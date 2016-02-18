@@ -1,16 +1,8 @@
-@product @check_tor_leaks
+@product @check_tor_leaks @fragile
 Feature: Various checks for torified software
 
   Background:
-    Given a computer
-    And I start the computer
-    And the computer boots Tails
-    And I log in to a new session
-    And the Tails desktop is ready
-    And Tor is ready
-    And all notifications have disappeared
-    And available upgrades have been checked
-    And I save the state so the background can be restored next scenario
+    Given I have started Tails from DVD and logged in and the network is connected
 
   Scenario: wget(1) should work for HTTP and go through Tor.
     When I wget "http://example.com/" to stdout

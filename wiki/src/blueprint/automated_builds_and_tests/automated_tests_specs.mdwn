@@ -13,7 +13,9 @@ the [[automatically build ISOs|autobuild_specs]] ([[!tails_ticket 5288]]).
 Running the full test suite on 1 isotester hosted on Lizard takes
 around 8 hours.
 We intend to run __4 isotesters__, so at the moment we would be able
-to run __12 full test suites__ per day.
+to run __12 full test suites__ per day. ([[!tails_ticket 6094]] will
+save ~25% on the full test suite runtime, but we'll keep on adding
+more tests, so let's stick to the 8 hours estimate for now.)
 
 We have 2 isobuilders on Lizard, that build a total of a bit less than
 __400 ISOs/month__ (that's __an average of 13 ISOs/day__).
@@ -54,6 +56,17 @@ automatically built by Jenkins, at least in the first iteration.
 We __need to lessen the number of tests per day__. Probably even in
 the second iteration, with the expected growth of the number of
 automated builds.
+
+At first, we'll try to run the full test suite on all of them. If our
+infra can't cope with that, we have ideas written below to help in that.
+The one that everyone seem to agree on is to run the full test suite for
+base branches and features branches that are in ReadyForQA status in
+Redmine.
+
+We might want to play with job priorities, the same way we'll do with
+the automated builds (see [[!tails_ticket 9760]]). Luckily, configuring
+that for the builds will probably also work by itself for their automated
+tests, as this jobs will be chained together.
 
 ### Current proposal
 
@@ -103,6 +116,32 @@ automated builds:
 * For base branches, notify the RM.
 * For topic branches, notify the author of the last commit.
 
+When notifying Redmine, the use of the ReadyForQA custom field is not so
+semantically correct, and may overlap with the dev usage of it. We will
+probably have to add a new one for Jenkins to decide to test the branch
+if we choose to test only the feature branch that are ready to be
+reviewed.
+
+## What kind of result shall be kept
+
+The test suite produces different kind of artifacts: logfiles, screen
+captures for failing steps, snapshots of the test VM, and also videos of
+the running test session.
+
+We can keep the video captures in the build artifacts, now that
+[[!tails_ticket 10001]] is resolved.
+
+Decision:
+
+ * For green test suite run: keep the test logs (Jenkins natively do
+   that).
+ * For red test suite run: keep the screenshots and video captures, the
+   logs and the pcap files.
+
+In [[!tails_ticket 10155]] we calculated that we can probably keep the
+video captures for a full release cycle. This will be refine is reality
+claims the contrary after an evaluation.
+
 # Scenarios
 
 In the following scenario:
@@ -137,12 +176,12 @@ builds specification.
     And I need to know if my branch fails to pass the automated test
       suite because of an external change possibly weeks after my
       last commit (by e.g Debian changes, changes in branch B, ...)
-    And if my branch passes the automates test suite
+    And if my branch passes the automated test suite
       The resulting test logs must be made available to me
       The Redmine ticket should be notified
     Otherwise I *need* to see the build logs and screenshots
-      And the developer who proposed the merge must be notified
-      And the ticket should be reassigned to the branch submitter
+      And I must be notified
+      And the ticket should be reassigned to me if needed
       And QA check should be set to "Dev needed"
 
 
@@ -160,9 +199,10 @@ builds specification.
 
 ## Cutting the number of run per day
 
-For feature branches, we could run the full test suite only on the
-daily builds, and either only the automated tests related to the
-branch on every git push, and/or a subset of the whole test suite.
+For feature branches, we could run the full test suite only on the daily
+builds or on ReadyForQA ones, and either only the automated tests
+related to the branch on every git push, and/or a subset of the whole
+test suite.
 
 We can also maybe find more ways to split the automated test suite in
 faster subsets of features depending on the context, define priorities

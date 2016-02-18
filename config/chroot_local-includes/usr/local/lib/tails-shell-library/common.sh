@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# Get monotonic time in seconds. See clock_gettime(2) for details.
+# Note: we limit ourselves to seconds simply because floating point
+# arithmetic is a PITA in the shell.
+clock_gettime_monotonic() {
+    perl -w -MTime::HiRes=clock_gettime,CLOCK_MONOTONIC \
+         -E 'say int(clock_gettime(CLOCK_MONOTONIC))'
+}
+
 # Run `check_expr` until `timeout` seconds has passed, and sleep
 # `delay` (optional, defaults to 1) seconds in between the calls.
 # Note that execution isn't aborted exactly after `timeout`
@@ -11,9 +19,9 @@ wait_until() {
     timeout="${1}"
     check_expr="${2}"
     delay="${3:-1}"
-    timeout_at=$(expr $(date +%s) + ${timeout})
+    timeout_at=$(expr $(clock_gettime_monotonic) + ${timeout})
     until eval "${check_expr}"; do
-        if [ "$(date +%s)" -ge "${timeout_at}" ]; then
+        if [ "$(clock_gettime_monotonic)" -ge "${timeout_at}" ]; then
             return 1
         fi
         sleep ${delay}

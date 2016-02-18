@@ -1,6 +1,6 @@
 [[!meta title="Automated test suite"]]
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 # Introduction
 
@@ -111,7 +111,7 @@ Requirements on the guest (the remote shell server):
 Scripts:
 
 * [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-autotest-remote-shell]]
-* [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-autotest-remote-shell]]
+* [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-autotest-remote-shell.service]]
 
 # The art of writing new product test cases
 
@@ -151,7 +151,7 @@ completely fresh one, with all defaults. The defaults are defined in
 `features/domains/default.xml`, but some highlights are:
 
 * One virtual `x86_64` CPU with one core
-* 1 GiB of RAM
+* A reasonable amount of RAM
 * ACPI, APIC and PAE enabled
 * UTC harware clock
 * A DVD drive loaded with the Tails from the ISO
@@ -159,8 +159,19 @@ completely fresh one, with all defaults. The defaults are defined in
 * USB 2.0 controller
 * Ethernet interface, plugged into a network bridged with the host
 
-After this step there's a number of steps that reconfigures the
-above...
+However, most of the time we do not set up a computer from scratch
+using this step, but restore from a snapshot (also called checkpoint)
+using the one of the `Given Tails has booted ...` steps generated in
+`features/step_definitions/snapshots.rb`. An example of such a step,
+and indeed one of the most common ones, is:
+
+    Given Tails has booted from DVD and logged in and the network is connected
+
+These steps will actually run multiple steps, saving one or more
+snapshots along the way. See the next section for details about this.
+
+Returning back to what we'd do after the `Given a computer` step,
+there's a number of steps that reconfigures the computer...
 
     And I create a 10 GiB disk named "some_disk"
 
@@ -203,7 +214,7 @@ This step:
     And I enable more Tails Greeter options
 
 This is required for steps enabling Tails Greeter options, like the
-next one, or the `I enable Microsoft Windows XP camouflage` step.
+next one.
 Note that the "I set sudo password ..." step has to be run before the
 other Tails Greeter option steps as it relies on keyboard navigation.
 
@@ -234,21 +245,31 @@ has started` step.
 
 Since Tor is working, the check for upgrades will be run. We have to
 wait for it to complete because that generally will break later if we
-use a background snapshot.
+use snapshots.
 
-    And I save the state so the background can be restored next scenario
+### Snapshots
 
-This is where the state of the VM is saved into the so called
-background snapshot the first time it is reached within a feature. For
-all subsequent scenarios, all steps before this one are skipped and
-the VM state is restored from the snapshot in this state. This step
-also makes sure that the remote shell is back up, and if Tor was
-running, that the time is resynced from the host and Tor is restarted
-and working again.
+To speed up the test suite and get consistent results when setting up
+state, we make heavy use of virtual machine snapshots. We encourage
+contributors to read the snapshot definitions in
+`features/step_definitions/snapshots.rb` carefully. We generate steps
+from these descriptions, and they are created lazily on first use (and
+then reused in subsequent instances, across features). Some things to
+make note of:
 
-It's called the background snapshot because generally we only want to
-do this if we define a background in a feature. We don't want to use
-the above step if scenarios that have different steps before this one.
+* Snapshots may have parents, which means that they start by running
+  the parent's step, generating its snapshot, recursively to a "root"
+  snapshot without parent.
+
+* Snapshots can be made "temporary". If the snapshot description's
+  `:temporary` field is set to `true`, then the snapshot
+  will be cleared after the feature it was created in finishes. This
+  is a way to reduce the disk space needed for running the test suite,
+  and is encouraged to use for features where a very perticular state
+  is set up, that isn't reused in any other feature.
+
+* Debugging snapshot creation is made a lot easier by enabling the
+  `debug` formatter, which will print the steps as they are run.
 
 ### Scenarios involving the Internet
 
@@ -290,26 +311,6 @@ The remote shell:
   commands output. This is because of Sikuli's OCR capabilities are
   poor, and cannot be depended on.
 
-### Background snapshot compatibility
-
-All steps that possibly could be in a feature's background (that can
-be quickly skipped through thanks to background snapshots) should in
-general contain the following in its absolute beginning:
-
-    next if @skip_steps_while_restoring_background
-
-This is what makes it possible to pass the step without actually
-running it.
-
-Note the "in general" above, though. Sometimes there may be code in
-a step that we should let run before we skip the test. In general
-that's just assignment of input from a step into a global/class
-variable that is used in subsequent steps. For an instructive example
-of this, see the `I set sudo password ...` step in
-`features/step_definitions/common_steps.rb`, which saves the password
-into a class variable so it can be used by, among others, the `I enter
-the sudo password ...` step.
-
 # Limitations and issues
 
 These things are good to know when developing new features, scenarios
@@ -341,8 +342,19 @@ forever.
 Filesystem shares cannot (due to QEMU limitations) be added to an
 active VM, and cannot (due to QEMU limitations) be active
 (i.e. mounted) during a snapshot save. For this reason, don't use
-filesystem shares in combination with background snapshots. For more
+filesystem shares in combination with snapshots. For more
 information, see [[!tails_ticket 5571]].
+
+On a more practical note, you *can* add a filesystem share if you
+restore a snapshot and then power off the computer, which still is
+worth it when there's a big setup cost, e.g. when Tails is running
+from USB with persistence enabled. So something like this is valid,
+for example:
+
+    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
+    And I shutdown Tails and wait for the computer to power off
+    And I setup some filesystem share ...
+    And I start Tails from USB drive "current" with network unplugged and I login with persistence enabled
 
 ## Plugging SATA drives
 
@@ -352,27 +364,41 @@ drive, GNOME will report that the drive is failing when inside Tails,
 and indeed several SMART tests fail. For now, plug hard disks as IDE
 only (or USB, of course).
 
-## Class variables assigned in skippable steps
+## Passing state between steps in snapshots
 
-This is best explained with an example. Let's say we have this feature:
+When creating snapshots, anything stored in a variable in any of those
+steps will only be available in subsequent steps in that scenario, not
+in other scenarios restoring from that snapshot. The exception is when
+global variables are used, which is an acceptable workaround, but it
+requires minute control to get right, and is hard to follow. Please
+try to avoid this until [[!tails_ticket 5847]] is solved.
 
-	Background:
-    ...
-	Given I assign @x with something we read from the VMs state and we know should be 100
-	And I save the state so the background can be restored next scenario
+## Disabling scenarios that are known to fail
 
-	Scenario: 1
-	Then @x == 100
+When a scenario is broken for an extended period of time (e.g. when
+rebasing Tails on a new Debian version, which usually breaks tons of
+stuff) the current method of temporarily disabling affected tests is
+simply to remove them in Tails' Git, making sure that we won't forget
+about them.
 
-	Scenario: 2
-	Then @x == 100
+Note that such removals should be isolated per commit so that they are
+easy to revert when whatever was broken is fixed. Hence, such a commit
+could either:
 
-As expected, scenario 1 will succeed, but since class variables lie
-`@x` are cleared between scenarios, scenario 2 will fail if it is
-skippable (i.e. it has the `next if...` thing at the top), which it
-should besince it interacts with the VM. To avoid this, make sure to
-put *all* steps dealing with the class variable in the background, or
-all of them after the background. Alternatively, use global variables
-(e.g. `$x`) instead of class variables, since they are never cleared.
+* remove a single scenario if something unique to that scenario is
+  broken;
 
-Also, see [[!tails_ticket 5847]].
+* remove multiple scenarios possibly spanning multiple features, if
+  they're broken for the same reason, e.g. a step they all use is
+  broken;
+
+* remove a complete feature, if the complete feature is broken for the
+  same reason.
+
+Each such commit *must* have a ticket created, referencing the commit
+to revert, have an assignee and an appropriate milestone set so they
+are not forgotten. Bonus point: push a branch that reverts the commit,
+and then set it as the ticket's _Feature Branch_.
+
+(Once [[!tails_ticket 10198]] has hit Cucumber we can solve this,
+i.e. [[!tails_ticket 7233]], in a much better way.)

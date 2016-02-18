@@ -32,6 +32,17 @@ feature, we'd simply run something like:
 
     ./run_test_suite features/build.feature
 
+Actually, `run_test_suite` is just a wrapper around `cucumber`, so any
+`cucumber` option can be passed too, although after an `--` so they
+are not confused with the wrapper's options. For instance:
+
+    ./run_test_suite ... -- --format debug features/apt.feature
+
+will enable the `debug` formatter, which in Tails' Cucumber setup will
+enable debugging information to be printed (which is *very* useful
+when debugging or developing for the test suite) unlike in vanilla
+Cucumber, where it's used for debugging the formatting subsystem.
+
 For full instructions, see its `--help`.
 
 Note: since the test suite itself uses `virt-viewer` to interact with
@@ -72,13 +83,17 @@ can be use by concurrent test suite runs):
 Here's a list of all non-secret key-value pairs that can be supported
 by the local configuration file:
 
-* `DEBUG`: Boolean value. If set to `true`, various debugging info
-  will be printed. Defaults to `false`.
+* `CAPTURE`: Captures failed scenarios into videos stored in the
+  temporary directory (see `TMPDIR` below) using x264
+  encoding. Defaults to `false`.
+
+* `CAPTURE_ALL`: Keep videos for all scenarios, including those that
+  succeed (implies `CAPTURE`). Defaults to `false`.
 
 * `MAX_NEW_TOR_CIRCUIT_RETRIES`: Integer. Upon failure, some test steps may be
   run again after requesting that connections are made using new Tor circuits. This
   configuration variable limits how many times forcing a circuit will be
-  attempted.  Defaults to `5`.
+  attempted.  Defaults to `10`.
 
 * `PAUSE_ON_FAIL`: Boolean value. If set to `true`, the test suite run
   is suspended on failure until ENTER is pressed. This is useful for
@@ -90,7 +105,7 @@ by the local configuration file:
   after pressing ENTER. This is useful for updating outdated images,
   or when extracting new images. Defaults to `false`.
 
-* `TEMP_DIR`: String value. Directory where various temporary files
+* `TMPDIR`: String value. Directory where various temporary files
   are written during a test, e.g. VM snapshots and memory dumps,
   failure screenshots, pcap files and disk images. Defaults to
   `"/tmp/TailsToaster"`.

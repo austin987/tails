@@ -1,0 +1,155 @@
+[[!meta title="Installing Tails on a USB stick from Debian or Ubuntu using the command line"]]
+
+[[!meta stylesheet="inc/stylesheets/assistant" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/steps" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/expert" rel="stylesheet" title=""]]
+
+<p>Start in Debian or Ubuntu.</p>
+
+Verify the Tails signing key
+============================
+
+<div class="tip">
+
+<p>If you already certified the Tails signing key with your own key, you
+can skip this step and start [[downloading and verifying the ISO
+image|usb#download]].</p>
+
+</div>
+
+In this step, you will download and verify the *Tails signing
+key* which is the OpenPGP key that is used to cryptographically sign
+the Tails ISO image.
+
+<div class="note">
+
+<p>To follow these instructions you need to have your own OpenPGP
+key.</p>
+
+<p>To learn how to create yourself an OpenPGP key, see
+<a href="https://help.riseup.net/en/security/message-security/openpgp/gpg-keys">Managing
+OpenPGP Keys</a> by <em>Riseup</em>.</p>
+
+</div>
+
+1. Import the Tails signing key in your <span class="application">GnuPG</span> keyring:
+
+       wget https://tails.boum.org/tails-signing.key
+       gpg --import < tails-signing.key
+
+1. Install the Debian keyring. It contains the OpenPGP keys of all Debian developers:
+
+       sudo apt-get install debian-keyring
+
+1. Import the OpenPGP key of [[!wikipedia Stefano_Zacchiroli]], a former
+   Debian Project Leader, from the Debian keyring into your keyring:
+
+       gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export zack@upsilon.cc | gpg --import
+
+1. Verify the certifications made on the Tails signing key:
+
+       gpg --keyid-format 0xlong --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+   In the output of this command, look for the following line:
+
+       sig! 0x9C31503C6D866396 2015-02-03  Stefano Zacchiroli <zack@upsilon.cc>
+
+   Here, <code>sig!</code>, with an exclamation mark, means that Stefano
+   Zacchiroli verified and certified the Tails signing key with his key.
+
+   It is also possible to verify the certifications made by other
+   people. Their name and email address appear in the list of
+   certification if you have their key in your keyring.
+
+   <div class="caution">
+   <p>If the verification of the certification failed, then you might
+   have downloaded a malicious version of the Tails signing key or our
+   instructions might be outdated.
+   Please [[get in touch with us|support/talk]].</p>
+   </div>
+
+   <div class="tip">
+   <p>The line `175 signatures not checked due to missing keys` or similar
+   refers to the certifications (also called *signatures*) made by other public
+   keys that are not in your keyring. This is not a problem.</p>
+   </div>
+
+1. Certify the Tails signing key with your own key:
+
+   a. To make a non-exportable certification that will never be shared
+      with others:
+
+          gpg --lsign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+   b. To make an exportable certification of the Tails signing
+      key and publish it on the public key servers:
+
+          gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+          gpg --send-keys A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+      Doing so allows people who verified
+      your key to verify your certification and, as a consequence, build
+      more trust in the Tails signing key.
+
+<a id="download"></a>
+
+Download and verify the ISO image
+=================================
+
+In this step, you will download the latest Tails ISO image and verify it
+using the Tails signing key.
+
+1. Download the ISO image:
+
+   <p class="pre">wget --continue [[!inline pages="inc/stable_i386_iso_url" raw="yes"]]</p>
+
+1. Download the signature of the ISO image:
+
+   <p class="pre">wget [[!inline pages="inc/stable_i386_iso_sig_url" raw="yes"]]</p>
+
+1. Verify that the ISO image is signed by the Tails signing key:
+
+   <p class="pre">[[!inline pages="inc/stable_i386_gpg_verify" raw="yes"]]</p>
+
+   The output of this command should be the following:
+
+   <p class="pre">[[!inline pages="inc/stable_i386_gpg_signature_output" raw="yes"]]</p>
+
+   Verify in this output that:
+
+     - The date of the signature is the same.
+     - The signature is marked as <code>Good signature</code> since you
+       certified the Tails signing key with your own key.
+
+[[!inline pages="install/inc/steps/install_tails_installer.inline" raw="yes"]]
+
+1. If you are running:
+
+   a. Debian, execute the following command to add the
+   backports repository to your system:
+
+         BACKPORTS='deb http://http.debian.net/debian/ jessie-backports main'
+         echo $BACKPORTS | sudo tee /etc/apt/sources.list.d/jessie-backports.list && echo "OK"
+
+   b. Ubuntu, execute the following command to add the
+   PPA repository to your system:
+
+         sudo add-apt-repository ppa:tails-team/tails-installer
+
+1. Update your lists of packages:
+
+       sudo apt update
+
+1. Install the <span class="code">tails-installer</span> package:
+
+       sudo apt install tails-installer
+
+[[!inline pages="install/inc/steps/install_final.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/switch.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/restart_first_time.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/you_are_done.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/create_persistence.inline" raw="yes"]]

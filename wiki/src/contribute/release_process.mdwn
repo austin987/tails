@@ -47,6 +47,12 @@ Update Tor Browser preferences
 * update `extensions.adblockplus.currentVersion` in
   `config/chroot_local-includes/etc/tor-browser/profile/preferences/0000tails.js`
 
+Update Icedove preferences
+------------------------------
+
+* update `extensions.enigmail.configuredVersion` in
+  `config/chroot_local-includes/etc/skel/.icedove/profile.default/preferences/0000tails.js`
+
 Coordinate with Debian security updates
 ---------------------------------------
 
@@ -170,7 +176,7 @@ Correct any displayed error, then commit the changes if any.
 Then see the relevant release processes, and upload the packages to
 the release branch's APT suite:
 
-* [[liveusb-creator]]
+* [[tails-installer]]
 * [[tails-greeter]]
 * [[perl5lib]]
 * [[persistence-setup]]
@@ -237,7 +243,7 @@ Update other base branches
    that `tails-merge-suite` currently happily overwrites newer
    packages in the target with older packages from the source, it's
    probably easier to just merge each individual APT overlay that was
-   just merged into the release branch into `feautre/jessie`'s APT
+   just merged into the release branch into `feature/jessie`'s APT
    suite. Also, most of our just upgraded bundled packages
    (e.g. `tails-greeter`) may need to be rebuilt for Jessie.
 
@@ -260,6 +266,7 @@ Changelog
 Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
+	git checkout "$RELEASE_BRANCH" && \
 	./release $VERSION $PREVIOUS_VERSION
 
 This populates the Changelog with the Git log entries.
@@ -300,13 +307,13 @@ at least 24 hours in the future! Between tests and mirror synchronization,
 the build will not be released on the same day. Try to make sure it
 matches the date of the future signature.
 
-	RELEASE_DATE='June 26, 2013'
+	RELEASE_DATE='2015-11-03'
 
 	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
-	echo "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
+	echo -n "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
 	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
 	$EDITOR wiki/src/inc/*.html
-	./build-wiki
+	./build-website
 	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
 
 ### features and design documentation
@@ -328,7 +335,7 @@ pages that were added or changed accordingly to changes coming with
 the new release. This e.g. ensures that the RC call for translation
 points translators to up-to-date PO files:
 
-	./build-wiki && git add wiki/src && git commit -m 'Update website PO files.'
+	./build-website && git add wiki/src && git commit -m 'Update website PO files.'
 
 Call for translation
 ====================
@@ -408,8 +415,16 @@ Better catch this before people spend time doing manual tests.
 Build the almost-final image
 ----------------------------
 
-[[Build images|contribute/build]] and carefully read the build logs to
-make sure nothing bad happened.
+* Check out the release tag:
+
+      git checkout "${TAG}"
+
+* [[Build images|contribute/build]] and carefully read the build logs to
+  make sure nothing bad happened.
+
+* Check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 SquashFS file order
 -------------------
@@ -451,10 +466,16 @@ suite should be ready, so it is time to:
           git tag -f -u "$TAILS_SIGNATURE_KEY" \
   	    -m "tagging version ${VERSION}" "${TAG}" && \
           git push --tags -f
-  
+
+* check out the release tag:
+
+      git checkout "${TAG}"
+
 * build the final image!
 
-<a id="prepare-iuk"></a>
+* check out the release branch again:
+
+      git checkout "${RELEASE_BRANCH}"
 
 Generate the OpenPGP signatures and Torrents
 ============================================
@@ -464,11 +485,10 @@ First, create a directory with a suitable name and go there:
 	mkdir "$ISOS/tails-i386-$VERSION" && \
 	cd "$ISOS/tails-i386-$VERSION"
 
-Second, copy the built image to this brand new directory.
-Then, rename it:
+Second, move the built image to this brand new directory:
 
-	mv "$ARTIFACTS/tails-i386-${RELEASE_BRANCH}-$VERSION-"*".iso" \
-	   "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso"
+	mv "$ARTIFACTS/tails-i386-$VERSION.iso" \
+	   "$ISOS/tails-i386-$VERSION/"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
@@ -493,6 +513,8 @@ Fifth, generate detached OpenPGP signatures for every published
 	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign \
 	  tails-i386-$VERSION.torrent && \
 	mv tails-i386-$VERSION.torrent.{asc,sig}
+
+<a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
 ============================
@@ -617,6 +639,29 @@ Prepare upgrade-description files
    one by default, this will allow you to more easily test the IUK
    without impacting anyone.
 
+Prepare the ISO description file for DAVE
+-----------------------------------------
+
+Update the ISO description file (IDF) used by the browser extension:
+
+    ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
+    ISO_SHA256SUM="$(sha256sum "${ISO_PATH}" | cut -f 1 -d ' ' | tr -d '\n')"
+    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH}")"
+    cat > "$RELEASE_CHECKOUT"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
+    ---
+    build-target: i386
+    channel: stable
+    product-name: Tails
+    version: '${VERSION}'
+    target-files:
+    - sha256: ${ISO_SHA256SUM}
+      size: ${ISO_SIZE_IN_BYTES}
+      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-${VERSION}/tails-i386-${VERSION}.iso
+    EOF
+    ( cd "${RELEASE_CHECKOUT}" && \
+      git add wiki/src/install/v1/Tails/i386/stable/latest.yml && \
+      git commit -m "Update IDF file for DAVE." )
+
 Upload images
 =============
 
@@ -692,6 +737,13 @@ Make sure every webserver listed in the `dl.amnesia.boum.org` round
 robin pool has the new version. Drop those that are lagging behind and
 notify their administrators.
 
+ISO history
+-----------
+
+Push the released ISO to our Tails ISO history git-annex repo, so that
+our isotesters can fetch it from there for their testing. How to do so
+is described in our internal Git repo.
+
 Update the website and Git repository
 =====================================
 
@@ -710,7 +762,7 @@ In order to get any new documentation into the website, merge either
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-"${RELEASE_BRANCH}-$VERSION"-*.iso.packages \
+	mv "$ARTIFACTS"/tails-i386-"$VERSION".iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
 Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
@@ -728,24 +780,20 @@ previous release (including any RC).
 Generate the SHA-256 hash of every image
 to be released in `inc/*`:
 
-	sha256sum $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 1 -d ' ' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_hash.html"
+	echo "${ISO_SHA256SUM}" > \
+	  "${RELEASE_CHECKOUT}/wiki/src/inc/stable_i386_hash.html"
 
 Update the size of the ISO image in `inc/*`:
 
-	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb.mdwn"
-	LC_NUMERIC=C ls -l --si $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2B/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mb_unit.mdwn"
-	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib.mdwn"
-	LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
-	  cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\2iB/' | tr -d '\n' \
-	  > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size_mib_unit.mdwn"
+        LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' \
+          > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
+
+Generate the expected signature verification output:
+
+      gpg --keyid-format 0xlong --verify "${ISO_PATH}.sig" "${ISO_PATH}" 2>&1 | \
+      sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
+      "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_gpg_signature_output.html"
 
 Update the [[support/known_issues]] page:
 
@@ -792,8 +840,7 @@ Skip this part if preparing a final release.
 
 Copy the `.iso.sig` file into the website repository:
 
-	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
-	   "$MASTER_CHECKOUT/wiki/src/torrents/files/"
+	cp "${ISO_PATH}.sig" "${MASTER_CHECKOUT}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
 `$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
@@ -809,7 +856,7 @@ Write the announcement for the release in
 In any case
 -----------
 
-Generate PO files for the announcements with `./build-wiki`.
+Generate PO files for the announcements with `./build-website`.
 
 Then, send them to <tails-l10n@boum.org> so that they get translated
 shortly, perhaps even soon enough to integrate them before pushing the
@@ -868,6 +915,7 @@ repository like this:
       git merge "$RELEASE_BRANCH" && \
       git push origin master:master \
     )
+
 
 Bug tracker
 -----------
@@ -973,7 +1021,8 @@ Prepare for the next release
 XXX: adapt / fork for release candidates. In the meantime, read all
 this, and skip what does not make sense for a RC.
 
-1. Move the previous stable release to `obsolete` on the mirrors.
+1. If you just released a new stable release, remove the previous
+   stable release on the mirrors.
 1. Remove any remaining RC for the just-published release from
    the mirrors.
 1. Remove IUKs that are more than 6 months old from
@@ -1008,11 +1057,16 @@ this, and skip what does not make sense for a RC.
            --repo "$bare_repo" && \
         rm -rf "$bare_repo"
 
+1. Remove all old versions in `wiki/src/upgrade/v1/Tails` that were
+   never released. Explanation: the post-release APT repository steps
+   from the previous stable release will usually have had us prepare
+   for an emergency release that was never made.
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`, `experimental` and `feature/jessie`.
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
-   repository documentation.
+   repository documentation. Make sure there are upgrade-description
+   files for any new versions that were added.
 1. Push the resulting branches.
 1. If this was a major release, then reset experimental:
    - take note of branches merged into `experimental`, but not into
@@ -1036,10 +1090,9 @@ this, and skip what does not make sense for a RC.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
-* If the next release is a point-release, ask
-  <tails-sysadmins@boum.org> to disable the Jenkins job that's
-  building ISO images from the `testing` branch (since it basically
-  won't be used/maintained in the next 2.5 months).
+1. If you will be the release manager for the next release, look at the
+   tasks that must be done at the beginning of your shift in the
+   [[release manager role page|contribute/working_together/roles/release_manager]].
 
 Related pages
 =============

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+# XXX: check if we still need that in Stretch
+
+# Import (almost all) XDG_*, locale-related and DBUS_SESSION_BUS_ADDRESS variables
+# into the systemd user instance's environment. We're filtering some
+# XDG_* out in order not to pretend that processes run via `systemd --user`
+# are part of the desktop session.
+/usr/bin/env \
+    | /bin/grep '^XDG_' \
+    | /bin/grep -E -v '^XDG_(SEAT=|SESSION_)' \
+    | /usr/bin/xargs /bin/systemctl --user set-environment
+/usr/bin/locale | /usr/bin/xargs /bin/systemctl --user set-environment
+/bin/systemctl --user import-environment \
+	       DBUS_SESSION_BUS_ADDRESS  \
+	       DISPLAY                   \
+	       XAUTHORITY
+
+# Start desktop.target
+/bin/systemctl --user start desktop.target

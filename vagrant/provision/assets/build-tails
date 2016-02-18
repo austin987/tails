@@ -33,19 +33,9 @@ cleanup() {
 trap cleanup EXIT
 
 if [ -n "$JENKINS_URL" ]; then
-	# Build triggered by Jenkins
-	ENV_FILE=/etc/jenkins/environment
-	if [ -f "$ENV_FILE" ] && [ -r "$ENV_FILE" ] ; then
-		. "$ENV_FILE"
-	fi
-
 	if [ -z "$WORKSPACE" ]; then
 		echo "WORKSPACE environment variable is not set. Aborting." >&2
 		exit 2
-	fi
-	if [ -z "$ARTIFACTS_ROOT_DIR" ] ; then
-		echo "ARTIFACTS_ROOT_DIR environment variable is not set. Aborting." >&2
-		exit 3
 	fi
 	if [ -z "$GIT_BRANCH" ]; then
 		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
@@ -57,7 +47,7 @@ if [ -n "$JENKINS_URL" ]; then
 	fi
 	REV="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
-	ARTIFACTS_DIR="$ARTIFACTS_ROOT_DIR/$JOB_NAME"
+	ARTIFACTS_DIR="$WORKSPACE/build-artifacts"
 else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
@@ -93,7 +83,7 @@ if [ "$TAILS_CLEAN_BUILD" ]; then
 fi
 
 if [ -z "$JENKINS_URL" ]; then
-	./build-wiki
+	./build-website
 fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
@@ -133,9 +123,3 @@ if [ -n "$JENKINS_URL" ]; then
 fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
-
-if [ -n "$JENKINS_URL" ]; then
-	for EXT in '' .binpkgs .srcpkgs .shasum .shasum.asc .packages .buildlog ; do
-		ln -sf "${ISO}${EXT}" "$ARTIFACTS_DIR/latest.iso${EXT}"
-	done
-fi

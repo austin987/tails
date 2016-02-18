@@ -1,0 +1,308 @@
+[[!toc levels=2]]
+
+The idea I had was to let the server(s) send a reduced list of hosts. Not
+only it would allow to work-around Tor DNS limitations, but also to have
+some weighted round robin, in order to prioritize some high bandwidth
+mirrors, if we choose to.
+
+If I had to mention the ideal design goals for such changes, I would say
+that the more straightforward would be the better for implementation and
+also for maintainability.
+
+## Using DNS
+
+Using DNS seems to be an easy way to do some round robin in low level. It
+allows some kind of transparency to the upper layers protocols and
+distribute the load and to avoid having a single server that can became a
+SPOF.
+
+The following ways are available to implement it:
+
+* CNAME Hacks
+* NS Hacks
+* Modified DNS servers
+
+### CNAME Hacks
+
+As mention by ToBeFree something that can be done is to have different
+pools of servers like:
+
+	a.dl.amnesia.boum.org A $MIRROR1
+	a.dl.amnesia.boum.org A $MIRROR2
+	a.dl.amnesia.boum.org A $MIRROR3
+	a.dl.amnesia.boum.org A $MIRROR4
+	a.dl.amnesia.boum.org A $MIRROR5
+
+	b.dl.amnesia.boum.org A $MIRROR6
+	b.dl.amnesia.boum.org A $MIRROR7
+
+	dl.amnedia.boum.org CNAME a.dl.amnesia.boum.org
+	dl.amnedia.boum.org CNAME b.dl.amnesia.boum.org
+
+Interestingly the requests would be equally distributed betwen a.dl and
+b.dl, thus if their is more mirrors in one name than one other some
+servers would be somehow prioritized. For example: here "a" mirrors will
+share 50% of requests, giving 10% for every host where "b" mirrors will
+share the other 50% of requests betwen two host giving them 25% of
+requests each.
+
+However this kind of CNAME hack is not supported by current DNS
+Servers. Bind 8 used to support it with a [configuration
+option](http://docstore.mik.ua/orelly/networking_2ndEd/dns/ch10_07.htm)
+that has not been ported to bind 9. Neither NSD nor PowerDNS seem to
+support it, and their is no actual data about how resolvers would
+handle this case, so I don't think it is the best option.
+
+### NS Hacks
+
+Following the same idea the dl amnesia.boum.org could be delegated to a
+few different DNS servers, and those servers may have different versions
+of the zone. For example:
+
+	dl.amnesia.boum.org NS $DNS1
+	dl.amnesia.boum.org NS $DNS2
+	
+DNS1 would have a zone similar to a.dl.amnesia.boum.org:
+
+	dl.amnesia.boum.org A $MIRROR1
+	dl.amnesia.boum.org A $MIRROR2
+	dl.amnesia.boum.org A $MIRROR3
+	dl.amnesia.boum.org A $MIRROR4
+	dl.amnesia.boum.org A $MIRROR5
+	
+And DNS2 would have a zone similar to b.dl.amnesia.boum.org:
+
+	dl.amnesia.boum.org A $MIRROR6
+	dl.amnesia.boum.org A $MIRROR7
+
+In theory it should work (and give almost the same load distribution as
+CNAME hacks, almost as the NS servers will not receive 50% of requests
+because of [[!rfc 5452]]). However, I am not sure that playing with DNS
+inconsistency will be a so good idea, for example for maintainability :)
+
+### Using modified DNS servers
+
+Interestingly Tails is not the first project to be looking how to use DNS
+for load distribution. People already wrote some DNS software designed to
+handle those usecases and return the visitor a reduced list of servers
+according to some rules like weights or geolocalisation. They work by
+delegating a subzone (like dl.amnesia.boum.org) to those servers and with
+zone files containing additionals fields. There is two main softwares for
+those usecases:
+
+* <http://gdnsd.org/> which is available on debian and used for
+  example for wikipedia.
+
+* <https://github.com/abh/geodns> that requires manual installation
+  and is used for example by pool.ntp.org.
+
+Deploying such software would solve the problem in a more elegant way than
+CNAME or NS hacks. It would require a bit of system administration that
+maybe can be done using some puppet templates in a few Virtal Machines.
+
+## Using HTTP(s)
+
+DNS is not the only way to do some load balancing. It is mostly used for
+low level protocols that don't allow redirects (for example: NTP). As
+content download is already done using HTTP(s). HTTP(s) can be leveraged
+to do this kind of load balancing. It is what is done by sourceforge.net
+as pointed by ToBeFree and by many Linux distributions.
+
+For example using a PHP script (or more complete options such as
+mirrorbrain, thanks Sagi!) that would redirect requests to
+`dl.amnesia.boum.org/$file to $mirror.dl.amnesia.boum.org/$file`
+randomly or according to some additional rules (weights,
+geolocalisation, SSL availability ...).
+
+There is a few drawbacks on this approach:
+
+* It would increase a bit the load on boum.org's server.
+* It would increase the dependency on this server, meaning that it is
+  unavailable (down, blocked...), downloads will be blocked (but in this
+  case the site will be too).
+* It would require to develop the script or to install one such as
+  mirrorbrain (which is feature-full, available as [3rd party Debian
+  packages](http://download.opensuse.org/repositories/Apache:/MirrorBrain/),
+  and requires PostgreSQL).
+
+On the other side it has a few advantage:
+
+* It will only require a few ~20 lines of PHP script when DNS based
+  solutions require to install and maintain additional software and servers.
+* It can allow the script to be personnalised to add some additional rules
+  if necessary.
+* As boum.org server will see every requests, it would allow to do some
+  stats.
+* It can allow to use $mirror.dl.amnesia.boum.org URLs, allowing to deploy
+  SSL certificates easier that if all mirrors use dl.amnesia.boum.org.
+* As ToBeFree mentionned (thanks!) it is also possible to use some client
+  side scripts to select the mirror. I would not recommend to rely only on
+  this option as it would not work for browsers without scripts, but it can
+  be done as a complementary approach, it order to reduce the load and
+  dependency to dl.amnesia.boum.org's server.
+
+Thus, if I may, I would like to recommend considering the HTTP(s) option,
+even if it means that I have to write the PHP script by myself or to create
+an easy task entry on the ticket tracker and follow it :)
+
+## Proof of concept: JavaScript + multiple DNS pools / named mirrors
+
+This method can either be used with multiple DNS pools (dl1.amnesia.boum.org, dl2.amnesia.boum.org etc.) or with named mirrors (freiwuppertal.dl.amnesia.boum.org, othermirror.dl.amnesia.boum.org, ...). Using named mirrors allows you to use a huge, unlimited list of completely equally used mirrors; using multiple DNS pools leads to effects described under "CNAME hacks".
+
+These POCs should be 1:1 usable on the Tails [[download]] page. All that would be needed is setting up the DNS pools and/or named mirrors, and telling the mirror owners to configure their servers to respond to \*.amnesia.boum.org (the wildcard is important).
+
+### JavaScript POC (multiple DNS pools)
+   
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript">//<![CDATA[ 
+    $(window).load(function(){
+        var hosts = Array("dl.amnesia.boum.org","dl2.amnesia.boum.org","dl3.amnesia.boum.org","dl4.amnesia.boum.org","dl5.amnesia.boum.org");
+        var host = hosts[Math.floor(Math.random()*hosts.length)];
+    $(document).ready(function() {
+        var strNewString = $('body').html().replace(/dl\.amnesia\.boum\.org/g,host);
+        $('body').html(strNewString);
+    });
+    });//]]>  
+    </script>
+
+For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.org. Just responding to one of the pool names would make this a very unflexible solution, so the wildcard is needed. 
+
+At least nginx is unable to use a wildcard like dl\*.amnesia.boum.org, so \*.amnesia.boum.org has to be used. This is more flexible anyway.
+
+#### Example webpage (see the webpage source there too)
+
+<http://freiwuppertal.de/tails-mirror-example-dns.htm>
+
+
+### JavaScript POC (named mirrors)
+    
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript">//<![CDATA[ 
+    $(window).load(function(){
+        var hosts = Array("freiwuppertal.dl.amnesia.boum.org","othermirror.dl.amnesia.boum.org","yetanother.dl.amnesia.boum.org","weirdname.dl.amnesia.boum.org","supermirror.dl.amnesia.boum.org");
+        var host = hosts[Math.floor(Math.random()*hosts.length)];
+    $(document).ready(function() {
+        var strNewString = $('body').html().replace(/dl\.amnesia\.boum\.org/g,host);
+        $('body').html(strNewString);
+    });
+    });//]]>  
+    </script>
+
+For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.org. Just responding to a fixed name would make this an unflexible solution, so the wildcard is needed.
+
+#### Example webpage (see the webpage source there too)
+
+<http://freiwuppertal.de/tails-mirror-example-named.htm>
+
+#### Giving mirrors higher or lower weight
+
+Using this approach, giving one mirror more weight than others is very easy: Simply add it's name multiple times to the array of mirrors. :D
+
+### Vanilla JavaScript POC and JSON
+
+        <a href="http://dl.amnesia.boum.org/tails/stable/tails-i386-1.6/tails-i386-1.6.iso" id="dllink">download link</a>
+
+        <script type="text/javascript">
+        function fetchJSONdata(path, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200 || xhr.status === 0) {
+                        var data = JSON.parse(xhr.responseText);
+                        if (callback) callback(data);
+                    } else {
+						console.log( "Error: " + xhr.statusText);
+					}
+				}
+			};
+            xhr.open('GET', path, true);
+            xhr.send();
+        }
+
+		function getRandomInt(min, max) {
+  			return Math.floor(Math.random() * (max - min +1)) + min;
+		}
+
+		function isJSON(str) {
+			try {
+				JSON.parse(str);
+			} catch (e) {
+				return false;
+			}
+			return true;
+		}
+
+		function replaceDownloadURL(updatedURL) {
+			var URLMarker = "/tails/stable";
+			// todo check that url is a correct url
+			var linkDOMElem = document.getElementById('dllink');
+			var linkHREF = linkDOMElem.href.split( '//' );
+			var linkToISO = linkHREF[1].split( URLMarker );
+			// fixme http or https
+			linkDOMElem.href = '//' + updatedURL + URLMarker + linkToISO[1];
+			return true;
+		}
+
+        fetchJSONdata('./mirrors.json', function(data){
+            //console.log(data);
+			if( data == "undefined" ) {
+				console.log( "Error: mirror data not loaded.");
+			} else if( !isJSON( JSON.stringify(data) ) ) {
+				console.log( "Error: mirror data is not JSON.");
+			} else {
+				//console.log(data.mirrors);
+				// todo delete all mirrors with weight 0 before choosing one
+				if(data.mirrors.length > 0 ) {
+					var activeMirrors = new Array();
+					for ( i = 0; i < data.mirrors.length; i++ ) {
+						if ( data.mirrors[i].weight != 0 ) {
+							// add mirror as many times as its weight, max weight is 5
+							if ( parseInt(data.mirrors[i].weight ) > 5) {
+								var max_weight = 5;
+							} else {
+								var max_weight = parseInt( data.mirrors[i].weight );
+							}
+							for ( w = 0; w < max_weight; w++ ) {
+								activeMirrors.push( data.mirrors[i] );
+							}
+						}
+					}
+					console.log(activeMirrors);
+
+					var randomMirror = getRandomInt(0, activeMirrors.length-1);
+					//console.log(randomMirror);
+					//console.log(data.mirrors[randomMirror]);
+					replaceDownloadURL(activeMirrors[randomMirror].url);
+				}
+			}
+        });
+    </script>
+
+The mirrors.json file contains:
+<pre>
+   {
+	"mirrors": [
+		{ "url": "1.dl.amnesia.boum.org", "weight": "10" },
+		{ "url": "5.dl.amnesia.boum.org", "weight": "5" },
+		{ "url": "6.dl.amnesia.boum.org", "weight": "6" },
+		{ "url": "3.dl.amnesia.boum.org", "weight": "0" }
+	]
+    }
+</pre>
+
+
+## PHP: first draft
+
+
+    // http://stackoverflow.com/questions/4233407/get-random-item-from-array
+    
+    $mirrors = Array("alice.amnesia.boum.org","bob.amnesia.boum.org","clark.amnesia.boum.org","deborah.amnesia.boum.org","eric.amnesia.boum.org","freiwuppertal.amnesia.boum.org");
+    $mirror = $mirrors[array_rand($mirrors)];
+    echo "<p><a href=\"http://{$mirror}/tails/stable/tails-i386-1.4/tails-i386-1.4.iso\">Download Tails!</a></p>\n";
+    echo "<p>Selected mirror: {$mirror}</p>";
+
+Try it here:
+http://sandbox.onlinephpfunctions.com/code/54ffcc18e5dbbafc6c7d3c81e0c26f94ce7946fc
+
+Note: I am a horrible coder and basically copied this from the linked StackOverflow page. This page also helped me: http://php.net/manual/de/function.echo.php
+...and that's all. There might be security flaws in this extremely simple concept, so please have a close look at it. :)

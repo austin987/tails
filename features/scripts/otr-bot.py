@@ -3,6 +3,7 @@ import sys
 import jabberbot
 import xmpp
 import potr
+import logging
 from argparse import ArgumentParser
 
 class OtrContext(potr.context.Context):
@@ -51,9 +52,11 @@ class OtrBot(jabberbot.JabberBot):
 
     PING_FREQUENCY = 60
 
-    def __init__(self, account, password, otr_key_path, connect_server = None):
+    def __init__(self, account, password, otr_key_path,
+                 connect_server = None, log_file = None):
         self.__connect_server = connect_server
         self.__password = password
+        self.__log_file = log_file
         super(OtrBot, self).__init__(account, password)
         self.__otr_manager = OtrContextManager(account, otr_key_path)
         self.send_raw_message_fn = super(OtrBot, self).send_message
@@ -71,6 +74,8 @@ class OtrBot(jabberbot.JabberBot):
     # completely (copy-paste mostly) in order to add support for using
     # an XMPP "Connect Server".
     def connect(self):
+        logging.basicConfig(filename = self.__log_file,
+                            level = logging.DEBUG)
         if not self.conn:
             conn = xmpp.Client(self.jid.getDomain(), debug=[])
             if self.__connect_server:
@@ -185,10 +190,14 @@ if __name__ == '__main__':
                         "(port defaults to 5222)")
     parser.add_argument("-j", "--auto-join", nargs = '+', metavar = 'ROOMS',
                         help = "auto-join multi-user chatrooms on start")
+    parser.add_argument("-l", "--log-file", metavar = 'LOGFILE',
+                        help = "Log to file instead of stderr")
     args = parser.parse_args()
     otr_bot_opt_args = dict()
     if args.connect_server:
         otr_bot_opt_args["connect_server"] = args.connect_server
+    if args.log_file:
+        otr_bot_opt_args["log_file"] = args.log_file
     otr_bot = OtrBot(args.account, args.password, args.otr_key_path,
                      **otr_bot_opt_args)
     if args.auto_join:

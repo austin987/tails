@@ -20,6 +20,18 @@ PROFILE="${HOME}/.tor-browser/profile.default"
 # Import exec_firefox() and configure_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Allow Torbutton access to the control port filter (for new identity).
+# Setting a password is required, otherwise Torbutton attempts to
+# read the authentication cookie file instead, which fails.
+export TOR_CONTROL_HOST='127.0.0.1'
+export TOR_CONTROL_PORT='9052'
+export TOR_CONTROL_PASSWD='passwd'
+# Hide Torbutton's "Tor Network Settings..." context menu entry since
+# it doesn't work in Tails, and we deal with those configurations
+# strictly through Tor Launcher.
+export TOR_NO_DISPLAY_NETWORK_SETTINGS='yes'
+
+
 ask_for_confirmation() {
     # Skip dialog if user is already running Tor Browser:
     if pgrep -u amnesia -f "${TBB_INSTALL}/firefox" ; then
@@ -41,50 +53,25 @@ tor_has_bootstrapped() {
     sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped
 }
 
-# Workaround bug #8036 by copying any localized search plugins into
-# the profile.
-enable_localized_searchplugins() {
-    local locale plugin
-    locale=$(cat "${PROFILE}"/preferences/0000locale.js | \
-                 sed 's@^pref("general\.useragent\.locale", "\([^"]*\)");$@\1@')
-    if [ "${locale}" = en-US ] || [ -e "${PROFILE}"/searchplugins ]; then
-        return
-    fi
-    # Fallback to a similar locale if there is no exact match
-    plugin="$(ls -1 "${TBB_INSTALL}"/distribution/searchplugins/locale/ | grep -m1 "^${locale}\(-[A-Z]\+\)\?$" || true)"
-    if [ -n "${plugin}" ]; then
-        mkdir -p "${PROFILE}"/searchplugins
-        # The plugins do not load if they are symlinks
-        cp --dereference "${TBB_INSTALL}"/distribution/searchplugins/locale/"${plugin}"/*  "${PROFILE}"/searchplugins
-    fi
-}
-
 start_browser() {
     if [ ! -d "${PROFILE}" ]; then
-        /usr/local/bin/generate-tor-browser-profile
+        /usr/local/lib/generate-tor-browser-profile
     fi
 
     TMPDIR="${PROFILE}/tmp"
     mkdir --mode=0700 -p "$TMPDIR"
     export TMPDIR
 
+    # We need to set general.useragent.locale properly to get
+    # localized search plugins (and perhaps other things too). It is
+    # not enough to simply set intl.locale.matchOS to true.
     configure_best_tor_browser_locale "${PROFILE}"
-
-    # Workaround bug #8036
-    enable_localized_searchplugins
-
-    if [ -z "$XAUTHORITY" ]; then
-        XAUTHORITY=~/.Xauthority
-        export XAUTHORITY
-    fi
-
-    unset SESSION_MANAGER
 
     exec_firefox -allow-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
 }
 
 
-if tor_has_bootstrapped || ask_for_confirmation; then
+if /usr/local/sbin/tor-has-bootstrapped || ask_for_confirmation; then
     # Torbutton 1.5.1+ uses those environment variables
     export TOR_SOCKS_HOST='127.0.0.1'
     export TOR_SOCKS_PORT='9150'

@@ -4,6 +4,10 @@
 
 This document serves as an explanation of the rationale behind the proposed Greeter design related to [[!tails_ticket 8230]]. This document will grow over time, so please feel free to agree with, object to, or request anything.
 
+# Contents
+
+[[!toc levels=3]]
+
 # History of this document
 
 This document is the result of a process that took more than one year:
@@ -17,52 +21,63 @@ Please take this into account when you comment on current proposals. Improvement
 
 # Flow
 
-After working on a prototype and doing UX testing with some folks at NUMA, we arrived at
-the idea of having two main experience flows:
+After working on a prototype and doing UX testing with some folks at NUMA, we arrived at the idea of having two main experience flows:
 
-- A quick setup for regular users, in which the every option is easy to access in a few secreens;
-- A wizard to guide newcomers.
+- Guided Configuration: A wizard to guide new users
+- Self-guided Configuration: A quick setup for veteran users
 
-The result of this step can be found in [[NUMA_flow]].
+The result of this step can be found in this [[NUMA_flow]].
 
 # Implementation phases
 
-The implementation and release of this is scheduled in three
-phases, so that we make actual progress we can deliver to users as
-soon as things become reality:
+The implementation and release of this is scheduled in three phases.  The intention is to make progress that can be delivered as soon as things become reality:
 
-- Phase 1: redesign the Greeter's 1st screen. We then have
-  similar functionality to the current Greeter, but more clearly presented.
+- PHASE 1: Redesign the Greeter's 1st screen. We then have similar functionality to the current Greeter but more clearly presented.
 
-- Phase 2: add a Wizard to guide beginners ("Discover: Guided Configuration")
+- PHASE 2: Add a wizard to guide beginners ("Discover: Guided Configuration")
 
-- Phase 3: merge the persistence creation/configuration into the
-  greeter
+- PHASE 3: Merge the persistence creation/configuration into the Greeter
 
-We are proposing this because we have been debating a lot on
-the first screen(s) and we have reached something that is worth
-being tested and implemented. On the other hand, there is more
-work needed on the Guided Configuration wizard.
+We are proposing this because we have been debating a lot on the first screen(s) and we have reached something that is worth being tested and implemented. There is still work needed on the Guided Configuration wizard.
 
 # Proposed design for the 1st screen
 
-We refined this on the *tails-ux* mailing list to arrive at the following concrete proposal
-for the 1st screen. Below in this document we explain every designation.
+We refined this on the *tails-ux* mailing list to arrive at the following concrete proposal for the 1st screen. Below in this document we explain every designation.
 
 ## Intention
 
 Design a greeter dialog that:
 
-- Accommodates for one-click access to persistence, localization, and privacy options
+- Accommodates for one-click access to localization and persistence options
+- Accommodates for fast access to other advanced options
 - Has a simple and easy to understand interface for both new and advanced users
 - Uses as much tested data from previous design iterations as possible
-- Is up to date with GNOME 3.14 standards
+- Is up-to-date with GNOME 3.14 guidelines
 
 ## Proposed design
 
-[[!img Greeter.Welcome.png link="Greeter.Welcome.svg"]]
+A single welcome and settings screen, which is always displayed, that acts as a "Check & Go" screen, as well as a hub for editing settings.
 
-There is a single welcome and settings screen which is always displayed and acts as a "Check & Go" screen, as well as a hub for editing settings. 
+<img src="https://labs.riseup.net/code/attachments/download/984/Greeter.Explained.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/984/Greeter.Explained.png)
+[source](https://labs.riseup.net/code/attachments/download/985/Greeter.Explained.svgz)
+
+<img src="https://labs.riseup.net/code/attachments/download/979/Greeter.States.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/979/Greeter.States.png)
+[source](https://labs.riseup.net/code/attachments/download/980/Greeter.States.svgz) 
+
+
+## UX for specific options
+
+### Language
+
+<img src="https://labs.riseup.net/code/attachments/download/1016/Greeter.Language.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/1016/Greeter.Language.png)
+
+The language section is always visible. When a language is saved (in cleartext), it is automatically filled in with saved options.
 
 When a line is clicked, a popover ([[https://developer.gnome.org/hig/stable/popovers.html.en]]) opens with an explanation of the option and the controls to change its value.
 
@@ -70,19 +85,50 @@ As the values change their new value will replace the previous value in each res
 
 It is clear that the "Language" section can/should be saved, but not yet weather the "Settings" section can/should be saved.
 
+UI when "Save Language Changes" is checked:
+
+  - On a new Tails installation the check box is unchecked by default.
+  - When the user switches languages the check box is checked, then a warning is 
+    displayed.
+  - The next time Tails starts the language preferences that were saved unencrypted are
+    detected and the box is automatically checked.
+  - When the user switches languages by unchecking the box to remove the saved 
+    preferences, a notification is displayed saying that the options were safely 
+    deleted.
+
+### Storage
+
+<img src="https://labs.riseup.net/code/attachments/download/997/Encrypted.Storage.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/997/Encrypted.Storage.png) [source](https://labs.riseup.net/code/attachments/download/998/Encrypted.Storage.svgz)
+
+
+### Privacy
+
+<img src="https://labs.riseup.net/code/attachments/download/1017/Greeter.Privacy.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/1017/Greeter.Privacy.png)
+[source](https://labs.riseup.net/code/attachments/download/1018/Greeter.Privacy.svgz) 
+
 ## Explanation of this design
 
 ### Content Structure Types
 
 Which content structure type is most appropriate for the Greeter?
 
-[[!img Greeter.Decision.00-Structure.png link="Greeter.Decision.00-Structure.svg" size="800x"]]
+<img src="https://labs.riseup.net/code/attachments/download/987/Content.Structure.Types.png" width="100%" height="auto" />
 
-- Step-by-step - Guided walkthrough
-- Show/Hide - Hidden off-screen or behind on-screen element
-- **Openface - Full display**
+[full size bitmap](https://labs.riseup.net/code/attachments/download/987/Content.Structure.Types.png)
+[source](https://labs.riseup.net/code/attachments/download/988/Content.Structure.Types.svgz)
 
-With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that, although the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob vs veteran), the Openface structure is the most appropriate for the Greeter’s first screen, as it most closely aligns with GNOME HIG and ensures there is no hidden or undiscoverable information.
+- Step-by-step: Guided walkthrough
+- Show/Hide: Hidden off-screen or behind on-screen element
+- **Openface: Full display**
+
+With the Step-by-step flow already established as the most appropriate guided configuration structure, the designation made was that the Show/Hide structure most appropriately accommodates the two end-of-spectrum use cases (noob and veteran). However, this does not align with the GNOME HIG or provide feedback to the user which options are selected (when diverging from defaults). We thus chose to:
+
+- Add a "+" button to add a customizable setting, as commonly found in GNOME lists
+- Only display privacy settings that diverge from defaults
 
 ### Options Available On The 1st Screen
 
@@ -90,14 +136,16 @@ The hypothesis is that a good design should allow people to teach themselves.
 
 With this said, it seems appropriate to educate people of varying technical levels of understanding what options are available to them and what importance these options hold in regard to the intended function.
 
-In our situation, this is most effectively accomplished by 
-displaying everything upfront (Openface).
+In our situation, this is most effectively accomplished by displaying all settings groups upfront. However, in order not lose the beginners, the privacy settings are hidden when they doesn't diverge from defaults.
 
 ### Start Tails Button Location
 
 Where should the ‘Start Tails’ button be located?
 
-[[!img Greeter.Decision.01-Start.png link="Greeter.Decision.01-Start.svg"  size="800x"]]
+<img src="https://labs.riseup.net/code/attachments/download/989/Start.Tails.Button.Location.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/989/Start.Tails.Button.Location.png)
+[source](https://labs.riseup.net/code/attachments/download/990/Start.Tails.Button.Location.svgz)
 
 Height:
 
@@ -124,11 +172,14 @@ How should the settings section be ordered?
 - Importance: Storage, Language, Settings
 - **Logical: Language, Storage, Settings**
 
-An arbitrary order such as alphabetical is much less relevant than ordering by importance or logical steps. On top of that, to setup storage, one should select the appropriate language first to be able to read or write. Thus the choice of the Language, Storage, then Settings order.
+An order such as alphabetical is much less helpful than ordering by importance or by logical steps. On top of that, to setup storage, one should select the appropriate language first to be able to read or write. Thus the choice of the Language, Storage, then Settings order.
 
-Further, should the settings sections be labeled with either two or three labels?
+Should the settings sections be labeled with either two or three labels?
 
-[[!img Greeter.Decision.03-Labels.png link="Greeter.Decision.03-Labels.svg" size="800x"]]
+<img src="https://labs.riseup.net/code/attachments/download/991/Settings.Labels.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/991/Settings.Labels.png)
+[source](https://labs.riseup.net/code/attachments/download/992/Settings.Labels.svgz)
 
 - Two
 - **Three**
@@ -139,7 +190,10 @@ The designation was made that having three sections with three labels was the mo
 
 Should icons accompany the Section or Line-item labels, none, or both?
 
-[[!img Greeter.Decision.04-Icons.png link="Greeter.Decision.04-Icons.svg" size="800x"]]
+<img src="https://labs.riseup.net/code/attachments/download/993/Label.Icons.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/993/Label.Icons.png)
+[source](https://labs.riseup.net/code/attachments/download/994/Label.Icons.svgz)
 
 - Section
 - **Line Item**
@@ -159,56 +213,15 @@ The designation was made that icons should not accompany button labels. In addit
 
 Should the Greeter have the option to be closed/restarted?
 
-[[!img Greeter.Decision.05-Close.png link="Greeter.Decision.05-Close.svg" size="800x"]]
+<img src="https://labs.riseup.net/code/attachments/download/995/Close.Greeter.png" width="100%" height="auto" />
+
+[full size bitmap](https://labs.riseup.net/code/attachments/download/995/Close.Greeter.png)
+[source](https://labs.riseup.net/code/attachments/download/996/Close.Greeter.svgz)
 
 - **Close/Restart**
 - No Close/Restart
 
 Since there are multiple boot modes to choose from for Tails, the designation was made that a ‘Restart’ button located in the Action Bar of the Greeter would accommodate a user’s preference to go back and boot into failsafe mode.
-
-## UX for specific options
-
-### Language
-
-The language section is always visible. When a language is saved (in cleartext), it is automatically filled in with saved options.
-
-Clicking on a language line will open a Popover with the available options and a search bar.
-
-UI when "Save Language Changes" is checked:
-
-  - On a new Tails installation the check box is unchecked by default.
-  - When the user switches languages the check box is checked, then a warning is 
-    displayed.
-  - The next time Tails starts the language preferences that were saved unencrypted are
-    detected and the box is automatically checked.
-  - When the user switches languages by unchecking the box to remove the saved 
-    preferences, a notification is displayed saying that the options were safely 
-    deleted.
-
-### Storage
-
-Initial state:
-
-    Storage [more info]
-    [Type your passphrase...................] [icon: pad closed] [enable]
-
-A context menu enables to "show passphrase", "copy" and "paste" as in
-GNOME OpenPGP agent
-
-After clicking on enable:
-
-    Storage [more info]
-    [ooooooooooooooooo......................] [icon: spinner] [enable]
-
-If the password is correct:
-
-    Storage [more info]
-    [xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] [icon: pad open] [disable]
-
-If the password is wrong:
-
-    Storage [more info]
-    [ooooooooooooooooo......................] [icon: pad closed] [enable]
 
 # Upcoming settings
 

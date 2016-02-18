@@ -36,7 +36,7 @@ Corresponding parent ticket: [[!tails_ticket 5734]]
 
 Here, we call:
 
-* _machine_: a computer (be it bare metal or physical) and its
+* _machine_: a computer (be it bare metal or virtual) and its
   operating system
 * _monitored machine_: a machine we monitor
 * _monitoring machine_: the machine(s) that monitors the... _monitored
@@ -62,11 +62,11 @@ The monitoring system:
   interface that works within Tor Browser with the security slider set
   to Medium-High.
 * MAY additionally offer a read-only version of this overview, that we
-  MAY want to make available to selected contributors, or anonymous
+  may want to make available to selected contributors, or anonymous
   users. Needless to say, this must be carefully balanced with the
   security implications of such a system (in other words, a set of
   exported static HTML pages is totally fine, but a huge dynamic web
-  application is probably a no-starter).
+  application is probably a non-starter).
 * MUST support configuring, with a per-check/per-service granularity,
   a threshold of N failures _in a row_ before an alert is raised.
   Still, it SHOULD support triggering alerts depending on the
@@ -244,6 +244,8 @@ scale up to 50 hosts.
   monitoring system. Let's keep in mind that collecting exported
   Puppet resources is expensive.
 
+<a id="services"></a>
+
 # Service and system checks
 
 Below, HIGH, MEDIUM and LOW are priority level wrt. the implementation
@@ -263,8 +265,8 @@ For description of individual services, see
 
 ## APT repository
 
-* HIGH: `stable` APT suite over HTTP
-* HIGH: freezable APT repository, once it exists
+* CRITICAL: `stable` APT suite over HTTP
+* CRITICAL: freezable APT repository, once it exists
 
 ## Bitcoind
 
@@ -288,18 +290,18 @@ For description of individual services, see
 
 ## Jenkins
 
-* HIGH: the HTTP server must be up, and unauthenticated connection
+* CRITICAL: the HTTP server must be up, and unauthenticated connection
   must be forbidden (may require to install its TLS certificate, or to
   skip certificate validation, or something)
 
 ## Nightly builds
 
-* HIGH: <http://nightly.tails.boum.org/> must have directories for
+* CRITICAL: <http://nightly.tails.boum.org/> must have directories for
   the `stable` and `devel` branches, that contain ISO images
 
 ## rsync
 
-* HIGH: check, over `rsync://`, that expected directories are there
+* CRITICAL: check, over `rsync://`, that expected directories are there
 
 ## Test suite infrastructure
 
@@ -308,7 +310,7 @@ For description of individual services, see
 
 ## Website
 
-* HIGH: <https://tails.boum.org/> must be up and working
+* CRITICAL: <https://tails.boum.org/> must be up and working
 
 ## WhisperBack relay
 

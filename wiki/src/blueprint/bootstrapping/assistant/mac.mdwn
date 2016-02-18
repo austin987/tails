@@ -5,10 +5,12 @@ Global process:
   - Second step (difficult solution):
     - Maintain a list of Macs and their compatibility
 
+<a id="generic"></a>
 
-Generic instructions that would work in most of the case
-========================================================
-Implementation is happening there : [[!tails_ticket 9316]] 
+Generic instructions that would work in most cases
+==================================================
+
+Implementation is happening there: [[!tails_ticket 9316]]
 
 Truths about Mac:
 
@@ -55,10 +57,6 @@ Algorithm:
       - if works → happy
       - else → try temporary Tails
 
-
-
-
-
 List of compatibility with Mac
 ==============================
 
@@ -70,30 +68,28 @@ Seeing that:
 
 We will maintain the state of Tails compatibility on these computers.
 
-
 Roadmap
 -------
 
-1 Bootstrap
------------
-- Specifing the data type.
+Bootstrap
+---------
+
+- Specifying the data type.
 - Know the precise models. #9322
 - Setup a git repo.
 
+Start to fill it
+----------------
 
-2 Start to fill it
-------------------
 - Frontdesk starts to fill it
 
+Have it on the website
+----------------------
 
-3 Have it on the website
-------------------------
 - Full list in markdown thanks to a routine
  - In the web installation assistant
  - In/linked in the troubleshooting section
 - Maybe later an interactive app in the assistant
-
-
 
 ### Data type
 
@@ -104,11 +100,11 @@ The data could be stored in a YAML file, in the git repo. See [[!tails_ticket 98
 - Fields ("strings", boolean?):
 
       "model id"
-      - "Tails version" | DVD? |  dd ? | tails installer? | SD? | wifi? | gaphic card? | mac address? 
+      - "Tails version" | DVD? |  dd ? | tails installer? | SD? | wifi? | gaphic card? | mac address?
       - ... (an other user reports on this model)
 
-
 Writing the report after the summit, I would add :
+
 - Anonymised uniq identifier per users
 - Timestemp
 - Comments (if there is non anticipated things to keep)
@@ -120,33 +116,32 @@ Trying a yaml type (optional or not):
     reports:
         - date:         (required)
           user:         (optional)
-          tails:        (required)
+          tails_version:(required)
           media:        (required)
           boot:         (required)
           install:      (required)
           wifi:         (optional)
-          mac_address   (optional)
-          graphic_card  (optional)   
+          mac_spoofing   (optional)
+          graphic_card  (optional)
           comments:     (optional)
 
 And some samples :
-
 
     model_id:   MacBookAir3.2
     reports:
 
         - date:         2012-08-06
           user:         Oothai1iu6iefaiy
-          tails:        1.5
+          tails_version:1.5
           media:        usb
           boot:         true
-          install:      tails_installer   
+          install:      tails_installer
           comments:
             Touchpad not working.
 
         - date:         2012-07-26
           user:         seyuo4daiChei3Oo
-          tails:        1.4
+          tails_version:1.4
           media:        sd
           boot:         true
           install:      tails_installer
@@ -155,7 +150,7 @@ And some samples :
 
         - date:         2012-06-12
           user:         aif0ueveeb0Ahkii
-          tails:        1.2
+          tails_version:1.2
           media:        dvd
           boot:         false
           comments:
@@ -163,15 +158,18 @@ And some samples :
 
 
 
-* "model id" : #9322. For one model id, there is one or several reports. (note that there is not realy the "state" for one model : the is different reports who can help to guess the state.)
-* "Tails version" : can be useful to:
+* "model id": #9322. For one model id, there is one or several reports. (note that there is not realy the "state" for one model: the is different reports who can help to guess the state.)
+* "Tails version": can be useful to:
   - Have a better view of how the support Mac evolves.
   - Let the user or frontdesk know when the compatibility got broken.
+* "mac_spoofing": Is mac spoofing working with this computer
+* "graphic_card": Is the graphic card working on this computer.
+
 * We want to keep history of compatibility (with older Tails
   versions) in this file, maybe we will have to show to the user only
   the last relevant informations.
 * "Comments" is raw information on harward issues (touchpad, bluetooth). The most common issues are fields (wifi, mac spoofing, graphic card)
- 
+
 
 ### How to feed the list
 

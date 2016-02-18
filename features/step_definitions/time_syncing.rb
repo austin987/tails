@@ -3,13 +3,12 @@
 # command over the remote shell and get the answer back, parsing and
 # post-processing of the result, etc.
 def max_time_drift
-  5
+  10
 end
 
 When /^I set the system time to "([^"]+)"$/ do |time|
-  next if @skip_steps_while_restoring_background
-  @vm.execute_successfully("date -s '#{time}'")
-  new_time = DateTime.parse(@vm.execute_successfully("date").stdout).to_time
+  $vm.execute_successfully("date -s '#{time}'")
+  new_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
   expected_time_lower_bound = DateTime.parse(time).to_time
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift
   assert(expected_time_lower_bound <= new_time &&
@@ -19,16 +18,15 @@ When /^I set the system time to "([^"]+)"$/ do |time|
 end
 
 When /^I bump the (hardware clock's|system) time with "([^"]+)"$/ do |clock_type, timediff|
-  next if @skip_steps_while_restoring_background
   case clock_type
   when "hardware clock's"
-    old_time = DateTime.parse(@vm.execute_successfully("hwclock -r").stdout).to_time
-    @vm.execute_successfully("hwclock --set --date 'now #{timediff}'")
-    new_time = DateTime.parse(@vm.execute_successfully("hwclock -r").stdout).to_time
+    old_time = DateTime.parse($vm.execute_successfully("hwclock -r").stdout).to_time
+    $vm.execute_successfully("hwclock --set --date 'now #{timediff}'")
+    new_time = DateTime.parse($vm.execute_successfully("hwclock -r").stdout).to_time
   when 'system'
-    old_time = DateTime.parse(@vm.execute_successfully("date").stdout).to_time
-    @vm.execute_successfully("date -s 'now #{timediff}'")
-    new_time = DateTime.parse(@vm.execute_successfully("date").stdout).to_time
+    old_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
+    $vm.execute_successfully("date -s 'now #{timediff}'")
+    new_time = DateTime.parse($vm.execute_successfully("date").stdout).to_time
   end
   expected_time_lower_bound = DateTime.parse(
       cmd_helper(["date", "-d", "#{old_time} #{timediff}"])).to_time
@@ -40,8 +38,7 @@ When /^I bump the (hardware clock's|system) time with "([^"]+)"$/ do |clock_type
 end
 
 Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
-  next if @skip_steps_while_restoring_background
-  guest_time_str = @vm.execute("date --rfc-2822").stdout.chomp
+  guest_time_str = $vm.execute("date --rfc-2822").stdout.chomp
   guest_time = Time.rfc2822(guest_time_str)
   host_time = Time.now
   diff = (host_time - guest_time).abs
@@ -51,12 +48,11 @@ Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
 end
 
 Then /^the system clock is just past Tails' build date$/ do
-  next if @skip_steps_while_restoring_background
-  system_time_str = @vm.execute_successfully('date').to_s
+  system_time_str = $vm.execute_successfully('date').to_s
   system_time = DateTime.parse(system_time_str).to_time
   build_time_cmd = 'sed -n -e "1s/^.* - \([0-9]\+\)$/\1/p;q" ' +
                    '/etc/amnesia/version'
-  build_time_str = @vm.execute_successfully(build_time_cmd).to_s
+  build_time_str = $vm.execute_successfully(build_time_cmd).to_s
   build_time = DateTime.parse(build_time_str).to_time
   diff = system_time - build_time  # => in seconds
   # Half an hour should be enough to boot Tails on any reasonable
@@ -72,15 +68,14 @@ end
 
 Then /^Tails' hardware clock is close to the host system's time$/ do
   host_time = Time.now
-  hwclock_time_str = @vm.execute('hwclock -r').stdout.chomp
+  hwclock_time_str = $vm.execute('hwclock -r').stdout.chomp
   hwclock_time = DateTime.parse(hwclock_time_str).to_time
   diff = (hwclock_time - host_time).abs
   assert(diff <= max_time_drift)
 end
 
 Then /^the hardware clock is still off by "([^"]+)"$/ do |timediff|
-  next if @skip_steps_while_restoring_background
-  hwclock = DateTime.parse(@vm.execute_successfully("hwclock -r").stdout.chomp).to_time
+  hwclock = DateTime.parse($vm.execute_successfully("hwclock -r").stdout.chomp).to_time
   expected_time_lower_bound = DateTime.parse(
       cmd_helper(["date", "-d", "now #{timediff}"])).to_time - max_time_drift
   expected_time_upper_bound = expected_time_lower_bound + max_time_drift

@@ -11,21 +11,12 @@ class IPAddr
   ]
 
   PrivateIPv6Ranges = [
-    IPAddr.new("fc00::/7"),   # private
+    IPAddr.new("fc00::/7")
   ]
 
   def private?
-    if self.ipv4?
-      PrivateIPv4Ranges.each do |ipr|
-        return true if ipr.include?(self)
-      end
-      return false
-    else
-      PrivateIPv6Ranges.each do |ipr|
-        return true if ipr.include?(self)
-      end
-      return false
-    end
+    private_ranges = self.ipv4? ? PrivateIPv4Ranges : PrivateIPv6Ranges
+    private_ranges.any? { |range| range.include?(self) }
   end
 
   def public?
@@ -34,18 +25,25 @@ class IPAddr
 end
 
 class FirewallLeakCheck
-  attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks
+  attr_reader :ipv4_tcp_leaks, :ipv4_nontcp_leaks, :ipv6_leaks, :nonip_leaks, :mac_leaks
 
   def initialize(pcap_file, options = {})
     options[:accepted_hosts] ||= []
     options[:ignore_lan] ||= true
     @pcap_file = pcap_file
     packets = PacketFu::PcapFile.new.file_to_array(:filename => @pcap_file)
+    mac_leaks = Set.new
     ipv4_tcp_packets = []
     ipv4_nontcp_packets = []
     ipv6_packets = []
     nonip_packets = []
     packets.each do |p|
+      if PacketFu::EthPacket.can_parse?(p)
+        packet = PacketFu::EthPacket.parse(p)
+        mac_leaks << packet.eth_saddr
+        mac_leaks << packet.eth_daddr
+      end
+
       if PacketFu::TCPPacket.can_parse?(p)
         ipv4_tcp_packets << PacketFu::TCPPacket.parse(p)
       elsif PacketFu::IPPacket.can_parse?(p)
@@ -62,6 +60,7 @@ class FirewallLeakCheck
     ipv4_tcp_hosts = filter_hosts_from_ippackets(ipv4_tcp_packets,
                                                  options[:ignore_lan])
     accepted = Set.new(options[:accepted_hosts])
+    @mac_leaks = mac_leaks
     @ipv4_tcp_leaks = ipv4_tcp_hosts.select { |host| !accepted.member?(host) }
     @ipv4_nontcp_leaks = filter_hosts_from_ippackets(ipv4_nontcp_packets,
                                                      options[:ignore_lan])
@@ -71,9 +70,7 @@ class FirewallLeakCheck
   end
 
   def save_pcap_file
-    pcap_copy = "#{@pcap_file}-#{DateTime.now}"
-    FileUtils.cp(@pcap_file, pcap_copy)
-    puts "Full network capture available at: #{pcap_copy}"
+    save_failure_artifact("Network capture", @pcap_file)
   end
 
   # Returns a list of all unique destination IP addresses found in
