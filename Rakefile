@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+require 'net/scp'
 require 'open3'
 require 'rbconfig'
 require 'uri'
@@ -247,9 +248,24 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http
                  collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
   status = run_vagrant('ssh', '-c', "#{exported_env} build-tails")
 
-  # Move build products to the current directory
-  FileUtils.mv Dir.glob("#{VAGRANT_PATH}/tails-*"),
-               File.expand_path('..', __FILE__), :force => true
+  artifacts = capture_vagrant('ssh', '-c', 'ls -1 tails-*.iso*').first.split("\n")
+  if not artifacts.empty?
+    ssh_info = capture_vagrant('ssh-config').first.split("\n") \
+               .map { |line| line.strip.split(/\s+/, 2) } .to_h
+    user = ssh_info['User']
+    hostname = ssh_info['HostName']
+    # The path in the ssh-config output is quoted, which is not what
+    # is expected outside of a shell, so let's get rid of the quotes.
+    key_file = ssh_info['IdentityFile'].gsub(/^"|"$/, '')
+    Net::SCP.start(hostname, user, :keys => [key_file]) do |scp|
+      artifacts.each do |artifact_name|
+        artifact_path = "/home/#{user}/#{artifact_name}"
+        run_vagrant('ssh', '-c', "sudo chown #{user} #{artifact_path}")
+        scp.download!(artifact_path, '.')
+        run_vagrant('ssh', '-c', "sudo rm -f #{artifact_path}")
+      end
+    end
+  end
 
   exit status
 end

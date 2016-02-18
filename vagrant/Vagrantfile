@@ -20,27 +20,28 @@ $:.unshift File.expand_path('../lib', __FILE__)
 require 'tails_build_settings'
 
 Vagrant.configure("2") do |config|
-  config.vm.box = 'tails-builder-20141201'
-  config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/tails-builder-20141201.box'
-
+  config.vm.box = 'tails-builder-20141201+libvirt'
+  config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/tails-builder-20141201+libvirt.box'
   config.vm.box_download_checksum_type = "sha256"
   config.vm.box_download_checksum =
-    'efb339f06192d5db16585abc946e50cc73cb13aad5afd39357c6a8e33aebb814'
-
+    '6684003f619d8ba9c86028e12817c9ec0a0b23aa08d84fb395c403746f9c1671'
   config.vm.provision "shell", inline: <<-EOF
     sudo http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder
   EOF
-
-  config.vm.synced_folder '../.git', '/amnesia.git'
-
-  config.vm.provider :virtualbox do |vb|
+  config.vm.synced_folder '.', '/vagrant', type: '9p', readonly: true
+  config.vm.synced_folder '../.git', '/amnesia.git', type: '9p', readonly: true
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.driver = 'kvm'
+    libvirt.connect_via_ssh = false
+    libvirt.machine_arch = 'x86_64'
+    libvirt.machine_type = 'q35'
+    libvirt.emulator_path = '/usr/bin/qemu-system-x86_64'
     if ENV['TAILS_RAM_BUILD']
-      memory = VM_MEMORY_FOR_RAM_BUILDS
+      libvirt.memory = VM_MEMORY_FOR_RAM_BUILDS
     else
-      memory = VM_MEMORY_FOR_DISK_BUILDS
+      libvirt.memory = VM_MEMORY_FOR_DISK_BUILDS
     end
-    vb.memory = memory
     cpus = ENV['TAILS_BUILD_CPUS']
-    vb.cpus = cpus unless cpus.nil?
+    libvirt.cpus = cpus unless cpus.nil?
   end
 end
