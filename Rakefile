@@ -39,7 +39,7 @@ EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TA
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
 # In-VM proxy URL
-INTERNEL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
+INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
 # Runs the vagrant command, letting stdout/stderr through, and returns
 # the command's exit status.
@@ -148,7 +148,7 @@ task :parse_build_options do
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
       ENV['http_proxy'] = EXTERNAL_HTTP_PROXY
     when 'vmproxy'
-      ENV['http_proxy'] = INTERNEL_HTTP_PROXY
+      ENV['http_proxy'] = INTERNAL_HTTP_PROXY
     when 'noproxy'
       ENV['http_proxy'] = nil
     # SquashFS compression settings
@@ -276,7 +276,7 @@ namespace :vm do
     case vm_state
     when :not_created
       # Do not use non-existant in-VM proxy to download the basebox
-      if ENV['http_proxy'] == INTERNEL_HTTP_PROXY
+      if ENV['http_proxy'] == INTERNAL_HTTP_PROXY
         ENV['http_proxy'] = nil
         restore_internal_proxy = true
       end
@@ -305,7 +305,7 @@ namespace :vm do
     end
     result = run_vagrant('up')
     abort "'vagrant up' failed" unless result
-    ENV['http_proxy'] = INTERNEL_HTTP_PROXY if restore_internal_proxy
+    ENV['http_proxy'] = INTERNAL_HTTP_PROXY if restore_internal_proxy
   end
 
   desc 'Stop the build virtual machine'
