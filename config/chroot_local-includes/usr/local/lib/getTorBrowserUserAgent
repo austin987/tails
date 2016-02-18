@@ -1,6 +1,7 @@
 #!/bin/sh
 
-set -eu
+set -e
+set -u
 
 # Import the TBB_INSTALL variable
 . /usr/local/lib/tails-shell-library/tor-browser.sh
@@ -9,7 +10,7 @@ ua="$(unzip -q -p "${TBB_INSTALL}"/browser/omni.ja \
           defaults/preferences/000-tor-browser.js | \
           sed -n 's@^pref("general\.useragent\.override", "\(.*\)");$@\1@p')"
 
-if [ -z "${ua}" ]; then
+if [ -z "${ua:-}" ]; then
     echo "Got empty user agent string" >&2
     exit 1
 fi
