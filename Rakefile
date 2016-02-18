@@ -23,8 +23,7 @@ require 'open3'
 require 'rbconfig'
 require 'uri'
 
-$:.unshift File.expand_path('../vagrant/lib', __FILE__)
-require 'tails_build_settings'
+require_relative 'vagrant/lib/tails_build_settings'
 
 # Path to the directory which holds our Vagrantfile
 VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
