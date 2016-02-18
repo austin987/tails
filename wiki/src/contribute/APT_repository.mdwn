@@ -204,26 +204,26 @@ operation must be done on the APT suites.
 
    1. Set some environment variables:
 
-        # the branch you want to merge
-        SRC=stable
-        # the branch you want to merge _into_
-        DST=devel
+            # the branch you want to merge
+            SRC=stable
+            # the branch you want to merge _into_
+            DST=devel
 
    2. Merge in Git and APT:
 
-        git checkout "$DST" && \
-        git merge "$SRC" && \
-        ssh reprepro@incoming.deb.tails.boum.org \
-             tails-merge-suite "$SRC" "$DST"
+            git checkout "$DST" && \
+            git merge "$SRC" && \
+            ssh reprepro@incoming.deb.tails.boum.org \
+                 tails-merge-suite "$SRC" "$DST"
 
    3. Restore the `config/base_branch` if needed:
 
-        echo "${DST}" > config/base_branch && \
-        git commit config/base_branch -m "Restore ${DST}'s base branch." || :
+            echo "${DST}" > config/base_branch && \
+            git commit config/base_branch -m "Restore ${DST}'s base branch." || :
 
    4. Push:
 
-        git push origin "${DST}:${DST}"
+            git push origin "${DST}:${DST}"
 
 4. Make sure not to re-add, into the branch we merge into, any package
    that was removed from it, but still is in the branch we merge from:
