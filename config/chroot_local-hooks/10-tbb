@@ -4,12 +4,13 @@ set -eu
 
 echo "Install the Tor Browser"
 
-# Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, which
-# contains the paths we will split TBB's actual browser (binaries
-# etc), user data and extension into. While this differs from how the
-# TBB organizes the files, the end result will be the same, and it's
-# practical since when creating a new browser profile we can simply
-# copy the profile directory without duplicating all extensions.
+# Import the TBB_INSTALL, TBB_PROFILE, TBB_EXT and
+# TOR_LAUNCHER_INSTALL variables, which contains the paths we will
+# split TBB's actual browser (binaries etc), user data and extension
+# into. While this differs from how the TBB organizes the files, the
+# end result will be the same, and it's practical since when creating
+# a new browser profile we can simply copy the profile directory
+# without duplicating all extensions.
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 download_and_verify_files() {
@@ -70,11 +71,11 @@ install_tor_browser() {
     # profile but we want to keep it as a standalone application
     # when Tails is started in "bridge mode".
     torlauncher_xpi_path="${prep}/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
-    7z x -o'/usr/share/tor-launcher-standalone' "${torlauncher_xpi_path}"
+    7z x -o"${TOR_LAUNCHER_INSTALL}" "${torlauncher_xpi_path}"
     torlauncher_version="$(sed -n \
         's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p' \
-        '/usr/share/tor-launcher-standalone/install.rdf')"
-    cat > '/usr/share/tor-launcher-standalone/application.ini' << EOF
+        "${TOR_LAUNCHER_INSTALL}/install.rdf")"
+    cat > "${TOR_LAUNCHER_INSTALL}/application.ini" << EOF
 [App]
 Vendor=TorProject
 Name=TorLauncher
@@ -89,7 +90,7 @@ MaxVersion=*.*.*
 [Shell]
 Icon=icon.png
 EOF
-    chmod -R a+rX '/usr/share/tor-launcher-standalone'
+    chmod -R a+rX "${TOR_LAUNCHER_INSTALL}"
     rm "${torlauncher_xpi_path}"
 
     # The Tor Browser will fail, complaining about an incomplete profile,

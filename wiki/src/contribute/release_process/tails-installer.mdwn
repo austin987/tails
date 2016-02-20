@@ -63,6 +63,11 @@ targeted at current Tails, as said above. More specifically:
 * The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
   to use as its "upstream" branch. Make sure to check them out when setting up the repository
   for the first time.
+* For Ubuntu, we want to support the current Ubuntu version (currently `wily`), the
+  upcoming version, currently (`xenial`) and the current LTS, from 16.04 on (currently
+  `xenial`).
+  We do not maintain any Git branches related to Ubuntu releases, as simply the changelog
+  entries are modified.
 
 Topic branches
 --------------
@@ -224,3 +229,63 @@ Example for a backport to Jessie:
 * build, test and upload to jessie-backports
 * have gbp create a `debian/4.3+dfsg-1_bpo8+1` tag
 * push the Debian packaging branch (`debian/jessie-backports`) and the new tag
+
+Upload a package to our Ubuntu PPA
+----------------------------------
+
+Team members are allowed to upload a package to our Ubuntu PPA:
+<https://launchpad.net/~tails-team/+archive/ubuntu/tails-installer>
+
+You'll need to configure the dput tool to upload to the PPA and put into
+`$HOME/.dput.cf` (adjust to use your Launchpad ID):
+
+    [ppa-tails-installer]
+    fqdn = ppa.launchpad.net
+    method = sftp
+    incoming = ~tails-team/ubuntu/tails-installer/
+    login = your_launchpad_id
+    allow_unsigned_uploads = 0
+
+* checkout the `debian/sid` branch
+  to build a package for the next Ubuntu release or checkout the
+  `debian/jessie-backports` branch to build a package for the
+  current Ubuntu version or current LTS.
+* bump version to `4.3+dfsg-0ubuntu1~$codename` using `dch -i`
+  where `$codename` is the name of the target Ubuntu distribution.
+* if it does not exist, rebuild the .orig.tar.gz of the latest version
+  from pristine-tar (use the latest git log entry to find the version):
+  `pristine-tar checkout ../tails-installer_4.4.6+dfsg.orig.tar.gz`
+* build a source only package using `debuild -i -uc -us -sa -S`
+  Once the package has been built, a `.changes` file will be created in
+  pbuilder's configured destination directory.
+* test the package (piuparts, Lintian, etc.)
+* sign the corresponding source.changes file
+  `debsign ../tails-installer_$NEW_UPSTREAM_RELEASE-xxx_source.changes`
+  Replace "xxx" with the correct version information.
+  The signature should be made with a key which is registered
+  at Launchpad as being part of the Tails team.
+* Upload to the PPA:
+  `dput ppa-tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+xxx_source.changes`
+
+You will receive an email informing you if the upload was really successful
+or if it contained any errors. On success, you should now revert your changes on the
+Debian branch using `git reset HEAD --hard`.
+
+Quality assurance for Debian and Ubuntu packages
+------------------------------------------------
+
+    Scenario: Installing Tails to a pristine USB drive
+      Given I have started Debian
+      And I have a Tails ISO image
+      When I install the tails-installer package
+      And I plug USB drive "install"
+      And I ask Tails Installer to install my Tails ISO image to USB drive "install"
+      Then my Tails ISO image is installed on USB drive "install"
+
+    Scenario: Upgrading an old Tails USB installation from an ISO image
+      Given I have started Debian
+      And I have a Tails ISO image
+      When I install the tails-installer package
+      And I plug USB drive "upgrade" that has an old Tails installed
+      And I ask Tails installer to upgrade USB drive "upgrade" with my Tails ISO image
+      Then my Tails ISO image is installed on USB drive "upgrade"

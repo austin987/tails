@@ -1,3 +1,130 @@
+[[!toc levels=1]]
+
+# Linux dependencies
+
+The current Tails Installer version (<https://git-tails.immerda.ch/liveusb-creator/>)
+has considerable changes when compared with the upstream Fedora liveusb-creator
+(<https://git.fedorahosted.org/cgit/liveusb-creator.git>).
+
+The current package dependencies for the Tails Installer in Linux are:
+
+* dosfstools
+* gdisk
+* genisoimage
+* gir1.2-glib-2.0
+* gir1.2-gtk-3.0
+* gir1.2-udisks-2.0
+* mtools
+* p7zip-full
+* policykit-1
+* python-configobj
+* python-gi
+* python-urlgrabber
+* syslinux
+
+If we list the set of requirements for each important source file then we have:
+
+### \_\_init\_\_.py
+
+    import gettext
+
+    if sys.platform == 'win32':
+        import gettext_windows
+        gettext_windows.setup_env()
+
+### creator.py
+
+    if 'linux' in sys.platform:
+        import gi
+        gi.require_version('UDisks', '2.0')
+        from gi.repository import UDisks, GLib
+
+    Commands:
+    * syslinux
+    * sgdisk
+    * dd
+    * dosfslabel
+    * e2label
+    * extlinux
+    * pkexec
+    * mkdiskimage
+    * sync
+
+### gui.py
+
+    from gi.repository import Gdk, GLib, Gtk
+    urlgrabber
+
+    In general GTK3
+
+### launcher.py
+
+    from gi.repository import Gtk
+
+### utils.py
+
+    if 'linux' in sys.platform:
+        from gi.repository import GLib
+
+# Alternatives for Windows:
+
+The Windows specific code for the Tails Installer uses mostly
+the Python win32 interfaces:
+
+    import win32file, win32api, pywintypes
+
+and a set of third parties tools listed here:
+
+<https://git-tails.immerda.ch/liveusb-creator/tree/tools>
+
+There are other tools that would be possible to explore like:
+<https://labs.riseup.net/code/issues/10984>
+
+As a conclusion, the biggest difference in the current Tails version is the usage
+of the Python interface for GTK3 (PyGI). The tools/libraries for Windows used in
+the current upstream liveusb-creator version seem in principle like the same
+used for Tails right now, except for the GUI parts.
+
+# Analysis regarding operations on storage devices
+
+According to <https://tails.boum.org/contribute/design/installation/>,
+the steps to create a Tails bootable device are:
+
+1. Partition the device as a GPT partition.
+2. Create a FAT32 (VFAT) partition with the Tails files and Tails label.
+3. (Optionally) Create a persistence partition with LUKS.
+
+When we analyze the current Tails Installer code related to the former
+steps:
+
+## GPT partition.
+
+### creator.py
+    def partition_device():
+
+    The Linux code uses UDISK instead of plain sgdisk, because the first allows unprivileged users
+    to get a refreshed partition table from the kernel. The Windows code doesn't implement
+    this, but the usage of sgdisks is suggested <http://www.rodsbooks.com/gdisk/>.
+
+## FAT32 (VFAT) partition:
+
+###  creator.py
+
+    def format_device(self):
+
+    The Linux code uses UDISK as well. For Windows the "format" command is used,
+    but it looks outdated:
+
+    def format_device(self):
+        """ Format the selected partition as FAT32 """
+        self.log.info('Formatting %s as FAT32' % self.drive['device'])
+        self.popen('format /Q /X /y /V:Fedora /FS:FAT32 %s' % self.drive['device'])
+
+## Persistent partition:
+
+This is managed by the persistence-setup <https://git-tails.immerda.ch/persistence-setup>
+so it is beyond the scope of the current research.
+
 # PyGI windows executable
 
 I managed to create a native windows executable for a test Python/GI program under Windows 8.1

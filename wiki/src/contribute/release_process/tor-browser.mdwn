@@ -91,6 +91,22 @@ the corresponding tarballs ourselves, so read on the next section.
 </p>
 </div>
 
+Sync with the start-tor-browser script
+======================================
+
+Adapt our `config/chroot_local-includes/usr/local/bin/tor-browser`
+and/or
+`config/chroot_local-includes/usr/local/lib/tails-shell-library/tor-browser.sh`
+for recent changes in `RelativeLink/start-tor-browser` in the
+[Tor Browser Bundle Git repo](https://git.torproject.org/builders/tor-browser-bundle.git). Look
+in the Git history:
+
+    git log -p RelativeLink/start-tor-browser
+
+and take note of changes to environment variables (or newly added
+ones) and the commandline options passed to the `firefox` executable,
+etc.
+
 Self-hosted Tor Browser tarballs archive
 ========================================
 
@@ -159,10 +175,10 @@ Import a new set of Tor Browser tarballs
 Commit and push your changes
 ----------------------------
 
-        cd "$TORBROWSER_ARCHIVE" && \
+	cd "$TORBROWSER_ARCHIVE" && \
 	git commit -m "Add Tor Browser ${VERSION}." && \
 	git annex sync && \
-	git annex copy --to origin
+	git annex copy --to origin -- "${VERSION}"
 
 Adjust the URL in the main Git repository
 -----------------------------------------

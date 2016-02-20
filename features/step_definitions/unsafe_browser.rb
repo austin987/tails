@@ -166,29 +166,20 @@ Then /^the Unsafe Browser complains that no DNS server is configured$/ do
 end
 
 Then /^I configure the Unsafe Browser to check for updates more frequently$/ do
-  prefs = '/usr/share/tails/unsafe-browser/prefs.js'
+  prefs = '/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js'
   $vm.file_append(prefs, 'pref("app.update.idletime", 1);')
   $vm.file_append(prefs, 'pref("app.update.promptWaitTime", 1);')
   $vm.file_append(prefs, 'pref("app.update.interval", 5);')
 end
 
 But /^checking for updates is disabled in the Unsafe Browser's configuration$/ do
-  prefs = '/usr/share/tails/unsafe-browser/prefs.js'
+  prefs = '/usr/share/tails/chroot-browsers/common/prefs.js'
   assert($vm.file_content(prefs).include?('pref("app.update.enabled", false)'))
 end
 
 Then /^the clearnet user has (|not )sent packets out to the Internet$/ do |sent|
-  pkts = 0
   uid = $vm.execute_successfully("id -u clearnet").stdout.chomp.to_i
-  ip4tables_chains do |name, _, rules|
-    next unless name == "OUTPUT"
-    rules.each do |rule|
-      if rule.elements["conditions/owner/uid-owner[text()=#{uid}]"]
-        pkts += rule.attribute('packet-count').to_s.to_i
-      end
-    end
-  end
-
+  pkts = ip4tables_packet_counter_sum(:tables => ['OUTPUT'], :uid => uid)
   case sent
   when ''
     assert(pkts > 0, "Packets have not gone out to the internet.")

@@ -1,9 +1,9 @@
 Given /^I2P is (?:still )?(not )?running$/ do |notrunning|
   if notrunning
-    !$vm.execute('service i2p status').success?
+    !$vm.execute('systemctl --quiet is-active i2p').success?
   else
-    try_for(30) do
-      $vm.execute('service i2p status').success?
+    try_for(60) do
+      $vm.execute('systemctl --quiet is-active i2p').success?
     end
   end
 end
@@ -61,12 +61,19 @@ end
 Then /^the I2P homepage loads in I2P Browser$/ do
   recovery_on_failure = Proc.new do
     $vm.focus_window('I2P Browser')
-    @screen.type(Sikuli::Key.ESC)
-    @screen.click('BrowserReloadButton.png')
+    begin
+      @screen.click('BrowserReloadButton.png')
+    rescue FindFailed
+      @screen.type(Sikuli::Key.ESC)
+      @screen.click('BrowserReloadButton.png')
+    end
   end
   retry_i2p(recovery_on_failure) do
     $vm.focus_window('I2P Browser')
-    @screen.wait('I2PBrowserProjectHomepage.png', 80)
+    visible, _ = @screen.waitAny(['I2PBrowserProjectHomepage.png', 'BrowserReloadButton.png'], 120)
+    unless visible == 'I2PBrowserProjectHomepage.png'
+      raise "Did not find 'I2PBrowserProjectHomepage.png'"
+    end
   end
 end
 
@@ -74,10 +81,8 @@ Then /^I see a notification that I2P failed to start$/ do
   robust_notification_wait('I2PFailedToStart.png', 2 * 60)
 end
 
-Then /^I2P successfully built a tunnel$/ do
-  try_for(7 * 60) do
-    $vm.execute('i2p_built_a_tunnel', :libs => 'i2p').success?
-  end
+Then /^I see shared client tunnels in the I2P router console$/ do
+  @screen.wait('I2PSharedClientTunnels.png', 15 * 60)
 end
 
 Then /^I see a notification that I2P is not ready$/ do
