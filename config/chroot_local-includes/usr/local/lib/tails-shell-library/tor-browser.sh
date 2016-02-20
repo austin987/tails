@@ -48,7 +48,7 @@ guess_best_tor_browser_locale() {
     similar_locale="$(ls -1 "${TBB_EXT}" | \
         sed -n "s,^langpack-\(${short_locale}-[A-Z]\+\)@firefox.mozilla.org.xpi$,\1,p" | \
         head -n 1)" || :
-    if [ -n "${similar_locale}" ]; then
+    if [ -n "${similar_locale:-}" ]; then
         echo "${similar_locale}"
         return
     fi
