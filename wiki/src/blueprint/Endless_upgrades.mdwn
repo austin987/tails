@@ -77,6 +77,15 @@ initramfs on next boot, we only need 2 times the size of an
 installation in total, and can safely download the ISO to the scratch
 partition while keeping the system partition read-only.
 
+Ideally, let's also save the files used to authenticate the upgrade on
+the scratch partition, and make check the authenticity during
+initramfs, before starting the upgrade.
+
+Also, with the scratch partition we will never have to mount it
+read-write outside of initramfs, it can be made read-only in a
+slightly stronger sense on the block dev level. This is not really a
+security feature, but more a foolproof things, but why not?
+
 # Auxilliary ideas
 
 ## Read-write system partition while the network is enabled
