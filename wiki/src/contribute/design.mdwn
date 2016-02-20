@@ -712,7 +712,6 @@ extension).
   that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
   TCP. Our intention is to always use the latest stable version.
-- Vidalia is used to control Tor's behavior.
 
 Being based in Debian, Tails benefits from its great package
 management tools, facilitating its build and the inclusion of new
@@ -834,15 +833,15 @@ Only connections from localhost are accepted. It can be argued
 that running a Tor server (onion router) would increase one's
 anonymity for a number for reasons but we still feel that most users
 probably would not want this due to the added consumption of
-bandwidth. The user can nevertheless easily choose to turn his or her
-Tor client into a relay, thanks to the Vidalia graphical user
-interface.
+bandwidth.
 
 If a compromised software had access to the Tor control port,
 an attacker who controls it could simply ask Tor the public
 IP through the `GETINFO address` command.
 To prevent this, access to the Tor control port is only
-granted to the vidalia user, who is running Vidalia.
+granted to the `root` and `tor-launcher` users, as well as to the
+members of the `debian-tor` group, such as the `tor-monitor` user
+(that is used to run Onion Circuits).
 A filtering proxy to the control port exists, so
 Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
 
@@ -853,11 +852,18 @@ providers recommend and even enforce StartTLS on these ports, the effect
 of these warnings were most of the time counterproductive as people had
 to click through needlessly scary security warnings.
 
-- [[!tails_gitweb config/chroot_local-hooks/06-adduser_vidalia]]
+- [[!tails_gitweb config/chroot_local-hooks/06-adduser_tor-monitor]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tor-controlport-filter.service]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/restart-vidalia]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tor-controlport-filter]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+
+[[!tails_gitweb_repo onioncircuits desc="Onion Circuits"]] allows the
+user to view the state of their Tor circuits and streams. The Tor
+Status extension provides a permanent visual indication of whether Tor
+has bootstrapped already.
+
+- [[!tails_gitweb_dir config/chroot_local-includes/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tormonitor]]
 
 <a id="dns"></a>
 
