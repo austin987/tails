@@ -120,6 +120,10 @@ export MKSQUASHFS_OPTIONS
 # refresh translations of our programs
 ./refresh-translations || fatal "refresh-translations failed ($?)."
 
+# Make the python library available in Tails
+install -d -m 2777 config/chroot_local-includes/tmp/
+cp -r submodules/pythonlib config/chroot_local-includes/tmp/
+
 case "$LB_BINARY_IMAGES" in
    iso)
       BUILD_FILENAME_EXT=iso
