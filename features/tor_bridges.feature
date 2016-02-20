@@ -1,4 +1,4 @@
-@product @fragile
+@product
 Feature: Using Tails with Tor pluggable transports
   As a Tails user
   I want to circumvent censorship of Tor by using Tor pluggable transports
