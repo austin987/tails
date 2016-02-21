@@ -69,6 +69,23 @@ real device, which we still probably will need information about.
 Some more details (some perhaps wrong) can be read in comment 16 on
 [[!tails_ticket 7496]].
 
+## Apply upgrade in initramfs
+
+By storing the ISO (or disk image) that the upgrade is gonna be
+extracted from on a scratch partition, and then apply the upgrade in
+initramfs on next boot, we only need 2 times the size of an
+installation in total, and can safely download the ISO to the scratch
+partition while keeping the system partition read-only.
+
+Ideally, let's also save the files used to authenticate the upgrade on
+the scratch partition, and make check the authenticity during
+initramfs, before starting the upgrade.
+
+Also, with the scratch partition we will never have to mount it
+read-write outside of initramfs, it can be made read-only in a
+slightly stronger sense on the block dev level. This is not really a
+security feature, but more a foolproof things, but why not?
+
 # Auxilliary ideas
 
 ## Read-write system partition while the network is enabled
@@ -93,6 +110,15 @@ actually brings us any security. After all, if the system is
 compromised while downloading the upgrade, it will still be
 compromised when the download is finished and the system partition is
 remounted read-write, and it can infect that part then.
+
+Chrome OS keeps the running system partition read-only, has _two_
+system partitions, and the update is applied to the non-running one.
+This has nice additional properties like allowing one to rollback if
+the upgraded system doesn't start properly. More information about
+their design and implementation:
+
+* [disk format](https://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format)
+* [file system and autoupdate system](https://www.chromium.org/chromium-os/chromiumos-design-docs/filesystem-autoupdate)
 
 ## What about IUKs?
 
@@ -121,3 +147,8 @@ known-good .iso to compare with.
 The ISOBoot case is the simplest, probably, as the other methods would
 require signed manifests of files with the expected hashes (or
 similar), which of course is not such a big deal to provide.
+
+The ISOBoot case would still require a manifest of files we extract
+from the ISO (bootloader code and configuration), but indeed that
+manifest could be in the ISO itself, and thus its authenticity and
+integrity would be signed/verified at the same time as the ISO.
