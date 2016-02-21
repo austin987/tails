@@ -23,12 +23,6 @@ echo 'Welcome to your Vagrant-built virtual machine.' > /var/run/motd
 # Removing leftover DHCP leases
 rm /var/lib/dhcp/*.leases
 
-# Deactivate name persistence for network interfaces
-dpkg-divert --divert /lib/udev/write_net_rules \
-            --rename /lib/udev/write_net_rules.udev
-cp /bin/true /lib/udev/write_net_rules
-rm -f /etc/udev/rules.d/70-persistent-net.rules
-
 # Adding a 2 sec delay to the interface up, to make the dhclient happy
 echo "pre-up sleep 5" >> /etc/network/interfaces
 
