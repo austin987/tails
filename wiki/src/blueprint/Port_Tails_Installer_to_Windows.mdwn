@@ -68,17 +68,12 @@ If we list the set of requirements for each important source file then we have:
 
 # Alternatives for Windows:
 
-If we make a diff of the Windows class section in the "creator.py" source file,
-comparing the current Tails version and the upstream version like this:
-
-    git difftool remotes/origin/master:tails_installer/creator.py remotes/b/master:liveusb/creator.py
-
-we can see that the changes are not so big, at least in the raw Windows tools used.
-These tools are basically, the Python win32 interfaces:
+The Windows specific code for the Tails Installer uses mostly
+the Python win32 interfaces:
 
     import win32file, win32api, pywintypes
 
-and set of third parties tools listed here:
+and a set of third parties tools listed here:
 
 <https://git-tails.immerda.ch/liveusb-creator/tree/tools>
 
@@ -89,8 +84,46 @@ As a conclusion, the biggest difference in the current Tails version is the usag
 of the Python interface for GTK3 (PyGI). The tools/libraries for Windows used in
 the current upstream liveusb-creator version seem in principle like the same
 used for Tails right now, except for the GUI parts.
-In the next section a proposed solution for porting applications using this library
-for Windows is described.
+
+# Analysis regarding operations on storage devices
+
+According to <https://tails.boum.org/contribute/design/installation/>,
+the steps to create a Tails bootable device are:
+
+1. Partition the device as a GPT partition.
+2. Create a FAT32 (VFAT) partition with the Tails files and Tails label.
+3. (Optionally) Create a persistence partition with LUKS.
+
+When we analyze the current Tails Installer code related to the former
+steps:
+
+## GPT partition.
+
+### creator.py
+    def partition_device():
+
+    The Linux code uses UDISK instead of plain sgdisk, because the first allows unprivileged users
+    to get a refreshed partition table from the kernel. The Windows code doesn't implement
+    this, but the usage of sgdisks is suggested <http://www.rodsbooks.com/gdisk/>.
+
+## FAT32 (VFAT) partition:
+
+###  creator.py
+
+    def format_device(self):
+
+    The Linux code uses UDISK as well. For Windows the "format" command is used,
+    but it looks outdated:
+
+    def format_device(self):
+        """ Format the selected partition as FAT32 """
+        self.log.info('Formatting %s as FAT32' % self.drive['device'])
+        self.popen('format /Q /X /y /V:Fedora /FS:FAT32 %s' % self.drive['device'])
+
+## Persistent partition:
+
+This is managed by the persistence-setup <https://git-tails.immerda.ch/persistence-setup>
+so it is beyond the scope of the current research.
 
 # PyGI windows executable
 
