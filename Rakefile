@@ -44,7 +44,9 @@ INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 # the command's exit status.
 def run_vagrant(*args)
   Process.wait Kernel.spawn('vagrant', *args, :chdir => './vagrant')
-  $?.exitstatus
+  if $?.exitstatus != 0
+    abort "'vagrant #{*args}' command failed: #{$?.exitstatus}"
+  end
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
