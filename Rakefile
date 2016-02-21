@@ -203,6 +203,11 @@ task :ensure_clean_repository do
   end
 end
 
+desc "Make sure the vagrant user's home directory has no undesired artifacts"
+task :ensure_clean_home_directory => ['vm:up'] do
+  run_vagrant('ssh', '-c', "sudo rm '/home/#{user}/'*.iso.*")
+end
+
 task :validate_http_proxy do
   if ENV['http_proxy']
     proxy_host = URI.parse(ENV['http_proxy']).host
@@ -224,7 +229,7 @@ task :validate_http_proxy do
 end
 
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
 
   if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
     $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
