@@ -304,26 +304,22 @@ namespace :vm do
 
       END_OF_MESSAGE
     end
-    result = run_vagrant('up')
-    abort "'vagrant up' failed" unless result
+    run_vagrant('up')
     ENV['http_proxy'] = INTERNAL_HTTP_PROXY if restore_internal_proxy
   end
 
   desc 'Stop the build virtual machine'
   task :halt do
-    result = run_vagrant('halt')
-    abort "'vagrant halt' failed" unless result
+    run_vagrant('halt')
   end
 
   desc 'Re-run virtual machine setup'
   task :provision => ['parse_build_options', 'validate_http_proxy'] do
-    result = run_vagrant('provision')
-    abort "'vagrant provision' failed" unless result
+    run_vagrant('provision')
   end
 
   desc 'Destroy build virtual machine (clean up all files)'
   task :destroy do
-    result = run_vagrant('destroy', '--force')
-    abort "'vagrant destroy' failed" unless result
+    run_vagrant('destroy', '--force')
   end
 end
