@@ -50,9 +50,14 @@ def run_vagrant(*args)
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
-# returns [stdout, stderr, Process::Status].
+# returns [stdout, stderr].
 def capture_vagrant(*args)
-  Open3.capture3('vagrant', *args, :chdir => './vagrant')
+  stdout, stderr, proc_status =
+    Open3.capture3('vagrant', *args, :chdir => './vagrant')
+  if proc_status.exitstatus != 0
+    abort "'vagrant #{*args}' command failed: #{proc_status.exitstatus}"
+  end
+  return stdout, stderr
 end
 
 def current_vm_cpus
@@ -60,7 +65,7 @@ def current_vm_cpus
 end
 
 def vm_state
-  out, _, status = capture_vagrant('status')
+  out, _ = capture_vagrant('status')
   status_line = out.split("\n")[2]
   if    status_line['not created']
     return :not_created
