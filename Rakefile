@@ -261,9 +261,9 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http
     Net::SCP.start(hostname, user, :keys => [key_file]) do |scp|
       artifacts.each do |artifact_name|
         artifact_path = "/home/#{user}/#{artifact_name}"
-        run_vagrant('ssh', '-c', "sudo chown #{user} #{artifact_path}")
+        run_vagrant('ssh', '-c', "sudo chown '#{user}' '#{artifact_path}'")
         scp.download!(artifact_path, '.')
-        run_vagrant('ssh', '-c', "sudo rm -f #{artifact_path}")
+        run_vagrant('ssh', '-c', "sudo rm -f '#{artifact_path}'")
       end
     end
   end
