@@ -45,7 +45,7 @@ INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 def run_vagrant(*args)
   Process.wait Kernel.spawn('vagrant', *args, :chdir => './vagrant')
   if $?.exitstatus != 0
-    abort "'vagrant #{*args}' command failed: #{$?.exitstatus}"
+    abort "'vagrant #{args}' command failed: #{$?.exitstatus}"
   end
 end
 
@@ -55,7 +55,7 @@ def capture_vagrant(*args)
   stdout, stderr, proc_status =
     Open3.capture3('vagrant', *args, :chdir => './vagrant')
   if proc_status.exitstatus != 0
-    abort "'vagrant #{*args}' command failed: #{proc_status.exitstatus}"
+    abort "'vagrant #{args}' command failed: #{proc_status.exitstatus}"
   end
   return stdout, stderr
 end
