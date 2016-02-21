@@ -33,6 +33,10 @@ EOF
 http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
 gpg --export C7988EA7A358D82E | sudo apt-key add -
 
+# We need a newer version of debootstrap for saving the list of
+# packages used when building Tails (#6297).
+echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
+
 apt-get update
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 
@@ -50,6 +54,7 @@ apt-get -y dist-upgrade
 
 # Those are needed to build Tails
 apt-get -y install \
+	debootstrap/jessie-backports \
 	live-build \
 	syslinux-utils \
 	eatmydata \
