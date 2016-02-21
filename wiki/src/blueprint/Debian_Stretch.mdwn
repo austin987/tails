@@ -16,12 +16,12 @@ had to workaround lots of problems on our side.
 So we started much earlier the porting work to Jessie, which indeed
 essentially avoided the aforementioned problem. But we didn't allocate
 enough focused resources to this effort, and as a result the total
-duration of the porting to Jessie work is lasting too much, and we're
-spending too much time just keeping our feature/jessie branch
-up-to-date wrt. the changes we were making in our Wheezy
-production branches.
+duration of the porting to Jessie work has lasted too much (July 2014
+to January 2016, included = 19 months), and we've spent too much time
+just keeping our feature/jessie branch up-to-date wrt. the changes we
+were making in our Wheezy production branches.
 
-For Stretch we'd like to avoid both problems. We want to start early,
+For Stretch we would like to avoid both problems. We want to start early,
 in order to fix problems directly in Debian Stretch before it's
 released. And, we want the porting work to fit into a shorter time
 span, so as soon as we start we'll allocate more resources to it, and
@@ -33,16 +33,17 @@ evaluate the idea of basing Tails on snapshots of Debian testing.
 # Schedule
 
 * 2016Q1 — Tails 2.0 is out
-* April or May 2016 — start working on Tails 3.0 (1 week sprint with
+* August 2016 — start working on Tails 3.0 (1 week sprint with
   all involved people) :intrigeri:anonym:kytv:
   - get feature/stretch to build and boot
   - update the automated test suite to test Tails/Stretch ISO images
-* May 2016 to April 2017 — have one dedicated half-time, 1-week sprint
+* August 2016 to April 2017 — have one dedicated half-time, 1-week sprint
   every 6 weeks.
   - Schedule these sprints in advance, announce them
     publicly, and invite other contributors (e.g. doc writers).
   - Most of these sprints will probably be attended remotely, but at
-    least some could happen face-to-face.
+    least some could happen face-to-face (at least the first sprint;
+    and then, one out of two, i.e. every one every 3 months?).
   - At the beginning of each Stretch sprint, we import a new snapshot
     of Debian testing into our freezable APT repository, so that:
     * during the sprint we update our stuff as required by changes
@@ -57,20 +58,92 @@ evaluate the idea of basing Tails on snapshots of Debian testing.
 
 # Let's go rolling
 
+## Stretch cycle
+
 Let's use this porting cycle to evaluate how being based on snapshots
 of Debian testing would feel like. During the entire cycle:
 
 * Keep the automated test suite up-to-date on feature/stretch :kytv:
-* Keep the documentation up-to-date on feature/stretch :doc_writer:
+  - Whenever the porting work feels painful, e.g. because it requires
+    updating images, consider fixing the problem at its root in our
+    current devel branch, e.g. thanks to dogtail
+    ([[!tails_ticket 10721]]).
+
+* Keep the documentation up-to-date on feature/stretch (:doc_writer:),
+  or if it is too ambitious:
+  - start doing it for real only once Stretch is frozen
+  - before Stretch is frozen, during each Stretch sprint, test the
+    documentation in order to:
+    * find and report bugs while it is still time to fix them in the
+      right place
+    * identify what would have required work if we wanted to keep the
+      documentation up-to-date on feature/stretch, and take notes
+      about it; the goal is here is to gather useful data regarding
+      the need to update the same piece of documentation multiple
+      times over a given Debian release cycle, which will help us make
+      a decision further down the road; it also might help us pinpoint
+      specific parts of our documentation that could be updated to
+      depend less on varying factors, if any
+
 * Take notes of issues we see from the perspective of "how would it go
   if we were based on testing already?". E.g.:
-  - How to deal with ongoing transitions that block migration of
-    security updates from sid to testing?
+  - How to keep track of security issues that affect us, and whether
+    their fix has been uploaded and has migrated to testing yet?
+    See e.g. how security support for Debian testing [used to be
+    (briefly) done](http://secure-testing-master.debian.net/), and in
+    particular the
+    [Vulnerable source packages in the testing suite](https://security-tracker.debian.org/tracker/status/release/testing)
+    and the
+    [Candidates for DTSAs](https://security-tracker.debian.org/tracker/status/dtsa-candidates).
+  - How to deal with
+    [[!debwiki OngoingTransitions desc="ongoing transitions"]] that
+    block migration of security updates from sid to testing?
 
 Note that during half of the cycle, we'll be based on a frozen Debian
-testing, so the changes rate coming from Debian won't be crazy.
-Of course there will be changes coming from our own porting efforts.
+testing, so the changes rate coming from Debian, that impact the
+documentation and test suite work, won't be crazy. Of course there
+will be changes coming from our own porting efforts.
+
+Also, note that the work we will be doing after Stretch is frozen is
+work we would have to do to port Tails to Stretch anyway: so the only
+part of this that is somewhat experimental, and might make us do extra
+work, is limited to 4 months (August to November 2016).
+
+## And after?
 
 And then, once Tails 3.0 is out: we're not lagging behind anymore, and
 are thus in a position to decide whether we want to base Tails on
-snapshots of Debian testing.
+snapshots of Debian testing. Chances are that we won't want to be
+based on Debian testing during the 6 months that follow a Debian
+stable release, so we will have time to make up our mind, and to
+prepare the infrastructure and tooling we may need if we decide to
+be based on Debian testing.
+
+To sum up how a ~2 years Debian release cycle could look like from our
+perspective, if we were based on snapshots of Debian testing:
+
+1. a new Debian stable is released
+2. 6 months during which Tails is based on Debian stable that was just
+   released
+3. 12 months during which Tails is based on a non-frozen Debian
+   testing
+4. 6 months during which Tails is based on a frozen Debian testing
+
+Let's now analyze and discuss some consequences of this scenario.
+
+We would be based on a moving target half of the time; the remaining
+half of the time we are based on something that doesn't change much.
+
+We would need to track 2 Debian versions at the same time (and
+continuously forward-port development that was based on the oldest
+one) during the first phase only, that is 6 months, compared to the 19
+months during which we did that in the Jessie cycle. We would save
+lots of time there, that could be re-invested in aspects of this
+proposal that will require more time: essentially this idea is about
+doing a different kind of work, and doing it at different places; it
+won't necessarily lower the total amount of effort we have to do, but
+it likely will make such efforts generate less frustration, more
+happiness, and a warm feeling of being part of a broader community.
+
+Another aspect is that we would essentially stop having to produce and
+maintain backports of Debian packages.

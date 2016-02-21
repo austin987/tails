@@ -194,10 +194,10 @@ less fingerprintable.
   persisted, and possibly proposing to enable this setting for them).
 * Persist the Tor `state` file only (not the consensus etc.)
 * Name of the persistent Tor state file to be used:
-  `hash(per-Tails device secret, N bits of location-based information, SSID)`.
-  By adding the SSID, we prevent attackers from being able to spoof only
+  `hash(per-Tails device secret, N bits of location-based information, ESSID)`.
+  By adding the ESSID, we prevent attackers from being able to spoof only
   the MAC address of the router to reuse a given Tor state; they also
-  have to spoof the SSID which is visible to the user and might be
+  have to spoof the ESSID which is visible to the user and might be
   detected as malicious.
   **FIXME**: shall we truncate the resulting hash? so that there are
   collisions and the total number of different state file names is
@@ -213,13 +213,13 @@ less fingerprintable.
     same Tails device, with more certainty than when deducing that
     from the mere fact that they are re-using the same Entry Guard in
     the place?
-  **FIXME** do we want to use a HMAC instead?
-  **FIXME** Patrick Schleizer wrote "I find it unlikely, that users
-  might judge an often changing SSID malicious.
-  FreeWifi832458252823523 vs FreeWifi358235892435. How many users are
-  going to remember that? I would guess, they would just click through
-  whatever hoops required to make the WiFi connect again."; what do we
-  think about it?
+  - **FIXME** do we want to use a HMAC instead?
+  - **FIXME** Patrick Schleizer wrote "I find it unlikely, that users
+    might judge an often changing SSID malicious.
+    FreeWifi832458252823523 vs FreeWifi358235892435. How many users are
+    going to remember that? I would guess, they would just click through
+    whatever hoops required to make the WiFi connect again."; what do we
+    think about it?
 * `tordate` remains unchanged for now
 * Add a NetworkManager hook that generates a random per-Tails device
   secret, and stores it into persistence, if the Tor state persistence

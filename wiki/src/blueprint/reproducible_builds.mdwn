@@ -1,5 +1,155 @@
-debconf (1.5.58) unstable; urgency=medium
+This is about [[!tails_ticket 5630]].
 
-  * Don't update po/debconf.pot unless doing so changes something other than
-    the POT-Creation-Date header.  The basic approach here is from gettext,
-    though implemented a bit more simply since we can assume perl.
+[[!toc levels=2]]
+
+# Why we want reproducible builds
+
+## List of reasons why
+
+<div class="note">
+
+Reproducible builds probably will not give us <emph>all</emph> these
+advantages for free: some require additional work. Also, it might be
+that some of these advantages are incompatible with each other.
+
+</div>
+
+* Allow independent verification that a build product matches what the
+  source intended to produce ⇒ better resist attacks against build
+  machines and developers (see
+  <https://reproducible-builds.org/docs/buy-in/> for specific
+  examples) ⇒ improves users' security, and allows developers to sleep
+  better at night (as the incentive for an attacker to compromise
+  developers' systems, or to compromise developers themselves, is
+  lowered). In turn, this avoids the need to trust
+  people (or software) who build the ISO we release, which in turn
+  allows more people to get involved in release management work.
+
+* We would not have to upload the ISO image when we do a release, we
+  could instead build it on our infrastructure (Jenkins), build it
+  locally, compare the outputs, and publish the ISO built by Jenkins
+  if they match. Uploading an ISO can take many hours with
+  some commonly found access to the Internet, so removing the need to
+  go through this step decreases our time to remediation
+  for fixing security issues, and makes it easier for developers
+  with poor access to the Internet to take care of a release.
+
+* Decrease the size of the IUKs ⇒ decrease the download time when
+  upgrading ⇒ nicer UX, and makes it more likely that users upgrade in
+  a timely manner instead of postponing to "when they have time".
+  This depends e.g. on how we handle building with a fixed timestamp,
+  and how we handle files metadata such as mtime when building an IUK.
+
+* Limit the scope of the QA work that we have to conduct before
+  putting out a bugfix release that has a small delta at the source
+  level ⇒ decrease time to remediation (compared to having to test
+  everything), and we can release security upgrades more frequently
+  (e.g. every time a DSA affects us) because it is cheaper. We are
+  indeed able to assess the impact of a specific update, when we know
+  that everything else won't change when we build an ISO that includes
+  this update, and we can verify it for example with diffoscope.
+
+* No more bit flip that makes us waste precious hours during a release
+  process (been there, seen that).
+
+* Increases confidence in the value of our continuous quality
+  assurance processes: it tests something that is be closer to what
+  lands into the released binaries.
+
+* Allow developers to use different build environments, while making
+  sure that they produce the same binaries from the same source code.
+  This is nice for developers (who get to pick their preferred tools),
+  and also it helps ensure that we don't fully rely a golden trusted
+  build environment, that must be absolutely never be compromised, and
+  is very painful to upgrade.
+
+* Increases the trust that users, and anyone interested really, can
+  put into our released build products (such as ISO images) and our
+  development and release process.
+
+* Provides a more baseline (system + configuration) that is more
+  stable, and thus it is easier to maintain a delta against it, and
+  easier to audit that delta in the ISO built from the modified
+  source; e.g. another flavour of Tails we would support ourselves, or
+  a rebranded Tails produced by some NGO, or a personal, custom built
+  ISO that differs only by the addition of a few packages.
+
+* Might save disk space on mirrors, if some block-level de-duplication
+  is done by the filesystem, and the compression algorithms we use to
+  build images is stable enough in the situations we use it for.
+
+* Opens the door for cross-architecture building and verification of the build
+  products, which:
+  - decreases the risk that our build systems are all affected by the
+    same architecture- or platform- specific security issue;
+  - may allow us to support more architectures (e.g.
+    [[!tails_ticket 10972 desc="ARM"]]), because we could do most our
+    CI and QA on the fastest one.
+
+* Detect bugs, for example the ones provided on the
+  [reproducible builds project's buy-in page](https://reproducible-builds.org/docs/buy-in/)
+  (retrieved on 2015-02-16):
+  "[[!debbug 773916 desc="a library had a different application binary interface for every build"]],
+  [[!debbug 801855 desc="garbled strings due to encoding mismatch"]],
+  [[!debbug 778486 desc="missing translations"]],
+  or [[!debbug 778707 desc="changing dependencies"]]".
+
+* "The constraint of having to reflect about the build environment
+  also helps developers to think about the relationship with external
+  software or data providers. Relying on external sources with no
+  backup plans might cause serious troubles in the long term"
+  ([reproducible builds project's buy-in page](https://reproducible-builds.org/docs/buy-in/), 2015-02-16).
+
+* Faster development processes: e.g. when one knows for sure that
+  build stage 1 will produce the same output, one can cache it and
+  build only stages 2 to n.
+
+## Draft
+
+<div class="note">
+
+This draft needs to be updated. It was written in 2014, way before we
+came up with the previous list of advantages, or discussed this topic
+much. It was primarily meant to explain why we needed
+a [[!tails_ticket 5926 desc="freezable APT repository"]], as a first
+step towards reproducible builds.
+
+</div>
+
+Being free software is a necessary condition for tools to
+be trusted for their security. The only way for *security researchers*
+to know if a piece of software is trustworthy, is to audit its source
+code.
+
+But operating systems are delivered *to their users* in binary form that
+cannot be simply reverted back to their original source code.
+
+Of course, we provide ways for our users to strongly authenticate our
+binaries using HTTPS and OpenPGP signatures. But there is no technical
+way for security researchers to be sure that the binary delivered to the
+users was built from the original source code, because the process of
+transforming the source code into a binary is not deterministic: for
+various reasons, compiling the same source code twice produces
+different binaries.
+
+Several free software projects such as Tor, Debian, and Bitcoin are
+working on addressing this core issue of secure computing by making the
+build process deterministic using new, innovative techniques.
+
+Tails also wants to work towards reproducible
+builds, in order to enable security researchers to audit our software more easily
+and, as a consequence, to allow our users to put more trust in our
+software.
+
+# Miscellaneous resources
+
+* <https://reproducible-builds.org/>
+
+* <https://wiki.debian.org/ReproducibleBuilds>
+
+* [[!tor_bug 3688]]
+
+* Making POT files more stable: debconf 1.5.58's changelog entry reads
+  "Don't update po/debconf.pot unless doing so changes something other than
+  the POT-Creation-Date header.  The basic approach here is from gettext,
+  though implemented a bit more simply since we can assume perl."
