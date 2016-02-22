@@ -10,11 +10,56 @@ tails (2.2) UNRELEASED; urgency=medium
 
  -- anonym <anonym@riseup.net>  Tue, 26 Jan 2016 02:32:45 +0100
 
-tails (2.0.1) UNRELEASED; urgency=medium
+tails (2.0.1) unstable; urgency=medium
 
-  * Dummy entry.
+  * Major new features and changes
+    - Enable the Tor Browser's font fingerprinting protection
+      (Closes: #11000). We do it for all browsers (including
+      the Unsafe Browser and I2P Browser mainly to avoid making our
+      automated test suite overly complex. This implied to set an appropriate
+      working directory when launching the Tor Browser, to accommodate for
+      the assumptions it makes about this.
 
- -- anonym <anonym@riseup.net>  Wed, 27 Jan 2016 16:35:56 +0100
+  * Security fixes
+    - Upgrade Tor Browser to 5.5.2 (Closes: #11105).
+
+  * Bugfixes
+    - Repair 32-bit UEFI support (Closes: #11007); bugfix on 2.0.
+    - Add libgnome2-bin to installed packages list to provide gnome-open,
+      which fixes URL handling at least in KeePassX, Electrum and Icedove
+      (Closes: #11031); bugfix on 2.0. Thanks to segfault for the patch!
+
+  * Minor improvements
+    - Refactor and de-duplicate the chrooted browsers' configuration:
+      prefs.js, userChrome.css (Closes: #9896).
+    - Make the -profile Tor Launcher workaround simpler (Closes: #7943).
+    - Move Torbutton environment configuration to the tor-browser script,
+      instead of polluting the default system environment with it.
+    - Refresh patch against the Tor Browser AppArmor profile
+      (Closes: #11078).
+    - Propagate Tor Launcher options via the wrapper.
+    - Move tor-launcher script to /usr/local/bin.
+    - Move tor-launcher-standalone to /usr/local/lib.
+    - Move Tor Launcher env configuration closer to the place where it is used,
+      for simplicity's sake.
+
+  * Test suite
+    - Mass update browser and Tor Launcher related images due to font change,
+      caused by Tor Browser 5.5's font fingerprinting protection
+      (Closes: #11097). And then, use separate PrintToFile.png for the browsers,
+      and Evince, since it cannot be shared anymore.
+    - Adjust to the refactored chrooted browsers configuration handling.
+    - Test that Tor Launcher uses the correct Tor Browser libraries.
+    - Allow more slack when verifying that the date that was set.
+    - Bump a bit the timeout used when waiting for the remote shell.
+    - Bump timeout for the process to disappear, when closing Evince.
+    - Bump timeout when saving persistence configuration.
+    - Bump timeout for bootstrapping I2P.
+
+  * Build system
+    - Remove no longer relevant places.sqlite cleanup procedure.
+
+ -- Tails developers <tails@boum.org>  Fri, 12 Feb 2016 13:00:15 +0000
 
 tails (2.0) unstable; urgency=medium
 
