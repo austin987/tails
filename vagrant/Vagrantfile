@@ -37,11 +37,8 @@ Vagrant.configure("2") do |config|
     domain.machine_arch = 'x86_64'
     domain.machine_type = 'q35'
     domain.emulator_path = '/usr/bin/qemu-system-x86_64'
-    if ENV['TAILS_RAM_BUILD']
-      domain.memory = VM_MEMORY_FOR_RAM_BUILDS
-    else
-      domain.memory = VM_MEMORY_FOR_DISK_BUILDS
-    end
+    domain.memory = ENV['TAILS_RAM_BUILD'] ? VM_MEMORY_FOR_RAM_BUILDS :
+                                             VM_MEMORY_FOR_DISK_BUILDS
     cpus = ENV['TAILS_BUILD_CPUS']
     domain.cpus = cpus unless cpus.nil?
   end
