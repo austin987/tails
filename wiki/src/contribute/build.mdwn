@@ -24,93 +24,36 @@ maximum of 10 GB of free storage.
 
 ## Installing the dependencies in Debian
 
-### If you run Debian Jessie
+At the moment Tails relies on `vagrant-libvirt` which is not packaged
+in Debian yet. Until then, please use our dedicated repo. First get
+our APT repo's key, which is stored in Tails' main Git repo (so
+execute the following command from the root of the Tails source tree):
 
-1. Add Debian unstable to your APT sources:
+    sudo apt-key add config/chroot_sources/tails.chroot.gpg
 
-       echo "deb http://ftp.us.debian.org/debian/ unstable main" | \
-           sudo tee /etc/apt/sources.list.d/unstable.list
+And then add the sources:
 
-2. Pin all packages from Debian unstable at 500 (`apt_preferences(5)`):
-
-       sudo tee /etc/apt/preferences.d/unstable <<EOF
-       Package: *
-       Pin: release o=Debian,a=unstable
-       Pin-Priority: 500
-       EOF
-
-3. Install the needed tools:
-
-       sudo apt-get install git virtualbox rake ruby-childprocess \
-           ruby-erubis ruby-i18n ruby-log4r ruby-net-scp ruby bsdtar curl
-
-### If you run Debian Wheezy
-
-1. Add Debian Jessie, unstable and wheezy-backports to your APT sources:
-
-       echo "deb http://ftp.us.debian.org/debian/ jessie main" | \
-           sudo tee /etc/apt/sources.list.d/jessie.list
-       echo "deb http://ftp.us.debian.org/debian/ unstable main" | \
-           sudo tee /etc/apt/sources.list.d/unstable.list
-       echo "deb http://ftp.us.debian.org/debian/ wheezy-backports main" | \
-           sudo tee /etc/apt/sources.list.d/wheezy-backports.list
-
-2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`):
-
-       sudo tee /etc/apt/preferences.d/jessie <<EOF
-       Package: *
-       Pin: release o=Debian,a=jessie
-       Pin-Priority: 500
-       EOF
-       sudo tee /etc/apt/preferences.d/unstable <<EOF
-       Package: *
-       Pin: release o=Debian,a=unstable
-       Pin-Priority: 500
-       EOF
-
-3. Install the needed tools:
-
-       sudo apt-get install git virtualbox rake ruby-childprocess/jessie \
-           ruby-net-scp/jessie ruby-erubis ruby-i18n ruby-log4r bsdtar curl \
-           gettext/wheezy-backports
-
-### In both Debian Wheezy and Jessie
-
-At the moment Tails relies on a version of Vagrant (the 1.4.x series)
-that is not packaged in Debian any more. Here's a workaround for both
-Debian Wheezy and Jessie:
-
-    sudo tee /etc/apt/preferences.d/tails-build-vagrant <<EOF
-    Package: vagrant
-    Pin: version 1.4.3+dfsg1-3
-    Pin-Priority: 550
-
-    Package: ruby-net-ssh
-    Pin: version 1:2.6.8-2
-    Pin-Priority: 550
+    sudo tee /etc/apt/sources.d/feature-6354-vagrant-libvirt.list <<EOF
+    deb http://deb.tails.boum.org/ feature-6354-vagrant-libvirt main
+    deb-src http://deb.tails.boum.org/ feature-6354-vagrant-libvirt main
     EOF
-    echo "deb http://snapshot.debian.org/archive/debian/20141010T042049Z/ unstable main" | \
-        sudo tee /etc/apt/sources.list.d/20141010T042049Z.list
-    sudo apt-get -o Acquire::Check-Valid-Until=false update
-    sudo apt-get install vagrant ruby-net-ssh
-    sudo rm /etc/apt/sources.list.d/20141010T042049Z.list
     sudo apt-get update
 
-If you run Virtualbox >4.3 (5.0 is in Jessie backports at the moment)
-you will have to patch Vagrant a bit:
+Now we can install all the dependencies:
 
-    --- /usr/share/vagrant/plugins/providers/virtualbox/driver/meta.rb.orig 2016-02-12 11:58:06.150337645 +0100
-    +++ /usr/share/vagrant/plugins/providers/virtualbox/driver/meta.rb      2016-02-12 11:58:38.778726368 +0100
-    @@ -45,7 +45,8 @@
-                 "4.0" => Version_4_0,
-                 "4.1" => Version_4_1,
-                 "4.2" => Version_4_2,
-    -            "4.3" => Version_4_3
-    +            "4.3" => Version_4_3,
-    +            "5.0" => Version_4_3
-               }
-     
-               if @version.start_with?("4.2.14")
+    sudo apt-get install \
+        git \
+        rake \
+        vagrant-libvirt
+
+### In Debian Unstable (as of Feb 22 2016)
+
+For some reason `vagrant-libvirt` (or something in the `vagrant`
+stack) is not compatible with `ruby-net-ssh` 3.0.1-3. Until this
+[[!tails_ticket 11154 desc="is fixed"]]), please install the version
+from Jessie for now:
+
+    sudo apt-get install ruby-net-ssh/jessie
 
 ## Building Tails using Vagrant
 
