@@ -257,7 +257,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
 
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                  collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-  status = run_vagrant('ssh', '-c', "#{exported_env} build-tails")
+  run_vagrant('ssh', '-c', "#{exported_env} build-tails")
 
   artifacts = capture_vagrant('ssh', '-c', 'ls -1 tails-*.iso*').first.split("\n")
   if not artifacts.empty?
@@ -277,8 +277,6 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
       end
     end
   end
-
-  exit status
 end
 
 namespace :vm do
