@@ -12,13 +12,12 @@ dpkg-reconfigure libdvd-pkg
 # libdvd-pkg. libdvd-pkg however depends on build-essential, which is
 # explicitly removed. So instead we build/install a fake libdvd-pkg
 # without the build-essential dependency to satisfy libdvdcss2.
-(
-    tmp="$(mktemp -d)"
-    apt-get install --yes equivs
+tmp="$(mktemp -d)"
+apt-get install --yes equivs
 
-    LIBDVD_PKG_VERSION="$(dpkg-query -s libdvd-pkg | grep Version | cut -d ' ' -f2)+fake1"
+LIBDVD_PKG_VERSION="$(dpkg-query -s libdvd-pkg | grep Version | cut -d ' ' -f2)+fake1"
 
-    cat > "${tmp}/libdvd-pkg-${LIBDVD_PKG_VERSION}.control" << EOF
+cat > "${tmp}/libdvd-pkg-${LIBDVD_PKG_VERSION}.control" << EOF
 Section: multimedia
 Priority: optional
 Homepage: https://tails.boum.org/
@@ -32,6 +31,7 @@ Description: (Fake) libdvd-pkg package
  Provide placeholder to keep libdvdcss2 happy.
 EOF
 
+(
     cd "${tmp}"
     equivs-build "${tmp}/libdvd-pkg-${LIBDVD_PKG_VERSION}.control"
     dpkg -i "${tmp}/libdvd-pkg-${LIBDVD_PKG_VERSION}_all.deb"
