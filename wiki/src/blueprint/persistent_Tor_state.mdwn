@@ -194,11 +194,7 @@ less fingerprintable.
   persisted, and possibly proposing to enable this setting for them).
 * Persist the Tor `state` file only (not the consensus etc.)
 * Name of the persistent Tor state file to be used:
-  `hash(per-Tails device secret, N bits of location-based information, SSID)`.
-  By adding the SSID, we prevent attackers from being able to spoof only
-  the MAC address of the router to reuse a given Tor state; they also
-  have to spoof the SSID which is visible to the user and might be
-  detected as malicious.
+  `hash(per-Tails device secret, N bits of location-based information)`.
   **FIXME**: shall we truncate the resulting hash? so that there are
   collisions and the total number of different state file names is
   caped, which implies that a given Tails persistent media will use
@@ -213,7 +209,19 @@ less fingerprintable.
     same Tails device, with more certainty than when deducing that
     from the mere fact that they are re-using the same Entry Guard in
     the place?
-  **FIXME** do we want to use a HMAC instead?
+  - **FIXME** do we want to use a HMAC instead?
+  - We considered adding the ESSID to the value being hashed, in order
+    to make it harder for attackers to force us to reuse a given
+    already saved Tor state, by spoofing only the MAC address of the
+    router: they would also have to spoof the ESSID, which is visible
+    to the user and might be detected as malicious. This was rejected
+    for two reasons: first, it gives the attacker more bits they can
+    use to force us to try new Entry Guards until we pick one they
+    control (see the reasoning about choosing N above); second, it's
+    doubtful that users will worry much about a ESSID being reused:
+    chances are that most of them will just "just click through
+    whatever hoops required to make the WiFi connect again", as
+    Patrick Schleizer put it.
 * `tordate` remains unchanged for now
 * Add a NetworkManager hook that generates a random per-Tails device
   secret, and stores it into persistence, if the Tor state persistence
@@ -221,6 +229,132 @@ less fingerprintable.
 * Add a NetworkManager hook that copies the relevant
   location-dependent Tor `state` file in place before starting Tor.
 * Write the corresponding end-user and design documentation.
+
+#### One example attack, one example defense
+
+NetworkManager is happy to roam across APs that have the same ESSID,
+but different BSSIDs (MAC address). This is a pretty useful feature.
+It can also be used by an adversary to perform active attacks against
+the design described above.
+
+Attacker controls Wi-Fi AP in places A and B. In place A, attacker
+switches the AP's MAC address back'n'forth between Mi with i between
+1 and x. They do that during Tails sessions running on laptops
+connected to place A, so for each such laptop they can record x (AP
+MAC address → list of Entry Guards) mappings.
+
+Then, in place B, the attacker also switches the AP's MAC address
+between the same M1 to Mx during Tails sessions. By observing which
+Entry Guard a given Tails laptop connected to place B picks, the
+attacker can then link it to one of the mappings recorded in place A.
+This seems to allow the attacker to track that laptop across places.
+This attack can scale to place C, place D, etc., as long as the
+attacker has the ability to control the Wi-Fi AP's MAC address there
+in real time.
+
+As a possible defense, let's make Tails stick to the Tor state (⇒
+Entry Guard, more or less) it picked the first time, during a given
+session.
+
+Then, if the user starts Tails only once at a given place, what the
+attacker learns is pretty much useless: one single (AP MAC address →
+Entry Guard) mapping essentially conveys only the "Entry Guard being
+used" information, instead of an actual mapping from a AP MAC address
+to an Entry Guard; and many other Tor users are using this same Entry
+Guard. Only learning that with a different MAC address, _the same
+system_ would use a different Entry Guard, gives value to this first
+mapping, and all subsequent ones, together.
+
+Now, let's consider the case when the same Tails device with Tor state
+persistence is started multiple times in the same place, and an
+attacker who can somehow guess that it is probably the same device
+(ignoring Entry Guard choice for now). This makes the defense just as
+strong as it is difficult for the attacker to guess this. For example:
+
+ * Tails started twice in a row: if sessions don't overlap in terms of
+   time, and a Tails starts shortly after "another" one has shut down,
+   then it is maybe quite safe to assume that it's the same system.
+   On the other hand, the user may have restarted on a different
+   Tails, to use another contextual identity.
+
+ * How can the attacker to force Tails to reboot? Just blocking
+   Internet access (after the Entry Guard was picked and the mapping
+   recorded) can plausibly trigger a reboot action from many users,
+   and then we're back to the "Tails started twice in
+   a row" situation.
+
+ * Tails boots every day at about the same time in the same location:
+   an attacker who can observe this can quite safely assume that it is
+   the same Tails, and then the defense we've discussing does not work
+   against this attack.
+
+#### Discussion
+
+##### Passive attacker
+
+ * location tracking:
+   - much better than Tor Browser
+   - slightly worse than Tails without persistent Tor state
+
+ * defenses provided by Entry Guard stability:
+   - We pick Entry Guard among 2^N Tor states so we're worse than Tor
+     Browser.
+   - much better than Tails without persistent Tor state
+
+⇒ looking at passive attacks only, this design seems to be the way
+to go.
+
+##### Active attacker
+
+(Note that the same attacker can still use passive attacks.)
+
+ * location tracking:
+   - worse than Tor Browser because the attacker can get more than one
+     of these (AP's MAC address → Entry Guard) mappings, which leaks
+     more information than "yet another Tor user who has this Entry
+     Guard"
+   - much worse than Tails without persistent state
+
+ * defenses provided by Entry Guard stability:
+   - we allow a maximum of 2^N times more Entry Guards than Tor
+     Browser: for each of 2^N Tor state we can pick, we use the same
+     anti-guard-churn algorithm as Tor Browser ⇒ worse than Tor
+     Browser in this respect
+   - better than Tails without persistent Tor state; how much it is
+     better depends on how sophisticated and powerful the attacker is,
+     and how much they want to target Tails specifically (vs.
+     generally Tor users)
+
+⇒ looking at active attacks only, this design is pretty bad.
+
+Let's now look at combined cost/benefit of passive+active attacks.
+
+In terms of location tracking:
+
+ * it's game over for Tor Browser users as the attacker can passively
+   track them using the laptop's MAC address in most cases, and
+   fallback to the weak Entry Guard information otherwise;
+
+ * with Tails without persistent Tor state: it's game over for the
+   attacker, even if they go active
+
+ * with this design: the attacker needs to become active if they want
+   to track Tails users
+
+In terms of defenses provided by Entry Guard stability:
+
+ * Tor Browser: the attacker needs to be active, and is quickly
+   limited by Tor's protections against Entry Guard churn
+
+ * with Tails without persistent Tor state: a passive attacker can
+   just wait until the Tails users pick an adversary -controlled Entry
+   Guard; an active attacker can make this happen faster
+
+ * with this design: the attacker needs to be active, and we still
+   offer some protection given the limited set of Tor states the
+   attacker can make us cycle through
+
+XXX: look at other designs that don't have this infoleak.
 
 ### Second iteration
 
@@ -404,3 +538,6 @@ feature, hence:
 How much info does it leak to share a single set of Tor consensus and
 descriptors files between isolated Tor state files? How much of
 a problem is that?
+
+We must discuss the designs proposed on
+<https://trac.torproject.org/projects/tor/ticket/10969#comment:2>.

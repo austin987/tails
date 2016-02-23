@@ -90,31 +90,6 @@ for something like:
 * 128 GiB of RAM (ideally we would just reuse the 128 GiB we have in lizard v2)
 * 12-18 CPU threads == 6-9 CPU cores
 
-Other than that, we currently prefer option C if it's doable, and option
-D otherwise.
-
-<a id="option_C"></a>
-
-### Option C: 12 cores, upgradable by adding a CPU
-
-This is for 8 VMs with 3 vcpus each.
-
-XXX:
-
-* can we plug one CPU only on a 2-sockets SMP mobo?
-  => waiting for taggart's answer
-
-Specs:
-
- * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
- * 1 x Intel® E5-2690v3-2.6Ghz/12C, 30M, 135W LGA2011 CPU               - $2124
- * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
- * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
- * 1 x Heatsink                                                         - $50
- * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
-
-Total   --- **$5424**
-
 <a id="option_D"></a>
 
 ### Option D: 2*6 cores, upgradable by replacing CPUs
@@ -125,12 +100,40 @@ Specs:
 
  * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
  * 2 x Intel® E5-2643v3, 6C, 3.4GHz, 135                                - $3260
- * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
+ * 16 x 8GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                           - $0
  * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
- * 1 x Heatsink                                                         - $50
+ * 2 x Heatsink                                                         - $100
  * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
 
-Total   --- **$6675**
+Total   --- **$4500**
+
+<a id="option_E"></a>
+
+### Option E: 8 cores, Haswell, single socket
+
+Single socket boards that support E5-1600 CPUs and hold 8 DIMMs (up to
+512GB of RAM):
+<http://www.supermicro.com/products/motherboard/Xeon3000/#2011>
+
+XXX: pick a mobo that has 16 DIMM slots, all those have 8 slots; or
+deal with the fact it has 8 slots only.
+
+Specs:
+
+ * 1 x X10SRi-F                                                         - $273.05
+ * 1 x [E5-1680 v3](http://ark.intel.com/products/82767), 8C, 3.2GHz, 140W - $1829.65
+ * 16 x 8GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                           - $0
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 1 x Heatsink                                                         - $50
+ * 1 x case FIXME                                                       - $350
+
+Total --- around **$2900**
+
+### HPE
+
+* HPE ProLiant DL60 Gen9: 1 or 2 * E5-2600 v3, 256GB max. RAM
+* HPE ProLiant DL120 Gen9: 1 * E5-2600 v3 or E5-1600 v3, up to 256 GB RAM
+* HPE ProLiant DL360 Gen9: 1 or 2 * E5-2600 v3, 1.5TB max RAM
 
 ## Deprecated options
 
@@ -159,3 +162,23 @@ Total   --- **$6200**
  * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
 
 Total   --- **$6650**
+
+<a id="option_C"></a>
+
+### Option C: 12 cores, upgradable by adding a CPU
+
+We can't plug one CPU only on a 2-sockets SMP mobo without
+losing functionality.
+
+This is for 8 VMs with 3 vcpus each.
+
+Specs:
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
+ * 1 x Intel® E5-2690v3-2.6Ghz/12C, 30M, 135W LGA2011 CPU               - $2124
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 1 x Heatsink                                                         - $50
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
+
+Total   --- **$5424**
