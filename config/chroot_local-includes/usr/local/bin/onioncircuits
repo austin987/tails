@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+set -u
+
+# Get LANG
+. /etc/default/locale
+
+export LANG
+
+(
+xhost +SI:localuser:onioncircuits
+sudo -u onioncircuits \
+     /usr/bin/lckdo /var/lock/onioncircuits \
+     /usr/bin/onioncircuits
+xhost -SI:localuser:onioncircuits
+) &
+

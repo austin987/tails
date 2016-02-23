@@ -52,8 +52,8 @@ const TorStatusIndicator = new Lang.Class({
         this.actor.add_style_class_name('panel-status-button');
 
         // Create menu
-        let menu_item = new PopupMenu.PopupMenuItem(_("Open Tor Monitor"));
-        menu_item.connect('activate', Lang.bind(this, this._openTorMonitor));
+        let menu_item = new PopupMenu.PopupMenuItem(_("Open Onion Circuits"));
+        menu_item.connect('activate', Lang.bind(this, this._openOnionCircuits));
         this.menu.addMenuItem(menu_item);
     },
 
@@ -65,8 +65,8 @@ const TorStatusIndicator = new Lang.Class({
         }
     },
 
-    _openTorMonitor: function() {
-        Shell.AppSystem.get_default().lookup_app('tormonitor.desktop').activate();
+    _openOnionCircuits: function() {
+        Shell.AppSystem.get_default().lookup_app('onioncircuits.desktop').activate();
     },
 
     _onFileChanged: function(monitor, file, other_file, event_type, user_data) {
