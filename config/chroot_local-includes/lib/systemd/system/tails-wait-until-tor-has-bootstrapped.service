@@ -7,12 +7,10 @@ Before=tails-tor-has-bootstrapped.target
 [Service]
 Type=oneshot
 User=debian-tor
-ExecStartPre=/bin/rm -f /run/tor-has-bootstrapped/done
 ExecStart=/bin/sh -c '. /usr/local/lib/tails-shell-library/tor.sh ; \
                       while ! tor_is_working ; do                   \
                          /bin/sleep 1                             ; \
                       done'
-ExecStartPost=/bin/touch /run/tor-has-bootstrapped/done
 TimeoutStartSec=0
 CapabilityBoundingSet=
 PrivateDevices=yes
