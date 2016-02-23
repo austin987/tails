@@ -3,6 +3,9 @@
 set -e
 set -u
 
+# Import no_abort()
+. /usr/local/lib/tails-shell-library/common.sh
+
 # Get LANG
 . /etc/default/locale
 
@@ -10,9 +13,10 @@ export LANG
 
 (
 xhost +SI:localuser:onioncircuits
-sudo -u onioncircuits \
+no_abort sudo -u onioncircuits \
      /usr/bin/lckdo /var/lock/onioncircuits \
      /usr/bin/onioncircuits
 xhost -SI:localuser:onioncircuits
+exit ${_NO_ABORT_RET}
 ) &
 
