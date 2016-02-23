@@ -37,3 +37,8 @@ EOF
     dpkg -i "libdvd-pkg_${LIBDVD_PKG_VERSION}_all.deb"
 )
 rm -R "${tmp}"
+
+# Remove dangling symlink -- note that we absolutely do not want the
+# functionality (automatic checks and upgrades for new css sources)
+# that the removed script provides.
+rm -f /etc/apt/apt.conf.d/88libdvdcss-pkg
