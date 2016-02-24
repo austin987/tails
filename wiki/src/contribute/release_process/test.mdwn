@@ -102,11 +102,14 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 * Check mail over IMAP using:
   - a "clearnet" IMAP server.
-  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion
-    with SSL).
+  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
+* Check mail over POP using:
+  - a "clearnet" POP server.
+  - a hidden service POP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
 * Send an email using:
   - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
+
 * Check that the profile works and is torified:
   1. Send an email using Icedove and a non-anonymizing SMTP relay (a
      SMTP relay that writes the IP address of the client it is
@@ -122,7 +125,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
   3. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
      Tor encrypts it, then close tcpdump
   4. Check the dump for the HELO/EHLO message and
-     verify that it only contains `localhost`: `tcpdump -A -r dump`
+     verify that it only contains `127.0.0.1`: 
+     `tcpdump -A -r dump | grep EHLO`
   5. Check the `Received:` and `Message-Id` fields in the received
      message: it must not leak the hostname, nor the local IP.
 * Make sure Icedove Mail use its dedicated `SocksPort` when connecting
