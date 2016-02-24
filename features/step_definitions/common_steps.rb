@@ -872,11 +872,6 @@ When /^I open a page on the LAN web server in the (.*)$/ do |browser|
   step "I open the address \"#{@web_server_url}\" in the #{browser}"
 end
 
-def force_new_tor_circuit()
-  debug_log("Forcing new Tor circuit...")
-  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
-end
-
 Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
   if min
     time = rand(max.to_i - min.to_i + 1) + min.to_i
@@ -926,7 +921,8 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
 end
 
 Then /^I force Tor to use a new circuit$/ do
-  force_new_tor_circuit
+  debug_log("Forcing new Tor circuit...")
+  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
 end
 
 When /^I eject the boot medium$/ do
