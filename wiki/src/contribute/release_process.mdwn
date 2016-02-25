@@ -501,6 +501,12 @@ Fifth, generate detached OpenPGP signatures for every published
 	  tails-i386-$VERSION.torrent && \
 	mv tails-i386-$VERSION.torrent.{asc,sig}
 
+Lastly, let's set some variables to be used later:
+
+    ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
+    ISO_SHA256SUM="$(sha256sum "${ISO_PATH}" | cut -f 1 -d ' ' | tr -d '\n')"
+    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH}")"
+
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
@@ -633,9 +639,6 @@ If preparing a RC, skip this part.
 
 Update the ISO description file (IDF) used by the browser extension:
 
-    ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
-    ISO_SHA256SUM="$(sha256sum "${ISO_PATH}" | cut -f 1 -d ' ' | tr -d '\n')"
-    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH}")"
     cat > "$RELEASE_CHECKOUT"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
     ---
     build-target: i386
