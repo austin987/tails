@@ -271,9 +271,13 @@ Then, gather other useful information from:
 * the "Fix committed" section on the *Release Manager View for $VERSION*
   in Redmine.
 
-Finally, commit:
+Finally, sanity check the version and commit:
 
-	git commit debian/changelog -m "Update changelog for $VERSION."
+	if [ "$(dpkg-parsechangelog -SVersion)" = "${VERSION}" ]; then
+	    git commit debian/changelog -m "Update changelog for $VERSION."
+	else
+	    echo 'Error: version mismatch: please compare $VERSION with the last entry in debian/changelog'
+	fi
 
 Included website
 ----------------
