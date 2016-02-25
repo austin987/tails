@@ -245,3 +245,8 @@ When /^I disable all networking in the Tails Greeter$/ do
     @screen.click('TailsGreeterDisableAllNetworking.png')
   end
 end
+
+Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|
+  picture = not_usable ? 'TorStatusNotUsable' : 'TorStatusUsable'
+  @screen.find("#{picture}.png")
+end
