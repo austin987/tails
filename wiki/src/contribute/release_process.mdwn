@@ -271,9 +271,13 @@ Then, gather other useful information from:
 * the "Fix committed" section on the *Release Manager View for $VERSION*
   in Redmine.
 
-Finally, commit:
+Finally, sanity check the version and commit:
 
-	git commit debian/changelog -m "Update changelog for $VERSION."
+	if [ "$(dpkg-parsechangelog -SVersion)" = "${VERSION}" ]; then
+	    git commit debian/changelog -m "Update changelog for $VERSION."
+	else
+	    echo 'Error: version mismatch: please compare $VERSION with the last entry in debian/changelog'
+	fi
 
 Included website
 ----------------
@@ -501,6 +505,12 @@ Fifth, generate detached OpenPGP signatures for every published
 	  tails-i386-$VERSION.torrent && \
 	mv tails-i386-$VERSION.torrent.{asc,sig}
 
+Lastly, let's set some variables to be used later:
+
+    ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
+    ISO_SHA256SUM="$(sha256sum "${ISO_PATH}" | cut -f 1 -d ' ' | tr -d '\n')"
+    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH}")"
+
 <a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
@@ -629,11 +639,10 @@ Prepare upgrade-description files
 Prepare the ISO description file for DAVE
 -----------------------------------------
 
+If preparing a RC, skip this part.
+
 Update the ISO description file (IDF) used by the browser extension:
 
-    ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
-    ISO_SHA256SUM="$(sha256sum "${ISO_PATH}" | cut -f 1 -d ' ' | tr -d '\n')"
-    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH}")"
     cat > "$RELEASE_CHECKOUT"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
     ---
     build-target: i386
@@ -825,7 +834,10 @@ Skip this part if preparing a final release.
 
 Copy the `.iso.sig` file into the website repository:
 
-	cp "${ISO_PATH}.sig" "${MASTER_CHECKOUT}/wiki/src/torrents/files/"
+	cp "${ISO_PATH}.sig" \
+	   "$ISOS/tails-i386-${VERSION}.torrent" \
+	   "$ISOS/tails-i386-${VERSION}.torrent.sig" \
+	      "${MASTER_CHECKOUT}/wiki/src/torrents/files/
 
 Write the announcement for the release in
 `$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
