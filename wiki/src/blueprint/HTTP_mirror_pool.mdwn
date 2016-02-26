@@ -8,334 +8,109 @@
 
 We decided to implement a two-way strategy for this feature:
 
-* Use JavaScript to modify the link on the download page, so that each
-  user is pointed to random mirror.
+* Write dispatcher code, in JavaScript, that DAVE uses to dynamically modify the
+  hostname, in the download link it gets from the ISO description file
+  (IDF), so that each user is pointed to random mirror.
+  - [Git repository](https://git-tails.immerda.ch/mirror-pool-dispatcher/)
   - Vanilla JS (no frameworks)
-  - Store the JS code and its configuration file in two dedicated
-    ikiwiki overlays, for finer-grained access control possibilities
-    to it (e.g. we may want to let people who don't have commit access
-    to Git maintain the mirrors pool).
-  - Configuration for the JS is loaded from JSON file. It attaches
-    a weight to each mirror. Weight 0 means that the mirror is
-    currently disabled, and will never be redirected to. We're using
-    JSON and not YAML to avoid the need to use a third-party parser.
+  - The code must work from inside a Firefox extension (DAVE) at
+    least; ideally it is library code that can also be used from a web
+    page (see below for an actual use case).
+  - Configuration for the JS is loaded from a JSON file hosted on our
+    website.
+    See [[the configuration section|HTTP_mirror_pool#configuration]]
+    for details.
 
 * Keep using DNS to point to 3-5 fast and reliable mirrors. This will
   be the fallback for people who do not use JS. So we still need a DNS
   dynamic update system; we can simply re-purpose the one we already
   have (`dl.amnesia.boum.org`).
 
-* The ISO verification extension also needs to use mirrors. So, we'll
-  be providing library code for it to do the same, internally, as
-  a web browser would do when visiting the Tails download page, that
-  is replacing the hostname, in a ISO download URL, with a suitable
-  mirror's hostname (using the JSON mirror pool configuration file).
+<a id="questions"></a>
+
+## Remaining questions
+
+* How do we manage *.dl.amnesia.boum.org DNS?
+
+* What to do for downloads we offer outside of the Installation
+  Assistant, that are not supported by DAVE, such as images for
+  release candidates? What to do for browsers that don't have DAVE,
+  e.g. non-Firefox browsers, the
+  [[wget download option|install/expert/usb]], and
+  documented download methods that rely on
+  [[!tails_gitweb wiki/src/install/inc/steps/download.inline.html]]?
+  - A first iteration could simply use the DNS pool. This might put
+    too much load on the few servers in it though, so it might only
+    work if we're able to add a few really fast servers in it.
+  - In second iteration, we can use our JavaScript dispatcher code to rewrite the
+    download link on the call for testing web page. If we do this, we
+    need to include our JavaScript library in a dedicated ikiwiki
+    overlay, and load + call it on every page that contains an ISO
+    download link (or simply on _every_ page).
+  - It might be that going straight to the second iteration is simpler
+    in the end. Or, we can forget the non-DAVE dispatcher code and
+    instead put energy into adding very fast and reliable mirrors to
+    the DNS pool, as
+    [is being discussed](https://mailman.boum.org/pipermail/tails-dev/2016-February/010282.html).
+
+* What to do for the IUK downloads done by Tails Upgrader?
+  ([[!tails_ticket 11123]])
+
+<a id="configuration"></a>
+
+# Mirror pool configuration
+
+The client dispatcher code fetches the mirror pool configuration file
+from our website.
+
+The configuration file is written in JSON (and not YAML), to avoid the
+need to use a third-party parser.
+
+The configuration file is stored in
+[[!tails_gitweb_repo mirror-pool desc="a dedicated Git repository"]],
+that is added to our website with the ikiwiki underlay mechanism.
+Using a separate Git repository gives us finer-grained access control
+possibilities in the long run, e.g. we may want to let people who
+don't have commit access to Git maintain the mirrors pool. Note that
+we'll need to serve the configuration file from outside our website if
+we ever want to do so: an _underlay_ can affect our website in ways
+that are probably (almost?) as bad as what one can do with Git access
+to the website itself.
+
+The configuration file is essentially a list of mirrors, and for each
+of them we need a few values:
+
+ * url_prefix: whatever needs to be pre-pended to the path to an ISO
+   (e.g. `/stable/tails-i386-2.0/tails-i386-2.0.iso`) that is shared
+   between all mirrors, to form a complete URL to that ISO; for
+   example:
+   - in the old mirror pool design, this would be
+     `http://dl.amnesia.boum.org/tails`
+   - in the new mirror pool design, this could be e.g.
+     `http://42.dl.amnesia.boum.org/tails` (for mirrors who want to
+     use the unique VirtualHost we provide them), or something they
+     deal with themselves, e.g. `https://mirrors.kernel.org/tails`
+
+ * weight: the probability this mirror has to be picked by the
+   dispatcher code, expressed as a non-negative integer; weight
+   0 means that the mirror is currently disabled, and will never be
+   redirected to
+
+For a more formal, and probably more up-to-date definition of the data
+model, better see
+[its JSON schema](https://git-tails.immerda.ch/mirror-pool/tree/schema.json).
+
+Here is
+[an example configuration file](https://git-tails.immerda.ch/mirror-pool/tree/example-mirrors.json).
+
+Later, we may want to add more data that is not blocking for the
+initial iterations:
+
+ * email: contact information for the operator(s) of this mirror; XXX:
+   check if all mirror operators are OK with this; if enough are OK,
+   then document on [[contribute/how/mirror]] that it's the case, and
+   do it; otherwise, we'll need to manage contact info separately.
 
 # Initial research
 
-The idea I had was to let the server(s) send a reduced list of hosts. Not
-only it would allow to work-around Tor DNS limitations, but also to have
-some weighted round robin, in order to prioritize some high bandwidth
-mirrors, if we choose to.
-
-If I had to mention the ideal design goals for such changes, I would say
-that the more straightforward would be the better for implementation and
-also for maintainability.
-
-## Using DNS
-
-Using DNS seems to be an easy way to do some round robin in low level. It
-allows some kind of transparency to the upper layers protocols and
-distribute the load and to avoid having a single server that can became a
-SPOF.
-
-The following ways are available to implement it:
-
-* CNAME Hacks
-* NS Hacks
-* Modified DNS servers
-
-### CNAME Hacks
-
-As mention by ToBeFree something that can be done is to have different
-pools of servers like:
-
-	a.dl.amnesia.boum.org A $MIRROR1
-	a.dl.amnesia.boum.org A $MIRROR2
-	a.dl.amnesia.boum.org A $MIRROR3
-	a.dl.amnesia.boum.org A $MIRROR4
-	a.dl.amnesia.boum.org A $MIRROR5
-
-	b.dl.amnesia.boum.org A $MIRROR6
-	b.dl.amnesia.boum.org A $MIRROR7
-
-	dl.amnedia.boum.org CNAME a.dl.amnesia.boum.org
-	dl.amnedia.boum.org CNAME b.dl.amnesia.boum.org
-
-Interestingly the requests would be equally distributed betwen a.dl and
-b.dl, thus if their is more mirrors in one name than one other some
-servers would be somehow prioritized. For example: here "a" mirrors will
-share 50% of requests, giving 10% for every host where "b" mirrors will
-share the other 50% of requests betwen two host giving them 25% of
-requests each.
-
-However this kind of CNAME hack is not supported by current DNS
-Servers. Bind 8 used to support it with a [configuration
-option](http://docstore.mik.ua/orelly/networking_2ndEd/dns/ch10_07.htm)
-that has not been ported to bind 9. Neither NSD nor PowerDNS seem to
-support it, and their is no actual data about how resolvers would
-handle this case, so I don't think it is the best option.
-
-### NS Hacks
-
-Following the same idea the dl amnesia.boum.org could be delegated to a
-few different DNS servers, and those servers may have different versions
-of the zone. For example:
-
-	dl.amnesia.boum.org NS $DNS1
-	dl.amnesia.boum.org NS $DNS2
-	
-DNS1 would have a zone similar to a.dl.amnesia.boum.org:
-
-	dl.amnesia.boum.org A $MIRROR1
-	dl.amnesia.boum.org A $MIRROR2
-	dl.amnesia.boum.org A $MIRROR3
-	dl.amnesia.boum.org A $MIRROR4
-	dl.amnesia.boum.org A $MIRROR5
-	
-And DNS2 would have a zone similar to b.dl.amnesia.boum.org:
-
-	dl.amnesia.boum.org A $MIRROR6
-	dl.amnesia.boum.org A $MIRROR7
-
-In theory it should work (and give almost the same load distribution as
-CNAME hacks, almost as the NS servers will not receive 50% of requests
-because of [[!rfc 5452]]). However, I am not sure that playing with DNS
-inconsistency will be a so good idea, for example for maintainability :)
-
-### Using modified DNS servers
-
-Interestingly Tails is not the first project to be looking how to use DNS
-for load distribution. People already wrote some DNS software designed to
-handle those usecases and return the visitor a reduced list of servers
-according to some rules like weights or geolocalisation. They work by
-delegating a subzone (like dl.amnesia.boum.org) to those servers and with
-zone files containing additionals fields. There is two main softwares for
-those usecases:
-
-* <http://gdnsd.org/> which is available on debian and used for
-  example for wikipedia.
-
-* <https://github.com/abh/geodns> that requires manual installation
-  and is used for example by pool.ntp.org.
-
-Deploying such software would solve the problem in a more elegant way than
-CNAME or NS hacks. It would require a bit of system administration that
-maybe can be done using some puppet templates in a few Virtal Machines.
-
-## Using HTTP(s)
-
-DNS is not the only way to do some load balancing. It is mostly used for
-low level protocols that don't allow redirects (for example: NTP). As
-content download is already done using HTTP(s). HTTP(s) can be leveraged
-to do this kind of load balancing. It is what is done by sourceforge.net
-as pointed by ToBeFree and by many Linux distributions.
-
-For example using a PHP script (or more complete options such as
-mirrorbrain, thanks Sagi!) that would redirect requests to
-`dl.amnesia.boum.org/$file to $mirror.dl.amnesia.boum.org/$file`
-randomly or according to some additional rules (weights,
-geolocalisation, SSL availability ...).
-
-There is a few drawbacks on this approach:
-
-* It would increase a bit the load on boum.org's server.
-* It would increase the dependency on this server, meaning that it is
-  unavailable (down, blocked...), downloads will be blocked (but in this
-  case the site will be too).
-* It would require to develop the script or to install one such as
-  mirrorbrain (which is feature-full, available as [3rd party Debian
-  packages](http://download.opensuse.org/repositories/Apache:/MirrorBrain/),
-  and requires PostgreSQL).
-
-On the other side it has a few advantage:
-
-* It will only require a few ~20 lines of PHP script when DNS based
-  solutions require to install and maintain additional software and servers.
-* It can allow the script to be personnalised to add some additional rules
-  if necessary.
-* As boum.org server will see every requests, it would allow to do some
-  stats.
-* It can allow to use $mirror.dl.amnesia.boum.org URLs, allowing to deploy
-  SSL certificates easier that if all mirrors use dl.amnesia.boum.org.
-* As ToBeFree mentionned (thanks!) it is also possible to use some client
-  side scripts to select the mirror. I would not recommend to rely only on
-  this option as it would not work for browsers without scripts, but it can
-  be done as a complementary approach, it order to reduce the load and
-  dependency to dl.amnesia.boum.org's server.
-
-Thus, if I may, I would like to recommend considering the HTTP(s) option,
-even if it means that I have to write the PHP script by myself or to create
-an easy task entry on the ticket tracker and follow it :)
-
-## Proof of concept: JavaScript + multiple DNS pools / named mirrors
-
-This method can either be used with multiple DNS pools (dl1.amnesia.boum.org, dl2.amnesia.boum.org etc.) or with named mirrors (freiwuppertal.dl.amnesia.boum.org, othermirror.dl.amnesia.boum.org, ...). Using named mirrors allows you to use a huge, unlimited list of completely equally used mirrors; using multiple DNS pools leads to effects described under "CNAME hacks".
-
-These POCs should be 1:1 usable on the Tails [[download]] page. All that would be needed is setting up the DNS pools and/or named mirrors, and telling the mirror owners to configure their servers to respond to \*.amnesia.boum.org (the wildcard is important).
-
-### JavaScript POC (multiple DNS pools)
-   
-    <script src="//code.jquery.com/jquery.min.js"></script>
-    <script type="text/javascript">//<![CDATA[ 
-    $(window).load(function(){
-        var hosts = Array("dl.amnesia.boum.org","dl2.amnesia.boum.org","dl3.amnesia.boum.org","dl4.amnesia.boum.org","dl5.amnesia.boum.org");
-        var host = hosts[Math.floor(Math.random()*hosts.length)];
-    $(document).ready(function() {
-        var strNewString = $('body').html().replace(/dl\.amnesia\.boum\.org/g,host);
-        $('body').html(strNewString);
-    });
-    });//]]>  
-    </script>
-
-For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.org. Just responding to one of the pool names would make this a very unflexible solution, so the wildcard is needed. 
-
-At least nginx is unable to use a wildcard like dl\*.amnesia.boum.org, so \*.amnesia.boum.org has to be used. This is more flexible anyway.
-
-#### Example webpage (see the webpage source there too)
-
-<http://freiwuppertal.de/tails-mirror-example-dns.htm>
-
-
-### JavaScript POC (named mirrors)
-    
-    <script src="//code.jquery.com/jquery.min.js"></script>
-    <script type="text/javascript">//<![CDATA[ 
-    $(window).load(function(){
-        var hosts = Array("freiwuppertal.dl.amnesia.boum.org","othermirror.dl.amnesia.boum.org","yetanother.dl.amnesia.boum.org","weirdname.dl.amnesia.boum.org","supermirror.dl.amnesia.boum.org");
-        var host = hosts[Math.floor(Math.random()*hosts.length)];
-    $(document).ready(function() {
-        var strNewString = $('body').html().replace(/dl\.amnesia\.boum\.org/g,host);
-        $('body').html(strNewString);
-    });
-    });//]]>  
-    </script>
-
-For this to work and to be flexible, mirrors need to respond to \*.amnesia.boum.org. Just responding to a fixed name would make this an unflexible solution, so the wildcard is needed.
-
-#### Example webpage (see the webpage source there too)
-
-<http://freiwuppertal.de/tails-mirror-example-named.htm>
-
-#### Giving mirrors higher or lower weight
-
-Using this approach, giving one mirror more weight than others is very easy: Simply add it's name multiple times to the array of mirrors. :D
-
-### Vanilla JavaScript POC and JSON
-
-        <a href="http://dl.amnesia.boum.org/tails/stable/tails-i386-1.6/tails-i386-1.6.iso" id="dllink">download link</a>
-
-        <script type="text/javascript">
-        function fetchJSONdata(path, callback) {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200 || xhr.status === 0) {
-                        var data = JSON.parse(xhr.responseText);
-                        if (callback) callback(data);
-                    } else {
-						console.log( "Error: " + xhr.statusText);
-					}
-				}
-			};
-            xhr.open('GET', path, true);
-            xhr.send();
-        }
-
-		function getRandomInt(min, max) {
-  			return Math.floor(Math.random() * (max - min +1)) + min;
-		}
-
-		function isJSON(str) {
-			try {
-				JSON.parse(str);
-			} catch (e) {
-				return false;
-			}
-			return true;
-		}
-
-		function replaceDownloadURL(updatedURL) {
-			var URLMarker = "/tails/stable";
-			// todo check that url is a correct url
-			var linkDOMElem = document.getElementById('dllink');
-			var linkHREF = linkDOMElem.href.split( '//' );
-			var linkToISO = linkHREF[1].split( URLMarker );
-			// fixme http or https
-			linkDOMElem.href = '//' + updatedURL + URLMarker + linkToISO[1];
-			return true;
-		}
-
-        fetchJSONdata('./mirrors.json', function(data){
-            //console.log(data);
-			if( data == "undefined" ) {
-				console.log( "Error: mirror data not loaded.");
-			} else if( !isJSON( JSON.stringify(data) ) ) {
-				console.log( "Error: mirror data is not JSON.");
-			} else {
-				//console.log(data.mirrors);
-				// todo delete all mirrors with weight 0 before choosing one
-				if(data.mirrors.length > 0 ) {
-					var activeMirrors = new Array();
-					for ( i = 0; i < data.mirrors.length; i++ ) {
-						if ( data.mirrors[i].weight != 0 ) {
-							// add mirror as many times as its weight, max weight is 5
-							if ( parseInt(data.mirrors[i].weight ) > 5) {
-								var max_weight = 5;
-							} else {
-								var max_weight = parseInt( data.mirrors[i].weight );
-							}
-							for ( w = 0; w < max_weight; w++ ) {
-								activeMirrors.push( data.mirrors[i] );
-							}
-						}
-					}
-					console.log(activeMirrors);
-
-					var randomMirror = getRandomInt(0, activeMirrors.length-1);
-					//console.log(randomMirror);
-					//console.log(data.mirrors[randomMirror]);
-					replaceDownloadURL(activeMirrors[randomMirror].url);
-				}
-			}
-        });
-    </script>
-
-The mirrors.json file contains:
-<pre>
-   {
-	"mirrors": [
-		{ "url": "1.dl.amnesia.boum.org", "weight": "10" },
-		{ "url": "5.dl.amnesia.boum.org", "weight": "5" },
-		{ "url": "6.dl.amnesia.boum.org", "weight": "6" },
-		{ "url": "3.dl.amnesia.boum.org", "weight": "0" }
-	]
-    }
-</pre>
-
-
-## PHP: first draft
-
-
-    // http://stackoverflow.com/questions/4233407/get-random-item-from-array
-    
-    $mirrors = Array("alice.amnesia.boum.org","bob.amnesia.boum.org","clark.amnesia.boum.org","deborah.amnesia.boum.org","eric.amnesia.boum.org","freiwuppertal.amnesia.boum.org");
-    $mirror = $mirrors[array_rand($mirrors)];
-    echo "<p><a href=\"http://{$mirror}/tails/stable/tails-i386-1.4/tails-i386-1.4.iso\">Download Tails!</a></p>\n";
-    echo "<p>Selected mirror: {$mirror}</p>";
-
-Try it here:
-http://sandbox.onlinephpfunctions.com/code/54ffcc18e5dbbafc6c7d3c81e0c26f94ce7946fc
-
-Note: I am a horrible coder and basically copied this from the linked StackOverflow page. This page also helped me: http://php.net/manual/de/function.echo.php
-...and that's all. There might be security flaws in this extremely simple concept, so please have a close look at it. :)
+See [[HTTP_mirror_pool/archive]].

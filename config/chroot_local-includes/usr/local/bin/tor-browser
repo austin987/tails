@@ -20,6 +20,18 @@ PROFILE="${HOME}/.tor-browser/profile.default"
 # Import exec_firefox() and configure_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Allow Torbutton access to the control port filter (for new identity).
+# Setting a password is required, otherwise Torbutton attempts to
+# read the authentication cookie file instead, which fails.
+export TOR_CONTROL_HOST='127.0.0.1'
+export TOR_CONTROL_PORT='9052'
+export TOR_CONTROL_PASSWD='passwd'
+# Hide Torbutton's "Tor Network Settings..." context menu entry since
+# it doesn't work in Tails, and we deal with those configurations
+# strictly through Tor Launcher.
+export TOR_NO_DISPLAY_NETWORK_SETTINGS='yes'
+
+
 ask_for_confirmation() {
     # Skip dialog if user is already running Tor Browser:
     if pgrep -u amnesia -f "${TBB_INSTALL}/firefox" ; then
@@ -54,8 +66,6 @@ start_browser() {
     # localized search plugins (and perhaps other things too). It is
     # not enough to simply set intl.locale.matchOS to true.
     configure_best_tor_browser_locale "${PROFILE}"
-
-    unset SESSION_MANAGER
 
     exec_firefox -allow-remote --class "Tor Browser" -profile "${PROFILE}" "${@}"
 }

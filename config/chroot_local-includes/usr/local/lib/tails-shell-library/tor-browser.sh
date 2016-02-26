@@ -3,18 +3,33 @@
 TBB_INSTALL=/usr/local/lib/tor-browser
 TBB_PROFILE=/etc/tor-browser/profile
 TBB_EXT=/usr/local/share/tor-browser-extensions
-TOR_LAUNCHER_LOCALES_DIR=/usr/share/tor-launcher-standalone/chrome/locale
+TOR_LAUNCHER_INSTALL=/usr/local/lib/tor-launcher-standalone
+TOR_LAUNCHER_LOCALES_DIR="${TOR_LAUNCHER_INSTALL}/chrome/locale"
+
+exec_firefox_helper() {
+    local binary="${1}"; shift
+
+    export LD_LIBRARY_PATH="${TBB_INSTALL}"
+    export FONTCONFIG_PATH="${TBB_INSTALL}/TorBrowser/Data/fontconfig"
+    export FONTCONFIG_FILE="fonts.conf"
+
+    # The Tor Browser often assumes that the current directory is
+    # where the browser lives, e.g. for the fixed set of fonts set by
+    # fontconfig above.
+    cd "${TBB_INSTALL}"
+
+    # From start-tor-browser:
+    unset SESSION_MANAGER
+
+    exec "${TBB_INSTALL}"/"${binary}" "${@}"
+}
 
 exec_firefox() {
-    LD_LIBRARY_PATH="${TBB_INSTALL}"
-    export LD_LIBRARY_PATH
-    exec "${TBB_INSTALL}"/firefox "${@}"
+    exec_firefox_helper firefox "${@}"
 }
 
 exec_unconfined_firefox() {
-    LD_LIBRARY_PATH="${TBB_INSTALL}"
-    export LD_LIBRARY_PATH
-    exec "${TBB_INSTALL}"/firefox-unconfined "${@}"
+    exec_firefox_helper firefox-unconfined "${@}"
 }
 
 guess_best_tor_browser_locale() {
