@@ -182,3 +182,42 @@ Specs:
  * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
 
 Total   --- **$5424**
+
+# Benchmarks
+
+This is about [[!tails_ticket 11011]], [[!tails_ticket 11009]] and
+friends. All these tests are run on lizard v2, and all isobuilders we
+have (currently: 2) must be kept busy while tests are running.
+
+* past baseline: 4 tests in parallel, with 20GB of RAM for each tester
+  - rationale: get an idea of whether giving testers more RAM helped
+  - results: 75+75+64+75 ⇒ 72 minutes / run, 3.3 runs / hour
+
+* current baseline: 4 tests in parallel, with 23GB of RAM for each tester
+  - rationale: get an idea of whether giving testers more RAM helped;
+    and provide a current baseline to compare other results with
+  - results: 71+64+71+73 ⇒ 69 minutes / run, 3.5 runs / hour
+  - conclusion: giving more RAM to each isotester seems to help a bit;
+    next benchmarks will all use 23 GB per isotester
+
+* more vcpus per TailsToaster: 4 test suite runs in parallel, with
+  23GB of RAM for each tester, from the experimental branch
+  - rationale: see if [[!tails_ticket 6729]] helps
+  - results: 60+64+68+68 ⇒ 65 minutes / run, 3.7 runs / hour
+  - conclusion: this hypothesis is worth looking more closely into,
+    so next benchmarks will be run with both 1 and 2 vpcus per
+    TailsToaster
+
+And then, we can work on [[!tails_ticket 11113]]:
+
+* 6 testers: 6 tests (devel branch, 1 vcpu per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+
+* 6 testers: 6 tests (experimental branch, 2 vcpus per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+
+* 8 testers: 8 tests (devel branch, 1 vcpu per TailsToaster)
+  in parallel on 8 testers, with 23GB of RAM for each tester
+
+* 8 testers: 8 tests (experimental branch, 2 vcpus per TailsToaster)
+  in parallel on 8 testers, with 23GB of RAM for each tester
