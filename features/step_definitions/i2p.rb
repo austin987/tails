@@ -82,7 +82,7 @@ Then /^I see a notification that I2P failed to start$/ do
 end
 
 Then /^I see shared client tunnels in the I2P router console$/ do
-  @screen.wait('I2PSharedClientTunnels.png', 7 * 60)
+  @screen.wait('I2PSharedClientTunnels.png', 15 * 60)
 end
 
 Then /^I see a notification that I2P is not ready$/ do

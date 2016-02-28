@@ -1,3 +1,248 @@
+[[!toc levels=1]]
+
+# Linux dependencies
+
+The current Tails Installer version (<https://git-tails.immerda.ch/liveusb-creator/>)
+has considerable changes when compared with the upstream Fedora liveusb-creator
+(<https://git.fedorahosted.org/cgit/liveusb-creator.git>).
+
+The current package dependencies for the Tails Installer in Linux are:
+
+* dosfstools
+* gdisk
+* genisoimage
+* gir1.2-glib-2.0
+* gir1.2-gtk-3.0
+* gir1.2-udisks-2.0
+* mtools
+* p7zip-full
+* policykit-1
+* python-configobj
+* python-gi
+* python-urlgrabber
+* syslinux
+
+If we list the set of requirements for each important source file then we have:
+
+### \_\_init\_\_.py
+
+    import gettext
+
+    if sys.platform == 'win32':
+        import gettext_windows
+        gettext_windows.setup_env()
+
+### creator.py
+
+    if 'linux' in sys.platform:
+        import gi
+        gi.require_version('UDisks', '2.0')
+        from gi.repository import UDisks, GLib
+
+    Commands:
+    * syslinux
+    * sgdisk
+    * dd
+    * dosfslabel
+    * e2label
+    * extlinux
+    * pkexec
+    * mkdiskimage
+    * sync
+
+### gui.py
+
+    from gi.repository import Gdk, GLib, Gtk
+    urlgrabber
+
+    In general GTK3
+
+### launcher.py
+
+    from gi.repository import Gtk
+
+### utils.py
+
+    if 'linux' in sys.platform:
+        from gi.repository import GLib
+
+# Alternatives for Windows:
+
+The Windows specific code for the Tails Installer uses mostly
+the Python win32 interfaces:
+
+    import win32file, win32api, pywintypes
+
+and a set of third parties tools listed here:
+
+<https://git-tails.immerda.ch/liveusb-creator/tree/tools>
+
+There are other tools that would be possible to explore like:
+<https://labs.riseup.net/code/issues/10984>
+
+As a conclusion, the biggest difference in the current Tails version is the usage
+of the Python interface for GTK3 (PyGI). The tools/libraries for Windows used in
+the current upstream liveusb-creator version seem in principle like the same
+used for Tails right now, except for the GUI parts.
+
+# Analysis regarding operations on storage devices
+
+According to <https://tails.boum.org/contribute/design/installation/>,
+the steps to create a Tails bootable device are:
+
+1. Partition the device as a GPT partition.
+2. Create a FAT32 (VFAT) partition with the Tails files and Tails label.
+3. (Optionally) Create a persistence partition with LUKS.
+
+Next we analyze the code related to above steps. First we list
+the current Linux specific operations carried out in the
+target installation device and then we list the current and
+proposed Windows alternatives.
+
+## For Linux - LinuxTailsInstallerCreator/creator.py:
+
+### detect_supported_drives:
+
+    self._udisksclient.get_object_manager().get_objects()
+    self._udisksclient.get_drive_for_block(block)
+    self._udisksclient.get_partition_table(partition)
+
+### mount_device:
+
+    self._get_object().props.filesystem
+    mount = filesystem.call_mount_sync(
+      arg_options = GLib.Variant('a{sv}', None),
+      cancellable = None)
+
+### unmount_device:
+
+    filesystem = self._get_object(udi).props.filesystem
+    filesystem.call_unmount_sync(
+       arg_options=GLib.Variant('a{sv}', None),
+       cancellable=None)
+
+### partition_device:
+
+    block.call_format_sync(
+        'gpt',
+        arg_options=GLib.Variant('a{sv}', None),
+         cancellable=None)
+    partition_table.call_create_partition_sync(
+                    arg_offset=0,
+                    arg_size=self.system_partition_size * 2**20,
+                    arg_type=ESP_GUID,
+                    arg_name=self.label,
+                    arg_options=GLib.Variant('a{sv}', None),
+                    cancellable=None)
+    system_partition.call_set_type_sync(ESP_GUID, GLib.Variant('a{sv}', None))
+    system_partition.call_set_name_sync(self.label, GLib.Variant('a{sv}', None))
+    self._set_partition_flags(system_partition, SYSTEM_PARTITION_FLAGS)
+
+### update_system_partition_properties:
+
+    system_partition.call_set_type_sync(ESP_GUID, GLib.Variant('a{sv}', None))
+    system_partition.call_set_name_sync(self.label, GLib.Variant('a{sv}', None))
+    self._set_partition_flags(system_partition, SYSTEM_PARTITION_FLAGS)
+
+### verify_filesystem:
+
+    self.popen('/sbin/dosfslabel %s %s' % (
+                                   self.drive['device'], self.label))
+    self.popen('/sbin/e2label %s %s' % (self.drive['device'],
+                                                        self.label))
+
+### install_bootloader:
+
+    self.popen('/usr/bin/pkexec /usr/bin/syslinux %s -d syslinux %s' % (
+                    ' '.join(self.syslinux_options()),
+                    self.drive['device']))
+
+### initialize_zip_geometry:
+
+    self.popen('/usr/lib/syslinux/mkdiskimage -4 %s 0 %d %d' % (
+                   self._drive[:-1], heads, cylinders))
+
+### format_device:
+
+    block.call_format_sync(
+                'vfat',
+                arg_options=GLib.Variant(
+                    'a{sv}',
+                    {'label': GLib.Variant('s', self.label),
+                     'update-partition-type': GLib.Variant('s', 'FALSE')}))
+    self._get_object().props.block.call_rescan_sync(GLib.Variant('a{sv}', None))
+
+## For Windows - WindowsTailsInstallerCreator/creator.py:
+
+###    detect_supported_drives:
+
+    win32file, win32api, pywintypes
+    win32file.GetDriveType(drive) == win32file.DRIVE_REMOVABLE
+    win32api.GetVolumeInformation(drive)
+
+###    mount_device:
+
+    self.dest = self.drive['mount']
+
+###    unmount_device:
+
+    pass
+    We might use this:
+    https://technet.microsoft.com/en-us/library/cc772586.aspx
+
+###    partition_device:
+
+    Not implemented.
+    Here what we need is to perform a GPT partition on the target device.
+    The only realistic option we could find was to use the gdisk tools
+    (http://www.rodsbooks.com/gdisk/). This library provides two utilities
+    to create GPT partitions. The first is gdisk.exe a text mode interactive
+    application and the second is sgdisk.exe, which works by command line.
+    If we want to use sgdisk.exe which looks like the best option, we should
+    compile it by ourselfs, because the binaries is not provided. The compilation
+    requires gnuwin32 popt library (http://gnuwin32.sourceforge.net/packages/popt.htm)
+    which looks old and might only work up to WindowsXP. In the other hand,
+    the only thing popt does is parsing command line parameters,
+    so in theory it should not be so difficult to run it in other
+    Windows versions, but I could not find more information.
+    The only alternative would be to use directly the WinAPI but it could
+    also require a good amount of work.
+
+###    update_system_partition_properties:
+
+    cmd = (  [ '/sbin/sgdisk' ]
+               + [ '--typecode=1:%s' % ESP_GUID ]
+               + [ self.drive['parent'] ])
+        self.popen(cmd, shell=False)
+    Currently it uses sgdisk but we need to decide on
+    using it or not.
+
+###    verify_filesystem:
+
+    win32api, win32file, pywintypes
+    win32file.SetVolumeLabel(self.drive['device'], self.label)
+
+###    install_bootloader:
+
+    self.popen('syslinux %s -m -a -d %s %s' %  (
+                ' '.join(self.syslinux_options()), 'syslinux', device))
+    Ref: https://www.kernel.org/pub/linux/utils/boot/syslinux/
+
+###    initialize_zip_geometry:
+
+    self.popen('/usr/lib/syslinux/mkdiskimage -4 %s 0 %d %d' % (
+                   self._drive[:-1], heads, cylinders))
+
+###    format_device:
+
+    self.popen('format /Q /X /y /V:Fedora /FS:FAT32 %s' % self.drive['device'])
+    Looks broken
+
+## Persistent partition:
+
+This is managed by the persistence-setup <https://git-tails.immerda.ch/persistence-setup>
+so it is beyond the scope of the current research.
+
 # PyGI windows executable
 
 I managed to create a native windows executable for a test Python/GI program under Windows 8.1

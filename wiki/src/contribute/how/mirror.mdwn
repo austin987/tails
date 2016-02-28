@@ -62,12 +62,12 @@ bandwidth: a domestic DSL connection won't help; neither will a shared
 web hosting setup that provides FTP access only.
 
 To give you an idea, a few dedicated Mb/s is a must; you must expect
-pushing at least 50-100GB [[!wikipedia GiB]] (bytes, not bits) on
+pushing at least **50-100GB** [[!wikipedia GiB]] (bytes, not bits) on
 a normal day, and twice as much for a short period after each release.
-So, it is a must to be able to push at least 5 [[!wikipedia TiB]]
-a month, and preferably 6 or 8 TiB.
+So, it is a must to be able to push **at least 5 [[!wikipedia TiB]]**
+a month, and **preferably 6 or 8 TiB**.
 
-You will also need around 5-10 GiB of disk space.
+You will also need around **5-10 GiB** of disk space.
 
 If you satisfy these practical requirements, please read on!
 Else, please consider seeding Tails images over BitTorrent instead.
@@ -107,8 +107,8 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 	   ServerName dl.amnesia.boum.org
 	   ServerAdmin YOUR_EMAIL
 	
-	   DocumentRoot /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
-	   <Directory /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/>
+	   DocumentRoot /var/www/YOUR_PATH/
+	   <Directory /var/www/YOUR_PATH/>
 	      Options Indexes
 	      FileETag None
 	      AllowOverride None
@@ -122,7 +122,7 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 
 	static-file.etags = "disable"
 	$HTTP["host"] =~ "^dl\.amnesia\.boum\.org$" {
-		server.document-root = "/var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/"
+		server.document-root = "/var/www/YOUR_PATH/"
 		server.dir-listing = "enable"
 	}
 
@@ -131,7 +131,7 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 	server {
 		server_name dl.amnesia.boum.org;
 		etag off;
-		root /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE;
+		root /var/www/YOUR_PATH;
 		location / {
 			autoindex on;
 		}
@@ -142,22 +142,22 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 Download a snapshot of the current Tails files:
 
 	rsync -rt --delete \
-	         rsync.torproject.org::amnesia-archive \
-	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
 If you have disk space limitations, you might want to exclude the
 `/tails/obsolete` folder (which contains old versions of Tails) from the
 download:
 
 	rsync -rt --delete --exclude=/tails/obsolete --delete-excluded \
-	         rsync.torproject.org::amnesia-archive \
-	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
 ### 3. Schedule the pulling of the files
 
-Secondary mirrors (like yours) should sync every hour + 15 minutes.
+Your mirror should sync every hour + 15 minutes (at 00:15, 01:15, 02:15, etc.).
 Use `cron` or equivalent to schedule the same `rsync` command
 as above.
+
+    15 * * * * root rsync -rt --delete rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
 You can now [[ask for your mirror to be added to the pool|mirror#http-pool]].
 

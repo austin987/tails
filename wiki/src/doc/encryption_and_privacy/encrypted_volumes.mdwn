@@ -6,7 +6,7 @@ encrypted volume: a dedicated partition on a USB stick or external hard-disk.
 
 Tails comes with utilities for LUKS, a standard for disk-encryption under Linux. 
 
-  - The GNOME <span class="application">Disk Utility</span> allows you to
+  - <span class="application">GNOME Disks</span> allows you to
     create encrypted volumes.
   - The GNOME desktop allows you to open encrypted volumes.
 
@@ -17,20 +17,21 @@ Tails comes with utilities for LUKS, a standard for disk-encryption under Linux.
 
 </div>
 
-[[!toc levels=1]]
+[[!toc levels=2]]
 
 Create an encrypted partition
 =============================
 
-To open the GNOME <span class="application">Disk Utility</span> choose
+To open <span class="application">GNOME Disks</span> choose
 <span class="menuchoice">
   <span class="guimenu">Applications</span>&nbsp;▸
-  <span class="guisubmenu">Accessories</span>&nbsp;▸
-  <span class="guimenuitem">Disk Utility</span></span>.
+  <span class="guisubmenu">Utilities</span>&nbsp;▸
+  <span class="guimenuitem">Disks</span></span>.
 
-<h2 class="bullet-number-one">Identify your external storage device</h2>
+Identify your external storage device
+-------------------------------------
 
-<span class="application">Disk Utility</span> lists all the current storage
+<span class="application">Disks</span> lists all the current storage
 devices on the left side of the screen.
 
   1. Plug in the external storage device that you want to use.
@@ -40,82 +41,116 @@ devices on the left side of the screen.
      [[!img storage_devices_after.png link=no alt="A new storage device appeared
      in the list"]]
 
-<h2 class="bullet-number-two">Format the device</h2>
-
   1. Check that the description of the device on the right side of the screen
   corresponds to your device: its brand, its size, etc.
 
-  1. Click on <span class="guilabel">Format Drive</span> to erase all the
-  existing partitions on the device.
+Format the device
+-----------------
 
-  1. In the dialog box to select the <span class="guilabel">Scheme</span>, if
-  you are unsure, leave the default option <span class="guilabel">Master Boot
-  Record</span> selected.
+  1. Click on the <span class="guimenu">[[!img lib/emblem-system.png alt="System" class="symbolic" link="no"]]</span> button
+     in the titlebar and choose <span class="guilabel">Format…</span>
+     to erase all the existing partitions on the device.
 
-<h2 class="bullet-number-three">Create a new encrypted partition</h2>
+  1. In the <span class="guilabel">Format Disk</span> dialog:
+
+     - If you want to erase all data securely, choose to
+       <span class="guilabel">Overwrite existing data with zeroes</span> in the
+       <span class="guilabel">Erase</span> drop-down list.
+
+     - Choose <span class="guilabel">Compatible with all
+       systems and devices (MBR/DOS)</span> in the <span class="guilabel">Partitioning</span>
+       drop-down list.
+
+     Then click <span class="button">Format…</span>.
+
+  1. In the confirmation dialog, make sure that the device
+     is correct. Click <span class="button">Format</span> to confirm.
+
+Create a new encrypted partition
+--------------------------------
 
 Now the schema of the partitions in the middle of the screen shows an empty
-device.
+device:
 
 [[!img empty_device.png link=no alt="Free 3.9 GB"]]
 
-  1. Click on <span class="guilabel">Create Partition</span>.
+  1. Click on the <span class="guimenu">[[!img lib/list-add.png alt="Create partition" class="symbolic" link="no"]]</span>
+     button to create a new partition on the device.
 
-  1. Configure the new partition:
+  1. In the <span class="guilabel">Create Partition</span> dialog:
 
-     [[!img create_partition.png link=no alt="Create partition on…"]]
+     - <span class="guilabel">Partition Size</span>: you can create a partition
+       on the whole device or only on part of it. In this example we are
+       creating a partition of 4.0 GB on a device of 8.1 GB.
 
-    - <span class="guilabel">Size</span>. You can decide to create a partition
-      on the whole device or just on part of it. In this example we are creating
-      a partition of 2.0 GB on a device of 3.9 GB.
-    - <span class="guilabel">Type</span>. You can change the file system type of
-      the partition. If you are not sure you can leave the default value:
-      <span class="guilabel">Ext4</span>.
-    - <span class="guilabel">Name</span>. You can set a name for the partition.
-      This name remains invisible until the partition is open but can help
-      you to identify it during use.
-    - <span class="guilabel">Encrypt underlying device</span>. Select this
-      option to encrypt the partition.
+     - <span class="guilabel">Type</span>: choose
+       <span class="guilabel">Encrypted, compatible with Linux systems (LUKS + Ext4)</span>
+       from the drop-down list.
 
-    Then click on the <span class="button">Create</span> button.
+     - <span class="guilabel">Name</span>: you can set a name for the partition.
+       This name remains invisible until the partition is open but can help
+       you to identify it during use.
 
-  1. Enter a passphrase for the new partition in the
-     <span class="guilabel">Enter passphrase</span> dialog box. Then click on
-     the <span class="button">Create</span> button.
+     - <span class="guilabel">Passphrase</span>: type a passphrase for the
+       encrypted partition and repeat it to confirm.
+
+     Then click <span class="button">Create</span>.
+
+     <div class="bug">
+     <p>If an error occurs while creating the new partition, try to unplug the
+     device, restart <span class="application">GNOME Disks</span>,
+     and follow all steps again from the beginning.</p>
+     </div>
 
   1. Creating the partition takes from a few seconds to a few minutes. After
-     that, the new encrypted partition appears in the volumes of the device:
+     that, the new encrypted partition appears in the volumes on the device:
 
-     [[!img encrypted_partition.png link=no alt="Encrypted 2.0 GB / secret 2.0 GB ext4"]]
+     [[!img encrypted_partition.png link="no" alt="Encrypted 2.0 GB / secret 2.0 GB ext4"]]
 
-  1. At this point you can create other partitions in the free space left on the
-     device, if you want, by clicking on it and doing again
-     <span class="guilabel">Create Partition</span>.
+  1. If you want to create another partition in the free space on the
+     device, click on the free space and then click on the
+     <span class="guimenu">[[!img lib/list-add.png alt="Create partition" class="symbolic" link="no"]]</span>
+     button again.
 
-<h2 class="bullet-number-four">Use the new partition</h2>
+Use the new partition
+---------------------
 
-You can access this new volume from the <span class="guimenu">Places</span> menu
-with the name you gave it.
+You can open this new partition from the sidebar of the file browser with the
+name you gave it.
 
-[[!img places_secret.png link=no alt="Places&nbsp;▸ secret"]]
+After opening the partition with the file browser, you can also access it
+from the <span class="guimenu">Places</span> menu.
 
 Open an existing encrypted partition
 ====================================
 
-When plugging in a device containing an encrypted partition, Tails does not mount it
-automatically but it appears in the <span class="guimenu">Places</span>
-menu. If several partitions appear as <span class="guimenu">Encrypted</span>,
-like in the example, you can use their sizes to guess which one is the one you want
-to open.
+When plugging in a device containing an encrypted partition, Tails does not open the partition
+automatically but you can do so from the file browser.
 
-[[!img places_encrypted.png link=no alt="Places&nbsp;▸ 2.0 GB Encrypted"]]
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Places</span>&nbsp;▸
+     <span class="guisubmenu">Computer</span></span>
+   to open the file browser.
 
-Once you are done using the device, to close the encrypted partition choose
-<span class="menuchoice">
-  <span class="guimenu">Places</span>&nbsp;▸
-  <span class="guisubmenu">Computer</span></span>,
-right-click on the device, and select <span class="guilabel">Safely
-Remove Drive</span>.
+1. Click on the encrypted partition that you want to open in the sidebar.
+
+   [[!img nautilus_encrypted.png link="no" alt="File browser with '4.0 GB Encrypted' entry in the sidebar"]]
+
+1. Enter the passphrase of the partition in the password prompt and
+   click <span class="button">Unlock</span>.
+
+   If you choose the option <span class="guilabel">Remember Password</span> and have
+   the <span class="guilabel">[[GNOME Keyring|first_steps/persistence/configure#gnome_keyring]]</span>
+   persistence feature activated, the password is stored in the persistent storage and remembered across multiple
+   working sessions.
+
+1. After opening the partition with the file browser, you can also access it
+   from the <span class="guimenu">Places</span> menu.
+
+1. To close the partition after you finished using it, click on the
+   <span class="guimenu">[[!img lib/media-eject.png alt="Eject" class="symbolic" link="no"]]</span>
+   button next to the partition in the sidebar of the file browser.
 
 Storing sensitive documents
 ===========================
