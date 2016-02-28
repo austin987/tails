@@ -105,8 +105,12 @@ proposed Windows alternatives.
 ### detect_supported_drives:
 
     self._udisksclient.get_object_manager().get_objects()
+    partition = obj.props.partition
+    filesystem = obj.props.filesystem
     self._udisksclient.get_drive_for_block(block)
     self._udisksclient.get_partition_table(partition)
+
+Add to that a bunch of `drive.props.*` and `block.props.*`.
 
 ### mount_device:
 
@@ -183,6 +187,8 @@ proposed Windows alternatives.
 
 ###    mount_device:
 
+XXX: ?
+
     self.dest = self.drive['mount']
 
 ###    unmount_device:
@@ -199,12 +205,12 @@ We might use this:
 Here what we need is to perform a GPT partition on the target device.
 The only realistic option we could find was to use the gdisk tools
 (<http://www.rodsbooks.com/gdisk/>). This library provides two utilities
-to create GPT partitions. The first is gdisk.exe a text mode interactive
-application and the second is sgdisk.exe, which works by command line.
-If we want to use sgdisk.exe which looks like the best option, we should
-compile it by ourselfs, because the binaries is not provided. The compilation
+to create GPT partitions. The first is `gdisk.exe` a text mode interactive
+application and the second is `sgdisk.exe`, which works by command line.
+If we want to use `sgdisk.exe` which looks like the best option, we should
+compile it by ourselves, because no binary is provided. The compilation
 requires gnuwin32 popt library (<http://gnuwin32.sourceforge.net/packages/popt.htm>)
-which looks old and might only work up to WindowsXP. In the other hand,
+which looks old and might only work up to Windows XP. On the other hand,
 the only thing popt does is parsing command line parameters,
 so in theory it should not be so difficult to run it in other
 Windows versions, but I could not find more information.
@@ -409,3 +415,6 @@ In another fresh windows 8.1VM
 
 * py2exe: <https://gmigdos.wordpress.com/2014/06/29/how-to-bundle-python-gtk3-apps-on-windows-with-py2exe/>
 
+# Conclusion
+
+XXX
