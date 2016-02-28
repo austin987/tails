@@ -189,6 +189,9 @@ This is about [[!tails_ticket 11011]], [[!tails_ticket 11009]] and
 friends. All these tests are run on lizard v2, and all isobuilders we
 have (currently: 2) must be kept busy while tests are running.
 
+The initial set of tests use `ext4` for `/tmp/TailsToaster`, and later
+on we switch to `tmpfs`.
+
 * past baseline: 4 tests in parallel, with 20GB of RAM for each tester
   - rationale: get an idea of whether giving testers more RAM helped
   - results: 75+75+64+75 ⇒ 72 minutes / run, 3.3 runs / hour
@@ -212,12 +215,47 @@ And then, we can work on [[!tails_ticket 11113]]:
 
 * 6 testers: 6 tests (devel branch, 1 vcpu per TailsToaster)
   in parallel on 6 testers, with 23GB of RAM for each tester
+  - results: 3/6 runs fail, 2 of them due to [[!tails_ticket 10777]],
+    another one due to a kernel panic in TailsToaster
 
 * 6 testers: 6 tests (experimental branch, 2 vcpus per TailsToaster)
   in parallel on 6 testers, with 23GB of RAM for each tester
+  - results: 3/6 runs fail
+    * two failures due to a mistake in test/10777-robust-boot-menu,
+      fixed since then in commit 4601cbb
+    * one due to a regression probably brought by
+      test/10777-robust-boot-menu, fixed since then in commit 6a9030a;
+      plus some race condition in the "all notifications have
+      disappeared" step
+
+At this point it seems that I/O load is a problem (it slows down
+things enough to trigger weird test failures), so let's switch to
+mounting a tmpfs on `/tmp/TailsToaster` ([[!tails_ticket 11175]]) for
+all following benchmarks.
+
+* 6 testers: 6 tests (devel branch, 1 vcpu per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+  - results #1: 58+59+58+59+58+59 = 59 minutes, 6.1 runs / hour;
+    one failure due to [[!tails_ticket 11176]], and another one that
+    I can't quite explain; note that I was setting up VMs with Puppet
+    during this run
+  - results #2: XXX
+
+* 6 testers: 6 tests (experimental branch, 2 vcpus per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+  - results: 49+50+50+49+49+49 ⇒ 49 minutes, 7.3 runs / hour;
+    one failure due to a mistake in test/10777-robust-boot-menu,
+    fixed since then; note that I was installing Debian on 2 VMs
+    during this run
+  - results: 75 minutes (?!); one failure due to kernel panic in
+    TailsToaster
 
 * 8 testers: 8 tests (devel branch, 1 vcpu per TailsToaster)
   in parallel on 8 testers, with 23GB of RAM for each tester
+  - results #1: 57+57+59*6 ⇒ 58.5 minutes / run, 8.2 runs / hour
+  - results #2: XXX
 
 * 8 testers: 8 tests (experimental branch, 2 vcpus per TailsToaster)
   in parallel on 8 testers, with 23GB of RAM for each tester
+  - results #1: XXX
+  - results #2: XXX
