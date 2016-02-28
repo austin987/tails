@@ -187,26 +187,28 @@ proposed Windows alternatives.
 ###    unmount_device:
 
     pass
-    We might use this:
-    https://technet.microsoft.com/en-us/library/cc772586.aspx
+
+We might use this:
+<https://technet.microsoft.com/en-us/library/cc772586.aspx>
 
 ###    partition_device:
 
     Not implemented.
-    Here what we need is to perform a GPT partition on the target device.
-    The only realistic option we could find was to use the gdisk tools
-    (http://www.rodsbooks.com/gdisk/). This library provides two utilities
-    to create GPT partitions. The first is gdisk.exe a text mode interactive
-    application and the second is sgdisk.exe, which works by command line.
-    If we want to use sgdisk.exe which looks like the best option, we should
-    compile it by ourselfs, because the binaries is not provided. The compilation
-    requires gnuwin32 popt library (http://gnuwin32.sourceforge.net/packages/popt.htm)
-    which looks old and might only work up to WindowsXP. In the other hand,
-    the only thing popt does is parsing command line parameters,
-    so in theory it should not be so difficult to run it in other
-    Windows versions, but I could not find more information.
-    The only alternative would be to use directly the WinAPI but it could
-    also require a good amount of work.
+
+Here what we need is to perform a GPT partition on the target device.
+The only realistic option we could find was to use the gdisk tools
+(<http://www.rodsbooks.com/gdisk/>). This library provides two utilities
+to create GPT partitions. The first is gdisk.exe a text mode interactive
+application and the second is sgdisk.exe, which works by command line.
+If we want to use sgdisk.exe which looks like the best option, we should
+compile it by ourselfs, because the binaries is not provided. The compilation
+requires gnuwin32 popt library (<http://gnuwin32.sourceforge.net/packages/popt.htm>)
+which looks old and might only work up to WindowsXP. In the other hand,
+the only thing popt does is parsing command line parameters,
+so in theory it should not be so difficult to run it in other
+Windows versions, but I could not find more information.
+The only alternative would be to use directly the WinAPI but it could
+also require a good amount of work.
 
 ###    update_system_partition_properties:
 
@@ -214,8 +216,8 @@ proposed Windows alternatives.
                + [ '--typecode=1:%s' % ESP_GUID ]
                + [ self.drive['parent'] ])
         self.popen(cmd, shell=False)
-    Currently it uses sgdisk but we need to decide on
-    using it or not.
+
+Currently it uses sgdisk but we need to decide on using it or not.
 
 ###    verify_filesystem:
 
@@ -226,7 +228,8 @@ proposed Windows alternatives.
 
     self.popen('syslinux %s -m -a -d %s %s' %  (
                 ' '.join(self.syslinux_options()), 'syslinux', device))
-    Ref: https://www.kernel.org/pub/linux/utils/boot/syslinux/
+
+Ref: <https://www.kernel.org/pub/linux/utils/boot/syslinux/>
 
 ###    initialize_zip_geometry:
 
@@ -236,7 +239,8 @@ proposed Windows alternatives.
 ###    format_device:
 
     self.popen('format /Q /X /y /V:Fedora /FS:FAT32 %s' % self.drive['device'])
-    Looks broken
+
+Looks broken
 
 ## Persistent partition:
 
