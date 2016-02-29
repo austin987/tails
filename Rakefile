@@ -216,6 +216,7 @@ end
 
 desc "Make sure the vagrant user's home directory has no undesired artifacts"
 task :ensure_clean_home_directory => ['vm:up'] do
+  user = vagrant_ssh_config('User')
   run_vagrant('ssh', '-c', "sudo rm '/home/#{user}/'*.iso.*")
 end
 
