@@ -51,12 +51,6 @@ if [ "$LOCAL_HTTP_PROXY" ]; then
 	http_proxy="$LOCAL_HTTP_PROXY"
 fi
 
-# Currently our base box contains a stupid dpkg-divert that breaks
-# upgrading udev.
-if dpkg-divert --list | grep -wq '/lib/udev/write_net_rules.udev'; then
-   dpkg-divert --remove /lib/udev/write_net_rules.udev
-fi
-
 # Upgrade if needed
 apt-get -y dist-upgrade
 
