@@ -6,13 +6,13 @@ Related pages
 * [[!tails_ticket 5525]]
 * [[blueprint/Mandatory_Access_Control]]
 * [[contribute/design/application_isolation]]
+* `feature/5525-sandbox-web-browser` branch
+* [nightly built images](http://nightly.tails.boum.org/build_Tails_ISO_feature-5525-sandbox-web-browser/)
 
 Status
 ======
 
 ## automated test passes
-
-(needs to be run again with current status of the branch at some point)
 
 * feature/i2p (unconfined)
 * feature/torified_browsing
@@ -22,6 +22,24 @@ Status
 * relevant bits of feature/usb_install
   - view persistent bookmarks, in read-only persistence mode ([[!tails_ticket 8787]])
   - persistent bookmarks, RW
+* "Tails documentation" link on the Desktop ([[!tails_ticket 8788]])
+* default download directory is `~/Tor Browser`
+* HTML5 audio playback
+* WebM video and audio playback
+* download to amnesiac `~/Tor Browser`
+* read from amnesiac `~/Tor Browser`
+* default upload directory is `~/Tor Browser/`
+* `~/Tor Browser/` must always exist
+* there must always be a GTK bookmark to `~/Tor Browser/`
+* import OpenPGP key from website
+* printing to file
+* download to persistent `~/Persistent/Tor Browser`, in
+  read-write persistence mode
+* read from persistent `~/Persistent/Tor Browser`, in read-write
+  persistence mode
+* when `~/Persistent/` is persistent read-write, then
+  `~/Persistent/Tor Browser` must exist and there must be
+  a GNOME bookmark pointing to it
 
 ## manual test OK
 
@@ -32,157 +50,48 @@ Status
 * manually update AdBlock Plus lists
 * add a bookmark, with persistent bookmarks feature enabled, in
   read-only persistence mode
+* install a Firefox add-on (this does not mean we actively support that, right? :)
+* read from persistent `~/Persistent/Tor Browser`, in read-only
+  persistence mode
 
 ## manual test OK, maybe needs automated test
 
-* YouTube audio and video playback
-* non-YouTube HTML5 video playback
-* "Tails documentation" link on the Desktop ([[!tails_ticket 8788]])
-* download to persistent `~/Downloads`, in read-write persistence mode
-* read from persistent `~/Downloads`, in read-write persistence mode
-* download to persistent `~/Downloads`, in read-only persistence mode
-* read from persistent `~/Downloads`, in read-only persistence mode
-* default download directory is `~/Downloads`
-* download to non-persistent `~/Downloads`
-* read from non-persistent `~/Downloads`
 
 ## known issues
 
-None currently.
 
 ## needs testing
 
-* default upload directory is `~/Downloads`
-* import OpenPGP key from website:
-  - clicking on the "Tails signing key" link in Tails 1.2.3 leads in
-    a dialog whose default is "Open with Import Key"
-  - this is provided by `seahorse-pgp-keys.desktop`, that execs
-    `seahorse-tool --import`
-* install a Firefox add-on (this does not mean we actively support that, right? :)
+* printing to real printer
 
 <a id="ux"></a>
 
 User experience matters
 =======================
 
-Downloading files
------------------
+Until the `feature/5525-sandbox-web-browser` branch is merged, see the
+"User experience matters" section on
+<https://git-tails.immerda.ch/tails/tree/wiki/src/contribute/design/application_isolation.mdwn?h=feature/5525-sandbox-web-browser>.
 
-No good way exists (yet) to let the user choose a specific file to
-upload, or download directory, each time they want to do that (this is
-work-in-progress in AppArmor upstream, with a mediation layer between
-applications, the GTK file chooser and the filesystem -- some day we
-can solve this problem in better ways, but we're not there yet).
+Later, see [[contribute/design/application_isolation#ux]].
 
-So, once we confine Tor Browser with AppArmor in Tails 1.3:
+Remaining questions:
 
-* either we allow the Tor Browser to read and write everywhere in
-  the home and persistent directory: would entirely defeat the purpose
-  of confining it in the first place, so that's a no-no;
-* or, we allow the Tor Browser to read/write files from/to one
-  specific directory (e.g. `/home/amnesia/Downloads/`).
-
-I see no better solution than the latter, so the following assumes
-that we'll go with it. So, a first question is: what name should this
-directory have? (Wait, other constraints about this are exposed
-below).
-
-Now, let's say we have a downloads/uploads directory that's shared
-between the Tor Browser, the file browser, and all non-confined
-applications. We have a usability issue: the space available in that
-directory is limited by the free system memory (RAM). So in practice,
-if one starts downloading a large file in there, worst case the
-download will fail at some point during the download, best case the
-browser will tell the user that there's not enough space available
-there before they are allowed to confirm the destination directory for
-the download.
-
-[Side-note: I believe we have no simple mean to adjust the browser's
-behaviour in this area, at least not on the short term, so I've not
-checked how exactly it behaves right now — perhaps that would be
-a good research project on the long term, but on the other hand on the
-long term we'll have even better solutions showing up, as explained
-above, so IMO this shouldn't block confining the Tor Browser
-in Tails.]
-
-The obvious (and easiest to implement) solution to this, from my
-perspective, was to add a persistence setting for `~/Downloads/`
-(called "Browser Downloads", subtitled "Downloads from the Tor
-Browser", akin to the "Browser Bookmarks" we already have), and to add
-a GNOME bookmark called "Downloads" when the Downloads persistence
-feature is enabled. This is implemented in the
-`feature/5525-sandbox-web-browser` branch, and can be tested using the
-latest nightly built image from that branch:
-<http://nightly.tails.boum.org/build_Tails_ISO_feature-5525-sandbox-web-browser/>.
-
-Then sajolida submitted another idea:
-
-> Then could we imagine giving the browser access to two places: a
-> non-persistent place (~/Downloads) and a persistent place (maybe
-> ~/Persistent/Downloads) and let the user decide when stuff gets downloaded?
->
-> This is pretty much the case as of today: when I download something it
-> proposes to download to ~/Downloads by default but if I want to save it
-> for real I have to browser my myself to somewhere under ~/Persistent.
-> 
-> Then we don't need a new persistence feature.
-
-Indeed this would work. And then, the questions that are speficic to
-sajolida's proposal are:
-
-* What should be the _default_ download directory proposed to the
-  user? `~/Downloads/` in all cases? `~/Persistent/Downloads/` iff.
-  this directory is persistent in read-write mode? I've not looked at
-  how hard it is to change this at runtime, but I guess it's easy.
-
-* Implementation-wise, we have to create `~/Persistent/Downloads/`
-  whenever `~/Persistent/` is made persistent.
-
-Now, here are some remaining questions that apply to both proposals.
-Below, I'll use the term "persistent downloads directory" for both the
-persistent `~/Downloads/` I've implemented, and the persistent
-`~/Persistent/Downloads/` sajolida suggested.
-
-1. Take a step back. Think. Do you see a better general solution to
-   this problem? [AFAIK no other Live OS has AppArmor enabled by
-   default, so there's no source of inspiration available.] Feel free
-   to dream awake: worst case I'll tell you that it's impossible, too
-   hard, or only good for the long term, and it'll still be useful.
-
-2. Shall we display a Downloads bookmark in GNOME even if
-   `~/Downloads/` is not persistent? I guess we should not.
-
-3. Shall we rename the bookmark pointing to the default persistent
-   downloads directory "Persistent Downloads"? But then users may lose
-   data by mistake when they use read-only persistence option,
-   believing it'll be persistent. OTOH, we have had a "Persistent"
-   bookmark for years, even in read-only persistence mode, and 1.
-   nobody complained; 2. the read-only persistence mode is barely used
-   at all anyway.
-
-4. Shall we rename the persistent uploads directory and the
-   corresponding bookmark to include the "Uploading files" use case?
-   E.g. maybe we can find a name that conveys the "files shared with
-   Tor Browser" concept. See below for more bits about this uploading
-   files topic.
-
-5. What to do about alternative browsers (I2P and Unsafe Browser)?
+1. What to do about alternative browsers (I2P and Unsafe Browser)?
    We have [[!tails_ticket 8280 desc="a ticket"]] about allowing the
-   I2P Browser to access local files. Shall we use e.g.
-   `~/Downloads/Tor Browser/`, `~/Downloads/I2P Browser/` and
-   `~/Downloads/Unsafe Brower/` (the latter may make sense now that we
-   plan to move the LAN browsing support into the Unsafe Browser) —
-   and equivalently, if we go with sajolida's idea,
-   `~/Persistent/Downloads/Tor Browser/`, etc.?
-   If we go this way, IMO we should:
-   * have a single persistent feature for the persistent downloads
-     directory (`~/Downloads/` or `~/Persistent/Downloads/`)
-   * have a single bookmark to that directory
-   * _not_ allow a given browser to access files in other browsers'
-     own download directory (this would be too much of a linkability
-     and de-anonymization risk)
+   I2P Browser to access local files. Shall we use e.g. `~/Tor Browser
+   files/`, `~/I2P Browser files/` and `~/Unsafe Brower files/` (the
+   latter may make sense now that we plan to move the LAN browsing
+   support into the Unsafe Browser) — and equivalently,
+   `~/Persistent/Tor Browser/`, etc.? or rather a single
+   shared namespace, with e.g. `~/Browser files/Tor Browser`,
+   `~/Browser files/I2P Browser`, etc.?
+   
+   In any case, of course we should _not_ allow a given browser to
+   access files in other browsers' own download directory (this would
+   be too much of a linkability and de-anonymization risk)
 
-6. The "New Identity" problem. The Tor Browser tries hard to prevent
+2. The "New Identity" problem. The Tor Browser tries hard to prevent
    data to persist once its "New Identity" button has been clicked, to
    prevent activities performed before and after this action to be
    linked with each other. As boyska (a Freepto developer) made me
@@ -200,28 +109,14 @@ persistent `~/Downloads/` I've implemented, and the persistent
    users in my experience, see [[!tails_ticket 7709]]), warns them
    that their previous downloads will be deleted, or rather moved to
    a directory where that the Tor Browser hasn't access to.
+   Another idea is to block the "New Identity" until the user has
+   themselves emptied the browser files directory, e.g.:
+   
+       When I click on "New Identity" while there are files in one
+            of the downloads directories
+       Then I'm told "Tor Browser will be reset to a New Identity
+            once you have emptied folders $x and $y"
+       And then, once I have emptied the download directories
+       Then Tor Browser is reset to a New Identity
+   
    Food for thought.
-
-7. Ideally, we should not need any documentation, but in this case
-   I believe we do: users _will_ try to download to directories that
-   the browser don't have access to, and wonder why the browser says
-   "No read permission" or similar. I guess that at least
-   doc/anonymous_internet/Tor_Browser should have a new section
-   about this.
-
-Uploading files
----------------
-
-Basically, the same problems apply as for downloading files. Is it
-better to share a common directory with downloads, or to add
-a different one to the whitelist?
-
-In any case, I guess we have to:
-
-* document that one should put files in that specific directory before
-  submitting them for upload in the Tor Browser
-* make sure that this directory is selected by default when clicking
-  a "Browse" upload button on a website
-
-I didn't think much about this uploading problem, so all ideas
-are welcome.

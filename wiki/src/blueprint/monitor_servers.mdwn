@@ -1,0 +1,324 @@
+Corresponding parent ticket: [[!tails_ticket 5734]]
+
+[[!toc levels=3]]
+
+# Introduction
+
+## Why?
+
+* Some pieces of our infrastructure are critical to e.g.:
+  - the development process (if the ISO build fails, developers
+    cannot work)
+  - the release process -- which may block us from putting out
+    emergency security fixes
+  - users (if the APT repository is down, the "additional software
+    packages" persistence feature is broken)
+
+* We want to avoid contributors getting used to ignore alerts sent by
+  our CI system. The more false positives there are, the more they
+  will "learn" to do so. Here we want to diminish the rate of false
+  positives caused by malfunctioning infrastructure.
+
+* We want to shorten the dev/feedback loop for sysadmins when they
+  deploy changes, and also when changes are automatically applied
+  (e.g. Puppet agent passes, or automatic APT upgrades).
+
+* We want to be notified when a service we run doesn't come back up
+  properly post-reboot, without having to manually test every service.
+
+* We want to minimize the rate of non-sysadmins discovering and
+  reporting problems _first_, that is before we learn about it.
+  This is highly subjective, but replying "we're aware of this problem
+  and are working on it" is much more confidence inspiring than
+  "really, it's broken?"
+
+## Nomenclature
+
+Here, we call:
+
+* _machine_: a computer (be it bare metal or virtual) and its
+  operating system
+* _monitored machine_: a machine we monitor
+* _monitoring machine_: the machine(s) that monitors the... _monitored
+  machines_
+* _monitoring system_, or _monitoring setup_: all the software
+  components that we run so that the monitoring machine can monitor
+  the monitored ones, and their configuration
+
+Note that the monitoring machine may very well be, at the same time,
+itself be monitored (be it by itself, or by another monitoring
+machine).
+
+Requirements
+============
+
+## Human interface
+
+The monitoring system:
+
+* MUST send email notifications to the sysadmin(s) in charge, to lower
+  the downtime.
+* MUST offer an overview of the status of our systems, via a web
+  interface that works within Tor Browser with the security slider set
+  to Medium-High.
+* MAY additionally offer a read-only version of this overview, that we
+  may want to make available to selected contributors, or anonymous
+  users. Needless to say, this must be carefully balanced with the
+  security implications of such a system (in other words, a set of
+  exported static HTML pages is totally fine, but a huge dynamic web
+  application is probably a non-starter).
+* MUST support configuring, with a per-check/per-service granularity,
+  a threshold of N failures _in a row_ before an alert is raised.
+  Still, it SHOULD support triggering alerts depending on the
+  frequency of such failures, even when they never fail twice in a row
+  (we don't want to miss the fact that `$service` is down for
+  5 minutes every day). Implementation details may vary, but you get
+  the idea.
+
+## Threat model
+
+### Compromised monitored machine
+
+* We do not try to avoid the fact that it can report wrong information
+  (this includes missing information) about itself.
+* It MUST NOT result in a compromise of the monitoring machine.
+* It MUST NOT be able to DoS the sysadmin(s) in charge, e.g.
+  by flooding them with alerts.
+* It MUST NOT result in a compromise of the network traffic between
+  other monitored machines and the monitoring machine (e.g. if that
+  traffic is encrypted, the monitored machines MUST NOT use the same
+  private key).
+* It SHOULD NOT be able to alter the information about other
+  monitored machines.
+
+### Compromised monitoring machine
+
+* We do not try to avoid the fact that it can DoS the sysadmin(s) in
+  charge, e.g. by flooding them with alerts.
+* We do not try to avoid the fact that it can report wrong information
+  about the monitored machines.
+* It MUST NOT be able to run arbitrary code as root on any of the
+  monitored machines.
+* It SHOULD NOT be able to run arbitrary code as a non-privileged user
+  on any of the monitored machines.
+
+### Network attacker
+
+Here, we consider an attacker that may be active or passive, and can
+sit at any point they choose on the Internet.
+
+We accept the risk that a network attacker:
+
+* can enumerate the machines and services we monitor;
+* can view the reports, test results, and any such information about
+  monitored services, that the monitoring system needs to learn; this
+  of course implies that we should be careful about what kind of
+  information flows this way: it MUST NOT be a big deal if it leaks
+  into the hands of an adversary;
+* can DoS our monitoring, e.g. by blocking network connections;
+* can spoof the reports, test results and alike about monitored
+  services that a client has no credible means to authenticate.
+
+However, a network attacker:
+
+* SHOULD NOT be able to spoof the reports, test results and alike
+  that monitored machines send about themselves;
+* MUST NOT be able to run arbitrary code on the monitored machines;
+* MUST NOT be able to run arbitrary code on the monitoring machine.
+
+## Availability, sustainability
+
+Here, we assume that the entire monitoring system has both software
+components that run on the monitored machines (that we call the
+"agent"), and software components that run on the monitoring machine
+(that we call the "server"). Below, the _agent_ implicitly includes
+anything needed for basic usage (plugins, checks, whatever); and
+similarly, the _server_ implicitly includes its web interface, and
+anything needed for basic usage (plugins, checks, etc.).
+
+* The agent MUST be usually available in all of Debian oldstable,
+  stable, and testing -- possibly thanks to _pre-existing_ and
+  well-maintained official backports. All these versions of the agent
+  MUST be compatible with the chosen version of the server.
+
+* The server MUST be usually available either in current Debian stable
+  (Jessie), or in current Debian testing (Stretch). We are considering
+  running the version from Debian testing mainly because it might
+  avoid having to go through a costly upgrade process in a couple
+  years, e.g. to switch to the next major, incompatible version of
+  the software.
+
+* Both the agent and the server MUST be actively maintained in all the
+  versions of Debian we care about (see above). Hint: this excludes
+  Nagios 4.
+
+* Both the agent and the server MUST be DFSG-free.
+
+* For all involved software, the upstream project MUST be mature and
+  active. It MUST have a confidence inspiring future. We can't afford
+  having to migrate to a totally different monitoring setup in three
+  years, to the extent that this can be foreseen. Hint: given Nagios 4
+  is not an option (see above), this in turn excludes all older
+  versions of Nagios.
+
+* It SHOULD be realistically possible for external contributors to
+  have patches merged into the upstream codebase of the
+  involved software.
+
+* All the involved softwares MUST have a not-too-scary security
+  track record.
+
+## Configuration
+
+Here, we have two major desires. One is the ability for humans to
+easily review the monitoring system's configuration, or changes
+proposed to it, so that contributions are made easier. The other is
+the ability to include monitoring aspects within the description of
+the services we run, in a self-contained way, so that describing them
+in puppet is easier. Note that a system that satisfies the second
+requirement has great chances to also mostly satisfy the first one as
+well.
+
+The chosen monitoring system:
+
+* SHOULD allow encoding, in the description of a service (read: in the
+  corresponding Puppet class), how it needs to be monitored.
+  - Additionally, if this optional (but warmly welcome) requirement is
+    satisfied, then the "shared Puppet modules" we use SHOULD already
+    support the chosen monitoring system (hint: in practice, this
+    means something compatible with Nagios).
+  - Note: this gives us for free the ability to review the monitoring
+    configuration for service checks, but it is unrelated to our
+    ability to review the global configuration of the server
+    components, that run on the monitoring machine.
+
+* SHOULD allow humans to easily review the service checks
+  configuration. Really, that's a *strong* SHOULD. A system that
+  doesn't make this possible will need to have very serious advantages
+  in other areas to be attractive to us.
+
+* SHOULD allow humans to review the global configuration of the server
+  components, that run on the monitoring machine. This assumes that
+  said configuration is mostly static, and is unaffected when adding
+  or modifying service checks.
+
+## Adequacy to our resources
+
+Being able to operate the monitoring system for 20-50 monitored
+systems MUST NOT require Tails sysadmins to invest lots of time and
+become experts at hand-holding a complex software stack: the main
+focus of our system and automation engineers shall not become
+monitoring. For example, we won't like a monitoring system that is
+trivial to set up for monitoring 5-10 hosts, but requires adding more
+and more moving parts and complex optional components to be able to
+scale up to 50 hosts.
+
+## Miscellaneous
+
+* We run Tor hidden services, that we want to monitor, so the
+  monitoring system MUST allow using a configured SOCKS proxy for
+  specific checks (worst case, for _all_ checks, but it prevents us
+  from). Wrapping checks with `torsocks` might be an acceptable
+  option, depending on how involved and hackish this would be. Ability
+  to retry and not notify on first error is interesting here.
+
+## Hosting of the monitoring machine
+
+* The monitoring machine MUST be a virtual machine.
+* We MUST be enabled to admin the OS of the monitoring machine
+  ourselves:  we need to be root, we need to have a Puppet agent that
+  talks to our own puppetmaster, we want to do the initial
+  OS installation.
+* The monitoring machine MUST be hosted on infrastructure managed by
+  people the Tails sysadmins trust quite a bit.
+* The people who manage the underlying hardware and infrastructure
+  MUST be reactive and easy to get in touch with.
+* We MUST be given out-of-band access to the monitoring machine.
+* The monitoring machine MUST have unfiltered access to the Internet,
+  and SHOULD be assigned at least one public IPv4 address.
+* Hosting MUST be affordable (say, max. 20€/month).
+* The monitoring machine SHOULD allow at least some flexibility
+  regarding future "hardware" upgrades (e.g. allocating more disk
+  space, memory, CPU cores).
+* TODO: exact hardware specifications, depending on the chosen
+  monitoring system. Let's keep in mind that collecting exported
+  Puppet resources is expensive.
+
+<a id="services"></a>
+
+# Service and system checks
+
+Below, HIGH, MEDIUM and LOW are priority level wrt. the implementation
+of such checks.
+
+For description of individual services, see
+[[contribute/working_together/roles/sysadmins]]
+
+## All systems
+
+* HIGH: up and running!
+* HIGH: disk space usage (bytes and inodes)
+* HIGH: memory usage
+* MEDIUM: Puppet agent last run
+* MEDIUM: APT indices (aka. `apt-get update` was successfully run recently)
+* MEDIUM: `systemctl is-system-running` (see [[!tails_ticket 8262]])
+
+## APT repository
+
+* CRITICAL: `stable` APT suite over HTTP
+* CRITICAL: freezable APT repository, once it exists
+
+## Bitcoind
+
+* MEDIUM: compare `getblockcount` with what the Internet says it
+  should be (probably requires exporting the output of `bitcoin-cli
+  getblockcount` to a place that's readable by the monitoring agent)
+
+## BitTorrent
+
+* LOW: last Tails release is seeded
+
+## Gitolite
+
+* MEDIUM: `git pull` or `git clone` a test repository over all
+  supported protocols (currently: `git://` and SSH)
+
+## git-annex
+
+* HIGH: our Tor Browser archive must be reachable over HTTP, and
+  contain directories with tarballs
+
+## Jenkins
+
+* CRITICAL: the HTTP server must be up, and unauthenticated connection
+  must be forbidden (may require to install its TLS certificate, or to
+  skip certificate validation, or something)
+
+## Nightly builds
+
+* CRITICAL: <http://nightly.tails.boum.org/> must have directories for
+  the `stable` and `devel` branches, that contain ISO images
+
+## rsync
+
+* CRITICAL: check, over `rsync://`, that expected directories are there
+
+## Test suite infrastructure
+
+* HIGH: the (fake or limited) SSH and SFTP access used by core
+  contributors and robots when running the test suite must be up
+
+## Website
+
+* CRITICAL: <https://tails.boum.org/> must be up and working
+
+## WhisperBack relay
+
+* HIGH: SMTP server is up
+* MEDIUM: email is actually relayed (would be truly good to have, but
+  hard to implement, so the cost/benefit ratio is likely to be pretty
+  bad)
+
+## XMPP server
+
+* MEDIUM: responds on the TCP/IP port it is listening on

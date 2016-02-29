@@ -205,11 +205,19 @@ sub build_action_menu {
     $mmanage->signal_connect('activate' => sub { manage_keys(); });
     $action_menu->append($mmanage);
 
+    my $mtexteditor = Gtk2::MenuItem->new_with_mnemonic($encoding->decode(gettext("_Open Text Editor")));
+    $mtexteditor->signal_connect('activate' => sub { open_text_editor(); });
+    $action_menu->append($mtexteditor);
+
     return $action_menu;
 }
 
 sub manage_keys {
     system("seahorse &");
+}
+
+sub open_text_editor {
+    system("gnome-text-editor &");
 }
 
 sub all_text_types {

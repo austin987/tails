@@ -1,6 +1,6 @@
 ### Self-bla
-liveusb-creator
 tails-greeter
+tails-installer
 tails-iuk
 tails-persistence-setup
 whisperback
@@ -8,24 +8,19 @@ whisperback
 python-pyinotify
 # contains mkpasswd, needed in chroot_local-hooks/01-password
 whois
+# needed by getTorBrowserUserAgent
+unzip
 # needed in chroot_local-includes/etc/NetworkManager/dispatcher.d/50-htp.sh
 bind9-host
-# needed by WhisperBack
-python-gnutls
-python-gtk2
-python-pyme
 # needed by tails-security-check
 libcarp-assert-perl
 libcarp-assert-more-perl
-libdesktop-notify-perl
 libio-socket-ssl-perl
 liblocale-gettext-perl
 liblwp-protocol-socks-perl
 libnet-ssleay-perl
 libwww-perl
 libxml-atom-perl
-# needed by the upcoming virtualization environment warning
-virt-what
 # needed by htpdate
 curl
 libdatetime-perl
@@ -36,45 +31,38 @@ libtry-tiny-perl
 pv
 # needed by our chroot_local-hooks
 live-build
-# needed for initramfs-tools' COMPRESS=lzma
-lzma
 # needed by tordate
 inotify-tools
-# needed by gpgSymEncApplet
+# needed by gpgApplet
+libany-moose-perl
 libencode-perl
 libglib-perl
 libgnupg-interface-perl
 libgtk2-perl
 liblocale-gettext-perl
 xclip
-# needed by shutdown-helper-applet
-gir1.2-panelapplet
 # needed by 20-time.sh
 libnotify-bin
-notification-daemon
-# needed by unsafe-browser
-zenity
 # needed by tails-documentation
 yelp
-# for /usr/local/sbin/tails-blocked-network-detector
-libfile-tail-perl
-libparse-syslog-perl
 # needed by live-persist
 acl
 # needed by the Unsafe Browser
-unzip
+zenity
 # ships gksudo, needed by various wrappers of ours
 gksu
+# Needed by tails-htp-notify-user and others
+libdesktop-notify-perl
 
 ### Software
 
-#include <standard-x11>
-
 aircrack-ng
+alsa-utils
 apparmor
+apparmor-profiles
 apparmor-profiles-extra
+apt-transport-tor
 audacity
-barry-util
 bilibop-udev
 cups
 cups-pk-helper
@@ -82,56 +70,61 @@ cryptsetup
 rsync
 bash-completion
 bookletimposer
-claws-mail
-claws-mail-archiver-plugin
-claws-mail-i18n
-claws-mail-pgpinline
-claws-mail-pgpmime
 connect-proxy
+cracklib-runtime
 desktop-base
 dmz-cursor-theme
 dosfstools
 eatmydata
 ekeyd
+electrum
+enigmail
 eog
 evince
 exiv2
 file-roller
 florence
 fonts-cantarell
+fonts-liberation
+fonts-linuxlibertine
 gcalctool
 gdm3
 gedit
 gimp
 git
+gkbd-capplet
 gnome-control-center
 gnome-disk-utility
+gnome-flashback
 gnome-media
-gnome-menus
-gnome-panel
 gnome-power-manager
 gnome-search-tool
 gnome-screenshot
-gnome-session-fallback
+gnome-session
+gnome-session-flashback
+gnome-shell-extensions
 gnome-system-log
 gnome-system-monitor
 gnome-terminal
 gnome-themes
 gnome-themes-standard
+gnome-tweak-tool
 gnome-user-guide
 gnupg-agent
 gnupg-curl
+gnupg2
 gobi-loader
 gobby-0.5
 ## breaks lb because of desktop-base.postinst (see Debian bug #467620)
 #if ARCHITECTURE i386 amd64
 # grub
+grub-efi-ia32
 #endif
-gstreamer0.10-ffmpeg
 gstreamer0.10-plugins-base
 gstreamer0.10-plugins-good
 gstreamer0.10-plugins-ugly
 gstreamer0.10-pulseaudio
+gstreamer1.0-libav
 gvfs-backends
 hardlink
 haveged
@@ -139,8 +132,9 @@ haveged
 hdparm
 hledger
 hopenpgp-tools
+icedove
+icedove-l10n-all
 inkscape
-ipheth-utils
 iptables
 # ships isolinux.bin in syslinux 6.x packaging
 isolinux
@@ -157,7 +151,8 @@ libqt4-qt3support
 libsane-hpaio
 liferea
 live-config
-live-config-sysvinit
+live-config-systemd
+live-tools
 lvm2
 macchanger
 mat
@@ -165,16 +160,15 @@ monkeysign
 monkeysphere
 # our vidialia-wrapper needs lckdo
 moreutils
-msmtp
 msva-perl
-mutt
 nautilus
 nautilus-wipe
 nautilus-gtkhash
+network-manager
 network-manager-gnome
+nmh
 ntfs-3g
-ntfsprogs
-obfsproxy
+obfs4proxy
 libreoffice-calc
 libreoffice-draw
 libreoffice-gnome
@@ -192,21 +186,22 @@ libreoffice-l10n-ru
 libreoffice-l10n-vi
 libreoffice-l10n-zh-cn
 openssh-client
+paperkey
 parted
 pidgin
 pidgin-otr
 pinentry-gtk2
 pitivi
-plymouth
 poedit
 ppp
 pulseaudio
+pulseaudio-utils
 pwgen
 p7zip-full
-resolvconf
 rng-tools
 rfkill
 sane-utils
+scdaemon
 scribus
 seahorse
 seahorse-daemon
@@ -216,17 +211,15 @@ simple-scan
 sshfs
 # ships the *.c32 modules in syslinux 6.x packaging
 syslinux-common
+# ships syslinux.efi in syslinux 6.x packaging
 syslinux-efi
 # ships isohybrid in syslinux 6.x packaging
 syslinux-utils
-system-config-printer
-systemd
 synaptic
 torsocks
 totem-plugins
 traverso
 ttf-dejavu
-fonts-liberation
 tcpdump
 tcpflow
 tor
@@ -237,12 +230,15 @@ tor-arm
 totem
 ttdnsd
 unar
-unrar-free
 usbutils
 vidalia
 vim-nox
 virtualbox-guest-utils
 wireless-tools
+xsel
+xul-ext-torbirdy
+# needed for initramfs-tools' COMPRESS=xz
+xz-utils
 
 #if ARCHITECTURE i386 amd64
 open-vm-tools
@@ -250,6 +246,7 @@ xserver-xorg-input-vmmouse
 #endif
 
 ### Firmwares
+firmware-amd-graphics
 firmware-atheros
 firmware-brcm80211
 firmware-ipw2x00
@@ -258,7 +255,7 @@ firmware-libertas
 firmware-linux
 firmware-linux-free
 firmware-linux-nonfree
-firmware-ralink
+firmware-misc-nonfree
 firmware-realtek
 firmware-zd1211
 b43-fwcutter
@@ -266,6 +263,7 @@ firmware-b43-installer
 firmware-b43legacy-installer
 
 ### Xorg
+xorg
 xserver-xorg-input-all
 #if ARCHITECTURE i386
 xserver-xorg-video-geode
@@ -318,12 +316,11 @@ fonts-thai-tlwg
 
 ### CD burning
 brasero
+cdrdao
 
 ### Accessibility
 ## mouse accessibility enhancements
 mousetweaks
-## screen magnifier
-gnome-mag
 ## text-to-speech
 gnome-orca
 at-spi2-core
@@ -362,33 +359,20 @@ python-zbarpygtk
 ### Printing support
 foomatic-db
 foomatic-db-engine
-foomatic-filters
 hpijs-ppds
 hplip
-hplip-cups
 printer-driver-escpr
+printer-driver-hpcups
+printer-driver-gutenprint
 
 ### Make the MAT more powerful
 gir1.2-poppler-0.18
 libimage-exiftool-perl
 python-cairo
 python-mutagen
+python-nautilus
 python-pdfrw
 python-poppler
-
-### USB installer
-python-qt4
-syslinux
-gdisk
-isomd5sum
-mtools
-python-configobj
-python-qt4-dbus
-python-urlgrabber
-
-### Windows8 theme ###
-gnome-theme-windows8
-window-picker-applet
 
 ### Needed by virtualbox-guest-utils
 pciutils
@@ -406,9 +390,16 @@ crda
 wireless-regdb
 
 ### Automated test suite
-python-serial
+python3-serial
+python3-systemd
 xdotool
 
 i2p
 # Prevent java 6 from being installed
 openjdk-7-jre
+
+# Enable Electrum's Qt GUI
+python-qt4
+
+# Provide gnome-open (used to open e.g. URLs in KeePassX, Icedove, Electrum...)
+libgnome2-bin

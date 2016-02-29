@@ -10,12 +10,24 @@ pref("extensions.torbutton.use_privoxy", false);
 
 // Tails-specific configuration below
 
+// Disable the Tor Browser's per-tab circuit view. It demands more
+// from the Tor control port than our tor-controlport-filter currently
+// handles (concurrent, asynchronous connections). Besides, not
+// exposing the stream/circuit level info to the browser (or user
+// running as the browser) is a nice hardening feature, and part of
+// why we introduced the control port filter in the first place.
+pref("extensions.torbutton.display_circuit", false);
+
+// Since the slider notification will be shown everytime at each Tails
+// boot, which is bad (nagging) UX, we disable it.
+pref("extensions.torbutton.show_slider_notification", false);
+
 // Disable the Tor Browser's automatic update checking
 pref("app.update.enabled", false);
 
 // Adblock Plus preferences
 pref("extensions.adblockplus.correctTypos", false);
-pref("extensions.adblockplus.currentVersion", "2.1");
+pref("extensions.adblockplus.currentVersion", "2.6.6");
 pref("extensions.adblockplus.savestats", false);
 pref("extensions.adblockplus.showinaddonbar", false);
 pref("extensions.adblockplus.showintoolbar", false);
@@ -59,9 +71,34 @@ pref("noscript.forbidPlugins", true);
 pref("noscript.untrusted", "google-analytics.com");
 
 // Other non-Torbutton, Tails-specific prefs
+pref("browser.download.dir", "/home/amnesia/Tor Browser");
+pref("browser.download.folderList", 2);
 pref("browser.download.manager.closeWhenDone", true);
 pref("extensions.update.enabled", false);
 pref("layout.spellcheckDefault", 0);
 pref("network.dns.disableIPv6", true);
 pref("security.warn_submit_insecure", true);
-pref("network.proxy.no_proxies_on", "10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16");
+
+// Disable fetching of the new tab page's Tiles links/ads. Ads are
+// generally unwanted, and also the fetching is a "phone home" type of
+// feature that generates traffic at least the first time the browser
+// is started.
+pref("browser.newtabpage.directory.source", "");
+pref("browser.newtabpage.directory.ping", "");
+// ... and disable the explanation shown the first time
+pref("browser.newtabpage.introShown", true);
+
+// Don't use geographically specific search prefs, like
+// browser.search.*.US for US locales. Our generated amnesia branding
+// add-on localizes search-engines in an incompatible but equivalent
+// way.
+pref("browser.search.geoSpecificDefaults", false);
+
+// Without setting this, the Download Management page will not update
+// the progress being made.
+pref("browser.download.panel.shown", true);
+
+// Given our AppArmor sandboxing, Tor Browser will not be allowed to
+// open external applications, so let's not offer the option to the user,
+// and instead only propose them to save downloaded files.
+pref("browser.download.forbid_open_with", true);

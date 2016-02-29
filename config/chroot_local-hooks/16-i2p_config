@@ -5,10 +5,28 @@ set -e
 echo "Configuring I2P"
 
 I2P="/usr/share/i2p"
+I2PROUTER="/usr/bin/i2prouter"
 WRAPPER="/etc/i2p/wrapper.config"
 
 # This must be set in order for the i2p init script to work
 sed -i 's/^RUN_DAEMON=.*$/RUN_DAEMON="true"/' /etc/default/i2p
+
+# Remove the "i2prouter" script, its man page, and its apparmor profile
+# since these are not used by Tails:
+rm /etc/apparmor.d/usr.bin.i2prouter /usr/share/man/man1/i2prouter.1.gz
+
+# Install custom i2prouter stub scripts
+for script in ${I2PROUTER} ${I2PROUTER}-nowrapper; do
+    echo "Removing $script"
+    dpkg-divert --rename --add "${script}"
+    cat > "$script" << EOF
+#!/bin/sh
+echo "This script is not used by Tails."
+echo "See https://tails.boum.org/doc/anonymous_internet/i2p/ for more information."
+exit 0
+EOF
+    chmod 755 "$script"
+done
 
 # Remove the outproxy from the tunnel on port 4444
 # This will remove the following lines:
@@ -34,6 +52,7 @@ sed -i 's|^.*\(wrapper\.java\.additional\.6=-Djava\.net\.preferIPv6Addresses=\).
 # * In-I2P Network Updates: Disabled
 # * Inbound connections: Disabled (setting is "i2cp.ntcp.autoip")
 # * Disable I2P plugins
+# * Disable NTP
 cat > "$I2P/router.config" << EOF
 # NOTE: This I2P config file must use UTF-8 encoding
 i2cp.disableInterface=true
@@ -43,8 +62,13 @@ i2np.udp.ipv6=false
 router.isHidden=true
 router.updateDisabled=true
 router.enablePlugins=false
+time.disabled=true
 EOF
 
 cat > "$I2P/susimail.config" << EOF
 susimail.pop3.leave.on.server=true
 EOF
+
+# enforce apparmor
+echo Setting the I2P apparmor profile to enforce mode
+sed  -i -re 's|flags=\(complain\)||' /etc/apparmor.d/system_i2p

@@ -1,18 +1,21 @@
---- a/etc/apparmor.d/system_tor	2014-09-12 15:44:48.000000000 +0000
-+++ b//etc/apparmor.d/system_tor	2014-09-17 04:41:35.591556000 +0000
-@@ -4,8 +4,12 @@
- profile system_tor {
-   #include <abstractions/tor>
+XXX: renaming the profile should not be needed on Stretch anymore,
+since tor@default.service loads the profile correctly itself there
+(and actually, renaming the profile as this patch does may prevent
+the service from starting at all).
 
-+  owner /etc/tor/torrc w,
-+  owner /etc/tor/torrc.* w,
-+  /lib/live/mount/overlay/etc/tor/* wl,
-+
--  owner /var/lib/tor/** rwk,
--  owner /var/log/tor/* w,
-+  owner /{,lib/live/mount/overlay/}var/lib/tor/** rwk,
-+  owner /{,lib/live/mount/overlay/}var/log/tor/* w,
+--- a/etc/apparmor.d/system_tor	2015-06-04 12:28:12.243020484 +0000
++++ b/etc/apparmor.d/system_tor	2015-06-04 12:29:32.580249731 +0000
+@@ -1,9 +1,12 @@
+ # vim:syntax=apparmor
+ #include <tunables/global>
  
-   /{,var/}run/tor/control w,
-   /{,var/}run/tor/tor.pid w,
-
+-profile system_tor flags=(attach_disconnected) {
++/usr/bin/tor flags=(attach_disconnected) {
+   #include <abstractions/tor>
+ 
++  link /etc/tor/.wh.torrc -> /.wh..wh.aufs,
++  /etc/tor/* w,
++
+   owner /var/lib/tor/** rwk,
+   owner /var/log/tor/* w,
+ 

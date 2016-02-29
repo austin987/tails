@@ -22,6 +22,11 @@ building (see below).
 desc="RFP bug"]]). We need to have it packaged, and then backported
 to Wheezy.
 
+WIP:
+
+* https://git-tails.immerda.ch/intrigeri/vagrant-libvirt
+* https://git-tails.immerda.ch/intrigeri/ruby-fog-libvirt
+
 Also, some of `vagrant-libvirt`'s dependencies are too old in Wheezy:
 
 * `ruby-fog >= 1.10.0`: Sid has 1.12.1 and backporting is trivial
@@ -42,6 +47,10 @@ Also, some of `vagrant-libvirt`'s dependencies are too old in Wheezy:
 
 ## Syncing (Tails' Git and built images)
 
+**Update**: vagrant-libvirt now
+[supports](https://github.com/pradels/vagrant-libvirt/pull/170) 9p
+shared folders.
+
 When using the libvirt provider in Vagrant, "synced folders" are
 simply `rsync`:ed into the VM's filesystem, unlike with Vagrant with
 Virtualbox, which uses its shared folder feature. The `rsync:`ing only
@@ -60,9 +69,7 @@ implementation therefore doesn't rely on synced folders but instead:
 Proper synced folders (bidirectional, continously "syncing", like
 Virtualbox' shared folders) would be preferable (faster, less disk
 usage (size of Tails' .git) in build guest, less code complexity,
-etc.), so we'd like this
-[upstream issue](https://github.com/pradels/vagrant-libvirt/issues/7)
-to get fixed.
+etc.).
 
 It should be noted that the libvirt provider does support shares using
 NFS, which would give synced folders with the properties we want, but

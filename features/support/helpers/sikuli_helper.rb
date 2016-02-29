@@ -5,6 +5,9 @@ require 'sikuli-script.jar'
 Rjb::load
 
 package_members = [
+                   "java.io.FileOutputStream",
+                   "java.io.PrintStream",
+                   "java.lang.System",
                    "org.sikuli.script.Finder",
                    "org.sikuli.script.Key",
                    "org.sikuli.script.KeyModifier",
@@ -18,6 +21,8 @@ package_members = [
 
 translations = Hash[
                     "org.sikuli.script", "Sikuli",
+                    "java.lang", "Java::Lang",
+                    "java.io", "Java::Io",
                    ]
 
 for p in package_members
@@ -36,12 +41,16 @@ for p in package_members
   mod.const_set(class_name, imported_class)
 end
 
+# Bind Java's stdout to debug_log() via our magical pseudo fifo
+# logger.
+def bind_java_to_pseudo_fifo_logger
+  file_output_stream = Java::Io::FileOutputStream.new(DEBUG_LOG_PSEUDO_FIFO)
+  print_stream = Java::Io::PrintStream.new(file_output_stream)
+  Java::Lang::System.setOut(print_stream)
+end
+
 def findfailed_hook(pic)
-  STDERR.puts ""
-  STDERR.puts "FindFailed for: #{pic}"
-  STDERR.puts ""
-  STDERR.puts "Update the image and press RETURN to retry"
-  STDIN.gets
+  pause("FindFailed for: '#{pic}'")
 end
 
 # Since rjb imports Java classes without creating a corresponding
@@ -61,10 +70,16 @@ end
 sikuli_script_proxy = Sikuli::Screen
 $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 
+# For waitAny()/findAny() we are forced to throw this exception since
+# Rjb::throw doesn't block until the Java exception has been received
+# by Ruby, so strange things can happen.
+class FindAnyFailed < StandardError
+end
+
 def sikuli_script_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
-  if $sikuli_retry_findfailed
+  if $config["SIKULI_RETRY_FINDFAILED"]
     # The usage of `_invoke()` below exemplifies how one can wrap
     # around Java objects' methods when they're imported using RJB. It
     # isn't pretty. The seconds argument is the parameter signature,
@@ -104,6 +119,18 @@ def sikuli_script_proxy.new(*args)
     self.click(Sikuli::Location.new(x, y))
   end
 
+  def s.doubleClick_point(x, y)
+    self.doubleClick(Sikuli::Location.new(x, y))
+  end
+
+  def s.click_mid_right_edge(pic)
+    r = self.find(pic)
+    top_right = r.getTopRight()
+    x = top_right.getX
+    y = top_right.getY + r.getH/2
+    self.click_point(x, y)
+  end
+
   def s.wait_and_click(pic, time)
     self.click(self.wait(pic, time))
   end
@@ -112,8 +139,46 @@ def sikuli_script_proxy.new(*args)
     self.doubleClick(self.wait(pic, time))
   end
 
+  def s.wait_and_right_click(pic, time)
+    self.rightClick(self.wait(pic, time))
+  end
+
   def s.wait_and_hover(pic, time)
     self.hover(self.wait(pic, time))
+  end
+
+  def s.existsAny(images)
+    images.each do |image|
+      region = self.exists(image)
+      return [image, region] if region
+    end
+    return nil
+  end
+
+  def s.findAny(images)
+    images.each do |image|
+      begin
+        return [image, self.find(image)]
+      rescue FindFailed
+        # Ignore. We deal we'll throw an appropriate exception after
+        # having looped through all images and found none of them.
+      end
+    end
+    # If we've reached this point, none of the images could be found.
+    raise FindAnyFailed.new("can not find any of the images #{images} on the " +
+                            "screen")
+  end
+
+  def s.waitAny(images, time)
+    Timeout::timeout(time) do
+      loop do
+        result = self.existsAny(images)
+        return result if result
+      end
+    end
+  rescue Timeout::Error
+    raise FindAnyFailed.new("can not find any of the images #{images} on the " +
+                            "screen")
   end
 
   def s.hover_point(x, y)
@@ -137,13 +202,13 @@ java.lang.System.setProperty("SIKULI_IMAGE_PATH", "#{Dir.pwd}/features/images/")
 # required, ruby's require method complains that the method for the
 # field accessor is missing.
 sikuli_settings = Sikuli::Settings.new
-sikuli_settings.OcrDataPath = $tmp_dir
+sikuli_settings.OcrDataPath = $config["TMPDIR"]
 # sikuli_ruby, which we used before, defaulted to 0.9 minimum
 # similarity, so all our current images are adapted to that value.
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
 sikuli_settings.MinSimilarity = 0.9
-sikuli_settings.ActionLogs = $debug
-sikuli_settings.DebugLogs = $debug
-sikuli_settings.InfoLogs = $debug
-sikuli_settings.ProfileLogs = $debug
+sikuli_settings.ActionLogs = true
+sikuli_settings.DebugLogs = true
+sikuli_settings.InfoLogs = true
+sikuli_settings.ProfileLogs = true

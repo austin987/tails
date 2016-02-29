@@ -45,6 +45,38 @@ The [[principles used by the broader Tails
 project|contribute/relationship_with_upstream]] also apply for
 system administration.
 
+<a id="duties"></a>
+
+# Duties
+
+## In general
+
+As said above, "set up and maintain the infrastructure". This implies
+for example:
+
+* dealing with hardware purchase, upgrades and failures;
+* upgrading our systems to a new version of Debian.
+
+## During sysadmin shifts
+
+* create Git repositories when requested
+* update access control lists to resources we manage, as requested by
+  the corresponding teams
+* keep systems up-to-date, reboot them as needed
+* keep backups up-to-date
+* keep Puppet modules up-to-date wrt. upstream changes
+* keep Jenkins plugins up-to-date, by upgrading any plugin that satisfies
+  at least one of these conditions:
+   - only brings security fixes
+   - fixes bugs we're affected by
+   - brings new feature we are interested in, without breaking the ones we rely on
+   - is needed to upgrade another plugin that we want to upgrade
+   - is required by a system upgrade (e.g. of the Jenkins packages)
+* report bugs identified in Jenkins plugins after they have been upgraded (both
+  on the upstream bug tracker and on our own one)
+* act as the de facto interface between Tails and the servers hosting
+  our services (boum.org, immerda.ch) for non-trivial requests
+
 <a id="tools"></a>
 
 # Tools
@@ -83,7 +115,8 @@ We use Redmine tickets for public discussion and tasks management:
 * [[documentation|contribute/APT repository]]
 * access: anyone can read, Tails core developers can write
 * tools: [[!debpts reprepro]]
-* configuration: `tails::reprepro` class in [[!tails_gitweb_repo puppet-tails]]
+* configuration: `tails::reprepro::custom` class
+  in [[!tails_gitweb_repo puppet-tails]]
 
 ## Bitcoind
 
@@ -119,11 +152,15 @@ We use Redmine tickets for public discussion and tasks management:
 
 ## git-annex
 
-* purpose: host the full history of Tails released images
+* purpose: host the full history of Tails released images and Tor
+  Browser tarballs
 * access: Tails core developers only
 * tools: [[!debpts git-annex]]
-* configuration: `tails::gitolite` class in [[!tails_gitweb_repo
-  puppet-tails]]
+* configuration:
+  - `tails::git_annex` and `tails::gitolite` classes in
+    [[!tails_gitweb_repo puppet-tails]]
+  - `tails::git_annex::mirror` defined resource in
+    [[!tails_gitweb_repo puppet-tails]]
 
 ## Jenkins
 
@@ -144,7 +181,7 @@ We use Redmine tickets for public discussion and tasks management:
       uses it to configure Jenkins
   - slaves:
     * `tails::builder`, `tails::jenkins::slave`,
-      `tails::jenkins::slave::iso_builder` classes in
+      `tails::jenkins::slave::iso_builder` and `tails::tester` classes in
       [[!tails_gitweb_repo puppet-tails]]
     * some configuration in the manifest ([[!tails_ticket 7106]])
   - web server:
@@ -165,7 +202,7 @@ We use Redmine tickets for public discussion and tasks management:
   for testing
 * access: anyone who gets it from
   [BridgeDB](https://bridges.torproject.org/)
-* tools: [[!debpts tor]], [[!debpts obfsproxy]]
+* tools: [[!debpts tor]], [[!debpts obfs4proxy]]
 * configuration:
   - `tails::apt::repository::torproject` in
     [[!tails_gitweb_repo puppet-tails]]

@@ -3,6 +3,12 @@ require "#{Dir.pwd}/features/support/extra_hooks.rb"
 require 'time'
 require 'rspec'
 
+# Force UTF-8. Ruby will default to the system locale, and if it is
+# non-UTF-8, String-methods will fail when operating on non-ASCII
+# strings.
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
+
 def fatal_system(str)
   unless system(str)
     raise StandardError.new("Command exited with #{$?}")
@@ -14,6 +20,9 @@ def git_exists?
 end
 
 def create_git
+  Dir.mkdir 'config'
+  FileUtils.touch('config/base_branch')
+  Dir.mkdir('config/APT_overlays.d')
   Dir.mkdir 'debian'
   File.open('debian/changelog', 'w') do |changelog|
     changelog.write(<<END_OF_CHANGELOG)
@@ -33,7 +42,35 @@ END_OF_CHANGELOG
   fatal_system "git branch -M stable"
   fatal_system "git branch testing stable"
   fatal_system "git branch devel stable"
-  fatal_system "git branch experimental devel"
+  fatal_system "git branch feature/jessie devel"
+end
+
+def current_branch
+  cmd = 'git rev-parse --symbolic-full-name --abbrev-ref HEAD'.split
+  branch = cmd_helper(cmd).strip
+  assert_not_equal("HEAD", branch, "We are in 'detached HEAD' state")
+  return branch
+end
+
+# In order: if git HEAD is tagged, return its name; if a branch is
+# checked out, return its name; otherwise we are in 'detached HEAD'
+# state, and we return the empty string.
+def describe_git_head
+  cmd_helper("git describe --tags --exact-match #{current_commit}".split).strip
+rescue Test::Unit::AssertionFailedError
+  begin
+    current_branch
+  rescue Test::Unit::AssertionFailedError
+    ""
+  end
+end
+
+def current_commit
+  cmd_helper('git rev-parse HEAD'.split).strip
+end
+
+def current_short_commit
+  current_commit[0, 7]
 end
 
 RSpec::Matchers.define :have_suite do |suite|

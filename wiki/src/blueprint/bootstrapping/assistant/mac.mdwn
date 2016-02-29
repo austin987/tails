@@ -1,0 +1,212 @@
+Global process:
+
+  - First step (simple solution):
+    - Generic instructions that would work in most of the case.
+  - Second step (difficult solution):
+    - Maintain a list of Macs and their compatibility
+
+<a id="generic"></a>
+
+Generic instructions that would work in most cases
+==================================================
+
+Implementation is happening there: [[!tails_ticket 9316]]
+
+Truths about Mac:
+
+  - DVD
+    - No DVD on some model
+    - DVD works on 32-bit UEFI
+    - Reported to fail very rarely (cf. known issues)
+    - MacBookPro (early 2011) fails to boot from DVD since Tails 1.1
+  - dd
+    - Not working on:
+      - Macbook Air 1.1: 32-bit UEFI
+      - Macbook Air 3.1: 64-bit UEFI
+    - 32-bit might work with next version (#8471)
+    - Test Tails 1.5 with dd :mercedes:tchou:
+  - Tails Installer
+    - 32-bit doesn't work with Tails Installer
+    - 64-bit work sometimes yes and sometimes no
+    - Test Tails 1.5 with Installer on Macbook Air 1.1 :mercedes:
+  - rEFInd
+    - Don't ask people to do that
+  - Bootcamp
+    - No good
+
+Algorithm:
+
+  - if have a friend
+    - clone
+    - if works → happy
+    - if fails
+      - DVD
+      - dd
+      - if works → stay on DVD or dd
+      - if fails → sad
+  - else
+    - DVD
+    - dd
+    - another computer (different Mac, different OS)
+    - if fails → sad
+    - if DVD or dd works
+      - clone
+        - if works → happy
+        - else → stay on DVD or dd
+    - if another computer works until full-feature Tails
+      - if works → happy
+      - else → try temporary Tails
+
+List of compatibility with Mac
+==============================
+
+Seeing that:
+
+- A lot of current and potential users are Mac users.
+- Tails is running more or less on this devices.
+- There are a limited number of different models.
+
+We will maintain the state of Tails compatibility on these computers.
+
+Roadmap
+-------
+
+Bootstrap
+---------
+
+- Specifying the data type.
+- Know the precise models. #9322
+- Setup a git repo.
+
+Start to fill it
+----------------
+
+- Frontdesk starts to fill it
+
+Have it on the website
+----------------------
+
+- Full list in markdown thanks to a routine
+ - In the web installation assistant
+ - In/linked in the troubleshooting section
+- Maybe later an interactive app in the assistant
+
+### Data type
+
+The data could be stored in a YAML file, in the git repo. See [[!tails_ticket 9892]] for work in progress.
+
+### Data content
+
+- Fields ("strings", boolean?):
+
+      "model id"
+      - "Tails version" | DVD? |  dd ? | tails installer? | SD? | wifi? | gaphic card? | mac address?
+      - ... (an other user reports on this model)
+
+Writing the report after the summit, I would add :
+
+- Anonymised uniq identifier per users
+- Timestemp
+- Comments (if there is non anticipated things to keep)
+- Explicit say if the device type and if it boot or not (I feel it's easiest to write and read)
+
+Trying a yaml type (optional or not):
+
+    model_id:           (required)
+    reports:
+        - date:         (required)
+          user:         (optional)
+          tails_version:(required)
+          media:        (required)
+          boot:         (required)
+          install:      (required)
+          wifi:         (optional)
+          mac_spoofing   (optional)
+          graphic_card  (optional)
+          comments:     (optional)
+
+And some samples :
+
+    model_id:   MacBookAir3.2
+    reports:
+
+        - date:         2012-08-06
+          user:         Oothai1iu6iefaiy
+          tails_version:1.5
+          media:        usb
+          boot:         true
+          install:      tails_installer
+          comments:
+            Touchpad not working.
+
+        - date:         2012-07-26
+          user:         seyuo4daiChei3Oo
+          tails_version:1.4
+          media:        sd
+          boot:         true
+          install:      tails_installer
+          wifi:         true
+          mac_spoofing: false
+
+        - date:         2012-06-12
+          user:         aif0ueveeb0Ahkii
+          tails_version:1.2
+          media:        dvd
+          boot:         false
+          comments:
+            Tried to  boot on external DVD. Tails is on not on the Mac boot menu.
+
+
+
+* "model id": #9322. For one model id, there is one or several reports. (note that there is not realy the "state" for one model: the is different reports who can help to guess the state.)
+* "Tails version": can be useful to:
+  - Have a better view of how the support Mac evolves.
+  - Let the user or frontdesk know when the compatibility got broken.
+* "mac_spoofing": Is mac spoofing working with this computer
+* "graphic_card": Is the graphic card working on this computer.
+
+* We want to keep history of compatibility (with older Tails
+  versions) in this file, maybe we will have to show to the user only
+  the last relevant informations.
+* "Comments" is raw information on harward issues (touchpad, bluetooth). The most common issues are fields (wifi, mac spoofing, graphic card)
+
+
+### How to feed the list
+
+- Call to heavily test sometimes
+- Ask to people doing Tails trainings
+- Update from frontdesk
+- Maybe something editable by users
+
+### Later implementation
+
+In the Mac page of the router, we could implement this in two ways, that
+could be two iterations.
+
+#### All information (without form)
+
+- Raw data is transformed server-side into an HTML table with links to
+  the available scenarios for each model (maybe using
+  <https://ikiwiki.info/plugins/contrib/ymlfront/>).
+- The full list is included in the HTML page sent to the user by hidden
+  in toggle by default.
+- Some information is displayed to help the user identify his type of
+  Mac (maybe simplifying <https://fr.ifixit.com/Info/ID-your-Mac>).
+- The user can toggle to display the sublist corresponding to her type
+  of Mac (iMac, Macbook, MacBook Air, etc.)
+- If JavaScript is disabled, the full list is displayed.
+
+#### Only relevant information (with form)
+
+- Some information is displayed to know easily what kind of mac is
+  working
+- The user types in a form the serial number of her Mac or clicks in a
+  dedicated tiny wizard like <https://fr.ifixit.com/Info/ID-your-Mac>.
+- Some server-side code (Ruby?) or client-side code (JavaScript) gets
+  the relevant model and displays the possible scenarios.
+- If implemented in JavaScript, it would fallback on the "without form"
+  version described earlier.
+
+### Redmine
+
+This tickets wants to fix the same problem : [[!tails_ticket 9150]]

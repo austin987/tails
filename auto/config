@@ -1,6 +1,8 @@
 #! /bin/sh
 # automatically run by "lb config"
 
+set -x
+
 # we require building from git
 if ! git rev-parse --is-inside-work-tree; then
     echo "${PWD} is not a Git tree. Exiting."
@@ -12,11 +14,13 @@ if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
 fi
 
+export LB_BOOTSTRAP_INCLUDE='eatmydata'
+
 # init variables
 RUN_LB_CONFIG="lb config noauto"
 
 # init config/ with defaults for the target distribution
-$RUN_LB_CONFIG --distribution wheezy ${@}
+$RUN_LB_CONFIG --distribution jessie ${@}
 
 # set Amnesia's general options
 $RUN_LB_CONFIG \

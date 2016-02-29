@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# Get monotonic time in seconds. See clock_gettime(2) for details.
+# Note: we limit ourselves to seconds simply because floating point
+# arithmetic is a PITA in the shell.
+clock_gettime_monotonic() {
+    perl -w -MTime::HiRes=clock_gettime,CLOCK_MONOTONIC \
+         -E 'say int(clock_gettime(CLOCK_MONOTONIC))'
+}
+
 # Run `check_expr` until `timeout` seconds has passed, and sleep
 # `delay` (optional, defaults to 1) seconds in between the calls.
 # Note that execution isn't aborted exactly after `timeout`
@@ -11,9 +19,9 @@ wait_until() {
     timeout="${1}"
     check_expr="${2}"
     delay="${3:-1}"
-    timeout_at=$(expr $(date +%s) + ${timeout})
+    timeout_at=$(expr $(clock_gettime_monotonic) + ${timeout})
     until eval "${check_expr}"; do
-        if [ "$(date +%s)" -ge "${timeout_at}" ]; then
+        if [ "$(clock_gettime_monotonic)" -ge "${timeout_at}" ]; then
             return 1
         fi
         sleep ${delay}
@@ -38,12 +46,15 @@ try_for() {
 # torrc's " "). If the key already exists its value is updated in
 # place, otherwise it's added at the end.
 set_simple_config_key() {
-    local key="${1}"
-    local value="${2}"
-    local file="${3}"
+    local file="${1}"
+    local key="${2}"
+    local value="${3}"
     local op="${4:-=}"
     if grep -q "^${key}${op}" "${file}"; then
-        sed -i -n "s/^${key}${op}.*$/${key}${op}${value}/p" "${file}"
+        # Escape / in input so it can be used as the sed separator
+        key="$(echo "${key}" | sed 's,/,\\/,g')"
+        value="$(echo "${value}" | sed 's,/,\\/,g')"
+        sed -i "s/^${key}${op}.*$/${key}${op}${value}/" "${file}"
     else
         echo "${key}${op}${value}" >> "${file}"
     fi

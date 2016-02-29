@@ -24,7 +24,7 @@ they require removing the `live-media=removable` boot parameter, which [[is
 dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
 
 * SanDisk Cruzer Edge 8GB
-* SanDisk Cruzer Extreme USB 3.0 16GB and 32GB
+* SanDisk Cruzer Extreme USB 3.0 16GB, 32GB and 64GB
 * SanDisk Cruzer Fit USB 2.0 8GB, 16GB, and 32G
 * SanDisk Cruzer Force 8GB
 * SanDisk Cruzer Glide 4GB, 8GB and 16GB
@@ -50,11 +50,21 @@ See also [[!tails_ticket 6397]].
 When installing Tails, PNY USB sticks have problems with the constant write load
 and are prone to failure.
 
+<a id="aegis"></a>
+
+### Aegis
+
+* Aegis Secure Key USB 2.0
+
+During the boot process, USB is briefly powered off, that causes Aegis hardware-encrypted USB sticks to lock down, and the PIN must be entered again (fast) in order to complete the boot.
+
+* Aegis Secure Key USB 3.0
+
+This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working for that hardware.
+
 ### Other vendors
 
 * Staples Relay USB 2.0 16GB, suffers from the same problem as [[some SanDisk USB sticks|known_issues#sandisk]].
-
-<a id="isohybrid-options"></a>
 
 Acer Travelmate 8573T-254G50M
 -----------------------------
@@ -64,6 +74,11 @@ using Tails Installer.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
+
+Acer Aspire 5315-ICL50 and Acer ES-1-331
+----------------------------------------
+
+Does not start on USB sticks created using Tails Installer.
 
 ASUS VivoBook X202E
 -------------------
@@ -120,9 +135,25 @@ to us.
 Dell Dimension 2400
 -------------------
 
-Cannot start neither from USB nor from DVD. System crashes with a blank
+Does not start neither from USB nor from DVD. System crashes with a blank
 screen and locked up keyboard. This problem might be corrected in
 newer versions: please report your test results back to us.
+
+Fujitsu Siemens Amilo A 1667G
+-----------------------------
+
+Does not start on USB sticks created using Tails Installer.
+
+HP Compaq dc5750 Microtower
+---------------------------
+
+Does not start Tails 1.2.3 created using Tails Installer.
+
+HP Pavilion dv7
+---------------
+
+Since Tails 1.3, gets stuck at the boot menu, whether Tails is installed manually or using
+Tails Installer.
 
 HP ProBook 4330s
 ----------------
@@ -133,15 +164,15 @@ then `Filesystem Tails` and `EFI/BOOT/bootx64.efi`.
 Lenovo IdeaPad Y410p
 --------------------
 
-Cannot start Tails 1.1 from USB installed manually in Linux.
+Does not start Tails 1.1 from USB installed manually in Linux.
 
 Lenovo IdeaPad z585
 -------------------
 
 Goes back continuously to boot menu on Tails installed on DVD.
 
-Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, E325 and E530
---------------------------------------------------------------------------
+Clevo W258CU, ThinkPad X220, X121e, T420i, T410, T520, W520, T530, E325, and E530
+---------------------------------------------------------------------------------
 
 These machines do not start on USB sticks created using Tails USB
 Installer, due to a firmware limitation.
@@ -161,16 +192,61 @@ Mac
 
 * Some Mac need [rEFInd](http://sourceforge.net/projects/refind/)
   installed to boot Tails from a USB stick.
-* Any Mac with 32-bit EFI won't succeed in booting Tails USB stick
+* Any Mac with 32-bit EFI may not succeed in booting Tails USB stick
   created by Tails Installer. You can check if a given Mac is 32-bit
   or 64-bit EFI on that list:
   <http://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
-* MacBookPro5,5 does not boot with Tails in UEFI mode.
+* MacBook Pro 5,5 does not boot with Tails in UEFI mode.
+* MacBook Pro 5,1 17" (Nvidia GeForce 9400M): one must add the
+  `nouveau.noaccel=1` boot parameters so that the display
+  works properly.
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
-* MacBookPro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and MacBookPro late 2011 (8,2) fail to boot from a USB stick created by
+* MacBook Pro (early 2011) fails to boot from DVD since Tails 1.1.
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and
+  MacBook Pro 8,2 (late 2011) fail to boot from a USB stick created by
   Tails Installer.
+
+<a id="switchable_graphics"></a>
+
+Switchable graphics computers
+-----------------------------
+
+Some computers with switchable graphics (such as Optimus) fail to
+choose a video card and end up on a black screen. This has been
+reported for MacBook Pro 6,2, MacBook Pro 10,1 Retina, MacBook Pro
+15-inch (early 2011) and might affect many others.
+
+There are two possible workarounds for this issue:
+
+* For the Mac computers, it is possible to use a third-party
+  application, <http://gfx.io/>, to force integrated graphics only through OS X.
+  Then restart in that special mode that works with Tails.
+
+* Expert Linux users can also do the following:
+
+  1. Add the `i915.modeset=0 rootpw=pass` option in the
+     [[boot menu|doc/first_steps/startup_options#boot_menu]].
+
+  2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
+     following content:
+
+         Section "Device"
+             Identifier "Device0"
+             Driver "nouveau"
+             BusID "1:0:0"
+         EndSection
+
+  4. Restart X with the command:
+
+         service gdm3 restart
+
+  5. After the GNOME session has started, change again the root password with
+     the command:
+
+         sudo passwd
+
+For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
 
 <a id="chainloading"></a>
 
@@ -188,24 +264,46 @@ The following commands, run from the GRUB shell, might be helpful:
     chainloader +1
     boot
 
-Other hardware issues
-=====================
+<a id="wi-fi"></a>
+
+Wi-Fi issues
+============
+
+Broadcom Wi-Fi network interface needing `broadcom-sta-dkms`
+------------------------------------------------------------
+
+Some Broadcom Wi-Fi interfaces require the
+[`wl`](https://wiki.debian.org/wl) driver, provided by the
+`broadcom-sta-dkms` Debian package, to work in Tails.
+
+The `wl` driver is not included in Tails because it is proprietary.
+
+To find out if your Wi-Fi interface requires the `wl` driver:
+
+1. Execute the following command in a [[terminal|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#index3h2]]:
+
+       lspci -nn | grep Network
+
+2. Verify if your device is in the list of devices supported by the `broadcom-sta-dkms`
+package on the corresponding [Debian wiki page](https://wiki.debian.org/wl).
+If you find your device in the list of supported devices, then it is
+impossible to use your Wi-Fi card in Tails.
 
 <a id="bcm43224"></a>
 
-Broadcom BCM43224 802.11a/b/g/n wireless network adapter
---------------------------------------------------------
+Broadcom BCM43224 802.11a/b/g/n Wi-Fi network interface
+-------------------------------------------------------
 
-The Broadcom Corporation BCM43224 802.11a/b/g/n wireless network
-adapter is known to not be able to
+The Broadcom Corporation BCM43224 802.11a/b/g/n Wi-Fi network
+interface is known to not be able to
 [[spoof its MAC address|doc/first_steps/startup_options/mac_spoofing]]. Tails
-enables MAC spoofing by default, and will disable any network adapter
+enables MAC spoofing by default, and will disable any network interface
 it fails to spoof. To make it work you must
 [[disable Tails' MAC spoofing feature|doc/first_steps/startup_options/mac_spoofing#disable]];
 please read the documentation carefully and make sure you understand
 the consequences before doing so.
 
-This network adapter can, for instance, be found in the MacBook Air
+This network interface can, for instance, be found in the MacBook Air
 4,1, 4,2, 5,1 and 5,2.
 
 Security issues
@@ -214,14 +312,29 @@ Security issues
 Tails might not erase all the system memory on shutdown
 -------------------------------------------------------
 
-On rare systems (non-PAE with big amounts of memory),
-Tails does not consistently [[!tails_todo
-more_efficient_memory_wipe desc="erase all system memory as it
-should"]].
+On rare systems (non-PAE with big amounts of memory), Tails does not
+consistently erase all system memory as it should.
 
 If no [[cold boot attack|doc/advanced_topics/cold_boot_attacks]]
 happens directly after shutdown, the RAM empties itself in minutes,
 and all data disappears.
+
+See [[!tails_ticket 6006 desc="More efficient memory wipe"]].
+
+<a id="video-memory"></a>
+
+Tails does not erase video memory
+---------------------------------
+
+Tails doesn't erase the [[!wikipedia VRAM desc="video memory"]] yet.
+When one uses Tails, then restarts the computer into another operating
+system, that other operating system can see what has been displayed on
+the screen within Tails.
+
+Shutting down the computer completely, instead of restarting it,
+might allow the video memory to empty itself.
+
+See [[!tails_ticket 5356 desc="Erase video memory on shutdown"]].
 
 After using Tails Installer, the "emergency shutdown" doesn't work
 ------------------------------------------------------------------
@@ -229,7 +342,10 @@ After using Tails Installer, the "emergency shutdown" doesn't work
 Tails Installer messes a bit too much with the USB devices for the
 "emergency shutdown on media removal" feature to continue working after using
 it. If you believe this feature is critical for the session you're running, we
-advice you to reboot Tails.
+advice you to restart Tails.
+
+See
+[[!tails_ticket 5677 desc="Tails Installer should not break emergency shutdown"]].
 
 Tails DVD eject failure
 -----------------------
@@ -238,15 +354,7 @@ Pressing the DVD eject button does not trigger emergency shutdown.
 Also, the "normal" (non-emergency) shutdown procedure does not eject
 the DVD anymore.
 
-(Ticket: [[!tails_todo fix_DVD_eject_at_shutdown]])
-
-Stream isolation inconsistency in Claws Mail
---------------------------------------------
-
-Claws Mail isn't using its dedicated Tor SocksPort for Tor hidden
-service IMAP/POP/SMTP servers (instead Tor's TransPort is used). This
-is just a deviation from Tails' design and should have no adverse real
-world consequences.
+See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
 
 Tails fails to completely shutdown or restart
 ---------------------------------------------
@@ -266,31 +374,56 @@ This issue has been reported on the following hardware:
 
   - Apple when booting from a USB stick:
     - MacBook Air 5,1
-    - MacBook Pro 7,1, 13-inch mid 2010
-    - MacBook Pro 9,2, 13-inch mid 2012
-    - MacBook Pro 8,1, 13-inch late 2011
+    - MacBook Air 5,2 (using a device installed with Tails Installer)
+    - MacBook Air 6,2
+    - MacBook Pro 7,1 13-inch (mid 2010)
+    - MacBook Pro 9,2 13-inch (mid 2012)
+    - MacBook Pro 8,1 13-inch (late 2011)
     - MacBook Pro 10,2
-    - MacBook Pro Retina 11,1, late 2013
+    - MacBook Pro Retina 11,1 (late 2013)
+    - MacBook Pro Retina 13-inch (early 2015)
+  - Hewlett-Packard HP ENVY x360
   - Hewlett-Packard HP Pavilion dv6 Notebook PC
+  - Hewlett-Packard HP ProBook 450 G0
   - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
     USB stick
+  - Lenovo ThinkPad X220
   - Toshiba Satellite C855D
   - Dell Inc. Studio 1458
   - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
     shutdown works
   - Samsung N150P
+  - Acer Aspire e1-572
+  - Dell Latitude E6230
+  - Microsoft Surface Pro 3
 
 <a id="fingerprint"></a>
 
-Fingerprint
-===========
+Browser fingerprint
+===================
 
-<!-- If this section is empty adjust the [[fingerprint documentation|doc/about/fingerprint]]. -->
+There are currently no known differences between the fingerprints of
+<span class="application">Tor Browser</span> inside and outside of
+Tails.
 
-<!-- The fingerprints of <span class="application">Tor Browser</span> in Tails and on other operating systems are different: -->
+<!--
 
-* Browser window resizing is in not reliable: [[!tails_ticket 6377]]
-  and [[!tor_bug 10095]].
+OR
+
+There are known differences between the fingerprints of <span
+class="application">Tor Browser</span> inside and outside of Tails:
+
+* Tor Browser 5.5 introduces
+  [protection against fingerprinting](https://trac.torproject.org/projects/tor/ticket/13313)
+  but due to an [[!tails_ticket 11000 desc="oversight"]]
+  it is not enabled in Tails 2.0. However, this is not so bad for
+  Tails users since each Tails system has the same fonts installed,
+  and hence will look identical, so this only means that it's easy to
+  distinguish whether a user of Tor Browser 5.5 uses Tails or
+  not. That is already easy given that Tails has the AdBlock Plus
+  extension enabled, unlike the normal Tor Browser.
+
+-->
 
 Other issues
 ============
@@ -316,15 +449,14 @@ with the I2P Browser:
 Boot menu has display issues
 ----------------------------
 
-Since Tails 1.1, one some hardware (ThinkPad X230, MacBookPro8,1),
+Since Tails 1.1, on some hardware (ThinkPad X230, MacBook Pro 8,1),
 the boot menu is not displayed properly. Tails starts fine, though.
 
 Connecting to FTP servers is not possible
 -----------------------------------------
 
 Public FTP servers on the Internet are not reachable using Tails.
-See [[!tails_todo fix_Internet_FTP_support desc="the corresponding
-task"]] for more details.
+See [[!tails_ticket 6096 desc="Fix FTP support"]] for more details.
 
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
@@ -332,16 +464,17 @@ Tails fails to connect to certain Wi-Fi networks
 This might be related to the introduction of wireless regulation support
 in Tails 0.13.
 
-VirtualBox guest modules are broken for 64-bit guests
------------------------------------------------------
+The desktop crashes when run with the default QEMU emulated processor
+---------------------------------------------------------------------
 
-VirtualBox guest modules allow for additional features when using Tails as a
-VirtualBox guest: shared folders, resizable display, shared clipboard, etc.
+Due to a [bug in llvmpipe](https://freedesktop.org/patch/34445/), when
+Tails runs in a QEMU virtual machine with the default emulated CPU,
+the GNOME desktop crashes after login.
 
-But due to [a bug in VirtualBox](https://www.virtualbox.org/ticket/11037), the
-resizable display and shared clipboard
-only work in Tails if the VirtualBox guest is configured to have a 32-bit
-processor. The shared folders work both on 32-bit and 64-bit guests.
+To workaround this problem, pass @-cpu host@ on the QEMU command-line.
+If you use <span class="application">libvirt</span>, choose <span
+class="guilabel">Copy host CPU configuration</span> in <span
+class="application">virt-manager</span>'s processor configuration screen.
 
 Touchpad configurations
 -----------------------
@@ -362,13 +495,6 @@ Bluetooth is not enabled in Tails for security reasons. To enable it
 anyway, see the documentation about
 [[wireless devices|doc/advanced_topics/wireless_devices]].
 
-Tor Browser takes too long to shutdown
---------------------------------------
-
-Since Tails 0.22, the browser sometimes takes too long to shutdown
-([[!tails_ticket 6480]]). Waiting a few more seconds is usually enough
-to let it close itself correctly.
-
 <a id="browser_languages"></a>
 
 Tor Browser is translated in a limited number of languages
@@ -378,3 +504,50 @@ Since Tails 1.2, the web browser is based on Tor Browser which is
 translated in less languages than before. You can see the list of
 languages available in Tor Browser from the [Tor Browser
 homepage](https://www.torproject.org/projects/torbrowser.html.en).
+
+<a id="keyboard_layout"></a>
+
+Keyboard layout is sometimes not applied
+----------------------------------------
+
+The keyboard layout selected in *Tails Greeter* is sometimes not
+applied if different from **English (US)**. Click on the
+[[keyboard layout|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#keyboard_layout]] icon
+in the notification area to switch between English and the layout
+selected in *Tails Greeter*.
+
+<a id="automatic_upgrade_fails"></a>
+
+Tails does not boot after automatic upgrade
+-------------------------------------------
+
+Sometimes, after an automatic upgrade, Tails
+gets blocked when booting, often after the message
+'Loading, please wait...'.
+
+To fix this problem, you can [[update your Tails
+manually|doc/first_steps/upgrade/#manual]].
+
+Note that your Persistent Volume will be safely preserved.
+
+## Print preview is blank in Tor Browser
+
+Due to a [bug in Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1205598),
+its print preview is incompatible with the AppArmor confinement of Tor
+Browser in Tails.
+
+From the print preview, you can click
+<span class="guilabel">Print&hellip;</span> and choose
+<span class="guilabel">Print to File</span> in the list of printers to
+save it as a PDF file. Then you can open this PDF file from the file
+browser.
+
+Slow graphics operations with recent NVidia hardware
+----------------------------------------------------
+
+Graphics display operations are slow on computers with graphics
+adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
+GeForce GTX 960.
+
+This problem will likely be resolved once Tails
+[[!tails_ticket 10298 desc="includes a newer Linux kernel"]].

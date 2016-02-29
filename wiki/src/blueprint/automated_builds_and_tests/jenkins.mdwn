@@ -1,118 +1,193 @@
-[[!meta title="Jenkins"]]
+[[!meta title="Automated tests implementation details"]]
+
+For Jenkins resources, see [[blueprint/automated_builds_and_tests/resources]].
 
 [[!toc levels=2]]
 
-Resources
-=========
+Generating jobs
+===============
 
-Miscellaneous
--------------
+We use code that lay in three different Git repositories to generate
+automatically the list of Jenkins jobs for branches that are active in
+the Tails main Git repo.
 
-- [Jenkins Best
-  Practices](https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+Best+Practices)
-- [plugins](https://wiki.jenkins-ci.org/display/JENKINS/Plugins)
-  * [Git plugin](https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin)
-  * [Copy Artifact
-    plugin](https://wiki.jenkins-ci.org/display/JENKINS/Copy+Artifact+Plugin)
-    can be used to run a test job against the result of a build job,
-    e.g. for Debian packages (think Lintian) or Tails ISO images; see
-    [grml's setup
-    documentation](http://jenkins-debian-glue.org/getting_started/manual/)
-    that uses it.
-- the [jenkins](http://jujucharms.com/charms/precise/jenkins) and
-  [jenkins-slave](http://jujucharms.com/charms/precise/jenkins-slave)
-  JuJu charms may be good sources of inspiration for deployment
-- [[!cpan Net-Jenkins]] (not in Debian) allows to interact with
-  a Jenkins server: create and start jobs, get information about
-  builds etc.
+The first brick is the Tails
+[[!tails_gitweb_repo pythonlib]], which extracts the list of
+active branches and output the needed informations. This list is parsed
+by the `generate_tails_iso_jobs` script run by a cronjob and deployed by
+our [[!tails_gitweb_repo puppet-tails]]
+`tails::jenkins::iso_jobs_generator` manifest.
 
-Jobs management
----------------
+This script output yaml files compatible with
+[jenkins-job-builder](http://docs.openstack.org/infra/jenkins-job-builder).
+It creates one `project` for each active branches, which in turn uses
+three JJB `job templates` to create the three jobs for each branch: the
+ISO build one, and wrapper job that is used to start the ISO test jobs.
 
-- [Job builder](http://ci.openstack.org/jenkins-job-builder/) provides
-  one-way (Git to Jenkins) jobs synchronization; it's in Debian sid.
-  * [configuration documentation](http://ci.openstack.org/jenkins-job-builder/configuration.html)
-  * Debian uses it in their `update_jdn.sh`: it runs `jenkins-jobs
-    update $config` after importing updated YAML job config files
-    from Git.
-  * Tor [use
-    it](https://gitweb.torproject.org/project/jenkins/jobs.git/tree) too.
-- jenkins.debian.net uses the [SCM
-  Sync](https://wiki.jenkins-ci.org/display/JENKINS/SCM+Sync+configuration+plugin)
-  plugin, that apparently handles committing to the VCS on
-  configuration changes done in the web interface, and maybe more.
-- [jenkins-yaml](https://github.com/varnish/jenkins-yaml) might make
-  it easy to generate a large number of similar Jenkins jobs, e.g.
-  one per branch
-- [jenkins_jobs puppet module](http://tradeshift.com/blog/tstech-managing-jenkins-job-configurations-by-puppet/)
+This changes are pushed to our [[!tails_gitweb_repo jenkins-jobs]] git
+repo by the cronjob, and thanks to their automatic deployment in our
+`tails::jenkins::master` and `tails::gitolite::hooks::jenkins_jobs`
+manifests in our [[!tails_gitweb_repo puppet-tails]] repo, this new
+changes are applied automatically to our Jenkins instance.
 
-Web setup
----------
+Restarting slave VMs between jobs
+=================================
 
-### Visible read-only on the web
+This question is tracked in [[!tails_ticket 9486]].
 
-We'd like our Jenkins instance to be visible read-only on the web.
-We'd rather not rely on Jenkins authentication / authorization to
-enforce this read-only policy. We'd rather see the frontend reverse
-proxy take care of this.
+For [[!tails_ticket 5288]] to be robust enough, if the test suite doesn't
+_always_ clean between itself properly (e.g. when tests simply hang
+and timeout), we might want to restart `isotesterN.lizard` between
+each each ISO testing job.
 
-The
-[`getUnprotectedRootActions()`](http://javadoc.jenkins-ci.org/jenkins/model/Jenkins.html#getUnprotectedRootActions())
-method should return the list of URL prefixes that we want to allow.
-And we could forbid anything else.
+If such VMs are Jenkins slave, then we can't do it as part of the job
+itself, but workarounds are possible, such as having a job restart and
+wait for the VM, that triggers another job that actually starts the
+tests. Or, instead of running `jenkins-slave` on those VMs, running
+one instance thereof somewhere else (in a Docker container on
+`jenkins.lizard`?) and then have "restart the testing VM and wait for
+it to come up" be part of the testing job.
 
-The [Reverse Proxy
-Auth](https://wiki.jenkins-ci.org/display/JENKINS/Reverse+Proxy+Auth+Plugin)
-Jenkins plugin can be useful to display [an example
-usage](https://github.com/jenkinsci/reverse-proxy-auth-plugin/commit/72567a974960be2363107614ba3f705ec6e9b695)
-of this method.
+This was discussed at least there:
 
-### Miscellaneous
+* <http://jenkins-ci.361315.n4.nabble.com/How-to-reboot-a-slave-during-a-build-td4628820.html>
+* <https://stackoverflow.com/questions/5543413/reconfigure-and-reboot-a-hudson-jenkins-slave-as-part-of-a-build>
 
-- [sample nginx configuration](https://wiki.jenkins-ci.org/display/JENKINS/Installing+Jenkins+on+Ubuntu)
+We achieve this VM reboot by using 3 chained jobs:
 
-Notifications
--------------
+* First one is a wrapper and trigger 2 other jobs. It is executed on the
+  isotester the test job is supposed to be assigned to. It puts the
+  isotester in offline mode and starts the second job, blocking while
+  waiting for it to complete. This way this isotester is left reserved
+  while the second job run, and the isotester name can be passed as a build
+  parameter to the second job. This job is low prio so it waits for
+  other second and third type of jobs to be completed before starting its
+  own.
+* The second job is executed on the master (which has 4 build
+  executors). This job ssh into the said isotester and issue the
+  reboot. It needs to wait a reasonable amount of time for the Jenkins
+  slave to be stopped by the shutdown process so that no jobs gets assigned
+  to this isotester meanwhile. Stoping this Jenkins slave daemon usually
+  takes a few seconds. During testing, 5 seconds proved to be enough of
+  a delay for that, and more would mean unnecessary lagging time. It then
+  put the node back online again.  This job is higher prio so that it is
+  not lagging behind other wrapper jobs in the queue.
+* The third job is the test job, run on the freshly started isotester.
+  This one is high prio too to get executed before any other wrapper
+  jobs. These jobs are set to run concurrently, so that if a first one is
+  already running, a more recent one triggered by a new build will still
+  be able to run and not be blocked by the first running one.
 
-- [IRC plugin](https://wiki.jenkins-ci.org/display/JENKINS/IRC+Plugin),
-  but I'm told that the jenkins email notifications are way nicer
-  than what this plugin can do, so see [a better way to do
-  it](http://jenkins.debian.net/userContent/setup.html#_installing_kgb_client)
-- [[!cpan Jenkins-NotificationListener]] is a server that listens to
-  messages from Jenkins [Notification
-  plugin](https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin).
+<a id="chain"></a>
 
-How others use Jenkins
-----------------------
+Chaining jobs
+=============
 
--  jenkins.debian.net's:
-   * [setup documentation](http://jenkins.debian.net/userContent/setup.html)
-   * configuration: `git://git.debian.org/git/users/holger/jenkins.debian.net.git`
-- [Tor's jobs](https://gitweb.torproject.org/project/jenkins/jobs.git/blob/HEAD:/jobs.yaml)
-- [Ubuntu QA Jenkins instance](https://jenkins.qa.ubuntu.com/)
-- grml's Michael Prokop talks about autotesting in KVM during his
-  [talk at DebConf
-  10](http://penta.debconf.org/dc10_schedule/events/547.en.html);
-  they use Jenkins:
-  * [Jenkins instance](http://jenkins.grml.org/)
-  * [unittests](https://github.com/grml/grml-unittests)
-  * [debian-glue Jenkins plugin](https://github.com/mika/jenkins-debian-glue)
-  * [kantan](https://github.com/mika/kantan): simple test suite for
-    autotesting using Grml and KVM
-  * [Jenkins server setup documentation](https://github.com/grml/grml-server-setup/blob/master/jenkins.asciidoc)
-- [jenkinstool](http://git.gitano.org.uk/personal/liw/jenkinstool.git/)
-  has the tools Lars Wirzenius uses to manage his CI (Python projects
-  test suite, Debian packages, importing into reprepro, VM setup of
-  all needed stuff); the whole thing is very ad-hoc but many bits
-  could be used as inspiration sources.
+There are several plugins that allow to chain jobs that we might use to
+run the test suite job following a build job of a branch.
 
-Jenkins for Perl projects
--------------------------
+ * Jenkins native way: it's very simple, and cannot take arguments.
+   That's what weasel
+   [uses](https://gitweb.torproject.org/project/jenkins/jobs.git/tree/jobs.yaml)
+   for his Tor CI stuff.
+ * [BuildPipeline plugin](https://wiki.jenkins-ci.org/display/JENKINS/Build+Pipeline+Plugin):
+   More a visualization tool, uses the native Jenkins way of triggering
+   a downstream job if one wants this trigger to be automatic.
+ * [ParameterizedTrigger plugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin):
+   a more complete solution than the Jenkins Native way. Can pass
+   arguments from one job to another, using parameters to the call of
+   the downstream job, or taking them from a file from the upstream job.
+   The downstream job can also be manually triggered, and in this case
+   the parameters are entered through a form in the Web interface.
+   Note that the latest release as of 2015-09-01 (2.28) requires
+   Jenkins 1.580.1 ([[!tails_ticket 10068]])
+ * [MultiJob plugin](https://wiki.jenkins-ci.org/display/JENKINS/Multijob+Plugin):
+   Seems to be a complete solution too, build on the ParameterizedTrigger plugin and
+   the EnvInject one. Seems a bit less deployed than the
+   ParameterizedTrigger plugin.
 
-* [a collection of links](https://wiki.jenkins-ci.org/display/JENKINS/Perl+Projects)
-  on the Jenkins wiki
-* an overview of the available tools: [[!cpan Task::Jenkins]]
-* [a tutorial](https://logiclab.jira.com/wiki/display/OPEN/Continuous+Integration)
-* [another tutorial](http://alexandre-masselot.blogspot.com/2011/12/perl-hudson-continuous-testing.html)
-* use [[!cpan TAP::Formatter::JUnit]] (in Wheezy) rather than the Jenkins TAP plugin
-* use `prove --timer` to know how long each test takes
+These are all supported by JJB v0.9+.
+
+As we'll have to pass some parameters, the ParameterizedTrigger plugin
+is the best candidate for us.
+
+Passing parameters through jobs
+===============================
+
+We already specified what kind of informations we want to pass from the
+build job to the test job.
+
+The ParameterizedTiggerPlugin is the one usually used for that kind of
+work.
+
+We'll use it for some basic parameter passing through jobs, but given
+the test jobs will need to know a lot of them from the build job, we'll
+also use the EnvInject plugin we're already using:
+
+ * In the build job, a script will collect every necessary parameters
+   defined in the automated test blueprint and outputing them in a file
+   in the /build-artifacts/ directory.
+ * This file is the one used by the build job, to setup the variables it
+   needs (currently only $NOTIFY_TO).
+ * At the end of the build job, this file is archived with the other
+   artifacts.
+ * At the beginning of the chained test job, this file is imported in
+   the workspace along with the build artifacts. The EnvInject pre-build
+   step uses it to setup the necessary variables.
+
+Define which $OLD_ISO to test against
+=====================================
+
+It appeared in [[!tails_ticket 10117]] that this question is not so
+obvious and easy to address.
+
+The most obvious answer would be to use the previous release for all the
+branches **but** feature/jessie, which would use the previously built
+ISO of the same branch.
+
+But in some occasions, an ISO can't be tested this way, because it
+contains changes that affects the "set up an old Tails", like changes in
+the Persistence Assistant, the Greeter, the Tails Installer or in
+syslinux.
+
+So we may need a way to encode in the Git repo that a given branch needs
+to use the same value than $ISO rather than the last release as $OLD_ISO.
+We could use the same kind of trick than for the APT_overlay feature:
+having a file in `config/ci.d/` that if present shows that this is the
+case. OTOH, we may need something a bit more complex than a simple
+boolean flag. So we may rather want to check the content of a file.
+
+But this brings concerns about the merge of the base branch in the
+feature branch and how to handle conflicts. Note that at testing time,
+we'll have to merge the base branch before we look at that config
+setting (because for some reason the base branch might itself require
+old ISO = same).
+
+Another option that could be considered, using existing code in the repo: use the
+`OLD_TAILS_ISO` flag present in `config/default.yml`: when we release we
+set its value to the released ISO, and for some branch that need it we
+empty this variable so that the test use the same ISO for both
+`--old-iso` and `--iso`.
+
+In the end, we will by default use the same ISO for both `--old-iso` and
+`--iso`, except for the branches used to prepare releases (`devel` and
+`stable`), so that we know if the upgrades are broken long before the
+next release.
+
+Retrieving the ISOs for the test
+================================
+
+We'll need a way to retrieve the different ISO needed for the test.
+
+For the ISO related to the upstream build job, this shouln't be a
+problem with #9597. We can get it with either wget, or a python script
+using python-jenkins. That was the point of this ticket.
+
+For the last release ISO, we have several means:
+
+* Using wget to get them from http://iso-history.tails.boum.org. This
+  website is password protected, but we could set up another private
+  vhost for the isotesters.
+* Using the git-annex repo directly.
+
+We'll use the first one, as it's easier to implement.

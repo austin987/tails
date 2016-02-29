@@ -64,39 +64,41 @@ Options affecting the 'activate' action:
 "
 }
 
+escape_dots() {
+	printf "%s\n" $1 | sed 's/\./\\./g'
+}
+
+migrate_persistence_preset()
+{
+	local OLD_PRESET="${1}"
+	local OLD_PRESET_SOURCE="${2}"
+	local NEW_PRESET="${3}"
+	local NEW_PRESET_SOURCE="${4}"
+	local CONFIG="${5}"
+	if grep -E -qs --line-regex \
+		-e "$(escape_dots ${OLD_PRESET})\s+source=${OLD_PRESET_SOURCE}" \
+		"$CONFIG" \
+		&& ! grep -E -qs --line-regex \
+		-e "$(escape_dots ${NEW_PRESET})\s+source=${NEW_PRESET_SOURCE}" \
+		"$CONFIG"
+	then
+		warning "Need to make $NEW_PRESET persistent"
+		if [ "$PERSISTENCE_READONLY" = true ]
+		then
+			warning "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
+		else
+			echo "$NEW_PRESET	source=$NEW_PRESET_SOURCE" \
+				>> "$CONFIG" \
+				|| error "Failed to make $NEW_PRESET: $?"
+			warning "Successfully made $NEW_PRESET persistent"
+		fi
+	fi
+}
+
 warning ()
 {
 	echo "warning: ${@}" >&2
 }
-
-dbus_udisks_get_attribute ()
-{
-	local dev="${1}"
-	local attribute="${2}"
-	local re='^[[:space:]]*variant[[:space:]]\+string[[:space:]]\+"\(.*\)"$'
-	dbus-send --system --print-reply --dest=org.freedesktop.UDisks \
-		/org/freedesktop/UDisks/devices/$(basename ${dev}) \
-		org.freedesktop.DBus.Properties.Get \
-		string:org.freedesktop.UDisks.Device \
-		string:"${attribute}" 2>/dev/null | \
-		grep -e "${re}" | sed "s|${re}|\1|"
-}
-
-# We override the following two functions from live-helpers since old
-# blkid (i.e. util-linux and libblkid1) doesn't support GPT. We use dbus
-# instead (which should be available in user-space).
-get_gpt_name ()
-{
-	local dev="${1}"
-	dbus_udisks_get_attribute ${dev} partition-label
-}
-
-is_gpt_device ()
-{
-	local dev="${1}"
-	[ "$(dbus_udisks_get_attribute ${dev} partition-scheme)" = "gpt" ]
-}
-
 
 # We override live-boot's logging facilities to get more useful error messages
 log_warning_msg ()
@@ -323,31 +325,19 @@ activate_volumes ()
 		fi
 	done
 
-	# Migrate Squeeze-era NetworkManager persistence setting to Wheezy.
 	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
-		if grep -E -qs --line-regex \
-			-e '/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections' \
-			"$conf" \
-		   && ! grep -E -qs --line-regex \
-			-e '/etc/NetworkManager/system-connections\s+source=nm-system-connections' \
+		# Migrate Squeeze-era NetworkManager persistence setting to Wheezy.
+		migrate_persistence_preset '/home/amnesia/.gconf/system/networking/connections' 'nm-connections' \
+			'/etc/NetworkManager/system-connections' 'nm-system-connections' "$conf"
+		# disable pre-Wheezy NM persistence setting
+		sed -r -i \
+			-e 's,^(/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections)$,#\1,' \
 			"$conf"
-		then
-			warning "Needs to make /etc/NetworkManager/system-connections persistent"
-			if [ "$PERSISTENCE_READONLY" = true ]
-			then
-				# XXX: don't really error-out, do we?
-				error "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
-			fi
-			echo '/etc/NetworkManager/system-connections	source=nm-system-connections' \
-				>> "$conf" \
-				|| error "Failed to make /etc/NetworkManager/system-connections persistent: $?"
-			warning "Successfully made /etc/NetworkManager/system-connections persistent"
-			# disable pre-Wheezy NM persistence setting
-			sed -r -i \
-				-e 's,^(/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections)$,#\1,' \
-				"$conf"
-		fi
+
+		# Migrate Claws-mail persistence setting to Icedove
+		migrate_persistence_preset '/home/amnesia/.claws-mail' 'claws-mail' \
+			'/home/amnesia/.icedove' 'icedove' "$conf"
 	done
 
 	# Fix permissions on persistent directories that were created

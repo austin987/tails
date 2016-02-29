@@ -10,6 +10,9 @@
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
+# Import export_gnome_env().
+. /usr/local/lib/tails-shell-library/gnome.sh
+
 # Import tor_control_*(), tor_is_working(), TOR_LOG, TOR_DIR
 . /usr/local/lib/tails-shell-library/tor.sh
 
@@ -70,7 +73,7 @@ has_only_unverified_consensus() {
 
 wait_for_tor_consensus_helper() {
 	tries=0
-	while ! has_consensus && [ $tries -lt 5 ]; do
+	while ! has_consensus && [ $tries -lt 10 ]; do
 		inotifywait -q -t 30 -e close_write -e moved_to ${TOR_DIR} || log "timeout"
 		tries=$(expr $tries + 1)
 	done
@@ -81,10 +84,6 @@ wait_for_tor_consensus_helper() {
 
 wait_for_tor_consensus() {
 	log "Waiting for a Tor consensus file to contain a valid time interval"
-	if ! has_consensus && ! wait_for_tor_consensus_helper; then
-		log "Unsuccessfully waited for Tor consensus, restarting Tor and retrying."
-		restart-tor
-	fi
 	if ! has_consensus && ! wait_for_tor_consensus_helper; then
 		log "Unsuccessfully retried waiting for Tor consensus, aborting."
 	fi
@@ -175,7 +174,7 @@ maybe_set_time_from_tor_consensus() {
 	date -us "${vmid}" 1>/dev/null
 
 	# Tor is unreliable with picking a circuit after time change
-	restart-tor
+	systemctl restart tor@default.service
 }
 
 tor_cert_valid_after() {
@@ -211,22 +210,12 @@ is_clock_way_off() {
 }
 
 start_notification_helper() {
-	export DISPLAY=':0.0'
-	export XAUTHORITY="$(echo /var/run/gdm3/auth-for-$LIVE_USERNAME-*/database)"
-	exec /bin/su -c /usr/local/bin/tails-htp-notify-user "$LIVE_USERNAME" &
+	export_gnome_env
+	exec /bin/su -c /usr/local/lib/tails-htp-notify-user "$LIVE_USERNAME" &
 }
 
 
 ### Main
-
-# When the network is obstacled (e.g. we need a bridge) we wait until
-# Tor Launcher has unset DisableNetwork, since Tor's bootstrapping
-# won't start until then.
-if [ "$(tails_netconf)" = "obstacle" ]; then
-	until [ "$(tor_control_getconf DisableNetwork)" = 0 ]; do
-		sleep 1
-	done
-fi
 
 start_notification_helper
 
@@ -241,7 +230,7 @@ else
 	if is_clock_way_off; then
 		log "The clock is so badly off that Tor cannot download a consensus. Setting system time to the authority's cert's valid-after date and trying to fetch a consensus again..."
 		date --set="$(tor_cert_valid_after)" > /dev/null
-		service tor reload
+		systemctl reload tor@default.service
 	fi
 	wait_for_tor_consensus
 	maybe_set_time_from_tor_consensus
@@ -257,5 +246,5 @@ fi
 touch $TORDATE_DONE_FILE
 
 log "Restarting htpdate"
-service htpdate restart
+systemctl restart htpdate.service
 log "htpdate service restarted with return code $?"

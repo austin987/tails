@@ -1,6 +1,6 @@
 [[!meta title="Building a Tails image"]]
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 Git repository and branches
 ===========================
@@ -96,12 +96,28 @@ Debian Wheezy and Jessie:
     sudo rm /etc/apt/sources.list.d/20141010T042049Z.list
     sudo apt-get update
 
+If you run Virtualbox >4.3 (5.0 is in Jessie backports at the moment)
+you will have to patch Vagrant a bit:
+
+    --- /usr/share/vagrant/plugins/providers/virtualbox/driver/meta.rb.orig 2016-02-12 11:58:06.150337645 +0100
+    +++ /usr/share/vagrant/plugins/providers/virtualbox/driver/meta.rb      2016-02-12 11:58:38.778726368 +0100
+    @@ -45,7 +45,8 @@
+                 "4.0" => Version_4_0,
+                 "4.1" => Version_4_1,
+                 "4.2" => Version_4_2,
+    -            "4.3" => Version_4_3
+    +            "4.3" => Version_4_3,
+    +            "5.0" => Version_4_3
+               }
+     
+               if @version.start_with?("4.2.14")
+
 ## Building Tails using Vagrant
 
 Once all dependencies are installed, get the Tails sources and
 checkout the development branch:
 
-    git clone git://git.tails.boum.org/tails
+    git clone https://git-tails.immerda.ch/tails
     cd tails
     git checkout devel
 
@@ -232,41 +248,75 @@ using *gzip*.
 Building manually
 =================
 
-In order to build Tails manually, you need a running [Debian
-Wheezy](https://www.debian.org/releases/wheezy/) system
-and some [backports](http://backports.debian.org/). Anything else
-will fail.
+In order to build Tails manually, you need a running Debian Jessie
+system and some [backports](http://backports.debian.org/). Anything
+else will fail.
 
 Dependencies
 ------------
 
 The following Debian packages need to be installed:
 
-* our `live-build` 2.x package, adapted for Wheezy. Its version is
-  something like *3.0.5+really+is+2.0.12-0.tails1*. One can install it
+* our `live-build` 2.x package, adapted for Wheezy and later. Its version is
+  something like *3.0.5+really+is+2.0.12-0.tails2*. One can install it
   from:
 
-      deb http://deb.tails.boum.org/ builder-wheezy main
+      deb http://deb.tails.boum.org/ builder-jessie main
 
-  This APT repository's signing key can be found on the keyservers.
-  It is certified by the [[!tails_website tails-signing.key
-  desc="Tails signing key"]], and its fingerprint is:
+  This APT repository's signing key can be found:
+
+  - in our Git tree (that you have cloned already, right?):
+    `config/chroot_sources/tails.chroot.gpg`
+  - at <http://deb.tails.boum.org/key.asc>
+  - on the keyservers.
+
+  It is certified by the
+  [[Tails signing key|doc/about/openpgp_keys#signing]], and its
+  fingerprint is:
 
       221F 9A3C 6FA3 E09E 182E  060B C798 8EA7 A358 D82E
 
-* `syslinux`
-* `eatmydata`, `time` and `whois` (for `/usr/bin/mkpasswd`)
-* `ikiwiki` 3.20120725 or newer, available in wheezy-backports.
-* `apt-get install libyaml-perl libyaml-libyaml-perl po4a perlmagick
-  libyaml-syck-perl` so that the wiki builds smoothly.
-* `dpkg-dev`
-* `intltool`
-* `gettext` 0.18.3 or newer, available in wheezy-backports
+  You should pin that repository, so that live-build isn't upgraded to
+  the version of jessie.
+
+      #/etc/apt/preferences.d/00-builder-jessie-pinning
+      Package: *
+      Pin: release o=Debian,a=stable
+      Pin-Priority: 700
+
+      Package: *
+      Pin: origin deb.tails.boum.org
+      Pin-Priority: 800
+
+
+  Then install these dependencies from Jessie:
+
+      apt-get install \
+        dpkg-dev \
+        eatmydata \
+        gettext \
+        intltool \
+        libyaml-libyaml-perl \
+        libyaml-perl \
+        libyaml-syck-perl
+        perlmagick \
+        po4a \
+        syslinux-utils \
+        time \
+        whois
+
+  And install these dependencies from jessie-backports (please verify
+  manually that the following command actually does install the
+  expected versions):
+
+      apt-get install \
+        debootstrap/jessie-backports \
+        ikiwiki/jessie-backports
 
 Configure live-build
 --------------------
 
-Remove any line matching `/^[[:space:]]*LB.*MIRROR.*=/` in
+Remove any line matching `/^\[[:space:]]*LB.*MIRROR.*=/` in
 `/etc/live/build.conf`.
 
 Build process

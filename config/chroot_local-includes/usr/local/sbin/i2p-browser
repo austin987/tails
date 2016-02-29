@@ -5,9 +5,6 @@ set -e
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
-# Import windows_camouflage_is_enabled()
-. /usr/local/lib/tails-shell-library/tor-browser.sh
-
 # Import try_cleanup_browser_chroot(), setup_browser_chroot(),
 # configure_chroot_dns_servers(), configure_chroot_browser(),
 # configure_chroot_browser(), set_chroot_browser_locale()
@@ -58,9 +55,9 @@ copy_extra_tbb_prefs () {
     local browser_prefs_dir="${chroot}/home/${browser_user}/.${browser_name}/profile.default/preferences"
     mkdir -p "${browser_prefs_dir}"
     # Selectively copy the TBB prefs we want
-    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\|torbutton\)/!d' "${tbb_prefs}/0000tails.js" > \
+    sed '/\(security\|update\|download\|spell\|noscript\|torbrowser\)/!d' "${tbb_prefs}/0000tails.js" > \
                     "${browser_prefs_dir}/0000tails.js"
-    sed '/\(capability\|noscript\|torbutton\)/!d' "${tbb_prefs}/extension-overrides.js" > \
+    sed '/\(capability\|noscript\)/!d' "${tbb_prefs}/extension-overrides.js" > \
                     "${browser_prefs_dir}/extension-overrides.js"
     chown -R "${browser_user}:${browser_user}" "${browser_prefs_dir}"
 }

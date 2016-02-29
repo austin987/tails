@@ -1,7 +1,7 @@
 [[!meta title="Installing onto a USB Stick"]]
 
 Tails is easily installed to a USB storage device
-by cloning an existing Tails system that is running from CD or USB.
+by cloning an existing Tails system that is running from DVD or USB.
 Tails Installer also supports upgrades from an ISO image or from
 the currently running Tails system.
 
@@ -29,7 +29,7 @@ an arbitrary ISO into Tails Installer can run arbitrary code (stored
 in the ISO filesystem as `utils/linux/syslinux`) as the user running
 Tails Installer. We have no mechanism to run Tails Installer with
 elevated privileges currently, so this should not be a problem: being
-able to run `liveusb-creator` with arbitrary arguments is equivalent
+able to run `tails-installer` with arbitrary arguments is equivalent
 to being able to run arbitrary code already.
 
 Mode of operation and booting methods
@@ -37,7 +37,7 @@ Mode of operation and booting methods
 
 In order to be able to have non-destructive upgrades, blind overwrites
 (using `dd` or similar raw copy methods) of the boot media is not possible 
-(even if Tails [[shipped hybrid ISO
+(even when Tails [[ships hybrid ISO
 images|contribute/design/hybrid_ISO]]).
 
 Two alternatives booting methods have been investigated:
@@ -90,37 +90,6 @@ filesystem limits what can be shipped on the system parition
 The rest of the device is left unpartitionned for an encrypted storage
 partition that can be used for the [[design/persistence]] feature.
 
-Branding of liveusb-creator
-===========================
-
-The original liveusb-creator is Fedora-specific. We have made configurable
-most of the branding we needed to change.
-
- * Allow disabling the download feature.
- * Allow defaults/vendor/site configuration of the
-   window title, download widget title, and custom artwork.
-
-Currently supported config options (in the "branding" section) are:
-
- * `distribution`: name used in window title and download widget title,
- * `header`: pixmap displayed on top of the main dialog.
-
-These options can be set in `/etc/liveusb-creator/{vendor,site}.ini`.
-
-Both Qt resources and regular paths are supported for the `header`
-option:
-
-    # Qt resource
-    [branding]
-    distribution = Tails
-    header = :/tails-liveusb-header.png
-    partition_label = Tails
-
-    # Regular path
-    [branding]
-    distribution = Tails
-    header = /path/to/tails-liveusb-header.png
-
 Launchers
 =========
 
@@ -150,3 +119,10 @@ mind, it proved to be hard, and future extension seems now out of question.
 Our [[future plans|blueprint/usb_install_and_upgrade]] include moving to another
 piece of software as a basis, and hopefully working more closely with this
 future upstream of ours.
+
+Source code
+===========
+
+The Tails Installer source code lives in a Git repository:
+
+	<https://git-tails.immerda.ch/liveusb-creator/>
