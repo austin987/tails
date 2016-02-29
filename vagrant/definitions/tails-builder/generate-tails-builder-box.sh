@@ -6,7 +6,7 @@ set -u
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
 
 ARCHITECTURE="amd64"
-DISTRIBUTION="wheezy"
+DISTRIBUTION="jessie"
 USERNAME="vagrant"
 PASSWORD="vagrant"
 SIZE="20G"

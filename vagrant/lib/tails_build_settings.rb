@@ -3,7 +3,7 @@
 # vi: set ft=ruby :
 
 # Hostname of the virtual machine (must be in /etc/hosts)
-VIRTUAL_MACHINE_HOSTNAME = 'vagrant-wheezy'
+VIRTUAL_MACHINE_HOSTNAME = 'vagrant-jessie'
 
 # Approximate amount of extra space needed for builds
 BUILD_SPACE_REQUIREMENT = 7*1024 + 128
