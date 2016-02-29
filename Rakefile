@@ -60,6 +60,17 @@ def capture_vagrant(*args)
   return stdout, stderr
 end
 
+def vagrant_ssh_config(key)
+  if $vagrant_ssh_config.nil?
+    $vagrant_ssh_config = capture_vagrant('ssh-config').first.split("\n") \
+                           .map { |line| line.strip.split(/\s+/, 2) } .to_h
+    # The path in the ssh-config output is quoted, which is not what
+    # is expected outside of a shell, so let's get rid of the quotes.
+    $vagrant_ssh_config['IdentityFile'].gsub!(/^"|"$/, '')
+  end
+  $vagrant_ssh_config[key]
+end
+
 def current_vm_cpus
   capture_vagrant('ssh', '-c', 'grep -c "^processor\s*:" /proc/cpuinfo').first.chomp.to_i
 end
@@ -261,13 +272,9 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
 
   artifacts = capture_vagrant('ssh', '-c', 'ls -1 tails-*.iso*').first.split("\n")
   if not artifacts.empty?
-    ssh_info = capture_vagrant('ssh-config').first.split("\n") \
-               .map { |line| line.strip.split(/\s+/, 2) } .to_h
-    user = ssh_info['User']
-    hostname = ssh_info['HostName']
-    # The path in the ssh-config output is quoted, which is not what
-    # is expected outside of a shell, so let's get rid of the quotes.
-    key_file = ssh_info['IdentityFile'].gsub(/^"|"$/, '')
+    user     = vagrant_ssh_config('User')
+    hostname = vagrant_ssh_config('HostName')
+    key_file = vagrant_ssh_config('IdentityFile')
     Net::SCP.start(hostname, user, :keys => [key_file]) do |scp|
       artifacts.each do |artifact_name|
         artifact_path = "/home/#{user}/#{artifact_name}"
