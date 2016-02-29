@@ -214,10 +214,21 @@ task :ensure_clean_repository do
   end
 end
 
+def list_artifacts
+  user = vagrant_ssh_config('User')
+  stdout = capture_vagrant('ssh', '-c', "find '/home/#{user}/' -maxdepth 1 " +
+                                        "-name 'tails-*.iso*'").first
+  stdout.split("\n")
+end
+
+def remove_artifacts
+  artifacts = list_artifacts.join(' ')
+  run_vagrant('ssh', '-c', "sudo rm -f #{artifacts}")
+end
+
 desc "Make sure the vagrant user's home directory has no undesired artifacts"
 task :ensure_clean_home_directory => ['vm:up'] do
-  user = vagrant_ssh_config('User')
-  run_vagrant('ssh', '-c', "sudo rm -f '/home/#{user}/'*.iso.*")
+  remove_artifacts
 end
 
 task :validate_http_proxy do
@@ -271,19 +282,18 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
                  collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
   run_vagrant('ssh', '-c', "#{exported_env} build-tails")
 
-  artifacts = capture_vagrant('ssh', '-c', 'ls -1 tails-*.iso*').first.split("\n")
+  artifacts = list_artifacts
   if not artifacts.empty?
     user     = vagrant_ssh_config('User')
     hostname = vagrant_ssh_config('HostName')
     key_file = vagrant_ssh_config('IdentityFile')
+    run_vagrant('ssh', '-c', "sudo chown #{user} #{artifacts.join(' ')}")
     Net::SCP.start(hostname, user, :keys => [key_file]) do |scp|
-      artifacts.each do |artifact_name|
-        artifact_path = "/home/#{user}/#{artifact_name}"
-        run_vagrant('ssh', '-c', "sudo chown '#{user}' '#{artifact_path}'")
-        scp.download!(artifact_path, '.')
-        run_vagrant('ssh', '-c', "sudo rm -f '#{artifact_path}'")
+      artifacts.each do |artifact|
+        scp.download!(artifact, '.')
       end
     end
+    remove_artifacts
   end
 end
 
