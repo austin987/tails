@@ -334,6 +334,11 @@ namespace :vm do
     ENV['http_proxy'] = INTERNAL_HTTP_PROXY if restore_internal_proxy
   end
 
+  desc 'SSH into the builder VM'
+  task :ssh do
+    run_vagrant('ssh')
+  end
+
   desc 'Stop the build virtual machine'
   task :halt do
     run_vagrant('halt')
