@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-# Tor control port filter proxy, only white-listing SIGNAL NEWNYM.
+# Tor control port filter proxy, only white-listing SIGNAL NEWNYM,
+# ADD_ONION, and DEL_ONION.
 
 # This filter proxy should allow Torbutton to request a
 # new Tor circuit, without exposing dangerous control requests
@@ -8,6 +9,9 @@
 
 # If something goes wrong, an error code is returned, and
 # Torbutton will display a warning dialog that New Identity failed.
+
+# This filter proxy also allows software like OnionShare or Ricochet
+# to add and delete ephermeral hidden services.
 
 # Only one application can talk through this filter proxy
 # simultaneously. A malicious application that is running as a
@@ -19,131 +23,185 @@ import socket
 import binascii
 import re
 
+from stem.control import Controller
+from stem import Signal, SocketError, InvalidArguments, ProtocolError
+
 # Limit the length of a line, to prevent DoS attacks trying to
 # crash this filter proxy by sending infinitely long lines.
 MAX_LINESIZE = 128
 
 class UnexpectedAnswer(Exception):
-	def __init__(self, msg):
-		self.msg = msg
-	def __str__(self):
-		return "[UnexpectedAnswer] " + self.msg
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return "[UnexpectedAnswer] " + self.msg
 
-def do_newnym_real():
-	# Read authentication cookie
-	with open("/var/run/tor/control.authcookie", "rb") as f:
-		rawcookie = f.read(32)
+def connect_to_real_control_port():
+    # Read authentication cookie
+    with open("/var/run/tor/control.authcookie", "rb") as f:
+        cookie = f.read(32)
 
-	hexcookie = binascii.hexlify(rawcookie)
+    # Connect to the real control port
+    c = Controller.from_socket_file("/var/run/tor/control")
+    try:
+        c.authenticate(cookie)
+    except SocketError:
+        raise UnexpectedAnswer("AUTHENTICATE failed")
 
-	# Connect to the real control port
-	sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-	sock.settimeout(10.0)
-	sock.connect("/var/run/tor/control")
-	readh = sock.makefile("r")
-	writeh = sock.makefile("w")
+    return c
 
-	# Authenticate
-	writeh.write("AUTHENTICATE " + hexcookie + "\n")
-	writeh.flush()
+def handle_connection(c, sock):
+    # Create file handles for the socket
+    readh = sock.makefile("r")
+    writeh = sock.makefile("w")
 
-	answer = readh.readline(MAX_LINESIZE)
-	if not answer.startswith("250"):
-		raise UnexpectedAnswer("AUTHENTICATE failed")
+    # Keep accepting commands
+    while True:
+        # Read in a newline terminated line
+        line = readh.readline(MAX_LINESIZE)
 
-	# Send the newnym signal
-	writeh.write("SIGNAL NEWNYM\n")
-	writeh.flush()
+        if not line: break
 
-	answer = readh.readline(MAX_LINESIZE)
-	if not answer.startswith("250"):
-		raise UnexpectedAnswer("SIGNAL NEWNYM failed")
+        def line_matches_command(cmd):
+            # The control port language does not care about case
+            # for commands.
+            return re.match(r"^%s\b" % cmd, line, re.IGNORECASE)
 
-	# Close the connection
-	writeh.write("QUIT\n")
-	writeh.flush()
+        # Check what it is
+        if line_matches_command("PROTOCOLINFO"):
+            # Stem call PROTOCOLINFO before authenticating
+            # Tell the client that there is no authentication
+            writeh.write("250-PROTOCOLINFO 1\r\n")
+            writeh.write("250-AUTH METHODS=NULL\r\n")
+            writeh.write("250-VERSION Tor=\"{}\"\r\n".format(c.get_version()))
+            writeh.write("250 OK\r\n")
 
-	answer = readh.readline(MAX_LINESIZE)
-	if not answer.startswith("250"):
-		raise UnexpectedAnswer("QUIT failed")
+        elif line_matches_command("AUTHENTICATE"):
+            # Don't check authentication, since only
+            # safe commands are allowed
+            writeh.write("250 OK\r\n")
 
-	sock.close()
+        elif line_matches_command("GETINFO version"):
+            # Stem calls "GETINFO version" in the create_ephemeral_hidden_service function
+            writeh.write("250-version={}\r\n".format(c.get_version()))
+            writeh.write("250 OK\r\n")
 
-def do_newnym():
-	# Catch innocent exceptions, will report error instead
-	try:
-		do_newnym_real()
-		print "Newnym went fine"
-		return True
-	except (IOError, UnexpectedAnswer) as e:
-		print "Warning: Couldn't perform newnym!"
-		print e
-		return False
+        elif line_matches_command("GETINFO onions/current"):
+            # This lists ephemeral hidden services, made during the current control port connection
+            # Send GETINFO onions/current
+            try:
+                onions = c.list_ephemeral_hidden_services()
+            except InvalidArguments:
+                writeh.write("510 GETINFO onions/current failed\r\n")
+                raise UnexpectedAnswer("GETINFO onions/current failed")
 
-def handle_connection(sock):
-	# Create file handles for the socket
-	readh = sock.makefile("r")
-	writeh = sock.makefile("w")
+            if len(onions) == 0:
+                writeh.write("551 No onion services of the specified type.\r\n")
+            elif len(onions) == 1:
+                writeh.write("250-onions/current={}\r\n".format(onions[0]))
+                writeh.write("250 OK\r\n")
+            else:
+                writeh.write("250+onions/current=\r\n")
+                for onion in onions:
+                    writeh.write("{}\r\n".format(onion))
+                writeh.write(".\r\n")
+                writeh.write("250 OK\r\n")
 
-	# Keep accepting commands
-	while True:
-		# Read in a newline terminated line
-		line = readh.readline(MAX_LINESIZE)
-		if not line: break
+            print "GETINFO onions/current went fine"
 
-                def line_matches_command(cmd):
-                        # The control port language does not care about case
-                        # for commands.
-                        return re.match(r"^%s\b" % cmd, line, re.IGNORECASE)
+        elif line_matches_command("SIGNAL NEWNYM"):
+            # Perform a real SIGNAL NEWNYM (new Tor circuit)
+            try:
+                c.signal(Signal.NEWNYM)
+            except InvalidArguments:
+                writeh.write("510 NEWNYM signal failed\r\n")
+                raise UnexpectedAnswer("NEWNYM signal failed")
 
-		# Check what it is
-		if line_matches_command("AUTHENTICATE"):
-			# Don't check authentication, since only
-			# safe commands are allowed
-			writeh.write("250 OK\n")
-		elif line_matches_command("SIGNAL NEWNYM"):
-			# Perform a real SIGNAL NEWNYM (new Tor circuit)
-			if do_newnym():
-				writeh.write("250 OK\n")
-			else:
-				writeh.write("510 Newnym signal failed\n")
-		elif line_matches_command("QUIT"):
-			# Quit session
-			writeh.write("250 Closing connection\n")
-			break
-		else:
-			# Everything else we ignore/block
-			writeh.write("510 Command filtered\n")
+            writeh.write("250 OK\r\n")
+            print "NEWNYM went fine"
 
-		# Ensure the answer was written
-		writeh.flush()
+        elif line_matches_command("ADD_ONION"):
+            # Perform a real ADD_ONION (new ephemeral hidden service)
 
-	# Ensure all data was written
-	writeh.flush()
+            # example: ADD_ONION NEW:BEST Port=80,8080
+            parts = line.split(' ')         # ['ADD_ONION', 'NEW:BEST', 'Port=80,8080']
+
+            key_parts = parts[1].split(':') # ['NEW', 'BEST']
+            key_type = key_parts[0]         # 'NEW'
+            key_content = key_parts[1]      # 'BEST'
+
+            port_parts = parts[2].split('=')[1].split(',')     # ['80','8080']
+            ports = { int(port_parts[0]): int(port_parts[1]) } # { 80: 8080 }
+
+            # Send ADD_ONION
+            try:
+                res = c.create_ephemeral_hidden_service(ports, key_type, key_content)
+            except InvalidArguments:
+                writeh.write("510 ADD_ONION signal failed\n")
+                raise UnexpectedAnswer("ADD_ONION failed")
+
+            writeh.write(res.raw_content())
+            print "ADD_ONION went fine"
+
+        elif line_matches_command("DEL_ONION"):
+            # Perform a real DEL_ONION (delete ephemeral hidden service)
+
+            # example: DEL_ONION ho2fw3hol6q5hehh
+            service_id = line.split(' ')[1].strip()
+
+            try:
+                c.remove_ephemeral_hidden_service(service_id)
+            except ProtocolError:
+                writeh.write("510 DEL_ONION signal failed\r\n")
+                raise UnexpectedAnswer("DEL_ONION failed")
+
+            writeh.write("250 OK\r\n")
+            print "DEL_ONION went fine"
+
+        elif line_matches_command("QUIT"):
+            # Quit session
+            writeh.write("250 Closing connection\r\n")
+            break
+
+        else:
+            # Everything else we ignore/block
+            writeh.write("510 Command filtered\r\n")
+
+        # Ensure the answer was written
+        writeh.flush()
+
+    # Ensure all data was written
+    writeh.flush()
 
 def main():
-	# Listen on port 9052 (we cannot use 9051 as Tor uses that one)
-	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	server.bind(("127.0.0.1", 9052))
-	server.listen(4)
+    # Listen on port 9052 (we cannot use 9051 as Tor uses that one)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("127.0.0.1", 9052))
+    server.listen(4)
 
-	print "Tor control port filter started, listening on 9052"
+    print "Tor control port filter started, listening on 9052"
 
-	# Accept and handle connections one after one,
-	# sessions are short enough that the added complexity of
-	# simultaneous connections are unnecessary (in absence of attacks)
-	while True:
-		clisock, cliaddr = server.accept()
+    # Accept and handle connections one after one,
+    # sessions are short enough that the added complexity of
+    # simultaneous connections are unnecessary (in absence of attacks)
+    while True:
+        clisock, cliaddr = server.accept()
 
-		try:
-			print "Accepted a connection"
-			handle_connection(clisock)
-			print "Connection closed"
-		except IOError:
-			print "Connection closed (IOError)"
+        try:
+            # Connect to real control port, and keep the connection persistent
+            c = connect_to_real_control_port()
 
-		clisock.close()
+            print "Accepted a connection"
+            handle_connection(c, clisock)
+            print "Connection closed"
+
+            # Close Tor control port connection
+            c.close()
+        except IOError:
+            print "Connection closed (IOError)"
+
+        clisock.close()
 
 if __name__ == "__main__":
-	main()
+    main()
