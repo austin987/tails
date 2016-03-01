@@ -40,12 +40,16 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 # In-VM proxy URL
 INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
+class VagrantCommandError < StandardError
+end
+
 # Runs the vagrant command, letting stdout/stderr through, and returns
 # the command's exit status.
 def run_vagrant(*args)
   Process.wait Kernel.spawn('vagrant', *args, :chdir => './vagrant')
   if $?.exitstatus != 0
-    abort "'vagrant #{args}' command failed: #{$?.exitstatus}"
+    raise(VagrantCommandError, "'vagrant #{args}' command failed: " +
+                               "#{$?.exitstatus}")
   end
 end
 
@@ -55,7 +59,8 @@ def capture_vagrant(*args)
   stdout, stderr, proc_status =
     Open3.capture3('vagrant', *args, :chdir => './vagrant')
   if proc_status.exitstatus != 0
-    abort "'vagrant #{args}' command failed: #{proc_status.exitstatus}"
+    raise(VagrantCommandError, "'vagrant #{args}' command failed: " +
+                               "#{proc_status.exitstatus}")
   end
   return stdout, stderr
 end
@@ -219,6 +224,8 @@ def list_artifacts
   stdout = capture_vagrant('ssh', '-c', "find '/home/#{user}/' -maxdepth 1 " +
                                         "-name 'tails-*.iso*'").first
   stdout.split("\n")
+rescue VagrantCommandError
+  return Array.new
 end
 
 def remove_artifacts
