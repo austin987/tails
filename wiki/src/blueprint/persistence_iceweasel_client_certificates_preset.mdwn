@@ -1,50 +1,15 @@
-Persistence of client certificates in the browser would make their use a lot easier
+This is about [[!tails_ticket 5976]].
 
-Research
-========
+Persistence of client certificates and CAs in the browser would make their use a lot easier.
 
-Import method
--------------
+What should be saved
+====================
 
-The same approach than with bookmarks seems to be working. Candidate files are `key3.db` and/or `cert8.db` and/or `secmod.db` (<http://www-archive.mozilla.org/projects/security/pki/nss/db_formats.html>). These filenames seems to be subject to change without a notice.
+The same approach than with bookmarks seems to be working, and we would need to persist the `cert8.db` file, which is the NSS database used to store CA and certificate information in general (this file stores all your security certificate settings and any SSL certificates you have imported into Firefox.)
 
-Another approach would be to use `pk12util` (from `nss3-tools` package, see <https://developer.mozilla.org/en-US/docs/NSS/Tools>) to import client cert (<https://developer.mozilla.org/en-US/docs/NSS/tools/NSS_Tools_pk12util>). See also `certutil` to import certificates (<http://wiki.wmtransfer.com/projects/webmoney/wiki/Installing_personal_certificate_in_Mozilla_Firefox> : <https://developer.mozilla.org/en-US/docs/NSS_reference/NSS_tools_:_certutil>)
+(It was considered at some point to switch to key4 and cert9, but it never happened for Firefox desktop)
 
-According to
-<https://support.mozilla.org/en-US/kb/Recovering%20important%20data%20from%20an%20old%20profile>:
+How can we save it?
+===================
 
-  - `key3.db` - This file stores your key database for your passwords.
-  - `cert8.db` - This file stores all your security certificate settings
-    and any SSL certificates you have imported into Firefox.
-
-It's being replaced by a sqlite database.
-
-One is asked passwords when importing client certificates. The [Python
-binding for
-NSS](https://www.mozilla.org/projects/security/pki/python-nss/)
-([Python
-API](http://people.redhat.com/jdennis/python-nss/doc/api/html/), [C
-API](https://developer.mozilla.org/en-US/docs/NSS#NSS_APIs)) should
-allow to do roughly the same as `pk12util` or `certutil`, but ask for
-the password graphically. But perhaps there's a GUI available
-somewhere already?
-
-If the certificate is not in PKCS #12 format, the certutil tool can be
-used to convert it.
-
-User experience
----------------
-
-### NSS database upgrade
-
-certutil has a `--upgrade-merge` feature to *Upgrade an old database
-and merge it into a new database. This is used to migrate legacy NSS
-databases (cert8.db and key3.db) into the newer SQLite databases
-(cert9.db and key4.db).* that might be handy.
-
-However, certain certutil versions (e.g. 3.15) refuse to read or write
-any too old databases, such as the one Firefox 17 generates and uses
-with NSS 3.14.3 backported from Wheezy. We'll presumably always have
-to ship NSS and Firefox in sync' in Tails anyway. So, if we use
-certutil to perform the upgrade, then we and/or users will have to
-ensure it's done during the transition period, assuming there's one.
+A new persistence option needs to be created, to allow the persistence of browser certificates and CAs. It will need to do a `bind-mount` of the persisted files. This needs to be done in the "live-boot" debian project.
