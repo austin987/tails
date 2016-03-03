@@ -211,7 +211,14 @@ and commit the result, including new PO files:
 	cd "$RELEASE_CHECKOUT" && \
 	./import-translations  && \
 	./refresh-translations && \
+	./submodules/jenkins-tools/slaves/check_po && \
 	git add po && git commit -m 'Update PO files.'
+
+If `check_po` complains:
+
+* delete the offending PO files;
+* send a note to <tails-l10n@boum.org> so that they get in touch with
+  whoever can fix them.
 
 When preparing an actual release
 ================================
@@ -277,6 +284,7 @@ Changelog
 Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
+	git checkout "$RELEASE_BRANCH" && \
 	./release $VERSION $PREVIOUS_VERSION
 
 This populates the Changelog with the Git log entries.
@@ -488,8 +496,6 @@ suite should be ready, so it is time to:
 
       git checkout "${RELEASE_BRANCH}"
 
-<a id="prepare-iuk"></a>
-
 Generate the OpenPGP signatures and Torrents
 ============================================
 
@@ -526,6 +532,8 @@ Fifth, generate detached OpenPGP signatures for every published
 	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign \
 	  tails-i386-$VERSION.torrent && \
 	mv tails-i386-$VERSION.torrent.{asc,sig}
+
+<a id="prepare-iuk"></a>
 
 Prepare incremental upgrades
 ============================
@@ -814,8 +822,6 @@ Update the [[support/known_issues]] page:
 Write the announcement for the release in
 `wiki/src/news/version_$TAG.mdwn`, including:
 
-- The content of the "Changes" section must live in
-  `wiki/src/inc/release_notes/$TAG.mdwn`.
 - Update the `meta title` directive.
 - Update the `meta date` directive.
 - Make sure there's an `announce` tag to have an email sent to the
