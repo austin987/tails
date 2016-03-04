@@ -60,7 +60,61 @@ XXX: intrigeri
 
 ## C.2. Be able to detect within hours failures and malfunction on our services
 
-XXX: bertagaz
+- C.2.1. Research and decide what monitoring solution to use
+         what tools and abstraction layer to use for configuring it,
+         and where to host it: [[!tails_ticket 8645]]
+
+  We settled on a plan while refining the details of the implementation
+  of Icinga2 in our infrastructure.
+
+  We agreed to use its decentralized feature to isolate our monitored
+  systems from our monitoring one: a VM on the monitored host will be
+  set up as a Icinga2 `satellite`, and will collect the datas from the
+  other monitored systems, to send them back to the monitoring system
+  Icinga2 instance. The later will be the only one responsible for the
+  sending of notifications and will also be the one running the network
+  checks.
+
+  Icinga2 will be the agent we'll use on all systems to collect
+  monitoring datas.
+
+  We've also settled on the way to secure the communication between our
+  systems, and decided not to solely rely on icinga2 SSL certificates,
+  but to harden it using a VPN.
+
+  This was also necessary, because we chose to manage our monitoring
+  system with our current puppetmaster, which is hosted on the monitored
+  host. So both Icinga2 and puppet take benefits from this VPN.
+  [[!tails_ticket 10760]]
+
+  Still some of the deep details are quite blurry for the reviewer of
+  this design. We'll leave this discussion open, so that we can go on
+  with the deployement, while we'll be able discuss some other questions
+  that may raise later.
+
+- C.2.2. Set up the monitoring software and the underlying infrastructure
+
+  We've deployed the VPN between our systems [[!tails_ticket 11094]],
+  which lead us to finish the install of the OS on the monitoring
+  machine. It's now managed by our puppetmaster as any other of our
+  systems. [[!tails_ticket 8647]]
+
+  We also installed the VM on our monitored host that will serve as the
+  satellite relay to our monitoring system. [[!tails_ticket 10886]]
+
+  We then started writing in our puppet manifests the recipes we learned
+  from the monitoring prototype tested on a developer machine. We had
+  Icinga2 installed on all of our systems with a basic configuration.
+  Then we configured it on the monitoring system as well as on the VM that
+  will be the satellite so that they are now both interconnected over
+  the VPN. [[!tails_ticket 8648]]
+
+  We still need to connect our Icinga2 agent instances on the rest of
+  our systems to this Icinga2 network. This will be done in the beginning
+  of March, and we'll then be able to implement the various checks we
+  defined in the blueprint, which are part of C.2.4 and C.2.6. Once
+  done, in end of March we'll configure the notifications (C.2.5) and
+  will release our monitoring setup for the end of M5.
 
 ## C.4. Maintain our already existing services
 
