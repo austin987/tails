@@ -105,6 +105,7 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName dl.amnesia.boum.org
+	   ServerAlias *.dl.amnesia.boum.org
 	   ServerAdmin YOUR_EMAIL
 	
 	   DocumentRoot /var/www/YOUR_PATH/
@@ -121,7 +122,7 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 #### Lighttpd configuration example
 
 	static-file.etags = "disable"
-	$HTTP["host"] =~ "^dl\.amnesia\.boum\.org$" {
+	$HTTP["host"] =~ "^(\d+\.)?dl\.amnesia\.boum\.org$" {
 		server.document-root = "/var/www/YOUR_PATH/"
 		server.dir-listing = "enable"
 	}
@@ -129,7 +130,7 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 #### nginx configuration example
 
 	server {
-		server_name dl.amnesia.boum.org;
+		server_name dl.amnesia.boum.org *.dl.amnesia.boum.org;
 		etag off;
 		root /var/www/YOUR_PATH;
 		location / {
