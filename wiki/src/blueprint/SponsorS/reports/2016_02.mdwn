@@ -34,19 +34,101 @@ Everything in this report can be made public.
 
 XXX: u
 
+The last few traces of Claws Mail has been purged from Tails
+([[!tails_ticket 10904]]).
+
+- A.1.5. Update Icedove documentation
+
+  The design documentation has been updated to reflect the current
+  state of the Icedove integration into
+  Tails. ([[!tails_ticket 10737]])
+
 # B. Improve our quality assurance process
 
 ## B.1. Automatically build ISO images for all the branches of our source code that are under active development
 
-XXX: bertagaz
+In February, **603 ISO images** were automatically built by our Jenkins
+instance.
+
+The code that manages the cleaning of previous builds leftovers on our
+builder VMs is ready and waiting for reviews. ([[!tails_ticket 10772]])
 
 ## B.2. Continuously run our entire test suite on all those ISO images once they are built
 
-XXX: bertagaz
+In February, **597 ISO images** were automatically tested by our Jenkins
+instance.
+
+We decided on a way to collectively check for false positives in our
+test infrastructure. We have planed a shift per month so that we're sure
+one of us is taking care of them. ([[!tails_ticket 10993]])
+
+We still need to check if two minor bugs are around, but they don't seem
+to prevent our automated tests to be run. ([[!tails_ticket 10725]] and
+[[!tails_ticket 10601]])
 
 ## B.3. Extend the coverage of our test suite
 
-XXX: anonym
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+- Reduce peak space requirement for full test suite runs
+
+  Given the snapshot improvements reported about before
+  ([[!tails_ticket 6094]]) our test suite accumulates more and more
+  virtual machine snapshots throughout a full run, and has to keep
+  most of them until the end. These occupy quite a bit of disk space,
+  which in our case translates into RAM since we want everything
+  stored in RAM for performance reasons. By optimizing the order in
+  which our features are run we have managed to reduce the peak space
+  requirement, which allows us to run more tests in parallel on the
+  same hardware. ([[!tails_ticket 10503]])
+
+- Robustness improvements
+
+  Given the rather large amount of robustness issues we experience, we
+  have rethought our strategy and will try more fundamental approaches
+  to attacking them. The vast majority issues fall into two
+  categories:
+
+  * Transient network issues: the Tor network simply isn't as reliable
+    as our test suite assumes, resulting in tests failing due to
+    unexpectedly long timeouts and similar. So far our approach has
+    been to make our tests retry the failing actions in the specific
+    places where they occur, much like how a user would deal with the
+    situation. However, this does not scale well, since it seems we
+    have to do this everywhere, and the code for this is not always
+    straight forward.
+
+    Instead we will improve the Tor network stability by making our
+    test suite set up its own private Tor network dedicated. This
+    should eliminate all network instability introduced by normal Tor
+    usage. ([[!tails_ticket 9521]])
+
+    In the long-term, and certainly outside the scope of this
+    contract, we would like to extend this Network simulation so that
+    all network services used in tests are run locally, and the real
+    Internet is not used at all. ([[!tails_ticket 9519]],
+    [[!tails_ticket 9520]])
+
+  * Glitches when interacting with graphical user interfaces:
+    currently we simulate a user in with the very black box approach
+    of only relying on exact images for the elements it interacts
+    with. This has turned out harder than anticipated, since modern
+    desktop environments do not behave as deterministically as one
+    would hope.
+
+    Our new plan is to leverage the interfaces used by assistive
+    technologies used by e.g. screen readers to communicate the
+    structure and layout of graphical user interfaces to sight
+    impaired users. This will allow a more deterministic and reliable
+    approach for our test suite to interact with applications.
+
+  Besides this, the following specific robustness issues were fixed:
+
+  * Test that clicks the roadmap URL in Pidgin is fragile
+    ([[!tails_ticket 10783]])
+
+  * The Test that clicks the roadmap URL in Pidgin is fragile
+    ([[!tails_ticket 10775]])
 
 ## B.4. Freezable APT repository
 
@@ -196,4 +278,9 @@ accordingly ([[!tails_ticket 9262]]).
 
 # E. Release management
 
-XXX: anonym
+- [[Tails 2.0.1|news/version_2.0.1]] was released on 2016-02-13 as an
+  emergency response to CVE-2016-1523 affecting Tor Browser:
+
+  * Enable the Tor Browser's font fingerprinting protections.
+  * Upgrade Tor Browser to 5.5.2.
+  * Repair 32-bit UEFI support.
