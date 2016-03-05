@@ -23,6 +23,38 @@ Code
 XXX: List important code work that is not covered already by the Release
      section (for example, the changes being worked on for the next version).
 
+A friendlier build system
+-------------------------
+
+For years Tails has offered a
+[[build system based on Vagrant|contribute/build/#index2h1]], which at
+times has been maintained and really easy to use, and so a great
+resource for new contributors that want to test their
+modifications. Sadly that was a while ago, mostly because all but one
+Tails developers have been using their own custom build systems. The
+main reason for that is that Vagrant uses Virtualbox by default, while
+all of us (and our infrastructure, e.g. our Jenkins automated builds
+and tests setup) greatly prefer the QEMU/KVM stack (and libvirt), and
+it is not possible to mix two hypervisors at the same time.
+
+But this is about to change! Recently there's been quite an effort to
+[[!tails_bug 6354 desc="migrate to vagrant-libvirt and the QEMU/KVM hypervisor"]]
+which should allow all of us to converge to the same build
+system. Besides saving development time since only one system has to
+be maintained, it also means that this build system will be
+well-maintained in the future, and so remain easy-to-use for
+contributors.
+
+There are a few roadblocks still, though, but you can help, especially
+if you are a Debian developer! Currently we need vagrant-libvirt (and
+ruby-fog-libvirt) packaged and maintained in Debian, and
+[quite a lot of work](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=753012)
+has already been done on that front. And to have the build system
+working on Debian Jessie we need the following packages backported:
+vagrant, ruby-excon, ruby-fog-core and ruby-fog-xml. If you want to
+help, please get in touch with us on the
+[tails-dev@boum.org public mailing list](https://mailman.boum.org/listinfo/tails-dev/)!
+
 Documentation and website
 =========================
 
