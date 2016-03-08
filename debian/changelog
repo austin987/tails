@@ -1,8 +1,84 @@
-tails (2.0.2) UNRELEASED; urgency=medium
+tails (2.2) unstable; urgency=medium
 
-  * Dummy entry.
+  * Major new features and changes
+    - Replace Vidalia (which has been unmaintained for years) with:
+      (Closes: #6841)
+      * the Tor Status GNOME Shell extension, which adds a System Status
+        icon indicating whether Tor is ready or not.
+      * Onion Circuits, a simple Tor circuit monitoring tool.
 
- -- anonym <anonym@riseup.net>  Sat, 13 Feb 2016 15:30:26 +0000
+  * Security fixes
+    - Upgrade Tor Browser to 5.5.3 (Closes: #11189).
+    - Upgrade Linux to 3.16.7-ckt20-1+deb8u4.
+    - Upgrade cpio to 2.11+dfsg-4.1+deb8u1.
+    - Upgrade glibc to 2.19-18+deb8u3.
+    - Upgrade libav to 6:11.6-1~deb8u1.
+    - Upgrade libgraphite2 to 1.3.5-1~deb8u1.
+    - Upgrade libjasper1 to 1.900.1-debian1-2.4+deb8u1.
+    - Upgrade libreoffice to 4.3.3-2+deb8u3.
+    - Upgrade libssh2 to 1.4.3-4.1+deb8u1.
+    - Upgrade openssl to 1.0.1k-3+deb8u4.
+    - Upgrade perl to 5.20.2-3+deb8u4.
+    - Upgrade python-imaging, python-pil to 2.6.1-2 2.6.1-2+deb8u2.
+
+  * Bugfixes
+    - Hide "Laptop Mode Tools Configuration" menu entry. We don't
+      support configuring l-m-t in Tails, and it doesn't work out of
+      the box. (Closes: #11074)
+    - WhisperBack:
+      * Actually write a string when saving bug report to
+        disk. (Closes: #11133)
+      * Add missing argument to OpenPGP dialog so the optional OpenPGP
+        key can be added again. (Closes: #11033)
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.24-1~deb8u+1.
+    - Add support for viewing DRM protected DVD videos using
+      libdvdcss2. Patch series submitted by Austin English
+      <austinenglish@gmail.com>. (Closes: #7674)
+    - Automatically save KeePassX database after every change by default.
+      (Closes: #11147)
+    - Implement Tor stream isolation for WhisperBack
+    - Delete unused tor-tsocks-mua.conf previously used by Claws
+      Mail. (Closes: #10904)
+    - Add set -u to all gettext:ized shell scripts. In gettext-base <
+      1.8.2, like the one we had in Wheezy, gettext.sh references the
+      environment variable ZSH_VERSION, which we do not set. This has
+      prevented us from doing `set -u` without various hacks. (Closes:
+      #9371)
+    - Also set -e in some shell scripts which lacked it for no good
+      reason.
+    - Make Git verify the integrity of transferred objects. (Closes:
+      #11107)
+    - Remove LAlt+Shift and LShift+RShift keyboard layout toggling
+      shortcuts. (Closes: #10913, #11042)
+
+  * Test suite
+    - Reorder the execution of feature to decrease peak disk
+      usage. (Closes: #10503)
+    - Paste into the GTK file chooser, instead of typing. (Closes:
+      #10775)
+    - Pidgin: wait a bit for text to have stopped scrolling before we
+      click on it. (Closes: #10783)
+    - Fix step that runs commands in GNOME Terminal, that was broken
+      on Jessie when a Terminal is running already. (Closes: #11176)
+    - Let ruby-rjb guess JAVA_HOME instead fixing on one jvm
+      version. (Closes: #11190)
+
+  * Build system
+    - Upgrade build system to Debian Jessie. This includes migrating to a
+      new Vagrant basebox based on Debian Jessie.
+    - Rakefile: print git status when there are uncommitted
+      changes. Patch submitted by Austin English
+      <austinenglish@gmail.com>. (Closes: #11108)
+    - .gitignore: add .rake_tasks~. Patch submitted by Austin English
+      <austinenglish@gmail.com>. (Closes: #11134)
+    - config/amnesia: use --show-field over sed filtering. Patch
+      submitted by Chris Lamb <lamby@debian.org>.
+    - Umount and clean up leftover temporary directories from old
+      builds. (Closes: #10772)
+
+ -- Tails developers <tails@boum.org>  Mon, 07 Mar 2016 18:09:50 +0100
 
 tails (2.0.1) unstable; urgency=medium
 
