@@ -125,7 +125,7 @@ configure_chroot_browser_profile () {
 
     # Select extensions to enable
     local extension
-    while [ -n "${*}" ]; do
+    while [ -n "${*:-}" ]; do
         extension="${1}" ; shift
         ln -s "${extension}" "${browser_ext}"
     done
@@ -138,7 +138,7 @@ configure_chroot_browser_profile () {
         "${chroot_browser_config}/${browser_name}/prefs.js" > "${browser_prefs}"
 
     # Set browser home page to something that explains what's going on
-    if [ -n "${home_page}" ]; then
+    if [ -n "${home_page:-}" ]; then
         echo 'user_pref("browser.startup.homepage", "'"${home_page}"'");' >> \
             "${browser_prefs}"
     fi
