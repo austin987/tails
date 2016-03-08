@@ -48,7 +48,16 @@ For more details, see also our [changelog](https://git-tails.immerda.ch/tails/pl
 
 # Known issues
 
-See the current list of [[known issues|support/known_issues]].
+* While there is an automatic upgrade from Tails 2.2~rc1 to 2.2, it
+  will not be detected by default since Tails 2.2~rc1 think it already
+  is 2.2 (see [[the 2.2~rc1 announcement|test_2.2-rc1]]). To fix this,
+  run the following command:
+
+      sudo sed -i 's/^TAILS_VERSION_ID="2.2"$/TAILS_VERSION_ID="2.2~rc1"/' \
+          /etc/os-release && \
+      tails-upgrade-frontend-wrapper
+
+* See the current list of [[known issues|support/known_issues]].
 
 # Install or upgrade
 
