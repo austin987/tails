@@ -1,0 +1,154 @@
+--- /usr/share/xul-ext/torbirdy/chrome/content/emailwizard.js.orig
++++ /usr/share/xul-ext/torbirdy/chrome/content/emailwizard.js
+@@ -1,28 +1,46 @@
++Components.utils.import("resource://gre/modules/Preferences.jsm");
++
+ if (!org) var org = {};
+ if (!org.torbirdy) org.torbirdy = {};
+ 
+ if(!org.torbirdy.emailwizard) org.torbirdy.emailwizard = new function() {
+   var pub = {};
+ 
+-  var prefs = Cc["@mozilla.org/preferences-service;1"]
+-                .getService(Ci.nsIPrefBranch);
+-
+-  // Check if we are running Tails. If yes, disable the manual account
+-  // configuration wizard since Tails handles that on its own. See:
+-  // https://tails.boum.org/todo/Return_of_Icedove__63__/#index6h2
+-  // This is also disabled if "extensions.torbirdy.emailwizard" is true.
+-  var disableWizard = false;
+-  if (prefs.prefHasUserValue("vendor.name")) {
+-    if (prefs.getCharPref("vendor.name") === "Tails") {
+-      disableWizard = true;
+-    }
++  var disableAutoConfiguration = false;
++  if (Preferences.get("extensions.torbirdy.emailwizard", false)) {
++    disableAutoConfiguration = true;
+   }
+-  if (prefs.getBoolPref("extensions.torbirdy.emailwizard")) {
+-    disableWizard = true;
++
++  pub.applySecureConfigurationOnAccout = function(account) {
++    var idkey = account.defaultIdentity.key;
++    var serverkey = account.incomingServer.key;
++    var protocol = account.incomingServer.type;
++
++    var pref_spec = [
++        ['mail.server.%serverkey%.check_new_mail', false],
++        ['mail.server.%serverkey%.login_at_startup', false]
++    ];
++
++    // Make sure that drafts are saved to Local Folders if it is an IMAP account.
++    if (protocol === "imap") {
++        pref_spec.push(['mail.identity.%idkey%.draft_folder',
++                        'mailbox://nobody@Local%20Folders/Drafts']);
++    }
++
++    // Do not automatically download new messages in POP accounts.
++    if (protocol === "pop3") {
++        pref_spec.push(['mail.server.%serverkey%.download_on_biff', false]);
++    }
++
++    for each (var [pref_template, value] in pref_spec) {
++        var pref = pref_template.replace("%idkey%", idkey);
++        pref = pref.replace("%serverkey%", serverkey);
++        Preferences.set(pref, value);
++    }
+   }
+ 
+-  pub.disableAutoWizard = function() {
+-    if (!disableWizard) {
++  pub.adjustAutoWizard = function() {
++    if (!disableAutoConfiguration) {
+       var realname = document.getElementById("realname").value;
+       var email = document.getElementById("email").value;
+       var password = document.getElementById("password").value;
+@@ -77,29 +95,7 @@ if(!org.torbirdy.emailwizard) org.torbirdy.emailwizard = new function() {
+ 
+       var newAccount = createAccountInBackend(config);
+ 
+-      // Set check_new_mail to false. We can't do this through the account setup, so let's do it here.
+-      var checkNewMail = 'mail.server.%serverkey%.check_new_mail';
+-      var serverkey = newAccount.incomingServer.key;
+-      var checkNewMailPref = checkNewMail.replace("%serverkey%", serverkey);
+-      prefs.setBoolPref(checkNewMailPref, false);
+-
+-      // Make sure that drafts are saved to Local Folders if it is an IMAP account.
+-      if (protocol === "imap") {
+-        var identity = newAccount.defaultIdentity;
+-        identity.draftFolder = "mailbox://nobody@Local%20Folders/Drafts";
+-      }
+-
+-      // Do not check for new messages at startup.
+-      var loginAtStartup = 'mail.server.%serverkey%.login_at_startup';
+-      var loginAtStartupPref = loginAtStartup.replace("%serverkey%", serverkey);
+-      prefs.setBoolPref(loginAtStartupPref, false);
+-
+-      // Do not automatically download new messages.
+-      if (protocol === "pop3") {
+-        var downloadOnBiff = 'mail.server.%serverkey%.download_on_biff';
+-        var downloadOnBiffPref = downloadOnBiff.replace("%serverkey%", serverkey);
+-        prefs.setBoolPref(downloadOnBiffPref, false);
+-      }
++      pub.applySecureConfigurationOnAccout(newAccount);
+ 
+       // From comm-release/mailnews/base/prefs/content/accountcreation/emailWizard.js : onAdvancedSetup().
+       var windowManager = Cc["@mozilla.org/appshell/window-mediator;1"]
+@@ -117,6 +113,14 @@ if(!org.torbirdy.emailwizard) org.torbirdy.emailwizard = new function() {
+       window.close();
+     }
+     else {
++       // From comm-release/mailnews/base/prefs/content/accountcreation/emailWizard.js : finish().
++      gEmailConfigWizard.finish = function() {
++        gEmailWizardLogger.info("creating account in backend");
++        var account = createAccountInBackend(this.getConcreteConfig());
++        pub.applySecureConfigurationOnAccout(account);
++        window.close();
++      }
++
+       gEmailConfigWizard.onNext();
+     }
+   };
+@@ -125,25 +129,17 @@ if(!org.torbirdy.emailwizard) org.torbirdy.emailwizard = new function() {
+     var keycode = event.keyCode;
+     if (keycode == 13) {
+       if (document.getElementById("next_button").disabled === false) {
+-        if (!disableWizard) {
+-          pub.disableAutoWizard();
+-        }
+-        else {
+-          gEmailConfigWizard.onNext();
+-        }
++        pub.adjustAutoWizard();
+       }
+     }
+   };
+ 
+   pub.onLoad = function() {
+-    if (disableWizard) {
++    if (disableAutoConfiguration) {
+       document.getElementById("torbirdy-protocol-box").collapsed = true;
+-      document.getElementById("provisioner_button").disabled = false;
+-      document.getElementById("provisioner_button").hidden = false;
+-    } else {
+-      document.getElementById("provisioner_button").disabled = true;
+-      document.getElementById("provisioner_button").hidden = true;
+     }
++    document.getElementById("provisioner_button").disabled = true;
++    document.getElementById("provisioner_button").hidden = true;
+   };
+ 
+   return pub;
+diff --git a/chrome/content/emailwizard.xul b/chrome/content/emailwizard.xul
+index 72fad2a..f3a9c60 100644
+--- /usr/share/xul-ext/torbirdy/chrome/content/emailwizard.xul.orig
++++ /usr/share/xul-ext/torbirdy/chrome/content/emailwizard.xul
+@@ -9,7 +9,7 @@
+   </stringbundleset>
+ 
+   <button id="next_button"
+-      oncommand="org.torbirdy.emailwizard.disableAutoWizard();" />
++      oncommand="org.torbirdy.emailwizard.adjustAutoWizard();" />
+ 
+   <vbox id="mastervbox" flex="1">
+     <groupbox id="torbirdy-protocol-box" class="indent" insertafter="initialSettings">
