@@ -23,11 +23,20 @@ usable_memory() {
 cleanup() {
 	[ -n "$BUILD_DIR" ] || return 0
 	cd /
-	mounts=$(mount | grep -E "^[^[:space:]]+ on $BUILD_DIR" | \
-		awk '{print $3}' | sort -r)
-	[ -n "$mounts" ] && sudo umount $mounts
-	[ -d "$TMPFS_DIR" ] && ( sudo umount $TMPFS_DIR ; rmdir $TMPFS_DIR )
-	[ -d "$BUILD_DIR" ] && sudo rm -rf $BUILD_DIR
+	remove_build_dirs
+	sudo rm -rf "$BUILD_DIR"
+}
+
+remove_build_dirs() {
+	for mountpoint in $(old_build_dirs | tac) ; do
+		sudo umount -f -l "$mountpoint"
+		sudo rm -rf "$mountpoint"
+	done
+}
+
+old_build_dirs() {
+	mount | \
+	perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:aufs|tmpfs|devpts-live|proc-live|sysfs-live) on (/tmp/tails-build(?:-tmpfs)?\.[/[:alnum:]]+)}))'
 }
 
 trap cleanup EXIT
@@ -68,6 +77,10 @@ else
 	git fetch origin
 fi
 
+if [ "$TAILS_RAM_BUILD" ]; then
+	remove_build_dirs
+fi
+
 cd "$WORKSPACE"
 git checkout --force "$REV"
 git reset --hard "$COMMIT"
@@ -88,7 +101,7 @@ fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
-	TMPFS_DIR=$(mktemp -d /tmp/tmpfs.XXXXXXXX)
+	TMPFS_DIR=$(mktemp -d /tmp/tails-build-tmpfs.XXXXXXXX)
 	as_root_do mount -t tmpfs -o "noatime,size=100%,mode=0770,uid=root,gid=${USER}" tmpfs "$TMPFS_DIR"
 	as_root_do mount -t aufs -o "noatime,noxino,dirs=$TMPFS_DIR=rw:${WORKSPACE}/=rr+wh" aufs "$BUILD_DIR"
 else

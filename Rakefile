@@ -194,26 +194,29 @@ task :parse_build_options do
 end
 
 task :ensure_clean_repository do
-  unless `git status --porcelain`.empty?
+  git_status = `git status --porcelain`
+  unless git_status.empty?
     if ENV['TAILS_BUILD_IGNORE_CHANGES']
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-        You have uncommited changes in the Git repository. They will
-        be ignored for the upcoming build.
+        You have uncommitted changes in the Git repository. They will
+        be ignored for the upcoming build:
+        #{git_status}
 
       END_OF_MESSAGE
     else
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-        You have uncommited changes in the Git repository. Due to limitations
-        of the build system, you need to commit them before building Tails.
+        You have uncommitted changes in the Git repository. Due to limitations
+        of the build system, you need to commit them before building Tails:
+        #{git_status}
 
         If you don't care about those changes and want to build Tails nonetheless,
         please add `ignorechanges` to the TAILS_BUILD_OPTIONS environment
         variable.
 
       END_OF_MESSAGE
-      abort 'Uncommited changes. Aborting.'
+      abort 'Uncommitted changes. Aborting.'
     end
   end
 end
