@@ -39,3 +39,7 @@ pref("mail.tabs.autoHide", true);
 pref("toolkit.telemetry.prompted", 2);
 pref("toolkit.telemetry.rejected", true);
 pref("toolkit.telemetry.enabled", false);
+
+// Only allow Icedove's automatic configuration wizard to use and
+// configure secure (SSL/TLS) protocols.
+pref("mailnews.auto_config_ssl_only", true);
