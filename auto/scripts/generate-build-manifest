@@ -52,8 +52,7 @@ if (! -d $debootstrap) {
     usage;
 }
 
-### Read (package, version, uri) tuples and generate per-origin
-### (package, version) lists:
+### Read (package, version, uri) tuples and generate a single (package, version) list:
 my $data;
 foreach my $type (keys %package_type) {
     my $path = "$debootstrap/$type";
@@ -65,21 +64,7 @@ foreach my $type (keys %package_type) {
     foreach my $line (read_file($path)) {
         chomp $line;
         my ($package, $version, $uri) = split / /, $line;
-        my $found;
-        for my $origin (keys %origin_name) {
-            if (substr($uri, 0, length $origin) eq $origin) {
-                push @{ $data->{ packages }->{ $package_type{$type} }->{ $origin_name{$origin} } }, { package => $package, version => $version, };
-                $found = $origin;
-                last;
-            }
-        }
-        if (! $found) {
-            print "E: origin cannot be determined for $uri\n";
-            use Data::Dumper;
-            print "E: known uri to origin mapping follows:\n", Dumper(\%origin_name);
-            print "E: sources.list files might have been updated, please update this mapping\n";
-            exit 1;
-        }
+        push @{ $data->{ packages }->{ $package_type{$type} } }, { package => $package, version => $version, };
     }
 }
 
