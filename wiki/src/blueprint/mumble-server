@@ -48,6 +48,10 @@ systemctl reload tor@default
 [ -e "${ONION}/hostname" ] || inotifywait -e create ${ONION}
 HOSTNAME=$(cat ${ONION}/hostname)
 
+# Drop previous mumble-server firewall exceptions
+
+systemctl reload ferm
+
 # Allow local connections
 
 iptables -I OUTPUT --out-interface lo --protocol tcp --dport 64738 --jump ACCEPT
