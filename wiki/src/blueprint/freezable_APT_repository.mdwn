@@ -54,8 +54,9 @@ little value.
       and have Jenkins publish this info if available
    h. manage symlinks or rewrite rules for URL → reprepro filesystem layout
 
-3. generate set of APT sources
-   * write automated tests for the generation of APT sources [i]
+3. generate set of APT sources [i]
+   * write automated tests for the generation of APT sources
+     - redirection when using the latest snapshot of a given origin
    * implement the generation of APT sources
    * plug the generation of APT sources into the build system
    * implement
@@ -71,25 +72,21 @@ little value.
       - review and test k's code that is meant to address this [i]; in particular:
         * `generate-build-manifest` (main Git repo), aka.
           [[!tails_ticket 10748]]
-           - The current script does not gather all information
-             we specified in the
-             [[Listing used packages|freezable APT repository#build-manifest]]
-             section: specifically, it only saves the origin from
-             which we have retrieved a package during the build, even
-             if that package was also available from another origin,
-             from which it could as well have been fetched. It would
-             not be a problem if:
-             * the problematic scenario this requirement was meant to
-               address was (made?) entirely impossible for some
-               reason; see dedicated section below for a discussion;
-             * this was dealt with by
-               `tails-prepare-tagged-apt-snapshot-import`, somehow;
-               apparently it isn't
-           - The architecture information is not part of the manifest.
-             It's fine if `tails-prepare-tagged-apt-snapshot-import` can
-             do its job without this information. Can it?
+          - cherry-pick the relevant bits and get them into Tails 2.3 [i]
+          - update or replace the custom debootstrap script
+            (`tails-wheezy`)
+          - drop the "per-origin" part: we only need (package,
+            version)
+          - The architecture information is not part of the manifest.
+            It's fine if `tails-prepare-tagged-apt-snapshot-import` can
+            do its job without this information. Can it?
+          - triage remaining XXX:s in the script, address what needs
+            to be
         * `tails-prepare-tagged-apt-snapshot-import`, aka.
           [[!tails_ticket 10749]] (`puppet-tails` repo):
+          - Handle the problem mentioned on
+            [[listing used packages|freezable APT repository#build-manifest]]
+            [k]
           - support for multiple architectures? needed for multiarch
             that we'll have to use as soon as we want to upgrade Linux
             to 4.x, see
@@ -98,7 +95,6 @@ little value.
             package for _all_ architectures our reprepro setup
             supports even though we need it only for one architecture;
             beware of differing versions due to binNMUs, though)
-          - benchmark master vs. kibi/master with realistic input data
           - triage remaining XXX:s in the script, address what needs
             to be
    f. **WIP** expand list of source packages with those that the binary
@@ -570,18 +566,15 @@ from it.
 
 Output:
 
-- for each .deb:
-  * APT sources from where it is available, so that we can reinject it
-    into the relevant tagged snapshot(s!); better gather this info
-    incrementally rather than at the end of the build => we avoid
-    requiring APT sources to be stable during the duration of the
-    build
-  * Checksum(s) ???
+- for each .deb: the installed version
 - The union of all APT sources used during the build.
 
-XXX: if a (package, version) is seen at build time in 2 or more APT
-sources, we'll want to inject it into each of the tagged snapshots
-corresponding to these sources. The goal is to avoid this scenario:
+### Corner case
+
+If a (package, version) is seen at build time in 2 or more APT
+sources, `tails-prepare-tagged-apt-snapshot-import` will inject it
+into each of the tagged snapshots corresponding to these sources.
+The goal is to avoid this scenario:
 
  - version X of package P is available both in suite S1 on origin O1,
    and in suite S2 on origin O2
@@ -642,15 +635,6 @@ e.g. because we were using a tagged snapshot that imported `a2ps` into
 the security archive, then APT would prefer `a2ps` from Jessie, which
 demonstrates the bug... hence the "inject it into each of the tagged
 snapshots corresponding to these sources" requirement we had.
-
-Can we prevent this scenario somehow?
-
-If we can't prevent that scenario, then how do we mitigate its
-effects? First of all, we can easily detect that it happened by
-diff'ing the build manifests: the one we used to generate the snapshot
-vs. the one resulting from building with the tagged snapshots.
-This needs more code and process, but seems entirely doable. But once
-we've detected the problem, what do we do?
 
 ### Bonus material
 
