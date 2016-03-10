@@ -4,6 +4,7 @@ PERSISTENCE=/live/persistence/TailsData_unlocked
 MUMBLE="${PERSISTENCE}/mumble-server"
 ONION=/var/lib/tor/mumble-server
 CONFIG=/etc/mumble-server.ini
+PORT=64738
 
 # Ad-hoc option handling
 
@@ -49,7 +50,7 @@ install -o debian-tor -g debian-tor -m 700 -d "${PERSISTENCE}/tor/mumble-server"
 
 grep --quiet "^/dev/mapper/TailsData_unlocked ${ONION}" /proc/mounts || mount --bind "${PERSISTENCE}/tor/mumble-server" "${ONION}"
 grep --quiet "^HiddenServiceDir ${ONION}$" /etc/tor/torrc || echo "HiddenServiceDir ${ONION}" >> /etc/tor/torrc
-grep --quiet "^HiddenServicePort 64738$" /etc/tor/torrc || echo "HiddenServicePort 64738" >> /etc/tor/torrc
+grep --quiet "^HiddenServicePort ${PORT}$" /etc/tor/torrc || echo "HiddenServicePort ${PORT}" >> /etc/tor/torrc
 
 # Restart Tor and Mumble server
 
@@ -65,14 +66,14 @@ systemctl reload ferm
 
 # Allow local connections
 
-iptables -I OUTPUT --out-interface lo --protocol tcp --dport 64738 --jump ACCEPT
+iptables -I OUTPUT --out-interface lo --protocol tcp --dport "${PORT}" --jump ACCEPT
 
 # Allow LAN connections if requested
 
 if [ -n "${MUMBLE_LISTEN_ON_LAN}" ]; then
     for range in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16; do
         for proto in tcp udp; do
-            iptables -A INPUT --source "${range}" --protocol "${proto}" --dport 64738 --jump ACCEPT
+            iptables -A INPUT --source "${range}" --protocol "${proto}" --dport "${PORT}" --jump ACCEPT
         done
     done
 fi
