@@ -44,7 +44,8 @@ foreach my $type (keys %package_type) {
     foreach my $line (read_file($path)) {
         chomp $line;
         my ($package, $version, $uri) = split / /, $line;
-        push @{ $data->{ packages }->{ $package_type{$type} } }, { package => $package, version => $version, };
+        # Store package_version for now to ease sort+uniq for deduplication:
+        push @{ $data->{ packages_tmp }->{ $package_type{$type} } }, "${package}_${version}";
     }
 }
 
@@ -57,6 +58,17 @@ while (my $origin_dir = glob('config/APT_snapshots.d/*')) {
     chomp $origin_reference{$origin_name};
     $data->{origin_references}->{ $origin_name }->{reference} = $origin_reference{ $origin_name } || 'unknown';
 }
+
+### Deduplicate:
+foreach my $type (values %package_type) {
+    foreach my $entry (uniq sort @{ $data->{ packages_tmp }->{ $type } }) {
+        if ($entry =~ m{(.*)_(.*)}) {
+            my ($package, $version) = ($1, $2);
+            push @{ $data->{ packages }->{ $type } }, { package => $package, version => $version, };
+        }
+    }
+}
+delete $data->{ packages_tmp };
 
 my $yaml = Dump $data;
 write_file($manifest, $yaml);
