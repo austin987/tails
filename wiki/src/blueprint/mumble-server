@@ -25,8 +25,8 @@ sed -i "s%^#host=$%host=127.0.0.1%" ${CONFIG}
 
 apt-get --yes --quiet --quiet install sqlite3
 
-service mumble-server restart # To generate the database
-service mumble-server stop # To unlock database
+systemctl start mumble-server # To generate the database
+systemctl stop  mumble-server # To unlock database
 
 FINGERPRINT=$(sqlite3 ${MUMBLE}/mumble-server.sqlite "select value from config where key = 'certificate';" | openssl x509 -fingerprint | head -n 1 | cut -d '=' -f 2)
 
@@ -42,8 +42,8 @@ grep --quiet "^HiddenServicePort 64738$" /etc/tor/torrc || echo "HiddenServicePo
 
 # Restart Tor and Mumble server
 
-service mumble-server start
-service tor reload
+systemctl start mumble-server
+systemctl reload tor@default
 
 inotifywait -e create ${ONION}
 HOSTNAME=$(cat ${ONION}/hostname)
