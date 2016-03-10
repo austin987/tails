@@ -75,10 +75,7 @@ while (my $origin_dir = glob('config/APT_snapshots.d/*')) {
     $origin_name =~ s{\A config/APT_snapshots[.]d/}{}xms;
     $origin_reference{$origin_name} = read_file("$origin_dir/serial");
     chomp $origin_reference{$origin_name};
-}
-
-for my $name(values %origin_name) {
-    $data->{origin_references}->{ $name }->{reference} = $origin_reference{ $name } || 'unknown';
+    $data->{origin_references}->{ $origin_name }->{reference} = $origin_reference{ $origin_name } || 'unknown';
 }
 
 my $yaml = Dump $data;
