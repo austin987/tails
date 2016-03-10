@@ -45,7 +45,7 @@ grep --quiet "^HiddenServicePort 64738$" /etc/tor/torrc || echo "HiddenServicePo
 systemctl start mumble-server
 systemctl reload tor@default
 
-inotifywait -e create ${ONION}
+[ -e "${ONION}/hostname" ] || inotifywait -e create ${ONION}
 HOSTNAME=$(cat ${ONION}/hostname)
 
 # Allow local connections
