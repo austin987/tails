@@ -5,6 +5,12 @@ MUMBLE=${PERSISTENCE}/mumble-server
 ONION=/var/lib/tor/mumble-server
 CONFIG=/etc/mumble-server.ini
 
+# Ad-hoc option handling
+
+if echo "${@}" | grep -qw -- '--listen-on-lan'; then
+    MUMBLE_LISTEN_ON_LAN=yes
+fi
+
 # Install mumble-server
 
 apt-get --yes --quiet --quiet install mumble-server
@@ -19,7 +25,11 @@ PASSWORD=$(cat ${MUMBLE}/password)
 
 sed -i "s%^database=/var/lib/mumble-server/mumble-server.sqlite%database=${MUMBLE}/mumble-server.sqlite%" ${CONFIG}
 sed -i "s%^serverpassword=$%serverpassword=${PASSWORD}%" ${CONFIG}
-sed -i "s%^#host=$%host=127.0.0.1%" ${CONFIG}
+if [ -n "${MUMBLE_LISTEN_ON_LAN}" ]; then
+    sed -i "s%^host=%#host=%" ${CONFIG}
+else
+    sed -i "s%^#host=$%host=127.0.0.1%" ${CONFIG}
+fi
 
 # Extract fingerprint from SQLite database
 
@@ -55,6 +65,16 @@ systemctl reload ferm
 # Allow local connections
 
 iptables -I OUTPUT --out-interface lo --protocol tcp --dport 64738 --jump ACCEPT
+
+# Allow LAN connections if requested
+
+if [ -n "${MUMBLE_LISTEN_ON_LAN}" ]; then
+    for range in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16; do
+        for proto in tcp udp; do
+            iptables -A INPUT --source "${range}" --protocol "${proto}" --dport 64738 --jump ACCEPT
+        done
+    done
+fi
 
 # Output connection information
 
