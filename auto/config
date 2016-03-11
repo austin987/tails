@@ -22,6 +22,8 @@ RUN_LB_CONFIG="lb config noauto"
 # init config/ with defaults for the target distribution
 $RUN_LB_CONFIG --distribution jessie ${@}
 
+MIRROR="$(apt-mirror debian)"
+
 # set Amnesia's general options
 $RUN_LB_CONFIG \
    --verbose \
@@ -39,9 +41,9 @@ $RUN_LB_CONFIG \
    --iso-publisher="https://tails.boum.org/" \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
    --memtest none \
-   --mirror-binary "http://ftp.us.debian.org/debian/" \
-   --mirror-bootstrap "http://ftp.us.debian.org/debian/" \
-   --mirror-chroot "http://ftp.us.debian.org/debian/" \
+   --mirror-binary    "$MIRROR" \
+   --mirror-bootstrap "$MIRROR" \
+   --mirror-chroot    "$MIRROR" \
    --packages-lists="standard" \
    --tasks="standard" \
    --linux-packages="linux-image-3.16.0-4" \
