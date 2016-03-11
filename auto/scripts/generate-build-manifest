@@ -44,8 +44,17 @@ foreach my $type (keys %package_type) {
     foreach my $line (read_file($path)) {
         chomp $line;
         my ($package, $version, $uri) = split / /, $line;
-        # Store package_version for now to ease sort+uniq for deduplication:
-        push @{ $data->{ packages_tmp }->{ $package_type{$type} } }, "${package}_${version}";
+        # Store package_version_arch to ease sort+uniq for deduplication:
+        my $arch = 'source';
+        if ($package_type{$type} eq 'binary') {
+            if ($uri =~ /_([^_]+)\.deb$/) {
+                $arch = $1;
+            }
+            else {
+                die "unable to determine architecture for uri=$uri";
+            }
+        }
+        push @{ $data->{ packages_tmp }->{ $package_type{$type} } }, "${package}_${version}_${arch}";
     }
 }
 
@@ -62,9 +71,13 @@ while (my $origin_dir = glob('config/APT_snapshots.d/*')) {
 ### Deduplicate:
 foreach my $type (values %package_type) {
     foreach my $entry (uniq sort @{ $data->{ packages_tmp }->{ $type } }) {
-        if ($entry =~ m{(.*)_(.*)}) {
-            my ($package, $version) = ($1, $2);
-            push @{ $data->{ packages }->{ $type } }, { package => $package, version => $version, };
+        if ($entry =~ m{^(.+)_(.+)_(.+)$}) {
+            my ($package, $version, $arch) = ($1, $2, $3);
+            my $item = { package => $package, version => $version, arch => $arch, };
+            # Reduce clutter:
+            delete $item->{arch}
+                if $type eq 'source';
+            push @{ $data->{ packages }->{ $type } }, $item;
         }
     }
 }
