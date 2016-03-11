@@ -69,7 +69,7 @@ while (my $origin_dir = glob('config/APT_snapshots.d/*')) {
 }
 
 ### Deduplicate:
-foreach my $type (values %package_type) {
+foreach my $type (uniq values %package_type) {
     foreach my $entry (uniq sort @{ $data->{ packages_tmp }->{ $type } }) {
         if ($entry =~ m{^(.+)_(.+)_(.+)$}) {
             my ($package, $version, $arch) = ($1, $2, $3);
