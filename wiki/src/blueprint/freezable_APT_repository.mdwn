@@ -91,26 +91,6 @@ little value.
             to be
         * `tails-prepare-tagged-apt-snapshot-import`, aka.
           [[!tails_ticket 10749]] (`puppet-tails` repo):
-          - When loading the list of available packages in time-based
-            snapshots, skip symlinks that reprepro generated for us
-            (e.g. stable → jessie). Then, the generated reprepro
-            configuration will only inject the packages in dists with
-            codenames (e.g. "jessie"), and once we run reprepro to
-            generate the tagged snapshot it will create the symlinks
-            in there ⇒ tagged snapshots are usable both via "stable"
-            and via "jessie" dists.
-          - `reprepro update` in `target/conf` fails with:
-
-                    Multiple distributions with the common codename: 'updates'!
-                    First was in ./conf/distributions line 137 to 143,
-                    now another in lines 145 to 151 of ./conf/distributions.
-                    There have been errors!
-
-            ⇒ `tails-prepare-tagged-apt-snapshot-import` should
-            generate a set of reprepro configuration per mirrored
-            archive
-          - `tails-prepare-tagged-apt-snapshot-import` should take two
-            parameters: a manifest, and an output directory
           - support for multiple architectures? needed for multiarch
             that we'll have to use as soon as we want to upgrade Linux
             to 4.x, see
@@ -138,12 +118,6 @@ little value.
    h. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
       snapshots [i]
-   i. have debootstrap 1.0.73+ in all our build environments so that
-      we get the `deburis` file, that's needed to build our packages
-      listing; same for `libfile-slurp-perl` and `liblist-moreutils-perl`
-      - Vagrant basebox
-      - Jenkins slaves
-      - done: manual build doc
    j. convert custom `data/debootstrap/tails-wheezy` into a patch,
       or set up the process to update/replace it in the future [i]
    k. Update the
