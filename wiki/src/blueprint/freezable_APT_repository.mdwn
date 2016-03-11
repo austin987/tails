@@ -42,6 +42,7 @@ little value.
    c. **done** decide how many reprepro instances we want/have to split all
       this among
    d. **done** mirror relevant suites of deb.tails.b.o as well
+   d. clean up Wheezy packages (hint: snapshots)
    d. publish the snapshots over HTTP
    e. try using such snapshots for building an ISO
    e. publish the snapshots' serial: a file is updated, now needs to
@@ -87,6 +88,19 @@ little value.
           - Handle the problem mentioned on
             [[listing used packages|freezable APT repository#build-manifest]]
             [k]
+          - When loading the list of available packages in time-based
+            snapshots, skip symlinks that reprepro generated for us
+            (e.g. stable → jessie). Then, the generated reprepro
+            configuration will only inject the packages in dists with
+            codenames (e.g. "jessie"), and once we run reprepro to
+            generate the tagged snapshot it will create the symlinks
+            in there ⇒ tagged snapshots are usable both via "stable"
+            and via "jessie" dists.
+          - `reprepro update` in `target/conf` fails with:
+                    Multiple distributions with the common codename: 'updates'!
+                    First was in ./conf/distributions line 137 to 143,
+                    now another in lines 145 to 151 of ./conf/distributions.
+                    There have been errors!
           - support for multiple architectures? needed for multiarch
             that we'll have to use as soon as we want to upgrade Linux
             to 4.x, see
