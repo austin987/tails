@@ -42,18 +42,33 @@ little value.
    c. **done** decide how many reprepro instances we want/have to split all
       this among
    d. **done** mirror relevant suites of deb.tails.b.o as well
-   d. WIP: clean up Wheezy packages (hint: snapshots)
-   d. publish the snapshots over HTTP
+   d. **done** publish the snapshots over HTTP
+   d. **WIP** clean up Wheezy packages (hint: snapshots)
+   e. manage symlinks or rewrite rules for URL → reprepro filesystem
+      layout (cf. "APT vs. reprepro: dist names" below)
    e. try using such snapshots for building an ISO
+      - branch: `feature/build-from-snapshots`
+      - how to avoid re-downloading everything one has in their local
+        apt-cacher-ng, and filling its cache with files duplicated
+        many times? It seems that we can't merge caches between the
+        default `debrep` and our own snapshots: XXX.
+        But at least we should de-duplicate among our own snapshots,
+        e.g. using the "merging" strategy (documented on
+        <file:///usr/share/doc/apt-cacher-ng/html/config-serv.html#repmap>),
+        that is `Remap-tails` with no `TargetURLs` list.
    e. publish the snapshots' serial: a file is updated, now needs to
       be published over HTTP
+   e. verify that snapshots newer than 20160311 have the expected
+      `Valid-Until` field in their `Release` file
    d. implement list of sticky snapshots that must not be GC'ed,
       including the tool to add to that list
    e. implement GC of snapshots
    f. implement GC of packages
+   f. clean up old snapshots that the GC system can't clean up
+      automatically (e.g. those before 20160311, that have no
+      `Valid-Until`)
    g. have build system output the snapshots being used,
       and have Jenkins publish this info if available
-   h. manage symlinks or rewrite rules for URL → reprepro filesystem layout
 
 3. generate set of APT sources [i]
    * write automated tests for the generation of APT sources
@@ -81,8 +96,6 @@ little value.
         - convert custom `data/debootstrap/tails-wheezy` into a patch,
           or set up the process to update/replace it in the future,
           or something (we're using Jessie now) [i]
-        - triage remaining XXX:s in the script, address what needs
-          to be
       * `tails-prepare-tagged-apt-snapshot-import`, aka.
         [[!tails_ticket 10749]] (`puppet-tails` repo):
           - review & test support for multiple architectures [i]:
@@ -100,6 +113,7 @@ little value.
         (`libdevmapper1.02.1` vs. `lvm2`)
       - torproject provides no source packages; how does
         `tails-prepare-tagged-apt-snapshot-import` deal with it?
+   h. publish tagged snapshots over HTTP
    h. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
       snapshots [i]
@@ -540,7 +554,8 @@ XXX: find out how we can solve these two problems.
 None of these problems seem to warrant going back to the other
 option... and having to deal with 80GB+ BDB databases.
 
-E.g. to remove all Wheezy snapshots:
+We need to document how to clean up a repository after we stop
+tracking a distribution. E.g. to remove all Wheezy snapshots:
 
 	reprepro dumpreferences \
        | grep -E '^s=wheezy' \
@@ -692,38 +707,41 @@ HTTP rewrite rules. Here's how.
 
 Let's assume:
 
-    lb config --distribution wheezy
-    lb config --mirror-chroot          http://XYZ.tails.boum.org/debian/20151019/
-    lb config --mirror-chroot-security http://XYZ.tails.boum.org/debian-security/20151021/
+    lb config --distribution jessie
+    lb config --mirror-chroot \
+       http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/
+    lb config --mirror-chroot-security \
+       http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/
     etc.
 
 Which generates this APT `sources.list`:
 
-    deb http://XYZ.tails.boum.org/debian/20151019/ wheezy main
-    deb http://XYZ.tails.boum.org/debian-security/20151021/ wheezy/updates main
+    deb http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/ jessie main
+    deb http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
 
 As a result APT sends HTTP requests with URL such as:
 
- * <http://XYZ.tails.boum.org/debian/20151019/dists/wheezy/Release>
- * <http://XYZ.tails.boum.org/debian-security/20151021/dists/wheezy/updates/Release>
-
-XXX: update the following if we decide to use `reprepro gensnapshot`,
-which implies slightly different paths.
+ * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/dists/jessie/Release>
+ * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/pool/XXX>
+ * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/dists/jessie/updates/Release>
+ * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/pool/XXX>
 
 The corresponding files in reprepro's filesystem (if we have one
 reprepro instance per mirrored archive) are:
 
  * in Debian archive's reprepro:
-   - `/srv/foo/debian/dists/wheezy/20151019/Release`
-   - `/srv/foo/debian/conf/distributions` contains `Suite: wheezy/20151019`
+   - `/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016031101/Release`,
+     that contains `Suite: jessie/snapshots/2016031101` and `Codename: jessie`
+   - `/srv/apt-snapshots/time-based/repositories/debian/pool/XXX`
 
  * in Debian security archive's reprepro:
-   - `/srv/foo/debian-security/dists/wheezy/updates/20151021/Release`
-   - `/srv/foo/debian-security/conf/distributions` contains
-     `Suite: wheezy/updates/20151019`
+   - `/srv/apt-snapshots/time-based/repositories/debian-security/dists/jessie/updates/snapshots/2016031102/Release`,
+     that contains `Suite: jessie/updates/snapshots/2016031102` and
+     `Codename: jessie/updates`
+   - `/srv/apt-snapshots/time-based/repositories/debian-security/pool/XXX`
 
 To have these HTTP requests translate to access these files, one needs
-either symlinks (tested successfully) or HTTP rewrite rules.
+either symlinks or HTTP rewrite rules.
 
 Note: this works because APT only warns when the codename in the
 `Release` file doesn't match the one requested in `sources.list`.
