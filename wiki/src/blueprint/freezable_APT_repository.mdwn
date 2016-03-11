@@ -75,43 +75,31 @@ little value.
    c. **done** initial reprepro setup for tagged snapshots
    d. **done** debootstrap in jessie-backports
    e. **WIP** how to create a partial snapshot from a manifest and
-      the origin time-based snapshots? [k]
-      - review and test k's code that is meant to address this [i]; in particular:
-        * `generate-build-manifest` (main Git repo), aka.
-          [[!tails_ticket 10748]]
-          - cherry-pick the relevant bits and get them into Tails 2.3 [i]
-          - convert custom `data/debootstrap/tails-wheezy` into a patch,
-            or set up the process to update/replace it in the future,
-            or something (we're using Jessie now) [i]
-          - triage remaining XXX:s in the script, address what needs
-            to be
-        * `tails-prepare-tagged-apt-snapshot-import`, aka.
-          [[!tails_ticket 10749]] (`puppet-tails` repo):
-          - support for multiple architectures? needed for multiarch
-            that we'll have to use as soon as we want to upgrade Linux
-            to 4.x, see
-            [[!tails_gitweb_branch feature/8415-overlayfs]]; (it might
-            be good enough to import a bit too much, e.g. import each
-            package for _all_ architectures our reprepro setup
-            supports even though we need it only for one architecture;
-            beware of differing versions due to binNMUs, though) [k]
-          - test with a complete set of data (including all
-            architectures we want, source packages, and a build
-            manifest that includes amd64 and source packages) [i]
-   f. **WIP** expand list of source packages with those that the binary
-      packages were built from [k]
+      the origin time-based snapshots?
+      * `generate-build-manifest` (main Git repo), aka. [[!tails_ticket 10748]]
+        - cherry-pick the relevant bits and get them into Tails 2.3 [i]
+        - convert custom `data/debootstrap/tails-wheezy` into a patch,
+          or set up the process to update/replace it in the future,
+          or something (we're using Jessie now) [i]
+        - triage remaining XXX:s in the script, address what needs
+          to be
+      * `tails-prepare-tagged-apt-snapshot-import`, aka.
+        [[!tails_ticket 10749]] (`puppet-tails` repo):
+          - review & test support for multiple architectures [i]:
+            * beware of differing versions due to binNMUs
+            * test with a complete set of data (including all
+              architectures we want, source packages, and a build
+              manifest that includes amd64 (e.g.
+              [[!tails_gitweb_branch feature/8415-overlayfs]]) and
+              source packages
+   g. **WIP** have the manifest → partial snapshot process include source
+      packages
       => review this [i], in particular:
       - check the case when the binary package's version is different
         from the corresponding source package's one
         (`libdevmapper1.02.1` vs. `lvm2`)
       - torproject provides no source packages; how does
         `tails-prepare-tagged-apt-snapshot-import` deal with it?
-   g. **WIP** have the manifest → partial snapshot process include source
-      packages [k]
-      => review this [i], in particular:
-      - check the case when the binary package's version is different
-        from the corresponding source package's one
-        (`libdevmapper1.02.1` vs. `lvm2`)
    h. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
       snapshots [i]
@@ -124,7 +112,6 @@ little value.
 
 5. misc
    * implement whatever the "freeze exceptions" section requires
-   * Puppetize every server-side thing that hasn't been yet.
 
 # The big picture
 
