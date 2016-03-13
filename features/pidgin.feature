@@ -67,7 +67,8 @@ Feature: Chatting anonymously using Pidgin
     When I type "/topic"
     And I press the "ENTER" key
     Then I see the Tails roadmap URL
-    When I click on the Tails roadmap URL
+    When I wait 10 seconds
+    And I click on the Tails roadmap URL
     Then the Tor Browser has started and loaded the Tails roadmap
     And the "irc.oftc.net" account only responds to PING and VERSION CTCP requests
 
