@@ -53,10 +53,64 @@ class="application">Terminal</span> as instructed below.</p>
 Using the <span class="application">Terminal</span>
 ===================================================
 
-1. Find out the device name of the USB stick and unmount the device.
+1. Unplug the USB stick from the computer.
 
-   The steps are described in point 1 and 2 of the
-   [[!traillink manual_install_instructions|first_steps/installation/manual/mac]].
+1. Open <span class="application">Terminal</span> from
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Utilities</span>&nbsp;▸
+     <span class="guimenuitem">Terminal.app</span></span>.
+
+1. Execute the following command:
+
+       diskutil list
+
+   It returns a list of the storage devices on the system. For example:
+
+       $ diskutil list
+       /dev/disk0
+         #:                     TYPE NAME         SIZE      IDENTIFIER
+         0:    GUID_partition_scheme             *500.1 GB  disk0
+         1:                      EFI              209.7 MB  disk0s1
+         2:                Apple_HFS MacDrive     250.0 GB  disk0s2
+         3:                      EFI              134.1 GB  disk0s3
+         4:     Microsoft Basic Data BOOTCAMP     115.5 GB  disk0s4
+
+1. Plug the USB stick in the computer.
+
+1. Execute again the same command:
+
+       diskutil list
+
+   Your USB stick appears as a new device in the list. Check
+   that its size corresponds to the size of your USB stick.
+
+       $ diskutil list
+       /dev/disk0
+         #:                     TYPE NAME         SIZE      IDENTIFIER
+         0:    GUID_partition_scheme             *500.1 GB  disk0
+         1:                      EFI              209.7 MB  disk0s1
+         2:                Apple_HFS MacDrive     250.0 GB  disk0s2
+         3:                      EFI              134.1 GB  disk0s3
+         4:     Microsoft Basic Data BOOTCAMP     115.5 GB  disk0s4
+       /dev/disk1
+         #:                     TYPE NAME         SIZE      IDENTIFIER
+         0:   FDisk_partition_scheme             *4.0 GB    disk1
+         1:                Apple_HFS Untitled 1   4.0 GB    disk1s1
+
+1. Take note of the *device name* of your USB stick.
+   In this example, the USB stick is 4.0 GB and its device name is <span class="code">/dev/disk1</span>.
+   Yours might be different.
+
+   <div class="caution">
+   <p>If you are unsure about the device name, you should stop proceeding or
+   <strong>you risk overwriting any hard disk on the system</strong>.</p>
+   </div>
+
+1. Execute the following command to safely remove the USB stick. Replace <span class="code">[device]</span>
+   with the device name found in step 5.
+
+       diskutil unmountDisk [device]
 
 2. Reset the device using the fdisk command:
 
