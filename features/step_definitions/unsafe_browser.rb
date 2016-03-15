@@ -1,6 +1,6 @@
 When /^I see and accept the Unsafe Browser start verification$/ do
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  @screen.type(Sikuli::Key.ESC)
+  @screen.type(Sikuli::Key.RIGHT + Sikuli::Key.ENTER)
 end
 
 def supported_torbrowser_languages
