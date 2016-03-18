@@ -174,6 +174,57 @@
  
    <vbox id="mastervbox" flex="1">
      <groupbox id="torbirdy-protocol-box" class="indent" insertafter="initialSettings">
+--- /usr/share/xul-ext/torbirdy/chrome/content/preferences.js.orig
++++ /usr/share/xul-ext/torbirdy/chrome/content/preferences.js
+@@ -37,36 +37,20 @@ if (!org.torbirdy.prefs) org.torbirdy.prefs = new function() {
+   };
+ 
+   pub.setEnigmailPrefs = function(anonService) {
++    var opts = "";
+     if (pub.prefs.getBoolPref("extensions.torbirdy.enigmail.throwkeyid")) {
+-      if (anonService === "tor") {
+-        return "--no-emit-version " +
+-               "--no-comments " +
+-               "--throw-keyids " +
+-               "--display-charset utf-8 " +
+-               "--keyserver-options no-auto-key-retrieve,no-try-dns-srv,http-proxy=http://127.0.0.1:8118";
+-      }
+-      if (anonService === "jondo") {
+-        return "--no-emit-version " +
+-               "--no-comments " +
+-               "--throw-keyids " +
+-               "--display-charset utf-8 " +
+-               "--keyserver-options no-auto-key-retrieve,no-try-dns-srv,http-proxy=http://127.0.0.1:4001";
+-      }
+-    }
+-    else {
+-      if (anonService === "tor") {
+-        return "--no-emit-version " +
+-               "--no-comments " +
+-               "--display-charset utf-8 " +
+-               "--keyserver-options no-auto-key-retrieve,no-try-dns-srv,http-proxy=http://127.0.0.1:8118";
+-      }
+-      if (anonService === "jondo") {
+-        return "--no-emit-version " +
+-               "--no-comments " +
+-               "--display-charset utf-8 " +
+-               "--keyserver-options no-auto-key-retrieve,no-try-dns-srv,http-proxy=http://127.0.0.1:4001";
+-      }
++      opts += "--throw-keyids ";
+     }
++    var proxy = "socks5h://127.0.0.1:9050";
++    if (anonService === "jondo") {
++      proxy = "http://127.0.0.1:4001";
++    }
++    return opts +
++           "--no-emit-version " +
++           "--no-comments " +
++           "--display-charset utf-8 " +
++           "--keyserver-options no-auto-key-retrieve,no-try-dns-srv,http-proxy=" +
++           proxy;
+   };
+ 
+   pub.updateKeyserver = function(anonService) {
 --- /usr/share/xul-ext/torbirdy/components/torbirdy.js.orig
 +++ /usr/share/xul-ext/torbirdy/components/torbirdy.js
 @@ -181,6 +181,14 @@ const TorBirdyPrefs = {
@@ -191,3 +242,12 @@
  
    /*
      Browser
+@@ -215,7 +223,7 @@ const TorBirdyPrefs = {
+                                               // We want to force UTF-8 everywhere
+                                               "--display-charset utf-8 " +
+                                               // We want to ensure that Enigmail is proxy aware even when it runs gpg in a shell
+-                                              "--keyserver-options http-proxy=http://127.0.0.1:8118 ",
++                                              "--keyserver-options http-proxy=socks5h://127.0.0.1:9050 ",
+                                             
+   // The default key server should be a hidden service and this is the only known one (it's part of the normal SKS network)
+   "extensions.enigmail.keyserver": "hkp://qdigse2yzvuglcix.onion",
