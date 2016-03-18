@@ -42,90 +42,81 @@ little value.
    c. **done** decide how many reprepro instances we want/have to split all
       this among
    d. **done** mirror relevant suites of deb.tails.b.o as well
-   d. publish the snapshots over HTTP
+   d. **done** publish the snapshots over HTTP
+   d. **done** clean up Wheezy packages (including those referenced by
+      snapshots)
+   e. **done** publish the snapshots' serial over HTTP
+      (e.g. <http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security>)
+   e. deny robots access to that data
+   e. manage symlinks or rewrite rules for URL → reprepro filesystem
+      layout (cf. "APT vs. reprepro: dist names" below)
    e. try using such snapshots for building an ISO
-   e. publish the snapshots' serial: a file is updated, now needs to
-      be published over HTTP
+      - branch: `feature/build-from-snapshots`
+      - how to avoid re-downloading everything one has in their local
+        apt-cacher-ng, and filling its cache with files duplicated
+        many times? It seems that we can't merge caches between the
+        default `debrep` and our own snapshots: XXX.
+        But at least we should de-duplicate among our own snapshots,
+        e.g. using the "merging" strategy (documented on
+        <file:///usr/share/doc/apt-cacher-ng/html/config-serv.html#repmap>),
+        that is `Remap-tails` with no `TargetURLs` list.
    d. implement list of sticky snapshots that must not be GC'ed,
       including the tool to add to that list
    e. implement GC of snapshots
    f. implement GC of packages
+   f. clean up old snapshots that the GC system can't clean up
+      automatically (e.g. those before 20160311, that have no
+      `Valid-Until`)
    g. have build system output the snapshots being used,
       and have Jenkins publish this info if available
-   h. manage symlinks or rewrite rules for URL → reprepro filesystem layout
 
-3. generate set of APT sources
-   * write automated tests for the generation of APT sources [i]
+3. generate set of APT sources [i]
+   * write automated tests for the generation of APT sources
+     - redirection when using the latest snapshot of a given origin
+     - We still need to support adding APT sources in
+       `config/chroot_sources/`, pointing to repositories that exist
+       outside of the freezable APT system, e.g. to point to a custom
+       or personal APT repository during early development phases, for
+       contributors who do not have the ability to upload packages to
+       any of the repositories we snapshot.
    * implement the generation of APT sources
    * plug the generation of APT sources into the build system
    * implement
      [[switching to live APT sources at runtime|freezable_APT_repository#runtime-sources]]
 
 4. tagged snapshots
-   a. **done** PoC of capturing the list of binary packages used during the build [k]
-   b. **done** PoC of capturing the list of source packages used during the build [k]
+   a. **done** PoC of capturing the list of binary packages used during the build
+   b. **done** PoC of capturing the list of source packages used during the build
    c. **done** initial reprepro setup for tagged snapshots
    d. **done** debootstrap in jessie-backports
    e. **WIP** how to create a partial snapshot from a manifest and
-      the origin time-based snapshots? [k]
-      - review and test k's code that is meant to address this [i]; in particular:
-        * `generate-build-manifest` (main Git repo), aka.
-          [[!tails_ticket 10748]]
-           - The current script does not gather all information
-             we specified in the
-             [[Listing used packages|freezable APT repository#build-manifest]]
-             section: specifically, it only saves the origin from
-             which we have retrieved a package during the build, even
-             if that package was also available from another origin,
-             from which it could as well have been fetched. It would
-             not be a problem if:
-             * the problematic scenario this requirement was meant to
-               address was (made?) entirely impossible for some
-               reason; see dedicated section below for a discussion;
-             * this was dealt with by
-               `tails-prepare-tagged-apt-snapshot-import`, somehow;
-               apparently it isn't
-           - The architecture information is not part of the manifest.
-             It's fine if `tails-prepare-tagged-apt-snapshot-import` can
-             do its job without this information. Can it?
-        * `tails-prepare-tagged-apt-snapshot-import`, aka.
-          [[!tails_ticket 10749]] (`puppet-tails` repo):
-          - support for multiple architectures? needed for multiarch
-            that we'll have to use as soon as we want to upgrade Linux
-            to 4.x, see
-            [[!tails_gitweb_branch feature/8415-overlayfs]]; (it might
-            be good enough to import a bit too much, e.g. import each
-            package for _all_ architectures our reprepro setup
-            supports even though we need it only for one architecture;
-            beware of differing versions due to binNMUs, though)
-          - benchmark master vs. kibi/master with realistic input data
-          - triage remaining XXX:s in the script, address what needs
-            to be
-   f. **WIP** expand list of source packages with those that the binary
-      packages were built from [k]
+      the origin time-based snapshots?
+      * `generate-build-manifest` (main Git repo), aka. [[!tails_ticket 10748]]
+        - cherry-pick the relevant bits and get them into Tails 2.3 [i]
+        - convert custom `data/debootstrap/tails-wheezy` into a patch,
+          or set up the process to update/replace it in the future,
+          or something (we're using Jessie now) [i]
+      * `tails-prepare-tagged-apt-snapshot-import`, aka.
+        [[!tails_ticket 10749]] (`puppet-tails` repo):
+          - review & test support for multiple architectures [i]:
+            * beware of differing versions due to binNMUs
+            * test with a complete set of data (including all
+              architectures we want, source packages, and a build
+              manifest that includes amd64 (e.g.
+              [[!tails_gitweb_branch feature/8415-overlayfs]]) and
+              source packages
+   g. **WIP** have the manifest → partial snapshot process include source
+      packages
       => review this [i], in particular:
       - check the case when the binary package's version is different
         from the corresponding source package's one
         (`libdevmapper1.02.1` vs. `lvm2`)
       - torproject provides no source packages; how does
         `tails-prepare-tagged-apt-snapshot-import` deal with it?
-   g. **WIP** have the manifest → partial snapshot process include source
-      packages [k]
-      => review this [i], in particular:
-      - check the case when the binary package's version is different
-        from the corresponding source package's one
-        (`libdevmapper1.02.1` vs. `lvm2`)
+   h. publish tagged snapshots over HTTP
    h. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
       snapshots [i]
-   i. have debootstrap 1.0.73+ in all our build environments so that
-      we get the `deburis` file, that's needed to build our packages
-      listing; same for `libfile-slurp-perl` and `liblist-moreutils-perl`
-      - Vagrant basebox
-      - Jenkins slaves
-      - done: manual build doc
-   j. convert custom `data/debootstrap/tails-wheezy` into a patch,
-      or set up the process to update/replace it in the future [i]
    k. Update the
       [[Listing used packages|freezable APT repository#build-manifest]]
       section
@@ -135,7 +126,6 @@ little value.
 
 5. misc
    * implement whatever the "freeze exceptions" section requires
-   * Puppetize every server-side thing that hasn't been yet.
 
 # The big picture
 
@@ -405,7 +395,10 @@ superseded as soon as it can be. However:
    can do it by the book with the custom backport option too, by going
    through a topic branch and `config/APT_overlays.d/`, but it still
    conveys less historical information through Git than the APT
-   pinning option.
+   pinning option;
+ * anonym NACK'ed this ("Please do not underestimate the added
+   overhead of having to rebuild packages for trivialities like
+   this"), and intrigeri agreed.
 
 ## Number of distributions
 
@@ -561,6 +554,16 @@ XXX: find out how we can solve these two problems.
 None of these problems seem to warrant going back to the other
 option... and having to deal with 80GB+ BDB databases.
 
+We need to document how to clean up a repository after we stop
+tracking a distribution. E.g. to remove all Wheezy snapshots:
+
+	reprepro dumpreferences \
+       | grep -E '^s=wheezy' \
+       | awk '{print $1}' \
+       | sort -u \
+       | xargs -n 1 reprepro _removereferences \
+    && reprepro deleteunreferenced
+
 <a id="build-manifest"></a>
 
 ## Listing used packages
@@ -570,18 +573,15 @@ from it.
 
 Output:
 
-- for each .deb:
-  * APT sources from where it is available, so that we can reinject it
-    into the relevant tagged snapshot(s!); better gather this info
-    incrementally rather than at the end of the build => we avoid
-    requiring APT sources to be stable during the duration of the
-    build
-  * Checksum(s) ???
+- for each .deb: the installed version
 - The union of all APT sources used during the build.
 
-XXX: if a (package, version) is seen at build time in 2 or more APT
-sources, we'll want to inject it into each of the tagged snapshots
-corresponding to these sources. The goal is to avoid this scenario:
+### Corner case
+
+If a (package, version) is seen at build time in 2 or more APT
+sources, `tails-prepare-tagged-apt-snapshot-import` will inject it
+into each of the tagged snapshots corresponding to these sources.
+The goal is to avoid this scenario:
 
  - version X of package P is available both in suite S1 on origin O1,
    and in suite S2 on origin O2
@@ -642,15 +642,6 @@ e.g. because we were using a tagged snapshot that imported `a2ps` into
 the security archive, then APT would prefer `a2ps` from Jessie, which
 demonstrates the bug... hence the "inject it into each of the tagged
 snapshots corresponding to these sources" requirement we had.
-
-Can we prevent this scenario somehow?
-
-If we can't prevent that scenario, then how do we mitigate its
-effects? First of all, we can easily detect that it happened by
-diff'ing the build manifests: the one we used to generate the snapshot
-vs. the one resulting from building with the tagged snapshots.
-This needs more code and process, but seems entirely doable. But once
-we've detected the problem, what do we do?
 
 ### Bonus material
 
@@ -716,38 +707,41 @@ HTTP rewrite rules. Here's how.
 
 Let's assume:
 
-    lb config --distribution wheezy
-    lb config --mirror-chroot          http://XYZ.tails.boum.org/debian/20151019/
-    lb config --mirror-chroot-security http://XYZ.tails.boum.org/debian-security/20151021/
+    lb config --distribution jessie
+    lb config --mirror-chroot \
+       http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/
+    lb config --mirror-chroot-security \
+       http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/
     etc.
 
 Which generates this APT `sources.list`:
 
-    deb http://XYZ.tails.boum.org/debian/20151019/ wheezy main
-    deb http://XYZ.tails.boum.org/debian-security/20151021/ wheezy/updates main
+    deb http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/ jessie main
+    deb http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
 
 As a result APT sends HTTP requests with URL such as:
 
- * <http://XYZ.tails.boum.org/debian/20151019/dists/wheezy/Release>
- * <http://XYZ.tails.boum.org/debian-security/20151021/dists/wheezy/updates/Release>
-
-XXX: update the following if we decide to use `reprepro gensnapshot`,
-which implies slightly different paths.
+ * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/dists/jessie/Release>
+ * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/pool/XXX>
+ * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/dists/jessie/updates/Release>
+ * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/pool/XXX>
 
 The corresponding files in reprepro's filesystem (if we have one
 reprepro instance per mirrored archive) are:
 
  * in Debian archive's reprepro:
-   - `/srv/foo/debian/dists/wheezy/20151019/Release`
-   - `/srv/foo/debian/conf/distributions` contains `Suite: wheezy/20151019`
+   - `/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016031101/Release`,
+     that contains `Suite: jessie/snapshots/2016031101` and `Codename: jessie`
+   - `/srv/apt-snapshots/time-based/repositories/debian/pool/XXX`
 
  * in Debian security archive's reprepro:
-   - `/srv/foo/debian-security/dists/wheezy/updates/20151021/Release`
-   - `/srv/foo/debian-security/conf/distributions` contains
-     `Suite: wheezy/updates/20151019`
+   - `/srv/apt-snapshots/time-based/repositories/debian-security/dists/jessie/updates/snapshots/2016031102/Release`,
+     that contains `Suite: jessie/updates/snapshots/2016031102` and
+     `Codename: jessie/updates`
+   - `/srv/apt-snapshots/time-based/repositories/debian-security/pool/XXX`
 
 To have these HTTP requests translate to access these files, one needs
-either symlinks (tested successfully) or HTTP rewrite rules.
+either symlinks or HTTP rewrite rules.
 
 Note: this works because APT only warns when the codename in the
 `Release` file doesn't match the one requested in `sources.list`.
