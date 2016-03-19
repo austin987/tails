@@ -121,7 +121,10 @@ tracked by tickets prefixed with `todo/test_suite:`.
   1. Start Icedove using the GNOME Applications menu.
   2. Disable SSL/TLS for SMTP in Icedove (so take precautions for not
      leaking your password in plaintext by either changing it
-     temporarily or using a disposable account).
+     temporarily or using a disposable account). Or better, configure
+     StartTLS, since it will send two EHLO/HELO: one before TLS is
+     initiated; one after. The assumption here is that Icedove will
+     send the same both times.
   3. Run `sudo tcpdump -n -i lo -w dump` while sending an email to
      capture the packets before Tor encrypts it, then close
      tcpdump. Note that the packet containing EHLO/HELO will be sent
@@ -129,7 +132,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
      server doesn't support plaintext SMTP on port 587) we are ok.
   4. Check the dump for the HELO/EHLO message and
      verify that it only contains `127.0.0.1`:
-     `tcpdump -A -r dump | grep EHLO`
+     `sudo tcpdump -A -r dump | grep EHLO`
 * Make sure Icedove Mail use its dedicated `SocksPort` (see "SocksPort
   for the MUA" in `/etc/tor/torrc`) when connecting to IMAP / POP3 /
   SMTP servers (both clearnet and hidden services) by monitoring the
