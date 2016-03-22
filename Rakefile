@@ -295,6 +295,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     hostname = vagrant_ssh_config('HostName')
     key_file = vagrant_ssh_config('IdentityFile')
     run_vagrant('ssh', '-c', "sudo chown #{user} #{artifacts.join(' ')}")
+    $stderr.puts "Retrieving artifacts from Vagrant build box."
     Net::SCP.start(hostname, user, :keys => [key_file]) do |scp|
       artifacts.each do |artifact|
         scp.download!(artifact, '.')
