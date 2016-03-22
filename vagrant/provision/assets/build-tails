@@ -23,13 +23,20 @@ usable_memory() {
 cleanup() {
 	[ -n "$BUILD_DIR" ] || return 0
 	cd /
-	mounts=$(mount | grep -E "^[^[:space:]]+ on $BUILD_DIR" | \
-		awk '{print $3}' | sort -r)
-	[ -n "$mounts" ] && sudo umount $mounts
-	if [ -d "${BUILD_DIR}" ]; then
-            mountpoint -q "${BUILD_DIR}" && sudo umount "${BUILD_DIR}"
-            sudo rm -rf "${BUILD_DIR}"
-        fi
+	remove_build_dirs
+	sudo rm -rf "$BUILD_DIR"
+}
+
+remove_build_dirs() {
+	for mountpoint in $(old_build_dirs | tac) ; do
+		sudo umount -f -l "$mountpoint"
+		sudo rm -rf "$mountpoint"
+	done
+}
+
+old_build_dirs() {
+	mount | \
+	perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:aufs|tmpfs|devpts-live|proc-live|sysfs-live) on (/tmp/tails-build(?:-tmpfs)?\.[/[:alnum:]]+)}))'
 }
 
 trap cleanup EXIT
@@ -68,6 +75,10 @@ else
 	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
+fi
+
+if [ "$TAILS_RAM_BUILD" ]; then
+	remove_build_dirs
 fi
 
 cd "$WORKSPACE"
