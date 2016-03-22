@@ -1,12 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- encoding: UTF-8
 
 import gettext
 import subprocess
 
-import glib
-import gtk
-import gtk.gdk
+from gi import require_version
+require_version('Gtk', '3.0')
+from gi.repository import GLib, Gtk, GdkPixbuf
+#from gi.repository.GdkPixbuf import Pixbuf
 
 gettext.install("tails")
 try:
@@ -15,11 +16,11 @@ try:
 except OSError:
     tails_version = _("not available")
     tails_main_version = ""
-about_dialog = gtk.AboutDialog()
+about_dialog = Gtk.AboutDialog()
 about_dialog.set_program_name(_("Tails"))
 try:
-    about_dialog.set_logo(gtk.gdk.pixbuf_new_from_file_at_size('/usr/share/tails/tails-logo-flat-inverted.svg', 400, 200))
-except glib.GError:
+    about_dialog.set_logo(GdkPixbuf.Pixbuf.new_from_file_at_size('/usr/share/tails/tails-logo-flat-inverted.svg', 400, 200))
+except GLib.GError:
     pass
 about_dialog.set_comments(_("The Amnesic Incognito Live System") + "\n\n" +
     _("Build information:\n%s") % tails_version)
@@ -28,8 +29,8 @@ about_dialog.set_title=(_("About Tails"))
 about_dialog.set_version(tails_main_version)
 about_dialog.set_website("https://tails.boum.org/")
 
-about_dialog.connect("delete-event", gtk.main_quit)
-about_dialog.connect("response", gtk.main_quit)
+about_dialog.connect("delete-event", Gtk.main_quit)
+about_dialog.connect("response", Gtk.main_quit)
 about_dialog.show_all()
 
-gtk.main()
+Gtk.main()
