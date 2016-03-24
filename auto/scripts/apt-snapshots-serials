@@ -6,7 +6,7 @@ BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
 CONFIG=config/APT_snapshots.d
 ORIGINS=$(cd $CONFIG; ls -d *)
 
-get_serial() {
+get_latest_serial() {
 	origin=$1
 	wget -q $BASE_URL/$origin/project/trace/$origin -O - \
 		| awk -F': ' '/^Archive serial: / {print $2}'
@@ -14,9 +14,9 @@ get_serial() {
 
 action="$1"
 case "$action" in
-	info)
+	get-latest)
 		for origin in $ORIGINS; do
-			online=$(get_serial $origin)
+			online=$(get_latest_serial $origin)
 			echo "$origin: $online"
 		done
 	;;
@@ -24,7 +24,7 @@ case "$action" in
 		for origin in $ORIGINS; do
 			serial_file="$CONFIG/$origin/serial"
 			git=$(cat $serial_file)
-			online=$(get_serial $origin)
+			online=$(get_latest_serial $origin)
 			printf "Origin $origin:\n  old: $git\n  new: $online\n"
 			echo $online > $serial_file
 		done
@@ -32,7 +32,7 @@ case "$action" in
 	;;
 	prepare-build)
 		cp -r config/APT_snapshots.d tmp
-		$0 info > tmp/cached_APT_snapshots_serials
+		$0 get-latest > tmp/cached_APT_snapshots_serials
 		for origin_dir in tmp/APT_snapshots.d/*; do
 			origin=$(basename $origin_dir)
 			if grep -qs '^latest$' $origin_dir/serial; then
@@ -43,7 +43,7 @@ case "$action" in
 		done
 	;;
 	*)
-		printf "unknown action ($action), use either 'info' or 'freeze'\n" >&2
+		printf "unknown action ($action), use either 'get-latest' or 'freeze'\n" >&2
 		exit 1
 	;;
 esac
