@@ -28,6 +28,16 @@ case "$action" in
 		done
 		printf "\nAll files ($CONFIG/*/serial) have been updated with new serials\n" >&2
 	;;
+	prepare-build)
+		cp -r config/APT_snapshots.d tmp
+		$0 info > tmp/serials
+		for repo_dir in tmp/APT_snapshots.d/*; do
+			repo=$(basename $repo_dir)
+			if grep -qs '^latest$' $repo_dir/serial; then
+				awk -F': ' "/^$repo: / {print \$2}" tmp/serials > $repo_dir/serial
+			fi
+		done
+	;;
 	*)
 		printf "unknown action ($action), use either 'info' or 'freeze'\n" >&2
 		exit 1
