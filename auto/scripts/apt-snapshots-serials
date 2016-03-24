@@ -31,11 +31,11 @@ case "$action" in
 	;;
 	prepare-build)
 		cp -r config/APT_snapshots.d tmp
-		$0 info > tmp/serials
+		$0 info > tmp/cached_APT_snapshots_serials
 		for origin_dir in tmp/APT_snapshots.d/*; do
 			origin=$(basename $origin_dir)
 			if grep -qs '^latest$' $origin_dir/serial; then
-				awk -F': ' "/^$origin: / {print \$2}" tmp/serials > $origin_dir/serial
+				awk -F': ' "/^$origin: / {print \$2}" tmp/cached_APT_snapshots_serials > $origin_dir/serial
 			fi
 		done
 	;;
