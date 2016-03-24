@@ -1,54 +1,82 @@
+#!/bin/sh
+
 PERSISTENCE=/live/persistence/TailsData_unlocked
-MUMBLE=${PERSISTENCE}/mumble-server
+MUMBLE="${PERSISTENCE}/mumble-server"
 ONION=/var/lib/tor/mumble-server
 CONFIG=/etc/mumble-server.ini
+PORT=64738
+
+# Ad-hoc option handling
+
+if echo "${@}" | grep -qw -- '--listen-on-lan'; then
+    MUMBLE_LISTEN_ON_LAN=yes
+fi
 
 # Install mumble-server
 
-apt-get --yes --quiet --quiet install mumble-server
+apt-get --yes --quiet --quiet install mumble-server || \
+    ( echo 'Please run `sudo apt-get update` and retry' >&2; exit 1 )
 
 # Generate persistent password for Mumble server
 
-install -o mumble-server -g mumble-server -m 700 -d ${MUMBLE}
-[ -f ${MUMBLE}/password ] || pwgen 32 1 > ${MUMBLE}/password
-PASSWORD=$(cat ${MUMBLE}/password)
+install -o mumble-server -g mumble-server -m 700 -d "${MUMBLE}"
+[ -f "${MUMBLE}/password" ] || pwgen 32 1 > "${MUMBLE}/password"
+PASSWORD="$(cat "${MUMBLE}/password")"
 
 # Configure mumble-server
 
-sed -i "s%^database=/var/lib/mumble-server/mumble-server.sqlite%database=${MUMBLE}/mumble-server.sqlite%" ${CONFIG}
-sed -i "s%^serverpassword=$%serverpassword=${PASSWORD}%" ${CONFIG}
-sed -i "s%^#host=$%host=127.0.0.1%" ${CONFIG}
+sed -i "s%^database=/var/lib/mumble-server/mumble-server.sqlite%database=${MUMBLE}/mumble-server.sqlite%" "${CONFIG}"
+sed -i "s%^serverpassword=$%serverpassword=${PASSWORD}%" "${CONFIG}"
+if [ -n "${MUMBLE_LISTEN_ON_LAN}" ]; then
+    sed -i "s%^host=%#host=%" "${CONFIG}"
+else
+    sed -i "s%^#host=$%host=127.0.0.1%" "${CONFIG}"
+fi
 
 # Extract fingerprint from SQLite database
 
 apt-get --yes --quiet --quiet install sqlite3
 
-service mumble-server restart # To generate the database
-service mumble-server stop # To unlock database
+systemctl start mumble-server # To generate the database
+systemctl stop  mumble-server # To unlock database
 
-FINGERPRINT=$(sqlite3 ${MUMBLE}/mumble-server.sqlite "select value from config where key = 'certificate';" | openssl x509 -fingerprint | head -n 1 | cut -d '=' -f 2)
+FINGERPRINT="$(sqlite3 "${MUMBLE}/mumble-server.sqlite" "select value from config where key = 'certificate';" | openssl x509 -fingerprint | head -n 1 | cut -d '=' -f 2)"
 
 # Configure Tor hidden service
 
 install -o debian-tor -g debian-tor -m 700 -d /var/lib/tor/mumble-server
-install -o debian-tor -g debian-tor -m 700 -d ${PERSISTENCE}/tor
-install -o debian-tor -g debian-tor -m 700 -d ${PERSISTENCE}/tor/mumble-server
+install -o debian-tor -g debian-tor -m 700 -d "${PERSISTENCE}/tor"
+install -o debian-tor -g debian-tor -m 700 -d "${PERSISTENCE}/tor/mumble-server"
 
-grep --quiet "^/dev/mapper/TailsData_unlocked ${ONION}" /proc/mounts || mount --bind ${PERSISTENCE}/tor/mumble-server ${ONION}
+grep --quiet "^/dev/mapper/TailsData_unlocked ${ONION}" /proc/mounts || mount --bind "${PERSISTENCE}/tor/mumble-server" "${ONION}"
 grep --quiet "^HiddenServiceDir ${ONION}$" /etc/tor/torrc || echo "HiddenServiceDir ${ONION}" >> /etc/tor/torrc
-grep --quiet "^HiddenServicePort 64738$" /etc/tor/torrc || echo "HiddenServicePort 64738" >> /etc/tor/torrc
+grep --quiet "^HiddenServicePort ${PORT}$" /etc/tor/torrc || echo "HiddenServicePort ${PORT}" >> /etc/tor/torrc
 
 # Restart Tor and Mumble server
 
-service mumble-server start
-service tor reload
+systemctl start mumble-server
+systemctl reload tor@default
 
-inotifywait -e create ${ONION}
-HOSTNAME=$(cat ${ONION}/hostname)
+[ -e "${ONION}/hostname" ] || inotifywait -e create "${ONION}"
+HOSTNAME="$(cat "${ONION}/hostname")"
+
+# Drop previous mumble-server firewall exceptions
+
+systemctl reload ferm
 
 # Allow local connections
 
-iptables -I OUTPUT --out-interface lo --protocol tcp --dport 64738 --jump ACCEPT
+iptables -I OUTPUT --out-interface lo --protocol tcp --dport "${PORT}" --jump ACCEPT
+
+# Allow LAN connections if requested
+
+if [ -n "${MUMBLE_LISTEN_ON_LAN}" ]; then
+    for range in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16; do
+        for proto in tcp udp; do
+            iptables -A INPUT --source "${range}" --protocol "${proto}" --dport "${PORT}" --jump ACCEPT
+        done
+    done
+fi
 
 # Output connection information
 
