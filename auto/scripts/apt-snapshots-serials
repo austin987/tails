@@ -33,8 +33,9 @@ case "$action" in
 		printf "\nAll files ($CONFIG/*/serial) have been updated with new serials\n" >&2
 	;;
 	prepare-build)
-		rm -r tmp/APT_snapshots.d
-		cp -r config/APT_snapshots.d tmp
+		rm -rf tmp/APT_snapshots.d
+		mkdir -p tmp
+		cp -r config/APT_snapshots.d tmp/
 		$0 get-latest > tmp/cached_APT_snapshots_serials
 		for origin_dir in tmp/APT_snapshots.d/*; do
 			origin=$(basename $origin_dir)
