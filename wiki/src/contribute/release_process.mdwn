@@ -97,13 +97,18 @@ If we are at freeze time for a major release:
 
 5. Encode in the `testing` branch the set of [[time-based APT
    repository snapshots|APT_repository/time-based snapshots]]
-   that shall be used during the freeze (and make it so these
-   snapshots are kept around):
+   that shall be used during the freeze:
 
         git checkout testing && \
         ./bin/freeze-apt-snapshots && \
         git add config/APT_snapshots.d/ && \
         git commit -m "Freeze APT repository snapshots for ${VERSION}."
+
+6. Make it so the time-based APT repository snapshots are kept around
+   long enough, by bumping their `Valid-Until` to expected release
+   date + 5 days:
+
+        XXX
 
 Point-release
 -------------
