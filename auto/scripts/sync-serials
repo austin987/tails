@@ -1,0 +1,35 @@
+#!/bin/sh
+set -e
+
+BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
+CONFIG=config/APT_snapshots.d
+REPOS=$(cd $CONFIG; ls -d *)
+
+get_serial() {
+	repo=$1
+	wget -q $BASE_URL/$repo/project/trace/$repo -O -|awk -F': ' '/^Archive serial: / {print $2}'
+}
+
+action="$1"
+case "$action" in
+	info)
+		for repo in $REPOS; do
+			online=$(get_serial $repo)
+			echo "$repo: $online"
+		done
+	;;
+	freeze)
+		for repo in $REPOS; do
+			serial_file="$CONFIG/$repo/serial"
+			git=$(cat $serial_file)
+			online=$(get_serial $repo)
+			printf "Repository $repo:\n  old: $git\n  new: $online\n"
+			echo $online > $serial_file
+		done
+		printf "\nAll files ($CONFIG/*/serial) have been updated with new serials\n" >&2
+	;;
+	*)
+		printf "unknown action ($action), use either 'info' or 'freeze'\n" >&2
+		exit 1
+	;;
+esac
