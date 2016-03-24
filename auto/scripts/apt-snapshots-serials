@@ -4,27 +4,27 @@ set -u
 
 BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
 CONFIG=config/APT_snapshots.d
-REPOS=$(cd $CONFIG; ls -d *)
+ORIGINS=$(cd $CONFIG; ls -d *)
 
 get_serial() {
-	repo=$1
-	wget -q $BASE_URL/$repo/project/trace/$repo -O -|awk -F': ' '/^Archive serial: / {print $2}'
+	origin=$1
+	wget -q $BASE_URL/$origin/project/trace/$origin -O -|awk -F': ' '/^Archive serial: / {print $2}'
 }
 
 action="$1"
 case "$action" in
 	info)
-		for repo in $REPOS; do
-			online=$(get_serial $repo)
-			echo "$repo: $online"
+		for origin in $ORIGINS; do
+			online=$(get_serial $origin)
+			echo "$origin: $online"
 		done
 	;;
 	freeze)
-		for repo in $REPOS; do
-			serial_file="$CONFIG/$repo/serial"
+		for origin in $ORIGINS; do
+			serial_file="$CONFIG/$origin/serial"
 			git=$(cat $serial_file)
-			online=$(get_serial $repo)
-			printf "Repository $repo:\n  old: $git\n  new: $online\n"
+			online=$(get_serial $origin)
+			printf "Origin $origin:\n  old: $git\n  new: $online\n"
 			echo $online > $serial_file
 		done
 		printf "\nAll files ($CONFIG/*/serial) have been updated with new serials\n" >&2
@@ -32,10 +32,10 @@ case "$action" in
 	prepare-build)
 		cp -r config/APT_snapshots.d tmp
 		$0 info > tmp/serials
-		for repo_dir in tmp/APT_snapshots.d/*; do
-			repo=$(basename $repo_dir)
-			if grep -qs '^latest$' $repo_dir/serial; then
-				awk -F': ' "/^$repo: / {print \$2}" tmp/serials > $repo_dir/serial
+		for origin_dir in tmp/APT_snapshots.d/*; do
+			origin=$(basename $origin_dir)
+			if grep -qs '^latest$' $origin_dir/serial; then
+				awk -F': ' "/^$origin: / {print \$2}" tmp/serials > $origin_dir/serial
 			fi
 		done
 	;;
