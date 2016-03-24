@@ -47,19 +47,30 @@ little value.
       snapshots)
    e. **done** publish the snapshots' serial over HTTP
       (e.g. <http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security>)
-   e. deny robots access to that data
-   e. manage symlinks or rewrite rules for URL → reprepro filesystem
+   e. **WIP** manage symlinks or rewrite rules for URL → reprepro filesystem
       layout (cf. "APT vs. reprepro: dist names" below)
-   e. try using such snapshots for building an ISO
+   e. **WIP** try using such snapshots for building an ISO
       - branch: `feature/build-from-snapshots`
+      - It's acceptable not to have optimal caching for `dists/`; what
+        matters is `pool`.
       - how to avoid re-downloading everything one has in their local
         apt-cacher-ng, and filling its cache with files duplicated
         many times? It seems that we can't merge caches between the
         default `debrep` and our own snapshots: XXX.
-        But at least we should de-duplicate among our own snapshots,
-        e.g. using the "merging" strategy (documented on
+        But at least we should de-duplicate among our own snapshots.
+        PoC works using the "merging" strategy (documented on
         <file:///usr/share/doc/apt-cacher-ng/html/config-serv.html#repmap>),
-        that is `Remap-tails` with no `TargetURLs` list.
+        that is `Remap-tails` with no `TargetURLs` list; it works if
+        we do that for the `pool/` directory only (we don't want to
+        merge the cache for the different `dists` directory):
+
+               $ echo 'Remap-tailspool: file:tails-time-based-snapshots-debian-pool.list' \
+                 | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.conf
+
+               $ for y in 2015 2016 2017 ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/debian/%04u%02u%02u%02u/pool/\n' $y $m $d $t ; done ; done ; done ; done > /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.list
+
+   d. shall we do something about`W: Conflicting distribution: http://time-based.snapshots.deb.tails.boum.org jessie/updates InRelease (expected jessie but got jessie/updates)`?
+   e. deny robots access to that data
    d. implement list of sticky snapshots that must not be GC'ed,
       including the tool to add to that list
    e. implement GC of snapshots
@@ -716,22 +727,22 @@ Let's assume:
 
 Which generates this APT `sources.list`:
 
-    deb http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/ jessie main
-    deb http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
+    deb http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/ jessie main
+    deb http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
 
 As a result APT sends HTTP requests with URL such as:
 
- * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/dists/jessie/Release>
- * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/pool/XXX>
- * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/dists/jessie/updates/Release>
- * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/pool/XXX>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/dists/jessie/Release>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/pool/XXX>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/dists/jessie/updates/Release>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/pool/XXX>
 
 The corresponding files in reprepro's filesystem (if we have one
 reprepro instance per mirrored archive) are:
 
  * in Debian archive's reprepro:
-   - `/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016031101/Release`,
-     that contains `Suite: jessie/snapshots/2016031101` and `Codename: jessie`
+   - `/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016032401/Release`,
+     that contains `Suite: jessie/snapshots/2016032401` and `Codename: jessie`
    - `/srv/apt-snapshots/time-based/repositories/debian/pool/XXX`
 
  * in Debian security archive's reprepro:
