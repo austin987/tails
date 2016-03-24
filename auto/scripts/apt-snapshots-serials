@@ -8,7 +8,8 @@ ORIGINS=$(cd $CONFIG; ls -d *)
 
 get_serial() {
 	origin=$1
-	wget -q $BASE_URL/$origin/project/trace/$origin -O -|awk -F': ' '/^Archive serial: / {print $2}'
+	wget -q $BASE_URL/$origin/project/trace/$origin -O - \
+		| awk -F': ' '/^Archive serial: / {print $2}'
 }
 
 action="$1"
@@ -35,7 +36,9 @@ case "$action" in
 		for origin_dir in tmp/APT_snapshots.d/*; do
 			origin=$(basename $origin_dir)
 			if grep -qs '^latest$' $origin_dir/serial; then
-				awk -F': ' "/^$origin: / {print \$2}" tmp/cached_APT_snapshots_serials > $origin_dir/serial
+				awk -F': ' "/^$origin: / {print \$2}" \
+					tmp/cached_APT_snapshots_serials \
+					> $origin_dir/serial
 			fi
 		done
 	;;
