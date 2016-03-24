@@ -410,7 +410,7 @@ Tag the release in Git
 
 	git tag -u "$TAILS_SIGNATURE_KEY" \
 	  -m "tagging version ${VERSION}" "${TAG}" && \
-	git push --tags
+	git push --tags origin "${RELEASE_BRANCH}"
 
 (Pushing the tag is needed so that the APT repository is updated, and
 the Tails APT configuration works at build and boot time. It might be
@@ -482,7 +482,8 @@ suite should be ready, so it is time to:
   
           git tag -f -u "$TAILS_SIGNATURE_KEY" \
   	    -m "tagging version ${VERSION}" "${TAG}" && \
-          git push --tags -f
+          git push origin "${RELEASE_BRANCH}" && \
+          git push --tags --force
 
 * check out the release tag:
 
