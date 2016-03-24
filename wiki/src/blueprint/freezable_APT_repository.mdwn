@@ -71,9 +71,7 @@ little value.
 
    d. shall we do something about`W: Conflicting distribution: http://time-based.snapshots.deb.tails.boum.org jessie/updates InRelease (expected jessie but got jessie/updates)`?
    e. deny robots access to that data
-   d. implement list of sticky snapshots that must not be GC'ed,
-      including the tool to add to that list
-   e. implement GC of snapshots
+   e. implement GC of expired snapshots
    f. implement GC of packages
    f. clean up old snapshots that the GC system can't clean up
       automatically (e.g. those before 20160311, that have no
@@ -461,9 +459,13 @@ than N days will probably be compulsory.
 
 To ensure that garbage collection doesn't delete a snapshot we still
 need, e.g. the one currently referenced in the frozen `testing`
-branch, we'll maintain a list of snapshots that need to be kept
-around. The tool used by the RM to bump the archive snapshot serials
-in Git should take care of it.
+branch, we'll rely on `Valid-Until`: the way to express "I want to
+keep a given snapshot around" would be to postpone its expiration
+date; i.e. we don't differentiate "keep a given snapshot around" from
+"keep a given snapshot usable".
+
+See the section about `Valid-Until` below, for details about how we
+can bump it.
 
 ### Tagged snapshots
 
@@ -556,7 +558,7 @@ Conclusion: compared to the "snapshots as full-blown distributions +
 is very appealing. The counterpart being that:
 
  * garbage collecting expired snapshots is a bit more involved, but
-   apparently doable: see reprepro(1) around `gensnapshot`;
+   doable: see reprepro(1) around `gensnapshot`;
  * bumping `Valid-Until` for a given time-based snapshot has to be
    done directly in `dist`, without any help from reprepro.
 
