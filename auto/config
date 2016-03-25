@@ -25,7 +25,8 @@ $RUN_LB_CONFIG --distribution jessie ${@}
 # set up everything for time-based snapshots:
 apt-snapshots-serials prepare-build
 
-MIRROR="$(apt-mirror debian)"
+DEBIAN_MIRROR="$(apt-mirror debian)"
+DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
 
 # set Amnesia's general options
 $RUN_LB_CONFIG \
@@ -44,9 +45,11 @@ $RUN_LB_CONFIG \
    --iso-publisher="https://tails.boum.org/" \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
    --memtest none \
-   --mirror-binary    "$MIRROR" \
-   --mirror-bootstrap "$MIRROR" \
-   --mirror-chroot    "$MIRROR" \
+   --mirror-binary              "$DEBIAN_MIRROR" \
+   --mirror-bootstrap           "$DEBIAN_MIRROR" \
+   --mirror-chroot              "$DEBIAN_MIRROR" \
+   --mirror-binary-security     "$DEBIAN_SECURITY_MIRROR" \
+   --mirror-chroot-security     "$DEBIAN_SECURITY_MIRROR" \
    --packages-lists="standard" \
    --tasks="standard" \
    --linux-packages="linux-image-3.16.0-4" \
