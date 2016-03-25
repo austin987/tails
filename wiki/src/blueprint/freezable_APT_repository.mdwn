@@ -47,8 +47,6 @@ little value.
       snapshots)
    e. **done** publish the snapshots' serial over HTTP
       (e.g. <http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security>)
-   e. **WIP** manage symlinks or rewrite rules for URL → reprepro filesystem
-      layout (cf. "APT vs. reprepro: dist names" below)
    e. **WIP** try using such snapshots for building an ISO
       - branch: `feature/build-from-snapshots`
       - It's acceptable not to have optimal caching for `dists/`; what
@@ -67,12 +65,18 @@ little value.
                $ echo 'Remap-tailspool: file:tails-time-based-snapshots-debian-pool.list' \
                  | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.conf
 
-               $ for y in 2015 2016 2017 ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/debian/%04u%02u%02u%02u/pool/\n' $y $m $d $t ; done ; done ; done ; done > /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.list
+               $ for origin in $(cd config/APT_snapshots.d/ ; ls -d *) ; do for y in $(seq 2016 2026) ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' $origin $y $m $d $t ; done ; done ; done ; done | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list ; done
 
+        XXX: use `debrep` for the `debian` origin?
+
+   e. **WIP** manage symlinks or rewrite rules for URL → reprepro filesystem
+      layout (cf. "APT vs. reprepro: dist names" below); seems to
+      work, we'll know for use once we use time-based snapshots for
+      the debian-security archive as well
    d. shall we do something about`W: Conflicting distribution: http://time-based.snapshots.deb.tails.boum.org jessie/updates InRelease (expected jessie but got jessie/updates)`?
    e. deny robots access to that data
-   e. implement GC of expired snapshots
-   f. implement GC of packages
+   e. implement GC of expired snapshots [k]
+   f. implement GC of packages [k]
    f. clean up old snapshots that the GC system can't clean up
       automatically (e.g. those before 20160311, that have no
       `Valid-Until`)
@@ -105,15 +109,18 @@ little value.
         - convert custom `data/debootstrap/tails-wheezy` into a patch,
           or set up the process to update/replace it in the future,
           or something (we're using Jessie now) [i]
+        - the manifest is not complete, e.g. `tails-greeter` is missing
       * `tails-prepare-tagged-apt-snapshot-import`, aka.
         [[!tails_ticket 10749]] (`puppet-tails` repo):
           - review & test support for multiple architectures [i]:
+            * is it really using hardlinks? even when run as a different user than the original file's owner? is it a problem?
             * beware of differing versions due to binNMUs
             * test with a complete set of data (including all
               architectures we want, source packages, and a build
               manifest that includes amd64 (e.g.
               [[!tails_gitweb_branch feature/8415-overlayfs]]) and
               source packages
+            * the generated `torproject/conf/updates` has `source`, which doesn't work since we don't have it, as torproject doesn't provide it in the first place [k]
    g. **WIP** have the manifest → partial snapshot process include source
       packages
       => review this [i], in particular:
