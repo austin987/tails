@@ -77,7 +77,15 @@ chmod -R go+rX config/chroot_sources
 # build the image
 
 # we need /debootstrap/deburis to build a manifest of used packages:
-export DEBOOTSTRAP_OPTIONS='--keep-debootstrap-dir'
+DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keep-debootstrap-dir"
+
+# use our own APT repository's key:
+DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
+gpg --homedir "$DEBOOTSTRAP_GNUPG_HOMEDIR" \
+    --import config/chroot_sources/tails.chroot.gpg
+DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
+
+export DEBOOTSTRAP_OPTIONS
 
 : ${MKSQUASHFS_OPTIONS:='-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K'}
 MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/amnesia/build/mksquashfs-excludes"

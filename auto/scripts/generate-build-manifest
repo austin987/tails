@@ -17,26 +17,6 @@ my %package_type = qw(
     srcuris source
 );
 
-# NOTE: Keep those in sync with the URIs used in sources.list during
-# the build.
-my %origin_name = qw(
-    http://ftp.us.debian.org/                           debian
-    http://snapshot.deb.tails.boum.org/debian/          debian
-    http://released.deb.tails.boum.org/debian/          debian
-
-    http://security.debian.org/                         debian-security
-    http://snapshot.deb.tails.boum.org/debian-security/ debian-security
-    http://released.deb.tails.boum.org/debian-security/ debian-security
-
-    http://deb.tails.boum.org/                          tails
-    http://snapshot.deb.tails.boum.org/tails/           tails
-    http://released.deb.tails.boum.org/tails/           tails
-
-    http://deb.torproject.org/                          torproject
-    http://snapshot.deb.tails.boum.org/torproject/      torproject
-    http://released.deb.tails.boum.org/torproject/      torproject
-);
-
 ### Various usability checks:
 sub usage {
     die "Usage: $0 debootstrap-dir manifest-file";
@@ -52,8 +32,7 @@ if (! -d $debootstrap) {
     usage;
 }
 
-### Read (package, version, uri) tuples and generate per-origin
-### (package, version) lists:
+### Read (package, version, uri) tuples and generate a single (package, version) list:
 my $data;
 foreach my $type (keys %package_type) {
     my $path = "$debootstrap/$type";
@@ -65,36 +44,45 @@ foreach my $type (keys %package_type) {
     foreach my $line (read_file($path)) {
         chomp $line;
         my ($package, $version, $uri) = split / /, $line;
-        my $found;
-        for my $origin (keys %origin_name) {
-            if (substr($uri, 0, length $origin) eq $origin) {
-                push @{ $data->{ packages }->{ $package_type{$type} }->{ $origin_name{$origin} } }, { package => $package, version => $version, };
-                $found = $origin;
-                last;
+        # Store package_version_arch to ease sort+uniq for deduplication:
+        my $arch = 'source';
+        if ($package_type{$type} eq 'binary') {
+            if ($uri =~ /_([^_]+)\.deb$/) {
+                $arch = $1;
+            }
+            else {
+                die "unable to determine architecture for uri=$uri";
             }
         }
-        if (! $found) {
-            print "E: origin cannot be determined for $uri\n";
-            use Data::Dumper;
-            print "E: known uri to origin mapping follows:\n", Dumper(\%origin_name);
-            print "E: sources.list files might have been updated, please update this mapping\n";
-            exit 1;
-        }
+        push @{ $data->{ packages_tmp }->{ $package_type{$type} } }, "${package}_${version}_${arch}";
     }
 }
 
-### Extract list of (origin, reference) from the build configuration:
+### Extract list of (origin, reference) from the build configuration
+### (the resolved serials, stored under tmp by "apt-snapshots-serials prepare-build"):
 my %origin_reference;
-while (my $origin_dir = glob('config/APT_snapshots.d/*')) {
+while (my $origin_dir = glob('tmp/APT_snapshots.d/*')) {
     my $origin_name = $origin_dir;
-    $origin_name =~ s{\A config/APT_snapshots[.]d/}{}xms;
+    $origin_name =~ s{\A tmp/APT_snapshots[.]d/}{}xms;
     $origin_reference{$origin_name} = read_file("$origin_dir/serial");
     chomp $origin_reference{$origin_name};
+    $data->{origin_references}->{ $origin_name }->{reference} = $origin_reference{ $origin_name } || 'unknown';
 }
 
-for my $name(values %origin_name) {
-    $data->{origin_references}->{ $name }->{reference} = $origin_reference{ $name } || 'unknown';
+### Deduplicate:
+foreach my $type (uniq values %package_type) {
+    foreach my $entry (uniq sort @{ $data->{ packages_tmp }->{ $type } }) {
+        if ($entry =~ m{^(.+)_(.+)_(.+)$}) {
+            my ($package, $version, $arch) = ($1, $2, $3);
+            my $item = { package => $package, version => $version, arch => $arch, };
+            # Reduce clutter:
+            delete $item->{arch}
+                if $type eq 'source';
+            push @{ $data->{ packages }->{ $type } }, $item;
+        }
+    }
 }
+delete $data->{ packages_tmp };
 
 my $yaml = Dump $data;
 write_file($manifest, $yaml);
