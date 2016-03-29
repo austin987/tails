@@ -88,13 +88,6 @@ little value.
         `deleteunreferenced` [k]
       * review and test [i]
       * deploy with Puppet, redirect output to a log file, logrotate snippet [i]
-   f. clean up old snapshots that the GC system can't clean up
-      automatically (e.g. those before 20160311, that have no
-      `Valid-Until`)
-      * debian
-      * debian-security
-      * tails
-      * torproject
    g. have build system output the snapshots being used,
       and have Jenkins publish this info if available
 
@@ -117,6 +110,8 @@ little value.
    b. **done** PoC of capturing the list of source packages used during the build
    c. **done** initial reprepro setup for tagged snapshots
    d. **done** debootstrap in jessie-backports
+   d. **done** Have Jenkins create, publish and manage
+      `latest.iso.build-manifest` symlinks
    e. **WIP** create a partial snapshot from a manifest and
       the origin time-based snapshots:
       * add comments for the most obscure aspects of
@@ -136,8 +131,8 @@ little value.
    k. Update the
       [[Listing used packages|freezable APT repository#build-manifest]]
       section
-   l. Have Jenkins publish the list of build manifest
-      if available (supersede existing `*.{bin,src}pkg`).
+   l. Point consumers of the now deprecated `*.{bin,src}pkg` (probably
+      only jenkins.debian.net) to the new build manifest.
    m. if needed, implement GC
 
 5. misc
