@@ -653,56 +653,11 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   end
 end
 
-def gnome_app_menu_click_helper(click_me, verify_me = nil)
-  try_for(30) do
-    @screen.hide_cursor
-    # The sensitivity for submenus to open by just hovering past them
-    # is extremely high, and may result in the wrong one
-    # opening. Hence we better avoid hovering over undesired submenus
-    # entirely by "approaching" the menu strictly horizontally.
-    r = @screen.wait(click_me, 10)
-    @screen.hover_point(@screen.w, r.getY)
-    @screen.click(r)
-    @screen.wait(verify_me, 10) if verify_me
-    return
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
+Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
+  Dogtail::Application.interact('gnome-shell') do |app|
+    for element in ['Applications', submenu, app_name] do
+      app.child(element, roleName: 'label').click
     end
-    true
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
-      gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
   end
 end
 
