@@ -344,6 +344,12 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.session idle-delay 0',
     :user => LIVE_USER
   )
+  # We need to enable the accessibility toolkit for dogtail.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
+    :user => LIVE_USER,
+  )
+
 end
 
 Then /^Tails seems to have booted normally$/ do
