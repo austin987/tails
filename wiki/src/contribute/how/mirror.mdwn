@@ -80,11 +80,13 @@ can be properly encrypted and authenticated.
 The big picture
 ------------------
 
-We have a DNS Round Robin setup for the `dl.amnesia.boum.org` host.
+We currently have a DNS Round Robin setup for the `dl.amnesia.boum.org` host.
+In the future we'll have this setup provide a small set of fast and reliable mirrors.
+Other mirrors are randomly selected from a mirror pool.
 
 Every HTTP mirror makes our files available under a fixed URL
-(`http://dl.amnesia.boum.org/tails/`) that contains per-version
-sub-directories (such as
+(e.g. `http://dl.amnesia.boum.org/tails/` or `http://yourdomain.org/tails/`)
+that contains per-version sub-directories (such as
 `http://dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
 
 <div class="tip">
@@ -98,8 +100,12 @@ Manual set up
 
 ### 1. Set up your web server
 
-You need to set up a virtual host for dl.amnesia.boum.org, with indexing
-enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
+You need to set up a virtual host either for dl.amnesia.boum.org or a URL prefix
+of your choice, e.g. using your own domain name. The virtual host will need to
+have indexing enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
+Optionally, you can provide HTTPS. However, in order to avoir errors, we'd like
+to avoid self-signed SSL certificates. You might instead want to consider using
+LetsEncrypt.
 
 #### Apache configuration example
 
@@ -108,6 +114,36 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 	   ServerAlias *.dl.amnesia.boum.org
 	   ServerAdmin YOUR_EMAIL
 	
+	   DocumentRoot /var/www/YOUR_PATH/
+	   <Directory /var/www/YOUR_PATH/>
+	      Options Indexes
+	      FileETag None
+	      AllowOverride None
+	      IndexIgnore README.html
+	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
+	      IndexOrderDefault Descending Date
+	   </Directory>
+	</VirtualHost>
+
+#### Apache configuration example using own domain and HTTPS
+
+The server alias is optional.
+
+	<VirtualHost YOUR_WEBSERVER_IP:80>
+	   ServerName yourdomain.org
+	   ServerAlias dl.amnesia.boum.org
+	   ServerAlias *.dl.amnesia.boum.org
+	   Redirect permanent / https://yourdomain.org/
+	</VirtualHost>
+
+	<VirtualHost YOUR_WEBSERVER_IP:443>
+	   ServerName yourdomain.org
+	   ServerAdmin YOUR_EMAIL
+
+	   SSLEngine on
+	   SSLCertificateFile /etc/apache2/ssl/apache.crt
+	   SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+
 	   DocumentRoot /var/www/YOUR_PATH/
 	   <Directory /var/www/YOUR_PATH/>
 	      Options Indexes
