@@ -56,16 +56,33 @@ module Dogtail
       $vm.execute("rm -f '#{script_path}'")
     end
 
-    def proxy_call(method, args)
+    def self.args_to_s(args)
       args_list = args
       args_hash = nil
       if args_list.class == Array && args_list.last.class == Hash
         *args_list, args_hash = args_list
       end
-      args_str = (
-        (args_list.nil? ? [] : args_list.map { |e| "\"#{e}\"" }) +
-        (args_hash.nil? ? [] : args_hash.map { |k, v| "#{k}=\"#{v}\"" })
+      argify = Proc.new do |v|
+        if v == true
+          'True'
+        elsif v == false
+          'False'
+        elsif v.class == String
+          "\"#{v}\""
+        elsif [Fixnum, Float].include?(v.class)
+          v.to_s
+        else
+          raise "#{self.class.name} does not know how to handle argument type '#{v.class}'"
+        end
+      end
+      (
+        (args_list.nil? ? [] : args_list.map { |e| argify.call(e) }) +
+        (args_hash.nil? ? [] : args_hash.map { |k, v| "#{k}=#{argify.call(v)}" })
       ).join(', ')
+    end
+
+    def proxy_call(method, args)
+      args_str = self.class.args_to_s(args)
       component = "#{method.to_s}(#{args_str})"
       final_components = @components + [component]
       self.class.new(@init_lines, final_components,  @opts)
