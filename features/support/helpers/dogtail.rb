@@ -119,7 +119,11 @@ module Dogtail
 
     def initialize(*args)
       super(*args)
-      @module_import_lines << "from dogtail import tree"
+      @module_import_lines += [
+        'from dogtail import tree',
+        'from dogtail.config import config',
+      ]
+      @init_lines = ['config.searchShowingOnly = True'] + @init_lines
     end
 
     TREE_API_NODE_METHODS.each do |method|
