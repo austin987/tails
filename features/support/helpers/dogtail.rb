@@ -143,6 +143,14 @@ module Dogtail
       end
     end
 
+    def wait(timeout = nil)
+      if timeout
+        try_for(timeout) { run }
+      else
+        run
+      end
+    end
+
   end
 
   class Application

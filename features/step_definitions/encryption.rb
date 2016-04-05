@@ -47,13 +47,12 @@ end
 
 def maybe_deal_with_pinentry
   begin
-    @screen.wait_and_click("PinEntryPrompt.png", 10)
-    # Without this sleep here (and reliable visual indicators) we can sometimes
-    # miss keystrokes by typing too soon. This sleep prevents this problem from
-    # coming up.
-    sleep 5
+    # Dogtail doesn't support the password entry field for some reason
+    # but when this label is shown it should always be ready, and then
+    # we fallback to Sikuli for typing.
+    Dogtail::Application.new('pinentry').child('Passphrase').wait
     @screen.type(@passphrase + Sikuli::Key.ENTER)
-  rescue FindFailed
+  rescue ExecutionFailedInVM
     # The passphrase was cached or we wasn't prompted at all (e.g. when
     # only encrypting to a public key)
   end
