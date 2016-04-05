@@ -40,9 +40,13 @@ module Dogtail
       ).join("\n")
     end
 
-    def run
+    def build_line
+      @components.join('.')
+    end
+
+    def run(python_expr = nil)
       @opts[:user] ||= LIVE_USER
-      python_expr = @components.join('.')
+      python_expr ||= build_line
       script = build_script([python_expr])
       script_path = $vm.execute_successfully('mktemp', @opts).stdout.chomp
       $vm.file_overwrite(script_path, script, @opts[:user])
@@ -88,6 +92,9 @@ module Dogtail
       self.class.new(@init_lines, final_components,  @opts)
     end
 
+    def get_field(key)
+      run("print(#{build_line}.#{key})").stdout
+    end
   end
 
   TREE_API_NODE_ACTIONS = [

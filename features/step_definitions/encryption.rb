@@ -96,12 +96,26 @@ def encrypt_sign_helper(encrypt, sign)
   gedit_paste_into_a_new_tab
 end
 
-def decrypt_verify_helper(icon)
+def decrypt_verify_helper(encrypted, signed)
   gedit_copy_all_text
+  if encrypted
+    icon = "GpgAppletIconEncrypted.png"
+  else
+    icon = "GpgAppletIconSigned.png"
+  end
   seahorse_menu_click_helper(icon, 'GpgAppletDecryptVerify.png')
   maybe_deal_with_pinentry
-  @screen.wait("GpgAppletResults.png", 20)
-  @screen.wait("GpgAppletResultsMsg.png", 20)
+  Dogtail::Application.interact('gpgApplet') do |app|
+    dialog = app.child('Information', roleName: 'alert')
+    # Given some inconsistency in either gpg or gpgApplet, we can get
+    # either one or two trailing newlines here.
+    result = dialog.child(roleName: 'text').get_field('text').chomp.chomp
+    assert_equal(@message, result,
+                 "The expected message could not be found in the GnuPG output")
+    @screen.wait("GpgAppletResultsEncrypted.png", 20) if encrypted
+    @screen.wait("GpgAppletResultsSigned.png", 20) if signed
+    dialog.button('OK').click
+  end
 end
 
 When /^I encrypt the message using my OpenPGP key$/ do
@@ -109,8 +123,7 @@ When /^I encrypt the message using my OpenPGP key$/ do
 end
 
 Then /^I can decrypt the encrypted message$/ do
-  decrypt_verify_helper("GpgAppletIconEncrypted.png")
-  @screen.wait("GpgAppletResultsEncrypted.png", 20)
+  decrypt_verify_helper(true, false)
 end
 
 When /^I sign the message using my OpenPGP key$/ do
@@ -118,8 +131,7 @@ When /^I sign the message using my OpenPGP key$/ do
 end
 
 Then /^I can verify the message's signature$/ do
-  decrypt_verify_helper("GpgAppletIconSigned.png")
-  @screen.wait("GpgAppletResultsSigned.png", 20)
+  decrypt_verify_helper(false, true)
 end
 
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
@@ -127,9 +139,7 @@ When /^I both encrypt and sign the message using my OpenPGP key$/ do
 end
 
 Then /^I can decrypt and verify the encrypted message$/ do
-  decrypt_verify_helper("GpgAppletIconEncrypted.png")
-  @screen.wait("GpgAppletResultsEncrypted.png", 20)
-  @screen.wait("GpgAppletResultsSigned.png", 20)
+  decrypt_verify_helper(true, true)
 end
 
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
