@@ -53,13 +53,18 @@ def maybe_deal_with_pinentry
 end
 
 def gedit_copy_all_text
-  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditSelectAll.png')
-  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditCopy.png')
+  @gedit.interact do |app|
+    app.child(roleName: 'text').click(button: Dogtail::Mouse::RIGHT_CLICK)
+    app.menuItem('Select All').click
+  end
 end
 
 def paste_into_a_new_tab
-  @screen.wait_and_click("GeditNewTab.png", 20)
-  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditPaste.png')
+  @gedit.interact do |app|
+    app.button('New').click()
+    app.child(roleName: 'text').click(button: Dogtail::Mouse::RIGHT_CLICK)
+    app.menuItem('Paste').click
+  end
 end
 
 def encrypt_sign_helper
