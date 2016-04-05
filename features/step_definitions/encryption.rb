@@ -32,13 +32,10 @@ EOF
 end
 
 When /^I type a message into gedit$/ do
-  step 'I start "Gedit" via the GNOME "Accessories" applications menu'
-  @screen.wait_and_click("GeditWindow.png", 20)
-  # We don't have a good visual indicator for when we can continue. Without the
-  # sleep we may start typing in the gedit window far too soon, causing
-  # keystrokes to go missing.
-  sleep 5
-  @screen.type("ATTACK AT DAWN")
+  step 'I start "gedit" via the GNOME "Accessories" applications menu'
+  @message = 'ATTACK AT DAWN'
+  @gedit = Dogtail::Application.new('gedit')
+  @gedit.child(roleName: 'text').typeText(@message)
 end
 
 def maybe_deal_with_pinentry
