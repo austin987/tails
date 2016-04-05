@@ -153,6 +153,13 @@ module Dogtail
 
   end
 
+  LOCAL_TREE_API_NODE_METHODS = [
+    :wait,
+    :get_field,
+  ]
+
+  ALL_TREE_API_NODE_METHODS = TREE_API_NODE_METHODS + LOCAL_TREE_API_NODE_METHODS
+
   class Application
 
     def initialize(app)
@@ -177,7 +184,7 @@ module Dogtail
       self.class.interact(@app, *args, &block)
     end
 
-    TREE_API_NODE_METHODS.each do |method|
+    ALL_TREE_API_NODE_METHODS.each do |method|
       define_method(method) do |*args|
         interact do |app|
           app.method(method).call(*args)
