@@ -59,7 +59,7 @@ def gedit_copy_all_text
   end
 end
 
-def paste_into_a_new_tab
+def gedit_paste_into_a_new_tab
   @gedit.interact do |app|
     app.button('New').click()
     app.child(roleName: 'text').click(button: Dogtail::Mouse::RIGHT_CLICK)
@@ -76,7 +76,7 @@ def encrypt_sign_helper
   sleep 5
   yield
   maybe_deal_with_pinentry
-  paste_into_a_new_tab
+  gedit_paste_into_a_new_tab
 end
 
 def decrypt_verify_helper(icon)
@@ -131,5 +131,5 @@ When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletEncryptPassphrase.png')
   maybe_deal_with_pinentry # enter password
   maybe_deal_with_pinentry # confirm password
-  paste_into_a_new_tab
+  gedit_paste_into_a_new_tab
 end
