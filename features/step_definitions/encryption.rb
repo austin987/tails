@@ -13,15 +13,19 @@ end
 
 Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |name, pwd|
   @passphrase = pwd
-  @key_name = name
+  key_name = name
+  key_comment = 'Blah'
+  key_email = "#{key_name}@test.org"
+  # This is how gpgApplet will present this key:
+  @gpgApplet_key_desc = "#{key_name} (#{key_comment}) <#{key_email}>"
   gpg_key_recipie = <<EOF
      Key-Type: RSA
      Key-Length: 4096
      Subkey-Type: RSA
      Subkey-Length: 4096
-     Name-Real: #{@key_name}
-     Name-Comment: Blah
-     Name-Email: #{@key_name}@test.org
+     Name-Real: #{key_name}
+     Name-Comment: #{key_comment}
+     Name-Email: #{key_email}
      Expire-Date: 0
      Passphrase: #{pwd}
      %commit
@@ -70,14 +74,24 @@ def gedit_paste_into_a_new_tab
   end
 end
 
-def encrypt_sign_helper
+def encrypt_sign_helper(encrypt, sign)
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
-  @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
-  # We don't have a good visual indicator for when we can continue without
-  # keystrokes being lost.
-  sleep 5
-  yield
+  Dogtail::Application.interact('gpgApplet') do |app|
+    dialog = app.dialog('Choose keys')
+    if encrypt
+      dialog.child(roleName: "table").child(@gpgApplet_key_desc).doubleClick
+    end
+    if sign
+      combobox = dialog.child(roleName: 'combo box')
+      combobox.click
+      combobox.child(@gpgApplet_key_desc, roleName: 'menu item').click
+      # Often the cursor stays hovering over an element that opens a
+      # pop-up blocking the OK button.
+      @screen.hide_cursor
+    end
+    dialog.button('OK').click
+  end
   maybe_deal_with_pinentry
   gedit_paste_into_a_new_tab
 end
@@ -91,9 +105,7 @@ def decrypt_verify_helper(icon)
 end
 
 When /^I encrypt the message using my OpenPGP key$/ do
-  encrypt_sign_helper do
-    @screen.type(@key_name + Sikuli::Key.ENTER + Sikuli::Key.ENTER)
-  end
+  encrypt_sign_helper(true, false)
 end
 
 Then /^I can decrypt the encrypted message$/ do
@@ -102,9 +114,7 @@ Then /^I can decrypt the encrypted message$/ do
 end
 
 When /^I sign the message using my OpenPGP key$/ do
-  encrypt_sign_helper do
-    @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
-  end
+  encrypt_sign_helper(false, true)
 end
 
 Then /^I can verify the message's signature$/ do
@@ -113,13 +123,7 @@ Then /^I can verify the message's signature$/ do
 end
 
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
-  encrypt_sign_helper do
-    @screen.wait_and_click('GpgAppletEncryptionKey.png', 20)
-    @screen.type(Sikuli::Key.SPACE)
-    @screen.wait('GpgAppletKeySelected.png', 10)
-    @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
-    @screen.type(Sikuli::Key.ENTER)
-  end
+  encrypt_sign_helper(true, true)
 end
 
 Then /^I can decrypt and verify the encrypted message$/ do
