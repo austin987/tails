@@ -1,3 +1,6 @@
+# Sadly Dogtail is not useful here as long as the notification area
+# icon is provided for by the TopIcons extension since it doesn't set
+# any useful fields (like name) for the accessibility API.
 def seahorse_menu_click_helper(main, sub, verify = nil)
   try_for(60) do
     step "process \"#{verify}\" is running" if verify
