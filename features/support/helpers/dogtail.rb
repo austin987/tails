@@ -44,10 +44,11 @@ module Dogtail
       @components.join('.')
     end
 
-    def run(python_expr = nil)
+    def run(lines = nil)
       @opts[:user] ||= LIVE_USER
-      python_expr ||= build_line
-      script = build_script([python_expr])
+      lines ||= [build_line]
+      lines = [lines] if lines.class != Array
+      script = build_script(lines)
       script_path = $vm.execute_successfully('mktemp', @opts).stdout.chomp
       $vm.file_overwrite(script_path, script, @opts[:user])
       args = ["/usr/bin/python '#{script_path}'", @opts]
