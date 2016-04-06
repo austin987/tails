@@ -104,13 +104,19 @@ def decrypt_verify_helper(encrypted, signed)
   maybe_deal_with_pinentry
   Dogtail::Application.interact('gpgApplet') do |app|
     dialog = app.child('Information', roleName: 'alert')
+    stdout_text_area, stderr_text_area = app.children(roleName: 'text')
     # Given some inconsistency in either gpg or gpgApplet, we can get
     # either one or two trailing newlines here.
-    result = dialog.child(roleName: 'text').get_field('text').chomp.chomp
-    assert_equal(@message, result,
+    stdout = stdout_text_area.get_field('text').chomp.chomp
+    assert_equal(@message, stdout,
                  "The expected message could not be found in the GnuPG output")
-    @screen.wait("GpgAppletResultsEncrypted.png", 20) if encrypted
-    @screen.wait("GpgAppletResultsSigned.png", 20) if signed
+    stderr = stderr_text_area.get_field('text').chomp.chomp
+    if encrypted
+      assert(stderr['gpg: encrypted with '], 'Message was not encrypted')
+    end
+    if signed
+      assert(stderr['gpg: Good signature from '], 'Message was not signed')
+    end
     dialog.button('OK').click
   end
 end
