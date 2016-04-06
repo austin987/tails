@@ -154,6 +154,37 @@ module Dogtail
       end
     end
 
+    # Equivalent to the Tree API's Node.findChildren(), with the
+    # arguments constructing a GenericPredicate to use as parameter.
+    def children(*args)
+      # A fundamental assumption of ScriptProxy is that we will only
+      # act on *one* object at a time. If we were to allow more, we'd
+      # have to port looping, conditionals and much more into our
+      # script generation, which is insane.
+      # However, since references are lost between script runs (=
+      # ScriptProxy.run()) we need to be a bit tricky here. We use the
+      # internal a11y AT-SPI "path" to uniquely identify a Dogtail
+      # node, so we can give handles to each of them that can be used
+      # later to re-find them.
+      find_paths_script_lines = [
+        "from dogtail import predicate",
+        "for n in #{build_line}.findChildren(predicate.GenericPredicate(#{self.class.args_to_s(args)})):",
+        "    print(n.path)",
+      ]
+      a11y_at_spi_paths = run(find_paths_script_lines).stdout.chomp.split("\n")
+      a11y_at_spi_paths.map do |path|
+        more_init_lines = [
+          "from dogtail import predicate",
+          "node = None",
+          "for n in #{build_line}.findChildren(predicate.GenericPredicate()):",
+          "    if str(n.path) == '#{path}':",
+          "        node = n",
+          "        break",
+        ]
+        self.class.new(@init_lines + more_init_lines, ['node'],  @opts)
+      end
+    end
+
   end
 
   LOCAL_TREE_API_NODE_METHODS = [
