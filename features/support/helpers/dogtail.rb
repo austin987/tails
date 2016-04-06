@@ -131,7 +131,9 @@ module Dogtail
         'from dogtail import tree',
         'from dogtail.config import config',
       ]
+      @module_import_lines.uniq!
       @init_lines = ['config.searchShowingOnly = True'] + @init_lines
+      @init_lines.uniq!
     end
 
     TREE_API_NODE_METHODS.each do |method|
