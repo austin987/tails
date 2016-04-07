@@ -58,38 +58,33 @@ def maybe_deal_with_pinentry
 end
 
 def gedit_copy_all_text
-  @gedit.interact do |app|
-    app.child(roleName: 'text').click(button: Dogtail::Mouse::RIGHT_CLICK)
-    app.menuItem('Select All').click
-  end
+  @gedit.child(roleName: 'text').click(button: Dogtail::Mouse::RIGHT_CLICK)
+  @gedit.menuItem('Select All').click
 end
 
 def gedit_paste_into_a_new_tab
-  @gedit.interact do |app|
-    app.button('New').click()
-    app.child(roleName: 'text').click(button: Dogtail::Mouse::RIGHT_CLICK)
-    app.menuItem('Paste').click
-  end
+  @gedit.button('New').click()
+  @gedit.child(roleName: 'text').click(button: Dogtail::Mouse::RIGHT_CLICK)
+  @gedit.menuItem('Paste').click
 end
 
 def encrypt_sign_helper(encrypt, sign)
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
-  Dogtail::Application.interact('gpgApplet') do |app|
-    dialog = app.dialog('Choose keys')
-    if encrypt
-      dialog.child(roleName: "table").child(@gpgApplet_key_desc).doubleClick
-    end
-    if sign
-      combobox = dialog.child(roleName: 'combo box')
-      combobox.click
-      combobox.child(@gpgApplet_key_desc, roleName: 'menu item').click
-      # Often the cursor stays hovering over an element that opens a
-      # pop-up blocking the OK button.
-      @screen.hide_cursor
-    end
-    dialog.button('OK').click
+  gpgApplet = Dogtail::Application.new('gpgApplet')
+  dialog = gpgApplet.dialog('Choose keys')
+  if encrypt
+    dialog.child(roleName: "table").child(@gpgApplet_key_desc).doubleClick
   end
+  if sign
+    combobox = dialog.child(roleName: 'combo box')
+    combobox.click
+    combobox.child(@gpgApplet_key_desc, roleName: 'menu item').click
+    # Often the cursor stays hovering over an element that opens a
+    # pop-up blocking the OK button.
+    @screen.hide_cursor
+  end
+  dialog.button('OK').click
   maybe_deal_with_pinentry
   gedit_paste_into_a_new_tab
 end
@@ -103,23 +98,22 @@ def decrypt_verify_helper(encrypted, signed)
   end
   seahorse_menu_click_helper(icon, 'GpgAppletDecryptVerify.png')
   maybe_deal_with_pinentry
-  Dogtail::Application.interact('gpgApplet') do |app|
-    dialog = app.child('Information', roleName: 'alert')
-    stdout_text_area, stderr_text_area = app.children(roleName: 'text')
-    # Given some inconsistency in either gpg or gpgApplet, we can get
-    # either one or two trailing newlines here.
-    stdout = stdout_text_area.get_field('text').chomp.chomp
-    assert_equal(@message, stdout,
-                 "The expected message could not be found in the GnuPG output")
-    stderr = stderr_text_area.get_field('text').chomp.chomp
-    if encrypted
-      assert(stderr['gpg: encrypted with '], 'Message was not encrypted')
-    end
-    if signed
-      assert(stderr['gpg: Good signature from '], 'Message was not signed')
-    end
-    dialog.button('OK').click
+  gpgApplet = Dogtail::Application.new('gpgApplet')
+  dialog = gpgApplet.child('Information', roleName: 'alert')
+  stdout_text_area, stderr_text_area = dialog.children(roleName: 'text')
+  # Given some inconsistency in either gpg or gpgApplet, we can get
+  # either one or two trailing newlines here.
+  stdout = stdout_text_area.get_field('text').chomp.chomp
+  assert_equal(@message, stdout,
+               "The expected message could not be found in the GnuPG output")
+  stderr = stderr_text_area.get_field('text').chomp.chomp
+  if encrypted
+    assert(stderr['gpg: encrypted with '], 'Message was not encrypted')
   end
+  if signed
+    assert(stderr['gpg: Good signature from '], 'Message was not signed')
+  end
+  dialog.button('OK').click
 end
 
 When /^I encrypt the message using my OpenPGP key$/ do

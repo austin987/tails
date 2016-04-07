@@ -639,10 +639,9 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  Dogtail::Application.interact('gnome-shell') do |app|
-    for element in ['Applications', submenu, app_name] do
-      app.child(element, roleName: 'label').click
-    end
+  app = Dogtail::Application.new('gnome-shell')
+  for element in ['Applications', submenu, app_name] do
+    app.child(element, roleName: 'label').click
   end
 end
 

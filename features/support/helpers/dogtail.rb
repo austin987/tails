@@ -5,16 +5,41 @@ module Dogtail
     RIGHT_CLICK = 3
   end
 
+  TREE_API_NODE_SEARCHES = [
+    :button,
+    :child,
+    :childLabelled,
+    :childNamed,
+    :menu,
+    :menuItem,
+    :tab,
+    :text,
+    :textentry,
+  ]
+
+  TREE_API_NODE_ACTIONS = [
+    :click,
+    :doubleClick,
+    :grabFocus,
+    :keyCombo,
+    :point,
+    :typeText,
+  ]
+
+  TREE_API_APP_SEARCHES = TREE_API_NODE_SEARCHES + [
+    :dialog,
+    :window,
+  ]
+
   # We want to keep this class immutable so that handles always are
   # left intact when doing new (proxied) method calls.  This was we
   # can support stuff like:
   #
-  #     Dogtail::Application.interact('gedit') do |app|
-  #         menu = app.menu('Menu')
-  #         menu.click()
-  #         menu.something_else()
-  #         menu.click()
-  #     end
+  #     app = Dogtail::Application.new('gedit')
+  #     menu = app.menu('Menu')
+  #     menu.click()
+  #     menu.something_else()
+  #     menu.click()
   #
   # i.e. the object referenced by `menu` is never modified by method
   # calls and can be used as expected. This explains why
@@ -22,19 +47,23 @@ module Dogtail
   # appending the new component the proxied method call would result
   # in.
 
-  class ScriptProxy
+  class Application
 
-    def initialize(init_lines = [], init_components = [], opts = {})
-      @module_import_lines = []
-      @init_lines = init_lines
+    def initialize(app_name, opts = {})
+      @app_name = app_name
       @opts = opts
-      @components = init_components
+      @init_lines = @opts[:init_lines] || [
+        "from dogtail import tree",
+        "from dogtail.config import config",
+        "config.searchShowingOnly = True",
+        "application = tree.root.application('#{@app_name}')",
+      ]
+      @components = @opts[:components] || ['application']
     end
 
     def build_script(lines)
       (
         ["#!/usr/bin/python"] +
-        @module_import_lines +
         @init_lines +
         lines
       ).join("\n")
@@ -73,7 +102,7 @@ module Dogtail
         elsif v == false
           'False'
         elsif v.class == String
-          "\"#{v}\""
+          "'#{v}'"
         elsif [Fixnum, Float].include?(v.class)
           v.to_s
         else
@@ -84,66 +113,6 @@ module Dogtail
         (args_list.nil? ? [] : args_list.map { |e| argify.call(e) }) +
         (args_hash.nil? ? [] : args_hash.map { |k, v| "#{k}=#{argify.call(v)}" })
       ).join(', ')
-    end
-
-    def proxy_call(method, args)
-      args_str = self.class.args_to_s(args)
-      component = "#{method.to_s}(#{args_str})"
-      final_components = @components + [component]
-      self.class.new(@init_lines, final_components,  @opts)
-    end
-
-    def get_field(key)
-      run("print(#{build_line}.#{key})").stdout
-    end
-  end
-
-  TREE_API_NODE_ACTIONS = [
-    :click,
-    :doubleClick,
-    :grabFocus,
-    :keyCombo,
-    :point,
-    :typeText,
-  ]
-
-  TREE_API_NODE_SEARCHES = [
-    :button,
-    :child,
-    :childLabelled,
-    :childNamed,
-    :dialog,
-    :menu,
-    :menuItem,
-    :tab,
-    :text,
-    :textentry,
-    :window,
-  ]
-
-  TREE_API_NODE_METHODS = (TREE_API_NODE_ACTIONS + TREE_API_NODE_SEARCHES)
-
-  class TreeAPIScriptProxy < ScriptProxy
-
-    def initialize(*args)
-      super(*args)
-      @module_import_lines += [
-        'from dogtail import tree',
-        'from dogtail.config import config',
-      ]
-      @module_import_lines.uniq!
-      @init_lines = ['config.searchShowingOnly = True'] + @init_lines
-      @init_lines.uniq!
-    end
-
-    TREE_API_NODE_METHODS.each do |method|
-      define_method(method) do |*args|
-        proxy = proxy_call(method, args)
-        # If it's not an action we are calling, we just want a
-        # "reference" for use later, so we just return ScriptProxy
-        # object representing the current state of the call.
-        TREE_API_NODE_ACTIONS.include?(method) ? proxy.run : proxy
-      end
     end
 
     def wait(timeout = nil)
@@ -162,7 +131,7 @@ module Dogtail
       # have to port looping, conditionals and much more into our
       # script generation, which is insane.
       # However, since references are lost between script runs (=
-      # ScriptProxy.run()) we need to be a bit tricky here. We use the
+      # Application.run()) we need to be a bit tricky here. We use the
       # internal a11y AT-SPI "path" to uniquely identify a Dogtail
       # node, so we can give handles to each of them that can be used
       # later to re-find them.
@@ -180,49 +149,53 @@ module Dogtail
           "    if str(n.path) == '#{path}':",
           "        node = n",
           "        break",
+          "assert(node)",
         ]
-        self.class.new(@init_lines + more_init_lines, ['node'],  @opts)
+        Node.new(
+          @app_name,
+          @opts.merge(
+            init_lines: @init_lines + more_init_lines,
+            components: ['node']
+          )
+        )
+      end
+    end
+
+    def get_field(key)
+      run("print(#{build_line}.#{key})").stdout
+    end
+
+    def proxy_call(method, args)
+      args_str = self.class.args_to_s(args)
+      method_call = "#{method.to_s}(#{args_str})"
+      Node.new(
+        @app_name,
+        @opts.merge(
+          init_lines: @init_lines,
+          components: @components + [method_call]
+        )
+      )
+    end
+
+    TREE_API_APP_SEARCHES.each do |method|
+      define_method(method) do |*args|
+        proxy_call(method, args)
       end
     end
 
   end
 
-  LOCAL_TREE_API_NODE_METHODS = [
-    :wait,
-    :get_field,
-  ]
+  class Node < Application
 
-  ALL_TREE_API_NODE_METHODS = TREE_API_NODE_METHODS + LOCAL_TREE_API_NODE_METHODS
-
-  class Application
-
-    def initialize(app)
-      @app = app
-    end
-
-    def self.init_lines(app)
-      ["application = tree.root.application(\"#{app}\")"]
-    end
-
-    def self.init_components
-      ['application']
-    end
-
-    def self.interact(app, opts = {}, &block)
-      yield TreeAPIScriptProxy.new(self.init_lines(app),
-                                   self.init_components,
-                                   opts)
-    end
-
-    def interact(*args, &block)
-      self.class.interact(@app, *args, &block)
-    end
-
-    ALL_TREE_API_NODE_METHODS.each do |method|
+    TREE_API_NODE_SEARCHES.each do |method|
       define_method(method) do |*args|
-        interact do |app|
-          app.method(method).call(*args)
-        end
+        proxy_call(method, args)
+      end
+    end
+
+    TREE_API_NODE_ACTIONS.each do |method|
+      define_method(method) do |*args|
+        proxy_call(method, args).run
       end
     end
 
