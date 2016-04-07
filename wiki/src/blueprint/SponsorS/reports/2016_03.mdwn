@@ -32,7 +32,35 @@ Now that we've adapted Thunderbird to use the automatic email creation wizard ag
 
 - Robustness improvements
 
-  XXX: anonym
+  As discussed in this section in the previous report, this month has
+  been spent on trying out new "fundamental approaches" to deal with
+  our robustness issues. Specifically we have looked at dealing with
+  "glitches when interacting with graphical user interfaces", and we
+  found a suitable solution in
+  [Dogtail](https://fedorahosted.org/dogtail/), an automated GUI
+  testing framework based on assistive technologies (specifically
+  a11y). ([[!tails_ticket 10721]])
+
+  We have developed a simple interface in our test suite to generate
+  and run Dogtail scripts inside the system under test, so elements of
+  the graphical user interface can be identified *programmatically*
+  and then interacted with much like before (e.g. clicked with the
+  mouse, or typed text into). Previously we could only identify such
+  elements using static images that had to exactly match what we see
+  on the screen, which often turned out to not be the case due to the
+  non-deterministic nature of modern desktop applications, and this
+  new approach already shows promise on being more reliable.
+
+  Furthermore, being able to identify elements with code instead of
+  images will significantly decrease the maintenance burden;
+  previously we've had to update images whenever something changes in
+  the GUI, e.g. size or anti-aliazing changes for fonts, whereas we
+  now only need to change if the program itself changes. Also, when
+  reading the code, referring to an image is much more opaque than a
+  programmatic description, making the code more readable.
+
+  Next month's focus will be to deal with "transient network
+  issues" ([[!tails_ticket 9521]]).
 
 - Performance improvements on Jenkins
 
