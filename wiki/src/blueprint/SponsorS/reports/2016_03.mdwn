@@ -117,7 +117,7 @@ instance.
 
 ## B.4. Freezable APT repository
 
-In summary, we now have a working proof-of-concept for all essential pieces of
+We now have a working proof-of-concept for all essential pieces of
 infrastructure and code, except some bits of the "tagged snapshots" component
 (that is kind of bonus material for the time being, and is not needed to achieve
 the goals we have set about this deliverable this year).
@@ -136,7 +136,7 @@ Now, into the details:
   also confirm the soundness of large parts of this design, so we now consider
   these two deliverables as done.
 
-- B.4.2. Implement a mechanism to save the list of packages used at ISO build time ([[!tails_ticket 10748]])
+- B.4.2. Implement a mechanism to save the list of packages used at ISO build time ([[!tails_ticket 10748]], [[!tails_ticket 10749]])
 
   We made great progress on this front. We added support for storing the
   architecture information about packages used at build time, in preparation for
@@ -152,26 +152,25 @@ Now, into the details:
   This will allow us to store (virtually forever) all packages needed to build
   a given Tails release.
 
-XXX:intrigeri:
-
 - B.4.3. Centralize and merge the list of needed packages
 
-  This deliverable doesn't make sense, as-is, in our current design. It is
+  The original definition of this deliverable doesn't make sense, as-is, in our current design. It is
   replaced by processes and tools that our release managers can use to:
 
-  * keep around the APT snapshots we need for a longer time than the default,
-    e.g. the ones used during a longer than usual Tails code freeze, and prevent
+  * keep around the APT snapshots we need for a longer time than the default
+    when needed,
+    e.g. the snapshots used during a longer than usual Tails code freeze, and prevent
     them from being deleted by our garbage collector;
 
   * freeze and thaw time-based APT snapshots used by a branch.
 
-  The corresponding programs were drafted
+  The corresponding scripts were drafted
   (<https://git-tails.immerda.ch/tails/tree/auto/scripts/apt-snapshots-serials?h=feature/build-from-snapshots>,
   <https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-bump-apt-snapshot-valid-until>)
   and passed early testing. We will now document their usage as part of the
   Tails release process documentation.
 
-- B.4.5. Implement processes and tools for importing and freezing those packages
+- B.4.5. Implement processes and tools for importing and freezing those packages ([[!tails_ticket 6299]], [[!tails_ticket 6296]])
 
   Time-based snapshots are now generated four times a day, and
   [published over HTTP](http://time-based.snapshots.deb.tails.boum.org/).
@@ -187,11 +186,12 @@ XXX:intrigeri:
   work in a production context.
 
   This lead us to identify that if we didn't do anything about it, the
-  `apt-cacher-ng` caching proxy used for building Tails ISO images, that
-  improves build speed a lot, would not only be rendered inefficient, but would
+  `apt-cacher-ng` caching proxy used to speed up building Tails ISO images,
+  would not only be made mostly useless, but would
   also consume quickly growing amount of disk space. It took us some time but we
   now have a proof-of-concept solution for that problem. Next step on this front
-  is to .
+  is to integrate our proof-of-concept into the various configurations
+  used to build a Tails ISO image.
 
 - B.4.6. Adjust the rest of our ecosystem to the freezable APT repository ([[!tails_ticket 6303]])
 
