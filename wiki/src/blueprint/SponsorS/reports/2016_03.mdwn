@@ -205,6 +205,58 @@ Try to:
 
 Deployment: May or July
 
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+- C.2.2. Set up the monitoring software and the underlying infrastructure
+
+  During the last round, we deployed a basic Icinga2 instance on every
+  systems that needed to be monitored. They weren't configured to check
+  anything nor communicate with anyone. We just connected the virtual
+  machine acting as a Icinga2 *satellite* to the monitoring host over
+  a VPN.
+
+  During this month, we configured half of our monitored systems as
+  Icinga2 agents reporting to the satellites.
+
+  This required us to write a second batch of Puppet manifests,
+  so deploying the other half of our monitored agents later will help to
+  test if we introduce any *from scratch* deployment bug during the rest
+  of the development process. Integrating them won't require much
+  efforts to do as everything is automated.
+
+  The satellite VM is collecting the reports and pushing them to our
+  monitoring system. This way, our infrastructure hosted on one host
+  is isolated from the external monitoring host, which can't execute
+  any code on the monitoring systems and only collect results pushed to
+  it.
+
+  We preferred to use Puppet to spread the configuration, so that we
+  don't have to use Icinga2 own ways to do it, isolating a bit more
+  both hosts.
+
+  We also set up a Icingaweb2 interface at
+  https://icingaweb2.tails.boum.org, so that we could have feedbacks
+  from the systems.
+
+- C.2.4. (Configure and debug the monitoring of the most critical
+  services) and C.2.6. (Configure and debug the monitoring of other
+  high-priority services)
+
+  We then deployed basic system checks that were part of our previously
+  defined objectives, as well as set up our monitoring host to check
+  public services from a remote point of view. Deploying this checks
+  already warned us some of our partitions were closed to be full.
+
+  Most of our checks defined as `CRITICAL` and `HIGH PRIORITY` are now
+  deployed. Two of them are being implemented as custom Icinga2 plugins
+  as they are not common. ([[!tails_ticket 8650]] and [[!tails_ticket 8653]])
+
+- C.2.5. Configure the receiving side of the monitoring notifications
+
+  As planned we're going to spend the next round to set up the
+  notification process, last mile to the release of out monitoring
+  system.
+
 ## C.4. Maintain our already existing services
 
 We kept on answering the requests from the community as well as taking

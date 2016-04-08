@@ -4,7 +4,7 @@
 
 # Vision #
 
-The Tails Server should provide a user-friendly way to start onion services that facilitate group collaboration, communication and data sharing.
+The Tails Server should provide a user-friendly way to start onion services that facilitate group collaboration, communication, and data sharing.
 
 Such services are immensely helpful for working together in groups over distance. Usually they are hosted centrally by a third party. This comes with several perils: Users have to trust that the service provider protects their information and does not use it for other purposes or disclose it, and the provider poses as a single point of attack for adversaries. In contrast, a self-hosted onion service comes with several advantages:
 
@@ -29,7 +29,7 @@ In order to achieve this, the following problems have to be solved:
 * Design an extendible and robust format describing the services and how they integrate into Tails.
 * Installing the server software.
 * Settings up the onion service, reusing an existing onion address and keys, if chosen by the user.
-* Persistently storing the data, configuration and onion service data.
+* Persistently storing the data, configuration, and onion service data.
 * Integrating into Tails' firewall.
 * Presenting the onion address and client credentials to the user in a way that s/he can easily share them with clients.
 * Implementing a proper CLI and GUI to configure and activate services.
@@ -57,7 +57,20 @@ Please add to this list!
 * Leaking platform
   * SecureDrop
   * GlobaLeaks
+* XMPP
+  * Prosody
+  * ejabberd
+* IRC
+  * ngIRCd
+  * IRCD-Hybrid
 * SSH
+
+# Design #
+The current plan is to have one executable file per service, which must implement a defined set of CLI options to configure, start and stop the service. To facilitate the creation of these service executables, a template will be created, which will usually only need marginal customization. An advantage of this design is that the functionality of a service executable is not limited to the functionality of the template. If a service needs additional functionality, it can be easily implemented for this specific service.
+
+The CLI will provide a wrapper around these service executables, passing the arguments to the respective service executable. The service executables must provide output in a defined format, which should be easily readable and parsable - currently we plan to use YAML for this.
+
+The GUI will call the service executables with specific arguments and parse the output to get the information it then displays to the user. The same applies to the configuration and actions chosen by the user in the GUI.
 
 # Implementation #
 In consideration of the work in progress of porting all Tails shell scripts to Python 3, and the good reasons for this, the Tails Server should also be implemented in Python 3.
