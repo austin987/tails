@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -u
 
 . gettext.sh
 TEXTDOMAIN="tails"
@@ -15,9 +16,16 @@ claws_mail_config_is_persistent() {
 }
 
 warn_about_claws_mail_persistence() {
+
     local dialog_msg="<b><big>`gettext \"The <b>Claws Mail</b> persistence feature is activated.\"`</big></b>
 
 `gettext \"If you have emails saved in <b>Claws Mail</b>, you should <a href='https://tails.boum.org/doc/anonymous_internet/claws_mail_to_icedove'>migrate your data</a> before starting <b>Icedove</b>.\"`"
+
+    if [ -f "${PROFILE}/prefs.js" ]; then
+        dialog_msg="${dialog_msg}
+
+`gettext \"If you already migrated your emails to <b>Icedove</b>, you should <a href='https://tails.boum.org/doc/anonymous_internet/claws_mail_to_icedove#delete'>delete all your <b>Claws Mail</b> data</a> to remove this warning.\"`"
+    fi
 
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"

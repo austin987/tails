@@ -335,8 +335,6 @@ end
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-  # By this point the only icon left is Vidalia and it will not cause the other systray
-  # icons to shift positions.
   @screen.wait("GnomeSystrayFlorence.png", 180)
   @screen.wait(desktop_started_picture, 180)
   # Disable screen blanking since we sometimes need to wait long
@@ -598,7 +596,7 @@ When /^I start and focus GNOME Terminal$/ do
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
-  if !$vm.has_process?("gnome-terminal")
+  if !$vm.has_process?("gnome-terminal-server")
     step "I start and focus GNOME Terminal"
   else
     @screen.wait_and_click('GnomeTerminalWindow.png', 20)
@@ -809,8 +807,8 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
   @screen.type("p", Sikuli::KeyModifier.CTRL)
-  @screen.wait("TorBrowserPrintDialog.png", 10)
-  @screen.wait_and_click("PrintToFile.png", 10)
+  @screen.wait("TorBrowserPrintDialog.png", 20)
+  @screen.wait_and_click("BrowserPrintToFile.png", 10)
   @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
   @screen.hide_cursor
   @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
@@ -874,38 +872,6 @@ When /^I open a page on the LAN web server in the (.*)$/ do |browser|
   step "I open the address \"#{@web_server_url}\" in the #{browser}"
 end
 
-def force_new_tor_circuit(with_vidalia=nil)
-  debug_log("Forcing new Tor circuit...")
-  if with_vidalia
-    begin
-      step 'process "vidalia" is running'
-    rescue Test::Unit::AssertionFailedError
-      debug_log("Vidalia was not running. Attempting to start Vidalia...")
-      $vm.spawn('restart-vidalia')
-      step 'process "vidalia" is running within 15 seconds'
-    end
-    # Sometimes Sikuli gets confused and recognizes the yellow-colored vidalia systray
-    # icon as the green one. This has been seen when Vidalia needed to be
-    # restarted in the above 'begin' block.
-    #
-    # try_for is used here for that reason, otherwise this step may fail
-    # because sikuli presumaturely right-clicked the Vidalia icon and the 'New
-    # Identity' option isn't clickable yet..
-    try_for(3 * 60) do
-      # Let's be *sure* that vidalia is still running. I'd hate to spend up to
-      # three minutes waiting for an icon that isn't there because Vidalia, for
-      # whatever reason, is no longer running...
-      step 'process "vidalia" is running'
-      @screen.wait_and_right_click('VidaliaSystrayReady.png', 10)
-      @screen.wait_and_click('VidaliaMenuNewIdentity.png', 10)
-    end
-    @screen.wait('VidaliaNewIdentityNotification.png', 20)
-    @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
-  else
-    $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
-  end
-end
-
 Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
   if min
     time = rand(max.to_i - min.to_i + 1) + min.to_i
@@ -954,8 +920,9 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
   end
 end
 
-Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
-  force_new_tor_circuit(with_vidalia)
+Then /^I force Tor to use a new circuit$/ do
+  debug_log("Forcing new Tor circuit...")
+  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
 end
 
 When /^I eject the boot medium$/ do
