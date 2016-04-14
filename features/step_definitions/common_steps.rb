@@ -526,7 +526,7 @@ Given /^package "([^"]+)" is installed$/ do |package|
 end
 
 When /^I start the Tor Browser$/ do
-  step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
 end
 
 When /^I request a new identity using Torbutton$/ do
