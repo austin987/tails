@@ -84,6 +84,15 @@ When /^I configure Tails to use a simulated Tor network$/ do
     'TestingDirAuthVoteHSDir *',
     'TestingMinExitFlagThreshold 0',
     'V3AuthNIntervalsValid 2',
+    # Enabling TestinTorNetwork disables ClientRejectInternalAddresses
+    # so the Tor client will happily try LAN connections. Coupled with
+    # that TestinTorNetwork is enabled on all exits, and their
+    # ExitPolicyRejectPrivate is disabled, we will allow exiting to
+    # LAN hosts. We have at least one test that tries to make sure
+    # that is *not* possible (Scenario: The Tor Browser cannot access
+    # the LAN) so we cannot allow it. We'll have to rethink all this
+    # if we ever want to run all services locally as well (#9520).
+    'ClientRejectInternalAddresses 1',
   ]
   # We run one client in chutney so we easily can grep the generated
   # DirAuthority lines and use them.
