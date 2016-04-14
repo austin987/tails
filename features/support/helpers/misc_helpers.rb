@@ -177,13 +177,14 @@ def convert_from_bytes(size, unit)
   return size.to_f/convert_bytes_mod(unit).to_f
 end
 
-def cmd_helper(cmd)
+def cmd_helper(cmd, env = {})
   if cmd.instance_of?(Array)
     cmd << {:err => [:child, :out]}
   elsif cmd.instance_of?(String)
     cmd += " 2>&1"
   end
-  IO.popen(cmd) do |p|
+  env = ENV.to_h.merge(env)
+  IO.popen(env, cmd) do |p|
     out = p.readlines.join("\n")
     p.close
     ret = $?
