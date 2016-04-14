@@ -114,16 +114,16 @@ Feature: Browsing the web using the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the address "https://check.torproject.org" in the Tor Browser
-    Then I see "TorBrowserTorCheck.png" after at most 180 seconds
+    And I open Tor Check in the Tor Browser
+    Then I see Tor Check give the expected outcome in the Tor Browser
 
   @check_tor_leaks @fragile
   Scenario: The Tor Browser's "New identity" feature works as expected
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the address "https://check.torproject.org" in the Tor Browser
-    Then I see "TorBrowserTorCheck.png" after at most 180 seconds
+    And I open Tor Check in the Tor Browser
+    Then I see Tor Check give the expected outcome in the Tor Browser
     When I request a new identity using Torbutton
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page

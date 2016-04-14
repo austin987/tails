@@ -193,3 +193,31 @@ Then /^the file is saved to the default Tor Browser download directory$/ do
   expected_path = "/home/#{LIVE_USER}/Tor Browser/#{@some_file}"
   try_for(10) { $vm.file_exist?(expected_path) }
 end
+
+When /^I open Tor Check in the (.+)$/ do |browser|
+  step "I open the address \"https://check.torproject.org\" in the #{browser}"
+end
+
+Then /^I see Tor Check (.+) in the (.+)$/ do |expectation, browser|
+  assert(['Tor Browser', 'Unsafe Browser'].include?(browser),
+         "This step does not support the '#{browser}'")
+  success = 'TorBrowserTorCheck.png'
+  failure = 'UnsafeBrowserTorCheckFail.png'
+  case expectation
+  when 'succeed'
+    assert_equal('Tor Browser', browser,
+                 'Only the Tor Browser can pass Tor Check')
+    expected_image = success
+  when 'fail'
+    expected_image = failure
+  when 'give the expected outcome'
+    if browser == 'Tor Browser' and not $config["Chutney"]
+      expected_image = success
+    else
+      expected_image = failure
+    end
+  else
+    raise "Unsupported expectation '#{expectation}'"
+  end
+  step "I see \"#{expected_image}\" after at most 180 seconds"
+end

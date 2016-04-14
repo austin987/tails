@@ -22,8 +22,8 @@ Feature: The Tor enforcement is effective
     Given I have started Tails from DVD and logged in and the network is connected
     And I capture all network traffic
     When I successfully start the Unsafe Browser
-    And I open the address "https://check.torproject.org" in the Unsafe Browser
-    And I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
+    And I open Tor Check in the Unsafe Browser
+    And I see Tor Check fail in the Unsafe Browser
     Then the firewall leak detector has detected IPv4 TCP leaks
 
   Scenario: Anti test: Detecting IPv4 TCP leaks of TCP DNS lookups with the firewall leak detector

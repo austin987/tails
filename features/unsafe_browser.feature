@@ -44,8 +44,8 @@ Feature: Browsing the web using the Unsafe Browser
   Scenario: Opening check.torproject.org in the Unsafe Browser shows the red onion and a warning message.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
-    And I open the address "https://check.torproject.org" in the Unsafe Browser
-    Then I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
+    And I open Tor Check in the Unsafe Browser
+    Then I see Tor Check give the expected outcome in the Unsafe Browser
     And the clearnet user has sent packets out to the Internet
 
   @fragile
