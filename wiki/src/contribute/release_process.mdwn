@@ -1065,28 +1065,12 @@ this, and skip what does not make sense for a RC.
    from the previous stable release will usually have had us prepare
    for an emergency release that was never made.
 1. Pull `master` back and merge it into `stable`, and in turn into
-   `devel` and `experimental`.
+   `devel`
 1. Follow the
    [[post-release|contribute/APT_repository#workflow-post-release]] APT
    repository documentation. Make sure there are upgrade-description
    files for any new versions that were added.
 1. Push the resulting branches.
-1. If this was a major release, then reset experimental:
-   - take note of branches merged into `experimental`, but not into
-     `devel`:
-
-         git log --pretty=oneline --color=never --merges devel..experimental \
-           | /bin/grep 'into experimental$' \
-           | sed -e 's,^[a-f0-9]\+\s\+,,' | sort -u
-
-   - `git checkout experimental && git reset --hard devel`
-   - merge additional Git branches into experimental
-
-         for branch in $UNMERGED_BRANCHES ; do
-            git merge $branch
-         done
-
-   - `git push --force origin experimental:experimental`
 1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
 1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
