@@ -97,7 +97,10 @@ When /^I configure Tails to use a simulated Tor network$/ do
   # We run one client in chutney so we easily can grep the generated
   # DirAuthority lines and use them.
   chutney_src_dir = $config["Chutney"]["src_dir"]
-  dir_auth_lines = open("#{$config['TMPDIR']}/chutney-data/nodes/035c/torrc") do |f|
+  client_torrcs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*client/torrc"
+  )
+  dir_auth_lines = open(client_torrcs.first) do |f|
     f.grep(/^DirAuthority\s/)
   end
   client_torrc_lines.concat(dir_auth_lines)
