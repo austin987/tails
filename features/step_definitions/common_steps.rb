@@ -106,9 +106,6 @@ def post_snapshot_restore_hook
       $vm.execute("rm -f /var/log/tor/log")
       $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
       $vm.host_to_guest_time_sync
-      if $config["Chutney"]
-        ensure_chutney_is_running
-      end
       $vm.spawn("restart-tor")
       wait_until_tor_is_working
       if $vm.file_content('/proc/cmdline').include?(' i2p')
