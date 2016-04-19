@@ -342,9 +342,11 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   bridge_dirs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
   )
-  @bridges = []
+  bridge_descs = []
+  @bridge_hosts = []
   bridge_dirs.each do |bridge_dir|
     bridge = { 'ipv4_address' => $vmnet.bridge_ip_addr }
+    @bridge_hosts << bridge["ipv4_address"]
     if bridge_type == 'bridge'
       open(bridge_dir + "/torrc") do |f|
         bridge['ipv4_port'] = f.grep(/^OrPort\b/).first.split.last
@@ -368,11 +370,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     open(bridge_dir + "/fingerprint") do |f|
       bridge['fingerprint'] = f.read.chomp.split.last
     end
-    @bridges << bridge
-  end
-  @bridge_hosts = []
-  for bridge in @bridges do
-    @bridge_hosts << bridge["ipv4_address"]
+    bridge_descs << bridge
   end
 
   @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
@@ -380,7 +378,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
   @screen.wait_and_click('TorLauncherNextButton.png', 10)
   @screen.wait_and_click('TorLauncherBridgeList.png', 10)
-  for bridge in @bridges do
+  for bridge in bridge_descs do
     bridge_line = bridge_type.downcase   + " " +
                   bridge["ipv4_address"] + ":" +
                   bridge["ipv4_port"].to_s
