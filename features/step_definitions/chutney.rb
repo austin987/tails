@@ -77,6 +77,7 @@ When /^I configure Tails to use a simulated Tor network$/ do
     'TestingTorNetwork 1',
     'AssumeReachable 1',
     'PathsNeededToBuildCircuits 0.25',
+    'TestingBridgeDownloadSchedule 0, 5',
     'TestingClientConsensusDownloadSchedule 0, 5',
     'TestingClientDownloadSchedule 0, 5',
     'TestingDirAuthVoteExit *',
@@ -101,7 +102,7 @@ When /^I configure Tails to use a simulated Tor network$/ do
     "#{$config['TMPDIR']}/chutney-data/nodes/*client/torrc"
   )
   dir_auth_lines = open(client_torrcs.first) do |f|
-    f.grep(/^DirAuthority\s/)
+    f.grep(/^(Alternate)?(Dir|Bridge)Authority\s/)
   end
   client_torrc_lines.concat(dir_auth_lines)
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)

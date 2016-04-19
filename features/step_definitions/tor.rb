@@ -338,17 +338,37 @@ end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
   bridge_type.downcase!
-  bridge_type.capitalize!
-  begin
-    @bridges = $config["Tor"]["Transports"][bridge_type]
-    assert_not_nil(@bridges)
-    assert(!@bridges.empty?)
-  rescue NoMethodError, Test::Unit::AssertionFailedError
-    raise(
-<<EOF
-It seems no '#{bridge_type}' pluggable transports are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
-EOF
-)
+  chutney_src_dir = $config["Chutney"]["src_dir"]
+  bridge_dirs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
+  )
+  @bridges = []
+  bridge_dirs.each do |bridge_dir|
+    bridge = { 'ipv4_address' => $vmnet.bridge_ip_addr }
+    if bridge_type == 'bridge'
+      open(bridge_dir + "/torrc") do |f|
+        bridge['ipv4_port'] = f.grep(/^OrPort\b/).first.split.last
+      end
+    else
+      # This is the pluggable transport case. While we could set a
+      # static port via ServerTransportListenAddr we instead let it be
+      # picked randomly so an already used port is not picked --
+      # Chutney already has issues with that for OrPort selection.
+      pt_re = /Registered server transport '#{bridge_type}' at '[^']*:(\d+)'/
+      open(bridge_dir + "/notice.log") do |f|
+        pt_lines = f.grep(pt_re)
+        bridge['ipv4_port'] = pt_lines.last.match(pt_re)[1]
+      end
+      if bridge_type == 'obfs4'
+        open(bridge_dir + "/pt_state/obfs4_bridgeline.txt") do |f|
+          bridge['extra'] = f.readlines.last.chomp.sub(/^.* cert=/, 'cert=')
+        end
+      end
+    end
+    open(bridge_dir + "/fingerprint") do |f|
+      bridge['fingerprint'] = f.read.chomp.split.last
+    end
+    @bridges << bridge
   end
   @bridge_hosts = []
   for bridge in @bridges do
