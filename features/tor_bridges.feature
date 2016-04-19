@@ -17,18 +17,6 @@ Feature: Using Tails with Tor pluggable transports
     And available upgrades have been checked
     And all Internet traffic has only flowed through the configured pluggable transports
 
-  Scenario: Using obfs2 pluggable transports
-    When I configure some obfs2 pluggable transports in Tor Launcher
-    Then Tor is ready
-    And available upgrades have been checked
-    And all Internet traffic has only flowed through the configured pluggable transports
-
-  Scenario: Using obfs3 pluggable transports
-    When I configure some obfs3 pluggable transports in Tor Launcher
-    Then Tor is ready
-    And available upgrades have been checked
-    And all Internet traffic has only flowed through the configured pluggable transports
-
   Scenario: Using obfs4 pluggable transports
     When I configure some obfs4 pluggable transports in Tor Launcher
     Then Tor is ready
