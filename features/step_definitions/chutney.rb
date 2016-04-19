@@ -1,4 +1,7 @@
 def ensure_chutney_is_running
+  if not $config["Chutney"]
+    raise 'You must specify the path to a Chutney source checkout in you local test suite configuration; see the documentation'
+  end
   # Ensure that a fresh chutney instance is running, and that it will
   # be cleaned upon exit. We only do it once, though, since the same
   # setup can be used throughout the same test suite run.

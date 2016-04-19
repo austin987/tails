@@ -290,10 +290,7 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   @screen.wait('TailsGreeter.png', 30*60)
   $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
-
-  if $config["Chutney"]
-    step 'I configure Tails to use a simulated Tor network'
-  end
+  step 'I configure Tails to use a simulated Tor network'
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|

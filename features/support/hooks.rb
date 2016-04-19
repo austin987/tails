@@ -159,9 +159,7 @@ BeforeFeature('@product') do |feature|
     $vmstorage = VMStorage.new($virt, VM_XML_PATH)
     $started_first_product_feature = true
   end
-  if $config["Chutney"]
-    ensure_chutney_is_running
-  end
+  ensure_chutney_is_running
 end
 
 AfterFeature('@product') do
