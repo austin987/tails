@@ -337,7 +337,6 @@ When /^the Tor Launcher autostarts$/ do
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
-  bridge_type.downcase!
   @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
   @screen.wait('TorLauncherBridgePrompt.png', 10)
   @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)

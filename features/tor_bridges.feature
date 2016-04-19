@@ -12,7 +12,7 @@ Feature: Using Tails with Tor pluggable transports
     And the Tor Launcher uses all expected TBB shared libraries
 
   Scenario: Using bridges
-    When I configure some Bridge pluggable transports in Tor Launcher
+    When I configure some bridge pluggable transports in Tor Launcher
     Then Tor is ready
     And available upgrades have been checked
     And all Internet traffic has only flowed through the configured pluggable transports

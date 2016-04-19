@@ -18,7 +18,7 @@ Feature: Time syncing
     Given I have started Tails from DVD without network and logged in with bridge mode enabled
     When the network is plugged
     And the Tor Launcher autostarts
-    And I configure some Bridge pluggable transports in Tor Launcher
+    And I configure some bridge pluggable transports in Tor Launcher
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
@@ -38,7 +38,7 @@ Feature: Time syncing
     When I bump the system time with "-1 day"
     And the network is plugged
     And the Tor Launcher autostarts
-    And I configure some Bridge pluggable transports in Tor Launcher
+    And I configure some bridge pluggable transports in Tor Launcher
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
@@ -59,7 +59,7 @@ Feature: Time syncing
     When I bump the system time with "-6 weeks"
     And the network is plugged
     And the Tor Launcher autostarts
-    And I configure some Bridge pluggable transports in Tor Launcher
+    And I configure some bridge pluggable transports in Tor Launcher
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
@@ -80,7 +80,7 @@ Feature: Time syncing
     When I bump the system time with "+1 day"
     And the network is plugged
     And the Tor Launcher autostarts
-    And I configure some Bridge pluggable transports in Tor Launcher
+    And I configure some bridge pluggable transports in Tor Launcher
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
@@ -102,7 +102,7 @@ Feature: Time syncing
     When I set the system time to "01 Jan 2020 12:34:56"
     And the network is plugged
     And the Tor Launcher autostarts
-    And I configure some Bridge pluggable transports in Tor Launcher
+    And I configure some bridge pluggable transports in Tor Launcher
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
