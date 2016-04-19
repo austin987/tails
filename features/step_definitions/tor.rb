@@ -338,18 +338,25 @@ end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
   bridge_type.downcase!
+  @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
+  @screen.wait('TorLauncherBridgePrompt.png', 10)
+  @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
+  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.wait_and_click('TorLauncherBridgeList.png', 10)
+  @bridge_hosts = []
   chutney_src_dir = $config["Chutney"]["src_dir"]
   bridge_dirs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
   )
-  bridge_descs = []
-  @bridge_hosts = []
   bridge_dirs.each do |bridge_dir|
-    bridge = { 'ipv4_address' => $vmnet.bridge_ip_addr }
-    @bridge_hosts << bridge["ipv4_address"]
+    address = $vmnet.bridge_ip_addr
+    port = nil
+    fingerprint = nil
+    extra = nil
+    @bridge_hosts << address
     if bridge_type == 'bridge'
       open(bridge_dir + "/torrc") do |f|
-        bridge['ipv4_port'] = f.grep(/^OrPort\b/).first.split.last
+        port = f.grep(/^OrPort\b/).first.split.last
       end
     else
       # This is the pluggable transport case. While we could set a
@@ -359,31 +366,19 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
       pt_re = /Registered server transport '#{bridge_type}' at '[^']*:(\d+)'/
       open(bridge_dir + "/notice.log") do |f|
         pt_lines = f.grep(pt_re)
-        bridge['ipv4_port'] = pt_lines.last.match(pt_re)[1]
+        port = pt_lines.last.match(pt_re)[1]
       end
       if bridge_type == 'obfs4'
         open(bridge_dir + "/pt_state/obfs4_bridgeline.txt") do |f|
-          bridge['extra'] = f.readlines.last.chomp.sub(/^.* cert=/, 'cert=')
+          extra = f.readlines.last.chomp.sub(/^.* cert=/, 'cert=')
         end
       end
     end
     open(bridge_dir + "/fingerprint") do |f|
-      bridge['fingerprint'] = f.read.chomp.split.last
+      fingerprint = f.read.chomp.split.last
     end
-    bridge_descs << bridge
-  end
-
-  @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
-  @screen.wait('TorLauncherBridgePrompt.png', 10)
-  @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
-  @screen.wait_and_click('TorLauncherNextButton.png', 10)
-  @screen.wait_and_click('TorLauncherBridgeList.png', 10)
-  for bridge in bridge_descs do
-    bridge_line = bridge_type.downcase   + " " +
-                  bridge["ipv4_address"] + ":" +
-                  bridge["ipv4_port"].to_s
-    bridge_line += " " + bridge["fingerprint"].to_s if bridge["fingerprint"]
-    bridge_line += " " + bridge["extra"].to_s if bridge["extra"]
+    bridge_line = bridge_type + " " + address + ":" + port
+    [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
     @screen.type(bridge_line + Sikuli::Key.ENTER)
   end
   @screen.wait_and_click('TorLauncherNextButton.png', 10)
