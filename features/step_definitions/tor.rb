@@ -352,7 +352,6 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     port = nil
     fingerprint = nil
     extra = nil
-    @bridge_hosts << address
     if bridge_type == 'bridge'
       open(bridge_dir + "/torrc") do |f|
         port = f.grep(/^OrPort\b/).first.split.last
@@ -376,6 +375,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     open(bridge_dir + "/fingerprint") do |f|
       fingerprint = f.read.chomp.split.last
     end
+    @bridge_hosts << { address: address, port: port.to_i }
     bridge_line = bridge_type + " " + address + ":" + port
     [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
     @screen.type(bridge_line + Sikuli::Key.ENTER)
@@ -390,9 +390,9 @@ end
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
   assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
-                                :accepted_hosts => @bridge_hosts)
-  leaks.assert_no_leaks
+  assert_all_connections(@sniffer.pcap_file) do |host|
+    @bridge_hosts.include?({ address: host.address, port: host.port })
+  end
 end
 
 Then /^the Tor binary is configured to use the expected Tor authorities$/ do

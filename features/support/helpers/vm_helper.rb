@@ -1,3 +1,4 @@
+require 'ipaddr'
 require 'libvirt'
 require 'rexml/document'
 

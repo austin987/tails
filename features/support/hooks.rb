@@ -253,14 +253,10 @@ end
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
   if scenario.passed?
-    if @bridge_hosts.nil?
-      expected_tor_nodes = get_all_tor_nodes
-    else
-      expected_tor_nodes = @bridge_hosts
+    expected_tor_nodes = @bridge_hosts ? @bridge_hosts : get_all_tor_nodes
+    assert_all_connections(@tor_leaks_sniffer.pcap_file) do |host|
+      expected_tor_nodes.include?({ address: host.address, port: host.port })
     end
-    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
-                                  :accepted_hosts => expected_tor_nodes)
-    leaks.assert_no_leaks
   end
 end
 

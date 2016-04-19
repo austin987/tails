@@ -447,9 +447,10 @@ Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, ima
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
-                                :accepted_hosts => get_all_tor_nodes)
-  leaks.assert_no_leaks
+  all_tor_nodes = get_all_tor_nodes
+  assert_all_connections(@sniffer.pcap_file) do |host|
+    all_tor_nodes.include?({ address: host.address, port: host.port })
+  end
 end
 
 Given /^I enter the sudo password in the pkexec prompt$/ do
@@ -822,9 +823,9 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
 end
 
 Given /^a web server is running on the LAN$/ do
-  web_server_ip_addr = $vmnet.bridge_ip_addr
-  web_server_port = 8000
-  @web_server_url = "http://#{web_server_ip_addr}:#{web_server_port}"
+  @web_server_ip_addr = $vmnet.bridge_ip_addr
+  @web_server_port = 8000
+  @web_server_url = "http://#{@web_server_ip_addr}:#{@web_server_port}"
   web_server_hello_msg = "Welcome to the LAN web server!"
 
   # I've tested ruby Thread:s, fork(), etc. but nothing works due to
@@ -839,8 +840,8 @@ Given /^a web server is running on the LAN$/ do
   require "webrick"
   STDOUT.reopen("/dev/null", "w")
   STDERR.reopen("/dev/null", "w")
-  server = WEBrick::HTTPServer.new(:BindAddress => "#{web_server_ip_addr}",
-                                   :Port => #{web_server_port},
+  server = WEBrick::HTTPServer.new(:BindAddress => "#{@web_server_ip_addr}",
+                                   :Port => #{@web_server_port},
                                    :DocumentRoot => "/dev/null")
   server.mount_proc("/") do |req, res|
     res.body = "#{web_server_hello_msg}"

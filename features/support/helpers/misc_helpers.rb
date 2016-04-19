@@ -193,11 +193,19 @@ def cmd_helper(cmd, env = {})
   end
 end
 
-# This command will grab all router IP addresses from the Tor
-# consensus in the VM + the hardcoded TOR_AUTHORITIES.
 def get_all_tor_nodes
-  cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  $vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
+  nodes = Array.new
+  chutney_torrcs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*/torrc"
+  )
+  chutney_torrcs.each do |torrc|
+    open(torrc) do |f|
+      nodes += f.grep(/^(Or|Dir)Port\b/).map do |line|
+        { address: $vmnet.bridge_ip_addr, port: line.split.last.to_i }
+      end
+    end
+  end
+  return nodes
 end
 
 def get_free_space(machine, path)
