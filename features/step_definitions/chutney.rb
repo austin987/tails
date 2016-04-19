@@ -22,26 +22,45 @@ def ensure_chutney_is_running
       'CHUTNEY_LISTEN_ADDRESS' => chutney_listen_address,
       'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data/"
     }
-    chutney_cleanup_hook = Proc.new do
+
+    chutney_data_dir_cleanup = Proc.new do
+      if File.directory?(env['CHUTNEY_DATA_DIR'])
+        FileUtils.rm_r(env['CHUTNEY_DATA_DIR'])
+      end
+    end
+
+    chutney_cmd = Proc.new do |cmd|
       Dir.chdir(chutney_src_dir) do
-        cmd_helper([chutney_script, "stop", network_definition], env)
-        if File.directory?(env['CHUTNEY_DATA_DIR']) and not KEEP_SNAPSHOTS
-          FileUtils.rm_r(env['CHUTNEY_DATA_DIR'])
+        cmd_helper([chutney_script, cmd, network_definition], env)
+      end
+    end
+
+    if KEEP_SNAPSHOTS
+      begin
+        chutney_cmd.call('start')
+      rescue Test::Unit::AssertionFailedError
+        if File.directory?(env['CHUTNEY_DATA_DIR'])
+          raise "You are running with --keep-snapshots but Chutney failed " +
+                "to start with its current data directory. To recover you " +
+                "likely want to delete '#{env['CHUTNEY_DATA_DIR']}' and " +
+                "all test suite snapshots and then start over."
+        else
+          chutney_cmd.call('configure')
+          chutney_cmd.call('start')
         end
       end
+    else
+      chutney_cmd.call('stop')
+      chutney_data_dir_cleanup.call
+      chutney_cmd.call('configure')
+      chutney_cmd.call('start')
     end
-    # Let's make sure we're initializing a fresh Chutney instance
-    chutney_cleanup_hook.call
-    at_exit { chutney_cleanup_hook.call }
-    Dir.chdir(chutney_src_dir) do
-      begin
-        cmd_helper([chutney_script, "start", network_definition], env)
-      rescue Test::Unit::AssertionFailedError
-        # Chutney will only fail on "start" if it is not configured
-        cmd_helper([chutney_script, "configure", network_definition], env)
-        cmd_helper([chutney_script, "start", network_definition], env)
-      end
+
+    at_exit do
+      chutney_cmd.call('stop')
+      chutney_data_dir_cleanup.call unless KEEP_SNAPSHOTS
     end
+
     $chutney_initialized = true
   end
 end
