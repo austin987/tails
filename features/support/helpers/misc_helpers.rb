@@ -89,6 +89,11 @@ end
 class MaxRetriesFailure < StandardError
 end
 
+def force_new_tor_circuit()
+  debug_log("Forcing new Tor circuit...")
+  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+end
+
 # This will retry the block up to MAX_NEW_TOR_CIRCUIT_RETRIES
 # times. The block must raise an exception for a run to be considered
 # as a failure. After a failure recovery_proc will be called (if

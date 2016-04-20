@@ -923,8 +923,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
 end
 
 Then /^I force Tor to use a new circuit$/ do
-  debug_log("Forcing new Tor circuit...")
-  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+  force_new_tor_circuit
 end
 
 When /^I eject the boot medium$/ do
