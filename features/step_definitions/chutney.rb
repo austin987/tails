@@ -128,8 +128,6 @@ When /^I configure Tails to use a simulated Tor network$/ do
   end
   client_torrc_lines.concat(dir_auth_lines)
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)
-  $vm.execute_successfully('sed "s/Sandbox 1/Sandbox 0/" ' +
-                           '/etc/NetworkManager/dispatcher.d/10-tor.sh')
 end
 
 When /^Tails is using the real Tor network$/ do
