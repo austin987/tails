@@ -127,6 +127,20 @@ def save_failure_artifact(type, path)
   $failure_artifacts << [type, path]
 end
 
+# Due to Tails' Tor enforcement, we only allow contacting hosts that
+# are Tor (or I2P) nodes or located on the LAN. However, when we try
+# to verify that only such hosts are contacted we have a problem --
+# we run all Tor nodes (via Chutney) *and* LAN hosts (used on some
+# tests) on the same host, the one running the test suite. Hence we
+# need to always explicitly track which nodes are LAN or not.
+#
+# Warning: when a host is added via this function, it is only added
+# for the current scenario. As such, if this is done before saving a
+# snapshot, it will not remain after the snapshot is loaded.
+def add_lan_host(ipaddr, port)
+  @lan_hosts << { address: ipaddr, port: port }
+end
+
 BeforeFeature('@product') do |feature|
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
@@ -199,6 +213,8 @@ Before('@product') do |scenario|
   @os_loader = "MBR"
   @sudo_password = "asdf"
   @persistence_password = "asdf"
+  # See comment for add_lan_host() above.
+  @lan_hosts = []
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
@@ -253,9 +269,9 @@ end
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
   if scenario.passed?
-    expected_tor_nodes = @bridge_hosts ? @bridge_hosts : get_all_tor_nodes
+    allowed_nodes = @bridge_hosts ? @bridge_hosts : allowed_hosts_under_tor_enforcement
     assert_all_connections(@tor_leaks_sniffer.pcap_file) do |host|
-      expected_tor_nodes.include?({ address: host.address, port: host.port })
+      allowed_nodes.include?({ address: host.address, port: host.port })
     end
   end
 end

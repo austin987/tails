@@ -198,7 +198,7 @@ def cmd_helper(cmd, env = {})
   end
 end
 
-def get_all_tor_nodes
+def all_tor_hosts
   nodes = Array.new
   chutney_torrcs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*/torrc"
@@ -211,6 +211,10 @@ def get_all_tor_nodes
     end
   end
   return nodes
+end
+
+def allowed_hosts_under_tor_enforcement
+  all_tor_hosts + @lan_hosts
 end
 
 def get_free_space(machine, path)
