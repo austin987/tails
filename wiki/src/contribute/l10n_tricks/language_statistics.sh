@@ -49,8 +49,7 @@ else
 fi
 
 # all PO files
-echo "All website PO files"
-echo "===================="
+echo "## All the website"
 echo ""
 
 for lang in $LANGUAGES ; do
@@ -65,8 +64,7 @@ echo "Total original words: $TOTAL_WC"
 
 # core PO files
 echo ""
-echo "[[Core PO files|contribute/l10n_tricks/core_po_files.txt]]"
-echo "=========================================================="
+echo "## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]"
 echo ""
 
 for lang in $LANGUAGES ; do
