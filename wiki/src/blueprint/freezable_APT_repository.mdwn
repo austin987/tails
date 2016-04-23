@@ -80,21 +80,16 @@ little value.
 
                $ for origin in $(cd config/APT_snapshots.d/ ; ls -d *) ; do for y in $(seq 2016 2026) ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' $origin $y $m $d $t ; done ; done ; done ; done | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list ; done
 
+   e. check if/how
+      [by-hash](http://www.chiark.greenend.org.uk/~cjwatson/blog/no-more-hash-sum-mismatch-errors.html)
+      impacts our design and implementation
    e. deny robots access to that data
    e. implement GC of expired snapshots and packages (`tails-delete-expired-apt-snapshots`):
-      * allow running in verbose or silent mode, just like in
-        `tails-update-time-based-apt-snapshots` [k]
-      * delete expired snapshots' `dist` directories after
-        `deleteunreferenced` [k]
-      * review and test [i]
+      * review [i]
+      * test, including dry-run, silent & verbose modes, performance,
+        and removal of expired snapshots' `dist` directories after
+        `deleteunreferenced` [i]
       * deploy with Puppet, redirect output to a log file, logrotate snippet [i]
-   f. clean up old snapshots that the GC system can't clean up
-      automatically (e.g. those before 20160311, that have no
-      `Valid-Until`)
-      * debian
-      * debian-security
-      * tails
-      * torproject
    g. have build system output the snapshots being used,
       and have Jenkins publish this info if available
 
@@ -117,10 +112,10 @@ little value.
    b. **done** PoC of capturing the list of source packages used during the build
    c. **done** initial reprepro setup for tagged snapshots
    d. **done** debootstrap in jessie-backports
+   d. **done** Have Jenkins create, publish and manage
+      `latest.iso.build-manifest` symlinks
    e. **WIP** create a partial snapshot from a manifest and
       the origin time-based snapshots:
-      * add comments for the most obscure aspects of
-        `tails-prepare-tagged-apt-snapshot-import` [k]
       * `generate-build-manifest` (main Git repo), aka. get [[!tails_ticket 10748]]
         done in Tails 2.3 [i]
         - convert custom `data/debootstrap/tails-wheezy` into a patch,
@@ -136,8 +131,8 @@ little value.
    k. Update the
       [[Listing used packages|freezable APT repository#build-manifest]]
       section
-   l. Have Jenkins publish the list of build manifest
-      if available (supersede existing `*.{bin,src}pkg`).
+   l. Point consumers of the now deprecated `*.{bin,src}pkg` (probably
+      only jenkins.debian.net) to the new build manifest.
    m. if needed, implement GC
 
 5. misc
@@ -188,7 +183,13 @@ Building an ISO from the branch used to prepare the next major release
  * **at release time**: when building from a tagged branch, similarly to
    what we do for our custom [[contribute/APT_repository]], instead of
    using time-based APT repository snapshots, we use snapshots
-   labeled with the Git tag;
+   labeled with the Git tag; note that this is not needed, strictly speaking,
+   as the APT sources used at Tails runtime will anyway be the
+   official (and not frozen) Debian ones; this is mostly needed for
+   legal purposes (this allows to distribute for a long
+   time the source packages needed to build a given Tails ISO image),
+   and it will be useful when we want to be able to reproduce a given
+   Tails ISO build;
  * **after releasing**, the RM encodes in the `testing` Git branch the
    fact that it is not frozen anymore, that is: the RM removes the
    indication that a specific set of APT repository snapshots must be
