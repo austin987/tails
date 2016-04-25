@@ -138,6 +138,7 @@ end
 # for the current scenario. As such, if this is done before saving a
 # snapshot, it will not remain after the snapshot is loaded.
 def add_lan_host(ipaddr, port)
+  @lan_hosts ||= []
   @lan_hosts << { address: ipaddr, port: port }
 end
 
@@ -214,7 +215,7 @@ Before('@product') do |scenario|
   @sudo_password = "asdf"
   @persistence_password = "asdf"
   # See comment for add_lan_host() above.
-  @lan_hosts = []
+  @lan_hosts ||= []
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
