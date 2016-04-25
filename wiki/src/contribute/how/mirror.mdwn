@@ -99,10 +99,34 @@ module|mirror#http-puppet]].
 Manual set up
 -------------------------
 
-### 1. Set up your web server
+### 1. Pick a hostname for your mirror
 
-You need to set up a virtual host either for dl.amnesia.boum.org or a URL prefix
-of your choice, e.g. using your own domain name. The virtual host will need to
+Your web server needs to answer requests sent to `dl.amnesia.boum.org`
+(for compatibility with our current legacy mirror pool setup).
+But that's not all: to be compatible with our upcoming mirror pool
+setup, your web server also needs to answer HTTP requests sent to
+a _dedicated_ hostname that is unique, within our mirror pool, to
+your mirror.
+
+There are two ways to pick that dedicated hostname:
+
+1. Use a hostname of your choice, under a domain you control.
+   For example, if you control `example.com`, you can call your Tails
+   mirror `tails.example.com`. This is, by far, our preferred option:
+   * it allows you to maintain that DNS record yourself, e.g. whenever you
+     need to update your mirror's IP address;
+   * it saves us a lot of work :)
+
+2. Use a hostname of our choice, under `dl.amnesia.boum.org` (e.g.
+   you may get `142.dl.amnesia.boum.org`). To do so, at the end of
+   this set of instructions, when it's time to ask us to add your
+   mirror to the pool, also ask us to create a dedicated hostname
+   for you.
+
+### 2. Set up your web server
+
+Set up a virtual host for the hostname chosen at the
+previous step. The virtual host will need to
 have indexing enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 
 Please consider serving files over HTTPS. To be helpful in our
@@ -110,14 +134,14 @@ context, this requires a certificate that is considered valid by
 mainstream web browsers; you can get such a certificate free of charge,
 from [Let's Encrypt](https://letsencrypt.org/) for example.
 
-#### Apache configuration example
+#### Apache configuration example using your own domain
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName yourdomain.org
 	   ServerAlias dl.amnesia.boum.org
 	   ServerAlias *.dl.amnesia.boum.org
 	   ServerAdmin YOUR_EMAIL
-	
+
 	   DocumentRoot /var/www/YOUR_PATH/
 	   <Directory /var/www/YOUR_PATH/>
 	      Options Indexes
@@ -129,7 +153,7 @@ from [Let's Encrypt](https://letsencrypt.org/) for example.
 	   </Directory>
 	</VirtualHost>
 
-#### Apache configuration example using own domain and HTTPS
+And if you want to enable HTTPS:
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName yourdomain.org
@@ -164,6 +188,25 @@ You can harden this configuration using the
 Mozilla SSL Configuration Generator</a>.
 </div>
 
+#### Apache configuration example using a hostname under dl.amnesia.boum.org
+
+	<VirtualHost YOUR_WEBSERVER_IP:80>
+	   ServerName yourdomain.org
+	   ServerAlias dl.amnesia.boum.org
+	   ServerAlias *.dl.amnesia.boum.org
+	   ServerAdmin YOUR_EMAIL
+
+	   DocumentRoot /var/www/YOUR_PATH/
+	   <Directory /var/www/YOUR_PATH/>
+	      Options Indexes
+	      FileETag None
+	      AllowOverride None
+	      IndexIgnore README.html
+	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
+	      IndexOrderDefault Descending Date
+	   </Directory>
+	</VirtualHost>
+
 #### Lighttpd configuration example
 
 	static-file.etags = "disable"
@@ -183,7 +226,7 @@ Mozilla SSL Configuration Generator</a>.
 		}
 	}
 
-### 2. Download the files
+### 3. Download the files
 
 Download a snapshot of the current Tails files:
 
@@ -197,7 +240,7 @@ download:
 	rsync -rt --delete --exclude=/tails/obsolete --delete-excluded \
 	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
-### 3. Schedule the pulling of the files
+### 4. Schedule the pulling of the files
 
 Your mirror should sync every hour + 15 minutes (at 00:15, 01:15, 02:15, etc.).
 Use `cron` or equivalent to schedule the same `rsync` command
@@ -232,30 +275,25 @@ If you need to adjust any parameters of the class, you should declare it like
 
      class { 'tails::mirror':
        webserver   => 'apache2',
+       server_name => 'tails.example.com',
        mirror_path => '/srv/tails/mirror',
      }
 
 #### Configurable parameters
 
- * `webserver`, specifies webserver software, 'nginx' or 'apache2', defaults to
-   'nginx'
- * `package`, specifies the debian package name for the webserver, defaults to
-   `webserver` value
- * `mirror_path`, specifies the directory where mirror's data will be located,
-   defaults to '/var/www/tails-mirror/'
- * `access_log`, specifies webserver's access log file path, defaults to
-   '/dev/null'
- * `error_log`, specifies webserver's error log file path, defaults to
-   '/dev/null'
+See the documentation on top of
+[the module](https://git-tails.immerda.ch/puppet-tails/tree/manifests/mirror.pp).
 
 <a id="http-pool"></a>
 
-Go wild
-----------
+Go wild: ask for your mirror to be added to the pool
+----------------------------------------------------
 
 As soon as your web server is ready, please e-mail us its IP address
-so that we can ask the DNS server admins to add it to the Round Robin
-pool.
+so that we can add it to the Round Robin pool.
+
+Also, if you decided to use a hostname under `dl.amnesia.boum.org`,
+please ask us to create it at the same time.
 
 # Talk to us
 
