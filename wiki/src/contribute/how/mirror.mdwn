@@ -90,16 +90,8 @@ Every HTTP mirror makes our files available under a fixed URL
 that contains per-version sub-directories (such as
 `http://dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
 
-<div class="tip">
-If you are using [[!wikipedia Puppet_(software) desc="Puppet"]] to configure
-your server infrastructure, consider using the available [[HTTP mirror Puppet
-module|mirror#http-puppet]].
-</div>
-
-Manual set up
--------------------------
-
-### 1. Pick a hostname for your mirror
+Pick a hostname for your mirror
+-------------------------------
 
 Your web server needs to answer requests sent to `dl.amnesia.boum.org`
 (for compatibility with our current legacy mirror pool setup).
@@ -123,7 +115,16 @@ There are two ways to pick that dedicated hostname:
    mirror to the pool, also ask us to create a dedicated hostname
    for you.
 
-### 2. Set up your web server
+Manual set up
+-------------------------
+
+<div class="tip">
+If you are using [[!wikipedia Puppet_(software) desc="Puppet"]] to configure
+your server infrastructure, consider using the available [[HTTP mirror Puppet
+module|mirror#http-puppet]].
+</div>
+
+### 1. Set up your web server
 
 Set up a virtual host for the hostname chosen at the
 previous step. The virtual host will need to
@@ -226,7 +227,7 @@ Mozilla SSL Configuration Generator</a>.
 		}
 	}
 
-### 3. Download the files
+### 2. Download the files
 
 Download a snapshot of the current Tails files:
 
@@ -240,7 +241,7 @@ download:
 	rsync -rt --delete --exclude=/tails/obsolete --delete-excluded \
 	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
-### 4. Schedule the pulling of the files
+### 3. Schedule the pulling of the files
 
 Your mirror should sync every hour + 15 minutes (at 00:15, 01:15, 02:15, etc.).
 Use `cron` or equivalent to schedule the same `rsync` command
