@@ -773,6 +773,14 @@ into the website repository:
 	   "$ISOS/tails-i386-$VERSION.torrent.sig" \
 	   "$RELEASE_CHECKOUT/wiki/src/torrents/files/"
 
+Update the `/torrents/files/.htaccess` to redirect to the latest Torrent and signature:
+
+	echo "RewriteEngine on
+	RewriteBase /torrents/files/
+	RewriteRule ^latest.iso.sig tails-i386-$VERSION.iso.sig [R]
+	RewriteRule ^latest.iso http://dl.amnesia.boum.org/tails/stable/tails-i386-$VERSION/tails-i386-$VERSION.iso" > \
+	"$RELEASE_CHECKOUT/wiki/src/torrents/files/.htaccess"
+
 Remove from `wiki/src/torrents/files/` any remaining file from the
 previous release (including any RC).
 
