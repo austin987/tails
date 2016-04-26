@@ -23,7 +23,8 @@ When /^I create a new bitcoin wallet$/ do
   @screen.type('c', Sikuli::KeyModifier.CTRL) # copy seed to clipboard
   seed = $vm.get_clipboard
   @screen.wait_and_click("ElectrumNextButton.png", 15)
-  @screen.wait("ElectrumWalletSeedTextbox.png", 15)
+  @screen.wait("ElectrumSeedVerificationPrompt.png", 15)
+  @screen.click("ElectrumWalletSeedTextbox.png", 15)
   @screen.type(seed) # Confirm seed
   @screen.wait_and_click("ElectrumNextButton.png", 10)
   @screen.wait_and_click("ElectrumEncryptWallet.png", 10)
