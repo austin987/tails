@@ -18,3 +18,510 @@ performing the verification.
    All our ISO images are signed with the same signing key, so you only
    have to import it once. Still, you have to verify the ISO image every
    time you download a new one.
+
+<div class="caution">
+
+<p>Those techniques rely on standard HTTPS and <span
+class="definition">[[!wikipedia Certificate_authority desc="certificate
+authorities"]]</span> to make you trust the content of this website.
+But, [[as explained on our warning
+page|doc/about/warning#man-in-the-middle]], you
+could still be victim of a man-in-the-middle attack while using HTTPS.
+On this website as much as on any other of the Internet.</p>
+
+<p>As a consequence, <strong>they don't provide you with a
+strong way of checking the ISO image <span
+class="definition">[[!wikipedia Authentication
+desc="authenticity"]]</span> and making sure you downloaded a genuine
+Tails.</strong> In a dedicated section, we will propose you some more advanced
+techniques to <a href="#authenticity-check">check the authenticity of
+the ISO image</a>.</p>
+
+</div>
+
+<h2>Using Linux with Gnome: Ubuntu, Debian, Tails, Fedora, etc.</h2>
+
+<h3>Install <code>seahorse-nautilus</code> and <code>shared-mime-info</code></h3>
+
+<p>You need to have recent enough versions of the <code>seahorse-nautilus</code>
+and <code>shared-mime-info</code> packages installed.</p>
+
+<p>These packages are already installed in Tails.</p>
+
+<div class="note">
+
+<p>The needed packages are available starting from:
+  <ul>
+    <li>Debian version 7 (Wheezy)</li>
+    <li>Ubuntu version 15.04 (Vivid)</li>
+  </ul>
+</p>
+
+</div>
+
+In Debian Wheezy, the needed packages are
+only available as
+<a href="http://backports.debian.org/">backports</a>. See the
+<a href="http://backports.debian.org/Instructions/">setup instructions</a>
+on the Debian Backports website to add them to your list of repositories. Then, to
+install the necessary packages, you can execute the following
+commands:
+
+<pre>
+sudo apt-get update
+sudo apt-get install seahorse-nautilus/wheezy-backports shared-mime-info/wheezy-backports
+</pre>
+
+In Debian 8 (Jessie), Ubuntu 15.04 (Vivid), or later, to
+install the necessary packages, you can execute the following
+commands:
+
+<pre>
+sudo apt update
+sudo apt install seahorse-nautilus
+</pre>
+
+<div class="note">
+
+<p>If you are unable to install the necessary packages, try [[verifying the ISO using the
+command line|verify_the_iso_image_using_the_command_line]].</p>
+
+</div>
+
+
+<h3>Get the Tails signing key</h3>
+
+<p>If you are using Tails, you already have the signing
+key. Otherwise, first download Tails signing key:</p>
+
+[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+<p>Your browser should propose you to open it with "Import
+Key". Choose this action. It will add the Tails signing key to your
+keyring, the collection of OpenPGP keys you already imported:</p>
+
+<p>[[!img import_key.png alt="What should the web browser do with this
+file? Open with: Import Key (default)" link="no"]]</p>
+
+<p>You will get notified will the following message:</p>
+
+<p>[[!img key_imported.png alt="Key Imported. Imported a key for Tails
+developers (offline long-term identity key) &lt;tails@boum.org&gt;" link="no"]]</p>
+
+<h3>Verify the ISO image</h3>
+
+<p>Now, download the cryptographic signature corresponding to the ISO
+image you want to verify:</p>
+
+[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+<p>Your browser should propose you to open it with "Verify Signature".
+Choose this action to start the cryptographic verification:</p>
+
+<p>[[!img verify_signature.png alt="What should the web browser do
+with this file?  Open with: Verify Signature (default)"
+link="no"]]</p>
+
+<p>Browse your files to select the Tails ISO image you want to verify.
+Then, the verification will start. It can take several minutes:</p>
+
+<p>[[!img verifying.png alt="Verifying" link="no"]]</p>
+
+<p><strong>If the ISO image is correct</strong> you will get a
+notification telling you that the signature is good:</p>
+
+<p>[[!img good_signature.png alt="Goog Signature" link="no"]]</p>
+
+<p><strong>If the ISO image is not correct</strong> you will get a
+notification telling you that the signature is bad:</p>
+
+<p>[[!img bad_signature.png alt="Bad Signature: Bad or forged signature."
+link="no"]]</p>
+
+<h2>Using Linux with the command line</h2>
+
+<p>You need to have GnuPG installed. GnuPG is the common OpenPGP
+implementation for Linux: it is installed by default under Debian,
+Ubuntu, Tails and many other distributions.</p>
+
+<h3>Get the Tails signing key</h3>
+
+<p>First, <strong>download Tails signing key</strong>:</p>
+
+[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+<p>Open a terminal and <strong>import Tails signing key</strong> with the following
+commands:</p>
+
+<pre>
+cd [the directory in which you downloaded the key]
+gpg --keyid-format long --import tails-signing.key
+</pre>
+
+<p>The output should tell you that the key was imported:</p>
+
+<pre>
+gpg: key DBB802B258ACD84F: public key "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" imported
+gpg: Total number processed: 1
+gpg:               imported: 1  (RSA: 1)
+</pre>
+
+<p><strong>If you had already imported Tails signing key in the
+past</strong>, the output
+should tell you that the key was not changed:</p>
+
+<pre>
+gpg: key DBB802B258ACD84F: "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" not changed
+gpg: Total number processed: 1
+gpg:              unchanged: 1
+</pre>
+
+<p><strong>If you are shown the following message</strong> at the end of
+the output:</p>
+
+<pre>
+gpg: no ultimately trusted keys found
+</pre>
+
+<p>Analyse the other messages as usual: this extra message doesn't
+relate to the Tails signing key that you downloaded and usually means
+that you didn't create an OpenPGP key for yourself yet, which of no
+importance to verify the ISO image.</p>
+
+<h3>Verify the ISO image</h3>
+
+<p>Now, <strong>download the cryptographic signature</strong> corresponding to the ISO
+image you want to verify and save it in the same folder as the ISO
+image:</p>
+
+[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+<p>Then, <strong>start the cryptographic verification</strong>, it can take several
+minutes:</p>
+
+<p class="pre">
+cd [the ISO image directory]<br />
+[[!inline pages="inc/stable_i386_gpg_verify" raw="yes"]]
+</p>
+
+<p><strong>If the ISO image is correct</strong> the output will tell you
+that the signature is good:</p>
+
+<pre>
+gpg: Signature made Sun 08 Feb 2015 08:17:03 PM UTC
+gpg:                using RSA key 0x98FEC6BC752A3DB6
+gpg: Good signature from "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" [unknown]
+Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+     Subkey fingerprint: BA2C 222F 44AC 00ED 9899  3893 98FE C6BC 752A 3DB6
+</pre>
+
+<p>or:</p>
+
+<pre>
+gpg: Signature made Sun 08 Feb 2015 08:17:03 PM UTC
+gpg:                using RSA key 0x3C83DCB52F699C56
+gpg: Good signature from "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;" [unknown]
+Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+     Subkey fingerprint: A509 1F72 C746 BA6B 163D  1C18 3C83 DCB5 2F69 9C56
+</pre>
+
+<p>If you see the following warning:</p>
+
+<pre>
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+</pre>
+
+<p>Then the ISO image is still correct, and valid according to the Tails signing
+key that you downloaded. This warning is related to the trust that you put in
+the Tails signing key. See, [[Trusting Tails signing
+key|doc/get/trusting_tails_signing_key]]. To remove this warning you would have
+to personally <span class="definition">[[!wikipedia Keysigning
+desc="sign"]]</span> the Tails signing key with your own key.</p>
+
+<p><strong>If the ISO image is not correct</strong> the output will tell
+you that the signature is bad:</p>
+
+<pre>
+gpg: Signature made Sat 30 Apr 2015 10:53:23 AM CEST
+gpg:                using RSA key 0xDBB802B258ACD84F
+gpg: BAD signature from "Tails developers (offline long-term identity key) &lt;tails@boum.org&gt;"
+</pre>
+
+<h2>Using other operating systems</h2>
+
+<p>GnuPG, a common free software implementation of OpenPGP has versions
+and graphical frontends for both Windows and Mac OS X. This also make it
+possible to check the cryptographic signature with those operating
+systems:</p>
+
+<ul>
+  <li>[[Gpg4win|http://www.gpg4win.org/]], for Windows</li>
+  <li>[[GPGTools|http://www.gpgtools.org/]], for Mac OS X</li>
+</ul>
+
+<p>You will find on either of those websites detailed documentation on
+how to install and use them.</p>
+
+<h3 id="windows">For Windows using Gpg4win</h3>
+
+<p>After installing Gpg4win, download the Tails signing key:</p>
+
+[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+<p>[[Consult the Gpg4win documentation to import
+it|http://www.gpg4win.org/doc/en/gpg4win-compendium_15.html]]</p>
+
+<p>Then, download the cryptographic signature corresponding to the ISO
+image you want to verify:</p>
+
+[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]
+
+<p>[[Consult the Gpg4win documentation to check the
+signature|http://www.gpg4win.org/doc/en/gpg4win-compendium_24.html#id4]]</p>
+
+<p>If you see the following warning:</p>
+
+<a id="warning"></a>
+
+<pre>
+Not enough information to check the signature validity.
+Signed on ... by tails@boum.org (Key ID: 0x58ACD84F
+The validity of the signature cannot be verified.
+</pre>
+
+<p>Then the ISO image is still correct, and valid according to the Tails signing
+key that you downloaded. This warning is related to the trust that you put in
+the Tails signing key. See, [[Trusting Tails signing
+key|doc/get/trusting_tails_signing_key]]. To remove this warning you would have
+to personally <span class="definition">[[!wikipedia Keysigning
+desc="sign"]]</span> the Tails signing key with your own key.</p>
+
+<h3 id="mac">For Mac OS X using GPGTools</h3>
+
+<p>After installing GPGTools, download the Tails signing key:</p>
+
+[[!inline pages="lib/download_tails_signing_key" raw="yes"]]
+
+<p>You can do the verification using <span class="application">Finder</span>:</p>
+
+<div class="tip">
+
+<p>You can also follow the instructions for [[Linux using the command
+line|verify_the_iso_image_using_the_command_line]].</p>
+
+</div>
+
+<ol>
+
+<li><p>Open <span class="application">GPG Keychain</span>.</p></li>
+
+<li><p>Drag the signing key to <span class="application">GPG Keychain</span>
+to import the signing key in your keyring.</p></li>
+
+<li><p>Download the cryptographic signature of the ISO image:</p>
+
+<p>[[!inline pages="lib/download_stable_i386_iso_sig" raw="yes"]]</p></li>
+
+<li><p>Save the signature in the same folder where you saved the ISO image.</p></li>
+
+<li><p>Right-click on the ISO image and choose
+<span class="menuchoice">
+  <span class="guimenu">Services</span>&nbsp;▸
+  <span class="guimenuitem">OpenPGP: Verify Signature of File</span></span>.</p></li>
+
+</ol>
+
+# Trusting Tails signing key
+
+We will present you three techniques from the easiest to the safest. Again,
+none of them is a perfect and magic solution. Feel free to explore them
+according to your possibilities and technical skills.
+
+Note that since all Tails releases are signed with the same key, you will not
+have to verify the key every time and the trust you might progressively build in
+it will be built once and for all. Still, you will have to check the ISO image
+every time you download a new one!
+
+# Correlates several downloads of Tails signing key
+
+A simple technique to increase the trust you can put in Tails signing key would
+be to download it several times, from several locations, several computers,
+possibly several countries, etc.
+
+For example you could save them every time with a different name in the same
+directory on a USB stick. Then run the following command from a terminal to
+check whether all the keys are identical:
+
+    cd [your download directory]
+    diff -qs --from-file tails-signing*.key
+
+This command would output something like this:
+
+    Files tails-signing-desktop.key and tails-signing-laptop.key are identical
+    Files tails-signing-desktop.key and tails-signing-library.key are identical
+    Files tails-signing-desktop.key and tails-signing-seattle.key are identical
+
+You would then need to check that every line reports identical key files.
+
+If at least a key differs from the rest, the command would output accordingly:
+
+    Files tails-signing-desktop.key and tails-signing-laptop.key are identical
+    Files tails-signing-desktop.key and tails-signing-library.key are identical
+    Files tails-signing-desktop.key and tails-signing-seattle.key differ
+
+You could also use this technique to compare keys downloaded by your friends or
+other people you trust.
+
+# Using the OpenPGP Web of Trust
+
+If you want to be extra cautious and really authenticate Tails signing key in a
+stronger way than what standard HTTPS offers you, you will need to use the
+OpenPGP Web of Trust.
+
+One of the inherent problems of standard HTTPS is that the trust we usually put
+on a website is defined by certificate authorities: a hierarchical and closed
+set of companies and governmental institutions approved by web browser vendors.
+This model of trust has long been criticized and proved several times to be
+vulnerable to attacks [[as explained on our warning
+page|about/warning#man-in-the-middle]].
+
+We believe instead that users should be given the final say when trusting a
+website, and that designation of trust should be done on the basis of human
+interaction.
+
+The OpenPGP [[!wikipedia Web_of_Trust desc="Web of Trust"]] is a decentralized
+trust model based on OpenPGP keys. Let's see that with an example.
+
+*You're a friend of Alice and really trust her way of managing OpenPGP keys.
+You're trusting Alice's key.*
+
+*Furthermore, Alice met Bob, a Tails developer, in a conference, and signed
+Bob's key. Alice is trusting Bob's key.*
+
+*Bob is a Tails developer who directly owns the Tails signing key. Bob fully
+trusts Tails signing key.*
+
+This scenario creates a trust path from you to Tails signing key that could
+allow you to trust it without having to depend on certificate authorities.
+
+This trust model is not perfect either and requires both caution and intelligent
+supervision by users. The technical details of creating, managing and trusting
+OpenPGP keys is outside of the scope of this document.
+
+We also acknowledge that not everybody might be able to create good trust path
+to Tails signing key since it based on a network of direct human relationships
+and the knowledge of quite complex tools such as OpenPGP.
+
+<a id="debian">
+
+# Check Tails signing key against the Debian keyring
+
+Following the previous scenario, when Alice met Bob, a Tails developer, she
+could have made a new signature on Tails signing key with her own key to certify this
+trust relationship and make it public. Tails signing key would now come along
+with a signature made by Alice.
+
+Tails signing key is actually already signed by the keys of several official
+developers of Debian, the operating system on which Tails is based. Debian makes
+an extensive use of OpenPGP and you can download the keys of all Debian
+developers by installing the <code>debian-keyring</code> package. You can then
+verify the signatures those developers made with their own key on Tails signing
+key.
+
+To download the Debian keyring you can do:
+
+    sudo apt-get install debian-keyring
+
+To get a list of the signatures made by other people on Tails signing key you
+can do:
+
+    gpg --keyid-format long --list-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+You will get something like this:
+
+    pub   4096R/DBB802B258ACD84F 2015-01-18 [expires: 2016-01-11]
+          Key fingerprint = A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+    uid               [ unknown] Tails developers (offline long-term identity key) <tails@boum.org>
+    sig 3        DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sig          1202821CBE2CD9C1 2015-01-19  Tails developers (signing key) <tails@boum.org>
+    sig          BACE15D2A57498FF 2015-01-19  [User ID not found]
+    sig          9C31503C6D866396 2015-02-03  [User ID not found]
+    sig          BB3A68018649AA06 2015-02-04  [User ID not found]
+    sig          091AB856069AAA1C 2015-02-05  [User ID not found]
+    sub   4096R/98FEC6BC752A3DB6 2015-01-18 [expires: 2016-01-11]
+    sig          DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sub   4096R/3C83DCB52F699C56 2015-01-18 [expires: 2016-01-11]
+    sig          DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+
+The lines ending with '[User ID not found]' are signatures made by keys you
+still don't have in your keyring. You could try to search for them in the Debian
+keyring by their key ID: the 16 digit code between the 'sig' tag and the date.
+You could for example do:
+
+    gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --list-key 9C31503C6D866396
+
+If this signature corresponds to a key in the Debian keyring you will get
+something like this:
+
+    pub   4096R/0x9C31503C6D866396 2010-09-27
+          Key fingerprint = 4900 707D DC5C 07F2 DECB  0283 9C31 503C 6D86 6396
+    uid                 [ unknown] Stefano Zacchiroli <zack@upsilon.cc>
+    uid                 [ unknown] Stefano Zacchiroli <zack@debian.org>
+    uid                 [ unknown] Stefano Zacchiroli <zack@cs.unibo.it>
+    uid                 [ unknown] Stefano Zacchiroli <zack@pps.jussieu.fr>
+    uid                 [ unknown] Stefano Zacchiroli <zack@pps.univ-paris-diderot.fr>
+    sub   4096R/0x7DFA4FED02D0E74C 2010-09-27
+
+You can then import it in your own keyring by doing:
+
+    gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export 9C31503C6D866396 | gpg --import
+
+Now you can try to verify the signature made by this new key on Tails signing
+key by doing:
+
+    gpg --keyid-format long --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+On the output, the status of the verification is indicated by a flag directly
+following the "sig" tag. A "!" indicates that the signature has been
+successfully verified, a  "-" denotes a bad signature and a "%" is used if an
+error occurred while checking the signature (e.g. a non supported algorithm).
+For example, in the following output the signature of Stefano Zacchiroli on
+Tails signing key has been successfully verified:
+
+    pub   4096R/DBB802B258ACD84F 2015-01-18 [expires: 2016-01-11]
+          Key fingerprint = A490 D0F4 D311 A415 3E2B  B7CA DBB8 02B2 58AC D84F
+    uid               [ unknown] Tails developers (offline long-term identity key) <tails@boum.org>
+    sig!3        DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sig!         1202821CBE2CD9C1 2015-01-19  Tails developers (signing key) <tails@boum.org>
+    sig!         9C31503C6D866396 2015-02-03  Stefano Zacchiroli <zack@upsilon.cc>
+    sub   4096R/98FEC6BC752A3DB6 2015-01-18 [expires: 2016-01-11]
+    sig!         DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+    sub   4096R/3C83DCB52F699C56 2015-01-18 [expires: 2016-01-11]
+    sig!         DBB802B258ACD84F 2015-01-18  Tails developers (offline long-term identity key) <tails@boum.org>
+
+    3 signatures not checked due to missing keys
+
+# Get into the Web of Trust!
+
+Since the Web of Trust is actually based on human relationships and real-life
+interactions the best would be to start establishing contacts with people
+knowledgeable about OpenPGP, start using it yourself and build trust
+relationships in order to find your own trust path to Tails signing key.
+
+You could start by contacting a local [[!wikipedia Linux_User_Group desc="%s"]]
+or other Tails enthusiasts near you and exchange about their OpenPGP
+practices.
+
+# Further reading on OpenPGP
+
+- [[!wikipedia GnuPG desc="Wikipedia: %s"]], a free OpenPGP software
+- [[Apache: How To OpenPGP|http://www.apache.org/dev/openpgp.html]]
+- [[Debian: Keysigning|http://www.debian.org/events/keysigning]], a
+  tutorial on signing keys of other people
+- [[rubin.ch: Explanation of the web of trust of PGP|http://www.rubin.ch/pgp/weboftrust.en.html]]
+- [[Gpg4win: Certificate
+  inspection|http://www.gpg4win.org/doc/en/gpg4win-compendium_16.html]],
+  instructions to manage key trust with Gpg4win
+- <!-- l10n placeholder for language-specific link -->
