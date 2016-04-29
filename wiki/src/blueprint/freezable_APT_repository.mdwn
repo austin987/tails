@@ -28,10 +28,27 @@ little value.
      - developer (including stable, testing, devel, and `$topic`)
    * get the updated documentation + this design reviewed, including
      security aspects [i]
-   * write tools that the doc calls for
-     - bump `Valid-Until`
-     - freeze
-     - unfreeze
+   * give RM's access to `reprepro-time-based-snapshots@apt.lizard` [i]
+   * document how to freeze time-based APT snapshots being used:
+
+             ./auto/scripts/apt-snapshots-serials freeze && \
+             git commit \
+                 -m 'Freeze APT snapshots to the current ones.' \
+                 config/APT_snapshots.d/*/serial
+
+   * document how to thaw time-based APT snapshots being used:
+
+             ./auto/scripts/apt-snapshots-serials thaw && \
+             git commit \
+                 -m 'Thaw APT snapshots.' \
+                 config/APT_snapshots.d/*/serial
+
+   * document how to bump `Valid-Until` [i], e.g.
+
+             ssh reprepro-time-based-snapshots@apt.lizard \
+                 tails-bump-apt-snapshot-valid-until \
+                     tails 2016031304 15
+
    * move relevant content from this blueprint to the "final" design
      doc + contributors doc
 
@@ -47,26 +64,32 @@ little value.
       snapshots)
    e. **done** publish the snapshots' serial over HTTP
       (e.g. <http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security>)
+   e. **done** try using such snapshots for building an ISO:
+      done in `feature/5926-freezable-APT-repository`
+   e. Avoid re-downloading everything one has in their local
+      apt-cacher-ng, and filling its cache with files duplicated
+      many times. It's acceptable not to have optimal caching for `dists/`; what
+      matters is `pool`. We have a working PoC using the "merging" strategy (documented on
+      <file:///usr/share/doc/apt-cacher-ng/html/config-serv.html#repmap>),
+      that is `Remap-tails` with no `TargetURLs` list; it works if
+      we do that for the `pool/` directory only (we don't want to
+      merge the cache for the different `dists` directory):
+
+               $ echo 'Remap-tailspool: file:tails-time-based-snapshots-debian-pool.list' \
+                 | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.conf
+
+               $ for origin in $(cd config/APT_snapshots.d/ ; ls -d *) ; do for y in $(seq 2016 2026) ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' $origin $y $m $d $t ; done ; done ; done ; done | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list ; done
+
+   e. check if/how
+      [by-hash](http://www.chiark.greenend.org.uk/~cjwatson/blog/no-more-hash-sum-mismatch-errors.html)
+      impacts our design and implementation
    e. deny robots access to that data
-   e. manage symlinks or rewrite rules for URL → reprepro filesystem
-      layout (cf. "APT vs. reprepro: dist names" below)
-   e. try using such snapshots for building an ISO
-      - branch: `feature/build-from-snapshots`
-      - how to avoid re-downloading everything one has in their local
-        apt-cacher-ng, and filling its cache with files duplicated
-        many times? It seems that we can't merge caches between the
-        default `debrep` and our own snapshots: XXX.
-        But at least we should de-duplicate among our own snapshots,
-        e.g. using the "merging" strategy (documented on
-        <file:///usr/share/doc/apt-cacher-ng/html/config-serv.html#repmap>),
-        that is `Remap-tails` with no `TargetURLs` list.
-   d. implement list of sticky snapshots that must not be GC'ed,
-      including the tool to add to that list
-   e. implement GC of snapshots
-   f. implement GC of packages
-   f. clean up old snapshots that the GC system can't clean up
-      automatically (e.g. those before 20160311, that have no
-      `Valid-Until`)
+   e. implement GC of expired snapshots and packages (`tails-delete-expired-apt-snapshots`):
+      * review [i]
+      * test, including dry-run, silent & verbose modes, performance,
+        and removal of expired snapshots' `dist` directories after
+        `deleteunreferenced` [i]
+      * deploy with Puppet, redirect output to a log file, logrotate snippet [i]
    g. have build system output the snapshots being used,
       and have Jenkins publish this info if available
 
@@ -89,30 +112,18 @@ little value.
    b. **done** PoC of capturing the list of source packages used during the build
    c. **done** initial reprepro setup for tagged snapshots
    d. **done** debootstrap in jessie-backports
-   e. **WIP** how to create a partial snapshot from a manifest and
-      the origin time-based snapshots?
-      * `generate-build-manifest` (main Git repo), aka. [[!tails_ticket 10748]]
-        - cherry-pick the relevant bits and get them into Tails 2.3 [i]
+   d. **done** Have Jenkins create, publish and manage
+      `latest.iso.build-manifest` symlinks
+   e. **WIP** create a partial snapshot from a manifest and
+      the origin time-based snapshots:
+      * `generate-build-manifest` (main Git repo), aka. get [[!tails_ticket 10748]]
+        done in Tails 2.3 [i]
         - convert custom `data/debootstrap/tails-wheezy` into a patch,
           or set up the process to update/replace it in the future,
           or something (we're using Jessie now) [i]
-      * `tails-prepare-tagged-apt-snapshot-import`, aka.
-        [[!tails_ticket 10749]] (`puppet-tails` repo):
-          - review & test support for multiple architectures [i]:
-            * beware of differing versions due to binNMUs
-            * test with a complete set of data (including all
-              architectures we want, source packages, and a build
-              manifest that includes amd64 (e.g.
-              [[!tails_gitweb_branch feature/8415-overlayfs]]) and
-              source packages
-   g. **WIP** have the manifest → partial snapshot process include source
-      packages
-      => review this [i], in particular:
-      - check the case when the binary package's version is different
-        from the corresponding source package's one
-        (`libdevmapper1.02.1` vs. `lvm2`)
-      - torproject provides no source packages; how does
-        `tails-prepare-tagged-apt-snapshot-import` deal with it?
+        - get rid of the last XXX in `data/wrappers/apt-get`
+        - move `data/wrappers/apt-get` to a better place
+      * deploy, update release process doc, grant RM's access
    h. publish tagged snapshots over HTTP
    h. for some Tails release: generate manifest, import packages into
       tagged snapshots, try building *offline* with these tagged
@@ -120,8 +131,8 @@ little value.
    k. Update the
       [[Listing used packages|freezable APT repository#build-manifest]]
       section
-   l. Have Jenkins publish the list of build manifest
-      if available (supersede existing `*.{bin,src}pkg`).
+   l. Point consumers of the now deprecated `*.{bin,src}pkg` (probably
+      only jenkins.debian.net) to the new build manifest.
    m. if needed, implement GC
 
 5. misc
@@ -132,8 +143,7 @@ little value.
 ## Snapshots and branches
 
 Several times a day (e.g. 4 times, to match runs of `dinstall` in the
-Debian archive; XXX: start with once a day and then raise the
-frequency if the infrastructure can hold it?) we update a local mirror
+Debian archive, we update a local mirror
 of the APT repositories we're
 interested in, e.g. with `reprepro update`. Once this is successfully
 done, we take a snapshot of the current state of our local mirror
@@ -173,7 +183,13 @@ Building an ISO from the branch used to prepare the next major release
  * **at release time**: when building from a tagged branch, similarly to
    what we do for our custom [[contribute/APT_repository]], instead of
    using time-based APT repository snapshots, we use snapshots
-   labeled with the Git tag;
+   labeled with the Git tag; note that this is not needed, strictly speaking,
+   as the APT sources used at Tails runtime will anyway be the
+   official (and not frozen) Debian ones; this is mostly needed for
+   legal purposes (this allows to distribute for a long
+   time the source packages needed to build a given Tails ISO image),
+   and it will be useful when we want to be able to reproduce a given
+   Tails ISO build;
  * **after releasing**, the RM encodes in the `testing` Git branch the
    fact that it is not frozen anymore, that is: the RM removes the
    indication that a specific set of APT repository snapshots must be
@@ -189,12 +205,6 @@ except:
  * we generally use our latest snapshot of security.debian.org;
  * if a set of APT repository snapshots is encoded directly in that
    branch: use them, even for security.debian.org.
-
-XXX: add special handling of deb.tails.b.o, that we need since it's
-the repo where we can sneak freeze exceptions in. In theory it's not
-related to our great APT repository snapshots plans, since it has its
-own snapshots mechanism already, but ideally we would integrate it
-into the new system entirely?
 
 ## Different problems ⇒ different solutions
 
@@ -251,13 +261,25 @@ snapshots information.
 So we'll use two independent `reprepro` instances to address these
 two problems.
 
-XXX: how exactly we'll import packages we need from time-based
-snapshots to tagged ones is left to be defined (filtered `reprepro
-update`? `cp` + `reprepro includeblah`?)
-
 # Special cases and implementation
 
 <a id="runtime-sources"></a>
+
+## Custom APT repository
+
+Our custom APT repository (<http://deb.tails.boum.org/>) is not part of
+the first iteration of this system: it's not needed, since we already
+have a process to manage it, including creating snapshots labeled with
+the Git tag.
+
+However, longer-term, ideally we would integrate it into the new
+system. It will require quite some infrastructure and code, if we want
+to avoid making the release process more painful (e.g. it would be nice
+if this didn't require waiting up to 6 hours until the next time-based
+snapshot of our custom APT repository is created, between the time we
+upload a package to it, and when we can build an ISO with it; we could
+solve this by automatically creating a new snapshot whenever an APT
+suite corresponding to a release branch is updated).
 
 ## APT sources used inside Tails
 
@@ -450,9 +472,13 @@ than N days will probably be compulsory.
 
 To ensure that garbage collection doesn't delete a snapshot we still
 need, e.g. the one currently referenced in the frozen `testing`
-branch, we'll maintain a list of snapshots that need to be kept
-around. The tool used by the RM to bump the archive snapshot serials
-in Git should take care of it.
+branch, we'll rely on `Valid-Until`: the way to express "I want to
+keep a given snapshot around" would be to postpone its expiration
+date; i.e. we don't differentiate "keep a given snapshot around" from
+"keep a given snapshot usable".
+
+See the section about `Valid-Until` below, for details about how we
+can bump it.
 
 ### Tagged snapshots
 
@@ -545,7 +571,7 @@ Conclusion: compared to the "snapshots as full-blown distributions +
 is very appealing. The counterpart being that:
 
  * garbage collecting expired snapshots is a bit more involved, but
-   apparently doable: see reprepro(1) around `gensnapshot`;
+   doable: see reprepro(1) around `gensnapshot`;
  * bumping `Valid-Until` for a given time-based snapshot has to be
    done directly in `dist`, without any help from reprepro.
 
@@ -716,22 +742,22 @@ Let's assume:
 
 Which generates this APT `sources.list`:
 
-    deb http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/ jessie main
-    deb http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
+    deb http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/ jessie main
+    deb http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
 
 As a result APT sends HTTP requests with URL such as:
 
- * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/dists/jessie/Release>
- * <http://time-based.snapshot.deb.tails.boum.org/debian/2016031101/pool/XXX>
- * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/dists/jessie/updates/Release>
- * <http://time-based.snapshot.deb.tails.boum.org/debian-security/2016031102/pool/XXX>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/dists/jessie/Release>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/pool/XXX>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/dists/jessie/updates/Release>
+ * <http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/pool/XXX>
 
 The corresponding files in reprepro's filesystem (if we have one
 reprepro instance per mirrored archive) are:
 
  * in Debian archive's reprepro:
-   - `/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016031101/Release`,
-     that contains `Suite: jessie/snapshots/2016031101` and `Codename: jessie`
+   - `/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016032401/Release`,
+     that contains `Suite: jessie/snapshots/2016032401` and `Codename: jessie`
    - `/srv/apt-snapshots/time-based/repositories/debian/pool/XXX`
 
  * in Debian security archive's reprepro:
