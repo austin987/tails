@@ -36,7 +36,6 @@ EOF
     @sshd_config_file.close
 
     cmd = ["/usr/sbin/sshd", "-4", "-f", @sshd_config_file.path, "-D"]
-    add_lan_host(@sshd_host, @sshd_port)
 
     job = IO.popen(cmd)
     @pid = job.pid
