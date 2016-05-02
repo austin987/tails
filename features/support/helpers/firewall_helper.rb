@@ -67,7 +67,8 @@ def assert_all_connections(pcap_file, opts = {}, &block)
   good = all.find_all(&block)
   bad = all - good
   save_failure_artifact("Network capture", pcap_file) unless bad.empty?
-  assert(bad.empty?, "Unexpected hosts were contacted:\n#{bad}")
+  assert(bad.empty?, "Unexpected hosts were contacted:\n" +
+                     bad.map { |e| "  #{e}" } .join("\n"))
 end
 
 def assert_no_connections(pcap_file, opts = {}, &block)
