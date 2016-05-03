@@ -22,17 +22,20 @@ EOF
 chown -R vagrant:vagrant /home/vagrant
 chmod 0700 /home/vagrant/.ssh
 
+echo "I: Configuring APT..."
 cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
 
+echo "I: Installing extra dependencies..."
 apt-get -y install grub2 openssh-server curl
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
 echo "UseDNS no" >>/etc/ssh/sshd_config
 
+echo "I: Running localepurge..."
 TEMPFILE="$(mktemp)"
 
 cat > "${TEMPFILE}" << EOF
@@ -53,6 +56,7 @@ localepurge
 apt-get -y remove localepurge
 rm -f "${TEMPFILE}"
 
+echo "I: Cleaning up..."
 apt-get -y autoremove
 apt-get clean
 rm -rf \
@@ -64,7 +68,7 @@ rm -rf \
    /var/lib/dhcp/* \
     || :
 
-# Zero out the free space to save space in the final image:
+echo "I: Zeroing out the free space to save space in the final image..."
 dd if=/dev/zero of=/EMPTY bs=1M || :
 rm -f /EMPTY || :
 
