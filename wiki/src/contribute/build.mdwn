@@ -24,34 +24,19 @@ maximum of 10 GB of free storage.
 
 ## Installing the dependencies in Debian
 
-At the moment Tails relies on `vagrant-libvirt` which is not packaged
-in Debian yet. Until then, please use our dedicated repo. First get
-our APT repo's key, which is stored in Tails' main Git repo (so
-execute the following command from the root of the Tails source tree):
-
-    sudo apt-key add config/chroot_sources/tails.chroot.gpg
-
-And then add the sources:
-
-    sudo tee /etc/apt/sources.list.d/feature-6354-vagrant-libvirt.list <<EOF
-    deb http://deb.tails.boum.org/ feature-6354-vagrant-libvirt main
-    deb-src http://deb.tails.boum.org/ feature-6354-vagrant-libvirt main
-    EOF
-    sudo apt-get update
-
-In addition, if you run Debian Jessie, you must install a few
-dependencies fomr Debian Stretch:
+If you run Debian Jessie, you must install a few dependencies from
+Debian Stretch:
 
     sudo tee /etc/apt/sources.list.d/stretch.list <<EOF
     deb http://ftp.us.debian.org/debian/ stretch main
     deb-src http://ftp.us.debian.org/debian/ stretch main
     EOF
-    sudo tee /etc/apt/preferences.d/ruby-fog-from-stretch.pref <<EOF
+    sudo tee /etc/apt/preferences.d/vagrant-libvirt-from-stretch.pref <<EOF
     Package: *
     Pin: release o=Debian,n=stretch
     Pin-Priority: 100
     
-    Package: vagrant ruby-excon ruby-fog-core ruby-fog-xml
+    Package: vagrant vagrant-libvirt ruby-excon ruby-fog-core ruby-fog-libvirt ruby-fog-xml
     Pin: release o=Debian,n=stretch
     Pin-Priority: 990
     EOF
