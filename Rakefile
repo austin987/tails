@@ -362,3 +362,32 @@ namespace :vm do
     run_vagrant('destroy', '--force')
   end
 end
+
+namespace :basebox do
+
+  desc 'Generate a new base box'
+  task :create do
+    box_dir = VAGRANT_PATH + '/definitions/tails-builder'
+    Dir.chdir(box_dir) do
+      `./generate-tails-builder-box.sh`
+      raise 'Base box generation failed!' unless $?.success?
+    end
+    box = Dir.glob("#{box_dir}/*.box").sort_by {|f| File.mtime(f) } .last
+    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+
+      You have successfully generated a new Vagrant base box:
+
+          #{box}
+
+      To install the new base box, please run:
+
+          $ vagrant box add #{box}
+
+      To actually make Tails build using this base box, the `config.vm.box` key
+      in `vagrant/Vagrantfile` has to be updated. Please check the documentation
+      for details.
+
+    END_OF_MESSAGE
+  end
+
+end
