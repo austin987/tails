@@ -65,6 +65,7 @@ def capture_vagrant(*args)
 end
 
 def vagrant_ssh_config(key)
+  # Cache results
   if $vagrant_ssh_config.nil?
     $vagrant_ssh_config = capture_vagrant('ssh-config').first.split("\n") \
                            .map { |line| line.strip.split(/\s+/, 2) } .to_h
