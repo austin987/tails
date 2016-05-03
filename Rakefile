@@ -291,22 +291,19 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
   run_vagrant('ssh', '-c', "#{exported_env} build-tails")
 
   artifacts = list_artifacts
-  if not artifacts.empty?
-    user     = vagrant_ssh_config('User')
-    hostname = vagrant_ssh_config('HostName')
-    key_file = vagrant_ssh_config('IdentityFile')
-    $stderr.puts "Retrieving artifacts from Vagrant build box."
-    artifacts.each do |artifact|
-      run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
-      Process.wait Kernel.spawn('scp',
-                                '-i', key_file,
-                                "#{user}@#{hostname}:#{artifact}", '.')
-      raise "Failed to fetch artifact '#{artifact}" unless $?.success?
-    end
-    remove_artifacts
-  else
-    raise 'No build artifacts was found!'
+  raise 'No build artifacts was found!' if artifacts.empty?
+  user     = vagrant_ssh_config('User')
+  hostname = vagrant_ssh_config('HostName')
+  key_file = vagrant_ssh_config('IdentityFile')
+  $stderr.puts "Retrieving artifacts from Vagrant build box."
+  artifacts.each do |artifact|
+    run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
+    Process.wait Kernel.spawn('scp',
+                              '-i', key_file,
+                              "#{user}@#{hostname}:#{artifact}", '.')
+    raise "Failed to fetch artifact '#{artifact}" unless $?.success?
   end
+  remove_artifacts
 end
 
 namespace :vm do
