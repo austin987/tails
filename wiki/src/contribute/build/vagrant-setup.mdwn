@@ -81,7 +81,7 @@ set `BOX` appropriately below:
     BOX="$(ls -1tr vagrant/definitions/tails-builder/*.box | tail -n1)"
     BOX_NAME="$(basename "${BOX}" .box)"
     BOX_CHECKSUM="$(sha256sum "${BOX}" | cut -f 1 -d ' ' | tr -d '\n')"
-    sed \
+    sed -i \
         -e "s/^\(\s*config.vm.box\s*=\s*\).*$/\1'${BOX_NAME}'/" \
         -e "s/^\(\s*config.vm.box_download_checksum\s*=\s*\).*$/\1'${BOX_CHECKSUM}'/" \
         vagrant/Vagrantfile
