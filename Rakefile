@@ -301,7 +301,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     Process.wait Kernel.spawn('scp',
                               '-i', key_file,
                               "#{user}@#{hostname}:#{artifact}", '.')
-    raise "Failed to fetch artifact '#{artifact}" unless $?.success?
+    raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
   end
   remove_artifacts
 end
