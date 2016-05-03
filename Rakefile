@@ -229,8 +229,9 @@ rescue VagrantCommandError
 end
 
 def remove_artifacts
-  artifacts = list_artifacts.join(' ')
-  run_vagrant('ssh', '-c', "sudo rm -f #{artifacts}")
+  list_artifacts.each do |artifact|
+    run_vagrant('ssh', '-c', "sudo rm -f '#{artifact}'")
+  end
 end
 
 desc "Make sure the vagrant user's home directory has no undesired artifacts"
@@ -294,9 +295,9 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     user     = vagrant_ssh_config('User')
     hostname = vagrant_ssh_config('HostName')
     key_file = vagrant_ssh_config('IdentityFile')
-    run_vagrant('ssh', '-c', "sudo chown #{user} #{artifacts.join(' ')}")
     $stderr.puts "Retrieving artifacts from Vagrant build box."
     artifacts.each do |artifact|
+      run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
       Process.wait Kernel.spawn('scp',
                                 '-i', key_file,
                                 "#{user}@#{hostname}:#{artifact}", '.')
