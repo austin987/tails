@@ -18,7 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-require 'net/scp'
 require 'open3'
 require 'rbconfig'
 require 'uri'
@@ -296,10 +295,11 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     key_file = vagrant_ssh_config('IdentityFile')
     run_vagrant('ssh', '-c', "sudo chown #{user} #{artifacts.join(' ')}")
     $stderr.puts "Retrieving artifacts from Vagrant build box."
-    Net::SCP.start(hostname, user, :keys => [key_file]) do |scp|
-      artifacts.each do |artifact|
-        scp.download!(artifact, '.')
-      end
+    artifacts.each do |artifact|
+      Process.wait Kernel.spawn('scp',
+                                '-i', key_file,
+                                "#{user}@#{hostname}:#{artifact}", '.')
+      raise "Failed to fetch artifact '#{artifact}" unless $?.success?
     end
     remove_artifacts
   end
