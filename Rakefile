@@ -303,6 +303,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
       raise "Failed to fetch artifact '#{artifact}" unless $?.success?
     end
     remove_artifacts
+  else
+    raise 'No build artifacts was found!'
   end
 end
 
