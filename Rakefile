@@ -42,8 +42,8 @@ INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 class VagrantCommandError < StandardError
 end
 
-# Runs the vagrant command, letting stdout/stderr through, and returns
-# the command's exit status.
+# Runs the vagrant command, letting stdout/stderr through. Throws an
+# exception unless the vagrant command succeeds.
 def run_vagrant(*args)
   Process.wait Kernel.spawn('vagrant', *args, :chdir => './vagrant')
   if $?.exitstatus != 0
@@ -53,7 +53,7 @@ def run_vagrant(*args)
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
-# returns [stdout, stderr].
+# returns [stdout, stderr, Preocess:Status].
 def capture_vagrant(*args)
   stdout, stderr, proc_status =
     Open3.capture3('vagrant', *args, :chdir => './vagrant')
