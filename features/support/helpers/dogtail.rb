@@ -104,6 +104,11 @@ module Dogtail
       end
     end
 
+    # Generates a Python-style parameter list from `args`. If the last
+    # element of `args` is a Hash, it's used as Python's kwargs dict.
+    # In the end, the resulting string should be possible to copy-paste
+    # into the parentheses of a Python function call.
+    # Example: [42, {:foo => 'bar'}] => "42, foo = 'bar'"
     def self.args_to_s(args)
       args_list = args
       args_hash = nil
