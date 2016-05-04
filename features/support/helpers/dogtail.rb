@@ -147,6 +147,7 @@ module Dogtail
         "    print(n.path)",
       ]
       a11y_at_spi_paths = run(find_paths_script_lines).stdout.chomp.split("\n")
+                          .grep(Regexp.new('^/org/a11y/atspi/accessible/'))
       a11y_at_spi_paths.map do |path|
         more_init_lines = [
           "from dogtail import predicate",
