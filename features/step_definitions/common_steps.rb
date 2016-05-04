@@ -289,6 +289,8 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
+  step 'Tails Greeter has dealt with the sudo password'
+  step 'the Tails desktop is ready'
 end
 
 Given /^I enable more Tails Greeter options$/ do
