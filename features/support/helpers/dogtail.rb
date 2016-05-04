@@ -32,7 +32,7 @@ module Dogtail
   ]
 
   # We want to keep this class immutable so that handles always are
-  # left intact when doing new (proxied) method calls.  This was we
+  # left intact when doing new (proxied) method calls.  This way we
   # can support stuff like:
   #
   #     app = Dogtail::Application.new('gedit')
