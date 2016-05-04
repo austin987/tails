@@ -68,15 +68,17 @@ def gedit_paste_into_a_new_tab
   @gedit.menuItem('Paste').click
 end
 
-def encrypt_sign_helper(encrypt, sign)
+def encrypt_sign_helper(opts = {})
+  opts[:encrypt] ||= false
+  opts[:sign] ||= false
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
   gpgApplet = Dogtail::Application.new('gpgApplet')
   dialog = gpgApplet.dialog('Choose keys')
-  if encrypt
+  if opts[:encrypt]
     dialog.child(roleName: "table").child(@gpgApplet_key_desc).doubleClick
   end
-  if sign
+  if opts[:sign]
     combobox = dialog.child(roleName: 'combo box')
     combobox.click
     combobox.child(@gpgApplet_key_desc, roleName: 'menu item').click
@@ -89,9 +91,11 @@ def encrypt_sign_helper(encrypt, sign)
   gedit_paste_into_a_new_tab
 end
 
-def decrypt_verify_helper(encrypted, signed)
+def decrypt_verify_helper(opts = {})
+  opts[:decrypt] ||= false
+  opts[:verify] ||= false
   gedit_copy_all_text
-  if encrypted
+  if opts[:decrypt]
     icon = "GpgAppletIconEncrypted.png"
   else
     icon = "GpgAppletIconSigned.png"
@@ -107,37 +111,37 @@ def decrypt_verify_helper(encrypted, signed)
   assert_equal(@message, stdout,
                "The expected message could not be found in the GnuPG output")
   stderr = stderr_text_area.get_field('text').chomp.chomp
-  if encrypted
+  if opts[:decrypt]
     assert(stderr['gpg: encrypted with '], 'Message was not encrypted')
   end
-  if signed
+  if opts[:verify]
     assert(stderr['gpg: Good signature from '], 'Message was not signed')
   end
   dialog.button('OK').click
 end
 
 When /^I encrypt the message using my OpenPGP key$/ do
-  encrypt_sign_helper(true, false)
+  encrypt_sign_helper(encrypt: true, sign: false)
 end
 
 Then /^I can decrypt the encrypted message$/ do
-  decrypt_verify_helper(true, false)
+  decrypt_verify_helper(decrypt: true, verify: false)
 end
 
 When /^I sign the message using my OpenPGP key$/ do
-  encrypt_sign_helper(false, true)
+  encrypt_sign_helper(encrypt: false, sign: true)
 end
 
 Then /^I can verify the message's signature$/ do
-  decrypt_verify_helper(false, true)
+  decrypt_verify_helper(decrypt: false, verify: true)
 end
 
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
-  encrypt_sign_helper(true, true)
+  encrypt_sign_helper(encrypt: true, sign: true)
 end
 
 Then /^I can decrypt and verify the encrypted message$/ do
-  decrypt_verify_helper(true, true)
+  decrypt_verify_helper(decrypt: true, verify: true)
 end
 
 When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
