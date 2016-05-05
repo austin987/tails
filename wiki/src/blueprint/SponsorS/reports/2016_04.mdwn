@@ -32,6 +32,25 @@ Everything in this report is public.
 
 # B. Improve our quality assurance process
 
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+In April, **779 ISO images** were automatically built by our Jenkins
+instance.
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+In April, **778 ISO images** were automatically tested by our Jenkins
+instance.
+
+- B.2.4. Implement and deploy the best solution from this research: [[!tails_ticket 5288]]
+
+  We closed a bug where our isotesters sometimes were not connecting
+  back to our Jenkins master after being rebooted, as it didn't seem
+  to happen again. [[!tails_ticket 10601]]
+
+  That was the last remaining subtask so we closed the ticket tracking
+  our Jenkins automatic isotesting deployment, and consider it now
+  done. [[!tails_ticket 5288]]
 
 # C. Scale our infrastructure
 
@@ -60,6 +79,74 @@ XXX: see March report for ticket numbers about other C.1.n's.
 * C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL ([[!tails_ticket 8642]], [[!tails_ticket 11329]])
 
 * C.1.8. Clean up the remainers of the old mirror pool setup ([[!tails_ticket 8643]])
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+- C.2.2. Set up the monitoring software and the underlying infrastructure
+
+  We polished the Puppet code used to deploy the VPN between the
+  monitoring host and the monitored ones. [[!tails_ticket 11094]]
+
+  We configured the Icinga2 agents on the remaining half of our
+  systems. This helped to validate our Puppet code by deploying it from
+  scratch. No big problems were raised during this process.
+
+  We set up different accounts for each sysadmins, so that they can use
+  the Icingaweb2 comments feature to discuss problems. [[!tails_ticket 11282]]
+
+  We also defined some relevant hosts and services groups that will ease
+  the configuration of downtimes in the web interface. [[!tails_ticket 11277]]
+
+  We disabled the perfdata statistic history feature on our monitoring
+  host as we don't use them and it was filing all the inodes of the root
+  partition. [[!tails_ticket 11368]]
+
+- C.2.4. Configure and debug the monitoring of the most critical
+  services and C.2.6. Configure and debug the monitoring of other
+  high-priority services
+
+  We wrote the last two Icinga2 custom plugins that we needed: one
+  checking if our SSH and SFTP accounts used by our automatic tests were
+  up, and another one checking if our SMTP hidden service used by the
+  Whisperback "privacy aware" bug reporting tool was available.
+  [[!tails_ticket 8650]] and [[!tails_ticket 8653]]
+
+  As during March, Icinga2 already warned us of some problems in our
+  infrastructure. Some of our partitions were close to be filed and we
+  were able to fix them before it became a problem. Most notabily, it
+  helped us to notice that the Tor daemon running our SMTP hidden
+  service was not upgraded to the right version when its host was,
+  leading to crashes every few minutes, rendering the service not so
+  reliable. We fixed that by upgrading the Tor daemon.
+
+  We've then reviewed every checks to define the regularity they should
+  be run and after how many retries they should notify our sysadmins. We
+  came up with an agreement we implemented promptly. After a few days of
+  evaluation we stabilized what we think is the best option on this
+  question. [[!tails_ticket 11358]]
+
+  In the end, all of the high-prirority and critical checks were
+  deployed early April, and we're now running 79 different checks on 19
+  different hosts.
+
+- C.2.5. Configure the receiving side of the monitoring notifications
+
+  Early April, once the above tasks were completed, we set up
+  email notifications to an individual email address, so that we could
+  evaluate if it wasn't sending too much of them. This helped us to
+  define checks regularity, and in the end of April it seems we came up
+  with a good ratio of signal/noise enough for us to release the email
+  notifications to our sysadmins in early May. [[!tails_ticket 8651]]
+
+## C.4. Maintain our already existing services
+
+We kept on answering the requests from the community and taking
+care of security updates as covered by "C.4.5. Administer our services
+up to milestone V".
+
+We fixed the postfix configuration of our monitoring host that was
+spamming us for every emails it sent because IPv6 is disabled on this
+host. [[!tails_ticket 11342]]
 
 
 # D. Migration to Debian Jessie
