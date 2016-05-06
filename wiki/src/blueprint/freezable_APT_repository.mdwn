@@ -78,12 +78,27 @@ little value.
                $ echo 'Remap-tailspool: file:tails-time-based-snapshots-debian-pool.list' \
                  | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.conf
 
-               $ for origin in $(cd config/APT_snapshots.d/ ; ls -d *) ; do for y in $(seq 2016 2026) ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' $origin $y $m $d $t ; done ; done ; done ; done | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list ; done
+               $ for origin in $(cd config/APT_snapshots.d/ ; ls --color=never -d *) ; do for y in $(seq 2016 2026) ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' $origin $y $m $d $t ; done ; done ; done ; done | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list ; done
 
-   e. check if/how
-      [by-hash](http://www.chiark.greenend.org.uk/~cjwatson/blog/no-more-hash-sum-mismatch-errors.html)
-      impacts our design and implementation
-   e. deny robots access to that data
+      We need to handle that for:
+      - Vagrant build setup: update this file as part of the build
+        process in `vagrant/provision/assets/build-tails`?
+      - `tails::builder` Puppet class, used at least by lizard’s
+        isobuilders: a cronjob run on the host that has
+        `apt-cacher-ng` would be good enough; note that
+        `apt-cacher-ng` is _not_ running on isobuilders themselves
+      - manual build setup: we should not bother too much because
+        we'll soon have it Vagrant for everyone
+        ([[!tails_ticket 6354]]), and then a manual build setup will
+        be a corner case, that we can address with some minimal
+        documentation. What to do depends on where `apt-cacher-ng`
+        runs; when it's on the build host, then we can update the
+        configuration as part of the build process, just like for the
+        Vagrant case; else, if it's run elsewhere, then one should use
+        a cronjob, just like in the Puppet case, or do it by hand;
+        let's keep in mind that once generated, the config file should
+        be valid for a while.
+   e. **done** deny robots access to that data
    e. implement GC of expired snapshots and packages (`tails-delete-expired-apt-snapshots`):
       * review [i]
       * test, including dry-run, silent & verbose modes, performance,
