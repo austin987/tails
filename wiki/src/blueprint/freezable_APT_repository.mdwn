@@ -100,11 +100,19 @@ little value.
         be valid for a while.
    e. **done** deny robots access to that data
    e. implement GC of expired snapshots and packages (`tails-delete-expired-apt-snapshots`):
-      * review [i]
-      * test, including dry-run, silent & verbose modes, performance,
-        and removal of expired snapshots' `dist` directories after
+      * **done** review [i]
+      * **done** deploy with Puppet [i]
+      * **done** test dry-run mode [i]
+      * **done** test verbose mode [i]
+      * **done** test silent mode [i]
+      * **done** test removal of expired snapshots' `dist` directories after
         `deleteunreferenced` [i]
-      * deploy with Puppet, redirect output to a log file, logrotate snippet [i]
+      * evaluate performance [i]
+      * redirect output to a log file + logrotate snippet? or just run
+        in silent mode and be done with it? [i]
+      * clean up after failed experiments: the `debian` repo has tons
+        of old, obsolete references that the script is not able to
+        clean because the corresponding directories were removed already
    g. have build system output the snapshots being used,
       and have Jenkins publish this info if available
 
