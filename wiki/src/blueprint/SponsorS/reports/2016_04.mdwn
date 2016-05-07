@@ -52,6 +52,42 @@ instance.
   our Jenkins automatic isotesting deployment, and consider it now
   done. [[!tails_ticket 5288]]
 
+## B.3. Extend the coverage of our test suite
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+- Robustness improvements
+
+  As discussed
+  [[last month|contribute/reports/SponsorS/2015/2016_03#index3h2]] and
+  the
+  [[one before|contribute/reports/SponsorS/2015/2016_02#index3h2]], we
+  have continued trying out new "fundamental approaches" to deal with
+  our robustness issues. This month we have looked closer at the
+  "transient network issues", of which all seem to be related to using
+  the real Tor network. Our solution ended up being to run our own
+  miniature Tor network on the automated test suite host using the Tor
+  project's own tool for running Tor network diagnostic tests,
+  [Chutney](https://gitweb.torproject.org/chutney.git). ([[!tails_ticket 9521]])
+
+  The Tor client shipped in Tails is hardcoded to use the real Tor
+  network, but after we carefully "patch" it to use our Tor network
+  during tests, everything is essentially identical to the real thing
+  from Tails' perspective, so we can trust the testing
+  results. Initial test results are very positive -- so far no
+  Tor-related test failures have been observed with this approach, so
+  it seems sufficient for our immediate needs. On the bonus-side, we
+  now have some of the features and systems in place required for our
+  long-term goal of running all network services locally for even more
+  control, performance and (most importantly) increased
+  reliability. ([[!tails_ticket 9519]], [[!tails_ticket 9520]])
+
+  This concludes our two experiments with new fundamental approaches,
+  of which both seem to be successes. The next two months will be used
+  to fully integrate them into our test suite, and use these new tools
+  to fix specific tests that we see still exhibiting these types of
+  robustness problems.
+
 # C. Scale our infrastructure
 
 ## C.1. Change in depth the infrastructure of our pool of mirrors
