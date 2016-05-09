@@ -16,7 +16,6 @@ echo "Localize each supported browser locale"
 # Import TAILS_WIKI_SUPPORTED_LANGUAGES
 . /etc/amnesia/environment
 
-TBB_DEFAULT_SEARCHPLUGINS_DIR="${TBB_INSTALL}/browser/searchplugins"
 TBB_LOCALIZED_SEARCHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
@@ -171,21 +170,22 @@ done < "${DESCRIPTIONS_FILE}"
 # This directory is not needed after build time.
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
-# Remove unwanted browser search plugins bundled in the Tor Browser.
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/yahoo*.xml
-# We generate localized versions of the following:
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/disconnect*.xml
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/startpage*.xml
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/wikipedia*.xml
-
 # We want our localized English Wikipedia plugin to be available in
 # all locales.
-mv "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/en-US/wikipedia-en-US.xml" \
-   "${TBB_DEFAULT_SEARCHPLUGINS_DIR}/"
+(
+    cd "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}"
+    for dir in *; do
+        if [ -d "${dir}" ] && [ "${dir}" != en-US ]; then
+            (
+                cd "${dir}"
+                cp -a ../en-US/wikipedia-en-US.xml .
+            )
+        fi
+    done
+)
 
 # All generated files must be world-readable.
 chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
-              "${TBB_DEFAULT_SEARCHPLUGINS_DIR}" \
               "${BRANDING_DIR}"
 
 apt-get --yes purge imagemagick
