@@ -90,7 +90,7 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
                "The following rule has an unexpected destination:\n" +
                rule.to_s)
         state_cond = try_xml_element_text(rule, "conditions/state/state")
-        next if state_cond == "RELATED,ESTABLISHED"
+        next if state_cond == "ESTABLISHED"
         assert_not_nil(rule.elements['conditions/owner/uid-owner'])
         rule.elements.each('conditions/owner/uid-owner') do |owner|
           uid = owner.text.to_i
