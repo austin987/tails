@@ -109,8 +109,9 @@ When /^I start a conversation with my friend$/ do
   @screen.wait("PidginConversationWindowMenuBar.png", 10)
 end
 
-And /^I say something to my friend( in the multi-user chat)?$/ do |multi_chat|
-  msg = "ping" + Sikuli::Key.ENTER
+And /^I say (.*) to my friend( in the multi-user chat)?$/ do |msg, multi_chat|
+  msg = "ping" if msg == "something"
+  msg = msg + Sikuli::Key.ENTER
   if multi_chat
     $vm.focus_window(@chat_room_jid.split("@").first)
     msg = @friend_name + ": " + msg

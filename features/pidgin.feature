@@ -21,7 +21,8 @@ Feature: Chatting anonymously using Pidgin
     And I say something to my friend
     Then I receive a response from my friend
 
-  @check_tor_leaks
+  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
+  @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP in a multi-user chat
     Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
@@ -35,6 +36,11 @@ Feature: Chatting anonymously using Pidgin
     Then I can see that my friend joined the multi-user chat
     And I say something to my friend in the multi-user chat
     Then I receive a response from my friend in the multi-user chat
+    When I say https://labs.riseup.net/code/projects/tails/roadmap to my friend in the multi-user chat
+    Then I see the Tails roadmap URL
+    When I wait 10 seconds
+    And I click on the Tails roadmap URL
+    Then the Tor Browser has started and loaded the Tails roadmap
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
@@ -52,8 +58,7 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
-  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Connecting to the tails multi-user chat with my XMPP account
     Given I have started Tails from DVD and logged in and the network is connected
     And Pidgin has the expected accounts configured with random nicknames
@@ -63,12 +68,6 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's account manager window
     Then Pidgin automatically enables my XMPP account
     And I can join the "tails" channel on "conference.riseup.net"
-    When I type "/topic"
-    And I press the "ENTER" key
-    Then I see the Tails roadmap URL
-    When I wait 10 seconds
-    And I click on the Tails roadmap URL
-    Then the Tor Browser has started and loaded the Tails roadmap
 
   Scenario: Adding a certificate to Pidgin
     Given I have started Tails from DVD and logged in and the network is connected
