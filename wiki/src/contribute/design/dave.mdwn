@@ -1,4 +1,4 @@
-[[!meta title="Download and Verify Extension for Firefox"]]
+[[!meta title="Download and Verify Extension for Firefox (DAVE)"]]
 
 Software verification is a critical step in the use of secure
 applications but it has traditionally been hard to provide, especially
@@ -8,7 +8,7 @@ from a user perspective. Usual solutions are:
     many downloads that we have to rely on mirrors hosted by third
     parties.
   - Providing OpenPGP signatures. But this really works only for the few
-    of us who know how to verify an OpenPGP signature and use the
+    people who know how to verify an OpenPGP signature and use the
     OpenPGP Web-of-Trust correctly.
 
 We are trying here to provide a usable solution to verify a download
@@ -25,7 +25,7 @@ Goals
 -----
 
   - Provide a simple, automated, and cross-platform technique to verify
-    the ISO image as they download it.
+    the ISO image as it is downloaded.
   - Ensure that ISO images are downloaded entirely before trying to
     verify them.
   - In case of an interrupted download, help the user resume it.
@@ -39,8 +39,8 @@ Non goals
   - Verify ISO images downloaded through BitTorrent. If we can rely on
     our website to provide a correct cryptographic description of the
     ISO image then we can rely on it as well to provide a correct
-    BitTorrent file. Then BitTorrent clients verify the integrity of
-    their downloads and we're good ([[!tails_ticket 9043]]).
+    BitTorrent file. Then we rely on the BitTorrent client to verify the integrity of
+    the download ([[!tails_ticket 9043]]).
 
 Why Firefox?
 ------------
@@ -97,7 +97,8 @@ We are not considering an attacker who can:
     instead:
 
     - Monitor externally the most relevant parts of our website.
-    - Work on integrating full upgrades in Tails Upgrader. See
+    - Work on integrating full upgrades in Tails Upgrader to limit the
+      number of times people have to rely on our website to upgrade. See
       [[!tails_ticket 7499]].
 
   - (D) Insert malicious information in our main Git repository as such
@@ -113,7 +114,7 @@ We are not considering an attacker who can:
   - (G) Insert malicious content on https://tails.boum.org/ after taking
     control of the web server, or entire system, behind it. Such an
     attacker could do attack (C) as well but in such a way that could be
-    much harder to detect (for example by serving malicious content to
+    much harder to detect (for example by serving malicious content only to
     some users).
 
     To mitigate such an attack in some cases we could both:
@@ -138,14 +139,14 @@ different origin cannot interfere in any way with the result of the
 verification performed by the extension. Only tabs from the same origin,
 or if the content of the other tab opts-in for some form of cross-domain
 communication, or it's been opened with `window.open()` by a script in
-this tab or vice-versa (in the latter cases it has a handle to the
+this tab or vice-versa. In the latter cases it has a handle to the
 window of the other tab, either as the return value of `window.open()` or
 as the `window.opener` property, but it cannot actually touch the content
-unless it's same domain).
+unless it's same domain.
 
 Of course, any tab can open an alert box saying "Verification
 Successful", but it cannot overlay a different tab and, most important,
-cannot detect any hint that the verification is happening. Note that the
+it cannot detect any hint that the verification is happening. Note that the
 proposed wireframe for the extension does not open alert boxes but
 instead modifies the content of the page.
 
@@ -189,20 +190,22 @@ Other considerations:
 HTML code
 =========
 
-The extension will manipulate the HTML code of the download page. Here
+The extension manipulates the HTML code of the [[!tails_gitweb
+wiki/src/install/inc/steps/download.inline.html desc="download section of the
+different installation scenarios"]]. Here
 are some important parts of this code.
 
 ### Extension version
 
-The HTML code will include a tag to force a version of the extension.
+The HTML code includes a tag to force a version of the extension.
 For example:
 
 <pre>
 &lt;div id="extension-version"&gt;1.0&lt;/div&gt;
 </pre>
 
-We will provide only one version of the download page at a time. So the
-extension must check the value of this tag and ask for an upgrade if its
+We provide only one version of the download page at a time. So the
+extension checks the value of this tag and asks for an upgrade if its
 version is lower than the request version number.
 
 <a id="data_source">
@@ -260,27 +263,26 @@ and Tor Launcher](https://lists.torproject.org/pipermail/tbb-dev/2015-April/0002
 Extension technology
 ====================
 
-We [decided](https://mailman.boum.org/pipermail/tails-dev/2015-August/009450.html)
-to write our extension as a Add-on SDK to have is compatible with
-Electrolysis, extend its lifespan and make its code easier to port to
+The extension is writted as a *Add-on SDK* to be compatible with
+Electrolysis, extend its lifespan, and make its code easier to port to
 Chrome in the future.
 
-Add-on SDK was the only valid option amongst the different technologies
+*Add-on SDK* was the only valid option amongst the different technologies
 available to write Firefox extensions:
 
-  A. XUL/XPCOM. This technology requires restarting the browser after
+  A. *XUL/XPCOM* requires restarting the browser after
      installing the extension and will be deprecated at some point as
      Firefox wants to move out of XUL/XPCOM in general.
 
-  A. Bootstrapped add-ons. Are restartless but still uses XPCOM so will
+  A. *Bootstrapped* add-ons are restartless but still uses XPCOM so will
      get deprecated as well.
 
-  A. Add-on SDK. Are restartless as well and use a pure-JS sandboxed
+  A. *Add-on SDK* add-ons are restartless as well and use a pure-JS sandboxed
      abstraction. They will be automatically ready for Electrolysis, the
      new multi-thread paradigm of Firefox. By being pure JS and not
      depending on XUL/XPCOM their code will be easier to port to Chrome.
 
-  A. WebExtensions. Is a future technology that will use a pure JS API
+  A. *WebExtensions* is a future technology that will use a pure JS API
      partially shared between Firefox and Google Chrome. They will be
      restartless and ready for Electrolysis as well. But this API is not
      stable yet and lacks some mechanisms that our extension would need.
