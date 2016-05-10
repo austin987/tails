@@ -73,38 +73,23 @@ Other nice bonuses would be:
 ISO verification
 ----------------
 
-- Push more ISO verification logic to Tails Installer. See the
-  [[blueprint on ISO verification|verification]].
+In 2015 we created a [[Download and Verify Extension|contribute/design/dave]]
+for Firefox but its verification capacities are limited as can be seen in its
+[[thread model|contribute/design/dave#index4h2]].
 
-We're currently considering more seriously the option of pushing more
-verification logic into Tails Installer. It could then:
+A stronger solution might be to do the OpenPGP verification automatically from
+Tails Installer. Users have to trust Tails Installer anyway (currently *on top
+of* trusting the ISO image) and most modern operating systems have software
+distribution mechanisms that are quite strong, hopefully stronger than plain
+HTTPS (Debian's *APT*, Apple's *Mac App Store*, etc.).
 
-  - Automate OpenPGP verification. That would be easy to achieve on
-    Linux and would need more research for other platforms. Note that
-    having a super secure verification process on Windows might not be
-    relevant.
-  - Do download correlation of our signing key, and check it against the
-    Debian keyring on Debian and derivatives.
-  - Allow people to burn DVDs from Tails Installer as well. If Tails
+  - Automating the OpenPGP verification would be easy to achieve on
+    Linux but would require more research for other platforms.
+  - Do we want Tails Installer to include the Tails signing key or to rather
+    depend on external mechanisms to fetch and verify the signing key? Thinking
+    about key transitions…
+  - Should we allow people to burn DVDs from Tails Installer as well? If Tails
     Installer becomes the recommended tool for verifying Tails, people
     should be able to burn DVDs from it.
-  - Allow expert users to build more trust in our signing key through
+  - We should still allow expert users to build more trust in our signing key through
     the OpenPGP WoT.
-
-The advantages of going this way instead of pushing more verification
-logic into the browser extension are that:
-
-  - More people will be able to work on such code.
-  - We will not rely on browsers for serious cryptography.
-  - We will have less implementation restrictions than inside browser extensions.
-
-The cons:
-
-  - The verification using OpenPGP might be harder to port to Windows
-    and OS X. But we are ready to provide lower standards of
-    verification for them.
-  - How would people verify Tails Installer on Windows and OS X? Maybe
-    the browser extension could do that by then.
-  - The browser extension will lose some of its relevance. It will
-    still be useful until we get there, and maybe to verify Tails
-    Installer.
