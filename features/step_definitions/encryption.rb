@@ -68,17 +68,15 @@ def gedit_paste_into_a_new_tab
   @gedit.menuItem('Paste').click
 end
 
-def encrypt_sign_helper(opts = {})
-  opts[:encrypt] ||= false
-  opts[:sign] ||= false
+def encrypt_sign_helper(encrypt: false, sign: false)
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
   gpgApplet = Dogtail::Application.new('gpgApplet')
   dialog = gpgApplet.dialog('Choose keys')
-  if opts[:encrypt]
+  if encrypt
     dialog.child(roleName: "table").child(@gpgApplet_key_desc).doubleClick
   end
-  if opts[:sign]
+  if sign
     combobox = dialog.child(roleName: 'combo box')
     combobox.click
     combobox.child(@gpgApplet_key_desc, roleName: 'menu item').click
@@ -91,11 +89,9 @@ def encrypt_sign_helper(opts = {})
   gedit_paste_into_a_new_tab
 end
 
-def decrypt_verify_helper(opts = {})
-  opts[:decrypt] ||= false
-  opts[:verify] ||= false
+def decrypt_verify_helper(decrypt: false, verify: false)
   gedit_copy_all_text
-  if opts[:decrypt]
+  if decrypt
     icon = "GpgAppletIconEncrypted.png"
   else
     icon = "GpgAppletIconSigned.png"
@@ -111,10 +107,10 @@ def decrypt_verify_helper(opts = {})
   assert_equal(@message, stdout,
                "The expected message could not be found in the GnuPG output")
   stderr = stderr_text_area.get_field('text').chomp.chomp
-  if opts[:decrypt]
+  if decrypt
     assert(stderr['gpg: encrypted with '], 'Message was not encrypted')
   end
-  if opts[:verify]
+  if verify
     assert(stderr['gpg: Good signature from '], 'Message was not signed')
   end
   dialog.button('OK').click
