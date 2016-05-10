@@ -66,6 +66,17 @@ is part of the `kvm`, `libvirt` and `libvirt-qemu` groups:
 
     for group in kvm libvirt libvirt-qemu; do sudo adduser $USER $group; done
 
+## Known issues and workarounds
+
+* `ruby-fog-libvirt <= 0.0.3` has a
+  [bug](https://github.com/fog/fog-libvirt/issues/21) that will make
+  Vagrant crash when trying to start the VM if you have any libvirt
+  domain defined with a floppy (`fd`) as part of the boot order, set
+  via `<os>` tag; please remove all such occurrences! If you really
+  need to have a floppy as part of some domain's boot order, please
+  set it via `<disk>` by adding `<boot order='1'/>` which does not
+  trigger the bug.
+
 ## Building Tails using Vagrant
 
 Once all dependencies are installed, get the Tails sources and
