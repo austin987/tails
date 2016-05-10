@@ -98,14 +98,85 @@ instance.
 
 ## B.4. Freezable APT repository
 
-XXX:
+First, note that in February, we shared
+[[updated development schedule|contribute/reports/SponsorS/2015/2016_02#index4h2]]
+for this project.
 
- * B.4.1. Specify when we want to import foreign packages into which APT suites
- * B.4.2. Implement a mechanism to save the list of packages used at ISO build time
- * B.4.3. Centralize and merge the list of needed packages
- * B.4.4. Design freezable APT repository
- * B.4.5. Implement processes and tools for importing and freezing those packages
- * B.4.6. Adjust the rest of our ecosystem to the freezable APT repository
+- B.4.1. Specify when we want to import foreign packages into which APT suites ([[!tails_ticket 9488]])
+  and B.4.4. Design freezable APT repository ([[!tails_ticket 9487]])
+
+  These were delivered in March.
+
+- B.4.2. Implement a mechanism to save the list of packages used at ISO build time ([[!tails_ticket 10748]], [[!tails_ticket 10749]])
+
+  We still have to do some polishing but are happy with how this component
+  works now.
+
+  In April, we focused on C.1 (Change in depth the infrastructure of
+  our pool of mirrors) so much that we did not manage to polish this
+  in time for Tails 2.3. So, we now aim to get this merged in time for
+  Tails 2.4.
+
+  This will allow us to store, virtually forever, all the packages needed to build
+  a given Tails release.
+
+- B.4.3. Centralize and merge the list of needed packages
+
+  As [[explained last month|contribute/reports/SponsorS/2015/2016_03#index4h2]],
+  the original definition of this deliverable doesn't make sense
+  anymore, so here we are reporting about what now replaces it:
+
+  * Allow storing APT snapshots longer than the default when needed. For
+    example to store the snapshots used during a code freeze that lasts
+    longer than usual and prevent them from being deleted by our garbage
+    collector: the
+    [corresponding script](https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-bump-apt-snapshot-valid-until)
+    was tested and works fine.
+
+  * Freeze and unfreeze the APT snapshots used by a branch when
+    needed: the
+    [corresponding script](https://git-tails.immerda.ch/tails/tree/auto/scripts/apt-snapshots-serials?h=feature/build-from-snapshots)
+    passed early testing in March, but we did not work on it April.
+    This will be one of our main focuses in May.
+
+- B.4.5. Implement processes and tools for importing and freezing those packages ([[!tails_ticket 6299]], [[!tails_ticket 6296]])
+
+  This infrastructure is described with and managed by a [Puppet
+  manifest](https://git-tails.immerda.ch/puppet-tails/tree/manifests/reprepro).
+
+  Time-based snapshots have been generated four times a day and
+  [published over HTTP](http://time-based.snapshots.deb.tails.boum.org/)
+  since months now. This has proven to be solid.
+
+  The last remaining bits here are about handling some consequences on
+  this system:
+
+  * The process for garbage collecting these snapshots was designed in March,
+    and the
+    [implementation](<https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-delete-expired-apt-snapshots>)
+    was completed in April. Spoiler alert: this was deployment in
+    production in May, and works fine.
+
+  * Manage a very custom configuration for `apt-cacher-ng`, the
+    caching proxy used to speed up building Tails ISO images, to make
+    it compatible with our time-based snapshots (see last month's
+    report for details): our proof-of-concept works, we now need to
+    integrate it into the various configuration used to build a Tails
+    ISO image.
+
+  * `reprepro`'s database grows relatively quickly, which at some
+    point creates performance issues on our server, once this system
+    has been running for months; we have set up an Icinga2 check to
+    keep an eye of the size of this database, and have researched how
+    to compact that database, together with `reprepro`'s upstream
+    author. Our current best solution works well, and we now need to
+    document the process so that our system administrators know how to
+    apply it when needed.
+
+- B.4.6. Adjust the rest of our ecosystem to the freezable APT repository ([[!tails_ticket 6303]])
+
+  The last remaining tiny blocker was completed in April, so this
+  deliverable is now done.
 
 # C. Scale our infrastructure
 
