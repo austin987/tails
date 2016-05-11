@@ -3,8 +3,9 @@
 set -e
 set -u
 
-APT_HOST='apt.lizard'
-APT_USER='reprepro-tagged-snapshots'
+TIME_BASED_SNAPSHOTS_HOST='apt.lizard'
+TIME_BASED_SNAPSHOTS_USER='reprepro-time-based-snapshots'
+TIME_BASED_SNAPSHOTS_USER_AT_HOST="${TIME_BASED_SNAPSHOTS_USER}@${TIME_BASED_SNAPSHOTS_HOST}"
 
 fail_with_usage() {
    echo "$(basename $0) BUILD_MANIFEST TAG" >&2
@@ -18,18 +19,22 @@ TAG="$2"
 [ -r "$BUILD_MANIFEST" ] || fail_with_usage
 [ -n "$TAG" ]            || fail_with_usage
 
-REMOTE_BUILD_MANIFEST=$(ssh "${APT_USER}@${APT_HOST}" mktemp)
-REMOTE_DEST_DIR=$(ssh "${APT_USER}@${APT_HOST}" mktemp -d)
+REMOTE_BUILD_MANIFEST=$(ssh "$TIME_BASED_SNAPSHOTS_USERAT_HOST" mktemp)
+REMOTE_DEST_DIR=$(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" mktemp -d)
 
-scp "$BUILD_MANIFEST" "${APT_USER}@${APT_HOST}:${REMOTE_BUILD_MANIFEST}"
+scp "$BUILD_MANIFEST" \
+    "${TIME_BASED_SNAPSHOTS_USER_AT_HOST}:${REMOTE_BUILD_MANIFEST}"
 
 # Build the tagged snapshots, i.e. pull packages listed in the build manifest
 # from the time-based snapshots into the tagged snapshots
-ssh "${APT_USER}@${APT_HOST}" \
+ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
     tails-prepare-tagged-apt-snapshot-import \
     "$REMOTE_BUILD_MANIFEST" \
     "$REMOTE_DEST_DIR"
-ssh "${APT_USER}@${APT_HOST}" reprepro --basedir "$REMOTE_DEST_DIR" update
+ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
+    reprepro --basedir "$REMOTE_DEST_DIR" update
 
 # Publish the tagged snapshots
-ssh "${APT_USER}@${APT_HOST}" mv "$REMOTE_DEST_DIR" "repositories/$TAG"
+ssh "${TIME_BASED_SNAPSHOTS_USER}@${TIME_BASED_SNAPSHOTS_HOST}" \
+    sudo /usr/local/sbin/tails-publish-tagged-apt-snashot \
+             "$REMOTE_DEST_DIR" "$TAG"
