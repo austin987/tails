@@ -298,9 +298,18 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
   $stderr.puts "Retrieving artifacts from Vagrant build box."
   artifacts.each do |artifact|
     run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
-    Process.wait Kernel.spawn('scp',
-                              '-i', key_file,
-                              "#{user}@#{hostname}:#{artifact}", '.')
+    Process.wait(
+      Kernel.spawn(
+        'scp',
+        '-i', key_file,
+        # We need this since the user will not necessarily have a
+        # known_hosts entry. It is safe since an attacker must
+        # compromise libvirt's network config or the user running the
+        # command to modify the #{hostname} below.
+        '-o', 'StrictHostKeyChecking=no',
+        "#{user}@#{hostname}:#{artifact}", '.'
+      )
+    )
     raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
   end
   remove_artifacts
