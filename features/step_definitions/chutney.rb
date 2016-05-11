@@ -107,9 +107,9 @@ When /^I configure Tails to use a simulated Tor network$/ do
     'TestingDirAuthVoteHSDir *',
     'TestingMinExitFlagThreshold 0',
     'V3AuthNIntervalsValid 2',
-    # Enabling TestinTorNetwork disables ClientRejectInternalAddresses
+    # Enabling TestingTorNetwork disables ClientRejectInternalAddresses
     # so the Tor client will happily try LAN connections. Coupled with
-    # that TestinTorNetwork is enabled on all exits, and their
+    # that TestingTorNetwork is enabled on all exits, and their
     # ExitPolicyRejectPrivate is disabled, we will allow exiting to
     # LAN hosts. We have at least one test that tries to make sure
     # that is *not* possible (Scenario: The Tor Browser cannot access
