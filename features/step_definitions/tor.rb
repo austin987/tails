@@ -390,8 +390,8 @@ end
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
   assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
-  assert_all_connections(@sniffer.pcap_file) do |host|
-    @bridge_hosts.include?({ address: host.address, port: host.port })
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    @bridge_hosts.include?({ address: c.address, port: c.port })
   end
 end
 

@@ -33,8 +33,8 @@ end
 
 Then /^the real MAC address was (not )?leaked$/ do |mode|
   is_leaking = mode.nil?
-  assert_all_connections(@sniffer.pcap_file) do |host|
-    [host.mac_saddr, host.mac_daddr].include?($vm.real_mac) == is_leaking
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    [c.mac_saddr, c.mac_daddr].include?($vm.real_mac) == is_leaking
   end
 end
 
