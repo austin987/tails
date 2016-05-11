@@ -32,6 +32,12 @@ if (! -d $debootstrap) {
     usage;
 }
 
+if (-f "$debootstrap/unknown") {
+    print "E: actions unsupported by the apt-get wrapper were logged ",
+          "in $debootstrap/unknown. Aborting.";
+    exit 1;
+}
+
 ### Read (package, version, uri) tuples and generate a single (package, version) list:
 my $data;
 foreach my $type (keys %package_type) {
