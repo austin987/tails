@@ -27,6 +27,14 @@ apt-snapshots-serials prepare-build
 
 DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
+TORPROJECT_MIRROR="$(apt-mirror torproject)"
+
+perl -pi \
+     -E \
+       "s|^(deb(?:-src)?\s+)https?://ftp[.]us[.]debian[.]org/debian/?(\s+)|\$1$DEBIAN_MIRROR\$2| ; \
+        s|^(deb(?:-src)?\s+)https?://deb[.]torproject[.]org/torproject[.]org/?(\s+)|\$1$TORPROJECT_MIRROR\$2|" \
+    config/chroot_sources/*.chroot \
+    || exit 1
 
 # set Amnesia's general options
 $RUN_LB_CONFIG \
