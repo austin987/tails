@@ -289,7 +289,7 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
 end
 
 When /^I start Pidgin through the GNOME menu$/ do
-  step 'I start "Pidgin" via the GNOME "Internet" applications menu'
+  step 'I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu'
 end
 
 When /^I open Pidgin's account manager window$/ do

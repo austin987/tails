@@ -166,7 +166,6 @@ Feature: Browsing the web using the Tor Browser
     And the computer reboots Tails
     And I enable read-only persistence
     And I log in to a new session
-    And the Tails desktop is ready
     And I start the Tor Browser in offline mode
     And the Tor Browser has started in offline mode
     Then the Tor Browser has a bookmark to eff.org
