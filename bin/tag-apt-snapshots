@@ -1,1 +1,35 @@
+#!/bin/sh
 
+set -e
+set -u
+
+APT_HOST='apt.lizard'
+APT_USER='reprepro-tagged-snapshots'
+
+fail_with_usage() {
+   echo "$(basename $0) BUILD_MANIFEST TAG" >&2
+}
+
+[ $# -eq 2 ] || fail_with_usage
+
+BUILD_MANIFEST="$1"
+TAG="$2"
+
+[ -r "$BUILD_MANIFEST" ] || fail_with_usage
+[ -n "$TAG" ]            || fail_with_usage
+
+REMOTE_BUILD_MANIFEST=$(ssh "${APT_USER}@${APT_HOST}" mktemp)
+REMOTE_DEST_DIR=$(ssh "${APT_USER}@${APT_HOST}" mktemp -d)
+
+scp "$BUILD_MANIFEST" "${APT_USER}@${APT_HOST}:${REMOTE_BUILD_MANIFEST}"
+
+# Build the tagged snapshots, i.e. pull packages listed in the build manifest
+# from the time-based snapshots into the tagged snapshots
+ssh "${APT_USER}@${APT_HOST}" \
+    tails-prepare-tagged-apt-snapshot-import \
+    "$REMOTE_BUILD_MANIFEST" \
+    "$REMOTE_DEST_DIR"
+ssh "${APT_USER}@${APT_HOST}" reprepro --basedir "$REMOTE_DEST_DIR" update
+
+# Publish the tagged snapshots
+ssh "${APT_USER}@${APT_HOST}" mv "$REMOTE_DEST_DIR" "repositories/$TAG"
