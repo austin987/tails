@@ -211,11 +211,8 @@ Then /^I see Tor Check (.+) in the (.+)$/ do |expectation, browser|
   when 'fail'
     expected_image = failure
   when 'give the expected outcome'
-    if browser == 'Tor Browser' and not $config["Chutney"]
-      expected_image = success
-    else
-      expected_image = failure
-    end
+    # Since we use Chutney, failure is expected
+    expected_image = failure
   else
     raise "Unsupported expectation '#{expectation}'"
   end
