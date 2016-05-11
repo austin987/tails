@@ -18,8 +18,6 @@ class VMCommand
     end
   end
 
-  # The parameter `cmd` cannot contain newlines. Separate multiple
-  # commands using ";" instead.
   # If `:spawn` is false the server will block until it has finished
   # executing `cmd`. If it's true the server won't block, and the
   # response will always be [0, "", ""] (only used as an
