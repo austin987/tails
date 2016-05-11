@@ -22,6 +22,12 @@ if grep -qs -E '^Pin:\s+release\s+.*a=' config/chroot_apt/preferences ; then
     echo "use n= instead. Exiting."
     exit 1
 fi
+if grep -qs -E '^Pin:\s+release\s+.*o=Debian Backports' \
+	config/chroot_apt/preferences ; then
+    echo "Found unsupported 'o=Debian Backports' syntax,"
+    echo "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
+    exit 1
+fi
 
 # init variables
 RUN_LB_CONFIG="lb config noauto"
