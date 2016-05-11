@@ -110,20 +110,12 @@ Feature: Browsing the web using the Tor Browser
     Then the Tor Browser uses all expected TBB shared libraries
 
   @check_tor_leaks @fragile
-  Scenario: Opening check.torproject.org in the Tor Browser shows the green onion and the congratulations message
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
-    And I open Tor Check in the Tor Browser
-    Then I see Tor Check give the expected outcome in the Tor Browser
-
-  @check_tor_leaks @fragile
   Scenario: The Tor Browser's "New identity" feature works as expected
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open Tor Check in the Tor Browser
-    Then I see Tor Check give the expected outcome in the Tor Browser
+    And I open Tails homepage in the Tor Browser
+    Then Tails homepage loads in the Tor Browser
     When I request a new identity using Torbutton
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page

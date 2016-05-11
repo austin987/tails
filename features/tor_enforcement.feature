@@ -22,8 +22,8 @@ Feature: The Tor enforcement is effective
     Given I have started Tails from DVD and logged in and the network is connected
     And I capture all network traffic
     When I successfully start the Unsafe Browser
-    And I open Tor Check in the Unsafe Browser
-    And I see Tor Check fail in the Unsafe Browser
+    And I open Tails homepage in the Unsafe Browser
+    And Tails homepage loads in the Unsafe Browser
     Then the firewall leak detector has detected leaks
 
   Scenario: Anti test: Detecting TCP leaks of DNS lookups with the firewall leak detector
