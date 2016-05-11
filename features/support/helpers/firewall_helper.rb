@@ -62,6 +62,8 @@ def pcap_connections_helper(pcap_file, opts = {})
   connections.uniq.map { |p| OpenStruct.new(p) }
 end
 
+# These assertions are made from the perspective of the system under
+# testing when it comes to the concepts of "source" and "destination".
 def assert_all_connections(pcap_file, opts = {}, &block)
   all = pcap_connections_helper(pcap_file, opts)
   good = all.find_all(&block)
