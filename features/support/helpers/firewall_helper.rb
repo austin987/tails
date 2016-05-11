@@ -53,10 +53,6 @@ def pcap_connections_helper(pcap_file, opts = {})
       daddr: ip_packet.ip_daddr,
       sport: sport,
       dport: dport,
-      # Convenience aliases since we most often care about the
-      # destination side of connections (i.e. leaks):
-      address: ip_packet.ip_daddr,
-      port: dport,
     }
   end
   connections.uniq.map { |p| OpenStruct.new(p) }

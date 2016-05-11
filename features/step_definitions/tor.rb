@@ -391,7 +391,7 @@ When /^all Internet traffic has only flowed through the configured pluggable tra
   assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
   assert_all_connections(@sniffer.pcap_file) do |c|
-    @bridge_hosts.include?({ address: c.address, port: c.port })
+    @bridge_hosts.include?({ address: c.daddr, port: c.dport })
   end
 end
 

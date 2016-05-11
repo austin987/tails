@@ -449,7 +449,7 @@ end
 Then /^all Internet traffic has only flowed through Tor$/ do
   allowed_hosts = allowed_hosts_under_tor_enforcement
   assert_all_connections(@sniffer.pcap_file) do |c|
-    allowed_hosts.include?({ address: c.address, port: c.port })
+    allowed_hosts.include?({ address: c.daddr, port: c.dport })
   end
 end
 
