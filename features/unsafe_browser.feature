@@ -41,14 +41,6 @@ Feature: Browsing the web using the Unsafe Browser
     Then I see a warning about another instance already running
 
   @fragile
-  Scenario: Opening check.torproject.org in the Unsafe Browser shows the red onion and a warning message.
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I successfully start the Unsafe Browser
-    And I open Tor Check in the Unsafe Browser
-    Then I see Tor Check give the expected outcome in the Unsafe Browser
-    And the clearnet user has sent packets out to the Internet
-
-  @fragile
   Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser

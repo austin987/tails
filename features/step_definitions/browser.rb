@@ -113,6 +113,28 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
 end
 
+# This step is limited to the Tor Browser due to #7502 since dogtail
+# uses the same interface.
+Then /^a page titled "([^"]+)" has loaded in the Tor Browser$/ do |title|
+  expected_title = "#{title} - Tor Browser"
+  app = Dogtail::Application.new('Firefox')
+  app.child(expected_title, roleName: 'frame').wait(60)
+  # The 'Stop loading this page' button (graphically shown as an X) is
+  # only shown while a page is loading, so once we see the expected
+  # title *and* this one has disappeared, then we can be sure that the
+  # page has fully loaded.
+  try_for(60) do
+    assert_raise do
+      app.child(
+        'Location',
+        roleName: 'push button',
+        description: 'Stop loading this page',
+        retry: False
+      )
+    end
+  end
+end
+
 Then /^the (.*) has no plugins installed$/ do |browser|
   step "I open the address \"about:plugins\" in the #{browser}"
   step "I see \"TorBrowserNoPlugins.png\" after at most 30 seconds"
@@ -194,30 +216,15 @@ Then /^the file is saved to the default Tor Browser download directory$/ do
   try_for(10) { $vm.file_exist?(expected_path) }
 end
 
-When /^I open Tor Check in the (.+)$/ do |browser|
-  step "I open the address \"https://check.torproject.org\" in the #{browser}"
+When /^I open Tails homepage in the (.+)$/ do |browser|
+  step "I open the address \"https://tails.boum.org\" in the #{browser}"
 end
 
-Then /^I see Tor Check (.+) in the (.+)$/ do |expectation, browser|
-  assert(['Tor Browser', 'Unsafe Browser'].include?(browser),
-         "This step does not support the '#{browser}'")
-  success = 'TorBrowserTorCheck.png'
-  failure = 'UnsafeBrowserTorCheckFail.png'
-  case expectation
-  when 'succeed'
-    assert_equal('Tor Browser', browser,
-                 'Only the Tor Browser can pass Tor Check')
-    expected_image = success
-  when 'fail'
-    expected_image = failure
-  when 'give the expected outcome'
-    if browser == 'Tor Browser' and not $config["Chutney"]
-      expected_image = success
-    else
-      expected_image = failure
-    end
-  else
-    raise "Unsupported expectation '#{expectation}'"
-  end
-  step "I see \"#{expected_image}\" after at most 180 seconds"
+Then /^Tails homepage loads in the Tor Browser$/ do
+  title = 'Tails - Privacy for anyone anywhere'
+  step "a page titled \"#{title}\" has loaded in the Tor Browser"
+end
+
+Then /^Tails homepage loads in the Unsafe Browser$/ do
+  @screen.wait('TailsHomepage.png', 60)
 end
