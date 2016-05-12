@@ -305,6 +305,8 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
+  step 'Tails Greeter has dealt with the sudo password'
+  step 'the Tails desktop is ready'
 end
 
 Given /^I enable more Tails Greeter options$/ do
@@ -345,6 +347,12 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.session idle-delay 0',
     :user => LIVE_USER
   )
+  # We need to enable the accessibility toolkit for dogtail.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
+    :user => LIVE_USER,
+  )
+
 end
 
 Then /^Tails seems to have booted normally$/ do
@@ -537,7 +545,7 @@ Given /^package "([^"]+)" is installed$/ do |package|
 end
 
 When /^I start the Tor Browser$/ do
-  step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -649,56 +657,10 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   end
 end
 
-def gnome_app_menu_click_helper(click_me, verify_me = nil)
-  try_for(30) do
-    @screen.hide_cursor
-    # The sensitivity for submenus to open by just hovering past them
-    # is extremely high, and may result in the wrong one
-    # opening. Hence we better avoid hovering over undesired submenus
-    # entirely by "approaching" the menu strictly horizontally.
-    r = @screen.wait(click_me, 10)
-    @screen.hover_point(@screen.w, r.getY)
-    @screen.click(r)
-    @screen.wait(verify_me, 10) if verify_me
-    return
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
-      gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
+Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
+  app = Dogtail::Application.new('gnome-shell')
+  for element in ['Applications', submenu, app_name] do
+    app.child(element, roleName: 'label').click
   end
 end
 

@@ -12,7 +12,7 @@ Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
 end
 
 When /^I start the (Unsafe|I2P) Browser(?: through the GNOME menu)?$/ do |browser_type|
-  step "I start \"#{browser_type}Browser\" via the GNOME \"Internet\" applications menu"
+  step "I start \"#{browser_type} Browser\" via the GNOME \"Internet\" applications menu"
 end
 
 When /^I successfully start the (Unsafe|I2P) Browser$/ do |browser_type|
