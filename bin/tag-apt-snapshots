@@ -35,8 +35,12 @@ ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
     "$REMOTE_BUILD_MANIFEST" \
     "$REMOTE_DEST_DIR"
 echo "I: Pulling packages into the tagged APT snapshots"
-ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
-    reprepro --basedir "$REMOTE_DEST_DIR" update
+for archive in $(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
+		     ls "$REMOTE_DEST_DIR") ; do
+   echo "I: - $archive"
+   ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
+       reprepro --basedir "${REMOTE_DEST_DIR}/${archive}" update
+done
 
 # Publish the tagged snapshots
 echo "I: Publishing the tagged APT snapshot"
