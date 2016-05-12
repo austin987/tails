@@ -205,64 +205,7 @@ except:
  * if a set of APT repository snapshots is encoded directly in that
    branch: use them, even for security.debian.org.
 
-## Different problems ⇒ different solutions
-
-Note that:
-
- * The time-based snapshots of the mirrored APT repositories that are
-   used basically all the time (except when building a release) should
-   be *full* snapshots, that is they should contain exactly the same
-   set of packages as the mirrored repository. This has the advantage
-   that some workflows are trivially handled, e.g. working on a topic
-   branch that installs additional Debian packages; if such snapshots
-   were not full ones, then to work on one such branch, one would need
-   either that I have the credentials to import new packages from
-   Debian into our own mirror or repositories (which raises the
-   barrier for contributing), or that during some phases of Tails
-   development the regular Debian archive is used instead of our own
-   mirror, which feels prone to "time to QA vs. time to
-   release" issues.
-
- * The tagged snapshots used to build releases can be *partial*, that
-   is they can contain only the subset of the mirrored repositories
-   that is required for building a specific Tails ISO image.
-
-So, we actually want to manage two sets of snapshots that are vastly
-different in terms of goals, users, turnover, garbage collection and
-backup strategies:
-
- * **time-based, full snapshots** of the mirrored APT repositories over
-   the last N days;
-   - goal: freezable repo feature for the dev process and QA
-   - this one can be restarted from scratch from time to time if
-     reprepro becomes too slow for some reason (such as imperfect DB
-     garbage collection);
-   - if we lose this content, we lose only N days of data, and we can
-     immediately rebuild a working data set from scratch ⇒ no need to
-     sync' this content to the failover server; no need to back it up;
-
- * **tagged, partial snapshots** that were used to build released Tails
-   ISO images:
-   - goal: reproducible builds, GPL compliance;
-   - in there we import only the needed packages;
-   - we want to back up this data, and expire it very cautiously,
-     if ever.
-
-Trying to solve both problems in the same `reprepro` instance would be
-problematic. Not only, coupling very different problems together, and
-trying to address them with the exact same tools and process, is
-generally a bad idea. But also, reprepro's database becomes quite big
-when we import large chunks of the Debian archive into it, which may
-make it slow ([[!tails_ticket 6295]]), and in any case makes it hard
-to back up... which we want to, for preserving the releases' tagged
-snapshots information.
-
-So we'll use two independent `reprepro` instances to address these
-two problems.
-
 # Special cases and implementation
-
-<a id="runtime-sources"></a>
 
 ## Custom APT repository
 
@@ -279,6 +222,8 @@ snapshot of our custom APT repository is created, between the time we
 upload a package to it, and when we can build an ISO with it; we could
 solve this by automatically creating a new snapshot whenever an APT
 suite corresponding to a release branch is updated).
+
+<a id="runtime-sources"></a>
 
 ## APT sources used inside Tails
 
@@ -586,101 +531,6 @@ tracking a distribution. E.g. to remove all Wheezy snapshots:
        | sort -u \
        | xargs -n 1 reprepro _removereferences \
     && reprepro deleteunreferenced
-
-<a id="build-manifest"></a>
-
-## Listing used packages
-
-Saved as ISO build artifact, both when building in Jenkins and outside
-from it.
-
-Output:
-
-- for each .deb: the installed version
-- The union of all APT sources used during the build.
-
-### Corner case
-
-If a (package, version) is seen at build time in 2 or more APT
-sources, `tails-prepare-tagged-apt-snapshot-import` will inject it
-into each of the tagged snapshots corresponding to these sources.
-The goal is to avoid this scenario:
-
- - version X of package P is available both in suite S1 on origin O1,
-   and in suite S2 on origin O2
- - version Y of package P is available in suite S3 of origin O3
- - our pinning makes us prefer version X of package P *because it's
-   available in O1/S1*; otherwise, if it wasn't in there, then our
-   pinning would make APT prefer version Y to version X
- - at ISO build time, APT fetches package P version X from O2/S2
- - given this build manifest, we import package P version X into our
-   tagged snapshot of O2/S2, but not into our tagged snapshot of O1/S1
- - if we rebuild from the same source tree using that set of tagged
-   snapshots, then version Y of package P will be installed
-
-This scenario can happen in practice:
-
-	# cat /etc/apt/sources.list
-	deb http://security.debian.org wheezy/updates main
-	deb http://ftp.us.debian.org/debian/ wheezy main
-	deb http://ftp.us.debian.org/debian/ jessie main
-
-	# cat /etc/apt/preferences
-	Package: *
-	Pin: origin security.debian.org
-	Pin-Priority: -10
-
-	Package: *
-	Pin: release o=Debian,n=wheezy
-	Pin-Priority: 990
-
-	Package: *
-	Pin: release o=Debian,n=jessie
-	Pin-Priority: 700
-
-	# apt-cache madison a2ps
-	a2ps | 1:4.14-1.3 | http://ftp.us.debian.org/debian/ jessie/main amd64 Packages
-	a2ps | 1:4.14-1.1+deb7u1 | http://security.debian.org/ wheezy/updates/main amd64 Packages
-	a2ps | 1:4.14-1.1+deb7u1 | http://ftp.us.debian.org/debian/ wheezy/main amd64 Packages
-
-	# apt-cache policy a2ps
-	a2ps:
-	  Installed: (none)
-	  Candidate: 1:4.14-1.1+deb7u1
-	  Version table:
-	     1:4.14-1.3 0
-	        700 http://ftp.us.debian.org/debian/ jessie/main amd64 Packages
-	     1:4.14-1.1+deb7u1 0
-	        -10 http://security.debian.org/ wheezy/updates/main amd64 Packages
-	        990 http://ftp.us.debian.org/debian/ wheezy/main amd64 Packages
-
-And then, in the current state of things APT will download `a2ps` from
-security.d.o:
-
-	# apt-get download a2ps --print-uris
-	'http://security.debian.org/pool/updates/main/a/a2ps/a2ps_4.14-1.1+deb7u1_amd64.deb' a2ps_4.14-1.1+deb7u1_amd64.deb 956298 sha256:e47d7fe9adb7aa62421108debf425830f4e2385e98151c5cb359d3eb8688eea8
-
-... but if `a2ps` was not available in the regular Wheezy archive,
-e.g. because we were using a tagged snapshot that imported `a2ps` into
-the security archive, then APT would prefer `a2ps` from Jessie, which
-demonstrates the bug... hence the "inject it into each of the tagged
-snapshots corresponding to these sources" requirement we had.
-
-### Bonus material
-
-- Allows to inspect the diff between the subset of two different
-  snapshots that was used at build time; the benefit is very
-  minor as long as we're based on Debian oldstable or stable, but
-  if/when we switch to being based on Debian testing then we will
-  definitely want that. Not that minor: we also fetch packages
-  from testing, sid, backports, etc.
-- Say a branch (topic one, or devel, etc.) introduces
-  a regression, and has changes the set of packages used at build
-  time, we may want to check how exactly that set was changed.
-  Think "check the diff between `.packages`" as we do at release
-  time, but done in a correct way.
-- Allows keeping only _partial_ snapshots (of our full archive
-  ones) for those we want to keep forever, i.e. release ones.
 
 ## Valid-Until and signing
 
