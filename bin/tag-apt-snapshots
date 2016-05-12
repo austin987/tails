@@ -19,22 +19,27 @@ TAG="$2"
 [ -r "$BUILD_MANIFEST" ] || fail_with_usage
 [ -n "$TAG" ]            || fail_with_usage
 
+echo "I: Preparing a workspace on ${TIME_BASED_SNAPSHOTS_HOST}"
 REMOTE_BUILD_MANIFEST=$(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" mktemp)
 REMOTE_DEST_DIR=$(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" mktemp -d)
 
+echo "I: Sending build manifest to ${TIME_BASED_SNAPSHOTS_HOST}"
 scp "$BUILD_MANIFEST" \
     "${TIME_BASED_SNAPSHOTS_USER_AT_HOST}:${REMOTE_BUILD_MANIFEST}"
 
 # Build the tagged snapshots, i.e. pull packages listed in the build manifest
 # from the time-based snapshots into the tagged snapshots
+echo "I: Preparing reprepro configuration"
 ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
     tails-prepare-tagged-apt-snapshot-import \
     "$REMOTE_BUILD_MANIFEST" \
     "$REMOTE_DEST_DIR"
+echo "I: Pulling packages into the tagged APT snapshots"
 ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
     reprepro --basedir "$REMOTE_DEST_DIR" update
 
 # Publish the tagged snapshots
+echo "I: Publishing the tagged APT snapshot"
 ssh "${TIME_BASED_SNAPSHOTS_USER}@${TIME_BASED_SNAPSHOTS_HOST}" \
     sudo /usr/local/sbin/tails-publish-tagged-apt-snashot \
              "$REMOTE_DEST_DIR" "$TAG"
