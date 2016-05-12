@@ -8,6 +8,34 @@ Overview
 XXX: import relevant content from
 <https://tails.boum.org/blueprint/freezable_APT_repository/>
 
+These are _full_ snapshots of the upstream APT repositories we use for
+building Tails ISO images. They contain exactly the same set of
+packages as the mirrored repository. This has the advantage that some
+workflows are trivially handled, e.g. working on a topic branch that
+installs additional Debian packages; if such snapshots were not full
+ones, then to work on one such branch, one would need either that to
+have the credentials to import new packages from Debian into our own
+mirror or repositories (which raises the barrier for contributing), or
+that during some phases of Tails development the regular Debian
+archive is used instead of our own mirror, which feels prone to "time
+to QA vs. time to release" issues.
+
+We snapshot each upstream APT repository N times a day, and without
+further action, each snapshot is kept for D days.
+
+The main goal here is to be able to freeze the APT repositories used
+by a branch, whenever we freeze it.
+
+The corresponding data is not critical: we can restart the whole thing
+from scratch if needed, without too much pain ⇒ no need to synchronize
+this content to the failover server; no need to back it up.
+
+# Source code
+
+* `tails::reprepro::snapshots::time_based` class in
+  [[!tails_gitweb_repo puppet-tails]]
+* bits scattered in the main Tails Git repository (details below)
+
 Workflow
 ========
 
