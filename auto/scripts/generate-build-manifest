@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 # © 2015 Cyril Brulebois <cyril@debamax.com>, for the Tails project.
+# © 2016 Tails developers <tails@boum.org>
 
 use strict;
 use warnings;
@@ -32,6 +33,16 @@ if (! -d $debootstrap) {
     usage;
 }
 
+my $extra_packages_file = 'config/build-manifest-extra-packages.yml';
+my $extra_packages;
+
+if (-e $extra_packages_file) {
+    my $yaml = read_file($extra_packages_file);
+    my $extra_packages_data = Load $yaml
+        or die "E: failed to load $extra_packages_file: $!";
+    $extra_packages = $extra_packages_data->{packages};
+}
+
 ### Read (package, version, uri) tuples and generate a single (package, version) list:
 my $data;
 foreach my $type (keys %package_type) {
@@ -55,6 +66,19 @@ foreach my $type (keys %package_type) {
             }
         }
         push @{ $data->{ packages_tmp }->{ $package_type{$type} } }, "${package}_${version}_${arch}";
+    }
+
+    # Add extra packages
+    if ($extra_packages->{$package_type{$type}}) {
+        foreach my $pkginfo (@{ $extra_packages->{$package_type{$type}} }) {
+            my $package = $pkginfo->{package};
+            my $version = $pkginfo->{version};
+            my $arch    = $package_type{$type} eq 'binary'
+                          ? $pkginfo->{arch}
+                          : 'source';
+            push @{ $data->{ packages_tmp }->{ $package_type{$type} } },
+                "${package}_${version}_${arch}";
+        }
     }
 }
 
