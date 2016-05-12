@@ -428,6 +428,7 @@ Prepare the versioned APT suites
 
 * [[Prepare the versioned APT suite in our custom APT
   repository|contribute/APT_repository/custom#workflow-post-tag]].
+
 * Prepare tagged snapshots of upstream APT repositories:
 
        ./bin/tag-apt-snapshots "$PACKAGES_MANIFEST" "$TAG"
@@ -437,12 +438,12 @@ Prepare the versioned APT suites
   - This command can take a while (about a dozen minutes).
   - It's expected that the packages that were pulled from our
     [[custom APT repository|contribute/APT_repository/custom]] are
-    listed under "some packages were not found anywhere" (because we are
-    current not using time-based snapshots of our custom APT
-    repository). However, no other package should be on that list. Now,
-    we have a "safety" net, in case you don't notice that: if other
-    packages are missing, the next build (that will use the newly
-    created partial, tagged APT repository) will fail.
+    listed under "some packages were not found anywhere" (because we
+    are current not using time-based snapshots for our custom APT
+    repository). However, no other package should be on that list.
+    Now, we have a "safety" net, in case you don't notice that: if
+    other packages are missing, the next build (that will use the
+    newly created partial, tagged APT repository) will fail.
 
 Build images
 ============
@@ -497,10 +498,10 @@ suite should be ready, so it is time to:
 
 * tag the release *again*, with all included files in:
   
-          git tag -f -u "$TAILS_SIGNATURE_KEY" \
-  	    -m "tagging version ${VERSION}" "${TAG}" && \
-          git push origin "${RELEASE_BRANCH}" && \
-          git push --tags --force
+      git tag -f -u "$TAILS_SIGNATURE_KEY" \
+              -m "tagging version ${VERSION}" "${TAG}" && \
+      git push origin "${RELEASE_BRANCH}" && \
+      git push --tags --force
 
 * check out the release tag:
 
