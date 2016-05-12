@@ -143,8 +143,8 @@ task :parse_build_options do
   # Default to in-memory builds if there is enough RAM available
   options += 'ram ' if enough_free_memory_for_ram_build?
 
-  # Use in-VM proxy unless an external proxy is set
-  options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
+  # Default to build using the in-VM proxy
+  options += 'vmproxy '
 
   # Default to fast compression on development branches
   options += 'gzipcomp ' unless is_release?
