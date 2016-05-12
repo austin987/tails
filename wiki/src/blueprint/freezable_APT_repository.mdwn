@@ -28,7 +28,6 @@ little value.
      - developer (including stable, testing, devel, and `$topic`)
    * get the updated documentation + this design reviewed, including
      security aspects [i]
-   * give RM's access to `reprepro-time-based-snapshots@apt.lizard` [i]
    * document how to freeze time-based APT snapshots being used:
 
              ./auto/scripts/apt-snapshots-serials freeze && \
@@ -53,19 +52,6 @@ little value.
      doc + contributors doc
 
 2. time-based snapshots [i]
-   a. **done** initial reprepro setup that keeps up-to-date local mirrors of
-      the APT repositories we need
-   b. **done** snapshot these mirrors every time they're updated
-   c. **done** decide how many reprepro instances we want/have to split all
-      this among
-   d. **done** mirror relevant suites of deb.tails.b.o as well
-   d. **done** publish the snapshots over HTTP
-   d. **done** clean up Wheezy packages (including those referenced by
-      snapshots)
-   e. **done** publish the snapshots' serial over HTTP
-      (e.g. <http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security>)
-   e. **done** try using such snapshots for building an ISO:
-      done in `feature/5926-freezable-APT-repository`
    e. Avoid re-downloading everything one has in their local
       apt-cacher-ng, and filling its cache with files duplicated
       many times. It's acceptable not to have optimal caching for `dists/`; what
@@ -98,15 +84,6 @@ little value.
         a cronjob, just like in the Puppet case, or do it by hand;
         let's keep in mind that once generated, the config file should
         be valid for a while.
-   e. **done** deny robots access to that data
-   e. **done** implement GC of expired snapshots and packages (`tails-delete-expired-apt-snapshots`):
-      * review [i]
-      * deploy with Puppet [i]
-      * test dry-run, verbose and silent modes [i]
-      * test removal of expired snapshots' `dist` directories after
-        `deleteunreferenced` [i]
-      * run via cron [i]
-      * evaluate performance [i]
    f. handle ever-growing `references.db`, aka. [[!debbug 823629]]: if
       `references.db` doesn't fit in the memory disk cache, then at
       least our GC process gets very slow); the visible consequence
@@ -145,12 +122,6 @@ little value.
      [[switching to live APT sources at runtime|freezable_APT_repository#runtime-sources]]
 
 4. tagged snapshots
-   a. **done** PoC of capturing the list of binary packages used during the build
-   b. **done** PoC of capturing the list of source packages used during the build
-   c. **done** initial reprepro setup for tagged snapshots
-   d. **done** debootstrap in jessie-backports
-   d. **done** Have Jenkins create, publish and manage
-      `latest.iso.build-manifest` symlinks
    e. **WIP** create a partial snapshot from a manifest and
       the origin time-based snapshots:
       * `generate-build-manifest` (main Git repo), aka. get [[!tails_ticket 10748]]
