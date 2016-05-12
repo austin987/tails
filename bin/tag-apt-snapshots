@@ -20,8 +20,11 @@ TAG="$2"
 [ -n "$TAG" ]            || fail_with_usage
 
 echo "I: Preparing a workspace on ${TIME_BASED_SNAPSHOTS_HOST}"
-REMOTE_BUILD_MANIFEST=$(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" mktemp)
-REMOTE_DEST_DIR=$(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" mktemp -d)
+ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" install -d '$HOME'/tmp
+REMOTE_BUILD_MANIFEST=$(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
+			    mktemp --tmpdir='$HOME'/tmp)
+REMOTE_DEST_DIR=$(ssh "$TIME_BASED_SNAPSHOTS_USER_AT_HOST" \
+		      mktemp -d --tmpdir='$HOME'/tmp)
 
 echo "I: Sending build manifest to ${TIME_BASED_SNAPSHOTS_HOST}"
 scp "$BUILD_MANIFEST" \
