@@ -27,6 +27,7 @@ class Sniffer
         "/usr/sbin/tcpdump",
         "-n",
         "-U",
+        "--immediate-mode",
         "-i", @vmnet.bridge_name,
         "-w", @pcap_file,
         filter,
@@ -37,15 +38,6 @@ class Sniffer
   end
 
   def stop
-    # Sometimes tcpdump/pcap is not fast enough to write a captured
-    # packet to file vs when we kill the process. For instance, if we
-    # sniff then network, run some step that generates traffic that we
-    # are interested in, and then immediately run this method, we
-    # might kill tcpdump before it has handled said traffic, so
-    # there's a race. Since we already run tcpdump with `-U` there
-    # seems to be little else we can do than a static sleep, short of
-    # switching to another sniffing technology that is faster.
-    sleep 1
     begin
       Process.kill("TERM", @pid)
     rescue
