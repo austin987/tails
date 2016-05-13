@@ -180,20 +180,18 @@ set -o pipefail
 time eatmydata lb build noauto ${@}
 RET=$?
 if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
-   if [ "$RET" -eq 0 ]; then
-      [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_END_FILENAME"
-      echo "Image was successfully created"
-      if [ "$LB_BINARY_IMAGES" = iso ]; then
-	  ISO_FILE="${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
-	  print_iso_size "$ISO_FILE"
-	  echo "Hybriding it..."
-	  isohybrid $AMNESIA_ISOHYBRID_OPTS "$ISO_FILE"
-	  print_iso_size "$ISO_FILE"
-	  truncate -s %2048 "$ISO_FILE"
-	  print_iso_size "$ISO_FILE"
-      fi
-   else
-      echo "Warning: image created, but lb build exited with code $RET"
+   echo "Image was successfully created"
+   [ "$RET" -eq 0 ] || \
+       echo "Warning: lb build exited with code $RET"
+   [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_END_FILENAME"
+   if [ "$LB_BINARY_IMAGES" = iso ]; then
+       ISO_FILE="${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
+       print_iso_size "$ISO_FILE"
+       echo "Hybriding it..."
+       isohybrid $AMNESIA_ISOHYBRID_OPTS "$ISO_FILE"
+       print_iso_size "$ISO_FILE"
+       truncate -s %2048 "$ISO_FILE"
+       print_iso_size "$ISO_FILE"
    fi
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"

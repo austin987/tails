@@ -45,12 +45,12 @@ Then /^I should be able to install a package using Synaptic$/ do
   @screen.wait_and_click('SynapticApplyButton.png', 10)
   @screen.wait('SynapticApplyPrompt.png', 60)
   @screen.type(Sikuli::Key.ENTER)
-  @screen.wait('SynapticChangesAppliedPrompt.png', 120)
+  @screen.wait('SynapticChangesAppliedPrompt.png', 240)
   step "package \"#{package}\" is installed"
 end
 
 When /^I start Synaptic$/ do
-  step 'I start "Synaptic" via the GNOME "System" applications menu'
+  step 'I start "Synaptic Package Manager" via the GNOME "System Tools" applications menu'
   deal_with_polkit_prompt('PolicyKitAuthPrompt.png', @sudo_password)
   @screen.wait('SynapticReloadButton.png', 30)
 end
