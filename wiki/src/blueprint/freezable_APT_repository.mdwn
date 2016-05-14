@@ -54,19 +54,9 @@ little value.
 2. time-based snapshots [i]
    e. Avoid re-downloading everything one has in their local
       apt-cacher-ng, and filling its cache with files duplicated
-      many times. It's acceptable not to have optimal caching for `dists/`; what
-      matters is `pool`. We have a working PoC using the "merging" strategy (documented on
-      <file:///usr/share/doc/apt-cacher-ng/html/config-serv.html#repmap>),
-      that is `Remap-tails` with no `TargetURLs` list; it works if
-      we do that for the `pool/` directory only (we don't want to
-      merge the cache for the different `dists` directory):
-
-               $ echo 'Remap-tailspool: file:tails-time-based-snapshots-debian-pool.list' \
-                 | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.conf
-
-               $ for origin in $(cd config/APT_snapshots.d/ ; ls --color=never -d *) ; do for y in $(seq 2016 2026) ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' $origin $y $m $d $t ; done ; done ; done ; done | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list ; done
-
-      We need to handle that for:
+      many times. We have a config file generator in:
+      `auto/scripts/update-acng-config`. We need to use it, somehow,
+      for:
       - Vagrant build setup: update this file as part of the build
         process in `vagrant/provision/assets/build-tails`?
       - `tails::builder` Puppet class, used at least by lizard’s
@@ -74,9 +64,8 @@ little value.
         `apt-cacher-ng` would be good enough; note that
         `apt-cacher-ng` is _not_ running on isobuilders themselves
       - manual build setup: we should not bother too much because
-        we'll soon have it Vagrant for everyone
-        ([[!tails_ticket 6354]]), and then a manual build setup will
-        be a corner case, that we can address with some minimal
+        now Vagrant should be working for everyone, so a manual build
+        setup is a corner case, that we can address with some minimal
         documentation. What to do depends on where `apt-cacher-ng`
         runs; when it's on the build host, then we can update the
         configuration as part of the build process, just like for the
@@ -122,10 +111,13 @@ little value.
      [[switching to live APT sources at runtime|freezable_APT_repository#runtime-sources]]
 
 4. tagged snapshots
-   h. for some Tails release: generate manifest, import packages into
-      tagged snapshots, try building *offline* with these tagged
+   h. for some Tails ISO build: create the corresponding
+      tagged snapshots, try building with them, check what is pulled
+      during the build, compare the resulting build manifest and package
+      list with the one from a similar build that used time-based
       snapshots [i]
    i. release process: publish the build manifest
+   k. delete the testing `8.32-alpha` tagged snapshot
    l. Point consumers of the now deprecated `*.{bin,src}pkg` (probably
       only jenkins.debian.net) to the new build manifest.
    m. if needed, implement GC
