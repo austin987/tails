@@ -12,7 +12,7 @@ Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
 end
 
 When /^I start the (Unsafe|I2P) Browser(?: through the GNOME menu)?$/ do |browser_type|
-  step "I start \"#{browser_type}Browser\" via the GNOME \"Internet\" applications menu"
+  step "I start \"#{browser_type} Browser\" via the GNOME \"Internet\" applications menu"
 end
 
 When /^I successfully start the (Unsafe|I2P) Browser$/ do |browser_type|
@@ -113,6 +113,28 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
 end
 
+# This step is limited to the Tor Browser due to #7502 since dogtail
+# uses the same interface.
+Then /^a page titled "([^"]+)" has loaded in the Tor Browser$/ do |title|
+  expected_title = "#{title} - Tor Browser"
+  app = Dogtail::Application.new('Firefox')
+  app.child(expected_title, roleName: 'frame').wait(60)
+  # The 'Stop loading this page' button (graphically shown as an X) is
+  # only shown while a page is loading, so once we see the expected
+  # title *and* this one has disappeared, then we can be sure that the
+  # page has fully loaded.
+  try_for(60) do
+    assert_raise do
+      app.child(
+        'Location',
+        roleName: 'push button',
+        description: 'Stop loading this page',
+        retry: False
+      )
+    end
+  end
+end
+
 Then /^the (.*) has no plugins installed$/ do |browser|
   step "I open the address \"about:plugins\" in the #{browser}"
   step "I see \"TorBrowserNoPlugins.png\" after at most 30 seconds"
@@ -192,4 +214,17 @@ Then /^the file is saved to the default Tor Browser download directory$/ do
   assert_not_nil(@some_file)
   expected_path = "/home/#{LIVE_USER}/Tor Browser/#{@some_file}"
   try_for(10) { $vm.file_exist?(expected_path) }
+end
+
+When /^I open Tails homepage in the (.+)$/ do |browser|
+  step "I open the address \"https://tails.boum.org\" in the #{browser}"
+end
+
+Then /^Tails homepage loads in the Tor Browser$/ do
+  title = 'Tails - Privacy for anyone anywhere'
+  step "a page titled \"#{title}\" has loaded in the Tor Browser"
+end
+
+Then /^Tails homepage loads in the Unsafe Browser$/ do
+  @screen.wait('TailsHomepage.png', 60)
 end

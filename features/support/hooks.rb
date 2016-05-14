@@ -5,6 +5,38 @@ require 'tmpdir'
 
 # Run once, before any feature
 AfterConfiguration do |config|
+  # Reorder the execution of some features. As we progress through a
+  # run we accumulate more and more snapshots and hence use more and
+  # more disk space, but some features will leave nothing behind
+  # and/or possibly use large amounts of disk space temporarily for
+  # various reasons. By running these first we minimize the amount of
+  # disk space needed.
+  prioritized_features = [
+    # Features not using snapshots but using large amounts of scratch
+    # space for other reasons:
+    'features/erase_memory.feature',
+    'features/untrusted_partitions.feature',
+    # Features using temporary snapshots:
+    'features/apt.feature',
+    'features/i2p.feature',
+    'features/root_access_control.feature',
+    'features/time_syncing.feature',
+    'features/tor_bridges.feature',
+    # This feature needs the almost biggest snapshot (USB install,
+    # excluding persistence) and will create yet another disk and
+    # install Tails on it. This should be the peak of disk usage.
+    'features/usb_install.feature',
+  ]
+  feature_files = config.feature_files
+  # The &-intersection is specified to keep the element ordering of
+  # the *left* operand.
+  intersection = prioritized_features & feature_files
+  if not intersection.empty?
+    feature_files -= intersection
+    feature_files = intersection + feature_files
+    config.define_singleton_method(:feature_files) { feature_files }
+  end
+
   # Used to keep track of when we start our first @product feature, when
   # we'll do some special things.
   $started_first_product_feature = false
@@ -95,6 +127,21 @@ def save_failure_artifact(type, path)
   $failure_artifacts << [type, path]
 end
 
+# Due to Tails' Tor enforcement, we only allow contacting hosts that
+# are Tor (or I2P) nodes or located on the LAN. However, when we try
+# to verify that only such hosts are contacted we have a problem --
+# we run all Tor nodes (via Chutney) *and* LAN hosts (used on some
+# tests) on the same host, the one running the test suite. Hence we
+# need to always explicitly track which nodes are LAN or not.
+#
+# Warning: when a host is added via this function, it is only added
+# for the current scenario. As such, if this is done before saving a
+# snapshot, it will not remain after the snapshot is loaded.
+def add_lan_host(ipaddr, port)
+  @lan_hosts ||= []
+  @lan_hosts << { address: ipaddr, port: port }
+end
+
 BeforeFeature('@product') do |feature|
   if TAILS_ISO.nil?
     raise "No Tails ISO image specified, and none could be found in the " +
@@ -127,6 +174,7 @@ BeforeFeature('@product') do |feature|
     $vmstorage = VMStorage.new($virt, VM_XML_PATH)
     $started_first_product_feature = true
   end
+  ensure_chutney_is_running
 end
 
 AfterFeature('@product') do
@@ -166,6 +214,8 @@ Before('@product') do |scenario|
   @os_loader = "MBR"
   @sudo_password = "asdf"
   @persistence_password = "asdf"
+  # See comment for add_lan_host() above.
+  @lan_hosts ||= []
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
@@ -220,14 +270,10 @@ end
 After('@product', '@check_tor_leaks') do |scenario|
   @tor_leaks_sniffer.stop
   if scenario.passed?
-    if @bridge_hosts.nil?
-      expected_tor_nodes = get_all_tor_nodes
-    else
-      expected_tor_nodes = @bridge_hosts
+    allowed_nodes = @bridge_hosts ? @bridge_hosts : allowed_hosts_under_tor_enforcement
+    assert_all_connections(@tor_leaks_sniffer.pcap_file) do |c|
+      allowed_nodes.include?({ address: c.daddr, port: c.dport })
     end
-    leaks = FirewallLeakCheck.new(@tor_leaks_sniffer.pcap_file,
-                                  :accepted_hosts => expected_tor_nodes)
-    leaks.assert_no_leaks
   end
 end
 

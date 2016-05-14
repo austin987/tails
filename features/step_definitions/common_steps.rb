@@ -290,6 +290,7 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   @screen.wait('TailsGreeter.png', 30*60)
   $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
+  step 'I configure Tails to use a simulated Tor network'
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
@@ -304,6 +305,8 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
+  step 'Tails Greeter has dealt with the sudo password'
+  step 'the Tails desktop is ready'
 end
 
 Given /^I enable more Tails Greeter options$/ do
@@ -335,8 +338,6 @@ end
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-  # By this point the only icon left is Vidalia and it will not cause the other systray
-  # icons to shift positions.
   @screen.wait("GnomeSystrayFlorence.png", 180)
   @screen.wait(desktop_started_picture, 180)
   # Disable screen blanking since we sometimes need to wait long
@@ -346,6 +347,12 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.session idle-delay 0',
     :user => LIVE_USER
   )
+  # We need to enable the accessibility toolkit for dogtail.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
+    :user => LIVE_USER,
+  )
+
 end
 
 Then /^Tails seems to have booted normally$/ do
@@ -448,9 +455,10 @@ Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, ima
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
-                                :accepted_hosts => get_all_tor_nodes)
-  leaks.assert_no_leaks
+  allowed_hosts = allowed_hosts_under_tor_enforcement
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    allowed_hosts.include?({ address: c.daddr, port: c.dport })
+  end
 end
 
 Given /^I enter the sudo password in the pkexec prompt$/ do
@@ -537,7 +545,7 @@ Given /^package "([^"]+)" is installed$/ do |package|
 end
 
 When /^I start the Tor Browser$/ do
-  step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -598,7 +606,7 @@ When /^I start and focus GNOME Terminal$/ do
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
-  if !$vm.has_process?("gnome-terminal")
+  if !$vm.has_process?("gnome-terminal-server")
     step "I start and focus GNOME Terminal"
   else
     @screen.wait_and_click('GnomeTerminalWindow.png', 20)
@@ -649,56 +657,10 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   end
 end
 
-def gnome_app_menu_click_helper(click_me, verify_me = nil)
-  try_for(30) do
-    @screen.hide_cursor
-    # The sensitivity for submenus to open by just hovering past them
-    # is extremely high, and may result in the wrong one
-    # opening. Hence we better avoid hovering over undesired submenus
-    # entirely by "approaching" the menu strictly horizontally.
-    r = @screen.wait(click_me, 10)
-    @screen.hover_point(@screen.w, r.getY)
-    @screen.click(r)
-    @screen.wait(verify_me, 10) if verify_me
-    return
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
-      gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
+Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
+  app = Dogtail::Application.new('gnome-shell')
+  for element in ['Applications', submenu, app_name] do
+    app.child(element, roleName: 'label').click
   end
 end
 
@@ -823,9 +785,9 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
 end
 
 Given /^a web server is running on the LAN$/ do
-  web_server_ip_addr = $vmnet.bridge_ip_addr
-  web_server_port = 8000
-  @web_server_url = "http://#{web_server_ip_addr}:#{web_server_port}"
+  @web_server_ip_addr = $vmnet.bridge_ip_addr
+  @web_server_port = 8000
+  @web_server_url = "http://#{@web_server_ip_addr}:#{@web_server_port}"
   web_server_hello_msg = "Welcome to the LAN web server!"
 
   # I've tested ruby Thread:s, fork(), etc. but nothing works due to
@@ -840,14 +802,15 @@ Given /^a web server is running on the LAN$/ do
   require "webrick"
   STDOUT.reopen("/dev/null", "w")
   STDERR.reopen("/dev/null", "w")
-  server = WEBrick::HTTPServer.new(:BindAddress => "#{web_server_ip_addr}",
-                                   :Port => #{web_server_port},
+  server = WEBrick::HTTPServer.new(:BindAddress => "#{@web_server_ip_addr}",
+                                   :Port => #{@web_server_port},
                                    :DocumentRoot => "/dev/null")
   server.mount_proc("/") do |req, res|
     res.body = "#{web_server_hello_msg}"
   end
   server.start
 EOF
+  add_lan_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
   try_for(10, :msg => "It seems the LAN web server failed to start") do
     Process.kill(0, proc.pid) == 1
@@ -872,38 +835,6 @@ end
 
 When /^I open a page on the LAN web server in the (.*)$/ do |browser|
   step "I open the address \"#{@web_server_url}\" in the #{browser}"
-end
-
-def force_new_tor_circuit(with_vidalia=nil)
-  debug_log("Forcing new Tor circuit...")
-  if with_vidalia
-    begin
-      step 'process "vidalia" is running'
-    rescue Test::Unit::AssertionFailedError
-      debug_log("Vidalia was not running. Attempting to start Vidalia...")
-      $vm.spawn('restart-vidalia')
-      step 'process "vidalia" is running within 15 seconds'
-    end
-    # Sometimes Sikuli gets confused and recognizes the yellow-colored vidalia systray
-    # icon as the green one. This has been seen when Vidalia needed to be
-    # restarted in the above 'begin' block.
-    #
-    # try_for is used here for that reason, otherwise this step may fail
-    # because sikuli presumaturely right-clicked the Vidalia icon and the 'New
-    # Identity' option isn't clickable yet..
-    try_for(3 * 60) do
-      # Let's be *sure* that vidalia is still running. I'd hate to spend up to
-      # three minutes waiting for an icon that isn't there because Vidalia, for
-      # whatever reason, is no longer running...
-      step 'process "vidalia" is running'
-      @screen.wait_and_right_click('VidaliaSystrayReady.png', 10)
-      @screen.wait_and_click('VidaliaMenuNewIdentity.png', 10)
-    end
-    @screen.wait('VidaliaNewIdentityNotification.png', 20)
-    @screen.waitVanish('VidaliaNewIdentityNotification.png', 60)
-  else
-    $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
-  end
 end
 
 Given /^I wait (?:between (\d+) and )?(\d+) seconds$/ do |min, max|
@@ -954,8 +885,8 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
   end
 end
 
-Then /^I force Tor to use a new circuit( in Vidalia)?$/ do |with_vidalia|
-  force_new_tor_circuit(with_vidalia)
+Then /^I force Tor to use a new circuit$/ do
+  force_new_tor_circuit
 end
 
 When /^I eject the boot medium$/ do

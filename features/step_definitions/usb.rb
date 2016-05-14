@@ -80,7 +80,7 @@ def usb_install_helper(name)
 end
 
 When /^I start Tails Installer$/ do
-  step 'I start "TailsInstaller" via the GNOME "Tails" applications menu'
+  step 'I start "Tails Installer" via the GNOME "Tails" applications menu'
   @screen.wait('USBCloneAndInstall.png', 30)
 end
 
@@ -178,8 +178,17 @@ Given /^I enable all persistence presets$/ do
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
+When /^I disable the first persistence preset$/ do
+  step 'I start "Configure persistent volume" via the GNOME "Tails" applications menu'
+  @screen.wait('PersistenceWizardPresets.png', 300)
+  @screen.type(Sikuli::Key.SPACE)
+  @screen.wait_and_click('PersistenceWizardSave.png', 10)
+  @screen.wait('PersistenceWizardDone.png', 30)
+  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+end
+
 Given /^I create a persistent partition$/ do
-  step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
+  step 'I start "Configure persistent volume" via the GNOME "Tails" applications menu'
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
@@ -325,13 +334,21 @@ def tails_persistence_enabled?
                      'test "$TAILS_PERSISTENCE_ENABLED" = true').success?
 end
 
-Given /^all persistence presets(| from the old Tails version) are enabled$/ do |old_tails|
+Given /^all persistence presets(| from the old Tails version)(| but the first one) are enabled$/ do |old_tails, except_first|
+  assert(old_tails.empty? || except_first.empty?, "Unsupported case.")
   try_for(120, :msg => "Persistence is disabled") do
     tails_persistence_enabled?
   end
+  unexpected_mounts = Array.new
   # Check that all persistent directories are mounted
   if old_tails.empty?
     expected_mounts = persistent_mounts
+    if ! except_first.empty?
+      first_expected_mount_source      = expected_mounts.keys[0]
+      first_expected_mount_destination = expected_mounts[first_expected_mount_source]
+      expected_mounts.delete(first_expected_mount_source)
+      unexpected_mounts = [first_expected_mount_destination]
+    end
   else
     assert_not_nil($remembered_persistence_mounts)
     expected_mounts = $remembered_persistence_mounts
@@ -340,6 +357,10 @@ Given /^all persistence presets(| from the old Tails version) are enabled$/ do |
   for _, dir in expected_mounts do
     assert(mount.include?("on #{dir} "),
            "Persistent directory '#{dir}' is not mounted")
+  end
+  for dir in unexpected_mounts do
+    assert(! mount.include?("on #{dir} "),
+           "Persistent directory '#{dir}' is mounted")
   end
 end
 
@@ -568,7 +589,7 @@ Then /^only the expected files are present on the persistence partition on USB d
 end
 
 When /^I delete the persistent partition$/ do
-  step 'I start "DeletePersistentVolume" via the GNOME "Tails" applications menu'
+  step 'I start "Delete persistent volume" via the GNOME "Tails" applications menu'
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)

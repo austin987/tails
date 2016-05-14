@@ -23,8 +23,8 @@ Feature: Keyserver interaction with GnuPG
     And the Seahorse operation is successful
     Then the "10CC5BC7" key is in the live user's public keyring
 
-  Scenario: Fetching OpenPGP keys using Seahorse via the Tails OpenPGP Applet should work and be done over Tor.
-    When I fetch the "10CC5BC7" OpenPGP key using Seahorse via the Tails OpenPGP Applet
+  Scenario: Fetching OpenPGP keys using Seahorse via the OpenPGP Applet should work and be done over Tor.
+    When I fetch the "10CC5BC7" OpenPGP key using Seahorse via the OpenPGP Applet
     And the Seahorse operation is successful
     Then the "10CC5BC7" key is in the live user's public keyring
 
@@ -40,12 +40,12 @@ Feature: Keyserver interaction with GnuPG
     And the Seahorse operation is successful
     Then the key "10CC5BC7" has more than 2 signatures
 
-  Scenario: Syncing OpenPGP keys using Seahorse started from the Tails OpenPGP Applet should work and be done over Tor.
+  Scenario: Syncing OpenPGP keys using Seahorse started from the OpenPGP Applet should work and be done over Tor.
     Given I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI without any signatures
     And the GnuPG fetch is successful
     And the "10CC5BC7" key is in the live user's public keyring
     But the key "10CC5BC7" has only 2 signatures
-    When I start Seahorse via the Tails OpenPGP Applet
+    When I start Seahorse via the OpenPGP Applet
     Then Seahorse has opened
     And I enable key synchronization in Seahorse
     And I synchronize keys in Seahorse

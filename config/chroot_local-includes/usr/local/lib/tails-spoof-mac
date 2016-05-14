@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -u
 
 # This script spoofs or resets the MAC address of all NICs given as
 # arguments according to the setting in Tails Greeter. The default (i.e
@@ -136,8 +137,8 @@ done
 # MAC spoofing fail-safe: if $NIC's MAC address isn't spoofed at this
 # point we have to take some drastic measures in order to prevent
 # potential leaks.
-if [ -z "${OLD_MAC}" ] || [ -z "${NEW_MAC}" ] || \
-   [ "${OLD_MAC}" = "${NEW_MAC}" ]
+if [ -z "${OLD_MAC:-}" ] || [ -z "${NEW_MAC:-}" ] || \
+   [ "${OLD_MAC:-}" = "${NEW_MAC:-}" ]
 then
     log "Failed to spoof MAC address of NIC ${NIC}. Going into panic mode."
     if ! mac_spoof_panic "${NIC}"; then
