@@ -18,8 +18,8 @@ toggle_src_APT_sources() {
          cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
             | grep --extended-regexp --line-regexp --invert-match \
                  'deb\s+file:/root/local-packages\s+\./' \
-            | grep --extended-regexp --invert-match \
-                 '^deb\s+http://time-based\.snapshots\.deb\.tails\.boum.org/torproject/' \
+            | grep --perl-regexp --invert-match \
+                 '^deb\s+http://(?:tagged|time-based)\.snapshots\.deb\.tails\.boum.org/[^/]+/torproject/' \
             | sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' \
             > "$TEMP_APT_SOURCES"
          ;;
