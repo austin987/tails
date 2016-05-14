@@ -84,6 +84,7 @@ fi
 cd "$WORKSPACE"
 git checkout --force "$REV"
 git reset --hard "$COMMIT"
+git submodule update --init
 
 if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
 	as_root_do ./auto/scripts/update-acng-config
