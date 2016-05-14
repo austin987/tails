@@ -24,13 +24,15 @@ $RUN_LB_CONFIG --distribution jessie ${@}
 
 # set Amnesia's general options
 $RUN_LB_CONFIG \
+   --verbose \
    --apt-recommends false \
    --backports false \
    --binary-images iso \
    --binary-indices false \
    --checksums none \
    --bootappend-live "${AMNESIA_APPEND}" \
-   --bootstrap "cdebootstrap" \
+   --bootstrap debootstrap \
+   --bootstrap-config tails-build-jessie \
    --archive-areas "main contrib non-free" \
    --includes none \
    --iso-application="The Amnesic Incognito Live System" \
@@ -106,3 +108,11 @@ install -m 0755 -d config/chroot_local-includes/usr/local/lib/nodejs
 install -m 0755 \
    submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
    config/chroot_local-includes/usr/local/lib/nodejs/
+
+# custom debootstrap script, setting some APT magic to log downloads:
+patch \
+    --follow-symlinks \
+    --output=/usr/share/debootstrap/scripts/tails-build-jessie \
+    /usr/share/debootstrap/scripts/jessie \
+    data/debootstrap/scripts/jessie.patch
+sed -i "s,%%topdir%%,$(pwd)," /usr/share/debootstrap/scripts/tails-build-jessie

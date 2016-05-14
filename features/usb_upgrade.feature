@@ -56,7 +56,6 @@ Feature: Upgrading an old Tails USB installation
     And I start the computer
     When the computer boots Tails
     And I log in to a new session
-    And the Tails desktop is ready
     And all notifications have disappeared
     And I create a 4 GiB disk named "old"
     And I plug USB drive "old"
