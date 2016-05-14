@@ -1,0 +1,70 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o pipefail
+
+list_origins () {
+   (
+      cd config/APT_snapshots.d/
+      ls --color=never -1 | grep -v --line-regexp '\.placeholder'
+   )
+}
+
+print_tagged_snapshots_pool_url () {
+   origin="$1"
+   version="$2"
+   printf \
+       'http://tagged.snapshots.deb.tails.boum.org/%s/%s/pool/\n' \
+       "$version" "$origin"
+}
+
+conf=/etc/apt-cacher-ng/tails-snapshots.conf
+for origin in $(list_origins) ; do
+   [ "$origin" != .placeholder ] || continue
+   echo "Remap-tails-snapshots-${origin}-pool: file:tails-time-based-snapshots-$origin-pool.list file:tails-tagged-snapshots-$origin-pool.list"
+done > "$conf"
+chmod 644 "$conf"
+
+# Generate .list files for time-based snapshots
+for origin in $(list_origins) ; do
+   list="/etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list"
+   for year in $(seq 2016 2026) ; do
+      for month in $(seq 1 12); do
+         for day in $(seq 1 31) ; do
+            for n in $(seq 1 4) ; do
+               printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' \
+                      "$origin" "$year" "$month" "$day" "$n"
+            done
+         done
+      done
+   done \
+   > "$list"
+   chmod 644 "$list"
+done
+
+# Generate .list files for tagged snapshots
+for origin in $(list_origins) ; do
+   list="/etc/apt-cacher-ng/tails-tagged-snapshots-$origin-pool.list"
+   for major in $(seq 2 8) ; do
+      for minor in $(seq 0 32); do
+         for suffix in "" alpha beta rc ; do
+            for suffix_n in "" $(seq 1 8); do
+               if [ -z "$suffix" ]; then
+                   version="${major}.${minor}"
+               elif [ -z "$suffix_n" ]; then
+                   version="${major}.${minor}-${suffix}"
+               else
+                   version="${major}.${minor}-${suffix}${suffix_n}"
+               fi
+               print_tagged_snapshots_pool_url "$origin" "$version"
+            done
+         done
+         for emergency in $(seq 1 4) ; do
+	    version="${major}.${minor}.${emergency}"
+            print_tagged_snapshots_pool_url "$origin" "$version"
+         done
+      done
+   done > "$list"
+   chmod 644 "$list"
+done
