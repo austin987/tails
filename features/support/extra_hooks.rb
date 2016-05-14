@@ -46,11 +46,59 @@ def AfterFeature(*tag_expressions, &block)
   $after_feature_hooks << SimpleHook.new(tag_expressions, block)
 end
 
+require 'cucumber/formatter/console'
+if not($at_exit_print_artifacts_dir_patching_done)
+  module Cucumber::Formatter::Console
+    if method_defined?(:print_stats)
+      alias old_print_stats print_stats
+    end
+    def print_stats(*args)
+      if Dir.exists?(ARTIFACTS_DIR) and Dir.entries(ARTIFACTS_DIR).size > 2
+        @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
+        @io.puts
+      end
+      if self.class.method_defined?(:old_print_stats)
+        old_print_stats(*args)
+      end
+    end
+  end
+  $at_exit_print_artifacts_dir_patching_done = true
+end
+
+def info_log(message = "", options = {})
+  options[:color] = :clear
+  # This trick allows us to use a module's (~private) method on a
+  # one-off basis.
+  cucumber_console = Class.new.extend(Cucumber::Formatter::Console)
+  puts cucumber_console.format_string(message, options[:color])
+end
+
 def debug_log(message, options = {})
   $debug_log_fns.each { |fn| fn.call(message, options) } if $debug_log_fns
 end
 
 require 'cucumber/formatter/pretty'
+# Backport part of commit af940a8 from the cucumber-ruby repo. This
+# fixes the "out hook output" for the Pretty formatter so stuff
+# written via `puts` after a Scenario has run its last step will be
+# written, instead of delayed to the next Feature/Scenario (if any) or
+# dropped completely (if not).
+# XXX: This can be removed once we stop supporting Debian Jessie
+# around when Debian Stretch is released.
+if Gem::Version.new(Cucumber::VERSION) < Gem::Version.new('2.0.0.beta.4')
+  module Cucumber
+    module Formatter
+      class Pretty
+        def after_feature_element(feature_element)
+          print_messages
+          @io.puts
+          @io.flush
+        end
+      end
+    end
+  end
+end
+
 module ExtraFormatters
   # This is a null formatter in the sense that it doesn't ever output
   # anything. We only use it do hook into the correct events so we can
@@ -70,7 +118,7 @@ module ExtraFormatters
 
     def after_feature(feature)
       if $after_feature_hooks
-        $after_feature_hooks.each do |hook|
+        $after_feature_hooks.reverse.each do |hook|
           hook.invoke(feature) if feature.accept_hook?(hook)
         end
       end

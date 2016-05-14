@@ -67,7 +67,7 @@ In practice, `config/APT_overlays.d/` contains:
 * for a topic branch:
   - if needed, a file that is named like the branch's own overlay APT
     suite; e.g. for the `bugfix/12345-whatever` branch, it would be
-    called `config/APT_overlays.d/bugfix-12345-whatever.suite`
+    called `config/APT_overlays.d/bugfix-12345-whatever`
   - any file representing APT suites that came from merging its base
     branch into this topic branch, that is:
 * for a base branch (`stable`, `testing`, `devel` or
@@ -88,12 +88,7 @@ At release time, the release manager:
 3. merges the release branch into other base branches as needed, and
    ensures that all resulting `config/APT_overlays.d/`:s make sense.
 
-Given this, the `experimental` branch doesn't need to be seen as
-a base branch anymore; instead, it can be seen as an integration
-branch of overlays on top of the `devel` one: its `config/APT_overlays.d/`
-will merely add, on top of `devel`'s one, the list of APT suites that WIP
-branches merged into `experimental` have introduced. On the other
-hand, `feature/jessie` does need to be a base branch: we want to be
+Note that a branch like `feature/jessie` needs to be a base branch: we want to be
 able to work on topic branches forked off `feature/jessie`.
 
 SSH access
@@ -119,6 +114,10 @@ Creating a new branch
 
 Push your branch to Git and wait a few minutes for the new APT suite
 to appear.
+
+Then you probably want to tell the build system, via
+`config/APT_overlays.d/` (documented above), that this new APT suite
+must be used when building that new branch.
 
 Importing a new package
 -----------------------
@@ -204,26 +203,26 @@ operation must be done on the APT suites.
 
    1. Set some environment variables:
 
-        # the branch you want to merge
-        SRC=stable
-        # the branch you want to merge _into_
-        DST=devel
+            # the branch you want to merge
+            SRC=stable
+            # the branch you want to merge _into_
+            DST=devel
 
    2. Merge in Git and APT:
 
-        git checkout "$DST" && \
-        git merge "$SRC" && \
-        ssh reprepro@incoming.deb.tails.boum.org \
-             tails-merge-suite "$SRC" "$DST"
+            git checkout "$DST" && \
+            git merge "$SRC" && \
+            ssh reprepro@incoming.deb.tails.boum.org \
+                 tails-merge-suite "$SRC" "$DST"
 
    3. Restore the `config/base_branch` if needed:
 
-        echo "${DST}" > config/base_branch && \
-        git commit config/base_branch -m "Restore ${DST}'s base branch." || :
+            echo "${DST}" > config/base_branch && \
+            git commit config/base_branch -m "Restore ${DST}'s base branch." || :
 
    4. Push:
 
-        git push origin "${DST}:${DST}"
+            git push origin "${DST}:${DST}"
 
 4. Make sure not to re-add, into the branch we merge into, any package
    that was removed from it, but still is in the branch we merge from:

@@ -1,0 +1,131 @@
+[[!meta title="Installing Tails on a USB stick from Mac using the command line"]]
+
+[[!meta stylesheet="bootstrap" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/assistant" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/dave" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/steps" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/mac-usb" rel="stylesheet" title=""]]
+[[!meta script="install/inc/js/dave"]]
+
+<div class="step-image">[[!img install/inc/infography/os-mac.png link="no"]]</div>
+
+<p class="start">Start in Mac OS X.</p>
+
+[[!inline pages="install/inc/tails-installation-assistant.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/download.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/install_intermediary_intro.inline" raw="yes"]]
+
+  1. Open <span class="application">Terminal</span> from
+     <span class="menuchoice">
+       <span class="guimenu">Applications</span>&nbsp;▸
+       <span class="guisubmenu">Utilities</span>&nbsp;▸
+       <span class="guimenuitem">Terminal.app</span></span>.
+
+  1. Execute the following command:
+
+        diskutil list
+
+     It returns a list of the storage devices on the system. For example:
+
+        $ diskutil list
+        /dev/disk0
+          #:                     TYPE NAME         SIZE      IDENTIFIER
+          0:    GUID_partition_scheme             *500.1 GB  disk0
+          1:                      EFI              209.7 MB  disk0s1
+          2:                Apple_HFS MacDrive     250.0 GB  disk0s2
+          3:                      EFI              134.1 GB  disk0s3
+          4:     Microsoft Basic Data BOOTCAMP     115.5 GB  disk0s4
+
+     <div class="step-image">[[!img install/inc/infography/plug-first-usb.png link="no"]]</div>
+
+  1. Plug the first USB stick in the computer.
+
+  1. Execute again the same command:
+
+        diskutil list
+
+     Your USB stick appears as a new device in the list. Check
+     that its size corresponds to the size of your USB stick.
+
+        $ diskutil list
+        /dev/disk0
+          #:                     TYPE NAME         SIZE      IDENTIFIER
+          0:    GUID_partition_scheme             *500.1 GB  disk0
+          1:                      EFI              209.7 MB  disk0s1
+          2:                Apple_HFS MacDrive     250.0 GB  disk0s2
+          3:                      EFI              134.1 GB  disk0s3
+          4:     Microsoft Basic Data BOOTCAMP     115.5 GB  disk0s4
+        /dev/disk1
+          #:                     TYPE NAME         SIZE      IDENTIFIER
+          0:   FDisk_partition_scheme             *4.0 GB    disk1
+          1:                Apple_HFS Untitled 1   4.0 GB    disk1s1
+
+  1. Take note of the *device name* of your USB stick.
+     In this example, the USB stick is 4.0 GB and its device name is <span class="code">/dev/disk1</span>.
+     Yours might be different.
+
+     <div class="caution">
+     <p>If you are unsure about the device name, you should stop proceeding or
+     <strong>you risk overwriting any hard disk on the system</strong>.</p>
+     </div>
+
+  1. Execute the following command to safely remove the USB stick. Replace <span class="code">[device]</span>
+     with the device name found in step 5.
+
+        diskutil unmountDisk [device]
+
+     <div class="step-image">[[!img install/inc/infography/install-intermediary-tails.png link="no"]]</div>
+
+  1. Execute the following command to copy the ISO image that you
+downloaded earlier to the USB stick. Replace:
+
+     - <span class="code">[tails.iso]</span> with the path to the ISO image
+
+       <div class="tip">
+       <p>If you are unsure about the path to the ISO image, you can insert the
+       correct path by dragging and dropping the icon of the ISO image from
+       <span class="application">Finder</span> onto <span class="application">
+       Terminal</span>.</p>
+       </div>
+
+     - <span class="code">[device]</span> with the device name found in step 5
+
+       <div class="tip">
+       <p>You can try adding <span class="code">r</span> before <span class="code">disk</span> to make the installation faster.</p>
+       </div>
+
+     <pre>dd if=[tails.iso] of=[device] bs=16m && sync</pre>
+
+     You should get something like this:
+
+      dd if=/Users/me/tails-i386-1.3.iso of=/dev/rdisk9 bs=16m && sync
+
+     If no error message is returned, Tails is being copied on the USB
+     stick. The copy takes some time, generally a few minutes.
+
+     <div class="note">
+     <p>If you get a <span class="guilabel">Permission denied</span> error, try
+     adding <code>sudo</code> at the beginning of the command:</p>
+
+     <pre>sudo dd if=[tails.iso] of=[device] bs=16m && sync</pre>
+
+     <p>If you get an <span class="guilabel">invalid number ‘16m’</span> error, try
+     using <code>16M</code> instead:</p>
+
+     <pre>dd if=[tails.iso] of=[device] bs=16M && sync</pre>
+
+     </div>
+
+     The installation is complete once the command prompt reappeared.
+
+[[!inline pages="install/inc/steps/install_intermediary_outro.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/restart_first_time.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/install_final.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/restart_second_time.inline" raw="yes"]]
+
+[[!inline pages="install/inc/steps/create_persistence.inline" raw="yes"]]

@@ -1,0 +1,93 @@
+[[!meta title="Network connection (configuration and startup)"]]
+
+This is about [[!tails_ticket 10491]].
+
+  - Original post-its by Lunar:
+
+    <a href="https://labs.riseup.net/code/attachments/download/1250/2015.10.02.jpg"><img src="https://labs.riseup.net/code/attachments/download/1250/2015.10.02.jpg" width="300px"></a>
+
+    <https://mailman.boum.org/pipermail/tails-dev/2015-October/009593.html>
+
+  - Digital rewrite by Spencer:
+
+    <a href="https://labs.riseup.net/code/attachments/download/1251/2015.12.04.png"><img src="https://labs.riseup.net/code/attachments/download/1251/2015.12.04.png" width="300px"></a>
+
+<https://mailman.boum.org/pipermail/tails-ux/2015-December/000812.html>
+
+Current issues in Tails
+=======================
+
+  - After Tails Greeter, it might be hard for some people to understand where
+  to click on the GNOME desktop to connect a Wi-Fi network.
+
+  - It's not possible to go from direct Tor connection to bridge mode in case
+  you realize once in the session that you actually need them to connect.
+
+  - It's hard to know whether you need to log in through a captive portal.
+
+  - There's no way of triggering Tor to reconnect after logging in through a
+  captive portal.
+
+  - Configuring bridges is done in two steps: (1) activate in the Greeter and
+  (2) configure in Tor Launcher. It can be scary for people who cannot afford
+  connecting without bridges to postponed the configuration after the session
+  is started.
+
+  - Bridges, firewall and proxy have to be configured again each time.
+
+  - There is no visual feedback on whether the connection to Tor is making
+  progress.
+
+  - If MAC spoofing fails but I decide that it's OK not to spoof MAC in my
+  situation, then I have to reboot Tails all the way.
+
+Open questions
+==============
+
+  - What's left from this configuration process on the desktop after Tor is
+  started?
+    - What do we do with the NetworkManager applet?
+    - Do we allow changing or visualizing the current settings?
+
+  - What's the best way of asking for bridges, keeping in mind
+    situations where people might be at risk if they don't use them?
+    - Lunar's proposal: Say you're at risk in the Greeter, then configure
+    bridges in the session.
+    - other possibility: Do everything in the session (offline mode and MAC
+    spoofing could still be optional settings in the Greeter), if so how?
+    - if we have persistent network configuration (for example bridges) per
+    local network, then this might conflict (or duplicate) the fact of
+    asking about bridges in the Greeter
+    - bridges might be needed on a give local network but not on
+    another, would it be possible to ask about that *after* selecting
+    the local network?
+
+  - Could we, technically speaking, do something more useful about the failure
+  of MAC spoofing than disabling the interface? in the Greeter? in the session?
+    - Should we ask for confirmation before disabling the interface?
+
+  - How shall we integrate the captive portal browser on the desktop in case we
+  need to get back to it (to log in again, to log out)?
+    - Lunar's proposal: as a detached windows
+    - other possibility: invisible browser by default, can be displayed again somehow
+
+  - Do we want to tell people about entry guards? For example, feedback
+    the entry guard to be selected before connecting? Random entry
+    guards are bad for security but persistent entry guards can ease
+    tracking.
+
+Process
+=======
+
+<a id="iff"></a>
+
+- We had a session at the IFF to gather feedback on mockups. See [[!tails_ticket 11245]].
+  - [flowchart behind the mockups](https://labs.riseup.net/code/attachments/download/1293/network-20160306.odg)
+  - [mockups](https://tails.boum.org/contribute/how/promote/material/slides/IFF-20160306/)
+  - [feedback from post-if notes](https://labs.riseup.net/code/attachments/download/1291/iff-feedback.ods)
+
+Related work
+============
+
+  - [[Captive portal detection|detect_captive_portals]]
+  - [[UX testing of circumvention features of Tor Browser|https://github.com/lindanlee/circumvention-ux-tor]]

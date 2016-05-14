@@ -1,4 +1,5 @@
-@product
+#10497: wait_until_tor_is_working
+@product @fragile
 Feature: Chatting anonymously using Pidgin
   As a Tails user
   when I chat using Pidgin
@@ -20,7 +21,8 @@ Feature: Chatting anonymously using Pidgin
     And I say something to my friend
     Then I receive a response from my friend
 
-  @check_tor_leaks
+  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
+  @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP in a multi-user chat
     Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
@@ -34,6 +36,11 @@ Feature: Chatting anonymously using Pidgin
     Then I can see that my friend joined the multi-user chat
     And I say something to my friend in the multi-user chat
     Then I receive a response from my friend in the multi-user chat
+    When I say https://labs.riseup.net/code/projects/tails/roadmap to my friend in the multi-user chat
+    Then I see the Tails roadmap URL
+    When I wait 10 seconds
+    And I click on the Tails roadmap URL
+    Then the Tor Browser has started and loaded the Tails roadmap
 
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
@@ -51,25 +58,16 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
-  # 10375 - Increase the number of Tor circuit retries in the test suite
-  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
-  # 10443 - OFTC tests are fragile
-  @check_tor_leaks @fragile
-  Scenario: Connecting to the #tails IRC channel with the pre-configured account
+  @check_tor_leaks
+  Scenario: Connecting to the tails multi-user chat with my XMPP account
     Given I have started Tails from DVD and logged in and the network is connected
     And Pidgin has the expected accounts configured with random nicknames
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
-    When I activate the "irc.oftc.net" Pidgin account
+    And I create my XMPP account
     And I close Pidgin's account manager window
-    Then Pidgin successfully connects to the "irc.oftc.net" account
-    And I can join the "#tails" channel on "irc.oftc.net"
-    When I type "/topic"
-    And I press the "ENTER" key
-    Then I see the Tails roadmap URL
-    When I click on the Tails roadmap URL
-    Then the Tor Browser has started and loaded the Tails roadmap
-    And the "irc.oftc.net" account only responds to PING and VERSION CTCP requests
+    Then Pidgin automatically enables my XMPP account
+    And I can join the "tails" channel on "conference.riseup.net"
 
   Scenario: Adding a certificate to Pidgin
     Given I have started Tails from DVD and logged in and the network is connected
@@ -91,6 +89,7 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's certificate manager
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
+  #10720: Tails Installer freezes on Jenkins
   @check_tor_leaks @fragile
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
@@ -101,20 +100,20 @@ Feature: Chatting anonymously using Pidgin
     And all notifications have disappeared
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
+    When I create my XMPP account
+    And I close Pidgin's account manager window
+    Then Pidgin automatically enables my XMPP account
     # And I generate an OTR key for the default Pidgin account
     And I take note of the configured Pidgin accounts
-    # And I take note of the OTR key for Pidgin's "irc.oftc.net" account
+    # And I take note of the OTR key for Pidgin's "conference.riseup.net" account
     And I shutdown Tails and wait for the computer to power off
     Given a computer
-    And I start Tails from USB drive "current" and I login with persistence enabled
+    And I start Tails from USB drive "__internal" and I login with persistence enabled
     And Pidgin has the expected persistent accounts configured
     # And Pidgin has the expected persistent OTR keys
     When I start Pidgin through the GNOME menu
-    Then I see Pidgin's account manager window
-    When I activate the "irc.oftc.net" Pidgin account
-    And I close Pidgin's account manager window
-    Then Pidgin successfully connects to the "irc.oftc.net" account
-    And I can join the "#tails" channel on "irc.oftc.net"
+    Then Pidgin automatically enables my XMPP account
+    And I join some empty multi-user chat
     # Exercise Pidgin AppArmor profile with persistence enabled.
     # This should really be in dedicated scenarios, but it would be
     # too costly to set up the virtual USB drive with persistence more

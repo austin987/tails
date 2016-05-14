@@ -101,27 +101,21 @@ When /^Tails has booted a 64-bit kernel$/ do
          "Tails has not booted a 64-bit kernel.")
 end
 
-Then /^GNOME Screenshot is configured to save files to the live user's home directory$/ do
-  home = "/home/#{LIVE_USER}"
-  save_path = $vm.execute_successfully(
-    "gsettings get org.gnome.gnome-screenshot auto-save-directory",
-    :user => LIVE_USER
-  ).stdout.chomp.tr("'","")
-  assert_equal("file://#{home}", save_path,
-               "The GNOME screenshot auto-save-directory is not set correctly.")
+Then /^there is no screenshot in the live user's Pictures directory$/ do
+  pictures_directory = "/home/#{LIVE_USER}/Pictures"
+  assert($vm.execute(
+          "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
+        ).stdout.empty?,
+         "Existing screenshots were found in the live user's Pictures directory.")
 end
 
-Then /^there is no screenshot in the live user's home directory$/ do
-  home = "/home/#{LIVE_USER}"
-  assert($vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?,
-         "Existing screenshots were found in the live user's home directory.")
-end
-
-Then /^a screenshot is saved to the live user's home directory$/ do
-  home = "/home/#{LIVE_USER}"
-  try_for(10, :msg=> "No screenshot was created in #{home}") {
-    !$vm.execute("find '#{home}' -name 'Screenshot*.png' -maxdepth 1").stdout.empty?
-  }
+Then /^a screenshot is saved to the live user's Pictures directory$/ do
+  pictures_directory = "/home/#{LIVE_USER}/Pictures"
+  try_for(10, :msg=> "No screenshot was created in #{pictures_directory}") do
+    !$vm.execute(
+      "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
+    ).stdout.empty?
+  end
 end
 
 Then /^the VirtualBox guest modules are available$/ do
@@ -178,6 +172,28 @@ def get_seccomp_status(process)
   return status.match(/^Seccomp:\s+([0-9])/)[1].chomp.to_i
 end
 
+def get_apparmor_status(pid)
+  apparmor_status = $vm.file_content("/proc/#{pid}/attr/current").chomp
+  if apparmor_status.include?(')')
+    # matches something like     /usr/sbin/cupsd (enforce)
+    # and only returns what's in the parentheses
+    return apparmor_status.match(/[^\s]+\s+\((.+)\)$/)[1].chomp
+  else
+    return apparmor_status
+  end
+end
+
+Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
+  if process == 'i2p'
+    $vm.execute_successfully('service i2p status')
+    pid = $vm.file_content('/run/i2p/i2p.pid').chomp
+  else
+    assert($vm.has_process?(process), "Process #{process} not running.")
+    pid = $vm.pidof(process)[0]
+  end
+  assert_equal(mode, get_apparmor_status(pid))
+end
+
 Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mode$/ do |process,mode|
   status = get_seccomp_status(process)
   if mode == 'strict'
@@ -187,4 +203,50 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
   else
     raise "Unsupported mode #{mode} passed"
   end
+end
+
+Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
+  secret_file = '/secret'
+  secret_contents = 'T0P S3Cr1t -- 3yEs oN1y'
+  $vm.file_append(secret_file, secret_contents)
+  $vm.execute_successfully("chmod u=rw,go= #{secret_file}")
+  $vm.execute_successfully("chown root:root #{secret_file}")
+  script_path = '/usr/local/sbin/tails-debugging-info'
+  script_lines = $vm.file_content(script_path).split("\n")
+  script_lines.grep(/^debug_file\s+/).each do |line|
+    _, user, debug_file = line.split
+    # root can always mount symlink attacks
+    next if user == 'root'
+    # Remove quoting around the file
+    debug_file.gsub!(/["']/, '')
+    # Skip files that do not exist, or cannot be removed (e.g. the
+    # ones in /proc).
+    next if not($vm.execute("rm #{debug_file}").success?)
+    # Check what would happen *if* the amnesia user managed to replace
+    # the debugging file with a symlink to the secret.
+    $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
+    $vm.execute_successfully("chown --no-dereference #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
+    if $vm.execute("sudo /usr/local/sbin/tails-debugging-info | " +
+                   "grep '#{secret_contents}'",
+                   :user => LIVE_USER).success?
+      raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
+    end
+    # Remove the secret so it cannot possibly interfere with the
+    # following iterations (even though it should not).
+    $vm.execute_successfully("echo > #{debug_file}")
+  end
+end
+
+When /^I disable all networking in the Tails Greeter$/ do
+  begin
+    @screen.click('TailsGreeterDisableAllNetworking.png')
+  rescue FindFailed
+    @screen.type(Sikuli::Key.PAGE_DOWN)
+    @screen.click('TailsGreeterDisableAllNetworking.png')
+  end
+end
+
+Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|
+  picture = not_usable ? 'TorStatusNotUsable' : 'TorStatusUsable'
+  @screen.find("#{picture}.png")
 end

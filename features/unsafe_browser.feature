@@ -36,13 +36,6 @@ Feature: Browsing the web using the Unsafe Browser
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 
-  Scenario: Opening check.torproject.org in the Unsafe Browser shows the red onion and a warning message.
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I successfully start the Unsafe Browser
-    And I open the address "https://check.torproject.org" in the Unsafe Browser
-    Then I see "UnsafeBrowserTorCheckFail.png" after at most 60 seconds
-    And the clearnet user has sent packets out to the Internet
-
   Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser

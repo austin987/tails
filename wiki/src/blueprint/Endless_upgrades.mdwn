@@ -1,0 +1,154 @@
+[[!meta title="Endless upgrades"]]
+
+Currently automatic upgrades have the limitation that only some N
+number of them can be performed in a row before the system partition
+runs out of space and automatic upgrades cannot be done further, but a
+full, manual upgrade is needed. Ideally, automatic upgrades should be
+possible forever, which will improve the UX and eliminate the
+recurring need to manually verify the Tails ISO when doing these
+unavoidable full upgrades.
+
+[[!toc levels=2]]
+
+# Different approaches to endless upgrades
+
+While examining these approaches, let's forget about IUKs for a while,
+and only consider full automatic upgrades ([[!tails_ticket 7499]]):
+
+## Extract upgrade from ISO
+
+Keeping our current partition layout and filesystems, a full upgrade of
+a running system can be done by extracting the required parts from the
+new version's .iso. Here we'd need at least 3 times the size of an
+installation available:
+
+1. one for the old, running installation
+2. one for the new ISO
+3. one for the extracted contents of the new ISO
+
+We would unlink the old squashfs, kernel, initrd etc. then copying in
+their place new version's ones, so the new version will run next time
+we reboot.
+
+### Disk images instead of ISOs
+
+Note that if we switch to using disk images as the primary way to
+install Tails ([[!tails_ticket 8550]], comment 9) we can similarly
+extract the needed parts just like above: replace "(ISO|.iso)" with
+"disk image" and it still works.
+
+## Streaming decompression
+
+An improved version of the above idea would be to serve "upgrade
+packs" using some compression method friendly to streaming
+decompression, so the need to download a the full archive (ISO or disk
+image above) is avoided, which reduces the amount of temporary disk
+space needed from 3 to 2 times the size of an installation when
+performing the upgrade.
+
+## ISOBoot
+
+Grub and syslinux supports booting directly from an ISO so we could
+switch to a strategy where Tails USB/SD installation means that we
+dump the ISO image into the system partition, and configure the
+bootloader to boot from it. If we make the system partition large
+enough to store two ISOs (= 2 times the size of an installation, when
+comparing o the above methods) we can keep the older, running version
+in place while downloading the new one, and then safely switch to the
+new one at next boot. Since the old version is kept, there's a
+fallback in case the new version doesn't boot. Older versions can be
+cleaned up at the next upgrade.
+
+Depending on how Grub/syslinux does the ISOBoot, this may make all
+running Tails instances more consistent, i.e. we now do not have the
+three cases of what type of medium Tails has booted from: DVD; USB
+drive; or SD card -- in all cases we have a ISO9660 filesystem. OTOH,
+the magic employed for the ISOBoot may hide too much about underlying
+real device, which we still probably will need information about.
+
+Some more details (some perhaps wrong) can be read in comment 16 on
+[[!tails_ticket 7496]].
+
+## Apply upgrade in initramfs
+
+By storing the ISO (or disk image) that the upgrade is gonna be
+extracted from on a scratch partition, and then apply the upgrade in
+initramfs on next boot, we only need 2 times the size of an
+installation in total, and can safely download the ISO to the scratch
+partition while keeping the system partition read-only.
+
+Ideally, let's also save the files used to authenticate the upgrade on
+the scratch partition, and make check the authenticity during
+initramfs, before starting the upgrade.
+
+Also, with the scratch partition we will never have to mount it
+read-write outside of initramfs, it can be made read-only in a
+slightly stronger sense on the block dev level. This is not really a
+security feature, but more a foolproof things, but why not?
+
+# Auxilliary ideas
+
+## Read-write system partition while the network is enabled
+
+Currently we keep the system partition read-only as long as the
+network is enabled. E.g. we download IUKs into the tmpfs, and when
+it's finished we disable the network and only then remount the system
+partition read-write to apply the upgrade.
+
+This is problematic for full upgrades, since we cannot assume that
+users' systems has over 1 GiB of free RAM available but need to
+download it to disk, but cannot use the system partition. In the
+"extract upgrade from ISO/Disk image" case we can simply introduce a
+scratch partition where the temporary download is stored without loss
+of disk usage efficiency (we still need 3 times an installation). But
+for the ISOBoot and streaming decompression cases we'd then go from 2
+times to 3 times the size of an installation.
+
+It might be worth having a discussion about whether preventing the
+network to be used while the system partition is mounted read-write
+actually brings us any security. After all, if the system is
+compromised while downloading the upgrade, it will still be
+compromised when the download is finished and the system partition is
+remounted read-write, and it can infect that part then.
+
+Chrome OS keeps the running system partition read-only, has _two_
+system partitions, and the update is applied to the non-running one.
+This has nice additional properties like allowing one to rollback if
+the upgraded system doesn't start properly. More information about
+their design and implementation:
+
+* [disk format](https://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format)
+* [file system and autoupdate system](https://www.chromium.org/chromium-os/chromiumos-design-docs/filesystem-autoupdate)
+
+## What about IUKs?
+
+If we want to support IUKs at the same time as full upgrades, we need
+to allocate even more space to the system partition. Also, we need to
+carefully consider the UX part of this.
+
+For instance, we could always give users the choice to do a full or
+incremental upgrade unless installing the incremental upgrade will
+result in too little disk space remaining for a full upgrade to be
+done *next* time -- in this case we only allow full upgrades, to
+prevent users from locking themselves in a situation where they cannot
+upgrade further. When both options are available, we could give users
+the suggestion that they should do a full upgrade if they currently
+have a lot of time and/or a fast connection.
+
+## Self-contained verification
+
+An interesting option for Tails installation verification
+([[!tails_ticket 7496]]) is to contain all the bits needed to verify
+an installation's integrity. For instance, in the ISOBoot case we'd
+include the .sig for the ISO on as well as the .iso, so an external
+verifier simply can verify the .sig instead of needing an external
+known-good .iso to compare with.
+
+The ISOBoot case is the simplest, probably, as the other methods would
+require signed manifests of files with the expected hashes (or
+similar), which of course is not such a big deal to provide.
+
+The ISOBoot case would still require a manifest of files we extract
+from the ISO (bootloader code and configuration), but indeed that
+manifest could be in the ISO itself, and thus its authenticity and
+integrity would be signed/verified at the same time as the ISO.

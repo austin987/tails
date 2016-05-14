@@ -11,54 +11,46 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   }
 end
 
-When /^I update APT using apt-get$/ do
+When /^I update APT using apt$/ do
   Timeout::timeout(30*60) do
     $vm.execute_successfully("echo #{@sudo_password} | " +
-                             "sudo -S apt-get update", :user => LIVE_USER)
+                             "sudo -S apt update", :user => LIVE_USER)
   end
 end
 
-Then /^I should be able to install a package using apt-get$/ do
+Then /^I should be able to install a package using apt$/ do
   package = "cowsay"
   Timeout::timeout(120) do
     $vm.execute_successfully("echo #{@sudo_password} | " +
-                             "sudo -S apt-get install #{package}",
+                             "sudo -S apt install #{package}",
                              :user => LIVE_USER)
   end
   step "package \"#{package}\" is installed"
 end
 
 When /^I update APT using Synaptic$/ do
-  # Upon start the interface will be frozen while Synaptic loads the
-  # package list. Since the frozen GUI is so similar to the unfrozen
-  # one there's no easy way to reliably wait for the latter. Hence we
-  # spam reload until it's performed, which is easier to detect.
-  try_for(60, :msg => "Failed to reload the package list in Synaptic") {
-    @screen.type("r", Sikuli::KeyModifier.CTRL)
-    @screen.find('SynapticReloadPrompt.png')
-  }
+  @screen.click('SynapticReloadButton.png')
+  @screen.wait('SynapticReloadPrompt.png', 20)
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
-  # After this next image is displayed, the GUI should be responsive.
-  @screen.wait('SynapticPackageList.png', 30)
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
-  @screen.type("f", Sikuli::KeyModifier.CTRL)  # Find key
-  @screen.wait_and_click('SynapticSearch.png', 10)
+  try_for(60) do
+    @screen.wait_and_click('SynapticSearchButton.png', 10)
+    @screen.wait_and_click('SynapticSearchWindow.png', 10)
+  end
   @screen.type(package + Sikuli::Key.ENTER)
-  @screen.wait_and_click('SynapticCowsaySearchResult.png', 20)
-  @screen.wait('SynapticCowsaySearchResultSelected.png', 20)
-  @screen.type("i", Sikuli::KeyModifier.CTRL)    # Mark for installation
-  @screen.wait('SynapticCowsayMarked.png', 10)
-  @screen.wait_and_click('SynapticApply.png', 10)
+  @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
+  @screen.wait_and_click('SynapticApplyButton.png', 10)
   @screen.wait('SynapticApplyPrompt.png', 60)
-  @screen.type("a", Sikuli::KeyModifier.ALT)     # Verify apply
-  @screen.wait('SynapticChangesAppliedPrompt.png', 120)
+  @screen.type(Sikuli::Key.ENTER)
+  @screen.wait('SynapticChangesAppliedPrompt.png', 240)
   step "package \"#{package}\" is installed"
 end
 
 When /^I start Synaptic$/ do
-  step 'I start "Synaptic" via the GNOME "System"/"Administration" applications menu'
-  deal_with_polkit_prompt('SynapticPolicyKitAuthPrompt.png', @sudo_password)
+  step 'I start "Synaptic Package Manager" via the GNOME "System Tools" applications menu'
+  deal_with_polkit_prompt('PolicyKitAuthPrompt.png', @sudo_password)
+  @screen.wait('SynapticReloadButton.png', 30)
 end

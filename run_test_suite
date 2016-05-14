@@ -20,7 +20,8 @@ libvirt-clients
 libvirt-daemon-system
 libvirt-dev
 libvirt0
-openjdk-7-jre
+obfs4proxy
+openssh-server
 ovmf
 python-jabberbot
 python-potr
@@ -37,6 +38,7 @@ ruby-rspec
 ruby-test-unit
 seabios
 tcpdump
+tor
 unclutter
 virt-viewer
 xvfb
@@ -48,6 +50,11 @@ Sets up an appropriate environment and invokes cucumber. Note that this script
 must be run from the Tails source directory root.
 
 Options for '@product' features:
+  --artifacts-base-uri URI
+                     Pretend that the artifact is located at URI when printing
+                     its location during a scenario failure. This is useful if
+                     you intend to serve the artifacts via the web, for
+                     instance.
   --capture          Captures failed scenarios into videos stored in the
                      temporary directory (see --tmpdir below) using x264
                      encoding. Requires x264.
@@ -169,6 +176,7 @@ capture_session() {
 # Unset all environment variables used by this script to pass options
 # to cucumber, except TMPDIR since we explicitly want to support
 # setting it that way.
+ARTIFACTS_BASE_URI=
 CAPTURE=
 CAPTURE_ALL=
 LOG_FILE=
@@ -180,11 +188,15 @@ SIKULI_RETRY_FINDFAILED=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,pause-on-fail"
+LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,pause-on-fail"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
     case $1 in
+        --artifacts-base-uri)
+            shift
+            export ARTIFACTS_BASE_URI="${1}"
+            ;;
         --view)
             VNC_VIEWER=yes
             VNC_SERVER=yes
@@ -243,14 +255,13 @@ TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
 
-if [ -n "${VNC_SERVER}" ]; then
+if [ -n "${VNC_SERVER:-}" ]; then
     start_vnc_server
 fi
-if [ -n "${VNC_VIEWER}" ]; then
+if [ -n "${VNC_VIEWER:-}" ]; then
     start_vnc_viewer
 fi
 
-export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 

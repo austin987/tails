@@ -1,6 +1,11 @@
 #!/bin/sh
 
 set -e
+set -u
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
 
 # Import tor_is_working()
 . /usr/local/lib/tails-shell-library/tor.sh
@@ -32,7 +37,7 @@ verify_start () {
     # Make sure the user really wants to start the browser
     local dialog_msg="<b><big>`gettext \"Do you really want to launch the Unsafe Browser?\"`</big></b>
 
-`gettext \"Network activity within the Unsafe Browser is <b>not anonymous</b>. Only use the Unsafe Browser if necessary, for example if you have to login or register to activate your Internet connection.\"`"
+`gettext \"Network activity within the Unsafe Browser is <b>not anonymous</b>.\\nOnly use the Unsafe Browser if necessary, for example\\nif you have to login or register to activate your Internet connection.\"`"
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"
     # Since zenity can't set the default button to cancel, we switch the
@@ -62,7 +67,7 @@ maybe_restart_tor () {
     if ! tor_is_working; then
         echo "* Restarting Tor"
         restart-tor
-        if ! service tor status; then
+        if ! systemctl --quiet is-active tor@default.service; then
             error "`gettext \"Failed to restart Tor.\"`"
         fi
     fi
@@ -72,11 +77,6 @@ maybe_restart_tor () {
 
 CMD="$(basename "${0}")"
 LOCK="/var/lock/${CMD}"
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
 CONF_DIR="/var/lib/unsafe-browser"
 COW="${CONF_DIR}/cow"
 CHROOT="${CONF_DIR}/chroot"
@@ -111,7 +111,7 @@ fi
 # FIXME: Or would it make sense to fallback to Google's DNS or OpenDNS?
 # Some stupid captive portals may allow DNS to any host, but chances are
 # that only the portal's DNS would forward to the login page.
-if [ -z "${IP4_NAMESERVERS}" ]; then
+if [ -z "${IP4_NAMESERVERS:-}" ]; then
     error "`gettext \"No DNS server was obtained through DHCP or manually configured in NetworkManager.\"`"
 fi
 

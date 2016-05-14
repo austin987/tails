@@ -1,4 +1,5 @@
-@product
+#10720: Tails Installer freezes on Jenkins
+@product @fragile
 Feature: Upgrading an old Tails USB installation
   As a Tails user
   If I have an old versoin of Tails installed on a USB device
@@ -10,6 +11,44 @@ Feature: Upgrading an old Tails USB installation
   # other. When editing this feature, make sure you understand these
   # dependencies (which are documented below).
 
+  Scenario: Try to "Upgrade from ISO" Tails to a pristine USB drive
+    Given a computer
+    And I setup a filesystem share containing the Tails ISO
+    And I start Tails from DVD with network unplugged and I login
+    And I temporarily create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Clone & Upgrade" Tails to a pristine USB drive
+    Given I have started Tails from DVD without network and logged in
+    And I temporarily create a 4 GiB disk named "pristine"
+    And I plug USB drive "pristine"
+    And I start Tails Installer in "Clone & Upgrade" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Upgrade from ISO" Tails to a USB drive with GPT and a FAT partition
+    Given a computer
+    And I setup a filesystem share containing the Tails ISO
+    And I start Tails from DVD with network unplugged and I login
+    And I temporarily create a 4 GiB disk named "gptfat"
+    And I create a gpt partition with a vfat filesystem on disk "gptfat"
+    And I plug USB drive "gptfat"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
+  Scenario: Try to "Clone & Upgrade" Tails to a USB drive with GPT and a FAT partition
+    Given I have started Tails from DVD without network and logged in
+    And I temporarily create a 4 GiB disk named "gptfat"
+    And I create a gpt partition with a vfat filesystem on disk "gptfat"
+    And I plug USB drive "gptfat"
+    And I start Tails Installer in "Upgrade from ISO" mode
+    Then a suitable USB device is not found
+    And I am told that the destination device cannot be upgraded
+
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
     And the computer is set to boot from the old Tails DVD
@@ -17,7 +56,6 @@ Feature: Upgrading an old Tails USB installation
     And I start the computer
     When the computer boots Tails
     And I log in to a new session
-    And the Tails desktop is ready
     And all notifications have disappeared
     And I create a 4 GiB disk named "old"
     And I plug USB drive "old"
@@ -80,7 +118,7 @@ Feature: Upgrading an old Tails USB installation
     When I "Clone & Upgrade" Tails to USB drive "to_upgrade"
     Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
-    And I unplug USB drive "current"
+    And I unplug USB drive "__internal"
 
   # Depends on scenario: Upgrading an old Tails USB installation from another Tails USB drive
   Scenario: Booting Tails from a USB drive upgraded from USB with persistence enabled

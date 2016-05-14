@@ -1,9 +1,10 @@
-@product
+@product @fragile
 Feature: Localization
   As a Tails user
   I want Tails to be localized in my native language
   And various Tails features should still work
 
+  @doc
   Scenario: The Report an Error launcher will open the support documentation in supported non-English locales
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And the network is plugged

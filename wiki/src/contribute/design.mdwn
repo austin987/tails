@@ -399,7 +399,7 @@ IP provided by the ISP when one asks information about themselves to
 their DNS resolver (source: [The State of the DNS and Tor Union (also:
 a DNS UDP
 - TCP shim)](http://archives.seul.org/or/talk/Jul-2010/msg00007.html)
-thread on the or-talk mailing-list).
+thread on the or-talk mailing list).
 
 Any exception to these rules MUST be thoroughly thought through and
 properly documented. If an action that is excepted from the above
@@ -533,7 +533,7 @@ A GUI Tor controller application such as Vidalia or TorK is highly
 RECOMMENDED. However, this requires opening the control port in Tor,
 and thus some means of authentication will be REQUIRED
 (`CookieAuthentication` preferably) to hinder attacks on the Tor
-software.
+software. XXX: this paragraph is mostly obsolete.
 
 #### 2.6.3.6 Hardened tool chain and compiling
 
@@ -627,7 +627,7 @@ unionfs/aufs ramdisk branch.
 
 This was
 [discussed](http://archives.seul.org/or/talk/Jan-2011/msg00137.html)
-on the or-talk mailing-list, and a new system that mitigates such
+on the or-talk mailing list, and a new system that mitigates such
 attacks is part of Tails 0.7 and newer.
 
 This specification must warn about such matters.
@@ -645,7 +645,7 @@ document on the Tor wiki:
 
 The impact of HTTP keepalive and possible solutions are [being
 discussed](http://thread.gmane.org/gmane.linux.distributions.tails.devel/52)
-on the tails-dev mailing-list.
+on the [[tails-dev@boum.org|about/contact#tails-dev]] mailing list.
 
 ### 2.7.3 Mounting of filesystems stored on removable devices
 
@@ -685,7 +685,7 @@ the risks involved and how to manage those risks.
 
 ## 3.1 Download
 
-See the [[download section|download]] on [[Tails's website|/index]]
+See the [[installation section|install]] on [[Tails's website|/index]]
 for download information. Published Tails images integrity can be
 checked using OpenPGP detached signatures made with a key that is well
 linked to the web-of-trust.
@@ -712,7 +712,6 @@ extension).
   that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
   TCP. Our intention is to always use the latest stable version.
-- Vidalia is used to control Tor's behavior.
 
 Being based in Debian, Tails benefits from its great package
 management tools, facilitating its build and the inclusion of new
@@ -751,15 +750,17 @@ and Bopomofo for Chinese, and Hangul for Korean).
 
 A login script prepares and configures IBus. When a Japanese,
 Chinese or Korean locale is selected, this login script selects
-the right default input method, and then starts the IBus daemon.
+the right default input method. GNOME starts the IBus daemon itself.
 
-Since one may want to work on documents written in
+Still, since one may want to work on documents written in
 Chinese, Japanese or Korean even when selecting English as their
-preferred language, IBus can also be manually started in other locales
-using the "IBus Preferences" launcher in the System->Preferences menu.
-IBus' environment variables is always exported on login to make this work.
+preferred language, IBus is also started in other locales, with all
+supported input engines pre-loaded.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/X11/Xsession.d/80im-starter]]
+IBus' environment variables are always exported on login to make this work.
+
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-configure-keyboard.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-configure-keyboard]]
 
 ## 3.4 Notification of security issues and new Tails releases
 
@@ -777,8 +778,8 @@ environment variable.
 This script is run after the user has logged-in and Tor is
 in known-working state.
 
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-security-check.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-security-check-wrapper]]
 
 Security issues that were fixed in a newer version of Tails are taken
 care of by [[Tails Upgrader|contribute/design/incremental_upgrades]]
@@ -789,9 +790,9 @@ through the necessary steps.
 
 Users can send feedback in several ways to Tails developers.
 A [[!tails_redmine desc="task tracker"]] is available.
-Users can also send email to the private [developers mailing
-list](tails@boum.org) or to the public [support mailing
-list](tails-support@boum.org).
+Users can also send email to the private [[developers mailing
+list|about/contact#tails]] or to the public [[support mailing
+list|about/contact#tails-support]].
 
 A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
@@ -832,15 +833,15 @@ Only connections from localhost are accepted. It can be argued
 that running a Tor server (onion router) would increase one's
 anonymity for a number for reasons but we still feel that most users
 probably would not want this due to the added consumption of
-bandwidth. The user can nevertheless easily choose to turn his or her
-Tor client into a relay, thanks to the Vidalia graphical user
-interface.
+bandwidth.
 
 If a compromised software had access to the Tor control port,
 an attacker who controls it could simply ask Tor the public
 IP through the `GETINFO address` command.
 To prevent this, access to the Tor control port is only
-granted to the vidalia user, who is running Vidalia.
+granted to the `root` and `tor-launcher` users, as well as to the
+members of the `debian-tor` group, such as the `onioncircuits` user
+(that is used to run Onion Circuits).
 A filtering proxy to the control port exists, so
 Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
 
@@ -851,10 +852,18 @@ providers recommend and even enforce StartTLS on these ports, the effect
 of these warnings were most of the time counterproductive as people had
 to click through needlessly scary security warnings.
 
-- [[!tails_gitweb config/chroot_local-hooks/06-adduser_vidalia]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/restart-vidalia]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-controlport-filter]]
+- [[!tails_gitweb config/chroot_local-hooks/06-adduser_onioncircuits]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tor-controlport-filter.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tor-controlport-filter]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+
+[[!tails_gitweb_repo onioncircuits desc="Onion Circuits"]] allows the
+user to view the state of their Tor circuits and streams. The Tor
+Status extension provides a permanent visual indication of whether Tor
+has bootstrapped already.
+
+- [[!tails_gitweb_dir config/chroot_local-includes/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/onioncircuits]]
 
 <a id="dns"></a>
 
@@ -864,7 +873,7 @@ to click through needlessly scary security warnings.
 
 ### 3.6.4 HTTP Proxy
 
-[[!inline pages="contribute/design/Tor_enforcement/Proxy" raw=yes]]
+Tails does not include any HTTP proxy anymore.
 
 ### 3.6.5 SOCKS libraries
 
@@ -988,8 +997,12 @@ ready, they are informed it won't work, and asked whether to start the
 browser anyway:
 
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tor-browser]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/generate-tor-browser-profile]]- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
-- [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tor-has-bootstrapped]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/generate-tor-browser-profile]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-tor-has-bootstrapped.target]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-wait-until-tor-has-bootstrapped.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-wait-until-tor-has-bootstrapped.service]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-tor-has-bootstrapped-flag-file.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
 
 Once Tor is ready to be used, the user is informed they can now use
 the Internet:
@@ -1011,27 +1024,33 @@ for the [[Unsafe Browser]] and [[I2P Browser]], although they are
 user-isolated and use separate profiles with very different
 configurations.
 
-### 3.6.14 Claws Mail
+### 3.6.14 Icedove
 
-Claws Mail generates `Message-ID` headers using the hostname part of
+Icedove, in combination with Torbirdy, sends email through Tor.
+
+Icedove itself leaks a lot of data and makes DNS requests, for example by
+retrieving mail server  configurations from a remote server over an insecure
+channel. This is prevented by the Torbirdy extension.
+
+Icedove generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
-It also always says `EHLO localhost` to the SMTP server instead of
-disclosing the real IP address and hostname. This is achieved thanks
-to tsocks, as Claws Mail leaks the hostname in the HELO/EHLO
-message, resulting in a hostname leak in the `Message ID` and
-`Received` email headers, when run with `torify` and `torsocks`.
+It also always says `EHLO[127.0.0.1]` to the SMTP server instead of
+disclosing the real IP address and hostname.
 
-Furthermore, any account a user creates is pre-configured to not use
-HTML in order to get rid of a whole class of privacy concerns.
+Torbirdy disables HTML email and inline attachments
+in order to get rid of a whole class of privacy concerns.
+Furthermore, when setting up an IMAP account, the drafts folder, instead
+of being remote, is set to "~$HOME/.icedove/Local Folders".
 
-OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
+OpenPGP support is provided by the Enigmail addon.
 
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.claws-mail]] is copied to
+- [[!tails_gitweb config/chroot_local-includes/etc/icedove/pref/icedove.js]]
+- [[!tails_gitweb config/chroot_local-patches/torbirdy-adjust-defaults.diff]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.icedove]] is copied to
   the user's `$HOME` at boot time
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/torified-claws-mail]]
-- [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks-mua.conf]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/icedove]]
 
 ### 3.6.15 Pidgin
 
@@ -1097,8 +1116,8 @@ Bluetooth radio (so that it can be dealt another way:
 [[todo/protect_against_external_bus_memory_forensics]]), and
 soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
-- [[!tails_gitweb config/chroot_local-includes/etc/init.d/tails-set-wireless-devices-state]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-set-wireless-devices-state]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-set-wireless-devices-state.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-set-wireless-devices-state]]
 
 ### 3.6.20 OpenSSH
 
@@ -1106,7 +1125,7 @@ The OpenSSH client is configured to use the Tor SOCKS proxy, and to
 prefer strong ciphers and MACs..
 
 - [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/connect-socks]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/connect-socks]]
 
 ### 3.6.21 Incremental upgrades
 
@@ -1116,17 +1135,15 @@ releases). See [[contribute/design/incremental_upgrades]] for details.
 To start with, this upgrade mechanism may be only available for
 point-releases.
 
-### 3.6.22 Panel applets
+### 3.6.22 Panel applets and GNOME Shell extensions
 
-Tails ships a few custom applets in the GNOME panel.
+Tails ships a few custom GNOME panel applets and GNOME Shell
+extensions.
 
-The shutdown helper applet provides two-clicks shutdown and
-restart actions.
+The shutdown-helper GNOME Shell extension provides two-clicks shutdown and
+restart actions, as well as screen locking.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/skel/.config/gnome-panel/panel-default-layout.layout]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/shutdown-helper-applet]]
-- [[!tails_gitweb config/chroot_local-includes/usr/share/dbus-1/services/org.gnome.panel.applet.ShutdownHelperFactory.service]]
-- [[!tails_gitweb config/chroot_local-includes/usr/share/gnome-panel/4.0/applets/org.boum.tails.ShutdownHelper.panel-applet]]
+- [[!tails_gitweb_dir config/chroot_local-includes/usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org]]
 
 The Tails OpenPGP applet allows to symmetrically and asymmetrically
 encrypt and decrypt text, and to verify OpenPGP signatures.
@@ -1164,6 +1181,8 @@ NetworkManager and others from setting the hostname to a value
 controlled by the DHCP server.
 
 * [[!tails_gitweb config/chroot_local-patches/dhcp-dont-send-hostname.diff]]
+* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/conf.d/dhcp-hostname.conf]]
+* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/conf.d/plugins.conf]]
 
 ### 3.6.24 TCP timestamps
 
@@ -1219,10 +1238,8 @@ through `live-build` (that is, usually a local `apt-cacher-ng`).
 
 However, at boot time, a hook does (a more elaborate version of)
 `s,http://,tor+http://` in APT sources. Then, APT will use the
-`tor+http` method, that is a simple torsocks wrapper for the good old
-`http` method.
+`tor+http` method, that is provided by [[!debpkg apt-transport-tor]].
 
-- [[!tails_gitweb config/chroot_local-includes/usr/lib/apt/methods/tor+http]]
 - [[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]]
 
 ### 3.6.28 Electrum
@@ -1237,6 +1254,10 @@ configuration folder, which stores the Bitcoin wallet, application
 preferences and the cached Bitcoin blockchain.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.electrum]]
+
+### 3.6.29 Kernel hardening
+
+[[!inline pages="contribute/design/kernel_hardening" raw=yes]]
 
 ## 3.7 Running Tails in virtual machines
 

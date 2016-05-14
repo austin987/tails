@@ -86,13 +86,40 @@ end
 class TorFailure < StandardError
 end
 
+class MaxRetriesFailure < StandardError
+end
+
+def force_new_tor_circuit()
+  debug_log("Forcing new Tor circuit...")
+  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+end
+
 # This will retry the block up to MAX_NEW_TOR_CIRCUIT_RETRIES
 # times. The block must raise an exception for a run to be considered
 # as a failure. After a failure recovery_proc will be called (if
 # given) and the intention with it is to bring us back to the state
 # expected by the block, so it can be retried.
 def retry_tor(recovery_proc = nil, &block)
-  max_retries = $config["MAX_NEW_TOR_CIRCUIT_RETRIES"]
+  tor_recovery_proc = Proc.new do
+    force_new_tor_circuit
+    recovery_proc.call if recovery_proc
+  end
+
+  retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
+               :recovery_proc => tor_recovery_proc,
+               :operation_name => 'Tor operation', &block)
+end
+
+def retry_i2p(recovery_proc = nil, &block)
+  retry_action(15, :recovery_proc => recovery_proc,
+               :operation_name => 'I2P operation', &block)
+end
+
+def retry_action(max_retries, options = {}, &block)
+  assert(max_retries.is_a?(Integer), "max_retries must be an integer")
+  options[:recovery_proc] ||= nil
+  options[:operation_name] ||= 'Operation'
+
   retries = 1
   loop do
     begin
@@ -100,31 +127,28 @@ def retry_tor(recovery_proc = nil, &block)
       return
     rescue Exception => e
       if retries <= max_retries
-        if $config["DEBUG"]
-          STDERR.puts "Tor operation failed (Tor circuit try #{retries} of " +
-                      "#{max_retries}) with:\n" +
-                      "#{e.class}: #{e.message}"
-        end
-        recovery_proc.call if recovery_proc
-        force_new_tor_circuit
+        debug_log("#{options[:operation_name]} failed (Try #{retries} of " +
+                  "#{max_retries}) with:\n" +
+                  "#{e.class}: #{e.message}")
+        options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
-        raise TorFailure.new("The operation failed (despite forcing " +
-                             "#{max_retries} new Tor circuits) with\n" +
-                             "#{e.class}: #{e.message}")
+        raise MaxRetriesFailure.new("#{options[:operation_name]} failed (despite retrying " +
+                                    "#{max_retries} times) with\n" +
+                                    "#{e.class}: #{e.message}")
       end
     end
   end
 end
 
 def wait_until_tor_is_working
-  try_for(270) { $vm.execute('tor_is_working', :libs => 'tor').success? }
+  try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
 rescue Timeout::Error => e
-  c = $vm.execute("grep restart-tor /var/log/syslog")
+  c = $vm.execute("journalctl SYSLOG_IDENTIFIER=restart-tor")
   if c.success?
-    debug_log("From syslog:\n" + c.stdout.sub(/^/, "  "))
+    debug_log("From the journal:\n" + c.stdout.sub(/^/, "  "))
   else
-    debug_log("Nothing was syslog:ed about 'restart-tor'")
+    debug_log("Nothing was in the journal about 'restart-tor'")
   end
   raise e
 end
@@ -158,13 +182,14 @@ def convert_from_bytes(size, unit)
   return size.to_f/convert_bytes_mod(unit).to_f
 end
 
-def cmd_helper(cmd)
+def cmd_helper(cmd, env = {})
   if cmd.instance_of?(Array)
     cmd << {:err => [:child, :out]}
   elsif cmd.instance_of?(String)
     cmd += " 2>&1"
   end
-  IO.popen(cmd) do |p|
+  env = ENV.to_h.merge(env)
+  IO.popen(env, cmd) do |p|
     out = p.readlines.join("\n")
     p.close
     ret = $?
@@ -173,11 +198,23 @@ def cmd_helper(cmd)
   end
 end
 
-# This command will grab all router IP addresses from the Tor
-# consensus in the VM + the hardcoded TOR_AUTHORITIES.
-def get_all_tor_nodes
-  cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  $vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
+def all_tor_hosts
+  nodes = Array.new
+  chutney_torrcs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*/torrc"
+  )
+  chutney_torrcs.each do |torrc|
+    open(torrc) do |f|
+      nodes += f.grep(/^(Or|Dir)Port\b/).map do |line|
+        { address: $vmnet.bridge_ip_addr, port: line.split.last.to_i }
+      end
+    end
+  end
+  return nodes
+end
+
+def allowed_hosts_under_tor_enforcement
+  all_tor_hosts + @lan_hosts
 end
 
 def get_free_space(machine, path)
@@ -209,4 +246,26 @@ end
 def random_alnum_string(min_len, max_len = 0)
   alnum_set = ('A'..'Z').to_a + ('a'..'z').to_a + (0..9).to_a.map { |n| n.to_s }
   random_string_from_set(alnum_set, min_len, max_len)
+end
+
+# Sanitize the filename from unix-hostile filename characters
+def sanitize_filename(filename, options = {})
+  options[:replacement] ||= '_'
+  bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
+  filename.gsub(bad_unix_filename_chars, options[:replacement])
+end
+
+def info_log_artifact_location(type, path)
+  if $config['ARTIFACTS_BASE_URI']
+    # Remove any trailing slashes, we'll add one ourselves
+    base_url = $config['ARTIFACTS_BASE_URI'].gsub(/\/*$/, "")
+    path = "#{base_url}/#{File.basename(path)}"
+  end
+  info_log("#{type.capitalize}: #{path}")
+end
+
+def pause(message = "Paused")
+  STDERR.puts
+  STDERR.puts "#{message} (Press ENTER to continue!)"
+  STDIN.gets
 end

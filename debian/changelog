@@ -1,10 +1,804 @@
-tails (1.7~rc1) unstable; urgency=medium
+tails (2.4) UNRELEASED; urgency=medium
+
+  * Dummy entry.
+
+ -- anonym <anonym@riseup.net>  Thu, 25 Feb 2016 19:01:40 +0100
+
+tails (2.3.1) UNRELEASED; urgency=medium
+
+  * Dummy entry.
+
+ -- anonym <anonym@riseup.net>  Tue, 26 Apr 2016 18:41:16 +0200
+
+tails (2.3) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.5.5. (Fixes: #11362)
+    - Upgrade icedove to 38.7.0-1~deb8u1
+    - Upgrade git to 1:2.1.4-2.1+deb8u2
+    - Upgrade libgd3 to 2.1.0-5+deb8u1
+    - Upgrade pidgin-otr to 4.0.1-1+deb8u1
+    - Upgrade srtp to 1.4.5~20130609~dfsg-1.1+deb8u1
+    - Upgrade imagemagick to 8:6.8.9.9-5+deb8u1
+    - Upgrade samba to 2:4.2.10+dfsg-0+deb8u2
+    - Upgrade openssh to 1:6.7p1-5+deb8u2
+
+  * Bugfixes
+    - Refresh Tor Browser's AppArmor profile patch against the one from
+      torbrowser-launcher 0.2.4-1. (Fixes: #11264)
+    - Pull monkeysphere from stretch to avoid failing to install under
+      eatmydata. (Fixes: #11170)
+    - Start gpg-agent with no-grab option due to issues with pinentry and
+      GNOME's top bar. (Fixes: #11038)
+    - Tails Installer: Update error message to match new name of 'Clone
+      & Install'. (Fixes: #11238)
+    - Onion Circuits:
+      * Cope with a missing geoipdb. (Fixes: #11203)
+      * Make both panes of the window scrollable. (Fixes #11192)
+    - WhisperBack: Workaround socks bug. When the Tor fails to connect to
+      the host, WisperBack used to display a ValueError.  This is caused by
+      a socks bug that is solved in upstream's master but not in Tails.
+      This commit workarounds this bug Unclear error message in WhisperBack
+      when failing to connect to the server. (Fixes: #11136)
+
+  * Minor improvements
+    - Upgrade to Debian 8.4, a Debian point release with many minor upgrades
+      and fixes to various packages . (Fixes: #11232)
+    - Upgrade I2P to 0.9.25. (Fixes: #11363)
+    - Pin pinentry-gtk2 to jessie-backports. The new version allows pasting
+      passwords from the clipboard. (Fixes: #11239)
+    - config/chroot_local-hooks/59-libdvd-pkg: cleanup /usr/src/libdvd-pkg.
+      (Fixes: #11273)
+    - Make the Tor Status "disconnected" icon more contrasted with the
+      "connected" one. (Fixes: #11199)
+
+  * Test suite
+    - Add UTF-8 support to OTR Bot. (Fixes: #10866)
+    - Don't explicitly depend on openjdk-7-jre or any JRE for that
+      matter. Sikuli will pull in a suitable one, so depending on one
+      ourselves is only risks causing trouble. (Fixes: #11335)
+
+ -- Tails developers <tails@boum.org>  Mon, 25 Apr 2016 14:12:22 +0200
+
+tails (2.2.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.5.4. (Closes: #11254)
+    - Upgrade bind9-related packages to 1:9.9.5.dfsg-9+deb8u6
+    - Upgrade libotr to 4.1.0-2+deb8u1
+    - Upgrade samba-related packages to 2:4.1.17+dfsg-2+deb8u2.
+    - Upgrade libgraphite2 to 1.3.6-1~deb8u1.
+
+ -- Tails developers <tails@boum.org>  Thu, 17 Mar 2016 15:03:52 +0100
+
+tails (2.2) unstable; urgency=medium
 
   * Major new features and changes
+    - Replace Vidalia (which has been unmaintained for years) with:
+      (Closes: #6841)
+      * the Tor Status GNOME Shell extension, which adds a System Status
+        icon indicating whether Tor is ready or not.
+      * Onion Circuits, a simple Tor circuit monitoring tool.
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.5.3 (Closes: #11189).
+    - Upgrade Linux to 3.16.7-ckt20-1+deb8u4.
+    - Upgrade cpio to 2.11+dfsg-4.1+deb8u1.
+    - Upgrade glibc to 2.19-18+deb8u3.
+    - Upgrade libav to 6:11.6-1~deb8u1.
+    - Upgrade libgraphite2 to 1.3.5-1~deb8u1.
+    - Upgrade libjasper1 to 1.900.1-debian1-2.4+deb8u1.
+    - Upgrade libreoffice to 4.3.3-2+deb8u3.
+    - Upgrade libssh2 to 1.4.3-4.1+deb8u1.
+    - Upgrade openssl to 1.0.1k-3+deb8u4.
+    - Upgrade perl to 5.20.2-3+deb8u4.
+    - Upgrade python-imaging, python-pil to 2.6.1-2 2.6.1-2+deb8u2.
+
+  * Bugfixes
+    - Hide "Laptop Mode Tools Configuration" menu entry. We don't
+      support configuring l-m-t in Tails, and it doesn't work out of
+      the box. (Closes: #11074)
+    - WhisperBack:
+      * Actually write a string when saving bug report to
+        disk. (Closes: #11133)
+      * Add missing argument to OpenPGP dialog so the optional OpenPGP
+        key can be added again. (Closes: #11033)
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.24-1~deb8u+1.
+    - Add support for viewing DRM protected DVD videos using
+      libdvdcss2. Patch series submitted by Austin English
+      <austinenglish@gmail.com>. (Closes: #7674)
+    - Automatically save KeePassX database after every change by default.
+      (Closes: #11147)
+    - Implement Tor stream isolation for WhisperBack
+    - Delete unused tor-tsocks-mua.conf previously used by Claws
+      Mail. (Closes: #10904)
+    - Add set -u to all gettext:ized shell scripts. In gettext-base <
+      1.8.2, like the one we had in Wheezy, gettext.sh references the
+      environment variable ZSH_VERSION, which we do not set. This has
+      prevented us from doing `set -u` without various hacks. (Closes:
+      #9371)
+    - Also set -e in some shell scripts which lacked it for no good
+      reason.
+    - Make Git verify the integrity of transferred objects. (Closes:
+      #11107)
+    - Remove LAlt+Shift and LShift+RShift keyboard layout toggling
+      shortcuts. (Closes: #10913, #11042)
+
+  * Test suite
+    - Reorder the execution of feature to decrease peak disk
+      usage. (Closes: #10503)
+    - Paste into the GTK file chooser, instead of typing. (Closes:
+      #10775)
+    - Pidgin: wait a bit for text to have stopped scrolling before we
+      click on it. (Closes: #10783)
+    - Fix step that runs commands in GNOME Terminal, that was broken
+      on Jessie when a Terminal is running already. (Closes: #11176)
+    - Let ruby-rjb guess JAVA_HOME instead fixing on one jvm
+      version. (Closes: #11190)
+
+  * Build system
+    - Upgrade build system to Debian Jessie. This includes migrating to a
+      new Vagrant basebox based on Debian Jessie.
+    - Rakefile: print git status when there are uncommitted
+      changes. Patch submitted by Austin English
+      <austinenglish@gmail.com>. (Closes: #11108)
+    - .gitignore: add .rake_tasks~. Patch submitted by Austin English
+      <austinenglish@gmail.com>. (Closes: #11134)
+    - config/amnesia: use --show-field over sed filtering. Patch
+      submitted by Chris Lamb <lamby@debian.org>.
+    - Umount and clean up leftover temporary directories from old
+      builds. (Closes: #10772)
+
+ -- Tails developers <tails@boum.org>  Mon, 07 Mar 2016 18:09:50 +0100
+
+tails (2.0.1) unstable; urgency=medium
+
+  * Major new features and changes
+    - Enable the Tor Browser's font fingerprinting protection
+      (Closes: #11000). We do it for all browsers (including
+      the Unsafe Browser and I2P Browser mainly to avoid making our
+      automated test suite overly complex. This implied to set an appropriate
+      working directory when launching the Tor Browser, to accommodate for
+      the assumptions it makes about this.
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.5.2 (Closes: #11105).
+
+  * Bugfixes
+    - Repair 32-bit UEFI support (Closes: #11007); bugfix on 2.0.
+    - Add libgnome2-bin to installed packages list to provide gnome-open,
+      which fixes URL handling at least in KeePassX, Electrum and Icedove
+      (Closes: #11031); bugfix on 2.0. Thanks to segfault for the patch!
+
+  * Minor improvements
+    - Refactor and de-duplicate the chrooted browsers' configuration:
+      prefs.js, userChrome.css (Closes: #9896).
+    - Make the -profile Tor Launcher workaround simpler (Closes: #7943).
+    - Move Torbutton environment configuration to the tor-browser script,
+      instead of polluting the default system environment with it.
+    - Refresh patch against the Tor Browser AppArmor profile
+      (Closes: #11078).
+    - Propagate Tor Launcher options via the wrapper.
+    - Move tor-launcher script to /usr/local/bin.
+    - Move tor-launcher-standalone to /usr/local/lib.
+    - Move Tor Launcher env configuration closer to the place where it is used,
+      for simplicity's sake.
+
+  * Test suite
+    - Mass update browser and Tor Launcher related images due to font change,
+      caused by Tor Browser 5.5's font fingerprinting protection
+      (Closes: #11097). And then, use separate PrintToFile.png for the browsers,
+      and Evince, since it cannot be shared anymore.
+    - Adjust to the refactored chrooted browsers configuration handling.
+    - Test that Tor Launcher uses the correct Tor Browser libraries.
+    - Allow more slack when verifying that the date that was set.
+    - Bump a bit the timeout used when waiting for the remote shell.
+    - Bump timeout for the process to disappear, when closing Evince.
+    - Bump timeout when saving persistence configuration.
+    - Bump timeout for bootstrapping I2P.
+
+  * Build system
+    - Remove no longer relevant places.sqlite cleanup procedure.
+
+ -- Tails developers <tails@boum.org>  Fri, 12 Feb 2016 13:00:15 +0000
+
+tails (2.0) unstable; urgency=medium
+
+  * Major new features and changes
+    - Upgrade to Debian 8 (Jessie).
+    - Migrate to GNOME Shell in Classic mode.
+    - Use systemd as PID 1, and convert all custom initscripts to systemd units.
+    - Remove the Windows camouflage feature: our call for help to port
+      it to GNOME Shell (issued in January, 2015) was unsuccessful.
+    - Remove Claws Mail: Icedove is now the default email client
+      (Closes: #10167).
+    - Upgrade Tor Browser to 5.5 (Closes: #10858, #10983).
+
+  * Security fixes
+    - Minimally sandbox many services with systemd's namespacing features.
+    - Upgrade Linux to 3.16.7-ckt20-1+deb8u3.
+    - Upgrade Git to 1:2.1.4-2.1+deb8u1.
+    - Upgrade Perl to 5.20.2-3+deb8u3.
+    - Upgrade bind9-related packages to 1:9.9.5.dfsg-9+deb8u5.
+    - Upgrade FUSE to 2.9.3-15+deb8u2.
+    - Upgrade isc-dhcp-client tot 4.3.1-6+deb8u2.
+    - Upgrade libpng12-0 to 1.2.50-2+deb8u2.
+    - Upgrade OpenSSH client to 1:6.7p1-5+deb8u1.
+
+  * Bugfixes
+    - Restore the logo in the "About Tails" dialog.
+    - Don't tell the user that "Tor is ready" before htpdate is done
+      (Closes: #7721).
+    - Upgrader wrapper: make the check for free memory more accurate
+      (Closes: #10540, #8263).
+    - Allow the desktop user, when active, to configure printers;
+      fixes regression introduced in Tails 1.1 (Closes: #8443).
+    - Close Vidalia before we restart Tor. Otherwise Vidalia will be running
+      and showing errors while we make sure that Tor bootstraps, which could
+      take a while.
+    - Allow Totem to read DVDs, by installing apparmor-profiles-extra
+      from jessie-backports (Closes: #9990).
+    - Make memory erasure on shutdown more robust (Closes: #9707, #10487):
+      · don't forcefully overcommit memory
+      · don't kill the allocating task
+      · make sure the kernel doesn't starve from memory
+      · make parallel sdmem handling faster and more robust
+    - Don't offer the option, in Tor Browser, to open a downloaded file with
+      an external application (Closes: #9285). Our AppArmor confinement was
+      blocking most such actions anyway, resulting in poor UX; bugfix on 1.3.
+      Accordingly, remove the now-obsolete exception we had in the Tor
+      Browser AppArmor profile, that allowed executing seahorse-tool.
+    - Fix performance issue in Tails Upgrader, that made it very slow to apply
+      an automatic upgrade; bugfix on 1.7 (Closes: #10757).
+    - Use our wrapper script to start Icedove from the GNOME menus.
+    - Make it possible to localize our Icedove wrapper script.
+    - List Icedove persistence option in the same position where Claws Mail
+      used to be, in the persistent volume assistant (Closes: #10832).
+    - Fix Electrum by installing the version from Debian Testing
+      (Closes: #10754). We need version >=2.5.4-2, see #9713;
+      bugfix on 2.0~beta1. And, explicitly install python-qt4 to enable
+      Electrum's GUI: it's a Recommends, and we're not pulling it ourselves
+      via other means anymore.
+    - Restore default file associations (Closes: #10798);
+      bugfix on 2.0~beta1.
+    - Update 'nopersistent' boot parameter to 'nopersistence'; bugfix on 0.12
+      (Closes: #10831). Thanks to live-media=removable, this had no security
+      impact in practice.
+    - Repair dotfiles persistence feature, by adding a symlink from
+      /lib/live/mount/persistence to /live/persistence; bugfix on 2.0~beta1
+      (Closes: #10784).
+    - Fix ability to re-configure an existing persistent volume using
+      the GUI; bugfix on 2.0~beta1 (Closes: #10809).
+    - Associate armored OpenPGP public keys named *.key with Seahorse,
+      to workaround https://bugs.freedesktop.org/show_bug.cgi?id=93656;
+      bugfix on 1.1 (Closes: #10889).
+    - Update the list of enabled GNOME Shell extensions, which might fix
+      the "GNOME Shell sometimes leaves Classic mode" bug seen in 2.0~beta1:
+      · Remove obsolete "Alternative Status Menu", that is not shipped
+        in Debian anymore.
+      · Explicitly enable the GNOME Shell extensions that build
+        the Classic mode.
+    - Make _get_tg_setting() compatible with set -u (Closes: #10785).
+    - laptop-mode-tools: don't control autosuspend. Some USB input
+      devices don't support autosuspend. This change might help fix
+      #10850, but even if it doesn't, it makes sense to me that we
+      don't let laptop-mode-tools fiddle with this on a Live system
+      (Closes (for now): #10850).
+
+  * Minor improvements
+    - Remove obsolete code from various places.
+    - Tails Greeter:
+      · hide all windows while logging in
+      · resize and re-position the panel when the screen size grows
+      · PostLogin: log into the Journal instead of a dedicated log file
+      · use localectl to set the system locale and keyboard mapping
+      · delete the Live user's password if no administration password is set
+        (Closes: #5589)
+      · port to GDBus greeter interface, and adjust to other GDM
+        and GNOME changes
+    - Tails Installer:
+      · port to UDisks2, and from Qt4 to GTK3
+      · adapt to work on other GNU/Linux operating systems than Tails
+      · clean up enough upstream code and packaging bits to make it
+        deserve being uploaded to Debian
+      · rename everything from liveusb-creator to tails-installer
+    - Port tails-perl5lib to GTK3 and UDisks2. In passing, do some minor
+      refactoring and a GUI improvement.
+    - Persistent Volume Assistant:
+      · port to GTK3 and UDisks2
+      · handle errors when deleting persistent volume (Closes: #8435)
+      · remove obsolete workarounds
+    - Don't install UDisks v1.
+    - Adapt custom udev and polkit rules to UDisks v2 (Closes: #9054, #9270).
+    - Adjust import-translations' post-import step for Tails Installer,
+      to match how its i18n system works nowadays.
+    - Use socket activation for CUPS, to save some boot time.
+    - Set memlockd.service's OOMScoreAdjust to -1000.
+    - Don't bother creating /var/lib/live in tails-detect-virtualization.
+      If it does not exist at this point, we have bigger and more
+      noticeable problems.
+    - Simplify the virtualization detection & reporting system, and do it
+      as a non-root user with systemd-detect-virt rather than virt-what.
+    - Replace rsyslog with the systemd Journal (Closes: #8320), and adjust
+      WhisperBack's logs handling accordingly.
+    - Drop tails-save-im-environment.
+      It's not been used since we stopped automatically starting the web browser.
+    - Add a hook that aborts the build if any *.orig file is found. Such files
+      appear mainly when a patch of ours is fuzzy. In most cases they are no big
+      deal, but in some cases they end up being taken into account
+      and break things.
+    - Replace the tor+http shim with apt-transport-tor (Closes: #8198).
+    - Install gnome-tweak-tool.
+    - Don't bother testing if we're using dependency based boot.
+    - Drop workaround to start spice-vdagent in GDM (Closes: #8025).
+      This has been fixed in Jessie proper.
+    - Don't install ipheth-utils anymore. It seems to be obsolete
+      in current desktop environments.
+    - Stop installing the buggy unrar-free, superseded in Jessie (Closes: #5838)
+    - Drop all custom fontconfig configuration, and configure fonts rendering
+      via dconf.
+    - Drop zenity patch (zenity-fix-whitespacing-box-sizes.diff),
+      that was applied upstream.
+    - Install libnet-dbus-perl (currently 1.1.0) from jessie-backports,
+      it brings new features we need.
+    - Have the security check and the upgrader wait for Tor having bootstrapped
+      with systemd unit ordering.
+    - Get rid of tails-security-check's wrapper.
+      Its only purpose was to wait for Tor to have bootstrapped,
+      which is now done via systemd.
+    - Don't allow the amnesia and tails-upgrade-frontend users to run
+      tor-has-bootstrapped as root with sudo. They don't need it anymore,
+      thanks to using systemd for starting relevant units only once Tor
+      has bootstrapped.
+    - Install python-nautilus, that enables MAT's context menu item in Nautilus.
+      (Closes: #9151).
+    - Configure GDM with a snippet file instead of patching its
+      greeter.dconf-defaults.
+    - WhisperBack:
+      · port to Python 3 and GObject Introspection (Closes: #7755)
+      · migrate from the gnutls module to the ssl one
+      · use PGP/MIME for better attachments handling
+      · migrate from the gnupginterface module to the gnupg one
+      · natively support SOCKS ⇒ don't wrap with torsocks anymore
+        (Closes: #9412)
+      · don't try to include the obsolete .xession-errors in bug reports
+        (Closes: #9966)
+    - chroot-browser.sh: don't use static DISPLAY.
+    - Simplify debugging:
+      · don't hide the emergency shutdown's stdout
+      · tails-unblock-network: trace commands so that they end up in the Journal
+    - Configure the console codeset at ISO build time, instead of setting it
+      to a constant via the Greeter's PostLogin.default.
+    - Order the AppArmor policy compiling in a way that is less of a blocker
+      during boot.
+    - Include the major KMS modules in the initramfs. This helps seamless
+      transition to X.Org when booting, and back to text mode on shutdown,
+      can help for proper graphics hardware reinitialization post-kexec,
+      and should improve GNOME Shell support in some virtual machines.
+    - Always show the Universal Access menu icon in the GNOME panel.
+    - Drop notification for not-migrated-yet persistence configuration,
+      and persistence settings disabled due to wrong access rights.
+      That migration happened more two years ago.
+    - Remove the restricted network detector, that has been broken for too long;
+      see #10560 for next steps (Closes: #8328).
+    - Remove unsupported, never completed kiosk mode support.
+    - clock_gettime_monotonic: use Perl's own function to get the integer part,
+      instead of forking out to sed.
+    - Don't (try to) disable lvm2 initscripts anymore. Both the original reason
+      and the implementation are obsolete on Jessie.
+    - Lower potential for confusion (#8443), by removing system-config-printer.
+      One GUI to configure printers is enough (Closes: #8505).
+    - Add "set -u" to tails-unblock-network.
+    - Add a systemd target whose completion indicates that Tor has bootstrapped,
+      and use it everywhere sensible (Closes: #9393).
+    - Disable udev's 75-persistent-net-generator.rules, to preventing races
+      between MAC spoofing and interface naming.
+    - Replace patch against NetworkManager.conf with drop-in files.
+    - Replace resolvconf with simpler NetworkManager and dhclient configuration.
+      (Closes: #7708)
+    - Replace patching of the gdomap, i2p, hdparm, tor and ttdnsd initscripts
+      with 'systemctl disable' (Closes: #9881).
+    - Replace patches that wrapped apps with torsocks with dynamic patching with
+      a hook, to ease maintenance. Also, patch D-Bus services as needed
+      (Closes: #10603).
+    - Notify the user if running Tails inside non-free virtualization software
+      that does not try to hide its nature (Closes: #5315).
+      Thanks to Austin English <austinenglish@gmail.com> for the patch.
+    - Declare htpdate.service as being needed for time-sync.target, to ensure
+      that "services where correct time is essential should be ordered after
+      this unit".
+    - Convert some of the X session startup programs to `systemd --user' units.
+    - Let the Pidgin wrapper pass through additional command-line arguments
+      (Closes: #10383)
+    - Move out of the $PATH a bunch of programs that users should generally
+      not run directly: connect-socks, end-profile, getTorBrowserUserAgent,
+      generate-tor-browser-profile, kill-boot-profile, tails-spoof-mac,
+      tails-set-wireless-devices-state, tails-configure-keyboard,
+      do_not_ever_run_me, boot-profile, tails-unblock-network,
+      tor-controlport-filter, tails-virt-notify-user, tails-htp-notify-user,
+      udev-watchdog-wrapper (Closes: #10658)
+    - Upgrade I2P to 0.9.23-2~deb8u+1.
+    - Disable I2P's time syncing support.
+    - Install Torbirdy from official Jessie backports, instead of from
+      our own APT repository (Closes: #10804).
+    - Make GNOME Disks' passphrase strength checking new feature work,
+      by installing cracklib-runtime (Closes: #10862).
+    - Add support for Japanese in Tor Browser.
+    - Install xserver-xorg-video-intel from Jessie Backports (currently:
+      2.99.917-2~bpo8+1). This adds support for recent chips such as
+      Intel Broadwell's HD Graphics (Closes: #10841).
+    - Improve a little bit post-Greeter network unblocking:
+      · Sleep a bit longer between deleting the blacklist, and triggering udev;
+        this might help cure #9012.
+      · Increase logging, so that we get more information next time someone
+        sees #9012.
+      · Touch /etc/modprobe.d/ after deleting the blacklist; this might help,
+        in case all this is caused by some aufs bug.
+    - Enable and use the Debian jessie-proposed-updates APT repository,
+      anticipating on the Jessie 8.3 point-release (Closes: #10897).
+    - Upgrade most firmware packages to 20160110-1.
+    - Upgrade Intel CPU microcodes to 3.20151106.1~deb8u1.
+    - Disable IPv6 for the default wired connection, so that
+      NetworkManager does not spam the logs with IPv6 router
+      solicitation failure. Note that this does not fix the problem
+      for other connections (Partially closes: #10939).
+
+  * Test suite
+    - Adapt to the new desktop environment and applications' look.
+    - Adapt new changed nmcli syntax and output.
+    - New NetworkManager connection files must be manually loaded in Jessie.
+    - Adapt to new pkexec behavior.
+    - Adapt to how we now disable networking.
+    - Use sysctl instead of echo:ing into /proc/sys.
+    - Use oom_score_adj instead of the older oom_adj.
+    - Adapt everything depending on logs to the use of the Journal.
+    - Port to UDisks v2.
+    - Check that the system partition is an EFI System Partition.
+    - Add ldlinux.c32 to the list of bootloader files that are expected
+      to be modified when we run syslinux (Closes: #9053).
+    - Use apt(8) instead of apt-get(8).
+    - Don't hide the cursor after opening the GNOME apps menu.
+    - Convert the remote shell to into a systemd native service and a Python 3,
+      script that uses the sd_notify facility (Closes: #9057). Also, set its
+      OOM score adjustment value via its unit file, and not from the test suite.
+    - Adjust to match where screenshots are saved nowadays.
+    - Check that all system units have started (Closes: #8262)
+    - Simplify the "too small device" test.
+    - Spawn `poweroff' and `halt' in the background, and don't wait for them
+      to return: anything else would be racy vs. the remote shell's stopping.
+    - Bump video memory allocated to the system under test, to fix out of video
+      memory errors.
+    - When configuring the CPU to lack PAE support, use a qemu32 CPU instead
+      of a Pentium one: the latter makes GNOME Shell crash.
+      See #8778 for details about how Mesa's CPU features detection has
+      room for improvement.
+    - Adjust free(1) output parsing for Jessie.
+    - vm-execute: rename --type option to --spawn.
+    - Add method to set the X.Org clipboard, and install its dependency
+      (xsel) in the ISO.
+    - Paste URLs in one go, to work around issue with lost key presses
+      in the browser (Closes: #10467).
+    - Reliably wait for Synaptic's search button to fade in.
+    - Take into account that the sticky bit is not set on block devices
+      on Jessie anymore.
+    - Ensure that we can use a NetworkManager connection stored in persistence
+      (Closes: #7966).
+    - Use a stricter regexp when extracting logs for dropped packets.
+    - Clone the host CPU for the test suite guests (Closes: #8778).
+    - Run ping as root (aufs does not support file capabilities so we don't
+      get cap_net_raw+ep, and if built on a filesystem that does support
+      file capabilities, then /bin/ping is not setupd root).
+    - Escape regexp special characters when constructing the firewall log
+      parsing regexp, and pass -P to grep, since Ruby uses PCRE.
+    - Adjust is_persistent?() helper to findmnt changes in Jessie.
+    - Rework in depth how we measure pattern coverage in memory, with more
+      reliable Linux OOM and VM settings, fundamental improvements
+      in what exactly we measure, and custom OOM adjutments for fillram
+      processes (Closes: #9705).
+    - Use blkid instead of parted to determine the filesystem type.
+    - Use --kiosk mode instead of --fullscreen in virt-viewer, to remove
+      the tiny border of the in-viewer menu.
+    - Remove now redundant desktop screenshot directory scenario.
+    - Adapt GNOME notification handling for Debian Jessie (Closes: #8782)
+    - Disable screen blanking in the automated test suite, which occasionally
+      breaks some test cases (Closes: #10403).
+    - Move upgrade scenarios to the feature dedicated to them.
+    - Don't make libvirt storage volumes executable.
+    - Refactor the PAUSE_ON_FAIL functionality, so that we can use `pause()`
+      as a breakpoint when debugging.
+    - Drop non-essential Totem test that is mostly a duplicate, and too painful
+      to be worth automating on Jessie.
+    - Retry Totem HTTPS test with a new Tor circuit on failure.
+    - Replace iptables status regexp-based parser with a new XML-based
+      status analyzer: the previous implementation could not be adjusted
+      to the new ip6tables' output (Closes: #9704).
+    - Don't reboot in one instance when it is not needed.
+    - Optimize memory erasure anti-test: block the boot to save CPU on the host.
+    - Update I2P tests for Jessie, and generally make them more robust.
+    - Update Electrum tests for 2.5.4-2 (Closes: #10758).
+    - Add workaround for libvirt vs. guestfs permissions issue, to allow
+      running the test suite on current Debian sid.
+    - Fix buggy code, that happened to work by mistake, in the Seahorse
+      test cases; bugfix on 1.8.
+    - Update test suite images due to CSS change on Tails' website.
+    - Adapt Tor Browser tests to work with the 5.5 series.
+    - Automatically test downloading files in Tor Browser.
+    - Remove obsolete scenario, that tested opening a downloaded file with
+      an external application, which we do not support anymore.
+    - Improve robustness of the "Tails OpenPGP keys" scenario (Closes: #10378).
+    - Automatically test the "Diable all networking" feature (Closes: #10430).
+    - Automatically test that SSH works over LAN (Closes: #9087).
+    - Bump some statuc sleeps to fix a few race conditions (Closes: #5330).
+    - Automatically test that an emergency shutdown triggers on boot
+      medium removal (Closes: #5472).
+    - Make the AppArmor checks actually detect errors (Closes: #10926).
+
+  * Build system
+    - Bump amount of disk space needed to build Tails with Vagrant.
+      The addition of the Japanese Tor Browser tarball made us reach
+      the limit of the previous value.
+
+  * Adjustments for Debian 8 (Jessie) with no or very little user-visible impact
+    - Free the fixed UIDs/GIDs we need before creating the corresponding users.
+    - Replace the real gnome-backgrounds with a fake, equivs generated one
+      (Closes: #8055). Jessie's gnome-shell depends on gnome-backgrounds,
+      which is too fat to ship considering we're not using it.
+    - AppArmor: adjust CUPS profile to support our Live system environment
+      (Closes: #8261):
+      · Mangle lib/live/mount/overlay/... as usual for aufs.
+      · Pass the the attach_disconnected flag, that's needed for compatibility
+        with PrivateTmp.
+    - Make sure we don't ship geoclue* (Closes: #7949).
+    - Drop deprecated GDM configuration file.
+    - Don't add the Live user to the deprecated 'fuse' group.
+    - Drop hidepid mount option for /proc (Closes: #8256). In its current,
+      simplistic form it cannot be supported by systemd.
+    - Don't manually load acpi-cpufreq at boot time. It fails to load
+      whenever no device it supports is present, which makes the
+      systemd-modules-load.service fail. These days, the kernel
+      should just automatically load such modules when they are needed.
+    - Drop sysvinit-specific (sensigs.omit.d) tweaks for memlockd.
+    - Disable the GDM unit file's Restart=always, that breaks our "emergency
+      shutdown on boot medium removal" feature.
+    - Update the implementation of the memory erasure on shutdown feature:
+      · check for rebooting state using systemctl, instead of the obsolete
+        $RUNLEVEL (Closes: #8306)
+      · the kexec-load initscript normally silently exits unless systemd is
+        currently running a reboot job. This is not the case when the emergency
+        shutdown has been triggered, so we removed this check
+      · migrate tails-kexec to the /lib/systemd/system-shutdown/ facility
+      · don't (try to) switch to tty1 on emergency shutdown: it apparently
+        requires data that we haven't locked into memory, and then it blocks
+        the whole emergency shutdown process
+    - Display a slightly darker version of the desktop wallpaper on the screen
+      saver, instead of the default flashy "Debian 8" branding (Closes: #9038).
+    - Disable software autorun from external media.
+    - Disable a few unneeded D-Bus services. Some of these services are
+      automatically started (via D-Bus activation) when GNOME Shell tries
+      to use them. The only "use" I've seen for them, except eating
+      precious RAM, is to display "No appointment today" in the calendar pop-up.
+      (Closes: #9037)
+    - Prevent NetworkManager services from starting at boot time
+      (Closes: #8313). We start them ourselves after changing the MAC address.
+    - Unfuzzy all patches (Closes: #8268) and drop a few obsolete ones.
+    - Adapt IBus configuration for Jessie (Closes: #8270), i.e. merge the two
+      places where we configure keyboard layout and input methods: both are now
+      configured in the same place in Jessie's GNOME.
+    - Migrate panel launchers to the favorite apps list (Closes: #7992).
+    - Drop pre-GNOME Shell menu tweaks.
+    - Hide "Log out" button in the GNOME Shell menu (Closes: #8364).
+    - Add a custom shutdown-helper GNOME Shell extension (Closes: #8302, #5684
+      and #5878) that removes the press-Alt-to-turn-shutdown-button-into-Suspend
+      functionality from the GNOME user menu, and makes Restart and Shutdown
+      immediate, without further user interaction. Accordingly remove our custom
+      Shutdown Helper panel applet (#8302).
+    - Drop GNOME Panel configuration, now deprecated.
+    - Disable GNOME Shell's screen lock feature.
+      We're not there yet (see #5684).
+    - Disable GNOME Shell screen locker's user switch feature.
+    - Explicitly install libany-moose-perl (Closes: #8051).
+      It's needed by our OpenPGP applet. On Wheezy, this package was pulled
+      by some other dependency. This is not the case anymore on Jessie.
+    - Don't install notification-daemon nor gnome-mag: GNOME Shell has taken
+      over this functionality (Closes: #7481).
+    - Don't install ntfsprogs: superseded on Jessie.
+    - Don't install barry-util: not part of Jessie.
+    - Link udev-watchdog dynamically, and lock it plus its dependencies
+      in memory.
+    - Migrate from gdm-simple-greeter to a custom gdm-tails session
+      (Closes: #7599).
+    - Update Plymouth installation and configuration:
+      · install the plymouth packages via chroot_local-hooks: lb 2.x's "standard"
+        packages list pulls console-common in, which plymouth now conflicts with
+      · don't patch the plymouth initscript anymore, that was superseded
+        by native systemd unit files
+      · mask the plymouth-{halt,kexec,poweroff,reboot,shutdown} services,
+        to prevent them from occupying the active TTY with an (empty) splash
+        screen on shutdown/reboot, that would hide the messages we want to show
+        to the user via tails-kexec (Closes: #9032)
+    - Migrate GNOME keyboard layout settings from libgnomekbd to input-sources
+      (Closes: #7898).
+    - Explicitly install syslinux-efi, that we need and is not automatically
+      pulled by anything else anymore.
+    - Workaround #7248 for GDM: use a solid blue background picture,
+      instead of a solid color fill, in the Greeter session.
+    - De-install gcc-4.8-base and gcc-4.9 at the end of the ISO build process.
+    - Revert the "Wrap syndaemon to always use -t" Wheezy-specific workaround.
+    - htpdate: run date(1) in a Jessie-compatible (and nicer) way.
+    - Remove obsolete dconf screenshot settings and the corresponding test.
+    - Drop our patched python-dbus{,-dev} package (Closes: #9177).
+    - live-persist: stop overriding live-boot's functions, we now have
+      a recent enough blkid.
+    - Adjust sdmem initramfs bits for Jessie:
+      · Directly call poweroff instead of halt -p.
+      · Don't pass -n to poweroff and reboot, it's not supported anymore.
+    - Wrap text in the Unsafe Browser startup warning dialog
+      (Jessie's zenity does not wrap it itself).
+    - Associate application/pgp-keys with Seahorse's "Import Key" application
+      (Closes: #10571).
+    - Install topIcons GNOME Shell extension (v28), to work around the fact
+      that a few of the applets we use hijack the notification area.
+    - "cd /" to fix permissions issue at tails-persistence-setup startup
+      (Closes: #8097).
+    - Install gstreamer1.0-libav, so that Totem can play H264-encoded videos.
+    - Adjust APT sources configuration:
+      · remove explicit jessie and jessie-updates sources:
+        automatically added by live-build
+      · add Debian testing
+      · add jessie-backports
+    - Firewall: white-list access to the accessibility daemon (Closes: #8075).
+    - Adjust to changed desktop notification behavior and supported feature set
+      (Closes: #7989):
+      · pass the DBUS_SESSION_BUS_ADDRESS used by the GNOME session
+        to notify-send
+      · update waiting for a notification handler: gnome-panel and nm-applet
+        are obsolete, GNOME Shell is now providing this facility, so instead
+        wait for a process that starts once GNOME Shell is ready, namely
+        ibus-daemon (Closes: #8685)
+      · port tails-warn-about-disabled-persistence and tails-virt-notify-user
+        to notification actions (instead of hyperlinks), and make the latter
+        transient; to this end, add support to Desktop::Notify for "hints"
+        and notification actions
+      · tails-security-check: use a dialog box instead of desktop notifications
+      · MAC spoofing failure notification: remove the link to the documentation;
+        it was broken on Tails/Wheezy already, see #10559 for next steps
+    - Don't explicitly install gnome-panel nor gnome-menus, so that they go away
+      whenever the Greeter does not pull them in anymore.
+    - Install gkbd-capplet, that provides gkbd-keyboard-display (Closes: #8363).
+    - Install Tor 0.2.7 from deb.torproject.org: we don't need to rebuild it
+      ourselves for seccomp support anymore.
+    - Wrap Seahorse with torsocks when it is started as a D-Bus service too
+      (Closes: #9792).
+    - Rename the AppArmor profile for Tor, so it applies to the system-wide
+      Tor service we run (Closes: #10528).
+    - Essentially revert ALSA state handling to how it was pre-Jessie, so that
+      mixer levels are unmuted and sanitized at boot time (Closes: #7591).
+    - Pass --yes to apt-get when installing imagemagick.
+    - Make removable devices, that we support installing Tails to, user writable:
+      Tails Installer requires raw block device access to such devices
+      (Closes: #8273). Similarly, allow the amnesia user, when active, to open
+      non-system devices for writing with udisks2. This is roughly udisks2's
+      equivalent of having direct write access to raw block storage devices.
+      Here too, Tails Installer uses this functionality.
+    - Disable networkd to prevent any risk of DNS leaks it might cause; and
+      disable timesyncd, as we have our own time synchronization mechanism.
+      They are not enabled by default in Jessie, but may be in Stretch,
+      so let's be explicit about it.
+    - Mask hwclock-save.service, to avoid sync'ing the system clock
+      to the hardware clock on shutdown (Closes: #9363).
+    - apparmor-adjust-cupsd-profile.diff: adjust to parse fine on Jessie
+      (Closes: #9963)
+    - Explicitly use tor@default.service when it's the one we mean.
+    - Refactor GNOME/X env exporting to Tails' shell library, and grab
+      more of useful bits of the desktop session environment.
+      Then, use the result in the test suite's remote shell.
+    - Stop tweaking /etc/modules. It's 2015, the kernel should load these things
+      automatically (Closes: #10609).
+    - Have systemd hardening let Tor modify its configuration (needed by Tor
+      Launcher), and start obfs4proy (Closes: #10696, #10724).
+    - Bump extensions.adblockplus.currentVersion and
+      extensions.enigmail.configuredVersion to match what we currently get
+      on Jessie.
+    - I2P: switch from 'service' to 'systemctl' where possible.
+
+ -- Tails developers <tails@boum.org>  Mon, 25 Jan 2016 18:06:33 +0100
+
+tails (1.8.2) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.0.7.
+    - Upgrade Linux to 3.16.7-ckt20-1+deb8u2.
+    - Upgrade foomatic-filters to 4.0.17-1+deb7u1.
+    - Upgrade git to 1:1.7.10.4-1+wheezy2.
+    - Upgrade Icedove to 38.5.0-1~deb7u1.
+    - Upgrade libxml2-related packages to 2.8.0+dfsg1-7+wheezy5.
+    - Upgrade OpenSSL-related packages to 1.0.1e-2+deb7u19.
+    - Upgrade libsmbclient to 2:3.6.6-6+deb7u6.
+
+ -- Tails developers <tails@boum.org>  Sat, 09 Jan 2016 16:27:27 +0100
+
+tails (1.8.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 5.0.6.
+    - Upgrade Linux to 3.16.7-ckt20-1+deb8u1
+    - Upgrade gdkpixbuf to 2.26.1-1+deb7u3
+    - Upgrade bind9 tools to 1:9.8.4.dfsg.P1-6+nmu2+deb7u8
+
+  * Bugfixes
+    - Fix time synchronization in bridge mode by refreshing our patch
+      against Tor's AppArmor profile.
+
+ -- Tails developers <tails@boum.org>  Fri, 18 Dec 2015 19:05:18 +0000
+
+tails (1.8) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor to 0.2.7.6-1~d70.wheezy+1+tails1.
+    - Upgrade Tor Browser to 5.0.5. (Closes: #10751)
+    - Upgrade LibreOffice to 1:3.5.4+dfsg2-0+deb7u5.
+    - Upgrade krb5-based packages to 1.10.1+dfsg-5+deb7u6.
+    - Upgrade Linux to 3.16.7-ckt11-1+deb8u6.
+    - Upgrade wpasupplicant to 1.0-3+deb7u3.
+    - Upgrade libpng12-0 to 1.2.49-1+deb7u1.
+    - Upgrade openjdk-7 to 7u91-2.6.3-1~deb7u1.
+    - Upgrade libnspr4 to 2:4.9.2-1+deb7u3
+    - Upgrade dpkg to 1.16.17.
+    - Upgrade gnutls26 to 2.12.20-8+deb7u4.
+    - Upgrade Icedove to 1:38.0.1-1~deb7u1.
+    - Upgrade OpenSSL to 1.0.1e-2+deb7u18.
+
+  * Bugfixes
+    - Upgrade to Electrum 2.5.4-2~d70.wheezy+1+tails1. Now Electrum
+      should work again. Note that the documentation has not been
+      adapted to the slight changes in the Electrum account setup
+      wizard yet.
+
+  * Minor improvements
+    - Upgrade I2P to 0.9.23-2~deb7u+1.
+    - Rebase our patch against the Tor Browser AppArmor profile on top
+      of the one shipped in torbrowser-launcher 0.2.1-2.
+    - Warn if the claws-mail persistence is enabled and contains a
+      Claws Mail configuration when starting icedove. (Closes: #10458)
+    - Replace the Claws Mail GNOME launcher with Icedove. (Closes:
+      #10739)
+    - Remove the Claws Mail persistence feature from the Persistence
+      Assistant. (Closes: #10742)
+
+  * Build system
+    - Simplify ISO image naming rules by using the base rule we use
+      for Jenkins all the time, except when building from a tag
+      (i.e. building a release).  (Closes: #10349)
+
+  * Test suite
+    - Lower the waiting time for USB installation in the test suite.
+      So far we were waiting up to one hour, which is just the same as
+      our Jenkins inactivity timeout, so in practice when Tails
+      Installer fails and displays an error message, instead of
+      reporting that the job failed (which is the point of the
+      exercise) we abort the job due to this timeout which
+      communicates less clearly that there's probably a bug. (Closes:
+      #10718)
+    - Remove the check for the sound icon in the systray in the
+      Windows Camouflage tests. (Closes: #10493)
+    - Retry running whois when "LIMIT EXCEEDED" is in its output for
+      increased robustness. (Closes: #10523)
+    - Make Seahorse tests more robust. (Closes: #9095, #10501)
+    - Make the handling of Pidgin's account manager more robust.
+      (Closes: #10506)
+
+ -- Tails developers <tails@boum.org>  Mon, 14 Dec 2015 23:07:19 +0100
+
+tails (1.7) unstable; urgency=medium
+
+  * Major new features and changes
+    - Upgrade Tor Browser to 5.0.4. (Closes: #10456)
     - Add a technology preview of the Icedove Email client (a
       rebranded version of Mozilla Thunderbird), including OpenPGP
       support via the Enigmail add-on, general security and anonymity
-      improvements via the Torbirdy add-on, and complete persitence
+      improvements via the Torbirdy add-on, and complete persistence
       support (which will be enabled automatically if you already have
       Claws Mail persistence enabled). Icedove will replace Claws Mail
       as the supported email client in Tails in a future
@@ -13,7 +807,7 @@ tails (1.7~rc1) unstable; urgency=medium
       improvement of this new Tor major release, the new
       KeepAliveIsolateSOCKSAuth option allows us to drop the
       bug15482.patch patch (taken from the Tor Browse bundle) that
-      enabled similar (but inferiour) functionality for *all*
+      enabled similar (but inferior) functionality for *all*
       SocksPort:s -- now the same circuit is only kept alive for
       extended periods for the SocksPort used by the Tor
       Browser. (Closes: #10194, #10308)
@@ -24,13 +818,38 @@ tails (1.7~rc1) unstable; urgency=medium
   * Security fixes
     - Fix CVE-2015-7665, which could lead to a network interface's IP
       address being exposed through wget. (Closes: #10364)
+    - Prevent a symlink attack on ~/.xsession-errors via
+      tails-debugging-info which could be used by the amnesia user to
+      read the contents of any file, no matter the
+      permissions. (Closes: #10333)
+    - Upgrade libfreetype6 to 2.4.9-1.1+deb7u2.
+    - Upgrade gdk-pixbuf packages to 2.26.1-1+deb7u2.
+    - Upgrade Linux to 3.16.7-ckt11-1+deb8u5.
+    - Upgrade openjdk-7 packages to 7u85-2.6.1-6~deb7u1.
+    - Upgrade unzip to 6.0-8+deb7u4.
+
+  * Bugfixes
+    - Add a temporary workaround for an issue in our code which checks
+      whether i2p has bootstrapped, which (due to some recent change
+      in either I2P or Java) could make it appear it had finished
+      prematurely. (Closes: #10185)
+    - Fix a logical bug in the persistence preset migration code while
+      real-only persistence is enabled. (Closes: #10431)
 
   * Minor improvements
+    - Rework the wordings of the various installation and upgrade
+      options available in Tails installer in Wheezy. (Closes: #9672)
     - Restart Tor if bootstrapping stalls for too long when not using
       pluggable transports. (Closes: #9516)
     - Install firmware-amd-graphics, and firmware-misc-nonfree instead
       of firmware-ralink-nonfree, both from Debian Sid.
     - Update the Tails signing key. (Closes: #10012)
+    - Update the Tails APT repo signing key. (Closes: #10419)
+    - Install the nmh package. (Closes: #10457)
+    - Explicitly run "sync" at the end of the Tails Upgrader's upgrade
+      process, and pass the "sync" option when remounting the system
+      partition as read-write. This might help with some issues we've
+      seen, such as #10239, and possibly for #8449 as well.
 
   * Test suite
     - Add initial automated tests for Icedove. (Closes: #10332)
@@ -53,8 +872,25 @@ tails (1.7~rc1) unstable; urgency=medium
     - Extract TBB languages from the Tails source code. This will
       ensure that valid locales are tested. As an added bonus, the
       code is greatly simplified. (Closes: #9897)
+    - Automatically test that tails-debugging-info is not susceptible
+      to the type of symlink attacks fixed by #10333.
+    - Save all test suite artifacts in a dedicated directory with more
+      useful infromation encoded in the path. This makes it easier to
+      see which artifacts belongs to which failed scenario and which
+      run. (Closes: #10151)
+    - Log all useful information via Cucumber's formatters instead of
+      printing to stderr, which is not included when logging to file
+      via `--out`. (Closes: #10342)
+    - Continue running the automated test suite's vnc server even if
+      the client disconnects. (Closes: #10345)
+    - Add more automatic tests for I2P. (Closes: #6406)
+    - Bump the Tor circuit retry count to 10. (Closes: #10375)
+    - Clean up dependencies: (Closes: #10208)
+      * libxslt1-dev
+      * radvd
+      * x11-apps
 
- -- Tails developers <tails@boum.org>  Mon, 26 Oct 2015 23:06:59 +0100
+ -- Tails developers <tails@boum.org>  Tue, 03 Nov 2015 01:09:41 +0100
 
 tails (1.6) unstable; urgency=medium
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # ATTENTION: Yes, this can be used as a backdoor, but only for an
 # adversary with access to you *physical* serial port, which means
@@ -9,8 +9,8 @@ from sys import argv
 from json import dumps, loads
 from pwd import getpwnam
 from os import setgid, setuid, environ
-from glob import glob
 import serial
+from systemd.daemon import notify as sd_notify
 
 def mk_switch_user_fn(uid, gid):
     def switch_user():
@@ -23,16 +23,17 @@ def run_cmd_as_user(cmd, user):
   switch_user_fn = mk_switch_user_fn(pwd_user.pw_uid,
                                      pwd_user.pw_gid)
   # We try to create an environment identical to what's expected
-  # inside Tails for the user by logging in (via `su`) as the user and
-  # extracting the environment.
-  pipe = Popen('su -c env ' + user, stdout=PIPE, shell=True)
-  env_data = pipe.communicate()[0]
+  # inside Tails for the user by logging in (via `su`) as the user,
+  # setting up the GNOME shell environment, and extracting the
+  # environment via `env`; not that we will run `env` unconditionally
+  # since the former command could fail, e.g. if GNOME is not running.
+  env_cmd = '. /usr/local/lib/tails-shell-library/gnome.sh && ' + \
+            'export_gnome_env ; ' + \
+            'env'
+  wrapped_env_cmd = "su -c '{}' {}".format(env_cmd, user)
+  pipe = Popen(wrapped_env_cmd, stdout=PIPE, shell=True)
+  env_data = pipe.communicate()[0].decode('utf-8')
   env = dict((line.split('=', 1) for line in env_data.splitlines()))
-  env['DISPLAY'] = ':0.0'
-  try:
-    env['XAUTHORITY'] = glob("/var/run/gdm3/auth-for-amnesia-*/database")[0]
-  except IndexError:
-    pass
   cwd = env['HOME']
   return Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, env=env, cwd=cwd,
                preexec_fn=switch_user_fn)
@@ -40,20 +41,20 @@ def run_cmd_as_user(cmd, user):
 def main():
   dev = argv[1]
   port = serial.Serial(port = dev, baudrate = 4000000)
-  port.open()
+  if not port.isOpen():
+    port.open()
 
-  # Create a state file so other applications can know that the remote
-  # shell is operational.
-  state_file_path = "/var/lib/live/autotest-remote-shell-running"
-  open(state_file_path, "w").close()
+  # Notify systemd that we're ready
+  sd_notify('READY=1')
+  sd_notify('STATUS=Processing requests...\n')
 
   while True:
     try:
-      line = port.readline()
+      line = port.readline().decode('utf-8')
     except Exception as e:
       # port must be opened wrong, so we restart everything and pray
       # that it works.
-      print str(e)
+      print(str(e))
       port.close()
       return main()
     try:
@@ -61,16 +62,18 @@ def main():
     except Exception as e:
       # We had a parse/pack error, so we just send a \0 as an ACK,
       # releasing the client from blocking.
-      print str(e)
-      port.write("\0")
+      print(str(e))
+      port.write(b"\0")
       continue
     p = run_cmd_as_user(cmd, user)
     if cmd_type == "spawn":
       returncode, stdout, stderr = 0, "", ""
     else:
-      stdout, stderr = p.communicate()
+      stdout_b, stderr_b = p.communicate()
+      stdout = stdout_b.decode('utf-8')
+      stderr = stderr_b.decode('utf-8')
       returncode = p.returncode
-    port.write(dumps([returncode, stdout, stderr]) + "\0")
+    port.write(dumps([returncode, stdout, stderr]).encode('utf-8') + b"\0")
 
 if __name__ == "__main__":
   main()

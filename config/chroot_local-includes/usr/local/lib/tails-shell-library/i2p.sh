@@ -9,6 +9,7 @@
 I2P_DEFAULT_CONFIG="/usr/share/i2p"
 I2P_CONFIG="/var/lib/i2p/i2p-config"
 I2P_TUNNEL_CONFIG="${I2P_CONFIG}/i2ptunnel.config"
+I2P_WRAPPER_LOG="/var/log/i2p/wrapper.log"
 
 i2p_is_enabled() {
     grep -qw "i2p" /proc/cmdline
@@ -27,7 +28,29 @@ i2p_eep_proxy_address() {
     echo ${listen_host}:${listen_port}
 }
 
-i2p_has_bootstrapped() {
+i2p_reseed_started() {
+    grep -q 'Reseed start$' "${I2P_WRAPPER_LOG}"
+}
+
+i2p_reseed_failed() {
+    grep -q 'Reseed failed, check network connection$' "${I2P_WRAPPER_LOG}"
+}
+
+i2p_reseed_completed() {
+    grep -q "Reseed complete" "${I2P_WRAPPER_LOG}"
+}
+
+i2p_reseed_status() {
+    if i2p_reseed_completed; then
+        echo success
+    elif i2p_reseed_failed; then
+        echo failure
+    elif i2p_reseed_started; then
+        echo running
+    fi
+}
+
+i2p_built_a_tunnel() {
     netstat -nlp | grep -qwF "$(i2p_eep_proxy_address)"
 }
 
