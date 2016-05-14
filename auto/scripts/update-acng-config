@@ -29,7 +29,8 @@ chmod 644 "$conf"
 # Generate .list files for time-based snapshots
 for origin in $(list_origins) ; do
    list="/etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list"
-   for year in $(seq 2016 2026) ; do
+   current_year=$(date '+%Y')
+   for year in $(seq $(($current_year - 1)) $(($current_year + 1))) ; do
       for month in $(seq 1 12); do
          for day in $(seq 1 31) ; do
             for n in $(seq 1 4) ; do
