@@ -80,11 +80,6 @@ and a set of third parties tools listed here:
 There are other tools that would be possible to explore like:
 <https://labs.riseup.net/code/issues/10984>
 
-As a conclusion, the biggest difference in the current Tails version is the usage
-of the Python interface for GTK3 (PyGI). The tools/libraries for Windows used in
-the current upstream liveusb-creator version seem in principle like the same
-used for Tails right now, except for the GUI parts.
-
 # Analysis regarding operations on storage devices
 
 According to <https://tails.boum.org/contribute/design/installation/>,
@@ -92,7 +87,7 @@ the steps to create a Tails bootable device are:
 
 1. Partition the device as a GPT partition.
 2. Create a FAT32 (VFAT) partition with the Tails files and Tails label.
-3. (Optionally) Create a persistence partition with LUKS.
+3. (Optionally, not supported yet) Create a persistence partition with LUKS.
 
 Next we analyze the code related to above steps. First we list
 the current Linux specific operations carried out in the
@@ -104,8 +99,12 @@ proposed Windows alternatives.
 ### detect_supported_drives:
 
     self._udisksclient.get_object_manager().get_objects()
+    partition = obj.props.partition
+    filesystem = obj.props.filesystem
     self._udisksclient.get_drive_for_block(block)
     self._udisksclient.get_partition_table(partition)
+
+Add to that a bunch of `drive.props.*` and `block.props.*`.
 
 ### mount_device:
 
@@ -182,31 +181,35 @@ proposed Windows alternatives.
 
 ###    mount_device:
 
+XXX: ?
+
     self.dest = self.drive['mount']
 
 ###    unmount_device:
 
     pass
-    We might use this:
-    https://technet.microsoft.com/en-us/library/cc772586.aspx
+
+We might use this:
+<https://technet.microsoft.com/en-us/library/cc772586.aspx>
 
 ###    partition_device:
 
     Not implemented.
-    Here what we need is to perform a GPT partition on the target device.
-    The only realistic option we could find was to use the gdisk tools
-    (http://www.rodsbooks.com/gdisk/). This library provides two utilities
-    to create GPT partitions. The first is gdisk.exe a text mode interactive
-    application and the second is sgdisk.exe, which works by command line.
-    If we want to use sgdisk.exe which looks like the best option, we should
-    compile it by ourselfs, because the binaries is not provided. The compilation
-    requires gnuwin32 popt library (http://gnuwin32.sourceforge.net/packages/popt.htm)
-    which looks old and might only work up to WindowsXP. In the other hand,
-    the only thing popt does is parsing command line parameters,
-    so in theory it should not be so difficult to run it in other
-    Windows versions, but I could not find more information.
-    The only alternative would be to use directly the WinAPI but it could
-    also require a good amount of work.
+
+Here what we need is to perform a GPT partition on the target device.
+The only realistic option we could find was to use the gdisk tools
+(<http://www.rodsbooks.com/gdisk/>). This library provides two utilities
+to create GPT partitions. The first is `gdisk.exe` a text mode interactive
+application and the second is `sgdisk.exe`, which works by command line.
+If we want to use `sgdisk.exe` which looks like the best option, we should
+compile it by ourselves, because no binary is provided. The compilation
+requires gnuwin32 popt library (<http://gnuwin32.sourceforge.net/packages/popt.htm>)
+which looks old and might only work up to Windows XP. On the other hand,
+the only thing popt does is parsing command line parameters,
+so in theory it should not be so difficult to run it in other
+Windows versions, but I could not find more information.
+The only alternative would be to use directly the WinAPI but it could
+also require a good amount of work.
 
 ###    update_system_partition_properties:
 
@@ -214,8 +217,8 @@ proposed Windows alternatives.
                + [ '--typecode=1:%s' % ESP_GUID ]
                + [ self.drive['parent'] ])
         self.popen(cmd, shell=False)
-    Currently it uses sgdisk but we need to decide on
-    using it or not.
+
+Currently it uses sgdisk but we need to decide on using it or not.
 
 ###    verify_filesystem:
 
@@ -226,7 +229,8 @@ proposed Windows alternatives.
 
     self.popen('syslinux %s -m -a -d %s %s' %  (
                 ' '.join(self.syslinux_options()), 'syslinux', device))
-    Ref: https://www.kernel.org/pub/linux/utils/boot/syslinux/
+
+Ref: <https://www.kernel.org/pub/linux/utils/boot/syslinux/>
 
 ###    initialize_zip_geometry:
 
@@ -236,14 +240,15 @@ proposed Windows alternatives.
 ###    format_device:
 
     self.popen('format /Q /X /y /V:Fedora /FS:FAT32 %s' % self.drive['device'])
-    Looks broken
+
+Looks broken
 
 ## Persistent partition:
 
 This is managed by the persistence-setup <https://git-tails.immerda.ch/persistence-setup>
 so it is beyond the scope of the current research.
 
-# PyGI windows executable
+# PyGI Windows executable
 
 I managed to create a native windows executable for a test Python/GI program under Windows 8.1
 
@@ -404,3 +409,21 @@ In another fresh windows 8.1VM
 
 * py2exe: <https://gmigdos.wordpress.com/2014/06/29/how-to-bundle-python-gtk3-apps-on-windows-with-py2exe/>
 
+# Conclusion
+
+We have outlined the main requirements we should face on fully porting the Tails
+Installer to Windows. The major differences in the current Tails version regarding
+the former upstream Fedora version, are the usage of the Python interface for GTK3
+(PyGI) and the udisks2 library for disk operations.
+
+We have found that there are alternative libraries we could use on Windows, in order
+to perform the Linux specific operations. Some of them seem currently maintained and
+updated, for instance, PyGI for Windows and extlinux. Other like sgdisk and its dependencies
+might need some custom maintenance, which could rise the amount of required effort.
+However, even with the extra required work, it seems totally likely that we can successfully
+port Tails installer to Windows.
+
+If our objective is to ease Tails adoption for Windows users, especially people that never have
+used Linux, then this project may be worth the effort. The question
+then becomes: is this the cheapest and/or best way to ease Tails
+adoption for Windows users?

@@ -1,11 +1,12 @@
 #!/bin/sh
 
-set -eu
+set -e
+set -u
 
 # Get $XKBMODEL, $XKBLAYOUT, $XKBVARIANT and $XKBOPTIONS
 . /var/lib/tails-user-session/keyboard
 
-if [ -z "$XKBVARIANT" ] ; then
+if [ -z "${XKBVARIANT:-}" ] ; then
 	XKBCONF="$XKBLAYOUT"
 else
 	XKBCONF="$XKBLAYOUT+$XKBVARIANT"
@@ -51,7 +52,7 @@ esac
 # Configure enabled input methods and their preferred order
 dconf write /desktop/ibus/general/preload-engines "$PRELOAD"
 dconf write /org/gnome/desktop/input-sources/sources "$SOURCES"
-if [ -n "$XKBOPTIONS" ] ; then
+if [ -n "${XKBOPTIONS:-}" ] ; then
     dconf write /org/gnome/desktop/input-sources/xkb-options "$XKBOPTIONS"
 fi
 
