@@ -80,7 +80,7 @@ def usb_install_helper(name)
 end
 
 When /^I start Tails Installer$/ do
-  step 'I start "TailsInstaller" via the GNOME "Tails" applications menu'
+  step 'I start "Tails Installer" via the GNOME "Tails" applications menu'
   @screen.wait('USBCloneAndInstall.png', 30)
 end
 
@@ -188,7 +188,7 @@ When /^I disable the first persistence preset$/ do
 end
 
 Given /^I create a persistent partition$/ do
-  step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
+  step 'I start "Configure persistent volume" via the GNOME "Tails" applications menu'
   @screen.wait('PersistenceWizardStart.png', 20)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
@@ -589,7 +589,7 @@ Then /^only the expected files are present on the persistence partition on USB d
 end
 
 When /^I delete the persistent partition$/ do
-  step 'I start "DeletePersistentVolume" via the GNOME "Tails" applications menu'
+  step 'I start "Delete persistent volume" via the GNOME "Tails" applications menu'
   @screen.wait("PersistenceWizardDeletionStart.png", 20)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
