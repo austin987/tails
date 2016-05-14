@@ -68,7 +68,7 @@ Feature: I2P
     When I activate the "I2P" Pidgin account
     And I close Pidgin's account manager window
     Then Pidgin successfully connects to the "I2P" account
-    And I can join the "#i2p" channel on "I2P"
+    And I can join the pre-configured "#i2p" channel on "I2P"
 
   @fragile
   Scenario: I2P displays a notice when bootstrapping fails
