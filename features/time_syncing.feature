@@ -106,7 +106,7 @@ Feature: Time syncing
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
-Scenario: The system time is not synced to the hardware clock
+  Scenario: The system time is not synced to the hardware clock
     Given I have started Tails from DVD without network and logged in
     When I bump the system time with "-15 days"
     And I warm reboot the computer
