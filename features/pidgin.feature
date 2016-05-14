@@ -103,6 +103,7 @@ Feature: Chatting anonymously using Pidgin
     When I create my XMPP account
     And I close Pidgin's account manager window
     Then Pidgin automatically enables my XMPP account
+    When I close Pidgin
     # And I generate an OTR key for the default Pidgin account
     And I take note of the configured Pidgin accounts
     # And I take note of the OTR key for Pidgin's "conference.riseup.net" account
