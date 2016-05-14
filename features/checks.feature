@@ -103,5 +103,4 @@ Feature: Various checks
     And I enable more Tails Greeter options
     And I disable all networking in the Tails Greeter
     And I log in to a new session
-    And the Tails desktop is ready
     Then no network interfaces are enabled
