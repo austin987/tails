@@ -83,10 +83,10 @@ tracked by tickets prefixed with `todo/test_suite:`.
   use](https://trac.torproject.org/projects/tor/wiki/doc/build/BuildSignoff#TestPagestoUse).
   (automate: [[!tails_ticket 10260]])
 * Compare the fingerprint of Tails and the latest TBB using at least
-  <https://panopticlick.eff.org/>
+  <https://panopticlick.eff.org/> (automate: [[!tails_ticket 10262]])
   - The exposed User-Agent should match the latest TBB's one.
   - Update the [[fingerprint section|support/known_issues#fingerprint]] of the
-    known issues page if needed. (automate: [[!tails_ticket 10262]])
+    known issues page if needed.
 * WebRTC should be disabled: (automate: [[!tails_ticket 10264]])
   - In `about:config` check that `media.peerconnection.enabled` is set to
     `false`.
@@ -95,9 +95,50 @@ tracked by tickets prefixed with `todo/test_suite:`.
     microphone with the remote website; anything else should fail.
   - <http://net.ipcalf.com/> should display
     `ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1`
-* One should be able to switch identities from the web browser.
-* Running `getTorBrowserUserAgent` should produce the User-Agent set by the
+* Running `/usr/local/lib/getTorBrowserUserAgent` should produce the User-Agent set by the
   installed version of Torbutton, and used in the Tor Browser. (automate: [[!tails_ticket 10268]])
+
+# Icedove
+
+* Check mail over IMAP using:
+  - a "clearnet" IMAP server.
+  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
+* Check mail over POP using:
+  - a "clearnet" POP server.
+  - a hidden service POP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
+* Send an email using:
+  - a "clearnet" SMTP server.
+  - a hidden service SMTP server (see above).
+
+* Check that the profile works and is torified:
+  1. Send an email using Icedove and a non-anonymizing SMTP relay (a
+     SMTP relay that writes the IP address of the client it is
+     relaying email for in the Received header).
+  1. Then check that email's headers once received, especially the
+     `Received:` one.
+* Also check that the EHLO/HELO SMTP message is not leaking anything
+  at the application level:
+  1. Start Icedove using the GNOME Applications menu.
+  2. Disable SSL/TLS for SMTP in Icedove (so take precautions for not
+     leaking your password in plaintext by either changing it
+     temporarily or using a disposable account). Or better, configure
+     StartTLS, since it will send two EHLO/HELO: one before TLS is
+     initiated; one after. The assumption here is that Icedove will
+     send the same both times.
+  3. Run `sudo tcpdump -n -i lo -w dump` while sending an email to
+     capture the packets before Tor encrypts it, then close
+     tcpdump. Note that the packet containing EHLO/HELO will be sent
+     really early, so even if the email failed (e.g. because the mail
+     server doesn't support plaintext SMTP on port 587) we are ok.
+  4. Check the dump for the HELO/EHLO message and
+     verify that it only contains `127.0.0.1`:
+     `sudo tcpdump -A -r dump | grep EHLO`
+* Make sure Icedove Mail use its dedicated `SocksPort` (see "SocksPort
+  for the MUA" in `/etc/tor/torrc`) when connecting to IMAP / POP3 /
+  SMTP servers (both clearnet and hidden services) by monitoring the
+  output of this command:
+
+      sudo watch -n 0.1 'netstat -taupen | grep icedove'
 
 # Tor
 
@@ -105,53 +146,11 @@ tracked by tickets prefixed with `todo/test_suite:`.
   before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>. (automate:
   [[!tails_ticket 10259]])
 
-# Claws
-
-* Check mail over IMAP using:
-  - a "clearnet" IMAP server.
-  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion
-    with SSL).
-* Send an email using:
-  - a "clearnet" SMTP server.
-  - a hidden service SMTP server (see above).
-* Check that the profile works and is torified:
-  1. Send an email using Claws and a non-anonymizing SMTP relay (a
-     SMTP relay that writes the IP address of the client it is
-     relaying email for in the Received header).
-  1. Then check that email's headers once received, especially the
-     `Received:` one.
-* Also check that the EHLO/HELO SMTP message is not leaking anything
-  at the application level:
-  1. Start Claws using the panel icon.
-  2. Disable SSL/TLS for SMTP in Claws (so take precautions for not
-     leaking your password in plaintext by either changing it
-     temporarily or using a disposable account).
-  3. Run `sudo tcpdump -n -i lo -w dump` to capture the packets before
-     Tor encrypts it, then close tcpdump
-  4. Check the dump for the HELO/EHLO message and
-     verify that it only contains `localhost`: `tcpdump -A -r dump`
-  5. Check the `Received:` and `Message-Id` fields in the received
-     message: it must not leak the hostname, nor the local IP.
-* Make sure Claws Mail use its dedicated `SocksPort` when connecting
-  to IMAP / POP3 / SMTP servers by monitoring the output of this
-  command:
-
-      sudo watch -n 0.1 'netstat -taupen | grep claws'
-
 # WhisperBack
 
 * I should be able to send a bug report with WhisperBack.
-* When we receive this bug report on the tails-bugs mailing-list,
+* When we receive this bug report on the tails-bugs mailing list,
   Schleuder tells us that it was sent encrypted.
-
-# Erase memory on shutdown
-
-- After booting from DVD, remove Tails boot medium and check that the
-  memory erasure process is started (`Loading new kernel`, at least).
-  (automate: [[!tails_ticket 5472]])
-- After booting from USB, remove Tails boot medium and check that the
-  memory erasure process is started (`Loading new kernel`, at least).
-  (automate: [[!tails_ticket 5472]])
 
 # Root access control
 
@@ -171,46 +170,6 @@ Make sure that I2P is up-to-date, at least if the
 [changelogs](https://geti2p.net/en/blog/) mention that
 security critical bugs were fixed.
 
-Start I2P by appending `i2p` to the kernel command line.
-
-* Check that I2P starts when a network interface is up:
-  - Within 30 seconds you should get the "I2P router console is ready"
-    pop-up
-  - Start the I2P Browser via "Applications -> Internet -> I2P Browser":
-    * You get the "Starting I2P Browser..." pop-up.
-    * The router console (<http://127.0.0.1:7657>) opens successfully
-      upon success.
-    * On exiting I2P Browser, check that its chroot gets properly torn
-      down on exit (there should be nothing mounted inside
-      `/var/lib/i2p-browser`).
-  - After a few minutes you should get the "I2P is ready" pop-up
-  - Go to <http://127.0.0.1:7657/i2ptunnelmgr> in the I2P Browser:
-    * You should get "Network: Hidden" in the "General" section.
-    * The numbers in the "Peers" section of the sidebar should be
-      non-zero.
-    * Check that you can reach some eepsites within Iceweasel, like
-      <http://i2p-projekt.i2p> and <http://forum.i2p>.
-  - Check that you can connect to the I2P IRC server through Pidgin
-    and the preconfigured IRC account on 127.0.0.1.
-* Check I2P failure modes:
-  - Router console failure:
-    * Boot without network so I2P doesn't start automatically.
-    * Block the router console port: `nc -l -p 7657 -t 127.0.0.1`
-    * Plug the network
-    * You should get the "I2P failed to start" pop-up, and I2P should
-      not be running (check with `service i2p status`)
-  - Bootstrap failure:
-    * Detach the network immediately after getting the "I2P router
-      console is ready" pop-up
-    * Wait for up to six minutes
-    * You should get the "I2P is not ready" pop-up
-    * The I2P router console should still be accessible on
-      <http://127.0.0.1:7657>
-
-# SSH
-
-* Connecting (by IP) over SSH to a server on the LAN should work. (automate: [[!tails_ticket 9087 desc="#9087"]])
-
 # APT (automate: [[!tails_ticket 8164 desc="#8164"]])
 
      grep -r deb.tails.boum.org /etc/apt/sources.list*
@@ -222,7 +181,7 @@ Start I2P by appending `i2p` to the kernel command line.
 
 <a id="incremental-upgrades"></a>
 
-# Incremental upgrades
+# Incremental upgrades (automate: [[!tails_ticket 6309 desc="#6309"]])
 
 * List the versions from which an upgrade paths to this one is described.
   In the `stable` or `testing` branch:
@@ -282,16 +241,6 @@ Start I2P by appending `i2p` to the kernel command line.
         DISABLE_PROXY=1 SSL_NO_VERIFY=1 \
         tails-upgrade-frontend-wrapper --override-baseurl \
         http://192.168.1.4/tails
-
-# Windows Camouflage
-
-Enable I2P in the boot loader menu, and enable Windows camouflage via
-the Tails Greeter checkbox, and then:
-
-* Tails OpenPGP Applet's context menu should look readable (automate: [[!tails_ticket 10255]])
-* The Tor Browser, Unsafe Browser and I2P Browser should all use the
-  Internet Explorer theme. (automate: [[!tails_ticket 10258]])
-* Vidalia should not start. (automate: [[!tails_ticket 10256]])
 
 # Unsafe Web Browser
 
@@ -354,5 +303,6 @@ language. You *really* have to reboot between each language.
 * Check that Tails Greeter's "more options" screen displays properly
   on a display with 600 px height, preferably in a language that's
   more verbose than English (e.g. French). (automate: [[!tails_ticket 10276]])
-* Check that all seems well during init (mostly that all services
-  start without errors), and that `/var/log/syslog` seems OK. (automate: [[!tails_ticket 10277]])
+* Check that all seems well during init: (automate: [[!tails_ticket 10277]])
+  - `systemctl --failed --all` should say `0 loaded units listed`
+  - the output of `journalctl` should seem OK.

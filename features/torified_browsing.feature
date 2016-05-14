@@ -12,7 +12,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     And I open a page on the LAN web server in the Tor Browser
     Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
-    And no traffic has flowed to the LAN
+    And no traffic was sent to the web server on the LAN
 
   @check_tor_leaks
   Scenario: The Tor Browser directory is usable
@@ -26,14 +26,14 @@ Feature: Browsing the web using the Tor Browser
     And I can print the current page as "output.pdf" to the default downloads directory
 
   @check_tor_leaks @fragile
-  Scenario: Importing an OpenPGP key from a website
+  Scenario: Downloading files with the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
-    And I open the address "https://tails.boum.org/tails-signing.key" in the Tor Browser
-    Then I see "OpenWithImportKey.png" after at most 20 seconds
-    When I accept to import the key with Seahorse
-    Then I see "KeyImportedNotification.png" after at most 10 seconds
+    Then the Tor Browser has started and loaded the startup page
+    When I download some file in the Tor Browser
+    Then I get the browser download dialog
+    When I save the file to the default Tor Browser download directory
+    Then the file is saved to the default Tor Browser download directory
 
   @check_tor_leaks @fragile
   Scenario: Playing HTML5 audio
@@ -94,6 +94,7 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///tmp/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
 
+  @doc
   Scenario: The "Tails documentation" link on the Desktop works
     Given I have started Tails from DVD and logged in and the network is connected
     When I double-click on the "Tails documentation" link on the Desktop
@@ -107,20 +108,12 @@ Feature: Browsing the web using the Tor Browser
     Then the Tor Browser uses all expected TBB shared libraries
 
   @check_tor_leaks @fragile
-  Scenario: Opening check.torproject.org in the Tor Browser shows the green onion and the congratulations message
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
-    And I open the address "https://check.torproject.org" in the Tor Browser
-    Then I see "TorBrowserTorCheck.png" after at most 180 seconds
-
-  @check_tor_leaks @fragile
   Scenario: The Tor Browser's "New identity" feature works as expected
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the address "https://check.torproject.org" in the Tor Browser
-    Then I see "TorBrowserTorCheck.png" after at most 180 seconds
+    And I open Tails homepage in the Tor Browser
+    Then Tails homepage loads in the Tor Browser
     When I request a new identity using Torbutton
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page
@@ -131,6 +124,8 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     Then the Tor Browser has no plugins installed
 
+  #10497, #10720
+  @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
@@ -146,6 +141,8 @@ Feature: Browsing the web using the Tor Browser
     Then I see "TorBrowserSavedStartupPage.png" after at most 10 seconds
     And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
+  #10720
+  @fragile
   Scenario: Persistent browser bookmarks
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And all persistence presets are enabled
@@ -159,7 +156,6 @@ Feature: Browsing the web using the Tor Browser
     And the computer reboots Tails
     And I enable read-only persistence
     And I log in to a new session
-    And the Tails desktop is ready
     And I start the Tor Browser in offline mode
     And the Tor Browser has started in offline mode
     Then the Tor Browser has a bookmark to eff.org

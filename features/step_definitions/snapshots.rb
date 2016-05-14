@@ -15,8 +15,32 @@ def checkpoints
       :parent_checkpoint => "tails-greeter",
       :steps => [
         'I log in to a new session',
-        'Tails Greeter has dealt with the sudo password',
-        'the Tails desktop is ready',
+      ],
+    },
+
+    'with-no-network-and-i2p' => {
+      :temporary => true,
+      :description => 'I have started Tails from DVD with I2P enabled and logged in',
+      :steps => [
+        'I set Tails to boot with options "i2p"',
+        'the network is unplugged',
+        'I start the computer',
+        'the computer boots Tails',
+        'I log in to a new session',
+      ],
+    },
+
+    'with-network-and-i2p' => {
+      :temporary => true,
+      :description => 'I have started Tails from DVD with I2P enabled and logged in and the network is connected',
+      :parent_checkpoint => "with-no-network-and-i2p",
+      :steps => [
+        'the network is plugged',
+        'Tor is ready',
+        'I2P is running',
+        'all notifications have disappeared',
+        'available upgrades have been checked',
+        "I2P's reseeding completed",
       ],
     },
 
@@ -39,8 +63,6 @@ def checkpoints
         'I enable more Tails Greeter options',
         'I enable the specific Tor configuration option',
         'I log in to a new session',
-        'Tails Greeter has dealt with the sudo password',
-        'the Tails desktop is ready',
         'all notifications have disappeared',
       ],
     },
@@ -53,8 +75,6 @@ def checkpoints
         'I enable more Tails Greeter options',
         'I set an administration password',
         'I log in to a new session',
-        'Tails Greeter has dealt with the sudo password',
-        'the Tails desktop is ready',
       ],
     },
 
@@ -74,33 +94,39 @@ def checkpoints
       :description => "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen",
       :parent_checkpoint => 'no-network-logged-in',
       :steps => [
-        'I create a 4 GiB disk named "current"',
-        'I plug USB drive "current"',
-        'I "Clone & Install" Tails to USB drive "current"',
-        'the running Tails is installed on USB drive "current"',
-        'there is no persistence partition on USB drive "current"',
+        'I create a 4 GiB disk named "__internal"',
+        'I plug USB drive "__internal"',
+        'I "Clone & Install" Tails to USB drive "__internal"',
+        'the running Tails is installed on USB drive "__internal"',
+        'there is no persistence partition on USB drive "__internal"',
         'I shutdown Tails and wait for the computer to power off',
-        'I start Tails from USB drive "current" with network unplugged',
+        'I start Tails from USB drive "__internal" with network unplugged',
         'the boot device has safe access rights',
-        'Tails is running from USB drive "current"',
-        'there is no persistence partition on USB drive "current"',
+        'Tails is running from USB drive "__internal"',
+        'there is no persistence partition on USB drive "__internal"',
         'process "udev-watchdog" is running',
         'udev-watchdog is monitoring the correct device',
       ],
     },
 
-    'usb-install-with-persistence-tails-greeter' => {
-      :description => "I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
+    'usb-install-logged-in' => {
+      :description => "I have started Tails without network from a USB drive without a persistent partition and logged in",
       :parent_checkpoint => 'usb-install-tails-greeter',
       :steps => [
         'I log in to a new session',
-        'the Tails desktop is ready',
+      ],
+    },
+
+    'usb-install-with-persistence-tails-greeter' => {
+      :description => "I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
+      :parent_checkpoint => 'usb-install-logged-in',
+      :steps => [
         'I create a persistent partition',
-        'a Tails persistence partition exists on USB drive "current"',
+        'a Tails persistence partition exists on USB drive "__internal"',
         'I shutdown Tails and wait for the computer to power off',
-        'I start Tails from USB drive "current" with network unplugged',
+        'I start Tails from USB drive "__internal" with network unplugged',
         'the boot device has safe access rights',
-        'Tails is running from USB drive "current"',
+        'Tails is running from USB drive "__internal"',
         'process "udev-watchdog" is running',
         'udev-watchdog is monitoring the correct device',
       ],
@@ -112,7 +138,6 @@ def checkpoints
       :steps => [
         'I enable persistence',
         'I log in to a new session',
-        'the Tails desktop is ready',
         'all persistence presets are enabled',
         'all persistent filesystems have safe access rights',
         'all persistence configuration files have safe access rights',

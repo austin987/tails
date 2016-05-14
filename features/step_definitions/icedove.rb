@@ -82,13 +82,3 @@ When /^I open Torbirdy's preferences$/ do
   @screen.wait('GnomeQuestionDialogIcon.png', 10)
   @screen.type(Sikuli::Key.ENTER)
 end
-
-When /^I test Torbirdy's proxy settings$/ do
-  @screen.wait('IcedoveTorbirdyPreferencesWindow.png', 10)
-  @screen.click('IcedoveTorbirdyTestProxySettingsButton.png')
-  @screen.wait('IcedoveTorbirdyCongratulationsTab.png', 180)
-end
-
-Then /^Torbirdy's proxy test is successful$/ do
-  @screen.wait('IcedoveTorbirdyCongratulationsTab.png', 180)
-end

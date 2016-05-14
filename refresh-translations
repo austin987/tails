@@ -4,19 +4,23 @@ set -e
 set -u
 
 PERL_PROGS="/usr/local/bin/gpgApplet /usr/local/bin/tails-security-check \
-   /usr/local/bin/tails-htp-notify-user \
-   /usr/local/bin/tails-virt-notify-user \
-   /usr/local/sbin/tails-restricted-network-detector"
-PYTHON_PROGS="/etc/whisperback/config.py /usr/local/lib/shutdown-helper-applet \
+   /usr/local/lib/tails-htp-notify-user \
+   /usr/local/lib/tails-virt-notify-user"
+PYTHON_PROGS="/etc/whisperback/config.py \
    /usr/local/bin/tails-about /usr/local/sbin/tails-additional-software"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
    /usr/local/bin/electrum \
+   /usr/local/bin/icedove \
    /usr/local/bin/tails-upgrade-frontend-wrapper \
-   /usr/local/sbin/tails-spoof-mac \
+   /usr/local/lib/tails-spoof-mac \
    /usr/local/sbin/tails-i2p \
    /usr/local/sbin/i2p-browser \
    /usr/local/bin/tor-browser \
    /usr/local/sbin/unsafe-browser"
+JAVASCRIPT_PROGS=" \
+   /usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org/extension.js \
+   /usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js \
+"
 
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 
@@ -30,7 +34,14 @@ prog_potfile () {
    prog=$1
 
    progpath="config/chroot_local-includes$prog"
-   domain=$(basename $prog)
+   case $prog in
+       /usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org/extension.js)
+           domain=shutdown-helper-extension.js
+           ;;
+       *)
+           domain=$(basename $prog)
+           ;;
+   esac
    echo "tmp/pot/${domain}.pot"
 }
 
@@ -103,6 +114,7 @@ mkdir -p tmp/pot
 for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
+for prog in $JAVASCRIPT_PROGS  ; do refresh_pot $prog JavaScript ; done
 intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes

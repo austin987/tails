@@ -1,6 +1,16 @@
-Given /^I2P is running$/ do
-  try_for(30) do
-    $vm.execute('service i2p status').success?
+Given /^I2P is (?:still )?(not )?running$/ do |notrunning|
+  if notrunning
+    !$vm.execute('systemctl --quiet is-active i2p').success?
+  else
+    try_for(60) do
+      $vm.execute('systemctl --quiet is-active i2p').success?
+    end
+  end
+end
+
+Given /^I2P's reseeding (completed|started|failed)$/ do |progress|
+  try_for(220) do
+    $vm.execute("i2p_reseed_#{progress}", :libs => 'i2p').success?
   end
 end
 
@@ -10,30 +20,18 @@ Given /^the I2P router console is ready$/ do
   end
 end
 
-When /^I start the I2P Browser through the GNOME menu$/ do
-  step 'I start "I2PBrowser" via the GNOME "Internet" applications menu'
+Then /^the I2P router console is displayed in I2P Browser$/ do
+  @screen.wait('I2PRouterConsole.png', 2 * 60)
 end
 
-Then /^the I2P Browser desktop file is (|not )present$/ do |mode|
+Then /^the I2P Browser desktop file is (not )?present$/ do |notpresent|
   file = '/usr/share/applications/i2p-browser.desktop'
-  if mode == ''
-    assert($vm.execute("test -e #{file}").success?)
-  elsif mode == 'not '
-    assert($vm.execute("! test -e #{file}").success?)
-  else
-    raise "Unsupported mode passed: '#{mode}'"
-  end
+  assert_equal(notpresent.nil?, $vm.execute("test -e #{file}").success?)
 end
 
-Then /^the I2P Browser sudo rules are (enabled|not present)$/ do |mode|
+Then /^the I2P Browser sudo rules are (not )?present$/ do |notpresent|
   file = '/etc/sudoers.d/zzz_i2pbrowser'
-  if mode == 'enabled'
-    assert($vm.execute("test -e #{file}").success?)
-  elsif mode == 'not present'
-    assert($vm.execute("! test -e #{file}").success?)
-  else
-    raise "Unsupported mode passed: '#{mode}'"
-  end
+  assert_equal(notpresent.nil?, $vm.execute("test -e #{file}").success?)
 end
 
 Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
@@ -44,10 +42,49 @@ Then /^the I2P firewall rules are (enabled|disabled)$/ do |mode|
   if mode == 'enabled'
     assert_equal(13, accept_rules_count)
     step 'the firewall is configured to only allow the clearnet, i2psvc and debian-tor users to connect directly to the Internet over IPv4'
-  elsif mode == 'disabled'
+  else
     assert_equal(0, accept_rules_count)
     step 'the firewall is configured to only allow the clearnet and debian-tor users to connect directly to the Internet over IPv4'
-  else
-    raise "Unsupported mode passed: '#{mode}'"
   end
+end
+
+Then /^I2P is running in hidden mode$/ do
+  @screen.wait("I2PNetworkHidden.png", 10)
+end
+
+Then /^I block the I2P router console port$/ do
+  step 'process "nc" is not running'
+  $vm.spawn("nc -l -p 7657 -t 127.0.0.1")
+  step 'process "nc" is running within 5 seconds'
+end
+
+Then /^the I2P homepage loads in I2P Browser$/ do
+  recovery_on_failure = Proc.new do
+    $vm.focus_window('I2P Browser')
+    begin
+      @screen.click('BrowserReloadButton.png')
+    rescue FindFailed
+      @screen.type(Sikuli::Key.ESC)
+      @screen.click('BrowserReloadButton.png')
+    end
+  end
+  retry_i2p(recovery_on_failure) do
+    $vm.focus_window('I2P Browser')
+    visible, _ = @screen.waitAny(['I2PBrowserProjectHomepage.png', 'BrowserReloadButton.png'], 120)
+    unless visible == 'I2PBrowserProjectHomepage.png'
+      raise "Did not find 'I2PBrowserProjectHomepage.png'"
+    end
+  end
+end
+
+Then /^I see a notification that I2P failed to start$/ do
+  robust_notification_wait('I2PFailedToStart.png', 2 * 60)
+end
+
+Then /^I see shared client tunnels in the I2P router console$/ do
+  @screen.wait('I2PSharedClientTunnels.png', 15 * 60)
+end
+
+Then /^I see a notification that I2P is not ready$/ do
+  robust_notification_wait('I2PBootstrapFailure.png', 4 * 60)
 end

@@ -1,16 +1,21 @@
 #!/bin/sh
 
+set -e
+set -u
+
 CMD=$(basename ${0})
 
 . gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
+# Import no_abort()
+. /usr/local/lib/tails-shell-library/common.sh
+
 TORDATE_DIR=/var/run/tordate
 TORDATE_DONE_FILE="${TORDATE_DIR}/done"
 INOTIFY_TIMEOUT=60
-MIN_MEMFREE=$((125 * 1024))
-MIN_TOTAL_MEMFREE=$((500 * 1024))
+MIN_REAL_MEMFREE=$((300 * 1024))
 RUN_AS_USER=tails-upgrade-frontend
 
 ### Functions
@@ -26,16 +31,16 @@ ${@}"
 }
 
 check_free_memory () {
-   local min_memfree min_total_memfree memfree buffers cached total_memfree
+   local min_real_memfree memfree buffers cached real_memfree
    local errormsg
 
-   min_memfree="$1"
-   min_total_memfree="$2"
+   min_real_memfree="$1"
 
    memfree=$(awk '/^MemFree:/{print $2}' /proc/meminfo)
    buffers=$(awk '/^Buffers:/{print $2}' /proc/meminfo)
    cached=$(awk '/^Cached:/{print $2}' /proc/meminfo)
-   total_memfree=$(($memfree + $buffers + $cached))
+   tmpfs=$(df --type=tmpfs --local --output=used --total | tail -n1)
+   real_memfree=$(($memfree + $buffers + $cached - $tmpfs))
 
    errormsg="`gettext \"<b>Not enough memory available to check for upgrades.</b>
 
@@ -47,26 +52,17 @@ Try to restart Tails to check for upgrades again.
 Or do a manual upgrade.
 See https://tails.boum.org/doc/first_steps/upgrade#manual\"`"
 
-   if [ "$memfree" -lt "$MIN_MEMFREE" ] ; then
-      echo "Only $memfree MemFree, while $MIN_MEMFREE is needed." >&2
-      error "$errormsg"
-   fi
-
-   if [ "$total_memfree" -lt "$MIN_TOTAL_MEMFREE" ] ; then
-      echo "Only $total_memfree MemFree + Buffers + Cached, while $MIN_TOTAL_MEMFREE is needed." >&2
+   if [ "$real_memfree" -lt "$MIN_REAL_MEMFREE" ] ; then
+      echo "Only $real_memfree MemFree + Buffers + Cached - usage of tmpfs, while $MIN_REAL_MEMFREE is needed." >&2
       error "$errormsg"
    fi
 }
 
 ### Main
 
-while ! sudo -n -u debian-tor /usr/local/sbin/tor-has-bootstrapped ; do
-   sleep 10
-done
-
 sleep 30
 
-check_free_memory "$MIN_MEMFREE" "$MIN_TOTAL_MEMFREE"
+check_free_memory "$MIN_REAL_MEMFREE"
 
 # Go to a place where everyone, especially Archive::Tar::Wrapper called by
 # tails-install-iuk, can chdir back after it has chdir'd elsewhere to do
@@ -74,5 +70,6 @@ check_free_memory "$MIN_MEMFREE" "$MIN_TOTAL_MEMFREE"
 cd /
 
 xhost +SI:localuser:"$RUN_AS_USER"
-sudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend $@
+no_abort sudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend "${@}"
 xhost -SI:localuser:"$RUN_AS_USER"
+exit ${_NO_ABORT_RET}

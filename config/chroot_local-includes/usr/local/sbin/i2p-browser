@@ -1,11 +1,13 @@
 #!/bin/sh
 
 set -e
+set -u
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
 
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
-. /usr/local/lib/tails-shell-library/tor-browser.sh
-
-# Import windows_camouflage_is_enabled()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 # Import try_cleanup_browser_chroot(), setup_browser_chroot(),
@@ -78,11 +80,6 @@ i2p_is_enabled || exit 0
 
 CMD="$(basename "${0}")"
 LOCK="/var/lock/${CMD}"
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
 CONF_DIR="/var/lib/i2p-browser"
 COW="${CONF_DIR}/cow"
 CHROOT="${CONF_DIR}/chroot"

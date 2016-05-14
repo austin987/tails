@@ -75,8 +75,8 @@ using Tails Installer.
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
-Acer Aspire 5315-ICL50
-----------------------
+Acer Aspire 5315-ICL50 and Acer ES-1-331
+----------------------------------------
 
 Does not start on USB sticks created using Tails Installer.
 
@@ -269,6 +269,8 @@ The following commands, run from the GRUB shell, might be helpful:
 Wi-Fi issues
 ============
 
+<a id="broadcom-sta-dkms"></a>
+
 Broadcom Wi-Fi network interface needing `broadcom-sta-dkms`
 ------------------------------------------------------------
 
@@ -289,35 +291,10 @@ package on the corresponding [Debian wiki page](https://wiki.debian.org/wl).
 If you find your device in the list of supported devices, then it is
 impossible to use your Wi-Fi card in Tails.
 
-<a id="bcm43224"></a>
-
-Broadcom BCM43224 802.11a/b/g/n Wi-Fi network interface
--------------------------------------------------------
-
-The Broadcom Corporation BCM43224 802.11a/b/g/n Wi-Fi network
-interface is known to not be able to
-[[spoof its MAC address|doc/first_steps/startup_options/mac_spoofing]]. Tails
-enables MAC spoofing by default, and will disable any network interface
-it fails to spoof. To make it work you must
-[[disable Tails' MAC spoofing feature|doc/first_steps/startup_options/mac_spoofing#disable]];
-please read the documentation carefully and make sure you understand
-the consequences before doing so.
-
-This network interface can, for instance, be found in the MacBook Air
-4,1, 4,2, 5,1 and 5,2.
-
 Security issues
 ===============
 
-Claws Mail leaks plaintext of encrypted emails to IMAP server
--------------------------------------------------------------
-
-Claws Mail stores plaintext copies of all emails on the remote IMAP
-server, including those that are meant to be encrypted.
-
-If you send OpenPGP encrypted emails using *Claws Mail* and IMAP, make
-sure to apply one of the workarounds documented in our [[security
-announcement|security/claws_mail_leaks_plaintext_to_imap]].
+<a id="memory-wipe"></a>
 
 Tails might not erase all the system memory on shutdown
 -------------------------------------------------------
@@ -355,7 +332,7 @@ it. If you believe this feature is critical for the session you're running, we
 advice you to restart Tails.
 
 See
-[[!tails_ticket 5677 desc="liveusb-creator should not break emergency shutdown"]].
+[[!tails_ticket 5677 desc="Tails Installer should not break emergency shutdown"]].
 
 Tails DVD eject failure
 -----------------------
@@ -366,13 +343,7 @@ the DVD anymore.
 
 See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
 
-Stream isolation inconsistency in Claws Mail
---------------------------------------------
-
-Claws Mail isn't using its dedicated Tor SocksPort for Tor hidden
-service IMAP/POP/SMTP servers (instead Tor's TransPort is used). This
-is just a deviation from Tails' design and should have no adverse real
-world consequences.
+<a id="fails-to-shutdown"></a>
 
 Tails fails to completely shutdown or restart
 ---------------------------------------------
@@ -400,6 +371,7 @@ This issue has been reported on the following hardware:
     - MacBook Pro 10,2
     - MacBook Pro Retina 11,1 (late 2013)
     - MacBook Pro Retina 13-inch (early 2015)
+  - Hewlett-Packard HP ENVY x360
   - Hewlett-Packard HP Pavilion dv6 Notebook PC
   - Hewlett-Packard HP ProBook 450 G0
   - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
@@ -416,14 +388,31 @@ This issue has been reported on the following hardware:
 
 <a id="fingerprint"></a>
 
-Fingerprint
-===========
+Browser fingerprint
+===================
 
-<!-- If this section is empty adjust the [[fingerprint documentation|doc/about/fingerprint]]. -->
+There are currently no known differences between the fingerprints of
+<span class="application">Tor Browser</span> inside and outside of
+Tails.
 
-<!-- The fingerprints of <span class="application">Tor Browser</span> in Tails and on other operating systems are different: -->
+<!--
 
-None currently known.
+OR
+
+There are known differences between the fingerprints of <span
+class="application">Tor Browser</span> inside and outside of Tails:
+
+* Tor Browser 5.5 introduces
+  [protection against fingerprinting](https://trac.torproject.org/projects/tor/ticket/13313)
+  but due to an [[!tails_ticket 11000 desc="oversight"]]
+  it is not enabled in Tails 2.0. However, this is not so bad for
+  Tails users since each Tails system has the same fonts installed,
+  and hence will look identical, so this only means that it's easy to
+  distinguish whether a user of Tor Browser 5.5 uses Tails or
+  not. That is already easy given that Tails has the AdBlock Plus
+  extension enabled, unlike the normal Tor Browser.
+
+-->
 
 Other issues
 ============
@@ -449,7 +438,7 @@ with the I2P Browser:
 Boot menu has display issues
 ----------------------------
 
-Since Tails 1.1, one some hardware (ThinkPad X230, MacBook Pro 8,1),
+Since Tails 1.1, on some hardware (ThinkPad X230, MacBook Pro 8,1),
 the boot menu is not displayed properly. Tails starts fine, though.
 
 Connecting to FTP servers is not possible
@@ -463,6 +452,18 @@ Tails fails to connect to certain Wi-Fi networks
 
 This might be related to the introduction of wireless regulation support
 in Tails 0.13.
+
+The desktop crashes when run with the default QEMU emulated processor
+---------------------------------------------------------------------
+
+Due to a [bug in llvmpipe](https://freedesktop.org/patch/34445/), when
+Tails runs in a QEMU virtual machine with the default emulated CPU,
+the GNOME desktop crashes after login.
+
+To workaround this problem, pass @-cpu host@ on the QEMU command-line.
+If you use <span class="application">libvirt</span>, choose <span
+class="guilabel">Copy host CPU configuration</span> in <span
+class="application">virt-manager</span>'s processor configuration screen.
 
 Touchpad configurations
 -----------------------
@@ -493,41 +494,80 @@ translated in less languages than before. You can see the list of
 languages available in Tor Browser from the [Tor Browser
 homepage](https://www.torproject.org/projects/torbrowser.html.en).
 
-The Windows 8 Browser theme doesn't look like Internet Explorer 10
-------------------------------------------------------------------
-
-When the Windows 8 camouflage is enabled, the Internet Explorer 10
-theme for the Tor Browser, Unsafe Browser and I2P Browser is incorrect
-([[!tails_ticket 9326]]). Specifically,
-
-* the default Firefox tab bar is used (it should be positioned above
-  the URL bar, and use a "square" style), and
-* the search bar is enabled (it should be disabled).
-
-<a id="keyboard_layout"></a>
-
-Keyboard layout is sometimes not applied
-----------------------------------------
-
-The keyboard layout selected in *Tails Greeter* is sometimes not
-applied if different from **English (US)**. Click on the
-[[keyboard layout|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#keyboard_layout]] icon
-in the notification area to switch between English and the layout
-selected in *Tails Greeter*.
-
 <a id="automatic_upgrade_fails"></a>
-Tails does not boot after Automatic Upgrade
+
+Tails does not boot after automatic upgrade
 -------------------------------------------
 
-If you keep updating automatically, there is a point in which your Tails
-partition gets full. Currently the test about remaining space is failing,
-so you may end up with a Tails device with a corrupted partition, unable
-to boot.
-
-Then, it gets blocked when booting, often after the message
+Sometimes, after an automatic upgrade, Tails
+gets blocked when booting, often after the message
 'Loading, please wait...'.
 
 To fix this problem, you can [[update your Tails
 manually|doc/first_steps/upgrade/#manual]].
 
 Note that your Persistent Volume will be safely preserved.
+
+## Print preview is blank in Tor Browser
+
+Due to a [bug in Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1205598),
+its print preview is incompatible with the AppArmor confinement of Tor
+Browser in Tails.
+
+From the print preview, you can click
+<span class="guilabel">Print&hellip;</span> and choose
+<span class="guilabel">Print to File</span> in the list of printers to
+save it as a PDF file. Then you can open this PDF file from the file
+browser.
+
+Slow graphics operations with recent NVidia hardware
+----------------------------------------------------
+
+Graphics display operations are slow on computers with graphics
+adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
+GeForce GTX 960.
+
+This problem will likely be resolved once Tails
+[[!tails_ticket 10298 desc="includes a newer Linux kernel"]].
+
+Tor Browser does not support MPEG-4 videos
+------------------------------------------
+
+Tor Browser does not support MPEG-4 video streaming in Tails 2.0 and
+newer. Instead, in some cases you can download them and play them with
+the video player included in Tails.
+
+On the other hand, web sites that propose WebM video streaming work fine.
+
+See [[!tails_ticket 10835]] for more details.
+
+<a id="restart-shell"></a>
+
+## Icons and information located on the top right corner of the screen disappeared
+
+Sometimes, some of the icons located on the top right corner of the
+screen are not displayed entirely, or at all. For example,
+the icon that allows to change to another keyboard layout
+may be hidden. Other information, such as the clock, may not
+be visible.
+
+Press <span class="keycap">Alt+F2</span> and type `r` to restart GNOME
+Shell, which often solves this problem.
+
+See [[!tails_ticket 10576]] and [[!tails_ticket 10807]] for more details.
+
+## Network interfaces remain turned off
+
+For your safety, Tails blocks access to the network until you have
+chosen whether to
+[[spoof the MAC address|doc/first_steps/startup_options/mac_spoofing]].
+Once you have done that, network interfaces are turned on. However,
+since Tails 2.0, sometimes network interfaces remain turned off.
+
+If this happens to you, please
+[[report a bug|doc/first_steps/bug_reporting]]: we currently lack
+information to fix this problem.
+
+Restarting Tails generally solves this problem.
+
+See [[!tails_ticket 9012]] for more details.
