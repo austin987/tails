@@ -147,6 +147,13 @@ done < "${DESCRIPTIONS_FILE}"
 # This directory is not needed after build time.
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
+# Remove unwanted browser search plugins bundled in the Tor Browser.
+7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
+   'chrome/en-US/locale/browser/searchplugins/disconnect*.xml' \
+   'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
+   'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
+   'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
+
 # We want our localized English Wikipedia plugin to be available in
 # all locales.
 (
