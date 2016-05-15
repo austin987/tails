@@ -179,7 +179,7 @@ Given /^I enable all persistence presets$/ do
 end
 
 When /^I disable the first persistence preset$/ do
-  step 'I start "ConfigurePersistentVolume" via the GNOME "Tails" applications menu'
+  step 'I start "Configure persistent volume" via the GNOME "Tails" applications menu'
   @screen.wait('PersistenceWizardPresets.png', 300)
   @screen.type(Sikuli::Key.SPACE)
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
