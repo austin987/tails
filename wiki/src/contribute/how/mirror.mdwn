@@ -71,8 +71,8 @@ You will also need around **5-10 GiB** of disk space.
 If you satisfy these practical requirements, please read on!
 Else, please consider seeding Tails images over BitTorrent instead.
 
-Before starting doing any real work on this topic, please get in touch
-(<tails@boum.org>, [[OpenPGP key|doc/about/openpgp_keys#private]]) and send us
+Before starting doing any real work on this topic, you may want to get in touch
+(<tails-mirrors@boum.org>, [[OpenPGP key|doc/about/openpgp_keys#mirrors]]) and send us
 your OpenPGP public key, so that any further communication between us
 can be properly encrypted and authenticated.
 
@@ -90,16 +90,8 @@ Every HTTP mirror makes our files available under a fixed URL
 that contains per-version sub-directories (such as
 `http://dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
 
-<div class="tip">
-If you are using [[!wikipedia Puppet_(software) desc="Puppet"]] to configure
-your server infrastructure, consider using the available [[HTTP mirror Puppet
-module|mirror#http-puppet]].
-</div>
-
-Manual set up
--------------------------
-
-### 1. Pick a hostname for your mirror
+Pick a hostname for your mirror
+-------------------------------
 
 Your web server needs to answer requests sent to `dl.amnesia.boum.org`
 (for compatibility with our current legacy mirror pool setup).
@@ -123,7 +115,16 @@ There are two ways to pick that dedicated hostname:
    mirror to the pool, also ask us to create a dedicated hostname
    for you.
 
-### 2. Set up your web server
+Manual set up
+-------------------------
+
+<div class="tip">
+If you are using [[!wikipedia Puppet_(software) desc="Puppet"]] to configure
+your server infrastructure, consider using the available [[HTTP mirror Puppet
+module|mirror#http-puppet]].
+</div>
+
+### 1. Set up your web server
 
 Set up a virtual host for the hostname chosen at the
 previous step. The virtual host will need to
@@ -191,8 +192,7 @@ Mozilla SSL Configuration Generator</a>.
 #### Apache configuration example using a hostname under dl.amnesia.boum.org
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
-	   ServerName yourdomain.org
-	   ServerAlias dl.amnesia.boum.org
+	   ServerName dl.amnesia.boum.org
 	   ServerAlias *.dl.amnesia.boum.org
 	   ServerAdmin YOUR_EMAIL
 
@@ -226,7 +226,7 @@ Mozilla SSL Configuration Generator</a>.
 		}
 	}
 
-### 3. Download the files
+### 2. Download the files
 
 Download a snapshot of the current Tails files:
 
@@ -240,7 +240,7 @@ download:
 	rsync -rt --delete --exclude=/tails/obsolete --delete-excluded \
 	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
-### 4. Schedule the pulling of the files
+### 3. Schedule the pulling of the files
 
 Your mirror should sync every hour + 15 minutes (at 00:15, 01:15, 02:15, etc.).
 Use `cron` or equivalent to schedule the same `rsync` command
@@ -294,6 +294,16 @@ so that we can add it to the Round Robin pool.
 
 Also, if you decided to use a hostname under `dl.amnesia.boum.org`,
 please ask us to create it at the same time.
+
+<div class="note">
+
+We will publish your email address, associated with the URL of your
+mirror, in a file hosted on our website. If you are not comfortable
+with this, give us an email alias that we can publish without
+revealing additional information, such as
+<emph>webmaster@your-mirror.org</emph>.
+
+</div>
 
 # Talk to us
 
