@@ -173,7 +173,7 @@ case "$LB_BINARY_IMAGES" in
       ;;
 esac
 BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
-BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
+BUILD_MANIFEST="${BUILD_DEST_FILENAME}.build-manifest"
 BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
 BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 BUILD_START_FILENAME="${BUILD_DEST_FILENAME}.start.timestamp"
@@ -207,7 +207,7 @@ if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
    mv -i binary.packages "${BUILD_PACKAGES}"
-   generate-build-manifest chroot/debootstrap "${BUILD_DEST_FILENAME}.build-manifest"
+   generate-build-manifest chroot/debootstrap "${BUILD_MANIFEST}"
 else
    fatal "lb build failed ($?)."
 fi
