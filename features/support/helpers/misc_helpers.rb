@@ -89,6 +89,11 @@ end
 class MaxRetriesFailure < StandardError
 end
 
+def force_new_tor_circuit()
+  debug_log("Forcing new Tor circuit...")
+  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+end
+
 # This will retry the block up to MAX_NEW_TOR_CIRCUIT_RETRIES
 # times. The block must raise an exception for a run to be considered
 # as a failure. After a failure recovery_proc will be called (if
@@ -177,13 +182,14 @@ def convert_from_bytes(size, unit)
   return size.to_f/convert_bytes_mod(unit).to_f
 end
 
-def cmd_helper(cmd)
+def cmd_helper(cmd, env = {})
   if cmd.instance_of?(Array)
     cmd << {:err => [:child, :out]}
   elsif cmd.instance_of?(String)
     cmd += " 2>&1"
   end
-  IO.popen(cmd) do |p|
+  env = ENV.to_h.merge(env)
+  IO.popen(env, cmd) do |p|
     out = p.readlines.join("\n")
     p.close
     ret = $?
@@ -192,11 +198,23 @@ def cmd_helper(cmd)
   end
 end
 
-# This command will grab all router IP addresses from the Tor
-# consensus in the VM + the hardcoded TOR_AUTHORITIES.
-def get_all_tor_nodes
-  cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  $vm.execute(cmd).stdout.chomp.split("\n") + TOR_AUTHORITIES
+def all_tor_hosts
+  nodes = Array.new
+  chutney_torrcs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*/torrc"
+  )
+  chutney_torrcs.each do |torrc|
+    open(torrc) do |f|
+      nodes += f.grep(/^(Or|Dir)Port\b/).map do |line|
+        { address: $vmnet.bridge_ip_addr, port: line.split.last.to_i }
+      end
+    end
+  end
+  return nodes
+end
+
+def allowed_hosts_under_tor_enforcement
+  all_tor_hosts + @lan_hosts
 end
 
 def get_free_space(machine, path)

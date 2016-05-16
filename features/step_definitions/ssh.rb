@@ -75,6 +75,7 @@ Given /^an SSH server is running on the LAN$/ do
   @sshd_server_host = $vmnet.bridge_ip_addr
   sshd = SSHServer.new(@sshd_server_host, @sshd_server_port)
   sshd.start
+  add_lan_host(@sshd_server_host, @sshd_server_port)
   add_after_scenario_hook { sshd.stop }
 end
 
