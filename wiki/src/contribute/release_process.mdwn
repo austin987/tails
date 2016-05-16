@@ -509,6 +509,11 @@ suite should be ready, so it is time to:
 
 * build the final image!
 
+* record where the manifest of needed packages is stored:
+
+        export PACKAGES_MANIFEST=XXX ; \
+        [ -f "$PACKAGES_MANIFEST" ] || echo "ERROR: PACKAGES_MANIFEST is incorrect"
+
 * check out the release branch again:
 
       git checkout "${RELEASE_BRANCH}"
@@ -808,10 +813,15 @@ of its name:
 	mv "$ARTIFACTS"/tails-i386-"$VERSION".iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
-Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
-into the website repository:
+Rename the manifest of needed packages as well:
+
+	mv "$PACKAGES_MANIFEST" "$ARTIFACTS/tails-i386-$VERSION.build-manifest"
+
+Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
+`.torrent.sig` files into the website repository:
 
 	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
+	   "$ARTIFACTS/tails-i386-$VERSION.build-manifest" \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages" \
 	   "$ISOS/tails-i386-$VERSION.torrent" \
 	   "$ISOS/tails-i386-$VERSION.torrent.sig" \
