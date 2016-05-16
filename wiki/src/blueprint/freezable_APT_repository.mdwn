@@ -90,8 +90,7 @@ little value.
         <https://docs.oracle.com/cd/E17076_02/html/api_reference/C/dbcompact.html>):
         works on small databases, but on our big `debian` the file
         doesn't shrink
-   g. have build system output the snapshots being used,
-      and have Jenkins publish this info if available
+   h. have Jenkins publish the `.apt-sources` file, if available
 
 3. generate set of APT sources [i]
    * write automated tests for the generation of APT sources
@@ -108,19 +107,9 @@ little value.
      [[switching to live APT sources at runtime|freezable_APT_repository#runtime-sources]]
 
 4. tagged snapshots
-   h. for some Tails ISO build:
-      * **done** create the corresponding tagged snapshots
-        tails-i386-feature_5926-freezable-APT-repository-2.4-20160514T2039Z-8580736.iso
-      * **done** build with these tagged snapshots
-        tails-i386-feature_5926-freezable-APT-repository-2.4-20160514T2148Z-d6ce38d.iso
-      * check what is pulled during the build
-      * compare the resulting build manifest, build log and package list
-        with the one from a similar build that used time-based snapshots
-   i. release process: publish the build manifest
    k. delete the testing `8.32-alpha` tagged snapshot
    l. Point consumers of the now deprecated `*.{bin,src}pkg` (probably
       only jenkins.debian.net) to the new build manifest.
-   m. if needed, implement GC
 
 5. misc
    * implement whatever the "freeze exceptions" section requires
