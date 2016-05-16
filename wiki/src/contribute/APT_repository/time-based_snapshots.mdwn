@@ -55,13 +55,13 @@ bump `Valid-Until` for a given time-based snapshot.
 
 Only release managers and sysadmins can do such operations.
 
-To bump `Valid-Until` to `$VALID_UNTIL`, for all distributions in
-a given snapshot (`$SERIAL`) of a given archive (`$ARCHIVE`):
+To bump `Valid-Until`, for all distributions in
+a given snapshot (`$SERIAL`) of a given archive (`$ARCHIVE`),
+so that they are valid for `$DAYS_FROM_NOW` days from now:
 
-	ssh time.snapshots.deb.tails.boum.org \
-	   sudo -u reprepro-time-based-snapshots \
-	      /usr/local/bin/postpone-apt-snapshot-expiration \
-	         "$ARCHIVE" "$SERIAL" "$VALID_UNTIL"
+    ssh reprepro-time-based-snapshots@apt.lizard \
+       tails-bump-apt-snapshot-valid-until \
+           "$ARCHIVE" "$SERIAL" "$DAYS_FROM_NOW"
 
 To bump `Valid-Until` to `$VALID_UNTIL`, for all distributions in
 every snapshot used by the current frozen `testing` branch:
@@ -70,15 +70,8 @@ every snapshot used by the current frozen `testing` branch:
 	(
 	   cd config/APT_snapshots.d/* && \
 	   for ARCHIVE in * ; do
-	      ssh time.snapshots.deb.tails.boum.org \
-	         sudo -u reprepro-time-based-snapshots \
-	            /usr/local/bin/postpone-apt-snapshot-expiration \
-	               "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" "$VALID_UNTIL"
+           ssh reprepro-time-based-snapshots@apt.lizard \
+               tails-bump-apt-snapshot-valid-until \
+                   "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" "$DAYS_FROM_NOW"
 	   done
 	)
-
-For additional, up-to-date information about the
-`postpone-apt-snapshot-expiration` command:
-
-	ssh time.snapshots.deb.tails.boum.org \
-	   sudo /usr/local/bin/postpone-apt-snapshot-expiration --help
