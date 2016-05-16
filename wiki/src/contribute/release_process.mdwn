@@ -100,9 +100,10 @@ If we are at freeze time for a major release:
    that shall be used during the freeze:
 
         git checkout testing && \
-        ./bin/freeze-apt-snapshots && \
-        git add config/APT_snapshots.d/ && \
-        git commit -m "Freeze APT repository snapshots for ${VERSION}."
+        ./auto/scripts/apt-snapshots-serials freeze && \
+        git commit \
+            -m 'Freeze APT snapshots for ${VERSION}.' \
+            config/APT_snapshots.d/*/serial
 
 6. Make it so the time-based APT repository snapshots are kept around
    long enough, by bumping their `Valid-Until` to max(now + 10 days,
@@ -1133,8 +1134,10 @@ this, and skip what does not make sense for a RC.
    fact that it is not frozen anymore, that is remove the indication
    that a specific set of APT repository snapshots must be used:
 
-       git rm config/APT_snapshots.d/* &&
-       git commit "Unfreeze APT repository snapshots after Tails $VERSION was release."
+           ./auto/scripts/apt-snapshots-serials thaw && \
+           git commit \
+               -m 'Thaw APT snapshots after Tails $VERSION was released.' \
+               config/APT_snapshots.d/*/serial
 
 1. Push the resulting branches.
 1. Make sure Jenkins manages to build all updated major branches fine:
