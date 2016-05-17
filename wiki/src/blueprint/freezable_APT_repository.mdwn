@@ -54,26 +54,13 @@ little value.
         doesn't shrink
 
 3. generate set of APT sources [i]
-   * write automated tests for the generation of APT sources
-     - redirection when using the latest snapshot of a given origin
-     - We still need to support adding APT sources in
-       `config/chroot_sources/`, pointing to repositories that exist
-       outside of the freezable APT system, e.g. to point to a custom
-       or personal APT repository during early development phases, for
-       contributors who do not have the ability to upload packages to
-       any of the repositories we snapshot.
-   * implement the generation of APT sources
-   * plug the generation of APT sources into the build system
    * implement
      [[switching to live APT sources at runtime|freezable_APT_repository#runtime-sources]]
 
 4. tagged snapshots
-   l. **WIP** Point consumers of the now deprecated `*.{bin,src}pkg`
-      (jenkins.debian.net) to the new build manifest:
+   l. **WIP** wait for jenkins.debian.net to use the new build manifest:
       support added in a `support-tails-build-manifest` branch
-      of `jenkins.debian.net.git`, now need to repair
-      the build of feature/stretch so that we can ask jenkins.d.n people
-      to merge the branch.
+      of `jenkins.debian.net.git`, submitted, waiting for merge.
 
 5. misc
    * implement whatever the "freeze exceptions" section requires
@@ -156,12 +143,8 @@ suite corresponding to a release branch is updated).
 A running Tails' APT must be pointed at the official, live Debian
 archive, and not to a Tails-specific and already obsolete snapshot.
 
-To achieve that we can tweak `sources.list` as we already do in
+To achieve that we tweak `sources.list` in
 [[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]].
-
-But generating the 2 versions (frozen, not frozen) of the sources at
-ISO build time would probably be more elegant: at boot time, one only
-needs to rename files instead of fiddling with `sed`.
 
 ## Upgrading to a new snapshot
 
