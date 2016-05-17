@@ -140,9 +140,9 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.waitVanish('UnsafeBrowserProxySettingsWindow.png', 10)
 
     # Test that the proxy settings work as they should
-    step "I open the address \"https://check.torproject.org\" in the Unsafe Browser"
+    step 'I open Tails homepage in the Unsafe Browser'
     if proxy_type == no_proxy
-      @screen.wait('UnsafeBrowserTorCheckFail.png', 60)
+      step 'Tails homepage loads in the Unsafe Browser'
     else
       @screen.wait('UnsafeBrowserProxyRefused.png', 60)
     end
