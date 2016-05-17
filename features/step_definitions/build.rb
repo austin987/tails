@@ -1,4 +1,4 @@
-Given /^Tails ([[:alnum:].]+) has been released$/ do |version|
+Given /^Tails ([[:alnum:]~.]+) has been released$/ do |version|
   create_git unless git_exists?
 
   old_branch = current_branch
@@ -17,7 +17,7 @@ tails (#{version}) stable; urgency=low
 END_OF_CHANGELOG
   end
   fatal_system "git commit --quiet debian/changelog -m 'Release #{version}'"
-  fatal_system "git tag '#{version}'"
+  fatal_system "git tag '#{version.gsub('~', '-')}'"
 
   if old_branch != 'stable'
     fatal_system "git checkout --quiet '#{old_branch}'"

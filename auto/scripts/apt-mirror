@@ -49,6 +49,18 @@ if [ "$(base_branch)" = stable ]; then
 	     fi
        esac
     fi
+elif [ "$(base_branch)" = testing ]; then
+    if version_was_released "$(version_in_changelog)"; then
+	[ "$(current_branch)" = testing ] \
+            || fatal "Not building from testing, but last version in changelog" \
+                     "was released"
+	[ "$SERIAL" != latest ] \
+	    || fatal "APT snapshots are not frozen, which should not happen on" \
+		     "a tagged testing branch"
+        output_tagged_snapshot "$ARCHIVE" "$(version_in_changelog)"
+    else
+       output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
+    fi
 elif [ "$(base_branch)" = devel ]; then
     [ "$SERIAL" = latest ] \
 	|| fatal "APT snapshots are frozen, which should not happen on a branch" \
