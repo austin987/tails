@@ -9,7 +9,37 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
 
-gcc_version=4.8
+gcc_version=5
+
+# Install fake linux-compiler-gcc-4.8-x86 (linux-headers-3.16-*
+# depends on linux-compiler-gcc-4.8-x86, but Stretch hasn't GCC 4.8)
+tmp="$(mktemp -d)"
+apt-get install --yes equivs
+REAL_COMPILER_PKG_VERSION=$(apt-cache policy linux-compiler-gcc-4.8-x86 | awk '/ +Candidate:/ {print $2}')
+FAKE_COMPILER_PKG_VERSION=${REAL_COMPILER_PKG_VERSION}+tails1
+cat > "${tmp}"/linux-compiler-gcc-4.8-x86.control << EOF
+Section: kernel
+Priority: optional
+Homepage: https://tails.boum.org/
+Standards-Version: 3.9.6
+
+Package: linux-compiler-gcc-4.8-x86
+Version: ${FAKE_COMPILER_PKG_VERSION}
+Maintainer: Tails developers <tails@boum.org>
+Architecture: i386
+Depends: gcc-${gcc_version}
+Description: Compiler for Linux on x86 (meta-package)
+ This package depends on gcc 5 of the appropriate architecture for Linux
+ on amd64, i386 and x32.
+ .
+ This makes it possible to install linux-headers-3.16-* on Stretch.
+EOF
+(
+   cd "${tmp}"
+   equivs-build "${tmp}"/linux-compiler-gcc-4.8-x86.control
+   dpkg -i "${tmp}"/linux-compiler-gcc-4.8-x86_"${FAKE_COMPILER_PKG_VERSION}"_i386.deb
+)
+rm -R "${tmp}"
 
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms dpatch
