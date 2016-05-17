@@ -92,7 +92,7 @@ When /^I successfully run "?([[:alnum:] -]+)"?$/ do |command|
   raise StandardError.new("#{command} failed. Exit code: #{$?}") if $? != 0
 end
 
-When /^I run ([[:alnum:]-]+)$/ do |command|
+When /^I run "?([[:alnum:] -]+)"?$/ do |command|
   @output = `#{File.expand_path("../../../auto/scripts/#{command}", __FILE__)}`
   @exit_code = $?.exitstatus
 end

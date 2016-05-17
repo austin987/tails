@@ -216,6 +216,28 @@ Feature: custom APT sources to build branches
     And I should see the 'feature-foo' suite
     And I should see the 'bugfix-bar' suite
 
+  Scenario: build from the devel branch with no encoded time-based snapshot
+    Given I am working on the devel base branch
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from the devel branch with encoded time-based snapshots
+    Given I am working on the devel base branch
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
+    When I run "apt-mirror debian-security"
+    Then it should fail
+
   Scenario: build from the feature/jessie branch without overlays
     Given I am working on the feature/jessie base branch
     And the config/APT_overlays.d directory is empty
@@ -243,6 +265,28 @@ Feature: custom APT sources to build branches
     And the config/APT_overlays.d directory is empty
     When I successfully run tails-custom-apt-sources
     Then I should see only the 'devel' suite
+
+  Scenario: build from a feature branch based on devel with no encoded time-based snapshot
+    Given I am working on the feature/icedove branch based on devel
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from a feature branch based on devel with encoded time-based snapshots
+    Given I am working on the feature/icedove branch based on devel
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
+    When I run "apt-mirror debian-security"
+    Then it should fail
 
   Scenario: build from a feature branch with overlays based on feature/jessie
     Given I am working on the feature/7756-reintroduce-whisperback branch based on feature/jessie
