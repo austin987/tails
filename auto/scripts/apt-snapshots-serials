@@ -26,9 +26,15 @@ case "$action" in
 		for origin in $ORIGINS; do
 			serial_file="$CONFIG/$origin/serial"
 			git=$(cat $serial_file)
-			online=$(get_latest_serial $origin)
-			printf "Origin $origin:\n  old: $git\n  new: $online\n"
-			echo $online > $serial_file
+			case "$origin" in
+				debian-security)
+					new=latest
+					;;
+				*)
+					new=$(get_latest_serial $origin)
+			esac
+			printf "Origin $origin:\n  old: $git\n  new: $new\n"
+			echo $new > $serial_file
 		done
 		printf "\nAll files ($CONFIG/*/serial) have been updated with new serials\n" >&2
 	;;

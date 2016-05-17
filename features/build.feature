@@ -221,8 +221,8 @@ Feature: custom APT sources to build branches
     Then it should fail
     When I run "apt-mirror torproject"
     Then it should fail
-    When I run "apt-mirror debian-security"
-    Then it should fail
+    When I successfully run "apt-mirror debian-security"
+    Then I should see the 0.11 tagged snapshot
 
   Scenario: build from a tagged testing branch with encoded time-based snapshots
     Given I am working on the testing base branch
@@ -319,8 +319,8 @@ Feature: custom APT sources to build branches
     Then it should fail
     When I run "apt-mirror torproject"
     Then it should fail
-    When I run "apt-mirror debian-security"
-    Then it should fail
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
 
   Scenario: build from the feature/jessie branch without overlays
     Given I am working on the feature/jessie base branch
@@ -369,8 +369,8 @@ Feature: custom APT sources to build branches
     Then it should fail
     When I run "apt-mirror torproject"
     Then it should fail
-    When I run "apt-mirror debian-security"
-    Then it should fail
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
 
   Scenario: build from a feature branch with overlays based on feature/jessie
     Given I am working on the feature/7756-reintroduce-whisperback branch based on feature/jessie

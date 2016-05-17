@@ -56,10 +56,14 @@ Given(/^no frozen APT snapshot is encoded in config\/APT_snapshots\.d$/) do
 end
 
 Given(/^frozen APT snapshots are encoded in config\/APT_snapshots\.d$/) do
-  ['debian', 'debian-security', 'torproject'].map do |origin|
+  ['debian', 'torproject'].map do |origin|
     File.open("config/APT_snapshots.d/#{origin}/serial", 'w+') do |serial|
       serial.write("2016060602\n")
     end
+  end
+  # We never freeze debian-security
+  File.open("config/APT_snapshots.d/debian-security/serial", 'w+') do |serial|
+    serial.write("latest\n")
   end
 end
 

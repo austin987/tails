@@ -39,6 +39,9 @@ if [ "$(base_branch)" = stable ]; then
 	   || fatal "None of the two last version in changelog were released"
        case "$ARCHIVE" in
           debian-security)
+	     [ "$SERIAL" = latest ] \
+		 || fatal "APT snapshots are frozen for debian-security, which" \
+			  "should not happen on a branch based on stable"
              output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
 	     ;;
 	  *)
@@ -56,9 +59,9 @@ elif [ "$(base_branch)" = testing ]; then
 	[ "$(current_branch)" = testing ] \
             || fatal "Not building from testing, but last version in changelog" \
                      "was released"
-	[ "$SERIAL" != latest ] \
-	    || fatal "APT snapshots are not frozen, which should not happen on" \
-		     "a tagged testing branch"
+	[ "$ARCHIVE" = debian-security ] || [ "$SERIAL" != latest ] \
+	    || fatal "APT snapshots for $ARCHIVE are not frozen, which should" \
+		     "not happen on a tagged testing branch"
         output_tagged_snapshot "$ARCHIVE" "$(version_in_changelog)"
     else
        output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
