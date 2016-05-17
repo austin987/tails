@@ -26,6 +26,21 @@ further action, each snapshot is kept for D days.
 The main goal here is to be able to freeze the APT repositories used
 by a branch, whenever we freeze it.
 
+A time-based snapshot's name contains:
+
+ * an identifier of the APT repository this snapshot is about, e.g.
+   `debian`, `debian-security`, `torproject`;
+ * a `YYYYMMDD$ID` serial, `$ID` being an incremental decimal number
+   formatted on two digits (`01`, `02`, etc.).
+
+The APT repository mirroring infrastructure publishes the name of the
+latest snapshot for each mirrored repository over HTTP, in the
+`project/trace/$archive` file
+([example](http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security)).
+Similarly, every ISO
+build exports the names of the APT repository snapshots it uses
+([example](http://nightly.tails.boum.org/build_Tails_ISO_devel/lastSuccessful/archive/latest.iso.apt-sources)).
+
 The corresponding data is not critical: we can restart the whole thing
 from scratch if needed, without too much pain ⇒ no need to synchronize
 this content to the failover server; no need to back it up.
