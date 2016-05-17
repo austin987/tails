@@ -31,8 +31,6 @@ We decided to implement a two-way strategy for this feature:
 
 ## Remaining questions
 
-* How do we manage *.dl.amnesia.boum.org DNS?
-
 * What to do for downloads we offer outside of the Installation
   Assistant, that are not supported by DAVE, such as images for
   release candidates? What to do for browsers that don't have DAVE,
@@ -97,6 +95,11 @@ of them we need a few values:
    0 means that the mirror is currently disabled, and will never be
    redirected to
 
+ * email (optional): the email address of the mirror's operator
+
+ * notes (optional): various additional notes that can be useful to
+   the managers of the mirror pool
+
 For a more formal, and probably more up-to-date definition of the data
 model, better see
 [its JSON schema](https://git-tails.immerda.ch/mirror-pool/tree/schema.json).
@@ -104,13 +107,136 @@ model, better see
 Here is
 [an example configuration file](https://git-tails.immerda.ch/mirror-pool/tree/example-mirrors.json).
 
-Later, we may want to add more data that is not blocking for the
-initial iterations:
+<a id="speed"></a>
 
- * email: contact information for the operator(s) of this mirror; XXX:
-   check if all mirror operators are OK with this; if enough are OK,
-   then document on [[contribute/how/mirror]] that it's the case, and
-   do it; otherwise, we'll need to manage contact info separately.
+# Speed
+
+This is mainly for [[!tails_ticket 10295]].
+
+## Potentially fast & reliable enough mirrors
+
+i.e. those that I've seen provide good speed and that have had no
+reliability issue in the last N months.
+
+Note: measurements done from lizard are capped to 100Mbps due to
+upstream network configuration, so they can barely be used to reliably
+compare those fast mirrors with each other. For measurements done from
+Germany, upstream network should not be the limiting factor for most
+practical purposes here.
+
+* 192.42.116.116 aka http://192.42.116.116/tails/ (Netherlands):
+  - from lizard: 4.36 MB/s, 6.45 MB/s, 5.94 MB/s, 6.53 MB/s
+  - from Germany: 45.0 MB/s, 45.5 MB/s, 38.0 MB/s
+  - from France: avg. 16.8 MB/s, stdev 2.0 MB/s
+  - from Netherlands: 89 MB/s, 94.8 MB/s, 88.0 MB/s
+* 5.45.108.219 aka https://tails.mirror.metalgamer.eu/tails/ (Germany):
+  - from lizard: 8.21 MB/s, 6.87 MB/s, 7.48 MB/s
+  - from Germany: 37.7 MB/s, 43.4 MB/s, 37.2 MB/s
+  - from France: avg. 21.1 MB/s, stdev 4.1 MB/s
+  - from Netherlands: 50.4 MB/s, 41.3 MB/s, 43.7 MB/s
+* 85.93.216.116 aka https://tails.c3l.lu/tails/ (Luxembourg):
+  - from lizard: 6.58 MB/s, 6.72 MB/s, 3.73 MB/s, 5.52 MB/s, 2.97 MB/s, 5.31 MB/s, 4.46 MB/s, 4.50 MB/s, 3.15 MB/s
+  - from Germany: 34.7 MB/s, 34.9 MB/s, 31.3 MB/s
+  - from France: avg. 14.5 MB/s, stdev 3.4 MB/s
+  - from Netherlands: 54.0 MB/s, 52.7 MB/s, 51.7 MB/s
+* 195.154.14.189 aka https://16.dl.amnesia.boum.org/tails/ (France):
+  - from lizard: 5.08 MB/s, 5.25 MB/s, 6.26 MB/s, 6.33 MB/s, 6.17 MB/s
+  - from Germany: 22.4 MB/s, 21.6 MB/s, 22.6 MB/s
+  - from France: avg. 25.4 MB/s, stdev. 1.5 MB/s
+  - from Netherlands: 17.2 MB/s, 17.5 MB/s, 18.4 MB/s
+* 5.104.106.180 aka https://dl2.crypto-rebels.de/tails/ (Germany):
+  - from lizard: 7.08 MB/s, 5.23 MB/s, 5.46 MB/s, 5.09 MB/s, 4.45 MB/s, 5.72 MB/s
+  - from Germany (from the same network): 24.6 MB/s, 17.6 MB/s, 18.4 MB/s
+  - from France: avg. 15.7 MB/s, stdev. 2.1 MB/s
+  - from Netherlands: 38.0 MB/s, 37.9 MB/s
+* 212.110.161.69 aka http://mirror.bytemark.co.uk/tails/ (UK):
+  - from lizard: 5.31 MB/s, 6.62 MB/s, 4.61 MB/s, 6.70 MB/s, 6.34 MB/s, 6.26 MB/s
+  - from Germany: 15.5 MB/s, 17.1 MB/s, 16.1 MB/s
+  - from France: avg. 10.4 MB/s, stdev. 2.7 MB/s
+  - from Netherlands: 25.2 MB/s, 66.3 MB/s, 43.9 MB/s
+* 141.138.141.28 aka http://25.dl.amnesia.boum.org/tails/ (Netherlands):
+  - from lizard: 3.35MB/s, 9.07MB/s, 6.00MB/s, 5.35 MB/s, 4.74 MB/s, 3.97 MB/s
+  - from Germany: 16.7MB/s, 27.9MB/s, 24.5MB/s
+  - from France: avg. 11.9 MB/s, stdev 2.3 MB/s
+  - from Netherlands: 21.5 MB/s, 21.9 MB/s, 23.3 MB/s
+* https://mirrors.ocf.berkeley.edu/tails/ (California)
+  - from lizard: 10.3MB/s, 11.0MB/s, 11.2MB/s
+  - from Germany: **XXX**
+  - from Netherlands: 16.0 MB/s, 12.7 MB/s, 14.7 MB/s
+
+## Too slow mirrors
+
+* 62.201.161.88 aka http://tails.mirror.iphh.net/tails/ (Germany):
+  - from lizard: 2.67 MB/s, 1.84MB/s, 1.82MB/s, 2.44MB/s
+  - from Germany: 56.7MB/s, 32.1MB/s, 13.7MB/s
+  - from France: avg. 11.6 MB/s, stdev 3.7 MB/s
+* 178.217.184.32 aka https://tails.uk.to/tails/ (Poland):
+  - from lizard: 4.96 MB/s, 4.96 MB/s
+  - from Germany: 17.1 MB/s, 18.9 MB/s, 16.7 MB/s
+  - from France: avg. 8.5 MB/s, stdev 2.1 MB/s
+* 176.9.38.37:
+  - from lizard: 2.81 MB/s, 2.74MB/s, 3.05MB/s, 2.74MB/s
+  - from Germany: 43.0MB/s, 22.1MB/s, 7.41MB/s
+  - from France: avg. 11.7 MB/s, stdev 2.6 MB/s
+* 195.154.188.146: 3.69 MB/s
+* 83.212.104.246:
+  - from lizard: 3.90 MB/s
+  - from France: avg. 4.8 MB/s, stdev 2.4 MB/s
+* 188.138.127.35 aka https://tails.bl0m.de/tails/: perf. varies too much
+* 45.33.79.99
+  - from France: avg. 4.3 MB/s, stdev 0.6 MB/s
+* 80.241.222.98 aka http://dl3.crypto-rebels.de/tails/ (Germany):
+  - from lizard: 9.18 MB/s, 3.90 MB/s, 6.62 MB/s
+  - from Germany: 7.83 MB/s, 8.00 MB/s, 7.54 MB/s
+* 213.136.84.245 aka https://dl1.crypto-rebels.de/tails/ (Germany):
+  - from lizard: 7.10 MB/s, 8.46 MB/s
+  - from Germany: 9.74 MB/s, 7.99 MB/s, 7.60 MB/s
+  - from France: avg. 6.5 MB/s, stdev. 2.4 MB/s
+* 81.7.10.29 aka https://tails.ybti.net/tails/ (Germany):
+  - from lizard: 6.28 MB/s, 5.17 MB/s, 5.26 MB/s
+  - from Germany: 7.92 MB/s, 6.04 MB/s, 6.92 MB/s
+  - from France: avg. 5.2 MB/s, stdev 1.5 MB/s
+* 96.126.119.95 aka https://tails.interpipe.net/tails/ (USA):
+  - from lizard: 6.10 MB/s, 7.04 MB/s
+  - from Germany: 4.99 MB/s, 4.62 MB/s, 4.59 MB/s
+  - from France: avg. 3.5 MB/s, stdev 0.1 MB/s
+* 5.135.66.221 aka http://24.dl.amnesia.boum.org/tails/ (France):
+  - from lizard: 3.27MB/s, 2.77MB/s, 2.89MB/s
+  - from Germany: 6.22MB/s, 6.93MB/s, 5.05MB/s
+  - from France: avg. 10.2 MB/s, stdev 1.7 MB/s
+* 151.80.190.129 (France):
+  - from lizard: 2.69MB/s, 1.24MB/s, 1.27MB/s
+  - from Germany: 2.40MB/s, 2.60MB/s, 4.42MB/s
+  - from France: avg. 7.0 MB/s, stdev 0.6 MB/s
+* 158.36.190.173 (Norway):
+  - from lizard: 3.17MB/s, 3.44MB/s, 2.44MB/s
+  - from Germany: 24.4MB/s, 23.1MB/s, 23.5MB/s
+  - from France: avg. 7.0 MB/s, stdev 1.1 MB/s
+
+## Not reliable enough mirrors
+
+i.e. mirrors that have had issues at least once in the last 6 months;
+let's not include them in the fallback DNS pool:
+
+* 5.196.175.179
+* 77.70.69.9
+  - from France: avg. 0.3 MB/s, stdev 0.1 MB/s ⇒ **TODO** remove from the pool?
+* 80.90.43.162
+* 84.106.196.237
+* 86.59.119.84
+* 109.239.48.152
+* 137.226.34.46:
+  - from lizard: 798 KB/s, 9.80MB/s, 2.08MB/s, 1.37MB/s
+     connection closes in the middle of the download pretty often
+  - from Germany: 8.73MB/s, 10.4MB/s, 12.2MB/s
+  - from France: avg. 11.1 MB/s, stdev 2.5 MB/s
+* 141.138.136.78
+* 144.76.14.145
+* 149.202.98.175
+* 178.32.220.171
+* 192.99.131.144
+* 198.199.103.96
+* 212.47.229.219
 
 # Initial research
 

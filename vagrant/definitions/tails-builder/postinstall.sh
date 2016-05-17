@@ -35,6 +35,13 @@ sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 echo "I: Disable DNS checks to speed-up SSH logins..."
 echo "UseDNS no" >>/etc/ssh/sshd_config
 
+# By default, Debian's ssh client forwards the locale env vars, and by
+# default, Debian's sshd accepts them. The locale used while building
+# could have affects on the resulting image, so let's fix on a single
+# locale for all (namely the one we won't purge below).
+echo "I: Disable sshd AcceptEnv..."
+sed -i 's/^AcceptEnv/#AcceptEnv/' /etc/ssh/sshd_config
+
 echo "I: Running localepurge..."
 TEMPFILE="$(mktemp)"
 

@@ -143,8 +143,8 @@ task :parse_build_options do
   # Default to in-memory builds if there is enough RAM available
   options += 'ram ' if enough_free_memory_for_ram_build?
 
-  # Use in-VM proxy unless an external proxy is set
-  options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
+  # Default to build using the in-VM proxy
+  options += 'vmproxy '
 
   # Default to fast compression on development branches
   options += 'gzipcomp ' unless is_release?
@@ -187,6 +187,8 @@ task :parse_build_options do
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
+    when 'noprovision'
+      ENV['TAILS_NO_AUTO_PROVISION'] = '1'
     end
   end
 end
@@ -286,6 +288,11 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
   end
 
+  # Let's make sure that, unless you know what you are doing and
+  # explicitly disable this, we always provision in order to ensure
+  # a valid, up-to-date build system.
+  run_vagrant('provision') unless ENV['TAILS_NO_AUTO_PROVISION']
+
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                  collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
   run_vagrant('ssh', '-c', "#{exported_env} build-tails")
@@ -298,9 +305,18 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
   $stderr.puts "Retrieving artifacts from Vagrant build box."
   artifacts.each do |artifact|
     run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
-    Process.wait Kernel.spawn('scp',
-                              '-i', key_file,
-                              "#{user}@#{hostname}:#{artifact}", '.')
+    Process.wait(
+      Kernel.spawn(
+        'scp',
+        '-i', key_file,
+        # We need this since the user will not necessarily have a
+        # known_hosts entry. It is safe since an attacker must
+        # compromise libvirt's network config or the user running the
+        # command to modify the #{hostname} below.
+        '-o', 'StrictHostKeyChecking=no',
+        "#{user}@#{hostname}:#{artifact}", '.'
+      )
+    )
     raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
   end
   remove_artifacts

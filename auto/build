@@ -76,6 +76,9 @@ chmod -R go+rX config/chroot_sources
 
 # build the image
 
+# we need /debootstrap/deburis to build a manifest of used packages:
+export DEBOOTSTRAP_OPTIONS='--keep-debootstrap-dir'
+
 : ${MKSQUASHFS_OPTIONS:='-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K'}
 MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/amnesia/build/mksquashfs-excludes"
 export MKSQUASHFS_OPTIONS
@@ -196,6 +199,7 @@ if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
    mv -i binary.packages "${BUILD_PACKAGES}"
+   generate-build-manifest chroot/debootstrap "${BUILD_DEST_FILENAME}.build-manifest"
 else
    fatal "lb build failed ($?)."
 fi

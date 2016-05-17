@@ -66,7 +66,18 @@ is part of the `kvm`, `libvirt` and `libvirt-qemu` groups:
 
     for group in kvm libvirt libvirt-qemu; do sudo adduser $USER $group; done
 
+Then reboot the system (alternatively, if you know what you are doing,
+run `newgrp` and reload the `kvm` module(s)).
+
 ## Known issues and workarounds
+
+* If Vagrant failed to start the Tails builder VM the first time
+  (e.g. because of permission issues or the `kvm` module not veing
+  loaded) it will not automatically run the provisioning script, so
+  you must run `rake vm:provision` yourself before attempting your
+  first `rake build`. If that fails, run `rake vm:destroy`, which
+  removes this half-broken VM, and then start from scratch with `rake
+  build` or similar.
 
 * `ruby-fog-libvirt <= 0.0.3` has a
   [bug](https://github.com/fog/fog-libvirt/issues/21) that will make
@@ -263,6 +274,8 @@ The following Debian packages need to be installed:
         eatmydata \
         gettext \
         intltool \
+        libfile-slurp-perl \
+        liblist-moreutils-perl \
         libyaml-libyaml-perl \
         libyaml-perl \
         libyaml-syck-perl \

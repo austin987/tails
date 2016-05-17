@@ -28,7 +28,6 @@ little value.
      - developer (including stable, testing, devel, and `$topic`)
    * get the updated documentation + this design reviewed, including
      security aspects [i]
-   * give RM's access to `reprepro-time-based-snapshots@apt.lizard` [i]
    * document how to freeze time-based APT snapshots being used:
 
              ./auto/scripts/apt-snapshots-serials freeze && \
@@ -53,43 +52,44 @@ little value.
      doc + contributors doc
 
 2. time-based snapshots [i]
-   a. **done** initial reprepro setup that keeps up-to-date local mirrors of
-      the APT repositories we need
-   b. **done** snapshot these mirrors every time they're updated
-   c. **done** decide how many reprepro instances we want/have to split all
-      this among
-   d. **done** mirror relevant suites of deb.tails.b.o as well
-   d. **done** publish the snapshots over HTTP
-   d. **done** clean up Wheezy packages (including those referenced by
-      snapshots)
-   e. **done** publish the snapshots' serial over HTTP
-      (e.g. <http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security>)
-   e. **done** try using such snapshots for building an ISO:
-      done in `feature/5926-freezable-APT-repository`
    e. Avoid re-downloading everything one has in their local
       apt-cacher-ng, and filling its cache with files duplicated
-      many times. It's acceptable not to have optimal caching for `dists/`; what
-      matters is `pool`. We have a working PoC using the "merging" strategy (documented on
-      <file:///usr/share/doc/apt-cacher-ng/html/config-serv.html#repmap>),
-      that is `Remap-tails` with no `TargetURLs` list; it works if
-      we do that for the `pool/` directory only (we don't want to
-      merge the cache for the different `dists` directory):
-
-               $ echo 'Remap-tailspool: file:tails-time-based-snapshots-debian-pool.list' \
-                 | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-debian-pool.conf
-
-               $ for origin in $(cd config/APT_snapshots.d/ ; ls -d *) ; do for y in $(seq 2016 2026) ; do for m in $(seq 1 12); do for d in $(seq 1 31) ; do for t in $(seq 1 4) ; do printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' $origin $y $m $d $t ; done ; done ; done ; done | sudo tee /etc/apt-cacher-ng/tails-time-based-snapshots-$origin-pool.list ; done
-
-   e. check if/how
-      [by-hash](http://www.chiark.greenend.org.uk/~cjwatson/blog/no-more-hash-sum-mismatch-errors.html)
-      impacts our design and implementation
-   e. deny robots access to that data
-   e. implement GC of expired snapshots and packages (`tails-delete-expired-apt-snapshots`):
-      * review [i]
-      * test, including dry-run, silent & verbose modes, performance,
-        and removal of expired snapshots' `dist` directories after
-        `deleteunreferenced` [i]
-      * deploy with Puppet, redirect output to a log file, logrotate snippet [i]
+      many times. We have a config file generator in:
+      `auto/scripts/update-acng-config`. We need to use it, somehow,
+      for:
+      - **done**: Vagrant build setup: update this file as part of the
+        build process
+      - **done** `tails::builder` Puppet class
+      - manual build setup: we should not bother too much because
+        now Vagrant should be working for everyone, so a manual build
+        setup is a corner case, that we can address with some minimal
+        documentation. What to do depends on where `apt-cacher-ng`
+        runs; when it's on the build host, then we can update the
+        configuration as part of the build process, just like for the
+        Vagrant case; else, if it's run elsewhere, then one should use
+        a cronjob, just like in the Puppet case, or do it by hand;
+        let's keep in mind that once generated, the config file should
+        be valid for a while.
+   f. handle ever-growing `references.db`, aka. [[!debbug 823629]]: if
+      `references.db` doesn't fit in the memory disk cache, then at
+      least our GC process gets very slow); the visible consequence
+      would be: long periods of heavy disk read, and much slower
+      snapshots expiration process; so we added an Icinga2 check on
+      the file size itself. When this problem occurs, our options are:
+      * add more RAM to the VM if that's still feasible and reasonable
+        (likely not)
+      * reset the whole `debian` repository to an empty state (simple
+        and big hammer, painful as it requires lots of coordination
+        with developers)
+      * compact the DB with `db5.3_dump` + `db5.3_load`: it got our
+        big `debian/db/references.db` down from 5.4 GB to 1.5 GB
+      * compact the DB with `DB->compact()`, using
+        [a script we wrote](https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-compact-reprepro-db)
+        (<https://docs.oracle.com/cd/E17076_02/html/programmer_reference/am_misc_diskspace.html>,
+        <https://groups.google.com/forum/#!topic/memcachedb/uiSvgStzYNY>,
+        <https://docs.oracle.com/cd/E17076_02/html/api_reference/C/dbcompact.html>):
+        works on small databases, but on our big `debian` the file
+        doesn't shrink
    g. have build system output the snapshots being used,
       and have Jenkins publish this info if available
 
@@ -108,29 +108,16 @@ little value.
      [[switching to live APT sources at runtime|freezable_APT_repository#runtime-sources]]
 
 4. tagged snapshots
-   a. **done** PoC of capturing the list of binary packages used during the build
-   b. **done** PoC of capturing the list of source packages used during the build
-   c. **done** initial reprepro setup for tagged snapshots
-   d. **done** debootstrap in jessie-backports
-   d. **done** Have Jenkins create, publish and manage
-      `latest.iso.build-manifest` symlinks
-   e. **WIP** create a partial snapshot from a manifest and
-      the origin time-based snapshots:
-      * `generate-build-manifest` (main Git repo), aka. get [[!tails_ticket 10748]]
-        done in Tails 2.3 [i]
-        - convert custom `data/debootstrap/tails-wheezy` into a patch,
-          or set up the process to update/replace it in the future,
-          or something (we're using Jessie now) [i]
-        - get rid of the last XXX in `data/wrappers/apt-get`
-        - move `data/wrappers/apt-get` to a better place
-      * deploy, update release process doc, grant RM's access
-   h. publish tagged snapshots over HTTP
-   h. for some Tails release: generate manifest, import packages into
-      tagged snapshots, try building *offline* with these tagged
-      snapshots [i]
-   k. Update the
-      [[Listing used packages|freezable APT repository#build-manifest]]
-      section
+   h. for some Tails ISO build:
+      * **done** create the corresponding tagged snapshots
+        tails-i386-feature_5926-freezable-APT-repository-2.4-20160514T2039Z-8580736.iso
+      * **done** build with these tagged snapshots
+        tails-i386-feature_5926-freezable-APT-repository-2.4-20160514T2148Z-d6ce38d.iso
+      * check what is pulled during the build
+      * compare the resulting build manifest, build log and package list
+        with the one from a similar build that used time-based snapshots
+   i. release process: publish the build manifest
+   k. delete the testing `8.32-alpha` tagged snapshot
    l. Point consumers of the now deprecated `*.{bin,src}pkg` (probably
       only jenkins.debian.net) to the new build manifest.
    m. if needed, implement GC
@@ -206,64 +193,7 @@ except:
  * if a set of APT repository snapshots is encoded directly in that
    branch: use them, even for security.debian.org.
 
-## Different problems ⇒ different solutions
-
-Note that:
-
- * The time-based snapshots of the mirrored APT repositories that are
-   used basically all the time (except when building a release) should
-   be *full* snapshots, that is they should contain exactly the same
-   set of packages as the mirrored repository. This has the advantage
-   that some workflows are trivially handled, e.g. working on a topic
-   branch that installs additional Debian packages; if such snapshots
-   were not full ones, then to work on one such branch, one would need
-   either that I have the credentials to import new packages from
-   Debian into our own mirror or repositories (which raises the
-   barrier for contributing), or that during some phases of Tails
-   development the regular Debian archive is used instead of our own
-   mirror, which feels prone to "time to QA vs. time to
-   release" issues.
-
- * The tagged snapshots used to build releases can be *partial*, that
-   is they can contain only the subset of the mirrored repositories
-   that is required for building a specific Tails ISO image.
-
-So, we actually want to manage two sets of snapshots that are vastly
-different in terms of goals, users, turnover, garbage collection and
-backup strategies:
-
- * **time-based, full snapshots** of the mirrored APT repositories over
-   the last N days;
-   - goal: freezable repo feature for the dev process and QA
-   - this one can be restarted from scratch from time to time if
-     reprepro becomes too slow for some reason (such as imperfect DB
-     garbage collection);
-   - if we lose this content, we lose only N days of data, and we can
-     immediately rebuild a working data set from scratch ⇒ no need to
-     sync' this content to the failover server; no need to back it up;
-
- * **tagged, partial snapshots** that were used to build released Tails
-   ISO images:
-   - goal: reproducible builds, GPL compliance;
-   - in there we import only the needed packages;
-   - we want to back up this data, and expire it very cautiously,
-     if ever.
-
-Trying to solve both problems in the same `reprepro` instance would be
-problematic. Not only, coupling very different problems together, and
-trying to address them with the exact same tools and process, is
-generally a bad idea. But also, reprepro's database becomes quite big
-when we import large chunks of the Debian archive into it, which may
-make it slow ([[!tails_ticket 6295]]), and in any case makes it hard
-to back up... which we want to, for preserving the releases' tagged
-snapshots information.
-
-So we'll use two independent `reprepro` instances to address these
-two problems.
-
 # Special cases and implementation
-
-<a id="runtime-sources"></a>
 
 ## Custom APT repository
 
@@ -280,6 +210,8 @@ snapshot of our custom APT repository is created, between the time we
 upload a package to it, and when we can build an ISO with it; we could
 solve this by automatically creating a new snapshot whenever an APT
 suite corresponding to a release branch is updated).
+
+<a id="runtime-sources"></a>
 
 ## APT sources used inside Tails
 
@@ -575,8 +507,6 @@ is very appealing. The counterpart being that:
  * bumping `Valid-Until` for a given time-based snapshot has to be
    done directly in `dist`, without any help from reprepro.
 
-XXX: find out how we can solve these two problems.
-
 None of these problems seem to warrant going back to the other
 option... and having to deal with 80GB+ BDB databases.
 
@@ -589,101 +519,6 @@ tracking a distribution. E.g. to remove all Wheezy snapshots:
        | sort -u \
        | xargs -n 1 reprepro _removereferences \
     && reprepro deleteunreferenced
-
-<a id="build-manifest"></a>
-
-## Listing used packages
-
-Saved as ISO build artifact, both when building in Jenkins and outside
-from it.
-
-Output:
-
-- for each .deb: the installed version
-- The union of all APT sources used during the build.
-
-### Corner case
-
-If a (package, version) is seen at build time in 2 or more APT
-sources, `tails-prepare-tagged-apt-snapshot-import` will inject it
-into each of the tagged snapshots corresponding to these sources.
-The goal is to avoid this scenario:
-
- - version X of package P is available both in suite S1 on origin O1,
-   and in suite S2 on origin O2
- - version Y of package P is available in suite S3 of origin O3
- - our pinning makes us prefer version X of package P *because it's
-   available in O1/S1*; otherwise, if it wasn't in there, then our
-   pinning would make APT prefer version Y to version X
- - at ISO build time, APT fetches package P version X from O2/S2
- - given this build manifest, we import package P version X into our
-   tagged snapshot of O2/S2, but not into our tagged snapshot of O1/S1
- - if we rebuild from the same source tree using that set of tagged
-   snapshots, then version Y of package P will be installed
-
-This scenario can happen in practice:
-
-	# cat /etc/apt/sources.list
-	deb http://security.debian.org wheezy/updates main
-	deb http://ftp.us.debian.org/debian/ wheezy main
-	deb http://ftp.us.debian.org/debian/ jessie main
-
-	# cat /etc/apt/preferences
-	Package: *
-	Pin: origin security.debian.org
-	Pin-Priority: -10
-
-	Package: *
-	Pin: release o=Debian,n=wheezy
-	Pin-Priority: 990
-
-	Package: *
-	Pin: release o=Debian,n=jessie
-	Pin-Priority: 700
-
-	# apt-cache madison a2ps
-	a2ps | 1:4.14-1.3 | http://ftp.us.debian.org/debian/ jessie/main amd64 Packages
-	a2ps | 1:4.14-1.1+deb7u1 | http://security.debian.org/ wheezy/updates/main amd64 Packages
-	a2ps | 1:4.14-1.1+deb7u1 | http://ftp.us.debian.org/debian/ wheezy/main amd64 Packages
-
-	# apt-cache policy a2ps
-	a2ps:
-	  Installed: (none)
-	  Candidate: 1:4.14-1.1+deb7u1
-	  Version table:
-	     1:4.14-1.3 0
-	        700 http://ftp.us.debian.org/debian/ jessie/main amd64 Packages
-	     1:4.14-1.1+deb7u1 0
-	        -10 http://security.debian.org/ wheezy/updates/main amd64 Packages
-	        990 http://ftp.us.debian.org/debian/ wheezy/main amd64 Packages
-
-And then, in the current state of things APT will download `a2ps` from
-security.d.o:
-
-	# apt-get download a2ps --print-uris
-	'http://security.debian.org/pool/updates/main/a/a2ps/a2ps_4.14-1.1+deb7u1_amd64.deb' a2ps_4.14-1.1+deb7u1_amd64.deb 956298 sha256:e47d7fe9adb7aa62421108debf425830f4e2385e98151c5cb359d3eb8688eea8
-
-... but if `a2ps` was not available in the regular Wheezy archive,
-e.g. because we were using a tagged snapshot that imported `a2ps` into
-the security archive, then APT would prefer `a2ps` from Jessie, which
-demonstrates the bug... hence the "inject it into each of the tagged
-snapshots corresponding to these sources" requirement we had.
-
-### Bonus material
-
-- Allows to inspect the diff between the subset of two different
-  snapshots that was used at build time; the benefit is very
-  minor as long as we're based on Debian oldstable or stable, but
-  if/when we switch to being based on Debian testing then we will
-  definitely want that. Not that minor: we also fetch packages
-  from testing, sid, backports, etc.
-- Say a branch (topic one, or devel, etc.) introduces
-  a regression, and has changes the set of packages used at build
-  time, we may want to check how exactly that set was changed.
-  Think "check the diff between `.packages`" as we do at release
-  time, but done in a correct way.
-- Allows keeping only _partial_ snapshots (of our full archive
-  ones) for those we want to keep forever, i.e. release ones.
 
 ## Valid-Until and signing
 
