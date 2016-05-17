@@ -1,9 +1,9 @@
-We pass a few kernel parameters on the boot command line to increase
-security at little to no cost.
+We pass a few kernel parameters on the boot command line and /proc/sys
+to increase security at little to no cost.
 
-See [[!tails_ticket 11143]] for the discussion that lead to this
-choice of parameters. Most of what follows come straight from what
-"cypherpunks" wrote there.
+See [[!tails_ticket 11143]] and [[!tails_ticket 10951]] for the
+discussion that lead to this choice of parameters. Most of what
+follows come straight from what "cypherpunks" wrote there.
 
 #### `slab_nomerge`
 
@@ -74,3 +74,14 @@ over, suffering only a SIGBUS at failure. Setting `mce=0` should have
 no impact. Any hardware which regularly triggers a memory-based MCE is
 unlikely to even boot, and the default is 1 only for
 long-lived servers.
+
+#### `kernel.kptr_restrict=2`
+
+Some off-the-shelf malware exploit kernel addresses exposed via
+`/proc/kallsyms` so by not making these addresses easily available we
+increase the cost of such attack some what; now such malware has to
+check which kernel Tails is running and then fetch the corresponding
+kernel address map from some external source. This is not hard, but
+certainly not all malware has such functionality.
+
+For this reason, we also make sure to purge `/boot/System.map`.

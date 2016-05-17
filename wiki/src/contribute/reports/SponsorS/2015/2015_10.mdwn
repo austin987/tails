@@ -2,64 +2,51 @@
 
 [[!toc levels=2]]
 
-<div class="caution">
-<strong>Deadline: 2015-11-05</strong>
-</div>
-
-<div class="note">
-Deliverable identifiers and descriptions are not free-form: they must
-be copy'n'pasted as-is from the proposal sent to the sponsor.
-</div>
-
 This reports covers the activity of Tails in October 2015.
 
 Everything in this report can be made public.
-
-Note: the numbers preceded with a `#` correspond to tickets in our bug
-tracker which contains more technical details and timeline. For example,
-ticket #6938 can be seen on <https://labs.riseup.net/code/issues/6938>.
 
 # A. Replace Claws Mail with Icedove
 
   - A.1.3. Integrate Icedove into Tails
 
-    We configured Icedove in Tails to match our security goals (#6151),
+    We configured Icedove in Tails to match our security goals ([[!tails_ticket 6151]]),
     as part of this we disabled:
 
-      - The remote email account feature (#10009)
-      - The automatic add-on updates (#10428)
+      - The remote email account feature ([[!tails_ticket 10009]])
+      - The automatic add-on updates ([[!tails_ticket 10428]])
 
-    We adapted Torbirdy to suit our needs in Tails. (#10007)
+    We adapted Torbirdy to suit our needs in Tails. ([[!tails_ticket 10007]])
 
     During this work we discovered a bug in Torbirdy sometimes
     choosing a wrong language, which we patched upstream. Once our
     patch was merged, we updated the Torbirdy Debian package to a new
-    version which we could also include in Tails. (#9821)
+    version which we could also include in Tails. ([[!tails_ticket 9821]])
 
   - A.1.4. Provide a migration path for our users from Claws Mail to Icedove
 
     We studied the most common Claws Mail persistence configuration
-    (#9494, #5663), then provided a script (#10453) to migrate POP
+    ([[!tails_ticket 9494]], [[!tails_ticket 5663]]), then provided a script ([[!tails_ticket 10453]]) to migrate POP
     mailboxes to Icedove and wrote
-    [migration instructions](https://tails.boum.org/doc/anonymous_internet/claws_mail_to_icedove/)
-    (#9495) for users to migrate their mailboxes, email account
+    [[migration instructions|doc/anonymous_internet/claws_mail_to_icedove]]
+    ([[!tails_ticket 9495]]) for users to migrate their mailboxes, email account
     settings, and address books.
 
     To make this migration easier to users, we enabled automatically the
     Icedove persistence feature when the Claws Mail persistence was
-    enabled (#9498) and temporarily added the `nmh` package to Tails.
+    enabled ([[!tails_ticket 9498]]) and temporarily added the `nmh` package to Tails.
 
   - A.1.5. Update Icedove documentation
 
-    The previous Thunderbird documentation was [completely
-    rewritten](https://tails.boum.org/doc/anonymous_internet/icedove/). (#7158)
+    The previous Thunderbird documentation was [[completely
+    rewritten|doc/anonymous_internet/icedove]]). ([[!tails_ticket 7158]])
 
   - A.1.6. Release Icedove in Tails
 
-    Icedove has been added to Tails 1.7. (#10285)
+    Icedove has been added to Tails 1.7. ([[!tails_ticket 10285]])
 
     It is advertised as a technology preview in our
-    [release notes](https://tails.boum.org/news/version_1.7/). We want
+    [[release notes|news/version_1.7]]). We want
     to have some more advanced users test our configuration and the
     migration process before we make Icedove the default email client
     and remove Claws Mail.
@@ -82,14 +69,14 @@ servers since the deployment of the automatic ISO builds:
 - B.2.3. Research and design a solution to generate a set of Jenkins ISO test jobs
 
   Early in October we finally settled to the best option we found to
-  reboot the VM between each run of the test suite in Jenkins (#9486).
+  reboot the VM between each run of the test suite in Jenkins ([[!tails_ticket 9486]]).
 
   We finished evaluating the solution set up last month to share
   artifacts between the build jobs and the corresponding test jobs,
-  and concluded that it works correctly. (#9597)
+  and concluded that it works correctly. ([[!tails_ticket 9597]])
 
   We had to upgrade our jenkins-job-builder setup to the new 1.3.0 version,
-  which was required to configure some Jenkins plugins our test jobs need. (#9646)
+  which was required to configure some Jenkins plugins our test jobs need. ([[!tails_ticket 9646]])
 
   We also pushed upstream a patch to handle the CucumberTestResult Jenkins
   plugin, so that we can easily use it in our setup and have a nice display of
@@ -97,24 +84,25 @@ servers since the deployment of the automatic ISO builds:
   jenkins-job-builder 1.4.0: <https://review.openstack.org/#/c/218668/>.
 
   We worked together with the test suite team on getting video artifacts
-  for failing scenarios of a test job stored so that we could better debug. (#10154)
+  for failing scenarios of a test job stored so that we could better debug. ([[!tails_ticket 10154]])
 
   With all this, we were able to deploy automated tests of ISO builds
   automatically for our main release branches at the end of the first week of
-  October, which helped us confirm our design was working. (#10117)
+  October, which helped us confirm our design was working. ([[!tails_ticket 10117]])
 
   <https://tails.boum.org/blueprint/automated_builds_and_tests/jenkins/>
 
 - B.2.4. Deploy the best solution from this research
 
   With this first initial and limited deployment, we corrected some tiny
-  configuration details we didn't catch during the design step. (#10215, #10417)
+  configuration details we didn't catch during the design step.
+  ([[!tails_ticket 10215]], [[!tails_ticket 10417]])
 
   We stumbled upon a bug due to hardware or kernel troubles with nested
-  virtualization we had to workaround. (#10229)
+  virtualization we had to workaround. ([[!tails_ticket 10229]])
 
   It also helped us fix some issues in the integration of our test
-  in the Jenkins environment. (#10356, #10359)
+  in the Jenkins environment. ([[!tails_ticket 10356]], [[!tails_ticket 10359]])
 
 - B.2.5. Write library code that maps Jenkins jobs from building to testing
 
@@ -123,7 +111,7 @@ servers since the deployment of the automatic ISO builds:
   adapted our code that generates build jobs for active branches to
   output their corresponding test jobs. We also ended up using the power
   of a more recent jenkins-job-builder version to simplify
-  this code quite a lot. (#10118, #10119)
+  this code quite a lot. ([[!tails_ticket 10118]], [[!tails_ticket 10119]])
 
   It was already clear that we wouldn't be able to notify the
   committers on test suite failures at first, as the number of false
@@ -131,7 +119,7 @@ servers since the deployment of the automatic ISO builds:
   such notifications. So we planned a first iteration during which
   only the test suite team would receive notifications upon failure,
   so that they'll be able to work on the remaining tests being too
-  fragile. (#10287)
+  fragile. ([[!tails_ticket 10287]])
 
   By October 15th, we had the automated test deployed live in Jenkins
   for all active branches. However, we quickly understood that our Git
@@ -145,7 +133,7 @@ servers since the deployment of the automatic ISO builds:
 
   We're also discussing on our public mailing list whether it makes sense to
   run our whole test suite on ISO images built from
-  documentation branches. (#10492)
+  documentation branches. ([[!tails_ticket 10492]])
 
 
 ## B.3. Extend the coverage of our test suite
@@ -153,7 +141,7 @@ servers since the deployment of the automatic ISO builds:
   - B.3.5. Write tests for I2P
 
     Basic I2P functionality and configuration that is important in the
-    context of Tails is now tested (#6306):
+    context of Tails is now tested ([[!tails_ticket 6306]]):
 
     <https://git-tails.immerda.ch/tails/tree/features/i2p.feature?h=stable>
 
@@ -165,57 +153,57 @@ servers since the deployment of the automatic ISO builds:
     A plan was devised to leverage out automated testing
     infrastructure for identifying robustness issues is our test suite, and isolating
     them into separate branches, where they can be dealt with in
-    isolation. (#10288)
+    isolation. ([[!tails_ticket 10288]])
 
     Other improvements:
 
     * The new snapshot system improved robustness noticeably, and
       reduced the amount of time needed for a full run with at least
-      30%. (#6094)
+      30%. ([[!tails_ticket 6094]])
 
     * Restart Tor if bootstrapping stalls for too long.
 
       This started out as a robustness improvement in the test suite,
       since many tests failed randomly due to Tor. We then implemented
       it as a feature in Tails, since it arguably should improve the
-      user experience too (#9516).
+      user experience too ([[!tails_ticket 9516]]).
 
   - B.3.9. Optimize tests that need a persistent volume
 
     The new snapshot system was finished early (part of Milestone IV,
-    January 15, 2015). (#6094, #8008)
+    January 15, 2015). ([[!tails_ticket 6094]], [[!tails_ticket 8008]])
 
   - B.3.13. Split the "various checks" feature
 
     Started early, but not finished; so far only `mat.feature` and
     `localization.feature` have been created from split out
-    scenarios. Thanks to #6094 the remainder of this work will be
+    scenarios. Thanks to [[!tails_ticket 6094]], the remainder of this work will be
     trivial.
 
   - Some other new tests that were written:
 
-    * Write initial Icedove tests. (#10332)
+    * Write initial Icedove tests. ([[!tails_ticket 10332]])
 
     * Write a test for the fix of a symlink attack. It was added at
       the same time as the fix, and this is the ideal workflow we hope
-      to be ready to adopt soon. (#10333)
+      to be ready to adopt soon. ([[!tails_ticket 10333]])
 
   - Some improvements for test suite developers:
 
     * Organize automated test suite artifacts in per-run directories,
       and improve the naming so that it's easier to see e.g. which video
-      belongs to which failed scenario. (#10151)
+      belongs to which failed scenario. ([[!tails_ticket 10151]])
 
-    * Clean up automated test suite dependencies. (#10208)
+    * Clean up automated test suite dependencies. ([[!tails_ticket 10208]])
 
     * Force UTF-8 locale in automated test suite, to avoid implicitly
-      relying on the system locales configuration. (#10359)
+      relying on the system locales configuration. ([[!tails_ticket 10359]])
 
-    * Run the automated test suite's VNC server forever. (#10345)
+    * Run the automated test suite's VNC server forever. ([[!tails_ticket 10345]])
 
     * Don't print test suite information to STDERR, but use the
       Cucumber logging facilities so this information is included when
-      logging to file. (#10342)
+      logging to file. ([[!tails_ticket 10342]])
 
   - Bugs and regressions identified by our test suite
 
@@ -223,29 +211,31 @@ servers since the deployment of the automatic ISO builds:
     probably not complete.
 
     * "Restart Tor if bootstrapping stalls for too long", mentioned
-      above (#9516).
+      above ([[!tails_ticket 9516]]).
     * In September, implementing the automated MAC spoofing tests led
-      us to notice that the MAC spoofing's panic mode was broken (#10160).
+      us to notice that the MAC spoofing's panic mode was broken
+      ([[!tails_ticket 10160]]).
 
 ## B.4. Freezable APT repository
 
 - B.4.1. Specify when we want to import foreign packages into which
-  APT suites (#9488),
-  B.4.4. Design freezable APT repository (#5926),
+  APT suites ([[!tails_ticket 9488]]),
+  B.4.4. Design freezable APT repository ([[!tails_ticket 5926]]),
   and B.4.5. Implement processes and tools for importing and freezing
-  those packages (#9487, #6295, #7427, #6906)
+  those packages ([[!tails_ticket 9487]], [[!tails_ticket 6295]],
+  [[!tails_ticket 7427]], [[!tails_ticket 6906]])
 
   Some initial research and experiments were conducted.
 
   The proposed design is described on a blueprint:
   <https://tails.boum.org/blueprint/freezable_APT_repository/>.
 
-  A server-side implementation (#6296, #6299) has been drafted in the
+  A server-side implementation ([[!tails_ticket 6296]], [[!tails_ticket 6299]]) has been drafted in the
   `tails::reprepro::snapshots::*` Puppet classes in the
   <https://git-tails.immerda.ch/puppet-tails/> module.
 
 - B.4.2. Implement a mechanism to save the list of packages used at
-  ISO build time (#6297)
+  ISO build time ([[!tails_ticket 6297]])
 
   We have found ways to implement this, and have a working
   proof-of-concept, that now needs to be refined. This implied adding
@@ -264,30 +254,29 @@ servers since the deployment of the automatic ISO builds:
 
 - C.1.2. Write & audit the code that makes the redirection decision
 
-  Our prototype code (#8639) has been refined and will be adapted to work
+  Our prototype code ([[!tails_ticket 8639]]) has been refined and will be adapted to work
   with our new installation assistant.
 
 ## C.2. Be able to detect within hours failures and malfunction on our services
 
-- C.2.1. Research and decide what monitoring solution to use: #8645
+- C.2.1. Research and decide what monitoring solution to use: [[!tails_ticket 8645]]
 
   A little bit more research was done to ensure that our current best
   option will satisfy our needs.
 
 ## C.4. Maintain our already existing services
 
-This covers "C.4.3. Administer our services upto milestone III" until
-the end of October.
+- C.4.3. Administer our services upto milestone III
 
   * We kept on answering to the request from the community as well as taking
     care of security updates.
   * We had to reinstall one of our ISO builder VM that was failing too
-    often. (#10334)
+    often. ([[!tails_ticket 10334]])
   * The OpenPGP key of our Debian repository was going to expire, so we had to
-    update it. (#10419)
+    update it. ([[!tails_ticket 10419]])
   * We thought a bit further how we could make our Jenkins instance public
     (#6270) which probably means to update to the packages provided by
-    upstream. (#10068)
+    upstream. ([[!tails_ticket 10068]])
 
 # D. Migration to Debian Jessie
 
@@ -295,9 +284,9 @@ the end of October.
 
   - D.3.1 Update our test suite for Tails Jessie
 
-    * Fix memory erasure tests in Debian Jessie. (#8317, #9705)
+    * Fix memory erasure tests in Debian Jessie. ([[!tails_ticket 8317]], [[!tails_ticket 9705]])
 
-    * Work around screen blanking when testing Synaptic. (#10403)
+    * Work around screen blanking when testing Synaptic. ([[!tails_ticket 10403]])
 
     * Fix a robustness issue with the "Applications" menu
-      handling. (#9706)
+      handling. ([[!tails_ticket 9706]])
