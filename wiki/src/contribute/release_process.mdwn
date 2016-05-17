@@ -499,13 +499,6 @@ check the generated `.torrent` files metainfo:
 	  "tails-i386-${VERSION}" && \
 	btshowmetainfo tails-i386-$VERSION.torrent
 
-Fifth, generate detached OpenPGP signatures for every published
-`.torrent` file:
-
-	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign \
-	  tails-i386-$VERSION.torrent && \
-	mv tails-i386-$VERSION.torrent.{asc,sig}
-
 Lastly, let's set some variables to be used later:
 
     ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
@@ -764,23 +757,16 @@ of its name:
 	mv "$ARTIFACTS"/tails-i386-"$VERSION".iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
-Copy the `.iso.sig`, `.packages`, `.torrent` and `.torrent.sig` files
+Copy the `.iso.sig`, `.packages` and `.torrent` files
 into the website repository:
 
 	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages" \
 	   "$ISOS/tails-i386-$VERSION.torrent" \
-	   "$ISOS/tails-i386-$VERSION.torrent.sig" \
 	   "$RELEASE_CHECKOUT/wiki/src/torrents/files/"
 
 Remove from `wiki/src/torrents/files/` any remaining file from the
 previous release (including any RC).
-
-Generate the SHA-256 hash of every image
-to be released in `inc/*`:
-
-	echo "${ISO_SHA256SUM}" > \
-	  "${RELEASE_CHECKOUT}/wiki/src/inc/stable_i386_hash.html"
 
 Update the size of the ISO image in `inc/*`:
 
@@ -839,7 +825,6 @@ Copy the `.iso.sig` file into the website repository:
 
 	cp "${ISO_PATH}.sig" \
 	   "$ISOS/tails-i386-${VERSION}.torrent" \
-	   "$ISOS/tails-i386-${VERSION}.torrent.sig" \
 	      "${MASTER_CHECKOUT}/wiki/src/torrents/files/
 
 Write the announcement for the release in
