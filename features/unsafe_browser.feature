@@ -4,6 +4,8 @@ Feature: Browsing the web using the Unsafe Browser
   when I browse the web using the Unsafe Browser
   I should have direct access to the web
 
+  #11401
+  @fragile
   Scenario: The Unsafe Browser can access the LAN
     Given I have started Tails from DVD and logged in and the network is connected
     And a web server is running on the LAN

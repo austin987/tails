@@ -4,16 +4,12 @@ Feature: Time syncing
   I want Tor to work properly
   And for that I need a reasonably accurate system clock
 
-  #10497: wait_until_tor_is_working
-  @fragile
   Scenario: Clock with host's time
     Given I have started Tails from DVD without network and logged in
     When the network is plugged
     And Tor is ready
     Then Tails clock is less than 5 minutes incorrect
 
-  #10497: wait_until_tor_is_working
-  @fragile
   Scenario: Clock with host's time in bridge mode
     Given I have started Tails from DVD without network and logged in with bridge mode enabled
     When the network is plugged
