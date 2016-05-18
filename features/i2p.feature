@@ -27,6 +27,8 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
+  #11401
+  @fragile
   Scenario: Closing the I2P Browser shows a stop notification and properly tears down the chroot.
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
@@ -44,14 +46,13 @@ Feature: I2P
     When I open the address "http://i2p-projekt.i2p" in the I2P Browser
     Then the I2P homepage loads in I2P Browser
 
- Scenario: I2P is configured to run in Hidden mode
+  Scenario: I2P is configured to run in Hidden mode
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
     And I2P is running in hidden mode
 
-  @fragile
   Scenario: Connecting to the #i2p IRC channel with the pre-configured account
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
