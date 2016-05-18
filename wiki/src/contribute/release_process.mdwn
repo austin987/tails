@@ -94,6 +94,16 @@ If we are at freeze time for a major release:
 4. [[Hard reset|APT_repository/custom#workflow-reset]] the `testing`
    custom APT suite to the current state of the `devel` one.
 
+5. [[Freeze|APT_repository/time-based snapshots#freeze]] the
+   time-based APT repository snapshots that shall be used
+   during the freeze.
+
+6. Make it so the time-based APT repository snapshots are kept around
+   long enough, by bumping their `Valid-Until` to max(now + 10 days,
+   expected release date + 5 days):
+   [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
+
+
 Point-release
 -------------
 
@@ -110,20 +120,11 @@ If we are at freeze time for a point-release:
 Common steps for point and major releases
 -----------------------------------------
 
-1. [[Freeze|APT_repository/time-based snapshots#freeze]] the
-   time-based APT repository snapshots that shall be used
-   during the freeze.
+Reset the release branch's `config/base_branch`:
 
-2. Make it so the time-based APT repository snapshots are kept around
-   long enough, by bumping their `Valid-Until` to max(now + 10 days,
-   expected release date + 5 days):
-   [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
-
-3. Reset the release branch's `config/base_branch`:
-
-           echo "${RELEASE_BRANCH}" > config/base_branch && \
-              git commit config/base_branch \
-                  -m "Restore ${RELEASE_BRANCH}'s base branch."
+        echo "${RELEASE_BRANCH}" > config/base_branch && \
+           git commit config/base_branch \
+               -m "Restore ${RELEASE_BRANCH}'s base branch."
 
 Update included files
 =====================
@@ -1098,7 +1099,7 @@ this, and skip what does not make sense for a RC.
    from the previous stable release will usually have had us prepare
    for an emergency release that was never made.
 1. [[Thaw|APT_repository/time-based snapshots#thaw]] the time-based
-   APT repository snapshots that were used during the freeze.
+   APT repository snapshots that were used during the freeze, if any.
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
 1. Follow the
