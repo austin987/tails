@@ -1097,16 +1097,8 @@ this, and skip what does not make sense for a RC.
    never released. Explanation: the post-release APT repository steps
    from the previous stable release will usually have had us prepare
    for an emergency release that was never made.
-1. Encode in the `$RELEASE_BRANCH` Git branch the
-   fact that it is not frozen anymore, that is remove the indication
-   that a specific set of APT repository snapshots must be used:
-
-           git checkout "$RELEASE_BRANCH" && \
-           ./auto/scripts/apt-snapshots-serials thaw && \
-           git commit \
-               -m 'Thaw APT snapshots after Tails $VERSION was released.' \
-               config/APT_snapshots.d/*/serial
-
+1. [[Thaw|APT_repository/time-based snapshots#thaw]] the time-based
+   APT repository snapshots that were used during the freeze.
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
 1. Follow the
