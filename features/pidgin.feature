@@ -22,6 +22,7 @@ Feature: Chatting anonymously using Pidgin
     Then I receive a response from my friend
 
   # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
+  #11414
   @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP in a multi-user chat
     Given I have started Tails from DVD and logged in and the network is connected
