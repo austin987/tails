@@ -54,40 +54,53 @@ this content to the failover server; no need to back it up.
   [[!tails_gitweb_repo puppet-tails]]
 * bits scattered in the main Tails Git repository (details below)
 
+SSH access
+==========
+
+One must configure their SSH client to connect to the APT server:
+
+	Host incoming.deb.tails.boum.org
+		Port 3003
+
 Workflow
 ========
-
-<a id="bump-expiration-date"></a>
 
 Bump expiration date
 --------------------
 
-XXX: script was renamed, usage and behavior might have changed
-
 We set `Valid-Until` of time-based snapshots 10 days after they are
-generated. In some rare cases, e.g. if a freeze lasts substantially
-longer than usual, this can be too short, and we may need to manually
-bump `Valid-Until` for a given time-based snapshot.
+generated. In some cases, this can be too short, and we need to
+manually bump `Valid-Until` for a given time-based snapshot.
 
 Only release managers and sysadmins can do such operations.
 
-To bump `Valid-Until`, for all distributions in
-a given snapshot (`$SERIAL`) of a given archive (`$ARCHIVE`),
-so that they are valid for `$DAYS_FROM_NOW` days from now:
+### Bump one specific snapshot's expiration date
 
-    ssh reprepro-time-based-snapshots@apt.lizard \
+To bump `Valid-Until`, for a given snapshot (`$SERIAL`) of a given
+archive (`$ARCHIVE`), so that they are valid for `$DAYS_FROM_NOW` days
+from now:
+
+    ssh reprepro-time-based-snapshots@incoming.deb.tails.boum.org \
        tails-bump-apt-snapshot-valid-until \
            "$ARCHIVE" "$SERIAL" "$DAYS_FROM_NOW"
 
-To bump `Valid-Until` to `$VALID_UNTIL`, for all distributions in
-every snapshot used by the current frozen `testing` branch:
+<a id="bump-expiration-date-for-all-snapshots"></a>
 
-	git checkout testing && \
+### Bump all snapshots' expiration date
+
+To bump `Valid-Until`, for every snapshot used by the current frozen
+`$RELEASE_BRANCH` branch, so that they are valid for `$DAYS_FROM_NOW`
+days from now:
+
+	git checkout "$RELEASE_BRANCH" && \
 	(
-	   cd config/APT_snapshots.d/* && \
+	   cd config/APT_snapshots.d && \
 	   for ARCHIVE in * ; do
-           ssh reprepro-time-based-snapshots@apt.lizard \
-               tails-bump-apt-snapshot-valid-until \
-                   "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" "$DAYS_FROM_NOW"
+           if ! grep -qs '^latest$' "$ARCHIVE"/serial; then
+               ssh reprepro-time-based-snapshots@incoming.deb.tails.boum.org \
+                   tails-bump-apt-snapshot-valid-until \
+                       "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" \
+                       "$DAYS_FROM_NOW"
+           fi
 	   done
 	)

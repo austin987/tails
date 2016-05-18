@@ -105,12 +105,6 @@ If we are at freeze time for a major release:
             -m 'Freeze APT snapshots for ${VERSION}.' \
             config/APT_snapshots.d/*/serial
 
-6. Make it so the time-based APT repository snapshots are kept around
-   long enough, by bumping their `Valid-Until` to max(now + 10 days,
-   expected release date + 5 days):
-
-   XXX: [[contribute/APT_repository/time-based_snapshots#bump-expiration-date]]
-
 Point-release
 -------------
 
@@ -128,11 +122,17 @@ If we are at freeze time for a point-release:
 Common steps for point and major releases
 -----------------------------------------
 
-After either of the above sections' steps, reset the release branch's
-`config/base_branch`:
+1. Make it so the time-based APT repository snapshots are kept around
+   long enough, by bumping their `Valid-Until` to max(now + 10 days,
+   expected release date + 5 days):
+   [[contribute/APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
-    echo "${RELEASE_BRANCH}" > config/base_branch && \
-    git commit config/base_branch -m "Restore ${RELEASE_BRANCH}'s base branch."
+2. After either of the above sections' steps, reset the release branch's
+   `config/base_branch`:
+
+           echo "${RELEASE_BRANCH}" > config/base_branch && \
+              git commit config/base_branch \
+                  -m "Restore ${RELEASE_BRANCH}'s base branch."
 
 Update included files
 =====================
