@@ -29,7 +29,9 @@ cautiously, if ever.
   [[!tails_gitweb_repo puppet-tails]]
 * bits scattered in the main Tails Git repository (details below)
 
-# Listing needed packages
+# Design notes
+
+## Listing needed packages
 
 To generate partial APT repositories, we need to know what to include
 in them. Therefore, we create a _build manifest_ at the end of an ISO
@@ -58,15 +60,15 @@ manifest:
   diff between `.packages`" as we do at release time, but done in
   a more correct way.
 
-# Importing packages into partial snapshots
+## Importing packages into partial snapshots
 
-## How it's done in practice
+### How it's done in practice
 
 * [[!tails_gitweb auto/scripts/tag-apt-snapshots]]
 * [tails-prepare-tagged-apt-snapshot-import](https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/tagged/tails-prepare-tagged-apt-snapshot-import)
 * [tails-publish-tagged-apt-snapshot](https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-publish-tagged-apt-snapshot)
 
-## A corner case: APT pinning magics
+### A corner case: APT pinning magics
 
 If a (package, version) is seen at build time in 2 or more APT
 sources, `tails-prepare-tagged-apt-snapshot-import` injects it
@@ -132,3 +134,24 @@ And then, APT will download `a2ps` from security.d.o:
 e.g. because we were using a tagged snapshot that imported `a2ps` into
 the security archive, then APT would prefer `a2ps` from Jessie, which
 demonstrates the problem.
+
+## Valid-Until
+
+A tagged APT repository snapshot that was used to build a given Tails
+release is immutable by design, so it does not need the protections
+provided by `Valid-Until`. Besides, not using `Valid-Until` for those
+makes it much easier to reproduce a given ISO build in the future.
+
+So, the `Release` files for tagged snapshots have no
+`Valid-Until` field.
+
+## Garbage collection
+
+We want to keep "forever" the tagged snapshots used by Tails releases.
+
+In practice, "forever" == min(3 years for GPL, how long we want to be
+able to reproduce the build of a released ISO) = 3 years.
+
+Depending on the growth rate of our tagged snapshots in practice, we
+may or may not need to implement expiration of these snapshots any
+time soon. Time will tell.
