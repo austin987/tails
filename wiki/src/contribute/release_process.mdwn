@@ -95,16 +95,6 @@ If we are at freeze time for a major release:
 4. [[Hard reset|APT_repository/custom#workflow-reset]] the `testing`
    custom APT suite to the current state of the `devel` one.
 
-5. Encode in the `testing` branch the set of [[time-based APT
-   repository snapshots|APT_repository/time-based snapshots]]
-   that shall be used during the freeze:
-
-        git checkout testing && \
-        ./auto/scripts/apt-snapshots-serials freeze && \
-        git commit \
-            -m 'Freeze APT snapshots for ${VERSION}.' \
-            config/APT_snapshots.d/*/serial
-
 Point-release
 -------------
 
@@ -122,12 +112,16 @@ If we are at freeze time for a point-release:
 Common steps for point and major releases
 -----------------------------------------
 
-1. Make it so the time-based APT repository snapshots are kept around
+1. [[Freeze|APT_repository/time-based snapshots#freeze]] the
+   time-based APT repository snapshots that shall be used
+   during the freeze.
+
+2. Make it so the time-based APT repository snapshots are kept around
    long enough, by bumping their `Valid-Until` to max(now + 10 days,
    expected release date + 5 days):
    [[contribute/APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
-2. After either of the above sections' steps, reset the release branch's
+3. After either of the above sections' steps, reset the release branch's
    `config/base_branch`:
 
            echo "${RELEASE_BRANCH}" > config/base_branch && \
@@ -1115,10 +1109,11 @@ this, and skip what does not make sense for a RC.
    [[post-release|contribute/APT_repository/custom#workflow-post-release]]
    custom APT repository documentation. Make sure there are upgrade-description
    files for any new versions that were added.
-1. If this was a major release, encode in the `testing` Git branch the
+1. Encode in the `$RELEASE_BRANCH` Git branch the
    fact that it is not frozen anymore, that is remove the indication
    that a specific set of APT repository snapshots must be used:
 
+           git checkout "$RELEASE_BRANCH" && \
            ./auto/scripts/apt-snapshots-serials thaw && \
            git commit \
                -m 'Thaw APT snapshots after Tails $VERSION was released.' \

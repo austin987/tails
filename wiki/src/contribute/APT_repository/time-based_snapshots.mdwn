@@ -65,6 +65,21 @@ One must configure their SSH client to connect to the APT server:
 Workflow
 ========
 
+<a id="freeze"></a>
+
+Freeze snapshots
+----------------
+
+For example, to encode in the `$RELEASE_BRANCH` branch the set of
+[[time-based APT repository snapshots|APT_repository/time-based snapshots]]
+that shall be used during the freeze:
+
+        git checkout "$RELEASE_BRANCH" && \
+        ./auto/scripts/apt-snapshots-serials freeze && \
+        git commit \
+            -m 'Freeze APT snapshots for ${VERSION}.' \
+            config/APT_snapshots.d/*/serial
+
 Bump expiration date
 --------------------
 
