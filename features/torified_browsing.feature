@@ -1,5 +1,3 @@
-#10376: The "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
-#10497: wait_until_tor_is_working
 @product @fragile
 Feature: Browsing the web using the Tor Browser
   As a Tails user
@@ -126,7 +124,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     Then the Tor Browser has no plugins installed
 
-  #10497, #10720
+  #10720
   @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in

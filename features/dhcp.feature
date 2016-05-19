@@ -1,4 +1,4 @@
-@product @fragile
+@product
 Feature: Getting a DHCP lease without leaking too much information
   As a Tails user
   when I connect to a network with a DHCP server

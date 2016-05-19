@@ -1,5 +1,3 @@
-#10497: wait_until_tor_is_working
-#10444: Git tests are fragile
 @product @check_tor_leaks @fragile
 Feature: Cloning a Git repository
   As a Tails user
