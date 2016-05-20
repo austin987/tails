@@ -228,3 +228,14 @@ end
 Then /^Tails homepage loads in the Unsafe Browser$/ do
   @screen.wait('TailsHomepage.png', 60)
 end
+
+Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
+  firefox = Dogtail::Application.new('Firefox')
+  page = firefox.child("Problem loading page", roleName: "document frame")
+  # Important to wait here since children() won't retry but return the
+  # immediate results
+  page.wait
+  headers = page.children(roleName: "heading")
+  found = headers.any? { |heading| heading.text == error }
+  raise "Could not find the '#{error}' error in the Tor Browser" unless found
+end

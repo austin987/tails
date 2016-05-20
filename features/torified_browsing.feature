@@ -13,7 +13,7 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     And I open a page on the LAN web server in the Tor Browser
-    Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
+    Then the Tor Browser shows the "Unable to connect" error
     And no traffic was sent to the web server on the LAN
 
   @check_tor_leaks
