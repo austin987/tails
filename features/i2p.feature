@@ -37,6 +37,8 @@ Feature: I2P
     Then I see the I2P Browser stop notification
     And the I2P Browser chroot is torn down
 
+  #11114
+  @fragile
   Scenario: The I2P internal websites can be viewed in I2P Browser
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
@@ -53,6 +55,8 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And I2P is running in hidden mode
 
+  #10474
+  @fragile
   Scenario: Connecting to the #i2p IRC channel with the pre-configured account
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
@@ -66,6 +70,8 @@ Feature: I2P
     Then Pidgin successfully connects to the "I2P" account
     And I can join the pre-configured "#i2p" channel on "I2P"
 
+  #11452
+  @fragile
   Scenario: I2P displays a notice when bootstrapping fails
     Given I have started Tails from DVD with I2P enabled and logged in
     And I2P is not running

@@ -38,6 +38,8 @@ Feature: Browsing the web using the Unsafe Browser
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 
+  #11401
+  @fragile
   Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
