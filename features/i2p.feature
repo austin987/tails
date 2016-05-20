@@ -76,7 +76,7 @@ Feature: I2P
     Then Pidgin successfully connects to the "I2P" account
     And I can join the pre-configured "#i2p" channel on "I2P"
 
-  #10497
+  #10497, #11452
   @fragile
   Scenario: I2P displays a notice when bootstrapping fails
     Given I have started Tails from DVD with I2P enabled and logged in
