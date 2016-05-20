@@ -176,6 +176,10 @@ module Dogtail
       run("#{build_line}.#{key} = #{self.class.value_to_s(value)}")
     end
 
+    def text
+      get_field('text')
+    end
+
     def proxy_call(method, args)
       args_str = self.class.args_to_s(args)
       method_call = "#{method.to_s}(#{args_str})"
