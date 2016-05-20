@@ -32,6 +32,8 @@ Feature: Browsing the web using the Unsafe Browser
     Then I see the Unsafe Browser stop notification
     And the Unsafe Browser chroot is torn down
 
+  #11401
+  @fragile
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
