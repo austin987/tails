@@ -169,7 +169,7 @@ module Dogtail
     end
 
     def get_field(key)
-      run("print(#{build_line}.#{key})").stdout
+      run("print(#{build_line}.#{key})").stdout.chomp
     end
 
     def set_field(key, value)
