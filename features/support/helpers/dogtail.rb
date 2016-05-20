@@ -13,7 +13,6 @@ module Dogtail
     :menu,
     :menuItem,
     :tab,
-    :text,
     :textentry,
   ]
 
