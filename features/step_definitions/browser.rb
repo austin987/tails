@@ -115,7 +115,7 @@ end
 
 # This step is limited to the Tor Browser due to #7502 since dogtail
 # uses the same interface.
-Then /^a page titled "([^"]+)" has loaded in the Tor Browser$/ do |title|
+Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   expected_title = "#{title} - Tor Browser"
   app = Dogtail::Application.new('Firefox')
   app.child(expected_title, roleName: 'frame').wait(60)
@@ -213,7 +213,7 @@ end
 
 Then /^Tails homepage loads in the Tor Browser$/ do
   title = 'Tails - Privacy for anyone anywhere'
-  step "a page titled \"#{title}\" has loaded in the Tor Browser"
+  step "\"#{title}\" has loaded in the Tor Browser"
 end
 
 Then /^Tails homepage loads in the Unsafe Browser$/ do

@@ -403,7 +403,7 @@ Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tail
     raise "Unsupported page: #{page}"
   end
   step "the Tor Browser has started"
-  step "a page titled \"#{title}\" has loaded in the Tor Browser"
+  step "\"#{title}\" has loaded in the Tor Browser"
 end
 
 Given /^the Tor Browser has started in offline mode$/ do
