@@ -158,6 +158,11 @@ For example, when we stopped tracking Wheezy, we did:
        | xargs -n 1 reprepro _removereferences \
     && reprepro deleteunreferenced
 
+Freeze exception
+----------------
+
+XXX
+
 # Design notes
 
 ## gensnapshot
@@ -312,3 +317,76 @@ situation here is mostly:
    possible, but also reasonably easy to handle with this design
    (otherwise we may have to switch to more powerful tools, such as
    dak + britney).
+
+To grant a freeze exception to a given package, we simply import it
+into our own
+[[custom APT repository|contribute/APT repository/custom]], in the
+suite corresponding to the branch that we want to see this package ⇒
+in the general case, the upgraded package will be installed in the
+next Tails release.
+
+This works because our APT pinning ranks Tails custom APT suites at
+the same level as the other APT sources corresponding to the current
+version of Debian Tails is based on, and higher than other Debian
+distribution (which, in passing, implies that we have to manually pin,
+in Git, the packages from our custom APT suites, that we want to
+override the ones found in other repositories regardless of version
+numbers):
+
+ * if the imported package comes from Debian stable: it will be
+   installed simply because its version is greater than the version of
+   the same package from Debian stable; and once we have thawed the
+   corresponding snapshot, the package can be pulled equally from any
+   of these two sources (Debian, and our custom APT repository), until
+   a newer version of this package is uploaded to Debian, and then the
+   newer one will supersede the package we have in our custom APT
+   repository;
+
+ * if the imported package comes from another Debian distribution,
+   that has a pinning value strictly lower than 990, such as Debian
+   unstable: if we did nothing more, the package would be installed
+   because its pinning (`origin deb.tails.boum.org`) is higher than
+   the one from the Debian distribution we're importing it from;
+   *however*, in this case we need to track this package, and to
+   remove it from our custom repository after we have thawed the
+   corresponding snapshot — otherwise, due to this pinning
+   configuration, we would stick to the version of the package we have
+   one day imported, while in most cases we want to resume tracking
+   the version from Debian; so, we do this that way:
+
+   1. Import the package we want to upgrade into our own
+      [[custom APT repository|contribute/APT repository/custom]], in
+      the suite corresponding to the branch that we want to see this
+      package.
+
+   2. Explicitly pin, in `config/chroot_apt/preferences`, the upgraded
+      package we have just imported to a value higher than 990, with
+      a proper `Explanation:` field; this pinning is not required at
+      this stage, but it is one way to encode in Git the packages we
+      have imported, which simplifies the following (clean up) step.
+
+   3. Once the corresponding APT snapshot has been thawed, that is
+      once the upgraded package can be fetched from a newer time-based
+      snapshot of the repository we've initially pulled it from: make
+      it so branches stop using the upgraded package, and resume
+      tracking the one available in Debian. To do that, we modify the
+      pinning entry added at the previous step, and give it a value of
+      `-1`. This should be done by the release manager, immediately
+      after a release, when they thaw the APT snapshots used for the
+      release, and merge it into other release branches.
+
+      Ideas for future improvements:
+
+      * At some point a helper tool can do this automatically,
+        assuming we always use the same `Explanation:` field to mark
+        these pinning entries. (Ideally we would simply use
+        a dedicated file under `apt/preferences.d/` for freeze
+        exceptions, but `live-build` 2.x doesn't support that.)
+
+      * Ideally we would remove these imported packages from our
+        custom APT repository at post-release time as well, so we can
+        get rid of the `-1` pinning entries, but it really needs to be
+        done in a 100% correct order, to ensure that after all the
+        merges we do post-release (and sometimes at other times)
+        between release branches, the imported packages are _not_
+        present anymore in any of the corresponding APT suites.
