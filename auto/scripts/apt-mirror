@@ -66,11 +66,10 @@ elif [ "$(base_branch)" = testing ]; then
     else
         output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
     fi
-elif [ "$(base_branch)" = devel ]; then
-    [ "$SERIAL" = latest ] \
-	|| fatal "APT snapshots are frozen, which should not happen on a branch" \
-		 "based on the devel one"
-   output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
 else
-   output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
+    if [ "$(base_branch)" = devel ] && [ "$SERIAL" != latest ]; then
+        fatal "APT snapshots are frozen, which should not happen on a branch" \
+              "based on the devel one"
+    fi
+    output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
 fi
