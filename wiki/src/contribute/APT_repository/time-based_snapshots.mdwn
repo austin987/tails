@@ -158,7 +158,49 @@ For example, when we stopped tracking Wheezy, we did:
 Freeze exception
 ----------------
 
-XXX
+### Grant a freeze exception
+
+1. Import the package you want to upgrade into our own
+   [[custom APT repository|contribute/APT repository/custom]], in the
+   suite corresponding to the branch that we want to see this
+   package in.
+
+2. If the imported package comes from a Debian distribution whose
+   pinning value is at least 990 in `config/chroot_apt/preferences`:
+   you can stop right here. Otherwise, read on.
+
+3. Add a pinning entry in `config/chroot_apt/preferences` for the
+   package you imported:
+
+        Explanation: freeze exception
+        Package: XYZ
+        Pin: origin deb.tails.boum.org
+        Pin-Priority: 999
+
+4. Commit:
+
+        git commit config/chroot_apt/preferences \
+            -m "Add freeze exceptions for $(dpkg-parsechangelog -SVersion)"
+
+5. Push to Git.
+
+<a id="freeze-exceptions-post-release"></a>
+
+### Post-release
+
+Thaw the packages that were granted freeze exceptions, now that they
+can be fetched from a newer time-based snapshot of the repository
+we've initially pulled it from.
+
+1. For each entry in `config/chroot_apt/preferences` that has
+   `Explanation: freeze exception`: set `Pin-Priority` to `-1`.
+
+2. Commit:
+
+        git commit config/chroot_apt/preferences \
+            -m "Remove freeze exceptions added for $(dpkg-parsechangelog -SVersion)"
+
+3. Push to Git.
 
 # Design notes
 
