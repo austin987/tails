@@ -92,28 +92,6 @@ We can handle freeze exceptions this way:
    comfortable giving commit access to our Git repository to more
    machines, and have time to implement it.
 
-Another option, instead of adding/removing temporary APT pinning,
-would be to backport the package we want to upgrade, and make it so it
-has a version greater than the one in the time-based snapshot used by
-the frozen release branch, and lower than the one in more recent
-time-based snapshots. This means building and uploading the package to
-the relevant overlay APT suite. This is appealing, because it doesn't
-require any cleanup: the upgraded package will automatically be
-superseded as soon as it can be. However:
-
- * we would not benefit from Debian features like reproducible builds;
- * it requires either manual work and bandwidth every time, or setting
-   up and maintaining infrastructure to automate the whole thing;
- * the fact that the changes *have to* go through Git, with the APT
-   pinning option, helps enforcing our review'n'merge processes; one
-   can do it by the book with the custom backport option too, by going
-   through a topic branch and `config/APT_overlays.d/`, but it still
-   conveys less historical information through Git than the APT
-   pinning option;
- * anonym NACK'ed this ("Please do not underestimate the added
-   overhead of having to rebuild packages for trivialities like
-   this"), and intrigeri agreed.
-
 # Bonus for later
 
 ## Miscellaneous
@@ -270,3 +248,27 @@ One "solution" would be to replace `Acquire::Check-Valid-Until`:
 
 Overkill, and not really meant to address our needs.
 Let's instead write our own :P
+
+## Handling freeze exceptions by backporting
+
+Another option, instead of adding/removing temporary APT pinning,
+would be to backport the package we want to upgrade, and make it so it
+has a version greater than the one in the time-based snapshot used by
+the frozen release branch, and lower than the one in more recent
+time-based snapshots. This means building and uploading the package to
+the relevant custom APT suite. This is appealing, because it doesn't
+require any cleanup: the upgraded package will automatically be
+superseded as soon as it can be. However:
+
+ * we would not benefit from Debian features like reproducible builds;
+ * it requires either manual work and bandwidth every time, or setting
+   up and maintaining infrastructure to automate the whole thing;
+ * the fact that the changes *have to* go through Git, with the APT
+   pinning option, helps enforcing our review'n'merge processes; one
+   can do it by the book with the custom backport option too, by going
+   through a topic branch and `config/APT_overlays.d/`, but it still
+   conveys less historical information through Git than the APT
+   pinning option;
+ * anonym NACK'ed this ("Please do not underestimate the added
+   overhead of having to rebuild packages for trivialities like
+   this"), and intrigeri agreed.
