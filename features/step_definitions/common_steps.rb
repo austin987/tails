@@ -396,14 +396,14 @@ end
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    picture = "TorBrowserStartupPage.png"
+    title = 'Tails - News'
   when "Tails roadmap"
-    picture = "TorBrowserTailsRoadmap.png"
+    title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
     raise "Unsupported page: #{page}"
   end
   step "the Tor Browser has started"
-  @screen.wait(picture, 120)
+  step "a page titled \"#{title}\" has loaded in the Tor Browser"
 end
 
 Given /^the Tor Browser has started in offline mode$/ do
