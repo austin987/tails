@@ -43,34 +43,6 @@ This is about [[!tails_ticket 5926]].
 
 ## Freeze exceptions
 
-This is a new problem brought by using "frozen" snapshot of APT
-repositories during a Tails code freeze: some bug, that we want to see
-fixed in the release we are preparing, would be resolved if we pulled
-an upgraded package as-is from a freshest Debian APT repository.
-Before we could freeze APT repositories, we would have got this bugfix
-for free. Now we need to grant freeze exceptions.
-
-This is similar to "Upgrading to a new snapshot", except that we want
-to upgrade one package only. By definition, this only affects *frozen*
-release branches (`stable`, `testing`), and topic branches based on
-them: all other branches use the freshest set of APT repository
-snapshots available.
-
-Most of the time, a bugfix branch we want to merge into a frozen
-release branch doesn't need to upgrade packages from Debian, so this
-is a corner case for the time being. Moreover, so far we have always
-dealt with this problem entirely by hand, so it's not critical to
-provide much improved tools. What makes it tempting to improve the
-situation here is mostly:
-
- * even though freeze exceptions will remain exceptions, frozen will
-   add one use case:
- * this will become a relatively common operation if we are based on
-   Debian testing some day, so let's check that it's not only
-   possible, but also reasonably easy to handle with this design
-   (otherwise we may have to switch to more powerful tools, such as
-   dak + britney).
-
 Definition: here, we'll call "overlay [[contribute/APT repository]]"
 the set of Tails-specific APT suites that we have been maintaining for
 a few years. They are overlay in that they don't contain all the
