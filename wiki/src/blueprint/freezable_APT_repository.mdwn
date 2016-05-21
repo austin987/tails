@@ -37,61 +37,6 @@ This is about [[!tails_ticket 5926]].
    * implement whatever the "freeze exceptions" section requires
      ([[!tails_ticket 11446]], [[!tails_ticket 11448]])
 
-# Special cases and implementation
-
-<a id="freeze-exceptions"></a>
-
-## Freeze exceptions
-
-Definition: here, we'll call "overlay [[contribute/APT repository]]"
-the set of Tails-specific APT suites that we have been maintaining for
-a few years. They are overlay in that they don't contain all the
-packages that can be found in Debian: building a Tails ISO image also
-requires another kind of APT sources, that are more complete.
-
-We can handle freeze exceptions this way:
-
-1. Import the package we want to upgrade into our own overlay
-   [[contribute/APT repository]], in the suite corresponding to the
-   branch that we want to see this package ⇒ in the general case, the
-   upgraded package will be installed in the next Tails release.
-   We need a tool to do that (would `reprepro pull` with a custom
-   filter do the job?).
-
-2. Pin, in `config/chroot_apt/preferences`, the upgraded package we
-   have just imported. The aforementioned tool can do this as well.
-
-   [Our current default APT pinning ranks Tails overlay APT suites
-   over any other APT source, so why the need to add an APT pinning
-   entry? The problem is that it's hard to do the next step (clean up)
-   with this APT pinning, combined with the fact that we can't easily
-   delete a package from an APT suite and see this deletion propagated
-   over suite merges. I (intrigeri) was not able to find a good
-   solution to that problem under these constraints, so this document
-   assumes that we change this, and pin our overlay APT suites at the
-   same level as the APT sources corresponding to the Debian release
-   Tails is currently based on. This implies that we manually pin, in
-   Git, the packages from our overlay APT suites, that we want to
-   override the ones found in other repositories regardless of
-   version numbers.]
-
-3. Make it so branches stop using the upgraded package once they have
-   been unfrozen, that is once the upgraded package can be fetched
-   from a time-based snapshot of the repository we've initially pulled
-   it from. Reverting the commit that added the corresponding APT
-   pinning in the first place is enough. This should be done by the
-   release manager, immediately after a release, when they un-freeze
-   the branch used for the release and merge it into other release
-   branches. But the RM needs to know which commit to revert, so we
-   need to keep track of such upgrades: ideally the tool used to pull
-   the upgraded package in the first place should generate the
-   commands that will need to be run post-release, or save the data
-   needed to generate these commands; such information must be pasted
-   somewhere, e.g. into a new ticket; these commands could even be
-   scheduled to be run post-release automatically, if we're
-   comfortable giving commit access to our Git repository to more
-   machines, and have time to implement it.
-
 # Bonus for later
 
 ## Miscellaneous
