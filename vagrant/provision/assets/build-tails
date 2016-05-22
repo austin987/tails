@@ -86,6 +86,11 @@ git checkout --force "$REV"
 git reset --hard "$COMMIT"
 git submodule update --init
 
+if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
+	as_root_do ./auto/scripts/update-acng-config
+	as_root_do systemctl restart apt-cacher-ng.service
+fi
+
 if [ -n "$JENKINS_URL" ]; then
 	git clean --force -d -x
 fi

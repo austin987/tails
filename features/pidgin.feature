@@ -8,6 +8,7 @@ Feature: Chatting anonymously using Pidgin
   And AppArmor should prevent Pidgin from doing dangerous things
   And all Internet traffic should flow only through Tor
 
+  #11453
   @check_tor_leaks
   Scenario: Chatting with some friend over XMPP
     Given I have started Tails from DVD and logged in and the network is connected
