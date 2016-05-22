@@ -88,6 +88,20 @@ run `newgrp` and reload the `kvm` module(s)).
   set it via `<disk>` by adding `<boot order='1'/>` which does not
   trigger the bug.
 
+* If the system you are setting this up on ever had the old
+  (Virtualbox-based) Vagrant setup, you will get errors unless you
+  clean up these parts:
+
+  - Remove any old pinnings for `vagrant` and `ruby-net-ssh`. If you
+    followed our old instructions to the point, that should be:
+
+        sudo rm /etc/apt/preferences.d/tails-build-vagrant
+
+  - Clearing the Vagrant configuration seems to also often solve
+    issues:
+
+        rm -r ~/.vagrant.d
+
 ## Building Tails using Vagrant
 
 Once all dependencies are installed, get the Tails sources and
