@@ -29,8 +29,7 @@ Feature: Encryption and verification using GnuPG
     And I both encrypt and sign the message using my OpenPGP key
     Then I can decrypt and verify the encrypted message
 
-  #11394
-  #11398
+  # 11394
   @fragile
   Scenario: Symmetric encryption and decryption using OpenPGP Applet
     When I type a message into gedit
