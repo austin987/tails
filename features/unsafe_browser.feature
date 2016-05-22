@@ -4,8 +4,6 @@ Feature: Browsing the web using the Unsafe Browser
   when I browse the web using the Unsafe Browser
   I should have direct access to the web
 
-  #11401
-  @fragile
   Scenario: The Unsafe Browser can access the LAN
     Given I have started Tails from DVD and logged in and the network is connected
     And a web server is running on the LAN
@@ -32,16 +30,12 @@ Feature: Browsing the web using the Unsafe Browser
     Then I see the Unsafe Browser stop notification
     And the Unsafe Browser chroot is torn down
 
-  #11401
-  @fragile
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 
-  #11401
-  @fragile
   Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
