@@ -86,7 +86,7 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Click anywhere to close the notification applet
   @screen.hide_cursor
-  @screen.click("GnomeApplicationsMenu.png")
+  @screen.type(Sikuli::Key.ESC)
   @screen.hide_cursor
 end
 
