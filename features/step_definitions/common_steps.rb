@@ -290,6 +290,7 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   @screen.wait('TailsGreeter.png', 30*60)
   $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
+  step 'I configure Tails to use a simulated Tor network'
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
@@ -304,6 +305,8 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
+  step 'Tails Greeter has dealt with the sudo password'
+  step 'the Tails desktop is ready'
 end
 
 Given /^I enable more Tails Greeter options$/ do
@@ -344,6 +347,12 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.session idle-delay 0',
     :user => LIVE_USER
   )
+  # We need to enable the accessibility toolkit for dogtail.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
+    :user => LIVE_USER,
+  )
+
 end
 
 Then /^Tails seems to have booted normally$/ do
@@ -446,9 +455,10 @@ Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, ima
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
-                                :accepted_hosts => get_all_tor_nodes)
-  leaks.assert_no_leaks
+  allowed_hosts = allowed_hosts_under_tor_enforcement
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    allowed_hosts.include?({ address: c.daddr, port: c.dport })
+  end
 end
 
 Given /^I enter the sudo password in the pkexec prompt$/ do
@@ -535,7 +545,7 @@ Given /^package "([^"]+)" is installed$/ do |package|
 end
 
 When /^I start the Tor Browser$/ do
-  step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -647,56 +657,10 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   end
 end
 
-def gnome_app_menu_click_helper(click_me, verify_me = nil)
-  try_for(30) do
-    @screen.hide_cursor
-    # The sensitivity for submenus to open by just hovering past them
-    # is extremely high, and may result in the wrong one
-    # opening. Hence we better avoid hovering over undesired submenus
-    # entirely by "approaching" the menu strictly horizontally.
-    r = @screen.wait(click_me, 10)
-    @screen.hover_point(@screen.w, r.getY)
-    @screen.click(r)
-    @screen.wait(verify_me, 10) if verify_me
-    return
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
-      gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
+Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
+  app = Dogtail::Application.new('gnome-shell')
+  for element in ['Applications', submenu, app_name] do
+    app.child(element, roleName: 'label').click
   end
 end
 
@@ -821,9 +785,9 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
 end
 
 Given /^a web server is running on the LAN$/ do
-  web_server_ip_addr = $vmnet.bridge_ip_addr
-  web_server_port = 8000
-  @web_server_url = "http://#{web_server_ip_addr}:#{web_server_port}"
+  @web_server_ip_addr = $vmnet.bridge_ip_addr
+  @web_server_port = 8000
+  @web_server_url = "http://#{@web_server_ip_addr}:#{@web_server_port}"
   web_server_hello_msg = "Welcome to the LAN web server!"
 
   # I've tested ruby Thread:s, fork(), etc. but nothing works due to
@@ -838,14 +802,15 @@ Given /^a web server is running on the LAN$/ do
   require "webrick"
   STDOUT.reopen("/dev/null", "w")
   STDERR.reopen("/dev/null", "w")
-  server = WEBrick::HTTPServer.new(:BindAddress => "#{web_server_ip_addr}",
-                                   :Port => #{web_server_port},
+  server = WEBrick::HTTPServer.new(:BindAddress => "#{@web_server_ip_addr}",
+                                   :Port => #{@web_server_port},
                                    :DocumentRoot => "/dev/null")
   server.mount_proc("/") do |req, res|
     res.body = "#{web_server_hello_msg}"
   end
   server.start
 EOF
+  add_lan_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
   try_for(10, :msg => "It seems the LAN web server failed to start") do
     Process.kill(0, proc.pid) == 1
@@ -921,8 +886,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
 end
 
 Then /^I force Tor to use a new circuit$/ do
-  debug_log("Forcing new Tor circuit...")
-  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+  force_new_tor_circuit
 end
 
 When /^I eject the boot medium$/ do
