@@ -31,7 +31,7 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
-  #10497, #11401, #11457
+  #10497, #11401, #11457, #11458
   @fragile
   Scenario: Closing the I2P Browser shows a stop notification and properly tears down the chroot.
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
