@@ -366,7 +366,7 @@ Given /^the Tails desktop is ready$/ do
   # instead do this programmatically with xdotool.
   if florence_keyboard_is_visible
     @screen.click("GnomeSystrayFlorence.png")
-    try_for(10) { ! florence_keyboard_is_visible }
+    try_for(2) { ! florence_keyboard_is_visible }
   end
 end
 
