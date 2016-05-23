@@ -88,6 +88,20 @@ run `newgrp` and reload the `kvm` module(s)).
   set it via `<disk>` by adding `<boot order='1'/>` which does not
   trigger the bug.
 
+* If the system you are setting this up on ever had the old
+  (Virtualbox-based) Vagrant setup, you will get errors unless you
+  clean up these parts:
+
+  - Remove any old pinnings for `vagrant` and `ruby-net-ssh`. If you
+    followed our old instructions to the point, that should be:
+
+        sudo rm /etc/apt/preferences.d/tails-build-vagrant
+
+  - Clearing the Vagrant configuration seems to also often solve
+    issues:
+
+        rm -r ~/.vagrant.d
+
 ## Building Tails using Vagrant
 
 Once all dependencies are installed, get the Tails sources and
@@ -323,11 +337,13 @@ The most common customizations are documented on this wiki:
 * to avoid compressing the SquashFS using XZ (efficient, but very
   slow), `export MKSQUASHFS_OPTIONS='-comp gzip'` in your
   build environment;
-* [[using a custom Debian mirror to build Tails
-  images|build/custom_mirror]];
-* [[using squid-deb-proxy to build Tails images|build/squid-deb-proxy]]
-  (**Note**: most Tails contributors using the manual build method
-  use [[!debpts apt-cacher-ng]] instead, nowadays.)
+* to avoid downloading lots of Debian packages during every build, you
+  can use [[!debpts apt-cacher-ng]]; however, the build system
+  constantly switches APT sources for our
+  [[APT repositories|contribute/APT_repository]], so some custom
+  configuration is needed to make `apt-cacher-ng` useful: see the
+  bits about `apt-cacher-ng` in
+  [[!tails_gitweb vagrant/provision/assets/build-tails]].
 
 More documentation about this can be found in the [Debian Live
 Manual](http://live.debian.net/manual-2.x/html/live-manual.en.html).
