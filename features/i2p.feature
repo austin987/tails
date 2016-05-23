@@ -41,7 +41,7 @@ Feature: I2P
     Then I see the I2P Browser stop notification
     And the I2P Browser chroot is torn down
 
-  #10497, #11114
+  #10497, #11114, #11465
   @fragile
   Scenario: The I2P internal websites can be viewed in I2P Browser
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
