@@ -2,75 +2,17 @@ This is about [[!tails_ticket 5926]].
 
 [[!toc levels=3]]
 
-# Assumptions
-
-A given APT repository snapshot is immutable after it's been taken.
-We'll deal with freeze exception separately.
-
-We want to have reproducible builds some day. Therefore, the APT
-`sources.list` shipped in the ISO must be stable across rebuilds from
-the same release Git tag.
-
-Say `kedit` is a package shipped in Debian, but not in Tails. Then,
-when run inside Tails, `apt install kedit` must fetch `kedit` from
-current Debian, as opposed to installing it from a Tails-specific, and
-generally obsolete, snapshot of the Debian APT repository.
-
-We don't bother merging mirrored APT repositories / suites into
-aggregated ones. It loses information, gives us more work, and brings
-little value.
+<a id="todo"></a>
 
 # TODO
 
-1. doc-driven development [i]
-   * draft contributors doc for each workflow
-     - RM (see release process doc and APT repo common operations doc)
-     - developer (including stable, testing, devel, and `$topic`)
-   * get the updated documentation + this design reviewed, including
-     security aspects [i]
-   * document how to freeze time-based APT snapshots being used:
-
-             ./auto/scripts/apt-snapshots-serials freeze && \
-             git commit \
-                 -m 'Freeze APT snapshots to the current ones.' \
-                 config/APT_snapshots.d/*/serial
-
-   * document how to thaw time-based APT snapshots being used:
-
-             ./auto/scripts/apt-snapshots-serials thaw && \
-             git commit \
-                 -m 'Thaw APT snapshots.' \
-                 config/APT_snapshots.d/*/serial
-
-   * document how to bump `Valid-Until` [i], e.g.
-
-             ssh reprepro-time-based-snapshots@apt.lizard \
-                 tails-bump-apt-snapshot-valid-until \
-                     tails 2016031304 15
-
+1. documentation
    * move relevant content from this blueprint to the "final" design
-     doc + contributors doc
+     doc + contributors doc ([[!tails_ticket 11447]])
 
 2. time-based snapshots [i]
-   e. Avoid re-downloading everything one has in their local
-      apt-cacher-ng, and filling its cache with files duplicated
-      many times. We have a config file generator in:
-      `auto/scripts/update-acng-config`. We need to use it, somehow,
-      for:
-      - **done**: Vagrant build setup: update this file as part of the
-        build process
-      - **done** `tails::builder` Puppet class
-      - manual build setup: we should not bother too much because
-        now Vagrant should be working for everyone, so a manual build
-        setup is a corner case, that we can address with some minimal
-        documentation. What to do depends on where `apt-cacher-ng`
-        runs; when it's on the build host, then we can update the
-        configuration as part of the build process, just like for the
-        Vagrant case; else, if it's run elsewhere, then one should use
-        a cronjob, just like in the Puppet case, or do it by hand;
-        let's keep in mind that once generated, the config file should
-        be valid for a while.
-   f. handle ever-growing `references.db`, aka. [[!debbug 823629]]: if
+   f. [[!tails_ticket 11445]]: handle ever-growing `references.db`, aka.
+      [[!debbug 823629]]: if
       `references.db` doesn't fit in the memory disk cache, then at
       least our GC process gets very slow); the visible consequence
       would be: long periods of heavy disk read, and much slower
@@ -90,166 +32,12 @@ little value.
         <https://docs.oracle.com/cd/E17076_02/html/api_reference/C/dbcompact.html>):
         works on small databases, but on our big `debian` the file
         doesn't shrink
-   g. have build system output the snapshots being used,
-      and have Jenkins publish this info if available
-
-3. generate set of APT sources [i]
-   * write automated tests for the generation of APT sources
-     - redirection when using the latest snapshot of a given origin
-     - We still need to support adding APT sources in
-       `config/chroot_sources/`, pointing to repositories that exist
-       outside of the freezable APT system, e.g. to point to a custom
-       or personal APT repository during early development phases, for
-       contributors who do not have the ability to upload packages to
-       any of the repositories we snapshot.
-   * implement the generation of APT sources
-   * plug the generation of APT sources into the build system
-   * implement
-     [[switching to live APT sources at runtime|freezable_APT_repository#runtime-sources]]
-
-4. tagged snapshots
-   h. for some Tails ISO build:
-      * **done** create the corresponding tagged snapshots
-        tails-i386-feature_5926-freezable-APT-repository-2.4-20160514T2039Z-8580736.iso
-      * **done** build with these tagged snapshots
-        tails-i386-feature_5926-freezable-APT-repository-2.4-20160514T2148Z-d6ce38d.iso
-      * check what is pulled during the build
-      * compare the resulting build manifest, build log and package list
-        with the one from a similar build that used time-based snapshots
-   i. release process: publish the build manifest
-   k. delete the testing `8.32-alpha` tagged snapshot
-   l. Point consumers of the now deprecated `*.{bin,src}pkg` (probably
-      only jenkins.debian.net) to the new build manifest.
-   m. if needed, implement GC
 
 5. misc
    * implement whatever the "freeze exceptions" section requires
-
-# The big picture
-
-## Snapshots and branches
-
-Several times a day (e.g. 4 times, to match runs of `dinstall` in the
-Debian archive, we update a local mirror
-of the APT repositories we're
-interested in, e.g. with `reprepro update`. Once this is successfully
-done, we take a snapshot of the current state of our local mirror
-(e.g. with `reprepro pull`); this snapshot's name must contain:
-
- * an identifier of the APT repository this snapshot is about, e.g.
-   `debian`, `debian-security`, `torproject`;
- * a `YYYYMMDD$ID` serial, `$ID` being an incremental decimal number
-   formatted on two digits (`01`, `02`, etc.).
-
-The APT repository mirroring infrastructure publishes the name of the
-latest snapshot for each mirrored repository. Similarly, every ISO
-build exports the names of the APT repository snapshots it uses.
-
-Building an ISO from the `devel` branch always uses the freshest set
-of APT repository snapshots available. Resolving what's the set of
-freshest APT repository snapshots is done at the beginning of the
-build, so that the entire build uses the exact same state of these
-repositories. This is needed for reproducible builds, and has a nice
-side effect: so long, `Hashsum mismatch`, and thanks for the fish.
-(Implementation detail: in practice, this pointer resolution is done
-early in `auto/config`, so that we can 1. specify the snapshots we
-want via `lb config --mirror-{bootstrap,chroot}`, which `lb build`
-uses to generate APT sources for the target base distribution, and 2.
-adjust other APT sources (`config/chroot_sources`) somehow.)
-
-Building an ISO from the branch used to prepare the next major release
-(`testing`), or a topic branch based on it (`config/base_branch`):
-
- * **outside of the freeze period**: we use the latest set of APT
-   repository snapshots, just like when building from `devel`;
- * **freeze period**: at freeze time, the RM encodes in the Git
-   `testing` branch the set of APT repository snapshots (via their
-   serial numbers) that shall be used during the freeze; the only
-   exception is security.debian.org, for which we always use our
-   latest snapshot;
- * **at release time**: when building from a tagged branch, similarly to
-   what we do for our custom [[contribute/APT_repository]], instead of
-   using time-based APT repository snapshots, we use snapshots
-   labeled with the Git tag; note that this is not needed, strictly speaking,
-   as the APT sources used at Tails runtime will anyway be the
-   official (and not frozen) Debian ones; this is mostly needed for
-   legal purposes (this allows to distribute for a long
-   time the source packages needed to build a given Tails ISO image),
-   and it will be useful when we want to be able to reproduce a given
-   Tails ISO build;
- * **after releasing**, the RM encodes in the `testing` Git branch the
-   fact that it is not frozen anymore, that is: the RM removes the
-   indication that a specific set of APT repository snapshots must be
-   used; and then, we're back to the "outside of the freeze
-   period" case.
-
-Building an ISO from the branch used to prepare the next point-release
-(`stable`), or a topic branch based on it (`config/base_branch`
-contains `stable`), we
-use snapshots labeled with the Git tag of the latest Tails release,
-except:
-
- * we generally use our latest snapshot of security.debian.org;
- * if a set of APT repository snapshots is encoded directly in that
-   branch: use them, even for security.debian.org.
+     ([[!tails_ticket 11446]], [[!tails_ticket 11448]])
 
 # Special cases and implementation
-
-## Custom APT repository
-
-Our custom APT repository (<http://deb.tails.boum.org/>) is not part of
-the first iteration of this system: it's not needed, since we already
-have a process to manage it, including creating snapshots labeled with
-the Git tag.
-
-However, longer-term, ideally we would integrate it into the new
-system. It will require quite some infrastructure and code, if we want
-to avoid making the release process more painful (e.g. it would be nice
-if this didn't require waiting up to 6 hours until the next time-based
-snapshot of our custom APT repository is created, between the time we
-upload a package to it, and when we can build an ISO with it; we could
-solve this by automatically creating a new snapshot whenever an APT
-suite corresponding to a release branch is updated).
-
-<a id="runtime-sources"></a>
-
-## APT sources used inside Tails
-
-A running Tails' APT must be pointed at the official, live Debian
-archive, and not to a Tails-specific and already obsolete snapshot.
-
-To achieve that we can tweak `sources.list` as we already do in
-[[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]].
-
-But generating the 2 versions (frozen, not frozen) of the sources at
-ISO build time would probably be more elegant: at boot time, one only
-needs to rename files instead of fiddling with `sed`.
-
-## Upgrading to a new snapshot
-
-In other words: bumping, in Git, the pointers to the set of snapshots
-that shall be used.
-
-Let's use, as an example of a situation in which we might want to do
-that, upgrading to a new Debian point-release.
-
-With this design:
-
- * `devel` gets them automatically because it closely tracks the
-   Debian archive;
- * for release branches (`stable`, `testing`): on a case-by-case
-   basis, depending on the respective Debian/Tails release schedule
-   timing, we can choose whether to switch to using a new snapshot of
-   the Debian archive for the next release. Note that this can be done
-   via a topic-branch since this information is encoded in Git. If we
-   choose not to manually pick the point release, which is the default
-   if we don't act at all, then:
-   - `testing` will start using the new Debian point-release as soon
-     as it is unfrozen, that is as soon as it has been used to release
-     a new major version of Tails;
-   - `stable` will start using the new Debian point-release once
-     a `testing` branch that uses that point-release is merged into
-     `stable`.
 
 <a id="freeze-exceptions"></a>
 
@@ -354,101 +142,19 @@ superseded as soon as it can be. However:
    overhead of having to rebuild packages for trivialities like
    this"), and intrigeri agreed.
 
-## Number of distributions
+# Bonus for later
 
-... in reprepro's `conf/distributions`, for the reprepro instance(s)
-dedicated to taking snapshots of the regular Debian archive, assuming
-other mirrored archives such as security.d.o, deb.tpo, etc. each go to
-their own reprepro instance.
+## Miscellaneous
 
-XXX: the more we split between multiple instances of reprepro, the
-smaller and more manageable its database becomes. But it implies some
-disk space waste due to duplicated files, and some bandwidth waste to
-re-downloading these duplicated packages. If the waste is limited the
-packages from security.d.o that get included in the next
-{oldstable,stable} point release we can perhaps live with it.
+If the chosen mirroring/snapshoting tool supported re-using the Debian
+signature (e.g. <https://github.com/smira/aptly/issues/37>) then we
+would only have to sign ourselves the snapshots for which need to
+modify `Release` — that is: when we bump (too long freeze) or remove
+(at release time) `Valid-Until` — which happens rarely and can be done
+manually ⇒ we can avoid storing the signing key on an online server.
 
-### Time-based snapshots
-
-14 distributions:
- (    oldstable * (base, updates, p-u, backports, sloppy-backports)
-    + stable    * (base, updates, p-u, backports)
-    + testing * (base, updates, p-u)
-    + sid
-    + experimental
- )
-
-4 snapshots a day (=~ 1/dinstall run) * 14 distributions
-* N days
-= 56 * N
-
-Let's set N to match the `Valid-Until` duration we want: it makes
-little sense to keep expired snapshots around, and reciprocally it
-makes little sense to give a snapshot a validity time that goes beyond
-when we'll delete it via garbage collection.
-
-⇒ 56 * N = 56 * 10 = 560
-
-Number of distributions for other archives:
-
-- debian-security: 3 (oldstable, stable, testing)
-- tails: 3 (stable, testing, devel)
-- torproject: 5 (oldstable, stable, testing, unstable, obfs4proxy)
-
-#### Garbage collection
-
-Simply cloning an existing Wheezy/i386/main "distribution" adds 100MB
-to `reprepro`'s database (*not* counting the actual packages!), so the
-whole thing will likely be quite big ⇒ expiring the snapshots older
-than N days will probably be compulsory.
-
-To ensure that garbage collection doesn't delete a snapshot we still
-need, e.g. the one currently referenced in the frozen `testing`
-branch, we'll rely on `Valid-Until`: the way to express "I want to
-keep a given snapshot around" would be to postpone its expiration
-date; i.e. we don't differentiate "keep a given snapshot around" from
-"keep a given snapshot usable".
-
-See the section about `Valid-Until` below, for details about how we
-can bump it.
-
-### Tagged snapshots
-
-We want to keep "forever" the tagged snapshots used by releases.
-
-In practice, "forever" == min(3 years for GPL, how long we want to be
-able to reproduce the build of a released ISO) = 3 years.
-
-12 releases/year * 13 distributions =~ 150 distributions/year
-
-⇒ 450 distributions three years after deployment, which is the upper
-bound if we delete such snapshots when they're 3 years old.
-
-#### Garbage collection
-
-Depending on the growth rate of this `reprepro` instance's database,
-we may or may not need to implement expiration of these snapshots any
-time soon. Time will tell.
-
-## reprepro
-
-XXX:
-
- * use `Log:` in `conf/distributions`? deployed (20151030), let's look
-   at it and reconsider in a few weeks
- * use `Tracking:` in `conf/distributions`?
- * use a leading dash for `Update: - ...` in `conf/distributions`?
-   <https://mirrorer.alioth.debian.org/reprepro.1.html#Some%20note%20on%20updates>
- * compare fields in generated `Release` files, with what can be found
-   in the official Debian archive
- * "Reprepro uses berkeley db, which was a big mistake. The most
-   annoying problem not yet worked around is database corruption when
-   the disk runs out of space. (Luckily if it happens while
-   downloading packages while updating, only the files database is
-   affected, which is easy (though time consuming) to rebuild, see
-   recovery file in the documentation). *Ideally put the database on
-   another partition to avoid that.*" (emphasis mine, from
-   [reprepro(1)](https://mirrorer.alioth.debian.org/reprepro.1.html#BUGS))
+We might want to use reprepro's `Tracking:` feature in
+`conf/distributions` once it's stabilized.
 
 There's a race condition when updating a local mirror with `reprepro
 update`: if it's not finished before the next dinstall + mirror sync'
@@ -457,173 +163,35 @@ the remote mirror, and `reprepro update` will fail (exit code = 255).
 So, when the first run exits with exit code 255, let's ignore the
 error and run `reprepro update` a second time.
 
-### Snapshots
+## Handle full disk
 
-In our [initial
-experiments](https://labs.riseup.net/code/issues/6295#note-14) we
-added full blown distributions to `conf/distributions` for each
-snapshot, and used `reprepro pull $codename` to add packages to them.
+"Reprepro uses berkeley db, which was a big mistake. The most
+annoying problem not yet worked around is database corruption when
+the disk runs out of space. (Luckily if it happens while
+downloading packages while updating, only the files database is
+affected, which is easy (though time consuming) to rebuild, see
+recovery file in the documentation). *Ideally put the database on
+another partition to avoid that.*" (emphasis mine, from
+[reprepro(1)](https://mirrorer.alioth.debian.org/reprepro.1.html#BUGS))
 
-Let's try with `reprepro gensnapshot`, which avoids the need to manage
-the list of snapshots in `conf/distributions`. The following tests are
-run with `conf/{distributions,updates}` set up to mirror the 14
-distributions we want from the Debian archive.
+Note: we have an Icinga2 check monitoring the filesystem that hosts
+our APT snapshots, so in theory we should not experience this situation.
 
-Creating one snapshot:
+## Custom APT repository
 
-	distributions() {
-	    sed -rn -e 's/^Codename:\s+(.*)$/\1/p' conf/distributions
-	}
-	serial="$(date -u '+%Y%m%d')01"
-	for codename in $(distributions) ; do
-	    reprepro gensnapshot "$codename" "$serial"
-	done
+Our custom APT repository (<http://deb.tails.boum.org/>) is not part of
+our APT snapshots system: it's not needed, since we already
+have a process to manage it, including creating snapshots labeled with
+the Git tag.
 
-⇒ `dists/*/snapshots` takes 400MB (a snapshot done with `reprepro
-pull` would of course add essentially the same files somewhere else in
-`dists`, and occupy the same disk space in there), but the DB doesn't
-grow noticeably.
-
-And then, jumping to 40 (10 days * 4 snapshots/day) snapshots of each
-distribution, which is what we should have in practice:
-
-	for incr in $(seq --equal-width 2 40); do
-	    serial="$(date -u '+%Y%m%d')$incr"
-	    for codename in $(distributions) ; do
-	        reprepro gensnapshot "$codename" "$serial"
-	    done
-	done
-
-⇒ `dists/*/snapshots` takes 16 GB, and the DB has grown from 900 MB to
-1.5 GB; as expected, `packages.db` didn't grow at all: only
-`references.db` did.
-
-Conclusion: compared to the "snapshots as full-blown distributions +
-`reprepro pull`" option, we're saving _a lot_ on database size, which
-is very appealing. The counterpart being that:
-
- * garbage collecting expired snapshots is a bit more involved, but
-   doable: see reprepro(1) around `gensnapshot`;
- * bumping `Valid-Until` for a given time-based snapshot has to be
-   done directly in `dist`, without any help from reprepro.
-
-None of these problems seem to warrant going back to the other
-option... and having to deal with 80GB+ BDB databases.
-
-We need to document how to clean up a repository after we stop
-tracking a distribution. E.g. to remove all Wheezy snapshots:
-
-	reprepro dumpreferences \
-       | grep -E '^s=wheezy' \
-       | awk '{print $1}' \
-       | sort -u \
-       | xargs -n 1 reprepro _removereferences \
-    && reprepro deleteunreferenced
-
-## Valid-Until and signing
-
-Assumption: it is acceptable to have our APT repository snapshots
-signed by a key that lives on an online server.
-
-We would like to have `Valid-Until` fields in the generated `Release`
-files, but we'd rather not have to update these files, and the
-corresponding signatures, regularly. In practice:
-
- * A **tagged APT repository snapshot** that was used to build a given
-   Tails release is immutable by design, so it does not need the
-   protections provided by `Valid-Until`. Besides, not using
-   `Valid-Until` for those makes it much easier to reproduce a given
-   ISO build in the future.
-
- * The main use case for keeping a given **time-based APT repository
-   snapshot** around and valid is when it's being used by a release
-   branch:
-   - `testing`: while it's frozen, that is during 5-10 days most of
-     the time;
-   - `stable`: that's a corner case, since `stable` generally uses the
-     set of tagged snapshots of the latest Tails release; if and when
-     we decide to manually point `stable` to a different set of
-     snapshots, then we can as well deal with `Valid-Until` manually.
-
-So, let's set `Valid-Until` 10 days after the generation time for
-time-based snapshots, and not set it at all for tagged snapshots.
-
-Still, it may be that we need to bump `Valid-Until` for a given
-time-based snapshot, e.g. if a freeze lasts substantially longer than
-usual. We thus need a tool that allows us (XXX: the RM?
-sysadmin team?) to do so.
-
-In passing, note that we ship an empty `/var/cache/apt/lists/` in the
-ISO ⇒ modifying `Release` and `Release.gpg` files on our APT
-repository won't prevent the ISO build from being deterministic.
-
-## APT vs. reprepro: dist names
-
-We need to encode in the APT sources' base URL the exact snapshot we
-want to use, in order to be able to pass it to `lb config --mirror-*`.
-But this doesn't match reprepro's directory structure as-is.
-
-Thankfully this problem can be workaround'ed with some symlinks or
-HTTP rewrite rules. Here's how.
-
-Let's assume:
-
-    lb config --distribution jessie
-    lb config --mirror-chroot \
-       http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/
-    lb config --mirror-chroot-security \
-       http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/
-    etc.
-
-Which generates this APT `sources.list`:
-
-    deb http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/ jessie main
-    deb http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
-
-As a result APT sends HTTP requests with URL such as:
-
- * <http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/dists/jessie/Release>
- * <http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/pool/XXX>
- * <http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/dists/jessie/updates/Release>
- * <http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/pool/XXX>
-
-The corresponding files in reprepro's filesystem (if we have one
-reprepro instance per mirrored archive) are:
-
- * in Debian archive's reprepro:
-   - `/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016032401/Release`,
-     that contains `Suite: jessie/snapshots/2016032401` and `Codename: jessie`
-   - `/srv/apt-snapshots/time-based/repositories/debian/pool/XXX`
-
- * in Debian security archive's reprepro:
-   - `/srv/apt-snapshots/time-based/repositories/debian-security/dists/jessie/updates/snapshots/2016031102/Release`,
-     that contains `Suite: jessie/updates/snapshots/2016031102` and
-     `Codename: jessie/updates`
-   - `/srv/apt-snapshots/time-based/repositories/debian-security/pool/XXX`
-
-To have these HTTP requests translate to access these files, one needs
-either symlinks or HTTP rewrite rules.
-
-Note: this works because APT only warns when the codename in the
-`Release` file doesn't match the one requested in `sources.list`.
-There's a code comment around this check, dating back from 2004, that
-says something like "This might become fatal in the future". We bet that if it
-becomes fatal some day, it will be possible to turn it back into
-a warning via configuration. This affects only development builds
-since we're not going to configure APT _in the Tails ISO_ to point to
-our own snapshots of the Debian archive.
-
-# Bonus for later
-
-This mechanism can perhaps be reused for snapshotting the state of our
-own repo at release time (e.g. to create/publish the `1.6` APT suite).
-
-If the chosen mirroring/snapshoting tool supported re-using the Debian
-signature (e.g. <https://github.com/smira/aptly/issues/37>) then we
-would only have to sign ourselves the snapshots for which need to
-modify `Release` — that is: when we bump (too long freeze) or remove
-(at release time) `Valid-Until` — which happens rarely and can be done
-manually ⇒ we can avoid storing the signing key on an online server.
+However, longer-term, ideally we would integrate it into the new
+system. It will require quite some infrastructure and code, if we want
+to avoid making the release process more painful (e.g. it would be nice
+if this didn't require waiting up to 6 hours until the next time-based
+snapshot of our custom APT repository is created, between the time we
+upload a package to it, and when we can build an ISO with it; we could
+solve this by automatically creating a new snapshot whenever an APT
+suite corresponding to a release branch is updated).
 
 # Discarded
 

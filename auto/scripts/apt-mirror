@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -e
+set -u
+
+. "$(dirname $0)/utils.sh"
+
+ARCHIVE="$1"
+
+output_tagged_snapshot() {
+   local archive="$1"
+   local tag="$2"
+   echo "http://tagged.snapshots.deb.tails.boum.org/$tag/$archive"
+}
+
+output_time_based_snapshot() {
+   local archive="$1"
+   local serial="$2"
+   echo "http://time-based.snapshots.deb.tails.boum.org/$archive/$serial"
+}
+
+### Sanity checks
+
+[ -n "$ARCHIVE" ] || exit 1
+
+### Main
+
+SERIAL=$(cat "config/APT_snapshots.d/$ARCHIVE/serial")
+RESOLVED_SERIAL=$(cat "tmp/APT_snapshots.d/$ARCHIVE/serial")
+
+if [ "$(base_branch)" = stable ]; then
+    if version_was_released "$(version_in_changelog)"; then
+        [ "$(current_branch)" = stable ] \
+            || fatal "Not building from stable, but last version in changelog" \
+                     "was released"
+        output_tagged_snapshot "$ARCHIVE" "$(version_in_changelog)"
+    else
+       version_was_released "$(previous_version_in_changelog)" \
+           || fatal "None of the two last version in changelog were released"
+       case "$ARCHIVE" in
+          debian-security)
+             [ "$SERIAL" = latest ] \
+                 || fatal "APT snapshots are frozen for debian-security, which" \
+                          "should not happen on a branch based on stable"
+             output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
+             ;;
+          *)
+             if [ "$SERIAL" = latest ]; then
+                # In this case, "latest" means "do what I mean", that is stick
+                # to previous release's tagged snapshot
+                output_tagged_snapshot "$ARCHIVE" "$(previous_version_in_changelog)"
+             else
+                output_time_based_snapshot "$ARCHIVE" "$SERIAL"
+             fi
+       esac
+    fi
+elif [ "$(base_branch)" = testing ]; then
+    if version_was_released "$(version_in_changelog)"; then
+        [ "$(current_branch)" = testing ] \
+            || fatal "Not building from testing, but last version in changelog" \
+                     "was released"
+        [ "$ARCHIVE" = debian-security ] || [ "$SERIAL" != latest ] \
+            || fatal "APT snapshots for $ARCHIVE are not frozen, which should" \
+                     "not happen on a tagged testing branch"
+        output_tagged_snapshot "$ARCHIVE" "$(version_in_changelog)"
+    else
+        output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
+    fi
+else
+    if [ "$(base_branch)" = devel ] && [ "$SERIAL" != latest ]; then
+        fatal "APT snapshots are frozen, which should not happen on a branch" \
+              "based on the devel one"
+    fi
+    output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
+fi
