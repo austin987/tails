@@ -92,7 +92,7 @@ Feature: I2P
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
 
-  #10497
+  #10497, #11462
   @fragile
   Scenario: I2P displays a notice when it fails to start
     Given I have started Tails from DVD with I2P enabled and logged in
