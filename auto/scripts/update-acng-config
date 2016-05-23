@@ -33,6 +33,9 @@ for origin in $(list_origins) ; do
    current_year=$(date '+%Y')
    for year in $(seq $(($current_year - 1)) $(($current_year + 1))) ; do
       for month in $(seq 1 12); do
+         # We need the config file to contain _at least_ everything
+         # that can possibly exists, and we don't care if it has some extra
+         # lines, so to simplify we do as if each month had 31 days.
          for day in $(seq 1 31) ; do
             for n in $(seq 1 4) ; do
                printf 'http://time-based.snapshots.deb.tails.boum.org/%s/%04u%02u%02u%02u/pool/\n' \
@@ -48,6 +51,14 @@ done
 # Generate .list files for tagged snapshots
 for origin in $(list_origins) ; do
    list="/etc/apt-cacher-ng/tails-tagged-snapshots-$origin-pool.list"
+   # We need the config file to contain _at least_ everything
+   # that can possibly exists, and we don't care if it has some extra
+   # lines, so here we try to build the smallest possible superset of
+   # all realistic Tails version numbers; it could certainly be a tiny
+   # bit smaller, at the cost of more assumptions (=> more risk of not
+   # including some version number we'll end up using) or of more
+   # code complexity (=> higher maintenance cost).
+   #
    # XXX: Stretch: bump the end of the range of major versions
    for major in $(seq 2 3) ; do
       for minor in $(seq 0 32); do
