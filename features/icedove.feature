@@ -1,4 +1,5 @@
-@product @check_tor_leaks
+#11465
+@product @check_tor_leaks @fragile
 Feature: Icedove email client
   As a Tails user
   I may want to use an email client
