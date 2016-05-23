@@ -33,6 +33,12 @@ if (! -d $debootstrap) {
     usage;
 }
 
+if (-f "$debootstrap/unknown") {
+    print "E: actions unsupported by the apt-get wrapper were logged ",
+          "in $debootstrap/unknown. Aborting.";
+    exit 1;
+}
+
 my $extra_packages_file = 'config/build-manifest-extra-packages.yml';
 my $extra_packages;
 
@@ -82,11 +88,12 @@ foreach my $type (keys %package_type) {
     }
 }
 
-### Extract list of (origin, reference) from the build configuration:
+### Extract list of (origin, reference) from the build configuration
+### (the resolved serials, stored under tmp by "apt-snapshots-serials prepare-build"):
 my %origin_reference;
-while (my $origin_dir = glob('config/APT_snapshots.d/*')) {
+while (my $origin_dir = glob('tmp/APT_snapshots.d/*')) {
     my $origin_name = $origin_dir;
-    $origin_name =~ s{\A config/APT_snapshots[.]d/}{}xms;
+    $origin_name =~ s{\A tmp/APT_snapshots[.]d/}{}xms;
     $origin_reference{$origin_name} = read_file("$origin_dir/serial");
     chomp $origin_reference{$origin_name};
     $data->{origin_references}->{ $origin_name }->{reference} = $origin_reference{ $origin_name } || 'unknown';

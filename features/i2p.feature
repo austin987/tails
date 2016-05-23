@@ -27,7 +27,7 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
-  #11401
+  #11401, #11457, #11458
   @fragile
   Scenario: Closing the I2P Browser shows a stop notification and properly tears down the chroot.
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
@@ -37,7 +37,7 @@ Feature: I2P
     Then I see the I2P Browser stop notification
     And the I2P Browser chroot is torn down
 
-  #11114
+  #11114, #11465
   @fragile
   Scenario: The I2P internal websites can be viewed in I2P Browser
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
@@ -86,6 +86,8 @@ Feature: I2P
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
 
+  #11462
+  @fragile
   Scenario: I2P displays a notice when it fails to start
     Given I have started Tails from DVD with I2P enabled and logged in
     And I2P is not running
