@@ -80,9 +80,8 @@ If we are at freeze time for a major release:
 
         git checkout devel && git merge --no-ff origin/master
 
-2. [[Merge each APT overlay
-   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-   the `devel` branch's `config/APT_overlays.d/` into the `devel`
+2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
+   listed in the `devel` branch's `config/APT_overlays.d/` into the `devel`
    APT suite.
 
 3. Merge the `devel` Git branch into the `testing` one:
@@ -92,8 +91,18 @@ If we are at freeze time for a major release:
    ... and check that the resulting `config/APT_overlays.d/` in the
    `testing` branch is empty.
 
-4. [[Hard reset|APT_repository#workflow-reset]] the `testing` APT
-   suite to the current state of the `devel` one.
+4. [[Hard reset|APT_repository/custom#workflow-reset]] the `testing`
+   custom APT suite to the current state of the `devel` one.
+
+5. [[Freeze|APT_repository/time-based snapshots#freeze]] the
+   time-based APT repository snapshots that shall be used
+   during the freeze.
+
+6. Make it so the time-based APT repository snapshots are kept around
+   long enough, by bumping their `Valid-Until` to max(now + 10 days,
+   expected release date + 5 days):
+   [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
+
 
 Point-release
 -------------
@@ -104,19 +113,18 @@ If we are at freeze time for a point-release:
 
         git checkout stable && git merge --no-ff origin/master
 
-2. [[Merge each APT overlay
-   suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-   the `stable` branch's `config/APT_overlays.d/` into the `stable`
+2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
+   listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
    APT suite.
 
 Common steps for point and major releases
 -----------------------------------------
 
-After either of the above sections' steps, reset the release branch's
-`config/base_branch`:
+Reset the release branch's `config/base_branch`:
 
-    echo "${RELEASE_BRANCH}" > config/base_branch && \
-    git commit config/base_branch -m "Restore ${RELEASE_BRANCH}'s base branch."
+        echo "${RELEASE_BRANCH}" > config/base_branch && \
+           git commit config/base_branch \
+               -m "Restore ${RELEASE_BRANCH}'s base branch."
 
 Update included files
 =====================
@@ -171,7 +179,7 @@ Then check the PO files:
 Correct any displayed error, then commit the changes if any.
 
 Then see the relevant release processes, and upload the packages to
-the release branch's APT suite:
+the release branch's custom APT suite:
 
 * [[tails-installer]]
 * [[tails-greeter]]
@@ -215,10 +223,9 @@ follow these instructions:
 Major release
 -------------
 
-[[Merge each APT overlay
-suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-the `testing` branch's `config/APT_overlays.d/` into the `testing`
-APT suite.
+[[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
+listed in the `testing` branch's `config/APT_overlays.d/` into the `testing`
+custom APT suite.
 
 Point-release
 -------------
@@ -230,17 +237,31 @@ steps have already been done above, and this section is a noop in the
 general case.
 </div>
 
-[[Merge each APT overlay
-suite|contribute/APT_repository#workflow-merge-overlays]] listed in
-the `stable` branch's `config/APT_overlays.d/` into the `stable` APT suite.
+[[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
+listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
+custom APT suite.
 
 Update other base branches
 ==========================
 
 1. Merge the release branch into `devel` following the instructions for
-   [[merging base branches|contribute/APT_repository#workflow-merge-main-branch]].
+   [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
-2. Push the modified branches to Git:
+2. Merge `devel` into `feature/stretch` following the instructions for
+   [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
+   Given that these two branches' APT suites have diverged a lot, and
+   that `tails-merge-suite` currently happily overwrites newer
+   packages in the target with older packages from the source, it's
+   probably easier to just merge each individual APT overlay that was
+   just merged into the release branch into `feature/stretch`'s APT
+   suite. Also, most of our just upgraded bundled packages
+   (e.g. `tails-greeter`) may need to be rebuilt for Stretch.
+
+3. Ensure that the release, `devel` and `feature/stretch` branches
+   have the expected content in `config/APT_overlays.d/`: e.g. it must
+   not list any overlay APT suite that has been merged already.
+
+4. Push the modified branches to Git:
 
         git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" devel:devel
 
@@ -367,6 +388,19 @@ signatures, like the defaults we set in Tails:
 
     cp config/chroot_local-includes/etc/skel/.gnupg/gpg.conf "$GNUPGHOME"
 
+Build the almost-final image
+============================
+
+1. [[Build an ISO image|contribute/build]] from the release branch.
+2. Carefully read the build logs to make sure nothing bad happened.
+3. Keep at least the resulting ISO image and the manifest of needed
+   packages until the end of this release process.
+4. Record where the manifest of needed packages is stored:
+
+        export PACKAGES_MANIFEST=XXX ; \
+        [ -f "$PACKAGES_MANIFEST" ] || echo "ERROR: PACKAGES_MANIFEST is incorrect"
+
+
 Tag the release in Git
 ======================
 
@@ -380,11 +414,26 @@ premature, as testing might reveal critical issues, but this is
 a signed tag, so it can be overridden later. Yes, there is room for
 improvement here.)
 
-Prepare the versioned APT suite
-===============================
+Prepare the versioned APT suites
+================================
 
-Follow the [[post-tag|contribute/APT_repository#workflow-post-tag]] APT
-repository documentation.
+* [[Prepare the versioned APT suite in our custom APT repository|APT_repository/custom#workflow-post-tag]].
+
+* Prepare tagged snapshots of upstream APT repositories:
+
+          ./bin/tag-apt-snapshots "$PACKAGES_MANIFEST" "$TAG"
+
+  Note:
+
+  - This command can take a while (about a dozen minutes).
+  - It's expected that the packages that were pulled from our
+    [[custom APT repository|APT_repository/custom]] are
+    listed under "some packages were not found anywhere" (because we
+    are current not using time-based snapshots for our custom APT
+    repository). However, _no other package should be on that list_.
+    Now, we have a "safety" net, in case you don't notice such a problem: if
+    other packages are missing, the next build (that will use the
+    newly created partial, tagged APT repository) will fail.
 
 Build images
 ============
@@ -403,25 +452,10 @@ A new tag may indicate that a new TBB release is imminent.
 
 Better catch this before people spend time doing manual tests.
 
-Build the almost-final image
-----------------------------
-
-* Check out the release tag:
-
-      git checkout "${TAG}"
-
-* [[Build images|contribute/build]] and carefully read the build logs to
-  make sure nothing bad happened.
-
-* Check out the release branch again:
-
-      git checkout "${RELEASE_BRANCH}"
-
 SquashFS file order
 -------------------
 
-1. Build an ISO image.
-1. Burn a DVD.
+1. Burn the almost final ISO image to a DVD.
 1. Boot this DVD **on bare metal**.
 1. Add `profile` to the kernel command-line.
 1. Login.
@@ -454,16 +488,19 @@ suite should be ready, so it is time to:
 
 * tag the release *again*, with all included files in:
   
-          git tag -f -u "$TAILS_SIGNATURE_KEY" \
-  	    -m "tagging version ${VERSION}" "${TAG}" && \
-          git push origin "${RELEASE_BRANCH}" && \
-          git push --tags --force
+      git tag -f -u "$TAILS_SIGNATURE_KEY" \
+              -m "tagging version ${VERSION}" "${TAG}" && \
+      git push origin "${RELEASE_BRANCH}" && \
+      git push --tags --force
 
 * check out the release tag:
 
       git checkout "${TAG}"
 
 * build the final image!
+
+* compare the new build manifest with the one from the previous,
+  almost final build; they should be identical
 
 * check out the release branch again:
 
@@ -757,10 +794,15 @@ of its name:
 	mv "$ARTIFACTS"/tails-i386-"$VERSION".iso.packages \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages"
 
-Copy the `.iso.sig`, `.packages` and `.torrent` files
-into the website repository:
+Rename the manifest of needed packages as well:
+
+	mv "$PACKAGES_MANIFEST" "$ARTIFACTS/tails-i386-$VERSION.build-manifest"
+
+Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
+`.torrent.sig` files into the website repository:
 
 	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
+	   "$ARTIFACTS/tails-i386-$VERSION.build-manifest" \
 	   "$ARTIFACTS/tails-i386-$VERSION.packages" \
 	   "$ISOS/tails-i386-$VERSION.torrent" \
 	   "$RELEASE_CHECKOUT/wiki/src/torrents/files/"
@@ -1051,11 +1093,14 @@ this, and skip what does not make sense for a RC.
    never released. Explanation: the post-release APT repository steps
    from the previous stable release will usually have had us prepare
    for an emergency release that was never made.
+1. [[Thaw|APT_repository/time-based snapshots#thaw]] the time-based
+   APT repository snapshots that were used during the freeze, if any.
+1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
 1. Follow the
-   [[post-release|contribute/APT_repository#workflow-post-release]] APT
-   repository documentation. Make sure there are upgrade-description
+   [[post-release|APT_repository/custom#workflow-post-release]]
+   custom APT repository documentation. Make sure there are upgrade-description
    files for any new versions that were added.
 1. Push the resulting branches.
 1. Make sure Jenkins manages to build all updated major branches fine:
