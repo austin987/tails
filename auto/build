@@ -77,7 +77,15 @@ chmod -R go+rX config/chroot_sources
 # build the image
 
 # we need /debootstrap/deburis to build a manifest of used packages:
-export DEBOOTSTRAP_OPTIONS='--keep-debootstrap-dir'
+DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keep-debootstrap-dir"
+
+# use our own APT repository's key:
+DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
+gpg --homedir "$DEBOOTSTRAP_GNUPG_HOMEDIR" \
+    --import config/chroot_sources/tails.chroot.gpg
+DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
+
+export DEBOOTSTRAP_OPTIONS
 
 : ${MKSQUASHFS_OPTIONS:='-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K'}
 MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/amnesia/build/mksquashfs-excludes"
@@ -165,7 +173,8 @@ case "$LB_BINARY_IMAGES" in
       ;;
 esac
 BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
-BUILD_MANIFEST="${BUILD_DEST_FILENAME}.list"
+BUILD_MANIFEST="${BUILD_DEST_FILENAME}.build-manifest"
+BUILD_APT_SOURCES="${BUILD_DEST_FILENAME}.apt-sources"
 BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
 BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
 BUILD_START_FILENAME="${BUILD_DEST_FILENAME}.start.timestamp"
@@ -176,6 +185,15 @@ exec >  >(tee -a "$BUILD_LOG")
 trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 exec 2> >(tee -a "$BUILD_LOG" >&2)
 trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+
+(
+   echo "Mirrors:"
+   apt-mirror debian
+   apt-mirror debian-security
+   apt-mirror torproject
+   echo "Additional sources:"
+   cat config/chroot_sources/*.chroot
+) > "$BUILD_APT_SOURCES"
 
 echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
 set -o pipefail
@@ -199,7 +217,7 @@ if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
    echo "Renaming generated files..."
    mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
    mv -i binary.packages "${BUILD_PACKAGES}"
-   generate-build-manifest chroot/debootstrap "${BUILD_DEST_FILENAME}.build-manifest"
+   generate-build-manifest chroot/debootstrap "${BUILD_MANIFEST}"
 else
    fatal "lb build failed ($?)."
 fi
