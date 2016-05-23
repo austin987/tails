@@ -50,6 +50,8 @@ Feature: Various checks
     And all notifications have disappeared
     And the time has synced
 
+  #11463
+  @fragile
   Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
     Given I have started Tails from DVD without network and logged in
     And the network is plugged
