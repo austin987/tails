@@ -21,6 +21,11 @@ build from, we are building an ISO that is meant to be released (i.e.
 whether there is a tag in Git corresponding the last entry in
 debian/changelog).
 
+Note: when we say "building an ISO from the `B` branch" below, we only
+refer to the base branch, i.e. `B` is encoded in `config/base_branch`.
+Hence such statements also refers to topic branches with `B` as base
+branch.
+
 Building an ISO from the `devel` branch always uses the freshest set
 of APT repository snapshots available. Resolving what's the set of
 freshest APT repository snapshots is done at the beginning of the
@@ -30,8 +35,8 @@ uses the exact same state of these
 repositories. This is needed for reproducible builds, and has a nice
 side effect: so long, `Hashsum mismatch`, and thanks for the fish.
 
-When building an ISO from the branch used to prepare the next major release
-(`testing`), or a topic branch based on it (`config/base_branch`):
+When building an ISO from the branch used to prepare the next major
+release (`testing`):
 
  * **outside of the freeze period**: we use the latest set of APT
    repository snapshots, just like when building from `devel`;
@@ -57,11 +62,9 @@ When building an ISO from the branch used to prepare the next major release
    used; and then, we're back to the "outside of the freeze
    period" case.
 
-When building an ISO from the branch used to prepare the next point-release
-(`stable`), or a topic branch based on it (`config/base_branch`
-contains `stable`), we
-use snapshots labeled with the Git tag of the latest Tails release,
-except:
+When building an ISO from the branch used to prepare the next
+point-release (`stable`) we use snapshots labeled with the Git tag of
+the latest Tails release, except:
 
  * we generally use our latest snapshot of security.debian.org;
  * at release time: when building from a tagged branch, similarly to
@@ -84,17 +87,17 @@ We want to have reproducible builds some day. Therefore, the APT
 `sources.list` shipped in the ISO must be stable across rebuilds from
 the same release Git tag.
 
-Say `kedit` is a package shipped in Debian, but not in Tails. Then,
-when run inside Tails, `apt install kedit` must fetch `kedit` from
-current Debian, as opposed to installing it from a Tails-specific, and
-generally obsolete, snapshot of the Debian APT repository.
-
 <a id="runtime-sources"></a>
 
 ## APT sources used inside Tails
 
 A running Tails' APT must be pointed at the official, live Debian
 archive, and not to a Tails-specific and already obsolete snapshot.
+
+Say `kedit` is a package shipped in Debian, but not in Tails. Then,
+when run inside Tails, `apt install kedit` must fetch `kedit` from
+current Debian, as opposed to installing it from a Tails-specific, and
+generally obsolete, snapshot of the Debian APT repository.
 
 To achieve that we tweak `sources.list` in
 [[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]].
