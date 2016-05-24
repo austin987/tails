@@ -41,7 +41,7 @@ Feature: I2P
     Then I see the I2P Browser stop notification
     And the I2P Browser chroot is torn down
 
-  #10497, #11114
+  #10497, #11114, #11465
   @fragile
   Scenario: The I2P internal websites can be viewed in I2P Browser
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
@@ -92,7 +92,7 @@ Feature: I2P
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
 
-  #10497
+  #10497, #11462
   @fragile
   Scenario: I2P displays a notice when it fails to start
     Given I have started Tails from DVD with I2P enabled and logged in
