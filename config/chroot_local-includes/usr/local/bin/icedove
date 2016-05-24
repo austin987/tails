@@ -10,13 +10,12 @@ set -u
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-CLAWSMAIL_DIR="${HOME}/.claws-mail"
-
+CLAWSMAIL_CONFIG_DIR="${HOME}/.claws-mail"
 ICEDOVE_CONFIG_DIR="${HOME}/.icedove"
 PROFILE="${ICEDOVE_CONFIG_DIR}/profile.default"
 
 claws_mail_config_is_persistent() {
-    [ "$(findmnt --noheadings --output SOURCE --target "${CLAWSMAIL_DIR}")" = "/dev/mapper/TailsData_unlocked[/claws-mail]" ]
+    [ "$(findmnt --noheadings --output SOURCE --target "${CLAWSMAIL_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/claws-mail]" ]
 }
 
 icedove_config_is_persistent() {
@@ -66,7 +65,7 @@ start_icedove() {
     /usr/bin/icedove --class "Icedove" -profile "${PROFILE}" "${@}"
 }
 
-if claws_mail_config_is_persistent && [ -f "${CLAWSMAIL_DIR}/accountrc" ]; then
+if claws_mail_config_is_persistent && [ -f "${CLAWSMAIL_CONFIG_DIR}/accountrc" ]; then
    warn_about_claws_mail_persistence || exit 0
 fi
 
