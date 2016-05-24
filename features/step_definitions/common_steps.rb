@@ -84,7 +84,7 @@ def robust_notification_wait(notification_image, time_to_wait)
     found
   end
 
-  # Click anywhere to close the notification applet
+  # Close the notification applet
   @screen.type(Sikuli::Key.ESC)
 end
 
