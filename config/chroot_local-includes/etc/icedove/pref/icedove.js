@@ -44,3 +44,8 @@ pref("toolkit.telemetry.enabled", false);
 // configure secure (SSL/TLS) protocols. This is the Icedove default
 // but let's me extra sure!
 pref("mailnews.auto_config.ssl_only", true);
+// Disable MX lookup which is susceptible to MitM (without
+// DNSSEC). Note that the lookup is not done using the system
+// resolved, but over https to some DNS web service, but that web
+// service could still be targeted.
+pref("mailnews.auto_config.dns_mx_lookup.enabled", false);
