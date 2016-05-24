@@ -85,9 +85,7 @@ def robust_notification_wait(notification_image, time_to_wait)
   end
 
   # Click anywhere to close the notification applet
-  @screen.hide_cursor
   @screen.type(Sikuli::Key.ESC)
-  @screen.hide_cursor
 end
 
 def post_snapshot_restore_hook
