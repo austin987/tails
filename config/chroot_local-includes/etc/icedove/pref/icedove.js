@@ -41,5 +41,6 @@ pref("toolkit.telemetry.rejected", true);
 pref("toolkit.telemetry.enabled", false);
 
 // Only allow Icedove's automatic configuration wizard to use and
-// configure secure (SSL/TLS) protocols.
-pref("mailnews.auto_config_ssl_only", true);
+// configure secure (SSL/TLS) protocols. This is the Icedove default
+// but let's me extra sure!
+pref("mailnews.auto_config.ssl_only", true);
