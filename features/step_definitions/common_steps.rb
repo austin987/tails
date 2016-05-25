@@ -330,7 +330,7 @@ end
 Given /^Tails Greeter has dealt with the sudo password$/ do
   f1 = "/etc/sudoers.d/tails-greeter"
   f2 = "#{f1}-no-password-lecture"
-  try_for(20) {
+  try_for(30) {
     $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
   }
 end
