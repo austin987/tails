@@ -52,7 +52,7 @@ Feature: Browsing the web using the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the address "https://webm.html5.org/test.webm" in the Tor Browser
+    And I open the address "https://tails.boum.org/lib/test_suite/test.webm" in the Tor Browser
     And I click the blocked video icon
     And I see "TorBrowserNoScriptTemporarilyAllowDialog.png" after at most 30 seconds
     And I accept to temporarily allow playing this video
