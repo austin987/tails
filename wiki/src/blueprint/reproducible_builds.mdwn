@@ -343,6 +343,28 @@ be that a new VM is created, because we do not want to have to deal
 with re-installing the correct versions when switching between
 branches.
 
+## Jenkins
+
+To get all the benefits from the reproducible builds mentionned above,
+it makes sense to adapt our current Jenkins build system so that every
+ISOs produced by Jenkins are reproducible.
+
+A first implementation would be to nest the vagrant-libvirt VM into each
+of our current isobuilder VMs. It means adapting our Puppet manifests,
+to install Libvirt and Vagrant in all our isobuilder VMs, and the
+vagrant box image being deployed in every of this systems so that the
+isobuilder VMs don't need to download it at every builds. We'll have to
+think about how to do this last requirement, given at the moment this
+vagrant box image is hosted on a different remote sytem than our
+isobuilders.
+
+It also raises technical questions:
+
+* How much would that impact our automatic ISO build throughput? Will it
+  then still cope with our developement rythm?
+* Will we have enough hardware resources to use this build system. E.g
+  will it require to assign more RAM or CPUs to our isobuilders?
+
 # Miscellaneous resources
 
 * <https://reproducible-builds.org/>
