@@ -42,6 +42,10 @@ DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
 TORPROJECT_MIRROR="$(apt-mirror torproject)"
 
+[ -n "$DEBIAN_MIRROR" ]          || exit 1
+[ -n "$DEBIAN_SECURITY_MIRROR" ] || exit 1
+[ -n "$TORPROJECT_MIRROR" ]      || exit 1
+
 perl -pi \
      -E \
        "s|^(deb(?:-src)?\s+)https?://ftp[.]us[.]debian[.]org/debian/?(\s+)|\$1$DEBIAN_MIRROR\$2| ; \
