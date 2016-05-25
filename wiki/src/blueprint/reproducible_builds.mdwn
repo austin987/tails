@@ -172,7 +172,12 @@ that we update this (via making a new snapshot and encoded its serial
 in Git) regularly (e.g. when there's a security update). We may even
 be able to automate parts of this (e.g. jenkins publishes a branch
 pointing to an updated snapshot *it* generated, that we then can merge
-into all branches).
+into all branches). If we go this approach we have to deal with the
+case where a branch modifies the build VM (e.g. by installing some
+extra build dependency) -- in this case the work flow probably has to
+be that a new VM is created, because we do not want to have to deal
+with re-installing the correct versions when switching between
+branches.
 
 # Miscellaneous resources
 
