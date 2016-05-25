@@ -25,17 +25,17 @@ that some of these advantages are incompatible with each other.
   people (or software) who build the ISO we release, which in turn
   allows more people to get involved in release management work.
 
-* We would not have to upload the ISO image when we do a release, we
-  could instead build it on our infrastructure (Jenkins), build it
-  locally, compare the outputs, and publish the ISO built by Jenkins
-  if they match. Uploading an ISO can take many hours with
-  some commonly found access to the Internet, so removing the need to
+* We would not have to upload the ISO image anymore when we do a release: we
+  could instead build it both on our infrastructure (Jenkins) and
+  locally, compare the outputs, and if they match publish the ISO
+  built by Jenkins. Uploading an ISO can take many hours with
+  some commonly found means of accessing the Internet, so removing the need to
   go through this step decreases our time to remediation
   for fixing security issues, and makes it easier for developers
   with poor access to the Internet to take care of a release.
 
-* Decrease the size of the IUKs ⇒ decrease the download time when
-  upgrading ⇒ nicer UX, and makes it more likely that users upgrade in
+* Decrease the size of the IUKs ⇒ decrease the time needed by users to
+  download upgrades ⇒ nicer UX, and makes it more likely that users upgrade in
   a timely manner instead of postponing to "when they have time".
   This depends e.g. on how we handle building with a fixed timestamp,
   and how we handle files metadata such as mtime when building an IUK.
@@ -43,7 +43,7 @@ that some of these advantages are incompatible with each other.
 * Limit the scope of the QA work that we have to conduct before
   putting out a bugfix release that has a small delta at the source
   level ⇒ decrease time to remediation (compared to having to test
-  everything), and we can release security upgrades more frequently
+  everything every time), and we can release security upgrades more frequently
   (e.g. every time a DSA affects us) because it is cheaper. We are
   indeed able to assess the impact of a specific update, when we know
   that everything else won't change when we build an ISO that includes
@@ -81,7 +81,7 @@ that some of these advantages are incompatible with each other.
 * Opens the door for cross-architecture building and verification of the build
   products, which:
   - decreases the risk that our build systems are all affected by the
-    same architecture- or platform- specific security issue;
+    same architecture — or platform — specific security issue;
   - may allow us to support more architectures (e.g.
     [[!tails_ticket 10972 desc="ARM"]]), because we could do most our
     CI and QA on the fastest one.
@@ -101,7 +101,7 @@ that some of these advantages are incompatible with each other.
   ([reproducible builds project's buy-in page](https://reproducible-builds.org/docs/buy-in/), 2015-02-16).
 
 * Faster development processes: e.g. when one knows for sure that
-  build stage 1 will produce the same output, one can cache it and
+  build stage 1 will produce the same output given the same input, one can cache it and
   build only stages 2 to n.
 
 ## Draft
