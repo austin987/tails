@@ -5,7 +5,7 @@ current_branch() {
 }
 
 on_a_tag() {
-   ! git symbolic-ref HEAD
+   ! git symbolic-ref HEAD >/dev/null 2>&1
 }
 
 base_branch() {
