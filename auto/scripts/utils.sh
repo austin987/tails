@@ -8,6 +8,12 @@ base_branch() {
 	cat config/base_branch | head -n1
 }
 
+branch_name_to_suite() {
+	local branch="$1"
+
+	echo "$branch" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[A-Z]' '[a-z]'
+}
+
 fatal() {
 	echo "$*" >&2
 	exit 1
