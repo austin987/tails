@@ -56,6 +56,7 @@ Feature: custom APT sources to build branches
     Given Tails 0.10 has been released
     And the last version mentioned in debian/changelog is 0.10
     And I am working on the stable base branch
+    And I checkout the 0.10 tag
     And the config/APT_overlays.d directory is empty
     When I successfully run tails-custom-apt-sources
     Then I should see only the '0.10' suite
@@ -64,6 +65,7 @@ Feature: custom APT sources to build branches
     Given Tails 0.10 has been released
     And the last version mentioned in debian/changelog is 0.10
     And I am working on the stable base branch
+    And I checkout the 0.10 tag
     And config/APT_overlays.d contains 'feature-foo'
     When I run tails-custom-apt-sources
     Then it should fail
@@ -73,6 +75,7 @@ Feature: custom APT sources to build branches
     And Tails 0.10 has been released
     And the last version mentioned in debian/changelog is 0.10
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    And I checkout the 0.10 tag
     When I successfully run "apt-snapshots-serials prepare-build"
     And I successfully run "apt-mirror debian"
     Then I should see the 0.10 tagged snapshot
@@ -86,6 +89,7 @@ Feature: custom APT sources to build branches
     And Tails 0.10 has been released
     And the last version mentioned in debian/changelog is 0.10
     And frozen APT snapshots are encoded in config/APT_snapshots.d
+    And I checkout the 0.10 tag
     When I successfully run "apt-snapshots-serials prepare-build"
     And I successfully run "apt-mirror debian"
     Then I should see the 0.10 tagged snapshot
@@ -200,6 +204,7 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.11
     And Tails 0.11 has been released
     And the config/APT_overlays.d directory is empty
+    And I checkout the 0.11 tag
     When I successfully run tails-custom-apt-sources
     Then I should see only the '0.11' suite
 
@@ -208,6 +213,7 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.11
     And Tails 0.11 has been released
     And config/APT_overlays.d contains 'feature-foo'
+    And I checkout the 0.11 tag
     When I run tails-custom-apt-sources
     Then it should fail
 
@@ -216,6 +222,7 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.11
     And Tails 0.11 has been released
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    And I checkout the 0.11 tag
     When I successfully run "apt-snapshots-serials prepare-build"
     And I run "apt-mirror debian"
     Then it should fail
@@ -229,6 +236,7 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.11
     And Tails 0.11 has been released
     And frozen APT snapshots are encoded in config/APT_snapshots.d
+    And I checkout the 0.11 tag
     When I successfully run "apt-snapshots-serials prepare-build"
     And I successfully run "apt-mirror debian"
     Then I should see the 0.11 tagged snapshot
@@ -243,6 +251,7 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.12~rc1
     And Tails 0.12-rc1 has been tagged
     And the config/APT_overlays.d directory is empty
+    And I checkout the 0.12-rc1 tag
     When I successfully run tails-custom-apt-sources
     Then I should see only the '0.12-rc1' suite
 
@@ -252,6 +261,7 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.12~rc1
     And Tails 0.12-rc1 has been tagged
     And config/APT_overlays.d contains 'bugfix-bar'
+    And I checkout the 0.12-rc1 tag
     When I run tails-custom-apt-sources
     Then it should fail
 

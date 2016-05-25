@@ -4,6 +4,10 @@ current_branch() {
 	git branch | awk '/^\* / { print $2 }'
 }
 
+on_a_tag() {
+   ! git symbolic-ref HEAD
+}
+
 base_branch() {
 	cat config/base_branch | head -n1
 }
