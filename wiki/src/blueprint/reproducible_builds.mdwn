@@ -298,9 +298,50 @@ builds reproducible, and even more so for Debian-based projects.
 
 ## Adjust our infrastructure accordingly
 
-XXX: Jenkins
+We will adapt our server infrastructure to support this project.
+There are two aspects to it.
 
-XXX: host baseboxes
+First of all, we will need to host a number of "frozen" build
+environments, and make them available through the Internet.
+Depending on how long we want to keep build environments about past
+Tails releases available, this may require a lot of disk space and
+bandwidth, so we will probably need to adjust our
+infrastructure accordingly.
+
+Secondly, we will enable our existing QA processes to build ISO
+images:
+
+ * when needed: in a fully reproducible manner (e.g. when building
+   from a Git tag);
+ * in the general case: in a way that minimizes the non-determinism of
+   the output (we may want to use an up-to-date build environment
+   instead of a frozen one).
+
+To achieve this, we will most likely re-use the Vagrant-based build
+system we have created for developers: that build system will need to
+support reproducible builds anyway. Still, the integration into our
+Jenkins setup will require us to go through a few additional steps,
+such as:
+
+ * The virtual machines used as Jenkins "slaves" to build ISO images
+   will need fast access to various frozen build environments (that
+   is, a bunch of large files). We can do this e.g. via network file
+   sharing, or by maintaining a local cache.
+
+ * For simplicity and security reasons, we will be using nested
+   virtualization, i.e. Vagrant will start the desired ISO build
+   environment in a virtual machine, all this inside a Jenkins "slave"
+   virtual machine. We are already using nested virtualization a lot,
+   so we are confident it can work out well, but still it brings two
+   other problems. First, we have experienced reliability issues with
+   nested virtualization in the past; these issues have been solved in
+   the Linux kernel recently, but there may be more that our current
+   use cases have not uncovered. And secondly, nested virtualization
+   does not come for free: it has a cost in terms of performance and
+   hardware resources, so in order for our continuous integration
+   processes to keep up with our development cadence with a satisfying
+   throughput, we might have to purchase and allocate more hardware
+   to them.
 
 # Various ideas
 
@@ -345,9 +386,13 @@ branches.
 
 ## Jenkins
 
+XXX: see "Adjust our infrastructure accordingly" above, that has some
+more details (and some less, too).
+
 To get all the benefits from the reproducible builds mentionned above,
-it makes sense to adapt our current Jenkins build system so that every
-ISOs produced by Jenkins are reproducible.
+it makes sense to adapt our current Jenkins build system so that
+ISO images produced by Jenkins can be built in a reproducible manner,
+e.g. when building a release tag.
 
 A first implementation would be to nest the vagrant-libvirt VM into each
 of our current isobuilder VMs. It means adapting our Puppet manifests,
@@ -356,13 +401,13 @@ vagrant box image being deployed in every of this systems so that the
 isobuilder VMs don't need to download it at every builds. We'll have to
 think about how to do this last requirement, given at the moment this
 vagrant box image is hosted on a different remote sytem than our
-isobuilders.
+isobuilders (NFS share?).
 
 It also raises technical questions:
 
 * How much would that impact our automatic ISO build throughput? Will it
-  then still cope with our developement rythm?
-* Will we have enough hardware resources to use this build system. E.g
+  then still cope with our development cadence?
+* Will we have enough hardware resources to use this build system. E.g.
   will it require to assign more RAM or CPUs to our isobuilders?
 
 # Miscellaneous resources
