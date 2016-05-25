@@ -6,6 +6,19 @@ TBB_EXT=/usr/local/share/tor-browser-extensions
 TOR_LAUNCHER_INSTALL=/usr/local/lib/tor-launcher-standalone
 TOR_LAUNCHER_LOCALES_DIR="${TOR_LAUNCHER_INSTALL}/chrome/locale"
 
+# For strings it's up to the caller to add double-quotes ("") around
+# the value.
+set_mozilla_pref() {
+    local file name value prefix
+    file="${1}"
+    name="${2}"
+    value="${3}"
+    # Sometimes we might want to do e.g. user_pref
+    prefix="${4:-pref}"
+    sed -i "/^${prefix}(\"${name}\",/d" "${file}"
+    echo "${prefix}(\"${name}\", ${value});" >> "${file}"
+}
+
 exec_firefox_helper() {
     local binary="${1}"; shift
 
