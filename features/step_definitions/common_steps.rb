@@ -199,7 +199,6 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    step "Tails seems to have booted normally"
     if network_unplugged.nil?
       step "Tor is ready"
       step "all notifications have disappeared"
@@ -228,7 +227,6 @@ Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I 
       end
     end
     step "I log in to a new session"
-    step "Tails seems to have booted normally"
     if network_unplugged.empty?
       step "Tor is ready"
       step "all notifications have disappeared"
@@ -366,10 +364,6 @@ Given /^the Tails desktop is ready$/ do
     @screen.click("GnomeSystrayFlorence.png")
     try_for(2) { ! florence_keyboard_is_visible }
   end
-end
-
-Then /^Tails seems to have booted normally$/ do
-  step "the Tails desktop is ready"
 end
 
 When /^I see the 'Tor is ready' notification$/ do
