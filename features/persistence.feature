@@ -7,8 +7,7 @@ Feature: Tails persistence
   Scenario: Booting Tails from a USB drive with a disabled persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
-    Then Tails seems to have booted normally
-    And Tails is running from USB drive "__internal"
+    Then Tails is running from USB drive "__internal"
     And persistence is disabled
     But a Tails persistence partition exists on USB drive "__internal"
 
