@@ -443,7 +443,8 @@ Given /^all notifications have disappeared$/ do
   begin
     @screen.click("GnomeNotificationApplet.png")
   rescue FindFailed
-    # No notifications, so we're good to go.
+    # No notifications, so we're done here.
+    return
   end
   @screen.wait("GnomeNotificationAppletOpened.png", 10)
   begin
