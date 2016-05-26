@@ -438,8 +438,12 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  next if not(@screen.exists("GnomeNotificationApplet.png"))
-  @screen.click("GnomeNotificationApplet.png")
+  begin
+    @screen.click("GnomeNotificationApplet.png")
+  rescue FindFailed
+    # No notifications, so we're done here.
+    return
+  end
   @screen.wait("GnomeNotificationAppletOpened.png", 10)
   begin
     entries = @screen.findAll("GnomeNotificationEntry.png")
