@@ -36,7 +36,14 @@ EOF
     equivs-build "libdvd-pkg-${LIBDVD_PKG_VERSION}.control"
     dpkg -i "libdvd-pkg_${LIBDVD_PKG_VERSION}_all.deb"
 )
-rm -R "${tmp}"
+rm -r "${tmp}" /usr/src/libdvd-pkg
+
+# Verify installed packages:
+for x in libdvd-pkg
+do
+    dpkg -s $x
+    dpkg-query -W -f='${Version}\n' $x
+done
 
 # Remove dangling symlink -- note that we absolutely do not want the
 # functionality (automatic checks and upgrades for new css sources)

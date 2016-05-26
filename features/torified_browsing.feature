@@ -13,8 +13,8 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     And I open a page on the LAN web server in the Tor Browser
-    Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
-    And no traffic has flowed to the LAN
+    Then the Tor Browser shows the "Unable to connect" error
+    And no traffic was sent to the web server on the LAN
 
   @check_tor_leaks
   Scenario: The Tor Browser directory is usable
@@ -52,7 +52,7 @@ Feature: Browsing the web using the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the address "https://webm.html5.org/test.webm" in the Tor Browser
+    And I open the address "https://tails.boum.org/lib/test_suite/test.webm" in the Tor Browser
     And I click the blocked video icon
     And I see "TorBrowserNoScriptTemporarilyAllowDialog.png" after at most 30 seconds
     And I accept to temporarily allow playing this video
@@ -110,20 +110,12 @@ Feature: Browsing the web using the Tor Browser
     Then the Tor Browser uses all expected TBB shared libraries
 
   @check_tor_leaks @fragile
-  Scenario: Opening check.torproject.org in the Tor Browser shows the green onion and the congratulations message
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
-    And I open the address "https://check.torproject.org" in the Tor Browser
-    Then I see "TorBrowserTorCheck.png" after at most 180 seconds
-
-  @check_tor_leaks @fragile
   Scenario: The Tor Browser's "New identity" feature works as expected
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
-    And I open the address "https://check.torproject.org" in the Tor Browser
-    Then I see "TorBrowserTorCheck.png" after at most 180 seconds
+    And I open Tails homepage in the Tor Browser
+    Then Tails homepage loads in the Tor Browser
     When I request a new identity using Torbutton
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page
@@ -166,7 +158,6 @@ Feature: Browsing the web using the Tor Browser
     And the computer reboots Tails
     And I enable read-only persistence
     And I log in to a new session
-    And the Tails desktop is ready
     And I start the Tor Browser in offline mode
     And the Tor Browser has started in offline mode
     Then the Tor Browser has a bookmark to eff.org

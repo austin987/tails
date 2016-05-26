@@ -96,7 +96,7 @@ The main tools used to manage the Tails infrastructure are:
 
 A few people have write access to the puppetmasters, and can log into
 the hosts.  
-They read the <tails-sysadmins@boum.org> encrypted mailing-list.
+They read the <tails-sysadmins@boum.org> encrypted mailing list.
 
 We use Redmine tickets for public discussion and tasks management:
 
@@ -109,13 +109,37 @@ We use Redmine tickets for public discussion and tasks management:
 
 # Services
 
-## APT repository
+## APT repositories
+
+### Custom APT repository
 
 * purpose: host Tails-specific Debian packages
-* [[documentation|contribute/APT repository]]
+* [[documentation|contribute/APT repository/custom]]
 * access: anyone can read, Tails core developers can write
 * tools: [[!debpts reprepro]]
 * configuration: `tails::reprepro::custom` class
+  in [[!tails_gitweb_repo puppet-tails]]
+
+### Time-based snapshots of APT repositories
+
+* purpose: host full snapshots of the upstream APT repositories we
+  need, which provides the freezable APT repositories feature needed
+  by the Tails development and QA processes
+* [[documentation|contribute/APT repository/time-based snapshots]]
+* access: anyone can read, release managers have some write access
+  (XXX: limited to the operations they need to perform? full?)
+* tools: [[!debpts reprepro]]
+* configuration: `tails::reprepro::snapshots::time_based` class
+  in [[!tails_gitweb_repo puppet-tails]]
+
+### Tagged snapshots of APT repositories
+
+* purpose: host partial snapshots of the upstream APT repositories we
+  need, for historical purposes and compliance with some licenses
+* [[documentation|contribute/APT repository/tagged snapshots]]
+* access: anyone can read, release managers can create new snapshots
+* tools: [[!debpts reprepro]]
+* configuration: `tails::reprepro::snapshots::tagged` class
   in [[!tails_gitweb_repo puppet-tails]]
 
 ## Bitcoind
@@ -132,14 +156,6 @@ We use Redmine tickets for public discussion and tasks management:
 * access: anyone can read, Tails core developers can write
 * tools: [[!debpts transmission-daemon]]
 * configuration: done by hand ([[!tails_ticket 6926]])
-
-## Debian package builder
-
-* purpose: build Tails-specific Debian packages
-* [[documentation|contribute/Debian_package_builder]]
-* access: Tails core developers only
-* tools: [[!debpts debomatic desc="Deb-o-Matic"]]
-* configuration: hard-coded in the manifest ([[!tails_ticket 6920]])
 
 ## Gitolite
 

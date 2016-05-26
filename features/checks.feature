@@ -51,6 +51,7 @@ Feature: Various checks
     And all notifications have disappeared
     And the time has synced
 
+  #10497, #11463
   @fragile
   Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
     Given I have started Tails from DVD without network and logged in
@@ -103,5 +104,4 @@ Feature: Various checks
     And I enable more Tails Greeter options
     And I disable all networking in the Tails Greeter
     And I log in to a new session
-    And the Tails desktop is ready
     Then no network interfaces are enabled
