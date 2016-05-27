@@ -94,7 +94,7 @@ If we are at freeze time for a major release:
 4. [[Hard reset|APT_repository/custom#workflow-reset]] the `testing`
    custom APT suite to the current state of the `devel` one.
 
-5. [[Freeze|APT_repository/time-based snapshots#freeze]] the
+5. [[Freeze|APT_repository/time-based_snapshots#freeze]] the
    time-based APT repository snapshots that shall be used
    during the freeze.
 
@@ -361,7 +361,13 @@ translators|contribute/how/translate]].
 
 To get a list of changes on the website:
 
-    git diff --stat 1.1.. -- *.{mdwn,html}
+    git diff --stat ${PREVIOUS_VERSION}.. -- \
+        *.{mdwn,html} \
+        ':!wiki/src/blueprint*' \
+        ':!wiki/src/contribute*' \
+        ':!wiki/src/inc' \
+        ':!wiki/src/news*' \
+        ':!wiki/src/security*'
 
 Import the signing key
 ======================
@@ -867,7 +873,7 @@ Copy the `.iso.sig` file into the website repository:
 
 	cp "${ISO_PATH}.sig" \
 	   "$ISOS/tails-i386-${VERSION}.torrent" \
-	      "${MASTER_CHECKOUT}/wiki/src/torrents/files/
+	      "${MASTER_CHECKOUT}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
 `$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
@@ -879,6 +885,11 @@ Write the announcement for the release in
   [[!tails_gitweb_commit 9925321]] breaks all existing persistent
   profiles).
 - Document known issues.
+- This snippet can help to convert the copied changelog's ticket
+  references to links:
+
+      sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
+          wiki/src/news/test_${TAG}.mdwn
 
 In any case
 -----------
@@ -1065,7 +1076,7 @@ this, and skip what does not make sense for a RC.
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+183' \
-                    -ls \
+                    -not -name '*~test_*~test.iuk' -ls \
              \"
    
    - then actually delete the files:
@@ -1074,7 +1085,7 @@ this, and skip what does not make sense for a RC.
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+183' \
-                    -delete \
+                    -not -name '*~test_*~test.iuk' -delete \
              \"
 
 1. Delete Git branches that were merged:

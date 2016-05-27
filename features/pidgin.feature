@@ -9,7 +9,7 @@ Feature: Chatting anonymously using Pidgin
   And all Internet traffic should flow only through Tor
 
   #11453
-  @check_tor_leaks
+  @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP
     Given I have started Tails from DVD and logged in and the network is connected
     When I start Pidgin through the GNOME menu
@@ -106,6 +106,7 @@ Feature: Chatting anonymously using Pidgin
     When I create my XMPP account
     And I close Pidgin's account manager window
     Then Pidgin automatically enables my XMPP account
+    When I close Pidgin
     # And I generate an OTR key for the default Pidgin account
     And I take note of the configured Pidgin accounts
     # And I take note of the OTR key for Pidgin's "conference.riseup.net" account

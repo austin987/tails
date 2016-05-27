@@ -306,6 +306,12 @@ When /^I close Pidgin's account manager window$/ do
   @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
 end
 
+When /^I close Pidgin$/ do
+  $vm.focus_window('Buddy List')
+  @screen.type("q", Sikuli::KeyModifier.CTRL)
+  @screen.waitVanish('PidginAvailableStatus.png', 10)
+end
+
 When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   @screen.click("PidginAccount_#{account}.png")
   @screen.type(Sikuli::Key.LEFT + Sikuli::Key.SPACE)

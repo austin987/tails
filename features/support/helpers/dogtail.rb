@@ -13,7 +13,6 @@ module Dogtail
     :menu,
     :menuItem,
     :tab,
-    :text,
     :textentry,
   ]
 
@@ -170,11 +169,15 @@ module Dogtail
     end
 
     def get_field(key)
-      run("print(#{build_line}.#{key})").stdout
+      run("print(#{build_line}.#{key})").stdout.chomp
     end
 
     def set_field(key, value)
       run("#{build_line}.#{key} = #{self.class.value_to_s(value)}")
+    end
+
+    def text
+      get_field('text')
     end
 
     def proxy_call(method, args)

@@ -42,6 +42,10 @@ DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
 TORPROJECT_MIRROR="$(apt-mirror torproject)"
 
+[ -n "$DEBIAN_MIRROR" ]          || exit 1
+[ -n "$DEBIAN_SECURITY_MIRROR" ] || exit 1
+[ -n "$TORPROJECT_MIRROR" ]      || exit 1
+
 perl -pi \
      -E \
        "s|^(deb(?:-src)?\s+)https?://ftp[.]us[.]debian[.]org/debian/?(\s+)|\$1$DEBIAN_MIRROR\$2| ; \
@@ -128,6 +132,15 @@ fi
 
 # custom APT sources
 tails-custom-apt-sources > config/chroot_sources/tails.chroot
+
+# tails-transform-mirror-url and its dependencies
+install -m 0755 \
+   submodules/mirror-pool-dispatcher/bin/tails-transform-mirror-url \
+   config/chroot_local-includes/usr/local/bin/
+install -m 0755 -d config/chroot_local-includes/usr/local/lib/nodejs
+install -m 0755 \
+   submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
+   config/chroot_local-includes/usr/local/lib/nodejs/
 
 # custom debootstrap script, setting some APT magic to log downloads:
 patch \
