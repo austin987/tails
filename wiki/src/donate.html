@@ -9,88 +9,109 @@
 <div class="row">
   <div class="col-md-5 col-md-offset-6">
 
+<form method="post" action="https://www.paypal.com/cgi-bin/webscr">
+
+<!-- HTML Variables for PayPal Payments Standard:
+     https://developer.paypal.com/docs/classic/paypal-payments-standard/integration-guide/Appx_websitestandard_htmlvariables/ -->
+<input type="hidden" name="cmd" value="_xclick-subscriptions" id="cmd">
+<input type="hidden" name="business" value="tailsriseuplabs@riseup.net" id="business">
+<input type="hidden" name="currency_code" value="USD" id="currency_code">
+<input type="hidden" name="item_name" value="Donation+to+Tails">
+<input type="hidden" name="no_note" value="1">
+<input type="hidden" name="return" value="https://tails.boum.org/donate/thankyou">
+<input type="hidden" name="cancel_return" value="https://tails.boum.org/donate/oops">
+
+<!-- For recurring donations only. -->
+<input type="hidden" name="a3" value="5" id="a3">
+<input type="hidden" name="t3" value="Y" id="t3">
+<input type="hidden" name="p3" value="1">
+<input type="hidden" name="src" value="1">
+
+<!-- For one-time donation only. -->
+<input type="hidden" name="amount" value="5" id="amount">
+
 <div id="currency" class="row">
 <div class="col-md-12 btn-group btn-group-justified" data-toggle="buttons" role="group">
   <label class="btn btn-lg btn-primary active" id="currency-dollar">
-    <input type="radio" name="options" id="dollars" autocomplete="off" checked data-complete-text="finished!"> Dollars</input>
+    <input type="radio" id="dollars" autocomplete="off" checked data-complete-text="finished!"> Dollars</input>
   </label>
   <label class="btn btn-lg btn-primary" id="currency-euro">
-    <input type="radio" name="options" id="euros" autocomplete="off" checked data-complete-text="finished!"> Euros</input>
+    <input type="radio" id="euros" autocomplete="off" checked data-complete-text="finished!"> Euros</input>
   </label>
 </div>
 </div>
 
 <div id="frequency" class="row">
 <div class="col-md-12 btn-group btn-group-justified" data-toggle="buttons" role="group">
-  <label class="btn btn-lg btn-primary">
-    <input type="radio" name="options" id="one-time" autocomplete="off"> One-time</input>
+  <label class="btn btn-lg btn-primary" id="one-time">
+    <input type="radio" autocomplete="off"> One-time</input>
   </label>
-  <label class="btn btn-lg btn-primary">
-    <input type="radio" name="options" id="monthly" autocomplete="off"> Monthly</input>
+  <label class="btn btn-lg btn-primary" id="monthly">
+    <input type="radio" autocomplete="off"> Monthly</input>
   </label>
-  <label class="btn btn-lg btn-primary active">
-    <input type="radio" name="options" id="yearly" autocomplete="off" checked> Yearly</input>
+  <label class="btn btn-lg btn-primary active" id="yearly">
+    <input type="radio" autocomplete="off" checked> Yearly</input>
   </label>
 </div>
 </div>
 
 <div id="dollar-amounts" class="row amounts" data-toggle="buttons" role="group">
-  <label class="btn btn-lg btn-primary col-md-3 active">
-    <input type="radio" name="options" id="5" autocomplete="off">$5</input>
+  <label class="btn btn-lg btn-primary col-md-3 5">
+    <input type="radio" autocomplete="off">$5</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="10" autocomplete="off">$10</input>
+  <label class="btn btn-lg btn-primary col-md-3 10">
+    <input type="radio" autocomplete="off">$10</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="20" autocomplete="off">$20</input>
+  <label class="btn btn-lg btn-primary col-md-3 20">
+    <input type="radio" autocomplete="off">$20</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="50" autocomplete="off">$50</input>
+  <label class="btn btn-lg btn-primary col-md-3 50">
+    <input type="radio" autocomplete="off">$50</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="100" autocomplete="off">$100</input>
+  <label class="btn btn-lg btn-primary col-md-3 100">
+    <input type="radio" autocomplete="off">$100</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="250" autocomplete="off">$250</input>
+  <label class="btn btn-lg btn-primary col-md-3 250">
+    <input type="radio" autocomplete="off">$250</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="500" autocomplete="off">$500</input>
+  <label class="btn btn-lg btn-primary col-md-3 500">
+    <input type="radio" autocomplete="off">$500</input>
   </label>
   <label class="btn btn-lg btn-primary col-md-3 other">
     <span>Other</span>
     <div class="input-group">
       <span class="input-group-addon">$</span>
-      <input type="text" class="form-control">
+      <input type="text" class="form-control" id="other-dollar">
     </div>
   </label>
 </div>
 
 <div id="euro-amounts" class="row amounts" data-toggle="buttons" role="group">
-  <label class="btn btn-lg btn-primary col-md-3 active">
-    <input type="radio" name="options" id="5" autocomplete="off">5€</input>
+  <label class="btn btn-lg btn-primary col-md-3 5">
+    <input type="radio" autocomplete="off">5€</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="10" autocomplete="off">10€</input>
+  <label class="btn btn-lg btn-primary col-md-3 10">
+    <input type="radio" autocomplete="off">10€</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="20" autocomplete="off">20€</input>
+  <label class="btn btn-lg btn-primary col-md-3 20">
+    <input type="radio" autocomplete="off">20€</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="50" autocomplete="off">50€</input>
+  <label class="btn btn-lg btn-primary col-md-3 50">
+    <input type="radio" autocomplete="off">50€</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="100" autocomplete="off">100€</input>
+  <label class="btn btn-lg btn-primary col-md-3 100">
+    <input type="radio" autocomplete="off">100€</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="250" autocomplete="off">250€</input>
+  <label class="btn btn-lg btn-primary col-md-3 250">
+    <input type="radio" autocomplete="off">250€</input>
   </label>
-  <label class="btn btn-lg btn-primary col-md-3">
-    <input type="radio" name="options" id="500" autocomplete="off">500€</input>
+  <label class="btn btn-lg btn-primary col-md-3 500">
+    <input type="radio" autocomplete="off">500€</input>
   </label>
   <label class="btn btn-lg btn-primary col-md-3 other">
     <span>Other</span>
     <div class="input-group">
-      <input type="text" class="form-control text-right">
+      <input type="text" class="form-control text-right" id="other-euro">
       <span class="input-group-addon">€</span>
     </div>
   </label>
@@ -99,6 +120,8 @@
 <div id="donate-button" class="row">
   <button class="btn btn-primary btn-lg btn-block col-md-12">Donate</button>
 </div>
+
+</form>
 
   </div>
 </div>
