@@ -121,7 +121,7 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   app.child(expected_title, roleName: 'frame').wait(60)
   # The 'Reload current page' button (graphically shown as a looping
   # arrow) is only shown when a page has loaded, so once we see the
-  # expected title *and* this has disappeared, then we can be sure
+  # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
   app.child('Reload current page', roleName: 'push button').wait(60)
 end
