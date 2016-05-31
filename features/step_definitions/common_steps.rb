@@ -902,3 +902,117 @@ When /^I eject the boot medium$/ do
     raise "Unsupported medium type '#{dev_type}' for boot device '#{dev}'"
   end
 end
+
+Given /^Tails is fooled to think it is running version (.+)$/ do |version|
+  $vm.execute_successfully(
+    "sed -i " +
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
+    "/etc/os-release"
+  )
+end
+
+Given /^the file system changes introduced in version (.+) are (not )?present$/ do |version, not_present|
+  assert_equal('1.1~test', version)
+  upgrade_applied = not_present.nil?
+  changes = [
+    {
+      filesystem: :rootfs,
+      path: 'some_new_file',
+      status: :added,
+      new_content: <<-EOF
+Some content
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'etc/amnesia/version',
+      status: :modified,
+      new_content: <<-EOF
+#{version} - 20380119
+ffffffffffffffffffffffffffffffffffffffff
+live-build: 3.0.5+really+is+2.0.12-0.tails2
+live-boot: 4.0.2-1
+live-config: 4.0.4-1
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'etc/os-release',
+      status: :modified,
+      new_content: <<-EOF
+TAILS_PRODUCT_NAME="Tails"
+TAILS_VERSION_ID="#{version}"
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'usr/share/common-licenses/BSD',
+      status: :removed
+    },
+    {
+      filesystem: :medium,
+      path: 'utils/linux/syslinux',
+      status: :removed
+    },
+  ]
+  changes.each do |change|
+    case change[:filesystem]
+    when :rootfs
+      path = '/' + change[:path]
+    when :medium
+      path = '/lib/live/mount/medium/' + change[:path]
+    else
+      raise "Unknown filesysten '#{change[:filesystem]}'"
+    end
+    case change[:status]
+    when :removed
+      assert_equal(!upgrade_applied, $vm.file_exist?(path))
+    when :added
+      assert_equal(upgrade_applied, $vm.file_exist?(path))
+      if upgrade_applied && change[:new_content]
+        assert_equal(change[:new_content], $vm.file_content(path))
+      end
+    when :modified
+      if upgrade_applied
+        assert_equal(upgrade_applied, $vm.file_exist?(path))
+        assert_not_nil(change[:new_content])
+        assert_equal(change[:new_content], $vm.file_content(path))
+      end
+    else
+      raise "Unknown status '#{change[:status]}'"
+    end
+  end
+end
+
+Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |version|
+  upgrader_prompt = Dogtail::Application.new('zenity')
+                    .dialog('Upgrade available')
+  upgrader_prompt.wait(2*60)
+  upgrader_prompt.children(roleName: 'label').find do |label|
+    message = label.text
+    message =~ /You should upgrade to Tails #{version}\./ &&
+      message =~ /Do you want to upgrade now\?/
+  end
+end
+
+When /^I agree to install the incremental upgrade$/ do
+  upgrader_prompt = Dogtail::Application.new('zenity')
+                    .dialog('Upgrade available')
+  upgrader_prompt.button('Upgrade now').click
+end
+
+Then /^the incremental upgrade is reportedly installed$/ do
+  upgrader_prompt = Dogtail::Application.new('zenity')
+                    .dialog('Restart Tails')
+  upgrader_prompt.children(roleName: 'label').find do |label|
+    label.text =~ /Your Tails device was successfully upgraded./
+  end
+end
+
+Then /^Tails is running version (.+)$/ do |version|
+  v1 = $vm.execute_successfully('tails-version').stdout.split.first
+  assert_equal(version, v1, "The version doesn't match tails-version's output")
+  v2 = $vm.file_content('/etc/os-release')
+       .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
+  assert_equal(version, v2, "The version doesn't match /etc/os-release")
+end
