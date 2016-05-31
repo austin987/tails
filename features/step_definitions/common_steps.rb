@@ -985,28 +985,15 @@ TAILS_VERSION_ID="#{version}"
 end
 
 Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |version|
-  upgrader_prompt = Dogtail::Application.new('zenity')
-                    .dialog('Upgrade available')
-  upgrader_prompt.wait(2*60)
-  upgrader_prompt.children(roleName: 'label').find do |label|
-    message = label.text
-    message =~ /You should upgrade to Tails #{version}\./ &&
-      message =~ /Do you want to upgrade now\?/
-  end
+  @screen.wait("TailsUpgraderUpgradeTo#{version}.png", 2*60)
 end
 
 When /^I agree to install the incremental upgrade$/ do
-  upgrader_prompt = Dogtail::Application.new('zenity')
-                    .dialog('Upgrade available')
-  upgrader_prompt.button('Upgrade now').click
+  @screen.click('TailsUpgraderUpgradeNowButton.png')
 end
 
 Then /^the incremental upgrade is reportedly installed$/ do
-  upgrader_prompt = Dogtail::Application.new('zenity')
-                    .dialog('Restart Tails')
-  upgrader_prompt.children(roleName: 'label').find do |label|
-    label.text =~ /Your Tails device was successfully upgraded./
-  end
+  @screen.wait('TailsUpgraderDone.png', 2*60)
 end
 
 Then /^Tails is running version (.+)$/ do |version|
