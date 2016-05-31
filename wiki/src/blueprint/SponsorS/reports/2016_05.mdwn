@@ -95,8 +95,58 @@ Now, let's dive into the details:
 
 # C. Scale our infrastructure
 
+## C.1. Change in depth the infrastructure of our pool of mirrors
 
-# D. Migration to Debian Jessie
+XXX: u, please review
 
+The new mirror pool is now used by Tails Upgrader, by users who
+download Tails without using our Download And Verification Extension
+for Firefox (aka. DAVE), for any download that is not supported by
+DAVE (e.g. release candidates), and for downloads started from a web
+browser that has JavaScript disabled. So, in summary two of the use
+cases of this work are covered already, and only the "downloading with
+DAVE" use case is left to complete.
+
+- C.1.2. Write & audit the code that makes the redirection decision from our website ([[!tails_ticket 8639]], [[!tails_ticket 8640]], [[!tails_ticket 11109]])
+
+  * `mirror-dispatcher.js`: we are still waiting for the auditor to do
+    a final security review.
+
+  * Download And Verification Extension for Firefox: we have made some
+    progress on the implementation, and coordinated with the person
+    who will do the code review to ensure he will be available when we
+    need it. XXX: u, please update/complete this part.
+
+- C.1.4. Communicate with each mirror operator to adapt their configuration ([[!tails_ticket 8635]], [[!tails_ticket 11079]])
+
+  This deliverable is completed:
+
+  * All mirrors have now implemented the changes we requested.
+
+  * We have sent a call for mirrors to a number of fast mirror
+    operators, and we already have 7 more mirrors. We will pursue this
+    effort in June, even though we have already reached the goals we
+    had set: we expected to have at least 30 mirrors in the pool once
+    the new infrastructure was ready, and 35 mirrors 3 months later,
+    and we already have 36 active mirrors as of May 31.
+
+- C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL ([[!tails_ticket 8642]], [[!tails_ticket 11329]], [[!tails_ticket 10295]])
+
+  This was deployed to production: all links pointing to our mirror
+  pool now use the new redirection system.
+
+  So, this deliverable is now completed.
+
+- C.1.7. Adjust update-description files for incremental upgrades ([[!tails_ticket 11123]])
+
+  We have adjusted the code of Tails Upgrader to use the new mirror
+  pool. This code has been merged, and is now used by Tails Upgrader
+  in production (starting with Tails 2.4~rc1), so this deliverable is
+  completed as well.
+
+- C.1.8. Clean up the remainers of the old mirror pool setup ([[!tails_ticket 8643]], [[!tails_ticket 11284]])
+
+  This is now only blocked by the work that is in progress on DAVE
+  (C.1.2).
 
 # E. Release management
