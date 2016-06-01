@@ -14,46 +14,39 @@ We decided to implement a two-way strategy for this feature:
   - [public read-only mirror of the Git repository](https://git-tails.immerda.ch/mirror-pool-dispatcher/)
   - Vanilla JS (no frameworks)
   - The code is deployed live: <https://tails.boum.org/lib/js/mirror-dispatcher.js>
-  - The code must work from inside a Firefox extension (DAVE) at
-    least; ideally it is library code that can also be used from a web
-    page (see below for an actual use case).
+  - The library code has three consumers it must work with:
+    * a Firefox extension (DAVE)
+    * our website, for downloads we offer outside of the Installation
+      Assistant, that are not supported by DAVE, such as images for
+      release candidates; and in any case, for browsers that DAVE does
+      not support
+    * Tails Upgrader, that runs the library code with Node.js
   - Configuration for the JS is loaded from a JSON file hosted on our
     website.
     See [[the configuration section|HTTP_mirror_pool#configuration]]
     for details.
 
-* Keep using DNS to point to 3-5 fast and reliable mirrors. This will
-  be the fallback for people who do not use JS. So we still need a DNS
-  dynamic update system; we can simply re-purpose the one we already
-  have (`dl.amnesia.boum.org`).
+* Keep using DNS to point to 3-5 fast and reliable mirrors. This will be
+  the fallback for some use cases. So we still need a DNS dynamic update
+  system; we can simply re-purpose the one we already have
+  (`dl.amnesia.boum.org`). This fallback DNS pool will be used:
+  - by people who do not use JS, when downloading from our website
+  - for the [[wget download option|install/expert/usb]]
 
-<a id="questions"></a>
+<a id="deployment"></a>
 
-## Remaining questions
+## Deployment plan
 
-* What to do for downloads we offer outside of the Installation
-  Assistant, that are not supported by DAVE, such as images for
-  release candidates? What to do for browsers that don't have DAVE,
-  e.g. non-Firefox browsers, the
-  [[wget download option|install/expert/usb]], and
-  documented download methods that rely on
-  [[!tails_gitweb wiki/src/install/inc/steps/download.inline.html]]?
-  - A first iteration could simply use the DNS pool. This might put
-    too much load on the few servers in it though, so it might only
-    work if we're able to add a few really fast servers in it.
-  - In second iteration, we can use our JavaScript dispatcher code to rewrite the
-    download link on the call for testing web page. If we do this, we
-    need to include our JavaScript library in a dedicated ikiwiki
-    overlay, and load + call it on every page that contains an ISO
-    download link (or simply on _every_ page).
-  - It might be that going straight to the second iteration is simpler
-    in the end. Or, we can forget the non-DAVE dispatcher code and
-    instead put energy into adding very fast and reliable mirrors to
-    the DNS pool, as
-    [is being discussed](https://mailman.boum.org/pipermail/tails-dev/2016-February/010282.html).
+This only include steps for which ordering is critical. There are a few
+other auxiliary tasks, tracked as sub-tasks of [[!tails_ticket 7161]],
+that can be dealt with independently.
 
-* What to do for the IUK downloads done by Tails Upgrader?
-  ([[!tails_ticket 11123]])
+1. Make (almost) all downloads use the new mirror pool:
+   * website: [[!tails_ticket 8642]]
+   * Dave: [[!tails_ticket 11109]]
+   * ~~Upgrader: [[!tails_ticket 11123]]~~
+2. Shrink our DNS pool into a small, fallback one: [[!tails_ticket 11284]]
+3. Have the second audit of our mirror pool dispatcher library completed: [[!tails_ticket 8640]]
 
 <a id="configuration"></a>
 
