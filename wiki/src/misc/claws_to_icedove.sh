@@ -6,7 +6,8 @@
 #     There will also be a corresponding file—which may be empty—called
 #     "FolderName"
 
-set -eu
+set -e
+set -u
 
 OLDIFS=$IFS
 IFS="

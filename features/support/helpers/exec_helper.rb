@@ -10,7 +10,7 @@ class VMCommand
     @returncode, @stdout, @stderr = VMCommand.execute(vm, cmd, options)
   end
 
-  def VMCommand.wait_until_remote_shell_is_up(vm, timeout = 30)
+  def VMCommand.wait_until_remote_shell_is_up(vm, timeout = 90)
     try_for(timeout, :msg => "Remote shell seems to be down") do
       Timeout::timeout(3) do
         VMCommand.execute(vm, "echo 'hello?'")
@@ -25,8 +25,8 @@ class VMCommand
   # response will always be [0, "", ""] (only used as an
   # ACK). execute() will always block until a response is received,
   # though. Spawning is useful when starting processes in the
-  # background (or running scripts that does the same) like the
-  # vidalia-wrapper, or any application we want to interact with.
+  # background (or running scripts that does the same) like our
+  # onioncircuits wrapper, or any application we want to interact with.
   def VMCommand.execute(vm, cmd, options = {})
     options[:user] ||= "root"
     options[:spawn] ||= false
