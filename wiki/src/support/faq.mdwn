@@ -116,7 +116,7 @@ many people would think the website is broken while it is not.
 We prefer to provide weak security, using a commercial certificate, that still
 works for most people. At the same time, we make clear this security is limited
 and encourage stronger ways of verifying the authenticity of Tails once
-downloaded.  See our documentation on [[verifying the ISO|download#verify]].
+downloaded. See our documentation on [[verifying the ISO image using OpenPGP|install/download/openpgp]].
 
 <a id="hardware"></a>
 
@@ -170,7 +170,7 @@ Can I install Tails with UNetbootin, YUMI or my other favorite tool?
 No. Those installation methods are unsupported. They might not work at
 all, or worse: they might seem to work, but produce a Tails device
 that does *not* behave like Tails should. Follow the
-[[download and installation documentation|download]] instead.
+[[download and installation documentation|install]] instead.
 
 <a id="upgrade"></a>
 
@@ -494,6 +494,15 @@ but it is complicated and not documented yet.
 For example, some people have been working on how to run a web server
 behind a hidden service on Tails. See [[!tails_ticket 7879]].
 
+<a id="ping"></a>
+
+Can I use <span class="command">ping</span> in Tails?
+-----------------------------------------------------
+
+It is impossible to use <span class="command">ping</span> in Tails,
+because <span class="command">ping</span> uses the ICMP protocol while Tor
+can only transport TCP connections.
+
 <a id="software"></a>
 
 Software not included in Tails
@@ -533,8 +542,8 @@ new software with a very good reason to do so:
     security problems, then this might be problematic as users might rely on it.
 
 After considering all this, if you still think that this software is a good
-candidate to be included in Tails, please [[explain us|/contribute/talk]] your
-proposal.
+candidate to be included in Tails, please explain us your
+proposal on [[tails-dev@boum.org|about/contact#tails-dev]].
 
 <div class="tip">
 
@@ -575,7 +584,7 @@ on this situation"]].
 Can I download videos from websites?
 ------------------------------------
 
-You can install <span class="code">youtube-dl/jessie</span> as an [[additional
+You can install <span class="code">youtube-dl</span> as an [[additional
 package|doc/advanced_topics/additional_software/]]. <span class="application">youtube-dl</span>
 allows downloading videos from more than
 [700 websites](https://github.com/rg3/youtube-dl/blob/master/docs/supportedsites.md).
@@ -652,7 +661,7 @@ liar; the answer of a true liar would always be "no".
 
 - To verify the integrity of a DVD from a separate trusted system, you can
   verify the signature of the ISO image as documented in [[verify the ISO image
-  using the command line|doc/get/verify_the_iso_image_using_the_command_line]]
+  using OpenPGP|install/download/openpgp]]
   against the DVD itself.
 
 - There is no documented method of verifying the integrity of a USB stick or SD
@@ -676,16 +685,27 @@ corresponding [[design documentation|contribute/design/memory_erasure]].
 
 <a id="new_identity"></a>
 
-Is it safe to use the <span class="guilabel">New Identity</span> feature of <span class="application">Vidalia</span> or <span class="application">Tor Browser</span>?
----------------------------------------------------------------------
+Where is the <span class="guilabel">New Identity</span> button?
+---------------------------------------------------------------
 
 In our [[warning page|doc/about/warning#identities]] we advice to
 restart Tails every time that you want to use a different contextual
-identity. The
-[[<span class="guilabel">New Identity</span> feature of <span class="application">Vidalia</span>|doc/anonymous_internet/vidalia#new_identity]]
-forces Tor to use new circuits but only for new connections and the
-[[<span class="guilabel">New Identity</span> of <span class="application">Tor Browser</span>|doc/anonymous_internet/Tor_Browser#new_identity]]
+identity.
+
+The
+[[<span class="guilabel">New Identity</span> feature of <span class="application">Tor Browser</span>|doc/anonymous_internet/Tor_Browser#new_identity]]
 is limited to the browser.
+
+Tails used to provide a <span class="guilabel">New Identity</span>
+feature, but this feature was not a good solution to
+[[separate contextual identities|about/warning#identities]], as it
+was dangerous:
+
+* Already existing connections could stay open.
+* Other sources of information could reveal your past activities, for
+  example the cookies stored in <span class="application">Tor
+  Browser</span> or the random nick in <span
+  class="application">Pidgin</span>.
 
 Tails is a full operating system, so a *new identity* should be thought on a
 broader level. **Restart Tails instead**.

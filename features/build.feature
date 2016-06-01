@@ -147,15 +147,6 @@ Feature: custom APT sources to build branches
     Then I should see the 'feature-jessie' suite
     And I should see the 'feature-7756-reintroduce-whisperback' suite
 
-  Scenario: build from the experimental branch
-    Given I am working on the experimental branch based on devel
-    And config/APT_overlays.d contains 'feature-foo'
-    And config/APT_overlays.d contains 'bugfix-bar'
-    When I successfully run tails-custom-apt-sources
-    Then I should see the 'devel' suite
-    And I should see the 'feature-foo' suite
-    And I should see the 'bugfix-bar' suite
-
   Scenario: build from a feature branch with overlays based on devel
     Given I am working on the feature/icedove branch based on devel
     And config/APT_overlays.d contains 'feature-icedove'

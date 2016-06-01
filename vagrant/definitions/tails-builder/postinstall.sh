@@ -23,12 +23,6 @@ echo 'Welcome to your Vagrant-built virtual machine.' > /var/run/motd
 # Removing leftover DHCP leases
 rm /var/lib/dhcp/*.leases
 
-# Deactivate name persistence for network interfaces
-dpkg-divert --divert /lib/udev/write_net_rules \
-            --rename /lib/udev/write_net_rules.udev
-cp /bin/true /lib/udev/write_net_rules
-rm -f /etc/udev/rules.d/70-persistent-net.rules
-
 # Adding a 2 sec delay to the interface up, to make the dhclient happy
 echo "pre-up sleep 5" >> /etc/network/interfaces
 
@@ -40,6 +34,14 @@ sed -e '/http::Proxy/d' -i /etc/apt/apt.conf
 
 # Remove installation logs
 rm -rf /var/log/installer
+
+# Clean up veewee's vbox additions iso. We don't use it, actually.
+rm -f /home/vagrant/VBoxGuestAdditions_*.iso
+
+# Clean up some APT stuff that will be recreated after the first
+# apt-get update during provision.
+rm -rf /var/lib/apt/lists
+rm -f /var/cache/apt/*pkgcache.bin
 
 # Zero out the free space to save space in the final image:
 dd if=/dev/zero of=/EMPTY bs=1M
