@@ -615,3 +615,91 @@ end
 Then /^no USB drive is selected$/ do
   @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end
+
+Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|
+  assert_equal('1.1~test', version)
+  upgrade_applied = not_present.nil?
+  chroot_browser = "#{chroot_browser.downcase}-browser" if chroot_browser
+  changes = [
+    {
+      filesystem: :rootfs,
+      path: 'some_new_file',
+      status: :added,
+      new_content: <<-EOF
+Some content
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'etc/amnesia/version',
+      status: :modified,
+      new_content: <<-EOF
+#{version} - 20380119
+ffffffffffffffffffffffffffffffffffffffff
+live-build: 3.0.5+really+is+2.0.12-0.tails2
+live-boot: 4.0.2-1
+live-config: 4.0.4-1
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'etc/os-release',
+      status: :modified,
+      new_content: <<-EOF
+TAILS_PRODUCT_NAME="Tails"
+TAILS_VERSION_ID="#{version}"
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'usr/share/common-licenses/BSD',
+      status: :removed
+    },
+    {
+      filesystem: :medium,
+      path: 'utils/linux/syslinux',
+      status: :removed
+    },
+  ]
+  changes.each do |change|
+    case change[:filesystem]
+    when :rootfs
+      path = '/'
+      path += "var/lib/#{chroot_browser}/chroot/" if chroot_browser
+      path += change[:path]
+    when :medium
+      path = '/lib/live/mount/medium/' + change[:path]
+    else
+      raise "Unknown filesysten '#{change[:filesystem]}'"
+    end
+    case change[:status]
+    when :removed
+      assert_equal(!upgrade_applied, $vm.file_exist?(path))
+    when :added
+      assert_equal(upgrade_applied, $vm.file_exist?(path))
+      if upgrade_applied && change[:new_content]
+        assert_equal(change[:new_content], $vm.file_content(path))
+      end
+    when :modified
+      assert($vm.file_exist?(path))
+      if upgrade_applied
+        assert_not_nil(change[:new_content])
+        assert_equal(change[:new_content], $vm.file_content(path))
+      end
+    else
+      raise "Unknown status '#{change[:status]}'"
+    end
+  end
+end
+
+Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |version|
+  @screen.wait("TailsUpgraderUpgradeTo#{version}.png", 2*60)
+end
+
+When /^I agree to install the incremental upgrade$/ do
+  @screen.click('TailsUpgraderUpgradeNowButton.png')
+end
+
+Then /^the incremental upgrade is reportedly installed$/ do
+  @screen.wait('TailsUpgraderDone.png', 2*60)
+end
