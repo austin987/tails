@@ -4,6 +4,7 @@ PREREQ=""
 
 # Duplicated in features/step_definitions/erase_memory.rb
 KERNEL_MEM_RESERVED_K=$((64*1024))
+ADMIN_MEM_RESERVED_K=$((128*1024))
 
 prereqs() {
    echo "${PREREQ}"
@@ -22,6 +23,7 @@ tweak_sysctl() {
     # Make sure the kernel doesn't starve, for better reliability when
     # running the test suite.
     echo "$KERNEL_MEM_RESERVED_K" > /proc/sys/vm/min_free_kbytes
+    echo "$ADMIN_MEM_RESERVED_K"  > /proc/sys/vm/admin_reserve_kbytes
    fi
 }
 
