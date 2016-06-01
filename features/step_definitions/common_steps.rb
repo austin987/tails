@@ -166,6 +166,11 @@ Given /^the network is unplugged$/ do
   $vm.unplug_network
 end
 
+Given /^the network connection is ready(?: within (\d+) seconds)?$/ do |timeout|
+  timeout ||= 30
+  try_for(timeout.to_i) { $vm.has_network? }
+end
+
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
   $vm.set_hardware_clock(DateTime.parse(time).to_time)
 end
@@ -911,9 +916,10 @@ Given /^Tails is fooled to think it is running version (.+)$/ do |version|
   )
 end
 
-Given /^the file system changes introduced in version (.+) are (not )?present$/ do |version, not_present|
+Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|
   assert_equal('1.1~test', version)
   upgrade_applied = not_present.nil?
+  chroot_browser = "#{chroot_browser.downcase}-browser" if chroot_browser
   changes = [
     {
       filesystem: :rootfs,
@@ -958,7 +964,9 @@ TAILS_VERSION_ID="#{version}"
   changes.each do |change|
     case change[:filesystem]
     when :rootfs
-      path = '/' + change[:path]
+      path = '/'
+      path += "var/lib/#{chroot_browser}/chroot/" if chroot_browser
+      path += change[:path]
     when :medium
       path = '/lib/live/mount/medium/' + change[:path]
     else

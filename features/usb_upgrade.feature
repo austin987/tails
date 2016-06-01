@@ -176,3 +176,7 @@ Feature: Upgrading an old Tails USB installation
     Then Tails is running version 1.1~test
     And all persistence presets are enabled
     And the file system changes introduced in version 1.1~test are present
+    When the network is plugged
+    And the network connection is ready within 30 seconds
+    And I successfully start the Unsafe Browser
+    Then the file system changes introduced in version 1.1~test are present in the Unsafe Browser's chroot
