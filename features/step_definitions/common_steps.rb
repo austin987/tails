@@ -981,8 +981,8 @@ TAILS_VERSION_ID="#{version}"
         assert_equal(change[:new_content], $vm.file_content(path))
       end
     when :modified
+      assert($vm.file_exist?(path))
       if upgrade_applied
-        assert_equal(upgrade_applied, $vm.file_exist?(path))
         assert_not_nil(change[:new_content])
         assert_equal(change[:new_content], $vm.file_content(path))
       end
