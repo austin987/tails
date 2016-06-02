@@ -52,31 +52,9 @@ Feature: Various checks
     And Tor is ready
     Then the running process "tor" is confined with Seccomp in filter mode
 
-  Scenario: The emergency shutdown applet can shutdown Tails
-    Given I have started Tails from DVD without network and logged in
-    When I request a shutdown using the emergency shutdown applet
-    Then Tails eventually shuts down
-
-  Scenario: The emergency shutdown applet can reboot Tails
-    Given I have started Tails from DVD without network and logged in
-    When I request a reboot using the emergency shutdown applet
-    Then Tails eventually restarts
-
   Scenario: tails-debugging-info does not leak information
     Given I have started Tails from DVD without network and logged in
     Then tails-debugging-info is not susceptible to symlink attacks
-
-  Scenario: Tails shuts down on DVD boot medium removal
-    Given I have started Tails from DVD without network and logged in
-    When I eject the boot medium
-    Then Tails eventually shuts down
-
-  #10720
-  @fragile
-  Scenario: Tails shuts down on USB boot medium removal
-    Given I have started Tails without network from a USB drive without a persistent partition and logged in
-    When I eject the boot medium
-    Then Tails eventually shuts down
 
   Scenario: The Tails Greeter "disable all networking" option disables networking within Tails
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
