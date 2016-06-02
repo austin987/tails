@@ -17,3 +17,11 @@ Feature: Networking
     And I disable all networking in the Tails Greeter
     And I log in to a new session
     Then no network interfaces are enabled
+
+  #11463
+  @fragile
+  Scenario: The 'Tor is ready' notification is shown when Tor has bootstrapped
+    Given I have started Tails from DVD without network and logged in
+    And the network is plugged
+    When I see the 'Tor is ready' notification
+    Then Tor is ready
