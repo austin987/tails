@@ -1,11 +1,6 @@
 @product
 Feature: Various checks
 
-  Scenario: AppArmor is enabled and has enforced profiles
-    Given I have started Tails from DVD without network and logged in
-    Then AppArmor is enabled
-    And some AppArmor profiles are enforced
-
   Scenario: The shipped Tails OpenPGP keys are up-to-date
     Given I have started Tails from DVD without network and logged in
     Then the OpenPGP keys shipped with Tails will be valid for the next 3 months
@@ -40,12 +35,6 @@ Feature: Various checks
     And the network is plugged
     When I see the 'Tor is ready' notification
     Then Tor is ready
-
-  Scenario: The tor process should be confined with Seccomp
-    Given I have started Tails from DVD without network and logged in
-    And the network is plugged
-    And Tor is ready
-    Then the running process "tor" is confined with Seccomp in filter mode
 
   Scenario: tails-debugging-info does not leak information
     Given I have started Tails from DVD without network and logged in
