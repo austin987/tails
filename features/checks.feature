@@ -1,15 +1,6 @@
 @product
 Feature: Various checks
 
-  @doc
-  Scenario: The "Report an Error" launcher will open the support documentation
-    Given I have started Tails from DVD without network and logged in
-    And the network is plugged
-    And Tor is ready
-    And all notifications have disappeared
-    When I double-click the Report an Error launcher on the desktop
-    Then the support documentation page opens in Tor Browser
-
   Scenario: No initial network
     Given I have started Tails from DVD without network and logged in
     And I wait between 30 and 60 seconds
