@@ -6,11 +6,6 @@ Feature: Various checks
     Then AppArmor is enabled
     And some AppArmor profiles are enforced
 
-  Scenario: VirtualBox guest modules are available
-    Given I have started Tails from DVD without network and logged in
-    When Tails has booted a 64-bit kernel
-    Then the VirtualBox guest modules are available
-
   Scenario: The shipped Tails OpenPGP keys are up-to-date
     Given I have started Tails from DVD without network and logged in
     Then the OpenPGP keys shipped with Tails will be valid for the next 3 months
