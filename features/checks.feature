@@ -6,12 +6,6 @@ Feature: Various checks
     Then AppArmor is enabled
     And some AppArmor profiles are enforced
 
-  Scenario: A screenshot is taken when the PRINTSCREEN key is pressed
-    Given I have started Tails from DVD without network and logged in
-    And there is no screenshot in the live user's Pictures directory
-    When I press the "PRINTSCREEN" key
-    Then a screenshot is saved to the live user's Pictures directory
-
   Scenario: VirtualBox guest modules are available
     Given I have started Tails from DVD without network and logged in
     When Tails has booted a 64-bit kernel
