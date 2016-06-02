@@ -84,10 +84,8 @@ def robust_notification_wait(notification_image, time_to_wait)
     found
   end
 
-  # Click anywhere to close the notification applet
-  @screen.hide_cursor
-  @screen.click("GnomeApplicationsMenu.png")
-  @screen.hide_cursor
+  # Close the notification applet
+  @screen.type(Sikuli::Key.ESC)
 end
 
 def post_snapshot_restore_hook
@@ -201,7 +199,6 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    step "Tails seems to have booted normally"
     if network_unplugged.nil?
       step "Tor is ready"
       step "all notifications have disappeared"
@@ -230,7 +227,6 @@ Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I 
       end
     end
     step "I log in to a new session"
-    step "Tails seems to have booted normally"
     if network_unplugged.empty?
       step "Tor is ready"
       step "all notifications have disappeared"
@@ -335,6 +331,13 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
   }
 end
 
+def florence_keyboard_is_visible
+  $vm.execute(
+    "xdotool search --all --onlyvisible --maxdepth 1 --classname 'Florence'",
+    :user => LIVE_USER,
+  ).success?
+end
+
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
@@ -352,11 +355,15 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
     :user => LIVE_USER,
   )
-
-end
-
-Then /^Tails seems to have booted normally$/ do
-  step "the Tails desktop is ready"
+  # Sometimes the Florence window is not hidden on startup (#11398).
+  # Whenever that's the case, hide it ourselves and verify that it vanishes.
+  # I could not find that window using Accerciser, so I'm not using dogtail;
+  # and it doesn't feel worth it to add an image and use Sikuli, since we can
+  # instead do this programmatically with xdotool.
+  if florence_keyboard_is_visible
+    @screen.click("GnomeSystrayFlorence.png")
+    try_for(5, delay: 0.1) { ! florence_keyboard_is_visible }
+  end
 end
 
 When /^I see the 'Tor is ready' notification$/ do
@@ -425,8 +432,12 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  next if not(@screen.exists("GnomeNotificationApplet.png"))
-  @screen.click("GnomeNotificationApplet.png")
+  begin
+    @screen.click("GnomeNotificationApplet.png")
+  rescue FindFailed
+    # No notifications, so we're done here.
+    next
+  end
   @screen.wait("GnomeNotificationAppletOpened.png", 10)
   begin
     entries = @screen.findAll("GnomeNotificationEntry.png")
