@@ -242,11 +242,11 @@ download:
 
 ### 3. Schedule the pulling of the files
 
-Your mirror should sync every hour + 15 minutes (at 00:15, 01:15, 02:15, etc.).
+Your mirror should sync every hour + a random time (maximum 40 minutes).
 Use `cron` or equivalent to schedule the same `rsync` command
 as above.
 
-    15 * * * * root rsync -rt --delete rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
+    0 * * * * root sleep $(perl -E 'print int(rand(2400))') && rsync -rt --delete rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
 You can now [[ask for your mirror to be added to the pool|mirror#http-pool]].
 

@@ -1,5 +1,4 @@
-#10497: wait_until_tor_is_working
-@product @fragile
+@product
 Feature: Chatting anonymously using Pidgin
   As a Tails user
   when I chat using Pidgin
@@ -22,7 +21,6 @@ Feature: Chatting anonymously using Pidgin
     And I say something to my friend
     Then I receive a response from my friend
 
-  # 10376 - "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
   #11414
   @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP in a multi-user chat
@@ -106,6 +104,7 @@ Feature: Chatting anonymously using Pidgin
     When I create my XMPP account
     And I close Pidgin's account manager window
     Then Pidgin automatically enables my XMPP account
+    When I close Pidgin
     # And I generate an OTR key for the default Pidgin account
     And I take note of the configured Pidgin accounts
     # And I take note of the OTR key for Pidgin's "conference.riseup.net" account
