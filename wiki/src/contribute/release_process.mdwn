@@ -649,14 +649,14 @@ Prepare upgrade-description files
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
 
-       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" \
-          -type f -name upgrades.yml -exec \
-             gpg -u "$TAILS_SIGNATURE_KEY" --armor --detach-sign {} \;
-
-1. Rename each detached signature to `.pgp`:
-
-       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" -type f \
-          -name upgrades.yml.asc -exec rename -f 's,\.asc$,.pgp,' {} \;
+       find "${RELEASE_CHECKOUT}/wiki/src/upgrade/" \
+          -type f -name upgrades.yml | \
+          while read udf; do
+              if [ -n "$(git status --porcelain "${udf}")" ]; then
+                  gpg -u "${TAILS_SIGNATURE_KEY}" --armor --detach-sign "${udf}"
+                  mv "${udf}.asc" "${udf}.pgp"
+              fi
+          done
 
 1. Add and commit the upgrade-description files and their detached
    signatures to the Git branch used to prepare the release (`stable`
