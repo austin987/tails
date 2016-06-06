@@ -653,6 +653,10 @@ Prepare upgrade-description files
           -type f -name upgrades.yml | \
           while read udf; do
               if [ -n "$(git status --porcelain "${udf}")" ]; then
+                  ( \
+                    cd $IUK_CHECKOUT && \
+                    ./bin/tails-iuk-check-upgrade-description-file "${udf}" \
+                  ) || break
                   gpg -u "${TAILS_SIGNATURE_KEY}" --armor --detach-sign "${udf}"
                   mv "${udf}.asc" "${udf}.pgp"
               fi
@@ -664,12 +668,6 @@ Prepare upgrade-description files
 
        ( cd "$RELEASE_CHECKOUT" && git add wiki/src/upgrade && \
           git commit -m "Update upgrade-description files." )
-
-1. Check the syntactic correctness of all upgrade-description files:
-
-       ( cd $IUK_CHECKOUT && \
-          ./bin/tails-iuk-check-upgrade-description-file \
-             ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml )
 
 1. If preparing a release candidate, move the generated or updated
    files to `$MASTER_CHECKOUT`, commit and push: given the updates are
