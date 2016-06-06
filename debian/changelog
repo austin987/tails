@@ -2,7 +2,157 @@ tails (2.4) UNRELEASED; urgency=medium
 
   * Dummy entry.
 
- -- anonym <anonym@riseup.net>  Thu, 25 Feb 2016 19:01:40 +0100
+ -- anonym <anonym@riseup.net>  Thu, 26 May 2016 19:54:45 +0200
+
+tails (2.4~rc1) unstable; urgency=medium
+
+  * Major new features and changes
+    - Upgrade Tor Browser to 6.0 based on Firefox 45.2. (Closes:
+      #11403).
+    - Enable Icedove's automatic configuration wizard. We patch the
+      wizard to only use secure protocols when probing, and only
+      accept secure protocols, while keeping the improvements done by
+      TorBirdy in its own non-automatic configuration wizard. (Closes:
+      #6158, #11204)
+
+  * Bugfixes
+    - Enable Packetization Layer Path MTU Discovery for IPv4. If any
+      system on the path to the remote host has a MTU smaller than the
+      standard Ethernet one, then Tails will receive an ICMP packet
+      asking it to send smaller packets. Our firewall will drop such
+      ICMP packets to the floor, and then the TCP connection won't
+      work properly. This can happen to any TCP connection, but so far
+      it's been reported as breaking obfs4 for actual users. Thanks to
+      Yawning for the help! (Closes: #9268)
+    - Make Tails Upgrader ship other locales than English. (Closes:
+      #10221)
+
+  * Minor improvements
+    - Icedove improvements:
+      * Stop patching in our default into Torbirdy. We've upstreamed
+        some parts, and the rest we set with pref branch overrides in
+        /etc/xul-ext/torbirdy.js. (Closes: #10905)
+      * Use hkps keyserver in Engimail. (Closes: #10906)
+      * Default to POP if persistence is enabled, IMAP is
+        not. (Closes: #10574)
+      * Disable remote email account creation in Icedove. (Closes:
+        #10464)
+    - Firewall hardening (Closes: #11391):
+      * Don't accept RELATED packets. This enables quite a lot of code
+        in the kernel that we don't need. Let's reduce the attack
+        surface a bit.
+      * Restrict debian-tor user to NEW TCP syn packets. It doesn't
+        need to do more, so let's do a little bit of security in
+        depth.
+      * Disable netfilter's nf_conntrack_helper.
+      * Fix disabling of automatic conntrack helper assignment.
+    - Kernel hardening:
+      * Set various kernel boot options: slab_nomerge slub_debug=FZ
+        mce=0 vsyscall=none. (Closes: #11143)
+      * Remove the kernel .map files. These are only useful for kernel
+        debugging and slightly make things easier for malware, perhaps
+        and otherwise just occupy disk space. Also stop exposing
+        kernel memory addresses through /proc etc. (Closes: #10951)
+    - Drop zenity hacks to "focus" the negative answer. Jessie's
+      zenity introduced the --default-cancel option, finally!
+      (Closes: #11229)
+    - Drop useless APT pinning for Linux.
+    - Remove gnome-tweak-tool. (Closes: #11237)
+    - Install python-dogtail, to enable accessibility technologies in
+      our automated test suite (see below). (Part of: #10721)
+    - Install libdrm and mesa from jessie-backports. (Closes: #11303)
+    - Remove hledger. (Closes: #11346)
+    - Don't pre-configure the #tails chan on the default OFTC account.
+      (Part of: #11306)
+    - Install onioncircuits from jessie-backports. (Closes: #11443)
+    - Remove nmh. (Closes: #10477)
+    - Drop Debian experimental APT source: we don't use it.
+    - Use APT codenames (e.g. "stretch") instead of suites, to be
+      compatible with our tagged APT snapshots.
+    - Drop module-assistant hook and its cleanup. We've not been using
+      it since 2010.
+    - Remove 'Reboot' and 'Power Off' entries from Applications →
+      System Tools. (Closes: #11075)
+    - Pin our custom APT repo to the same level as Debian ones, and
+      explicitly pin higher the packages we want to pull from our custom
+      APT repo, when needed.
+    - config/chroot_local-hooks/59-libdvd-pkg: verify libdvdcss
+      package installation. (Closes: #11420)
+    - Make Tails Upgrader use our new mirror pool design. (Closes:
+      #11123)
+
+  * Build system
+    - Use a freezable APT repo when building Tails. This is a first
+      step towards reproducible builds, and improves our QA and
+      development processes by making our builds more predictable. For
+      details, see: https://tails.boum.org/contribute/APT_repository/
+    - There has been a massive amount of improvements to the
+      Vagrant-based build system, and now it could be considered the
+      de-facto build system for Tails! Improvements and fixes include:
+      * Migrate Vagrant to use libvirt/KVM instead of
+        Virtualbox. (Closes: #6354)
+      * Make apt-get stuff non-interactive while provisioning.
+        Because there is no interaction, so that will results in
+        errors.
+      * Bump disk space (=> RAM for RAM builds) needed to build with
+        Vagrant. Since the Jessie migration it seems impossible to
+        keep this low enough to fit in 8 GiB or RAM. For this reason
+        we also drop the space optimization where we build inside a
+        crazy aufs stack; now we just build in a tmpfs.
+      * Clean up apt-cacher-ng cache on vm:provision to save disk
+        space on the builder.
+      * Add convenient Rake task for SSH:ing into the builder VM:
+        `rake vm:ssh`.
+      * Add rake task for generating a new Vagrant base box.
+      * Automatically provision the VM on build to keep things up-to-date.
+      * Don't enable extproxy unless explicitly given as an
+        option. Previously it would automatically be enabled when
+        `http_proxy` is set in the environment, unlike what is
+        documented. This will hopefully lead to fewer surprises for users
+        who e.g. point http_proxy to a torified polipo, or similar.
+      * Re-fetch tags when running build-tails with Vagrant. That
+        should fix an annoyance related to #7182 that I frequently
+        encounter: when I, as the RM, rebuild the release image the
+        second time from the force-updated tag, the build system would
+        not have the force-updated tag. (Closes: #7182)
+      * Make sure we use the intended locale in the Tails builder VM.
+        Since we communicate via SSH, and e.g. Debian forward the
+        locale env vars by default, we have to take some steps
+        ensuring we do not do that.
+    - Pull monkeysphere from stretch to avoid failing to install under
+      eatmydata. Patch submitted by Cyril Brulebois <cyril@debamax.com>.
+
+  * Test suite
+    - Add wrapper around dogtail (inside Tails) for "remote" usage in
+      the automated test suite. This provides a simple interface for
+      generating dogtail python code, sending it to the guest, and
+      executing it, and should allow us to write more robust tests
+      leveraging assistive technologies. (Closes: #10721)
+    - A few previously sikuli-based tests has been migrated to use
+      dogtail instead, e.g. GNOME Applications menu interaction.
+    - Add a test for re-configuring an existing persistent volume.
+      This is a regression test for #10809. (Closes: #10834)
+    - Use a simulated Tor network provided by Chutney in the automated
+      test suite. The main motivation here is improved robustness --
+      since the "Tor network" we now use will exit from the host
+      running the automated test suite, we won't have to deal with Tor
+      network blocking, or unreliable circuits. Performance should
+      also be improved. (Closes: #9521)
+    - Drop the usage of Tor Check in our tests. It doesn't make sense
+      now when we use Chutney since that always means it will report
+      that Tor is not being used.
+    - Stop testing obsolete pluggable transports.
+    - Completely rewrite the firewall leak detector to something more
+      flexible and expressive.
+    - Run tcpdump with --immediate-mode for the network sniffer. With
+      this option, "packets are delivered to tcpdump as soon as they
+      arrive, rather than being buffered for efficiency" which is
+      required to make the sniffing work reliable the way we use it.
+    - Remove most scenarios testing "tordate". It just isn't working
+      well in Tails, so we shouldn't expect the tests to actually work
+      all of the time. (Closes: #10440)
+
+ -- Tails developers <tails@boum.org>  Wed, 25 May 2016 18:24:57 +0200
 
 tails (2.3.1) UNRELEASED; urgency=medium
 

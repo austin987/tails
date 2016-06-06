@@ -326,7 +326,7 @@ end
 Given /^Tails Greeter has dealt with the sudo password$/ do
   f1 = "/etc/sudoers.d/tails-greeter"
   f2 = "#{f1}-no-password-lecture"
-  try_for(20) {
+  try_for(30) {
     $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
   }
 end
@@ -362,7 +362,7 @@ Given /^the Tails desktop is ready$/ do
   # instead do this programmatically with xdotool.
   if florence_keyboard_is_visible
     @screen.click("GnomeSystrayFlorence.png")
-    try_for(2) { ! florence_keyboard_is_visible }
+    try_for(5, delay: 0.1) { ! florence_keyboard_is_visible }
   end
 end
 
@@ -403,14 +403,14 @@ end
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    picture = "TorBrowserStartupPage.png"
+    title = 'Tails - News'
   when "Tails roadmap"
-    picture = "TorBrowserTailsRoadmap.png"
+    title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
     raise "Unsupported page: #{page}"
   end
   step "the Tor Browser has started"
-  @screen.wait(picture, 120)
+  step "\"#{title}\" has loaded in the Tor Browser"
 end
 
 Given /^the Tor Browser has started in offline mode$/ do
@@ -436,7 +436,7 @@ Given /^all notifications have disappeared$/ do
     @screen.click("GnomeNotificationApplet.png")
   rescue FindFailed
     # No notifications, so we're done here.
-    return
+    next
   end
   @screen.wait("GnomeNotificationAppletOpened.png", 10)
   begin

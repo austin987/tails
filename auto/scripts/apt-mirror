@@ -10,7 +10,8 @@ ARCHIVE="$1"
 output_tagged_snapshot() {
    local archive="$1"
    local tag="$2"
-   echo "http://tagged.snapshots.deb.tails.boum.org/$tag/$archive"
+   local snapshot=$(branch_name_to_suite "$tag")
+   echo "http://tagged.snapshots.deb.tails.boum.org/$snapshot/$archive"
 }
 
 output_time_based_snapshot() {
@@ -30,7 +31,7 @@ RESOLVED_SERIAL=$(cat "tmp/APT_snapshots.d/$ARCHIVE/serial")
 
 if [ "$(base_branch)" = stable ]; then
     if version_was_released "$(version_in_changelog)"; then
-        [ "$(current_branch)" = stable ] \
+        on_a_tag \
             || fatal "Not building from stable, but last version in changelog" \
                      "was released"
         output_tagged_snapshot "$ARCHIVE" "$(version_in_changelog)"
@@ -56,8 +57,8 @@ if [ "$(base_branch)" = stable ]; then
     fi
 elif [ "$(base_branch)" = testing ]; then
     if version_was_released "$(version_in_changelog)"; then
-        [ "$(current_branch)" = testing ] \
-            || fatal "Not building from testing, but last version in changelog" \
+        on_a_tag \
+            || fatal "Not building from a tag, but last version in changelog" \
                      "was released"
         [ "$ARCHIVE" = debian-security ] || [ "$SERIAL" != latest ] \
             || fatal "APT snapshots for $ARCHIVE are not frozen, which should" \

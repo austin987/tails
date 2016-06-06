@@ -1,3 +1,4 @@
+#10498: SSH tests are fragile
 @product @fragile
 Feature: Logging in via SSH
   As a Tails user

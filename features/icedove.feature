@@ -11,9 +11,6 @@ Feature: Icedove email client
     And I have not configured an email account
     Then I am prompted to setup an email account
 
-  Scenario: Icedove defaults to using IMAP
-    Then IMAP is the default protocol
-
   Scenario: Adblock is not enabled within Icedove
     Given I cancel setting up an email account
     When I open Icedove's Add-ons Manager
