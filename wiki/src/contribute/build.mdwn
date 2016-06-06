@@ -30,7 +30,7 @@ For details how Vagrant is setup, see its
 ## Installing the dependencies in Debian
 
 If you run Debian Jessie, you must install a few dependencies from
-Debian Stretch:
+Debian Stretch, and one of Tails' repos until [!debbug 823395]] is fixed:
 
     sudo tee /etc/apt/sources.list.d/stretch.list <<EOF
     deb http://ftp.us.debian.org/debian/ stretch main
@@ -45,6 +45,13 @@ Debian Stretch:
     Pin: release o=Debian,n=stretch
     Pin-Priority: 990
     EOF
+
+    sudo apt-key add config/chroot_sources/tails.chroot.gpg
+    sudo tee /etc/apt/sources.list.d/builder-jessie.list <<EOF
+    deb http://deb.tails.boum.org/ builder-jessie main
+    deb-src http://deb.tails.boum.org/ builder-jessie main
+    EOF
+
     sudo apt-get update
 
 Now we can install all the dependencies:
