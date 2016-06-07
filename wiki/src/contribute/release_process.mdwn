@@ -492,6 +492,11 @@ Build the final image
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
 
+* Mark the version as "released" in the changelog:
+
+      dch --release --no-force-save-on-release --maintmaint
+      git commit -m "Mark Tails ${VERSION} as released." debian/changelog
+
 * tag the release *again*, with all included files in:
   
       git tag -f -u "$TAILS_SIGNATURE_KEY" \
@@ -610,7 +615,6 @@ Prepare upgrade-description files
            --next-version "$NEXT_MAJOR_VERSION" \
            --next-version "${NEXT_MAJOR_VERSION}~rc1" \
            --next-version "${VERSION}.1" \
-           --next-version "${VERSION}.1~rc1" \
            --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
            --previous-version "$PREVIOUS_VERSION" \
            --previous-version "${VERSION}~rc1" \
@@ -645,14 +649,18 @@ Prepare upgrade-description files
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
 
-       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" \
-          -type f -name upgrades.yml -exec \
-             gpg -u "$TAILS_SIGNATURE_KEY" --armor --detach-sign {} \;
-
-1. Rename each detached signature to `.pgp`:
-
-       find "$RELEASE_CHECKOUT/wiki/src/upgrade/" -type f \
-          -name upgrades.yml.asc -exec rename -f 's,\.asc$,.pgp,' {} \;
+       find "${RELEASE_CHECKOUT}/wiki/src/upgrade/" \
+          -type f -name upgrades.yml | \
+          while read udf; do
+              if [ -n "$(git status --porcelain "${udf}")" ]; then
+                  ( \
+                    cd $IUK_CHECKOUT && \
+                    ./bin/tails-iuk-check-upgrade-description-file "${udf}" \
+                  ) || break
+                  gpg -u "${TAILS_SIGNATURE_KEY}" --armor --detach-sign "${udf}"
+                  mv "${udf}.asc" "${udf}.pgp"
+              fi
+          done
 
 1. Add and commit the upgrade-description files and their detached
    signatures to the Git branch used to prepare the release (`stable`
@@ -660,12 +668,6 @@ Prepare upgrade-description files
 
        ( cd "$RELEASE_CHECKOUT" && git add wiki/src/upgrade && \
           git commit -m "Update upgrade-description files." )
-
-1. Check the syntactic correctness of all upgrade-description files:
-
-       ( cd $IUK_CHECKOUT && \
-          ./bin/tails-iuk-check-upgrade-description-file \
-             ${RELEASE_CHECKOUT}/wiki/src/upgrade/v1/*/*/*/*/upgrades.yml )
 
 1. If preparing a release candidate, move the generated or updated
    files to `$MASTER_CHECKOUT`, commit and push: given the updates are
