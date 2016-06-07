@@ -1,5 +1,4 @@
-#10497: wait_until_tor_is_working
-@product @check_tor_leaks @fragile
+@product @check_tor_leaks
 Feature: Tor stream isolation is effective
   As a Tails user
   I want my Torified sessions to be sensibly isolated from each other to prevent identity correlation
