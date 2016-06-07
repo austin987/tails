@@ -384,6 +384,72 @@ be that a new VM is created, because we do not want to have to deal
 with re-installing the correct versions when switching between
 branches.
 
+## Debian (or nothing!) as trust anchor when building Tails
+
+Note: this goal should probably not be part of our first iteration of
+making Tails reproducible unless it turns out to be truly easy. But it
+can be good to keep this potential future goal in mind so we don't
+make decisions making it harder.
+
+A possible goal for us could be that, when building Tails, delegate
+the trust of the authenticity (here this means that a binary was built
+from the claimed source code) of the binaries used, from the Tails
+project (incl. infra) to the Debian project (incl. infra). This
+includes both binaries used when building Tails, and the binaries that
+end up inside the final Tails image. After all, the goal here is that
+looking at the source and building it should be enough to authenticate
+the images we ship.
+
+In our custom APT repo we ship packages that we build ourselves, so we
+need to make all of them build reproducibly for this goal to give any
+real confidence. That includes both packages installed inside the
+final Tails image (e.g. `tails-greeter`) and those used in the build
+process (e.g. our patched `live-build`). Note that this would also be
+nice to have in our QA process as a safe guard against contributors
+uploading a (knowingly or not) compromised package, i.e. the reviewer
+must be able to reproducibly build the same package.
+
+In our frozen APT suites we allegedly ship tons of packages imported
+straight from Debian. We should provide scripts that make it easy to
+verify that that is the case, perhaps by downloading the needed signed
+indexes/manifests etc from `snapshot.debian.org` and doing the
+necessary checks. Or possibly even better: in each APT suite we can
+include a package containing all the proofs needed to verify the
+sources of all packages in the same suite, i.e. all
+`dists/.../Packages`, `dists/.../Release{,.pgp}` and APT repo signing
+keys used. That will make it easier to deal with non-Debian sources we
+use (e.g. `deb.torproject.org`) that don't necessarily archive
+historical APT repo state like `snapshot.debian.org` does. Users would
+*only* need to authenticate all APT repo keys shipped in that package,
+or similar. Hopefully Debian provides a way to authenticate obsolete
+APT repo signing keys (e.g. by signing the old one with the new one)
+so at least that part can be scripted/automated.
+
+We also need to make it possible for users to generate the "static
+build environment" (see above) themselves so they do not have to rely
+on whatever binary blob (e.g. VM config + disk image) we
+distribute. As already mentioned above, it should be possible to to do
+this by leveraging our APT infrastructure's ability to freeze APT
+state, which then can be verified as described above. Whatever the
+users manage to produce does not need to be bit-by-bit identical with
+binary blob we distribute; it just must have the same properties for
+building Tails in a reproducible manner, which it should have provided
+the frozen APT state used during generation.
+
+(FWIW: given the experience we'll gather making Tails itself
+reproducible, making the generation of the "static build environment"
+reproducible is likely trivial in comparison. Having that would be
+nice, but, as pointed out above, not necessary for this goal.)
+
+Given all the above, users should be able to build Tails reproducibly
+while only having had to trust Debian for any binaries used in the
+process. Combine this with all Debian packages being reproducible at
+some point and we're basically down to the "Reflections on Trusting
+Trust" level when it comes to the "trust anchor", and close to reach
+reproducability nirvana. I guess the next step would be to rely less
+on a "static build environment" to support something like "Diverse
+Double-Compiling" to counter the "Trusting Trust" problem. :)
+
 ## Jenkins
 
 XXX: see "Adjust our infrastructure accordingly" above, that has some

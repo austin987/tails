@@ -1,6 +1,4 @@
-#10376: The "the Tor Browser loads the (startup page|Tails roadmap)" step is fragile
-#10497: wait_until_tor_is_working
-@product @fragile
+@product
 Feature: Browsing the web using the Tor Browser
   As a Tails user
   when I browse the web using the Tor Browser
@@ -46,17 +44,6 @@ Feature: Browsing the web using the Tor Browser
     And I open the address "http://www.terrillthompson.com/tests/html5-audio.html" in the Tor Browser
     And I click the HTML5 play button
     And 1 application is playing audio after 10 seconds
-
-  @check_tor_leaks @fragile
-  Scenario: Watching a WebM video
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
-    And I open the address "https://tails.boum.org/lib/test_suite/test.webm" in the Tor Browser
-    And I click the blocked video icon
-    And I see "TorBrowserNoScriptTemporarilyAllowDialog.png" after at most 30 seconds
-    And I accept to temporarily allow playing this video
-    Then I see "TorBrowserSampleRemoteWebMVideoFrame.png" after at most 180 seconds
 
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given I have started Tails from DVD and logged in and the network is connected
@@ -126,7 +113,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started and loaded the startup page
     Then the Tor Browser has no plugins installed
 
-  #10497, #10720
+  #10720
   @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
