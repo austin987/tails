@@ -1,19 +1,36 @@
-tails (2.4) UNRELEASED; urgency=medium
+tails (2.4.1) UNRELEASED; urgency=medium
 
   * Dummy entry.
 
- -- anonym <anonym@riseup.net>  Thu, 26 May 2016 19:54:45 +0200
+ -- anonym <anonym@riseup.net>  Tue, 07 Jun 2016 02:19:45 +0200
 
-tails (2.4~rc1) unstable; urgency=medium
+tails (2.4) unstable; urgency=medium
 
   * Major new features and changes
-    - Upgrade Tor Browser to 6.0 based on Firefox 45.2. (Closes:
-      #11403).
+    - Upgrade Tor Browser to 6.0.1 based on Firefox 45.2. (Closes:
+      #11403, #11513).
     - Enable Icedove's automatic configuration wizard. We patch the
       wizard to only use secure protocols when probing, and only
       accept secure protocols, while keeping the improvements done by
       TorBirdy in its own non-automatic configuration wizard. (Closes:
       #6158, #11204)
+
+  * Security fixes
+    - Upgrade bsdtar and libarchive13 to 3.1.2-11+deb8u1.
+    - Upgrade icedove to 38.8.0-1~deb8u1+tails3.
+    - Upgrade imagemagick to 8:6.8.9.9-5+deb8u3.
+    - Upgrade libexpat1 to 2.1.0-6+deb8u2.
+    - Upgrade libgd3 to 2.1.0-5+deb8u3.
+    - Upgrade gdk-pixbuf-based packages to 2.31.1-2+deb8u5.
+    - Upgrade libidn11 to 1.29-1+deb8u1.
+    - Upgrade libndp0 to 1.4-2+deb8u1.
+    - Upgrade poppler-based packages to 0.26.5-2+deb8u1.
+    - Upgrade librsvg2-2 to 2.40.5-1+deb8u2.
+    - Upgrade libsmbclient to 2:4.2.10+dfsg-0+deb8u3.
+    - Upgrade OpenSSL to 1.0.1k-3+deb8u5.
+    - Upgrade libtasn1-6 to 4.2-3+deb8u2.
+    - Upgrade libxml2 to 2.9.1+dfsg1-5+deb8u2.
+    - Upgrade openjdk-7-jre to 7u101-2.6.6-1~deb8u1.
 
   * Bugfixes
     - Enable Packetization Layer Path MTU Discovery for IPv4. If any
@@ -26,13 +43,18 @@ tails (2.4~rc1) unstable; urgency=medium
       Yawning for the help! (Closes: #9268)
     - Make Tails Upgrader ship other locales than English. (Closes:
       #10221)
+    - Make it possible to add local USB printers again. Bugfix on
+      Tails 2.0. (Closes #10965).
 
   * Minor improvements
+    - Remove custom SSH ciphers and MACs settings. (Closes: #7315)
+    - Bring back "minimize" and "maximize" buttons in titlebars by
+      default. (Closes: #11270)
     - Icedove improvements:
       * Stop patching in our default into Torbirdy. We've upstreamed
         some parts, and the rest we set with pref branch overrides in
         /etc/xul-ext/torbirdy.js. (Closes: #10905)
-      * Use hkps keyserver in Engimail. (Closes: #10906)
+      * Use hkps keyserver in Enigmail. (Closes: #10906)
       * Default to POP if persistence is enabled, IMAP is
         not. (Closes: #10574)
       * Disable remote email account creation in Icedove. (Closes:
@@ -80,6 +102,14 @@ tails (2.4~rc1) unstable; urgency=medium
       package installation. (Closes: #11420)
     - Make Tails Upgrader use our new mirror pool design. (Closes:
       #11123)
+    - Drop custom OpenSSH client ciphers and MACs settings. We did a
+      pretty bad job at maintaining them compared to the Debian
+      upstream. (Closes: #7315)
+    - Install jessie-backports version of all binary packages built
+      from src:hplip. This adds support for quite a few new
+      printers.
+    - Install printer-driver-postscript-hp, which adds support for
+      some more printers.
 
   * Build system
     - Use a freezable APT repo when building Tails. This is a first
@@ -151,8 +181,19 @@ tails (2.4~rc1) unstable; urgency=medium
     - Remove most scenarios testing "tordate". It just isn't working
       well in Tails, so we shouldn't expect the tests to actually work
       all of the time. (Closes: #10440)
+    - Close Pidgin before we inspect or persist its accounts.xml.
+      I've seen a case when that file is _not_ saved (and thus, not
+      persisted) if we shut down the system while Pidgin is still
+      running. (Closes: #11413)
+    - Close the GNOME Notification bar by pressing ESC, instead of
+      opening the Applications menu. The Applications menu often
+      covers other elements that we're looking for on the
+      screen. (Closes #11401)
+    - Hide Florence keyboard window when it doesn't vanish by itself
+      (Closes: #11398) and wait a bit less for Florence to disappear
+      (Closes: #11464).
 
- -- Tails developers <tails@boum.org>  Wed, 25 May 2016 18:24:57 +0200
+ -- Tails developers <tails@boum.org>  Mon, 06 Jun 2016 20:10:56 +0200
 
 tails (2.3.1) UNRELEASED; urgency=medium
 
