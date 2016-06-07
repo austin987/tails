@@ -115,24 +115,15 @@ end
 
 # This step is limited to the Tor Browser due to #7502 since dogtail
 # uses the same interface.
-Then /^a page titled "([^"]+)" has loaded in the Tor Browser$/ do |title|
+Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   expected_title = "#{title} - Tor Browser"
   app = Dogtail::Application.new('Firefox')
   app.child(expected_title, roleName: 'frame').wait(60)
-  # The 'Stop loading this page' button (graphically shown as an X) is
-  # only shown while a page is loading, so once we see the expected
-  # title *and* this one has disappeared, then we can be sure that the
-  # page has fully loaded.
-  try_for(60) do
-    assert_raise do
-      app.child(
-        'Location',
-        roleName: 'push button',
-        description: 'Stop loading this page',
-        retry: False
-      )
-    end
-  end
+  # The 'Reload current page' button (graphically shown as a looping
+  # arrow) is only shown when a page has loaded, so once we see the
+  # expected title *and* this button has appeared, then we can be sure
+  # that the page has fully loaded.
+  app.child('Reload current page', roleName: 'push button').wait(60)
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -222,9 +213,20 @@ end
 
 Then /^Tails homepage loads in the Tor Browser$/ do
   title = 'Tails - Privacy for anyone anywhere'
-  step "a page titled \"#{title}\" has loaded in the Tor Browser"
+  step "\"#{title}\" has loaded in the Tor Browser"
 end
 
 Then /^Tails homepage loads in the Unsafe Browser$/ do
   @screen.wait('TailsHomepage.png', 60)
+end
+
+Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
+  firefox = Dogtail::Application.new('Firefox')
+  page = firefox.child("Problem loading page", roleName: "document frame")
+  # Important to wait here since children() won't retry but return the
+  # immediate results
+  page.wait
+  headers = page.children(roleName: "heading")
+  found = headers.any? { |heading| heading.text == error }
+  raise "Could not find the '#{error}' error in the Tor Browser" unless found
 end

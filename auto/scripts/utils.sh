@@ -4,8 +4,18 @@ current_branch() {
 	git branch | awk '/^\* / { print $2 }'
 }
 
+on_a_tag() {
+	git describe --tags --exact-match $(git rev-parse --verify HEAD 2>/dev/null) >/dev/null 2>/dev/null
+}
+
 base_branch() {
 	cat config/base_branch | head -n1
+}
+
+branch_name_to_suite() {
+	local branch="$1"
+
+	echo "$branch" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[A-Z]' '[a-z]'
 }
 
 fatal() {

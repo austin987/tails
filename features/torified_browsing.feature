@@ -11,7 +11,7 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     And I open a page on the LAN web server in the Tor Browser
-    Then I see "TorBrowserUnableToConnect.png" after at most 20 seconds
+    Then the Tor Browser shows the "Unable to connect" error
     And no traffic was sent to the web server on the LAN
 
   @check_tor_leaks
@@ -44,17 +44,6 @@ Feature: Browsing the web using the Tor Browser
     And I open the address "http://www.terrillthompson.com/tests/html5-audio.html" in the Tor Browser
     And I click the HTML5 play button
     And 1 application is playing audio after 10 seconds
-
-  @check_tor_leaks
-  Scenario: Watching a WebM video
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
-    And I open the address "https://webm.html5.org/test.webm" in the Tor Browser
-    And I click the blocked video icon
-    And I see "TorBrowserNoScriptTemporarilyAllowDialog.png" after at most 30 seconds
-    And I accept to temporarily allow playing this video
-    Then I see "TorBrowserSampleRemoteWebMVideoFrame.png" after at most 180 seconds
 
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given I have started Tails from DVD and logged in and the network is connected

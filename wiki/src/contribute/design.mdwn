@@ -706,7 +706,7 @@ directory](/torrents/files/) (look for files with the `.packages`
 extension).
 
 ### 3.2.1 Core software
- 
+
 - [Debian GNU/Linux](https://www.debian.org/): the base operating
   system, provides hardware detection, infrastructure. Please note
   that the Debian distribution does not provide or endorse Tails.
@@ -1012,10 +1012,8 @@ the Internet:
 The remaining configuration differences can be found in:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser/preferences/0000tails.js]]
-- [[!tails_gitweb config/chroot_local-hooks/12-install_browser_searchplugins]]
-- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/11-localize_browser]]
 - [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
-- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_browser_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
 - [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
 
@@ -1026,11 +1024,13 @@ configurations.
 
 ### 3.6.14 Icedove
 
-Icedove, in combination with Torbirdy, sends email through Tor.
+Icedove, in combination with TorBirdy, sends email through Tor.
 
 Icedove itself leaks a lot of data and makes DNS requests, for example by
-retrieving mail server  configurations from a remote server over an insecure
-channel. This is prevented by the Torbirdy extension.
+retrieving mail server configurations from a remote server over an insecure
+channel. This is prevented by the TorBirdy extension as well as by custom
+patches for Icedove in Tails, which we are currently in the process of
+upstreaming ([[!tails_ticket 11215]]).
 
 Icedove generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
@@ -1042,12 +1042,32 @@ disclosing the real IP address and hostname.
 Torbirdy disables HTML email and inline attachments
 in order to get rid of a whole class of privacy concerns.
 Furthermore, when setting up an IMAP account, the drafts folder, instead
-of being remote, is set to "~$HOME/.icedove/Local Folders".
+of being remote, is set to `~$HOME/.icedove/Local Folders`.
+
+The original TorBirdy extension disables automatic email configuration
+through Icedove's email configuration wizard. This wizard is enabled in
+Tails. This is possible because our patches allow using only secure protocols
+for the domain and ISPDB lookups as well as for the actual mail account
+configuration. In detail this means:
+
+1. we prevent all testing of plaintext protocols when guessing configurations.
+2. we make autoconfiguration skip database lookups if `mailnews.auto_config_url`
+   isn't HTTPS.
+3. we make ISP autoconfiguration lookups first try https, then http, but only
+   if we allow insecure protocols.
+4. we discard any configurations using plaintext protocols.
+
+In addition, even when plaintext protocols are allowed, the patches make
+us prefer secure options if available.
+This setting can be disabled (opt-out by the user). This also applies to
+manual configuration.
 
 OpenPGP support is provided by the Enigmail addon.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/icedove/pref/icedove.js]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-adjust-defaults.diff]]
+- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
+- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
+- [[!tails_gitweb config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.icedove]] is copied to
   the user's `$HOME` at boot time
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/icedove]]
@@ -1121,8 +1141,7 @@ soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
 ### 3.6.20 OpenSSH
 
-The OpenSSH client is configured to use the Tor SOCKS proxy, and to
-prefer strong ciphers and MACs..
+The OpenSSH client is configured to use the Tor SOCKS proxy.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/lib/connect-socks]]

@@ -79,6 +79,11 @@ Given %r{I am working on the ([[:alnum:]./_-]+) base branch$} do |branch|
   end
 end
 
+Given %r{^I checkout the ([[:alnum:]~.-]+) tag$} do |tag|
+  create_git unless git_exists?
+  fatal_system "git checkout --quiet #{tag}"
+end
+
 Given %r{I am working on the ([[:alnum:]./_-]+) branch based on ([[:alnum:]./_-]+)$} do |branch, base|
   create_git unless git_exists?
 
