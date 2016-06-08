@@ -178,6 +178,27 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::git_annex::mirror` defined resource in
     [[!tails_gitweb_repo puppet-tails]]
 
+## Icinga2
+
+* purpose: Monitor Tails online services and systems.
+* access: only Tails core developers can read-only the Icingaweb2 interface,
+  sysadmins are RW and receive notifications by email.
+* tools: [[!debpts icinga2 desc="Icinga2"]], [[!debpts icingaweb2]]
+* configurations
+  - master:
+    * `tails::monitoring::master` class in [[!tails_gitweb_repo puppet-tails]].
+    * some configuration in the ecours.tails.boum.org node manifest.
+    * See Vpn section.
+  - web server:
+    * `tails::monitoring::icingaweb2` class in [[!tails_gitweb_repo puppet-tails]],
+       that wraps around [upstream `icingaweb2` module](https://git.icinga.org/puppet-icingaweb2.git).
+    * some configuration in the ecours.tails.boum.org node manifest.
+  - satellite:
+    * `tails::monitoring::satellite` class in [[!tails_gitweb_repo puppet-tails]],
+    * See Vpn section.
+  - agents:
+    * `tails::monitoring::agent` class in [[!tails_gitweb_repo puppet-tails]]
+
 ## Jenkins
 
 * purpose: continuous integration, e.g. build Tails ISO images from
@@ -223,6 +244,16 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::apt::repository::torproject` in
     [[!tails_gitweb_repo puppet-tails]]
   - `tor::daemon::relay` in [[!tails_gitweb_repo puppet-tor]]
+
+## VPN
+
+* purpose: flow through VPN traffic the connections between our
+  different remote systems. Mainly used by the monitoring service.
+* access: private network.
+* tools: [[!debpts tinc]]
+* configuration:
+  - `tails::vpn::instance` class in the [[!tails_gitweb_repo puppet-tails]]
+     repo.
 
 ## Web server
 
