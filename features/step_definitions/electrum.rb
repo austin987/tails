@@ -1,5 +1,5 @@
 Then /^I start Electrum through the GNOME menu$/ do
-  step "I start \"Electrum\" via the GNOME \"Internet\" applications menu"
+  step "I start \"Electrum Bitcoin Wallet\" via the GNOME \"Internet\" applications menu"
 end
 
 When /^a bitcoin wallet is (|not )present$/ do |existing|
@@ -24,7 +24,7 @@ When /^I create a new bitcoin wallet$/ do
   seed = $vm.get_clipboard
   @screen.wait_and_click("ElectrumNextButton.png", 15)
   @screen.wait("ElectrumSeedVerificationPrompt.png", 15)
-  @screen.click("ElectrumWalletSeedTextbox.png", 15)
+  @screen.wait_and_click("ElectrumWalletSeedTextbox.png", 15)
   @screen.type(seed) # Confirm seed
   @screen.wait_and_click("ElectrumNextButton.png", 10)
   @screen.wait_and_click("ElectrumEncryptWallet.png", 10)
