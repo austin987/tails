@@ -126,8 +126,7 @@ We use Redmine tickets for public discussion and tasks management:
   need, which provides the freezable APT repositories feature needed
   by the Tails development and QA processes
 * [[documentation|contribute/APT repository/time-based snapshots]]
-* access: anyone can read, release managers have some write access
-  (XXX: limited to the operations they need to perform? full?)
+* access: anyone can read, release managers have write access
 * tools: [[!debpts reprepro]]
 * configuration: `tails::reprepro::snapshots::time_based` class
   in [[!tails_gitweb_repo puppet-tails]]
@@ -137,7 +136,8 @@ We use Redmine tickets for public discussion and tasks management:
 * purpose: host partial snapshots of the upstream APT repositories we
   need, for historical purposes and compliance with some licenses
 * [[documentation|contribute/APT repository/tagged snapshots]]
-* access: anyone can read, release managers can create new snapshots
+* access: anyone can read, release managers can create and publish new
+  snapshots
 * tools: [[!debpts reprepro]]
 * configuration: `tails::reprepro::snapshots::tagged` class
   in [[!tails_gitweb_repo puppet-tails]]
@@ -177,6 +177,27 @@ We use Redmine tickets for public discussion and tasks management:
     [[!tails_gitweb_repo puppet-tails]]
   - `tails::git_annex::mirror` defined resource in
     [[!tails_gitweb_repo puppet-tails]]
+
+## Icinga2
+
+* purpose: Monitor Tails online services and systems.
+* access: only Tails core developers can read-only the Icingaweb2 interface,
+  sysadmins are RW and receive notifications by email.
+* tools: [[!debpts icinga2 desc="Icinga2"]], [[!debpts icingaweb2]]
+* configurations
+  - master:
+    * `tails::monitoring::master` class in [[!tails_gitweb_repo puppet-tails]].
+    * some configuration in the ecours.tails.boum.org node manifest.
+    * See Vpn section.
+  - web server:
+    * `tails::monitoring::icingaweb2` class in [[!tails_gitweb_repo puppet-tails]],
+       that wraps around [upstream `icingaweb2` module](https://git.icinga.org/puppet-icingaweb2.git).
+    * some configuration in the ecours.tails.boum.org node manifest.
+  - satellite:
+    * `tails::monitoring::satellite` class in [[!tails_gitweb_repo puppet-tails]],
+    * See Vpn section.
+  - agents:
+    * `tails::monitoring::agent` class in [[!tails_gitweb_repo puppet-tails]]
 
 ## Jenkins
 
@@ -223,6 +244,16 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::apt::repository::torproject` in
     [[!tails_gitweb_repo puppet-tails]]
   - `tor::daemon::relay` in [[!tails_gitweb_repo puppet-tor]]
+
+## VPN
+
+* purpose: flow through VPN traffic the connections between our
+  different remote systems. Mainly used by the monitoring service.
+* access: private network.
+* tools: [[!debpts tinc]]
+* configuration:
+  - `tails::vpn::instance` class in the [[!tails_gitweb_repo puppet-tails]]
+     repo.
 
 ## Web server
 

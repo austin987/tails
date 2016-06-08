@@ -5,7 +5,7 @@ current_branch() {
 }
 
 on_a_tag() {
-   ! git symbolic-ref HEAD >/dev/null 2>&1
+	git describe --tags --exact-match $(git rev-parse --verify HEAD 2>/dev/null) >/dev/null 2>/dev/null
 }
 
 base_branch() {
