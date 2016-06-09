@@ -9,11 +9,8 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
 
-gcc_version=4.8
-
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms
-apt-get install --yes gcc-${gcc_version}
 apt-get install --yes virtualbox-guest-utils virtualbox-guest-x11
 
 # Only build for the 32-bit kernel, since building for 64-bit is too painful
@@ -22,16 +19,9 @@ apt-get install --yes virtualbox-guest-utils virtualbox-guest-x11
 # we instruct users to set up a 32-bit VM.
 for KERNEL in /boot/vmlinuz-*-686 ; do
    KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-   MODULES_VERSION="$(dpkg-query -W -f='${Version\n}' virtualbox-guest-dkms)"
 
-   # Installing the headers should trigger the building of the modules for that kernel
+   # Installing the headers triggers the building of the modules for that kernel
    apt-get install --yes linux-headers-$KERNEL_VERSION virtualbox-guest-dkms
-   # Only build and install if it was not done already
-   if [ ! "$(dkms status -a i386 -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION)" ]; then
-      dkms build -a i386 -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
-      dkms install -a i386 -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
-   fi
-
 done
 
 # clean the build directory
