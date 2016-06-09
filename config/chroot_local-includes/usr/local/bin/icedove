@@ -1,32 +1,56 @@
 #!/bin/sh
 
 set -e
+set -u
+
+# Import set_mozilla_pref()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
 
 . gettext.sh
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-CLAWSMAIL_DIR="${HOME}/.claws-mail"
-
-PROFILE="${HOME}/.icedove/profile.default"
+CLAWSMAIL_CONFIG_DIR="${HOME}/.claws-mail"
+ICEDOVE_CONFIG_DIR="${HOME}/.icedove"
+PROFILE="${ICEDOVE_CONFIG_DIR}/profile.default"
 
 claws_mail_config_is_persistent() {
-    [ "$(findmnt --noheadings --output SOURCE --target "${CLAWSMAIL_DIR}")" = "/dev/mapper/TailsData_unlocked[/claws-mail]" ]
+    [ "$(findmnt --noheadings --output SOURCE --target "${CLAWSMAIL_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/claws-mail]" ]
+}
+
+icedove_config_is_persistent() {
+    [ "$(findmnt --noheadings --output SOURCE --target "${ICEDOVE_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/icedove]" ]
 }
 
 warn_about_claws_mail_persistence() {
+
     local dialog_msg="<b><big>`gettext \"The <b>Claws Mail</b> persistence feature is activated.\"`</big></b>
 
 `gettext \"If you have emails saved in <b>Claws Mail</b>, you should <a href='https://tails.boum.org/doc/anonymous_internet/claws_mail_to_icedove'>migrate your data</a> before starting <b>Icedove</b>.\"`"
 
+    if [ -f "${PROFILE}/prefs.js" ]; then
+        dialog_msg="${dialog_msg}
+
+`gettext \"If you already migrated your emails to <b>Icedove</b>, you should <a href='https://tails.boum.org/doc/anonymous_internet/claws_mail_to_icedove#delete'>delete all your <b>Claws Mail</b> data</a> to remove this warning.\"`"
+    fi
+
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"
-    # Since zenity can't set the default button to cancel, we switch the
-    # labels and interpret the return value as its negation.
-    if zenity --question --title "" --ok-label "${exit}" \
-       --cancel-label "${launch}" --text "${dialog_msg}"; then
-        return 1
+    zenity --question --title "" --text "${dialog_msg}" --default-cancel \
+           --ok-label "${launch}" --cancel-label "${exit}"
+}
+
+configure_default_incoming_protocol() {
+    # For extensions.torbirdy.defaultprotocol, POP = 0, IMAP = 1
+    local default_protocol
+    if icedove_config_is_persistent; then
+        default_protocol=0
+    else
+        default_protocol=1
     fi
+    set_mozilla_pref "${PROFILE}/preferences/0000tails.js" \
+                     "extensions.torbirdy.defaultprotocol" \
+                     "${default_protocol}"
 }
 
 start_icedove() {
@@ -37,10 +61,11 @@ start_icedove() {
 
     unset SESSION_MANAGER
 
+    configure_default_incoming_protocol
     /usr/bin/icedove --class "Icedove" -profile "${PROFILE}" "${@}"
 }
 
-if claws_mail_config_is_persistent && [ -f "${CLAWSMAIL_DIR}/accountrc" ]; then
+if claws_mail_config_is_persistent && [ -f "${CLAWSMAIL_CONFIG_DIR}/accountrc" ]; then
    warn_about_claws_mail_persistence || exit 0
 fi
 

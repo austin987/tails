@@ -1,6 +1,11 @@
 #!/bin/sh
 
 set -e
+set -u
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
 
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
@@ -32,10 +37,9 @@ verify_start () {
 `gettext \"The I2P router console is not ready.\"`"
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"
-    # Since zenity can't set the default button to cancel, we switch the
-    # labels and interpret the return value as its negation.
-    if sudo -u "${SUDO_USER}" zenity --question --title "" --ok-label "${exit}" \
-       --cancel-label "${launch}" --text "${dialog_msg}"; then
+    if ! sudo -u "${SUDO_USER}" \
+         zenity --question --title "" --text "${dialog_msg}" --default-cancel \
+         --cancel-label "${exit}"  --ok-label "${launch}" ; then
         exit 0
     fi
 }
@@ -75,11 +79,6 @@ i2p_is_enabled || exit 0
 
 CMD="$(basename "${0}")"
 LOCK="/var/lock/${CMD}"
-
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
 CONF_DIR="/var/lib/i2p-browser"
 COW="${CONF_DIR}/cow"
 CHROOT="${CONF_DIR}/chroot"

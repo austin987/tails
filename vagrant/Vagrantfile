@@ -16,45 +16,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Monkey-patched Vagrant!
-$:.unshift File.expand_path('../lib', __FILE__)
-require 'vagrant_version'
-require 'vagrant_verified_download'
-require 'tails_build_settings'
+require_relative 'lib/tails_build_settings'
 
-if ENV['TAILS_RAM_BUILD']
-  mem_size = VM_MEMORY_FOR_RAM_BUILDS
-else
-  mem_size = VM_MEMORY_FOR_DISK_BUILDS
-end
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
-cpus = ENV['TAILS_BUILD_CPUS']
-
-if vagrant_old
-  Vagrant::Config.run do |config|
-    config.vm.box = 'tails-builder-20150609'
-    config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/tails-builder-20150609.box'
-
-    config.vm.provision :shell, :inline => "http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder"
-
-   config.vm.share_folder 'amnesia', '/amnesia.git', '../.git'
-
-   config.vm.customize ['modifyvm', :id, '--memory', mem_size]
-   config.vm.customize ['modifyvm', :id, '--cpus', cpus] unless cpus.nil?
-  end
-else
-  Vagrant.configure("2") do |config|
-    config.vm.box = 'tails-builder-20150609'
-    config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/tails-builder-20150609.box'
-
-    config.vm.provision "shell",
-      inline: "sudo http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder"
-
-    config.vm.synced_folder '../.git', '/amnesia.git'
-
-    config.vm.provider :virtualbox do |vb|
-      vb.customize ['modifyvm', :id, '--memory', mem_size]
-      vb.customize ['modifyvm', :id, '--cpus', cpus] unless cpus.nil?
-    end
+Vagrant.configure("2") do |config|
+  config.vm.box = 'tails-builder-amd64-jessie-20160226'
+  config.vm.box_url = "http://dl.amnesia.boum.org/tails/project/vagrant/#{config.vm.box}.box"
+  config.vm.box_download_checksum_type = "sha256"
+  config.vm.box_download_checksum = 'a63298b7cae7cbc2ad3e2c01763a11b29ee8ac879398e007ae22857da5b2c6de'
+  config.vm.provision "shell", inline: <<-EOF
+    sudo http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder
+  EOF
+  config.vm.synced_folder '.', '/vagrant', type: '9p', readonly: true
+  config.vm.synced_folder '../.git', '/amnesia.git', type: '9p', readonly: true
+  config.vm.provider :libvirt do |domain|
+    domain.default_prefix = config.vm.box
+    domain.driver = 'kvm'
+    domain.management_network_guest_ipv6 = 'no'
+    domain.connect_via_ssh = false
+    domain.machine_arch = 'x86_64'
+    domain.machine_type = 'q35'
+    domain.cpu_mode = 'host-passthrough'
+    domain.emulator_path = '/usr/bin/qemu-system-x86_64'
+    domain.memory = ENV['TAILS_RAM_BUILD'] ? VM_MEMORY_FOR_RAM_BUILDS :
+                                             VM_MEMORY_FOR_DISK_BUILDS
+    cpus = ENV['TAILS_BUILD_CPUS']
+    domain.cpus = cpus unless cpus.nil?
   end
 end

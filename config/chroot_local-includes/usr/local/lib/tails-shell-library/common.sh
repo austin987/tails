@@ -59,3 +59,23 @@ set_simple_config_key() {
         echo "${key}${op}${value}" >> "${file}"
     fi
 }
+
+# Runs the wrapped command while temporarily disabling `set -e`, if
+# enabled. It will always return 0 to not make scripts with `set -e`
+# enabled abort but will instead store the wrapped command's return
+# value into the global variable _NO_ABORT_RET.
+no_abort() {
+    local set_e_was_enabled
+    if echo "${-}" | grep -q 'e'; then
+        set +e
+        set_e_was_enabled=true
+    else
+        set_e_was_enabled=false
+    fi
+    "${@}"
+    _NO_ABORT_RET=${?}
+    if [ "${set_e_was_enabled}" = true ]; then
+        set -e
+    fi
+    return 0
+}

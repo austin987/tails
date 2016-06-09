@@ -20,6 +20,9 @@ lang_is_excluded () {
 	echo -n "$EXCLUDE_LANGS" | grep -qs -w "$lang"
 }
 
+# Defaults
+LANG_DOT_PO_LAYOUT=yes
+
 # Detect which project is in current folder,
 # and set parameters accordingly
 if [ -f 'po/tails.pot' ]; then
@@ -31,6 +34,11 @@ elif [ -f 'po/tails-greeter.pot' ]; then
 elif [ -f 'po/tails-iuk.pot' ]; then
 	BRANCH='tails-iuk_completed'
 	AFTER_IMPORT='make -C po pot && make -C po update-po'
+elif [ -f 'po/onioncircuits.pot' ]; then
+	LANG_DOT_PO_LAYOUT=no
+	POTFILE=onioncircuits.pot
+	BRANCH='tails-onioncircuits_completed'
+	AFTER_IMPORT='./setup.py build_i18n && ( cd po && for po in *.po ; do msgmerge --update "$po" onioncircuits.pot ; done )'
 elif [ -f 'po/tails-perl5lib.pot' ]; then
 	BRANCH='tails-perl5lib_completed'
 	AFTER_IMPORT='make -C po pot && make -C po update-po'
@@ -62,16 +70,27 @@ eval "$GIT_IN_TOR_TRANSLATION_DIR reset --hard \"origin/$BRANCH\""
 
 # For each completely translated language, merge it,
 # unless it is translated outside Transifex
-find "$TOR_TRANSLATION_DIR" -name '*.po' | while read po_file; do
-	lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
+if [ "$LANG_DOT_PO_LAYOUT" = yes ] ; then
+	find "$TOR_TRANSLATION_DIR" -name '*.po' | while read po_file; do
+		lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
 
-	if ! lang_is_excluded "$lang"; then
-		echo "Importing translation for $lang..."
-		cp "$po_file" "$TAILS_PO_DIR"
-	fi
-done
+		if ! lang_is_excluded "$lang"; then
+			echo "Importing translation for $lang..."
+			cp "$po_file" "$TAILS_PO_DIR"
+		fi
+	done
+else
+	find "$TOR_TRANSLATION_DIR" -name '*.pot' | while read po_file; do
+		lang=$(basename $(dirname "$po_file" | tr - _ | sed 's/\.pot$//'))
+
+		if ! lang_is_excluded "$lang"; then
+			echo "Importing translation for $lang..."
+			cp "$po_file" "$TAILS_PO_DIR/${lang}.po"
+		fi
+	done
+fi
 
 # Update PO files
-if [ -n "$AFTER_IMPORT" ]; then
+if [ -n "${AFTER_IMPORT:-}" ]; then
 	eval "$AFTER_IMPORT"
 fi

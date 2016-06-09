@@ -23,6 +23,10 @@ def create_git
   Dir.mkdir 'config'
   FileUtils.touch('config/base_branch')
   Dir.mkdir('config/APT_overlays.d')
+  Dir.mkdir('config/APT_snapshots.d')
+  ['debian', 'debian-security', 'torproject'].map do |origin|
+    Dir.mkdir("config/APT_snapshots.d/#{origin}")
+  end
   Dir.mkdir 'debian'
   File.open('debian/changelog', 'w') do |changelog|
     changelog.write(<<END_OF_CHANGELOG)
@@ -86,5 +90,37 @@ RSpec::Matchers.define :have_suite do |suite|
   end
   description do
     "expected an output with #{suite}"
+  end
+end
+
+RSpec::Matchers.define :have_tagged_snapshot do |tag|
+  match do |string|
+    # e.g.: `http://tagged.snapshots.deb.tails.boum.org/0.10`
+    %r{^http://tagged\.snapshots\.deb\.tails\.boum\.org/#{Regexp.escape(tag)}/[a-z-]+$}.match(string)
+  end
+  failure_message_for_should do |string|
+    "expected the mirror to be #{tag}\nCurrent mirror: #{string}"
+  end
+  failure_message_for_should_not do |string|
+    "expected the mirror not to be #{tag}\nCurrent mirror: #{string}"
+  end
+  description do
+    "expected an output with #{tag}"
+  end
+end
+
+RSpec::Matchers.define :have_time_based_snapshot do |tag|
+  match do |string|
+    # e.g.: `http://time-based.snapshots.deb.tails.boum.org/debian/2016060602`
+    %r{^http://time\-based\.snapshots\.deb\.tails\.boum\.org/[^/]+/\d+}.match(string)
+  end
+  failure_message_for_should do |string|
+    "expected the mirror to be a time-based snapshot\nCurrent mirror: #{string}"
+  end
+  failure_message_for_should_not do |string|
+    "expected the mirror not to be a time-based snapshot\nCurrent mirror: #{string}"
+  end
+  description do
+    "expected a time-based snapshot"
   end
 end

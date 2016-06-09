@@ -32,7 +32,7 @@ When /^I close Totem$/ do
 end
 
 Then /^I can watch a WebM video over HTTPs$/ do
-  test_url = 'https://webm.html5.org/test.webm'
+  test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
   recovery_on_failure = Proc.new do
     step 'I close Totem'
   end
