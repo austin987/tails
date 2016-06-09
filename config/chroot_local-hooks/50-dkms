@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -e
+
+echo "Building VirtualBox guest modules"
+
+hw_arch="`dpkg --print-architecture`"
+if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
+   exit 0
+fi
+
+gcc_version=4.8
+
+# the -dkms package must be installed *after* dkms to be properly registered
+apt-get install --yes build-essential dkms dpatch
+apt-get install --yes gcc-${gcc_version}
+apt-get install --yes virtualbox-guest-utils virtualbox-guest-dkms virtualbox-guest-x11
+
+# Have the modules built for every installed kernel
+for KERNEL in /boot/vmlinuz-* ; do
+   KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
+   MODULES_VERSION="$(dpkg-query -W -f='${Version\n}' virtualbox-guest-dkms)"
+
+   # Installing the headers should trigger the building of the modules for that kernel
+   apt-get install --yes linux-headers-$KERNEL_VERSION
+   # Only build and install if it was not done already
+   if [ ! "$(dkms status -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION)" ]; then
+      dkms build -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
+      dkms install -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
+   fi
+
+done
+
+# clean the build directory
+rm -r /var/lib/dkms/virtualbox-guest/
+
+# virtualbox-guest-dkms's postrm script deletes any previously
+# built binary module; let's delete it before the package gets purged.
+rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
+
+# Also copy the udev rules installed by virtualbox-guest-dkms to enable guest
+# additions by default.
+cp -a /lib/udev/rules.d/60-virtualbox-guest-dkms.rules /etc/udev/rules.d/
