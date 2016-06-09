@@ -14,19 +14,22 @@ gcc_version=4.8
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms dpatch
 apt-get install --yes gcc-${gcc_version}
-apt-get install --yes virtualbox-guest-utils virtualbox-guest-dkms virtualbox-guest-x11
+apt-get install --yes virtualbox-guest-utils virtualbox-guest-x11
 
-# Have the modules built for every installed kernel
-for KERNEL in /boot/vmlinuz-* ; do
+# Only build for the 32-bit kernel, since building for 64-bit is too painful
+# with multiarch; and anyway, the 64-bit kernel module doesn't play well with
+# a 32-bit userspace (https://www.virtualbox.org/ticket/8336), which is why
+# we instruct users to set up a 32-bit VM.
+for KERNEL in /boot/vmlinuz-*-686 ; do
    KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
    MODULES_VERSION="$(dpkg-query -W -f='${Version\n}' virtualbox-guest-dkms)"
 
    # Installing the headers should trigger the building of the modules for that kernel
-   apt-get install --yes linux-headers-$KERNEL_VERSION
+   apt-get install --yes linux-headers-$KERNEL_VERSION virtualbox-guest-dkms
    # Only build and install if it was not done already
-   if [ ! "$(dkms status -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION)" ]; then
-      dkms build -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
-      dkms install -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
+   if [ ! "$(dkms status -a i386 -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION)" ]; then
+      dkms build -a i386 -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
+      dkms install -a i386 -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
    fi
 
 done
