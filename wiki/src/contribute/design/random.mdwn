@@ -20,10 +20,15 @@ fills `/dev/random` whenever the supply of random bits in
 Quoting its homepage, HAVEGE "exploits [these] modifications of the
 internal volatile hardware states as a source of uncertainty".
 
-The default configuration shipped with the [[!debpts haveged
-desc="Debian package"]] passes `-w 1024` to the `haveged` daemon.
-That is, it sets `/proc/sys/kernel/random/write_wakeup_threshold`
-to 1024.
+The default configuration shipped with the
+[[!debpts haveged desc="Debian package"]] passes `-w 1024` to the
+`haveged` daemon. That is, it sets
+`/proc/sys/kernel/random/write_wakeup_threshold` to 1024.
+We [[!tails_gitweb config/chroot_local-hooks/62-haveged desc="modify that"]]
+to use the same watermark as rngd, i.e. 2048 bits. The goal here is to
+avoid the situation when rngd starts first and always keeps the
+entropy pool between 1024 and 2048 bits, thus dominating the
+entropy pool.
 
 ## rngd
 
@@ -77,9 +82,9 @@ This discussion only makes sense whenever a hardware RNG supported by
 `rngd` is available. Otherwise, only `haveged` is used.
 
 The way it is configured in Debian, haveged sets
-`/proc/sys/kernel/random/write_wakeup_threshold` to 1024, so that
+`/proc/sys/kernel/random/write_wakeup_threshold` to 2048, so that
 processes that are waiting to write to `/dev/random` are woken up
-whenever less than 1024 bits of entropy is available. In practice,
+whenever less than 2048 bits of entropy is available. In practice,
 this probably means that Linux wakes up both `haveged` and `rngd` more
 or less at the same time.
 
