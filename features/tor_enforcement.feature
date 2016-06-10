@@ -5,10 +5,6 @@ Feature: The Tor enforcement is effective
   And as a Tails developer
   I want to ensure that the automated test suite detects firewall leaks reliably
 
-  Scenario: Tails' Tor binary is configured to use the expected Tor authorities
-    Given I have started Tails from DVD and logged in and the network is connected
-    Then the Tor binary is configured to use the expected Tor authorities
-
   Scenario: The firewall configuration is very restrictive
     Given I have started Tails from DVD and logged in and the network is connected
     Then the firewall's policy is to drop all IPv4 traffic
