@@ -12,7 +12,6 @@ Feature: Root access control enforcement
 
   Scenario: If no administrative password is set in Tails Greeter the live user should not be able to run arbitrary commands administrative privileges.
     Given I have started Tails from DVD without network and logged in
-    And Tails Greeter has dealt with the sudo password
     Then I should not be able to run administration commands as the live user with the "" password
     And I should not be able to run administration commands as the live user with the "amnesia" password
     And I should not be able to run administration commands as the live user with the "live" password
@@ -22,8 +21,6 @@ Feature: Root access control enforcement
     And running a command as root with pkexec requires PolicyKit administrator privileges
     Then I should be able to run a command as root with pkexec
 
-  #11398
-  @fragile
   Scenario: If no administrative password is set in Tails Greeter the live user should not be able to get administrative privileges through PolicyKit with the standard passwords.
     Given I have started Tails from DVD without network and logged in
     And running a command as root with pkexec requires PolicyKit administrator privileges
