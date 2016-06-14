@@ -1,19 +1,11 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 '''
     Tails upgrade frontend wrapper.
 
-    Conversion from bash to python by goodcrypto.com
+    Test with "python3 electrum.py doctest".
 
-    >>> # run script
-    >>> import sh
-    >>> import sys
-    >>> this_command = sh.Command(sys.argv[0])
-    >>> this_command()
-    ...
+    goodcrypto.com converted from bash to python and added basic tests.
 '''
-
-from __future__ import print_function
-
 import os
 import sys
 from gettext import gettext
@@ -22,7 +14,24 @@ import sh
 
 os.environ['TEXTDOMAIN'] = 'tails'
 
-CONF_DIR = '{}/.electrum'.format(os.environ['HOME'])
+HOME_DIR = os.environ['HOME']
+CONF_DIR = os.path.join(HOME_DIR, '.electrum')
+
+def main():
+    """
+        >>> # In case you answer Exit
+        >>> try:
+        ...     main()
+        ... except SystemExit:
+        ...     pass
+    """
+
+    if not electrum_config_is_persistent():
+        if not verify_start():
+            sys.exit(0)
+
+    run = sh.Command('/usr/bin/electrum')
+    run()
 
 def electrum_config_is_persistent():
     """
@@ -32,15 +41,16 @@ def electrum_config_is_persistent():
         False
     """
 
-    filesystem = str(sh.findmnt('--noheadings',
+    filesystem = sh.findmnt('--noheadings',
                                 '--output', 'SOURCE',
-                                '--target', CONF_DIR).stdout).strip()
+                                '--target', CONF_DIR).stdout.decode().strip()
     return filesystem in sh.glob('/dev/mapper/TailsData_unlocked[/electrum]')
 
 def verify_start():
     """
         Ask user whether to start Electrum.
 
+        >>> # Assumes you answer Exit
         >>> verify_start()
         False
     """
@@ -49,32 +59,34 @@ def verify_start():
     warning_text = gettext(
         "When you reboot Tails, all of Electrum's data will be lost, including your Bitcoin wallet. It is strongly recommended to only run Electrum when its persistence feature is activated.")
     question_text = gettext('Do you want to start Electrum anyway?')
-    launch_text = gettext('_Launch')
-    exit_text = gettext('_Exit')
     dialog_msg = ('<b><big>{}</big></b>\n\n{}\n\n{}\n'.
                   format(disabled_text, warning_text, question_text))
+    launch_text = gettext('_Launch')
+    exit_text = gettext('_Exit')
 
-    # Since zenity can't set the default button to cancel, we switch the
-    # labels and interpret the return value as its negation.
-    try:
-        sh_results = sh.zenity('--question',
-                               '--title', '',
-                               '--ok-label', exit_text,
-                               '--cancel-label', launch_text,
-                               '--text', dialog_msg,
-                               _ok_code=[0, 1])
-        start = sh_results.exit_code == 1
-    except sh.ErrorReturnCode:
-        start = False
-    else:
-        start = True
+    # results 0 == True; 1 == False; 5 == Timeout
+    results = sh.zenity('--question', '--title', "", '--default-cancel',
+        '--ok-label', '{}'.format(launch_text), '--cancel-label', '{}'.format(exit_text),
+        '--text', '{}'.format(dialog_msg), _ok_code=[0,1,5])
+    start = results.exit_code == 0
 
     return start
 
-if not electrum_config_is_persistent():
-    if not verify_start():
-        sys.exit(0)
+'''
+    >>> # run script
+    >>> this_command = sh.Command(sys.argv[0])
+    >>> this_command()
+    ...
+'''
+if __name__ == '__main__':
+    if sys.argv and len(sys.argv) > 1:
+        if sys.argv[1] == 'doctest':
+            from doctest import testmod
+            testmod()
+        else:
+            main()
+    else:
+        main()
 
-usr_bin_electrum = sh.Command('/usr/bin/electrum')
-usr_bin_electrum(*sys.argv[1:])
+    sys.exit(0)
 
