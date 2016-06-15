@@ -261,13 +261,15 @@ def bootsplash_tab_msg
   end
 end
 
+def memory_wipe_timeout
+  nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+  nr_gigs_of_ram*5*60
+end
+
 Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
   boot_timeout = 30
   # We need some extra time for memory wiping if rebooting
-  if reboot
-    nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-    boot_timeout += nr_gibs_of_ram*5*60
-  end
+  boot_timeout += memory_wipe_timeout if reboot
   # Simply looking for the boot splash image is not robust; sometimes
   # sikuli is not fast enough to see it. Here we hope that spamming
   # TAB, which will halt the boot process by showing the prompt for
@@ -535,9 +537,7 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually shuts down$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  timeout = nr_gibs_of_ram*5*60
-  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
+  try_for(memory_wipe_timeout, :msg => "VM is still running after #{timeout} seconds") do
     ! $vm.is_running?
   end
 end
