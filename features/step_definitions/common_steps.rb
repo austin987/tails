@@ -263,7 +263,7 @@ end
 
 def memory_wipe_timeout
   nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  nr_gigs_of_ram*5*60
+  nr_gigs_of_ram*30
 end
 
 Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
