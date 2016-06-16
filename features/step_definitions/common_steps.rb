@@ -556,7 +556,7 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually shuts down$/ do
-  try_for(memory_wipe_timeout, :msg => "VM is still running after #{timeout} seconds") do
+  try_for(memory_wipe_timeout, :msg => "VM is still running") do
     ! $vm.is_running?
   end
 end
