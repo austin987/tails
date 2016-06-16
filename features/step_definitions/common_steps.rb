@@ -300,7 +300,7 @@ end
 Given /^the computer (re)?boots Tails$/ do |reboot|
   step 'Tails is at the boot menu' + (reboot ? ' after rebooting' : '')
   @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(boot_menu_tab_msg_image, 1)
+  @screen.wait('TailsBootMenuKernelCmdline.png', 10)
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
