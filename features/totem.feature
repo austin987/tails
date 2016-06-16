@@ -45,8 +45,6 @@ Feature: Using Totem
     Given I have started Tails from DVD and logged in and the network is connected
     Then I can watch a WebM video over HTTPs
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     # Due to bug #5571 we have to reboot to be able to use
