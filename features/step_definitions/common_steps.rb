@@ -252,6 +252,15 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
+def boot_menu_cmdline_image
+  case @os_loader
+  when "UEFI"
+    'TailsBootMenuKernelCmdlineUEFI.png'
+  else
+    'TailsBootMenuKernelCmdline.png'
+  end
+end
+
 def boot_menu_tab_msg_image
   case @os_loader
   when "UEFI"
@@ -290,7 +299,17 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
     end
   end
   add_after_scenario_hook { kill_tab_spammer.call }
-  @screen.wait('TailsBootMenuKernelCmdline.png', boot_timeout)
+  # Our UEFI bootloader has the interesting "feature" that pressing
+  # any button will open its setup menu, so we have to exit the setup,
+  # and to not have the TAB spammer potentially interfering we pause
+  # it meanwhile.
+  if @os_loader == 'UEFI'
+    @screen.wait('UEFIBootLoaderSetup.png', boot_timeout)
+    Process.kill("TSTP", tab_spammer.pid)
+    @screen.type(Sikuli::Key.ENTER)
+    Process.kill("CONT", tab_spammer.pid)
+  end
+  @screen.wait(boot_menu_cmdline_image, boot_timeout)
   kill_tab_spammer.call
   # Ensure that we're back at the boot splash
   @screen.type(Sikuli::Key.ESC)
@@ -300,7 +319,7 @@ end
 Given /^the computer (re)?boots Tails$/ do |reboot|
   step 'Tails is at the boot menu' + (reboot ? ' after rebooting' : '')
   @screen.type(Sikuli::Key.TAB)
-  @screen.wait('TailsBootMenuKernelCmdline.png', 10)
+  @screen.wait(boot_menu_cmdline_image, 10)
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
