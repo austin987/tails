@@ -2,12 +2,17 @@
 
 set -e
 
-echo "Registering menus"
+echo "Registering and tweaking menus"
 
 for app in tails-installer-launcher tails-persistence-delete tails-persistence-setup tails-about tails-documentation; do
    xdg-desktop-menu install --novendor \
       /usr/share/desktop-directories/Tails.directory \
       "/usr/share/applications/${app}.desktop"
 done
+
+rm \
+   /usr/share/applications/laptop-mode-tools.desktop \
+   /usr/share/applications/sniff.desktop \
+   /usr/share/applications/system-config-printer.desktop
 
 xdg-desktop-menu forceupdate

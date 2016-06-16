@@ -20,7 +20,7 @@ libvirt-clients
 libvirt-daemon-system
 libvirt-dev
 libvirt0
-openjdk-7-jre
+obfs4proxy
 openssh-server
 ovmf
 python-jabberbot
@@ -38,6 +38,7 @@ ruby-rspec
 ruby-test-unit
 seabios
 tcpdump
+tor
 unclutter
 virt-viewer
 xvfb
@@ -254,14 +255,13 @@ TARGET_DISPLAY=$(next_free_display)
 
 start_xvfb
 
-if [ -n "${VNC_SERVER}" ]; then
+if [ -n "${VNC_SERVER:-}" ]; then
     start_vnc_server
 fi
-if [ -n "${VNC_VIEWER}" ]; then
+if [ -n "${VNC_VIEWER:-}" ]; then
     start_vnc_viewer
 fi
 
-export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"
 export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 

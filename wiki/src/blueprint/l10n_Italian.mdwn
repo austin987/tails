@@ -1,85 +1,95 @@
 [[!toc levels=2]]
 
-#Proposta prime Branch
-Sono 8!
+#errore compilazione wiki
 
-doc_about
-
-./doc/about
-./doc/about/features
-./doc/about/fingerprint
-./doc/about.index
-./doc/about/license
-./doc/about/openpgp_keys
-./doc/about/requirements
-./doc/about/tor
-./doc/about/trust
-./doc/about/warning
-
-doc_first_step_ABIM
-
-./doc/first_steps
-./doc/first_steps/accessibility
-./doc/first_steps/bug_reporting
-./doc/first_steps/bug_reporting/tails_does_not_start
-./doc/first_steps.index
-./doc/first_steps/introduction_to_gnome_and_the_tails_desktop
-./doc/first_steps/media
-
-doc_installation
-
-./doc/first_steps/installation
-./doc/first_steps/installation/manual
-./doc/first_steps/installation/manual.intro
-./doc/first_steps/installation/manual/linux
-./doc/first_steps/installation/manual/mac
-./doc/first_steps/installation/manual/windows
-
-doc_persistence
-
-./doc/first_steps/persistence
-./doc/first_steps/persistence.caution
-./doc/first_steps/persistence/configure
-./doc/first_steps/persistence/delete
-./doc/first_steps/persistence/use
-./doc/first_steps/persistence/warnings
-
-doc_first_step_start
-
-./doc/first_steps/start_tails
-./doc/first_steps/startup_options
-./doc/first_steps/startup_options/administration_password
-./doc/first_steps/startup_options/bridge_mode
-./doc/first_steps/startup_options/mac_spoofing
-./doc/first_steps/startup_options/network_configuration
-
-doc_first_step_RUS
-
-./doc/first_steps/reset
-./doc/first_steps/reset.intro
-./doc/first_steps/reset/linux
-./doc/first_steps/reset/windows
-./doc/first_steps/upgrade
-./doc/first_steps/shutdown
+Message conversion to user's charset will not work.
+wiki/src/doc/first_steps/startup_options/administration_password.it.po:4:2: syntax error
 
 
-doc_get
+#merge delle branch remote
 
-./doc/get.index
-./doc/get/trusting_tails_signing_key
-./doc/get/verify_the_iso_image_using_gnome
-./doc/get/verify_the_iso_image_using_other_operating_systems
-./doc/get/verify_the_iso_image_using_the_command_line
+[cri@localhost lastTails2.3]$ cd Masteritalian/
 
-first_level
+[cri@localhost Masteritalian]$ git branch -a
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/doc_first_step_ABIM
+  remotes/origin/doc_first_step_start
+  remotes/origin/doc_get
+  remotes/origin/italian_about
+  remotes/origin/italian_first_step_RUS
+  remotes/origin/italian_first_steps_RUS
+  remotes/origin/italian_installation
+  remotes/origin/italian_persistence
+  remotes/origin/italian_warnings
+  remotes/origin/master
 
-./download
-./getting_started
-./index
-./sidebar
-./support
-./about
-./doc
+[cri@localhost Masteritalian]$ git checkout -b first_step_start remotes/origin/doc_first_step_start
+Branch first_step_start set up to track remote branch doc_first_step_start from origin.
+Switched to a new branch 'first_step_start'
+
+[cri@localhost Masteritalian]$ git branch
+* first_step_start
+  master
+
+[cri@localhost Masteritalian]$ git checkout master
+Si è passati al branch 'master'
+Your branch is up-to-date with 'origin/master'.
+
+[cri@localhost Masteritalian]$ git merge first_step_start
+Auto-merging wiki/src/doc/first_steps/startup_options/administration_password.it.po
+CONFLICT (content): Merge conflict in wiki/src/doc/first_steps/startup_options/administration_password.it.po
+Merge automatico fallito; risolvi i conflitti ed eseguire il commit
+del risultato.
+
+-----------------------------------
+
+Aggiornamento di 7f39480..a6e77d9
+Fast-forward
+ wiki/src/doc/first_steps.index.it.po                                       | 100 ++++++++++++++++++++++++++++++++++++----------------------------------------------------------------
+ wiki/src/doc/first_steps/accessibility.it.po                               |  18 +++++++++++++-----
+ wiki/src/doc/first_steps/bug_reporting.it.po                               |  18 +++++++++---------
+ wiki/src/doc/first_steps/bug_reporting/tails_does_not_start.it.po          |   8 ++++----
+ wiki/src/doc/first_steps/introduction_to_gnome_and_the_tails_desktop.it.po |  53 ++++++++++++++++++++++++++++++++++++-----------------
+ wiki/src/doc/first_steps/media.it.po                                       |  14 +++++++-------
+ 6 files changed, 105 insertions(+), 106 deletions(-)
+
+
+-------------------------------------------------------
+
+
+#mini guida GIT
+
+https://rogerdudler.github.io/git-guide/index.it.html
+
+#branch
+
+Prima cosa un "git status" per vedere se siamo allineati ai rep remoti e se non lo siamo facciamolo.
+
+Voglio creare la nuova branch locale italia_about
+
+    git branch italian_about
+
+poi controllo che ci sia
+ 
+    git branch
+
+mi risponde la lista delle branch esistenti.
+
+Allora vado a lavorarci sopra.
+
+    git checkout italian_about
+
+    git branch
+mi fa rivedere le branch e che io sono su italian_about
+
+Ora modifico i vari file, faccio ADD, poi COMMIT e poi al PUSH:
+
+    git push [remote-name] [branch-name]
+
+Dove [remote-name] è comunemente "origin", dicono, ma nel mio caso ho dato:
+
+    git push l10n-italian italia_about
 
 # Dizionario
 
@@ -92,9 +102,6 @@ Warning page = pagina degli avvertimenti/avvisi
 Persistence = persistente https://it.wikipedia.org/wiki/Persistenza_%28informatica%29 
 
 Sensitive = sensibile o riservato
-
-
-
 [[Domande aperte sui termini]]
 
 # Info
@@ -366,8 +373,7 @@ Tu puoi costruire la tua copia locale del sito sul tuo pc. La generazione del si
 
 Genera il wiki in locale su TAILS
 
-
-    Crea e configura la partizione resistente attivando le seguenti funzionalità (Applicazioni>Tails>Configure persistent volume):
+Crea e configura la partizione resistente attivando le seguenti funzionalità (Applicazioni>Tails>Configure persistent volume):
         Dati personali
         Pacchetti APT
         Liste APT
@@ -378,7 +384,7 @@ Genera il wiki in locale su TAILS
 
     sudo apt-get update
 
-    Installa i seguenti pacchetti:
+Installa i seguenti pacchetti:
 
     sudo apt-get install libyaml-perl libyaml-libyaml-perl po4a \
      perlmagick libyaml-syck-perl ikiwiki
@@ -391,6 +397,7 @@ Genera il wiki in locale su TAILS
     Il codice sorgente del sito internet si trova nella cartella wiki/src/ .
 
     Per accelerare la compilazione, puoi disabilitare alcune lingue nei parametri po_slave_languages delle configurazioni nei file ikiwiki.setup.
+E poi lanciare ikiwiki --changesetup ikiwiki.setu
 
     Ora puoi visistare questo indirizzo locale dal tuo browser per vedere il sito web generato:
 
@@ -401,79 +408,4 @@ Genera il wiki in locale su TAILS
     ./build-website --set destdir="/home/amnesia/Persistent/outtails" "$@"
 ___
 # Documenti Revisionati
-Dancus
-
-./doc/first_steps/persistence/warninzeyev  REVISIONATO
-
-./doc/first_steps/shutdown   REVISIONATO
-
-./doc/first_steps/start_tails REVISIONATO
-
-./doc/first_steps/startup_option/administration_password REVISIONATO
-
-./doc/first_steps/startup_options/bridge_mode  REVISIONATO
-REVISIONATO
-./doc/first_steps/startup_options/mac_spoofing 
-
-./doc/first_steps/startup_options/network_configuration REVISIONATO
-
-./doc/first_steps/startup_options/windows_camouflage REVISIONATO
-
--------------------------------------------------------------------
-Blackflag
-
-doc/about/tor.it.html REVISIONATO  
-
-about/trust.it.po REVISIONATO
-
-about/warning.it.po REVISIONATO
-
-doc/first_steps/shutdown.it.po REVISIONATO
-
-getting_started.it.po REVISIONATO
-
-index.it.po REVISIONATO
-
-sidebar.it.po REVISIONATO
-
-support.it.html REVISIONATO (file ok ma html sbagliato (da me) )
-
-________________________________
-
-Igni
-
-./doc/about.index --FINITO!
-
-./doc/about/features --FINITO!
-
-./doc/about/fingerprint --FINITO! 
-
-./doc/first_steps/persistence.caution --FINITO!
-
-./doc/first_steps/persistence/configure --FINITO!
-
-./doc/first_steps/persistence/delete --FINITO!
-
-./doc/first_steps/persistence/warnings --FINITO!
-
-________________________________________
-
-Zeyev
-
-./doc/about/license	--FINITO
-
-./doc/about/requirements --FINITO
-
-./doc/get.index --FINITO
-
-./doc/get/trusting_tails_signing_key --FINITO
-
-./doc/get/verify_the_iso_image_using_gnome --FINITO
-
-./doc/get/verify_the_iso_image_using_other_operating_systems --FINITO
-
-./doc/get/verify_the_iso_image_using_the_command_line --FINITO
-
-./download.it.po --FINITO
-
 ________________________________________

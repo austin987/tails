@@ -4,7 +4,7 @@ Feature: Using Evince
   I want to view and print PDF files in Evince
   And AppArmor should prevent Evince from doing dangerous things
 
-  #10775, #10994
+  #10994
   @fragile
   Scenario: I can view and print a PDF file stored in /usr/share
     Given I have started Tails from DVD without network and logged in

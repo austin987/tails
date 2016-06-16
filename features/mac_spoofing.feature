@@ -10,21 +10,17 @@ Feature: Spoofing MAC addresses
     And I capture all network traffic
     And the network is plugged
 
-  @fragile
   Scenario: MAC address spoofing is disabled
     When I enable more Tails Greeter options
     And I disable MAC spoofing in Tails Greeter
     And I log in to a new session
-    And the Tails desktop is ready
     And Tor is ready
     Then 1 network interface is enabled
     And the network device has its default MAC address configured
     And the real MAC address was leaked
 
-  @fragile
   Scenario: MAC address spoofing is successful
     When I log in to a new session
-    And the Tails desktop is ready
     And Tor is ready
     Then 1 network interface is enabled
     And the network device has a spoofed MAC address configured
@@ -36,7 +32,6 @@ Feature: Spoofing MAC addresses
     Given macchanger will fail by not spoofing and always returns false
     When I log in to a new session
     And see the "Network card disabled" notification
-    And the Tails desktop is ready
     Then no network interfaces are enabled
     And the real MAC address was not leaked
 
@@ -46,7 +41,6 @@ Feature: Spoofing MAC addresses
     Given macchanger will fail by not spoofing and always returns true
     When I log in to a new session
     And see the "Network card disabled" notification
-    And the Tails desktop is ready
     Then no network interfaces are enabled
     And the real MAC address was not leaked
 
@@ -57,7 +51,6 @@ Feature: Spoofing MAC addresses
     And no network interface modules can be unloaded
     When I log in to a new session
     And see the "All networking disabled" notification
-    And the Tails desktop is ready
     Then 1 network interface is enabled
     But the MAC spoofing panic mode disabled networking
     And the real MAC address was not leaked

@@ -399,7 +399,7 @@ IP provided by the ISP when one asks information about themselves to
 their DNS resolver (source: [The State of the DNS and Tor Union (also:
 a DNS UDP
 - TCP shim)](http://archives.seul.org/or/talk/Jul-2010/msg00007.html)
-thread on the or-talk mailing-list).
+thread on the or-talk mailing list).
 
 Any exception to these rules MUST be thoroughly thought through and
 properly documented. If an action that is excepted from the above
@@ -533,7 +533,7 @@ A GUI Tor controller application such as Vidalia or TorK is highly
 RECOMMENDED. However, this requires opening the control port in Tor,
 and thus some means of authentication will be REQUIRED
 (`CookieAuthentication` preferably) to hinder attacks on the Tor
-software.
+software. XXX: this paragraph is mostly obsolete.
 
 #### 2.6.3.6 Hardened tool chain and compiling
 
@@ -627,7 +627,7 @@ unionfs/aufs ramdisk branch.
 
 This was
 [discussed](http://archives.seul.org/or/talk/Jan-2011/msg00137.html)
-on the or-talk mailing-list, and a new system that mitigates such
+on the or-talk mailing list, and a new system that mitigates such
 attacks is part of Tails 0.7 and newer.
 
 This specification must warn about such matters.
@@ -645,7 +645,7 @@ document on the Tor wiki:
 
 The impact of HTTP keepalive and possible solutions are [being
 discussed](http://thread.gmane.org/gmane.linux.distributions.tails.devel/52)
-on the tails-dev mailing-list.
+on the [[tails-dev@boum.org|about/contact#tails-dev]] mailing list.
 
 ### 2.7.3 Mounting of filesystems stored on removable devices
 
@@ -685,7 +685,7 @@ the risks involved and how to manage those risks.
 
 ## 3.1 Download
 
-See the [[download section|download]] on [[Tails's website|/index]]
+See the [[installation section|install]] on [[Tails's website|/index]]
 for download information. Published Tails images integrity can be
 checked using OpenPGP detached signatures made with a key that is well
 linked to the web-of-trust.
@@ -706,13 +706,12 @@ directory](/torrents/files/) (look for files with the `.packages`
 extension).
 
 ### 3.2.1 Core software
- 
+
 - [Debian GNU/Linux](https://www.debian.org/): the base operating
   system, provides hardware detection, infrastructure. Please note
   that the Debian distribution does not provide or endorse Tails.
 - [Tor](http://www.torproject.org/): anonymizing overlay network for
   TCP. Our intention is to always use the latest stable version.
-- Vidalia is used to control Tor's behavior.
 
 Being based in Debian, Tails benefits from its great package
 management tools, facilitating its build and the inclusion of new
@@ -791,9 +790,9 @@ through the necessary steps.
 
 Users can send feedback in several ways to Tails developers.
 A [[!tails_redmine desc="task tracker"]] is available.
-Users can also send email to the private [developers mailing
-list](tails@boum.org) or to the public [support mailing
-list](tails-support@boum.org).
+Users can also send email to the private [[developers mailing
+list|about/contact#tails]] or to the public [[support mailing
+list|about/contact#tails-support]].
 
 A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
@@ -834,15 +833,15 @@ Only connections from localhost are accepted. It can be argued
 that running a Tor server (onion router) would increase one's
 anonymity for a number for reasons but we still feel that most users
 probably would not want this due to the added consumption of
-bandwidth. The user can nevertheless easily choose to turn his or her
-Tor client into a relay, thanks to the Vidalia graphical user
-interface.
+bandwidth.
 
 If a compromised software had access to the Tor control port,
 an attacker who controls it could simply ask Tor the public
 IP through the `GETINFO address` command.
 To prevent this, access to the Tor control port is only
-granted to the vidalia user, who is running Vidalia.
+granted to the `root` and `tor-launcher` users, as well as to the
+members of the `debian-tor` group, such as the `onioncircuits` user
+(that is used to run Onion Circuits).
 A filtering proxy to the control port exists, so
 Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
 
@@ -853,11 +852,18 @@ providers recommend and even enforce StartTLS on these ports, the effect
 of these warnings were most of the time counterproductive as people had
 to click through needlessly scary security warnings.
 
-- [[!tails_gitweb config/chroot_local-hooks/06-adduser_vidalia]]
+- [[!tails_gitweb config/chroot_local-hooks/06-adduser_onioncircuits]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tor-controlport-filter.service]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/restart-vidalia]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tor-controlport-filter]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
+
+[[!tails_gitweb_repo onioncircuits desc="Onion Circuits"]] allows the
+user to view the state of their Tor circuits and streams. The Tor
+Status extension provides a permanent visual indication of whether Tor
+has bootstrapped already.
+
+- [[!tails_gitweb_dir config/chroot_local-includes/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/onioncircuits]]
 
 <a id="dns"></a>
 
@@ -867,7 +873,7 @@ to click through needlessly scary security warnings.
 
 ### 3.6.4 HTTP Proxy
 
-[[!inline pages="contribute/design/Tor_enforcement/Proxy" raw=yes]]
+Tails does not include any HTTP proxy anymore.
 
 ### 3.6.5 SOCKS libraries
 
@@ -995,6 +1001,7 @@ browser anyway:
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-tor-has-bootstrapped.target]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-wait-until-tor-has-bootstrapped.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-wait-until-tor-has-bootstrapped.service]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-tor-has-bootstrapped-flag-file.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
 
 Once Tor is ready to be used, the user is informed they can now use
@@ -1005,10 +1012,8 @@ the Internet:
 The remaining configuration differences can be found in:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser/preferences/0000tails.js]]
-- [[!tails_gitweb config/chroot_local-hooks/12-install_browser_searchplugins]]
-- [[!tails_gitweb config/chroot_local-hooks/12-remove_unwanted_browser_searchplugins]]
+- [[!tails_gitweb config/chroot_local-hooks/11-localize_browser]]
 - [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
-- [[!tails_gitweb config/chroot_local-hooks/14-add_localized_browser_searchplugins]]
 - [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
 - [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
 
@@ -1017,27 +1022,55 @@ for the [[Unsafe Browser]] and [[I2P Browser]], although they are
 user-isolated and use separate profiles with very different
 configurations.
 
-### 3.6.14 Claws Mail
+### 3.6.14 Icedove
 
-Claws Mail generates `Message-ID` headers using the hostname part of
+Icedove, in combination with TorBirdy, sends email through Tor.
+
+Icedove itself leaks a lot of data and makes DNS requests, for example by
+retrieving mail server configurations from a remote server over an insecure
+channel. This is prevented by the TorBirdy extension as well as by custom
+patches for Icedove in Tails, which we are currently in the process of
+upstreaming ([[!tails_ticket 11215]]).
+
+Icedove generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
-It also always says `EHLO localhost` to the SMTP server instead of
-disclosing the real IP address and hostname. This is achieved thanks
-to tsocks, as Claws Mail leaks the hostname in the HELO/EHLO
-message, resulting in a hostname leak in the `Message ID` and
-`Received` email headers, when run with `torify` and `torsocks`.
+It also always says `EHLO[127.0.0.1]` to the SMTP server instead of
+disclosing the real IP address and hostname.
 
-Furthermore, any account a user creates is pre-configured to not use
-HTML in order to get rid of a whole class of privacy concerns.
+Torbirdy disables HTML email and inline attachments
+in order to get rid of a whole class of privacy concerns.
+Furthermore, when setting up an IMAP account, the drafts folder, instead
+of being remote, is set to `~$HOME/.icedove/Local Folders`.
 
-OpenPGP support is provided by the PGP/inline and PGP/MIME plugins.
+The original TorBirdy extension disables automatic email configuration
+through Icedove's email configuration wizard. This wizard is enabled in
+Tails. This is possible because our patches allow using only secure protocols
+for the domain and ISPDB lookups as well as for the actual mail account
+configuration. In detail this means:
 
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.claws-mail]] is copied to
+1. we prevent all testing of plaintext protocols when guessing configurations.
+2. we make autoconfiguration skip database lookups if `mailnews.auto_config_url`
+   isn't HTTPS.
+3. we make ISP autoconfiguration lookups first try https, then http, but only
+   if we allow insecure protocols.
+4. we discard any configurations using plaintext protocols.
+
+In addition, even when plaintext protocols are allowed, the patches make
+us prefer secure options if available.
+This setting can be disabled (opt-out by the user). This also applies to
+manual configuration.
+
+OpenPGP support is provided by the Enigmail addon.
+
+- [[!tails_gitweb config/chroot_local-includes/etc/icedove/pref/icedove.js]]
+- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
+- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
+- [[!tails_gitweb config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.icedove]] is copied to
   the user's `$HOME` at boot time
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/torified-claws-mail]]
-- [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks-mua.conf]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/icedove]]
 
 ### 3.6.15 Pidgin
 
@@ -1108,8 +1141,7 @@ soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
 ### 3.6.20 OpenSSH
 
-The OpenSSH client is configured to use the Tor SOCKS proxy, and to
-prefer strong ciphers and MACs..
+The OpenSSH client is configured to use the Tor SOCKS proxy.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/lib/connect-socks]]
@@ -1241,6 +1273,10 @@ configuration folder, which stores the Bitcoin wallet, application
 preferences and the cached Bitcoin blockchain.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.electrum]]
+
+### 3.6.29 Kernel hardening
+
+[[!inline pages="contribute/design/kernel_hardening" raw=yes]]
 
 ## 3.7 Running Tails in virtual machines
 
