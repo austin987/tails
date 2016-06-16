@@ -252,7 +252,7 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
-def bootsplash_tab_msg
+def boot_menu_tab_msg_image
   case @os_loader
   when "UEFI"
     'TailsBootSplashTabMsgUEFI.png'
@@ -294,13 +294,13 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
   kill_tab_spammer.call
   # Ensure that we're back at the boot splash
   @screen.type(Sikuli::Key.ESC)
-  @screen.wait(bootsplash_tab_msg(), 5)
+  @screen.wait(boot_menu_tab_msg_image, 5)
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
   step 'Tails is at the boot menu' + (reboot ? ' after rebooting' : '')
   @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(bootsplash_tab_msg(), 1)
+  @screen.waitVanish(boot_menu_tab_msg_image, 1)
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
