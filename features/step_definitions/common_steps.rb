@@ -287,8 +287,16 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
   # but multi-threading etc is working extremely poor in our Ruby +
   # jrb environment when Sikuli is involved. Hence we run the spamming
   # from a separate process.
+  tab_key_code = '0xf'
+  # This can also be done with Libvirt::Domain.send_key, but virsh is
+  # easier to put into a separate process.
+  tab_spammer_code = <<-EOF
+    while true; do
+      virsh -c qemu:///system send-key #{$vm.domain_name} #{tab_key_code}
+    done
+  EOF
   tab_spammer =
-    IO.popen(['/bin/sh', '-c', 'while true ; do xdotool key Tab; done'])
+    IO.popen(['/bin/sh', '-c', tab_spammer_code])
   kill_tab_spammer = Proc.new do
     next if tab_spammer.closed?
     begin
