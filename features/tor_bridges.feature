@@ -1,4 +1,4 @@
-@product @fragile
+@product
 Feature: Using Tails with Tor pluggable transports
   As a Tails user
   I want to circumvent censorship of Tor by using Tor pluggable transports
@@ -12,19 +12,7 @@ Feature: Using Tails with Tor pluggable transports
     And the Tor Launcher uses all expected TBB shared libraries
 
   Scenario: Using bridges
-    When I configure some Bridge pluggable transports in Tor Launcher
-    Then Tor is ready
-    And available upgrades have been checked
-    And all Internet traffic has only flowed through the configured pluggable transports
-
-  Scenario: Using obfs2 pluggable transports
-    When I configure some obfs2 pluggable transports in Tor Launcher
-    Then Tor is ready
-    And available upgrades have been checked
-    And all Internet traffic has only flowed through the configured pluggable transports
-
-  Scenario: Using obfs3 pluggable transports
-    When I configure some obfs3 pluggable transports in Tor Launcher
+    When I configure some bridge pluggable transports in Tor Launcher
     Then Tor is ready
     And available upgrades have been checked
     And all Internet traffic has only flowed through the configured pluggable transports

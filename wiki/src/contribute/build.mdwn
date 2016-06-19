@@ -14,83 +14,100 @@ more about [[our Git branches layout|contribute/git#main-repo]].
 Using Vagrant
 =============
 
-Tails can be built easily in a virtual machine using [Rake], [Vagrant] and
-[VirtualBox]. The process requires a minimum of 1 GB of free memory and a
-maximum of 10 GB of free storage.
+Tails can be built easily in a virtual machine using [Rake], [Vagrant]
+and [vagrant-libvirt]. The process requires the
+[[!wikipedia Kernel-based_Virtual_Machine desc="KVM"]] virtual machine
+hypervisor to be available, a minimum of 512 MiB of free memory and a
+maximum of 20 GB of free storage.
 
 [Rake]: http://rake.rubyforge.org/
 [Vagrant]: http://vagrantup.com/
-[VirtualBox]: http://www.virtualbox.org/
+[vagrant-libvirt]: https://github.com/vagrant-libvirt/vagrant-libvirt/
+
+For details how Vagrant is setup, see its
+[[design page|build/vagrant-setup]].
 
 ## Installing the dependencies in Debian
 
-### If you run Debian Jessie
+If you run Debian Jessie, you must install a few dependencies from
+Debian Stretch, and one of Tails' repos until [!debbug 823395]] is fixed:
 
-Install the needed tools:
-
-    sudo apt-get install git virtualbox rake ruby-childprocess \
-         ruby-erubis ruby-i18n ruby-log4r ruby-net-scp ruby bsdtar curl
-
-### If you run Debian Wheezy
-
-1. Add Debian Jessie and wheezy-backports to your APT sources:
-
-       echo "deb http://ftp.us.debian.org/debian/ jessie main" | \
-           sudo tee /etc/apt/sources.list.d/jessie.list
-       echo "deb http://ftp.us.debian.org/debian/ wheezy-backports main" | \
-           sudo tee /etc/apt/sources.list.d/wheezy-backports.list
-
-2. Pin all packages from Debian Jessie and unstable at 500 (`apt_preferences(5)`):
-
-       sudo tee /etc/apt/preferences.d/jessie <<EOF
-       Package: *
-       Pin: release o=Debian,a=jessie
-       Pin-Priority: 500
-       EOF
-
-3. Install the needed tools:
-
-       sudo apt-get install git virtualbox rake ruby-childprocess/jessie \
-           ruby-net-scp/jessie ruby-erubis ruby-i18n ruby-log4r bsdtar curl \
-           gettext/wheezy-backports
-
-### In both Debian Wheezy and Jessie
-
-At the moment Tails relies on a version of Vagrant (the 1.4.x series)
-that is not packaged in Debian any more. Here's a workaround for both
-Debian Wheezy and Jessie:
-
-    sudo tee /etc/apt/preferences.d/tails-build-vagrant <<EOF
-    Package: vagrant
-    Pin: version 1.4.3+dfsg1-3
-    Pin-Priority: 550
-
-    Package: ruby-net-ssh
-    Pin: version 1:2.6.8-2
-    Pin-Priority: 550
+    sudo tee /etc/apt/sources.list.d/stretch.list <<EOF
+    deb http://ftp.us.debian.org/debian/ stretch main
+    deb-src http://ftp.us.debian.org/debian/ stretch main
     EOF
-    echo "deb http://snapshot.debian.org/archive/debian/20141010T042049Z/ unstable main" | \
-        sudo tee /etc/apt/sources.list.d/20141010T042049Z.list
-    sudo apt-get -o Acquire::Check-Valid-Until=false update
-    sudo apt-get install vagrant ruby-net-ssh
-    sudo rm /etc/apt/sources.list.d/20141010T042049Z.list
+    sudo tee /etc/apt/preferences.d/vagrant-libvirt-from-stretch.pref <<EOF
+    Package: *
+    Pin: release o=Debian,n=stretch
+    Pin-Priority: 100
+    
+    Package: vagrant vagrant-libvirt ruby-excon ruby-fog-core ruby-fog-libvirt ruby-fog-xml
+    Pin: release o=Debian,n=stretch
+    Pin-Priority: 990
+    EOF
+
+    sudo apt-key add config/chroot_sources/tails.chroot.gpg
+    sudo tee /etc/apt/sources.list.d/builder-jessie.list <<EOF
+    deb http://deb.tails.boum.org/ builder-jessie main
+    deb-src http://deb.tails.boum.org/ builder-jessie main
+    EOF
+
     sudo apt-get update
 
-If you run Virtualbox >4.3 (5.0 is in Jessie backports at the moment)
-you will have to patch Vagrant a bit:
+Now we can install all the dependencies:
 
-    --- /usr/share/vagrant/plugins/providers/virtualbox/driver/meta.rb.orig 2016-02-12 11:58:06.150337645 +0100
-    +++ /usr/share/vagrant/plugins/providers/virtualbox/driver/meta.rb      2016-02-12 11:58:38.778726368 +0100
-    @@ -45,7 +45,8 @@
-                 "4.0" => Version_4_0,
-                 "4.1" => Version_4_1,
-                 "4.2" => Version_4_2,
-    -            "4.3" => Version_4_3
-    +            "4.3" => Version_4_3,
-    +            "5.0" => Version_4_3
-               }
-     
-               if @version.start_with?("4.2.14")
+    sudo apt-get install \
+        git \
+        rake \
+        libvirt-daemon-system \
+        dnsmasq-base \
+        ebtables \
+        qemu-system-x86 \
+        qemu-utils \
+        vagrant \
+        vagrant-libvirt
+    sudo systemctl restart libvirtd
+
+Make sure that the user that is supposed to initiate the build command
+is part of the `kvm`, `libvirt` and `libvirt-qemu` groups:
+
+    for group in kvm libvirt libvirt-qemu; do sudo adduser $USER $group; done
+
+Then reboot the system (alternatively, if you know what you are doing,
+run `newgrp` and reload the `kvm` module(s)).
+
+## Known issues and workarounds
+
+* If Vagrant failed to start the Tails builder VM the first time
+  (e.g. because of permission issues or the `kvm` module not veing
+  loaded) it will not automatically run the provisioning script, so
+  you must run `rake vm:provision` yourself before attempting your
+  first `rake build`. If that fails, run `rake vm:destroy`, which
+  removes this half-broken VM, and then start from scratch with `rake
+  build` or similar.
+
+* `ruby-fog-libvirt <= 0.0.3` has a
+  [bug](https://github.com/fog/fog-libvirt/issues/21) that will make
+  Vagrant crash when trying to start the VM if you have any libvirt
+  domain defined with a floppy (`fd`) as part of the boot order, set
+  via `<os>` tag; please remove all such occurrences! If you really
+  need to have a floppy as part of some domain's boot order, please
+  set it via `<disk>` by adding `<boot order='1'/>` which does not
+  trigger the bug.
+
+* If the system you are setting this up on ever had the old
+  (Virtualbox-based) Vagrant setup, you will get errors unless you
+  clean up these parts:
+
+  - Remove any old pinnings for `vagrant` and `ruby-net-ssh`. If you
+    followed our old instructions to the point, that should be:
+
+        sudo rm /etc/apt/preferences.d/tails-build-vagrant
+
+  - Clearing the Vagrant configuration seems to also often solve
+    issues:
+
+        rm -r ~/.vagrant.d
 
 ## Building Tails using Vagrant
 
@@ -126,7 +143,9 @@ If you have a local HTTP proxy, the build system will use it as long as
 you properly set the `http_proxy` environment variable. The easiest way to
 do so is to run:
 
-    export http_proxy=http://proxy.lan:3142
+    http_proxy=http://proxy.lan:3142
+
+... and then, pass the `extproxy` build option (see below).
 
 This needs to be done before any other operations.
 
@@ -134,7 +153,7 @@ Build options
 -------------
 
 Options regarding the build process can be set using the
-`TAILS_BUILD_OPTIONS` environment variable. Muliple options must be
+`TAILS_BUILD_OPTIONS` environment variable. Multiple options must be
 separated by whitespaces.
 
 The following options are available:
@@ -194,8 +213,8 @@ In case you want to delete all these, the following option is available:
 
 ### Virtual CPUs settings
 
-The number of virtual CPUs that are allocated in the virtual machine can be set
-through:
+The number of virtual CPUs that are allocated in the virtual machine can be
+customized through:
 
  * **cpus=_n_**: allocate _n_ CPUs to the virtual machine.
 
@@ -205,9 +224,9 @@ will default to be the same as the host system.
 
 ### Git settings
 
-The build system can only work on files that have been *commited* to the Git
+The build system can only work on files that have been *committed* to the Git
 repository. By default, it will refuse to start a build in presence of
-uncommited changes. This behaviour can be controlled by:
+uncommitted changes. This behaviour can be controlled by:
 
  * **ignorechanges**: allow to make a build that will ignore changes in the Git
    repository.
@@ -276,6 +295,8 @@ The following Debian packages need to be installed:
         eatmydata \
         gettext \
         intltool \
+        libfile-slurp-perl \
+        liblist-moreutils-perl \
         libyaml-libyaml-perl \
         libyaml-perl \
         libyaml-syck-perl \
@@ -323,11 +344,13 @@ The most common customizations are documented on this wiki:
 * to avoid compressing the SquashFS using XZ (efficient, but very
   slow), `export MKSQUASHFS_OPTIONS='-comp gzip'` in your
   build environment;
-* [[using a custom Debian mirror to build Tails
-  images|build/custom_mirror]];
-* [[using squid-deb-proxy to build Tails images|build/squid-deb-proxy]]
-  (**Note**: most Tails contributors using the manual build method
-  use [[!debpts apt-cacher-ng]] instead, nowadays.)
+* to avoid downloading lots of Debian packages during every build, you
+  can use [[!debpts apt-cacher-ng]]; however, the build system
+  constantly switches APT sources for our
+  [[APT repositories|contribute/APT_repository]], so some custom
+  configuration is needed to make `apt-cacher-ng` useful: see the
+  bits about `apt-cacher-ng` in
+  [[!tails_gitweb vagrant/provision/assets/build-tails]].
 
 More documentation about this can be found in the [Debian Live
 Manual](http://live.debian.net/manual-2.x/html/live-manual.en.html).

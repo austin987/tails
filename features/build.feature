@@ -24,10 +24,39 @@ Feature: custom APT sources to build branches
     And I should see the 'bugfix-bar' suite
     But I should not see the '1.0' suite
 
+  Scenario: build from an untagged stable branch with no encoded time-based snapshot
+    Given I am working on the stable base branch
+    And Tails 0.10 has been released
+    And the last versions mentioned in debian/changelog are 0.10 and 1.0
+    And Tails 1.0 has not been released yet
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from an untagged stable branch with encoded time-based snapshots
+    Given I am working on the stable base branch
+    And Tails 0.10 has been released
+    And the last versions mentioned in debian/changelog are 0.10 and 1.0
+    And Tails 1.0 has not been released yet
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
   Scenario: build from a tagged stable branch where the config/APT_overlays.d directory is empty
     Given Tails 0.10 has been released
     And the last version mentioned in debian/changelog is 0.10
     And I am working on the stable base branch
+    And I checkout the 0.10 tag
     And the config/APT_overlays.d directory is empty
     When I successfully run tails-custom-apt-sources
     Then I should see only the '0.10' suite
@@ -36,9 +65,38 @@ Feature: custom APT sources to build branches
     Given Tails 0.10 has been released
     And the last version mentioned in debian/changelog is 0.10
     And I am working on the stable base branch
+    And I checkout the 0.10 tag
     And config/APT_overlays.d contains 'feature-foo'
     When I run tails-custom-apt-sources
     Then it should fail
+
+  Scenario: build from a tagged stable branch with no encoded time-based snapshot
+    Given I am working on the stable base branch
+    And Tails 0.10 has been released
+    And the last version mentioned in debian/changelog is 0.10
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    And I checkout the 0.10 tag
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see the 0.10 tagged snapshot
+
+  Scenario: build from a tagged stable branch with encoded time-based snapshots
+    Given I am working on the stable base branch
+    And Tails 0.10 has been released
+    And the last version mentioned in debian/changelog is 0.10
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    And I checkout the 0.10 tag
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see the 0.10 tagged snapshot
 
   Scenario: build from a bugfix branch without overlays for a stable release
     Given Tails 0.10 has been released
@@ -61,6 +119,34 @@ Feature: custom APT sources to build branches
     And I should see the 'bugfix-disable-gdomap' suite
     And I should see the 'bugfix-bar' suite
     But I should not see the '0.10' suite
+
+  Scenario: build from a bugfix branch with no encoded time-based snapshot for a stable release
+    Given Tails 0.10 has been released
+    And the last version mentioned in debian/changelog is 0.10.1
+    And Tails 0.10.1 has not been released yet
+    And I am working on the bugfix/disable_gdomap branch based on stable
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see the 0.10 tagged snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from a bugfix branch with encoded time-based snapshots for a stable release
+    Given Tails 0.10 has been released
+    And the last version mentioned in debian/changelog is 0.10.1
+    And Tails 0.10.1 has not been released yet
+    And I am working on the bugfix/disable_gdomap branch based on stable
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
 
   Scenario: build from an untagged testing branch where the config/APT_overlays.d directory is empty
     Given I am working on the testing base branch
@@ -85,11 +171,40 @@ Feature: custom APT sources to build branches
     And I should see the 'bugfix-bar' suite
     But I should not see the '0.11' suite
 
+  Scenario: build from an untagged testing branch with no encoded time-based snapshot
+    Given I am working on the testing base branch
+    And Tails 0.10 has been released
+    And the last versions mentioned in debian/changelog are 0.10 and 1.0
+    And Tails 1.0 has not been released yet
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from an untagged testing branch with encoded time-based snapshots
+    Given I am working on the testing base branch
+    And Tails 0.10 has been released
+    And the last versions mentioned in debian/changelog are 0.10 and 1.0
+    And Tails 1.0 has not been released yet
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
   Scenario: build from a tagged testing branch where the config/APT_overlays.d directory is empty
     Given I am working on the testing base branch
     And the last version mentioned in debian/changelog is 0.11
     And Tails 0.11 has been released
     And the config/APT_overlays.d directory is empty
+    And I checkout the 0.11 tag
     When I successfully run tails-custom-apt-sources
     Then I should see only the '0.11' suite
 
@@ -98,8 +213,37 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.11
     And Tails 0.11 has been released
     And config/APT_overlays.d contains 'feature-foo'
+    And I checkout the 0.11 tag
     When I run tails-custom-apt-sources
     Then it should fail
+
+  Scenario: build from a tagged testing branch with no encoded time-based snapshot
+    Given I am working on the testing base branch
+    And the last version mentioned in debian/changelog is 0.11
+    And Tails 0.11 has been released
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    And I checkout the 0.11 tag
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
+    When I successfully run "apt-mirror debian-security"
+    Then I should see the 0.11 tagged snapshot
+
+  Scenario: build from a tagged testing branch with encoded time-based snapshots
+    Given I am working on the testing base branch
+    And the last version mentioned in debian/changelog is 0.11
+    And Tails 0.11 has been released
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    And I checkout the 0.11 tag
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see the 0.11 tagged snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see the 0.11 tagged snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see the 0.11 tagged snapshot
 
   Scenario: build a release candidate from a tagged testing branch
     Given I am working on the testing base branch
@@ -107,6 +251,7 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.12~rc1
     And Tails 0.12-rc1 has been tagged
     And the config/APT_overlays.d directory is empty
+    And I checkout the 0.12-rc1 tag
     When I successfully run tails-custom-apt-sources
     Then I should see only the '0.12-rc1' suite
 
@@ -116,8 +261,39 @@ Feature: custom APT sources to build branches
     And the last version mentioned in debian/changelog is 0.12~rc1
     And Tails 0.12-rc1 has been tagged
     And config/APT_overlays.d contains 'bugfix-bar'
+    And I checkout the 0.12-rc1 tag
     When I run tails-custom-apt-sources
     Then it should fail
+
+  Scenario: build from a bugfix branch with no encoded time-based snapshot for a major release
+    Given I am working on the testing base branch
+    And Tails 0.10~rc1 has been released
+    And the last versions mentioned in debian/changelog are 0.10~rc1 and 0.10
+    And Tails 0.10 has not been released yet
+    And I am working on the bugfix/disable_gdomap branch based on testing
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from a bugfix branch with encoded time-based snapshots for a major release
+    Given I am working on the testing base branch
+    And Tails 0.10~rc1 has been released
+    And the last versions mentioned in debian/changelog are 0.10~rc1 and 0.10
+    And Tails 0.10 has not been released yet
+    And I am working on the bugfix/disable_gdomap branch based on testing
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
 
   Scenario: build from the devel branch without overlays
     Given I am working on the devel base branch
@@ -133,6 +309,28 @@ Feature: custom APT sources to build branches
     Then I should see the 'devel' suite
     And I should see the 'feature-foo' suite
     And I should see the 'bugfix-bar' suite
+
+  Scenario: build from the devel branch with no encoded time-based snapshot
+    Given I am working on the devel base branch
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from the devel branch with encoded time-based snapshots
+    Given I am working on the devel base branch
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
 
   Scenario: build from the feature/jessie branch without overlays
     Given I am working on the feature/jessie base branch
@@ -161,6 +359,28 @@ Feature: custom APT sources to build branches
     And the config/APT_overlays.d directory is empty
     When I successfully run tails-custom-apt-sources
     Then I should see only the 'devel' suite
+
+  Scenario: build from a feature branch based on devel with no encoded time-based snapshot
+    Given I am working on the feature/icedove branch based on devel
+    And no frozen APT snapshot is encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I successfully run "apt-mirror debian"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror torproject"
+    Then I should see a time-based snapshot
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
+
+  Scenario: build from a feature branch based on devel with encoded time-based snapshots
+    Given I am working on the feature/icedove branch based on devel
+    And frozen APT snapshots are encoded in config/APT_snapshots.d
+    When I successfully run "apt-snapshots-serials prepare-build"
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
+    When I successfully run "apt-mirror debian-security"
+    Then I should see a time-based snapshot
 
   Scenario: build from a feature branch with overlays based on feature/jessie
     Given I am working on the feature/7756-reintroduce-whisperback branch based on feature/jessie
