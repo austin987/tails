@@ -308,6 +308,8 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
   end
   add_after_scenario_hook { kill_tab_spammer.call }
   dealt_with_uefi_setup = false
+  # The below code is not completely reliable, so we might have to
+  # retry by rebooting.
   try_for(boot_timeout) do
     begin
       # Our UEFI bootloader has the interesting "feature" that
