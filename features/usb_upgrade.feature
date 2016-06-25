@@ -167,6 +167,7 @@ Feature: Upgrading an old Tails USB installation
     And the file system changes introduced in version 1.1~test are not present
     When the network is plugged
     And Tor is ready
+    And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 1.1~test
     When I agree to install the incremental upgrade
     Then the incremental upgrade is reportedly installed
@@ -177,5 +178,6 @@ Feature: Upgrading an old Tails USB installation
     And the file system changes introduced in version 1.1~test are present
     When the network is plugged
     And the network connection is ready within 30 seconds
+    And all notifications have disappeared
     And I successfully start the Unsafe Browser
     Then the file system changes introduced in version 1.1~test are present in the Unsafe Browser's chroot
