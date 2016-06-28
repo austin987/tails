@@ -50,17 +50,24 @@ end
 
 Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
-  try_for(60) do
-    @screen.wait_and_click('SynapticSearchButton.png', 10)
-    @screen.wait_and_click('SynapticSearchWindow.png', 10)
+  recovery_proc = Proc.new do
+    $vm.execute("killall synaptic")
+    $vm.execute("apt-get -y purge #{package}")
+    step "I start Synaptic"
   end
-  @screen.type(package + Sikuli::Key.ENTER)
-  @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
-  @screen.wait_and_click('SynapticApplyButton.png', 10)
-  @screen.wait('SynapticApplyPrompt.png', 60)
-  @screen.type(Sikuli::Key.ENTER)
-  @screen.wait('SynapticChangesAppliedPrompt.png', 240)
-  step "package \"#{package}\" is installed"
+  retry_tor(recovery_proc) do
+    try_for(60) do
+      @screen.wait_and_click('SynapticSearchButton.png', 10)
+      @screen.wait_and_click('SynapticSearchWindow.png', 10)
+    end
+    @screen.type(package + Sikuli::Key.ENTER)
+    @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
+    @screen.wait_and_click('SynapticApplyButton.png', 10)
+    @screen.wait('SynapticApplyPrompt.png', 60)
+    @screen.type(Sikuli::Key.ENTER)
+    @screen.wait('SynapticChangesAppliedPrompt.png', 240)
+    step "package \"#{package}\" is installed"
+  end
 end
 
 When /^I start Synaptic$/ do
