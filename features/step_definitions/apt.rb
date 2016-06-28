@@ -73,5 +73,5 @@ end
 When /^I start Synaptic$/ do
   step 'I start "Synaptic Package Manager" via the GNOME "System Tools" applications menu'
   deal_with_polkit_prompt('PolicyKitAuthPrompt.png', @sudo_password)
-  @screen.wait('SynapticReloadButton.png', 30)
+  @screen.wait('SynapticLoaded.png', 30)
 end
