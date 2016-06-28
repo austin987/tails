@@ -1,0 +1,139 @@
+[[!meta title="Tails August 2015 report"]]
+
+[[!toc levels=2]]
+
+# A. Replace Claws Mail with Icedove
+
+In May we discovered than Claws Mail is leaking plaintext of encrypted
+emails to the IMAP server and that it was impossible to fix this
+properly in Tails. As a consequence, we're now considering moving to
+Icedove faster than planned initially (late January) and to:
+
+  - Replace Claws Mail with Icedove *without* its account creation
+    wizard in Tails 1.7 (early November). TorBirdy already provides an
+    alternative account wizard which is good enough for that step.
+  - Add the wizard in Tails 1.9 (late January).
+
+We also started prototyping tools for users to migrate their data from
+Claws Mail to Icedove but nothing is published yet.
+
+# B. Improve our quality assurance process
+
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+- B.1.9. Deploy, refresh our Jenkins jobs regularly
+
+  After our code freeze for Tails 1.5, we realized that there was
+  a bug in our algorithm that detects what Git branch should be built
+  on Jenkins ([[!tails_ticket 9925]]). We promptly worked around the
+  problem initially, to not interfere with the release management work.
+  And then, a proper fix was implemented and deployed.
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+- B.2.1. Adjust our infrastructure to run tests in parallel: [[!tails_ticket 9645]], [[!tails_ticket 9486]]
+
+  All the testing VMs we planned to deploy (four of them) are now live,
+  and our test suite developers have access to them and can run the test
+  suite there. They are connected to our Jenkins master, but have no
+  jobs running on them yet. Our Puppet modules have been adapted to make
+  this possible.
+
+  Manual stress testing of these new systems is ongoing. It will allow
+  us to see how our test suite behaves there, and how these systems cope
+  with it.
+
+  We still need to automate these test suite runs with Jenkins to have
+  good statistics. It will also teach us whether we need to start a
+  clean test VM before each test suite run. Ideas to implement this have
+  been researched, evaluated, and discussed.
+
+- B.2.2. Decide what kind of ISO images qualify for testing and when, how to process, advertise, and store the results: [[!tails_ticket 8667]]
+
+  The discussion has almost reached its end, and [[the corresponding
+  blueprint|blueprint/automated_builds_and_tests/automated_tests_specs]] is now essentially complete.  Now that this step is
+  completed, we have clear design goals, and we know what will need to
+  be done to deploy our automated test suite on our Jenkins
+  infrastructure.
+
+# C. Scale our infrastructure
+
+## C.4. Maintain our already existing services
+
+This covers "C.4.3. Administer our services upto milestone III" until
+the end of August.
+
+- We fixed the "reboot required" notifications on our Jessie and
+  newer systems. The corresponding Puppet code was proposed upstream.
+- We started adapting our Puppet code to migrate to Gitolite v3 ([[!tails_ticket 10093]]).
+- We experimented with http://httpredir.debian.org, with limited
+  success so far. It should improve with the version of APT that will
+  ship in Debian 9 (Stretch).
+- We deployed to pre-production a meeting reminder system that should
+  be more robust ([[!tails_ticket 9172]]).
+- We converted some obsolete service management we had to systemd.
+- We installed the base system of the VM that was planned to be a
+  failover for our critical services ([[!tails_ticket 6250]]).
+
+# D. Migration to Debian Jessie
+
+Not much technical work in this area in August: we were busy attending
+GUADEC and DebConf.
+
+Still, aside of the achievements described below:
+
+- We identified issues on Jessie with the AppArmor profile for CUPS
+  ([[!tails_ticket 9963]]). The Tails-specific part was corrected,
+  and more generic maintainability issues were raised on the upstream
+  mailing list.
+
+- We identified a couple minor issues that we would like to address
+  before the Tails 2.0 release ([[!tails_ticket 9966]], [[!tails_ticket 9967]]), if time permits.
+
+## D.1. Adjust to the change of desktop environment to GNOME Shell
+
+- Regarding the not fully solved problem we have with desktop
+  notifications ([[!tails_ticket 7989]]): we asked for advice to
+  a GNOME developer, and were pointed to a technical solution that
+  seems to be exactly what we need.
+
+## D.2. Take advantage of systemd to improve the internals of Tails
+
+- D.2.2. Replace our patches to upstream initscripts with systemd
+  drop-in overrides ([[!tails_ticket 9881]])
+
+  We actually found a better solution to solve the underlying problem.
+  The objective was to patch 9 initscripts maximum, and we are now
+  modifying only 8.
+
+## D.6. Upgrade Tails-specific tools to Debian Jessie technologies
+
+- D.6.1. Port Tails-specific tools from udisks 1 to udisks 2
+
+  We worked a bit on simple reproducers for the race conditions we are
+  seeing in udisks ([[!tails_ticket 9691]]).
+
+- D.6.3. Port WhisperBack, our integrated bug reporting tool, to Python 3
+
+  We fixed a bug caused by a typo, and made progress on adding native
+  SOCKS support to WhisperBack ([[!tails_ticket 9412]]).
+
+# E. Release management
+
+  - [[Tails 1.5|news/version_1.5]] was released on 2015-08-11
+
+    - Disable access to the local network in the Tor Browser. Users
+      should now use the Unsafe Browser to access the local network.
+    - Install Tor Browser 5.0 (based on Firefox 38esr).
+    - Install a 32-bit GRUB EFI boot loader. Tails now starts on some
+      tablets with Intel Bay Trail processors and on some Mac with
+      32-bit UEFI.
+    - Let the user know when Tails Installer has rejected a device
+      because it is too small.
+    - Our AppArmor setup has been audited and improved in various ways
+      which should harden the system.
+
+  - [[Tails 1.5.1|news/version_1.5.1]] was released on 2015-08-28
+
+    Tails 1.5.1 was an emergency release triggered by an unscheduled Firefox
+    release meant to fix critical security issues.

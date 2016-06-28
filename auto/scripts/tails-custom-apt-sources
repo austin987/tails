@@ -1,32 +1,13 @@
 #!/bin/bash
 
 set -e
+set -u
+
+. "$(dirname $0)/utils.sh"
 
 APT_MIRROR_URL="http://deb.tails.boum.org/"
 DEFAULT_COMPONENTS="main"
 BASE_BRANCHES="stable testing devel feature/jessie"
-
-fatal() {
-	echo "$*" >&2
-	exit 1
-}
-
-git_tag_exists() {
-	local tag="$1"
-
-	test -n "$(git tag -l "$tag")"
-}
-
-version_was_released() {
-	local version="$1"
-
-	version="$(echo "$version" | tr '~' '-')"
-	git_tag_exists "$version"
-}
-
-version_in_changelog() {
-	dpkg-parsechangelog | awk '/^Version: / { print $2 }'
-}
 
 output_apt_binary_source() {
 	local suite="$1"
@@ -41,10 +22,6 @@ output_overlay_apt_binary_sources() {
 	done
 }
 
-current_branch() {
-	git branch | awk '/^\* / { print $2 }'
-}
-
 on_base_branch() {
 	local current_branch=$(current_branch)
 
@@ -55,16 +32,6 @@ on_base_branch() {
 	done
 
 	return 1
-}
-
-base_branch() {
-	cat config/base_branch | head -n1
-}
-
-branch_name_to_suite() {
-	local branch="$1"
-
-	echo "$branch" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[A-Z]' '[a-z]'
 }
 
 ### Sanity checks

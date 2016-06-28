@@ -9,7 +9,7 @@ Feature: Untrusted partitions
     And I create a gpt swap partition on disk "swap"
     And I plug ide drive "swap"
     When I start Tails with network unplugged and I login
-    Then a "linux-swap(v1)" partition was detected by Tails on drive "swap"
+    Then a "swap" partition was detected by Tails on drive "swap"
     But Tails has no disk swap enabled
 
   Scenario: Tails will detect LUKS-encrypted GPT partitions labeled "TailsData" stored on USB drives as persistence volumes when the removable flag is set
@@ -50,7 +50,6 @@ Feature: Untrusted partitions
     And I set Tails to boot with options "live-media="
     When I start Tails with network unplugged and I login
     Then Tails is running from ide drive "live_hd"
-    And Tails seems to have booted normally
 
   Scenario: Tails booting from a DVD does not use live systems stored on hard drives
     Given a computer

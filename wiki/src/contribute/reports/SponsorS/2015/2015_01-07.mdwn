@@ -1,0 +1,336 @@
+[[!meta title="Tails January to July 2015 report"]]
+
+This reports covers the activity of Tails from February 2015 and until
+the end of July 2015, as no contract was signed before August.
+
+Everything in this report can be made public.
+
+A small number of these deliverables are late compared to the
+initially planned milestones, because without a contract and the
+guarantee that they would be paid, contractors have "only" done the
+vast majority of the work, but did not feel strictly bound to these
+deadlines yet.
+
+A. Replace Claws Mail with Icedove
+==================================
+
+Due to an [[important security issue that we discovered in Claws Mails|security/claws_mail_leaks_plaintext_to_imap]]
+we want to move faster on the migration to Icedove and try to have it in Tails
+1.7 (November 3) instead of Tails 1.9 (January 26). Icedove in Tails 1.7
+will fallback on the account wizard provided by TorBirdy, and Icedove in
+Tails 1.9 will have the usual Icedove wizard with additional security (for
+example with TLS enforced).
+
+# B. Improve our quality assurance process
+
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+Any active Tails development branch is now built automatically on our
+Jenkins server. Since this piece of infrastructure has been deployed,
+every day at least 20 branches have been built, which exceeds the goal
+(ten per day) that we had set. The latest builds can be found on
+<http://nightly.tails.boum.org/>.
+
+This is the first stage towards integrating our automated test suite
+at the core of our software development process, and to run it
+continuously on our development versions while they are
+being developed.
+
+The steps that lead to completion of this project where:
+
+- B.1.1. Improve the Puppet code of our ISO building server (based on Jenkins) to be able to replicate our setup as needed: [[!tails_ticket 6938]] and [[!tails_ticket 6056]]
+
+  Once this refactoring was completed, we successfully validated it by
+  replicating our Jenkins setup locally. This should for example help
+  new contributors participate in infrastructure improvements.
+
+- B.1.2. Have a mechanism to automatically update Jenkins jobs when changes to their code are pushed through Git: [[!tails_ticket 5898]]
+
+  This, along with the next few completed tasks, enabled us to have
+  the Jenkins build jobs dynamically generated based on activity that
+  happens in the main Tails code repository, in a fully automated way.
+
+- B.1.3. Decide what kind of branches qualify for automatic building: [[!tails_ticket 8655]]
+
+  After an initial design was proposed by our infrastructure team,
+  other Tails developers were involved in the discussion to make sure
+  that what we were going to set up was a good match for their needs.
+  It was a long process, but after a few iterations we were confident
+  that we had identified the most important issues and resolved them,
+  which proved to be correct once the whole system was deployed
+  later on.
+
+- B.1.4. Improve automatic cleanup of nightly built ISO images: [[!tails_ticket 6439]]
+
+  The program that takes care of garbage collecting ISO images built
+  on our Jenkins infrastructure was previously buggy. Issues in the
+  algorithm were identified, a new algorithm was designed and
+  implemented, which resolved the issue. This will make it easier for
+  developers to debug regressions: they now have more data points
+  to compare.
+
+- B.1.5. Publish and upstream our improvements to the Jenkins Puppet module to ease its maintenance: [[!tails_ticket 9682]]
+
+  Tails has a policy of working hand-in-hand with upstream when
+  feasible, as a way to share our improvements with the outside world,
+  and more pragmatically as a way of keeping our project sustainable
+  on the long run. Here, we have worked with the upstream author of
+  the puppet-jenkins module and had our improvements merged upstream.
+  As a result, we now are back to using the upstream version of
+  this code.
+
+- B.1.6. Have topic branches built using the APT repository of their base branch (stable, devel, etc.)
+  and not devel by default as is currently the
+  case, merging them into their base branch. Adjust contributing
+  processes and documentation accordingly: [[!tails_ticket 8654]]
+
+  We deemed it important, when building ISO images from development
+  branches, to make sure that they merge fine with the base branch
+  they should land into eventually, and in turn that they build fine
+  after this merge has been done. It proved to be seriously harder
+  than expected: we had to encode information, in our Git tree, about
+  which APT repositories should be used when building a Tails ISO
+  image from a given branch, and to adjust great parts of our
+  development & QA processes and infrastructure. Thankfully the result
+  works well and makes the daily work of Tails developers easier.
+
+- B.1.7. Write library code that implements the automatic build criteria and parameters designed during the previous iteration: [[!tails_ticket 8657]]
+
+- B.1.8. Write tools that generate a set of Jenkins jobs to build ISO images based on the aforementioned library code: [[!tails_ticket 8656]]
+
+  This is the implementation of the design we came up with previously
+  (B.1.3). The vast majority of the code was implemented as a library,
+  so that we can reuse it in the future for whatever may need it.
+
+- B.1.9. Deploy, refresh regularly our Jenkins jobs and automatically clean obsolete ones: [[!tails_ticket 8658]]
+
+  This was the final step, when we deployed live the entire piece of
+  infrastructure, crossed fingers, and happily saw it work flawlessly.
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+- B.2.1. Adjust our infrastructure to run tests in parallel
+
+  This was not fully completed. Some initial work has been done,
+  though:
+
+  * We have started adjusting our server setup, Puppet modules and
+    maintenance procedures to cope with multiple test runners.
+  * We have starting deploying more virtual machines that will act as
+    test runners.
+
+- B.2.2. Decide what kind of ISO images qualify for testing and when, how to process, advertise, and store the results
+
+  An initial draft design was written, posted on our development
+  mailing list, and as a result the discussion has started but was not
+  completed yet.
+
+## B.3. Extend the coverage of our test suite
+
+### Refactoring to make room for improvements in the next iterations
+
+- B.3.1. Use libguestfs for better disk handling in the test suite: [[!tails_ticket 5294]]
+
+  Using libguestfs gave us some noticeable performance improvements
+  when running our automated test suite, and enables us more
+  flexibility when dealing with disk images.
+
+- B.3.2. Reorganize the test suite: [[!tails_ticket 6543]]
+
+  After two years of active development, our test suite has seen
+  a well-deserved spring clean up and refactoring, which allows us to
+  add more tests in a maintainable way.
+
+### Writing more automated tests
+
+- B.3.3. Test "Report an error" launcher: [[!tails_ticket 6904]]
+
+  This was completed, and got rid of one more manual test we
+  previously had to do at release time.
+
+- B.3.5. Write tests for I2P
+
+  Some initial work has been done, but it has not been completed yet.
+
+- A great number of additional tests were written over the reporting
+  period, as part of a project we have with another sponsor.
+
+### Make our test suite robust and faster
+
+During this iteration, this included:
+
+- B.3.4. Research how we can use background snapshots more efficiently for speeding up the test suite
+  and report upstream any bug we discover
+  along the way, if any, in the hope that we can benefit more from
+  this feature later on: [[!tails_ticket 6094]]
+
+  A proof-of-concept was created, and so far it is very convincing:
+  e.g. we've seen 20-30% test suite runtime decrease on various
+  hardware. We've been hit by a limitation in libvirt, and started
+  discussing it with upstream. Next steps are to polish our
+  proof-of-concept, merge it into our development branch, and report
+  a kernel bug to Linux upstream.
+
+- During the reporting period, lots of efforts were put into making
+  our test suite more robust, as part of a project we have with
+  another sponsor.
+
+# C. Scale our infrastructure
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+This section is about monitoring the most critical pieces of the
+infrastructure that supports Tails development. We have some early
+progress to report about, even though this deliverable is technically
+part of a milestone that is still many months in the future.
+
+- C.2.3. Do an inventory of the services that need monitoring and prioritize: [[!tails_ticket 8649]]
+
+  We did that, and while we were at it we wrote a detailed
+  specification for the upcoming monitoring system, which will help
+  choose software and hosting.
+
+- Some initial experiments and comparisons were made with several
+  monitoring systems. A dedicated virtual machine has been set up for
+  these experiments.
+
+## C.3. Make it easier for new contributors to start working on Tails
+
+Until a few months ago, cloning our main Git repository required
+downloading more than 300 MB of data. Most of this corresponded to
+files that were not useful anymore. This made it hard for new
+contributors to start working on Tails, so we had little choice but
+rewriting the history of this repository. This is what we did, and as
+a result our Git repository is now 75 MB large (the objective was:
+less than 150 MB).
+
+As expected, the implied migration process was a bit hard for the
+least technical of Tails existing contributors (e.g. translators), but
+given good documentation and support, everyone was able to go
+through it.
+
+We also made it so obsolete Git branches and APT repositories are now
+identified and cleaned up regularly.
+
+This covers deliverables C.3.1 to C.3.7.
+
+## C.4. Maintain our already existing services
+
+This covers deliverables C.4.1 and C.4.2.
+
+Aside of the usual security updates and taking care of daily requests
+coming from the Tails development community, here are a few selected
+tasks we have completed:
+
+* completed the migration of our main server to new hardware;
+* moved the /promote/ website directory to a dedicated Git
+  repository so that it can grow without cluttering the main one;
+* upgraded almost all our systems to Debian Jessie and adjusted our
+  Puppet code accordingly;
+* set up an archive of the Tor Browser tarballs we need, which removes
+  one of the blockers so previous tags in our Git repository can still
+  be built in the future;
+* set up a Jenkins job to proactively check for upstream merge
+  conflicts in our Tor Browser AppArmor profile;
+* improved and distributed our backup processes;
+* made it so our APT repository's keyring, and the exported APT repo's
+  pubkey we publish, are automatically updated;
+* extended storage capacity on our main server;
+* set up the infrastructure that the automated test suite team
+  requested (SSH, sftp, shared secrets repository);
+* written a Puppet module to deploy systems able to run our
+  test suite.
+
+# D. Migration to Debian Jessie
+
+We did quite some work on this migration. For details about bits that
+are not covered by this OTF project, see
+<https://labs.riseup.net/code/projects/tails/issues?query_id=130>.
+
+## D.2. Take advantage of systemd to improve the internals of Tails
+
+- D.2.1. Convert at least 4 of our custom initscripts to native systemd units
+
+  The 9 custom initscripts currently shipped in Tails (based on Debian
+  Wheezy) were converted to systemd unit files. Besides, while we were
+  at it, we converted most of our custom GNOME session initialization
+  scripts to systemd (9 more units in the end), as well as the MAC
+  address spoofing subsystem.
+
+- D.2.2. Replace our patches to initscripts from Debian with systemd drop-in overrides
+
+  This is work in progress: our Jessie branch still patches 13
+  initscripts. For the record, the goal we want to reach here is to go
+  down to 9.
+
+## D.6. Upgrade Tails-specific tools to Debian Jessie technologies
+
+- D.6.1 Port Tails-specific tools from udisks 1 to udisks 2: [[!tails_ticket 8292]]
+
+  We have ported Tails Installer, Tails Upgrader, and the persistent
+  volume assistant to udisks 2. As a result, our Jessie branch does
+  not ship udisks 1 anymore, which forced us to port our automated
+  test suite (that still relied on it) as well.
+
+- D.6.2 Adjust the memory wipe on shutdown feature for Debian Jessie: [[!tails_ticket 7183]], [[!tails_ticket 8372]] and [[!tails_ticket 9032]]
+
+  This ended up being quite involved, but was successfully completed.
+
+  Besides, we have created a Debian package (codename: wiperam) that
+  takes over this subsystem of Tails. The idea is that other similar
+  projects could benefit from it, and once all the pre-requisites have
+  been implemented in Debian, we could even make it available to all
+  Debian and Ubuntu users.
+
+- D.6.3 Port WhisperBack, our integrated bug reporting tool, to Python 3
+
+  The initial port is done; it implied replacing some of the libraries
+  used by the Python 2 version, with others that support Python 3.
+  The last remaining step is to add native SOCKS proxy support to
+  this application, because for some reason the Python 3 version does
+  not start under torsocks: [[!tails_ticket 9412]]
+
+# E. Release management
+
+  - [[Tails 1.3|news/version_1.3]] was released on 2015-02-24:
+
+    - Add Electrum bitcoin wallet.
+    - Sandbox Tor Browser using AppArmor.
+    - Add obfs4 pluggable transport.
+    - Add keyringer to manage and share secrets using OpenPGP and Git. 
+    - Publish isohybrid images to simplify installation.
+    - Enable tap-to-click and two-finger scrolling. 
+    - Add Ibus Vietnamese input method.
+    - Improve support for OpenPGP smartcards.
+
+  - [[Tails 1.3.1|news/version_1.3.1]] was released on 2015-03-23:
+
+    - We transitioned to a new signing key.
+    - Updated Tor Launcher.
+
+  - [[Tails 1.4|news/version_1.4]] was released on 2015-05-12:
+
+    - Update Tor Browser to include the security slider and better
+      protection against third-party tracking.
+    - Add a shortcut to gEdit in OpenPGP Applet.
+    - Add paperkey to back up OpenPGP keys on paper.
+    - Better support for Vietnamese in LibreOffice.
+    - Disable security warnings when connecting to POP3 and IMAP.
+    - Add support for more printers.
+    - Upgrade Tor to 0.2.6.7.
+    - Remove the obsolete #i2p-help IRC channel.
+    - Remove the command line email client mutt and msmtp.
+    - Fix Unsafe and I2P browsers theme in Windows camouflage.
+    - Remove the Tor Network Settings... from the Torbutton menu.
+    - Upgrade syslinux for better hardware support.
+    - Fix the localization of Tails Upgrader.
+    - Fix the OpenPGP key servers configured in Seahorse.
+    - Prevent Tor Browser from crashing when Orca is enabled.
+
+  - [[Tails 1.4.1|news/version_1.4.1]] was released on 2015-07-03:
+
+    - Upgrade Tor Browser to 4.5.3.
+    - Upgrade Tor to 0.2.6.9-1~d70.wheezy+1+tails2.
+    - Upgrade Linux to 3.16.7-ckt11-1.
+    - Have AppArmor Deny Tor Browser access to the list of recently used files.
+    - Fix automatic upgrades in Windows camouflage.

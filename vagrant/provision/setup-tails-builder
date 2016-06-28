@@ -2,6 +2,8 @@
 
 set -e
 
+export DEBIAN_FRONTEND=noninteractive
+
 # Do not use virtual machine proxy before apt-cacher-ng is installed
 if [ "$http_proxy" = "http://$(hostname -f):3142" ] &&
    ! [ -f /etc/apt-cacher-ng/acng.conf ]; then
@@ -9,18 +11,10 @@ if [ "$http_proxy" = "http://$(hostname -f):3142" ] &&
 	http_proxy=''
 fi
 
-# Uninstall custom Ikiwiki in case the build directory is still there
-if [ -d /home/vagrant/ikiwiki ]; then
-	rm -f /usr/local/bin/ikiwiki*
-	rm -rf /usr/local/lib/perl/5.10.1/auto/IkiWiki
-	rm -rf /usr/local/share/perl/5.10.1/
-	rm -rf /home/vagrant/ikiwiki
-fi
-
 rm -f /etc/apt/preferences.d/* /etc/apt/sources.list.d/*
 
-# Add our builder-wheezy repository for live-build, and pin it low
-echo 'deb http://deb.tails.boum.org/ builder-wheezy main' > /etc/apt/sources.list.d/tails.list
+# Add our builder-jessie repository for live-build, and pin it low
+echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
 	Pin: origin deb.tails.boum.org
@@ -41,25 +35,12 @@ EOF
 http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
 gpg --export C7988EA7A358D82E | sudo apt-key add -
 
-# Add unstable repository for ikiwiki, and pin it low
-echo 'deb http://ftp.us.debian.org/debian unstable main' > /etc/apt/sources.list.d/unstable.list
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/unstable <<EOF
-	Package: *
-	Pin: release a=unstable
-	Pin-Priority: 99
-EOF
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/ikiwiki <<EOF
-	Package: ikiwiki
-	Pin: release a=unstable
-	Pin-Priority: 500
-EOF
-
-# Add wheezy-backports for apt-cacher-ng. The version in wheezy has problems
-# with redirects to https, which we need when fetching the TBB tarballs
-echo 'deb http://ftp.us.debian.org/debian wheezy-backports main' > /etc/apt/sources.list.d/wheezy-backports.list
+# We need a newer version of debootstrap for saving the list of
+# packages used when building Tails (#6297).
+echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
 
 apt-get update
-apt-get -o Dpkg::Options::="--force-confold" -y -t wheezy-backports install apt-cacher-ng
+apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 
 # Install custom configuration for apt-cacher-ng and restart
 install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
@@ -75,23 +56,35 @@ apt-get -y dist-upgrade
 
 # Those are needed to build Tails
 apt-get -y install \
-	live-build \
-	syslinux-utils \
-	eatmydata/wheezy-backports \
-	time whois \
-	dpkg-dev \
-	git \
-	aufs-tools \
-	ikiwiki \
-	intltool \
-	gettext/wheezy-backports
+        debootstrap/jessie-backports \
+        dpkg-dev \
+        eatmydata \
+        gettext \
+        git \
+        ikiwiki \
+        intltool \
+        libfile-slurp-perl \
+        liblist-moreutils-perl \
+        live-build \
+        rsync \
+        syslinux-utils \
+        time \
+        whois
 
 # Be sure to get all the modules we need for our Ikiwiki
 apt-get -y --no-install-recommends install \
-       libyaml-perl libyaml-libyaml-perl po4a perlmagick libyaml-syck-perl \
-       libfile-chdir-perl liburi-perl libhtml-parser-perl wdg-html-validator \
-       libhtml-scrubber-perl libhtml-template-perl libtimedate-perl \
-       libxml-simple-perl libtext-multimarkdown-perl
+        libfile-chdir-perl \
+        libhtml-scrubber-perl \
+        libhtml-template-perl \
+        libtext-multimarkdown-perl \
+        libtimedate-perl \
+        liburi-perl libhtml-parser-perl \
+        libxml-simple-perl \
+        libyaml-libyaml-perl po4a \
+        libyaml-perl \
+        libyaml-syck-perl \
+        perlmagick \
+        wdg-html-validator
 
 # Add build script
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
@@ -118,3 +111,14 @@ for prefix in MIRROR PARENT_MIRROR ; do
 		done
 	done
 done
+
+# Clean up
+apt-get -y autoremove
+apt-get -y clean
+perl /usr/lib/apt-cacher-ng/expire-caller.pl || echo "The clean-up of apt-cacher-ng's cache failed: this is not fatal and most likely just means that some disk space could not be reclaimed -- in order to fix that situation you need to manually investigate /var/log/apt-cacher-ng/main_*.html " >&2
+
+# XXX: Remove this once we generate a basebox > 20160226
+if grep -q "^AcceptEnv" /etc/ssh/sshd_config; then
+    sed -i 's/^AcceptEnv/#AcceptEnv/' /etc/ssh/sshd_config
+    systemctl reload ssh.service
+fi

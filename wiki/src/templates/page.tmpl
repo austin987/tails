@@ -1,5 +1,9 @@
 <!DOCTYPE html>
+<TMPL_IF HTML_LANG_CODE>
+<html lang="<TMPL_VAR HTML_LANG_CODE>" dir="<TMPL_VAR HTML_LANG_DIR>" xmlns="http://www.w3.org/1999/xhtml">
+<TMPL_ELSE>
 <html xmlns="http://www.w3.org/1999/xhtml">
+</TMPL_IF>
 <head>
 <TMPL_IF DYNAMIC>
 <TMPL_IF FORCEBASEURL><base href="<TMPL_VAR FORCEBASEURL>" /><TMPL_ELSE>
@@ -18,6 +22,8 @@
 <TMPL_ELSE>
 <link rel="stylesheet" href="<TMPL_VAR BASEURL>local.css" type="text/css" />
 </TMPL_IF>
+
+<script src="<TMPL_VAR BASEURL>lib/js/mirror-dispatcher.js" type="text/javascript"></script>
 
 <TMPL_UNLESS DYNAMIC>
 <TMPL_IF EDITURL>
@@ -257,6 +263,13 @@ Last edited <TMPL_VAR MTIME>
 <TMPL_IF HTML5></footer><TMPL_ELSE></div></TMPL_IF>
 
 <TMPL_IF HTML5></article><TMPL_ELSE></div></TMPL_IF>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
 
 </body>
 </html>

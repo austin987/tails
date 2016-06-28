@@ -54,6 +54,10 @@ When /^I create my XMPP account$/ do
   @screen.wait("PidginAddAccountWindow.png", 20)
   @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
   @screen.click("PidginAddAccountProtocolXMPP.png")
+  # We first wait for some field that is shown for XMPP but not the
+  # default (IRC) since we otherwise may decide where we click before
+  # the GUI has updated after switching protocol.
+  @screen.wait("PidginAddAccountXMPPDomain.png", 5)
   @screen.click_mid_right_edge("PidginAddAccountXMPPUsername.png")
   @screen.type(account["username"])
   @screen.click_mid_right_edge("PidginAddAccountXMPPDomain.png")
@@ -105,8 +109,9 @@ When /^I start a conversation with my friend$/ do
   @screen.wait("PidginConversationWindowMenuBar.png", 10)
 end
 
-And /^I say something to my friend( in the multi-user chat)?$/ do |multi_chat|
-  msg = "ping" + Sikuli::Key.ENTER
+And /^I say (.*) to my friend( in the multi-user chat)?$/ do |msg, multi_chat|
+  msg = "ping" if msg == "something"
+  msg = msg + Sikuli::Key.ENTER
   if multi_chat
     $vm.focus_window(@chat_room_jid.split("@").first)
     msg = @friend_name + ": " + msg
@@ -206,8 +211,18 @@ def configured_pidgin_accounts
     account_name, network = account.split("@")
     protocol  = e.elements["protocol"].text
     port      = e.elements["settings/setting[@name='port']"].text
-    nickname  = e.elements["settings/setting[@name='username']"].text
-    real_name = e.elements["settings/setting[@name='realname']"].text
+    username_element  = e.elements["settings/setting[@name='username']"]
+    realname_elemenet = e.elements["settings/setting[@name='realname']"]
+    if username_element
+      nickname  = username_element.text
+    else
+      nickname  = nil
+    end
+    if realname_elemenet
+      real_name = realname_elemenet.text
+    else
+      real_name = nil
+    end
     accounts[network] = {
       'name'      => account_name,
       'network'   => network,
@@ -223,9 +238,8 @@ end
 
 def chan_image (account, channel, image)
   images = {
-    'irc.oftc.net' => {
-      '#tails' => {
-        'roster'           => 'PidginTailsChannelEntry',
+    'conference.riseup.net' => {
+      'tails' => {
         'conversation_tab' => 'PidginTailsConversationTab',
         'welcome'          => 'PidginTailsChannelWelcome',
       }
@@ -243,7 +257,7 @@ end
 
 def default_chan (account)
   chans = {
-    'irc.oftc.net' => '#tails',
+    'conference.riseup.net' => 'tails',
     'I2P'          => '#i2p',
   }
   return chans[account]
@@ -275,11 +289,12 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
 end
 
 When /^I start Pidgin through the GNOME menu$/ do
-  step 'I start "Pidgin" via the GNOME "Internet" applications menu'
+  step 'I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu'
 end
 
 When /^I open Pidgin's account manager window$/ do
-  @screen.type("a", Sikuli::KeyModifier.CTRL) # shortcut for "manage accounts"
+  @screen.wait_and_click('PidginMenuAccounts.png', 20)
+  @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
   step "I see Pidgin's account manager window"
 end
 
@@ -289,6 +304,12 @@ end
 
 When /^I close Pidgin's account manager window$/ do
   @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
+end
+
+When /^I close Pidgin$/ do
+  $vm.focus_window('Buddy List')
+  @screen.type("q", Sikuli::KeyModifier.CTRL)
+  @screen.waitVanish('PidginAvailableStatus.png', 10)
 end
 
 When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
@@ -358,10 +379,22 @@ Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ d
   ctcp_check.verify_ctcp_responses
 end
 
-Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
-  @screen.doubleClick(   chan_image(account, channel, 'roster'))
+Then /^I can join the( pre-configured)? "([^"]+)" channel on "([^"]+)"$/ do |preconfigured, channel, account|
+  if preconfigured
+    @screen.doubleClick(chan_image(account, channel, 'roster'))
+    focus_pidgin_irc_conversation_window(account)
+  else
+    $vm.focus_window('Buddy List')
+    @screen.wait_and_click("PidginBuddiesMenu.png", 20)
+    @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
+    @screen.wait_and_click("PidginJoinChatWindow.png", 10)
+    @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+    @screen.type(channel)
+    @screen.click("PidginJoinChatButton.png")
+    @chat_room_jid = channel + "@" + account
+    $vm.focus_window(@chat_room_jid)
+  end
   @screen.hide_cursor
-  focus_pidgin_irc_conversation_window(account)
   try_for(60) do
     begin
       @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 5)
@@ -451,7 +484,7 @@ When /^I see the Tails roadmap URL$/ do
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
-      @screen.click('PidginScrollArrowUp.png')
+      @screen.type(Sikuli::Key.PAGE_UP)
       raise e
     end
   end

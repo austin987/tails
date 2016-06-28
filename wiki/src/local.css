@@ -26,6 +26,10 @@ Table of Content:
   - Special Cases
 */
 
+/* Load RTL stylesheet */
+
+@import url("local.rtl.css");
+
 /* Fonts */
 
 @font-face { font-family: "Source Sans Pro Regular"; src: url("lib/SourceSansPro-Regular.ttf"); }
@@ -136,6 +140,15 @@ img.margin { /* overwrite style.css */
   margin: 2em 4em 2em 0em;
 }
 
+table.img, table.img td {
+  border: none;
+}
+
+table.img caption {
+  font-size: 90%;
+  font-style: italic;
+}
+
 /* Forms */
 
 input[type="text"], input[type="password"], input[type="select"],
@@ -171,6 +184,10 @@ label.block {
 ol, ul {
 	padding: 0;
 	margin-left: 1.5em;
+}
+
+.remove-extra-space {
+  margin: 0 -0.3em;
 }
 
 /* Layout */
@@ -433,6 +450,8 @@ pre, p.pre {
 	color: #444;
 	margin: 1.5em 1em 1.5em 1.5em;
 	padding: 0.25em 0.5em;
+	max-width: 58em;
+	width: 58em;
 }
 
 div.inlinepage {
@@ -581,7 +600,9 @@ input#searchbox {
 #pagebody a[href^="http://tails.boum.org"],
 #pagebody a[href^="https://tails.boum.org"],
 #pagebody a[href^="http://dl.amnesia.boum.org"],
-#pagebody a.noicon {
+#pagebody a[href^="https://dl.amnesia.boum.org"],
+#pagebody a.noicon,
+#pagebody a.use-mirror-pool {
 
 	background-image: none;
 	padding-right: 0;
@@ -638,8 +659,9 @@ input#searchbox {
 
 div.three-blocks {
 	display: inline-block;
-	width: 28%;
-	margin: 0 3em 0 0;
+	width: 32%;
+	padding: 0 5% 0 0;
+	box-sizing: border-box;
 	text-align: center;
 	vertical-align: top;
 }
@@ -656,6 +678,8 @@ div.three-blocks img {
 	text-decoration: none;
 	display: block;
 	margin: 0 auto;
+	max-width: 100%;
+	height: auto
 }
 
 p.center {
@@ -711,11 +735,6 @@ p.center {
 	background: #0a0 url('lib/download-arrow.png') no-repeat scroll right center;
 }
 
-#pagebody span.download-file-size {
-	font-size: 11px;
-	margin-left: 1em;
-}
-
 #pagebody a.download-signature {
 	background: #0a0 url('lib/download-signature.png') no-repeat scroll right center;
 }
@@ -727,6 +746,13 @@ p.center {
 #pagebody p.checksum {
 	word-wrap: break-word;
 	width: 19.7em;
+}
+
+#pagebody span.openpgp-small-link {
+	display: block;
+	margin-top: 1em;
+	margin-left: 1em;
+	font-size: 11px;
 }
 
 /* Toggleable */
@@ -866,7 +892,7 @@ background:#EEEEEE;
 
 }
 #crumbs li {
-	float:left;
+	display: inline-block;
 	line-height:2.3em;
 	color:#777;
 	padding-left:.75em;
@@ -1026,7 +1052,6 @@ span.application { font-style: italic; }
 span.button { font-weight: bold; }
 span.code {
   font-family: "Source Code Pro Regular", "Courier", monospace;
-  font-size: 1.071em; /* 14×1.071=15px */
 }
 span.command {
   font-family: "Source Code Pro Regular", "Courier", monospace;
@@ -1047,21 +1072,14 @@ span.replaceable { font-style: italic; }
 div.bug, div.caution, div.next, div.note, div.tip, div.trophy {
   background-color: #FFFFF0;
   border: 1px solid #E0E0DF;
-  padding: 0.5em 6px;
+  border-radius: 4px;
+  padding: 1.35em 6px 0em;
   background-position: 6px 0.5em;
   background-repeat: no-repeat;
   min-height: 48px;
   padding-left: 66px;
   margin: 0 0 1.5em 0;
   max-width: 38em;
-}
-div.bug > p:only-child, div.caution > p:only-child, div.next > p:only-child, div.note > p:only-child, div.tip > p:only-child, div.trophy > p:only-child {
-  display: table-cell;
-  height: 2.5em;
-  vertical-align: bottom;
-}
-div.bug p:last-child, div.caution p:last-child, div.next p:last-child, div.note p:last-child, div.tip p:last-child, div.trophy > p:last-child {
-  margin-bottom: 0;
 }
 div.bug {
   background-image: url(lib/admon-bug.png);
@@ -1080,6 +1098,10 @@ div.tip {
 }
 div.trophy {
   background-image: url(lib/trophy-gold.png);
+}
+
+div.bug pre, div.caution pre, div.next pre, div.note pre, div.tip pre, div.trophy pre {
+  max-width: 34em;
 }
 
 /* Inlined 16x16 icons */
@@ -1141,16 +1163,15 @@ pre.list-key {
 
 /* "Are you using Tor?" link on /news */
 
-#tor_check {
-	position: relative;
-	z-index: 10;
+@media all and (min-width: 600px) {
+	#tor_check {
+		position: absolute;
+		z-index: 10;
+		right: 2em;
+	}
 }
 
 #tor_check a[href="https://check.torproject.org/"] {
-	position: absolute;
-	width: 17em;
-	top: 0;
-	right: 0;
 	background: #0a0;
 	-moz-box-shadow: 1px 1px 5px rgba(5, 5, 5, 0.2);
 	-webkit-box-shadow: 1px 1px 5px rgba(5, 5, 5, 0.2);
@@ -1158,26 +1179,24 @@ pre.list-key {
 	-moz-border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
 	border-radius: 0.5em;
-	height: 79px;
+	display: inline-block;
+	padding: 0.5em 1em 0.5em 0.5em;
+	width: 16.5em; /* sidebar - padding */
+	box-sizing-border-box;
 }
 
 #tor_check a img {
-	position: absolute;
-	left: 0.8em;
-	bottom: 9px;
+	float: left;
 }
 
 #tor_check a span {
-	position: absolute;
-	bottom: 10px;
 	font-family: "Century Gothic", "Avant Garde", Avenir, TeXGyreAdventorRegular, "Heiti SC", "Heiti TC", AppleGothic, sans-serif;
 	font-weight: normal;
 	color: white;
 	text-align: left;
 	font-size: 2.29em;
-	line-height: 1.1em;
-	width: 70%;
-	left: 28%;
+	line-height: 2.1em;
+	margin-left: 0.5em;
 }
 
 #tor_check a span.twolines {
