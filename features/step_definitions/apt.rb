@@ -29,9 +29,23 @@ Then /^I should be able to install a package using apt$/ do
 end
 
 When /^I update APT using Synaptic$/ do
-  @screen.click('SynapticReloadButton.png')
-  @screen.wait('SynapticReloadPrompt.png', 20)
-  @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
+  recovery_proc = Proc.new do
+    $vm.execute("killall synaptic")
+    step "I start Synaptic"
+  end
+  retry_tor(recovery_proc) do
+    try_for(60, :msg => "Failed to trigger the reload of the package list") {
+      # here using the Synaptic keyboard shortcut is more effective on retries.
+      @screen.type("r", Sikuli::KeyModifier.CTRL)
+      @screen.wait('SynapticReloadPrompt.png', 10)
+    }
+    try_for(900, :msg => "Took too much time to download the APT data") {
+      !$vm.execute("pidof /usr/lib/apt/methods/tor+http").success?
+    }
+    if @screen.exists('SynapticFailure.png')
+      raise "Updating APT with Synaptic failed."
+    end
+  end
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
