@@ -276,7 +276,7 @@ def memory_wipe_timeout
 end
 
 Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
-  boot_timeout = 60
+  boot_timeout = 3*60
   # We need some extra time for memory wiping if rebooting
   boot_timeout += memory_wipe_timeout if reboot
   # Simply looking for the boot splash image is not robust; sometimes
