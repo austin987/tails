@@ -13,13 +13,16 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
     @screen.type('clear' + Sikuli::Key.ENTER)
   end
 
-  retry_tor(recovery_proc)  do
+  retry_tor(recovery_proc) do
     step "I run \"git clone #{repo}\" in GNOME Terminal"
     m = /^(https?|git):\/\//.match(repo)
     unless m
       step 'I verify the SSH fingerprint for the Git repository'
     end
-    @screen.wait('GitObjects.png', 40) # clone has actually started
+    try_for(180, :msg => 'Git process took too long') {
+      !$vm.has_process?('/usr/bin/git')
+    }
+    @screen.wait('GitCloneDone.png', 10)
   end
 end
 

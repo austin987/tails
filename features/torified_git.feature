@@ -9,16 +9,13 @@ Feature: Cloning a Git repository
 
   Scenario: Cloning a Git repository anonymously over HTTPS
     When I clone the Git repository "https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
-    And process "git" has stopped running after at most 180 seconds
     Then the Git repository "testing" has been cloned successfully
 
   Scenario: Cloning a Git repository anonymously over the Git protocol
     When I clone the Git repository "git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
-    And process "git" has stopped running after at most 180 seconds
     Then the Git repository "testing" has been cloned successfully
 
   Scenario: Cloning git repository over SSH
     Given I have the SSH key pair for a Git repository
     When I clone the Git repository "tails@git.tails.boum.org:myprivatekeyispublic/testing" in GNOME Terminal
-    And process "git" has stopped running after at most 180 seconds
     Then the Git repository "testing" has been cloned successfully
