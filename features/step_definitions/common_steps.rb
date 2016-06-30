@@ -295,27 +295,16 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
       virsh -c qemu:///system send-key #{$vm.domain_name} #{tab_key_code}
     done
   EOF
-  tab_spammer =
-    IO.popen(['/bin/sh', '-c', tab_spammer_code])
-  kill_tab_spammer = Proc.new do
-    next if tab_spammer.closed?
-    begin
-      Process.kill("TERM", tab_spammer.pid)
-      tab_spammer.close
-    rescue Errno::ESRCH
-      # The process was already killed
-    end
-  end
-  add_after_scenario_hook { kill_tab_spammer.call }
+  # Our UEFI bootloader has the interesting "feature" that pressing
+  # any button will open its setup menu, so we have to exit the setup,
+  # and to not have the TAB spammer potentially interfering we pause
+  # it meanwhile.
   dealt_with_uefi_setup = false
   # The below code is not completely reliable, so we might have to
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
-      # Our UEFI bootloader has the interesting "feature" that
-      # pressing any button will open its setup menu, so we have to
-      # exit the setup, and to not have the TAB spammer potentially
-      # interfering we pause it meanwhile.
+      tab_spammer = IO.popen(['/bin/sh', '-c', tab_spammer_code])
       if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
         @screen.find('UEFIBootLoaderSetup.png')
         Process.kill("TSTP", tab_spammer.pid)
@@ -325,14 +314,16 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
       end
       @screen.find(boot_menu_cmdline_image)
     rescue FindFailed => e
-      if @screen.exists('TailsGreeter.png')
+      if @screen.exists('TailsBooting.png') || @screen.exists('TailsGreeter.png')
         $vm.reset
         dealt_with_uefi_setup = false
       end
       raise e
+    ensure
+      Process.kill("TERM", tab_spammer.pid)
+      tab_spammer.close
     end
   end
-  kill_tab_spammer.call
   # Ensure that we're back at the boot splash
   @screen.type(Sikuli::Key.ESC)
   @screen.wait(boot_menu_tab_msg_image, 5)
