@@ -585,6 +585,7 @@ end
 
 Then /^Tails eventually restarts$/ do
   step 'Tails is at the boot menu after rebooting'
+  step 'the computer reboots Tails'
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
