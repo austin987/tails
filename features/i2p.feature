@@ -27,6 +27,8 @@ Feature: I2P
     Then the I2P router console is displayed in I2P Browser
     And the I2P Browser uses all expected TBB shared libraries
 
+  #11457, #11458
+  @fragile
   Scenario: Closing the I2P Browser shows a stop notification and properly tears down the chroot.
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
@@ -35,34 +37,41 @@ Feature: I2P
     Then I see the I2P Browser stop notification
     And the I2P Browser chroot is torn down
 
+  #11114, #11465
+  @fragile
   Scenario: The I2P internal websites can be viewed in I2P Browser
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
-    And I2P successfully built a tunnel
+    And I see shared client tunnels in the I2P router console
     When I open the address "http://i2p-projekt.i2p" in the I2P Browser
     Then the I2P homepage loads in I2P Browser
 
- Scenario: I2P is configured to run in Hidden mode
+  Scenario: I2P is configured to run in Hidden mode
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
     And I2P is running in hidden mode
 
+  #10474
   @fragile
   Scenario: Connecting to the #i2p IRC channel with the pre-configured account
     Given I have started Tails from DVD with I2P enabled and logged in and the network is connected
     And the I2P router console is ready
-    And I2P successfully built a tunnel
+    And I start the I2P Browser through the GNOME menu
+    And the I2P router console is displayed in I2P Browser
+    And I see shared client tunnels in the I2P router console
     When I start Pidgin through the GNOME menu
     Then I see Pidgin's account manager window
     When I activate the "I2P" Pidgin account
     And I close Pidgin's account manager window
     Then Pidgin successfully connects to the "I2P" account
-    And I can join the "#i2p" channel on "I2P"
+    And I can join the pre-configured "#i2p" channel on "I2P"
 
+  #11452
+  @fragile
   Scenario: I2P displays a notice when bootstrapping fails
     Given I have started Tails from DVD with I2P enabled and logged in
     And I2P is not running
@@ -77,6 +86,8 @@ Feature: I2P
     When I start the I2P Browser through the GNOME menu
     Then the I2P router console is displayed in I2P Browser
 
+  #11462
+  @fragile
   Scenario: I2P displays a notice when it fails to start
     Given I have started Tails from DVD with I2P enabled and logged in
     And I2P is not running

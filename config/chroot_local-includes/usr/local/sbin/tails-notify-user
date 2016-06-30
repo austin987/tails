@@ -2,6 +2,9 @@
 
 set -e
 
+# Import export_gnome_env().
+. /usr/local/lib/tails-shell-library/gnome.sh
+
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
@@ -18,8 +21,6 @@ if [ -n "$3" ]; then
         timeout_args="--expire-time=$3"
 fi
 (
-        export DISPLAY=':0.0'
-        export XAUTHORITY="`echo /var/run/gdm3/auth-for-${LIVE_USERNAME}-*/database`"
+        export_gnome_env
         exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
 )
-

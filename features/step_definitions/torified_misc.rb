@@ -1,7 +1,7 @@
 When /^I query the whois directory service for "([^"]+)"$/ do |domain|
   retry_tor do
     @vm_execute_res = $vm.execute("whois '#{domain}'", :user => LIVE_USER)
-    if @vm_execute_res.failure?
+    if @vm_execute_res.failure? || @vm_execute_res.stdout['LIMIT EXCEEDED']
       raise "Looking up whois info for #{domain} failed with:\n" +
             "#{@vm_execute_res.stdout}\n" +
             "#{@vm_execute_res.stderr}"

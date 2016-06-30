@@ -17,8 +17,11 @@ Feature: System memory erasure on shutdown
     And udev-watchdog is monitoring the correct device
     When I fill the guest's memory with a known pattern without verifying
     And I reboot without wiping the memory
+    And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
+  #10776
+  @fragile
   Scenario: Memory erasure on a modern computer
     Given a computer
     And the computer is a modern 64-bit system
@@ -47,8 +50,11 @@ Feature: System memory erasure on shutdown
     And udev-watchdog is monitoring the correct device
     When I fill the guest's memory with a known pattern without verifying
     And I reboot without wiping the memory
+    And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
+  #10776
+  @fragile
   Scenario: Memory erasure on an old computer
     Given a computer
     And the computer is an old pentium without the PAE extension

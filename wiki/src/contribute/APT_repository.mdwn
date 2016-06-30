@@ -1,372 +1,129 @@
 [[!toc levels=2]]
 
-To avoid cluttering our main Git repository with Debian source and
-binary packages, we have set an APT repository up.
-
-[[!toc levels=2]]
-
-Overview
-========
-
-We use one single APT repository hosting multiple *suites*:
-
-* We have a (read-only) suite for every past release: `0.9`,
-  `0.10.1`, etc.
-* We have a suite for each *main* branch: `stable`, `testing`,
-  `devel`, `feature-jessie`
-* We have an overlay suite for each *topic* branch: `bugfix/*`,
-  `feature/*`, etc.
-  **Note**: the APT suite corresponding to a given Git topic
-  branch contains *only* the packages this branch adds to the tag or
-  *main* branch it diverged from. Think of it as an overlay.
-* We also have a less formal `unstable` suite, that should not be used
-  by any Tails git branch; it can be used as hosting space for other
-  packaging work we might do, e.g. acting as upstream or
-  Debian maintainers.
-* We also have a `builder-wheezy` suite, used to provide additional
-  packages needed on a Wheezy system to build Tails.
-
-The suite(s) to use as sources for APT, during the build and inside
-the resulting system, are determined by the content of the
-`config/base_branch` and `config/APT_overlays.d/*` files. See details in
-the *Build system* section below.
-
-We manage our APT repository with
-[reprepro](http://mirrorer.alioth.debian.org/).
-
-The Puppet modules used to manage this part of our infrastructure are
-listed on our [[contribute/Git]] page.
-
-Basically, a cronjob fetches and scans the Tails Git repository every
-few minutes, detects new branches, and accordingly:
-
-- generates `conf/distributions`
-- generates `conf/incoming`
-- create new suites in the APT repository
-
-Build system
-============
-
-The Tails ISO build system dynamically adds APT sources that will be
-used during the build, and inside the resulting ISO itself.
-
-If the last version in `debian/changelog` was released already (i.e.
-a matching tag exists), then the build system adds the suite
-corresponding to this release (e.g. `1.5` or `3.0`), and that's all.
-
-Else, it adds:
-
-* one APT source for the base branch of the one being built, as found
-  in `config/base_branch`;
-* one APT source for each suite listed in
-  `config/APT_overlays.d/*`; note that only the name of such
-  files matters, and their content is ignored.
-
-In practice, `config/APT_overlays.d/` contains:
-
-* for a topic branch:
-  - if needed, a file that is named like the branch's own overlay APT
-    suite; e.g. for the `bugfix/12345-whatever` branch, it would be
-    called `config/APT_overlays.d/bugfix-12345-whatever.suite`
-  - any file representing APT suites that came from merging its base
-    branch into this topic branch, that is:
-* for a base branch (`stable`, `testing`, `devel` or
-  `feature/jessie`): a file for each additional, overlay APT suite that
-  came from topic branches that ship Debian packages and were merged
-  into this base branch since last time it was used to prepare
-  a release.
-
-The code that implements this is [[!tails_gitweb
-auto/scripts/tails-custom-apt-sources]]. It has [[!tails_gitweb
-features/build.feature desc="automated tests"]].
-
-At release time, the release manager:
-
-1. merges into the release branch's APT suite all APT overlay
-   suites found in `config/APT_overlays.d/`;
-2. empties `config/APT_overlays.d/` in the release branch;
-3. merges the release branch into other base branches as needed, and
-   ensures that all resulting `config/APT_overlays.d/`:s make sense.
-
-Given this, the `experimental` branch doesn't need to be seen as
-a base branch anymore; instead, it can be seen as an integration
-branch of overlays on top of the `devel` one: its `config/APT_overlays.d/`
-will merely add, on top of `devel`'s one, the list of APT suites that WIP
-branches merged into `experimental` have introduced. On the other
-hand, `feature/jessie` does need to be a base branch: we want to be
-able to work on topic branches forked off `feature/jessie`.
-
-SSH access
-==========
-
-One must configure their SSH client to connect to the APT server:
-
-	Host incoming.deb.tails.boum.org
-		Port 3003
-
-HTTP access
-===========
-
-This is the http:// public APT repository used at Tails
-build time. The `tails::reprepro` Puppet class sets nginx up to
-serve that.
-
-Workflow
-========
-
-Creating a new branch
----------------------
-
-Push your branch to Git and wait a few minutes for the new APT suite
-to appear.
-
-Importing a new package
------------------------
-
-### Building a package
-
-Make sure the `Distribution:` field in your `.changes` file matches
-the suite you want the package to land in (e.g.
-pass `--changes-option=-DDistribution=feature-torbrowser` to
-pdebuild's `--debbuildopts`).
-
-Make sure to have the `.changes` file include the original source
-archive (`.orig.tar.{gz,bz2,xz}`) if it is not already in our APT
-repository; this can be done by passing `-sa` to pdebuild's
-`--debbuildopts`.
-
-### Configuring an upload tool
-
-#### Configuring dupload
-
-Add this configuration snippet to your `dupload` configuration:
-
-	$config::cfg{'tails'} = {
-	        fqdn => "incoming.deb.tails.boum.org",
-	        method => "scp",
-	        login => "reprepro",
-	        incoming => "/srv/reprepro/incoming/",
-	        dinstall_runs => 1,
-	};
-
-#### Configuring dput
-
-Add this to `.dput.cf`:
-
-    [tails]
-    fqdn            = incoming.deb.tails.boum.org
-    method          = scp
-    login           = reprepro
-    incoming        = /srv/reprepro/incoming/
-    run_dinstall    = 0
-
-
-### Uploading and importing process
-
-Carefully prepare and build your package. Usual precautions, (Lintian
-etc.) apply.
-
-Carefully check the `.changes` file (especially the `Distribution`
-control field, and the included files list; the former can be fixed
-with the `changestool(1)` command, from [[!debpkg reprepro]]).
-
-Sign the `.changes` file with a key that is in the uploaders list:
-
-	$ debsign $CHANGES_FILE
-
-Upload the files to the incoming queue:
-
-	$ dupload --to tails $CHANGES_FILE
-
-reprepro will automatically notice the new files and import them into
-the suite specified in your `.changes` file.
-
-Check the result:
-
-	$ ssh reprepro@incoming.deb.tails.boum.org reprepro list $SUITE $PACKAGENAME
-
-<a id="workflow-merge-main-branch"></a>
-
-Merging a main branch
-----------------------
-
-When a Git *main* branch (`devel`, `testing`, `stable`,
-`feature/jessie`) is merged into another *main* branch, the corresponding
-operation must be done on the APT suites.
-
-1. Save the list of packages currently present in the APT suite we
-   want to merge *into*, e.g. `reprepro list devel`.
-
-2. Make sure you are not going to overwrite newer packages with
-   older ones (hint: use the `tails-diff-suites` script).
-
-3. Merge the APT suites:
-
-   1. Set some environment variables:
-
-        # the branch you want to merge
-        SRC=stable
-        # the branch you want to merge _into_
-        DST=devel
-
-   2. Merge in Git and APT:
-
-        git checkout "$DST" && \
-        git merge "$SRC" && \
-        ssh reprepro@incoming.deb.tails.boum.org \
-             tails-merge-suite "$SRC" "$DST"
-
-   3. Restore the `config/base_branch` if needed:
-
-        echo "${DST}" > config/base_branch && \
-        git commit config/base_branch -m "Restore ${DST}'s base branch." || :
-
-   4. Push:
-
-        git push origin "${DST}:${DST}"
-
-4. Make sure not to re-add, into the branch we merge into, any package
-   that was removed from it, but still is in the branch we merge from:
-   e.g. when merging `stable` into `devel`, it may be that
-   `devel` had some packages removed (e.g. due to previously
-   merging a topic branch into it, whose purpose is to *remove* custom
-   packages). To this end, compare the resulting list of (package,
-   version) in the `devel` APT suite with the one saved before
-   the merge, check Git
-   merges history if needed, apply common sense, and remove from
-   `devel` the packages that were removed from it a while ago,
-   and were just erroneously re-added by the merge operation.
-
-<a id="workflow-reset"></a>
-
-Resetting a suite to the state of another one
----------------------------------------------
-
-   a. First, set some environment variables:
-
-        # the suite to reset
-        OLD=testing
-        # the final state it should be in
-        NEW=devel
-
-   b. Then, empty the `OLD` suite:
-
-      	ssh reprepro@incoming.deb.tails.boum.org \
-      	      reprepro removematched $OLD '\*'
-
-   c. Finally, merge `NEW` into `OLD`
-
-      	ssh reprepro@incoming.deb.tails.boum.org \
-      	      tails-merge-suite $NEW $OLD
-
-<a id="workflow-merge-overlays"></a>
-
-Merging APT overlays
---------------------
-
-This operation merges all APT overlays listed in the given branch's
-`config/APT_overlays.d/` into its own APT suite, empties
-`config/APT_overlays.d/` accordingly, then commits and pushes to Git.
-
-1. Set some environment variables:
-
-        # The branch that should have its overlays merged
-        BRANCH=devel
-
-2. Merge the APT overlays in reprepro:
-
-        git checkout "$BRANCH" && \
-        for overlay in $(ls config/APT_overlays.d/) ; do
-           if ! ssh reprepro@incoming.deb.tails.boum.org \
-                   tails-merge-suite "$overlay" "$BRANCH" ; then
-              echo "Failed to merge '$overlay' into '$BRANCH': $?" >&2
-              break
-           fi
-        done
-
-3. Empty `config/APT_overlays.d/`:
-
-        git checkout "$BRANCH" && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
-
-4. Push the Git branch:
-
-        git push origin "${BRANCH}:${BRANCH}"
-
-<a id="workflow-post-tag"></a>
-
-Tagging a new Tails release
----------------------------
-
-Once the new release's Git tag is pushed, a cronjob creates
-a new APT suite on the APT repository's side within a few minutes.
-This new APT suite is called the same as the new release version.
-One may check it has appeared in `~reprepro/conf/distributions`.
-
-Then, the APT suite corresponding to the branch that was used to
-prepare the release must be copied to the new empty APT suite that
-just appeared:
-
-	$ ssh reprepro@incoming.deb.tails.boum.org \
-	     tails-merge-suite "$RELEASE_BRANCH" "$TAG"
-
-<a id="workflow-post-release"></a>
-
-After a new Tails release is out
---------------------------------
-
-If you just put out a final release:
-
-* [[merge `stable` or `testing` into
-  `devel`|APT_repository#workflow-merge-main-branch]]
-* increment the version number in devel's `debian/changelog` to match
-  the next major release, so that
-  next builds from the `devel` branch do not use the APT suite meant
-  for the last release
-* increment the version number in stable's `debian/changelog` to match
-  the next point release, so that
-  next builds from the `stable` branch do not use the APT suite meant
-  for the last release
-
-If you just released a RC:
-
-* add a dummy changelog entry (for the upcoming, non-RC version) in
-  the branch used for the release (`stable` or `testing`), so that the
-  next builds from it do not use the APT suite meant for the RC
-* add a dummy changelog entry (for the release *after* the one you
-  released a RC for) in the branch used for the release (`stable` or
-  `testing`), so that the next builds from it do not use the APT suite
-  meant for the RC
-
-If the release was a major one, then:
-
-1. [[Hard reset the stable APT suite to
-   the state of the testing one|APT_repository#workflow-reset]].
-
-2. Empty `config/APT_overlays.d` in the `stable` branch:
-
-        git checkout stable && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
-
-Giving access to a core developer
----------------------------------
-
-1. Give SSH access to the `reprepro` user on the system that hosts
-   reprepro (using the `ssh_authorized_key` Puppet resource).
-2. Import the developer's public GnuPG key into the `reprepro` user's
-   GnuPG keyring -- should be doable using Puppet, some day
-3. Add the developer's OpenPGP key ID to `$reprepro_uploaders` in our
-   `tails::reprepro` Puppet module. Deploy.
-
-Contributing without privileged access
---------------------------------------
-
-Non-core developers without access to the "private" APT infrastructure
-would add the .deb they want to their Git branch as we have been
-doing until now, push the result on GitLab or whatever... and at
-merge time, we would rewrite their history to remove the .deb, and
-import it into our APT repo.
+# Our APT repositories
+
+We have three kinds of APT repositories:
+
+* our [[custom APT repository|contribute/APT_repository/custom]],
+  that stores our custom Debian packages;
+* (full) [[contribute/APT_repository/time-based snapshots]] of the
+  upstream APT repositories we use, so that we can use frozen
+  versions thereof when needed;
+* (partial) [[contribute/APT_repository/tagged snapshots]] of upstream
+  APT repositories we need, so that one can rebuild a released ISO in
+  the future, and we keep the corresponding source code around.
+
+# Snapshots and branches
+
+Here we discuss what APT snapshots of upstream repositories are used
+when building a Tails ISO image. This is a function of the branch we
+build from, we are building an ISO that is meant to be released (i.e.
+whether there is a tag in Git corresponding the last entry in
+debian/changelog).
+
+Note: when we say "building an ISO from the `B` branch" below, we only
+refer to the base branch, i.e. `B` is encoded in `config/base_branch`.
+Hence such statements also refers to topic branches with `B` as base
+branch.
+
+Building an ISO from the `devel` branch always uses the freshest set
+of APT repository snapshots available. Resolving what's the set of
+freshest APT repository snapshots is done at the beginning of the
+build ([[!tails_gitweb auto/config]],
+[[!tails_gitweb auto/scripts/apt-mirror]]), so that the entire build
+uses the exact same state of these
+repositories. This is needed for reproducible builds, and has a nice
+side effect: so long, `Hashsum mismatch`, and thanks for the fish.
+
+When building an ISO from the branch used to prepare the next major
+release (`testing`):
+
+ * **outside of the freeze period**: we use the latest set of APT
+   repository snapshots, just like when building from `devel`;
+ * **freeze period**: at freeze time, the RM encodes in the Git
+   `testing` branch the set of APT repository snapshots (via their
+   serial numbers) that shall be used during the freeze; the only
+   exception is security.debian.org, for which we always use our
+   latest snapshot;
+ * **at release time**: when building from a tagged branch, similarly to
+   what we do for our
+   [[custom APT repository|contribute/APT_repository/custom]], instead
+   of using time-based APT repository snapshots, we use snapshots
+   labeled with the Git tag (note that this is not needed, strictly speaking,
+   as the APT sources used at Tails runtime will anyway be the
+   official (and not frozen) Debian ones; this is mostly needed for
+   legal purposes (this allows to distribute for a long
+   time the source packages needed to build a given Tails ISO image),
+   and it will be useful when we want to be able to reproduce a given
+   Tails ISO build);
+ * **after releasing**, the RM encodes in the `testing` Git branch the
+   fact that it is not frozen anymore, that is: the RM removes the
+   indication that a specific set of APT repository snapshots must be
+   used; and then, we're back to the "outside of the freeze
+   period" case.
+
+When building an ISO from the branch used to prepare the next
+point-release (`stable`) we use snapshots labeled with the Git tag of
+the latest Tails release, except:
+
+ * we generally use our latest snapshot of security.debian.org;
+ * at release time: when building from a tagged branch, similarly to
+   what we do for our
+   [[custom APT repository|contribute/APT_repository/custom]], instead
+   of using time-based APT repository snapshots, we use snapshots
+   labeled with the Git tag
+ * if a set of APT repository snapshots is encoded directly in that
+   branch: use them, even for security.debian.org.
+
+# Design notes
+
+## Miscellaneous
+
+A given APT repository snapshot is immutable after it's been taken.
+We
+[[deal with freeze exceptions separately|contribute/APT_repository/time-based_snapshots#design-freeze-exceptions]].
+
+We want to have reproducible builds some day. Therefore, the APT
+`sources.list` shipped in the ISO must be stable across rebuilds from
+the same release Git tag.
+
+<a id="runtime-sources"></a>
+
+## APT sources used inside Tails
+
+A running Tails' APT must be pointed at the official, live Debian
+archive, and not to a Tails-specific and already obsolete snapshot.
+
+Say `kedit` is a package shipped in Debian, but not in Tails. Then,
+when run inside Tails, `apt install kedit` must fetch `kedit` from
+current Debian, as opposed to installing it from a Tails-specific, and
+generally obsolete, snapshot of the Debian APT repository.
+
+To achieve that we tweak `sources.list` in
+[[!tails_gitweb config/chroot_local-includes/lib/live/config/1500-reconfigure-APT]].
+
+## Upgrading to a new snapshot
+
+In other words: bumping, in Git, the pointers to the set of snapshots
+that shall be used by a given branch.
+
+Let's use, as an example of a situation in which we might want to do
+that, upgrading to a new Debian point-release.
+
+With this design:
+
+ * `devel` gets them automatically because it closely tracks the
+   Debian archive;
+ * for release branches (`stable`, `testing`): on a case-by-case
+   basis, depending on the respective Debian/Tails release schedule
+   timing, we can choose whether to switch to using a new snapshot of
+   the Debian archive for the next release. Note that this can be done
+   via a topic-branch since this information is encoded in Git. If we
+   choose not to manually pick the point release, which is the default
+   if we don't act at all, then:
+   - `testing` will start using the new Debian point-release as soon
+     as it is unfrozen, that is as soon as it has been used to release
+     a new major version of Tails;
+   - `stable` will start using the new Debian point-release once
+     a `testing` branch that uses that point-release is merged into
+     `stable`.

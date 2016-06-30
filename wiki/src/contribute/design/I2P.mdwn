@@ -147,7 +147,7 @@ Tails uses the I2P (and deps)
 [Debian packages prepared by KillYourTV](http://deb.i2p2.no/), the official I2P
 Linux package maintainer as listed on the [I2P Team page](https://geti2p.net/team).
 The I2P source package and its binaries are imported into to our own
-[[APT repository|APT_repository]] into the devel or stable suite. The suite
+[[custom APT repository|APT_repository/custom]] into the devel or stable suite. The suite
 will depend on whether a major- or point-release is being prepared.
 
 ## Prepare a Git topic branch
@@ -155,6 +155,23 @@ will depend on whether a major- or point-release is being prepared.
 Create a Git branch, forked off the branch into which the new packages
 shall eventually be imported into, and called e.g.
 `feature/i2p-0.n.m`. Push this branch.
+
+## Get the packages
+
+1. Enter a Jessie i386 chroot and take note of its
+   temporary directory.
+2. In the chroot, download the source and binary packages:
+
+        echo 'deb http://deb.i2p2.no/ jessie main' > \
+           /etc/apt/sources.list.d/i2p.list && \
+        echo 'deb-src http://deb.i2p2.no/ jessie main' > \
+           /etc/apt/sources.list.d/i2p-sources.list && \
+        apt-key add - &&
+        apt update && \
+        apt-get --download-only source i2p && \
+        apt-get download i2p i2p-router libjbigi-jni
+
+3. Copy `{i2p,i2p-router,libjbigi-jni}_*` outside of the chroot.
 
 ## Check the binary packages
 
@@ -164,14 +181,14 @@ shall eventually be imported into, and called e.g.
        grep -v -E '^\./($|usr/(share/doc/i2p-router/|share/i2p/|share/$|share/doc/$|bin/eepget|bin/i2prouter-nowrapper|share/man/man1/eepget\.1\.gz$|share/man/$|share/man/man1/$|bin/$|$))'
 
     dpkg-deb --contents i2p_*.deb | awk '{print $6}' | \
-       grep -v -E '^\./($|etc/(apparmor.d/(abstractions/)?)?$|etc/apparmor.d/(system_i2p|usr.bin.i2prouter|abstractions/i2p)$|etc/i2p/|etc/init\.d/i2p$|etc/init\.d/$|usr/$|usr/share/$|usr/share/man/$|usr/share/man/man1/$|usr/share/man/man1/i2prouter\.1\.gz$|usr/share/doc/$|usr/share/doc/i2p$|usr/bin/$|usr/bin/i2prouter$)'
+       grep -v -E '^\./($|etc/(apparmor.d/(abstractions/)?)?$|etc/apparmor.d/(system_i2p|usr.bin.i2prouter|abstractions/i2p)$|etc/i2p/|etc/init\.d/i2p$|etc/init\.d/$|lib/$|lib/systemd/$|lib/systemd/system/$|lib/systemd/system/i2p\.service$|usr/$|usr/share/$|usr/share/man/$|usr/share/man/man1/$|usr/share/man/man1/i2prouter\.1\.gz$|usr/share/doc/$|usr/share/doc/i2p$|usr/bin/$|usr/bin/i2prouter$)'
 
     dpkg-deb --contents libjbigi-jni_*.deb | awk '{print $6}' | \
        grep -v -E '^\./($|usr/$|usr/lib/$|usr/lib/jni/|usr/share/$|usr/share/doc/$|usr/share/doc/libjbigi-jni$)'
 
 ### Maintainer scripts
 
-Have a look at `*.{pre,post}{inst,rm}` and `*.configure` maintainer
+Have a look at `*.{pre,post}{inst,rm} config *.config` maintainer
 scripts in each binary package.
 
 ## Import the packages
@@ -196,27 +213,3 @@ scripts in each binary package.
 1. build an ISO from the `feature/i2p-0.n.m` Git branch
 1. test this ISO
 1. merge the `feature/i2p-0.n.m` branch into the appropriate base branch
-
-Things to meditate upon
-=======================
-
-* Do we want to enable the "Hidden mode" which completely disables
-  participating traffic?
-
- - Pros:
-
-  - the IP address will not be published in I2P's distributed NetDB so
-    any adversary trying to enumerate all I2P users can only find the
-    user if he or she happens to use the adversary as an entry to the I2P
-    network. Hence the reason not to enable I2P per default due to
-    increased suspicion (3) is somewhat alleviated.
-
-  - there will be no additional network traffic used for relaying
-    other I2P peers traffic, so the network traffic reason (1) for not
-    starting I2P per default is essentially completely eliminated, and
-    the CPU/RAM reason (2) is made considerably less severe.
-
- - Cons:
-
-  - there's no "cover-traffic", which may decrease the anonymity
-    somewhat.

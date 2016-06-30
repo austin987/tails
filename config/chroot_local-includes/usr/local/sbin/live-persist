@@ -100,35 +100,6 @@ warning ()
 	echo "warning: ${@}" >&2
 }
 
-dbus_udisks_get_attribute ()
-{
-	local dev="${1}"
-	local attribute="${2}"
-	local re='^[[:space:]]*variant[[:space:]]\+string[[:space:]]\+"\(.*\)"$'
-	dbus-send --system --print-reply --dest=org.freedesktop.UDisks \
-		/org/freedesktop/UDisks/devices/$(basename ${dev}) \
-		org.freedesktop.DBus.Properties.Get \
-		string:org.freedesktop.UDisks.Device \
-		string:"${attribute}" 2>/dev/null | \
-		grep -e "${re}" | sed "s|${re}|\1|"
-}
-
-# We override the following two functions from live-helpers since old
-# blkid (i.e. util-linux and libblkid1) doesn't support GPT. We use dbus
-# instead (which should be available in user-space).
-get_gpt_name ()
-{
-	local dev="${1}"
-	dbus_udisks_get_attribute ${dev} partition-label
-}
-
-is_gpt_device ()
-{
-	local dev="${1}"
-	[ "$(dbus_udisks_get_attribute ${dev} partition-scheme)" = "gpt" ]
-}
-
-
 # We override live-boot's logging facilities to get more useful error messages
 log_warning_msg ()
 {
