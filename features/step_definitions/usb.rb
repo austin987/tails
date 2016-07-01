@@ -693,7 +693,19 @@ TAILS_VERSION_ID="#{version}"
 end
 
 Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |version|
-  @screen.wait("TailsUpgraderUpgradeTo#{version}.png", 2*60)
+  recovery_proc = Proc.new do
+    $vm.execute('killall tails-upgrade-frontend tails-upgrade-frontend-wrapper zenity')
+    # Remove unnecessary sleep for retry
+    $vm.execute_successfully('sed -i "/^sleep 30$/d" ' +
+                             '/usr/local/bin/tails-upgrade-frontend-wrapper')
+    $vm.spawn('tails-upgrade-frontend-wrapper', user: LIVE_USER)
+  end
+  failure_pic = 'TailsUpgraderFailure.png'
+  success_pic = "TailsUpgraderUpgradeTo#{version}.png"
+  retry_tor(recovery_proc) do
+    match, _ = @screen.waitAny([success_pic, failure_pic], 2*60)
+    assert_equal(success_pic, match)
+  end
 end
 
 When /^I agree to install the incremental upgrade$/ do
