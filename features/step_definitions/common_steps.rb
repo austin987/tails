@@ -287,13 +287,19 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
   # but multi-threading etc is working extremely poor in our Ruby +
   # jrb environment when Sikuli is involved. Hence we run the spamming
   # from a separate process.
-  tab_key_code = '0xf'
-  # This can also be done with Libvirt::Domain.send_key, but virsh is
-  # easier to put into a separate process.
   tab_spammer_code = <<-EOF
-    while true; do
-      virsh -c qemu:///system send-key #{$vm.domain_name} #{tab_key_code}
-    done
+    require 'libvirt'
+    tab_key_code = 0xf
+    virt = Libvirt::open("qemu:///system")
+    begin
+      domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
+      loop do
+        domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
+        sleep 0.1
+      end
+    ensure
+      virt.close
+    end
   EOF
   # Our UEFI bootloader has the interesting "feature" that pressing
   # any button will open its setup menu, so we have to exit the setup,
@@ -304,7 +310,7 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
-      tab_spammer = IO.popen(['/bin/sh', '-c', tab_spammer_code])
+      tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
       if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
         @screen.find('UEFIBootLoaderSetup.png')
         Process.kill("TSTP", tab_spammer.pid)
