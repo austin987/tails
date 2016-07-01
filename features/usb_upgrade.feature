@@ -179,5 +179,6 @@ Feature: Upgrading an old Tails USB installation
     When the network is plugged
     And the network connection is ready within 30 seconds
     And all notifications have disappeared
+    # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
     And I successfully start the Unsafe Browser
     Then the file system changes introduced in version 1.1~test are present in the Unsafe Browser's chroot
