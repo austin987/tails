@@ -25,10 +25,18 @@ end
 
 Then /^I should be able to install a package using apt$/ do
   package = "cowsay"
-  Timeout::timeout(120) do
-    $vm.execute_successfully("echo #{@sudo_password} | " +
-                             "sudo -S apt install #{package}",
-                             :user => LIVE_USER)
+  recovery_proc = Proc.new do
+    step 'I kill the process "apt"' if $vm.has_process?("apt")
+    $vm.execute("echo #{@sudo_password} | " +
+                "sudo -S apt purge #{package}",
+                :user => LIVE_USER)
+  end
+  retry_tor(recovery_proc) do
+    Timeout::timeout(120) do
+      $vm.execute_successfully("echo #{@sudo_password} | " +
+                               "sudo -S apt install #{package}",
+                               :user => LIVE_USER)
+    end
   end
   step "package \"#{package}\" is installed"
 end
