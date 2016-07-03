@@ -1,15 +1,17 @@
-@product @check_tor_leaks @fragile
+@product @check_tor_leaks
 Feature: Electrum Bitcoin client
   As a Tails user
   I might want to use a Bitcoin client
   And all Internet traffic should flow only through Tor
 
   Scenario: A warning will be displayed if Electrum is not persistent
-    Given I have started Tails from DVD and logged in and the network is connected
+    Given I have started Tails from DVD without network and logged in
     When I start Electrum through the GNOME menu
     But persistence for "electrum" is not enabled
     Then I see a warning that Electrum is not persistent
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Using a persistent Electrum configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
@@ -23,8 +25,9 @@ Feature: Electrum Bitcoin client
     When I create a new bitcoin wallet
     Then a bitcoin wallet is present
     And I see the main Electrum client window
+    And Electrum successfully connects to the network
     And I shutdown Tails and wait for the computer to power off
-    Given I start Tails from USB drive "current" and I login with persistence enabled
+    Given I start Tails from USB drive "__internal" and I login with persistence enabled
     When I start Electrum through the GNOME menu
     And a bitcoin wallet is present
     And I see the main Electrum client window

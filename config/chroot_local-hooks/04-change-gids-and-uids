@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+# Free the fixed GIDs and UIDs we're using.
+
+echo "Change GIDs and UIDs"
+
+TPS_GROUP_STEALER=$(getent group 122 | awk -F ':' '{print $1}')
+if [ -n "$TPS_GROUP_STEALER" ]; then
+   groupmod --gid 150 "$TPS_GROUP_STEALER"
+   find / -wholename /proc -prune -o \( \! -type l -a -gid 122 -exec chgrp 150 '{}' \; \)
+fi
+
+TPS_USER_STEALER=$(getent passwd 115 | awk -F ':' '{print $1}')
+if [ -n "$TPS_USER_STEALER" ]; then
+   usermod --uid 150 "$TPS_USER_STEALER"
+   find / -wholename /proc -prune -o \( \! -type l -a -gid 115 -exec chgrp 150 '{}' \; \)
+fi
