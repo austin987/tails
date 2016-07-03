@@ -48,6 +48,14 @@ def persistent_volumes_mountpoints
   $vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
+def recover_from_upgrader_failure
+    $vm.execute('killall tails-upgrade-frontend tails-upgrade-frontend-wrapper zenity')
+    # Remove unnecessary sleep for retry
+    $vm.execute_successfully('sed -i "/^sleep 30$/d" ' +
+                             '/usr/local/bin/tails-upgrade-frontend-wrapper')
+    $vm.spawn('tails-upgrade-frontend-wrapper', user: LIVE_USER)
+end
+
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
   $vm.storage.clone_to_new_disk(from, to)
 end
@@ -694,11 +702,7 @@ end
 
 Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |version|
   recovery_proc = Proc.new do
-    $vm.execute('killall tails-upgrade-frontend tails-upgrade-frontend-wrapper zenity')
-    # Remove unnecessary sleep for retry
-    $vm.execute_successfully('sed -i "/^sleep 30$/d" ' +
-                             '/usr/local/bin/tails-upgrade-frontend-wrapper')
-    $vm.spawn('tails-upgrade-frontend-wrapper', user: LIVE_USER)
+    recover_from_upgrader_failure
   end
   failure_pic = 'TailsUpgraderFailure.png'
   success_pic = "TailsUpgraderUpgradeTo#{version}.png"
@@ -712,6 +716,16 @@ When /^I agree to install the incremental upgrade$/ do
   @screen.click('TailsUpgraderUpgradeNowButton.png')
 end
 
-Then /^the incremental upgrade is reportedly installed$/ do
-  @screen.wait('TailsUpgraderDone.png', 2*60)
+Then /^the incremental upgrade to version "(.*?)" is reportedly installed$/ do |version|
+  recovery_proc = Proc.new do
+    recover_from_upgrader_failure
+    step "I am proposed to install an incremental upgrade to version #{version}"
+    step 'I agree to install the incremental upgrade'
+  end
+  failure_pic = 'TailsUpgraderFailure.png'
+  success_pic = "TailsUpgraderDone.png"
+  retry_tor(recovery_proc) do
+    match, _ = @screen.waitAny([success_pic, failure_pic], 2*60)
+    assert_equal(success_pic, match)
+  end
 end
