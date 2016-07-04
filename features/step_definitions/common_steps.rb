@@ -321,7 +321,7 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
       @screen.find(boot_menu_cmdline_image)
     rescue FindFailed => e
       if @screen.exists('TailsBooting.png') || @screen.exists('TailsGreeter.png')
-        debug_log('We missed the boot menu before we could deal with it, '
+        debug_log('We missed the boot menu before we could deal with it, ' +
                   'resetting...')
         $vm.reset
         dealt_with_uefi_setup = false
