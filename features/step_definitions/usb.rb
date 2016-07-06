@@ -283,7 +283,7 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 
   # The LUKS container may already be opened, e.g. by udisks after
   # we've run tails-persistence-setup.
-  c = $vm.execute("ls -1 /dev/mapper/")
+  c = $vm.execute("ls -1 --hide 'control' /dev/mapper/")
   if c.success?
     for candidate in c.stdout.split("\n")
       luks_info = $vm.execute("cryptsetup status #{candidate}")
