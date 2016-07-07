@@ -59,11 +59,30 @@ being uploaded.
 
 ### B.3.10. Write automated tests for features added in 2016Q1
 
-XXX
+* #10340 - Automatically test the Greeter's Disable All Networking option.
 
 ### B.3.11. Fix newly identified issues to make our test suite more robust and faster
 
-XXX
+We've identified the reason why sometimes our test suite is not
+able to add the necessary kernel command line options to the Tails
+system it tests. The fix is not that easy to implement, and solutions
+are being worked on. A patch is under test and we intend to fix this
+issue in July. [[!tails_ticket #10777]]
+
+We've investigated why our test suite sometimes fails because of time
+synchronisation errors. Auditing our [[htpdate
+script|contribute/design/Time_syncing]] showed that it may not have the
+best default for it to work correctly on sloppy network connections. A
+patch has been proposed and is being tested. [[!tails_ticket #10494]]
+
+A patch implementing a way to retry Synaptic related tests on
+network transient errors or if Synaptic segfaults is under test and will
+be proposed to be merged beginning of July. [[!tails_ticket #10441]] and
+[[!tails_ticket #10412]]
+
+We also implemented this retries on the Git scenarios, which had proved
+to be fragile because of network errors. A patch has been widely tested,
+and will likely be merged early July. [[!tails_ticket #10444]]
 
 ### B.3.12. Reliably wait for post-Greeter hooks
 
@@ -71,7 +90,9 @@ XXX
 
 ### B.3.13. Reorganize the "various checks" feature
 
-XXX
+A branch that split this feature's scenarios into more relevant
+thematic features has been proposed for review. It should be merged
+beginning of July. [[!tails_ticket 5707]]
 
 ### B.3.15. Write automated tests for features added in 2016Q2
 
@@ -79,7 +100,10 @@ XXX
 
 ### B.3.14. Write tests for incremental upgrades ([[!tails_ticket #6309]])
 
-XXX
+A branch testing the Tails incremental upgrades have been pushed and
+proposed to review. Issues with it were raised and a fix promptly
+pushed. It's receiving the last round of review and will likely be
+merged beginning of July.
 
 ## B.4. Freezable APT repository
 
