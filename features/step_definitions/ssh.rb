@@ -126,6 +126,7 @@ Then /^I connect to an SFTP server on the Internet$/ do
   read_and_validate_ssh_config "SFTP"
 
   recovery_proc = Proc.new do
+    step 'I kill the process "ssh"' if $vm.has_process?("ssh")
     @screen.type(Sikuli::Key.ESC)
   end
 
