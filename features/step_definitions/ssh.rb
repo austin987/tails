@@ -125,14 +125,15 @@ end
 Then /^I connect to an SFTP server on the Internet$/ do
   read_and_validate_ssh_config "SFTP"
 
+  @sftp_port ||= 22
+  @sftp_port = @sftp_port.to_s
+
   recovery_proc = Proc.new do
     step 'I kill the process "ssh"' if $vm.has_process?("ssh")
     @screen.type(Sikuli::Key.ESC)
   end
 
   retry_tor(recovery_proc) do
-    @sftp_port ||= 22
-    @sftp_port = @sftp_port.to_s
     step 'I start "Files" via the GNOME "Accessories" applications menu'
     @screen.wait_and_click("GnomeFilesConnectToServer.png", 10)
     @screen.wait("GnomeConnectToServerWindow.png", 10)
