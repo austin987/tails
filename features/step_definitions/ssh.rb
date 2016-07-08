@@ -137,7 +137,7 @@ Then /^I connect to an SFTP server on the Internet$/ do
     @screen.wait("GnomeConnectToServerWindow.png", 10)
     @screen.type("sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port)
     @screen.wait_and_click("GnomeConnectToServerConnectButton.png", 10)
-    @screen.wait_and_click("GnomeSSHFingerprint.png", 10)
+    step "I verify the SSH fingerprint for the SFTP server"
   end
 end
 
