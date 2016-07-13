@@ -283,10 +283,10 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 
   # The LUKS container may already be opened, e.g. by udisks after
   # we've run tails-persistence-setup.
-  c = $vm.execute("ls -1 /dev/mapper/")
+  c = $vm.execute("ls -1 --hide 'control' /dev/mapper/")
   if c.success?
     for candidate in c.stdout.split("\n")
-      luks_info = $vm.execute("cryptsetup status #{candidate}")
+      luks_info = $vm.execute("cryptsetup status '#{candidate}'")
       if luks_info.success? and luks_info.stdout.match("^\s+device:\s+#{dev}$")
         luks_dev = "/dev/mapper/#{candidate}"
         break
@@ -309,7 +309,7 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 
   mount_dir = "/mnt/#{name}"
   $vm.execute("mkdir -p #{mount_dir}")
-  c = $vm.execute("mount #{luks_dev} #{mount_dir}")
+  c = $vm.execute("mount '#{luks_dev}' #{mount_dir}")
   assert(c.success?,
          "Couldn't mount opened LUKS device '#{dev}' on drive '#{name}'")
 
