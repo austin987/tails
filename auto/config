@@ -16,30 +16,65 @@ fi
 
 export LB_BOOTSTRAP_INCLUDE='eatmydata'
 
+# sanity checks
+if grep -qs -E '^Pin:\s+release\s+.*a=' config/chroot_apt/preferences ; then
+    echo "Found unsupported a= syntax in config/chroot_apt/preferences,"
+    echo "use n= instead. Exiting."
+    exit 1
+fi
+if grep -qs -E '^Pin:\s+release\s+.*o=Debian Backports' \
+	config/chroot_apt/preferences ; then
+    echo "Found unsupported 'o=Debian Backports' syntax,"
+    echo "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
+    exit 1
+fi
+
 # init variables
 RUN_LB_CONFIG="lb config noauto"
 
 # init config/ with defaults for the target distribution
 $RUN_LB_CONFIG --distribution jessie ${@}
 
+# set up everything for time-based snapshots:
+apt-snapshots-serials prepare-build
+
+DEBIAN_MIRROR="$(apt-mirror debian)"
+DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
+TORPROJECT_MIRROR="$(apt-mirror torproject)"
+
+[ -n "$DEBIAN_MIRROR" ]          || exit 1
+[ -n "$DEBIAN_SECURITY_MIRROR" ] || exit 1
+[ -n "$TORPROJECT_MIRROR" ]      || exit 1
+
+perl -pi \
+     -E \
+       "s|^(deb(?:-src)?\s+)https?://ftp[.]us[.]debian[.]org/debian/?(\s+)|\$1$DEBIAN_MIRROR\$2| ; \
+        s|^(deb(?:-src)?\s+)https?://deb[.]torproject[.]org/torproject[.]org/?(\s+)|\$1$TORPROJECT_MIRROR\$2|" \
+    config/chroot_sources/*.chroot \
+    || exit 1
+
 # set Amnesia's general options
 $RUN_LB_CONFIG \
+   --verbose \
    --apt-recommends false \
    --backports false \
    --binary-images iso \
    --binary-indices false \
    --checksums none \
    --bootappend-live "${AMNESIA_APPEND}" \
-   --bootstrap "cdebootstrap" \
+   --bootstrap debootstrap \
+   --bootstrap-config tails-build-jessie \
    --archive-areas "main contrib non-free" \
    --includes none \
    --iso-application="The Amnesic Incognito Live System" \
    --iso-publisher="https://tails.boum.org/" \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
    --memtest none \
-   --mirror-binary "http://ftp.us.debian.org/debian/" \
-   --mirror-bootstrap "http://ftp.us.debian.org/debian/" \
-   --mirror-chroot "http://ftp.us.debian.org/debian/" \
+   --mirror-binary              "$DEBIAN_MIRROR" \
+   --mirror-bootstrap           "$DEBIAN_MIRROR" \
+   --mirror-chroot              "$DEBIAN_MIRROR" \
+   --mirror-binary-security     "$DEBIAN_SECURITY_MIRROR" \
+   --mirror-chroot-security     "$DEBIAN_SECURITY_MIRROR" \
    --packages-lists="standard" \
    --tasks="standard" \
    --linux-packages="linux-image-3.16.0-4" \
@@ -97,3 +132,20 @@ fi
 
 # custom APT sources
 tails-custom-apt-sources > config/chroot_sources/tails.chroot
+
+# tails-transform-mirror-url and its dependencies
+install -m 0755 \
+   submodules/mirror-pool-dispatcher/bin/tails-transform-mirror-url \
+   config/chroot_local-includes/usr/local/bin/
+install -m 0755 -d config/chroot_local-includes/usr/local/lib/nodejs
+install -m 0755 \
+   submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
+   config/chroot_local-includes/usr/local/lib/nodejs/
+
+# custom debootstrap script, setting some APT magic to log downloads:
+patch \
+    --follow-symlinks \
+    --output=/usr/share/debootstrap/scripts/tails-build-jessie \
+    /usr/share/debootstrap/scripts/jessie \
+    data/debootstrap/scripts/jessie.patch
+sed -i "s,%%topdir%%,$(pwd)," /usr/share/debootstrap/scripts/tails-build-jessie

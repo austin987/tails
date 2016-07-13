@@ -51,36 +51,40 @@ if [ "$LOCAL_HTTP_PROXY" ]; then
 	http_proxy="$LOCAL_HTTP_PROXY"
 fi
 
-# Currently our base box contains a stupid dpkg-divert that breaks
-# upgrading udev.
-if dpkg-divert --list | grep -wq '/lib/udev/write_net_rules.udev'; then
-   dpkg-divert --remove /lib/udev/write_net_rules.udev
-fi
-
 # Upgrade if needed
 apt-get -y dist-upgrade
 
 # Those are needed to build Tails
 apt-get -y install \
-	debootstrap/jessie-backports \
-	live-build \
-	syslinux-utils \
-	eatmydata \
-	time \
-	whois \
-	dpkg-dev \
-	git \
-	aufs-tools \
-	ikiwiki \
-	intltool \
-	gettext
+        debootstrap/jessie-backports \
+        dpkg-dev \
+        eatmydata \
+        gettext \
+        git \
+        ikiwiki \
+        intltool \
+        libfile-slurp-perl \
+        liblist-moreutils-perl \
+        live-build \
+        rsync \
+        syslinux-utils \
+        time \
+        whois
 
 # Be sure to get all the modules we need for our Ikiwiki
 apt-get -y --no-install-recommends install \
-       libyaml-perl libyaml-libyaml-perl po4a perlmagick libyaml-syck-perl \
-       libfile-chdir-perl liburi-perl libhtml-parser-perl wdg-html-validator \
-       libhtml-scrubber-perl libhtml-template-perl libtimedate-perl \
-       libxml-simple-perl libtext-multimarkdown-perl
+        libfile-chdir-perl \
+        libhtml-scrubber-perl \
+        libhtml-template-perl \
+        libtext-multimarkdown-perl \
+        libtimedate-perl \
+        liburi-perl libhtml-parser-perl \
+        libxml-simple-perl \
+        libyaml-libyaml-perl po4a \
+        libyaml-perl \
+        libyaml-syck-perl \
+        perlmagick \
+        wdg-html-validator
 
 # Add build script
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
@@ -111,3 +115,10 @@ done
 # Clean up
 apt-get -y autoremove
 apt-get -y clean
+perl /usr/lib/apt-cacher-ng/expire-caller.pl || echo "The clean-up of apt-cacher-ng's cache failed: this is not fatal and most likely just means that some disk space could not be reclaimed -- in order to fix that situation you need to manually investigate /var/log/apt-cacher-ng/main_*.html " >&2
+
+# XXX: Remove this once we generate a basebox > 20160226
+if grep -q "^AcceptEnv" /etc/ssh/sshd_config; then
+    sed -i 's/^AcceptEnv/#AcceptEnv/' /etc/ssh/sshd_config
+    systemctl reload ssh.service
+fi

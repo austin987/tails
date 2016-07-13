@@ -1,0 +1,228 @@
+[[!meta title="Tails Server"]]
+
+[[!toc levels=3]]
+
+# Vision #
+
+The Tails Server should provide a user-friendly way to start onion services that facilitate group collaboration, communication, and data sharing.
+
+Such services are immensely helpful for working together in groups over distance. Usually they are hosted centrally by a third party. This comes with several perils: Users have to trust that the service provider protects their information and does not use it for other purposes or disclose it, and the provider poses as a single point of attack for adversaries. In contrast, a self-hosted onion service comes with several advantages:
+
+* It automatically provides strong encryption between the clients and the server
+* It provides server authentication and optionally also client authentication
+* It provides anonymity for both the clients and the server
+* It's decentralized, reducing the impact fo the compromise of a single system
+* It works behind NATs and firewalls
+* It limits attack surface
+
+The Tails Server should be usable via both a graphical user interface (GUI) and a command line interface (CLI). The interfaces would be used from within a running Tails session (in contrast to the design in the [Legacy Blueprint](#index3h1). The CLI solution would make it easy to administrate a Tails Server remotely via SSH.
+Both interfaces should automatically install the services chosen by the user, configure them for the use in Tails and start them. It should be a generic solution which makes it easy to add many different services.
+
+The user should be able to choose:
+
+* Whether the server's configuration and data and the onion service's keys and address are stored persistently (i.e. being restored after reboot) or not.
+* Whether the service is supposed to automatically start after booting Tails.
+* Whether it should allow connections from the local area network (LAN).
+
+In order to achieve this, the following problems have to be solved:
+
+* Design an extendible and robust format describing the services and how they integrate into Tails.
+* Installing the server software.
+* Settings up the onion service, reusing an existing onion address and keys, if chosen by the user.
+* Persistently storing the data, configuration, and onion service data.
+* Integrating into Tails' firewall.
+* Presenting the onion address and client credentials to the user in a way that s/he can easily share them with clients.
+* Implementing a proper CLI and GUI to configure and activate services.
+
+## List of services to implement ##
+Please add to this list!
+
+* Collaborative text editor
+  * Gobby
+  * Etherpad (requires web server)
+* VoIP
+  * Mumble
+* Web server
+  * Nginx
+  * lighttpd
+* Filesharing (requires web server)
+  * Onionshare
+  * OwnCloud
+  * Cozy
+* Wiki (requires web server)
+  * MediaWiki
+  * ikiwiki
+  * DokuWiki
+  * MoinMoin
+* Leaking platform
+  * SecureDrop
+  * GlobaLeaks
+* XMPP
+  * Prosody
+  * ejabberd
+* IRC
+  * charybdis
+  * ngIRCd
+  * IRCD-Hybrid
+* SSH
+
+# Design #
+The current plan is to have one executable file per service, which must implement a defined set of CLI options to configure, start and stop the service. To facilitate the creation of these service executables, a template will be created, which will usually only need marginal customization. An advantage of this design is that the functionality of a service executable is not limited to the functionality of the template. If a service needs additional functionality, it can be easily implemented for this specific service.
+
+The CLI will provide a wrapper around these service executables, passing the arguments to the respective service executable. The service executables must provide output in a defined format, which should be easily readable and parsable - currently we plan to use YAML for this.
+
+The GUI will call the service executables with specific arguments and parse the output to get the information it then displays to the user. The same applies to the configuration and actions chosen by the user in the GUI.
+
+
+# Implementation #
+In consideration of the work in progress of porting all Tails shell scripts to Python 3, and the good reasons for this, the Tails Server should also be implemented in Python 3.
+
+
+# Service Specification #
+
+Note: This section is currently only a proposal. It builds upon this email to the Tails-dev mailinglist: https://mailman.boum.org/pipermail/tails-dev/2016-March/010506.html
+
+For each service included in Tails Server a single executable file (using this term here in it's broader sense, which includes scripts) must be provided, which implements the following CLI options. All output must be in valid YAML syntax. The file *mumble.py* is used as an example.
+
+## Attributes
+- name: The name of the service, as used in the CLI. This should be the same as the basename of the executable file.
+- name_in_gui: The name of the service, as displayed in the GUI. For example "Mumble".
+- description: A description of this service.
+- documentation: A URL pointing to the service's page in the Tails documentation. For example "file:///usr/share/doc/tails/website/doc/tails_server/mumble.en.html".
+- packages: A list of packages that need to be installed for this service.
+- systemd_service: The name of the service's systemd service. ¹ 
+- local_port: The default port the service listens on locally.
+- remote_port: The default port the service should be listening on via the hidden service.
+- persistent_paths: List of paths of files and directories that should be made persistent via the Persistence option.
+- icon_name: The name of the icon used for the service in the GUI.
+- is_installed: Bool indicating whether the service is installed or not.
+- is_enabled: Bool indicating whether the service is enabled or not.
+- address: The service's onion address.
+- hs_dir: The service's hidden service directory. For example "/var/lib/tor/mumble".
+- options: List of the service's options.
+
+¹ I spent some time thinking about whether we should require a systemd service or not. The advantage of it is that it allows us to monitor the service's status via dbus. The disadvantage is that not every service is implemented as a systemd service (or SysVinit scripts, which would suffice too, since they are used to automatically generate systemd services), for example *infinoted*, the dedicated Gobby server, doesn't have one. I like Gobby and it is one of the services I definitely want to include. I plan to ask the developer to include a systemd unit file or SysVinit scripts, but we would have to backport them to Jessie. Alternatively we could ship a systemd unit file for these services ourselves.
+
+## CLI options
+
+#### info [--details]
+Print a mapping of attributes of the service to their current values. With *--details*, additional attributes will be printed.
+  
+##### Example 1
+
+    $ mumble.py info
+    description: A low-latency, high quality voice chat server
+    installed: true
+    enabled: true
+    address: null
+    local-port: 64738
+    remote-port: 64738
+    config-files:
+    - /etc/mumble-server.ini
+    options:
+      persistence: false
+      autostart: false
+      allow-lan-connections: false
+      server-password: PmEi9uVNH7oXMuppB7Hd
+      welcome-message: '"<br />Welcome to this server Enjoy your stay!<br />"'
+
+##### Example 2
+
+    $ mumble.py info --details
+    name: mumble
+    name-in-gui: Mumble
+    description: A low-latency, high quality voice chat server
+    installed: true
+    enabled: true
+    address: jw5bojkya5xqhnvq.onion
+    local-port: 64738
+    remote-port: 64738
+    config-files:
+    - /etc/mumble-server.ini
+    options:
+    - default: false
+      description: Store service configuration and data on the persistent volume
+      display-status: true
+      name: persistence
+      name-in-gui: Persistence
+      type: !!python/name:builtins.bool ''
+      value: false
+    - default: false
+      description: Start service automatically after booting Tails
+      display-status: true
+      name: autostart
+      name-in-gui: Autostart
+      type: !!python/name:builtins.bool ''
+      value: false
+    - default: false
+      description: Allow connections from the local network
+      display-status: true
+      name: allow-lan-connections
+      name-in-gui: Allow LAN connections
+      type: !!python/name:builtins.bool ''
+      value: false
+    - default: zwAxh1hmUm9ukqKAghtq
+      description: Password required to connect to service
+      display-status: true
+      name: server-password
+      name-in-gui: Server password
+      type: !!python/name:builtins.str ''
+      value: PmEi9uVNH7oXMuppB7Hd
+    - default: ''
+      description: Welcome message sent to clients when they connect
+      display-status: false
+      name: welcome-message
+      name-in-gui: Welcome message
+      type: !!python/name:builtins.str ''
+      value: '"<br />Welcome to this server running <b>Murmur</b>.<br />Enjoy your stay!<br
+        />"'
+    hidden-service-dir: /var/lib/tor/mumble
+    packages:
+    - mumble-server
+    systemd-service: mumble-server.service
+    icon-name: mumble
+
+#### status
+Print the mapping of the *enabled* attribute to its value.
+
+#### enable
+Enables the service, which involves installing the packages, starting the service, creating the hidden service directory and reloading Tor.
+
+#### disable
+Stops the service.
+
+#### get-option OPTION
+Prints the mapping of the provided option to its value.
+
+#### set-option OPTION VALUE
+Sets the provided option to the provided value.
+
+## Service Template Module
+Most of the above attributes and functions can be provided by a service template module. With this module, creating a new service could be done like this:
+    
+    import service_template
+    import service_option_template
+    
+    class MumbleServer(service_template.TailsService):
+        name = "mumble"
+        systemd_service = "mumble-server.service"
+        description = "A low-latency, high quality voice chat server"
+        packages = ["mumble-server"]
+        local_port = 64738
+        documentation = "file:///usr/share/doc/tails/website/doc/tails_server/mumble.en.html"
+        persistent_paths = [CONFIG_FILE]
+        icon_name = "mumble"
+    
+        options = [
+            service_option_template.PersistenceOption,
+            service_option_template.AutoStartOption,
+            service_option_template.AllowLanOption,
+            ServerPasswordOption,
+            WelcomeMessageOption,
+        ]
+
+    service = MumbleServer()
+
+
+# Service Option Specification
+A service's options can be configured via the CLI and the GUI. XXX

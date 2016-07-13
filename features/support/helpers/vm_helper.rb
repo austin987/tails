@@ -1,3 +1,4 @@
+require 'ipaddr'
 require 'libvirt'
 require 'rexml/document'
 
@@ -517,12 +518,17 @@ EOF
   end
 
   def file_append(file, lines, user = 'root')
-    lines = lines.split("\n") if lines.class == String
-    lines.each do |line|
-      cmd = execute("echo '#{line}' >> '#{file}'", :user => user)
-      assert(cmd.success?,
-             "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
-    end
+    lines = lines.join("\n") if lines.class == Array
+    # Use some tricky quoting to allow any character to be appended
+    lines.gsub!("'", "'\"'\"'")
+    cmd = execute("echo '#{lines}' >> '#{file}'", :user => user)
+    assert(cmd.success?,
+           "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+  end
+
+  def file_overwrite(*args)
+    execute_successfully("rm -f '#{args.first}'")
+    file_append(*args)
   end
 
   def set_clipboard(text)
