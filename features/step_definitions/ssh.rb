@@ -132,7 +132,7 @@ Then /^I connect to an SFTP server on the Internet$/ do
   @sftp_port = @sftp_port.to_s
 
   recovery_proc = Proc.new do
-    step 'I kill the process "ssh"' if $vm.has_process?("ssh")
+    step 'I kill the process "ssh"'
     @screen.type(Sikuli::Key.ESC)
     @screen.click("GnomeCloseTopButton.png")
     @screen.waitVanish("GnomeCloseTopButton.png", 10)
