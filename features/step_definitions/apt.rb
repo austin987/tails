@@ -13,7 +13,7 @@ end
 
 When /^I update APT using apt$/ do
   recovery_proc = Proc.new do
-    step 'I kill the process "apt"' if $vm.has_process?("apt")
+    step 'I kill the process "apt"'
   end
   retry_tor(recovery_proc) do
     Timeout::timeout(900) do
@@ -26,7 +26,7 @@ end
 Then /^I should be able to install a package using apt$/ do
   package = "cowsay"
   recovery_proc = Proc.new do
-    step 'I kill the process "apt"' if $vm.has_process?("apt")
+    step 'I kill the process "apt"'
     $vm.execute("echo #{@sudo_password} | " +
                 "sudo -S apt purge #{package}",
                 :user => LIVE_USER)
