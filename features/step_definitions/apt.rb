@@ -17,7 +17,7 @@ When /^I update APT using apt$/ do
     $vm.execute('rm -rf /var/lib/apt/lists/*')
   end
   retry_tor(recovery_proc) do
-    Timeout::timeout(900) do
+    Timeout::timeout(15*60) do
       $vm.execute_successfully("echo #{@sudo_password} | " +
                                "sudo -S apt update", :user => LIVE_USER)
     end
@@ -31,7 +31,7 @@ Then /^I should be able to install a package using apt$/ do
     $vm.execute("apt purge #{package}")
   end
   retry_tor(recovery_proc) do
-    Timeout::timeout(120) do
+    Timeout::timeout(2*60) do
       $vm.execute_successfully("echo #{@sudo_password} | " +
                                "sudo -S apt install #{package}",
                                :user => LIVE_USER)
