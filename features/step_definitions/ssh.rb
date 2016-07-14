@@ -1,6 +1,3 @@
-class SSHConnectionError < StandardError
-end
-
 class SFTPConnectionError < StandardError
 end
 
@@ -65,11 +62,7 @@ Given /^I have the SSH key pair for an? (Git|SSH|SFTP) (?:repository|server)( on
 end
 
 Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
-  @screen.waitAny(['SSHFingerprint.png', 'SSHFailed.png', 'SSHError.png'], 30)
-  unless @screen.exists('SSHFingerprint.png')
-    raise SSHConnectionError.new(
-      "Could not find 'SSHFingerprint.png'")
-  end
+  @screen.wait('SSHFingerprint.png', 30)
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
@@ -119,10 +112,7 @@ When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
 end
 
 Then /^I have sucessfully logged into the SSH server$/ do
-  @screen.waitAny(['SSHDenied.png', 'SSHLoggedInPrompt.png'], 60)
-  if @screen.exists('SSHDenied.png')
-    raise SSHConnectionError.new("Found 'SSHDenied.png' on the screen")
-  end
+  @screen.wait('SSHLoggedInPrompt.png', 60)
 end
 
 Then /^I connect to an SFTP server on the Internet$/ do
