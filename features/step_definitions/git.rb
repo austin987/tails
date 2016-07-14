@@ -3,13 +3,9 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
   assert(!$vm.directory_exist?("/home/#{LIVE_USER}/#{repo_directory}"))
 
   recovery_proc = Proc.new do
-    if $vm.directory_exist?("/home/#{LIVE_USER}/#{repo_directory}")
-      $vm.execute_successfully("rm -rf /home/#{LIVE_USER}/#{repo_directory}",
-                               :user => LIVE_USER)
-    end
-    if $vm.has_process?("git")
-      step 'I kill the process "git"'
-    end
+    $vm.execute("rm -rf /home/#{LIVE_USER}/#{repo_directory}",
+                             :user => LIVE_USER)
+    step 'I kill the process "git"'
     @screen.type('clear' + Sikuli::Key.ENTER)
   end
 
