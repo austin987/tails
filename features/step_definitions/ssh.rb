@@ -144,11 +144,11 @@ Then /^I connect to an SFTP server on the Internet$/ do
     @screen.wait("GnomeConnectToServerWindow.png", 10)
     @screen.type("sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port)
     @screen.wait_and_click("GnomeConnectToServerConnectButton.png", 10)
-    step "I verify the SSH fingerprint of the SFTP server"
+    step "I verify the SSH fingerprint for the SFTP server"
   end
 end
 
-Then /^I verify the SSH fingerprint of the SFTP server$/ do
+Then /^I verify the SSH fingerprint for the SFTP server$/ do
   result, _ = @screen.waitAny(["GnomeSSHPermissionError.png",
                               "GnomeSSHProcessExit.png",
                               "GnomeSSHVerificationConfirm.png"],
