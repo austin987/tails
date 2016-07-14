@@ -27,9 +27,7 @@ Then /^I should be able to install a package using apt$/ do
   package = "cowsay"
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
-    $vm.execute("echo #{@sudo_password} | " +
-                "sudo -S apt purge #{package}",
-                :user => LIVE_USER)
+    $vm.execute("apt purge #{package}")
   end
   retry_tor(recovery_proc) do
     Timeout::timeout(120) do
