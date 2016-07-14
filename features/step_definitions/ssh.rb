@@ -135,6 +135,7 @@ Then /^I connect to an SFTP server on the Internet$/ do
     step 'I kill the process "ssh"' if $vm.has_process?("ssh")
     @screen.type(Sikuli::Key.ESC)
     @screen.click("GnomeCloseTopButton.png")
+    @screen.waitVanish("GnomeCloseTopButton.png", 10)
   end
 
   retry_tor(recovery_proc) do
