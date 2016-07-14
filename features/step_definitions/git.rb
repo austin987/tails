@@ -19,7 +19,7 @@ When /^I give Git (\d+) seconds to clone "([\S]+)"$/ do |time_to_wait, repo|
     unless m
       step 'I verify the SSH fingerprint for the Git repository'
     end
-    try_for(time_to_wait.to_i, :msg => 'Git process took too long') {
+    try_for(time_to_wait, :msg => 'Git process took too long') {
       !$vm.has_process?('/usr/bin/git')
     }
     @screen.wait('GitCloneDone.png', 10)
