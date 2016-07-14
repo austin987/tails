@@ -1,6 +1,3 @@
-class SFTPConnectionError < StandardError
-end
-
 require 'socket'
 
 def assert_not_ipaddr(s)
@@ -139,18 +136,7 @@ Then /^I connect to an SFTP server on the Internet$/ do
 end
 
 Then /^I verify the SSH fingerprint for the SFTP server$/ do
-  result, _ = @screen.waitAny(["GnomeSSHPermissionError.png",
-                              "GnomeSSHProcessExit.png",
-                              "GnomeSSHVerificationConfirm.png"],
-                              2*60)
-  case result
-    when 'GnomeSSHPermissionError.png'
-      raise SFTPConnectionError.new("Got permission denied error.")
-    when 'GnomeSSHProcessExit.png'
-      raise SFTPConnectionError.new("Got SSH process exited error..")
-    when 'GnomeSSHVerificationConfirm.png'
-      @screen.click("GnomeSSHVerificationConfirm.png")
-  end
+  @screen.wait_and_click("GnomeSSHVerificationConfirm.png", 2*60)
 end
 
 Then /^I successfully connect to the SFTP server$/ do
