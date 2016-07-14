@@ -14,6 +14,7 @@ end
 When /^I update APT using apt$/ do
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
+    $vm.execute('rm -rf /var/lib/apt/lists/*')
   end
   retry_tor(recovery_proc) do
     Timeout::timeout(900) do
