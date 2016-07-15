@@ -20,7 +20,7 @@ end
 
 Then /^I should be able to install a package using apt$/ do
   package = "cowsay"
-  Timeout::timeout(120) do
+  Timeout::timeout(2*60) do
     $vm.execute_successfully("echo #{@sudo_password} | " +
                              "sudo -S apt install #{package}",
                              :user => LIVE_USER)
@@ -39,7 +39,7 @@ When /^I update APT using Synaptic$/ do
       @screen.type("r", Sikuli::KeyModifier.CTRL)
       @screen.wait('SynapticReloadPrompt.png', 10)
     }
-    try_for(900, :msg => "Took too much time to download the APT data") {
+    try_for(15*60, :msg => "Took too much time to download the APT data") {
       !$vm.execute("pidof /usr/lib/apt/methods/tor+http").success?
     }
     if @screen.exists('SynapticFailure.png')
@@ -68,7 +68,7 @@ Then /^I should be able to install a package using Synaptic$/ do
     @screen.wait_and_click('SynapticApplyButton.png', 10)
     @screen.wait('SynapticApplyPrompt.png', 60)
     @screen.type(Sikuli::Key.ENTER)
-    @screen.wait('SynapticChangesAppliedPrompt.png', 240)
+    @screen.wait('SynapticChangesAppliedPrompt.png', 4*60)
     step "package \"#{package}\" is installed"
   end
 end
