@@ -55,7 +55,7 @@ Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
   recovery_proc = Proc.new do
     step 'I kill the process "synaptic"'
-    $vm.execute("apt-get -y purge #{package}")
+    $vm.execute("apt -y purge #{package}")
     step "I start Synaptic"
   end
   retry_tor(recovery_proc) do
