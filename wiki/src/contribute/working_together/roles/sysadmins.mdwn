@@ -183,6 +183,14 @@ We use Redmine tickets for public discussion and tasks management:
 * purpose: Monitor Tails online services and systems.
 * access: only Tails core developers can read-only the Icingaweb2 interface,
   sysadmins are RW and receive notifications by email.
+* setup: We have one Icinga2 instance installed on a dedicated system
+  used as the master of all our Icinga2 zones. We use a VM on the other
+  bare-metal host as the Icinga2 satellite of our master. Icinga2 agents are
+  installed on every other VM and the host itself. They report back to
+  the satellite, which transmits to the master. We spread the Icinga2
+  configuration with Puppet. This way, we achieve a certain isolation
+  where the master or the satellite have no right to configure agents or
+  run arbitrary commands on them.
 * tools: [[!debpts icinga2 desc="Icinga2"]], [[!debpts icingaweb2]]
 * configurations
   - master:
@@ -195,7 +203,6 @@ We use Redmine tickets for public discussion and tasks management:
     * some configuration in the ecours.tails.boum.org node manifest.
   - satellite:
     * `tails::monitoring::satellite` class in [[!tails_gitweb_repo puppet-tails]],
-    * See Vpn section.
   - agents:
     * `tails::monitoring::agent` class in [[!tails_gitweb_repo puppet-tails]]
 
