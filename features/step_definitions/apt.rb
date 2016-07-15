@@ -30,7 +30,7 @@ end
 
 When /^I update APT using Synaptic$/ do
   recovery_proc = Proc.new do
-    step 'I kill the process "synaptic"' if $vm.has_process?("synaptic")
+    step 'I kill the process "synaptic"'
     step "I start Synaptic"
   end
   retry_tor(recovery_proc) do
@@ -54,7 +54,7 @@ end
 Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
   recovery_proc = Proc.new do
-    step 'I kill the process "synaptic"' if $vm.has_process?("synaptic")
+    step 'I kill the process "synaptic"'
     $vm.execute("apt-get -y purge #{package}")
     step "I start Synaptic"
   end
