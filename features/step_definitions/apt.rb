@@ -40,7 +40,7 @@ When /^I update APT using Synaptic$/ do
       @screen.wait('SynapticReloadPrompt.png', 10)
     }
     try_for(15*60, :msg => "Took too much time to download the APT data") {
-      !$vm.execute("pidof /usr/lib/apt/methods/tor+http").success?
+      !$vm.has_process?("/usr/lib/apt/methods/tor+http")
     }
     if @screen.exists('SynapticFailure.png')
       raise "Updating APT with Synaptic failed."
