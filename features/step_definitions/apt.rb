@@ -45,7 +45,7 @@ When /^I update APT using Synaptic$/ do
     if @screen.exists('SynapticFailure.png')
       raise "Updating APT with Synaptic failed."
     end
-    if !$vm.execute("pidof synaptic").success?
+    if !$vm.has_process?("synaptic")
       raise "Synaptic process vanished, did it segfault again?"
     end
   end
