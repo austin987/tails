@@ -15,6 +15,11 @@ Be careful with what you install.</p>
 
 </div>
 
+[[!toc levels=2]]
+
+Installing additional software packages
+=======================================
+
 Since Tails is amnesic, any additional software package needs to be reinstalled in each working
 session. To install the same software packages automatically at the beginning of every working session use the
 [[<span class="guilabel">Additional software packages</span> persistence feature|doc/first_steps/persistence/configure#additional_software]] instead.
@@ -51,3 +56,34 @@ To install additional software packages:
    automatically.</p>
 
    </div>
+
+Configuring additional APT repositories
+=======================================
+
+Sometimes, you might need to configure additional APT repositories. For
+example, to install packages from the `non-free` section of Debian. To do so:
+
+1. Create an <span class="filename">apt/sources</span> folder in your
+   persistent volume:
+
+       sudo install -d -m 755 /live/persistence/TailsData_unlocked/apt/sources
+
+1. Edit <span class="filename">/live/persistence/TailsData_unlocked/persistence.conf</span>,
+   the configuration of your persistent volume, add add the
+   <span class="filename">apt/sources</span> folder as a persistence
+   feature of type `link`:
+
+       /etc/apt/sources.list.d	source=apt/sources,link
+
+1. Create files for your additional `sources.list` entries in the
+   <span class="filename">apt/sources</span> folder. For example, to add
+   the `non-free` sections of Debian Jessie, backports, and security
+   updates, you can create a file named
+   <span class="filename">/live/persistence/TailsData_unlocked/apt/sources/non-free.list</span>
+   with the following content:
+
+       deb tor+http://ftp.us.debian.org/debian/ jessie non-free
+       deb tor+http://ftp.us.debian.org/debian/ jessie-backports non-free
+       deb tor+http://security.debian.org/ jessie/updates non-free
+
+1. Restart Tails to apply the changes.
