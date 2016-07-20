@@ -73,23 +73,23 @@ Be careful with what you install.</p>
 Sometimes, you might need to configure additional APT repositories. For
 example, to install packages from the `non-free` section of Debian. To do so:
 
-1. Create an <span class="filename">apt/sources</span> folder in your
+1. Create a <span class="filename">sources.list.d</span> folder in your
    persistent volume:
 
-       sudo install -d -m 755 /live/persistence/TailsData_unlocked/apt/sources
+       sudo install -d -m 755 /live/persistence/TailsData_unlocked/sources.list.d
 
 1. Edit <span class="filename">/live/persistence/TailsData_unlocked/persistence.conf</span>,
    the configuration of the persistent volume, as root and add the
-   <span class="filename">apt/sources</span> folder as a persistence
+   <span class="filename">sources.list.d</span> folder as a persistence
    feature of type `link`:
 
-       /etc/apt/sources.list.d	source=apt/sources,link
+       /etc/apt/sources.list.d	source=sources.list.d,link
 
 1. Create files for your additional `sources.list` entries in the
-   <span class="filename">apt/sources</span> folder. For example, to add
+   <span class="filename">sources.list.d</span> folder. For example, to add
    the `non-free` sections of Debian Jessie, backports, and security
    updates, you can create a file named
-   <span class="filename">/live/persistence/TailsData_unlocked/apt/sources/non-free.list</span>
+   <span class="filename">/live/persistence/TailsData_unlocked/sources.list.d/non-free.list</span>
    with the following content:
 
        deb tor+http://ftp.us.debian.org/debian/ jessie non-free
@@ -100,7 +100,7 @@ example, to install packages from the `non-free` section of Debian. To do so:
    `sources.list` to be owned by `root` and only readable by others. For
    example:
 
-       chown root:root /live/persistence/TailsData_unlocked/apt/sources/non-free.list
-       chmod 644 /live/persistence/TailsData_unlocked/apt/sources/non-free.list
+       chown root:root /live/persistence/TailsData_unlocked/sources.list.d/non-free.list
+       chmod 644 /live/persistence/TailsData_unlocked/sources.list.d/non-free.list
 
 1. Restart Tails to apply the changes.
