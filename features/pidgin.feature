@@ -92,6 +92,7 @@ Feature: Chatting anonymously using Pidgin
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
   #10720: Tails Installer freezes on Jenkins
+  #11584
   @check_tor_leaks @fragile
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
