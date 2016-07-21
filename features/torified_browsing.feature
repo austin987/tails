@@ -130,7 +130,7 @@ Feature: Browsing the web using the Tor Browser
     Then I see "TorBrowserSavedStartupPage.png" after at most 10 seconds
     And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
-  #10720
+  #10720, #11585
   @fragile
   Scenario: Persistent browser bookmarks
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
