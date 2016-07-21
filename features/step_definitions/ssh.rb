@@ -60,6 +60,7 @@ end
 
 Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
   @screen.wait("SSHFingerprint.png", 60)
+  sleep 1 # brief pause to ensure that the following keystrokes do not get lost
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
@@ -95,8 +96,17 @@ When /^I connect to an SSH server on the (Internet|LAN)$/ do |location|
   cmd = "ssh #{@ssh_username}@#{@ssh_host} #{ssh_port_suffix}"
 
   step 'process "ssh" is not running'
-  step "I run \"#{cmd}\" in GNOME Terminal"
-  step 'process "ssh" is running within 10 seconds'
+
+  recovery_proc = Proc.new do
+    step 'I kill the process "ssh"' if $vm.has_process?("ssh")
+    step 'I run "clear" in GNOME Terminal'
+  end
+
+  retry_tor(recovery_proc) do
+    step "I run \"#{cmd}\" in GNOME Terminal"
+    step 'process "ssh" is running within 10 seconds'
+    step 'I verify the SSH fingerprint for the SSH server'
+  end
 end
 
 Then /^I have sucessfully logged into the SSH server$/ do
@@ -105,17 +115,29 @@ end
 
 Then /^I connect to an SFTP server on the Internet$/ do
   read_and_validate_ssh_config "SFTP"
+
   @sftp_port ||= 22
   @sftp_port = @sftp_port.to_s
-  step 'I start "Files" via the GNOME "Accessories" applications menu'
-  @screen.wait_and_click("GnomeFilesConnectToServer.png", 10)
-  @screen.wait("GnomeConnectToServerWindow.png", 10)
-  @screen.type("sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port)
-  @screen.wait_and_click("GnomeConnectToServerConnectButton.png", 10)
+
+  recovery_proc = Proc.new do
+    step 'I kill the process "ssh"'
+    @screen.type(Sikuli::Key.ESC)
+    @screen.click("GnomeCloseTopButton.png")
+    @screen.waitVanish("GnomeCloseTopButton.png", 10)
+  end
+
+  retry_tor(recovery_proc) do
+    step 'I start "Files" via the GNOME "Accessories" applications menu'
+    @screen.wait_and_click("GnomeFilesConnectToServer.png", 10)
+    @screen.wait("GnomeConnectToServerWindow.png", 10)
+    @screen.type("sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port)
+    @screen.wait_and_click("GnomeConnectToServerConnectButton.png", 10)
+    step "I verify the SSH fingerprint for the SFTP server"
+  end
 end
 
 Then /^I verify the SSH fingerprint for the SFTP server$/ do
-  @screen.wait_and_click("GnomeSSHVerificationConfirm.png", 60)
+  @screen.wait_and_click("GnomeSSHVerificationConfirm.png", 2*60)
 end
 
 Then /^I successfully connect to the SFTP server$/ do
