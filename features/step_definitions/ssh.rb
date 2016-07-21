@@ -60,6 +60,7 @@ end
 
 Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
   @screen.wait("SSHFingerprint.png", 60)
+  sleep 1 # brief pause to ensure that the following keystrokes do not get lost
   @screen.type('yes' + Sikuli::Key.ENTER)
 end
 
