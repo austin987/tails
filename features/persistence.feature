@@ -16,7 +16,6 @@ Feature: Tails persistence
     Then Tails is running from USB drive "__internal"
     And all persistence presets are enabled
     And all persistent directories have safe access rights
-    And the persistence compatibility symlink points to the right directory
     When I disable the first persistence preset
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with read-only persistence enabled

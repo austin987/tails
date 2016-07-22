@@ -506,14 +506,6 @@ Then /^all persistent directories(| from the old Tails version) have safe access
   end
 end
 
-Then /^the persistence compatibility symlink points to the right directory$/ do
-  assert($vm.execute("test -L /lib/live/mount/persistence").success?,
-         "/lib/live/mount/persistence is not a symlink")
-  symlink_destination = $vm.execute("readlink -f /lib/live/mount/persistence").stdout.chomp
-  assert_equal("/live/persistence", symlink_destination,
-               "/lib/live/mount/persistence does not point to /live/persistence")
-end
-
 When /^I write some files expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
