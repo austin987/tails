@@ -1,0 +1,49 @@
+#! /bin/sh
+
+set -e
+set -u
+
+echo "Building the aufs module"
+
+. /usr/share/amnesia/build/variables
+
+apt-get install --yes \
+    build-essential \
+    "linux-source-${KERNEL_SOURCE_VERSION}"
+
+# aufs build needs fs/mount.h, which is in linux-source-* but not
+# in linux-headers-*, so we'll symlink it.
+tar --directory=/usr/src \
+    -xf "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}.tar."*
+
+for arch in 686 amd64 ; do
+    case "$arch" in
+        686)
+            linux_headers_arch_pkg="linux-headers-${KERNEL_VERSION}-686"
+            linux_headers_common_pkg="linux-headers-${KERNEL_VERSION}-common"
+            ;;
+        amd64)
+            linux_headers_arch_pkg="linux-headers-${KERNEL_VERSION}-amd64:amd64"
+            linux_headers_common_pkg="linux-headers-${KERNEL_VERSION}-common:amd64"
+            ;;
+        *)
+            exit 1
+    esac
+    apt-get install --yes "$linux_headers_arch_pkg" "$linux_headers_common_pkg"
+    ln -s \
+        "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}/fs" \
+        "/usr/src/linux-headers-${KERNEL_VERSION}-${arch}/fs"
+    (
+        cd /usr/src/aufs4-standalone
+        perl -pi -E \
+            's{\A CONFIG_AUFS_DEBUG \s* = \s* y \z}{CONFIG_AUFS_DEBUG =}xms' \
+            config.mk
+        KDIR="/usr/src/linux-headers-${KERNEL_VERSION}-${arch}"
+        make clean   KDIR="$KDIR"
+        make install KDIR="$KDIR"
+    )
+    depmod "${KERNEL_VERSION}-${arch}"
+    apt-get remove --yes "$linux_headers_arch_pkg" "$linux_headers_common_pkg"
+done
+rm -r /usr/src/aufs4-standalone
+rm -r "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}"

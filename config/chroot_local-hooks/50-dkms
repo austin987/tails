@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -u
 
 echo "Building VirtualBox guest modules"
 
@@ -9,57 +10,20 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
 
-gcc_version=5
-
-# Install fake linux-compiler-gcc-4.8-x86 (linux-headers-3.16-*
-# depends on linux-compiler-gcc-4.8-x86, but Stretch hasn't GCC 4.8)
-tmp="$(mktemp -d)"
-apt-get install --yes equivs
-REAL_COMPILER_PKG_VERSION=$(apt-cache policy linux-compiler-gcc-4.8-x86 | awk '/ +Candidate:/ {print $2}')
-FAKE_COMPILER_PKG_VERSION=${REAL_COMPILER_PKG_VERSION}+tails1
-cat > "${tmp}"/linux-compiler-gcc-4.8-x86.control << EOF
-Section: kernel
-Priority: optional
-Homepage: https://tails.boum.org/
-Standards-Version: 3.9.6
-
-Package: linux-compiler-gcc-4.8-x86
-Version: ${FAKE_COMPILER_PKG_VERSION}
-Maintainer: Tails developers <tails@boum.org>
-Architecture: i386
-Depends: gcc-${gcc_version}
-Description: Compiler for Linux on x86 (meta-package)
- This package depends on gcc 5 of the appropriate architecture for Linux
- on amd64, i386 and x32.
- .
- This makes it possible to install linux-headers-3.16-* on Stretch.
-EOF
-(
-   cd "${tmp}"
-   equivs-build "${tmp}"/linux-compiler-gcc-4.8-x86.control
-   dpkg -i "${tmp}"/linux-compiler-gcc-4.8-x86_"${FAKE_COMPILER_PKG_VERSION}"_i386.deb
-)
-rm -R "${tmp}"
+. /usr/share/amnesia/build/variables
 
 # the -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes build-essential dkms dpatch
-apt-get install --yes gcc-${gcc_version}
-apt-get install --yes virtualbox-guest-utils virtualbox-guest-dkms virtualbox-guest-x11
+apt-get install --yes build-essential dkms
 
-# Have the modules built for every installed kernel
-for KERNEL in /boot/vmlinuz-* ; do
-   KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-   MODULES_VERSION="$(dpkg-query -W -f='${Version\n}' virtualbox-guest-dkms)"
+# Note: we only build for the 32-bit kernel, since building for 64-bit is too painful
+# with multiarch; and anyway, the 64-bit kernel module doesn't play well with
+# a 32-bit userspace (https://www.virtualbox.org/ticket/8336), which is why
+# we instruct users to set up a 32-bit VM.
 
-   # Installing the headers should trigger the building of the modules for that kernel
-   apt-get install --yes linux-headers-$KERNEL_VERSION
-   # Only build and install if it was not done already
-   if [ ! "$(dkms status -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION)" ]; then
-      dkms build -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
-      dkms install -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
-   fi
-
-done
+# Installing the headers triggers the building of the modules for that kernel
+apt-get install --yes \
+    "linux-headers-${KERNEL_VERSION}-686" \
+    virtualbox-guest-dkms
 
 # clean the build directory
 # rm -r /var/lib/dkms/virtualbox-guest/
