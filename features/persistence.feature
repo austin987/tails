@@ -1,4 +1,5 @@
-@product
+#10720: Tails Installer freezes on Jenkins
+@product @fragile
 Feature: Tails persistence
   As a Tails user
   I want to use Tails persistence feature
