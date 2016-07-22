@@ -1,5 +1,4 @@
-#10720: Tails Installer freezes on Jenkins
-@product @check_tor_leaks @fragile
+@product @check_tor_leaks
 Feature: Electrum Bitcoin client
   As a Tails user
   I might want to use a Bitcoin client
@@ -11,6 +10,8 @@ Feature: Electrum Bitcoin client
     But persistence for "electrum" is not enabled
     Then I see a warning that Electrum is not persistent
 
+  #10720: Tails Installer freezes on Jenkins
+  @fragile
   Scenario: Using a persistent Electrum configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
