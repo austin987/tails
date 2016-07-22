@@ -12,18 +12,30 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
 end
 
 When /^I update APT using apt$/ do
-  Timeout::timeout(30*60) do
-    $vm.execute_successfully("echo #{@sudo_password} | " +
-                             "sudo -S apt update", :user => LIVE_USER)
+  recovery_proc = Proc.new do
+    step 'I kill the process "apt"'
+    $vm.execute('rm -rf /var/lib/apt/lists/*')
+  end
+  retry_tor(recovery_proc) do
+    Timeout::timeout(15*60) do
+      $vm.execute_successfully("echo #{@sudo_password} | " +
+                               "sudo -S apt update", :user => LIVE_USER)
+    end
   end
 end
 
 Then /^I should be able to install a package using apt$/ do
   package = "cowsay"
-  Timeout::timeout(120) do
-    $vm.execute_successfully("echo #{@sudo_password} | " +
-                             "sudo -S apt install #{package}",
-                             :user => LIVE_USER)
+  recovery_proc = Proc.new do
+    step 'I kill the process "apt"'
+    $vm.execute("apt purge #{package}")
+  end
+  retry_tor(recovery_proc) do
+    Timeout::timeout(2*60) do
+      $vm.execute_successfully("echo #{@sudo_password} | " +
+                               "sudo -S apt install #{package}",
+                               :user => LIVE_USER)
+    end
   end
   step "package \"#{package}\" is installed"
 end
