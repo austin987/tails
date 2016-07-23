@@ -60,7 +60,7 @@ Feature: Using Totem
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     And the file "/home/amnesia/Persistent/video.mp4" exists
     When I open "/home/amnesia/Persistent/video.mp4" with Totem
-    Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
+    Then I see "SampleLocalMp4VideoFrame.png" after at most 20 seconds
     Given I close Totem
     And the file "/home/amnesia/.gnupg/video.mp4" exists
     And I start monitoring the AppArmor log of "/usr/bin/totem"
