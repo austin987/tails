@@ -1,13 +1,13 @@
-[[!meta title="Adding Icinga2 checks in the Tails infrastructure"]]
+[[!meta title="How to add Icinga2 checks in the Tails infrastructure"]]
 
-See [[our sysadmin contribution page|contribute/working_together/roles/sysadmins]]
-for a description of our Icinga2 setup.
+First, see the
+[[description of our Icinga2 setup|contribute/working_together/roles/sysadmins#icinga2]].
 
 The [upstream Icinga2 Puppet
 module](https://git.icinga.org/?p=icinga2.git), which may help in
 simplifying our Puppet manifest, requires to use the puppetdb backend to
 support its complex exported resources. In Debian Jessie, exported
-resources are only supported through the Active Record backend, so we
+resources are only supported through the Active Records backend, so we
 can't use this Puppet module right now. Until PuppetDB can be
 used (possibly in Stretch), we have to write more Puppet code to add 
 new checks.
@@ -69,9 +69,8 @@ In this case, the exported resources for this kind of service checks
 need to be collected on the master, satellite and concerned system(s).
 That's what we do in the `tails::monitoring::{master,satellite,agent}`
 classes for the `tails::monitoring::service::memory` check in
-[[!tails_gitweb_repo puppet-tails]]. Pay attention to the parameter
-passed at the exported resources collection: the `$nodename` and
-`$tag` parameter must be set.
+[[!tails_gitweb_repo puppet-tails]]. Make sure that the `$nodename` and
+`$tag` parameters are set when collecting such exported resources.
 
 # Deploy
 
