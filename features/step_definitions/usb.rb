@@ -506,15 +506,19 @@ Then /^all persistent directories(| from the old Tails version) have safe access
   end
 end
 
-When /^I write some files expected to persist$/ do
-  persistent_mounts.each do |_, dir|
-    owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
-    assert($vm.execute("touch #{dir}/XXX_persist", :user => owner).success?,
-           "Could not create file in persistent directory #{dir}")
+When /^I write some (dotfile|files) expected to persist$/ do |filetype|
+  case filetype
+  when "files"
+    persistent_mounts.each do |_, dir|
+      owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
+      assert($vm.execute("touch #{dir}/XXX_persist", :user => owner).success?,
+             "Could not create file in persistent directory #{dir}")
+    end
+  when "dotfile"
+    assert($vm.execute("touch /live/persistence/TailsData_unlocked/dotfiles/.XXX_persist",
+                       :user => LIVE_USER).success?,
+           "Could not create a file in the dotfiles persistence.")
   end
-  assert($vm.execute("touch /live/persistence/TailsData_unlocked/dotfiles/.XXX_persist",
-                     :user => LIVE_USER).success?,
-         "Could not create a file in the dotfiles persistence.")
 end
 
 When /^I remove some files expected to persist$/ do
@@ -538,25 +542,28 @@ When /^I take note of which persistence presets are available$/ do
   $remembered_persistence_dirs = persistent_dirs
 end
 
-Then /^the expected persistent files(| created with the old Tails version) are present in the filesystem$/ do |old_tails|
-  if old_tails.empty?
-    expected_mounts = persistent_mounts
+Then /^the expected persistent (dotfile|files)(| created with the old Tails version) (are|is) present in the filesystem$/ do |filetype, old_tails, _|
+  case filetype
+  when "files"
+    if old_tails.empty?
+      expected_mounts = persistent_mounts
+    else
+      assert_not_nil($remembered_persistence_mounts)
+      expected_mounts = $remembered_persistence_mounts
+    end
+    expected_mounts.each do |_, dir|
+      assert($vm.execute("test -e #{dir}/XXX_persist").success?,
+             "Could not find expected file in persistent directory #{dir}")
+      assert(!$vm.execute("test -e #{dir}/XXX_gone").success?,
+             "Found file that should not have persisted in persistent directory #{dir}")
+    end
+  when "dotfile"
     expected_dirs = persistent_dirs
-  else
-    assert_not_nil($remembered_persistence_mounts)
-    expected_mounts = $remembered_persistence_mounts
-    expected_dirs = $remembered_persistence_dirs
+    assert($vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist").success?,
+           "Could not find expected persistent dotfile link.")
+    assert($vm.execute("test -e $(readlink -f #{expected_dirs['dotfiles']}/.XXX_persist)").success?,
+           "Could not find expected persistent dotfile link target.")
   end
-  expected_mounts.each do |_, dir|
-    assert($vm.execute("test -e #{dir}/XXX_persist").success?,
-           "Could not find expected file in persistent directory #{dir}")
-    assert(!$vm.execute("test -e #{dir}/XXX_gone").success?,
-           "Found file that should not have persisted in persistent directory #{dir}")
-  end
-  assert($vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist").success?,
-         "Could not find expected persitent dotfile link.")
-  assert($vm.execute("test -e $(readlink -f #{expected_dirs['dotfiles']}/.XXX_persist)").success?,
-         "Could not find expected persitent dotfile link target.")
 end
 
 Then /^only the expected files are present on the persistence partition on USB drive "([^"]+)"$/ do |name|
