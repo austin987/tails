@@ -56,7 +56,7 @@ Feature: Tails persistence
     When I delete the persistent partition
     Then there is no persistence partition on USB drive "__internal"
 
-  Scenario: Dotfiles persitence is working
+  Scenario: Dotfiles persistence
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     When I write some dotfile expected to persist
     And I shutdown Tails and wait for the computer to power off
