@@ -60,5 +60,5 @@ Feature: Tails persistence
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     When I write some dotfile expected to persist
     And I shutdown Tails and wait for the computer to power off
-    Given I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the expected persistent dotfile is present in the filesystem
