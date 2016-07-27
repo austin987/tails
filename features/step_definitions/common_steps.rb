@@ -312,13 +312,13 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
     begin
       tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
       if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
-        @screen.find('UEFIBootLoaderSetup.png')
+        @screen.wait('UEFIBootLoaderSetup.png', 30)
         Process.kill("TSTP", tab_spammer.pid)
         @screen.type(Sikuli::Key.ENTER)
         Process.kill("CONT", tab_spammer.pid)
         dealt_with_uefi_setup = true
       end
-      @screen.find(boot_menu_cmdline_image)
+      @screen.wait(boot_menu_cmdline_image, 15)
     rescue FindFailed => e
       if @screen.exists('TailsBooting.png') || @screen.exists('TailsGreeter.png')
         debug_log('We missed the boot menu before we could deal with it, ' +
