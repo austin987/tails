@@ -400,7 +400,7 @@ end
 Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   bus = bus.downcase
   case bus
-  when "ide"
+  when "sata"
     expected_bus = "ata"
   else
     expected_bus = bus
