@@ -189,7 +189,7 @@ end
 
 Given /^I create a persistent partition$/ do
   step 'I start "Configure persistent volume" via the GNOME "Tails" applications menu'
-  @screen.wait('PersistenceWizardStart.png', 20)
+  @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
   step "I enable all persistence presets"
@@ -604,7 +604,7 @@ end
 
 When /^I delete the persistent partition$/ do
   step 'I start "Delete persistent volume" via the GNOME "Tails" applications menu'
-  @screen.wait("PersistenceWizardDeletionStart.png", 20)
+  @screen.wait("PersistenceWizardDeletionStart.png", 120)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
 end
