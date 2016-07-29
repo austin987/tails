@@ -4,6 +4,8 @@ Feature: Browsing the web using the Tor Browser
   when I browse the web using the Tor Browser
   all Internet traffic should flow only through Tor
 
+  #11591, #11592
+  @fragile
   Scenario: The Tor Browser cannot access the LAN
     Given I have started Tails from DVD and logged in and the network is connected
     And a web server is running on the LAN
@@ -14,7 +16,8 @@ Feature: Browsing the web using the Tor Browser
     Then the Tor Browser shows the "Unable to connect" error
     And no traffic was sent to the web server on the LAN
 
-  @check_tor_leaks
+  #11592
+  @check_tor_leaks @fragile
   Scenario: The Tor Browser directory is usable
     Given I have started Tails from DVD and logged in and the network is connected
     Then the amnesiac Tor Browser directory exists
@@ -25,6 +28,7 @@ Feature: Browsing the web using the Tor Browser
     Then I can save the current page as "index.html" to the default downloads directory
     And I can print the current page as "output.pdf" to the default downloads directory
 
+  #11592
   @check_tor_leaks @fragile
   Scenario: Downloading files with the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
@@ -35,6 +39,7 @@ Feature: Browsing the web using the Tor Browser
     When I save the file to the default Tor Browser download directory
     Then the file is saved to the default Tor Browser download directory
 
+  #11592
   @check_tor_leaks @fragile
   Scenario: Playing HTML5 audio
     Given I have started Tails from DVD and logged in and the network is connected
@@ -45,6 +50,8 @@ Feature: Browsing the web using the Tor Browser
     And I click the HTML5 play button
     And 1 application is playing audio after 10 seconds
 
+  #11592
+  @fragile
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given I have started Tails from DVD and logged in and the network is connected
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
@@ -96,6 +103,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser has started
     Then the Tor Browser uses all expected TBB shared libraries
 
+  #11592
   @check_tor_leaks @fragile
   Scenario: The Tor Browser's "New identity" feature works as expected
     Given I have started Tails from DVD and logged in and the network is connected
@@ -107,13 +115,15 @@ Feature: Browsing the web using the Tor Browser
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page
 
+  #11592
+  @fragile
   Scenario: The Tor Browser should not have any plugins enabled
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser has started and loaded the startup page
     Then the Tor Browser has no plugins installed
 
-  #10720
+  #10720, #11592
   @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in

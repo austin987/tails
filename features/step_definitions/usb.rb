@@ -179,7 +179,7 @@ Given /^I enable all persistence presets$/ do
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.SPACE)
   end
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
-  @screen.wait('PersistenceWizardDone.png', 30)
+  @screen.wait('PersistenceWizardDone.png', 60)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
@@ -194,7 +194,7 @@ end
 
 Given /^I create a persistent partition$/ do
   step 'I start "Configure persistent volume" via the GNOME "Tails" applications menu'
-  @screen.wait('PersistenceWizardStart.png', 20)
+  @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
   step "I enable all persistence presets"
@@ -517,6 +517,12 @@ When /^I write some files expected to persist$/ do
   end
 end
 
+When /^I write some dotfile expected to persist$/ do
+  assert($vm.execute("touch /live/persistence/TailsData_unlocked/dotfiles/.XXX_persist",
+                     :user => LIVE_USER).success?,
+         "Could not create a file in the dotfiles persistence.")
+end
+
 When /^I remove some files expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
@@ -551,6 +557,14 @@ Then /^the expected persistent files(| created with the old Tails version) are p
     assert(!$vm.execute("test -e #{dir}/XXX_gone").success?,
            "Found file that should not have persisted in persistent directory #{dir}")
   end
+end
+
+Then /^the expected persistent dotfile is present in the filesystem$/ do
+  expected_dirs = persistent_dirs
+  assert($vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist").success?,
+         "Could not find expected persistent dotfile link.")
+  assert($vm.execute("test -e $(readlink -f #{expected_dirs['dotfiles']}/.XXX_persist)").success?,
+           "Could not find expected persistent dotfile link target.")
 end
 
 Then /^only the expected files are present on the persistence partition on USB drive "([^"]+)"$/ do |name|
@@ -593,7 +607,7 @@ end
 
 When /^I delete the persistent partition$/ do
   step 'I start "Delete persistent volume" via the GNOME "Tails" applications menu'
-  @screen.wait("PersistenceWizardDeletionStart.png", 20)
+  @screen.wait("PersistenceWizardDeletionStart.png", 120)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
 end
