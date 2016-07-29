@@ -308,7 +308,7 @@ end
 Given /^I enable more Tails Greeter options$/ do
   match = @screen.find('TailsGreeterMoreOptions.png')
   @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 10)
+  @screen.wait_and_click('TailsGreeterForward.png', 20)
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
