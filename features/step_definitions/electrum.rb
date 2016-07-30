@@ -6,7 +6,7 @@ When /^a bitcoin wallet is (|not )present$/ do |existing|
   wallet = "/home/#{LIVE_USER}/.electrum/wallets/default_wallet"
   case existing
   when ""
-    step "the file \"#{wallet}\" exists after at most 10 seconds"
+    step "the file \"#{wallet}\" exists after at most 30 seconds"
   when "not "
     step "the file \"#{wallet}\" does not exist"
   else
