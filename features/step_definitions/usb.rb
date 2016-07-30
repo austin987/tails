@@ -174,7 +174,7 @@ Given /^I enable all persistence presets$/ do
     @screen.type(Sikuli::Key.TAB + Sikuli::Key.SPACE)
   end
   @screen.wait_and_click('PersistenceWizardSave.png', 10)
-  @screen.wait('PersistenceWizardDone.png', 30)
+  @screen.wait('PersistenceWizardDone.png', 60)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
@@ -189,7 +189,7 @@ end
 
 Given /^I create a persistent partition$/ do
   step 'I start "Configure persistent volume" via the GNOME "Tails" applications menu'
-  @screen.wait('PersistenceWizardStart.png', 20)
+  @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
   step "I enable all persistence presets"
@@ -402,16 +402,14 @@ Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   end
   assert_equal(expected_bus, boot_device_type)
   actual_dev = boot_device
-  # The boot partition differs between a "normal" install using the
-  # USB installer and isohybrid installations
-  expected_dev_normal = $vm.disk_dev(name) + "1"
-  expected_dev_isohybrid = $vm.disk_dev(name) + "4"
-  assert(actual_dev == expected_dev_normal ||
-         actual_dev == expected_dev_isohybrid,
+  # The boot partition differs between an using Tails installer and
+  # isohybrids. There's also a strange case isohybrids are thought to
+  # be booting from the "raw" device, and not a partition of it
+  # (#10504).
+  expected_devs = ['', '1', '4'].map { |e| $vm.disk_dev(name) + e }
+  assert(expected_devs.include?(actual_dev),
          "We are running from device #{actual_dev}, but for #{bus} drive " +
-         "'#{name}' we expected to run from either device " +
-         "#{expected_dev_normal} (when installed via the USB installer) " +
-         "or #{expected_dev_isohybrid} (when installed from an isohybrid)")
+         "'#{name}' we expected to run from one of #{expected_devs}")
 end
 
 Then /^the boot device has safe access rights$/ do
@@ -514,6 +512,12 @@ When /^I write some files expected to persist$/ do
   end
 end
 
+When /^I write some dotfile expected to persist$/ do
+  assert($vm.execute("touch /live/persistence/TailsData_unlocked/dotfiles/.XXX_persist",
+                     :user => LIVE_USER).success?,
+         "Could not create a file in the dotfiles persistence.")
+end
+
 When /^I remove some files expected to persist$/ do
   persistent_mounts.each do |_, dir|
     owner = $vm.execute("stat -c %U #{dir}").stdout.chomp
@@ -548,6 +552,14 @@ Then /^the expected persistent files(| created with the old Tails version) are p
     assert(!$vm.execute("test -e #{dir}/XXX_gone").success?,
            "Found file that should not have persisted in persistent directory #{dir}")
   end
+end
+
+Then /^the expected persistent dotfile is present in the filesystem$/ do
+  expected_dirs = persistent_dirs
+  assert($vm.execute("test -L #{expected_dirs['dotfiles']}/.XXX_persist").success?,
+         "Could not find expected persistent dotfile link.")
+  assert($vm.execute("test -e $(readlink -f #{expected_dirs['dotfiles']}/.XXX_persist)").success?,
+           "Could not find expected persistent dotfile link target.")
 end
 
 Then /^only the expected files are present on the persistence partition on USB drive "([^"]+)"$/ do |name|
@@ -590,7 +602,7 @@ end
 
 When /^I delete the persistent partition$/ do
   step 'I start "Delete persistent volume" via the GNOME "Tails" applications menu'
-  @screen.wait("PersistenceWizardDeletionStart.png", 20)
+  @screen.wait("PersistenceWizardDeletionStart.png", 120)
   @screen.type(" ")
   @screen.wait("PersistenceWizardDone.png", 120)
 end

@@ -1,4 +1,5 @@
-@product
+#11606
+@product @fragile
 Feature: Using Tails with Tor pluggable transports
   As a Tails user
   I want to circumvent censorship of Tor by using Tor pluggable transports
@@ -11,6 +12,8 @@ Feature: Using Tails with Tor pluggable transports
     Then the Tor Launcher autostarts
     And the Tor Launcher uses all expected TBB shared libraries
 
+  #11589
+  @fragile
   Scenario: Using bridges
     When I configure some bridge pluggable transports in Tor Launcher
     Then Tor is ready

@@ -17,12 +17,12 @@ Given(/^I disable Tails' firewall$/) do
 end
 
 When(/^I do a TCP DNS lookup of "(.*?)"$/) do |host|
-  lookup = $vm.execute("host -T #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
+  lookup = $vm.execute("host -T -t A #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I do a UDP DNS lookup of "(.*?)"$/) do |host|
-  lookup = $vm.execute("host #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
+  lookup = $vm.execute("host -t A #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
