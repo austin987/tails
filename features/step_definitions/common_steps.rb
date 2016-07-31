@@ -320,12 +320,10 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
       end
       @screen.wait(boot_menu_cmdline_image, 15)
     rescue FindFailed => e
-      if @screen.exists('TailsBooting.png') || @screen.exists('TailsGreeter.png')
-        debug_log('We missed the boot menu before we could deal with it, ' +
-                  'resetting...')
-        $vm.reset
-        dealt_with_uefi_setup = false
-      end
+      debug_log('We missed the boot menu before we could deal with it, ' +
+                'resetting...')
+      dealt_with_uefi_setup = false
+      $vm.reset
       retry
     ensure
       Process.kill("TERM", tab_spammer.pid)
