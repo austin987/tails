@@ -162,7 +162,8 @@ Import a new set of Tor Browser tarballs
        cat "$TBB_SHA256SUMS_FILE" | while read expected_sha256 tarball; do
           (
              cd "$TMPDIR"
-             curl --remote-name "${TBB_TARBALLS_BASE_URL}/${tarball}"
+             curl --remote-name --continue-at - \
+                "${TBB_TARBALLS_BASE_URL}/${tarball}"
           )
        done
        (cd "$TMPDIR" && sha256sum -c "$TBB_SHA256SUMS_FILE")
