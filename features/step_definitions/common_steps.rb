@@ -326,7 +326,7 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
         $vm.reset
         dealt_with_uefi_setup = false
       end
-      raise e
+      retry
     ensure
       Process.kill("TERM", tab_spammer.pid)
       tab_spammer.close
