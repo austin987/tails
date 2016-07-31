@@ -182,6 +182,18 @@ Commit and push your changes
 	git annex sync && \
 	git annex copy --to origin -- "${VERSION}"
 
+Wait for the synchronization
+----------------------------
+
+Once you've gone through these steps, a cronjob that runs every
+5 minutes will download the tarballs and make them available on
+<http://torbrowser-archive.tails.boum.org/>.
+
+Wait for this to happen before you proceed with the next steps.
+
+In the meantime, you might want to import the new Tor Browser tarballs
+into your `apt-cacher-ng` local cache.
+
 Adjust the URL in the main Git repository
 -----------------------------------------
 
@@ -190,15 +202,3 @@ Adjust the URL in the main Git repository
          config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
     git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
         -m "Fetch Tor Browser from our own archive."
-
-Wait for the synchronization
-----------------------------
-
-Once you've gone through these steps, a cronjob that runs every
-5 minutes will download the tarballs and make them available on
-<http://torbrowser-archive.tails.boum.org/>.
-
-Wait for this to happen before you can build Tails using the new URL.
-
-In the meantime, you might want to import the new Tor Browser tarballs
-into your `apt-cacher-ng` local cache.
