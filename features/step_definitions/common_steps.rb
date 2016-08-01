@@ -330,15 +330,10 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
       tab_spammer.close
     end
   end
-  # Ensure that we're back at the boot splash
-  @screen.type(Sikuli::Key.ESC)
-  @screen.wait(boot_menu_tab_msg_image, 5)
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
   step 'Tails is at the boot menu' + (reboot ? ' after rebooting' : '')
-  @screen.type(Sikuli::Key.TAB)
-  @screen.wait(boot_menu_cmdline_image, 10)
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 30*60)
