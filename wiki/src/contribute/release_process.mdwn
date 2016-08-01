@@ -34,6 +34,7 @@ the scripts snippets found on this page:
   Git repository.
 * `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
   `perl5lib` Git repository.
+* `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 
 Pre-freeze
 ==========
@@ -731,12 +732,11 @@ rsync.lizard:
         scp -3 -r \
             bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-i386-$VERSION \
             rsync.lizard:
-    # set DIST to either 'alpha' (for RC:s) or 'stable' (for actual releases)
     ssh rsync.lizard << EOF
-      chown -R root:rsync_tails \
+      sudo chown -R root:rsync_tails \
          tails-i386-$VERSION \
          Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
-      chmod -R u=rwX,go=rX \
+      sudo chmod -R u=rwX,go=rX \
          tails-i386-$VERSION \
          Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
       sudo mv tails-i386-$VERSION \
@@ -776,10 +776,6 @@ If preparing a final release
 ----------------------------
 
 Skip this part if preparing a RC.
-
-In order to get any new documentation into the website, merge either
-`stable` or `testing` (depending on which release you just did) into
-`master`.
 
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
@@ -840,8 +836,8 @@ in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
 image to be released was *built*. Including:
 
-- the list of CVE fixed in Linux since the one shipped in the previous
-  release of Tails:
+- if we are shipping Linux from testing/sid, the list of CVE fixed in
+  Linux since the one shipped in the previous release of Tails:
   <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/stable_changelog>
 - the list of DSA fixed in packages we ship since those that were in
   the previous release of Tails: <https://www.debian.org/security/#DSAS>
@@ -901,9 +897,9 @@ Testing
    of bandwidth.
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO, pointing them to the up-to-date mirror you've found previously.
-1. Set up a Gobby document and copy the [[manual test
+1. Set up a pad and copy the [[manual test
    suite|contribute/release_process/test]] in it.
-1. Email to <tails@boum.org> and potential contributors (see
+1. Email <tails@boum.org> and potential contributors (see
    `manual_testers.mdwn` in the internal Git repository) that tests
    may start:
    - point them to the up-to-date mirror you've found previously
