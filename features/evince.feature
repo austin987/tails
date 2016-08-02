@@ -45,6 +45,7 @@ Feature: Using Evince
     And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
 
   #10720: Tails Installer freezes on Jenkins
+  #10994
   @fragile
   Scenario: I can view and print a PDF file stored in persistent /home/amnesia/Persistent
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
