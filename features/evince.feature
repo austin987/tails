@@ -44,6 +44,8 @@ Feature: Using Evince
     # as /lib/live/mount/overlay.
     And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
 
+  #10994
+  @fragile
   Scenario: I can view and print a PDF file stored in persistent /home/amnesia/Persistent
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/Persistent" as user "amnesia"
