@@ -992,12 +992,12 @@ this release.
                 echo "Failed to fetch ${url} so manually investigate #${ticket}" >&2
                 continue
             fi
-            status=$(echo "${url_content}" | \
+            ticket_status=$(echo "${url_content}" | \
                 sed -n 's,^.*<th class="status">Status:</th><td class="status">\([^<]\+\)</td>.*$,\1,p')
-            if [ "${status}" != "New" ] && \
-               [ "${status}" != "Confirmed" ] && \
-               [ "${status}" != "In Progress" ]; then
-                echo "It seems ticket #${ticket} has been fixed (Status: ${status}) so please find all instances in the wiki and fix them. Ticket URL: ${url}"
+            if [ "${ticket_status}" != "New" ] && \
+               [ "${ticket_status}" != "Confirmed" ] && \
+               [ "${ticket_status}" != "In Progress" ]; then
+                echo "It seems ticket #${ticket} has been fixed (Status: ${ticket_status}) so please find all instances in the wiki and fix them. Ticket URL: ${url}"
             fi
         done
 
