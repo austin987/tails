@@ -55,6 +55,7 @@ Feature: Installing Tails to a USB drive
     And there is no persistence partition on USB drive "__internal"
 
   #10720: Tails Installer freezes on Jenkins
+  #11583
   @fragile
   Scenario: Booting Tails from a USB drive in UEFI mode
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
