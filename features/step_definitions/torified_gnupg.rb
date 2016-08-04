@@ -108,7 +108,7 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = Proc.new do
-    # The versions of Seahorse in Wheezy and Jessie will abort with a
+    # The version of Seahorse in Jessie will abort with a
     # segmentation fault whenever there's any sort of network error while
     # syncing keys. This will usually happens after clicking away the error
     # message. This does not appear to be a problem in Stretch.
