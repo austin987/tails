@@ -308,7 +308,7 @@ end
 Given /^I enable more Tails Greeter options$/ do
   match = @screen.find('TailsGreeterMoreOptions.png')
   @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 10)
+  @screen.wait_and_click('TailsGreeterForward.png', 20)
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
@@ -326,7 +326,7 @@ end
 Given /^Tails Greeter has dealt with the sudo password$/ do
   f1 = "/etc/sudoers.d/tails-greeter"
   f2 = "#{f1}-no-password-lecture"
-  try_for(30) {
+  try_for(120) {
     $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
   }
 end
@@ -613,7 +613,7 @@ end
 
 When /^I start and focus GNOME Terminal$/ do
   step 'I start "Terminal" via the GNOME "Utilities" applications menu'
-  @screen.wait('GnomeTerminalWindow.png', 20)
+  @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
