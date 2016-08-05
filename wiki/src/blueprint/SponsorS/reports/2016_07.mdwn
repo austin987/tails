@@ -48,61 +48,52 @@ XXX: [[!tails_ticket 11588]], [[!tails_ticket 10720]],
 We implemented retries on transient network failures in a bunch of the
 features of our test suite that were subject to it:
 
-- in the SSH and SFTP feature [[!tails_ticket 10498]]
-- in the APT feature [[!tails_ticket 10496]]
-- in the Git feature [[!tails_ticket 10444]]
+- in the SSH and SFTP feature ([[!tails_ticket 10498]])
+- in the APT feature ([[!tails_ticket 10496]])
+- in the Git feature ([[!tails_ticket 10444]])
 - the Synaptic scenario has a proposed patch that has been widely
-  tested and should be merged for 2.6 [[!tails_ticket 10441]]. Hopefully
-  it will also workaround Synaptic segfaults we've seen
-  [[!tails_ticket 10412]] as well as another related bug
-  [[!tails_ticket 10900]].
+  tested and should be merged for 2.6 ([[!tails_ticket 10441]]).
+  Hopefully it will also workaround
+  [[!tails_ticket 10412 desc="Synaptic segfaults we've seen"]] as well
+  as [[!tails_ticket 10900 desc="another related bug"]].
 
-We identified a bug in the step checking that the persistent partition
-exists. It seems that sometimes UDisks2 uses a device mapper name that
-contains ASCII characters when unlocking the LUKS volume. We had to
-ensure its handling in our test suite was properly quoted, otherwise it
-used to fail. A fix has been merged already [[!tails_ticket 11558]].
+We [[!tails_ticket 11558 desc="identified and fixed"]] a bug in the
+step checking that the persistent partition exists.
 
-We experienced a bug where a Tails installed on a USB stick as a
-isohybrid was sometimes detected as running from the whole device, and
-not its partition. We adapted our test suite accordingly and merged the
-fix [[!tails_ticket 10504]].
+We [[!tails_ticket 10504 desc="identified and fixed"]] a bug in our
+test suite's handling of USB sticks created without Tails Installer,
+due to weirdness caused by hybrid ISO images.
 
-While working on tackling the failures of the time syncing step, we
-realized that some of the HTTP servers used in the HTPdate pools were
-offline or broken, weakening the time syncing in Tails. We replaced
-them, which ameliorates the situation [[!tails_ticket 11577]].
+While working on tackling the failures of time syncing tests, we
+realized that some of the servers we use for htpdate were
+offline or broken, making Tails' time syncing brittle.
+We [[!tails_ticket 11577 desc="replaced them"]],
+which improves the situation.
 
 Our test suite needs to add kernel command line options when booting the
 Tails VM under test, so that it can run commands inside it. This step
 used to be fragile: it sometimes happened that the Tails VM booted
-before our test suite had time to type this options. We've been
-researching and implementing a fix that is currently under test and
-seems to behave much better. It's been reviewed and some fixes and
-polishing have been added. It seems now in good shape enough to be
-merged for 2.6, after it gets a bit more testing.
-[[!tails_ticket 10777]]
+before our test suite had time to type these options.
+We've [[!tails_ticket 10777 desc="implemented a solution"]] that
+should be merged in August.
 
 ### B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
 
-With the workload we had on other test suite tickets we didn't have time
-to work on this bug. We'll tackle it during the next round.
+We lacked time to work on this, so it is postponed.
 
 ### B.3.13. Reorganize the "various checks" feature ([[!tails_ticket 5707]])
 
-This branch is now merged.
+This work has been merged, so this deliverable is now completed.
 
 ### B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
 
-A branch was proposed to merge and reviewed. Some issues with it were
-raised and corrected, but it brought semantic mistakes we have to fix
-before considering merging it. This will be done during the next round.
+This is still work in progress. We went through one more iteration,
+and hope to complete it soon.
 
 ### B.3.15. Write automated tests for features added in 2016Q2
 
-The `dotfiles` persistence option has been broken in the past, so we
-added a new scenario to test it and ensure we don't get a new regression
-with this one [[!tails_ticket 10840]].
+We [[!tails_ticket 10840 desc="wrote a regression test"]] for the
+persistence "dotfiles" feature. This completes this deliverable.
 
 ## B.4. Freezable APT repository
 
