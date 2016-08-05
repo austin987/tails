@@ -38,15 +38,16 @@ XXX:u
 
 ### B.3.10. Write automated tests for features added in 2016Q1
 
-XXX:intrigeri
+This deliverable was completed last month.
 
 ### B.3.11. Fix newly identified issues to make our test suite more robust and faster
 
-XXX: [[!tails_ticket 11588]], [[!tails_ticket 10720]],
-[[!tails_ticket 11590]]
+This month again, we made great progress in making our test suite
+more robust.
 
 We implemented retries on transient network failures in a bunch of the
-features of our test suite that were subject to it:
+features of our test suite that were subject to it. It made these
+tests robust enough for us to re-enable them on our Jenkins setup:
 
 - in the SSH and SFTP feature ([[!tails_ticket 10498]])
 - in the APT feature ([[!tails_ticket 10496]])
@@ -57,12 +58,24 @@ features of our test suite that were subject to it:
   [[!tails_ticket 10412 desc="Synaptic segfaults we've seen"]] as well
   as [[!tails_ticket 10900 desc="another related bug"]].
 
-We [[!tails_ticket 11558 desc="identified and fixed"]] a bug in the
-step checking that the persistent partition exists.
+In July, we tackled the parts of our test suite that rely on emulated
+removable USB mass storage devices, that have historically been
+fragile in our Jenkins environment. Great progress was made, and we
+have good hope to be able to re-enable these tests on production
+branches in August or September:
 
-We [[!tails_ticket 10504 desc="identified and fixed"]] a bug in our
-test suite's handling of USB sticks created without Tails Installer,
-due to weirdness caused by hybrid ISO images.
+- Tails Installer [[!tails_ticket 11590 desc="was improved"]] to
+  behave more robustly despite udisks' brittleness in some situations
+  ([[!tails_ticket 10720]]). This allowed the affected tests to run
+  one step further, and in turn to identify another kind of
+  flaky behavior, i.e.
+  [[!tails_ticket 11588 desc="seemingly random I/O errors on emulated USB devices"]],
+  that we fixed by tweaking the kind of hardware we ask QEMU to emulate.
+- We [[!tails_ticket 11558 desc="identified and fixed"]] a bug in the
+  step checking that the persistent partition exists.
+- We [[!tails_ticket 10504 desc="identified and fixed"]] a bug in our
+  test suite's handling of USB sticks created without Tails Installer,
+  due to weirdness caused by hybrid ISO images.
 
 While working on tackling the failures of time syncing tests, we
 realized that some of the servers we use for htpdate were
