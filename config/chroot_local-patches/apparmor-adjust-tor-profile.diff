@@ -1,21 +1,13 @@
-XXX: renaming the profile should not be needed on Stretch anymore,
-since tor@default.service loads the profile correctly itself there
-(and actually, renaming the profile as this patch does may prevent
-the service from starting at all).
-
---- a/etc/apparmor.d/system_tor	2015-06-04 12:28:12.243020484 +0000
-+++ b/etc/apparmor.d/system_tor	2015-06-04 12:29:32.580249731 +0000
-@@ -1,9 +1,12 @@
- # vim:syntax=apparmor
- #include <tunables/global>
- 
--profile system_tor flags=(attach_disconnected) {
-+/usr/bin/tor flags=(attach_disconnected) {
+--- a/etc/apparmor.d/system_tor	2016-06-01 21:34:23.000000000 +0000
++++ b/etc/apparmor.d/system_tor	2016-06-10 11:09:09.249017739 +0000
+@@ -4,6 +4,9 @@
+ profile system_tor flags=(attach_disconnected) {
    #include <abstractions/tor>
  
 +  link /etc/tor/.wh.torrc -> /.wh..wh.aufs,
 +  /etc/tor/* w,
 +
    owner /var/lib/tor/** rwk,
+   owner /var/lib/tor/ r,
    owner /var/log/tor/* w,
- 
+
