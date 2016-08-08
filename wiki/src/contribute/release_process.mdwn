@@ -16,7 +16,7 @@ the scripts snippets found on this page:
       export TAG=$(echo "$VERSION" | sed -e 's,~,-,')
       export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
 
-* `NEXT_MAJOR_VERSION`: set to the version number of the next Tails release
+* `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
   (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
 * `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
 * `ISOS`: the directory where one stores `tails-i386-*`
@@ -34,6 +34,7 @@ the scripts snippets found on this page:
   Git repository.
 * `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
   `perl5lib` Git repository.
+* `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 
 Pre-freeze
 ==========
@@ -263,7 +264,10 @@ Update other base branches
 
 4. Push the modified branches to Git:
 
-        git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}" devel:devel
+        git push origin                          \
+           "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
+           feature/stretch:feature/stretch       \
+           devel:devel
 
 Update more included files
 ==========================
@@ -333,12 +337,6 @@ matches the date of the future signature.
 Read the Changelog carefully, and update [[doc/about/features]]
 pages accordingly.
 
-Also:
-
-	git grep PENDING wiki/src/contribute/design*
-
-... and remove the `PENDING-FOR-N.M` warnings.
-
 Website translations
 --------------------
 
@@ -348,6 +346,7 @@ the new release. This e.g. ensures that the RC call for translation
 points translators to up-to-date PO files:
 
 	./build-website && git add wiki/src && git commit -m 'Update website PO files.'
+	git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}"
 
 Call for translation
 ====================
@@ -587,7 +586,7 @@ below):
 
 Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
-Wheezy too.
+Jessie too.
 
 <a id="prepare-upgrade-description-files"></a>
 
@@ -612,8 +611,8 @@ Prepare upgrade-description files
        ( cd $IUK_CHECKOUT && \
        ./bin/tails-iuk-generate-upgrade-description-files \
            --version "$VERSION" \
-           --next-version "$NEXT_MAJOR_VERSION" \
-           --next-version "${NEXT_MAJOR_VERSION}~rc1" \
+           --next-version "$NEXT_PLANNED_VERSION" \
+           --next-version "${NEXT_PLANNED_VERSION}~rc1" \
            --next-version "${VERSION}.1" \
            --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
            --previous-version "$PREVIOUS_VERSION" \
@@ -733,12 +732,11 @@ rsync.lizard:
         scp -3 -r \
             bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-i386-$VERSION \
             rsync.lizard:
-    # set DIST to either 'alpha' (for RC:s) or 'stable' (for actual releases)
     ssh rsync.lizard << EOF
-      chown -R root:rsync_tails \
+      sudo chown -R root:rsync_tails \
          tails-i386-$VERSION \
          Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
-      chmod -R u=rwX,go=rX \
+      sudo chmod -R u=rwX,go=rX \
          tails-i386-$VERSION \
          Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
       sudo mv tails-i386-$VERSION \
@@ -778,10 +776,6 @@ If preparing a final release
 ----------------------------
 
 Skip this part if preparing a RC.
-
-In order to get any new documentation into the website, merge either
-`stable` or `testing` (depending on which release you just did) into
-`master`.
 
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
@@ -842,8 +836,8 @@ in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
 image to be released was *built*. Including:
 
-- the list of CVE fixed in Linux since the one shipped in the previous
-  release of Tails:
+- if we are shipping Linux from testing/sid, the list of CVE fixed in
+  Linux since the one shipped in the previous release of Tails:
   <http://metadata.ftp-master.debian.org/changelogs/main/l/linux/stable_changelog>
 - the list of DSA fixed in packages we ship since those that were in
   the previous release of Tails: <https://www.debian.org/security/#DSAS>
@@ -903,9 +897,9 @@ Testing
    of bandwidth.
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO, pointing them to the up-to-date mirror you've found previously.
-1. Set up a Gobby document and copy the [[manual test
+1. Set up a pad and copy the [[manual test
    suite|contribute/release_process/test]] in it.
-1. Email to <tails@boum.org> and potential contributors (see
+1. Email <tails@boum.org> and potential contributors (see
    `manual_testers.mdwn` in the internal Git repository) that tests
    may start:
    - point them to the up-to-date mirror you've found previously
@@ -962,7 +956,7 @@ repository like this:
     ) && \
     ( cd "$MASTER_CHECKOUT" && \
       git fetch && \
-      git merge "$RELEASE_BRANCH" && \
+      git merge "origin/$RELEASE_BRANCH" && \
       git push origin master:master \
     )
 
@@ -998,26 +992,18 @@ this release.
                 echo "Failed to fetch ${url} so manually investigate #${ticket}" >&2
                 continue
             fi
-            status=$(echo "${url_content}" | \
+            ticket_status=$(echo "${url_content}" | \
                 sed -n 's,^.*<th class="status">Status:</th><td class="status">\([^<]\+\)</td>.*$,\1,p')
-            if [ "${status}" != "New" ] && \
-               [ "${status}" != "Confirmed" ] && \
-               [ "${status}" != "In Progress" ]; then
-                echo "It seems ticket #${ticket} has been fixed (Status: ${status}) so please find all instances in the wiki and fix them. Ticket URL: ${url}"
+            if [ "${ticket_status}" != "New" ] && \
+               [ "${ticket_status}" != "Confirmed" ] && \
+               [ "${ticket_status}" != "In Progress" ]; then
+                echo "It seems ticket #${ticket} has been fixed (Status: ${ticket_status}) so please find all instances in the wiki and fix them. Ticket URL: ${url}"
             fi
         done
 
 Remember that ticket expressions, e.g. `[[!tails_ticket 1234]]`, can
 span several lines, so finding the ones reported by the above code
 *might* be harder than `git grep "tails_ticket 1234"`.
-
-Test suite
-----------
-
-Remove indications of known broken tests that were fixed by this
-release:
-
-	git grep XXX -- features
 
 XMPP
 ----
