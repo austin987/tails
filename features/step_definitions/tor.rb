@@ -265,7 +265,7 @@ def stream_isolation_info(application)
     }
   when "SSH"
     {
-      :grep_monitor_expr => '/\(connect-proxy\|ssh\)\>',
+      :grep_monitor_expr => '/\(nc\|ssh\)\>',
       :socksport => 9050
     }
   when "whois"
