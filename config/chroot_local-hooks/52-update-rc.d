@@ -7,7 +7,6 @@ CUSTOM_INITSCRIPTS="
 
 PATCHED_INITSCRIPTS="
 alsa-utils
-gdomap
 haveged
 hwclock.sh
 i2p
@@ -75,7 +74,6 @@ systemctl disable NetworkManager-wait-online.service
 systemctl disable ttdnsd.service
 
 # We don't run these services by default
-systemctl disable gdomap.service
 systemctl disable i2p.service
 
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
