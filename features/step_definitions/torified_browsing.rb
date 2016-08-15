@@ -1,5 +1,5 @@
-When /^no traffic has flowed to the LAN$/ do
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, :ignore_lan => false)
-  assert(not(leaks.ipv4_tcp_leaks.include?(@lan_host)),
-         "Traffic was sent to LAN host #{@lan_host}")
+Then /^no traffic was sent to the web server on the LAN$/ do
+  assert_no_connections(@sniffer.pcap_file) do |c|
+    c.daddr == @web_server_ip_addr and c.dport == @web_server_port
+  end
 end

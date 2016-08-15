@@ -3,30 +3,66 @@
 In rare occasions, you might have to perform a file system check to repair a
 broken persistent volume.
 
+Unlock the persistent volume
+============================
+
 1. Start Tails, with persistence disabled, and [[set up an administration
    password|startup_options/administration_password]].
 
 1. Choose
    <span class="menuchoice">
      <span class="guimenu">Applications</span>&nbsp;▸
-     <span class="guisubmenu">Accessories</span>&nbsp;▸
-     <span class="guimenuitem">Disk Utility</span>
+     <span class="guisubmenu">Utilities</span>&nbsp;▸
+     <span class="guimenuitem">Disks</span>
    </span>
-   to open the <span class="application">GNOME Disk Utility</span>.
+   to open <span class="application">GNOME Disks</span>.
 
-1. In the left pane, click on the device corresponding to your Tails device.
+1. In the left pane, click on the device corresponding to your Tails USB stick.
 
 1. In the right pane, click on the partition labeled as
-   <span class="guilabel">Encrypted</span>. The
-   <span class="guilabel">Partition Label</span> must be
-   <span class="label">TailsData</span>.
+   <span class="guilabel">LUKS</span>. The
+   name of the partition must be
+   <span class="guilabel">TailsData</span>.
 
-1. Click on <span class="guilabel">Unlock Volume</span> to unlock the
-   old persistent volume. Enter the passphrase of the old persistent
+1. Click on the <span class="guimenu">[[!img lib/unlock.png alt="Unlock" class="symbolic" link="no"]]</span> button
+   to unlock the persistent volume. Enter the passphrase of the persistent
    volume and click <span class="guilabel">Unlock</span>.
+
+1. In the confirmation dialog, enter your administration password and click
+   <span class="guilabel">Authenticate</span>.
 
 1. Click on the <span class="guilabel">TailsData</span> partition that
    appears below the <span class="guilabel">Encrypted Volume</span>
    partition.
 
-1. Click on <span class="guilabel">Check Filesystem</span>.
+1. Identify the <span class="guilabel">Device</span> name of your persistent
+   volume that appears below the list of volumes.
+   It should look like <code>/dev/mapper/luks-xxxxxxxx</code>.
+   Triple-click to select it and press <span class="keycap">Ctrl+C</span> to
+   copy it to the clipboard.
+
+Check the file system using the terminal
+========================================
+
+1. Choose
+    <span class="menuchoice">
+      <span class="guimenu">Applications</span>&nbsp;▸
+      <span class="guisubmenu">System Tools</span>&nbsp;▸
+      <span class="guimenuitem">Root Terminal</span></span>
+   and enter your administration password to open a root terminal.
+
+1. In the terminal, execute the following command, replacing `[device]` with
+   the device name found in step 8:
+
+        fsck -y [device]
+
+   To do so, you can type <span class="command">fsck -y&nbsp;</span> and press
+   <span class="keycap">Shift+Ctrl+V</span> to paste the device name from the
+   clipboard.
+
+1. If the file system is free of errors, the last line from the output of
+   <span class="command">fsck</span> starts with <span class="command">TailsData: clean</span>.
+
+   If the file system has errors, <span class="command">fsck</span> tries to
+   fix them automatically. After it finishes, you can try executing the same
+   command again to check if all errors are solved.

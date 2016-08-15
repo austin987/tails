@@ -50,11 +50,7 @@ def bind_java_to_pseudo_fifo_logger
 end
 
 def findfailed_hook(pic)
-  STDERR.puts ""
-  STDERR.puts "FindFailed for: #{pic}"
-  STDERR.puts ""
-  STDERR.puts "Update the image and press RETURN to retry"
-  STDIN.gets
+  pause("FindFailed for: '#{pic}'")
 end
 
 # Since rjb imports Java classes without creating a corresponding

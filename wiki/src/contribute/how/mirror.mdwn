@@ -45,8 +45,7 @@ BitTorrent|contribute/how/mirror/automatically_download_and_seed_Tails_over_BitT
 
 Else, new versions are announced on:
 
-* our [news
-  mailing-list](https://mailman.boum.org/listinfo/amnesia-news)
+* our [[news list|about/contact#amnesia-news]]
 * our <a href='/torrents/rss/index.rss'>RSS</a> and
   <a href='/torrents/rss/index.atom'>Atom</a> feeds that announce new available
   BitTorrent files.
@@ -62,30 +61,66 @@ bandwidth: a domestic DSL connection won't help; neither will a shared
 web hosting setup that provides FTP access only.
 
 To give you an idea, a few dedicated Mb/s is a must; you must expect
-pushing at least 50-100GB [[!wikipedia GiB]] (bytes, not bits) on
+pushing at least **50-100GB** [[!wikipedia GiB]] (bytes, not bits) on
 a normal day, and twice as much for a short period after each release.
-So, it is a must to be able to push at least 5 [[!wikipedia TiB]]
-a month, and preferably 6 or 8 TiB.
+So, it is a must to be able to push **at least 5 [[!wikipedia TiB]]**
+a month, and **preferably 6 or 8 TiB**.
 
-You will also need around 5-10 GiB of disk space.
+You will also need around **5-10 GiB** of disk space.
+
+Please provide an unfiltered access to your server (no GeoIP
+blocking, no IP bans, no CAPTCHAs, etc.) as we want people everywhere
+to be able to download Tails.
 
 If you satisfy these practical requirements, please read on!
 Else, please consider seeding Tails images over BitTorrent instead.
 
-Before starting doing any real work on this topic, please get in touch
-(<tails@boum.org>, [[OpenPGP key|doc/about/openpgp_keys#private]]) and send us
+Before starting doing any real work on this topic, you may want to get in touch
+(<tails-mirrors@boum.org>, [[OpenPGP key|doc/about/openpgp_keys#mirrors]]) and send us
 your OpenPGP public key, so that any further communication between us
 can be properly encrypted and authenticated.
 
 The big picture
 ------------------
 
-We have a DNS Round Robin setup for the `dl.amnesia.boum.org` host.
+All downloads are currently served from a DNS Round Robin pool for the
+`dl.amnesia.boum.org` host. But we are transitioning away from this
+model (see the [[blueprint|blueprint/HTTP_mirror_pool]] for details).
+This documentation is mainly about the setup we are migrating to, even
+though most of it also works with the current setup.
 
 Every HTTP mirror makes our files available under a fixed URL
-(`http://dl.amnesia.boum.org/tails/`) that contains per-version
-sub-directories (such as
+(e.g. `http://dl.amnesia.boum.org/tails/` or `https://yourdomain.org/pub/tails/`)
+that contains per-version sub-directories (such as
 `http://dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
+
+Pick a hostname for your mirror
+-------------------------------
+
+Your web server needs to answer requests sent to `dl.amnesia.boum.org`
+(for compatibility with our current legacy mirror pool setup).
+But that's not all: to be compatible with our upcoming mirror pool
+setup, your web server also needs to answer HTTP requests sent to
+a _dedicated_ hostname that is unique, within our mirror pool, to
+your mirror.
+
+There are two ways to pick that dedicated hostname:
+
+1. Use a hostname of your choice, under a domain you control.
+   For example, if you control `example.com`, you can call your Tails
+   mirror `tails.example.com`. This is, by far, our preferred option:
+   * it allows you to maintain that DNS record yourself, e.g. whenever you
+     need to update your mirror's IP address;
+   * it saves us a lot of work :)
+
+2. Use a hostname of our choice, under `dl.amnesia.boum.org` (e.g.
+   you may get `142.dl.amnesia.boum.org`). To do so, at the end of
+   this set of instructions, when it's time to ask us to add your
+   mirror to the pool, also ask us to create a dedicated hostname
+   for you.
+
+Manual set up
+-------------------------
 
 <div class="tip">
 If you are using [[!wikipedia Puppet_(software) desc="Puppet"]] to configure
@@ -93,22 +128,80 @@ your server infrastructure, consider using the available [[HTTP mirror Puppet
 module|mirror#http-puppet]].
 </div>
 
-Manual set up
--------------------------
-
 ### 1. Set up your web server
 
-You need to set up a virtual host for dl.amnesia.boum.org, with indexing
-enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
+Set up a virtual host for the hostname chosen at the
+previous step. The virtual host will need to
+have indexing enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 
-#### Apache configuration example
+Please consider serving files over HTTPS. To be helpful in our
+context, this requires a certificate that is considered valid by
+mainstream web browsers; you can get such a certificate free of charge,
+from [Let's Encrypt](https://letsencrypt.org/) for example.
+
+#### Apache configuration example using your own domain
+
+	<VirtualHost YOUR_WEBSERVER_IP:80>
+	   ServerName yourdomain.org
+	   ServerAlias dl.amnesia.boum.org
+	   ServerAlias *.dl.amnesia.boum.org
+	   ServerAdmin YOUR_EMAIL
+
+	   DocumentRoot /var/www/YOUR_PATH/
+	   <Directory /var/www/YOUR_PATH/>
+	      Options Indexes
+	      FileETag None
+	      AllowOverride None
+	      IndexIgnore README.html
+	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
+	      IndexOrderDefault Descending Date
+	   </Directory>
+	</VirtualHost>
+
+And if you want to enable HTTPS:
+
+	<VirtualHost YOUR_WEBSERVER_IP:80>
+	   ServerName yourdomain.org
+	   ServerAlias dl.amnesia.boum.org
+	   ServerAlias *.dl.amnesia.boum.org
+	   RewriteEngine On
+	   RewriteRule ^/?(.*) https://%{SERVER_NAME}/pub/$1 [R=permanent,L]
+	</VirtualHost>
+
+	<VirtualHost YOUR_WEBSERVER_IP:443>
+	   ServerName yourdomain.org
+	   ServerAdmin YOUR_EMAIL
+
+	   SSLEngine on
+	   SSLCertificateFile /etc/apache2/ssl/apache.crt
+	   SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+
+	   DocumentRoot /var/www/YOUR_PATH/
+	   <Directory /var/www/YOUR_PATH/>
+	      Options Indexes
+	      FileETag None
+	      AllowOverride None
+	      IndexIgnore README.html
+	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
+	      IndexOrderDefault Descending Date
+	   </Directory>
+	</VirtualHost>
+
+<div class="tip">
+You can harden this configuration using the
+<a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">
+Mozilla SSL Configuration Generator</a>.
+</div>
+
+#### Apache configuration example using a hostname under dl.amnesia.boum.org
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName dl.amnesia.boum.org
+	   ServerAlias *.dl.amnesia.boum.org
 	   ServerAdmin YOUR_EMAIL
-	
-	   DocumentRoot /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
-	   <Directory /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/>
+
+	   DocumentRoot /var/www/YOUR_PATH/
+	   <Directory /var/www/YOUR_PATH/>
 	      Options Indexes
 	      FileETag None
 	      AllowOverride None
@@ -121,17 +214,17 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 #### Lighttpd configuration example
 
 	static-file.etags = "disable"
-	$HTTP["host"] =~ "^dl\.amnesia\.boum\.org$" {
-		server.document-root = "/var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/"
+	$HTTP["host"] =~ "^(\d+\.)?dl\.amnesia\.boum\.org$" {
+		server.document-root = "/var/www/YOUR_PATH/"
 		server.dir-listing = "enable"
 	}
 
 #### nginx configuration example
 
 	server {
-		server_name dl.amnesia.boum.org;
+		server_name dl.amnesia.boum.org *.dl.amnesia.boum.org;
 		etag off;
-		root /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE;
+		root /var/www/YOUR_PATH;
 		location / {
 			autoindex on;
 		}
@@ -142,22 +235,22 @@ enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 Download a snapshot of the current Tails files:
 
 	rsync -rt --delete \
-	         rsync.torproject.org::amnesia-archive \
-	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
 If you have disk space limitations, you might want to exclude the
 `/tails/obsolete` folder (which contains old versions of Tails) from the
 download:
 
 	rsync -rt --delete --exclude=/tails/obsolete --delete-excluded \
-	         rsync.torproject.org::amnesia-archive \
-	         /var/www/THE_PLACE_WHERE_YOU_WANT_OUR_FILES_TO_LIVE/
+	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
 ### 3. Schedule the pulling of the files
 
-Secondary mirrors (like yours) should sync every hour + 15 minutes.
+Your mirror should sync every hour + a random time (maximum 40 minutes).
 Use `cron` or equivalent to schedule the same `rsync` command
 as above.
+
+    0 * * * * root sleep $(perl -E 'print int(rand(2400))') && rsync -rt --delete rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
 
 You can now [[ask for your mirror to be added to the pool|mirror#http-pool]].
 
@@ -186,31 +279,37 @@ If you need to adjust any parameters of the class, you should declare it like
 
      class { 'tails::mirror':
        webserver   => 'apache2',
+       server_name => 'tails.example.com',
        mirror_path => '/srv/tails/mirror',
      }
 
 #### Configurable parameters
 
- * `webserver`, specifies webserver software, 'nginx' or 'apache2', defaults to
-   'nginx'
- * `package`, specifies the debian package name for the webserver, defaults to
-   `webserver` value
- * `mirror_path`, specifies the directory where mirror's data will be located,
-   defaults to '/var/www/tails-mirror/'
- * `access_log`, specifies webserver's access log file path, defaults to
-   '/dev/null'
- * `error_log`, specifies webserver's error log file path, defaults to
-   '/dev/null'
+See the documentation on top of
+[the module](https://git-tails.immerda.ch/puppet-tails/tree/manifests/mirror.pp).
 
 <a id="http-pool"></a>
 
-Go wild
-----------
+Go wild: ask for your mirror to be added to the pool
+----------------------------------------------------
 
 As soon as your web server is ready, please e-mail us its IP address
-so that we can ask the DNS server admins to add it to the Round Robin
-pool.
+so that we can add it to the Round Robin pool.
+
+Also, if you decided to use a hostname under `dl.amnesia.boum.org`,
+please ask us to create it at the same time.
+
+<div class="note">
+
+We will publish your email address, associated with the URL of your
+mirror, in a file hosted on our website. If you are not comfortable
+with this, give us an email alias that we can publish without
+revealing additional information, such as
+<emph>webmaster@your-mirror.org</emph>.
+
+</div>
 
 # Talk to us
 
-[[!inline pages="contribute/talk" raw="yes"]]
+You can subscribe to [[tails-dev@boum.org|about/contact#tails-dev]],
+our development mailing list.

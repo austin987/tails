@@ -1,0 +1,154 @@
+#!/bin/sh
+
+set -e
+set -u
+
+# This script spoofs or resets the MAC address of all NICs given as
+# arguments according to the setting in Tails Greeter. The default (i.e
+# before Tails Greeter has been run) is to enable MAC spoofing.
+
+. /usr/local/lib/tails-shell-library/hardware.sh
+. /usr/local/lib/tails-shell-library/log.sh
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
+. /usr/bin/gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+stop_and_disable_NM() {
+   for s in NetworkManager-dispatcher.service \
+            NetworkManager-wait-online.service \
+            NetworkManager.service; do
+       systemctl stop "${s}"
+       systemctl disable "${s}"
+       systemctl mask "${s}"
+   done
+   log "Networking disabled"
+}
+
+show_notification() {
+    # We must wait until all the facilities necessary for showing the
+    # notification to the Live user is available to prevent it from
+    # getting lost.
+    until pgrep -u "${LIVE_USERNAME}" '^ibus-daemon' >/dev/null ; do
+        sleep 1
+    done
+    # The above doesn't seem to be enough. The best we can do seems to
+    # be to statically wait a bit longer. The amount chosen is just
+    # arbitrarily picked, and may not work on slow hardware or even
+    # DVD boot, but should at least work in our automated test suite.
+    sleep 10
+    /usr/local/sbin/tails-notify-user "${1}" "${2}" 0
+}
+
+notify_panic_success() {
+    local nic
+    local nic_name
+    nic="${1}"
+    nic_name="${2}"
+    show_notification "`gettext \"Network card \\\${nic} disabled\"`" \
+"`eval_gettext \"MAC spoofing failed for network card \\\${nic_name} (\\\${nic}) so it is temporarily disabled.
+You might prefer to restart Tails and disable MAC spoofing.\"`"
+}
+
+notify_panic_failure() {
+    local nic
+    local nic_name
+    nic="${1}"
+    nic_name="${2}"
+    show_notification "`gettext \"All networking disabled\"`" \
+"`eval_gettext \"MAC spoofing failed for network card \\\${nic_name} (\\\${nic}). The error recovery also failed so all networking is disabled.
+You might prefer to restart Tails and disable MAC spoofing.\"`"
+}
+
+mac_spoof_panic() {
+    local nic
+    local module
+    local nic_name
+    local unload_success
+    nic=${1}
+    if ! /sbin/ip link set dev "${nic}" down; then
+        log "Failed to down NIC ${nic} in panic mode."
+    fi
+    module=$(get_module_used_by_nic "${nic}")
+    nic_name="$(get_name_of_nic ${nic})"
+    echo "blacklist ${module}" >> /etc/modprobe.d/"${module}"-blacklist.conf
+    unload_module_and_rev_deps "${module}" || :
+    if nic_exists "${nic}"; then
+        log "Failed to unload module ${module} of NIC ${nic}."
+        stop_and_disable_NM
+        notify_panic_failure "${nic}" "${nic_name}" &
+    else
+        log "Successfully unloaded module ${module} of NIC ${nic}."
+        notify_panic_success "${nic}" "${nic_name}" &
+    fi
+}
+
+spoof_mac() {
+    local msg
+    set +e
+    msg="$(macchanger -e "${1}" 2>&1)"
+    ret="${?}"
+    set -e
+    if [ "${ret}" != 0 ]; then
+        log "macchanger failed for NIC ${1}, returned ${ret} and said: ${msg}"
+        return 1
+    fi
+}
+
+set_log_tag spoof-mac
+
+NIC="${1}"
+
+if ! mac_spoof_is_enabled; then
+    exit 0
+fi
+
+log "Trying to spoof MAC address of NIC ${NIC}..."
+
+if ! nic_exists "${NIC}"; then
+    log "NIC ${NIC} doesn't exist, skipping"
+    exit 1
+fi
+
+OLD_MAC="$(get_current_mac_of_nic "${NIC}")"
+
+# There is a 1/2^24 chance macchanger will randomly pick the real MAC
+# address. We try to making it really unlikely repeating it up to
+# three times. Theoretically speaking this leaks information about the
+# real MAC address at each occasion but actually leaking the real MAC
+# address will be more serious in practice.
+for i in 1 2 3; do
+    if ! spoof_mac "${NIC}"; then
+        # If our MAC spoofing primitive fails, we fail safe by forcing
+        # us to enter into panic mode.
+        unset NEW_MAC
+        break
+    fi
+    NEW_MAC="$(get_current_mac_of_nic "${NIC}")"
+    if [ "${OLD_MAC}" != "${NEW_MAC}" ]; then
+        break
+    fi
+done
+
+# MAC spoofing fail-safe: if $NIC's MAC address isn't spoofed at this
+# point we have to take some drastic measures in order to prevent
+# potential leaks.
+if [ -z "${OLD_MAC:-}" ] || [ -z "${NEW_MAC:-}" ] || \
+   [ "${OLD_MAC:-}" = "${NEW_MAC:-}" ]
+then
+    log "Failed to spoof MAC address of NIC ${NIC}. Going into panic mode."
+    if ! mac_spoof_panic "${NIC}"; then
+        # If mac_spoof_panic() fails we're quite screwed, so we kill
+        # NetworkManager without notification to do our best to
+        # prevent a MAC address leak.
+        log "Panic mode failed for NIC ${NIC}."
+        stop_and_disable_NM
+    fi
+    exit 1
+fi
+
+log "Successfully spoofed MAC address of NIC ${NIC}"

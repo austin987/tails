@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Install a fake gnome-backgrounds package"
+
+tmp="$(mktemp -d)"
+
+apt-get install --yes equivs
+
+REAL_PKG_VERSION=$(dpkg-query -W -f='${Version}\n' gnome-backgrounds)
+FAKE_PKG_VERSION=${REAL_PKG_VERSION}+tails.fake1
+
+cat > "${tmp}"/gnome-backgrounds.control << EOF
+Section: gnome
+Priority: optional
+Homepage: https://tails.boum.org/
+Standards-Version: 3.9.6
+
+Package: gnome-backgrounds
+Version: ${FAKE_PKG_VERSION}
+Maintainer: Tails developers <amnesia@boum.org>
+Architecture: all
+Description: (Fake) gnome-backgrounds
+ Make it possible to install gnome-shell without having to
+ install a real gnome-backgrounds package.
+EOF
+
+(
+   cd "${tmp}"
+   equivs-build "${tmp}"/gnome-backgrounds.control
+   dpkg -i "${tmp}"/gnome-backgrounds_"${FAKE_PKG_VERSION}"_all.deb
+)
+rm -R "${tmp}"

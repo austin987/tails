@@ -1,6 +1,4 @@
-#10497: wait_until_tor_is_working
-#10444: Git tests are fragile
-@product @check_tor_leaks @fragile
+@product @check_tor_leaks
 Feature: Cloning a Git repository
   As a Tails user
   when I clone a Git repository
@@ -9,23 +7,17 @@ Feature: Cloning a Git repository
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
 
+  #11563
   @fragile
   Scenario: Cloning a Git repository anonymously over HTTPS
-    When I run "git clone https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
-    Then process "git" is running within 10 seconds
-    And process "git" has stopped running after at most 180 seconds
-    And the Git repository "testing" has been cloned successfully
+    When I clone the Git repository "https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
+    Then the Git repository "testing" has been cloned successfully
 
   Scenario: Cloning a Git repository anonymously over the Git protocol
-    When I run "git clone git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
-    Then process "git" is running within 10 seconds
-    And process "git" has stopped running after at most 180 seconds
-    And the Git repository "testing" has been cloned successfully
+    When I clone the Git repository "git://git.tails.boum.org/myprivatekeyispublic/testing" in GNOME Terminal
+    Then the Git repository "testing" has been cloned successfully
 
   Scenario: Cloning git repository over SSH
     Given I have the SSH key pair for a Git repository
-    When I run "git clone tails@git.tails.boum.org:myprivatekeyispublic/testing" in GNOME Terminal
-    Then process "git" is running within 10 seconds
-    When I verify the SSH fingerprint for the Git repository
-    And process "git" has stopped running after at most 180 seconds
+    When I clone the Git repository "tails@git.tails.boum.org:myprivatekeyispublic/testing" in GNOME Terminal
     Then the Git repository "testing" has been cloned successfully

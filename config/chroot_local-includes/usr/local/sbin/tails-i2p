@@ -2,7 +2,6 @@
 
 set -e
 set -u
-ZSH_VERSION="${ZSH_VERSION:-}"
 
 # Get LANG
 . /etc/default/locale
@@ -36,7 +35,7 @@ startup_failure() {
         "`gettext \"Something went wrong when I2P was starting. Check the logs in /var/log/i2p for more information.\"`"
     service i2p dump # generate a thread dump
     sleep 5 # Give thread dump ample time to complete
-    service i2p stop # clean up, just in case
+    systemctl stop i2p # clean up, just in case
     exit 1
 }
 
@@ -77,14 +76,14 @@ case "${1}" in
     start|restart)
         # Stop I2P before setting the router console language in case
         # it pushes any updated options on quit.
-        if service i2p status; then
-            service i2p stop
+        if systemctl --quiet is-active i2p; then
+            systemctl stop i2p
         fi
         # Get LANG, since we may run this from an environment that
         # doesn't have it set.
         . /etc/default/locale
         set_best_i2p_router_console_lang
-        service i2p start
+        systemctl start i2p
         wait_until_i2p_router_console_is_ready || startup_failure
         notify_router_console_success
         wait_until_i2p_has_bootstrapped || bootstrap_failure
@@ -92,7 +91,7 @@ case "${1}" in
         notify_bootstrap_success
         ;;
     stop)
-        exec service i2p stop
+        exec systemctl stop i2p
         ;;
     *)
         echo "invalid argument '${1}'" >&2

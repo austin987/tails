@@ -1,0 +1,276 @@
+[[!meta title="Tails January 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in January 2016.
+
+Everything in this report can be made public.
+
+# A. Replace Claws Mail with Icedove
+
+Last month we modified our Icedove schedule quite a bit. Due to
+sickness, some work has been delayed while other tasks have moved
+forward faster than expected.
+
+- A.1.1 Secure the Icedove autoconfig wizard: [[!tails_ticket 6154]]
+
+  The proof-of-concept branch that integrates the secured wizard into
+  Tails is delayed until the end of February and should be released in
+  2.4 instead.
+
+  We've been evaluating our own patches for Icedove against those
+  reported to Mozilla's bugtracker and are happy to announce that our
+  patches would provide an option to accept only secure protocols, as
+  a user opt-in. These patches will be submitted to Mozilla's bugtracker
+  and hopefully integrated upstream.
+  ([[!tails_ticket 7064]])
+
+- A.1.2 Make our improvements maintainable for future versions of Icedove
+
+  Unfortunately we also discovered that the autoconfig wizard of Icedove does
+  not always use the configured proxy. This means that some traffic can leak.
+  This is not a security problem in Tails since we drop non-Tor
+  traffic by default, but for this very reason it breaks the
+  functionality of the autoconfig wizard in the context of Tails.
+  We started to write a proof-of-concept patch to fix this bug which
+  will be submitted upstream in February.
+
+  We've worked out a set of strong arguments before actually presenting
+  our patches to upstream. We are now ready to do that ([[!tails_ticket 6156]]).
+
+  In order to improve Icedove's security in Tails and avoid unforeseen exploits,
+  we started evaluating an AppArmor profile for Icedove ([[!tails_ticket 10750]]).
+  We've asked the author to submit it upstream where it's now waiting to be merged.
+  In the meantime, we will consider shipping this profile in Tails on our own.
+
+- A.1.4. Provide a migration path for our users from Claws Mail to Icedove
+
+  This was completed in time for the first release of Icedove in Tails 1.8 (December 15).
+
+- A.1.6. Release Icedove in Tails
+
+  Icedove was made the default email client in Tails 1.8 (December 15)
+  and Claws Mail was removed from Tails in version 2.0 (January 26).
+
+# B. Improve our quality assurance process
+
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+In January, **757 ISO images** were automatically built by our Jenkins
+instance.
+
+We worked on designing and implementing a workaround for an issue in our
+autobuild setup: it sometimes happens that a build fails and leaves its
+temporary directories. The subsequent builds happening on the same
+system then always fail as they lack space in the /tmp/ directory.
+([[!tails_ticket 10772]])
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+In January, all the **757 ISO images** that were built were also tested by our Jenkins instance.
+
+- B.2.4. Implement and deploy the best solution from this research: [[!tails_ticket 5288]]
+
+  We installed the Jenkins `Cluster Statistics` plugin in order to get a
+  better idea of our Jenkins slaves usage. ([[!tails_ticket 10969]])
+
+  We consider our setup deployed but still needing adjustments:
+
+  - We planned to design a collective way to check regulary for false
+    positives and fragile scenarios, as it has proven to be not that well
+    handled by our team. This is planned to be discussed and implemented at
+    our monthly CI team meeting in February. ([[!tails_ticket 10993]])
+
+  - We still need to investigate a bug we've seen with the usage of the
+    Jenkins Cucumber Test Result plugin that is likely to only have been due
+    to a change we made in our infrastructure at the same moment it was
+    running. ([[!tails_ticket 10725]])
+
+  - We've sometimes seen some of our ISO testing VMs going offline and being
+    unavailable for new jobs. We tried a workaround, but we still need to
+    check if it worked. ([[!tails_ticket 10601]])
+
+## B.3. Extend the coverage of our test suite
+
+- B.3.7. Automatically test behavior on boot medium removal: [[!tails_ticket 5472]]
+
+  This was implemented and merged.
+
+- B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+  We've marked some more scenarios as fragile, as we noticed there
+  were still some false positives ([[!tails_ticket 10863]]):
+
+  - Encrypting and signing a message using an OpenPGP key ([[!tails_ticket 10991]])
+  - OpenPGP applet key selection window badly handled ([[!tails_ticket 10992]])
+  - Viewing and printing a PDF file ([[!tails_ticket 10994]])
+  - MAC address spoofing ([[!tails_ticket 10774]])
+  - Tails Installer ([[!tails_ticket 10720]])
+
+  The test suite machinery sometimes misses the boot splash
+  ([[!tails_ticket 10777]]): a branch was proposed.
+
+  Some research was done on a bug that we can't reproduce anymore now
+  ([[!tails_ticket 10504]]).
+
+## B.4. Freezable APT repository
+
+This was put aside in January, while the developer responsible for
+this project was focusing on porting Tails to Debian Jessie. Some
+progress was made nevertheless.
+
+- B.4.6. Adjust the rest of our ecosystem to the freezable APT repository: [[!tails_ticket 6303]]
+
+  We completed our evaluation of the hardware resources required by
+  our draft design ([[!tails_ticket 6295]]), purchased and set up the
+  needed storage ([[!tails_ticket 10851]]). Next step on this front is
+  to adjust our backup system, and our fail-over system once we
+  have one.
+
+# C. Scale our infrastructure
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+Deciding on how to deploy new hosts in our current Puppet setup took a bit
+more time than planned. A solution has been proposed, and once agreed upon, it
+will be deployed in production, which should happen in the beginning of
+February.
+
+Once this is done, we'll be able to start the deployment of the
+monitoring software on the new host, and implement the first critical
+checks. That has already been tested in the prototype. This will happen
+during February.
+
+Implementing other checks is planned for the end of February and
+beginning of March, as well as starting the setup of notifications to
+our sysadmins. In the end, we'll spend most of the rest of March and
+beginning of April to refine our setup, mostly on the notification part.
+This should lead us toward the completion of the whole C.2 deliverable
+before M5 is over.
+
+- C.2.1. Research and decide what monitoring solution to use
+         what tools and abstraction layer to use for configuring it,
+         and where to host it: [[!tails_ticket 8645]]
+
+  We decided to use Icinga 2 that seems to fit our specifications best.
+  It will be installed on a dedicated virtual machine hosted in
+  a different data center than all the services it will monitor.
+
+  Our prototype (see C.2.2) helped us validate this choice against our
+  requirements.
+
+- C.2.2. Set up the monitoring software and the underlying infrastructure
+
+  We deployed a prototype and are now waiting for the final host to be
+  configured to put it into production.
+
+- C.2.4. Configure and debug the monitoring of the most critical services: [[!tails_ticket 8650]]
+
+  Our prototype is already set up to monitor all the checks that we ranked as
+  critical in our blueprint.
+
+- C.2.5. Configure the receiving side of the monitoring notifications: [[!tails_ticket 8651]]
+
+  During the discussion about which services to check, we
+  defined our needs concerning notifications. This will be handled
+  after the monitoring software is deployed on the production host.
+
+- C.2.6. Configure and debug the monitoring of other high-priority services: [[!tails_ticket 8653]]
+
+  Some of these checks are already integrated in the default setup of the
+  monitoring software or part of the basics checks already handled and
+  easy to setup. Some have been tested on the prototype.
+
+## C.4. Maintain our already existing services
+
+We kept on answering the requests from the community as well as taking
+care of security updates as covered by "C.4.4. Administer our services
+up to milestone IV" and "C.4.5. Administer our services up to milestone
+V" until the end of January.
+
+We proposed a design to administer our new monitoring machine with Puppet
+([[!tails_ticket 10760]]).
+
+We fixed a bug in our Puppet manifests that prevented us to deploy
+new ISO tester systems. We improved the toolbox we use to compute
+statistics about the load put on our Jenkins workers, and
+their performance.
+
+# D. Migration to Debian Jessie
+
+- D.1.1. Adjust to the change of desktop environment to GNOME Shell
+
+  This was completed back in November 2015.
+
+- D.3.1 Update our test suite for Tails Jessie
+
+  This was completed ([[!tails_ticket 7563]]).
+
+  The only remaining issues are a few robustness ones, such as
+  [[!tails_ticket 10900]]. They will be handled as part of the "B.3.11.
+  Fix newly identified issues to make our test suite more robust and
+  faster" deliverable.
+
+- D.4.1 Document the changes implied by the move to Jessie on our website
+
+  We adapted all of our user documentation to Jessie ([[!tails_ticket 7584]]). For example we
+  entirely rewrote the [[introduction to
+  GNOME|doc/first_steps/introduction_to_gnome_and_the_tails_desktop]] and the
+  [[documentation on encrypted partitions|doc/encryption_and_privacy/encrypted_volumes]].
+
+  While reworking these pages we simplified and improved some of
+  the oldest parts of our documentation. This process also involved new
+  contributors who wrote documentation for Tails for the first time.
+
+- D.5.1 Release an official version of Tails based on Jessie
+
+  We put out a [[release candidate|news/test_2.0-rc1]], that allowed us to
+  identify and resolve quite a few bugs, such as
+  [[!tails_ticket 10862]], [[!tails_ticket 10809]], and
+  [[!tails_ticket 10784]]. We will be writing regression tests for some
+  of these bugs, in particular the persistence -related ones
+  ([[!tails_ticket 10834]] and [[!tails_ticket 10840]]).
+
+  Tails 2.0 [[was released|news/version_2.0]] on January 26, as planned.
+
+# E. Release management
+
+- [[Tails 2.0|news/version_2.0]] was released on 2016-01-26:
+
+  - Tails now uses the <span class="application">GNOME Shell</span> desktop
+    environment, in its <span class="application">Classic</span> mode.
+    <span class="application">GNOME Shell</span> provides a modern, simple, and
+    actively developed desktop environment. The <span class="application">Classic</span>
+    mode keeps the traditional <span class="guimenu">Applications</span>,
+    <span class="guimenu">Places</span> menu, and windows list. Accessibility and
+    non-Latin input sources are also better integrated.
+  - Debian 8 upgrades most included software, for example:
+    - Many core GNOME utilities from 3.4 to 3.14:
+      <span class="application">Files</span>,
+      <span class="application">Disks</span>,
+      <span class="application">Videos</span>, etc.
+    - <span class="application">LibreOffice</span> from 3.5 to 4.3
+    - <span class="application">PiTiVi</span> from 0.15 to 0.93
+    - <span class="application">Git</span> from 1.7.10 to 2.1.4
+    - <span class="application">Poedit</span> from 1.5.4 to 1.6.10
+    - <span class="application">Liferea</span> from 1.8.6 to 1.10
+  - Update <span class="application">Tor Browser</span> to 5.5 (based on Firefox 38.6.0 ESR):
+    - Add Japanese support.
+  - Remove the Windows camouflage which is currently broken in GNOME Shell.
+  - Change to `systemd` as init system and use it to:
+    - Sandbox many services using Linux namespaces and make them harder to exploit.
+    - Make the launching of Tor and the memory wipe on shutdown more robust.
+    - Sanitize our code base by replacing many custom scripts.
+  - Update most firmware packages which might improve hardware compatibility.
+  - Notify the user if Tails is running from a non-free virtualization software.
+  - Remove <span class="application">Claws Mail</span>, replaced by
+    <span class="application">[[Icedove|doc/anonymous_internet/icedove]]</span>.
+  - HiDPI displays are better supported. ([[!tails_ticket 8659]])
+  - Remove the option to open a download with an external application in Tor
+    Browser as this is usually impossible due to the AppArmor confinement.
+    ([[!tails_ticket 9285]])
+  - Close <span class="application">Vidalia</span> before restarting Tor.
+  - Allow <span class="application">Videos</span> to access the DVD drive.
+    ([[!tails_ticket 10455]], [[!tails_ticket 9990]])
+  - Allow configuring printers without administration password.
+    ([[!tails_ticket 8443]])

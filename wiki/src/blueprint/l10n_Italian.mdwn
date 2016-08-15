@@ -1,5 +1,96 @@
 [[!toc levels=2]]
 
+#errore compilazione wiki
+
+Message conversion to user's charset will not work.
+wiki/src/doc/first_steps/startup_options/administration_password.it.po:4:2: syntax error
+
+
+#merge delle branch remote
+
+[cri@localhost lastTails2.3]$ cd Masteritalian/
+
+[cri@localhost Masteritalian]$ git branch -a
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/doc_first_step_ABIM
+  remotes/origin/doc_first_step_start
+  remotes/origin/doc_get
+  remotes/origin/italian_about
+  remotes/origin/italian_first_step_RUS
+  remotes/origin/italian_first_steps_RUS
+  remotes/origin/italian_installation
+  remotes/origin/italian_persistence
+  remotes/origin/italian_warnings
+  remotes/origin/master
+
+[cri@localhost Masteritalian]$ git checkout -b first_step_start remotes/origin/doc_first_step_start
+Branch first_step_start set up to track remote branch doc_first_step_start from origin.
+Switched to a new branch 'first_step_start'
+
+[cri@localhost Masteritalian]$ git branch
+* first_step_start
+  master
+
+[cri@localhost Masteritalian]$ git checkout master
+Si è passati al branch 'master'
+Your branch is up-to-date with 'origin/master'.
+
+[cri@localhost Masteritalian]$ git merge first_step_start
+Auto-merging wiki/src/doc/first_steps/startup_options/administration_password.it.po
+CONFLICT (content): Merge conflict in wiki/src/doc/first_steps/startup_options/administration_password.it.po
+Merge automatico fallito; risolvi i conflitti ed eseguire il commit
+del risultato.
+
+-----------------------------------
+
+Aggiornamento di 7f39480..a6e77d9
+Fast-forward
+ wiki/src/doc/first_steps.index.it.po                                       | 100 ++++++++++++++++++++++++++++++++++++----------------------------------------------------------------
+ wiki/src/doc/first_steps/accessibility.it.po                               |  18 +++++++++++++-----
+ wiki/src/doc/first_steps/bug_reporting.it.po                               |  18 +++++++++---------
+ wiki/src/doc/first_steps/bug_reporting/tails_does_not_start.it.po          |   8 ++++----
+ wiki/src/doc/first_steps/introduction_to_gnome_and_the_tails_desktop.it.po |  53 ++++++++++++++++++++++++++++++++++++-----------------
+ wiki/src/doc/first_steps/media.it.po                                       |  14 +++++++-------
+ 6 files changed, 105 insertions(+), 106 deletions(-)
+
+
+-------------------------------------------------------
+
+
+#mini guida GIT
+
+https://rogerdudler.github.io/git-guide/index.it.html
+
+#branch
+
+Prima cosa un "git status" per vedere se siamo allineati ai rep remoti e se non lo siamo facciamolo.
+
+Voglio creare la nuova branch locale italia_about
+
+    git branch italian_about
+
+poi controllo che ci sia
+ 
+    git branch
+
+mi risponde la lista delle branch esistenti.
+
+Allora vado a lavorarci sopra.
+
+    git checkout italian_about
+
+    git branch
+mi fa rivedere le branch e che io sono su italian_about
+
+Ora modifico i vari file, faccio ADD, poi COMMIT e poi al PUSH:
+
+    git push [remote-name] [branch-name]
+
+Dove [remote-name] è comunemente "origin", dicono, ma nel mio caso ho dato:
+
+    git push l10n-italian italia_about
+
 # Dizionario
 
 <http://tp.linux.it/glossario.html>
@@ -11,9 +102,6 @@ Warning page = pagina degli avvertimenti/avvisi
 Persistence = persistente https://it.wikipedia.org/wiki/Persistenza_%28informatica%29 
 
 Sensitive = sensibile o riservato
-
-
-
 [[Domande aperte sui termini]]
 
 # Info
@@ -209,68 +297,119 @@ Attingere nuove pagine da tradurre dando precedenza a queste:
 <https://tails.boum.org/contribute/l10n_tricks/core_po_files.txt>
 
 
-# Lavoro svolto
+# In lavorazione (luglio 2016)
 
 [[file in elaborazione]]
 
-./about --DONE, pushed, daRev
+Pacco A [branch mix] - Blackflag
 
-./doc/about/license --DONE, pushed, daRev
+./about
+./doc
+./doc/about
+./doc/about.index
+./doc/about/features
+./doc/about/fingerprint
+./doc/about/license
+./doc/about/openpgp_keys
+./doc/about/requirements
+./doc/about/tor
+./doc/about/trust
+./doc/about/warning
+./doc/upgrade/error/check
+./doc/upgrade/error/download
+./doc/upgrade/error/install
+./doc/upgrade/error
+./getting_started   [attenzione link rotto verso downloading,
+verifying, and installing it !!!!!]
+./index
+./misc/unsafe_browser_warning
+./sidebar
+./support
+./upgrade
+./upgrade/clone
+./upgrade/clone/overview
+./upgrade/tails
+./upgrade/tails/overview
 
-./doc/about/requirements --DONE,  pushed, daRev
+PACCO B  [branch first steps]
 
-./doc/download --DONE,  pushed, daRev
-
-./doc/get.index --DONE,  pushed, daRev
-
-./doc/get/trusting_tails_signing_key --DONE,  pushed, daRev
-
-./doc/get/*--DONE,  pushed, daRev
-___
-
-bf
-
-./doc/about.index --FINITO!
-
-./doc/about/features --DONE, pushed  daRev 
-
-./doc/about/fingerprint --DONE,  pushed  daRev 
-
-./doc/first_steps/persistence.caution --FINITO!
-
-./doc/first_steps/persistence/configure --DONE pushed daRev
-
-./doc/first_steps/persistence/delete --FINITO!
-
-./doc/first_steps/persistence/warnings --FINITO!
-
-***
+./doc/first_steps
+./doc/first_steps.index
+./doc/first_steps/accessibility
+./doc/first_steps/bug_reporting
+./doc/first_steps/introduction_to_gnome_and_the_tails_desktop
+./doc/first_steps/persistence
+./doc/first_steps/persistence.caution
+./doc/first_steps/persistence/configure
+./doc/first_steps/persistence/delete
 ./doc/first_steps/persistence/use
+./doc/first_steps/persistence/warnings
+./doc/first_steps/shutdown
+./doc/first_steps/startup_options
+./doc/first_steps/startup_options/administration_password
+./doc/first_steps/startup_options/bridge_mode
+./doc/first_steps/startup_options/mac_spoofing
+./doc/first_steps/startup_options/network_configuration
+./doc/first_steps/startup_options/offline_mode
+./doc/first_steps/reset
+./doc/first_steps/reset.intro
+./doc/first_steps/reset/linux
+./doc/first_steps/reset/windows
+./doc/first_steps/reset/mac
+./doc/first_steps/upgrade
+./doc/first_steps/upgrade/release_notes.inline
 
-./doc/about/openpgp_keys --80% DONE, a lot of issues... not pushed
+PACCO C [branch install] - Zeyev
 
-___
-./doc/about/tor --DONE, Pushed 
+./install
+./install/clone
+./install/debian/clone/overview
+./install/debian
+./install/debian/usb
+./install/debian/usb/overview
+./install/download
+./install/download/openpgp
+./install/dvd
+./install/expert/usb
+./install/expert/usb/overview
+./install/linux/clone/overview
+./install/linux
+./install/linux/usb
+./install/linux/usb/overview
+./install/mac/clone
+./install/mac/clone/overview
+./install/mac/dvd
+./install/mac/dvd/overview
+./install/mac
+./install/mac/usb
+./install/mac/usb/overview
+./install/os
+./install/vm
+./install/win/clone/overview
+./install/win
+./install/win/usb
+./install/win/usb/overview
 
-./doc/about/trust --DONE, Pushed
+PACCO D [branch install ini] - Ignifugo
 
-./doc/about/warning --DONE, Pushed
-
-./doc/first_steps/accessibility --DONE, Pushed
-
-./doc/first_steps/bug_reporting --DONE, Pushed
-
-./doc/first_steps/bug_reporting/tails_does_not_start --DONE, Pushed
-
-./doc/first_steps/reset --DONE, Pushed
-
-./doc/first_steps/upgrade --DONE, Pushed
-
-___
-
-./doc/first_steps/start_tails --DONE, Pushed
-
-./doc/first_steps/startup_options --DONE, Pushed
+./install/inc/overview
+./install/inc/overview/vm
+./install/inc/router/clone
+./install/inc/router/why_extra.inline
+./install/inc/router/why_two.inline
+./install/inc/steps/bittorrent_verification.inline
+./install/inc/steps/create_persistence.inline
+./install/inc/steps/download.inline
+./install/inc/steps/install_final.inline
+./install/inc/steps/install_intermediary_intro.inline
+./install/inc/steps/install_intermediary_outro.inline
+./install/inc/steps/install_tails_installer.inline
+./install/inc/steps/mac_startup_disks.inline
+./install/inc/steps/not_at_all.inline
+./install/inc/steps/restart_first_time.inline
+./install/inc/steps/restart_second_time.inline
+./install/inc/steps/verify_up-to-date.inline
+./install/inc/tails-installation-assistant.inline
 
 #Viz
 
@@ -285,8 +424,7 @@ Tu puoi costruire la tua copia locale del sito sul tuo pc. La generazione del si
 
 Genera il wiki in locale su TAILS
 
-
-    Crea e configura la partizione resistente attivando le seguenti funzionalità (Applicazioni>Tails>Configure persistent volume):
+Crea e configura la partizione resistente attivando le seguenti funzionalità (Applicazioni>Tails>Configure persistent volume):
         Dati personali
         Pacchetti APT
         Liste APT
@@ -297,7 +435,7 @@ Genera il wiki in locale su TAILS
 
     sudo apt-get update
 
-    Installa i seguenti pacchetti:
+Installa i seguenti pacchetti:
 
     sudo apt-get install libyaml-perl libyaml-libyaml-perl po4a \
      perlmagick libyaml-syck-perl ikiwiki
@@ -310,6 +448,7 @@ Genera il wiki in locale su TAILS
     Il codice sorgente del sito internet si trova nella cartella wiki/src/ .
 
     Per accelerare la compilazione, puoi disabilitare alcune lingue nei parametri po_slave_languages delle configurazioni nei file ikiwiki.setup.
+E poi lanciare ikiwiki --changesetup ikiwiki.setu
 
     Ora puoi visistare questo indirizzo locale dal tuo browser per vedere il sito web generato:
 
@@ -320,59 +459,4 @@ Genera il wiki in locale su TAILS
     ./build-website --set destdir="/home/amnesia/Persistent/outtails" "$@"
 ___
 # Documenti Revisionati
-Dancus
-
-./doc/first_steps/persistence/warninzeyev   REVISIONATO
-
-./doc/first_steps/shutdown   REVISIONATO
-
-./doc/first_steps/start_tails REVISIONATO
-
-./doc/first_steps/startup_option/administration_password
-
-./doc/first_steps/startup_options/bridge_mode
-
-./doc/first_steps/startup_options/mac_spoofing
-
-./doc/first_steps/startup_options/network_configuration
-
-./doc/first_steps/startup_options/windows_camouflage
-
--------------------------------------------------------------------
-Blackflag
-
-doc/about/tor.it.html REVISIONATO  ("Tor ama le compagnie?")
-
-about/trust.it.po (il file è ok ma sul sito locale sembra ancora da tradurre...)
-
-about/warning.it.po (manca circa 1/3 della traduzione)
-
-doc/first_steps/shutdown.it.po REVISIONATO
-
-getting_started.it.po REVISIONATO
-
-index.it.po REVISIONATO
-
-sidebar.it.po REVISIONATO
-
-support.it.html REVISIONATO (file ok ma html sbagliato (da me) )
-
-________________________________
-
-Igni
-
-./doc/about.index --FINITO!
-
-./doc/about/features --FINITO!
-
-./doc/about/fingerprint --FINITO! 
-
-./doc/first_steps/persistence.caution --FINITO!
-
-./doc/first_steps/persistence/configure --FINITO!
-
-./doc/first_steps/persistence/delete --FINITO!
-
-./doc/first_steps/persistence/warnings --FINITO!
-
 ________________________________________

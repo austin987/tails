@@ -1,0 +1,51 @@
+#!/bin/sh
+set -e
+set -u
+
+echo "Installing libdvd-pkg"
+
+apt-get --yes install libdvd-pkg
+dpkg-reconfigure libdvd-pkg
+
+# Create and install a fake libdvd-pkg package. This is necessary for
+# libdvdcss2 (the actual dvd decoding package) which depends on
+# libdvd-pkg. libdvd-pkg however depends on build-essential, which is
+# explicitly removed. So instead we build/install a fake libdvd-pkg
+# without the build-essential dependency to satisfy libdvdcss2.
+tmp="$(mktemp -d)"
+apt-get install --yes equivs
+
+LIBDVD_PKG_VERSION="$(dpkg-query -s libdvd-pkg | grep Version | cut -d ' ' -f2)+fake1"
+
+cat > "${tmp}/libdvd-pkg-${LIBDVD_PKG_VERSION}.control" << EOF
+Section: multimedia
+Priority: optional
+Homepage: https://tails.boum.org/
+Standards-Version: 3.6.2
+
+Package: libdvd-pkg
+Version: ${LIBDVD_PKG_VERSION}
+Maintainer: Tails developers <amnesia@boum.org>
+Architecture: all
+Description: (Fake) libdvd-pkg package
+ Provide placeholder to keep libdvdcss2 happy.
+EOF
+
+(
+    cd "${tmp}"
+    equivs-build "libdvd-pkg-${LIBDVD_PKG_VERSION}.control"
+    dpkg -i "libdvd-pkg_${LIBDVD_PKG_VERSION}_all.deb"
+)
+rm -r "${tmp}" /usr/src/libdvd-pkg
+
+# Verify installed packages:
+for x in libdvd-pkg
+do
+    dpkg -s $x
+    dpkg-query -W -f='${Version}\n' $x
+done
+
+# Remove dangling symlink -- note that we absolutely do not want the
+# functionality (automatic checks and upgrades for new css sources)
+# that the removed script provides.
+rm -f /etc/apt/apt.conf.d/88libdvdcss-pkg
