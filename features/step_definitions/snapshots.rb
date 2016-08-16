@@ -15,8 +15,6 @@ def checkpoints
       :parent_checkpoint => "tails-greeter",
       :steps => [
         'I log in to a new session',
-        'Tails Greeter has dealt with the sudo password',
-        'the Tails desktop is ready',
       ],
     },
 
@@ -29,7 +27,6 @@ def checkpoints
         'I start the computer',
         'the computer boots Tails',
         'I log in to a new session',
-        'the Tails desktop is ready',
       ],
     },
 
@@ -66,8 +63,6 @@ def checkpoints
         'I enable more Tails Greeter options',
         'I enable the specific Tor configuration option',
         'I log in to a new session',
-        'Tails Greeter has dealt with the sudo password',
-        'the Tails desktop is ready',
         'all notifications have disappeared',
       ],
     },
@@ -80,8 +75,6 @@ def checkpoints
         'I enable more Tails Greeter options',
         'I set an administration password',
         'I log in to a new session',
-        'Tails Greeter has dealt with the sudo password',
-        'the Tails desktop is ready',
       ],
     },
 
@@ -121,7 +114,6 @@ def checkpoints
       :parent_checkpoint => 'usb-install-tails-greeter',
       :steps => [
         'I log in to a new session',
-        'the Tails desktop is ready',
       ],
     },
 
@@ -146,7 +138,6 @@ def checkpoints
       :steps => [
         'I enable persistence',
         'I log in to a new session',
-        'the Tails desktop is ready',
         'all persistence presets are enabled',
         'all persistent filesystems have safe access rights',
         'all persistence configuration files have safe access rights',

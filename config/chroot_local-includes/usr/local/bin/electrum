@@ -22,12 +22,8 @@ verify_start () {
 "
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"
-    # Since zenity can't set the default button to cancel, we switch the
-    # labels and interpret the return value as its negation.
-    if zenity --question --title "" --ok-label "${exit}" \
-       --cancel-label "${launch}" --text "${dialog_msg}"; then
-        return 1
-    fi
+    zenity --question --title "" --text "${dialog_msg}" --default-cancel \
+           --ok-label "${launch}" --cancel-label "${exit}"
 }
 
 if ! electrum_config_is_persistent; then

@@ -1,12 +1,12 @@
 Then /^I start Electrum through the GNOME menu$/ do
-  step "I start \"Electrum\" via the GNOME \"Internet\" applications menu"
+  step "I start \"Electrum Bitcoin Wallet\" via the GNOME \"Internet\" applications menu"
 end
 
 When /^a bitcoin wallet is (|not )present$/ do |existing|
   wallet = "/home/#{LIVE_USER}/.electrum/wallets/default_wallet"
   case existing
   when ""
-    step "the file \"#{wallet}\" exists after at most 10 seconds"
+    step "the file \"#{wallet}\" exists after at most 30 seconds"
   when "not "
     step "the file \"#{wallet}\" does not exist"
   else
@@ -24,7 +24,7 @@ When /^I create a new bitcoin wallet$/ do
   seed = $vm.get_clipboard
   @screen.wait_and_click("ElectrumNextButton.png", 15)
   @screen.wait("ElectrumSeedVerificationPrompt.png", 15)
-  @screen.click("ElectrumWalletSeedTextbox.png", 15)
+  @screen.wait_and_click("ElectrumWalletSeedTextbox.png", 15)
   @screen.type(seed) # Confirm seed
   @screen.wait_and_click("ElectrumNextButton.png", 10)
   @screen.wait_and_click("ElectrumEncryptWallet.png", 10)

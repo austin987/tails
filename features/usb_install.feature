@@ -42,7 +42,6 @@ Feature: Installing Tails to a USB drive
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
-    Then Tails seems to have booted normally
     When I create a persistent partition
     Then a Tails persistence partition exists on USB drive "__internal"
 
@@ -51,12 +50,12 @@ Feature: Installing Tails to a USB drive
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
-    Then Tails seems to have booted normally
-    And Tails is running from USB drive "__internal"
+    Then Tails is running from USB drive "__internal"
     And the persistent Tor Browser directory does not exist
     And there is no persistence partition on USB drive "__internal"
 
   #10720: Tails Installer freezes on Jenkins
+  #11583
   @fragile
   Scenario: Booting Tails from a USB drive in UEFI mode
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen

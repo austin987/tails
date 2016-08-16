@@ -38,6 +38,13 @@ EOF
 )
 rm -r "${tmp}" /usr/src/libdvd-pkg
 
+# Verify installed packages:
+for x in libdvd-pkg
+do
+    dpkg -s $x
+    dpkg-query -W -f='${Version}\n' $x
+done
+
 # Remove dangling symlink -- note that we absolutely do not want the
 # functionality (automatic checks and upgrades for new css sources)
 # that the removed script provides.
