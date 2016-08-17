@@ -1,3 +1,4 @@
+#11465
 @product @check_tor_leaks @fragile
 Feature: Icedove email client
   As a Tails user
@@ -9,9 +10,6 @@ Feature: Icedove email client
     And Icedove has started
     And I have not configured an email account
     Then I am prompted to setup an email account
-
-  Scenario: Icedove defaults to using IMAP
-    Then IMAP is the default protocol
 
   Scenario: Adblock is not enabled within Icedove
     Given I cancel setting up an email account
@@ -31,9 +29,3 @@ Feature: Icedove email client
     Given I cancel setting up an email account
     And I open Torbirdy's preferences
     Then I see that Torbirdy is configured to use Tor
-
-  Scenario: Icedove will work over Tor
-    Given I cancel setting up an email account
-    And I open Torbirdy's preferences
-    When I test Torbirdy's proxy settings
-    Then Torbirdy's proxy test is successful

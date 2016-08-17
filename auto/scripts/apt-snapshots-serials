@@ -1,0 +1,67 @@
+#!/bin/bash
+set -e
+set -u
+
+set -o pipefail
+
+BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
+CONFIG=config/APT_snapshots.d
+ORIGINS=$(cd $CONFIG; ls -d *)
+
+get_latest_serial() {
+	origin=$1
+	wget -q $BASE_URL/$origin/project/trace/$origin -O - \
+		| awk -F': ' '/^Archive serial: / {print $2}'
+}
+
+action="$1"
+case "$action" in
+	get-latest)
+		for origin in $ORIGINS; do
+			online=$(get_latest_serial $origin)
+			echo "$origin: $online"
+		done
+	;;
+	freeze)
+		for origin in $ORIGINS; do
+			serial_file="$CONFIG/$origin/serial"
+			git=$(cat $serial_file)
+			case "$origin" in
+				debian-security)
+					new=latest
+					;;
+				*)
+					new=$(get_latest_serial $origin)
+			esac
+			printf "Origin $origin:\n  old: $git\n  new: $new\n"
+			echo $new > $serial_file
+		done
+		printf "\nAll files ($CONFIG/*/serial) have been updated with new serials\n" >&2
+	;;
+	thaw)
+		for origin in $ORIGINS; do
+			serial_file="$CONFIG/$origin/serial"
+			git=$(cat $serial_file)
+			printf "Origin $origin:\n  old: $git\n  new: latest\n"
+			echo 'latest' > $serial_file
+		done
+	;;
+	prepare-build)
+		rm -rf tmp/APT_snapshots.d
+		mkdir -p tmp
+		cp -r config/APT_snapshots.d tmp/
+		$0 get-latest > tmp/cached_APT_snapshots_serials
+		for origin_dir in tmp/APT_snapshots.d/*; do
+			origin=$(basename $origin_dir)
+			if grep -qs '^latest$' $origin_dir/serial; then
+				awk -F': ' "/^$origin: / {print \$2}" \
+					tmp/cached_APT_snapshots_serials \
+					> $origin_dir/serial
+			fi
+		done
+	;;
+	*)
+		printf "unknown action ($action), use either 'get-latest', 'prepare-build', 'freeze' or 'thaw'\n" >&2
+		exit 1
+	;;
+esac

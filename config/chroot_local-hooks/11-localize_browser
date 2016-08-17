@@ -16,7 +16,6 @@ echo "Localize each supported browser locale"
 # Import TAILS_WIKI_SUPPORTED_LANGUAGES
 . /etc/amnesia/environment
 
-TBB_DEFAULT_SEARCHPLUGINS_DIR="${TBB_INSTALL}/browser/searchplugins"
 TBB_LOCALIZED_SEARCHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
@@ -143,49 +142,34 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     fi
     set_simple_config_key "${TARGET_BRANDING_FILE}" \
                           "browser.startup.homepage" "${HOMEPAGE}"
-
-    # We also want the localized search plugins from Debian's
-    # Iceweasel packages. Note that en-US doesn't have one; the
-    # en-US search plugins are in the iceweasel package, but it
-    # would only add search engines that we have decided to
-    # exclude so let's skip it.
-    if [ "${MOZILLA_LOCALE}" != en-US ]; then
-        PKG="iceweasel-l10n-$(echo "${MOZILLA_LOCALE}" | tr 'A-Z' 'a-z')"
-        DEB_PATH_TO_SEARCHPLUGINS="etc/iceweasel/searchplugins/locale/${MOZILLA_LOCALE}"
-        TMP="$(mktemp -d)"
-        cd "${TMP}"
-        apt-get download "${PKG}"
-        ar x "${PKG}"*.deb
-        tar xf data.tar.* ./"${DEB_PATH_TO_SEARCHPLUGINS}"
-        rm -f "${DEB_PATH_TO_SEARCHPLUGINS}"/amazon*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/bing*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/eBay*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/yahoo*.xml \
-              "${DEB_PATH_TO_SEARCHPLUGINS}"/wikipedia*.xml
-        cp "${DEB_PATH_TO_SEARCHPLUGINS}"/* "${TARGET_SEARCHPLUGINS_DIR}"
-        cd /
-        rm -r "${TMP}"
-    fi
 done < "${DESCRIPTIONS_FILE}"
 
 # This directory is not needed after build time.
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
 # Remove unwanted browser search plugins bundled in the Tor Browser.
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/yahoo*.xml
-# We generate localized versions of the following:
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/disconnect*.xml
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/startpage*.xml
-rm "${TBB_DEFAULT_SEARCHPLUGINS_DIR}"/wikipedia*.xml
+7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
+   'chrome/en-US/locale/browser/searchplugins/disconnect*.xml' \
+   'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
+   'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
+   'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
 
 # We want our localized English Wikipedia plugin to be available in
 # all locales.
-mv "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/en-US/wikipedia-en-US.xml" \
-   "${TBB_DEFAULT_SEARCHPLUGINS_DIR}/"
+(
+    cd "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}"
+    for dir in *; do
+        if [ -d "${dir}" ] && [ "${dir}" != en-US ]; then
+            (
+                cd "${dir}"
+                cp -a ../en-US/wikipedia-en-US.xml .
+            )
+        fi
+    done
+)
 
 # All generated files must be world-readable.
 chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
-              "${TBB_DEFAULT_SEARCHPLUGINS_DIR}" \
               "${BRANDING_DIR}"
 
 apt-get --yes purge imagemagick

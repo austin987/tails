@@ -1,6 +1,4 @@
-#10497: wait_until_tor_is_working
-#10498: SSH tests are fragile
-@product @fragile
+@product
 Feature: Logging in via SSH
   As a Tails user
   When I connect to SSH servers on the Internet
@@ -13,7 +11,6 @@ Feature: Logging in via SSH
   Scenario: Connecting to an SSH server on the Internet
     Given I have the SSH key pair for an SSH server
     When I connect to an SSH server on the Internet
-    And I verify the SSH fingerprint for the SSH server
     Then I have sucessfully logged into the SSH server
 
   @check_tor_leaks
@@ -27,5 +24,4 @@ Feature: Logging in via SSH
   Scenario: Connecting to an SFTP server on the Internet using the GNOME "Connect to Server" feature
     Given I have the SSH key pair for an SFTP server
     When I connect to an SFTP server on the Internet
-    And I verify the SSH fingerprint for the SFTP server
     Then I successfully connect to the SFTP server

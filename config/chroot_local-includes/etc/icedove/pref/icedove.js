@@ -19,9 +19,6 @@ pref("mail.shell.checkDefaultMail", false);
 pref("network.protocol-handler.app.http", "x-www-browser");
 pref("network.protocol-handler.app.https", "x-www-browser");
 
-// Tell TorBirdy we're running Tails so that it adapts its behaviour.
-//pref("vendor.name", "Tails");
-
 // Disable mail indexing
 pref("mailnews.database.global.indexer.enabled", false);
 
@@ -39,3 +36,13 @@ pref("mail.tabs.autoHide", true);
 pref("toolkit.telemetry.prompted", 2);
 pref("toolkit.telemetry.rejected", true);
 pref("toolkit.telemetry.enabled", false);
+
+// Only allow Icedove's automatic configuration wizard to use and
+// configure secure (SSL/TLS) protocols. This is the Icedove default
+// but let's be extra sure!
+pref("mailnews.auto_config.ssl_only", true);
+// Disable MX lookup which is susceptible to MitM (without
+// DNSSEC). Note that the lookup is not done using the system
+// resolver, but over HTTPS to some DNS web service, but that web
+// service could still be targeted.
+pref("mailnews.auto_config.dns_mx_lookup.enabled", false);

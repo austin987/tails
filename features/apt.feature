@@ -1,5 +1,4 @@
-#10497: wait_until_tor_is_working
-@product @fragile
+@product
 Feature: Installing packages through APT
   As a Tails user
   when I set an administration password in Tails Greeter
@@ -10,10 +9,9 @@ Feature: Installing packages through APT
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
 
   Scenario: APT sources are configured correctly
-    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,backports.debian.org,deb.tails.boum.org,deb.torproject.org,mozilla.debian.net"
+    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,deb.tails.boum.org,deb.torproject.org"
 
-  #10496: apt-get scenarios are fragile
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Install packages using apt
     When I update APT using apt
     Then I should be able to install a package using apt

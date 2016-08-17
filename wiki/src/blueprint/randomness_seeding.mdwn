@@ -1,11 +1,84 @@
+# /dev/random and /dev/urandom radomness seeding in Tails
+
+/dev/random and /dev/urandom are especial Linux devices that provide access from user land
+to the Linux kernel Pseudo Random Number Generator (PRNG). This generator is used for almost
+every security protocol, like TLS/SSL key generation, choosing TCP sequence and file system and email
+encryption [1]. Such PRNG requires a a "good" source of randomness on initialization,
+that is a seed. In order to this seed to be secure, a source of entropy should be used. The
+Linux kernel collects entropy from several sources, for example keyboard typing, mouse movement,
+among others.
+
+## Problem
+
+Because of the Tails nature of being amnesic, and run from a live device,
+the seed file is public and the same each boot for a given Tails release,
+this may make the output of /dev/urandom predictable.
+
+The urandom initscript makes it clear that the assumption for this file is that its content
+is "unique to this machine and not known to attackers"... which is not the case when we
+ship that file in our ISO images. If that file doesn't exist, the initscript seeds urandom
+with the output of date +%s.%N only. The same initscript says that "re-using a seed compromises
+security". Only /dev/urandom is at risk here. /dev/random is not.
+
+Read [2],[3],[4],[5],[6],[7] and [8] for more information.
+
+## Proposed solutions
+
+### Persist entropy pool seeds [[!tails_ticket 7675]]
+
+Generating entropy on a live distribution is a tough problem. And this has impact to securely
+generate cryptographic keys, like for example for Pidgin-OTR, using SSH or generating a PGP key.
+We hope to improve this situation for users who enable the persistence storage option using some
+randomness from the previous session to help bootstrap with some "well" generated randomness.
+
+However this option is only useful for users with persistence enabled, and does not solve the
+problem for the first time Tails is booted.
+
+### Use a stronger entropy collector library [[!tails_ticket 5650]]
+
+We could try haveged as well as other entropy collection daemons. It would be nice to
+have study (read: a survey of packages, etc) of all the useful entropy gathering daemons
+that might be of use on a Tails system.
+
+###  Use the Tails installer to create a better seed
+
+Tails installer can be used on Debian and Ubuntu, and in the future on
+Windows and OSX, we could use their PRNG to generate a presumably better
+seed file on every new Tails installation. Of course this should be a post installation
+mechanism, after verifying the ISO/disk image hash/signature.
+
+This would at least provide a better escenario than the one with the same known
+and constant seed file, which provides entropy zero.
+
+This solution is partial since it only works for Tails Installer+USB stick, and doesn't
+provide persistence by itself, but might be a complementary solution for [[!tails_ticket 7675]].
+
+## Current workaround
+
+Tails has stopped shipping /var/lib/urandom/random-seed, since it is a fixed known value
+for every Tails installation which means its entropy contribution is zero.
+
+On Tails 2.x we ship /var/lib/urandom/random-seed, that would be used by the urandom initscript...
+except that initscript is masked by urandom.service, so what matters now is how
+/lib/systemd/systemd-random-seed load behaves in the absence of any /var/lib/systemd/random-seed
+(Tails 2.0.1 ships no such file).
+
+Systemd-random-seed load won't write anything to /dev/urandom (so we rely purely on the kernel and
+current system entropy to get /dev/urandom). This new behavior can't be much worse, and the fact it's
+the new debootstrap and systemd default behavior tends to reassure me somewhat.
+
+## Related tickets
+
 This is about [[!tails_ticket 7642]], [[!tails_ticket 7675]],
 [[!tails_ticket 6116]], and friends.
 
-# Resources
+## References
 
-* <http://wiki.qubes-os.org/trac/ticket/673>
-* <https://github.com/QubesOS/qubes-issues/issues/1311>
-* <https://groups.google.com/forum/#!msg/qubes-devel/Q65boPAbqbE/9ZOZUInQCgAJ>
-* <https://groups.google.com/forum/#!topic/qubes-devel/5wI8ygbaohk>
-* <https://www.av8n.com/computer/htm/secure-random.htm>
-* <http://www.av8n.com/computer/htm/fixup-live-cd.htm>
+* [1] <https://eprint.iacr.org/2006/086.pdf>
+* [2] <https://eprint.iacr.org/2013/338.pdf>
+* [3] <http://wiki.qubes-os.org/trac/ticket/673>
+* [4] <https://github.com/QubesOS/qubes-issues/issues/1311>
+* [5] <https://groups.google.com/forum/#!msg/qubes-devel/Q65boPAbqbE/9ZOZUInQCgAJ>
+* [6] <https://groups.google.com/forum/#!topic/qubes-devel/5wI8ygbaohk>
+* [7] <https://www.av8n.com/computer/htm/secure-random.htm>
+* [8] <http://www.av8n.com/computer/htm/fixup-live-cd.htm>
