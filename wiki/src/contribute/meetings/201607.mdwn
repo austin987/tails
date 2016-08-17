@@ -1,0 +1,53 @@
+[[!meta title="July 2016 online meeting"]]
+
+Unfortunatly, we were not able to reach redmine during the meeting, because the
+cert was expired and hsts. The hidden service also didn't work as expected, but
+we had at least the chance to access it for a short period time to get a list
+of tickets to be discussed.
+So no volunteers to handle "[Hole in the
+roof](https://labs.riseup.net/code/versions/198)" and no volunteers to handle
+important tickets flagged for next release, but without assignee
+
+[[!toc levels=1]]
+
+# Availability this month
+
+- nodens will be working on [[!tails_ticket 10190]] and [[!tails_ticket 7711]]
+- intrigeri will be back to his usual Tails availability in ~10 days
+  and will be wrapping up the SponsorS contract at end of july
+- flaplap will try to get more people to do translations
+- u's availability will be reduced, but connected
+- segfault will be working on the Tails server
+
+# [[!tails_ticket 10950 desc="Consider installing gnome-sound-recorder on Jessie"]]
+
+We decided to add gnome-sound-recorder back to tails.
+If we had to decide between audacity and gnome-sound-recorder, we would ship
+the latter, because its easier to use for inexpierenced users. The former could
+be a case for the 'additional software packages', but we don't want a
+regression and there are usecases for audacity on Tails. Also g-s-r is really
+tiny. Thats why we ship both.
+
+# [[!tails_ticket 10100 desc="Enable Unsafe browser + Clearnet user via Greeter"]]
+
+We agree with sajolidas reasoning on the ticket #note-6: there is already a
+blueprint for a new solution and there are some ux problems with adding that
+functionality to the greeter.
+intrigeri suggested the middle ground to block/forbid the unsafe browser as
+soon as Tor has bootstrapped, but thats not that easy to implement: one ux
+problem to solve would be how to handle roaming laptops that move into a wifi
+that requires a captive portal.  thats not worth the
+coding/reviewing/documentation effort for a temporary solution
+
+# [[!tails_ticket 11539 desc="Don't ship the testing and unstable APT sources"]]
+
+Segfault explained that the reason for this ticket was that Tails Server needs
+to download the packge list the first time a service is installed, which takes
+a long time at the moment (30 seconds instead of 2 to 10 minutes).
+There could be corner cases where this could break stuff. intrigeri: "say we
+pull pkg P1 from sid, and then user wants to install package P2 themselves, and
+it depends on P3 but the version of P3 in stable conflicts with the version of
+P1 in stable, so the user would need to install P3 from sid, but we just broke
+that for them."
+We decided that this ticket needs more research into possible corner cases that
+could be broken.

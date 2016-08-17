@@ -1,4 +1,4 @@
-[[!meta title="Releasing the Tor Browser"]]
+[[!meta title="Upgrading the Tor Browser"]]
 
 [[!toc levels=2]]
 
@@ -43,6 +43,7 @@ Have a look at
 * <https://www.torproject.org/dist/torbrowser/>
 * <https://people.torproject.org/~mikeperry/builds/>
 * <https://people.torproject.org/~gk/builds/>
+* <https://people.torproject.org/~boklm/builds/>
 * <https://people.torproject.org/~linus/builds/>
 
 and see if the desired version is available. Set `DIST_URL` to the
@@ -113,10 +114,10 @@ Self-hosted Tor Browser tarballs archive
 Initial setup
 -------------
 
-First, install git-annex from wheezy-backports or newer.
+First, install git-annex.
 
 Then, make sure you have an entry for `git.puppet.tails.boum.org` in
-your `~/.ssh/config`. See systems/ISO_history in the internal Git repo
+your `~/.ssh/config`. See `systems/ISO_history.mdwn` in the internal Git repo
 for details.
 
 Then, clone the metadata repository and initialize git-annex:
@@ -161,7 +162,8 @@ Import a new set of Tor Browser tarballs
        cat "$TBB_SHA256SUMS_FILE" | while read expected_sha256 tarball; do
           (
              cd "$TMPDIR"
-             curl --remote-name "${TBB_TARBALLS_BASE_URL}/${tarball}"
+             curl --remote-name --continue-at - \
+                "${TBB_TARBALLS_BASE_URL}/${tarball}"
           )
        done
        (cd "$TMPDIR" && sha256sum -c "$TBB_SHA256SUMS_FILE")
@@ -180,6 +182,18 @@ Commit and push your changes
 	git annex sync && \
 	git annex copy --to origin -- "${VERSION}"
 
+Wait for the synchronization
+----------------------------
+
+Once you've gone through these steps, a cronjob that runs every
+5 minutes will download the tarballs and make them available on
+<http://torbrowser-archive.tails.boum.org/>.
+
+Wait for this to happen before you proceed with the next steps.
+
+In the meantime, you might want to import the new Tor Browser tarballs
+into your `apt-cacher-ng` local cache.
+
 Adjust the URL in the main Git repository
 -----------------------------------------
 
@@ -188,15 +202,3 @@ Adjust the URL in the main Git repository
          config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
     git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
         -m "Fetch Tor Browser from our own archive."
-
-Wait for the synchronization
-----------------------------
-
-Once you've gone through these steps, a cronjob that runs every
-5 minutes will download the tarballs and make them available on
-<http://torbrowser-archive.tails.boum.org/>.
-
-Wait for this to happen before you can build Tails using the new URL.
-
-In the meantime, you might want to import the new Tor Browser tarballs
-into your `apt-cacher-ng` local cache.
