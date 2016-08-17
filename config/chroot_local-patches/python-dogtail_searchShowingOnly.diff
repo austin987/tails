@@ -1,0 +1,294 @@
+Author: anonym <anonym@riseup.net>
+Date:   Mon Apr 4 18:04:52 2016 +0200
+
+    Add support for only searching among 'showing' nodes.
+    
+    Here 'showing' refers to pyatspi.STATE_SHOWING, i.e. whether a node is
+    shown to the end-user or not. Quite often we are only interested in
+    such nodes, at least when dogtail is used to interact with an
+    application (e.g. clicking something that isn't there won't
+    work). Most importantly, this greatly simplifies situations where the
+    'shown' element we are looking for is hard to exactly pinpoint since
+    it lacks properties to distinguish it from some not 'shown' element.
+    
+    Therefore we add a `showingOnly` boolean flag to all search methods
+    where it makes sense (e.g. it doesn't make sense for Application:s
+    since they seem to always be considered not 'showing'). The default
+    will be to not do this, for backwards-compatibility, but the default
+    is configurable via a new `searchShowingOnly` config option.
+
+--- a/usr/share/pyshared/dogtail/config.py
++++ b/usr/share/pyshared/dogtail/config.py
+@@ -58,6 +58,9 @@ class _Config(object):
+     searchCutoffCount (int):
+     Number of times to retry when a search fails.
+ 
++    searchShowingOnly (boolean):
++    Whether to only search among nodes that are currently being shown.
++
+     defaultDelay (float):
+     Default time in seconds to sleep when delaying.
+ 
+@@ -134,6 +137,7 @@ class _Config(object):
+         'searchBackoffDuration': 0.5,
+         'searchWarningThreshold': 3,
+         'searchCutoffCount': 20,
++        'searchShowingOnly': False,
+         'defaultDelay': 0.5,
+         'childrenLimit': 100,
+ 
+--- a/usr/share/pyshared/dogtail/tree.py
++++ b/usr/share/pyshared/dogtail/tree.py
+@@ -819,12 +819,18 @@ class Node(object):
+         else:
+             return False
+ 
+-    def _fastFindChild(self, pred, recursive=True):
++    def _fastFindChild(self, pred, recursive=True, showingOnly=None):
+         """
+         Searches for an Accessible using methods from pyatspi.utils
+         """
+         if isinstance(pred, predicate.Predicate):
+             pred = pred.satisfiedByNode
++        if showingOnly == None:
++            showingOnly = config.searchShowingOnly
++        if showingOnly:
++            orig_pred = pred
++            pred = lambda n: orig_pred(n) and \
++                             n.getState().contains(pyatspi.STATE_SHOWING)
+         if not recursive:
+             cIter = iter(self)
+             while True:
+@@ -839,7 +845,7 @@ class Node(object):
+             return pyatspi.utils.findDescendant(self, pred)
+ 
+     def findChild(self, pred, recursive=True, debugName=None,
+-                  retry=True, requireResult=True):
++                  retry=True, requireResult=True, showingOnly=None):
+         """
+         Search for a node satisyfing the predicate, returning a Node.
+ 
+@@ -871,7 +877,7 @@ class Node(object):
+                 logger.log("searching for %s (attempt %i)" %
+                            (describeSearch(self, pred, recursive, debugName), numAttempts))
+ 
+-            result = self._fastFindChild(pred.satisfiedByNode, recursive)
++            result = self._fastFindChild(pred.satisfiedByNode, recursive, showingOnly=showingOnly)
+             if result:
+                 assert isinstance(result, Node)
+                 if debugName:
+@@ -891,12 +897,12 @@ class Node(object):
+             raise SearchError(describeSearch(self, pred, recursive, debugName))
+ 
+     # The canonical "search for multiple" method:
+-    def findChildren(self, pred, recursive=True, isLambda=False):
++    def findChildren(self, pred, recursive=True, isLambda=False, showingOnly=None):
+         """
+         Find all children/descendents satisfying the predicate.
+         """
+         if isLambda is True:
+-            nodes = self.findChildren(predicate.GenericPredicate(), recursive=recursive)
++            nodes = self.findChildren(predicate.GenericPredicate(), recursive=recursive, showingOnly=showingOnly)
+             result = []
+             for node in nodes:
+                 try:
+@@ -907,6 +913,12 @@ class Node(object):
+             return result
+         if isinstance(pred, predicate.Predicate):
+             pred = pred.satisfiedByNode
++        if showingOnly == None:
++            showingOnly = config.searchShowingOnly
++        if showingOnly:
++            orig_pred = pred
++            pred = lambda n: orig_pred(n) and \
++                             n.getState().contains(pyatspi.STATE_SHOWING)
+         if not recursive:
+             cIter = iter(self)
+             result = []
+@@ -929,7 +941,7 @@ class Node(object):
+             return descendants
+ 
+     # The canonical "search above this node" method:
+-    def findAncestor(self, pred):
++    def findAncestor(self, pred, showingOnly=None):
+         """
+         Search up the ancestry of this node, returning the first Node
+         satisfying the predicate, or None.
+@@ -945,7 +957,7 @@ class Node(object):
+         return None
+ 
+     # Various wrapper/helper search methods:
+-    def child(self, name='', roleName='', description='', label='', recursive=True, retry=True, debugName=None):
++    def child(self, name='', roleName='', description='', label='', recursive=True, retry=True, debugName=None, showingOnly=None):
+         """
+         Finds a child satisying the given criteria.
+ 
+@@ -953,9 +965,9 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.GenericPredicate(name=name, roleName=roleName, description=description, label=label), recursive=recursive, retry=retry, debugName=debugName)
++        return self.findChild(predicate.GenericPredicate(name=name, roleName=roleName, description=description, label=label), recursive=recursive, retry=retry, debugName=debugName, showingOnly=showingOnly)
+ 
+-    def isChild(self, name='', roleName='', description='', label='', recursive=True, retry=False, debugName=None):
++    def isChild(self, name='', roleName='', description='', label='', recursive=True, retry=False, debugName=None, showingOnly=None):
+         """
+         Determines whether a child satisying the given criteria exists.
+ 
+@@ -970,12 +982,12 @@ class Node(object):
+             self.findChild(
+                 predicate.GenericPredicate(
+                     name=name, roleName=roleName, description=description, label=label),
+-                recursive=recursive, retry=retry, debugName=debugName)
++                recursive=recursive, retry=retry, debugName=debugName, showingOnly=showingOnly)
+         except SearchError:
+             found = False
+         return found
+ 
+-    def menu(self, menuName, recursive=True):
++    def menu(self, menuName, recursive=True, showingOnly=None):
+         """
+         Search below this node for a menu with the given name.
+ 
+@@ -983,9 +995,9 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.IsAMenuNamed(menuName=menuName), recursive)
++        return self.findChild(predicate.IsAMenuNamed(menuName=menuName), recursive, showingOnly=showingOnly)
+ 
+-    def menuItem(self, menuItemName, recursive=True):
++    def menuItem(self, menuItemName, recursive=True, showingOnly=None):
+         """
+         Search below this node for a menu item with the given name.
+ 
+@@ -993,9 +1005,9 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.IsAMenuItemNamed(menuItemName=menuItemName), recursive)
++        return self.findChild(predicate.IsAMenuItemNamed(menuItemName=menuItemName), recursive, showingOnly=showingOnly)
+ 
+-    def textentry(self, textEntryName, recursive=True):
++    def textentry(self, textEntryName, recursive=True, showingOnly=None):
+         """
+         Search below this node for a text entry with the given name.
+ 
+@@ -1003,9 +1015,9 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.IsATextEntryNamed(textEntryName=textEntryName), recursive)
++        return self.findChild(predicate.IsATextEntryNamed(textEntryName=textEntryName), recursive, showingOnly=showingOnly)
+ 
+-    def button(self, buttonName, recursive=True):
++    def button(self, buttonName, recursive=True, showingOnly=None):
+         """
+         Search below this node for a button with the given name.
+ 
+@@ -1013,9 +1025,9 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.IsAButtonNamed(buttonName=buttonName), recursive)
++        return self.findChild(predicate.IsAButtonNamed(buttonName=buttonName), recursive, showingOnly=showingOnly)
+ 
+-    def childLabelled(self, labelText, recursive=True):
++    def childLabelled(self, labelText, recursive=True, showingOnly=None):
+         """
+         Search below this node for a child labelled with the given text.
+ 
+@@ -1023,9 +1035,9 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.IsLabelledAs(labelText), recursive)
++        return self.findChild(predicate.IsLabelledAs(labelText), recursive, showingOnly=showingOnly)
+ 
+-    def childNamed(self, childName, recursive=True):
++    def childNamed(self, childName, recursive=True, showingOnly=None):
+         """
+         Search below this node for a child with the given name.
+ 
+@@ -1033,9 +1045,9 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.IsNamed(childName), recursive)
++        return self.findChild(predicate.IsNamed(childName), recursive, showingOnly=showingOnly)
+ 
+-    def tab(self, tabName, recursive=True):
++    def tab(self, tabName, recursive=True, showingOnly=None):
+         """
+         Search below this node for a tab with the given name.
+ 
+@@ -1043,7 +1055,7 @@ class Node(object):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return self.findChild(predicate.IsATabNamed(tabName=tabName), recursive)
++        return self.findChild(predicate.IsATabNamed(tabName=tabName), recursive, showingOnly=showingOnly)
+ 
+     def getUserVisibleStrings(self):
+         """
+@@ -1109,7 +1121,7 @@ class Root (Node):
+         Get all applications.
+         """
+         return root.findChildren(predicate.GenericPredicate(
+-            roleName="application"), recursive=False)
++            roleName="application"), recursive=False, showingOnly=False)
+ 
+     def application(self, appName, retry=True):
+         """
+@@ -1120,12 +1132,12 @@ class Root (Node):
+         if no such child is found, and will eventually raise an exception. It
+         also logs the search.
+         """
+-        return root.findChild(predicate.IsAnApplicationNamed(appName), recursive=False, retry=retry)
++        return root.findChild(predicate.IsAnApplicationNamed(appName), recursive=False, retry=retry, showingOnly=False)
+ 
+ 
+ class Application (Node):
+ 
+-    def dialog(self, dialogName, recursive=False):
++    def dialog(self, dialogName, recursive=False, showingOnly=None):
+         """
+         Search below this node for a dialog with the given name,
+         returning a Window instance.
+@@ -1136,9 +1148,9 @@ class Application (Node):
+ 
+         FIXME: should this method activate the dialog?
+         """
+-        return self.findChild(predicate.IsADialogNamed(dialogName=dialogName), recursive)
++        return self.findChild(predicate.IsADialogNamed(dialogName=dialogName), recursive, showingOnly=showingOnly)
+ 
+-    def window(self, windowName, recursive=False):
++    def window(self, windowName, recursive=False, showingOnly=None):
+         """
+         Search below this node for a window with the given name,
+         returning a Window instance.
+@@ -1152,13 +1164,13 @@ class Application (Node):
+         by the window manager) if wnck bindings are available.
+         """
+         result = self.findChild(
+-            predicate.IsAWindowNamed(windowName=windowName), recursive)
++            predicate.IsAWindowNamed(windowName=windowName), recursive, showingOnly=showingOnly)
+         # FIXME: activate the WnckWindow ?
+         # if gotWnck:
+         #       result.activate()
+         return result
+ 
+-    def getWnckApplication(self):  # pragma: no cover
++    def getWnckApplication(self, showingOnly=None):  # pragma: no cover
+         """
+         Get the wnck.Application instance for this application, or None
+ 
+@@ -1169,7 +1181,7 @@ class Application (Node):
+ 
+         FIXME: untested
+         """
+-        window = self.child(roleName='frame')
++        window = self.child(roleName='frame', showingOnly=showingOnly)
+         if window:
+             wnckWindow = window.getWnckWindow()
+             return wnckWindow.get_application()

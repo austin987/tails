@@ -1,0 +1,134 @@
+This is about [[!tails_ticket 10972]].
+
+[[!toc levels=2]]
+
+Pros & cons
+===========
+
+## Pros
+
+* It is likely that cheap laptops are going to be more and more often
+  based on ARM. So, supporting ARM would have several advantages:
+  - People who can't afford a more expensive computer might more
+    easily afford a ARM-based one ⇒ supporting Tails on ARM would make
+    it more accessible economically speaking.
+  - It could allow more people to dedicate a machine to Tails, which
+    can have a number of advantages, such as: one can choose a machine
+    that they can carry with them all the time (⇒ physical security of
+    the hardware); one avoids the risk of their (adversary -owned)
+    non-Tails operating system corrupting the firmware in a way that
+    can in turn compromise Tails.
+
+* Most mobile touch devices, e.g. tablets, are based on ARM
+  these days ([[!tails_ticket 6064]]).
+
+* Some concerns about (Intel) x86 technologies, like the Intel ME,
+  might be less of a problem for the time being on ARM. This is no
+  magic wand, though: as Joanna Rutkowska writes in her
+  [State considered harmful](http://blog.invisiblethings.org/2015/12/23/state_harmful.html)
+  paper, "there is nothing special in ARM-based architecture that
+  could prevent a vendor from introducing backdoors into the SoCs they
+  produce".
+
+## Cons
+
+* A huge amount of work is needed to make this happen, since it
+  impacts basically all kinds of teams and skills: user support,
+  release process and workload, infrastructure, quality assurance,
+  Installation Assistant + DAVE, etc.
+
+* This has the potential to spread our energy a bit too thinly, e.g.
+  in terms of maintenance workload, or in terms of acquiring
+  maintaining and knowledge and skills.
+
+* There are lots of unknowns: boot loaders, drivers and hardware
+  support. It's an entirely new world for most of us ⇒ in the current
+  state of things, it is hard to estimate the resources we would need
+  to make it happen.
+
+* Tor Browser [[!tor_bug 12631 desc="is not supported on ARM yet"]].
+
+## Other remarks
+
+* It might be a good thing, for the Tails project, to have a big thing
+  to do together, that at least one people from each team would need
+  to be somewhat involved in.
+
+* The Tor project may be interested in supporting ARM platforms better
+  (e.g. for Tor Browser). This could be a good opportunity to (learn
+  how to) work together more tightly, be it on the technical or
+  fundraising / paperwork side.
+
+Hardware
+========
+
+## CPU architecture
+
+Current (mid-2014 to early 2016) ARM Chromebooks have one of:
+
+* Nvidia's [[!wikipedia Tegra]] K1 T124 (32-bit), that has
+  [[!wikipedia ARM Cortex-A15]], that is ARMv7-A architecture; it has
+  VFPv4
+
+* [[!wikipedia ARM Cortex-A17]] (e.g.
+  in [[!wikipedia Rockchip_RK3288]] (32-bit), that is ARMv7-A
+  architecture; it has VFPv4
+
+For Jessie,
+<https://www.debian.org/releases/stable/armhf/ch02s01.html.en> reads:
+
+* Debian/armhf works only on newer 32-bit ARM processors which
+  implement at least the ARMv7 architecture with version 3 of the ARM
+  vector floating point specification (VFPv3). It makes use of the
+  extended features and performance enhancements available on
+  these models.
+
+* Debian/arm64 works on 64-bit ARM processors which implement at least
+  the ARMv8 architecture.
+
+⇒ armhf should support all current ARM Chromebooks.
+
+Also, 64-bit ARM CPUs can apparently run code that was compiled
+for armhf.
+
+⇒ armhf should support all ARM Chromebooks for the foreseeable future.
+
+## Drivers
+
+Let's see how current Debian supports ARM Chromebooks.
+
+XXX
+
+* Acer Chromebook 13 (CB5), Tegra K1
+  - [[!debwiki InstallingDebianOn/Acer/Chromebook_13_CB5-311-T8BT]]
+    suggests it may require a custom kernel
+
+* Asus Chromebook C201, Rockchip RK3288
+  - [[!debwiki InstallingDebianOn/Asus/C201]]
+    suggests it may require a custom kernel
+
+* Asus Chromebook Flip, Rockchip RK3288
+
+* HP Chromebook 14 (some models), Tegra K1
+
+Kali seems to provide one image per supported system
+([list of images](https://www.offensive-security.com/kali-linux-arm-images/),
+[documentation](http://docs.kali.org/category/kali-on-arm)).
+Their
+[build scripts](https://github.com/offensive-security/kali-arm-build-scripts)
+also display lots of machine-specific variations.
+
+Bootloader
+==========
+
+## coreboot
+
+Ships in Chromebooks.
+
+There's apparently a "legacy boot" mode that makes it "easy" to boot
+another OS than ChromeOS. It is provided by the
+[SeaBIOS](http://www.coreboot.org/SeaBIOS) payload of coreboot.
+
+## others?
+
+XXX

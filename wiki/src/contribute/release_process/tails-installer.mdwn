@@ -11,15 +11,12 @@ Upstream
 For this package, "upstream" means, from a Debian packaging
 point-of-view, the state of our upstream branches. Let's not pretend we
 have not forked liveusb-creator, and admit we are now upstream for our
-own version.
-
-_Note:_ from version 4.x on, liveusb-creator has been renamed to
-tails-installer. This is the version we will release to Tails/Jessie,
-Debian and Ubuntu.
+own version. Thus, from version 4.x on, our fork has been renamed to
+tails-installer.
 
 The `master` branch must always be the one that targets current Tails.
 That's what we have always done, and right
-now `master` is indeed targeting Wheezy.
+now `master` is indeed targeting Jessie.
 
 But that's not enough, since we also need to put releases out with code
 that works on current Debian testing/sid. Thus, we maintain several upstream
@@ -60,12 +57,17 @@ targeted at current Tails, as said above. More specifically:
   `debian/$package_version`. In practice this is something like
   `debian/4.0+dfsg-1~bpo8+1`.
 * The `tails/$codename` branch is used to prepare packages that we upload
-  to the Tails APT repo, but not to Debian -- e.g. `3.*` as currently used on
-  Tails/Wheezy will never be uploaded to Debian.
+  to the Tails APT repo, but not to Debian -- e.g. `4.*` as currently used on
+  Tails/Jessie will never be uploaded to Debian.
 * Additionally, we use `tails/$feature` branches for other Tails-specific packaging branches.
 * The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
   to use as its "upstream" branch. Make sure to check them out when setting up the repository
   for the first time.
+* For Ubuntu, we want to support the current Ubuntu version (currently `wily`), the
+  upcoming version, currently (`xenial`) and the current LTS, from 16.04 on (currently
+  `xenial`).
+  We do not maintain any Git branches related to Ubuntu releases, as simply the changelog
+  entries are modified.
 
 Topic branches
 --------------
@@ -73,8 +75,8 @@ Topic branches
 In practice, it's expected that Tails contributors submit bugfix and
 feature branches forked off master, because they want them part of next
 Tails release. Hence, it will happen that code lands into master first,
-and in turn into a new `3.*` upstream release, before it lands into
-`feature/jessie` and in turn into a new `4.*` upstream release.
+and in turn into a new `4.*` upstream release, before it lands into
+`feature/stretch` and in turn into a new `5.*` upstream release.
 
 For how to package topic branches (`bugfix/*` and `feature/*`), see
 [[the dedicated page|topic_branch]].
@@ -89,13 +91,13 @@ Release a new upstream version
 
 ### Prepare the environment
 
-The new upstream version should be something like `3.14`, based on the
+The new upstream version should be something like `4.14`, based on the
 upstream branch you are building the Debian package for. Adjust and
 export:
 
-    export NEW_UPSTREAM_VERSION=3.replace_me
+    export NEW_UPSTREAM_VERSION=4.replace_me
     export UPSTREAM_DEV_BRANCH=master
-    export PKG_NAME=tails-installer (or liveusb-creator for versions <4)
+    export PKG_NAME=tails-installer
 
 <a id="upstream-tag"></a>
 
@@ -128,9 +130,9 @@ export:
 Update the Debian package for Tails
 -----------------------------------
 
-Checkout the packaging branch, that would be `tails/wheezy` or `tails/jessie`,
-for example:
+Checkout the packaging branch:
 
+	export PKG_NAME=tails-installer
 	export PACKAGING_BRANCH=tails/jessie
 	git checkout "$PACKAGING_BRANCH"
 
@@ -175,7 +177,10 @@ In there, set the appropriate:
 
 Commit the changelog:
 
-    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')"
+    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')
+
+Git-Dch: Ignore
+"
 
 Make sure that the working environment is clean:
 
@@ -228,7 +233,49 @@ Example for a backport to Jessie:
 * have gbp create a `debian/4.3+dfsg-1_bpo8+1` tag
 * push the Debian packaging branch (`debian/jessie-backports`) and the new tag
 
-### Quality assurance
+Upload a package to our Ubuntu PPA
+----------------------------------
+
+Team members are allowed to upload a package to our Ubuntu PPA:
+<https://launchpad.net/~tails-team/+archive/ubuntu/tails-installer>
+
+You'll need to configure the dput tool to upload to the PPA and put into
+`$HOME/.dput.cf` (adjust to use your Launchpad ID):
+
+    [ppa-tails-installer]
+    fqdn = ppa.launchpad.net
+    method = sftp
+    incoming = ~tails-team/ubuntu/tails-installer/
+    login = your_launchpad_id
+    allow_unsigned_uploads = 0
+
+* checkout the `debian/sid` branch
+  to build a package for the next Ubuntu release or checkout the
+  `debian/jessie-backports` branch to build a package for the
+  current Ubuntu version or current LTS.
+* bump version to `4.3+dfsg-0ubuntu1~$codename` using `dch -i`
+  where `$codename` is the name of the target Ubuntu distribution.
+* if it does not exist, rebuild the .orig.tar.gz of the latest version
+  from pristine-tar (use the latest git log entry to find the version):
+  `pristine-tar checkout ../tails-installer_4.4.6+dfsg.orig.tar.gz`
+* build a source only package using `debuild -i -uc -us -sa -S`
+  Once the package has been built, a `.changes` file will be created in
+  pbuilder's configured destination directory.
+* test the package (piuparts, Lintian, etc.)
+* sign the corresponding source.changes file
+  `debsign ../tails-installer_$NEW_UPSTREAM_RELEASE-xxx_source.changes`
+  Replace "xxx" with the correct version information.
+  The signature should be made with a key which is registered
+  at Launchpad as being part of the Tails team.
+* Upload to the PPA:
+  `dput ppa-tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+xxx_source.changes`
+
+You will receive an email informing you if the upload was really successful
+or if it contained any errors. On success, you should now revert your changes on the
+Debian branch using `git reset HEAD --hard`.
+
+Quality assurance for Debian and Ubuntu packages
+------------------------------------------------
 
     Scenario: Installing Tails to a pristine USB drive
       Given I have started Debian

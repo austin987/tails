@@ -11,9 +11,6 @@ fi
 # configure_xulrunner_app_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
-# Import windows_camouflage_is_enabled()
-. /usr/local/lib/tails-shell-library/tails-greeter.sh
-
 # Import try_for().
 . /usr/local/lib/tails-shell-library/common.sh
 
@@ -128,18 +125,20 @@ configure_chroot_browser_profile () {
 
     # Select extensions to enable
     local extension
-    while [ -n "${*}" ]; do
+    while [ -n "${*:-}" ]; do
         extension="${1}" ; shift
         ln -s "${extension}" "${browser_ext}"
     done
 
     # Set preferences
     local browser_prefs="${browser_profile}/preferences/prefs.js"
+    local chroot_browser_config="/usr/share/tails/chroot-browsers"
     mkdir -p "$(dirname "${browser_prefs}")"
-    cp "/usr/share/tails/${browser_name}/prefs.js" "${browser_prefs}"
+    cat "${chroot_browser_config}/common/prefs.js" \
+        "${chroot_browser_config}/${browser_name}/prefs.js" > "${browser_prefs}"
 
     # Set browser home page to something that explains what's going on
-    if [ -n "${home_page}" ]; then
+    if [ -n "${home_page:-}" ]; then
         echo 'user_pref("browser.startup.homepage", "'"${home_page}"'");' >> \
             "${browser_prefs}"
     fi
@@ -147,25 +146,15 @@ configure_chroot_browser_profile () {
     # Remove all bookmarks
     rm "${chroot}/${TBB_PROFILE}/bookmarks.html"
 
-    # Set an appropriate theme, except if we're using Windows
-    # camouflage.
-    if ! windows_camouflage_is_enabled; then
-        cat "/usr/share/tails/${browser_name}/theme.js" >> "${browser_prefs}"
-    else
-        # The tails-activate-win8-theme script requires that the
-        # browser profile is writable by the user running the script.
-        set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
-        # The camouflage activation script requires a dbus server for
-        # properly configuring GNOME, so we start one in the chroot
-        chroot "${chroot}" sudo -H -u "${browser_user}" sh -c 'eval `dbus-launch --auto-syntax`; tails-activate-win8-theme' || :
-    fi
+    # Set an appropriate theme
+    cat "${chroot_browser_config}/${browser_name}/theme.js" >> "${browser_prefs}"
 
-    # Customize the GUI. This must be done after (potentially)
-    # applying the camouflage theme since we in that case will be
-    # appending to the camouflage config.
+    # Customize the GUI.
     local browser_chrome="${browser_profile}/chrome/userChrome.css"
     mkdir -p "$(dirname "${browser_chrome}")"
-    cat "/usr/share/tails/${browser_name}/userChrome.css" >> "${browser_chrome}"
+    cat "${chroot_browser_config}/common/userChrome.css" \
+        "${chroot_browser_config}/${browser_name}/userChrome.css" >> \
+            "${browser_chrome}"
 
     set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
 }
@@ -257,7 +246,7 @@ run_browser_in_chroot () {
     sudo -u "${local_user}" xhost "+SI:localuser:${chroot_user}"
     chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \
         ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
-         exec_firefox -DISPLAY=:0.0 \
+         exec_firefox -DISPLAY='${DISPLAY}' \
                       -profile '${profile}'"
     sudo -u "${local_user}" xhost "-SI:localuser:${chroot_user}"
 }

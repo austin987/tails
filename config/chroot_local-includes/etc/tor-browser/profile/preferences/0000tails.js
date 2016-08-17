@@ -27,7 +27,7 @@ pref("app.update.enabled", false);
 
 // Adblock Plus preferences
 pref("extensions.adblockplus.correctTypos", false);
-pref("extensions.adblockplus.currentVersion", "2.1");
+pref("extensions.adblockplus.currentVersion", "2.6.6");
 pref("extensions.adblockplus.savestats", false);
 pref("extensions.adblockplus.showinaddonbar", false);
 pref("extensions.adblockplus.showintoolbar", false);
@@ -97,3 +97,13 @@ pref("browser.search.geoSpecificDefaults", false);
 // Without setting this, the Download Management page will not update
 // the progress being made.
 pref("browser.download.panel.shown", true);
+
+// Given our AppArmor sandboxing, Tor Browser will not be allowed to
+// open external applications, so let's not offer the option to the user,
+// and instead only propose them to save downloaded files.
+pref("browser.download.forbid_open_with", true);
+
+// AdBlock Plus and the amnesia branding extensions are not signed and
+// therefore disabled by default for FF 45+ *unless* we set this
+// option. This is only a temporary stop gap. See #11419.
+pref("xpinstall.signatures.required", false);

@@ -1,0 +1,23 @@
+[Unit]
+Description=Wait for Tor to Have Bootstrapped
+Documentation=https://tails.boum.org/contribute/design/
+After=tor@default.service
+Before=tails-tor-has-bootstrapped.target
+
+[Service]
+Type=oneshot
+User=debian-tor
+ExecStart=/bin/sh -c '. /usr/local/lib/tails-shell-library/tor.sh ; \
+                      while ! tor_is_working ; do                   \
+                         /bin/sleep 1                             ; \
+                      done'
+TimeoutStartSec=0
+CapabilityBoundingSet=
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=tails-tor-has-bootstrapped.target

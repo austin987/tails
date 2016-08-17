@@ -19,14 +19,10 @@ clear_tor_log() {
 }
 
 clear_tor_log
-service tor restart
+systemctl restart tor@default.service
 
-# There are two main points to this script:
-#   * restarting Tor if bootstrapping stalls for more than 20 seconds
-#   * making sure that if vidalia is running it is restarted if Tor is restarted.
-#     This is needed because Vidalia doesn't re-connect to Tor automatically,
-#     so the user has to restart it to be able to control Tor again. Also, any
-#     options  set by Vidalia will be lost since they weren't written to torrc.
+# The main point of this script is to restart Tor if bootstrapping stalls for
+# more than 20 seconds
 
 bootstrap_progress=0
 last_bootstrap_change=$(clock_gettime_monotonic)
@@ -43,7 +39,7 @@ maybe_restart_tor() {
     elif [ $(expr $(clock_gettime_monotonic) - $last_bootstrap_change) -ge 20 ]; then
         log "Tor seems to have stalled while bootstrapping. Restarting Tor."
         clear_tor_log
-        service tor restart
+        systemctl restart tor@default.service
         bootstrap_progress=0
         last_bootstrap_change=$(clock_gettime_monotonic)
         return 1
@@ -53,15 +49,3 @@ maybe_restart_tor() {
 }
 
 try_for 270 maybe_restart_tor
-
-if pgrep "\<vidalia\>" >/dev/null; then
-    killall -SIGKILL vidalia
-    # Since Tor just restarted we wait for a while until the
-    # ControlPort hopefully is up.
-    counter=0
-    until [ "${counter}" -ge 10 ] || nc -z localhost 9051 2>/dev/null; do
-        sleep 1
-        counter=$((${counter}+1))
-    done
-    restart-vidalia
-fi

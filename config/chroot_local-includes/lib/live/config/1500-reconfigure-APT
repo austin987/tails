@@ -4,3 +4,71 @@ echo "- configuring APT sources"
 
 sed -i 's,^\(\#\?\s*deb\(-src\)\?\s\+\)http://,\1tor+http://,' \
            /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+
+echo '
+
+### Time-based snapshots
+
+s{
+   ^
+   (deb(?:-src)?\s+)
+   tor[+]https?://time-based[.]snapshots[.]deb[.]tails[.]boum[.]org
+   /debian
+   /[0-9]{10} # serial
+   /?
+   (\s+)
+}{$1tor+http://ftp.us.debian.org/debian/$2}xms;
+
+s{
+   ^
+   (deb(?:-src)?\s+)
+   tor[+]https?://time-based[.]snapshots[.]deb[.]tails[.]boum[.]org
+   /debian-security
+   /[0-9]{10} # serial
+   /?
+   (\s+)
+}{$1tor+http://security.debian.org/$2}xms;
+
+s{
+   ^
+   (deb(?:-src)?\s+)
+   tor[+]https?://time-based[.]snapshots[.]deb[.]tails[.]boum[.]org
+   /torproject
+   /[0-9]{10} # serial
+   /?
+   (\s+)
+}{$1tor+http://deb.torproject.org/torproject.org/$2}xms;
+
+### Tagged snapshots
+
+s{
+   ^
+   (deb(?:-src)?\s+)
+   tor[+]https?://tagged[.]snapshots[.]deb[.]tails[.]boum[.]org
+   /[0-9a-z.-]+ # tag
+   /debian
+   /?
+   (\s+)
+}{$1tor+http://ftp.us.debian.org/debian/$2}xms;
+
+s{
+   ^
+   (deb(?:-src)?\s+)
+   tor[+]https?://tagged[.]snapshots[.]deb[.]tails[.]boum[.]org
+   /[0-9a-z.-]+ # tag
+   /debian-security
+   /?
+   (\s+)
+}{$1tor+http://security.debian.org/$2}xms;
+
+s{
+   ^
+   (deb(?:-src)?\s+)
+   tor[+]https?://tagged[.]snapshots[.]deb[.]tails[.]boum[.]org
+   /[0-9a-z.-]+ # tag
+   /torproject
+   /?
+   (\s+)
+}{$1tor+http://deb.torproject.org/torproject.org/$2}xms;
+
+' | perl -pi - /etc/apt/sources.list /etc/apt/sources.list.d/*.list
