@@ -20,7 +20,7 @@ def start_or_restart_seahorse
   if @withgpgapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
-    step 'I start "Seahorse" via the GNOME "Utilities" applications menu'
+    step 'I start "Passwords and Keys" via the GNOME "Utilities" applications menu'
   end
   step 'Seahorse has opened'
 end
@@ -108,7 +108,7 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = Proc.new do
-    # The versions of Seahorse in Wheezy and Jessie will abort with a
+    # The version of Seahorse in Jessie will abort with a
     # segmentation fault whenever there's any sort of network error while
     # syncing keys. This will usually happens after clicking away the error
     # message. This does not appear to be a problem in Stretch.

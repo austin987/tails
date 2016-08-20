@@ -7,18 +7,20 @@ Feature: Tails persistence
   Scenario: Booting Tails from a USB drive with a disabled persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
-    Then Tails seems to have booted normally
-    And Tails is running from USB drive "__internal"
+    Then Tails is running from USB drive "__internal"
     And persistence is disabled
     But a Tails persistence partition exists on USB drive "__internal"
 
-  Scenario: Booting Tails from a USB drive with an enabled persistent partition
+  Scenario: Booting Tails from a USB drive with an enabled persistent partition and reconfiguring it
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     Then Tails is running from USB drive "__internal"
     And all persistence presets are enabled
     And all persistent directories have safe access rights
+    When I disable the first persistence preset
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with read-only persistence enabled
+    Then all persistence presets but the first one are enabled
 
-  @fragile
   Scenario: Writing files first to a read/write-enabled persistent partition, and then to a read-only-enabled persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
@@ -53,3 +55,10 @@ Feature: Tails persistence
     And all notifications have disappeared
     When I delete the persistent partition
     Then there is no persistence partition on USB drive "__internal"
+
+  Scenario: Dotfiles persistence
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    When I write some dotfile expected to persist
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then the expected persistent dotfile is present in the filesystem

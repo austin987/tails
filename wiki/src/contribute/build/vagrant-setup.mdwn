@@ -1,0 +1,95 @@
+[[!meta title="Vagrant"]]
+
+Tails can be [[built|contribute/build]] in a virtual machine that is
+managed using [Vagrant] and [vagrant-libvirt]. Here lies more details
+on how Tails uses Vagrant, its configuration, and how to create and
+upload the template virtual machine.
+
+[Vagrant]: http://vagrantup.com/
+[vagrant-libvirt]: https://github.com/vagrant-libvirt/vagrant-libvirt/
+
+Configuration
+=============
+
+Vagrant support files are located in the `vagrant` directory at the root of the
+[[amnesia.git|contribute/git]] repository.
+
+This directory contains:
+
+ * `Vagrantfile`: [configuration file for Vagrant](http://vagrantup.com/docs/vagrantfile.html],
+ * `provision/setup-tails-builder`: idempotent provisioning script that is
+   run inside the virtual machine upon boot,
+ * `provision/assets/build-tails`: build script to be run inside the
+   virtual machine,
+ * for building the base box:
+   - `definitions/tails-builder/generate-tails-builder-box.sh`: Script
+     that generates the base box. The box naming format and disk size
+     is specified in this script, as well as the vmdebootstrap
+     parameters (Debian distribution, architecture, etc).
+   - `definitions/tails-builder/postinstall.sh`: Script that is run
+     inside the base box before finalizing it, e.g. for installing the
+     packages we need.
+
+We choose to use the [Shell
+provisioner](http://vagrantup.com/docs/provisioners/shell.html), as long as we
+make this script reentrant it will lower the learning curve for contributors
+not familiar with Puppet or Chef.
+
+The Vagrantfile will share the `.git` directory of the local clone of the
+repository. This is done to overcome limitations of VirtualBox shared folders
+(namely *symlink support*). The build script will clone (and fetch further
+changes) that "bare" repository.
+
+Creating the base box
+=====================
+
+The creation of the base box is fully automated using `vmdebootstrap`
+and `vagrant-libvirt`'s `create.box.sh` script.
+
+Installing the requirements
+---------------------------
+
+Debian packages:
+
+    sudo apt-get install vmdebootstrap vagrant-libvirt
+
+Generating a new base box
+-------------------------
+
+Until [[!debbug 823317]] is solved, the `vagrant-libvirt` package in
+Debian is missing a script we depend on, so you have to copy
+[`create_box.sh`](https://github.com/vagrant-libvirt/vagrant-libvirt/blob/master/tools/create_box.sh)
+to `/usr/share/vagrant-plugins/vagrant-libvirt/tools/create_box.sh`
+before attempting the following!
+
+If needed, modify `vagrant/definitions/tails-builder` (e.g. if new
+packages are required, add them through `postinstall.sh`), and commit
+the changes. Then simply run:
+
+    rake basebox:create
+
+Note that it will require you to be a `sudo`er and will ask you for
+your password.
+
+Make Tails build with the new base box
+--------------------------------------
+
+Let's assume it's the most recent `.box` file in the current directory
+(which will be the case after generating a new base box), otherwise
+set `BOX` appropriately below:
+
+    BOX="$(ls -1tr vagrant/definitions/tails-builder/*.box | tail -n1)"
+    BOX_NAME="$(basename "${BOX}" .box)"
+    BOX_CHECKSUM="$(sha256sum "${BOX}" | cut -f 1 -d ' ' | tr -d '\n')"
+    sed -i \
+        -e "s/^\(\s*config.vm.box\s*=\s*\).*$/\1'${BOX_NAME}'/" \
+        -e "s/^\(\s*config.vm.box_download_checksum\s*=\s*\).*$/\1'${BOX_CHECKSUM}'/" \
+        vagrant/Vagrantfile
+    git commit -m "Upgrade Vagrant base box to '${BOX_NAME}'." vagrant/Vagrantfile
+
+If you want to use this base box locally, just add it with
+
+    vagrant box add "${BOX}"
+
+If this base box is to be available from our mirrors, please upload it
+to the `project/vagrant` directory of our rsync server.
