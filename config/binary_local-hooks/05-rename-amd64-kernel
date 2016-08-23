@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e
+
+# Including common functions
+. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'renaming amd64 kernel')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/common config/binary
+Set_defaults
+
+Echo_message "Renaming amd64 kernel"
+
+mv binary/live/vmlinuz-*-amd64 binary/live/vmlinuz2
+mv binary/live/initrd.img-*-amd64 binary/live/initrd2.img
