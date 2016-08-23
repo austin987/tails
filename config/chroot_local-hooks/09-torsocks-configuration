@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+echo "Configure torsocks"
+
+# Allow TCP outbound connections to the loopback interface, so
+# that we can wrap git with torsocks without breaking Git-over-SSH
+# (SSH is torified via ProxyCommand already).
+sed -i'' \
+    --regexp-extended 's,^#?AllowOutboundLocalhost\s+.*,AllowOutboundLocalhost 1,' \
+    /etc/tor/torsocks.conf
