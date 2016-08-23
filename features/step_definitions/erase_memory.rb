@@ -181,7 +181,7 @@ end
 
 Then /^I find very few patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram()
-  max_coverage = 0.007
+  max_coverage = 0.008
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
