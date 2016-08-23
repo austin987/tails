@@ -11,6 +11,7 @@ Feature: Electrum Bitcoin client
     Then I see a warning that Electrum is not persistent
 
   #10720: Tails Installer freezes on Jenkins
+  #11697
   @fragile
   Scenario: Using a persistent Electrum configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
