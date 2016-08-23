@@ -104,8 +104,11 @@ module ExtraFormatters
   # anything. We only use it do hook into the correct events so we can
   # add our extra hooks.
   class ExtraHooks
-    def initialize(*args)
+    def initialize(runtime, io, options)
       # We do not care about any of the arguments.
+      # XXX: We should be able to just have `*args` for the arguments
+      # in the prototype, but since moving to cucumber 2.4 that breaks
+      # this formatter for some unknown reason.
     end
 
     def before_feature(feature)
