@@ -133,8 +133,8 @@ module ExtraFormatters
 
   # The pretty formatter with debug logging mixed into its output.
   class PrettyDebug < Cucumber::Formatter::Pretty
-    def initialize(*args)
-      super(*args)
+    def initialize(runtime, io, options)
+      super(runtime, io, options)
       $debug_log_fns ||= []
       $debug_log_fns << self.method(:debug_log)
     end
