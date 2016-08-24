@@ -41,6 +41,10 @@ pref("toolkit.telemetry.enabled", false);
 // configure secure (SSL/TLS) protocols. This is the Icedove default
 // but let's be extra sure!
 pref("mailnews.auto_config.ssl_only", true);
+// Drop auto-fetched configurations using Oauth2 -- they do not work
+// together with Torbirdy since it disables needed functionality (like
+// JavaScript and cookies) in the embedded browser.
+pref("mailnews.auto_config.oauth2.enabled", false);
 // Disable MX lookup which is susceptible to MitM (without
 // DNSSEC). Note that the lookup is not done using the system
 // resolver, but over HTTPS to some DNS web service, but that web
