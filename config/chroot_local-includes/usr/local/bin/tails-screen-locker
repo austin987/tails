@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+import subprocess
+import time
+
+from tails_screen_locker import set_password_dialog
+
+
+def main():
+    if not is_password_set():
+        set_password()
+        # TODO: Remove this once this is fixed: https://bugzilla.gnome.org/show_bug.cgi?id=761969
+        time.sleep(2)
+    lock_screen()
+
+
+def is_password_set():
+    output = subprocess.check_output(["passwd", "--status"])
+    return output.split()[1] == b"P"
+
+
+def set_password():
+    pw = set_password_dialog.get_password()
+    if not pw:
+        raise RuntimeError("set_password_dialog returned no password")
+    pw = pw.encode('ascii')
+    p = subprocess.Popen("passwd", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.stdin.write(pw + b"\n")
+    p.stdin.write(pw)
+    p.stdin.flush()
+    out, err = p.communicate()
+    if p.returncode != 0:
+        print("passwd stdout: %s" % out)
+        print("passwd stderr: %s" % err)
+        raise RuntimeError("passwd returned %r", p.returncode)
+
+
+def lock_screen():
+    subprocess.check_call(["gnome-screensaver-command", "-l"])
+
+
+if __name__ == "__main__":
+    main()
