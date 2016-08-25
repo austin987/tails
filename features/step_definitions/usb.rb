@@ -65,61 +65,76 @@ Given /^the computer is set to boot in UEFI mode$/ do
   @os_loader = 'UEFI'
 end
 
+def tails_installer_selected_device
+  @installer.child('Target Device:', roleName: 'label').parent
+    .child('', roleName: 'combo box', recursive: false).name
+end
+
+def tails_installer_is_device_selected?(name)
+  device = $vm.disk_dev(name)
+  tails_installer_selected_device.end_with?(device)
+end
+
 class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  @screen.wait('USBTailsLogo.png', 10)
-  if @screen.exists("USBCannotUpgrade.png")
+  assert(tails_installer_is_device_selected?(name))
+  text = @installer.child('', roleName: 'text').text
+  if text['It is impossible to upgrade the device']
     raise UpgradeNotSupported
   end
   begin
-    @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-    @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
-    @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
-    @screen.wait('USBInstallationComplete.png', 30*60)
+    @installer.button('Install Tails').click
+    @installer.child('Question', roleName: 'alert').button('Yes').click
+    @installer.child('Information', roleName: 'alert')
+      .child('Installation complete!', roleName: 'label').wait(30*60)
   rescue FindFailed => e
     debug_log("Tails Installer debug log:\n" + $vm.file_content('/tmp/tails-installer-*'))
     raise e
   end
 end
 
-When /^I start Tails Installer$/ do
-  step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
-  @screen.wait('USBCloneAndInstall.png', 30)
-end
-
 When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
-  step 'I start Tails Installer'
-  case mode
-  when 'Clone & Install'
-    @screen.wait_and_click('USBCloneAndInstall.png', 10)
-  when 'Clone & Upgrade'
-    @screen.wait_and_click('USBCloneAndUpgrade.png', 10)
-  when 'Upgrade from ISO'
-    @screen.wait_and_click('USBUpgradeFromISO.png', 10)
-  else
-    raise "Unsupported mode '#{mode}'"
-  end
+  step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
+  installer_launcher = Dogtail::Application.new('tails-installer-launcher')
+  installer_launcher.wait(10)
+  installer_launcher.button('Install by cloning').click
+  @installer = Dogtail::Application.new('tails-installer')
+  @installer.child('Tails Installer', roleName: 'frame').wait
 end
 
 Then /^Tails Installer detects that a device is too small$/ do
-  @screen.wait('TailsInstallerTooSmallDevice.png', 10)
+  try_for(10) do
+    text = @installer.child('', roleName: 'text').text
+    text[/^The device .* is too small to install Tails/]
+  end
 end
 
-When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
-  step 'I start Tails Installer in "Clone & Install" mode'
+
+Then /^a suitable USB device is (?:still )?not found$/ do
+  @installer.child('No device suitable to install Tails could be found',
+                   roleName: 'label').wait(30)
+end
+
+Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
+  try_for(30) do
+    if mode == 'no'
+      tails_installer_selected_device == ''
+    else
+      tails_installer_is_device_selected?(name)
+    end
+  end
+end
+
+When /^I "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
+  step "I start Tails Installer in \"#{mode}\" mode"
   usb_install_helper(name)
 end
 
-When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
-  step 'I start Tails Installer in "Clone & Upgrade" mode'
-  usb_install_helper(name)
-end
-
-When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
+When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   begin
-    step "I \"Clone & Upgrade\" Tails to USB drive \"#{name}\""
+    step "I \"#{mode}\" Tails to USB drive \"#{name}\""
   rescue UpgradeNotSupported
     # this is what we expect
   else
@@ -127,17 +142,7 @@ When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
   end
 end
 
-When /^I try to "Upgrade from ISO" USB drive "([^"]+)"$/ do |name|
-  begin
-    step "I do a \"Upgrade from ISO\" on USB drive \"#{name}\""
-  rescue UpgradeNotSupported
-    # this is what we expect
-  else
-    raise "The USB installer should not succeed"
-  end
-end
-
-When /^I am suggested to do a "Clone & Install"$/ do
+When /^I am suggested to do a "Upgrade by cloning"$/ do
   @screen.find("USBCannotUpgrade.png")
 end
 
@@ -619,16 +624,4 @@ Then /^Tails has started in UEFI mode$/ do
 
 Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   $vm.storage.disk_mklabel(name, type)
-end
-
-Then /^a suitable USB device is (?:still )?not found$/ do
-  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
-end
-
-Then /^the "(?:[^"]+)" USB drive is selected$/ do
-  @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
-end
-
-Then /^no USB drive is selected$/ do
-  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end

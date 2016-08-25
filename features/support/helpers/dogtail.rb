@@ -16,6 +16,10 @@ module Dogtail
     :textentry,
   ]
 
+  TREE_API_NODE_SEARCH_FIELDS = [
+    :parent,
+  ]
+
   TREE_API_NODE_ACTIONS = [
     :click,
     :doubleClick,
@@ -180,6 +184,10 @@ module Dogtail
       get_field('text')
     end
 
+    def name
+      get_field('name')
+    end
+
     def proxy_call(method, args)
       args_str = self.class.args_to_s(args)
       method_call = "#{method.to_s}(#{args_str})"
@@ -195,6 +203,18 @@ module Dogtail
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
         proxy_call(method, args)
+      end
+    end
+
+    TREE_API_NODE_SEARCH_FIELDS.each do |field|
+      define_method(field) do
+        Node.new(
+          @app_name,
+          @opts.merge(
+            init_lines: @init_lines,
+            components: @components + [field]
+          )
+        )
       end
     end
 
