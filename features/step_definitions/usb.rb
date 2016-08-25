@@ -79,15 +79,16 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  @screen.wait('USBTailsLogo.png', 10)
-  if @screen.exists("USBCannotUpgrade.png")
+  assert(tails_installer_is_device_selected?(name))
+  text = @installer.child('', roleName: 'text').text
+  if text['It is impossible to upgrade the device']
     raise UpgradeNotSupported
   end
   begin
-    @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-    @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
-    @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
-    @screen.wait('USBInstallationComplete.png', 30*60)
+    @installer.button('Install Tails').click
+    @installer.child('Question', roleName: 'alert').button('Yes').click
+    @installer.child('Information', roleName: 'alert')
+      .child('Installation complete!', roleName: 'label').wait(30*60)
   rescue FindFailed => e
     debug_log("Tails Installer debug log:\n" + $vm.file_content('/tmp/tails-installer-*'))
     raise e
