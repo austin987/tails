@@ -175,7 +175,7 @@ task :parse_build_options do
       ENV['http_proxy'] = nil
     # SquashFS compression settings
     when 'gzipcomp'
-      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
+      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip -Xcompression-level 1'
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
     # Clean-up settings
