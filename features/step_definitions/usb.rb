@@ -65,6 +65,16 @@ Given /^the computer is set to boot in UEFI mode$/ do
   @os_loader = 'UEFI'
 end
 
+def tails_installer_selected_device
+  @installer.child('Target Device:', roleName: 'label').parent
+    .child('', roleName: 'combo box', recursive: false).name
+end
+
+def tails_installer_is_device_selected?(name)
+  device = $vm.disk_dev(name)
+  tails_installer_selected_device.end_with?(device)
+end
+
 class UpgradeNotSupported < StandardError
 end
 
@@ -605,14 +615,10 @@ end
 
 Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
   try_for(30) do
-    selected_device =
-      @installer.child('Target Device:', roleName: 'label').parent
-      .child('', roleName: 'combo box', recursive: false).name
     if mode == 'no'
-      '' == selected_device
+      tails_installer_selected_device == ''
     else
-      expected_device = $vm.disk_dev(name)
-      selected_device.end_with?(expected_device)
+      tails_installer_is_device_selected?(name)
     end
   end
 end
