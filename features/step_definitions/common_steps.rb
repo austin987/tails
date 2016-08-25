@@ -562,28 +562,10 @@ When /^I start the Tor Browser in offline mode$/ do
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
-  con_content = <<EOF
-[802-3-ethernet]
-duplex=full
-
-[connection]
-id=#{con_name}
-uuid=bbc60668-1be0-11e4-a9c6-2f1ce0e75bf1
-type=802-3-ethernet
-timestamp=1395406011
-
-[ipv6]
-method=auto
-
-[ipv4]
-method=auto
-EOF
-  con_content.split("\n").each do |line|
-    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
-  end
-  con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
-  $vm.execute_successfully("nmcli connection load '#{con_file}'")
+  $vm.execute_successfully(
+    "nmcli connection add con-name #{con_name} " + \
+    "type ethernet autoconnect yes ifname eth0"
+  )
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
