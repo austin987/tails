@@ -100,6 +100,7 @@ When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   installer_launcher.wait(10)
   installer_launcher.button('Install by cloning').click
   @installer = Dogtail::Application.new('tails-installer')
+  @installer.child('Tails Installer', roleName: 'frame').wait
 end
 
 Then /^Tails Installer detects that a device is too small$/ do
