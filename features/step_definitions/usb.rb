@@ -89,10 +89,14 @@ When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   installer_launcher = Dogtail::Application.new('tails-installer-launcher')
   installer_launcher.wait(10)
   installer_launcher.button('Install by cloning').click
+  @installer = Dogtail::Application.new('tails-installer')
 end
 
 Then /^Tails Installer detects that a device is too small$/ do
-  @screen.wait('TailsInstallerTooSmallDevice.png', 10)
+  try_for(10) do
+    text = @installer.child('', roleName: 'text').text
+    text[/^The device .* is too small to install Tails/]
+  end
 end
 
 When /^I "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
@@ -595,13 +599,20 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
 end
 
 Then /^a suitable USB device is (?:still )?not found$/ do
-  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
+  @installer.child('No device suitable to install Tails could be found',
+                   roleName: 'label').wait(30)
 end
 
-Then /^the "(?:[^"]+)" USB drive is selected$/ do
-  @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
-end
-
-Then /^no USB drive is selected$/ do
-  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
+Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
+  try_for(30) do
+    selected_device =
+      @installer.child('Target Device:', roleName: 'label').parent
+      .child('', roleName: 'combo box', recursive: false).name
+    if mode == 'no'
+      '' == selected_device
+    else
+      expected_device = $vm.disk_dev(name)
+      selected_device.end_with?(expected_device)
+    end
+  end
 end
