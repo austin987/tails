@@ -436,28 +436,10 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  begin
-    @screen.click("GnomeNotificationApplet.png")
-  rescue FindFailed
-    # No notifications, so we're done here.
-    next
-  end
-  @screen.wait("GnomeNotificationAppletOpened.png", 10)
-  begin
-    entries = @screen.findAll("GnomeNotificationEntry.png")
-    while(entries.hasNext) do
-      entry = entries.next
-      @screen.hide_cursor
-      @screen.click(entry)
-      @screen.wait_and_click("GnomeNotificationEntryClose.png", 10)
-    end
-  rescue FindFailed
-    # No notifications, so we're good to go.
-  end
-  @screen.hide_cursor
-  # Click anywhere to close the notification applet
-  @screen.click("GnomeApplicationsMenu.png")
-  @screen.hide_cursor
+  # XXX: It will be hard for us to interact with the Calendar (where
+  # the notifications are lited) without Dogtail, but it is broken
+  # here, see #11718.
+  next
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -616,7 +598,7 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
 end
 
 When /^I start and focus GNOME Terminal$/ do
-  step 'I start "Terminal" via the GNOME "Utilities" applications menu'
+  step 'I start "GNOME Terminal" via the GNOME "Utilities" applications menu'
   @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
@@ -673,10 +655,12 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  app = Dogtail::Application.new('gnome-shell')
-  for element in ['Applications', submenu, app_name] do
-    app.child(element, roleName: 'label').click
-  end
+  # XXX: Dogtail is broken in this use case, see #11718.
+  @screen.wait('GnomeApplicationsMenu.png', 10)
+  $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
+  @screen.wait('GnomeActivitiesOverview.png', 10)
+  @screen.type(app_name)
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 When /^I type "([^"]+)"$/ do |string|
