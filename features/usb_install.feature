@@ -82,7 +82,7 @@ Feature: Installing Tails to a USB drive
     Then Tails is running from USB drive "isohybrid"
     When I shutdown Tails and wait for the computer to power off
     And I start Tails from DVD with network unplugged and I login
-    And I try a "Upgrade by cloning" Tails to USB drive "isohybrid"
+    And I fail to "Upgrade by cloning" Tails to USB drive "isohybrid"
     Then I am suggested to do a "Install by cloning"
     When I kill the process "tails-installer"
     And I "Install by cloning" Tails to USB drive "isohybrid"

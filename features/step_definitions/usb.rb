@@ -132,7 +132,7 @@ When /^I "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   usb_install_helper(name)
 end
 
-When /^I try a "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
+When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   begin
     step "I \"#{mode}\" Tails to USB drive \"#{name}\""
   rescue UpgradeNotSupported
