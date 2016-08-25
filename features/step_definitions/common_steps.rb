@@ -302,6 +302,10 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
     raise "Unsupported language: #{lang}"
   end
   step 'Tails Greeter has dealt with the sudo password'
+
+  # XXX: Workaround while Tails/Stretch is affected by #11694.
+  $vm.execute_successfully('chvt 2')
+
   step 'the Tails desktop is ready'
 end
 
