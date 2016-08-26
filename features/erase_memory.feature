@@ -4,7 +4,7 @@ Feature: System memory erasure on shutdown
   when I shutdown Tails
   I want the system memory to be free from sensitive data.
 
-  Scenario: Anti-test: no memory erasure on a modern computer
+  Scenario: Anti-test: no memory erasure
     Given a computer
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
@@ -18,7 +18,7 @@ Feature: System memory erasure on shutdown
     And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
-  Scenario: Memory erasure on a modern computer
+  Scenario: Memory erasure
     Given a computer
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
