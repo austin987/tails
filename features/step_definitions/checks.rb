@@ -96,11 +96,6 @@ Then /^no unexpected services are listening for network connections$/ do
   end
 end
 
-When /^Tails has booted a 32-bit kernel$/ do
-  assert(! $vm.execute("uname -r | grep -qs 'amd64$'").success?,
-         "Tails has not booted a 32-bit kernel.")
-end
-
 When /^Tails has booted a 64-bit kernel$/ do
   assert($vm.execute("uname -r | grep -qs 'amd64$'").success?,
          "Tails has not booted a 64-bit kernel.")

@@ -16,15 +16,18 @@ apt-get install --yes \
 tar --directory=/usr/src \
     -xf "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}.tar."*
 
-for arch in 686 amd64 ; do
+# XXX: drop the loop once #8183 is almost ready to be merged;
+# meanwhile, let's simplify merges by keeping the code bases as close
+# as possible to each other
+for arch in amd64 ; do
     case "$arch" in
         686)
             linux_headers_arch_pkg="linux-headers-${KERNEL_VERSION}-686"
             linux_headers_common_pkg="linux-headers-${KERNEL_VERSION}-common"
             ;;
         amd64)
-            linux_headers_arch_pkg="linux-headers-${KERNEL_VERSION}-amd64:amd64"
-            linux_headers_common_pkg="linux-headers-${KERNEL_VERSION}-common:amd64"
+            linux_headers_arch_pkg="linux-headers-${KERNEL_VERSION}-amd64"
+            linux_headers_common_pkg="linux-headers-${KERNEL_VERSION}-common"
             ;;
         *)
             exit 1

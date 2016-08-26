@@ -5,24 +5,14 @@ set -u
 
 echo "Building VirtualBox guest modules"
 
-hw_arch="`dpkg --print-architecture`"
-if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
-   exit 0
-fi
-
 . /usr/share/amnesia/build/variables
 
 # the -dkms package must be installed *after* dkms to be properly registered
 apt-get install --yes build-essential dkms
 
-# Note: we only build for the 32-bit kernel, since building for 64-bit is too painful
-# with multiarch; and anyway, the 64-bit kernel module doesn't play well with
-# a 32-bit userspace (https://www.virtualbox.org/ticket/8336), which is why
-# we instruct users to set up a 32-bit VM.
-
 # Installing the headers triggers the building of the modules for that kernel
 apt-get install --yes \
-    "linux-headers-${KERNEL_VERSION}-686" \
+    "linux-headers-${KERNEL_VERSION}-amd64" \
     virtualbox-guest-dkms
 
 # clean the build directory
