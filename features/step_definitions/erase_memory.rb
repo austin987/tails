@@ -41,16 +41,6 @@ def which_kernel
   return File.basename(kernel_path)
 end
 
-Given /^the PAE kernel is running$/ do
-  kernel = which_kernel
-  assert_equal("vmlinuz2", kernel)
-end
-
-Given /^the non-PAE kernel is running$/ do
-  kernel = which_kernel
-  assert_equal("vmlinuz", kernel)
-end
-
 def used_ram_in_MiB
   return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
 end

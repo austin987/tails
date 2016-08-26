@@ -10,8 +10,7 @@ Feature: System memory erasure on shutdown
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
     And I start Tails from DVD with network unplugged and I login
-    Then the PAE kernel is running
-    And at least 8 GiB of RAM was detected
+    Then at least 8 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
     And udev-watchdog is monitoring the correct device
@@ -26,8 +25,7 @@ Feature: System memory erasure on shutdown
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
     And I start Tails from DVD with network unplugged and I login
-    Then the PAE kernel is running
-    And at least 8 GiB of RAM was detected
+    Then at least 8 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
     And udev-watchdog is monitoring the correct device
