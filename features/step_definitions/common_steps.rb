@@ -98,12 +98,12 @@ def post_snapshot_restore_hook
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
+  $vm.host_to_guest_time_sync
   if $vm.has_network?
     if $vm.execute("systemctl --quiet is-active tor@default.service").success?
       $vm.execute("systemctl stop tor@default.service")
       $vm.execute("rm -f /var/log/tor/log")
       $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
-      $vm.host_to_guest_time_sync
       $vm.spawn("restart-tor")
       wait_until_tor_is_working
       if $vm.file_content('/proc/cmdline').include?(' i2p')
@@ -114,8 +114,6 @@ def post_snapshot_restore_hook
         $vm.spawn('/usr/local/sbin/tails-i2p start')
       end
     end
-  else
-    $vm.host_to_guest_time_sync
   end
 end
 
