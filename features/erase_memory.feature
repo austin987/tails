@@ -6,7 +6,6 @@ Feature: System memory erasure on shutdown
 
   Scenario: Anti-test: no memory erasure on a modern computer
     Given a computer
-    And the computer is a modern 64-bit system
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
     And I start Tails from DVD with network unplugged and I login
@@ -21,7 +20,6 @@ Feature: System memory erasure on shutdown
 
   Scenario: Memory erasure on a modern computer
     Given a computer
-    And the computer is a modern 64-bit system
     And the computer has 8 GiB of RAM
     And I set Tails to boot with options "debug=wipemem"
     And I start Tails from DVD with network unplugged and I login

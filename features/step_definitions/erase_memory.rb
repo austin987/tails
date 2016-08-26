@@ -20,22 +20,6 @@ Given /^udev-watchdog is monitoring the correct device$/ do
   assert_equal(udev_watchdog_monitored_device, boot_device)
 end
 
-Given /^the computer is a modern 64-bit system$/ do
-  $vm.set_arch("x86_64")
-  $vm.drop_hypervisor_feature("nonpae")
-  $vm.add_hypervisor_feature("pae")
-end
-
-Given /^the computer is an old pentium without the PAE extension$/ do
-  $vm.set_arch("i686")
-  $vm.drop_hypervisor_feature("pae")
-  # libvirt claim the following feature doesn't exit even though
-  # it's listed in the hvm i686 capabilities...
-#  $vm.add_hypervisor_feature("nonpae")
-  # ... so we use a workaround until we can figure this one out.
-  $vm.disable_pae_workaround
-end
-
 def which_kernel
   kernel_path = $vm.execute_successfully("tails-get-bootinfo kernel").stdout.chomp
   return File.basename(kernel_path)
