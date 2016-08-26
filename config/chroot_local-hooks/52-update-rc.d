@@ -9,7 +9,6 @@ PATCHED_INITSCRIPTS="
 alsa-utils
 haveged
 hwclock.sh
-i2p
 kexec-load
 laptop-mode
 memlockd
@@ -72,7 +71,6 @@ systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
 
 # We don't run these services by default
-systemctl disable i2p.service
 
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
 for suffix in halt kexec poweroff reboot shutdown ; do
