@@ -171,7 +171,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   debug_log("Memory fill progress: finished")
   if verify
     coverage = pattern_coverage_in_guest_ram()
-    min_coverage = 0.90
+    min_coverage = 0.85
     assert(coverage > min_coverage,
            "#{"%.3f" % (coverage*100)}% of the free memory was filled with " +
            "the pattern, but more than #{"%.3f" % (min_coverage*100)}% was " +
