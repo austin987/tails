@@ -99,21 +99,20 @@ def post_snapshot_restore_hook
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
   $vm.host_to_guest_time_sync
-  if $vm.has_network?
-    if $vm.execute("systemctl --quiet is-active tor@default.service").success?
-      $vm.execute("systemctl stop tor@default.service")
-      $vm.execute("rm -f /var/log/tor/log")
-      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
-      $vm.spawn("restart-tor")
-      wait_until_tor_is_working
-      if $vm.file_content('/proc/cmdline').include?(' i2p')
-        $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
-        # we "killall tails-i2p" to prevent multiple
-        # copies of the script from running
-        $vm.execute_successfully('killall tails-i2p')
-        $vm.spawn('/usr/local/sbin/tails-i2p start')
-      end
-    end
+  if $vm.execute("systemctl --quiet is-active tor@default.service").success?
+    $vm.execute("systemctl stop tor@default.service")
+    $vm.execute("rm -f /var/log/tor/log")
+    $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
+    $vm.spawn("restart-tor")
+    wait_until_tor_is_working
+  end
+  # ... and the same goes for I2P's tunnel state.
+  if $vm.execute("systemctl --quiet is-active i2p.service").success?
+    $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
+    # We "killall tails-i2p" to prevent multiple copies of the script
+    # from running, which seems to happen for strange reasons.
+    $vm.execute_successfully('killall tails-i2p')
+    $vm.spawn('/usr/local/sbin/tails-i2p start')
   end
 end
 
