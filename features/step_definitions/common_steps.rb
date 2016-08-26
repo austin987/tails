@@ -398,8 +398,7 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  tor_browser_picture = "TorBrowserWindow.png"
-  @screen.wait(tor_browser_picture, 60)
+  Dogtail::Application.new('Firefox').child('', roleName: "document frame").wait(60)
 end
 
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
@@ -416,13 +415,14 @@ Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tail
 end
 
 Given /^the Tor Browser has started in offline mode$/ do
-  @screen.wait("TorBrowserOffline.png", 60)
+  step "the Tor Browser has started"
+  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
 end
 
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   url = "https://www.eff.org"
   step "I open the address \"#{url}\" in the Tor Browser"
-  @screen.wait("TorBrowserOffline.png", 5)
+  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
   @screen.type("d", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserBookmarkPrompt.png", 10)
   @screen.type(url + Sikuli::Key.ENTER)
@@ -555,8 +555,10 @@ end
 
 When /^I start the Tor Browser in offline mode$/ do
   step "I start the Tor Browser"
-  @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
-  @screen.click("TorBrowserOfflinePromptStart.png")
+  offline_prompt = Dogtail::Application.new('zenity')
+           .dialog('Tor is not ready')
+  offline_prompt.wait(10)
+  offline_prompt.button('Start Tor Browser').click
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
