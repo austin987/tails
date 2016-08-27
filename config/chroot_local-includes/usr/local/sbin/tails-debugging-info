@@ -16,6 +16,19 @@ debug_file() {
     sudo -u "${user}" -- cat "${file}"
 }
 
+debug_directory() {
+    local user="${1}"
+    shift
+    dir="${1}"
+    [ ! -d "${dir}" ] && return
+    echo
+    echo "===== listing of ${dir} ====="
+    sudo -u "${user}" -- /bin/ls -lA "${dir}"
+    for file in "${dir}"/* ; do
+        debug_file "${user}" "${file}"
+    done
+}
+
 debug_command /usr/sbin/dmidecode -s system-manufacturer
 debug_command /usr/sbin/dmidecode -s system-product-name
 debug_command /usr/sbin/dmidecode -s system-version
