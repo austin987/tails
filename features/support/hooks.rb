@@ -26,6 +26,8 @@ AfterConfiguration do |config|
     # excluding persistence) and will create yet another disk and
     # install Tails on it. This should be the peak of disk usage.
     'features/usb_install.feature',
+    # This feature needs a copy of the ISO and creates a new disk.
+    'features/usb_upgrade.feature',
   ]
   feature_files = config.feature_files
   # The &-intersection is specified to keep the element ordering of

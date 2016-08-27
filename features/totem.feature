@@ -16,7 +16,7 @@ Feature: Using Totem
     And the file "/home/amnesia/video.mp4" exists
     Given I start monitoring the AppArmor log of "/usr/bin/totem"
     When I open "/home/amnesia/video.mp4" with Totem
-    Then I see "SampleLocalMp4VideoFrame.png" after at most 20 seconds
+    Then I see "SampleLocalMp4VideoFrame.png" after at most 40 seconds
     And AppArmor has not denied "/usr/bin/totem" from opening "/home/amnesia/video.mp4"
     Given I close Totem
     And I copy the sample videos to "/home/amnesia/.gnupg" as user "amnesia"
@@ -45,8 +45,6 @@ Feature: Using Totem
     Given I have started Tails from DVD and logged in and the network is connected
     Then I can watch a WebM video over HTTPs
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     # Due to bug #5571 we have to reboot to be able to use
@@ -60,7 +58,7 @@ Feature: Using Totem
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     And the file "/home/amnesia/Persistent/video.mp4" exists
     When I open "/home/amnesia/Persistent/video.mp4" with Totem
-    Then I see "SampleLocalMp4VideoFrame.png" after at most 10 seconds
+    Then I see "SampleLocalMp4VideoFrame.png" after at most 40 seconds
     Given I close Totem
     And the file "/home/amnesia/.gnupg/video.mp4" exists
     And I start monitoring the AppArmor log of "/usr/bin/totem"

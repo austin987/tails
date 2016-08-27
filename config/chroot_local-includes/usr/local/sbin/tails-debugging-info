@@ -12,8 +12,21 @@ debug_file() {
     file="${1}"
     [ ! -e "${file}" ] && return
     echo
-    echo "===== content of $1 ====="
+    echo "===== content of ${file} ====="
     sudo -u "${user}" -- cat "${file}"
+}
+
+debug_directory() {
+    local user="${1}"
+    shift
+    dir="${1}"
+    [ ! -d "${dir}" ] && return
+    echo
+    echo "===== listing of ${dir} ====="
+    sudo -u "${user}" -- /bin/ls -lA "${dir}"
+    for file in "${dir}"/* ; do
+        debug_file "${user}" "${file}"
+    done
 }
 
 debug_command /usr/sbin/dmidecode -s system-manufacturer
@@ -48,6 +61,7 @@ debug_file root "/etc/X11/xorg.conf"
 debug_file root "/proc/asound/cards"
 debug_file root "/proc/asound/devices"
 debug_file root "/proc/asound/modules"
+debug_file root "/proc/cmdline"
 debug_file Debian-gdm "/var/log/gdm3/tails-greeter.errors"
 debug_file root "/var/log/live-persist"
 debug_file root "/var/log/live/boot.log"
@@ -56,3 +70,4 @@ debug_file root "/var/lib/gdm3/tails.persistence"
 debug_file root "/var/lib/live/config/tails.physical_security"
 debug_file root "/live/persistence/TailsData_unlocked/persistence.conf"
 debug_file root "/live/persistence/TailsData_unlocked/live-additional-software.conf"
+debug_directory root "/live/persistence/TailsData_unlocked/apt-sources.list.d"

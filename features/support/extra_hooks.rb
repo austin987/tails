@@ -1,18 +1,21 @@
 # Make the code below work with cucumber >= 2.0. Once we stop
 # supporting <2.0 we should probably do this differently, but this way
 # we can easily support both at the same time.
+
 begin
   if not(Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?))
-    require 'gherkin/tag_expression'
+    if Gem::Version.new(Cucumber::VERSION) >= Gem::Version.new('2.4.0')
+      require 'cucumber/core/gherkin/tag_expression'
+    else
+      require 'gherkin/tag_expression'
+      Cucumber::Core::Gherkin = Gherkin
+    end
     class Cucumber::Core::Ast::Feature
       # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
       # cucumber-ruby-core 1.1.3, lib/cucumber/core/test/case.rb:~59.
       def accept_hook?(hook)
-        tag_expr = Gherkin::TagExpression.new(hook.tag_expressions.flatten)
-        tags = @tags.map do |t|
-          Gherkin::Formatter::Model::Tag.new(t.name, t.line)
-        end
-        tag_expr.evaluate(tags)
+        tag_expr = Cucumber::Core::Gherkin::TagExpression.new(hook.tag_expressions.flatten)
+        tag_expr.evaluate(@tags)
       end
     end
   end
@@ -104,8 +107,11 @@ module ExtraFormatters
   # anything. We only use it do hook into the correct events so we can
   # add our extra hooks.
   class ExtraHooks
-    def initialize(*args)
+    def initialize(runtime, io, options)
       # We do not care about any of the arguments.
+      # XXX: We should be able to just have `*args` for the arguments
+      # in the prototype, but since moving to cucumber 2.4 that breaks
+      # this formatter for some unknown reason.
     end
 
     def before_feature(feature)
@@ -127,8 +133,8 @@ module ExtraFormatters
 
   # The pretty formatter with debug logging mixed into its output.
   class PrettyDebug < Cucumber::Formatter::Pretty
-    def initialize(*args)
-      super(*args)
+    def initialize(runtime, io, options)
+      super(runtime, io, options)
       $debug_log_fns ||= []
       $debug_log_fns << self.method(:debug_log)
     end
