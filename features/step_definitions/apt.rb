@@ -41,28 +41,52 @@ Then /^I should be able to install a package using apt$/ do
 end
 
 When /^I update APT using Synaptic$/ do
-  @screen.click('SynapticReloadButton.png')
-  @screen.wait('SynapticReloadPrompt.png', 20)
-  @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
+  recovery_proc = Proc.new do
+    step 'I kill the process "synaptic"'
+    step "I start Synaptic"
+  end
+  retry_tor(recovery_proc) do
+    try_for(60, :msg => "Failed to trigger the reload of the package list") {
+      # here using the Synaptic keyboard shortcut is more effective on retries.
+      @screen.type("r", Sikuli::KeyModifier.CTRL)
+      @screen.wait('SynapticReloadPrompt.png', 10)
+    }
+    try_for(15*60, :msg => "Took too much time to download the APT data") {
+      !$vm.has_process?("/usr/lib/apt/methods/tor+http")
+    }
+    if @screen.exists('SynapticFailure.png')
+      raise "Updating APT with Synaptic failed."
+    end
+    if !$vm.has_process?("synaptic")
+      raise "Synaptic process vanished, did it segfault again?"
+    end
+  end
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
-  try_for(60) do
-    @screen.wait_and_click('SynapticSearchButton.png', 10)
-    @screen.wait_and_click('SynapticSearchWindow.png', 10)
+  recovery_proc = Proc.new do
+    step 'I kill the process "synaptic"'
+    $vm.execute("apt -y purge #{package}")
+    step "I start Synaptic"
   end
-  @screen.type(package + Sikuli::Key.ENTER)
-  @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
-  @screen.wait_and_click('SynapticApplyButton.png', 10)
-  @screen.wait('SynapticApplyPrompt.png', 60)
-  @screen.type(Sikuli::Key.ENTER)
-  @screen.wait('SynapticChangesAppliedPrompt.png', 240)
-  step "package \"#{package}\" is installed"
+  retry_tor(recovery_proc) do
+    try_for(60) do
+      @screen.wait_and_click('SynapticSearchButton.png', 10)
+      @screen.wait_and_click('SynapticSearchWindow.png', 10)
+    end
+    @screen.type(package + Sikuli::Key.ENTER)
+    @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
+    @screen.wait_and_click('SynapticApplyButton.png', 10)
+    @screen.wait('SynapticApplyPrompt.png', 60)
+    @screen.type(Sikuli::Key.ENTER)
+    @screen.wait('SynapticChangesAppliedPrompt.png', 4*60)
+    step "package \"#{package}\" is installed"
+  end
 end
 
 When /^I start Synaptic$/ do
   step 'I start "Synaptic Package Manager" via the GNOME "System Tools" applications menu'
   deal_with_polkit_prompt(@sudo_password)
-  @screen.wait('SynapticReloadButton.png', 30)
+  @screen.wait('SynapticLoaded.png', 30)
 end
