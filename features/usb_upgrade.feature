@@ -16,17 +16,15 @@ Feature: Upgrading an old Tails USB installation
     And I start Tails from DVD with network unplugged and I login
     And I temporarily create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
-    And I start Tails Installer in "Upgrade from ISO" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
+    When I start Tails Installer in "Upgrade from ISO" mode
+    Then I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Upgrade by cloning" Tails to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
-    And I start Tails Installer in "Upgrade by cloning" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
+    When I start Tails Installer in "Upgrade by cloning" mode
+    Then I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Upgrade from ISO" Tails to a USB drive with GPT and a FAT partition
     Given a computer
@@ -35,18 +33,16 @@ Feature: Upgrading an old Tails USB installation
     And I temporarily create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
-    And I start Tails Installer in "Upgrade from ISO" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
+    When I start Tails Installer in "Upgrade from ISO" mode
+    Then I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Upgrade by cloning" Tails to a USB drive with GPT and a FAT partition
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
-    And I start Tails Installer in "Upgrade by cloning" mode
-    Then a suitable USB device is not found
-    And I am told that the destination device cannot be upgraded
+    When I start Tails Installer in "Upgrade by cloning" mode
+    Then I am told that the destination device cannot be upgraded
 
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer

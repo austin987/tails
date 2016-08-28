@@ -184,6 +184,10 @@ module Dogtail
       get_field('text')
     end
 
+    def text=(value)
+      set_field('text', value)
+    end
+
     def name
       get_field('name')
     end
