@@ -29,11 +29,15 @@ output_time_based_snapshot() {
 SERIAL=$(cat "config/APT_snapshots.d/$ARCHIVE/serial")
 RESOLVED_SERIAL=$(cat "tmp/APT_snapshots.d/$ARCHIVE/serial")
 
+# XXX: the stable and testing cases are now almost exactly the same => refactor
 if [ "$(base_branch)" = stable ]; then
     if version_was_released "$(version_in_changelog)"; then
         on_a_tag \
             || fatal "Not building from stable, but last version in changelog" \
                      "was released"
+        [ "$ARCHIVE" = debian-security ] || [ "$SERIAL" != latest ] \
+            || fatal "APT snapshots for $ARCHIVE are not frozen, which should" \
+                     "not happen on a tagged stable branch"
         output_tagged_snapshot "$ARCHIVE" "$(version_in_changelog)"
     else
        version_was_released "$(previous_version_in_changelog)" \
@@ -46,13 +50,10 @@ if [ "$(base_branch)" = stable ]; then
              output_time_based_snapshot "$ARCHIVE" "$RESOLVED_SERIAL"
              ;;
           *)
-             if [ "$SERIAL" = latest ]; then
-                # In this case, "latest" means "do what I mean", that is stick
-                # to previous release's tagged snapshot
-                output_tagged_snapshot "$ARCHIVE" "$(previous_version_in_changelog)"
-             else
-                output_time_based_snapshot "$ARCHIVE" "$SERIAL"
-             fi
+             [ "$SERIAL" != latest ] \
+                 || fatal "APT snapshots are not frozen for $ARCHIVE, which" \
+                          "should not happen on a branch based on stable"
+             output_time_based_snapshot "$ARCHIVE" "$SERIAL"
        esac
     fi
 elif [ "$(base_branch)" = testing ]; then
