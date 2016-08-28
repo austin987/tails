@@ -62,13 +62,13 @@ Remove_package
 cat > "${SYSLINUX_CFG}" <<EOF
 label select_menu
        com32 ifcpu64.c32
-       append menu_amd64 -- menu_486 -- menu_486
-label menu_amd64
+       append menu_64 -- menu_32 -- menu_32
+label menu_64
        kernel vesamenu.c32
-       append liveamd64.cfg
-label menu_486
+       append live64.cfg
+label menu_32
        kernel vesamenu.c32
-       append live486.cfg
+       append live32.cfg
 default select_menu
 prompt 0
 EOF
@@ -81,7 +81,7 @@ sed -i -e "1i prompt 0\ntimeout 40\n" "${SYSLINUX_MENU_CFG}"
 (
 	echo "include menu.cfg"
 	sed -n -e '/^label live-amd64.*/ { q } ; p' "${SYSLINUX_LIVE_CFG}"
-) > "${SYSLINUX_PATH}/liveamd64.cfg"
+) > "${SYSLINUX_PATH}/live64.cfg"
 
 # XXX: #11638
 
