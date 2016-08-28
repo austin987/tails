@@ -155,6 +155,8 @@ For example, when we stopped tracking Wheezy, we did:
        | xargs -n 1 reprepro _removereferences \
     && reprepro deleteunreferenced
 
+<a id="freeze-exception"></a>
+
 Freeze exception
 ----------------
 
@@ -164,6 +166,14 @@ Freeze exception
    [[custom APT repository|contribute/APT repository/custom]], in the
    suite corresponding to the branch that we want to see this
    package in.
+
+   For example:
+
+           PBUILDER_OPTIONS='--basetgz /var/cache/pbuilder/base-jessie-i386.tgz' \
+           TARGET_DIST='testing' \
+           ./bin/import-package libgsecuredelete
+
+   See [[!tails_gitweb bin/import-package]] for more detailed usage information.
 
 2. If the imported package comes from a Debian distribution whose
    pinning value is at least 990 in `config/chroot_apt/preferences`:
