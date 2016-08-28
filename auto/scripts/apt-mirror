@@ -33,7 +33,7 @@ RESOLVED_SERIAL=$(cat "tmp/APT_snapshots.d/$ARCHIVE/serial")
 if [ "$(base_branch)" = stable ]; then
     if version_was_released "$(version_in_changelog)"; then
         on_a_tag \
-            || fatal "Not building from stable, but last version in changelog" \
+            || fatal "Not building from a tag, but last version in changelog" \
                      "was released"
         [ "$ARCHIVE" = debian-security ] || [ "$SERIAL" != latest ] \
             || fatal "APT snapshots for $ARCHIVE are not frozen, which should" \
