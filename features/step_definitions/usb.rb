@@ -72,7 +72,7 @@ end
 
 def tails_installer_is_device_selected?(name)
   device = $vm.disk_dev(name)
-  tails_installer_selected_device.end_with?(device)
+  tails_installer_selected_device[/#{device}\d*$/]
 end
 
 class UpgradeNotSupported < StandardError
