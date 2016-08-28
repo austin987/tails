@@ -301,7 +301,11 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   step 'Tails Greeter has dealt with the sudo password'
 
   # XXX: Workaround while Tails/Stretch is affected by #11694.
-  $vm.spawn('chvt 2')
+  retry_times(3) do
+    $vm.spawn('chvt 2')
+    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+    @screen.wait(desktop_started_picture, 60)
+  end
 
   step 'the Tails desktop is ready'
 end
