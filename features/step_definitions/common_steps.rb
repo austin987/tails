@@ -301,7 +301,11 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   step 'Tails Greeter has dealt with the sudo password'
 
   # XXX: Workaround while Tails/Stretch is affected by #11694.
-  $vm.spawn('chvt 2')
+  retry_times(3) do
+    $vm.spawn('chvt 2')
+    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+    @screen.wait(desktop_started_picture, 60)
+  end
 
   step 'the Tails desktop is ready'
 end
@@ -341,9 +345,9 @@ end
 
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-  @screen.wait("GnomeSystrayFlorence.png", 180)
   @screen.wait(desktop_started_picture, 180)
+  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+  @screen.wait("GnomeSystrayFlorence.png", 30)
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
@@ -459,15 +463,21 @@ Given /^I enter the sudo password in the pkexec prompt$/ do
   step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
 end
 
-def deal_with_polkit_prompt (image, password)
+def deal_with_polkit_prompt(password, opts = {})
+  opts[:expect_success] ||= true
+  image = 'PolicyKitAuthPrompt.png'
   @screen.wait(image, 60)
   @screen.type(password)
   @screen.type(Sikuli::Key.ENTER)
-  @screen.waitVanish(image, 10)
+  if opts[:expect_success]
+    @screen.waitVanish(image, 20)
+  else
+    @screen.wait('PolicyKitAuthFailure.png', 20)
+  end
 end
 
 Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
-  deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
+  deal_with_polkit_prompt(password)
 end
 
 Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
@@ -499,17 +509,29 @@ Given /^I kill the process "([^"]+)"$/ do |process|
   }
 end
 
-Then /^Tails eventually shuts down$/ do
+Then /^Tails eventually (shuts down|restarts)$/ do |mode|
   nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   timeout = nr_gibs_of_ram*5*60
-  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
-    ! $vm.is_running?
+  # Work around Tails bug #11730, where something goes wrong when we
+  # kexec to the new kernel for memory wiping and gets dropped to a
+  # BusyBox shell instead.
+  try_for(timeout) do
+    if @screen.exists('TailsBug11730.png')
+      puts "We were hit by bug #11730: memory wiping got stuck"
+      if mode == 'restarts'
+        $vm.reset
+      else
+        $vm.power_off
+      end
+    else
+      if mode == 'restarts'
+        @screen.find('TailsBootSplash.png')
+        true
+      else
+        ! $vm.is_running?
+      end
+    end
   end
-end
-
-Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do

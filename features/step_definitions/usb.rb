@@ -72,7 +72,7 @@ end
 
 def tails_installer_is_device_selected?(name)
   device = $vm.disk_dev(name)
-  tails_installer_selected_device.end_with?(device)
+  tails_installer_selected_device[/#{device}\d*$/]
 end
 
 class UpgradeNotSupported < StandardError
@@ -99,18 +99,35 @@ When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
   installer_launcher = Dogtail::Application.new('tails-installer-launcher')
   installer_launcher.wait(10)
-  installer_launcher.button('Install by cloning').click
+  installer_launcher.button(mode).click
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame').wait
 end
 
+def tails_installer_match_status(pattern)
+  text = @installer.child('', roleName: 'text').text
+  text[pattern]
+end
+
 Then /^Tails Installer detects that a device is too small$/ do
   try_for(10) do
-    text = @installer.child('', roleName: 'text').text
-    text[/^The device .* is too small to install Tails/]
+    tails_installer_match_status(/^The device .* is too small to install Tails/)
   end
 end
 
+When /^I am told that the destination device cannot be upgraded$/ do
+  try_for(10) do
+    tails_installer_match_status(/^It is impossible to upgrade the device/)
+  end
+end
+
+When /^I am suggested to do a "Upgrade by cloning"$/ do
+  try_for(10) do
+    tails_installer_match_status(
+      /You should instead use "Install by cloning" to upgrade Tails/
+    )
+  end
+end
 
 Then /^a suitable USB device is (?:still )?not found$/ do
   @installer.child('No device suitable to install Tails could be found',
@@ -142,14 +159,6 @@ When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   end
 end
 
-When /^I am suggested to do a "Upgrade by cloning"$/ do
-  @screen.find("USBCannotUpgrade.png")
-end
-
-When /^I am told that the destination device cannot be upgraded$/ do
-  @screen.find("USBCannotUpgrade.png")
-end
-
 Given /^I setup a filesystem share containing the Tails ISO$/ do
   shared_iso_dir_on_host = "#{$config["TMPDIR"]}/shared_iso_dir"
   @shared_iso_dir_on_guest = "/tmp/shared_iso_dir"
@@ -160,17 +169,16 @@ Given /^I setup a filesystem share containing the Tails ISO$/ do
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
+  iso_path_on_guest = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   step 'I start Tails Installer in "Upgrade from ISO" mode'
-  @screen.wait('USBUseLiveSystemISO.png', 10)
-  match = @screen.find('USBUseLiveSystemISO.png')
-  @screen.click(match.getCenter.offset(0, match.h*2))
-  @screen.wait('USBSelectISO.png', 10)
-  @screen.wait_and_click('GnomeFileDiagHome.png', 10)
+  @installer.child('Use existing Live system ISO:', roleName: 'label')
+    .parent.button('(None)').click
+  file_chooser = @installer.child('Select a File', roleName: 'file chooser')
+  file_chooser.wait(10)
   @screen.type("l", Sikuli::KeyModifier.CTRL)
-  @screen.wait('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
-  @screen.type(iso)
-  @screen.wait_and_click('GnomeFileDiagOpenButton.png', 10)
+  # The only visible text element will be the path entry
+  file_chooser.child(roleName: 'text').text = iso_path_on_guest
+  file_chooser.button('Open').click
   usb_install_helper(name)
 end
 

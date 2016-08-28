@@ -34,8 +34,7 @@ end
 Then /^I should not be able to run a command as root with pkexec and the standard passwords$/ do
   step "I run \"pkexec touch /root/pkexec-test\" in GNOME Terminal"
   ['', 'live', 'amnesia'].each do |password|
-    step "I enter the \"#{password}\" password in the pkexec prompt"
-    @screen.wait('PolicyKitAuthFailure.png', 20)
+    deal_with_polkit_prompt(password, expect_success: false)
   end
   @screen.type(Sikuli::Key.ESC)
   @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
