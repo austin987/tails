@@ -141,6 +141,8 @@ def retry_action(max_retries, options = {}, &block)
   end
 end
 
+alias :retry_times :retry_action
+
 def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
 rescue Timeout::Error => e
