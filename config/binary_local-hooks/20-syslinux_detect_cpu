@@ -47,9 +47,9 @@ Restore_cache cache/packages_binary
 Install_package
 
 # Copy necessary syslinux modules
-for module in ifcpu64.c32
+for module in cat.c32 ifcpu64.c32
 do
-	cp "chroot/usr/lib/syslinux/${module}" "${SYSLINUX_PATH}/"
+	cp "chroot/usr/lib/syslinux/modules/bios/${module}" "${SYSLINUX_PATH}/"
 done
 
 # Saving cache
@@ -67,8 +67,8 @@ label menu_64
        kernel vesamenu.c32
        append live64.cfg
 label menu_32
-       kernel vesamenu.c32
-       append live32.cfg
+       com32 cat.c32
+       append sorry32.txt
 default select_menu
 prompt 0
 EOF
@@ -82,8 +82,6 @@ sed -i -e "1i prompt 0\ntimeout 40\n" "${SYSLINUX_MENU_CFG}"
 	echo "include menu.cfg"
 	sed -n -e '/^label live-amd64.*/ { q } ; p' "${SYSLINUX_LIVE_CFG}"
 ) > "${SYSLINUX_PATH}/live64.cfg"
-
-# XXX: #11638
 
 # Don't load live.cfg from menu.cfg:
 # syslinux_cfg automatically loads arch-specific menus
