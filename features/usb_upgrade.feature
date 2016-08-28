@@ -54,7 +54,7 @@ Feature: Upgrading an old Tails USB installation
     And all notifications have disappeared
     And I create a 4 GiB disk named "old"
     And I plug USB drive "old"
-    And I "Install by cloning" Tails to USB drive "old"
+    When I "Install by cloning" Tails to USB drive "old"
     Then the running Tails is installed on USB drive "old"
     But there is no persistence partition on USB drive "old"
     And I unplug USB drive "old"
@@ -75,7 +75,7 @@ Feature: Upgrading an old Tails USB installation
     And I start Tails from USB drive "old" with network unplugged and I login with persistence enabled
     Then Tails is running from USB drive "old"
     And all persistence presets are enabled
-    And I write some files expected to persist
+    When I write some files expected to persist
     And all persistent filesystems have safe access rights
     And all persistence configuration files have safe access rights
     And all persistent directories from the old Tails version have safe access rights
