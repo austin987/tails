@@ -16,6 +16,12 @@ get_latest_serial() {
 
 action="$1"
 case "$action" in
+	cat)
+		for origin in $ORIGINS; do
+			echo -n "$origin: "
+			cat "$CONFIG/$origin/serial"
+		done
+	;;
 	get-latest)
 		for origin in $ORIGINS; do
 			online=$(get_latest_serial $origin)
@@ -61,7 +67,7 @@ case "$action" in
 		done
 	;;
 	*)
-		printf "unknown action ($action), use either 'get-latest', 'prepare-build', 'freeze' or 'thaw'\n" >&2
+		printf "unknown action ($action), use either 'cat', 'get-latest', 'prepare-build', 'freeze' or 'thaw'\n" >&2
 		exit 1
 	;;
 esac
