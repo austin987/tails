@@ -27,7 +27,7 @@ Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:
   $vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
 end
 
-Given /^I cat an ISO of the Tails image to disk "([^"]+)"$/ do |name|
+Given /^I write the Tails ISO image to disk "([^"]+)"$/ do |name|
   src_disk = {
     :path => TAILS_ISO,
     :opts => {
