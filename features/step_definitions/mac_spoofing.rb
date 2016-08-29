@@ -64,14 +64,6 @@ EOF
   $vm.execute_successfully("chmod a+rx /sbin/modprobe")
 end
 
-When /^see the "Network card disabled" notification$/ do
-  robust_notification_wait("MACSpoofNetworkCardDisabled.png", 60)
-end
-
-When /^see the "All networking disabled" notification$/ do
-  robust_notification_wait("MACSpoofNetworkingDisabled.png", 60)
-end
-
 Then /^(\d+|no) network interface(?:s)? (?:is|are) enabled$/ do |expected_nr_nics|
   # note that "no".to_i => 0 in Ruby.
   expected_nr_nics = expected_nr_nics.to_i

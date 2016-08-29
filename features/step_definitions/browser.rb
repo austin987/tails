@@ -1,7 +1,3 @@
-Then /^I see the (Unsafe|I2P) Browser start notification and wait for it to close$/ do |browser_type|
-  robust_notification_wait("#{browser_type}BrowserStartNotification.png", 60)
-end
-
 Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
   case browser_type
   when 'Unsafe'
@@ -18,16 +14,12 @@ end
 When /^I successfully start the (Unsafe|I2P) Browser$/ do |browser_type|
   step "I start the #{browser_type} Browser"
   step "I see and accept the Unsafe Browser start verification" unless browser_type == 'I2P'
-  step "I see the #{browser_type} Browser start notification and wait for it to close"
+  step "I see the \"Starting the #{browser_type} Browser...\" notification after at most 60 seconds"
   step "the #{browser_type} Browser has started"
 end
 
 When /^I close the (?:Unsafe|I2P) Browser$/ do
   @screen.type("q", Sikuli::KeyModifier.CTRL)
-end
-
-Then /^I see the (Unsafe|I2P) Browser stop notification$/ do |browser_type|
-  robust_notification_wait("#{browser_type}BrowserStopNotification.png", 60)
 end
 
 def xul_application_info(application)

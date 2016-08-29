@@ -52,42 +52,6 @@ def deactivate_filesystem_shares
   #end
 end
 
-# This helper requires that the notification image is the one shown in
-# the notification applet's list, not the notification pop-up.
-def robust_notification_wait(notification_image, time_to_wait)
-  error_msg = "Didn't not manage to open the notification applet"
-  wait_start = Time.now
-  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
-    @screen.hide_cursor
-    @screen.click("GnomeNotificationApplet.png")
-    @screen.wait("GnomeNotificationAppletOpened.png", 10)
-  end
-
-  error_msg = "Didn't not see notification '#{notification_image}'"
-  time_to_wait -= (Time.now - wait_start).ceil
-  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
-    found = false
-    entries = @screen.findAll("GnomeNotificationEntry.png")
-    while(entries.hasNext) do
-      entry = entries.next
-      @screen.hide_cursor
-      @screen.click(entry)
-      close_entry = @screen.wait("GnomeNotificationEntryClose.png", 10)
-      if @screen.exists(notification_image)
-        found = true
-        @screen.click(close_entry)
-        break
-      else
-        @screen.click(entry)
-      end
-    end
-    found
-  end
-
-  # Close the notification applet
-  @screen.type(Sikuli::Key.ESC)
-end
-
 def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
@@ -371,8 +335,14 @@ Given /^the Tails desktop is ready$/ do
   end
 end
 
-When /^I see the 'Tor is ready' notification$/ do
-  robust_notification_wait('TorIsReadyNotification.png', 300)
+When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |title, timeout|
+  timeout = timeout ? timeout.to_i : nil
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  notification_list = gnome_shell.child(
+    'No Notifications', roleName: 'label', showingOnly: false
+  ).parent.parent
+  notification_list.child(title, roleName: 'label', showingOnly: false)
+    .wait(timeout)
 end
 
 Given /^Tor is ready$/ do
