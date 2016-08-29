@@ -20,12 +20,12 @@ Then /^the network device has (its default|a spoofed) MAC address configured$/ d
   ).stdout.chomp
   if is_spoofed
     if nic_real_mac == nic_current_mac
-      save_pcap_file
+      @sniffer.save_pcap_file
       raise "The MAC address was expected to be spoofed but wasn't"
     end
   else
     if nic_real_mac != nic_current_mac
-      save_pcap_file
+      @sniffer.save_pcap_file
       raise "The MAC address is spoofed but was expected to not be"
     end
   end
