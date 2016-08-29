@@ -56,10 +56,10 @@ if not($at_exit_print_artifacts_dir_patching_done)
       alias old_print_stats print_stats
     end
     def print_stats(*args)
-      if Dir.exists?(ARTIFACTS_DIR) and Dir.entries(ARTIFACTS_DIR).size > 2
-        @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
-        @io.puts
-      end
+      @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
+      @io.puts
+      @io.puts "Debug log:           #{ARTIFACTS_DIR}/debug.log"
+      @io.puts
       if self.class.method_defined?(:old_print_stats)
         old_print_stats(*args)
       end
@@ -166,6 +166,12 @@ AfterConfiguration do |config|
   # AfterConfiguration hook multiple times. We only want our
   # ExtraHooks formatter to be loaded once, otherwise the hooks would
   # be run miltiple times.
-  extra_hooks = ['ExtraFormatters::ExtraHooks', '/dev/null']
-  config.formats << extra_hooks if not(config.formats.include?(extra_hooks))
+  extra_hooks = [
+    ['ExtraFormatters::ExtraHooks', '/dev/null'],
+    ['Cucumber::Formatter::Pretty', "#{ARTIFACTS_DIR}/pretty.log"],
+    ['ExtraFormatters::PrettyDebug', "#{ARTIFACTS_DIR}/debug.log"],
+  ]
+  extra_hooks.each do |hook|
+    config.formats << hook if not(config.formats.include?(hook))
+  end
 end
