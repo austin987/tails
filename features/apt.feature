@@ -14,7 +14,7 @@ Feature: Installing packages through APT
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
     And I update APT using apt
     When I install "cowsay" using apt
-    Then package "cowsay" is installed
+    Then the package "cowsay" is installed
 
   @check_tor_leaks
   Scenario: Install packages using Synaptic
@@ -22,4 +22,4 @@ Feature: Installing packages through APT
     And I start Synaptic
     And I update APT using Synaptic
     When I install "cowsay" using Synaptic
-    Then package "cowsay" is installed
+    Then the package "cowsay" is installed
