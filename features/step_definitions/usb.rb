@@ -76,8 +76,7 @@ def tails_installer_is_device_selected?(name)
 end
 
 def tails_installer_match_status(pattern)
-  text = @installer.child('', roleName: 'text').text
-  text[pattern]
+  @installer.child('', roleName: 'text').text[pattern]
 end
 
 class UpgradeNotSupported < StandardError
