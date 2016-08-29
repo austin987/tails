@@ -288,10 +288,6 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
          "#{expected}")
 end
 
-When /^I start Pidgin through the GNOME menu$/ do
-  step 'I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu'
-end
-
 When /^I open Pidgin's account manager window$/ do
   @screen.wait_and_click('PidginMenuAccounts.png', 20)
   @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
