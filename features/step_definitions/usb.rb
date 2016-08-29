@@ -79,11 +79,11 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  assert(tails_installer_is_device_selected?(name))
   text = @installer.child('', roleName: 'text').text
   if text['It is impossible to upgrade the device']
     raise UpgradeNotSupported
   end
+  assert(tails_installer_is_device_selected?(name))
   begin
     @installer.button('Install Tails').click
     @installer.child('Question', roleName: 'alert').button('Yes').click
