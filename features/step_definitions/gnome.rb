@@ -1,13 +1,13 @@
-Then /^there is no screenshot in the live user's Pictures directory$/ do
-  pictures_directory = "/home/#{LIVE_USER}/Pictures"
+Then /^there is no screenshot in the live user's home directory$/ do
+  pictures_directory = "/home/#{LIVE_USER}"
   assert($vm.execute(
           "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
         ).stdout.empty?,
          "Existing screenshots were found in the live user's Pictures directory.")
 end
 
-Then /^a screenshot is saved to the live user's Pictures directory$/ do
-  pictures_directory = "/home/#{LIVE_USER}/Pictures"
+Then /^a screenshot is saved to the live user's home directory$/ do
+  pictures_directory = "/home/#{LIVE_USER}"
   try_for(10, :msg=> "No screenshot was created in #{pictures_directory}") do
     !$vm.execute(
       "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
