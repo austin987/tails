@@ -119,7 +119,7 @@ When /^I am told that the destination device cannot be upgraded$/ do
   end
 end
 
-When /^I am suggested to do a "Upgrade by cloning"$/ do
+When /^I am suggested to do a "Install by cloning"$/ do
   try_for(10) do
     tails_installer_match_status(
       /You should instead use "Install by cloning" to upgrade Tails/
