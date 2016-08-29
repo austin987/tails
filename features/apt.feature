@@ -13,11 +13,13 @@ Feature: Installing packages through APT
 
   @check_tor_leaks
   Scenario: Install packages using apt
-    When I update APT using apt
-    Then I should be able to install a package using apt
+    Given I update APT using apt
+    When I install "cowsay" using apt
+    Then package "cowsay" is installed
 
   @check_tor_leaks
   Scenario: Install packages using Synaptic
-    When I start Synaptic
+    Given I start Synaptic
     And I update APT using Synaptic
-    Then I should be able to install a package using Synaptic
+    When I install "cowsay" using Synaptic
+    Then package "cowsay" is installed

@@ -24,20 +24,18 @@ When /^I update APT using apt$/ do
   end
 end
 
-Then /^I should be able to install a package using apt$/ do
-  package = "cowsay"
+Then /^I install "(.+)" using apt$/ do |package_name|
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
-    $vm.execute("apt purge #{package}")
+    $vm.execute("apt purge #{package_name}")
   end
   retry_tor(recovery_proc) do
     Timeout::timeout(2*60) do
       $vm.execute_successfully("echo #{@sudo_password} | " +
-                               "sudo -S apt install #{package}",
+                               "sudo -S apt install #{package_name}",
                                :user => LIVE_USER)
     end
   end
-  step "package \"#{package}\" is installed"
 end
 
 When /^I start Synaptic$/ do
@@ -69,8 +67,7 @@ When /^I update APT using Synaptic$/ do
   end
 end
 
-Then /^I should be able to install a package using Synaptic$/ do
-  package_name = "cowsay"
+Then /^I install "(.+)" using Synaptic$/ do |package_name|
   recovery_proc = Proc.new do
     step 'I kill the process "synaptic"'
     $vm.execute("apt -y purge #{package_name}")
@@ -92,6 +89,5 @@ Then /^I should be able to install a package using Synaptic$/ do
     apply_prompt.button('Apply').click
     @synaptic.child('Changes applied', roleName: 'frame',
                     recursive: false).wait(4*60)
-    step "package \"#{package_name}\" is installed"
   end
 end
