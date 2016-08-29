@@ -100,8 +100,9 @@ If we are at freeze time for a major release:
    during the freeze.
 
 6. Make it so the time-based APT repository snapshots are kept around
-   long enough, by bumping their `Valid-Until` to max(now + 10 days,
-   expected release date + 5 days):
+   long enough, by bumping their `Valid-Until` to 10 days after the
+   next major release (the one _after_ the one you're preparing)'s
+   scheduled date:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
 
@@ -1098,11 +1099,12 @@ this, and skip what does not make sense for a RC.
    post-release APT repository steps from the previous stable release
    will usually have had us prepare for an emergency release that was
    never made.
-1. [[Thaw|APT_repository/time-based snapshots#thaw]] the time-based
-   APT repository snapshots that were used during the freeze, if any.
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
+1. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+   branch, the time-based APT repository snapshots that were used
+   during the freeze.
 1. Follow the
    [[post-release|APT_repository/custom#workflow-post-release]]
    custom APT repository documentation. Make sure there are upgrade-description

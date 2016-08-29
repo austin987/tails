@@ -38,7 +38,7 @@ Feature: I2P
     And the I2P router console is ready
     When I successfully start the I2P Browser
     And I close the I2P Browser
-    Then I see the I2P Browser stop notification
+    Then I see the "Shutting down the I2P Browser..." notification after at most 60 seconds
     And the I2P Browser chroot is torn down
 
   #11114, #11465
@@ -86,7 +86,7 @@ Feature: I2P
     And I2P is running
     And I2P's reseeding started
     And the network is unplugged
-    Then I see a notification that I2P is not ready
+    Then I see the "I2P is not read" notification after at most 240 seconds
     And I2P's reseeding failed
     But I2P is still running
     When I start the I2P Browser through the GNOME menu
@@ -103,5 +103,5 @@ Feature: I2P
     And Tor has built a circuit
     Then I2P is running
     But the network is unplugged
-    Then I see a notification that I2P failed to start
+    Then I see the "I2P failed to start" notification after at most 120 seconds
     And I2P is not running
