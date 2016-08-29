@@ -300,13 +300,6 @@ Given /^Tails Greeter has dealt with the sudo password$/ do
   }
 end
 
-def florence_keyboard_is_visible
-  $vm.execute(
-    "xdotool search --all --onlyvisible --maxdepth 1 --classname 'Florence'",
-    :user => LIVE_USER,
-  ).success?
-end
-
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   @screen.wait(desktop_started_picture, 180)
@@ -324,15 +317,6 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
     :user => LIVE_USER,
   )
-  # Sometimes the Florence window is not hidden on startup (#11398).
-  # Whenever that's the case, hide it ourselves and verify that it vanishes.
-  # I could not find that window using Accerciser, so I'm not using dogtail;
-  # and it doesn't feel worth it to add an image and use Sikuli, since we can
-  # instead do this programmatically with xdotool.
-  if florence_keyboard_is_visible
-    @screen.click("GnomeSystrayFlorence.png")
-    try_for(5, delay: 0.1) { ! florence_keyboard_is_visible }
-  end
 end
 
 When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |title, timeout|
