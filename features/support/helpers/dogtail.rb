@@ -132,6 +132,11 @@ module Dogtail
       end
     end
 
+    def exist?
+      @opts[:allow_failure] = true
+      run.success?
+    end
+
     # Equivalent to the Tree API's Node.findChildren(), with the
     # arguments constructing a GenericPredicate to use as parameter.
     def children(*args)

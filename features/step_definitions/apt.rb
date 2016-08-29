@@ -40,21 +40,27 @@ Then /^I should be able to install a package using apt$/ do
   step "package \"#{package}\" is installed"
 end
 
+When /^I start Synaptic$/ do
+  step 'I start "Synaptic Package Manager" via the GNOME "System Tools" applications menu'
+  deal_with_polkit_prompt(@sudo_password)
+  @synaptic = Dogtail::Application.new('synaptic')
+  # The seemingly spurious space is needed because that is how this
+  # frame is named...
+  @synaptic.child('Synaptic Package Manager ', roleName: 'frame',
+                  recursive: false).wait
+end
+
 When /^I update APT using Synaptic$/ do
   recovery_proc = Proc.new do
     step 'I kill the process "synaptic"'
     step "I start Synaptic"
   end
   retry_tor(recovery_proc) do
-    try_for(60, :msg => "Failed to trigger the reload of the package list") {
-      # here using the Synaptic keyboard shortcut is more effective on retries.
-      @screen.type("r", Sikuli::KeyModifier.CTRL)
-      @screen.wait('SynapticReloadPrompt.png', 10)
-    }
+    @synaptic.button('Reload').click
     try_for(15*60, :msg => "Took too much time to download the APT data") {
       !$vm.has_process?("/usr/lib/apt/methods/tor+http")
     }
-    if @screen.exists('SynapticFailure.png')
+    if @synaptic.child(roleName: 'dialog', recursive: false).child('Error', roleName: 'icon', retry: false).exist?
       raise "Updating APT with Synaptic failed."
     end
     if !$vm.has_process?("synaptic")
@@ -64,29 +70,28 @@ When /^I update APT using Synaptic$/ do
 end
 
 Then /^I should be able to install a package using Synaptic$/ do
-  package = "cowsay"
+  package_name = "cowsay"
   recovery_proc = Proc.new do
     step 'I kill the process "synaptic"'
-    $vm.execute("apt -y purge #{package}")
+    $vm.execute("apt -y purge #{package_name}")
     step "I start Synaptic"
   end
   retry_tor(recovery_proc) do
-    try_for(60) do
-      @screen.wait_and_click('SynapticSearchButton.png', 10)
-      @screen.wait_and_click('SynapticSearchWindow.png', 10)
-    end
-    @screen.type(package + Sikuli::Key.ENTER)
-    @screen.wait_and_double_click('SynapticCowsaySearchResult.png', 20)
-    @screen.wait_and_click('SynapticApplyButton.png', 10)
-    @screen.wait('SynapticApplyPrompt.png', 60)
-    @screen.type(Sikuli::Key.ENTER)
-    @screen.wait('SynapticChangesAppliedPrompt.png', 4*60)
-    step "package \"#{package}\" is installed"
+    @synaptic.button('Search').click
+    find_dialog = @synaptic.dialog('Find')
+    find_dialog.wait(10)
+    find_dialog.child(roleName: 'text').typeText(package_name)
+    find_dialog.button('Search').click
+    package_list = @synaptic.child('Installed Version',
+                                   roleName: 'table column header').parent
+    package_entry = package_list.child(package_name, roleName: 'table cell')
+    package_entry.doubleClick
+    @synaptic.button('Apply').click
+    apply_prompt = @synaptic.dialog('Summary')
+    apply_prompt.wait(60)
+    apply_prompt.button('Apply').click
+    @synaptic.child('Changes applied', roleName: 'frame',
+                    recursive: false).wait(4*60)
+    step "package \"#{package_name}\" is installed"
   end
-end
-
-When /^I start Synaptic$/ do
-  step 'I start "Synaptic Package Manager" via the GNOME "System Tools" applications menu'
-  deal_with_polkit_prompt(@sudo_password)
-  @screen.wait('SynapticLoaded.png', 30)
 end
