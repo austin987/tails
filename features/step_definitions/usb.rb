@@ -75,12 +75,16 @@ def tails_installer_is_device_selected?(name)
   tails_installer_selected_device[/#{device}\d*$/]
 end
 
+def tails_installer_match_status(pattern)
+  text = @installer.child('', roleName: 'text').text
+  text[pattern]
+end
+
 class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  text = @installer.child('', roleName: 'text').text
-  if text['It is impossible to upgrade the device']
+  if tails_installer_match_status('It is impossible to upgrade the device')
     raise UpgradeNotSupported
   end
   assert(tails_installer_is_device_selected?(name))
@@ -102,11 +106,6 @@ When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   installer_launcher.button(mode).click
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame').wait
-end
-
-def tails_installer_match_status(pattern)
-  text = @installer.child('', roleName: 'text').text
-  text[pattern]
 end
 
 Then /^Tails Installer detects that a device is too small$/ do
