@@ -69,7 +69,7 @@ Feature: I2P
     And I start the I2P Browser through the GNOME menu
     And the I2P router console is displayed in I2P Browser
     And I see shared client tunnels in the I2P router console
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     Then I see Pidgin's account manager window
     When I activate the "I2P" Pidgin account
     And I close Pidgin's account manager window

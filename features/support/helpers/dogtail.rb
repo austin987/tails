@@ -85,12 +85,12 @@ module Dogtail
       $vm.file_overwrite(script_path, script, @opts[:user])
       args = ["/usr/bin/python '#{script_path}'", @opts]
       if @opts[:allow_failure]
-        $vm.execute(*args)
+        ret = $vm.execute(*args)
       else
-        $vm.execute_successfully(*args)
+        ret = $vm.execute_successfully(*args)
       end
-    ensure
       $vm.execute("rm -f '#{script_path}'")
+      ret
     end
 
     def self.value_to_s(v)
@@ -130,6 +130,11 @@ module Dogtail
       else
         run
       end
+    end
+
+    def exist?
+      @opts[:allow_failure] = true
+      run.success?
     end
 
     # Equivalent to the Tree API's Node.findChildren(), with the

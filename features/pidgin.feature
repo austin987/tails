@@ -11,7 +11,7 @@ Feature: Chatting anonymously using Pidgin
   @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP
     Given I have started Tails from DVD and logged in and the network is connected
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
     And I close Pidgin's account manager window
@@ -25,7 +25,7 @@ Feature: Chatting anonymously using Pidgin
   @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP in a multi-user chat
     Given I have started Tails from DVD and logged in and the network is connected
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
     And I close Pidgin's account manager window
@@ -46,7 +46,7 @@ Feature: Chatting anonymously using Pidgin
   @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP and with OTR
     Given I have started Tails from DVD and logged in and the network is connected
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
     And I close Pidgin's account manager window
@@ -64,7 +64,7 @@ Feature: Chatting anonymously using Pidgin
   Scenario: Connecting to the tails multi-user chat with my XMPP account
     Given I have started Tails from DVD and logged in and the network is connected
     And Pidgin has the expected accounts configured with random nicknames
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     Then I see Pidgin's account manager window
     And I create my XMPP account
     And I close Pidgin's account manager window
@@ -73,14 +73,14 @@ Feature: Chatting anonymously using Pidgin
 
   Scenario: Adding a certificate to Pidgin
     Given I have started Tails from DVD and logged in and the network is connected
-    And I start Pidgin through the GNOME menu
+    And I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
     Then I can add a certificate from the "/home/amnesia" directory to Pidgin
 
   Scenario: Failing to add a certificate to Pidgin
     Given I have started Tails from DVD and logged in and the network is connected
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
@@ -100,7 +100,7 @@ Feature: Chatting anonymously using Pidgin
     And Tor is ready
     And available upgrades have been checked
     And all notifications have disappeared
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     Then I see Pidgin's account manager window
     When I create my XMPP account
     And I close Pidgin's account manager window
@@ -114,7 +114,7 @@ Feature: Chatting anonymously using Pidgin
     And I start Tails from USB drive "__internal" and I login with persistence enabled
     And Pidgin has the expected persistent accounts configured
     # And Pidgin has the expected persistent OTR keys
-    When I start Pidgin through the GNOME menu
+    When I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu
     Then Pidgin automatically enables my XMPP account
     And I join some empty multi-user chat
     # Exercise Pidgin AppArmor profile with persistence enabled.

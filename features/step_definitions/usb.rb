@@ -75,15 +75,18 @@ def tails_installer_is_device_selected?(name)
   tails_installer_selected_device[/#{device}\d*$/]
 end
 
+def tails_installer_match_status(pattern)
+  @installer.child('', roleName: 'text').text[pattern]
+end
+
 class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  assert(tails_installer_is_device_selected?(name))
-  text = @installer.child('', roleName: 'text').text
-  if text['It is impossible to upgrade the device']
+  if tails_installer_match_status('It is impossible to upgrade the device')
     raise UpgradeNotSupported
   end
+  assert(tails_installer_is_device_selected?(name))
   begin
     @installer.button('Install Tails').click
     @installer.child('Question', roleName: 'alert').button('Yes').click
@@ -104,11 +107,6 @@ When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   @installer.child('Tails Installer', roleName: 'frame').wait
 end
 
-def tails_installer_match_status(pattern)
-  text = @installer.child('', roleName: 'text').text
-  text[pattern]
-end
-
 Then /^Tails Installer detects that a device is too small$/ do
   try_for(10) do
     tails_installer_match_status(/^The device .* is too small to install Tails/)
@@ -121,7 +119,7 @@ When /^I am told that the destination device cannot be upgraded$/ do
   end
 end
 
-When /^I am suggested to do a "Upgrade by cloning"$/ do
+When /^I am suggested to do a "Install by cloning"$/ do
   try_for(10) do
     tails_installer_match_status(
       /You should instead use "Install by cloning" to upgrade Tails/
