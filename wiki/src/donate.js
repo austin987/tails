@@ -2,16 +2,22 @@ $(document).ready(function(){
 
   // Toggle between Zwiebelfreunde and Riseup Labs
   $('#dollar-amounts').show();
+  $('#dollar-tax').show();
   $('#euro-amounts').hide();
+  $('#euro-tax').hide();
   $('#currency-dollar').click(function () {
     $('#dollar-amounts').show();
+    $('#dollar-tax').show();
     $('#euro-amounts').hide();
+    $('#euro-tax').hide();
     document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
     document.getElementById('currency_code').value = 'USD';
   })
   $('#currency-euro').click(function () {
     $('#dollar-amounts').hide();
+    $('#dollar-tax').hide();
     $('#euro-amounts').show();
+    $('#euro-tax').show();
     document.getElementById('business').value = 'tails@torservers.net';
     document.getElementById('currency_code').value = 'EUR';
   })
