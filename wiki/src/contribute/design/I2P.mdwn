@@ -162,6 +162,7 @@ shall eventually be imported into, and called e.g.
    temporary directory.
 2. In the chroot, download the source and binary packages:
 
+        dpkg --add-architecture amd64 && \
         echo 'deb http://deb.i2p2.no/ jessie main' > \
            /etc/apt/sources.list.d/i2p.list && \
         echo 'deb-src http://deb.i2p2.no/ jessie main' > \
@@ -169,7 +170,7 @@ shall eventually be imported into, and called e.g.
         apt-key add - &&
         apt update && \
         apt-get --download-only source i2p && \
-        apt-get download i2p i2p-router libjbigi-jni
+        apt-get download i2p i2p-router libjbigi-jni:i386 libjbigi-jni:amd64
 
 3. Copy `{i2p,i2p-router,libjbigi-jni}_*` outside of the chroot.
 
