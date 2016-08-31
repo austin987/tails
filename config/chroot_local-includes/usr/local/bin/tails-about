@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 # -*- encoding: UTF-8
 """This scripts show a dialog with basic information about the
-running Tails installation"""
+running Tails installation.
+"""
 
 import gettext
 import subprocess
@@ -20,6 +21,11 @@ class AboutTails(Gtk.AboutDialog):
 
         self.set_program_name(_("Tails"))
 
+        headerbar = Gtk.HeaderBar()
+        headerbar.set_title(_("About Tails"))
+        headerbar.set_show_close_button(True)
+        self.set_titlebar(headerbar)
+
         try:
             self.set_logo(GdkPixbuf.Pixbuf.new_from_file_at_size(
                 '/usr/share/tails/tails-logo-flat-inverted.svg', 400, 200))
@@ -29,7 +35,6 @@ class AboutTails(Gtk.AboutDialog):
         self.set_comments(_("The Amnesic Incognito Live System") + "\n\n" +
                           _("Build information:\n%s") % self.tails_version)
         self.set_copyright("Tails developers")
-        self.set_title = (_("About Tails"))
         self.set_version(self.tails_main_version)
         self.set_website("https://tails.boum.org/")
 
@@ -43,6 +48,7 @@ class AboutTails(Gtk.AboutDialog):
         try:
             self.tails_version = subprocess.Popen(
                 ["tails-version"], stdout=subprocess.PIPE).communicate()[0]
+            self.tails_version = self.tails_version.decode('utf-8')
             self.tails_main_version = self.tails_version.split("-")[0]
         except OSError:
             self.tails_version = _("not available")
