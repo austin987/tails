@@ -40,13 +40,18 @@ Then /^I click the extensions tab$/ do
   @icedove_addons.child('Extensions', roleName: 'list item').click
 end
 
-Then /^I see that Adblock is not installed in Icedove$/ do
-  extensions_list = @icedove_addons.child('amnesia branding', roleName: 'label')
-                    .parent.parent
-  adblock_installed = extensions_list.children(roleName: 'label').any? do |label|
-    label.text.match(/adblock/i)
+Then /^I see that only the (.+) addons are enabled in Icedove$/ do |addons|
+  expected_addons = addons.split(/, | and /)
+  actual_addons =
+    @icedove_addons.child('amnesia branding', roleName: 'label')
+    .parent.parent.children(roleName: 'list item', recursive: false)
+    .map { |item| item.name }
+  expected_addons.each do |addon|
+    result = actual_addons.find { |e| e.start_with?(addon) }
+    assert_not_nil(result)
+    actual_addons.delete(result)
   end
-  assert(not(adblock_installed))
+  assert_equal(0, actual_addons.size)
 end
 
 When /^I go into Enigmail's preferences$/ do

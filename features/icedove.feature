@@ -11,11 +11,11 @@ Feature: Icedove email client
     And I have not configured an email account
     Then I am prompted to setup an email account
 
-  Scenario: Adblock is not enabled within Icedove
+  Scenario: Only the expected addons are installed
     Given I cancel setting up an email account
     When I open Icedove's Add-ons Manager
     And I click the extensions tab
-    Then I see that Adblock is not installed in Icedove
+    Then I see that only the amnesia branding, Enigmail and TorBirdy addons are enabled in Icedove
 
   Scenario: Enigmail is configured to use the correct keyserver
     Given I cancel setting up an email account

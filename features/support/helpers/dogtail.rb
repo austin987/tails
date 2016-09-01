@@ -113,6 +113,7 @@ module Dogtail
     # into the parentheses of a Python function call.
     # Example: [42, {:foo => 'bar'}] => "42, foo = 'bar'"
     def self.args_to_s(args)
+      return "" if args.size == 0
       args_list = args
       args_hash = nil
       if args_list.class == Array && args_list.last.class == Hash
@@ -140,6 +141,22 @@ module Dogtail
     # Equivalent to the Tree API's Node.findChildren(), with the
     # arguments constructing a GenericPredicate to use as parameter.
     def children(*args)
+      non_predicates = [:recursive, :showingOnly]
+      findChildren_opts = []
+      findChildren_opts_hash = Hash.new
+      if args.last.class == Hash
+        args_hash = args.last
+        non_predicates.each do |opt|
+          if args_hash.has_key?(opt)
+            findChildren_opts_hash[opt] = args_hash[opt]
+            args_hash.delete(opt)
+          end
+        end
+      end
+      findChildren_opts = ""
+      if findChildren_opts_hash.size > 0
+        findChildren_opts = ", " + self.class.args_to_s([findChildren_opts_hash])
+      end
       # A fundamental assumption of ScriptProxy is that we will only
       # act on *one* object at a time. If we were to allow more, we'd
       # have to port looping, conditionals and much more into our
@@ -149,9 +166,10 @@ module Dogtail
       # internal a11y AT-SPI "path" to uniquely identify a Dogtail
       # node, so we can give handles to each of them that can be used
       # later to re-find them.
+      predicate_opts = self.class.args_to_s(args)
       find_paths_script_lines = [
         "from dogtail import predicate",
-        "for n in #{build_line}.findChildren(predicate.GenericPredicate(#{self.class.args_to_s(args)})):",
+        "for n in #{build_line}.findChildren(predicate.GenericPredicate(#{predicate_opts})#{findChildren_opts}):",
         "    print(n.path)",
       ]
       a11y_at_spi_paths = run(find_paths_script_lines).stdout.chomp.split("\n")
