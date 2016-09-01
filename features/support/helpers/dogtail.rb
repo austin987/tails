@@ -16,6 +16,10 @@ module Dogtail
     :textentry,
   ]
 
+  TREE_API_NODE_SEARCH_FIELDS = [
+    :parent,
+  ]
+
   TREE_API_NODE_ACTIONS = [
     :click,
     :doubleClick,
@@ -81,12 +85,12 @@ module Dogtail
       $vm.file_overwrite(script_path, script, @opts[:user])
       args = ["/usr/bin/python '#{script_path}'", @opts]
       if @opts[:allow_failure]
-        $vm.execute(*args)
+        ret = $vm.execute(*args)
       else
-        $vm.execute_successfully(*args)
+        ret = $vm.execute_successfully(*args)
       end
-    ensure
       $vm.execute("rm -f '#{script_path}'")
+      ret
     end
 
     def self.value_to_s(v)
@@ -126,6 +130,11 @@ module Dogtail
       else
         run
       end
+    end
+
+    def exist?
+      @opts[:allow_failure] = true
+      run.success?
     end
 
     # Equivalent to the Tree API's Node.findChildren(), with the
@@ -180,6 +189,14 @@ module Dogtail
       get_field('text')
     end
 
+    def text=(value)
+      set_field('text', value)
+    end
+
+    def name
+      get_field('name')
+    end
+
     def proxy_call(method, args)
       args_str = self.class.args_to_s(args)
       method_call = "#{method.to_s}(#{args_str})"
@@ -195,6 +212,18 @@ module Dogtail
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
         proxy_call(method, args)
+      end
+    end
+
+    TREE_API_NODE_SEARCH_FIELDS.each do |field|
+      define_method(field) do
+        Node.new(
+          @app_name,
+          @opts.merge(
+            init_lines: @init_lines,
+            components: @components + [field]
+          )
+        )
       end
     end
 
