@@ -301,7 +301,7 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
-  step 'Tails Greeter has dealt with the sudo password'
+  step 'Tails Greeter has applied all settings'
   step 'the Tails desktop is ready'
 end
 
@@ -323,11 +323,12 @@ Given /^I set an administration password$/ do
   @screen.type(@sudo_password)
 end
 
-Given /^Tails Greeter has dealt with the sudo password$/ do
-  f1 = "/etc/sudoers.d/tails-greeter"
-  f2 = "#{f1}-no-password-lecture"
+Given /^Tails Greeter has applied all settings$/ do
+  # I.e. it is done with PostLogin, which is ensured to happen before
+  # a logind session is opened for LIVE_USER.
   try_for(120) {
-    $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
+    $vm.execute_successfully("loginctl").stdout
+      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s*$/) != nil
   }
 end
 
