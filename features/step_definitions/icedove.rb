@@ -89,3 +89,21 @@ Then /^I see that Torbirdy is configured to use Tor$/ do
   icedove_main.child(roleName: 'status bar')
     .child('TorBirdy Enabled:    Tor', roleName: 'label').wait
 end
+
+When /^I enter my email credentials into the autoconfiguration wizard$/ do
+  icedove_wizard.child('Email address:', roleName: 'entry')
+    .typeText($config['Icedove']['address'])
+  icedove_wizard.child('Password:', roleName: 'entry')
+    .typeText($config['Icedove']['password'])
+  icedove_wizard.button('Continue').click
+  # This button is shown if and only if a configuration has been found
+  icedove_wizard.button('Done').wait(120)
+end
+
+Then /^the autoconfiguration wizard defaults to secure (incoming|outgoing) (.+)$/ do |type, protocol|
+  type = type.capitalize + ':'
+  assert_not_nil(
+    icedove_wizard.child(type, roleName: 'entry').text
+      .match(/^#{protocol},[^,]+, (SSL|TLS)$/)
+  )
+end

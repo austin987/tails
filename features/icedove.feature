@@ -29,3 +29,8 @@ Feature: Icedove email client
   Scenario: Torbirdy is configured to use Tor
     Given I cancel setting up an email account
     Then I see that Torbirdy is configured to use Tor
+
+  Scenario: Icedove's autoconfiguration wizard defaults to IMAP and secure protocols
+    When I enter my email credentials into the autoconfiguration wizard
+    Then the autoconfiguration wizard defaults to secure incoming IMAP
+    And the autoconfiguration wizard defaults to secure outgoing SMTP
