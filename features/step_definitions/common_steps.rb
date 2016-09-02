@@ -283,7 +283,7 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
 
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
-  @screen.wait('TailsGreeter.png', 30*60)
+  @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
   step 'I configure Tails to use a simulated Tor network'
