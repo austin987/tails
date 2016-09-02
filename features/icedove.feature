@@ -34,3 +34,10 @@ Feature: Icedove email client
     When I enter my email credentials into the autoconfiguration wizard
     Then the autoconfiguration wizard defaults to secure incoming IMAP
     And the autoconfiguration wizard defaults to secure outgoing SMTP
+
+  Scenario: Icedove can send emails, and receive emails over IMAP
+    When I enter my email credentials into the autoconfiguration wizard
+    And I accept the autoconfiguration wizard's default choice
+    And I send an email to myself
+    And I fetch my email
+    Then I can find the email I sent to myself in my inbox

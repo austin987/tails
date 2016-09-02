@@ -135,7 +135,16 @@ module Dogtail
 
     def exist?
       @opts[:allow_failure] = true
+      # We do not want any retries since this method should return the
+      # result for the immediate situation, not for the situation up
+      # to 20 retries in the future.
+      optimization = "config.searchCutoffCount = 1"
+      @init_lines << optimization unless @init_lines.include?(optimization)
       run.success?
+    end
+
+    def wait_vanish(timeout)
+      try_for(timeout) { not(exist?) }
     end
 
     # Equivalent to the Tree API's Node.findChildren(), with the

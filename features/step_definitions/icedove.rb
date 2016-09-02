@@ -3,7 +3,10 @@ def icedove_app
 end
 
 def icedove_main
-  icedove_app.child('Home - Icedove Mail/News', roleName: 'frame')
+  # The main window title depends on context so without regexes it
+  # will be hard to find it, but it so happens that it is always the
+  # first frame of Icedove, so we do not have to be specific.
+  icedove_app.child(roleName: 'frame')
 end
 
 def icedove_wizard
@@ -106,4 +109,71 @@ Then /^the autoconfiguration wizard defaults to secure (incoming|outgoing) (.+)$
     icedove_wizard.child(type, roleName: 'entry').text
       .match(/^#{protocol},[^,]+, (SSL|TLS)$/)
   )
+end
+
+When /^I fetch my email$/ do
+  account = icedove_main.child($config['Icedove']['address'],
+                               roleName: 'table row')
+  account.click
+  icedove_main = icedove_app.child("#{$config['Icedove']['address']} - Icedove Mail/News", roleName: 'frame')
+
+  icedove_main.child('Mail Toolbar', roleName: 'tool bar')
+    .button('Get Messages').click
+  fetch_progress = icedove_main.child(roleName: 'status bar')
+                     .child(roleName: 'progress bar')
+  fetch_progress.wait_vanish(120)
+end
+
+When /^I accept the autoconfiguration wizard's default choice$/ do
+  icedove_wizard.button('Done').click
+  # The account isn't fully created before we fetch our mail. For
+  # instance, if we'd try to send an email before this, yet another
+  # wizard will stat, indicating (incorrectly) that we do not have an
+  # account set up yet.
+  step 'I fetch my email'
+end
+
+When /^I send an email to myself$/ do
+  icedove_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
+  compose_window = icedove_app.child('Write: (no subject)')
+  compose_window.wait(10)
+  compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
+    .typeText($config['Icedove']['address'])
+  # The randomness of the subject will make it easier for us to later
+  # find *exactly* this email. This makes it safe to run several tests
+  # in parallel.
+  @subject = "Automated test suite: #{random_alnum_string(32)}"
+  compose_window.child('Subject:', roleName: 'entry')
+    .typeText(@subject)
+  compose_window = icedove_app.child("Write: #{@subject}")
+  compose_window.child('about:blank', roleName: 'document frame')
+    .typeText('test')
+  compose_window.child('Composition Toolbar', roleName: 'tool bar')
+    .button('Send').click
+  compose_window.wait_vanish(120)
+end
+
+Then /^I can find the email I sent to myself in my inbox$/ do
+  folder_view = icedove_main.child($config['Icedove']['address'],
+                               roleName: 'table row').parent
+  inbox = folder_view.children(roleName: 'table row', recursive: false).find do |e|
+    e.name.match(/^Inbox( .*)?$/)
+  end
+  inbox.click
+  filter = icedove_main.child('Filter these messages <Ctrl+Shift+K>',
+                              roleName: 'entry')
+  filter.typeText(@subject)
+  hit_counter = icedove_main.child('1 message')
+  hit_counter.wait
+  inbox_view = hit_counter.parent
+  message_list = inbox_view.child(roleName: 'table')
+  the_message = message_list.children(roleName: 'table row').find do |message|
+    # The message will be cropped in the list, so we cannot search for
+    # the full message.
+    message.name.start_with?("Automated test suite:")
+  end
+  assert_not_nil(the_message)
+  # Let's clean up
+  the_message.click
+  inbox_view.button('Delete').click
 end
