@@ -107,7 +107,7 @@ Then /^the autoconfiguration wizard defaults to secure (incoming|outgoing) (.+)$
   type = type.capitalize + ':'
   assert_not_nil(
     icedove_wizard.child(type, roleName: 'entry').text
-      .match(/^#{protocol},[^,]+, (SSL|TLS)$/)
+      .match(/^#{protocol},[^,]+, (SSL|STARTTLS)$/)
   )
 end
 
