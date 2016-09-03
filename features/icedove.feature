@@ -48,3 +48,11 @@ Feature: Icedove email client
     And I send an email to myself
     And I fetch my email
     Then I can find the email I sent to myself in my inbox
+
+  Scenario: Icedove can send emails, and receive emails over IMAP using a hidden service
+    When I enter my email credentials into the autoconfiguration wizard
+    Then the autoconfiguration wizard defaults to secure incoming IMAP
+    When I alter the autoconfiguration wizard's result to use hidden services
+    And I send an email to myself
+    And I fetch my email
+    Then I can find the email I sent to myself in my inbox

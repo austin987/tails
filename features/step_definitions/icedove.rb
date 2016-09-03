@@ -143,6 +143,17 @@ When /^I accept the autoconfiguration wizard's (default|alternative) \((IMAP|POP
   step 'I fetch my email'
 end
 
+When /^I alter the autoconfiguration wizard's result to use hidden services$/ do
+  icedove_wizard.button('Manual config').click
+  incoming = icedove_wizard.child('Incoming:', roleName: 'entry')
+  outgoing = icedove_wizard.child('Outgoing:', roleName: 'entry')
+  incoming.text = ''
+  incoming.typeText($config['Icedove']['imap_hidden_service'])
+  outgoing.text = ''
+  outgoing.typeText($config['Icedove']['smtp_hidden_service'])
+  icedove_wizard.button('Done').click
+end
+
 When /^I send an email to myself$/ do
   icedove_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
   compose_window = icedove_app.child('Write: (no subject)')
