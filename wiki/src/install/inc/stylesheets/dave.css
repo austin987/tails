@@ -126,9 +126,8 @@ Extension's toggles
 
 #download-progress {
   width: 100%;
+  margin: 0;
 }
-[data-phase^="download"] #download-and-verify #i_have_iso.dave-show { display: none !important}
-[data-phase^="verif"] #download-and-verify #i_have_iso.dave-show { display: none !important}
 
 [data-phase^="download"] #download-button,
 [data-phase^="started"] #bittorrent-minor,
@@ -150,6 +149,7 @@ html[data-phase^="downloading"] #download-eta {
 
 #download-eta {
   opacity: 0;
+  margin-top: 1em;
 }
 
 /*
@@ -218,6 +218,11 @@ will give
   border: none;
 }
 
+
+#download-button-state-retry {
+  padding: 10px;
+}
+
 p.direct-download {
   margin-top: 3em;
   text-align: right;
@@ -228,12 +233,6 @@ p.direct-download {
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.25;
-}
-
-/* Hide "I already have an ISO" for the time being... */
-#i_have_iso {
-  display:none !important;
-  opacity: 0;
 }
 
 /* Hide download path once downloaded. */
@@ -368,6 +367,12 @@ html[data-phase="ready"] #bittorrent-minor {
   content: "3. ";
 }
 
+
+/* spacing */
+#update-text, #install-text, #use-text, #download {
+  min-height: 70px;
+}
+
 /* Images */
 
 #download-path {
@@ -379,6 +384,8 @@ html[data-phase="ready"] #bittorrent-minor {
 .done img {
   width: 46px;
   height: 37px;
+  position: relative;
+  top: -12px;
 }
 
 #download-button-state-pause img,
@@ -392,6 +399,7 @@ html[data-phase="ready"] #bittorrent-minor {
 #download-button-state-pause:hover img,
 #download-button-state-resume:hover img {
   -moz-transform: scale(1.2);
+  cursor: pointer;
 }
 
 #download-button-state-pause:active img,
@@ -400,9 +408,18 @@ html[data-phase="ready"] #bittorrent-minor {
 }
 
 #download-button-state-cancel {
+  text-decoration: none;
+  margin-right: -20px;
+  color: darkgrey;
+}
+
+#download-button-state-cancel:hover {
   text-decoration: underline;
 }
 
+#download-button-state {
+  text-align: right;
+}
 #download-and-verify small {
   font-size: 65% ;
   text-align: left;
@@ -439,14 +456,25 @@ html:not([data-phase="verified"]) #verify-text-state {
   float: right;
 }
 
+a#download-again  {
+  color: darkgrey;
+  border: none;
+}
+
+a#download-again:hover {
+  text-decoration: underline;
+}
+
 html:not([data-phase="verified"]) #downloaded-path {
   display: none !important;
 }
 
-#download-message-failed, #download-message-paused {
-  padding: 5px;
-  margin: 5px;
-  background: lightgrey;
+#download-message {
+  padding-left: 16px;
+}
+
+#download-message-paused {
+  font-style: italic;
 }
 
 #download[data-state="failed"] #download-message-failed {
