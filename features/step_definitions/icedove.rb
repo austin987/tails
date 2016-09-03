@@ -124,7 +124,17 @@ When /^I fetch my email$/ do
   fetch_progress.wait_vanish(120)
 end
 
-When /^I accept the autoconfiguration wizard's default choice$/ do
+When /^I accept the autoconfiguration wizard's (default|alternative) \((IMAP|POP3?)\) choice$/ do |type, protocol|
+  protocol = 'POP3' if protocol == 'POP'
+  if type == 'alternative'
+    if protocol == 'IMAP'
+      choice = 'IMAP (remote folders)'
+    else
+      choice = 'POP3 (keep mail on your computer)'
+    end
+    icedove_wizard.child(choice, roleName: 'radio button').click
+  end
+  step "the autoconfiguration wizard defaults to secure incoming #{protocol}"
   icedove_wizard.button('Done').click
   # The account isn't fully created before we fetch our mail. For
   # instance, if we'd try to send an email before this, yet another

@@ -37,7 +37,14 @@ Feature: Icedove email client
 
   Scenario: Icedove can send emails, and receive emails over IMAP
     When I enter my email credentials into the autoconfiguration wizard
-    And I accept the autoconfiguration wizard's default choice
+    And I accept the autoconfiguration wizard's default (IMAP) choice
+    And I send an email to myself
+    And I fetch my email
+    Then I can find the email I sent to myself in my inbox
+
+  Scenario: Icedove can send emails, and receive emails over POP
+    When I enter my email credentials into the autoconfiguration wizard
+    And I accept the autoconfiguration wizard's alternative (POP) choice
     And I send an email to myself
     And I fetch my email
     Then I can find the email I sent to myself in my inbox
