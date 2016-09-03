@@ -103,7 +103,7 @@ When /^I enter my email credentials into the autoconfiguration wizard$/ do
   icedove_wizard.button('Done').wait(120)
 end
 
-Then /^the autoconfiguration wizard defaults to secure (incoming|outgoing) (.+)$/ do |type, protocol|
+Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server is secure (.+)$/ do |type, protocol|
   type = type.capitalize + ':'
   assert_not_nil(
     icedove_wizard.child(type, roleName: 'entry').text
@@ -124,17 +124,7 @@ When /^I fetch my email$/ do
   fetch_progress.wait_vanish(120)
 end
 
-When /^I accept the autoconfiguration wizard's (default|alternative) \((IMAP|POP3?)\) choice$/ do |type, protocol|
-  protocol = 'POP3' if protocol == 'POP'
-  if type == 'alternative'
-    if protocol == 'IMAP'
-      choice = 'IMAP (remote folders)'
-    else
-      choice = 'POP3 (keep mail on your computer)'
-    end
-    icedove_wizard.child(choice, roleName: 'radio button').click
-  end
-  step "the autoconfiguration wizard defaults to secure incoming #{protocol}"
+When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
   icedove_wizard.button('Done').click
   # The account isn't fully created before we fetch our mail. For
   # instance, if we'd try to send an email before this, yet another
@@ -143,15 +133,26 @@ When /^I accept the autoconfiguration wizard's (default|alternative) \((IMAP|POP
   step 'I fetch my email'
 end
 
-When /^I alter the autoconfiguration wizard's result to use hidden services$/ do
+When /^I select the autoconfiguration wizard's (IMAP|POP3) choice$/ do |protocol|
+  if protocol == 'IMAP'
+    choice = 'IMAP (remote folders)'
+  else
+    choice = 'POP3 (keep mail on your computer)'
+  end
+  icedove_wizard.child(choice, roleName: 'radio button').click
+end
+
+When /^I select manual configuration$/ do
   icedove_wizard.button('Manual config').click
+end
+
+When /^I alter the email configuration to use hidden services$/ do
   incoming = icedove_wizard.child('Incoming:', roleName: 'entry')
   outgoing = icedove_wizard.child('Outgoing:', roleName: 'entry')
   incoming.text = ''
   incoming.typeText($config['Icedove']['imap_hidden_service'])
   outgoing.text = ''
   outgoing.typeText($config['Icedove']['smtp_hidden_service'])
-  icedove_wizard.button('Done').click
 end
 
 When /^I send an email to myself$/ do
