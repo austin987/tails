@@ -733,7 +733,8 @@ When /^I agree to install the incremental upgrade$/ do
   @screen.click('TailsUpgraderUpgradeNowButton.png')
 end
 
-Then /^the incremental upgrade to version "(.*?)" is reportedly installed$/ do |version|
+Then /^I can successfully install the incremental upgrade to version (.+)$/ do |version|
+  step 'I agree to install the incremental upgrade'
   recovery_proc = Proc.new do
     recover_from_upgrader_failure
     step "I am proposed to install an incremental upgrade to version #{version}"

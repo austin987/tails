@@ -168,8 +168,7 @@ Feature: Upgrading an old Tails USB installation
     And Tor is ready
     And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 1.1~test
-    When I agree to install the incremental upgrade
-    Then the incremental upgrade to version "1.1~test" is reportedly installed
+    And I can successfully install the incremental upgrade to version 1.1~test
     Given I shutdown Tails and wait for the computer to power off
     When I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then Tails is running version 1.1~test
