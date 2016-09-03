@@ -57,7 +57,21 @@ Feature: Icedove email client
     When I enter my email credentials into the autoconfiguration wizard
     Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
     When I select manual configuration
-    And I alter the email configuration to use hidden services
+    And I alter the email configuration to use IMAP over a hidden services
+    And I alter the email configuration to use SMTP over a hidden services
+    And I accept the manual configuration
+    And I send an email to myself
+    And I fetch my email
+    Then I can find the email I sent to myself in my inbox
+
+  Scenario: Icedove can send emails, and receive emails over POP3 using a hidden service
+    When I enter my email credentials into the autoconfiguration wizard
+    Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
+    When I select the autoconfiguration wizard's POP3 choice
+    Then the autoconfiguration wizard's choice for the incoming server is secure POP3
+    When I select manual configuration
+    And I alter the email configuration to use POP3 over a hidden services
+    And I alter the email configuration to use SMTP over a hidden services
     And I accept the manual configuration
     And I send an email to myself
     And I fetch my email

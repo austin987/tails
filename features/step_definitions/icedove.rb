@@ -146,13 +146,18 @@ When /^I select manual configuration$/ do
   icedove_wizard.button('Manual config').click
 end
 
-When /^I alter the email configuration to use hidden services$/ do
-  incoming = icedove_wizard.child('Incoming:', roleName: 'entry')
-  outgoing = icedove_wizard.child('Outgoing:', roleName: 'entry')
-  incoming.text = ''
-  incoming.typeText($config['Icedove']['imap_hidden_service'])
-  outgoing.text = ''
-  outgoing.typeText($config['Icedove']['smtp_hidden_service'])
+When /^I alter the email configuration to use (.*) over a hidden services$/ do |protocol|
+  case protocol.upcase
+  when 'IMAP', 'POP3'
+    entry_name = 'Incoming:'
+  when 'SMTP'
+    entry_name = 'Outgoing:'
+  else
+    raise "Unknown mail protocol '#{protocol}'"
+  end
+  entry = icedove_wizard.child(entry_name, roleName: 'entry')
+  entry.text = ''
+  entry.typeText($config['Icedove']["#{protocol.downcase}_hidden_service"])
 end
 
 When /^I send an email to myself$/ do
