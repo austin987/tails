@@ -38,8 +38,7 @@ side effect: so long, `Hashsum mismatch`, and thanks for the fish.
 When building an ISO from the branch used to prepare the next major
 release (`testing`):
 
- * **outside of the freeze period**: we use the latest set of APT
-   repository snapshots, just like when building from `devel`;
+ * **outside of the freeze period**: the `testing` branch is not used;
  * **freeze period**: at freeze time, the RM encodes in the Git
    `testing` branch the set of APT repository snapshots (via their
    serial numbers) that shall be used during the freeze; the only
@@ -55,25 +54,18 @@ release (`testing`):
    legal purposes (this allows to distribute for a long
    time the source packages needed to build a given Tails ISO image),
    and it will be useful when we want to be able to reproduce a given
-   Tails ISO build);
- * **after releasing**, the RM encodes in the `testing` Git branch the
-   fact that it is not frozen anymore, that is: the RM removes the
-   indication that a specific set of APT repository snapshots must be
-   used; and then, we're back to the "outside of the freeze
-   period" case.
+   Tails ISO build).
 
 When building an ISO from the branch used to prepare the next
-point-release (`stable`) we use snapshots labeled with the Git tag of
-the latest Tails release, except:
+point-release (`stable`) we use the same time-based snapshots that
+were used to prepare the latest Tails release, except:
 
- * we generally use our latest snapshot of security.debian.org;
+ * we use our latest snapshot of security.debian.org;
  * at release time: when building from a tagged branch, similarly to
    what we do for our
    [[custom APT repository|contribute/APT_repository/custom]], instead
    of using time-based APT repository snapshots, we use snapshots
-   labeled with the Git tag
- * if a set of APT repository snapshots is encoded directly in that
-   branch: use them, even for security.debian.org.
+   labeled with the Git tag.
 
 # Design notes
 
