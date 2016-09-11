@@ -304,3 +304,36 @@ Oppure in grafica dal browser:
 <https://git-tails.immerda.ch/l10n-italian/tails/>
 
 
+# Workflow
+
+Come procediamo per fare varie cose?
+
+## Pacchi
+
+Ogni tanto (quando?) si fanno dei pacchi di traduzioni. Un pacco e' un insieme di filename che vanno tradotti. Ogni pacco viene tradotto da una persona.
+
+Supponiamo di tradurre la divina commedia, e di fare 3 pacchi: Inferno, Purgatorio e Paradiso. Petrarca si accolla di tradurre l'Inferno, e lo fa in una branch che chiama, appunto "inferno". traduce tutti i file  `wiki/src/inferno/*.po`, quindi fa `git commit -m "inferno tradotto"`.
+
+A questo punto qualcuno deve revisionare la branch. Si fa avanti Laura. Laura fa `git fetch origin && git checkout origin/inferno`. Prima guarda le differenze introdotte da Petrarca, con `git log -p origin/inferno`.
+Gli sembrano ok, ma per controllare che si vedano anche bene nel wiki lo builda con `./build-website` e poi lo guarda da firefox. Nota che Petrarca, sbadato, ha fatto alcuni piccoli errori nel markup del wiki che "rompono" delle immagini. Petrarca aveva tradotto la riga 
+    [[!img \"caronte.png`"]]
+con
+    [[img \"caronte.png\"`]]
+
+Laura corregge e fa commit sulla stessa branch `git commit wiki/src/inferno/terzocanto.po -m "fix immagine caronte" && git push origin inferno`.
+Non trova altri errori, quindi fa
+
+    git checkout master
+    git merge inferno
+
+Potrebbe subito fare `git push origin master` ma, per non sbagliare, fa un diff:
+
+    git diff origin/master..master
+
+E controlla se tutto torna. Ci sono conflitti? Quel cambiamento al `!img` c'e' ancora? bene, ora possiamo fare
+
+    git push origin master
+
+## Call for translations
+
+Ogni tanto in lista tails-l10n arriva un'email "Call for translations". Come si procede a quel punto?
