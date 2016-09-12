@@ -13,6 +13,9 @@ echo "Localize each supported browser locale"
 # Import language_code_from_locale()
 . /usr/local/lib/tails-shell-library/localization.sh
 
+# Import TAILS_WIKI_SUPPORTED_LANGUAGES
+. /etc/amnesia/environment
+
 TBB_LOCALIZED_SEARCHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
@@ -134,6 +137,9 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
                           "spellchecker.dictionary" \
                           "${SPELLCHECKER_LOCALE}"
     HOMEPAGE="https://tails.boum.org/home/"
+    if echo "${TAILS_WIKI_SUPPORTED_LANGUAGES}" | grep -qw "${LANG_CODE}"; then
+        HOMEPAGE="${HOMEPAGE}index.${LANG_CODE}.html"
+    fi
     set_simple_config_key "${TARGET_BRANDING_FILE}" \
                           "browser.startup.homepage" "${HOMEPAGE}"
 done < "${DESCRIPTIONS_FILE}"
