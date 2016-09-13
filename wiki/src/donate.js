@@ -1,5 +1,9 @@
 $(document).ready(function(){
 
+  // Show version with JavaScript
+  $('#paypal-with-js').show();
+  $('#paypal-without-js').hide();
+
   // Toggle between Zwiebelfreunde and Riseup Labs
   $('#dollar-amounts').show();
   $('#dollar-tax').show();
