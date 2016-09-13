@@ -195,10 +195,34 @@ future of the Tails installer.
 One drawback: this would break the ability to verify this system partition with
 a simple shasum operation.
 
-XXX: Keep in mind that this solution works only when using the Tails installer,
-which is mostly when people are using Linux (or Tails) to install Tails. We have
-to investigate to see if there aren't some installation procedure on other OSes
-that would not be covered by this. [kurono, bertagaz]
+Keep in mind that this solution works only when using the Tails installer,
+which is mostly when people are using Linux (or Tails) to install Tails.
+However, there are standard Python libraries that help to generate Cryptographically
+Strong Pseudo Random Numbers (CSPRNG) [9]. They are mainly based in the os.urandom,
+defined in [10], "...This function returns random bytes from an OS-specific randomness source.
+The returned data should be unpredictable enough for cryptographic applications,
+though its exact quality depends on the OS implementation.
+On a UNIX-like system this will query /dev/urandom, and on Windows it will use
+CryptGenRandom(). If a randomness source is not found, NotImplementedError will be raised.".
+
+This means, if we use this library the generated code would be portable among several
+operation systems (Here we assume Mac OS is also included, but that might be tested).
+Besides the code would be simple enough, here an example:
+
+    import os
+    import sys
+    import random
+
+    # Random bytes
+    bytes = os.urandom(32)
+    csprng = random.SystemRandom()
+
+    # Random (probably large) integer
+    random_int = csprng.randint(0, sys.maxint)
+
+As a side point, we could try to integrate the created code with
+the persistence setup (althought it is made in Perl), and also we might
+locate it in the Tails Python library.
 
 ## Related tickets
 
@@ -215,3 +239,5 @@ This is about [[!tails_ticket 7642]], [[!tails_ticket 7675]],
 * [6] <https://groups.google.com/forum/#!topic/qubes-devel/5wI8ygbaohk>
 * [7] <https://www.av8n.com/computer/htm/secure-random.htm>
 * [8] <http://www.av8n.com/computer/htm/fixup-live-cd.htm>
+* [9] <https://www.python.org/dev/peps/pep-0506/>
+* [10]<https://docs.python.org/2/library/os.html#os.urandom>
