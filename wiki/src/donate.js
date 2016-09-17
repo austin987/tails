@@ -3,7 +3,7 @@ $(document).ready(function(){
   // Append anchor at the end of return and cancel_return page.
   // This will allow calculating conversion rates and failures from different sources.
   $('#paypal-with-js .return-url').each(function() {
-    $(this).attr("value", $(this).attr("value").concat(window.location.hash));
+    $(this).val($(this).val().concat(window.location.hash));
   });
 
   // Show version with JavaScript
