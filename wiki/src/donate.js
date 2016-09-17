@@ -40,42 +40,9 @@ $(document).ready(function(){
     document.getElementById('t3').value = 'Y';
   })
 
-  // Update amount
-  $('.5').click(function () {
-    document.getElementById('amount').value = '5';
-    document.getElementById('a3').value = '5';
-  })
-  $('.10').click(function () {
-    document.getElementById('amount').value = '10';
-    document.getElementById('a3').value = '10';
-  })
-  $('.20').click(function () {
-    document.getElementById('amount').value = '20';
-    document.getElementById('a3').value = '20';
-  })
-  $('.50').click(function () {
-    document.getElementById('amount').value = '50';
-    document.getElementById('a3').value = '50';
-  })
-  $('.100').click(function () {
-    document.getElementById('amount').value = '100';
-    document.getElementById('a3').value = '100';
-  })
-  $('.250').click(function () {
-    document.getElementById('amount').value = '250';
-    document.getElementById('a3').value = '500';
-  })
-  $('.500').click(function () {
-    document.getElementById('amount').value = '500';
-    document.getElementById('a3').value = '500';
-  })
-  $('#other-dollar').change(function () {
-    document.getElementById('amount').value = document.getElementById('other-dollar').value;
-    document.getElementById('a3').value = document.getElementById('other-dollar').value;
-  })
-  $('#other-euro').change(function () {
-    document.getElementById('amount').value = document.getElementById('other-euro').value;
-    document.getElementById('a3').value = document.getElementById('other-euro').value;
-  })
+  $('.amounts .btn').on('click, blur', function () {
+    let newvalue = parseInt($(this).find('input').val());
+    $('#amount, #a3').val(newvalue);
+  });
 
 });
