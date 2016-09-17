@@ -14,10 +14,8 @@ $(document).ready(function(){
   $('.donate-dollars').show();
   $('.donate-euros').hide();
   $('#currency-dollar').click(function () {
-    $('#dollar-amounts').show();
-    $('#dollar-tax').show();
-    $('#euro-amounts').hide();
-    $('#euro-tax').hide();
+    $('.donate-dollars').show();
+    $('.donate-euros').hide();
     document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
     document.getElementById('currency_code').value = 'USD';
   })
