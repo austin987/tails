@@ -1,4 +1,8 @@
 $(document).ready(function(){
+  $('.btn-group label, .amounts .btn').click( function(){
+    $(this).parent().find('label').removeClass('active');
+    $(this).addClass('active');
+  });
 
   // Append anchor at the end of return and cancel_return page.
   // This will allow calculating conversion rates and failures from different sources.
