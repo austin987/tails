@@ -11,10 +11,8 @@ $(document).ready(function(){
   $('#paypal-without-js').hide();
 
   // Toggle between Zwiebelfreunde and Riseup Labs
-  $('#dollar-amounts').show();
-  $('#dollar-tax').show();
-  $('#euro-amounts').hide();
-  $('#euro-tax').hide();
+  $('.donate-dollars').show();
+  $('.donate-euros').hide();
   $('#currency-dollar').click(function () {
     $('#dollar-amounts').show();
     $('#dollar-tax').show();
@@ -24,10 +22,8 @@ $(document).ready(function(){
     document.getElementById('currency_code').value = 'USD';
   })
   $('#currency-euro').click(function () {
-    $('#dollar-amounts').hide();
-    $('#dollar-tax').hide();
-    $('#euro-amounts').show();
-    $('#euro-tax').show();
+    $('.donate-dollars').hide();
+    $('.donate-euros').show();
     document.getElementById('business').value = 'tails@torservers.net';
     document.getElementById('currency_code').value = 'EUR';
   })
