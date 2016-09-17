@@ -10,9 +10,11 @@ $(document).ready(function(){
   $('#paypal-with-js').show();
   $('#paypal-without-js').hide();
 
-  // Toggle between Zwiebelfreunde and Riseup Labs
+  // default donation is in $
   $('.donate-dollars').show();
   $('.donate-euros').hide();
+
+  // Toggle between Zwiebelfreunde and Riseup Labs
   $('#currency-dollar').click(function () {
     $('.donate-dollars').show();
     $('.donate-euros').hide();
