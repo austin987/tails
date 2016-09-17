@@ -18,12 +18,14 @@ $(document).ready(function(){
   $('#currency-dollar').click(function () {
     $('.donate-dollars').show();
     $('.donate-euros').hide();
+    $('#dollar-amounts .btn').first().trigger('click');
     document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
     document.getElementById('currency_code').value = 'USD';
   });
   $('#currency-euro').click(function () {
     $('.donate-dollars').hide();
     $('.donate-euros').show();
+    $('#euro-amounts .btn').first().trigger('click');
     document.getElementById('business').value = 'tails@torservers.net';
     document.getElementById('currency_code').value = 'EUR';
   });
