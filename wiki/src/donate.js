@@ -42,6 +42,7 @@ $(document).ready(function(){
 
   $('.amounts .btn').on('click, blur', function () {
     let newvalue = parseInt($(this).find('input').val());
+    if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
     $('#amount, #a3').val(newvalue);
   });
 
