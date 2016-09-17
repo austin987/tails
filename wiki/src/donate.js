@@ -40,7 +40,7 @@ $(document).ready(function(){
     document.getElementById('t3').value = 'Y';
   })
 
-  $('.amounts .btn').on('click, blur', function () {
+  $('.amounts .btn').on('click donate', function () {
     let newvalue = parseInt($(this).find('input').val());
     if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
     $('#amount, #a3').val(newvalue);
