@@ -18,27 +18,27 @@ $(document).ready(function(){
     $('.donate-euros').hide();
     document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
     document.getElementById('currency_code').value = 'USD';
-  })
+  });
   $('#currency-euro').click(function () {
     $('.donate-dollars').hide();
     $('.donate-euros').show();
     document.getElementById('business').value = 'tails@torservers.net';
     document.getElementById('currency_code').value = 'EUR';
-  })
+  });
 
   // Toggle between one-time donation and recurring donation
   $('#one-time').click(function () {
     document.getElementById('cmd').value = '_donations';
     document.getElementById('t3').value = '';
-  })
+  });
   $('#monthly').click(function () {
     document.getElementById('cmd').value = '_xclick-subscriptions';
     document.getElementById('t3').value = 'M';
-  })
+  });
   $('#yearly').click(function () {
     document.getElementById('cmd').value = '_xclick-subscriptions';
     document.getElementById('t3').value = 'Y';
-  })
+  });
 
   $('.amounts .btn').on('click donate', function () {
     let newvalue = parseInt($(this).find('input').val());
