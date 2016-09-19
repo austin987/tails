@@ -304,6 +304,21 @@ Oppure in grafica dal browser:
 <https://git-tails.immerda.ch/l10n-italian/tails/>
 
 
+# Controlli
+
+Ogni tanto (piu' frequentemente possibile) e' bene fare dei controlli per vedere che tutto vada bene. Ad esempio questo andrebbe fatto prima di ogni commit, e anche da parte dei revisori.
+
+## ricreare il sito
+
+`./build-website` non solo crea il sito, ma mostra anche dei warning.
+Ad esempio `Strange line:` mostra delle linee problematiche. Quando dice `Strange line: --><--` si sta lamentando di linee vuote che secondo lui non dovrebbero esistere. Tipicamente questo avviene tra un commento e un msgid, o all'interno di un messaggio multilinea.
+
+## check-po
+
+vedi [[contribute/l10n_tricks]] alla sezione "Check the validity of PO files"; questi controlli sono MOLTO utili, e sono molto rari i falsi positivi.
+Inoltre, gli sviluppatori di tails lanceranno quei controlli sui nostri file e non li mergeranno se i file hanno problemi, quindi lanciare check-po e' davvero importante!
+
+
 # Workflow
 
 Come procediamo per fare varie cose?
@@ -322,12 +337,15 @@ In breve:
 
 Ogni tanto (quando?) si fanno dei pacchi di traduzioni. Un pacco e' un insieme di filename che vanno tradotti. Ogni pacco viene tradotto da una persona.
 
-Supponiamo di tradurre la divina commedia, e di fare 3 pacchi: Inferno, Purgatorio e Paradiso. Petrarca si accolla di tradurre l'Inferno, e lo fa in una branch che chiama, appunto "inferno". traduce tutti i file  `wiki/src/inferno/*.po`, quindi fa `git commit -m "inferno tradotto"`.
+Supponiamo di tradurre la divina commedia, e di fare 3 pacchi: Inferno, Purgatorio e Paradiso. Petrarca si accolla di tradurre l'Inferno, e lo fa in una branch che chiama, appunto "inferno". traduce tutti i file  `wiki/src/inferno/*.po`, (**TODO**: andrebbe anche fatti i check)  quindi fa `git commit -m "inferno tradotto"`.
 
 A questo punto qualcuno deve revisionare la branch. Si fa avanti Laura. Laura fa `git fetch origin && git checkout origin/inferno`. Prima guarda le differenze introdotte da Petrarca, con `git log -p origin/inferno`.
-Gli sembrano ok, ma per controllare che si vedano anche bene nel wiki lo builda con `./build-website` e poi lo guarda da firefox. Nota che Petrarca, sbadato, ha fatto alcuni piccoli errori nel markup del wiki che "rompono" delle immagini. Petrarca aveva tradotto la riga 
+Gli sembrano ok, ma per controllare che si vedano anche bene nel wiki lo builda con `./build-website` e poi lo guarda da firefox. Nota che Petrarca, sbadato, ha fatto alcuni piccoli errori nel markup del wiki che "rompono" delle immagini. Petrarca aveva tradotto la riga:
+
     [[!img \"caronte.png`"]]
-con
+
+con:
+
     [[img \"caronte.png\"`]]
 
 Laura corregge e fa commit sulla stessa branch `git commit wiki/src/inferno/terzocanto.po -m "fix immagine caronte" && git push origin inferno`.
