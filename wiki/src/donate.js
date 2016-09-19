@@ -19,29 +19,29 @@ $(document).ready(function(){
     $('.donate-dollars').show();
     $('.donate-euros').hide();
     $('#dollar-amounts .btn').first().trigger('click');
-    document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
-    document.getElementById('currency_code').value = 'USD';
+    $('#business').val('tailsriseuplabs@riseup.net');
+    $('#currency_code').val('USD');
   });
   $('#currency-euro').click(function () {
     $('.donate-dollars').hide();
     $('.donate-euros').show();
     $('#euro-amounts .btn').first().trigger('click');
-    document.getElementById('business').value = 'tails@torservers.net';
-    document.getElementById('currency_code').value = 'EUR';
+    $('#business').val('tails@torservers.net');
+    $('#currency_code').val('EUR');
   });
 
   // Toggle between one-time donation and recurring donation
   $('#one-time').click(function () {
-    document.getElementById('cmd').value = '_donations';
-    document.getElementById('t3').value = '';
+    $('#cmd').val('_donations');
+    $('#t3').val('');
   });
   $('#monthly').click(function () {
-    document.getElementById('cmd').value = '_xclick-subscriptions';
-    document.getElementById('t3').value = 'M';
+    $('#cmd').val('_xclick-subscriptions');
+    $('#t3').val('M');
   });
   $('#yearly').click(function () {
-    document.getElementById('cmd').value = '_xclick-subscriptions';
-    document.getElementById('t3').value = 'Y';
+    $('#cmd').val('_xclick-subscriptions');
+    $('#t3').val('Y');
   });
 
   $('.amounts .btn').on('click change', function () {
