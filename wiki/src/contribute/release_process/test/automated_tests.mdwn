@@ -6,8 +6,9 @@
 
 The automated test suite is essentially a glue between:
 
-* [Sikuli](http://www.sikuli.org/), used for simulating user
-  interaction,
+* [Sikuli](http://www.sikuli.org/) and
+  [dogtail](https://fedorahosted.org/dogtail/), used for simulating
+  user interaction,
 * [libvirt](http://libvirt.org/), used for running a specific build of
   Tails in a virtual machine, and
 * [cucumber](http://cukes.info/), for defining features and scenarios
@@ -127,6 +128,11 @@ to in the introduction:
 
  * [ruby-libvirt API](http://libvirt.org/ruby/api/index.html)
  * [sikuli API](http://doc.sikuli.org/toc.html)
+ * The `sniff` application, which is installed in Tails, is quite
+   useful to navigate the GUI element hierarchy. However, `accerciser`
+   (not installed) is even better, due to its ability to highlight
+   elements. Another useful tool is `ipython` (not installed) with its
+   TAB-completion.
 
 ## Writing new features and scenarios
 
@@ -285,21 +291,28 @@ In essense, the tools we have for interacting with the Tails instance
 are:
 
 * the VM helper class,
-* Sikuli, and
+* Sikuli and dogtail, and
 * the remote shell.
 
 It should be fairly obvious when to use the VM helper class (stuff
 relating to the virtual hardware), but there is some overlap between
-Sikuli and the remote shell.
+Sikuli, dogtail and the remote shell.
 
-Sikuli:
+Sikuli and dogtail:
 
-* Should be used in all instances where we want to simulate user
+* They should be used in all instances where we want to simulate user
   interaction with the Tails system. For instance, when we start an
   application we usually want to click our way through the GNOME
   applications menu to stay true to what an actual user would do.
-* It comes in handy when we want to verify some state pertaining
+* They come in handy when we want to verify some state pertaining
   to the GUI.
+* In general we prefer dogtail, since it is more precise given its
+  direct access to GUI elements and their state, and Sikuli's images
+  carry a quite heavy maintenance burden. However, Dogtail is not
+  possible to use before GNOME has started, so we rely on Sikuli for
+  anything before or after that. Also, for some applications it's
+  simply hard to "navigate" to the right element in the hierarchy of
+  elements of some GUI, due to ambiguity and/or lack of labels.
 
 The remote shell:
 

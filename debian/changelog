@@ -1,3 +1,348 @@
+tails (2.6) unstable; urgency=medium
+
+  * Major new features and changes
+    - Install Tor 0.2.8.7. (Closes: #11351)
+    - Enable kASLR in the Linux kernel. (Closes: #11281)
+    - Upgrade Icedove to 1:45.2.0-1~deb8u1+tails1: (Closes: #11714)
+      · Drop auto-fetched configurations using Oauth2.  They do not
+        work together with Torbirdy since it disables needed
+        functionality (like JavaScript and cookies) in the embedded
+        browser. This should make auto-configuration work for GMail
+        again, for instance.  (Closes: ##11536)
+      · Pin Icedove to be installed from our APT repo. Debian's
+        Icedove packages still do not have our secure Icedove
+        autoconfig wizard patches applied, so installing them would be
+        a serious security regression. (Closes: #11613)
+      · Add missing icedove-l10n-* packages to our custom APT
+        repository (Closes: #11550)
+    - Upgrade to Linux 4.6: (Closes: #10298)
+      · Install the 686 kernel flavour instead of the obsolete 586
+        one.
+      · APT, dpkg: add amd64 architecture. The amd64 kernel flavour is
+        not built anymore for the i386 architecture, so we need to use
+        multiarch now.
+      · Build and install the out-of-tree aufs4 module. (Closes: #10298)
+      · Disable kernel modesetting for QXL: it's not compatible with
+        Jessie's QXL X.Org driver.
+
+  * Security fixes
+    - Hopefully fixed an issue which would sometimes make the Greeter
+      ignore the "disable networking" or "bridge mode"
+      options. (Closes: #11593)
+
+  * Minor improvements
+    - Install firmware-intel-sound and firmware-ti-connectivity.  This
+      adds support for some sound cards and Wi-Fi adapters.  (Closes:
+      #11502)
+    - Install OpenPGP Applet from Debian. (Closes: #10190)
+    - Port the "About Tails" dialog to python3.
+    - Run our initramfs memory erasure hook earlier (Closes:
+      #10733). The goal here is to:
+      · save a few seconds on shutdown (it might matter especially for
+        the emergency one);
+      · work in a less heavily multitasking / event-driven
+        environment, for more robust operation.
+    - Install rngd, and make rng-tools initscript return success when
+      it can't find any hardware RNG device. Most Tails systems around
+      probably have no such device, and we don't want systemd to
+      believe they failed to boot properly. (Closes: #5650)
+    - Don't force using the vboxvideo X.Org driver. According to our
+      tests, this forced setting is:
+       · harmful: it breaks X startup when the vboxvideo *kernel*
+         driver is loaded;
+       · useless: X.Org now autodetects the vboxvideo X.Org driver and
+         uses it when running in VirtualBox and the vboxvideo kernel
+         is not present.
+    - Port boot-profile to python3 (Closes: #10083). Thanks to
+      heartsucker <heartsucker@autistici.org> for the patch!
+    - Include /proc/cmdline and the content of persistent APT sources
+      in WhisperBack bug reports. (Closes: #11675, #11635)
+    - Disable non-free APT sources at boot time. (Closes: #10130)
+    - Have a dedicated page for the homepage of Tor Browser in
+      Tails. (Closes: # 11725)
+    - Only build the VirtualBox kernel modules for the 32-bit kernel.
+      It's both hard and useless to build it for 64-bit in the current
+      state of things, as long as we're shipping a 32-bit userspace.
+      Also, install virtualbox-* from jessie-backports, since the
+      version in Jessie is not compatible with Linux 4.x.
+
+  * Build system
+    - Don't install+remove dpatch during the build. It's not been
+      needed in this hook for ages.
+    - Bump BUILD_SPACE_REQUIREMENT: at least one of us needed that to
+      build feature/10298-linux-4.x-aufs with the gzipcomp option.
+
+  * Test suite
+    - Send Tails Installer's debug log to the Cucumber debug log on
+      failure. This is meant to debug #10720 since I can't
+      reproduce it locally.
+    - Give the system under testing 2 vCPUs. (Closes: #6729)
+    - Split scenarios from checks.feature. (Closes: #5707)
+    - Add retry-logic to the Synaptic tests. (Closes: #10412, #10441,
+      #10991)
+    - Run usb_upgrade.feature earlier, when there is enough free disk
+      space left. (Closes: #11582)
+    - Use more recent virtual hardware in the system under test,
+      i.e. USB 3.0 (nec-xhci) on a pc-i440fx-2.5 machine. Switching
+      USB controllers has helped with problems we see on Jenkins when
+      booting from USB (#11588). Also, there are chances that more
+      recent virtual hardware sees more testing these days, so it
+      sounds potentially useful to "upgrade".
+    - Add support for Cucumber 2.4. (Closes: #11690)
+    - Always write {pretty,debug} logs and JSON output to the artifact
+      directory.
+    - Disable info level logging on Chutney nodes to save disk
+      space. For our network all these add up to > 1 GiB and we didn't
+      take this into account when budgeting RAM to the isotesters on
+      Jenkins.
+
+ -- Tails developers <tails@boum.org>  Tue, 20 Sep 2016 04:16:33 +0200
+
+tails (2.5) unstable; urgency=medium
+
+  * Major new features and changes
+    - Upgrade Icedove to 1:45.1.0-1~deb8u1+tails2. (Closes: #11530)
+      · Fix long delay causing bad UX in the autoconfig wizard,
+        when it does not manage to guess proper settings on some domains.
+        (Closes: #11486)
+      · Better support sending email through some ISPs, such as Riseup.
+        (Closes: #10933)
+      · Fix spurious error message when creating an account and providing
+        its password. (Closes: #11550)
+
+  * Security fixes
+    - Upgrade Tor Browser to 6.0.3 based on Firefox 45.3. (Closes: #11611)
+    - Upgrade GIMP to 2.8.14-1+deb8u1.
+    - Upgrade libav to 6:11.7-1~deb8u1.
+    - Upgrade expat to 2.1.0-6+deb8u3.
+    - Upgrade libgd3 to 2.1.0-5+deb8u6.
+    - Upgrade libmodule-build-perl to 0.421000-2+deb8u1.
+    - Upgrade perl to 5.20.2-3+deb8u6.
+    - Upgrade Pidgin to 2.11.0-0+deb8u1.
+    - Upgrade LibreOffice to 1:4.3.3-2+deb8u5.
+    - Upgrade libxslt1.1 to 1.1.28-2+deb8u1.
+    - Upgrade Linux to 3.16.7-ckt25-2+deb8u3.
+    - Upgrade OpenSSH to 1:6.7p1-5+deb8u3.
+    - Upgrade p7zip to 9.20.1~dfsg.1-4.1+deb8u2.
+
+  * Minor improvements
+    - htpdate: replace obsolete and unreliable URIs in HTP pools, and decrease
+      timeout for HTTP operations for more robust time synchronization.
+      (Closes: #11577)
+    - Hide settings panel for the Online Accounts component of GNOME,
+      that we don't support. (Closes: #11545)
+    - Vastly improve graphics performance in KVM guest with QXL driver.
+      (Closes: #11500)
+    - Fix graphics artifacts in Tor Browser in KVM guest with QXL driver.
+      (Closes: #11489)
+
+  * Build system
+    - Wrap Pidgin in a more maintainable way. (Closes: #11567)
+
+  * Test suite
+    - Add a test scenario for the persistence "dotfiles" feature.
+      (Closes: #10840)
+    - Improve robustness of most APT, Git, SFTP and SSH scenarios,
+      enough to enable them on Jenkins. (Closes: #10444, #10496, #10498)
+    - Improve robustness of checking for persistence partition. (Closes: #11558)
+    - Treat Tails booting from /dev/sda as OK, to support all cases
+      including a weird one caused by hybrid ISO images. (Closes: #10504)
+    - Bump a bunch of timeouts to cope with the occasional slowness on Jenkins.
+    - Only query A records when exercising DNS lookups, to improve robustness.
+
+ -- Tails developers <tails@boum.org>  Sun, 31 Jul 2016 16:50:35 +0000
+
+tails (2.4) unstable; urgency=medium
+
+  * Major new features and changes
+    - Upgrade Tor Browser to 6.0.1 based on Firefox 45.2. (Closes:
+      #11403, #11513).
+    - Enable Icedove's automatic configuration wizard. We patch the
+      wizard to only use secure protocols when probing, and only
+      accept secure protocols, while keeping the improvements done by
+      TorBirdy in its own non-automatic configuration wizard. (Closes:
+      #6158, #11204)
+
+  * Security fixes
+    - Upgrade bsdtar and libarchive13 to 3.1.2-11+deb8u1.
+    - Upgrade icedove to 38.8.0-1~deb8u1+tails3.
+    - Upgrade imagemagick to 8:6.8.9.9-5+deb8u3.
+    - Upgrade libexpat1 to 2.1.0-6+deb8u2.
+    - Upgrade libgd3 to 2.1.0-5+deb8u3.
+    - Upgrade gdk-pixbuf-based packages to 2.31.1-2+deb8u5.
+    - Upgrade libidn11 to 1.29-1+deb8u1.
+    - Upgrade libndp0 to 1.4-2+deb8u1.
+    - Upgrade poppler-based packages to 0.26.5-2+deb8u1.
+    - Upgrade librsvg2-2 to 2.40.5-1+deb8u2.
+    - Upgrade libsmbclient to 2:4.2.10+dfsg-0+deb8u3.
+    - Upgrade OpenSSL to 1.0.1k-3+deb8u5.
+    - Upgrade libtasn1-6 to 4.2-3+deb8u2.
+    - Upgrade libxml2 to 2.9.1+dfsg1-5+deb8u2.
+    - Upgrade openjdk-7-jre to 7u101-2.6.6-1~deb8u1.
+
+  * Bugfixes
+    - Enable Packetization Layer Path MTU Discovery for IPv4. If any
+      system on the path to the remote host has a MTU smaller than the
+      standard Ethernet one, then Tails will receive an ICMP packet
+      asking it to send smaller packets. Our firewall will drop such
+      ICMP packets to the floor, and then the TCP connection won't
+      work properly. This can happen to any TCP connection, but so far
+      it's been reported as breaking obfs4 for actual users. Thanks to
+      Yawning for the help! (Closes: #9268)
+    - Make Tails Upgrader ship other locales than English. (Closes:
+      #10221)
+    - Make it possible to add local USB printers again. Bugfix on
+      Tails 2.0. (Closes #10965).
+
+  * Minor improvements
+    - Remove custom SSH ciphers and MACs settings. (Closes: #7315)
+    - Bring back "minimize" and "maximize" buttons in titlebars by
+      default. (Closes: #11270)
+    - Icedove improvements:
+      * Stop patching in our default into Torbirdy. We've upstreamed
+        some parts, and the rest we set with pref branch overrides in
+        /etc/xul-ext/torbirdy.js. (Closes: #10905)
+      * Use hkps keyserver in Enigmail. (Closes: #10906)
+      * Default to POP if persistence is enabled, IMAP is
+        not. (Closes: #10574)
+      * Disable remote email account creation in Icedove. (Closes:
+        #10464)
+    - Firewall hardening (Closes: #11391):
+      * Don't accept RELATED packets. This enables quite a lot of code
+        in the kernel that we don't need. Let's reduce the attack
+        surface a bit.
+      * Restrict debian-tor user to NEW TCP syn packets. It doesn't
+        need to do more, so let's do a little bit of security in
+        depth.
+      * Disable netfilter's nf_conntrack_helper.
+      * Fix disabling of automatic conntrack helper assignment.
+    - Kernel hardening:
+      * Set various kernel boot options: slab_nomerge slub_debug=FZ
+        mce=0 vsyscall=none. (Closes: #11143)
+      * Remove the kernel .map files. These are only useful for kernel
+        debugging and slightly make things easier for malware, perhaps
+        and otherwise just occupy disk space. Also stop exposing
+        kernel memory addresses through /proc etc. (Closes: #10951)
+    - Drop zenity hacks to "focus" the negative answer. Jessie's
+      zenity introduced the --default-cancel option, finally!
+      (Closes: #11229)
+    - Drop useless APT pinning for Linux.
+    - Remove gnome-tweak-tool. (Closes: #11237)
+    - Install python-dogtail, to enable accessibility technologies in
+      our automated test suite (see below). (Part of: #10721)
+    - Install libdrm and mesa from jessie-backports. (Closes: #11303)
+    - Remove hledger. (Closes: #11346)
+    - Don't pre-configure the #tails chan on the default OFTC account.
+      (Part of: #11306)
+    - Install onioncircuits from jessie-backports. (Closes: #11443)
+    - Remove nmh. (Closes: #10477)
+    - Drop Debian experimental APT source: we don't use it.
+    - Use APT codenames (e.g. "stretch") instead of suites, to be
+      compatible with our tagged APT snapshots.
+    - Drop module-assistant hook and its cleanup. We've not been using
+      it since 2010.
+    - Remove 'Reboot' and 'Power Off' entries from Applications →
+      System Tools. (Closes: #11075)
+    - Pin our custom APT repo to the same level as Debian ones, and
+      explicitly pin higher the packages we want to pull from our custom
+      APT repo, when needed.
+    - config/chroot_local-hooks/59-libdvd-pkg: verify libdvdcss
+      package installation. (Closes: #11420)
+    - Make Tails Upgrader use our new mirror pool design. (Closes:
+      #11123)
+    - Drop custom OpenSSH client ciphers and MACs settings. We did a
+      pretty bad job at maintaining them compared to the Debian
+      upstream. (Closes: #7315)
+    - Install jessie-backports version of all binary packages built
+      from src:hplip. This adds support for quite a few new
+      printers.
+    - Install printer-driver-postscript-hp, which adds support for
+      some more printers.
+
+  * Build system
+    - Use a freezable APT repo when building Tails. This is a first
+      step towards reproducible builds, and improves our QA and
+      development processes by making our builds more predictable. For
+      details, see: https://tails.boum.org/contribute/APT_repository/
+    - There has been a massive amount of improvements to the
+      Vagrant-based build system, and now it could be considered the
+      de-facto build system for Tails! Improvements and fixes include:
+      * Migrate Vagrant to use libvirt/KVM instead of
+        Virtualbox. (Closes: #6354)
+      * Make apt-get stuff non-interactive while provisioning.
+        Because there is no interaction, so that will results in
+        errors.
+      * Bump disk space (=> RAM for RAM builds) needed to build with
+        Vagrant. Since the Jessie migration it seems impossible to
+        keep this low enough to fit in 8 GiB or RAM. For this reason
+        we also drop the space optimization where we build inside a
+        crazy aufs stack; now we just build in a tmpfs.
+      * Clean up apt-cacher-ng cache on vm:provision to save disk
+        space on the builder.
+      * Add convenient Rake task for SSH:ing into the builder VM:
+        `rake vm:ssh`.
+      * Add rake task for generating a new Vagrant base box.
+      * Automatically provision the VM on build to keep things up-to-date.
+      * Don't enable extproxy unless explicitly given as an
+        option. Previously it would automatically be enabled when
+        `http_proxy` is set in the environment, unlike what is
+        documented. This will hopefully lead to fewer surprises for users
+        who e.g. point http_proxy to a torified polipo, or similar.
+      * Re-fetch tags when running build-tails with Vagrant. That
+        should fix an annoyance related to #7182 that I frequently
+        encounter: when I, as the RM, rebuild the release image the
+        second time from the force-updated tag, the build system would
+        not have the force-updated tag. (Closes: #7182)
+      * Make sure we use the intended locale in the Tails builder VM.
+        Since we communicate via SSH, and e.g. Debian forward the
+        locale env vars by default, we have to take some steps
+        ensuring we do not do that.
+    - Pull monkeysphere from stretch to avoid failing to install under
+      eatmydata. Patch submitted by Cyril Brulebois <cyril@debamax.com>.
+
+  * Test suite
+    - Add wrapper around dogtail (inside Tails) for "remote" usage in
+      the automated test suite. This provides a simple interface for
+      generating dogtail python code, sending it to the guest, and
+      executing it, and should allow us to write more robust tests
+      leveraging assistive technologies. (Closes: #10721)
+    - A few previously sikuli-based tests has been migrated to use
+      dogtail instead, e.g. GNOME Applications menu interaction.
+    - Add a test for re-configuring an existing persistent volume.
+      This is a regression test for #10809. (Closes: #10834)
+    - Use a simulated Tor network provided by Chutney in the automated
+      test suite. The main motivation here is improved robustness --
+      since the "Tor network" we now use will exit from the host
+      running the automated test suite, we won't have to deal with Tor
+      network blocking, or unreliable circuits. Performance should
+      also be improved. (Closes: #9521)
+    - Drop the usage of Tor Check in our tests. It doesn't make sense
+      now when we use Chutney since that always means it will report
+      that Tor is not being used.
+    - Stop testing obsolete pluggable transports.
+    - Completely rewrite the firewall leak detector to something more
+      flexible and expressive.
+    - Run tcpdump with --immediate-mode for the network sniffer. With
+      this option, "packets are delivered to tcpdump as soon as they
+      arrive, rather than being buffered for efficiency" which is
+      required to make the sniffing work reliable the way we use it.
+    - Remove most scenarios testing "tordate". It just isn't working
+      well in Tails, so we shouldn't expect the tests to actually work
+      all of the time. (Closes: #10440)
+    - Close Pidgin before we inspect or persist its accounts.xml.
+      I've seen a case when that file is _not_ saved (and thus, not
+      persisted) if we shut down the system while Pidgin is still
+      running. (Closes: #11413)
+    - Close the GNOME Notification bar by pressing ESC, instead of
+      opening the Applications menu. The Applications menu often
+      covers other elements that we're looking for on the
+      screen. (Closes #11401)
+    - Hide Florence keyboard window when it doesn't vanish by itself
+      (Closes: #11398) and wait a bit less for Florence to disappear
+      (Closes: #11464).
+
+ -- Tails developers <tails@boum.org>  Mon, 06 Jun 2016 20:10:56 +0200
+
 tails (2.3) unstable; urgency=medium
 
   * Security fixes

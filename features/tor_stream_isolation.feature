@@ -1,5 +1,4 @@
-#10497: wait_until_tor_is_working
-@product @check_tor_leaks @fragile
+@product @check_tor_leaks
 Feature: Tor stream isolation is effective
   As a Tails user
   I want my Torified sessions to be sensibly isolated from each other to prevent identity correlation
@@ -22,6 +21,8 @@ Feature: Tor stream isolation is effective
     And I re-run tails-upgrade-frontend-wrapper
     Then I see that tails-upgrade-frontend-wrapper is properly stream isolated
 
+  #11592
+  @fragile
   Scenario: The Tor Browser is using the web browser-specific SocksPort
     When I monitor the network connections of Tor Browser
     And I start the Tor Browser

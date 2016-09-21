@@ -86,3 +86,36 @@ Tor does not support IPv6 yet so IPv6 communication is blocked.
 Tor only supports TCP. Non-TCP traffic to the Internet, such as UDP
 datagrams and ICMP packets, is dropped unless it's going through I2P,
 which supports UDP.
+
+An unfortunate consequence of fully blocking ICMP is that [[!wikipedia
+Path MTU Discovery]] is broken. We workaround this problem by enabling
+[[!rfc 4821 desc="Packetization Layer Path MTU Discovery"]].
+For details, see:
+
+* [[!tails_gitweb_commit 1d1c83d]]
+* [[!tails_gitweb config/chroot_local-includes/etc/sysctl.d/pmtud.conf]]
+
+#### `RELATED` packets
+
+As a general rule, the Tails' firewall does not accept `RELATED`
+packets: accepting them enables quite a lot of code in the kernel that
+we don't need, so we prefer reducing the attack surface a bit by
+blocking them. See the "[Tails-dev] Reducing attack surface of kernel
+and tightening firewall/sysctls" thread for details.
+
+However, `RELATED` ICMP packets to the loopback interface are let
+through, in order to smooth user experience whenever a program's local
+network connection is blocked, and the TCP stack generates ICMP
+packets (e.g. with `TYPE=3 CODE=3`, i.e. the destination port is
+unreachable) to let the program know what is going on early, instead
+of letting it wait for a timeout.
+
+#### netfilter's connection tracking helpers
+
+We disable netfilter's automatic conntrack helper assignment
+(`nf_conntrack_helper`), that would otherwise enable a lot of code in
+the Linux kernel that
+[parses incoming network packets, which seems potentially unsafe](https://home.regit.org/netfilter-en/secure-use-of-helpers/)
+compared to the little gain it brings in the use case of Tails:
+
+[[!tails_gitweb config/chroot_local-includes/etc/modprobe.d/no-conntrack-helper.conf]]
