@@ -73,14 +73,19 @@ def usb_install_helper(name)
   if @screen.exists("USBCannotUpgrade.png")
     raise UpgradeNotSupported
   end
-  @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-  @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
-  @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
-  @screen.wait('USBInstallationComplete.png', 30*60)
+  begin
+    @screen.wait_and_click('USBCreateLiveUSB.png', 10)
+    @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
+    @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
+    @screen.wait('USBInstallationComplete.png', 30*60)
+  rescue FindFailed => e
+    debug_log("Tails Installer debug log:\n" + $vm.file_content('/tmp/tails-installer-*'))
+    raise e
+  end
 end
 
 When /^I start Tails Installer$/ do
-  step 'I start "Tails Installer" via the GNOME "Tails" applications menu'
+  step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
   @screen.wait('USBCloneAndInstall.png', 30)
 end
 
@@ -395,7 +400,7 @@ end
 Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   bus = bus.downcase
   case bus
-  when "ide"
+  when "sata"
     expected_bus = "ata"
   else
     expected_bus = bus
