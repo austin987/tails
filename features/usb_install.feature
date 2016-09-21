@@ -27,8 +27,6 @@ Feature: Installing Tails to a USB drive
     Then no USB drive is selected
     And a suitable USB device is not found
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Installing Tails to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "install"
@@ -37,16 +35,12 @@ Feature: Installing Tails to a USB drive
     Then the running Tails is installed on USB drive "install"
     But there is no persistence partition on USB drive "install"
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
     When I create a persistent partition
     Then a Tails persistence partition exists on USB drive "__internal"
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
@@ -54,7 +48,6 @@ Feature: Installing Tails to a USB drive
     And the persistent Tor Browser directory does not exist
     And there is no persistence partition on USB drive "__internal"
 
-  #10720: Tails Installer freezes on Jenkins
   #11583
   @fragile
   Scenario: Booting Tails from a USB drive in UEFI mode
@@ -67,8 +60,6 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And Tails has started in UEFI mode
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions, and making sure that it boots
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "mbr"
@@ -83,8 +74,6 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it, then trying to upgrading it but ending up having to do a fresh installation, which boots
     Given a computer
     And I temporarily create a 4 GiB disk named "isohybrid"
