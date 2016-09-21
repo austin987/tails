@@ -44,6 +44,7 @@ $(document).ready(function(){
     $('#t3').val('Y');
   });
 
+  // Set the amounts for PayPal to the value of the radio button that gets clicked
   $('.amounts .btn').on('click change', function () {
     let newvalue = parseInt($(this).find('input').val());
     if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
