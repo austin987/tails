@@ -1,6 +1,11 @@
-When /^I see and accept the Unsafe Browser start verification$/ do
+When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do |locale|
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  @screen.type(Sikuli::Key.ESC)
+  if ['ar_EG.utf8', 'fa_IR'].include?(locale)
+    # Take into account button ordering in RTL languages
+    @screen.type(Sikuli::Key.LEFT + Sikuli::Key.ENTER)
+  else
+    @screen.type(Sikuli::Key.RIGHT + Sikuli::Key.ENTER)
+  end
 end
 
 def supported_torbrowser_languages
@@ -19,7 +24,7 @@ end
 
 Then /^I start the Unsafe Browser in the "([^"]+)" locale$/ do |loc|
   step "I run \"LANG=#{loc} LC_ALL=#{loc} sudo unsafe-browser\" in GNOME Terminal"
-  step "I see and accept the Unsafe Browser start verification"
+  step "I see and accept the Unsafe Browser start verification in the \"#{loc}\" locale"
 end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
@@ -140,9 +145,9 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.waitVanish('UnsafeBrowserProxySettingsWindow.png', 10)
 
     # Test that the proxy settings work as they should
-    step "I open the address \"https://check.torproject.org\" in the Unsafe Browser"
+    step 'I open Tails homepage in the Unsafe Browser'
     if proxy_type == no_proxy
-      @screen.wait('UnsafeBrowserTorCheckFail.png', 60)
+      step 'Tails homepage loads in the Unsafe Browser'
     else
       @screen.wait('UnsafeBrowserProxyRefused.png', 60)
     end

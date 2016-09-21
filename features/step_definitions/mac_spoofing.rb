@@ -33,20 +33,8 @@ end
 
 Then /^the real MAC address was (not )?leaked$/ do |mode|
   is_leaking = mode.nil?
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file)
-  mac_leaks = leaks.mac_leaks
-  if is_leaking
-    if !mac_leaks.include?($vm.real_mac)
-      save_pcap_file
-      raise "The real MAC address was expected to leak but didn't. We " +
-            "observed the following MAC addresses: #{mac_leaks}"
-    end
-  else
-    if mac_leaks.include?($vm.real_mac)
-      save_pcap_file
-      raise "The real MAC address was leaked but was expected not to. We " +
-            "observed the following MAC addresses: #{mac_leaks}"
-    end
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    [c.mac_saddr, c.mac_daddr].include?($vm.real_mac) == is_leaking
   end
 end
 

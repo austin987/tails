@@ -90,7 +90,7 @@ Then /^the firewall is configured to only allow the (.+) users? to connect direc
                "The following rule has an unexpected destination:\n" +
                rule.to_s)
         state_cond = try_xml_element_text(rule, "conditions/state/state")
-        next if state_cond == "RELATED,ESTABLISHED"
+        next if state_cond == "ESTABLISHED"
         assert_not_nil(rule.elements['conditions/owner/uid-owner'])
         rule.elements.each('conditions/owner/uid-owner') do |owner|
           uid = owner.text.to_i
@@ -337,35 +337,47 @@ When /^the Tor Launcher autostarts$/ do
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
-  bridge_type.downcase!
-  bridge_type.capitalize!
-  begin
-    @bridges = $config["Tor"]["Transports"][bridge_type]
-    assert_not_nil(@bridges)
-    assert(!@bridges.empty?)
-  rescue NoMethodError, Test::Unit::AssertionFailedError
-    raise(
-<<EOF
-It seems no '#{bridge_type}' pluggable transports are defined in your local configuration file (#{LOCAL_CONFIG_FILE}). See wiki/src/contribute/release_process/test/usage.mdwn for the format.
-EOF
-)
-  end
-  @bridge_hosts = []
-  for bridge in @bridges do
-    @bridge_hosts << bridge["ipv4_address"]
-  end
-
   @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
   @screen.wait('TorLauncherBridgePrompt.png', 10)
   @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
   @screen.wait_and_click('TorLauncherNextButton.png', 10)
   @screen.wait_and_click('TorLauncherBridgeList.png', 10)
-  for bridge in @bridges do
-    bridge_line = bridge_type.downcase   + " " +
-                  bridge["ipv4_address"] + ":" +
-                  bridge["ipv4_port"].to_s
-    bridge_line += " " + bridge["fingerprint"].to_s if bridge["fingerprint"]
-    bridge_line += " " + bridge["extra"].to_s if bridge["extra"]
+  @bridge_hosts = []
+  chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
+  bridge_dirs = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
+  )
+  bridge_dirs.each do |bridge_dir|
+    address = $vmnet.bridge_ip_addr
+    port = nil
+    fingerprint = nil
+    extra = nil
+    if bridge_type == 'bridge'
+      open(bridge_dir + "/torrc") do |f|
+        port = f.grep(/^OrPort\b/).first.split.last
+      end
+    else
+      # This is the pluggable transport case. While we could set a
+      # static port via ServerTransportListenAddr we instead let it be
+      # picked randomly so an already used port is not picked --
+      # Chutney already has issues with that for OrPort selection.
+      pt_re = /Registered server transport '#{bridge_type}' at '[^']*:(\d+)'/
+      open(bridge_dir + "/notice.log") do |f|
+        pt_lines = f.grep(pt_re)
+        port = pt_lines.last.match(pt_re)[1]
+      end
+      if bridge_type == 'obfs4'
+        open(bridge_dir + "/pt_state/obfs4_bridgeline.txt") do |f|
+          extra = f.readlines.last.chomp.sub(/^.* cert=/, 'cert=')
+        end
+      end
+    end
+    open(bridge_dir + "/fingerprint") do |f|
+      fingerprint = f.read.chomp.split.last
+    end
+    @bridge_hosts << { address: address, port: port.to_i }
+    bridge_line = bridge_type + " " + address + ":" + port
+    [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
     @screen.type(bridge_line + Sikuli::Key.ENTER)
   end
   @screen.wait_and_click('TorLauncherNextButton.png', 10)
@@ -378,25 +390,7 @@ end
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do
   assert_not_nil(@bridge_hosts, "No bridges has been configured via the " +
                  "'I configure some ... bridges in Tor Launcher' step")
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
-                                :accepted_hosts => @bridge_hosts)
-  leaks.assert_no_leaks
-end
-
-Then /^the Tor binary is configured to use the expected Tor authorities$/ do
-  tor_auths = Set.new
-  tor_binary_orport_strings = $vm.execute_successfully(
-    "strings /usr/bin/tor | grep -E 'orport=[0-9]+'").stdout.chomp.split("\n")
-  tor_binary_orport_strings.each do |potential_auth_string|
-    auth_regex = /^\S+ orport=\d+( bridge)?( no-v2)?( v3ident=[A-Z0-9]{40})? ([0-9\.]+):\d+( [A-Z0-9]{4}){10}$/
-    m = auth_regex.match(potential_auth_string)
-    if m
-      auth_ipv4_addr = m[4]
-      tor_auths << auth_ipv4_addr
-    end
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    @bridge_hosts.include?({ address: c.daddr, port: c.dport })
   end
-  expected_tor_auths = Set.new(TOR_AUTHORITIES)
-  assert_equal(expected_tor_auths, tor_auths,
-               "The Tor binary does not have the expected Tor authorities " +
-               "configured")
 end

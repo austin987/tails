@@ -1,29 +1,6 @@
-Then(/^the firewall leak detector has detected (.*?) leaks$/) do |type|
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
-                                :accepted_hosts => get_all_tor_nodes)
-  case type.downcase
-  when 'ipv4 tcp'
-    if leaks.ipv4_tcp_leaks.empty?
-      leaks.save_pcap_file
-      raise "Couldn't detect any IPv4 TCP leaks"
-    end
-  when 'ipv4 non-tcp'
-    if leaks.ipv4_nontcp_leaks.empty?
-      leaks.save_pcap_file
-      raise "Couldn't detect any IPv4 non-TCP leaks"
-    end
-  when 'ipv6'
-    if leaks.ipv6_leaks.empty?
-      leaks.save_pcap_file
-      raise "Couldn't detect any IPv6 leaks"
-    end
-  when 'non-ip'
-    if leaks.nonip_leaks.empty?
-      leaks.save_pcap_file
-      raise "Couldn't detect any non-IP leaks"
-    end
-  else
-    raise "Incorrect packet type '#{type}'"
+Then(/^the firewall leak detector has detected leaks$/) do
+  assert_raise(Test::Unit::AssertionFailedError) do
+    step 'all Internet traffic has only flowed through Tor'
   end
 end
 
@@ -40,12 +17,12 @@ Given(/^I disable Tails' firewall$/) do
 end
 
 When(/^I do a TCP DNS lookup of "(.*?)"$/) do |host|
-  lookup = $vm.execute("host -T #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
+  lookup = $vm.execute("host -T -t A #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 
 When(/^I do a UDP DNS lookup of "(.*?)"$/) do |host|
-  lookup = $vm.execute("host #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
+  lookup = $vm.execute("host -t A #{host} #{SOME_DNS_SERVER}", :user => LIVE_USER)
   assert(lookup.success?, "Failed to resolve #{host}:\n#{lookup.stdout}")
 end
 

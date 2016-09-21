@@ -1,5 +1,4 @@
-#10720: Tails Installer freezes on Jenkins
-@product @fragile
+@product
 Feature: Upgrading an old Tails USB installation
   As a Tails user
   If I have an old versoin of Tails installed on a USB device
@@ -45,7 +44,7 @@ Feature: Upgrading an old Tails USB installation
     And I temporarily create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
-    And I start Tails Installer in "Upgrade from ISO" mode
+    And I start Tails Installer in "Clone & Upgrade" mode
     Then a suitable USB device is not found
     And I am told that the destination device cannot be upgraded
 
@@ -56,7 +55,6 @@ Feature: Upgrading an old Tails USB installation
     And I start the computer
     When the computer boots Tails
     And I log in to a new session
-    And the Tails desktop is ready
     And all notifications have disappeared
     And I create a 4 GiB disk named "old"
     And I plug USB drive "old"
@@ -113,7 +111,6 @@ Feature: Upgrading an old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
-    And Tails seems to have booted normally
     And I clone USB drive "old" to a new USB drive "to_upgrade"
     And I plug USB drive "to_upgrade"
     When I "Clone & Upgrade" Tails to USB drive "to_upgrade"
