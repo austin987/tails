@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from pyinotify import WatchManager, Notifier, \
     ThreadedNotifier, ProcessEvent, IN_OPEN, IN_ACCESS, IN_CREATE, IN_MOVED_TO
@@ -29,7 +29,7 @@ class ProfileProcessor(ProcessEvent):
             return
         if path.startswith(IGNORE_PREFIX):
             path = path[len(IGNORE_PREFIX)-1:]
-        if not self.files.has_key(path):
+        if path not in self.files:
             self.files[path] = self.priority
             self.priority -= 1
 
@@ -60,10 +60,10 @@ class ProfileProcessor(ProcessEvent):
     def end_profiling(self):
         profile = open(self.profile_path, 'w')
         priorities = {}
-        for path, priority in self.files.iteritems():
-            if not self.ignored_files.has_key(path):
+        for path, priority in self.files.items():
+            if path not in self.ignored_files:
                 priorities[priority] = path
-        keys = priorities.keys()
+        keys = list(priorities.keys())
         keys.sort(reverse=True)
         for key in keys:
             profile.write("%-68s %s\n" % (priorities[key][1:], key))
@@ -71,7 +71,7 @@ class ProfileProcessor(ProcessEvent):
 
 def main():
     if len(sys.argv) < 2:
-        print >>sys.stderr, "usage: %s <new-profile>" % sys.argv[0]
+        print("usage: %s <new-profile>" % sys.argv[0], file=sys.stderr)
         sys.exit(0)
 
     wm = WatchManager()

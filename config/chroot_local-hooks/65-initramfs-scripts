@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+echo "Adding memory_wipe to the prereqs of all other init-top initramfs scripts"
+
+(
+   cd /usr/share/initramfs-tools/scripts/init-top
+   for script in * ; do
+      [ "$script" != memory_wipe ] || continue
+      sed --regexp-extended -i \
+	  -e 's/^(PREREQS?)="(.*)"/\1="memory_wipe \2"/' \
+	  "$script"
+   done
+)
