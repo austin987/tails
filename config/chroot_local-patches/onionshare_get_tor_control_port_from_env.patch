@@ -1,0 +1,31 @@
+From ba720f47d872c01e18150894d73122cec125f2bb Mon Sep 17 00:00:00 2001
+From: anonym <anonym@riseup.net>
+Date: Thu, 22 Sep 2016 11:25:42 +0200
+Subject: [PATCH] Try to get the Tor ControlPort from the environment.
+
+... via the TOR_CONTROL_PORT variable. If set, onionshare will only
+try this port.
+---
+ onionshare/onion.py | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/onionshare/onion.py b/onionshare/onion.py
+index 5370fe2..2bfd488 100644
+--- a/usr/lib/python3/dist-packages/onionshare/onion.py
++++ b/usr/lib/python3/dist-packages/onionshare/onion.py
+@@ -57,7 +57,11 @@ class Onion(object):
+         # connect to the tor controlport
+         found_tor = False
+         self.c = None
+-        ports = [9151, 9153, 9051]
++        env_port = os.environ.get('TOR_CONTROL_PORT')
++        if env_port:
++            ports = [int(env_port)]
++        else:
++            ports = [9151, 9153, 9051]
+         for port in ports:
+             try:
+                 self.c = Controller.from_port(port=port)
+-- 
+2.9.3
+
