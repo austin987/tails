@@ -10,7 +10,7 @@ $(document).ready(function(){
   $('#paypal-with-js').show();
   $('#paypal-without-js').hide();
 
-  // default donation is in $
+  // Default donation is in $
   $('.donate-dollars').show();
   $('.donate-euros').hide();
 
