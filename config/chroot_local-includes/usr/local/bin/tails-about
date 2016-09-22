@@ -1,35 +1,57 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- encoding: UTF-8
+"""This scripts show a dialog with basic information about the
+running Tails installation.
+"""
 
 import gettext
 import subprocess
 
-import glib
-import gtk
-import gtk.gdk
+from gi import require_version
+require_version('Gtk', '3.0')
+from gi.repository import GLib, Gtk, GdkPixbuf
 
-gettext.install("tails")
-try:
-    tails_version = subprocess.Popen(["tails-version"], stdout=subprocess.PIPE).communicate()[0]
-    tails_main_version = tails_version.split("-")[0]
-except OSError:
-    tails_version = _("not available")
-    tails_main_version = ""
-about_dialog = gtk.AboutDialog()
-about_dialog.set_program_name(_("Tails"))
-try:
-    about_dialog.set_logo(gtk.gdk.pixbuf_new_from_file_at_size('/usr/share/tails/tails-logo-flat-inverted.svg', 400, 200))
-except glib.GError:
-    pass
-about_dialog.set_comments(_("The Amnesic Incognito Live System") + "\n\n" +
-    _("Build information:\n%s") % tails_version)
-about_dialog.set_copyright("Tails developers")
-about_dialog.set_title=(_("About Tails"))
-about_dialog.set_version(tails_main_version)
-about_dialog.set_website("https://tails.boum.org/")
 
-about_dialog.connect("delete-event", gtk.main_quit)
-about_dialog.connect("response", gtk.main_quit)
-about_dialog.show_all()
+class AboutTails(Gtk.AboutDialog):
+    """A simple class showing the dialog"""
+    def __init__(self):
+        gettext.install("tails")
+        self.get_tails_version()
+        Gtk.AboutDialog.__init__(self)
 
-gtk.main()
+        self.set_program_name(_("Tails"))
+
+        headerbar = Gtk.HeaderBar()
+        headerbar.set_title(_("About Tails"))
+        headerbar.set_show_close_button(True)
+        self.set_titlebar(headerbar)
+
+        try:
+            self.set_logo(GdkPixbuf.Pixbuf.new_from_file_at_size(
+                '/usr/share/tails/tails-logo-flat-inverted.svg', 400, 200))
+        except GLib.GError:
+            pass
+
+        self.set_comments(_("The Amnesic Incognito Live System") + "\n\n" +
+                          _("Build information:\n%s") % self.tails_version)
+        self.set_copyright("Tails developers")
+        self.set_version(self.tails_main_version)
+        self.set_website("https://tails.boum.org/")
+
+        self.connect("delete-event", Gtk.main_quit)
+        self.connect("response", Gtk.main_quit)
+        self.show_all()
+        Gtk.main()
+
+    def get_tails_version(self):
+        """Find out the tails_version and the tails_main_version"""
+        try:
+            self.tails_version = subprocess.Popen(
+                ["tails-version"], stdout=subprocess.PIPE).communicate()[0]
+            self.tails_version = self.tails_version.decode('utf-8')
+            self.tails_main_version = self.tails_version.split("-")[0]
+        except OSError:
+            self.tails_version = _("not available")
+            self.tails_main_version = ""
+
+AboutTails()
