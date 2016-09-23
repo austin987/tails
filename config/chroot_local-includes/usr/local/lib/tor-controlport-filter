@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Tor control port filter proxy, only white-listing SIGNAL NEWNYM,
 # ADD_ONION, and DEL_ONION.
@@ -107,7 +107,7 @@ def handle_connection(c, sock):
                 writeh.write(".\r\n")
                 writeh.write("250 OK\r\n")
 
-            print "GETINFO onions/current went fine"
+            print("GETINFO onions/current went fine")
 
         elif line_matches_command("SIGNAL NEWNYM"):
             # Perform a real SIGNAL NEWNYM (new Tor circuit)
@@ -118,7 +118,7 @@ def handle_connection(c, sock):
                 raise UnexpectedAnswer("NEWNYM signal failed")
 
             writeh.write("250 OK\r\n")
-            print "NEWNYM went fine"
+            print("NEWNYM went fine")
 
         elif line_matches_command("ADD_ONION"):
             # Perform a real ADD_ONION (new ephemeral hidden service)
@@ -141,7 +141,7 @@ def handle_connection(c, sock):
                 raise UnexpectedAnswer("ADD_ONION failed")
 
             writeh.write(res.raw_content())
-            print "ADD_ONION went fine"
+            print("ADD_ONION went fine")
 
         elif line_matches_command("DEL_ONION"):
             # Perform a real DEL_ONION (delete ephemeral hidden service)
@@ -156,7 +156,7 @@ def handle_connection(c, sock):
                 raise UnexpectedAnswer("DEL_ONION failed")
 
             writeh.write("250 OK\r\n")
-            print "DEL_ONION went fine"
+            print("DEL_ONION went fine")
 
         elif line_matches_command("QUIT"):
             # Quit session
@@ -180,7 +180,7 @@ def main():
     server.bind(("127.0.0.1", 9052))
     server.listen(4)
 
-    print "Tor control port filter started, listening on 9052"
+    print("Tor control port filter started, listening on 9052")
 
     # Accept and handle connections one after one,
     # sessions are short enough that the added complexity of
@@ -192,14 +192,14 @@ def main():
             # Connect to real control port, and keep the connection persistent
             c = connect_to_real_control_port()
 
-            print "Accepted a connection"
+            print("Accepted a connection")
             handle_connection(c, clisock)
-            print "Connection closed"
+            print("Connection closed")
 
             # Close Tor control port connection
             c.close()
         except IOError:
-            print "Connection closed (IOError)"
+            print("Connection closed (IOError)")
 
         clisock.close()
 
