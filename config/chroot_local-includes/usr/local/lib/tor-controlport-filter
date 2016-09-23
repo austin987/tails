@@ -23,7 +23,7 @@ import socket
 import binascii
 import re
 
-from stem.control import Controller
+from stem.control import Controller, EventType
 from stem import Signal, SocketError, InvalidArguments, ProtocolError
 
 # Limit the length of a line, to prevent DoS attacks trying to
@@ -54,6 +54,11 @@ def handle_connection(c, sock):
     # Create file handles for the socket
     readh = sock.makefile("r")
     writeh = sock.makefile("w")
+
+    def hs_desc_event_cb(event):
+        writeh.write(event.raw_content())
+
+    subscribed_event_listeners = []
 
     # Keep accepting commands
     while True:
@@ -162,6 +167,17 @@ def handle_connection(c, sock):
             # Quit session
             writeh.write("250 Closing connection\r\n")
             break
+
+        elif line_matches_command("SETEVENTS HS_DESC"):
+            c.add_event_listener(hs_desc_event_cb, EventType.HS_DESC)
+            subscribed_event_listeners.append(hs_desc_event_cb)
+            writeh.write("250 OK\r\n")
+
+        elif line.strip() == "SETEVENTS":
+            for listener in subscribed_event_listeners:
+                c.remove_event_listener(listener)
+            subscribed_event_listeners = []
+            writeh.write("250 OK\r\n")
 
         else:
             # Everything else we ignore/block
