@@ -36,7 +36,7 @@ class UnexpectedAnswer(Exception):
     def __str__(self):
         return "[UnexpectedAnswer] " + self.msg
 
-def handle_connection(c, readh, writeh):
+def handle_controlport_session(c, readh, writeh):
     def respond(line):
         writeh.write(bytes(line, 'UTF-8'))
         writeh.flush()
@@ -188,7 +188,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
     def handle(self):
         controller = self.connect_to_real_control_port()
         try:
-            handle_connection(controller, self.rfile, self.wfile)
+            handle_controlport_session(controller, self.rfile, self.wfile)
         finally:
             controller.close()
 
