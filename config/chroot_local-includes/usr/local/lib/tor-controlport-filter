@@ -190,7 +190,10 @@ def main():
     server = socketserver.ThreadingTCPServer(("localhost", listen_port),
                                              FilteredControlPortProxyHandler)
     print("Tor control port filter started, listening on %d" % listen_port)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
 
 
 if __name__ == "__main__":
