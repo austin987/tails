@@ -19,7 +19,7 @@
 # doing NEWNYM. But it could just as well rewrite the
 # TOR_CONTROL_PORT environment variable to itself or do something else.
 
-import socket
+import socketserver
 import binascii
 import re
 
@@ -36,34 +36,20 @@ class UnexpectedAnswer(Exception):
     def __str__(self):
         return "[UnexpectedAnswer] " + self.msg
 
-def connect_to_real_control_port():
-    # Read authentication cookie
-    with open("/var/run/tor/control.authcookie", "rb") as f:
-        cookie = f.read(32)
-
-    # Connect to the real control port
-    c = Controller.from_socket_file("/var/run/tor/control")
-    try:
-        c.authenticate(cookie)
-    except SocketError:
-        raise UnexpectedAnswer("AUTHENTICATE failed")
-
-    return c
-
-def handle_connection(c, sock):
-    # Create file handles for the socket
-    readh = sock.makefile("r")
-    writeh = sock.makefile("w")
+def handle_connection(c, readh, writeh):
+    def respond(line):
+        writeh.write(bytes(line, 'UTF-8'))
+        writeh.flush()
 
     def hs_desc_event_cb(event):
-        writeh.write(event.raw_content())
+        respond(event.raw_content())
 
     subscribed_event_listeners = []
 
     # Keep accepting commands
     while True:
         # Read in a newline terminated line
-        line = readh.readline(MAX_LINESIZE)
+        line = str(readh.readline(MAX_LINESIZE), 'ascii')
 
         if not line: break
 
@@ -76,20 +62,20 @@ def handle_connection(c, sock):
         if line_matches_command("PROTOCOLINFO"):
             # Stem call PROTOCOLINFO before authenticating
             # Tell the client that there is no authentication
-            writeh.write("250-PROTOCOLINFO 1\r\n")
-            writeh.write("250-AUTH METHODS=NULL\r\n")
-            writeh.write("250-VERSION Tor=\"{}\"\r\n".format(c.get_version()))
-            writeh.write("250 OK\r\n")
+            respond("250-PROTOCOLINFO 1\r\n")
+            respond("250-AUTH METHODS=NULL\r\n")
+            respond("250-VERSION Tor=\"{}\"\r\n".format(c.get_version()))
+            respond("250 OK\r\n")
 
         elif line_matches_command("AUTHENTICATE"):
             # Don't check authentication, since only
             # safe commands are allowed
-            writeh.write("250 OK\r\n")
+            respond("250 OK\r\n")
 
         elif line_matches_command("GETINFO version"):
             # Stem calls "GETINFO version" in the create_ephemeral_hidden_service function
-            writeh.write("250-version={}\r\n".format(c.get_version()))
-            writeh.write("250 OK\r\n")
+            respond("250-version={}\r\n".format(c.get_version()))
+            respond("250 OK\r\n")
 
         elif line_matches_command("GETINFO onions/current"):
             # This lists ephemeral hidden services, made during the current control port connection
@@ -97,20 +83,20 @@ def handle_connection(c, sock):
             try:
                 onions = c.list_ephemeral_hidden_services()
             except InvalidArguments:
-                writeh.write("510 GETINFO onions/current failed\r\n")
+                respond("510 GETINFO onions/current failed\r\n")
                 raise UnexpectedAnswer("GETINFO onions/current failed")
 
             if len(onions) == 0:
-                writeh.write("551 No onion services of the specified type.\r\n")
+                respond("551 No onion services of the specified type.\r\n")
             elif len(onions) == 1:
-                writeh.write("250-onions/current={}\r\n".format(onions[0]))
-                writeh.write("250 OK\r\n")
+                respond("250-onions/current={}\r\n".format(onions[0]))
+                respond("250 OK\r\n")
             else:
-                writeh.write("250+onions/current=\r\n")
+                respond("250+onions/current=\r\n")
                 for onion in onions:
-                    writeh.write("{}\r\n".format(onion))
-                writeh.write(".\r\n")
-                writeh.write("250 OK\r\n")
+                    respond("{}\r\n".format(onion))
+                respond(".\r\n")
+                respond("250 OK\r\n")
 
             print("GETINFO onions/current went fine")
 
@@ -119,10 +105,10 @@ def handle_connection(c, sock):
             try:
                 c.signal(Signal.NEWNYM)
             except InvalidArguments:
-                writeh.write("510 NEWNYM signal failed\r\n")
+                respond("510 NEWNYM signal failed\r\n")
                 raise UnexpectedAnswer("NEWNYM signal failed")
 
-            writeh.write("250 OK\r\n")
+            respond("250 OK\r\n")
             print("NEWNYM went fine")
 
         elif line_matches_command("ADD_ONION"):
@@ -142,10 +128,9 @@ def handle_connection(c, sock):
             try:
                 res = c.create_ephemeral_hidden_service(ports, key_type, key_content, await_publication = True)
             except InvalidArguments:
-                writeh.write("510 ADD_ONION signal failed\n")
+                respond("510 ADD_ONION signal failed\n")
                 raise UnexpectedAnswer("ADD_ONION failed")
-
-            writeh.write(res.raw_content())
+            respond(res.raw_content())
             print("ADD_ONION went fine")
 
         elif line_matches_command("DEL_ONION"):
@@ -157,67 +142,64 @@ def handle_connection(c, sock):
             try:
                 c.remove_ephemeral_hidden_service(service_id)
             except ProtocolError:
-                writeh.write("510 DEL_ONION signal failed\r\n")
+                respond("510 DEL_ONION signal failed\r\n")
                 raise UnexpectedAnswer("DEL_ONION failed")
 
-            writeh.write("250 OK\r\n")
+            respond("250 OK\r\n")
             print("DEL_ONION went fine")
 
         elif line_matches_command("QUIT"):
             # Quit session
-            writeh.write("250 Closing connection\r\n")
+            respond("250 Closing connection\r\n")
             break
 
         elif line_matches_command("SETEVENTS HS_DESC"):
             c.add_event_listener(hs_desc_event_cb, EventType.HS_DESC)
             subscribed_event_listeners.append(hs_desc_event_cb)
-            writeh.write("250 OK\r\n")
+            respond("250 OK\r\n")
 
         elif line.strip() == "SETEVENTS":
             for listener in subscribed_event_listeners:
                 c.remove_event_listener(listener)
             subscribed_event_listeners = []
-            writeh.write("250 OK\r\n")
+            respond("250 OK\r\n")
 
         else:
             # Everything else we ignore/block
-            writeh.write("510 Command filtered\r\n")
+            respond("510 Command filtered\r\n")
 
-        # Ensure the answer was written
-        writeh.flush()
 
-    # Ensure all data was written
-    writeh.flush()
+class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
+
+    def connect_to_real_control_port(self):
+        # Read authentication cookie
+        with open("/var/run/tor/control.authcookie", "rb") as f:
+            cookie = f.read(32)
+
+        # Connect to the real control port
+        c = Controller.from_socket_file("/var/run/tor/control")
+        try:
+            c.authenticate(cookie)
+        except SocketError:
+            raise UnexpectedAnswer("AUTHENTICATE failed")
+
+        return c
+
+    def handle(self):
+        controller = self.connect_to_real_control_port()
+        try:
+            handle_connection(controller, self.rfile, self.wfile)
+        finally:
+            controller.close()
+
 
 def main():
-    # Listen on port 9052 (we cannot use 9051 as Tor uses that one)
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind(("127.0.0.1", 9052))
-    server.listen(4)
+    listen_port = 9052
+    server = socketserver.ThreadingTCPServer(("localhost", listen_port),
+                                             FilteredControlPortProxyHandler)
+    print("Tor control port filter started, listening on %d" % listen_port)
+    server.serve_forever()
 
-    print("Tor control port filter started, listening on 9052")
-
-    # Accept and handle connections one after one,
-    # sessions are short enough that the added complexity of
-    # simultaneous connections are unnecessary (in absence of attacks)
-    while True:
-        clisock, cliaddr = server.accept()
-
-        try:
-            # Connect to real control port, and keep the connection persistent
-            c = connect_to_real_control_port()
-
-            print("Accepted a connection")
-            handle_connection(c, clisock)
-            print("Connection closed")
-
-            # Close Tor control port connection
-            c.close()
-        except IOError:
-            print("Connection closed (IOError)")
-
-        clisock.close()
 
 if __name__ == "__main__":
     main()
