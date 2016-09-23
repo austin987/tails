@@ -40,9 +40,6 @@ def handle_controlport_session(c, readh, writeh):
         writeh.write(bytes(line, 'UTF-8'))
         writeh.flush()
 
-    def hs_desc_event_cb(event):
-        respond(event.raw_content())
-
     subscribed_event_listeners = []
 
     # Keep accepting commands
@@ -153,8 +150,10 @@ def handle_controlport_session(c, readh, writeh):
             break
 
         elif line_matches_command("SETEVENTS HS_DESC"):
-            c.add_event_listener(hs_desc_event_cb, EventType.HS_DESC)
-            subscribed_event_listeners.append(hs_desc_event_cb)
+            def event_cb(event):
+                respond(event.raw_content())
+            c.add_event_listener(event_cb, EventType.HS_DESC)
+            subscribed_event_listeners.append(event_cb)
             respond("250 OK\r\n")
 
         elif line.strip() == "SETEVENTS":
