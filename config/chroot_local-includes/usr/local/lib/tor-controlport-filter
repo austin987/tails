@@ -35,7 +35,7 @@ class UnexpectedAnswer(Exception):
     def __str__(self):
         return "[UnexpectedAnswer] " + self.msg
 
-def handle_controlport_session(c, readh, writeh):
+def handle_controlport_session(controller, readh, writeh):
     def respond(line):
         writeh.write(bytes(line, 'UTF-8'))
         writeh.flush()
@@ -60,7 +60,7 @@ def handle_controlport_session(c, readh, writeh):
             # Tell the client that there is no authentication
             respond("250-PROTOCOLINFO 1\r\n")
             respond("250-AUTH METHODS=NULL\r\n")
-            respond("250-VERSION Tor=\"{}\"\r\n".format(c.get_version()))
+            respond("250-VERSION Tor=\"{}\"\r\n".format(controller.get_version()))
             respond("250 OK\r\n")
 
         elif line_matches_command("AUTHENTICATE"):
@@ -70,14 +70,14 @@ def handle_controlport_session(c, readh, writeh):
 
         elif line_matches_command("GETINFO version"):
             # Stem calls "GETINFO version" in the create_ephemeral_hidden_service function
-            respond("250-version={}\r\n".format(c.get_version()))
+            respond("250-version={}\r\n".format(controller.get_version()))
             respond("250 OK\r\n")
 
         elif line_matches_command("GETINFO onions/current"):
             # This lists ephemeral hidden services, made during the current control port connection
             # Send GETINFO onions/current
             try:
-                onions = c.list_ephemeral_hidden_services()
+                onions = controller.list_ephemeral_hidden_services()
             except InvalidArguments:
                 respond("510 GETINFO onions/current failed\r\n")
                 raise UnexpectedAnswer("GETINFO onions/current failed")
@@ -99,7 +99,7 @@ def handle_controlport_session(c, readh, writeh):
         elif line_matches_command("SIGNAL NEWNYM"):
             # Perform a real SIGNAL NEWNYM (new Tor circuit)
             try:
-                c.signal(Signal.NEWNYM)
+                controller.signal(Signal.NEWNYM)
             except InvalidArguments:
                 respond("510 NEWNYM signal failed\r\n")
                 raise UnexpectedAnswer("NEWNYM signal failed")
@@ -122,7 +122,7 @@ def handle_controlport_session(c, readh, writeh):
 
             # Send ADD_ONION
             try:
-                res = c.create_ephemeral_hidden_service(ports, key_type, key_content, await_publication = True)
+                res = controller.create_ephemeral_hidden_service(ports, key_type, key_content, await_publication = True)
             except InvalidArguments:
                 respond("510 ADD_ONION signal failed\n")
                 raise UnexpectedAnswer("ADD_ONION failed")
@@ -136,7 +136,7 @@ def handle_controlport_session(c, readh, writeh):
             service_id = line.split(' ')[1].strip()
 
             try:
-                c.remove_ephemeral_hidden_service(service_id)
+                controller.remove_ephemeral_hidden_service(service_id)
             except ProtocolError:
                 respond("510 DEL_ONION signal failed\r\n")
                 raise UnexpectedAnswer("DEL_ONION failed")
@@ -152,13 +152,13 @@ def handle_controlport_session(c, readh, writeh):
         elif line_matches_command("SETEVENTS HS_DESC"):
             def event_cb(event):
                 respond(event.raw_content())
-            c.add_event_listener(event_cb, EventType.HS_DESC)
+            controller.add_event_listener(event_cb, EventType.HS_DESC)
             subscribed_event_listeners.append(event_cb)
             respond("250 OK\r\n")
 
         elif line.strip() == "SETEVENTS":
             for listener in subscribed_event_listeners:
-                c.remove_event_listener(listener)
+                controller.remove_event_listener(listener)
             subscribed_event_listeners = []
             respond("250 OK\r\n")
 
@@ -175,13 +175,13 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             cookie = f.read(32)
 
         # Connect to the real control port
-        c = Controller.from_socket_file("/var/run/tor/control")
+        controller = Controller.from_socket_file("/var/run/tor/control")
         try:
-            c.authenticate(cookie)
+            controller.authenticate(cookie)
         except SocketError:
             raise UnexpectedAnswer("AUTHENTICATE failed")
 
-        return c
+        return controller
 
     def handle(self):
         controller = self.connect_to_real_control_port()
