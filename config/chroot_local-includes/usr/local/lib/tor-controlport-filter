@@ -23,6 +23,20 @@ from stem import Signal, SocketError, InvalidArguments, ProtocolError
 # crash this filter proxy by sending infinitely long lines.
 MAX_LINESIZE = 128
 
+ALLOWED_COMMANDS = {
+    'GETINFO': ['version', 'onions/current'],
+    'SIGNAL': ['NEWNYM'],
+    'ADD_ONION': ['NEW:BEST Port=80,176\d\d'],
+    'DEL_ONION': ['.+'],
+}
+
+ALLOWED_EVENTS = {
+    'HS_DESC': EventType.HS_DESC,
+    'SIGNAL': EventType.SIGNAL,
+    'CONF_CHANGED': EventType.CONF_CHANGED,
+}
+
+
 class UnexpectedAnswer(Exception):
     def __init__(self, msg):
         self.msg = msg
@@ -62,103 +76,41 @@ def handle_controlport_session(controller, readh, writeh):
             # safe commands are allowed
             respond("250 OK\r\n")
 
-        elif line_matches_command("GETINFO version"):
-            # Stem calls "GETINFO version" in the create_ephemeral_hidden_service function
-            respond("250-version={}\r\n".format(controller.get_version()))
-            respond("250 OK\r\n")
-
-        elif line_matches_command("GETINFO onions/current"):
-            # This lists ephemeral hidden services, made during the current control port connection
-            # Send GETINFO onions/current
-            try:
-                onions = controller.list_ephemeral_hidden_services()
-            except InvalidArguments:
-                respond("510 GETINFO onions/current failed\r\n")
-                raise UnexpectedAnswer("GETINFO onions/current failed")
-
-            if len(onions) == 0:
-                respond("551 No onion services of the specified type.\r\n")
-            elif len(onions) == 1:
-                respond("250-onions/current={}\r\n".format(onions[0]))
+        # The client will be fooled that it is subscribing to all
+        # events it requested, but we will only let through allowed
+        # events.
+        elif line_matches_command("SETEVENTS"):
+            events = line.strip().split(' ')[1:]
+            if len(events) > 0:
+                for event in events:
+                    if event in ALLOWED_EVENTS:
+                        def event_cb(event):
+                            respond(event.raw_content())
+                        controller.add_event_listener(event_cb, ALLOWED_EVENTS[event])
+                        subscribed_event_listeners.append(event_cb)
                 respond("250 OK\r\n")
             else:
-                respond("250+onions/current=\r\n")
-                for onion in onions:
-                    respond("{}\r\n".format(onion))
-                respond(".\r\n")
+                for listener in subscribed_event_listeners:
+                    controller.remove_event_listener(listener)
+                subscribed_event_listeners = []
                 respond("250 OK\r\n")
 
-            print("GETINFO onions/current went fine")
-
-        elif line_matches_command("SIGNAL NEWNYM"):
-            # Perform a real SIGNAL NEWNYM (new Tor circuit)
-            try:
-                controller.signal(Signal.NEWNYM)
-            except InvalidArguments:
-                respond("510 NEWNYM signal failed\r\n")
-                raise UnexpectedAnswer("NEWNYM signal failed")
-
-            respond("250 OK\r\n")
-            print("NEWNYM went fine")
-
-        elif line_matches_command("ADD_ONION"):
-            # Perform a real ADD_ONION (new ephemeral hidden service)
-
-            # example: ADD_ONION NEW:BEST Port=80,8080
-            parts = line.split(' ')         # ['ADD_ONION', 'NEW:BEST', 'Port=80,8080']
-
-            key_parts = parts[1].split(':') # ['NEW', 'BEST']
-            key_type = key_parts[0]         # 'NEW'
-            key_content = key_parts[1]      # 'BEST'
-
-            port_parts = parts[2].split('=')[1].split(',')     # ['80','8080']
-            ports = { int(port_parts[0]): int(port_parts[1]) } # { 80: 8080 }
-
-            # Send ADD_ONION
-            try:
-                res = controller.create_ephemeral_hidden_service(ports, key_type, key_content, await_publication = True)
-            except InvalidArguments:
-                respond("510 ADD_ONION signal failed\n")
-                raise UnexpectedAnswer("ADD_ONION failed")
-            respond(res.raw_content())
-            print("ADD_ONION went fine")
-
-        elif line_matches_command("DEL_ONION"):
-            # Perform a real DEL_ONION (delete ephemeral hidden service)
-
-            # example: DEL_ONION ho2fw3hol6q5hehh
-            service_id = line.split(' ')[1].strip()
-
-            try:
-                controller.remove_ephemeral_hidden_service(service_id)
-            except ProtocolError:
-                respond("510 DEL_ONION signal failed\r\n")
-                raise UnexpectedAnswer("DEL_ONION failed")
-
-            respond("250 OK\r\n")
-            print("DEL_ONION went fine")
-
-        elif line_matches_command("QUIT"):
-            # Quit session
-            respond("250 Closing connection\r\n")
-            break
-
-        elif line_matches_command("SETEVENTS HS_DESC"):
-            def event_cb(event):
-                respond(event.raw_content())
-            controller.add_event_listener(event_cb, EventType.HS_DESC)
-            subscribed_event_listeners.append(event_cb)
-            respond("250 OK\r\n")
-
-        elif line.strip() == "SETEVENTS":
-            for listener in subscribed_event_listeners:
-                controller.remove_event_listener(listener)
-            subscribed_event_listeners = []
-            respond("250 OK\r\n")
-
         else:
-            # Everything else we ignore/block
-            respond("510 Command filtered\r\n")
+            cmd_allowed = False
+            cmd, _, args = line.strip().partition(' ')
+            cmd = cmd.upper()
+            if cmd in ALLOWED_COMMANDS:
+                allowed_args = ALLOWED_COMMANDS[cmd]
+                if args == "":
+                    if None in allowed_args:
+                        cmd_allowed = True
+                else:
+                    cmd_allowed = any([re.match(args_regex + "$", args) for args_regex in allowed_args])
+            if cmd_allowed:
+                response = controller.msg(line.strip())
+                respond(response.raw_content())
+            else:
+                respond("510 Command filtered\r\n")
 
 
 class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
