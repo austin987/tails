@@ -1,6 +1,6 @@
 Tails tasks are managed in a [[!tails_redmine "" desc="Redmine project"]].
 
-If you need to do something in Redmine, but you appear to lack the
+If you need to do something in Redmine and you appear to lack the
 needed credentials, please ask [[tails-sysadmins@boum.org|about/contact#tails-sysadmins]] to give you
 more power.
 
@@ -8,12 +8,14 @@ Some documentation about how we are using Redmine is available in the
 [[contribute/working_together]] pages. See also the [[review and merge
 process|contribute/merge_policy/review]] documentation.
 
+Tinkering with Redmine is an important part of the 
+[[Ticket gardener|contribute/working_together/roles/ticket_gardener/]] role.
 <a id="atom"></a>
 
 Atom feeds
 ==========
 
-Each custom query listed in the Redmine sidebar have an Atom feed.
+Each custom query listed in the Redmine sidebar has an Atom feed.
 
 Tracking review'n'merge requests
 --------------------------------
@@ -31,20 +33,19 @@ How to use Redmine's Atom feeds
 
 To use a Redmine Atom feed:
 
-1. Log into Redmine.
-2. Go to the *My account* page.
-3. Define an *Atom access key*.
-4. Go to the custom query you want to track.
-5. Look for the *Atom* link at the bottom of the page.
-6. Point your feed reader to that link.
+1. Go to the custom query you want to track.
+2. Look for the *Atom* link at the bottom of the page.
+3. Point your feed reader to that link.
 
 Email commands
 ==============
 
+This only works by sending mails from an email address associated with
+a Redmine account.
 For details, see the [corresponding documentation on the Redmine
 website](http://www.redmine.org/projects/redmine/wiki/RedmineReceivingEmails#How-it-works).
 
-Create a ticket by email
+Creating a ticket by email
 ------------------------
 
 You need to provide all the required fields in the body of the email, and the
@@ -77,3 +78,110 @@ description for your changes. For example:
     Status: Resolved
 
     This works but Redmine is quite picky on the syntax...
+
+<a id="fields"></a>
+How to use Redmine fields
+=========================
+
+It is important to be consistent in the use of the fields to make collective work
+easier. See [[document progress|contribute/working_together/document_progress/]]
+for more on this topic.
+
+Please take a time to see how we use the fields of Redmine:
+
+* Subject:
+  - The Subject should be a short but clear description of what the ticket is about.
+    Some people are case sensitive, please try to consider that.
+* Description:
+  - For the preferred style of this field when reporting a bug, refer to our
+    [[bug reporting instructions|doc/first_steps/bug_reporting]]. Features or
+    Discuss tickets may follow a different style.
+* Status:
+   * New:
+     - New users' tickets are marked always as new. If a Tails Contributor can
+       reproduce the issue, it should be marked as *confirmed*.
+     - [[Frontdesk|contribute/working_together/roles/front_desk#index2h1]] team is in
+       charge of keeping an eye on them.
+   * Confirmed:
+     - Tails Contributors can reproduce the issue.
+   * In Progress:
+     - Code has been pushed, submitted for review, committed to the Tails
+       repository or work is being done if is not code.
+     - Added by Redmine automatically when a Git commit with `will-fix: #NNNN`
+       is added to the Tails repository. This keyword should be only used in
+       topic branches.
+   * Fix committed:
+     - The fix has been merged to the `tails` repository.
+     - Added by Redmine automatically when a Git commit with `fix-committed: #NNNN`
+       is added to the Tails repository.
+   * Resolved:
+     - Fix is on current Tails.
+   * Duplicate:
+     - Another ticket in Redmine covers this issue. Do not forget the related issue!
+       You can add a related issue from the 'Related issues' section on the ticket.
+   * Rejected:
+     - Not applicable, not a Tails problem, being worked on elsewhere.
+* Priority
+   * Low:
+     - It would be good to have it, but nobody is volunteering to do it.
+   * Elevated:
+     - Regressions are always marked as Elevated.
+ * Assignee:
+    - Assign yourself to a ticket if you are working on it to prevent duplicated
+      work.
+    - Assign a ticket marking `QA check` as `Info needed` to get information from
+      someone.
+* Category:
+    - This are usually transversal issues, not specific tools.
+* Target version:
+    - The Tails release this ticket aims to be fixed for.
+    - If submitting code, the Tails release you would like your changes to be in.
+* QA Check (quality assurance):
+    * Info Needed:
+      - If you want to work on this ticket but you need more information, select
+        this option, ideally along with an assignee and a note about what to do
+        after the information has been given (*reassign to you?*).
+      - Answering this tickets quickly when they are assigned to you is very
+        important to speed up development.
+    * Ready for QA:
+      - When your code is ready to fix this ticket, you can set this option, usually
+        accompanied by a Git branch to review.
+        Read our [[merge policy|/contribute/merge_policy]] to know more.
+    * Pass:
+      - When a reviewer has reviewed submitted code can set this field to pass,
+        and can be merged to `tails` repository.
+* Feature Branch:
+  - Add the information of the branch for this issue in the format
+    `repositoryname:branch`, or only the branch name if it's on Tails repository.
+* Type of work:
+  * Communicate:
+    - Inside or outside of Tails (for example, with other projects).
+  * Contributors documentation:
+    - Everything below /contribute on the website.
+  * Debian:
+    - Related or to be done on the Debian project.
+  * Discuss:
+    - Discuss tickets are reviewed to discuss during the monthly Tails
+      contributors meeting.
+  * End-user documentation:
+    - Everything below /doc on the website.
+  * Wait:
+    - Used when waiting for input from other projects.
+  * Website:
+    - All website work not covered by other options.
+* Watchers:
+  - If you think somebody might be interested on this ticket although not as
+    assignee, you can add them as a watcher. They will receive an email with
+    information every time the ticket gets updated.
+  - If you create a ticket you will receive updates like a watcher.
+  - If you comment on a ticket, you're *not* automatically a watcher.
+* Parent task:
+  - It is always good to add it if there is any. Sometimes we use this field to
+    organize work that spans many tickets. See for example: [[!tails_ticket 7584]].
+* Blueprint:
+  - Many times the work to fix the tickets is also done in a wiki page, see
+    <https://tails.boum.org/blueprint/>.
+* Easy:
+  - Issues flagged as `Easy` on Redmine are a great tool for new contributors
+    getting into Tails. [[Learn
+    more|/contribute/working_together/criteria_for_easy_tasks/]].
