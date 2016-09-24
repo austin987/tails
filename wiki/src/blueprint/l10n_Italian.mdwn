@@ -1,9 +1,5 @@
 [[!toc levels=2]]
 
-#mini guida GIT
-
-https://rogerdudler.github.io/git-guide/index.it.html
-
 
 # Definizioni 
 
@@ -26,7 +22,15 @@ tipo: about.fr.po, e lo rinomini about.pot
 A quel punto lo apri con poedit e lui ti chiederà come nominarlo iniziando per una nuova lingua e tu gli dici: about.it
 a quel punto inizi a tradurre :)
 
-# Repository GIT
+# Aiuto con GIT
+
+
+
+##mini guida GIT
+
+https://rogerdudler.github.io/git-guide/index.it.html
+
+## Repository GIT
 
 E' qui: https://git.lattuga.net/transitails/italian
 
@@ -37,7 +41,7 @@ E' qui: https://git.lattuga.net/transitails/italian
 	 
 Per essere abilitati in scrittura, iscrivetevi a git.lattuga.net e chiedete in lista di accettarvi l'utente.
 
-#Git comandi quotidiani
+## Git comandi quotidiani
 
 Tutte le righe che iniziano con $ sono da digitare nel terminale, a volte sotto c'è la risposta del terminale, oppure niente. In generale nei sistemi unix-like se il terminale dopo aver dato un comando non vi risponde niente, vuol dire che tutto è andato bene.
 Il pulsante TAB è vostro amico per completare tutti i percorsi dei file e soprattutto quando usate git add. Le frecce su e giù della tastiera vi danno gli ultimi comandi che avete lanciato, così andate velocissim*. Tutto quello che inizia con [hagfsa] va sostituito con il nome che fa al caso vostro. Se vi trovate ad un certo punto intrappolati nel terminale e c'è ESC in fondo, niente paura, è vim, quindi fate: ESC : q
@@ -88,6 +92,23 @@ Verificate che il commit ci sia
 
      $git log origin [nome dalla branch o master]
 
+## Alcuni utili alias
+
+    git config --global alias.graph 'log --graph --oneline --all --decorate=short'
+    git config --global alias.lg 'log --oneline --graph --decorate=short'
+
+L'alias `graph` mostra un "grafo" della situazione corrente, in modo da riconoscere come sono disposte le varie branch e dove siete voi.
+L'alias `lg` e' simile, ma non mostra TUTTE le branch possibili e immaginabili. Di default mostra solo lo stato corrente (tipo git log, ma piu' stringato). Se fatte tipo `git lg master mia-branch` potete vedere come sta messa la vostra branch rispetto al master. E' in avanti? indietro? ecc.
+
+## mergiare i file PO piu facilmente
+
+Si può usare un *merge driver* specializzato per i `.po`:
+* si prende questo file https://github.com/mezis/git-whistles/blob/master/libexec/git-merge-po.sh
+* si verifica che il suo `sha1sum` è `1448725402f5828e8ad4216fc0fe593519066fcd`.
+* lo si mette in /usr/bin/git-merge-po
+* lo si configura come dice qui https://github.com/mezis/git-whistles#user-content-merge-po
+
+A questo punto il merge dei file `.po` dovrebbe andare parecchio meglio.
 
 # Lavoro da affrontare
 
@@ -292,3 +313,65 @@ Oppure in grafica dal browser:
 
 <https://git-tails.immerda.ch/l10n-italian/tails/>
 
+
+# Controlli
+
+Ogni tanto (piu' frequentemente possibile) e' bene fare dei controlli per vedere che tutto vada bene. Ad esempio questo andrebbe fatto prima di ogni commit, e anche da parte dei revisori.
+
+## ricreare il sito
+
+`./build-website` non solo crea il sito, ma mostra anche dei warning.
+Ad esempio `Strange line:` mostra delle linee problematiche. Quando dice `Strange line: --><--` si sta lamentando di linee vuote che secondo lui non dovrebbero esistere. Tipicamente questo avviene tra un commento e un msgid, o all'interno di un messaggio multilinea.
+
+## check-po
+
+vedi [[contribute/l10n_tricks]] alla sezione "Check the validity of PO files"; questi controlli sono MOLTO utili, e sono molto rari i falsi positivi.
+Inoltre, gli sviluppatori di tails lanceranno quei controlli sui nostri file e non li mergeranno se i file hanno problemi, quindi lanciare check-po e' davvero importante!
+
+
+# Workflow
+
+Come procediamo per fare varie cose?
+
+## Pacchi
+
+In breve:
+
+1. creazione pacchi
+2. assegnazione: ogni pacco ha un traduttore
+3. per ogni pacco:
+   * traduzione!
+   * revisione (non chiaro: quando si sceglie chi revisiona?)
+   * merge dentro master
+ 
+
+Ogni tanto (quando?) si fanno dei pacchi di traduzioni. Un pacco e' un insieme di filename che vanno tradotti. Ogni pacco viene tradotto da una persona.
+
+Supponiamo di tradurre la divina commedia, e di fare 3 pacchi: Inferno, Purgatorio e Paradiso. Petrarca si accolla di tradurre l'Inferno, e lo fa in una branch che chiama, appunto "inferno". traduce tutti i file  `wiki/src/inferno/*.po`, (**TODO**: andrebbe anche fatti i check)  quindi fa `git commit -m "inferno tradotto"`.
+
+A questo punto qualcuno deve revisionare la branch. Si fa avanti Laura. Laura fa `git fetch origin && git checkout origin/inferno`. Prima guarda le differenze introdotte da Petrarca, con `git log -p origin/inferno`.
+Gli sembrano ok, ma per controllare che si vedano anche bene nel wiki lo builda con `./build-website` e poi lo guarda da firefox. Nota che Petrarca, sbadato, ha fatto alcuni piccoli errori nel markup del wiki che "rompono" delle immagini. Petrarca aveva tradotto la riga:
+
+    [[!immagine \"caronte.png`"]]
+
+con:
+
+    [[immagine \"caronte.png\"`]]
+
+Laura corregge e fa commit sulla stessa branch `git commit wiki/src/inferno/terzocanto.po -m "fix immagine caronte" && git push origin inferno`.
+Non trova altri errori, quindi fa
+
+    git checkout master
+    git merge inferno
+
+Potrebbe subito fare `git push origin master` ma, per non sbagliare, fa un diff:
+
+    git diff origin/master..master
+
+E controlla se tutto torna. Ci sono conflitti? Quel cambiamento al `!img` c'e' ancora? bene, ora possiamo fare
+
+    git push origin master
+
+## Call for translations
+
+Prima di una release, in lista tails-l10n arriva un'email "Call for translations". Come si procede a quel punto?
