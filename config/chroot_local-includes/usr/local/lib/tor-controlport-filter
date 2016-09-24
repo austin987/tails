@@ -51,7 +51,7 @@ def handle_controlport_session(controller, readh, writeh):
     subscribed_event_listeners = []
 
     while True:
-        line = str(readh.readline(MAX_LINESIZE), 'ascii')
+        line = str(readh.readline(MAX_LINESIZE), 'ascii').strip()
 
         if not line: break
 
@@ -78,7 +78,7 @@ def handle_controlport_session(controller, readh, writeh):
         # events it requested, but we will only let through allowed
         # events.
         elif line_matches_command("SETEVENTS"):
-            events = line.strip().split(' ')[1:]
+            events = line.split(' ')[1:]
             if len(events) > 0:
                 for event in events:
                     if event in ALLOWED_EVENTS:
@@ -95,11 +95,11 @@ def handle_controlport_session(controller, readh, writeh):
 
         else:
             cmd_allowed = False
-            cmd, _, args = line.strip().partition(' ')
+            cmd, _, args = line.partition(' ')
             cmd = cmd.upper()
             allowed_args = ALLOWED_COMMANDS.get(cmd, [])
             if any([re.match(regex + "$", args) for regex in allowed_args]):
-                response = controller.msg(line.strip())
+                response = controller.msg(line)
                 respond(response.raw_content())
             else:
                 respond("510 Command filtered\r\n")
