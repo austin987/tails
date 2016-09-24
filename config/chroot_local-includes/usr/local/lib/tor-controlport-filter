@@ -50,30 +50,28 @@ def handle_controlport_session(controller, readh, writeh):
 
     subscribed_event_listeners = []
 
-    # Keep accepting commands
     while True:
-        # Read in a newline terminated line
         line = str(readh.readline(MAX_LINESIZE), 'ascii')
 
         if not line: break
 
         def line_matches_command(cmd):
-            # The control port language does not care about case
-            # for commands.
+            # The control port language does not care about case for
+            # commands.
             return re.match(r"^%s\b" % cmd, line, re.IGNORECASE)
 
         # Check what it is
         if line_matches_command("PROTOCOLINFO"):
-            # Stem call PROTOCOLINFO before authenticating
-            # Tell the client that there is no authentication
+            # Stem call PROTOCOLINFO before authenticating. Tell the
+            # client that there is no authentication.
             respond("250-PROTOCOLINFO 1\r\n")
             respond("250-AUTH METHODS=NULL\r\n")
             respond("250-VERSION Tor=\"{}\"\r\n".format(controller.get_version()))
             respond("250 OK\r\n")
 
         elif line_matches_command("AUTHENTICATE"):
-            # Don't check authentication, since only
-            # safe commands are allowed
+            # We have already authenticated, and the filtered port is
+            # access-restricted to the allowed users via the firewall.
             respond("250 OK\r\n")
 
         # The client will be fooled that it is subscribing to all
