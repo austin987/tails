@@ -97,14 +97,8 @@ def handle_controlport_session(controller, readh, writeh):
             cmd_allowed = False
             cmd, _, args = line.strip().partition(' ')
             cmd = cmd.upper()
-            if cmd in ALLOWED_COMMANDS:
-                allowed_args = ALLOWED_COMMANDS[cmd]
-                if args == "":
-                    if None in allowed_args:
-                        cmd_allowed = True
-                else:
-                    cmd_allowed = any([re.match(args_regex + "$", args) for args_regex in allowed_args])
-            if cmd_allowed:
+            allowed_args = ALLOWED_COMMANDS.get(cmd, [])
+            if any([re.match(regex + "$", args) for regex in allowed_args]):
                 response = controller.msg(line.strip())
                 respond(response.raw_content())
             else:
