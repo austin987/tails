@@ -44,8 +44,9 @@ class UnexpectedAnswer(Exception):
         return "[UnexpectedAnswer] " + self.msg
 
 def handle_controlport_session(controller, readh, writeh):
-    def respond(line):
+    def respond(line, raw = False):
         writeh.write(bytes(line, 'ascii'))
+        if not raw: writeh.write(bytes("\r\n", 'ascii'))
         writeh.flush()
 
     subscribed_event_listeners = []
@@ -64,15 +65,15 @@ def handle_controlport_session(controller, readh, writeh):
         if line_matches_command("PROTOCOLINFO"):
             # Stem call PROTOCOLINFO before authenticating. Tell the
             # client that there is no authentication.
-            respond("250-PROTOCOLINFO 1\r\n")
-            respond("250-AUTH METHODS=NULL\r\n")
-            respond("250-VERSION Tor=\"{}\"\r\n".format(controller.get_version()))
-            respond("250 OK\r\n")
+            respond("250-PROTOCOLINFO 1")
+            respond("250-AUTH METHODS=NULL")
+            respond("250-VERSION Tor=\"{}\"".format(controller.get_version()))
+            respond("250 OK")
 
         elif line_matches_command("AUTHENTICATE"):
             # We have already authenticated, and the filtered port is
             # access-restricted to the allowed users via the firewall.
-            respond("250 OK\r\n")
+            respond("250 OK")
 
         # The client will be fooled that it is subscribing to all
         # events it requested, but we will only let through allowed
@@ -86,12 +87,12 @@ def handle_controlport_session(controller, readh, writeh):
                             respond(event.raw_content())
                         controller.add_event_listener(event_cb, ALLOWED_EVENTS[event])
                         subscribed_event_listeners.append(event_cb)
-                respond("250 OK\r\n")
+                respond("250 OK")
             else:
                 for listener in subscribed_event_listeners:
                     controller.remove_event_listener(listener)
                 subscribed_event_listeners = []
-                respond("250 OK\r\n")
+                respond("250 OK")
 
         else:
             cmd_allowed = False
@@ -100,9 +101,9 @@ def handle_controlport_session(controller, readh, writeh):
             allowed_args = ALLOWED_COMMANDS.get(cmd, [])
             if any([re.match(regex + "$", args) for regex in allowed_args]):
                 response = controller.msg(line)
-                respond(response.raw_content())
+                respond(response.raw_content(), raw = True)
             else:
-                respond("510 Command filtered\r\n")
+                respond("510 Command filtered")
 
 
 class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
