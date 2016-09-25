@@ -64,6 +64,10 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             # access-restricted to the allowed users via the firewall.
             respond("250 OK")
 
+        elif line_matches_command("QUIT"):
+            respond("250 closing connection")
+            break
+
         # The client will be fooled that it is subscribing to all
         # events it requested, but we will only let through allowed
         # events.
