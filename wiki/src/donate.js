@@ -51,4 +51,9 @@ $(document).ready(function(){
     $('#amount, #a3').val(newvalue);
   });
 
+  // Reset custom amount when anything else is clicked
+  $('.amounts .btn').on('click', function () {
+    $('#other-dollar, #other-euro').val('');
+  });
+
 });
