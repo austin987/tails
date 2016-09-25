@@ -76,7 +76,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                     event = event.upper()
                     if event in allowed_events:
                         def event_cb(event):
-                            respond(event.raw_content())
+                            respond(event.raw_content(), raw = True)
                         controller.add_event_listener(event_cb, getattr(EventType, event))
                         subscribed_event_listeners.append(event_cb)
                 respond("250 OK")
