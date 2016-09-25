@@ -71,6 +71,9 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             events = line.split(' ')[1:]
             if len(events) > 0:
                 for event in events:
+                    # The control language doesn't care about case for
+                    # the event type.
+                    event = event.upper()
                     if event in allowed_events:
                         def event_cb(event):
                             respond(event.raw_content())
