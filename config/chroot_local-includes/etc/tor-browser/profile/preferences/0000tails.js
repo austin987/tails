@@ -10,14 +10,6 @@ pref("extensions.torbutton.use_privoxy", false);
 
 // Tails-specific configuration below
 
-// Disable the Tor Browser's per-tab circuit view. It demands more
-// from the Tor control port than our tor-controlport-filter currently
-// handles (concurrent, asynchronous connections). Besides, not
-// exposing the stream/circuit level info to the browser (or user
-// running as the browser) is a nice hardening feature, and part of
-// why we introduced the control port filter in the first place.
-pref("extensions.torbutton.display_circuit", false);
-
 // Since the slider notification will be shown everytime at each Tails
 // boot, which is bad (nagging) UX, we disable it.
 pref("extensions.torbutton.show_slider_notification", false);
