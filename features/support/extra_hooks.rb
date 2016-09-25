@@ -169,6 +169,7 @@ AfterConfiguration do |config|
   extra_hooks = [
     ['ExtraFormatters::ExtraHooks', '/dev/null'],
     ['Cucumber::Formatter::Pretty', "#{ARTIFACTS_DIR}/pretty.log"],
+    ['Cucumber::Formatter::Json', "#{ARTIFACTS_DIR}/cucumber.json"],
     ['ExtraFormatters::PrettyDebug', "#{ARTIFACTS_DIR}/debug.log"],
   ]
   extra_hooks.each do |hook|
