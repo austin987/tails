@@ -1,69 +1,81 @@
-$(document).ready(function(){
-  $('.btn-group label, .amounts .btn').click( function(){
-    $(this).parent().find('label').removeClass('active');
-    $(this).addClass('active');
-  });
+document.addEventListener('DOMContentLoaded', function() {
 
-  // Append anchor at the end of return and cancel_return page.
-  // This will allow calculating conversion rates and failures from different sources.
-  $('#paypal-with-js .return-url').each(function() {
-    $(this).val($(this).val().concat(window.location.hash));
-  });
+  function hide(elm) {
+    elm.style.display = "hide";
+  }
+
+  function show(elm) {
+      elm.style.display = "block";
+  }
+
+  function toggle(elm, mode) {
+    for(var i = 0; i < elm.length; i++) {
+      if(mode == "hide") {
+        hide(elm[i]);
+      } else {
+        show(elm[i]);
+      }
+    }
+  }
 
   // Show version with JavaScript
-  $('#paypal-with-js').show();
-  $('#paypal-without-js').hide();
+  show(document.getElementById('paypal-with-js'));
+  hide(document.getElementById('paypal-without-js'));
 
-  // Default donation is in $
-  $('.donate-dollars').show();
-  $('.donate-euros').hide();
+  // default donation is in $
+  toggle(document.getElementsByClassName('donate-dollars'), "show");
+  toggle(document.getElementsByClassName('donate-euros'), "hide");
 
   // Toggle between Zwiebelfreunde and Riseup Labs
-  $('#currency-dollar').click(function () {
-    $('.donate-dollars').show();
-    $('.donate-euros').hide();
-    $('#dollar-amounts .btn').first().trigger('click');
-    $('#business').val('tailsriseuplabs@riseup.net');
-    $('#currency_code').val('USD');
-  });
-  $('#currency-euro').click(function () {
-    $('.donate-dollars').hide();
-    $('.donate-euros').show();
-    $('#euro-amounts .btn').first().trigger('click');
-    $('#business').val('tails@torservers.net');
-    $('#currency_code').val('EUR');
-  });
+  document.getElementById("currency-dollar").onclick = function() {
+    toggle(document.getElementsByClassName('donate-dollars'), "show");
+    toggle(document.getElementsByClassName('donate-euros'), "hide");
+    document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
+    document.getElementById('currency_code').value = 'USD';
+  }
+
+  document.getElementById("currency-euro").onclick = function() {
+    toggle(document.getElementsByClassName('donate-dollars'), "hide");
+    toggle(document.getElementsByClassName('donate-euros'), "show");
+    document.getElementById('business').value = 'tails@torservers.net';
+    document.getElementById('currency_code').value = 'EUR';
+  }
 
   // Toggle between one-time donation and recurring donation
-  $('#one-time').click(function () {
-    $('#cmd').val('_donations');
-    $('#t3').val('');
-  });
-  $('#monthly').click(function () {
-    $('#cmd').val('_xclick-subscriptions');
-    $('#t3').val('M');
-  });
-  $('#yearly').click(function () {
-    $('#cmd').val('_xclick-subscriptions');
-    $('#t3').val('Y');
-  });
+  document.getElementById("one-time").onclick = function() {
+    document.getElementById('cmd').value = '_donations';
+    document.getElementById('t3').value = '';
+  }
+  document.getElementById("monthly").onclick = function() {
+    document.getElementById('cmd').value = '_xclick-subscriptions';
+    document.getElementById('t3').value = 'M';
+  }
+  document.getElementById("yearly").onclick = function() {
+    document.getElementById('cmd').value = '_xclick-subscriptions';
+    document.getElementById('t3').value = 'Y';
+  }
 
-  // Set the amounts for PayPal to the value of the radio button that gets clicked
-  $('.amounts .btn').on('click change', function () {
-    let newvalue = parseInt($(this).find('input').val());
-    if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
-    $('#amount, #a3').val(newvalue);
-  });
-
-  // Reset custom amount when anything else is clicked
-  $('.amounts .btn').on('click', function () {
-    $('#other-dollar, #other-euro').val('');
-  });
-
-  // Change the color of custom amount when clicked
-  $('#other-dollar, #other-euro').on('click change', function () {
-    $('.amounts .btn').removeClass('active');
-    $('.amounts .other').addClass('active');
-  });
-
+  // toggle buttons
+  var element = document.getElementsByClassName('btn');
+  for (let i = 0; i < element.length; i++) {
+    element[i].addEventListener('click', function() {
+      var siblings = element[i].parentNode.querySelectorAll('label');
+      for (let j = 0; j < siblings.length; j++) {
+        siblings[j].classList.remove('active');
+      }
+      this.classList.add('active');
+    });
+  }
+  // fixme: add event listener change
+  // change global values
+  var belement = document.getElementsByClassName('btn-amount');
+  for (let i = 0; i < belement.length; i++) {
+    belement[i].addEventListener('click', function() {
+      let newvalue = parseInt(belement[i].querySelector('input').value);
+      console.log(newvalue);
+      if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
+      document.getElementById('a3').value = newvalue;
+      document.getElementById('amount').value = newvalue;
+    });
+  }
 });
