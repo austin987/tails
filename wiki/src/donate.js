@@ -66,12 +66,15 @@ document.addEventListener('DOMContentLoaded', function() {
       this.classList.add('active');
     });
   }
+
   // fixme: add event listener change
-  // change global values
+  // change donation values
+	var defaultvalue = 5;
   var belement = document.getElementsByClassName('btn-amount');
   for (let i = 0; i < belement.length; i++) {
     belement[i].addEventListener('click', function() {
       let newvalue = parseInt(belement[i].querySelector('input').value);
+      if(newvalue === undefined || newvalue < 0) { newvalue = defaultvalue; }
       console.log(newvalue);
       if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
       document.getElementById('a3').value = newvalue;
