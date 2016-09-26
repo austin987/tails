@@ -75,8 +75,13 @@ document.addEventListener('DOMContentLoaded', function() {
     belement[i].addEventListener('click', function() {
       let newvalue = parseInt(belement[i].querySelector('input').value);
       if(newvalue === undefined || newvalue < 0) { newvalue = defaultvalue; }
-      console.log(newvalue);
-      if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
+      document.getElementById('a3').value = newvalue;
+      document.getElementById('amount').value = newvalue;
+    });
+
+    belement[i].addEventListener('change', function() {
+      let newvalue = parseInt(belement[i].querySelector('input').value);
+      if(newvalue === undefined || newvalue < 0) { newvalue = defaultvalue; }
       document.getElementById('a3').value = newvalue;
       document.getElementById('amount').value = newvalue;
     });
