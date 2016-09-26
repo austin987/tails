@@ -130,9 +130,9 @@ Extension's toggles
 }
 
 [data-phase^="download"] #download-button,
-[data-phase^="started"] #bittorrent-minor,
-[data-phase^="download"] #bittorrent-minor,
-[data-phase^="verify"] #bittorrent-minor,
+[data-phase^="started"] #download-minor,
+[data-phase^="download"] #download-minor,
+[data-phase^="verify"] #download-minor,
 [data-phase^="verif"] #download-button,
 [data-phase^="verif"] #download-eta,
 [data-phase^="verif"] #download-progress
@@ -220,7 +220,7 @@ will give
 
 
 #download-button-state-retry {
-  padding: 10px;
+  padding: 10px !important;
 }
 
 p.direct-download {
@@ -281,13 +281,14 @@ html[data-phase^="verified"] #verify-text-calculating {
   font-size: 0.8em;
 }
 
-/* Wider extension div and with more space. */
+/* Left margin to prevent install-button::before to be in the gutter. */
 #download-and-verify {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   padding-top: 50px;
   padding-bottom: 50px;
+  padding-left: 20px;
 }
 
 /* Do not display background image on links. */
@@ -305,22 +306,27 @@ html[data-phase^="verified"] #verify-text-calculating {
 }
 
 
-/* Show and Hide bittorent link. */
+/* Show and hide BitTorrent and OpenPGP links. */
 
-#bittorrent-minor {
+#download-minor {
   display: none !important;
   margin-top: 1em;
 }
 
-#bittorrent-minor p:first-child {
+#download-minor p:first-child {
   margin-left: 1.2em;
+  margin-bottom: 0em;
 }
 
-html:not([data-phase]) #bittorrent-minor {
+#install {
+  margin-bottom: 1em;
+}
+
+html:not([data-phase]) #download-minor {
   display: block !important;
 }
 
-html[data-phase="ready"] #bittorrent-minor {
+html[data-phase="ready"] #download-minor {
   display: block !important;
 }
 
@@ -452,16 +458,16 @@ html:not([data-phase="verified"]) #verify-text-state {
   display: none;
 }
 
-#download-again {
+.download-again {
   float: right;
 }
 
-a#download-again  {
+a.download-again  {
   color: darkgrey;
   border: none;
 }
 
-a#download-again:hover {
+a.download-again:hover {
   text-decoration: underline;
 }
 
@@ -478,5 +484,9 @@ html:not([data-phase="verified"]) #downloaded-path {
 }
 
 #download[data-state="failed"] #download-message-failed {
+  display: block !important;
+}
+
+#download[data-state="failed"] #download-text-failed {
   display: none !important;
 }
