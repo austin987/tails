@@ -14,7 +14,7 @@ $(document).ready(function(){
   $('#paypal-with-js').show();
   $('#paypal-without-js').hide();
 
-  // default donation is in $
+  // Default donation is in $
   $('.donate-dollars').show();
   $('.donate-euros').hide();
 
@@ -23,35 +23,47 @@ $(document).ready(function(){
     $('.donate-dollars').show();
     $('.donate-euros').hide();
     $('#dollar-amounts .btn').first().trigger('click');
-    document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
-    document.getElementById('currency_code').value = 'USD';
+    $('#business').val('tailsriseuplabs@riseup.net');
+    $('#currency_code').val('USD');
   });
   $('#currency-euro').click(function () {
     $('.donate-dollars').hide();
     $('.donate-euros').show();
     $('#euro-amounts .btn').first().trigger('click');
-    document.getElementById('business').value = 'tails@torservers.net';
-    document.getElementById('currency_code').value = 'EUR';
+    $('#business').val('tails@torservers.net');
+    $('#currency_code').val('EUR');
   });
 
   // Toggle between one-time donation and recurring donation
   $('#one-time').click(function () {
-    document.getElementById('cmd').value = '_donations';
-    document.getElementById('t3').value = '';
+    $('#cmd').val('_donations');
+    $('#t3').val('');
   });
   $('#monthly').click(function () {
-    document.getElementById('cmd').value = '_xclick-subscriptions';
-    document.getElementById('t3').value = 'M';
+    $('#cmd').val('_xclick-subscriptions');
+    $('#t3').val('M');
   });
   $('#yearly').click(function () {
-    document.getElementById('cmd').value = '_xclick-subscriptions';
-    document.getElementById('t3').value = 'Y';
+    $('#cmd').val('_xclick-subscriptions');
+    $('#t3').val('Y');
   });
 
+  // Set the amounts for PayPal to the value of the radio button that gets clicked
   $('.amounts .btn').on('click change', function () {
     let newvalue = parseInt($(this).find('input').val());
     if(newvalue === undefined || newvalue < 0) { newvalue = 1; }
     $('#amount, #a3').val(newvalue);
+  });
+
+  // Reset custom amount when anything else is clicked
+  $('.amounts .btn').on('click', function () {
+    $('#other-dollar, #other-euro').val('');
+  });
+
+  // Change the color of custom amount when clicked
+  $('#other-dollar, #other-euro').on('click change', function () {
+    $('.amounts .btn').removeClass('active');
+    $('.amounts .other').addClass('active');
   });
 
 });
