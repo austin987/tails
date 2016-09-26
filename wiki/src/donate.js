@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('t3').value = 'Y';
   }
 
-  // toggle buttons
+  // toggle button groups
   var element = document.getElementsByClassName('btn');
   for (let i = 0; i < element.length; i++) {
     element[i].addEventListener('click', function() {
