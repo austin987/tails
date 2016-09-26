@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 
   function hide(elm) {
-    elm.style.display = "hide";
+    elm.style.display = "none";
   }
 
   function show(elm) {
