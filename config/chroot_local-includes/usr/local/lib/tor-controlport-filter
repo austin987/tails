@@ -18,9 +18,8 @@ import re
 import psutil
 import yaml
 import glob
-
-from stem.control import Controller, EventType
-from stem import SocketError
+import stem
+import stem.control
 
 # Limit the length of a line, to prevent DoS attacks trying to
 # crash this filter proxy by sending infinitely long lines.
@@ -81,7 +80,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                     if event in allowed_events:
                         def event_cb(event):
                             respond(event.raw_content(), raw = True)
-                        controller.add_event_listener(event_cb, getattr(EventType, event))
+                        controller.add_event_listener(event_cb, getattr(stem.control.EventType, event))
                         subscribed_event_listeners.append(event_cb)
                 respond("250 OK")
             else:
@@ -117,10 +116,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             cookie = f.read(32)
 
         # Connect to the real control port
-        controller = Controller.from_socket_file("/var/run/tor/control")
+        controller = stem.control.Controller.from_socket_file("/var/run/tor/control")
         try:
             controller.authenticate(cookie)
-        except SocketError:
+        except stem.SocketError:
             raise UnexpectedAnswer("AUTHENTICATE failed")
 
         return controller
