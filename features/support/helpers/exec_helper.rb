@@ -37,16 +37,7 @@ class VMCommand
     socket.puts(JSON.dump([id, type, options[:user], cmd]))
     loop do
       s = socket.readline(sep = "\0").chomp("\0")
-      begin
-        response_id, *rest = JSON.load(s)
-      rescue JSON::ParserError
-        # The server often returns something unparsable for the very
-        # first execute() command issued after a VM start/restore
-        # (generally from wait_until_remote_shell_is_up()) presumably
-        # because the TCP -> serial link isn't properly setup yet. All
-        # will be well after that initial hickup, so we just retry.
-        return VMCommand.execute(vm, cmd, options)
-      end
+      response_id, *rest = JSON.load(s)
       if response_id == id
         debug_log("#{type} returned: #{s}") if not(options[:spawn])
         return rest
