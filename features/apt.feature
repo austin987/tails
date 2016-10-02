@@ -11,14 +11,12 @@ Feature: Installing packages through APT
   Scenario: APT sources are configured correctly
     Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,deb.tails.boum.org,deb.torproject.org"
 
-  #10496: apt-get scenarios are fragile
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Install packages using apt
     When I update APT using apt
     Then I should be able to install a package using apt
 
-  #10441: Synaptic test is fragile
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Install packages using Synaptic
     When I start Synaptic
     And I update APT using Synaptic

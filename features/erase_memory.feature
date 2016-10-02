@@ -20,8 +20,6 @@ Feature: System memory erasure on shutdown
     And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
-  #10776
-  @fragile
   Scenario: Memory erasure on a modern computer
     Given a computer
     And the computer is a modern 64-bit system
@@ -44,7 +42,7 @@ Feature: System memory erasure on shutdown
     And I set Tails to boot with options "debug=wipemem"
     And I start Tails from DVD with network unplugged and I login
     Then the non-PAE kernel is running
-    And at least 3500 MiB of RAM was detected
+    And at least 3 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
     And udev-watchdog is monitoring the correct device
@@ -53,8 +51,6 @@ Feature: System memory erasure on shutdown
     And I stop the boot at the bootloader menu
     Then I find many patterns in the guest's memory
 
-  #10776
-  @fragile
   Scenario: Memory erasure on an old computer
     Given a computer
     And the computer is an old pentium without the PAE extension
@@ -62,7 +58,7 @@ Feature: System memory erasure on shutdown
     And I set Tails to boot with options "debug=wipemem"
     And I start Tails from DVD with network unplugged and I login
     And the non-PAE kernel is running
-    And at least 3500 MiB of RAM was detected
+    And at least 3 GiB of RAM was detected
     And process "memlockd" is running
     And process "udev-watchdog" is running
     And udev-watchdog is monitoring the correct device
