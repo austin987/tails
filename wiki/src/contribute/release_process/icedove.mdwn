@@ -1,0 +1,67 @@
+[[!meta title="Releasing Icedove"]]
+
+Until we have
+[[!tails_ticket 6156 desc="upstreamed our secure autoconfiguration patches"]]
+we have to maintain Icedove ourselves. This means we need to
+[track](https://tracker.debian.org/pkg/icedove) new versions hitting
+Debian Stable.
+
+The first time you do this requires some additional steps (WARNING!
+this will download almost 2 GiB of data):
+
+1. Clone [Tails' Icedove repo](http://git.tails.boum.org/icedove/).
+
+1. Add a remote for Debian:
+
+        git remote add debian-upstream git://anonscm.debian.org/pkg-mozilla/icedove.git
+
+Let's pretend the scenario is that Icedove 45.3.0-1 has just been
+released:
+
+    VERSION=45.3.0-1
+    TAG=debian/1%${VERSION}_deb8u1
+
+1. `git fetch && git fetch debian-upstream`
+
+1. Verify the tag (expected to have been made with the key
+   8B94 819C 2555 70A3 74B6 2CCD 26E3 C875 A744 20EF):
+
+        git tag -v "${TAG}"
+
+1. Update `pristine-tar` to `debian`'s:
+
+        git checkout pristine-tar && git merge origin/pristine-tar
+        git merge debian/pristine-tar
+
+1. Let's update our branch to the new version:
+
+        git checkout tails/jessie && git merge origin/tails/jessie
+        git merge --no-edit "${TAG}"
+
+   Now you most likely will have to deal with a merge conflict in
+   debian/changelog -- just reorder the entries chronologically. Then
+   let's release a new version:
+
+        TAILS_VERSION="1:${VERSION}~deb8u1+tails1"
+        DISTRIBUTION="feature-icedove-${VERSION}"
+        dch --newversion "${TAILS_VERSION}" --force-bad-version  \
+            --distribution "${DISTRIBUTION}" --force-distribution \
+            "Rebuild Icedove with Tails' secure autoconfiguration patches."
+        git commit debian/changelog \
+            -m "document changes and release ${TAILS_VERSION}"
+        gbp buildpackage --git-debian-branch=tails/jessie \
+            --git-sign-tags --git-tag-only
+
+1. Build packages:
+
+        gbp buildpackage --git-debian-branch=tails/jessie
+
+1. Git push and upload packages:
+
+        git push origin "${TAG}" tails/jessie pristine-tar
+        debsign "${CHANGES_FILE}"
+        dupload --to tails "${CHANGES_FILE}"
+
+   At the moment pushing `TAG` may fail due to
+   [[!tails_ticket 11531]]. We'll just have to save these tags locally
+   until when it's solved, and then push...
