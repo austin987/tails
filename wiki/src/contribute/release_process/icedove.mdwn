@@ -28,11 +28,6 @@ released:
 
         git tag -v "${TAG}"
 
-1. Update `pristine-tar` to `debian`'s:
-
-        git checkout pristine-tar && git merge origin/pristine-tar
-        git merge debian/pristine-tar
-
 1. Let's update our branch to the new version:
 
         git checkout tails/jessie && git merge origin/tails/jessie
@@ -52,13 +47,28 @@ released:
         gbp buildpackage --git-debian-branch=tails/jessie \
             --git-sign-tags --git-tag-only
 
+1. Fetch the Debian sources to be used for the build:
+
+        ICEDOVE_SOURCES="$(mktemp -d)"
+        GIT_DIR="$(pwd)"
+        cd "${ICEDOVE_SOURCES}" && \
+        apt source icedove="1:${VERSION}" && \
+        cp icedove_*.orig*.tar.xz "${GIT_DIR}/.." && \
+        cd "${GIT_DIR}" && \
+        rm -r "${ICEDOVE_SOURCES}"
+
+   Note: we cannot use the `pristine-tar` branch since Jessie builds
+   expect split .orig sources for l10n stuff, which is not the case in
+   Sid, which `pristine-tar` is made for. Or something like
+   this. Let's not waste time on investigating this.
+
 1. Build packages:
 
         gbp buildpackage --git-debian-branch=tails/jessie
 
 1. Git push and upload packages:
 
-        git push origin "${TAG}" tails/jessie pristine-tar
+        git push origin "${TAG}" tails/jessie
         debsign "${CHANGES_FILE}"
         dupload --to tails "${CHANGES_FILE}"
 
