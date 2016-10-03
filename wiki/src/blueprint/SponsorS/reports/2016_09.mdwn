@@ -44,17 +44,32 @@ XXX
 
 ## B.3. Extend the coverage of our test suite
 
-- B.3.11. Fix newly identified issues to make our test suite more robust and faster
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
 
-XXX
+Our automated test suite depends on that Tails is started with a
+special kernel command-line option entered in the boot menu. This is
+done by pressing the TAB key before the menu's timeout starts Tails
+with the default options suitable for real use -- if this happens, the
+tests will later fail. However, at this stage we can only depend on
+what is shown on the screen and sometimes (presumably when the host
+running the test suite is under heavy load) the software we use to
+find images on the screen is not fast enough, resulting in
+failure. Making this part robust is particularly important since it
+can make *any* test fail.
 
-- B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
+This lead us to a rather involved work around essentially emulating a
+user repeatedly pressing the required key, ensuring that the timeout
+at the boot menu will never happen. But if it happens any way, we will
+detect that and reboot, and try again. ([[!tails_ticket 10777]])
 
-XXX
+### B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
 
-- B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
+This work has been implemented, and is waiting for testing and a code
+review.
 
-XXX
+### B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
+
+This work has been merged, so this deliverable is now completed.
 
 ## B.4. Freezable APT repository
 
