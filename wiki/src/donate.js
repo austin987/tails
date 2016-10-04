@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     toggle(document.getElementsByClassName('donate-euros'), "hide");
     document.getElementById('business').value = 'tailsriseuplabs@riseup.net';
     document.getElementById('currency_code').value = 'USD';
+    document.getElementById('other-euro').value = "";
   }
 
   document.getElementById("currency-euro").onclick = function() {
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     toggle(document.getElementsByClassName('donate-euros'), "show");
     document.getElementById('business').value = 'tails@torservers.net';
     document.getElementById('currency_code').value = 'EUR';
+    document.getElementById('other-dollar').value = "";
   }
 
   // Toggle between one-time donation and recurring donation
@@ -76,6 +78,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if(newvalue === undefined || newvalue < 0) { newvalue = defaultvalue; }
       document.getElementById('a3').value = newvalue;
       document.getElementById('amount').value = newvalue;
+      document.getElementById('other-euro').value = "";
+      document.getElementById('other-dollar').value = "";
     });
 
     belement[i].addEventListener('change', function() {
