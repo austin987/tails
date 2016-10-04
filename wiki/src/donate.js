@@ -67,9 +67,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // fixme: add event listener change
-  // change donation values
-	var defaultvalue = 5;
+  // change donation values on change and on click
+  var defaultvalue = 5;
   var belement = document.getElementsByClassName('btn-amount');
   for (let i = 0; i < belement.length; i++) {
     belement[i].addEventListener('click', function() {
