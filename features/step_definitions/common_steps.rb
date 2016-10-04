@@ -164,6 +164,11 @@ Given /^the network is unplugged$/ do
   $vm.unplug_network
 end
 
+Given /^the network connection is ready(?: within (\d+) seconds)?$/ do |timeout|
+  timeout ||= 30
+  try_for(timeout.to_i) { $vm.has_network? }
+end
+
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
   $vm.set_hardware_clock(DateTime.parse(time).to_time)
 end
@@ -336,7 +341,7 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
   step 'Tails is at the boot menu' + (reboot ? ' after rebooting' : '')
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
-  @screen.wait('TailsGreeter.png', 30*60)
+  @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
   step 'I configure Tails to use a simulated Tor network'
@@ -963,4 +968,20 @@ When /^I eject the boot medium$/ do
   else
     raise "Unsupported medium type '#{dev_type}' for boot device '#{dev}'"
   end
+end
+
+Given /^Tails is fooled to think it is running version (.+)$/ do |version|
+  $vm.execute_successfully(
+    "sed -i " +
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
+    "/etc/os-release"
+  )
+end
+
+Then /^Tails is running version (.+)$/ do |version|
+  v1 = $vm.execute_successfully('tails-version').stdout.split.first
+  assert_equal(version, v1, "The version doesn't match tails-version's output")
+  v2 = $vm.file_content('/etc/os-release')
+       .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
+  assert_equal(version, v2, "The version doesn't match /etc/os-release")
 end
