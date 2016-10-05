@@ -844,7 +844,13 @@ To prevent this, access to the Tor control port is only
 granted to the `root` and `tor-launcher` users, as well as to the
 members of the `debian-tor` group.
 A filtering proxy to the control port exists, so
-Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
+Torbutton still can perform safe commands like `SIGNAL NEWNYM`. It
+allows defining fine-grained access whitelists of commands (and their
+argunents) and events on a per-application basis, which can enforce
+rules like "this `$user` (e.g. `amnesia`) when running this
+`$application` (e.g. `/usr/bin/onionshare`) can only run these commands
+(`ADD_ONION` etc.) and listen to these events (e.g. `HS_DESC`, which is
+expected after a successfull use of `ADD_ONION`)".
 
 We disabled the default warning messages of Tor (`WarnPlaintextPorts`)
 when connecting to ports 110 (POP3) and 143 (IMAP). These ports are used
@@ -853,6 +859,7 @@ providers recommend and even enforce StartTLS on these ports, the effect
 of these warnings were most of the time counterproductive as people had
 to click through needlessly scary security warnings.
 
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-controlport-filter.d/]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tor-controlport-filter.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tor-controlport-filter]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
