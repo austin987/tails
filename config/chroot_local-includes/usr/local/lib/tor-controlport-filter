@@ -1,17 +1,13 @@
 #!/usr/bin/python3
 
-# Tor control port filter proxy, only white-listing SIGNAL NEWNYM,
-# ADD_ONION, and DEL_ONION.
-
-# This filter proxy should allow Torbutton to request a
-# new Tor circuit, without exposing dangerous control requests
-# like "GETINFO address" to applications running as a local user.
-
-# If something goes wrong, an error code is returned, and
-# Torbutton will display a warning dialog that New Identity failed.
-
-# This filter proxy also allows software like OnionShare or Ricochet
-# to add and delete ephermeral hidden services.
+# This filter proxy allows fine-grained access whitelists of commands
+# (and their argunents) and events on a per-application basis. See the
+# definitions the filter actually uses in:
+#
+#     /etc/tor-controlport-filter.d/
+#
+# which are pretty self-explanatory as long as you understand the Tor
+# ControlPort language.
 
 import glob
 import psutil
