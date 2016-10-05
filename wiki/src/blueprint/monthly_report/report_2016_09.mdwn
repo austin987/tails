@@ -45,6 +45,60 @@ Code
 XXX: List important code work that is not covered already by the Release
      section (for example, the changes being worked on for the next version).
 
+Tor ControlPort filter improvements and OnionShare integration
+--------------------------------------------------------------
+
+These two things might seem unrelated but are mentioned together
+because the work on the latter required the former.
+
+Background: Tor's ControlPort has a rather large attack surface
+in case of a compromise as it exposes sensitive information and
+allows reconfiguring Tor to drastically reduce its
+effectiveness. However some applications require access to (some
+subset of) it to improve the user experience in very real ways,
+like showing which circuits are used for a tab in the Tor
+Browser, or for OnionShare to tell Tor to start the hidden
+service used to share files. The solution we've used in Tails has
+been to give most users access to a filtered version of the Tor
+ControlPort, which only expose "safe" commands.
+
+This filter has been very simplistic until now, as it essentially
+only exposed the `SIGNAL NEWNYM` command, to make Tor use new
+circuits. Because of the complexity to support
+events (asynchronisity) and [[!tails_ticket 9365 desc="potential
+security concerns of exposing Tor's stream/circuit state"]] we
+for instance disabled the per-tab circuit view in Tor Browser,
+and were forced to run onioncircuits as a separate user (than the
+normal `amnesia` user) with full access to the Tor ControlPort.
+Notably, it could not support OnionShare, and in fact had
+architectural-level limitations (e.g. not being able to handle
+multiple sessions at the same time).
+
+Now the filter solves all these problems, and more. Depending on
+the PID of the client (e.g. OnionShare) it will pick a filter
+defined (by us) specifically for that application. For instance,
+we can say that "this $user (e.g. `amnesia`) when running this
+$application (e.g. `/usr/bin/onionshare`) can only run these
+commands (`ADD_ONION` etc.) and listen to these
+events (e.g. `HSDESC`, which is expected after a successfull use
+of `ADD_ONION`)". This makes user-separation (which has UX
+issues, like loss of accessibility support) an obsolete security
+measure, and to benefit from it clients has to do nothing.
+
+So now we can expect (not 100% sure though!) OnionShare to be
+introduced in Tails 2.8, and with much improved security on the
+ControlPort filtering. Probably we'll also see TorBrowser's
+per-tab circuit view enabled in Tails, finally.
+
+It should be noted that: there is at least one other project that
+already has implemented this functionality,
+[Subgraph](https://subgraph.com/) with its
+[roflcoptor](https://github.com/subgraph/roflcoptor), which we
+probably should have put our efforts at instead, but let's say
+that it is our long-term goal on this front. At least our users
+will be able to enjoy these features in Tails much sooner, which
+is great in itself.
+
 Documentation and website
 =========================
 
