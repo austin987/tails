@@ -13,6 +13,7 @@ import argparse
 import glob
 import psutil
 import re
+import shlex
 import socketserver
 import stem
 import stem.control
@@ -63,6 +64,22 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         writeh.write(bytes(line, 'ascii'))
         if not raw: writeh.write(bytes("\r\n", 'ascii'))
         writeh.flush()
+
+    def is_line_allowed(line):
+        if global_args.complain: return True
+        cmd, _, args = line.partition(' ')
+        cmd = cmd.upper()
+        allowed_args = allowed_commands.get(cmd, [])
+        return any(re.match(regex + "$", args) for regex in allowed_args)
+
+    def proxy_line(line):
+        if global_args.complain: print("-> {}".format(line))
+        response = controller.msg(line)
+        respond(response.raw_content(), raw = True)
+
+    def filter_line(line):
+        print("Command filtered: {}".format(line))
+        respond("510 Command filtered")
 
     subscribed_event_listeners = []
 
@@ -118,18 +135,28 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 subscribed_event_listeners = []
                 respond("250 OK")
 
-        else:
-            cmd, _, args = line.partition(' ')
-            cmd = cmd.upper()
-            allowed_args = allowed_commands.get(cmd, [])
-            if any(re.match(regex + "$", args) for regex in allowed_args) or \
-               global_args.complain:
-                if global_args.complain: print("-> {}".format(line))
-                response = controller.msg(line)
-                respond(response.raw_content(), raw = True)
+        # SETCONF can take multiple assignments, but let's allow
+        # listing them individually in the filter file.
+        elif line_matches_command("SETCONF"):
+            all_args_ok = True
+            for arg in shlex.split(line)[1:]:
+                if re.search(r'\s', arg):
+                    # Restore the quotes that shlex munched.
+                    k, _, v = arg.partition('=')
+                    arg = '{}="{}"'.format(k, v)
+                if not is_line_allowed("SETCONF {}".format(arg)):
+                    all_args_ok = False
+                    break
+            if all_args_ok:
+                proxy_line(line)
             else:
-                print("Command filtered: " + line)
-                respond("510 Command filtered")
+                filter_line(line)
+
+        else:
+            if is_line_allowed(line):
+                proxy_line(line)
+            else:
+                filter_line(line)
 
 
 class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
