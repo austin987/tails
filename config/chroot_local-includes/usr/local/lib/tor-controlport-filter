@@ -14,7 +14,6 @@ import glob
 import os.path
 import psutil
 import re
-import shlex
 import socketserver
 import stem
 import stem.control
@@ -89,13 +88,12 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
 
         if not line: break
 
-        def line_matches_command(cmd):
-            # The control port language does not care about case for
-            # commands.
-            return re.match(r"^%s\b" % cmd, line, re.IGNORECASE)
+        # This regex makes us split on unquoted whitespaces.
+        cmd, *args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', line)
+        cmd = cmd.upper()
 
         # Check what it is
-        if line_matches_command("PROTOCOLINFO"):
+        if cmd == "PROTOCOLINFO":
             # Stem call PROTOCOLINFO before authenticating. Tell the
             # client that there is no authentication.
             respond("250-PROTOCOLINFO 1")
@@ -103,22 +101,21 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             respond("250-VERSION Tor=\"{}\"".format(controller.get_version()))
             respond("250 OK")
 
-        elif line_matches_command("AUTHENTICATE"):
+        elif cmd == "AUTHENTICATE":
             # We have already authenticated, and the filtered port is
             # access-restricted to the allowed users via the firewall.
             respond("250 OK")
 
-        elif line_matches_command("QUIT"):
+        elif cmd == "QUIT":
             respond("250 closing connection")
             break
 
         # The client will be fooled that it is subscribing to all
         # events it requested, but we will only let through allowed
         # events.
-        elif line_matches_command("SETEVENTS") and not global_args.complain:
-            events = line.split(' ')[1:]
-            if len(events) > 0:
-                for event in events:
+        elif cmd == "SETEVENTS" and not global_args.complain:
+            if len(args) > 0:
+                for event in args:
                     # The control language doesn't care about case for
                     # the event type.
                     event = event.upper()
@@ -138,17 +135,8 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
 
         # SETCONF can take multiple assignments, but let's allow
         # listing them individually in the filter file.
-        elif line_matches_command("SETCONF"):
-            all_args_ok = True
-            for arg in shlex.split(line)[1:]:
-                if re.search(r'\s', arg):
-                    # Restore the quotes that shlex munched.
-                    k, _, v = arg.partition('=')
-                    arg = '{}="{}"'.format(k, v)
-                if not is_line_allowed("SETCONF {}".format(arg)):
-                    all_args_ok = False
-                    break
-            if all_args_ok:
+        elif cmd == "SETCONF":
+            if all(is_line_allowed("SETCONF {}".format(arg)) for arg in args):
                 proxy_line(line)
             else:
                 filter_line(line)
