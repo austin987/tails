@@ -33,11 +33,6 @@ global_args = None
 # crash this filter proxy by sending infinitely long lines.
 MAX_LINESIZE = 1024
 
-class UnexpectedAnswer(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-    def __str__(self):
-        return "[UnexpectedAnswer] " + self.msg
 
 def exe_path_of_pid(pid):
     # Here we leverage AppArmor's in-kernel solution for determining
@@ -169,10 +164,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         controller = stem.control.Controller.from_socket_file(
             global_args.control_socket_path
         )
-        try:
-            controller.authenticate(cookie)
-        except stem.SocketError:
-            raise UnexpectedAnswer("AUTHENTICATE failed")
+        controller.authenticate(cookie)
 
         return controller
 
