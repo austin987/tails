@@ -53,6 +53,7 @@ import re
 import socketserver
 import stem
 import stem.control
+import sys
 import yaml
 
 DEFAULT_LISTEN_PORT = 9051
@@ -68,6 +69,11 @@ global_args = None
 # Limit the length of a line, to prevent DoS attacks trying to
 # crash this filter proxy by sending infinitely long lines.
 MAX_LINESIZE = 1024
+
+
+def log(msg):
+    print(msg, file=sys.stderr)
+    sys.stderr.flush()
 
 
 def exe_path_of_pid(pid):
@@ -104,12 +110,12 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         return any(re.match(regex + "$", args) for regex in allowed_args)
 
     def proxy_line(line):
-        if global_args.complain: print("-> {}".format(line))
+        if global_args.complain: log("-> {}".format(line))
         response = controller.msg(line)
         respond(response.raw_content(), raw=True)
 
     def filter_line(line):
-        print("Command filtered: {}".format(line))
+        log("Command filtered: {}".format(line))
         respond("510 Command filtered")
 
     subscribed_event_listeners = []
@@ -224,8 +230,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             for key, expected_val in matchers:
                 if not key in filter_:
                     is_ok = False
-                    print("Filter '{}' lacks obligatory key '{}': skipping"
-                          .format(filter_['name'], key)
+                    log("Filter '{}' lacks obligatory key '{}': skipping"
+                        .format(filter_['name'], key)
                     )
                     break
                 if not any(val for val in filter_[key] \
@@ -249,8 +255,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             status = 'no matching filter found, using an empty one'
         else:
             status = 'loaded filter(s): {}'.format(", ".join(matched_filters))
-        print('{} (PID: {}, user: {}) connected: {}'
-              .format(client_exe_path, client_conn.pid, client_user, status)
+        log('{} (PID: {}, user: {}) connected: {}'
+            .format(client_exe_path, client_conn.pid, client_user, status)
         )
         controller = self.connect_to_real_control_port()
         disconnect_reason = "client quit"
@@ -262,9 +268,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             disconnect_reason = str(err)
         finally:
             controller.close()
-            print('{} (PID: {}, user: {}) disconnected: {}'
-                  .format(client_exe_path, client_conn.pid, client_user,
-                          disconnect_reason)
+            log('{} (PID: {}, user: {}) disconnected: {}'
+                .format(client_exe_path, client_conn.pid, client_user,
+                        disconnect_reason)
             )
 
 
@@ -296,8 +302,8 @@ def main():
         ("localhost", global_args.listen_port),
         FilteredControlPortProxyHandler
     )
-    print("Tor control port filter started, listening on {}"
-          .format(global_args.listen_port))
+    log("Tor control port filter started, listening on {}"
+        .format(global_args.listen_port))
     try:
         server.serve_forever()
     except KeyboardInterrupt:
