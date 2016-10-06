@@ -1,6 +1,6 @@
 // As suggested in TBB's start-tor-browser script for system-wide Tor
 // instances
-pref("extensions.torbutton.banned_ports", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9061,9062,9150,9052");
+pref("extensions.torbutton.banned_ports", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9061,9062,9150,9051");
 pref("extensions.torbutton.custom.socks_host", "127.0.0.1");
 pref("extensions.torbutton.custom.socks_port", 9150);
 pref("extensions.torbutton.launch_warning",  false);
@@ -44,7 +44,7 @@ pref("extensions.torbutton.startup", true);
 pref("extensions.torbutton.startup_state", 1);
 pref("extensions.torbutton.test_enabled", false); // Tails-specific
 pref("extensions.torbutton.tor_memory_jar", true);
-pref("extensions.torbutton.control_port", 9052);
+pref("extensions.torbutton.control_port", 9051);
 
 // These must be set to the same value to prevent Torbutton from
 // flashing its upgrade notification.
