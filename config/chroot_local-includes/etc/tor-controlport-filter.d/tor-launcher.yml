@@ -1,0 +1,30 @@
+---
+- match-exe-paths:
+    - '/usr/local/lib/tor-browser/firefox-unconfined'
+  commands:
+    SAVECONF:
+      - ''
+    GETINFO:
+      - 'status/bootstrap-phase'
+    GETCONF:
+      - 'UseBridges'
+      - 'Bridge'
+      - 'Socks4Proxy'
+      - 'Socks5Proxy'
+      - 'HTTPSProxy'
+    SETCONF:
+      - 'UseBridges(=.*)?'
+      - 'Bridge(=.*)?'
+      - 'Socks4Proxy(=.*)?'
+      - 'Socks5Proxy(=.*)?'
+      - 'Socks5ProxyUsername(=.*)?'
+      - 'Socks5ProxyPassword(=.*)?'
+      - 'HTTPSProxy(=.*)?'
+      - 'HTTPSProxyAuthenticator(=.*)?'
+      - 'ReachableAddresses(=.*)?'
+      - 'DisableNetwork=0'
+  events:
+    - 'STATUS_CLIENT'
+    - 'NOTICE'
+    - 'WARN'
+    - 'ERR'
