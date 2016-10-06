@@ -13,7 +13,6 @@ import glob
 import psutil
 import re
 import socketserver
-import subprocess
 import stem
 import stem.control
 import yaml
@@ -34,34 +33,18 @@ def exe_path_of_pid(pid):
     # interpreted script is running will just point to the
     # interpreter's binary, which is not fine-grained enough, but
     # AppArmor will be aware of which script is running for processes
-    # using one of its profiles.
-    p = subprocess.Popen(['/usr/sbin/aa-status', '--verbose'],
-                         stdout = subprocess.PIPE,
-                         stderr = subprocess.PIPE,
-                         shell = False)
-    stdout, _ = p.communicate()
-    returncode = p.returncode
-    assert(returncode == 0)
-    STATE_LOOKING_FOR_PROCS_SECTION = 0
-    STATE_FOUND_PROCS_SECTION = 1
-    parser_state = STATE_LOOKING_FOR_PROCS_SECTION
-    for line in str(stdout, 'UTF+8').split("\n"):
-        if parser_state == STATE_LOOKING_FOR_PROCS_SECTION:
-            if re.match(r'^\d+ processes ', line):
-                parser_state = STATE_FOUND_PROCS_SECTION
-        elif parser_state == STATE_FOUND_PROCS_SECTION:
-            match = re.match(r'^\s*(/.+)\s+\((\d+)\)\s*$', line)
-            if match:
-                proc_exe_path = match.group(1)
-                proc_pid = int(match.group(2))
-                if proc_pid == pid:
-                    return proc_exe_path
-            else:
-                parser_state = STATE_LOOKING_FOR_PROCS_SECTION
-    # If no AppArmor profile was found for the PID, we fallback to the
-    # executable according to procfs, which will be good enough for
-    # binaries but not interpreted scripts.
-    return psutil.Process(pid).exe()
+    # using one of its profiles. However, we fallback to /proc/pid/exe
+    # in case there is no AppArmor profile, so the only unsupported
+    # mode here is unconfined scripts.
+    aa_mode_re = r'(?:complain|enforce)'
+    enabled_aa_profile_re = r'^(/.+) \({}\)$'.format(aa_mode_re)
+    with open('/proc/{}/attr/current'.format(str(pid)), "rb") as fh:
+        aa_profile_status = str(fh.read().strip(), 'UTF-8')
+        exe_path_match = re.match(enabled_aa_profile_re, aa_profile_status)
+        if exe_path_match:
+            return exe_path_match.group(1)
+        else:
+            return psutil.Process(pid).exe()
 
 
 def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events):
