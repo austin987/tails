@@ -240,14 +240,19 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
               .format(client_exe_path, client_conn.pid, client_user, status)
         )
         controller = self.connect_to_real_control_port()
+        disconnect_reason = "client quit"
         try:
             handle_controlport_session(controller, self.rfile, self.wfile,
                                        allowed_commands, allowed_events)
-        except (ConnectionResetError, BrokenPipeError):
+        except (ConnectionResetError, BrokenPipeError) as err:
             # Handle clients disconnecting abruptly
-            pass
+            disconnect_reason = str(err)
         finally:
             controller.close()
+            print('{} (PID: {}, user: {}) disconnected: {}'
+                  .format(client_exe_path, client_conn.pid, client_user,
+                          disconnect_reason)
+            )
 
 
 def main():
