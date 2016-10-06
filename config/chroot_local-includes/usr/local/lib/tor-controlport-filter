@@ -9,6 +9,7 @@
 # which are pretty self-explanatory as long as you understand the Tor
 # ControlPort language.
 
+import argparse
 import glob
 import psutil
 import re
@@ -16,6 +17,16 @@ import socketserver
 import stem
 import stem.control
 import yaml
+
+DEFAULT_LISTEN_PORT = 9052
+DEFAULT_COOKIE_PATH = '/var/run/tor/control.authcookie'
+DEFAULT_CONTROL_SOCKET_PATH = '/var/run/tor/control'
+
+# This will store the arguments from argparse. We put it in the global
+# scope since it's awkward to extend socketserver so additional data
+# can be sent to the request handler, where we need access to the
+# arguments.
+global_args = None
 
 # Limit the length of a line, to prevent DoS attacks trying to
 # crash this filter proxy by sending infinitely long lines.
@@ -128,11 +139,11 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 
     def connect_to_real_control_port(self):
         # Read authentication cookie
-        with open("/var/run/tor/control.authcookie", "rb") as f:
+        with open(global_args.control_cookie_path, "rb") as f:
             cookie = f.read(32)
 
         # Connect to the real control port
-        controller = stem.control.Controller.from_socket_file("/var/run/tor/control")
+        controller = stem.control.Controller.from_socket_file(global_args.control_socket_path)
         try:
             controller.authenticate(cookie)
         except stem.SocketError:
@@ -154,10 +165,30 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 
 
 def main():
-    listen_port = 9052
-    server = socketserver.ThreadingTCPServer(("localhost", listen_port),
-                                             FilteredControlPortProxyHandler)
-    print("Tor control port filter started, listening on %d" % listen_port)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-p", "--listen-port",
+        type = int, metavar = 'PORT', default = DEFAULT_LISTEN_PORT,
+        help = "specifies the port on which the server listens " +
+               "(default: {})".format(DEFAULT_LISTEN_PORT))
+    parser.add_argument(
+        "-c", "--control-cookie-path",
+        type = str, metavar = 'PATH', default = DEFAULT_COOKIE_PATH,
+        help = "specifies the path to Tor's control authentication cookie " +
+               "(default: {})".format(DEFAULT_COOKIE_PATH))
+    parser.add_argument(
+        "-s", "--control-socket-path",
+        type = str, metavar = 'PATH', default = DEFAULT_CONTROL_SOCKET_PATH,
+        help = "specifies the path to Tor's control socket " +
+               "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH))
+    global global_args
+    global_args = parser.parse_args()
+    server = socketserver.ThreadingTCPServer(
+        ("localhost", global_args.listen_port),
+        FilteredControlPortProxyHandler
+    )
+    print("Tor control port filter started, listening on {}"
+          .format(global_args.listen_port))
     server.serve_forever()
 
 
