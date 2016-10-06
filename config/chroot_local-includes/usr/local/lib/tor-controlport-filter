@@ -97,7 +97,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         # The client will be fooled that it is subscribing to all
         # events it requested, but we will only let through allowed
         # events.
-        elif line_matches_command("SETEVENTS"):
+        elif line_matches_command("SETEVENTS") and not global_args.complain:
             events = line.split(' ')[1:]
             if len(events) > 0:
                 for event in events:
@@ -122,7 +122,9 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             cmd, _, args = line.partition(' ')
             cmd = cmd.upper()
             allowed_args = allowed_commands.get(cmd, [])
-            if any(re.match(regex + "$", args) for regex in allowed_args):
+            if any(re.match(regex + "$", args) for regex in allowed_args) or \
+               global_args.complain:
+                if global_args.complain: print("-> {}".format(line))
                 response = controller.msg(line)
                 respond(response.raw_content(), raw = True)
             else:
@@ -204,6 +206,11 @@ def main():
         type = str, metavar = 'PATH', default = DEFAULT_CONTROL_SOCKET_PATH,
         help = "specifies the path to Tor's control socket " +
                "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH))
+    parser.add_argument(
+        "--complain",
+        action = 'store_true', default = False,
+        help = "disables all filtering and just prints the commands sent " +
+               "by the client")
     global global_args
     global_args = parser.parse_args()
     server = socketserver.ThreadingTCPServer(
