@@ -109,24 +109,21 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         # events it requested, but we will only let through allowed
         # events.
         elif cmd == "SETEVENTS" and not global_args.complain:
-            if len(args) > 0:
-                for event in args:
-                    # The control language doesn't care about case for
-                    # the event type.
-                    event = event.upper()
-                    if event in allowed_events:
-                        def event_cb(event):
-                            respond(event.raw_content(), raw=True)
-                        controller.add_event_listener(
-                            event_cb, getattr(stem.control.EventType, event)
-                        )
-                        subscribed_event_listeners.append(event_cb)
-                respond("250 OK")
-            else:
-                for listener in subscribed_event_listeners:
-                    controller.remove_event_listener(listener)
-                subscribed_event_listeners = []
-                respond("250 OK")
+            for listener in subscribed_event_listeners:
+                controller.remove_event_listener(listener)
+            subscribed_event_listeners = []
+            for event in args:
+                # The control language doesn't care about case for
+                # the event type.
+                event = event.upper()
+                if event in allowed_events:
+                    def event_cb(event):
+                        respond(event.raw_content(), raw=True)
+                    controller.add_event_listener(
+                        event_cb, getattr(stem.control.EventType, event)
+                    )
+                    subscribed_event_listeners.append(event_cb)
+            respond("250 OK")
 
         # SETCONF can take multiple assignments, but let's allow
         # listing them individually in the filter file.
