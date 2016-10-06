@@ -243,6 +243,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         try:
             handle_controlport_session(controller, self.rfile, self.wfile,
                                        allowed_commands, allowed_events)
+        except (ConnectionResetError, BrokenPipeError):
+            # Handle clients disconnecting abruptly
+            pass
         finally:
             controller.close()
 
@@ -277,7 +280,10 @@ def main():
     )
     print("Tor control port filter started, listening on {}"
           .format(global_args.listen_port))
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
