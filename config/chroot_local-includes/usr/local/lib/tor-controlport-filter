@@ -60,7 +60,7 @@ def exe_path_of_pid(pid):
 
 
 def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events):
-    def respond(line, raw = False):
+    def respond(line, raw=False):
         writeh.write(bytes(line, 'ascii'))
         if not raw: writeh.write(bytes("\r\n", 'ascii'))
         writeh.flush()
@@ -75,7 +75,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
     def proxy_line(line):
         if global_args.complain: print("-> {}".format(line))
         response = controller.msg(line)
-        respond(response.raw_content(), raw = True)
+        respond(response.raw_content(), raw=True)
 
     def filter_line(line):
         print("Command filtered: {}".format(line))
@@ -121,7 +121,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                     event = event.upper()
                     if event in allowed_events:
                         def event_cb(event):
-                            respond(event.raw_content(), raw = True)
+                            respond(event.raw_content(), raw=True)
                         controller.add_event_listener(
                             event_cb, getattr(stem.control.EventType, event)
                         )
@@ -155,10 +155,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         self.filters = []
         for filter_file in glob.glob('/etc/tor-controlport-filter.d/*.yml'):
             with open(filter_file, "rb") as fh:
-                filter = yaml.load(fh.read())
-                name = re.sub('\.yml$', '', os.path.basename(filter_file))
-                filter[0]['name'] = name
-                self.filters += filter
+                filters = yaml.load(fh.read())
+                name = re.sub(r'\.yml$', '', os.path.basename(filter_file))
+                filters[0]['name'] = name
+                self.filters += filters
 
     def connect_to_real_control_port(self):
         # Read authentication cookie
@@ -190,36 +190,36 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         matched_filters = []
         allowed_commands = {}
         allowed_events = []
-        for filter in self.filters:
+        for filter_ in self.filters:
             is_ok = True
             matchers = [
                 ('match-exe-paths', client_exe_path),
                 ('match-users', client_user),
             ]
             for key, expected_val in matchers:
-                if not key in filter:
+                if not key in filter_:
                     is_ok = False
                     print("Filter '{}' lacks obligatory key '{}': skipping"
-                          .format(filter['name'], key)
+                          .format(filter_['name'], key)
                     )
                     break
-                if not any(val for val in filter[key] \
+                if not any(val for val in filter_[key] \
                            if expected_val == val or val == '*'):
                     is_ok = False
                     break
             if is_ok:
-                if 'commands' in filter:
+                if 'commands' in filter_:
                     # Instead of a simple dict.update(), which would
                     # overwrite existing values (i.e. the argument
                     # list from a previous filter) we merge the values
                     # in place, to combine multiple matched filters
                     # without loss.
-                    for key in filter['commands']:
+                    for key in filter_['commands']:
                         old = allowed_commands.get(key, [])
-                        new = filter['commands'][key]
+                        new = filter_['commands'][key]
                         allowed_commands[key] = old + new
-                allowed_events += filter.get('events', [])
-                matched_filters.append(filter['name'])
+                allowed_events += filter_.get('events', [])
+                matched_filters.append(filter_['name'])
         if matched_filters == []:
             status = 'no matching filter found, using an empty one'
         else:
@@ -247,24 +247,24 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-p", "--listen-port",
-        type = int, metavar = 'PORT', default = DEFAULT_LISTEN_PORT,
-        help = "specifies the port on which the server listens " +
-               "(default: {})".format(DEFAULT_LISTEN_PORT))
+        type=int, metavar='PORT', default=DEFAULT_LISTEN_PORT,
+        help="specifies the port on which the server listens " +
+             "(default: {})".format(DEFAULT_LISTEN_PORT))
     parser.add_argument(
         "-c", "--control-cookie-path",
-        type = str, metavar = 'PATH', default = DEFAULT_COOKIE_PATH,
-        help = "specifies the path to Tor's control authentication cookie " +
-               "(default: {})".format(DEFAULT_COOKIE_PATH))
+        type=str, metavar='PATH', default=DEFAULT_COOKIE_PATH,
+        help="specifies the path to Tor's control authentication cookie " +
+             "(default: {})".format(DEFAULT_COOKIE_PATH))
     parser.add_argument(
         "-s", "--control-socket-path",
-        type = str, metavar = 'PATH', default = DEFAULT_CONTROL_SOCKET_PATH,
-        help = "specifies the path to Tor's control socket " +
-               "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH))
+        type=str, metavar='PATH', default=DEFAULT_CONTROL_SOCKET_PATH,
+        help="specifies the path to Tor's control socket " +
+             "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH))
     parser.add_argument(
         "--complain",
-        action = 'store_true', default = False,
-        help = "disables all filtering and just prints the commands sent " +
-               "by the client")
+        action='store_true', default=False,
+        help="disables all filtering and just prints the commands sent " +
+             "by the client")
     global global_args
     global_args = parser.parse_args()
     server = socketserver.ThreadingTCPServer(
