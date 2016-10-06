@@ -1,13 +1,49 @@
 #!/usr/bin/python3
 
 # This filter proxy allows fine-grained access whitelists of commands
-# (and their argunents) and events on a per-application basis. See the
-# definitions the filter actually uses in:
+# (and their argunents) and events on a per-application basis, stored
+# in:
 #
 #     /etc/tor-controlport-filter.d/
 #
-# which are pretty self-explanatory as long as you understand the Tor
-# ControlPort language.
+# who are pretty self-explanatory as long as you understand the Tor
+# ControlPort language. The format is based on YAML where the
+# top-level is supposed to be a list, where each element looks like
+# this:
+#
+#     - match-exe-paths:
+#         - path_to_executable1
+#         - path_to_executable2
+#         ...
+#       match-users:
+#         - user1
+#         - user2
+#         ...
+#       commands:
+#         command1:
+#           - command1_arg1
+#           - command1_arg2
+#           ...
+#         command2:
+#           - command2_arg1
+#           - command2_arg2
+#           ...
+#         ...
+#       events:
+#         - event1
+#         - event2
+#         ...
+#
+# `match-exe-paths` and `match-users` are both obligatory, and clients
+# must match some element in both of their lists to get the access
+# rights defined in the filter. In both lists, `*` will match
+# anything. A client can match several filters, resulting in the union
+# of the access rights of all matched filters.
+#
+# `commands` and `events` are both optional. To be able to run a
+# command without arguments the empty string must be explicitly
+# listed. An empty argument list does not allow any use of the
+# command.
 
 import argparse
 import glob
