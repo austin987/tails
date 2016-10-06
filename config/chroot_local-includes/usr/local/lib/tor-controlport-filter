@@ -11,6 +11,7 @@
 
 import argparse
 import glob
+import os.path
 import psutil
 import re
 import shlex
@@ -166,7 +167,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         self.filters = []
         for filter_file in glob.glob('/etc/tor-controlport-filter.d/*.yml'):
             with open(filter_file, "rb") as fh:
-                self.filters += yaml.load(fh.read())
+                filter = yaml.load(fh.read())
+                name = re.sub('\.yml$', '', os.path.basename(filter_file))
+                filter[0]['name'] = name
+                self.filters += filter
 
     def connect_to_real_control_port(self):
         # Read authentication cookie
@@ -194,20 +198,47 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             # client being killed before we find the PID.
             return
         client_exe_path = exe_path_of_pid(client_conn.pid)
-        try:
-            client_filter = \
-                next(filter for filter in self.filters \
-                    if any(exe_path for exe_path in filter['match-exe-paths'] \
-                           if client_exe_path == exe_path))
-            client_status = 'loaded matching filter'
-        except StopIteration:
-            client_filter = {}
-            client_status = 'no matching filter found, using an empty one'
-        print('{} (PID {}) connected: {}'.format(client_exe_path,
-                                                 client_conn.pid,
-                                                 client_status))
-        allowed_commands = client_filter.get('commands', {})
-        allowed_events = client_filter.get('events', [])
+        client_user = psutil.Process(client_conn.pid).username()
+        matched_filters = []
+        allowed_commands = {}
+        allowed_events = []
+        for filter in self.filters:
+            is_ok = True
+            matchers = [
+                ('match-exe-paths', client_exe_path),
+                ('match-users', client_user),
+            ]
+            for key, expected_val in matchers:
+                if not key in filter:
+                    is_ok = False
+                    print("Filter '{}' lacks obligatory key '{}': skipping"
+                          .format(filter['name'], key)
+                    )
+                    break
+                if not any(val for val in filter[key] \
+                           if expected_val == val or val == '*'):
+                    is_ok = False
+                    break
+            if is_ok:
+                if 'commands' in filter:
+                    # Instead of a simple dict.update(), which would
+                    # overwrite existing values (i.e. the argument
+                    # list from a previous filter) we merge the values
+                    # in place, to combine multiple matched filters
+                    # without loss.
+                    for key in filter['commands']:
+                        old = allowed_commands.get(key, [])
+                        new = filter['commands'][key]
+                        allowed_commands[key] = old + new
+                allowed_events += filter.get('events', [])
+                matched_filters.append(filter['name'])
+        if matched_filters == []:
+            status = 'no matching filter found, using an empty one'
+        else:
+            status = 'loaded filter(s): {}'.format(", ".join(matched_filters))
+        print('{} (PID: {}, user: {}) connected: {}'
+              .format(client_exe_path, client_conn.pid, client_user, status)
+        )
         controller = self.connect_to_real_control_port()
         try:
             handle_controlport_session(controller, self.rfile, self.wfile,
