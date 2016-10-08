@@ -159,3 +159,24 @@ Feature: Upgrading an old Tails USB installation
     And the boot device has safe access rights
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
+
+  Scenario: Upgrading Tails with Tails Upgrader through an incremental upgrade
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    And Tails is fooled to think it is running version 1.0~test
+    And the file system changes introduced in version 1.1~test are not present
+    When the network is plugged
+    And Tor is ready
+    And all notifications have disappeared
+    Then I am proposed to install an incremental upgrade to version 1.1~test
+    And I can successfully install the incremental upgrade to version 1.1~test
+    Given I shutdown Tails and wait for the computer to power off
+    When I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then Tails is running version 1.1~test
+    And all persistence presets are enabled
+    And the file system changes introduced in version 1.1~test are present
+    When the network is plugged
+    And the network connection is ready within 30 seconds
+    And all notifications have disappeared
+    # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
+    And I successfully start the Unsafe Browser
+    Then the file system changes introduced in version 1.1~test are present in the Unsafe Browser's chroot
