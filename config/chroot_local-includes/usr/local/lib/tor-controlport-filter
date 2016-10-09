@@ -191,7 +191,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             with open(filter_file, "rb") as fh:
                 filters = yaml.load(fh.read())
                 name = re.sub(r'\.yml$', '', os.path.basename(filter_file))
-                filters[0]['name'] = name
+                for filter_ in filters:
+                    filter_['name'] = name
                 self.filters += filters
 
     def connect_to_real_control_port(self):
