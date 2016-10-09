@@ -181,6 +181,8 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         # events it requested, but we will only let through allowed
         # events.
         elif cmd == "SETEVENTS":
+            if global_args.complain:
+                log('-> SETEVENTS {}'.format(' '.join(args)))
             for listener in subscribed_event_listeners:
                 controller.remove_event_listener(listener)
             subscribed_event_listeners = []
