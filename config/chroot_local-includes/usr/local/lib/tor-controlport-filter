@@ -44,6 +44,10 @@
 # command without arguments the empty string must be explicitly
 # listed. An empty argument list does not allow any use of the
 # command.
+#
+# `restrict-stream-events` is optional, and if set any STREAM events
+# sent to the client (after it has subscribed to them) will be
+# restricted to those originating from the client itself.
 
 import argparse
 import glob
@@ -76,6 +80,14 @@ def log(msg):
     sys.stderr.flush()
 
 
+def pid_of_laddr(address):
+    try:
+        return next(conn for conn in psutil.net_connections() \
+                    if conn.laddr == address).pid
+    except StopIteration:
+        return None
+
+
 def exe_path_of_pid(pid):
     # Here we leverage AppArmor's in-kernel solution for determining
     # the exact executable invoked. Looking at /proc/pid/exe when an
@@ -96,7 +108,7 @@ def exe_path_of_pid(pid):
             return psutil.Process(pid).exe()
 
 
-def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events):
+def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events, client_pid, restrict_stream_events = False):
     def respond(line, raw=False):
         writeh.write(bytes(line, 'ascii'))
         if not raw: writeh.write(bytes("\r\n", 'ascii'))
@@ -118,7 +130,25 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         log("Command filtered: {}".format(line))
         respond("510 Command filtered")
 
+    def event_cb(event):
+        if restrict_stream_events and \
+           isinstance(event, stem.response.events.StreamEvent) and \
+           not global_args.complain:
+            if event.id not in client_streams:
+                if event.status in [stem.StreamStatus.NEW,
+                                    stem.StreamStatus.NEWRESOLVE] and \
+                   client_pid == pid_of_laddr((event.source_address,
+                                               event.source_port)):
+                    client_streams.add(event.id)
+                else:
+                    return
+            elif event.status in [stem.StreamStatus.FAILED,
+                                  stem.StreamStatus.CLOSED]:
+                client_streams.remove(event.id)
+        respond(event.raw_content(), raw=True)
+
     subscribed_event_listeners = []
+    client_streams = set()
 
     while True:
         line = str(readh.readline(MAX_LINESIZE), 'ascii').strip()
@@ -159,8 +189,6 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 # the event type.
                 event = event.upper()
                 if event in allowed_events or global_args.complain:
-                    def event_cb(event):
-                        respond(event.raw_content(), raw=True)
                     controller.add_event_listener(
                         event_cb, getattr(stem.control.EventType, event)
                     )
@@ -209,16 +237,13 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         return controller
 
     def handle(self):
-        try:
-            client_conn = \
-                next(conn for conn in psutil.net_connections() \
-                    if conn.laddr == self.client_address)
-        except StopIteration:
-            # Deal with the race between looking up the PID, and the
-            # client being killed before we find the PID.
-            return
-        client_exe_path = exe_path_of_pid(client_conn.pid)
-        client_user = psutil.Process(client_conn.pid).username()
+        client_pid = pid_of_laddr(self.client_address)
+        # Deal with the race between looking up the PID, and the
+        # client being killed before we find the PID.
+        if not client_pid: return
+        client_exe_path = exe_path_of_pid(client_pid)
+        client_user = psutil.Process(client_pid).username()
+        restrict_stream_events = False
         matched_filters = []
         allowed_commands = {}
         allowed_events = []
@@ -252,25 +277,29 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                         allowed_commands[key] = old + new
                 allowed_events += filter_.get('events', [])
                 matched_filters.append(filter_['name'])
+                if filter_.get('restrict-stream-events', False):
+                    restrict_stream_events = True
         if matched_filters == []:
             status = 'no matching filter found, using an empty one'
         else:
             status = 'loaded filter(s): {}'.format(", ".join(matched_filters))
         log('{} (PID: {}, user: {}) connected: {}'
-            .format(client_exe_path, client_conn.pid, client_user, status)
+            .format(client_exe_path, client_pid, client_user, status)
         )
         controller = self.connect_to_real_control_port()
         disconnect_reason = "client quit"
         try:
             handle_controlport_session(controller, self.rfile, self.wfile,
-                                       allowed_commands, allowed_events)
+                                       allowed_commands, allowed_events,
+                                       client_pid, restrict_stream_events
+            )
         except (ConnectionResetError, BrokenPipeError) as err:
             # Handle clients disconnecting abruptly
             disconnect_reason = str(err)
         finally:
             controller.close()
             log('{} (PID: {}, user: {}) disconnected: {}'
-                .format(client_exe_path, client_conn.pid, client_user,
+                .format(client_exe_path, client_pid, client_user,
                         disconnect_reason)
             )
 
