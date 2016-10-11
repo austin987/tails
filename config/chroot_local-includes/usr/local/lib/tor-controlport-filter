@@ -257,10 +257,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             for key, expected_val in matchers:
                 if not key in filter_:
                     is_ok = False
-                    log("Filter '{}' lacks obligatory key '{}': skipping"
+                    raise RuntimeError(
+                        "Filter '{}' lacks obligatory key '{}'"
                         .format(filter_['name'], key)
                     )
-                    break
                 if not any(val for val in filter_[key] \
                            if expected_val == val or val == '*'):
                     is_ok = False
