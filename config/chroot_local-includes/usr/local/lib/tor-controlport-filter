@@ -25,11 +25,11 @@
 #         ...
 #       commands:
 #         command:
-#           - command_arg
+#           - command_arg_rule
 #           ...
 #         ...
 #       events:
-#         - event
+#         - event_rule
 #         ...
 #
 # A filter is matched if for each of the `match-*` rules at least one
@@ -58,10 +58,11 @@
 # string must be explicitly given as a `pattern`. Hence, an empty
 # argument list does not allow any use of the command.
 #
-# `events` is a list of simple strings naming the events the client is
-# allowed to subscribe to with `SETEVENTS`. Note that we fake the
-# response to the client so that it seems like unlisted events also
-# are subscribed to but no such event will ever be received.
+# `events` is a dictionary where the key represents the event. If a
+# key exists the event is allowed, unless `suppress` is set to true in
+# the dictionary -- in this case the client will be fooled that it has
+# subscribed to the event (i.e. the client request is not filtered),
+# but all those events will be suppressed.
 #
 # `restrict-stream-events` is optional, and if set any STREAM events
 # sent to the client (after it has subscribed to them) will be
@@ -213,20 +214,22 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             respond("250 closing connection")
             break
 
-        # The client will be fooled that it is subscribing to all
-        # events it requested, but we will only let through allowed
-        # events.
         elif cmd == "SETEVENTS":
+            # The control language doesn't care about case for
+            # the event type.
+            events = [event.upper() for event in args]
             if global_args.complain:
-                log('-> SETEVENTS {}'.format(' '.join(args)))
+                log('-> SETEVENTS {}'.format(' '.join(events)))
+            else:
+                if not all(e in allowed_events for e in events):
+                    filter_line(line)
+                    continue
             for listener in subscribed_event_listeners:
                 controller.remove_event_listener(listener)
             subscribed_event_listeners = []
-            for event in args:
-                # The control language doesn't care about case for
-                # the event type.
-                event = event.upper()
-                if event in allowed_events or global_args.complain:
+            for event in events:
+                rule = allowed_events[event] or {}
+                if not rule.get('suppress', False) or global_args.complain:
                     controller.add_event_listener(
                         event_cb, getattr(stem.control.EventType, event)
                     )
@@ -299,7 +302,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         restrict_stream_events = False
         matched_filters = []
         allowed_commands = {}
-        allowed_events = []
+        allowed_events = {}
         for filter_ in self.filters:
             is_ok = True
             matchers = [
@@ -315,16 +318,16 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                     is_ok = False
                     break
             if is_ok:
+                # Instead of a simple dict.update(), which would
+                # overwrite existing values (i.e. the argument
+                # list from a previous filter) we merge the values
+                # in place, to combine multiple matched filters
+                # without loss.
                 if 'commands' in filter_:
-                    # Instead of a simple dict.update(), which would
-                    # overwrite existing values (i.e. the argument
-                    # list from a previous filter) we merge the values
-                    # in place, to combine multiple matched filters
-                    # without loss.
                     for key in filter_['commands']:
+                        new = filter_['commands'][key]
                         key = key.upper()
                         old = allowed_commands.get(key, [])
-                        new = filter_['commands'][key]
                         # Allow "simple" matching rules where the
                         # 'pattern' key is implicit.
                         for i in range(len(new)):
@@ -332,7 +335,11 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                             if isinstance(rule, str):
                                 new[i] = {'pattern': rule}
                         allowed_commands[key] = old + new
-                allowed_events += [e.upper() for e in filter_.get('events', [])]
+                if 'events' in filter_:
+                    for key in filter_['events']:
+                        val = filter_['events'][key]
+                        key = key.upper()
+                        allowed_events[key] = val
                 matched_filters.append(filter_['name'])
                 if filter_.get('restrict-stream-events', False):
                     if not local_connection:
