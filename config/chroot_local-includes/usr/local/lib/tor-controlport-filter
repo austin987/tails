@@ -60,6 +60,7 @@ import stem.control
 import sys
 import yaml
 
+DEFAULT_LISTEN_ADDRESS = 'localhost'
 DEFAULT_LISTEN_PORT = 9051
 DEFAULT_COOKIE_PATH = '/var/run/tor/control.authcookie'
 DEFAULT_CONTROL_SOCKET_PATH = '/var/run/tor/control'
@@ -309,6 +310,11 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "-a", "--listen-address",
+        type=str, metavar='ADDR', default=DEFAULT_LISTEN_ADDRESS,
+        help="specifies the address on which the server listens " +
+             "(default: {})".format(DEFAULT_LISTEN_ADDRESS))
+    parser.add_argument(
         "-p", "--listen-port",
         type=int, metavar='PORT', default=DEFAULT_LISTEN_PORT,
         help="specifies the port on which the server listens " +
@@ -331,11 +337,11 @@ def main():
     global global_args
     global_args = parser.parse_args()
     server = socketserver.ThreadingTCPServer(
-        ("localhost", global_args.listen_port),
+        (global_args.listen_address, global_args.listen_port),
         FilteredControlPortProxyHandler
     )
-    log("Tor control port filter started, listening on {}"
-        .format(global_args.listen_port))
+    log("Tor control port filter started, listening on {}:{}"
+        .format(global_args.listen_address, global_args.listen_port))
     try:
         server.serve_forever()
     except KeyboardInterrupt:
