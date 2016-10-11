@@ -11,43 +11,64 @@
 # top-level is supposed to be a list, where each element looks like
 # this:
 #
+#       # Defaults to '*'
 #     - match-exe-paths:
-#         - path_to_executable1
-#         - path_to_executable2
+#         - path_to_executable
 #         ...
+#       # Defaults to '*'
 #       match-users:
-#         - user1
-#         - user2
+#         - user
+#         ...
+#       # Defaults to '127.0.0.1'
+#       match-hosts:
+#         - host
 #         ...
 #       commands:
-#         command1:
-#           - command1_arg1
-#           - command1_arg2
-#           ...
-#         command2:
-#           - command2_arg1
-#           - command2_arg2
+#         command:
+#           - command_arg
 #           ...
 #         ...
 #       events:
-#         - event1
-#         - event2
+#         - event
 #         ...
 #
-# `match-exe-paths` and `match-users` are both obligatory, and clients
-# must match some element in both of their lists to get the access
-# rights defined in the filter. In both lists, `*` will match
-# anything. A client can match several filters, resulting in the union
-# of the access rights of all matched filters.
+# A filter is matched if for each of the `match-*` rules at least one
+# of the elements match the client. Note that there are defaults (see
+# above)! `*` will match anything. A client can match several filters,
+# resulting in the union of the access rights of all matched filters.
 #
-# `commands` and `events` are both optional. To be able to run a
-# command without arguments the empty string must be explicitly
-# listed. An empty argument list does not allow any use of the
-# command.
+# `commands` is optional, and each item in the list is a dictionary
+# with the obligatory `pattern` key, which is a regular expression
+# that is matched against the full argument part of the command. The
+# default behavior is to just proxy the line through if matched, but
+# it can be altered with these keys:
+#
+# * `replacement`: this rewrites the arguments. The value is a Python
+#   format string (str.format()) which will be given the match groups
+#   from the match of `pattern`, and can referred to by position
+#   starting from 1. The rewritten rule is then proxied without the
+#   need to match any rule.
+#
+# * `response`: instead of proxying the command, just respond with
+#   this static string to the client.
+#
+# If a simple regex (as string) is given, it is assumed to be the
+# `pattern` which allows a short-hand for this common type of rule.
+# Note that to allow a command to be run without arguments, the empty
+# string must be explicitly given as a `pattern`. Hence, an empty
+# argument list does not allow any use of the command.
+#
+# `events` is a list of simple strings naming the events the client is
+# allowed to subscribe to with `SETEVENTS`. Note that we fake the
+# response to the client so that it seems like unlisted events also
+# are subscribed to but no such event will ever be received.
 #
 # `restrict-stream-events` is optional, and if set any STREAM events
 # sent to the client (after it has subscribed to them) will be
-# restricted to those originating from the client itself.
+# restricted to those originating from the client itself. This option
+# only works for clients that run on the same host as the filter. A
+# runtime error will occur if a client on the network matches a filter
+# with this option set.
 
 import argparse
 import glob
