@@ -81,6 +81,16 @@ def log(msg):
     sys.stderr.flush()
 
 
+def rewrite_args_in_line(pattern, replacement, line):
+    # We also want to match the command in `line`...
+    pattern = r'^(\S+)\s+' + pattern
+    replacement = "{} " + replacement
+    match = re.match(pattern + "$", line)
+    if not match: return None
+    # ... and add it back to the replacement string.
+    return replacement.format(*match.groups())
+
+
 def pid_of_laddr(address):
     try:
         return next(conn for conn in psutil.net_connections() \
@@ -114,12 +124,16 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         if not raw: writeh.write(bytes("\r\n", 'ascii'))
         writeh.flush()
 
-    def is_line_allowed(line):
-        if global_args.complain: return True
+    def get_rule(line):
         cmd, _, args = line.partition(' ')
         cmd = cmd.upper()
         allowed_args = allowed_commands.get(cmd, [])
-        return any(re.match(regex + "$", args) for regex in allowed_args)
+        return next((rule for rule in allowed_args \
+                     if re.match(rule['pattern'] + "$", args)), None)
+
+    def is_line_allowed(line):
+        if global_args.complain: return True
+        return bool(get_rule(line))
 
     def proxy_line(line):
         if global_args.complain: log("-> {}".format(line))
@@ -206,8 +220,17 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 filter_line(line)
 
         else:
-            if is_line_allowed(line):
-                proxy_line(line)
+            rule = get_rule(line)
+            if rule:
+                if 'replacement' in rule:
+                    new_line = rewrite_args_in_line(rule['pattern'],
+                                                    rule['replacement'],
+                                                    line)
+                    proxy_line(new_line)
+                elif 'response' in rule:
+                    respond(rule['response'])
+                else:
+                    proxy_line(line)
             else:
                 filter_line(line)
 
@@ -277,6 +300,12 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                         key = key.upper()
                         old = allowed_commands.get(key, [])
                         new = filter_['commands'][key]
+                        # Allow "simple" matching rules where the
+                        # 'pattern' key is implicit.
+                        for i in range(len(new)):
+                            rule = new[i]
+                            if isinstance(rule, str):
+                                new[i] = {'pattern': rule}
                         allowed_commands[key] = old + new
                 allowed_events += [e.upper() for e in filter_.get('events', [])]
                 matched_filters.append(filter_['name'])
