@@ -51,6 +51,7 @@
 
 import argparse
 import glob
+import ipaddress
 import os.path
 import psutil
 import re
@@ -262,12 +263,18 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         return controller
 
     def handle(self):
-        client_pid = pid_of_laddr(self.client_address)
-        # Deal with the race between looking up the PID, and the
-        # client being killed before we find the PID.
-        if not client_pid: return
-        client_exe_path = exe_path_of_pid(client_pid)
-        client_user = psutil.Process(client_pid).username()
+        client_host = self.client_address[0]
+        local_connection = ipaddress.ip_address(client_host).is_loopback
+        if local_connection:
+            client_pid = pid_of_laddr(self.client_address)
+            # Deal with the race between looking up the PID, and the
+            # client being killed before we find the PID.
+            client_exe_path = exe_path_of_pid(client_pid)
+            client_user = psutil.Process(client_pid).username()
+        else:
+            client_pid = None
+            client_exe_path = ''
+            client_user = ''
         restrict_stream_events = False
         matched_filters = []
         allowed_commands = {}
@@ -275,16 +282,13 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         for filter_ in self.filters:
             is_ok = True
             matchers = [
-                ('match-exe-paths', client_exe_path),
-                ('match-users', client_user),
+                ('match-exe-paths', client_exe_path, ['*']),
+                ('match-users',     client_user,     ['*']),
+                ('match-hosts',     client_host,     ['127.0.0.1']),
             ]
-            for key, expected_val in matchers:
+            for key, expected_val, default_val in matchers:
                 if not key in filter_:
-                    is_ok = False
-                    raise RuntimeError(
-                        "Filter '{}' lacks obligatory key '{}'"
-                        .format(filter_['name'], key)
-                    )
+                    filter_[key] = default_val
                 if not any(val for val in filter_[key] \
                            if expected_val == val or val == '*'):
                     is_ok = False
@@ -310,6 +314,12 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 allowed_events += [e.upper() for e in filter_.get('events', [])]
                 matched_filters.append(filter_['name'])
                 if filter_.get('restrict-stream-events', False):
+                    if not local_connection:
+                        raise RuntimeError(
+                            "Filter '{}' has `restrict-stream-events` set " +
+                            "but the client '{}' is not local"
+                            .format(filter_['name'], self.client_address)
+                        )
                     restrict_stream_events = True
         if matched_filters == []:
             status = 'no matching filter found, using an empty one'
