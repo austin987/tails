@@ -273,10 +273,11 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                     # in place, to combine multiple matched filters
                     # without loss.
                     for key in filter_['commands']:
+                        key = key.upper()
                         old = allowed_commands.get(key, [])
                         new = filter_['commands'][key]
                         allowed_commands[key] = old + new
-                allowed_events += filter_.get('events', [])
+                allowed_events += [e.upper() for e in filter_.get('events', [])]
                 matched_filters.append(filter_['name'])
                 if filter_.get('restrict-stream-events', False):
                     restrict_stream_events = True
