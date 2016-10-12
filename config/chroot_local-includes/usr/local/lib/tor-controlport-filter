@@ -11,15 +11,12 @@
 # top-level is supposed to be a list, where each element looks like
 # this:
 #
-#       # Defaults to '*'
 #     - match-exe-paths:
 #         - path_to_executable
 #         ...
-#       # Defaults to '*'
 #       match-users:
 #         - user
 #         ...
-#       # Defaults to '127.0.0.1'
 #       match-hosts:
 #         - host
 #         ...
@@ -35,10 +32,9 @@
 # A filter is matched if for each of the `match-*` rules at least one
 # of the elements match the client. However, local connections only
 # `match-{exe-paths,users}` will be considered, and for non-local
-# connections only `match-hosts` will be.Note that there are defaults
-# (see above)! `*` will match anything. A client can match several
-# filters, resulting in the union of the access rights of all matched
-# filters.
+# connections only `match-hosts` will be. `*` will match anything. A
+# client can match several filters, resulting in the union of the
+# access rights of all matched filters.
 #
 # `commands` is optional, and each item in the list is a dictionary
 # with the obligatory `pattern` key, which is a regular expression
@@ -312,18 +308,18 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             is_ok = True
             if local_connection:
                 matchers = [
-                    ('match-exe-paths', client_exe_path, ['*']),
-                    ('match-users',     client_user,     ['*']),
+                    ('match-exe-paths', client_exe_path),
+                    ('match-users',     client_user),
                 ]
             else:
                 matchers = [
-                    ('match-hosts', client_host, ['127.0.0.1']),
+                    ('match-hosts', client_host),
                 ]
-            for key, expected_val, default_val in matchers:
-                if not key in filter_:
-                    filter_[key] = default_val
-                if not any(val for val in filter_[key] \
-                           if expected_val == val or val == '*'):
+            for key, expected_val in matchers:
+                if key not in filter_ or \
+                   ( not any(val for val in filter_[key] \
+                             if expected_val == val or val == '*') \
+                   ):
                     is_ok = False
                     break
             if is_ok:
