@@ -8,8 +8,8 @@
 #
 # who are pretty self-explanatory as long as you understand the Tor
 # ControlPort language. The format is based on YAML where the
-# top-level is supposed to be a list, where each element looks like
-# this:
+# top-level is supposed to be a list, where each element is a
+# dictionary looking something like this:
 #
 #     - match-exe-paths:
 #         - path_to_executable
@@ -26,24 +26,40 @@
 #           ...
 #         ...
 #       events:
-#         - event_rule
+#         event:
+#           event_option: event_option_value
+#           ...
 #         ...
 #
-# A filter is matched if for each of the `match-*` rules at least one
-# of the elements match the client. However, for local connections only
-# `match-{exe-paths,users}` will be considered, and for non-local
-# connections only `match-hosts` will be. `*` will match anything. A
-# client can match several filters, resulting in the union of the
-# access rights of all matched filters. Note that while
-# `match-exe-paths` always works for binaries, it only works for
-# scripts with an enabled AppArmor profile (not necessarily enforced,
-# complain mode is good enough).
+# A filter is matched if for each of the relevant `match-*` rules at
+# least one of the elements match the client. For local (loopback)
+# clients the following match rules are needed:
 #
-# `commands` is optional, and each item in the list is a dictionary
-# with the obligatory `pattern` key, which is a regular expression
-# that is matched against the full argument part of the command. The
-# default behavior is to just proxy the line through if matched, but
-# it can be altered with these keys:
+# * `match-exe-paths`: a list of strings, each describing the path to
+#   the binary or script of the client with `*` matching
+#   anything. While this matcher always works for binaries, it only
+#   works for scripts with an enabled AppArmor profile (not
+#   necessarily enforced, complain mode is good enough).
+#
+# * `match-users`: a list of strings, each describing the user of the
+#   client with `*` matching anything.
+#
+# For remote (non-local) clients, the following match rules are
+# needed:
+#
+# * match-hosts: a list of strings, each describing the IPv4 address
+#   of the client with `*` matching anything.
+#
+# A filter can serve both local and remote clients by having all
+# `match-*` rules.  A client can match several filters, resulting in
+# the union of the access rights of all matched filters (exceptions
+# are described for each option).
+#
+# `commands` (optional) is a list where each item is a dictionary with
+# the obligatory `pattern` key, which is a regular expression that is
+# matched against the full argument part of the command. The default
+# behavior is to just proxy the line through if matched, but it can be
+# altered with these keys:
 #
 # * `replacement`: this rewrites the arguments. The value is a Python
 #   format string (str.format()) which will be given the match groups
@@ -56,24 +72,27 @@
 #
 # If a simple regex (as string) is given, it is assumed to be the
 # `pattern` which allows a short-hand for this common type of rule.
+#
 # Note that to allow a command to be run without arguments, the empty
 # string must be explicitly given as a `pattern`. Hence, an empty
 # argument list does not allow any use of the command.
 #
-# `events` is a dictionary where the key represents the event. If a
-# key exists the event is allowed, unless `suppress` is set to true in
-# the dictionary -- in this case the client will be fooled that it has
-# subscribed to the event (i.e. the client request is not filtered),
-# but all those events will be suppressed. Note that two matched
-# filters setting some event's options differently will cause a
-# runtime error.
+# `events` (optional) is a dictionary where the key represents the
+# event. If a key exists the event is allowed. The valie is another
+# dictionary of options:
 #
-# `restrict-stream-events` is optional, and if set any STREAM events
-# sent to the client (after it has subscribed to them) will be
-# restricted to those originating from the client itself. This option
-# only works for clients that run on the same host as the filter. A
-# runtime error will occur if a client on the network matches a filter
-# with this option set.
+# * `suppress`: a boolean determining whether we should just fool the
+#   client that it has subscribed to the event (i.e. the client
+#   request is not filtered) while we suppress them.
+#
+# Note that two matched filters setting some event's option
+# differently will cause a runtime error.
+#
+# `restrict-stream-events` (optional) is a boolean, and if set any
+# STREAM events sent to the client (after it has subscribed to them)
+# will be restricted to those belonging to the client itself. This
+# option only works for local clients, and a runtime error will occur
+# for remote clients.
 
 import argparse
 import glob
