@@ -89,12 +89,6 @@ DEFAULT_LISTEN_PORT = 9051
 DEFAULT_COOKIE_PATH = '/var/run/tor/control.authcookie'
 DEFAULT_CONTROL_SOCKET_PATH = '/var/run/tor/control'
 
-# This will store the arguments from argparse. We put it in the global
-# scope since it's awkward to extend socketserver so additional data
-# can be sent to the request handler, where we need access to the
-# arguments.
-global_args = None
-
 # Limit the length of a line, to prevent DoS attacks trying to
 # crash this filter proxy by sending infinitely long lines.
 MAX_LINESIZE = 1024
@@ -461,6 +455,9 @@ def main():
         "--debug",
         action='store_true', default=False,
         help="prints all requests and responses")
+    # We put the argparse results in the global scope since it's
+    # awkward to extend socketserver so additional data can be sent to
+    # the request handler, where we need access to the arguments.
     global global_args
     global_args = parser.parse_args()
     # Deal with overlapping functionality between arguments
