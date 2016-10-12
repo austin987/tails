@@ -260,9 +260,9 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             rule = get_rule(line)
             if rule:
                 if 'replacement' in rule:
-                    new_line = rewrite_args_in_line(rule['pattern'],
-                                                    rule['replacement'],
-                                                    line)
+                    new_line = rewrite_args_in_line(
+                        rule['pattern'], rule['replacement'], line
+                    )
                     proxy_line(new_line)
                 elif 'response' in rule:
                     respond(rule['response'])
@@ -329,9 +329,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 ]
             for key, expected_val in matchers:
                 if key not in filter_ or \
-                   ( not any(val for val in filter_[key] \
-                             if expected_val == val or val == '*') \
-                   ):
+                   not any(val for val in filter_[key] \
+                           if expected_val == val or val == '*'):
                     is_ok = False
                     break
             if is_ok:
@@ -432,31 +431,37 @@ def main():
         "--listen-address",
         type=str, metavar='ADDR', default=DEFAULT_LISTEN_ADDRESS,
         help="specifies the address on which the server listens " +
-             "(default: {})".format(DEFAULT_LISTEN_ADDRESS))
+             "(default: {})".format(DEFAULT_LISTEN_ADDRESS)
+    )
     parser.add_argument(
         "--listen-port",
         type=int, metavar='PORT', default=DEFAULT_LISTEN_PORT,
         help="specifies the port on which the server listens " +
-             "(default: {})".format(DEFAULT_LISTEN_PORT))
+             "(default: {})".format(DEFAULT_LISTEN_PORT)
+    )
     parser.add_argument(
         "--control-cookie-path",
         type=str, metavar='PATH', default=DEFAULT_COOKIE_PATH,
         help="specifies the path to Tor's control authentication cookie " +
-             "(default: {})".format(DEFAULT_COOKIE_PATH))
+             "(default: {})".format(DEFAULT_COOKIE_PATH)
+    )
     parser.add_argument(
         "--control-socket-path",
         type=str, metavar='PATH', default=DEFAULT_CONTROL_SOCKET_PATH,
         help="specifies the path to Tor's control socket " +
-             "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH))
+             "(default: {})".format(DEFAULT_CONTROL_SOCKET_PATH)
+    )
     parser.add_argument(
         "--complain",
         action='store_true', default=False,
         help="disables all filtering and just prints the commands sent " +
-             "by the client")
+             "by the client"
+    )
     parser.add_argument(
         "--debug",
         action='store_true', default=False,
-        help="prints all requests and responses")
+        help="prints all requests and responses"
+    )
     # We put the argparse results in the global scope since it's
     # awkward to extend socketserver so additional data can be sent to
     # the request handler, where we need access to the arguments.
@@ -472,7 +477,8 @@ def main():
         FilteredControlPortProxyHandler
     )
     log("Tor control port filter started, listening on {}:{}"
-        .format(global_args.listen_address, global_args.listen_port))
+        .format(global_args.listen_address, global_args.listen_port)
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:
