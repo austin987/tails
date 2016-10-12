@@ -402,6 +402,15 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             )
 
 
+class FilteredControlPortProxy(socketserver.ThreadingTCPServer):
+    # So we can restart when the listening port is in TIME_WAIT state
+    # after an abrupt shutdown.
+    allow_reuse_address = True
+    # So all server threads immediately quit when the main thread
+    # quits.
+    daemon_threads = True
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -431,7 +440,7 @@ def main():
              "by the client")
     global global_args
     global_args = parser.parse_args()
-    server = socketserver.ThreadingTCPServer(
+    server = FilteredControlPortProxy(
         (global_args.listen_address, global_args.listen_port),
         FilteredControlPortProxyHandler
     )
