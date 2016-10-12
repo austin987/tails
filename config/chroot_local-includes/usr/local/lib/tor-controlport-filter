@@ -99,16 +99,6 @@ def log(msg):
     sys.stderr.flush()
 
 
-def rewrite_args_in_line(pattern, replacement, line):
-    # We also want to match the command in `line`...
-    pattern = r'^(\S+)\s+' + pattern
-    replacement = "{} " + replacement
-    match = re.match(pattern + "$", line)
-    if not match: return None
-    # ... and add it back to the replacement string.
-    return replacement.format(*match.groups())
-
-
 def pid_of_laddr(address):
     try:
         return next(conn for conn in psutil.net_connections() \
@@ -176,6 +166,15 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
     def filter_line(line):
         log("Command filtered: {}".format(line))
         respond("510 Command filtered")
+
+    def rewrite_args_in_line(pattern, replacement, line):
+        # We also want to match the command in `line`...
+        pattern = r'^(\S+)\s+' + pattern
+        replacement = "{} " + replacement
+        match = re.match(pattern + "$", line)
+        if not match: return None
+        # ... and add it back to the replacement string.
+        return replacement.format(*match.groups())
 
     def event_cb(event):
         if restrict_stream_events and \
