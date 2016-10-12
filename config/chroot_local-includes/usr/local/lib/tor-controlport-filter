@@ -309,6 +309,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             client_pid = pid_of_laddr(self.client_address)
             # Deal with the race between looking up the PID, and the
             # client being killed before we find the PID.
+            if not client_pid: return
             client_exe_path = exe_path_of_pid(client_pid)
             client_user = psutil.Process(client_pid).username()
         else:
