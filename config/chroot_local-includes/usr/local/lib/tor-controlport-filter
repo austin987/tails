@@ -217,18 +217,13 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
 
     subscribed_event_listeners = []
     client_streams = set()
-
     while True:
         line = str(readh.readline(MAX_LINESIZE), 'ascii').strip()
-
         if not line: break
         debug_log_recv(line)
-
         # This regex makes us split on unquoted whitespaces.
         cmd, *args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', line)
         cmd = cmd.upper()
-
-        # Check what it is
         if cmd == "PROTOCOLINFO":
             # Stem call PROTOCOLINFO before authenticating. Tell the
             # client that there is no authentication.
@@ -306,16 +301,12 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 self.filters += filters
 
     def connect_to_real_control_port(self):
-        # Read authentication cookie
         with open(global_args.control_cookie_path, "rb") as f:
             cookie = f.read(32)
-
-        # Connect to the real control port
         controller = stem.control.Controller.from_socket_file(
             global_args.control_socket_path
         )
         controller.authenticate(cookie)
-
         return controller
 
     def handle(self):
