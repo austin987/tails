@@ -361,17 +361,22 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                     if not local_connection:
                         raise RuntimeError(
                             "Filter '{}' has `restrict-stream-events` set " +
-                            "but the client '{}' is not local"
-                            .format(filter_['name'], self.client_address)
+                            "but the client '{}:{}' is not local"
+                            .format(filter_['name'], *self.client_address)
                         )
                     restrict_stream_events = True
         if matched_filters == []:
             status = 'no matching filter found, using an empty one'
         else:
             status = 'loaded filter(s): {}'.format(", ".join(matched_filters))
-        log('{} (PID: {}, user: {}) connected: {}'
-            .format(client_exe_path, client_pid, client_user, status)
-        )
+        if local_connection:
+            log('{} (PID: {}, user: {}) connected: {}'
+                .format(client_exe_path, client_pid, client_user, status)
+            )
+        else:
+            log('{1}:{2} connected: {0}'
+                .format(status, *self.client_address)
+            )
         controller = self.connect_to_real_control_port()
         disconnect_reason = "client quit"
         try:
