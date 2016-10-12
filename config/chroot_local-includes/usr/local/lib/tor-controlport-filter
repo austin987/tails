@@ -62,7 +62,9 @@
 # key exists the event is allowed, unless `suppress` is set to true in
 # the dictionary -- in this case the client will be fooled that it has
 # subscribed to the event (i.e. the client request is not filtered),
-# but all those events will be suppressed.
+# but all those events will be suppressed. Note that two matched
+# filters setting some event's options differently will cause a
+# runtime error.
 #
 # `restrict-stream-events` is optional, and if set any STREAM events
 # sent to the client (after it has subscribed to them) will be
@@ -335,11 +337,25 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                             if isinstance(rule, str):
                                 new_rules[i] = {'pattern': rule}
                         allowed_commands[cmd] = old_rules + new_rules
+                # Similarly, we don't use dict.update(), and instead
+                # verify that no two matching filters set some option
+                # for the same stream differently, cause then the
+                # order of how the filters are matched would matter.
                 if 'events' in filter_:
-                    for key in filter_['events']:
-                        val = filter_['events'][key]
-                        key = key.upper()
-                        allowed_events[key] = val
+                    for event in filter_['events']:
+                        new_opts = filter_['events'][event]
+                        event = event.upper()
+                        old_opts = allowed_events.get(event, None)
+                        if old_opts != None and new_opts != None and \
+                           any(old_opts.get(k, new_opts[k]) != new_opts[k] \
+                               for k in new_opts):
+                            raise RuntimeError(
+                                "Filter '{}' tried to set some option of " +
+                                "event `{}` that some other filter already " +
+                                "has set differently"
+                                .format(filter_['name'], event)
+                            )
+                        allowed_events[event] = new_opts
                 matched_filters.append(filter_['name'])
                 if filter_.get('restrict-stream-events', False):
                     if not local_connection:
