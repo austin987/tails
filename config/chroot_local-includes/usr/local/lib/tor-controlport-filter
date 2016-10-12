@@ -261,10 +261,11 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 rule = allowed_events[event] or {}
                 if not rule.get('suppress', False) or \
                    global_args.disable_filtering:
+                    event_cb_instance = lambda event: event_cb(event)
                     controller.add_event_listener(
-                        event_cb, getattr(stem.control.EventType, event)
+                        event_cb_instance, getattr(stem.control.EventType, event)
                     )
-                    subscribed_event_listeners.append(event_cb)
+                    subscribed_event_listeners.append(event_cb_instance)
             respond("250 OK")
 
         # SETCONF can take multiple assignments, but let's allow
