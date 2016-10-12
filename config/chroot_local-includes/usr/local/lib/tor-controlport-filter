@@ -33,9 +33,12 @@
 #         ...
 #
 # A filter is matched if for each of the `match-*` rules at least one
-# of the elements match the client. Note that there are defaults (see
-# above)! `*` will match anything. A client can match several filters,
-# resulting in the union of the access rights of all matched filters.
+# of the elements match the client. However, local connections only
+# `match-{exe-paths,users}` will be considered, and for non-local
+# connections only `match-hosts` will be.Note that there are defaults
+# (see above)! `*` will match anything. A client can match several
+# filters, resulting in the union of the access rights of all matched
+# filters.
 #
 # `commands` is optional, and each item in the list is a dictionary
 # with the obligatory `pattern` key, which is a regular expression
@@ -307,11 +310,15 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         allowed_events = {}
         for filter_ in self.filters:
             is_ok = True
-            matchers = [
-                ('match-exe-paths', client_exe_path, ['*']),
-                ('match-users',     client_user,     ['*']),
-                ('match-hosts',     client_host,     ['127.0.0.1']),
-            ]
+            if local_connection:
+                matchers = [
+                    ('match-exe-paths', client_exe_path, ['*']),
+                    ('match-users',     client_user,     ['*']),
+                ]
+            else:
+                matchers = [
+                    ('match-hosts', client_host, ['127.0.0.1']),
+                ]
             for key, expected_val, default_val in matchers:
                 if not key in filter_:
                     filter_[key] = default_val
