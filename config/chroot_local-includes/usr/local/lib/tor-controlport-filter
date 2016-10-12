@@ -142,8 +142,24 @@ def exe_path_of_pid(pid):
             return psutil.Process(pid).exe()
 
 
-def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events, client_pid, restrict_stream_events = False):
+def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events, client_desc, client_pid, restrict_stream_events = False):
+
+    def debug_log_helper(direction, line):
+        line = line.strip()
+        if "\n" in line:
+            line = "multi-line:\n" + line
+        log("{} {} {}".format(client_desc, direction, line))
+
+    def debug_log_send(line):
+        if global_args.print_responses:
+            debug_log_helper('<-', line)
+
+    def debug_log_recv(line):
+        if global_args.print_requests:
+            debug_log_helper('->', line)
+
     def respond(line, raw=False):
+        debug_log_send(line)
         writeh.write(bytes(line, 'ascii'))
         if not raw: writeh.write(bytes("\r\n", 'ascii'))
         writeh.flush()
@@ -156,11 +172,10 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                      if re.match(rule['pattern'] + "$", args)), None)
 
     def is_line_allowed(line):
-        if global_args.complain: return True
+        if global_args.disable_filtering: return True
         return bool(get_rule(line))
 
     def proxy_line(line):
-        if global_args.complain: log("-> {}".format(line))
         response = controller.msg(line)
         respond(response.raw_content(), raw=True)
 
@@ -171,7 +186,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
     def event_cb(event):
         if restrict_stream_events and \
            isinstance(event, stem.response.events.StreamEvent) and \
-           not global_args.complain:
+           not global_args.disable_filtering:
             if event.id not in client_streams:
                 if event.status in [stem.StreamStatus.NEW,
                                     stem.StreamStatus.NEWRESOLVE] and \
@@ -192,6 +207,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         line = str(readh.readline(MAX_LINESIZE), 'ascii').strip()
 
         if not line: break
+        debug_log_recv(line)
 
         # This regex makes us split on unquoted whitespaces.
         cmd, *args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', line)
@@ -219,18 +235,17 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             # The control language doesn't care about case for
             # the event type.
             events = [event.upper() for event in args]
-            if global_args.complain:
-                log('-> SETEVENTS {}'.format(' '.join(events)))
-            else:
-                if not all(e in allowed_events for e in events):
-                    filter_line(line)
-                    continue
+            if not global_args.disable_filtering and \
+               any(event not in allowed_events for event in events):
+                filter_line(line)
+                continue
             for listener in subscribed_event_listeners:
                 controller.remove_event_listener(listener)
             subscribed_event_listeners = []
             for event in events:
                 rule = allowed_events[event] or {}
-                if not rule.get('suppress', False) or global_args.complain:
+                if not rule.get('suppress', False) or \
+                   not global_args.disable_filtering:
                     controller.add_event_listener(
                         event_cb, getattr(stem.control.EventType, event)
                     )
@@ -373,19 +388,26 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         else:
             status = 'loaded filter(s): {}'.format(", ".join(matched_filters))
         if local_connection:
-            log('{} (PID: {}, user: {}) connected: {}'
-                .format(client_exe_path, client_pid, client_user, status)
+            client_desc = '{} (pid: {}, user: {})'.format(
+                client_exe_path, client_pid, client_user
             )
         else:
-            log('{1}:{2} connected: {0}'
-                .format(status, *self.client_address)
-            )
+            client_desc = '{}:{}'.format(*self.client_address)
+        log('{} connected: {}'.format(client_desc, status))
+        if global_args.debug:
+            log('Merged rules:')
+            log(yaml.dump({
+                'commands': allowed_commands,
+                'events': allowed_events,
+                'restrict-stream-events': restrict_stream_events,
+            }))
         controller = self.connect_to_real_control_port()
         disconnect_reason = "client quit"
         try:
             handle_controlport_session(controller, self.rfile, self.wfile,
                                        allowed_commands, allowed_events,
-                                       client_pid, restrict_stream_events
+                                       client_desc, client_pid,
+                                       restrict_stream_events
             )
         except (ConnectionResetError, BrokenPipeError) as err:
             # Handle clients disconnecting abruptly
@@ -434,8 +456,17 @@ def main():
         action='store_true', default=False,
         help="disables all filtering and just prints the commands sent " +
              "by the client")
+    parser.add_argument(
+        "--debug",
+        action='store_true', default=False,
+        help="prints all requests and responses")
     global global_args
     global_args = parser.parse_args()
+    # Deal with overlapping functionality between arguments
+    global_args.__dict__['disable_filtering'] = global_args.complain
+    global_args.__dict__['print_requests'] = global_args.complain or \
+                                             global_args.debug
+    global_args.__dict__['print_responses'] = global_args.debug
     server = FilteredControlPortProxy(
         (global_args.listen_address, global_args.listen_port),
         FilteredControlPortProxyHandler
