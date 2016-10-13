@@ -117,6 +117,7 @@ import socketserver
 import stem
 import stem.control
 import sys
+import textwrap
 import yaml
 
 DEFAULT_LISTEN_ADDRESS = 'localhost'
@@ -163,19 +164,20 @@ def exe_path_of_pid(pid):
 
 def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events, client_desc, client_pid, restrict_stream_events = False):
 
-    def _log(line, sep = ': '):
+    def _log(line, format_multiline=False, sep = ': '):
         line = line.strip()
-        if "\n" in line:
-            line = "multi-line:\n" + line
-        log("{}{}{}".format(client_desc, sep, line))
+        if format_multiline and "\n" in line:
+            sep += "(multi-line)\n"
+            line = textwrap.indent(line, ' '*4)
+        log(client_desc + sep + line)
 
     def debug_log_send(line):
         if global_args.print_responses:
-            _log(line, sep=': <- ')
+            _log(line, format_multiline=True, sep=': <- ')
 
     def debug_log_recv(line):
         if global_args.print_requests:
-            _log(line, sep=': -> ')
+            _log(line, format_multiline=True, sep=': -> ')
 
     def respond(line, raw=False):
         if line.isspace(): return
