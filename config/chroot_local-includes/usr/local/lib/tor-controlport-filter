@@ -179,6 +179,18 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         if global_args.print_requests:
             _log(line, format_multiline=True, sep=': -> ')
 
+    def debug_log_rewrite(kind, old, new):
+        if kind not in ['command', 'received event', 'response'] or \
+           (kind == 'command' and not global_args.print_responses) or \
+           (kind in ['received event', 'response'] and \
+            not global_args.print_requests):
+            return
+        if new != old:
+            old = textwrap.indent(old.strip(), ' '*4)
+            new = textwrap.indent(new.strip(), ' '*4)
+            _log("rewrote {}:\n{}\nto:\n{}".format(kind, old, new),
+                 format_multiline=False)
+
     def respond(line, raw=False):
         if line.isspace(): return
         debug_log_send(line)
@@ -194,10 +206,12 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                      if re.match(rule['pattern'] + "$", args)), None)
 
     def proxy_line(line, response_rewriter = None):
-        response = controller.msg(line)
+        response = controller.msg(line).raw_content()
         if response_rewriter:
-            response = response_rewriter(response)
-        respond(response.raw_content(), raw=True)
+            new_response = response_rewriter(response)
+            debug_log_rewrite('response', response, new_response)
+            response = new_response
+        respond(response, raw=True)
 
     def filter_line(line):
         _log("command filtered: {}".format(line))
@@ -246,7 +260,11 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 client_streams.remove(event.id)
         raw_event_content = event.raw_content()
         if event_rewriter:
-            raw_event_content = event_rewriter(raw_event_content)
+            new_raw_event_content = event_rewriter(raw_event_content)
+            debug_log_rewrite(
+                'received event', raw_event_content, new_raw_event_content
+            )
+            raw_event_content = new_raw_event_content
         respond(raw_event_content, raw=True)
 
     subscribed_event_listeners = []
@@ -291,13 +309,13 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 rule = allowed_events[event] or {}
                 if not rule.get('suppress', False) or \
                    global_args.disable_filtering:
-                    def _event_rewriter(line):
-                        return rewrite_matched_line(
-                            rule['response'].get('pattern', r'(.*)'),
-                            rule['response'].get('replacement', '{}'),
-                            line
-                        )
                     if 'response' in rule:
+                        pattern = rule['response'].get('pattern', r'(.*)')
+                        replacement = rule['response'].get('replacement', '{}')
+                        def _event_rewriter(line):
+                            return rewrite_matched_line(
+                                pattern, replacement, line
+                            )
                         def _event_cb(event):
                             event_cb(event, event_rewriter=_event_rewriter)
                     else:
@@ -324,9 +342,11 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                     response_rewriter = _response_rewriter
 
                 if 'replacement' in rule:
-                    line = rewrite_args_in_line(
+                    new_line = rewrite_args_in_line(
                         rule['pattern'], rule['replacement'], line
                     )
+                    debug_log_rewrite('command', line, new_line)
+                    line = new_line
 
                 proxy_line(line, response_rewriter=response_rewriter)
             else:
