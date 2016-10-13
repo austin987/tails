@@ -163,19 +163,19 @@ def exe_path_of_pid(pid):
 
 def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events, client_desc, client_pid, restrict_stream_events = False):
 
-    def debug_log_helper(direction, line):
+    def _log(line, sep = ': '):
         line = line.strip()
         if "\n" in line:
             line = "multi-line:\n" + line
-        log("{} {} {}".format(client_desc, direction, line))
+        log("{}{}{}".format(client_desc, sep, line))
 
     def debug_log_send(line):
         if global_args.print_responses:
-            debug_log_helper('<-', line)
+            _log(line, sep=': <- ')
 
     def debug_log_recv(line):
         if global_args.print_requests:
-            debug_log_helper('->', line)
+            _log(line, sep=': -> ')
 
     def respond(line, raw=False):
         if line.isspace(): return
@@ -198,7 +198,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         respond(response.raw_content(), raw=True)
 
     def filter_line(line):
-        log("Command filtered: {}".format(line))
+        _log("command filtered: {}".format(line))
         respond("510 Command filtered")
 
     def rewrite_line(pattern, replacement, line):
