@@ -25,6 +25,11 @@
 #           - command_arg_rule
 #           ...
 #         ...
+#       confs:
+#         conf:
+#           - conf_arg_rule
+#            ...
+#         ...
 #       events:
 #         event:
 #           event_option: event_option_value
@@ -51,9 +56,7 @@
 #   of the client with `*` matching anything.
 #
 # A filter can serve both local and remote clients by having all
-# `match-*` rules.  A client can match several filters, resulting in
-# the union of the access rights of all matched filters (exceptions
-# are described for each option).
+# `match-*` rules.
 #
 # `commands` (optional) is a list where each item is a dictionary with
 # the obligatory `pattern` key, which is a regular expression that is
@@ -79,8 +82,15 @@
 # string must be explicitly given as a `pattern`. Hence, an empty
 # argument list does not allow any use of the command.
 #
+# `confs` (optional) is a dictionary, and it's just syntactic sugar to
+# generate GETCONF/SETCONF rules. If a key exists, GETCONF of the
+# keyname is allowed, and if it has a non-empty list as value, those
+# values are allowed to be set. The empty string means that unsetting
+# it is allowed. This is very useful for applications that like to
+# SETCONF on multiple configurations at the same time.
+#
 # `events` (optional) is a dictionary where the key represents the
-# event. If a key exists the event is allowed. The valie is another
+# event. If a key exists the event is allowed. The value is another
 # dictionary of options:
 #
 # * `suppress`: a boolean determining whether we should just fool the
@@ -91,14 +101,11 @@
 #   keys work exactly as for `response` for commands, but now for the
 #   events.
 #
-# Note that two matched filters setting some event's option
-# differently will cause a runtime error.
-#
 # `restrict-stream-events` (optional) is a boolean, and if set any
 # STREAM events sent to the client (after it has subscribed to them)
 # will be restricted to those belonging to the client itself. This
-# option only works for local clients, and a runtime error will occur
-# for remote clients.
+# option only works for local clients and will be unset for remote
+# clients.
 
 import argparse
 import glob
@@ -181,15 +188,6 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         cmd, _, args = line.partition(' ')
         cmd = cmd.upper()
         allowed_args = allowed_commands.get(cmd, [])
-        # SETCONF can take multiple assignments, but let's allow
-        # listing them individually in the filter configuration.
-        if cmd == "SETCONF" and allowed_args != []:
-            combined_simple_rules = (
-                "|".join(["(?:{})".format(rule['pattern']) \
-                          for rule in allowed_args \
-                          if list(rule.keys()) == ['pattern']])
-            )
-            allowed_args.append(combined_simple_rules)
         return next((rule for rule in allowed_args \
                      if re.match(rule['pattern'] + "$", args)), None)
 
@@ -301,7 +299,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                             event_cb(event, event_rewriter=_event_rewriter)
                     else:
                         def _event_cb(event):
-                            event_cb(event, event)
+                            event_cb(event)
                     controller.add_event_listener(
                         _event_cb, getattr(stem.control.EventType, event)
                     )
@@ -364,16 +362,19 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             if not client_pid: return
             client_exe_path = exe_path_of_pid(client_pid)
             client_user = psutil.Process(client_pid).username()
+            client_desc = '{} (pid: {}, user: {})'.format(
+                client_exe_path, client_pid, client_user
+            )
         else:
             client_pid = None
             client_exe_path = ''
             client_user = ''
-        restrict_stream_events = False
-        matched_filters = []
+            client_desc = '{}:{}'.format(*self.client_address)
+        filter_name = None
         allowed_commands = {}
         allowed_events = {}
+        restrict_stream_events = False
         for filter_ in self.filters:
-            is_ok = True
             if local_connection:
                 matchers = [
                     ('match-exe-paths', client_exe_path),
@@ -383,71 +384,85 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 matchers = [
                     ('match-hosts', client_host),
                 ]
-            for key, expected_val in matchers:
-                if key not in filter_ or \
-                   not any(val for val in filter_[key] \
-                           if expected_val == val or val == '*'):
-                    is_ok = False
-                    break
-            if is_ok:
-                # Instead of a simple dict.update(), which would
-                # overwrite existing values (i.e. the argument
-                # list from a previous filter) we merge the values
-                # in place, to combine multiple matched filters
-                # without loss.
-                if 'commands' in filter_:
-                    for cmd in filter_['commands']:
-                        new_rules = filter_['commands'][cmd]
-                        cmd = cmd.upper()
-                        old_rules = allowed_commands.get(cmd, [])
-                        # Allow "simple" matching rules where the
-                        # 'pattern' key is implicit.
-                        for i in range(len(new_rules)):
-                            rule = new_rules[i]
-                            if isinstance(rule, str):
-                                new_rules[i] = {'pattern': rule}
-                        allowed_commands[cmd] = old_rules + new_rules
-                # Similarly, we don't use dict.update(), and instead
-                # verify that no two matching filters set some option
-                # for the same stream differently, cause then the
-                # order of how the filters are matched would matter.
-                if 'events' in filter_:
-                    for event in filter_['events']:
-                        new_opts = filter_['events'][event]
-                        event = event.upper()
-                        old_opts = allowed_events.get(event, None)
-                        if old_opts != None and new_opts != None and \
-                           any(old_opts.get(k, new_opts[k]) != new_opts[k] \
-                               for k in new_opts):
-                            raise RuntimeError(
-                                "Filter '{}' tried to set some option of " +
-                                "event `{}` that some other filter already " +
-                                "has set differently"
-                                .format(filter_['name'], event)
-                            )
-                        allowed_events[event] = new_opts
-                matched_filters.append(filter_['name'])
-                if filter_.get('restrict-stream-events', False):
-                    if not local_connection:
-                        raise RuntimeError(
-                            "Filter '{}' has `restrict-stream-events` set " +
-                            "but the client '{}:{}' is not local"
-                            .format(filter_['name'], *self.client_address)
-                        )
-                    restrict_stream_events = True
-        if matched_filters == []:
+            if all(any(expected_val == val or val == '*' \
+                       for val in filter_.get(key, [])) \
+                   for key, expected_val in matchers):
+                filter_name = filter_['name']
+
+                # Parse `commands`
+                commands = filter_.get('commands', {})
+                allowed_commands = {}
+                for cmd in commands:
+                    allowed_args = commands[cmd]
+                    # An empty argument list allows nothing, but will
+                    # make some code below easier than if it can be
+                    # None as well.
+                    if allowed_args == None:
+                        allowed_args = []
+                    for i in range(len(allowed_args)):
+                        if isinstance(allowed_args[i], str):
+                            allowed_args[i] = {'pattern': allowed_args[i]}
+                    allowed_commands[cmd.upper()] = allowed_args
+
+                # Prase `confs`, which is just syntactic sugar
+                confs = filter_.get('confs', {})
+                combined_getconf_rule = {'pattern': "(" + "|".join([
+                    key for key in confs]) + ")"}
+                setconf_unset_part = "\s*|\s*".join([
+                    key for key in confs if isinstance(confs[key], list) and \
+                                            '' in confs[key]]
+                )
+                setconf_assignment_part = "\s*|\s*".join([
+                    "{}{}".format(
+                        key, "=({})".format("|".join(confs[key]))
+                    ) for key in confs if isinstance(confs[key], list) and \
+                                          len(confs[key]) > 0])
+                setconf_parts = []
+                for part in [setconf_unset_part, setconf_assignment_part]:
+                    if part and part != '':
+                        setconf_parts.append(part)
+                combined_setconf_rule = {
+                    'pattern': "({})+".format("\s*|\s*".join(setconf_parts))
+                }
+                for cmd, rule in [('GETCONF', combined_getconf_rule),
+                                  ('SETCONF', combined_setconf_rule)]:
+                    if rule['pattern'] != "()+":
+                        if cmd not in allowed_commands:
+                            allowed_commands[cmd] = []
+                        allowed_commands[cmd].append(rule)
+
+                # Parse `events`
+                events = filter_.get('events', {})
+                allowed_events = {}
+                for event in events:
+                    opts = events[event]
+                    # Same as for the `commands` argument list, let's
+                    # add an empty dict to simplify later code.
+                    if opts == None:
+                        opts = {}
+                    allowed_events[event.upper()] = opts
+
+                # Parse `restrict-stream-events`
+                restrict_stream_events = filter_.get(
+                    'restrict-stream-events', False
+                )
+                if restrict_stream_events and not local_connection:
+                    log(
+                        "{}: filter '{}' has `restrict-stream-events` set " +
+                        "and we are remote so the option was disabled"
+                        .format(client_desc, filter_name)
+                    )
+                    restrict_stream_events = False
+
+                # If we're here, the filter is good!
+                break
+        if filter_name:
+            status = 'loaded filter: {}'.format(filter_name)
+        else:
             status = 'no matching filter found, using an empty one'
-        else:
-            status = 'loaded filter(s): {}'.format(", ".join(matched_filters))
-        if local_connection:
-            client_desc = '{} (pid: {}, user: {})'.format(
-                client_exe_path, client_pid, client_user
-            )
-        else:
-            client_desc = '{}:{}'.format(*self.client_address)
         log('{} connected: {}'.format(client_desc, status))
         if global_args.debug:
-            log('Merged rules:')
+            log('Final rules:')
             log(yaml.dump({
                 'commands': allowed_commands,
                 'events': allowed_events,
