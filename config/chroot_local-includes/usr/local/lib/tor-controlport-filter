@@ -11,7 +11,8 @@
 # top-level is supposed to be a list, where each element is a
 # dictionary looking something like this:
 #
-#     - match-exe-paths:
+#     - name: blabla
+#       match-exe-paths:
 #         - path_to_executable
 #         ...
 #       match-users:
@@ -35,6 +36,12 @@
 #           event_option: event_option_value
 #           ...
 #         ...
+#
+# `name` (optional) is a string which gives an internal name, useful
+# for debugging. When not given, filters will default to the name of
+# the file (excluding extension) they were read from (so there can be
+# duplicates!). It is advisable to define one filter per file, and
+# give helpful filenames instead of using this field.
 #
 # A filter is matched if for each of the relevant `match-*` rules at
 # least one of the elements match the client. For local (loopback)
@@ -363,7 +370,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 filters = yaml.load(fh.read())
                 name = re.sub(r'\.yml$', '', os.path.basename(filter_file))
                 for filter_ in filters:
-                    filter_['name'] = name
+                    if name not in filter_:
+                        filter_['name'] = name
                 self.filters += filters
 
     def connect_to_real_control_port(self):
