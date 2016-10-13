@@ -218,7 +218,8 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
     def rewrite_matched_lines(pattern, replacement, lines):
         # XXX: \r\n correct?
         split_lines = lines.strip().split("\r\n")
-        return "\r\n".join([rewrite_matched_line(line) for line in split_lines])
+        return "\r\n".join([rewrite_matched_line(pattern, replacement, line) \
+                            for line in split_lines])
 
     def rewrite_args_in_line(pattern, replacement, line):
         # We also want to match the command in `line`...
