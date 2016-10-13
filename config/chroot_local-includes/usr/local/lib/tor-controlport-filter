@@ -219,7 +219,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
     client_streams = set()
     while True:
         line = str(readh.readline(MAX_LINESIZE), 'ascii').strip()
-        if not line: break
+        if not line or line.isspace(): break
         debug_log_recv(line)
         # This regex makes us split on unquoted whitespaces.
         cmd, *args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', line)
