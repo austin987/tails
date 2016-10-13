@@ -67,8 +67,10 @@
 #   starting from 1. The rewritten rule is then proxied without the
 #   need to match any rule.
 #
-# * `response`: instead of proxying the command, just respond with
-#   this static string to the client.
+# * `response`: a dictionary, where the `pattern` and `replacement`
+#   keys work exactly as for commands arguments, but now for the
+#   response. Note that this means that the response is left intact if
+#   `pattern` doesn't match it.
 #
 # If a simple regex (as string) is given, it is assumed to be the
 # `pattern` which allows a short-hand for this common type of rule.
@@ -84,6 +86,10 @@
 # * `suppress`: a boolean determining whether we should just fool the
 #   client that it has subscribed to the event (i.e. the client
 #   request is not filtered) while we suppress them.
+#
+# * `response`: a dictionary, where the `pattern` and `replacement`
+#   keys work exactly as for `response` for commands, but now for the
+#   events.
 #
 # Note that two matched filters setting some event's option
 # differently will cause a runtime error.
@@ -165,6 +171,7 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             debug_log_helper('->', line)
 
     def respond(line, raw=False):
+        if line.isspace(): return
         debug_log_send(line)
         writeh.write(bytes(line, 'ascii'))
         if not raw: writeh.write(bytes("\r\n", 'ascii'))
@@ -174,31 +181,54 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         cmd, _, args = line.partition(' ')
         cmd = cmd.upper()
         allowed_args = allowed_commands.get(cmd, [])
+        # SETCONF can take multiple assignments, but let's allow
+        # listing them individually in the filter configuration.
+        if cmd == "SETCONF" and allowed_args != []:
+            combined_simple_rules = (
+                "|".join(["(?:{})".format(rule['pattern']) \
+                          for rule in allowed_args \
+                          if list(rule.keys()) == ['pattern']])
+            )
+            allowed_args.append(combined_simple_rules)
         return next((rule for rule in allowed_args \
                      if re.match(rule['pattern'] + "$", args)), None)
 
-    def is_line_allowed(line):
-        if global_args.disable_filtering: return True
-        return bool(get_rule(line))
-
-    def proxy_line(line):
+    def proxy_line(line, response_rewriter = None):
         response = controller.msg(line)
+        if response_rewriter:
+            response = response_rewriter(response)
         respond(response.raw_content(), raw=True)
 
     def filter_line(line):
         log("Command filtered: {}".format(line))
         respond("510 Command filtered")
 
+    def rewrite_line(pattern, replacement, line):
+        match = re.match(pattern + "$", line)
+        if not match: return None
+        return replacement.format(*match.groups())
+
+    def rewrite_matched_line(pattern, replacement, line):
+        new_line = rewrite_line(pattern, replacement, line)
+        if new_line:
+            return new_line
+        else:
+            return line
+
+    def rewrite_matched_lines(pattern, replacement, lines):
+        # XXX: \r\n correct?
+        split_lines = lines.strip().split("\r\n")
+        return "\r\n".join([rewrite_matched_line(line) for line in split_lines])
+
     def rewrite_args_in_line(pattern, replacement, line):
         # We also want to match the command in `line`...
         pattern = r'^(\S+)\s+' + pattern
+        # ... and add it back to the replacement string.
         replacement = "{} " + replacement
         match = re.match(pattern + "$", line)
-        if not match: return None
-        # ... and add it back to the replacement string.
-        return replacement.format(*match.groups())
+        return rewrite_line(pattern, replacement, line)
 
-    def event_cb(event):
+    def event_cb(event, event_rewriter = None):
         if restrict_stream_events and \
            isinstance(event, stem.response.events.StreamEvent) and \
            not global_args.disable_filtering:
@@ -213,7 +243,10 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
             elif event.status in [stem.StreamStatus.FAILED,
                                   stem.StreamStatus.CLOSED]:
                 client_streams.remove(event.id)
-        respond(event.raw_content(), raw=True)
+        raw_event_content = event.raw_content()
+        if event_rewriter:
+            raw_event_content = event_rewriter(raw_event_content)
+        respond(raw_event_content, raw=True)
 
     subscribed_event_listeners = []
     client_streams = set()
@@ -257,33 +290,44 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 rule = allowed_events[event] or {}
                 if not rule.get('suppress', False) or \
                    global_args.disable_filtering:
-                    event_cb_instance = lambda event: event_cb(event)
+                    def _event_rewriter(line):
+                        return rewrite_matched_line(
+                            rule['response'].get('pattern', r'(.*)'),
+                            rule['response'].get('replacement', '{}'),
+                            line
+                        )
+                    if 'response' in rule:
+                        def _event_cb(event):
+                            event_cb(event, event_rewriter=_event_rewriter)
+                    else:
+                        def _event_cb(event):
+                            event_cb(event, event)
                     controller.add_event_listener(
-                        event_cb_instance, getattr(stem.control.EventType, event)
+                        _event_cb, getattr(stem.control.EventType, event)
                     )
-                    subscribed_event_listeners.append(event_cb_instance)
+                    subscribed_event_listeners.append(_event_cb)
             respond("250 OK")
-
-        # SETCONF can take multiple assignments, but let's allow
-        # listing them individually in the filter file.
-        elif cmd == "SETCONF":
-            if all(is_line_allowed("SETCONF {}".format(arg)) for arg in args):
-                proxy_line(line)
-            else:
-                filter_line(line)
 
         else:
             rule = get_rule(line)
             if rule:
+                response_rewriter = None
+
+                if 'response' in rule:
+                    def _response_rewriter(lines):
+                        return rewrite_matched_lines(
+                            rule['response'].get('pattern', r'(.*)'),
+                            rule['response'].get('replacement', '{}'),
+                            lines
+                        )
+                    response_rewriter = _response_rewriter
+
                 if 'replacement' in rule:
-                    new_line = rewrite_args_in_line(
+                    line = rewrite_args_in_line(
                         rule['pattern'], rule['replacement'], line
                     )
-                    proxy_line(new_line)
-                elif 'response' in rule:
-                    respond(rule['response'])
-                else:
-                    proxy_line(line)
+
+                proxy_line(line, response_rewriter=response_rewriter)
             else:
                 filter_line(line)
 
