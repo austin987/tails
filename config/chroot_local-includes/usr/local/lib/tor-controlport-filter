@@ -385,8 +385,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             if not client_pid: return
             client_exe_path = exe_path_of_pid(client_pid)
             client_user = psutil.Process(client_pid).username()
-            client_desc = '{} (pid: {}, user: {})'.format(
-                client_exe_path, client_pid, client_user
+            client_desc = '{} (pid: {}, user: {}, port: {})'.format(
+                client_exe_path, client_pid, client_user, self.client_address[1]
             )
         else:
             client_pid = None
