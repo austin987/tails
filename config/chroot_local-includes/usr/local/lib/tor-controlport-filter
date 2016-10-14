@@ -438,13 +438,17 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         super(type(self), self).setup()
         self.filters = []
         for filter_file in glob.glob('/etc/tor-controlport-filter.d/*.yml'):
-            with open(filter_file, "rb") as fh:
-                filters = yaml.load(fh.read())
-                name = re.sub(r'\.yml$', '', os.path.basename(filter_file))
-                for filter_ in filters:
-                    if name not in filter_:
-                        filter_['name'] = name
-                self.filters += filters
+            try:
+                with open(filter_file, "rb") as fh:
+                    filters = yaml.load(fh.read())
+                    name = re.sub(r'\.yml$', '', os.path.basename(filter_file))
+                    for filter_ in filters:
+                        if name not in filter_:
+                            filter_['name'] = name
+                    self.filters += filters
+            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
+                log("filter '{}' has bad YAML and was not loaded!"
+                    .format(filter_file))
 
     def connect_to_real_control_port(self):
         with open(global_args.control_cookie_path, "rb") as f:
