@@ -389,9 +389,12 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                any(event not in allowed_events for event in events):
                 filter_line(line)
                 continue
-            for listener in subscribed_event_listeners:
-                controller.remove_event_listener(listener)
-            subscribed_event_listeners = []
+            for listener, event in subscribed_event_listeners:
+                if event in events:
+                    events.remove(event)
+                else:
+                    controller.remove_event_listener(listener)
+                    subscribed_event_listeners.remove((listener, event))
             for event in events:
                 rule = allowed_events[event] or {}
                 if not rule.get('suppress', False) or \
@@ -406,7 +409,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                     controller.add_event_listener(
                         _event_cb, getattr(stem.control.EventType, event)
                     )
-                    subscribed_event_listeners.append(_event_cb)
+                    subscribed_event_listeners.append((_event_cb, event))
             respond("250 OK")
 
         else:
