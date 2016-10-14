@@ -188,7 +188,7 @@ def match_and_parse_filter(filters, matchers):
             status = 'multiple filters matched, ' + status
 
         # Parse `commands`
-        commands = matched_filter.get('commands', {})
+        commands = matched_filter.get('commands', {}) or {}
         for cmd in commands:
             allowed_args = commands[cmd]
             # An empty argument list allows nothing, but will
@@ -202,7 +202,7 @@ def match_and_parse_filter(filters, matchers):
             allowed_commands[cmd.upper()] = allowed_args
 
         # Prase `confs`, which is just syntactic sugar
-        confs = matched_filter.get('confs', {})
+        confs = matched_filter.get('confs', {}) or {}
         combined_getconf_rule = {'pattern': "(" + "|".join([
             key for key in confs]) + ")"}
         setconf_reset_part = "\s*|\s*".join([
@@ -229,7 +229,7 @@ def match_and_parse_filter(filters, matchers):
                 allowed_commands[cmd].append(rule)
 
         # Parse `events`
-        events = matched_filter.get('events', {})
+        events = matched_filter.get('events', {}) or {}
         for event in events:
             opts = events[event]
             # Same as for the `commands` argument list, let's
@@ -239,9 +239,9 @@ def match_and_parse_filter(filters, matchers):
             allowed_events[event.upper()] = opts
 
         # Parse `restrict-stream-events`
-        restrict_stream_events = matched_filter.get(
+        restrict_stream_events = bool(matched_filter.get(
             'restrict-stream-events', False
-        )
+        ))
     else:
         status = 'no matching filter found, using an empty one'
     return (status, filter_name, allowed_commands,
