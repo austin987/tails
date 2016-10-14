@@ -565,13 +565,9 @@ def main():
     global_args.__dict__['print_requests'] = global_args.complain or \
                                              global_args.debug
     global_args.__dict__['print_responses'] = global_args.debug
-    server = FilteredControlPortProxy(
-        (global_args.listen_address, global_args.listen_port),
-        FilteredControlPortProxyHandler
-    )
-    log("Tor control port filter started, listening on {}:{}"
-        .format(global_args.listen_address, global_args.listen_port)
-    )
+    address = (global_args.listen_address, global_args.listen_port)
+    server = FilteredControlPortProxy(address, FilteredControlPortProxyHandler)
+    log("Tor control port filter started, listening on {}:{}".format(*address))
     try:
         server.serve_forever()
     except KeyboardInterrupt:
