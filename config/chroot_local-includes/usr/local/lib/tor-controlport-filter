@@ -77,10 +77,12 @@
 #   starting from 1. The rewritten rule is then proxied without the
 #   need to match any rule.
 #
-# * `response`: a dictionary, where the `pattern` and `replacement`
-#   keys work exactly as for commands arguments, but now for the
-#   response. Note that this means that the response is left intact if
-#   `pattern` doesn't match it.
+# * `response`: a list of dictionaries, where the `pattern` and
+#   `replacement` keys work exactly as for commands arguments, but now
+#   for the response. Note that this means that the response is left
+#   intact if `pattern` doesn't match it, and if many `pattern`:s
+#   match, only the first one (in the order listed) will trigger a
+#   replacement.
 #
 # If a simple regex (as string) is given, it is assumed to be the
 # `pattern` which allows a short-hand for this common type of rule.
@@ -224,31 +226,32 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
         _log("command filtered: {}".format(line))
         respond("510 Command filtered")
 
-    def rewrite_line(pattern, replacement, line):
-        match = re.match(pattern + "$", line)
-        if not match: return None
-        return replacement.format(*match.groups())
+    def rewrite_line(replacers, line):
+        for r in replacers:
+            match = re.match(r['pattern'] + "$", line)
+            if match:
+                return r['replacement'].format(*match.groups())
+        return None
 
-    def rewrite_matched_line(pattern, replacement, line):
-        new_line = rewrite_line(pattern, replacement, line)
+    def rewrite_matched_line(replacers, line):
+        new_line = rewrite_line(replacers, line)
         if new_line:
             return new_line
         else:
             return line
 
-    def rewrite_matched_lines(pattern, replacement, lines):
-        # XXX: \r\n correct?
+    def rewrite_matched_lines(replacers, lines):
         split_lines = lines.strip().split("\r\n")
-        return "\r\n".join([rewrite_matched_line(pattern, replacement, line) \
+        return "\r\n".join([rewrite_matched_line(replacers, line) \
                             for line in split_lines])
 
-    def rewrite_args_in_line(pattern, replacement, line):
-        # We also want to match the command in `line`...
-        pattern = r'^(\S+)\s+' + pattern
-        # ... and add it back to the replacement string.
-        replacement = "{} " + replacement
-        match = re.match(pattern + "$", line)
-        return rewrite_line(pattern, replacement, line)
+    def rewrite_args_in_line(replacers, line):
+        # We also want to match the command in `line` and add it back
+        # to the replacement string.
+        replacers = [{'pattern':     '^(\S+)\s+' + r['pattern'],
+                      'replacement': "{} " + r['replacement']} \
+                     for r in replacers]
+        return rewrite_line(replacers, line)
 
     def event_cb(event, event_rewriter = None):
         if restrict_stream_events and \
@@ -317,12 +320,9 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
                 if not rule.get('suppress', False) or \
                    global_args.disable_filtering:
                     if 'response' in rule:
-                        pattern = rule['response'].get('pattern', r'(.*)')
-                        replacement = rule['response'].get('replacement', '{}')
+                        replacers = rule['response']
                         def _event_rewriter(line):
-                            return rewrite_matched_line(
-                                pattern, replacement, line
-                            )
+                            return rewrite_matched_line(replacers, line)
                         def _event_cb(event):
                             event_cb(event, event_rewriter=_event_rewriter)
                     else:
@@ -341,17 +341,11 @@ def handle_controlport_session(controller, readh, writeh, allowed_commands, allo
 
                 if 'response' in rule:
                     def _response_rewriter(lines):
-                        return rewrite_matched_lines(
-                            rule['response'].get('pattern', r'(.*)'),
-                            rule['response'].get('replacement', '{}'),
-                            lines
-                        )
+                        return rewrite_matched_lines(rule['response'], lines)
                     response_rewriter = _response_rewriter
 
                 if 'replacement' in rule:
-                    new_line = rewrite_args_in_line(
-                        rule['pattern'], rule['replacement'], line
-                    )
+                    new_line = rewrite_args_in_line([rule], line)
                     debug_log_rewrite('command', line, new_line)
                     line = new_line
 
