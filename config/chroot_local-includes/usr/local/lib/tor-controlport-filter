@@ -171,6 +171,83 @@ def exe_path_of_pid(pid):
             return psutil.Process(pid).exe()
 
 
+def match_and_parse_filter(filters, matchers):
+    filter_name = None
+    allowed_commands = {}
+    allowed_events = {}
+    restrict_stream_events = False
+    matched_filters = [filter_ for filter_ in filters \
+                       if all(any(val == expected_val or val == '*' \
+                                  for val in filter_.get(key, [])) \
+                              for key, expected_val in matchers)]
+    if len(matched_filters) > 0:
+        matched_filter = matched_filters[0]
+        filter_name = matched_filter['name']
+        status = 'loaded filter: {}'.format(filter_name)
+        if len(matched_filters) > 1:
+            status = 'multiple filters matched, ' + status
+
+        # Parse `commands`
+        commands = matched_filter.get('commands', {})
+        for cmd in commands:
+            allowed_args = commands[cmd]
+            # An empty argument list allows nothing, but will
+            # make some code below easier than if it can be
+            # None as well.
+            if allowed_args == None:
+                allowed_args = []
+            for i in range(len(allowed_args)):
+                if isinstance(allowed_args[i], str):
+                    allowed_args[i] = {'pattern': allowed_args[i]}
+            allowed_commands[cmd.upper()] = allowed_args
+
+        # Prase `confs`, which is just syntactic sugar
+        confs = matched_filter.get('confs', {})
+        combined_getconf_rule = {'pattern': "(" + "|".join([
+            key for key in confs]) + ")"}
+        setconf_unset_part = "\s*|\s*".join([
+            key for key in confs if isinstance(confs[key], list) and \
+                                    '' in confs[key]]
+        )
+        setconf_assignment_part = "\s*|\s*".join([
+            "{}{}".format(
+                key, "=({})".format("|".join(confs[key]))
+            ) for key in confs if isinstance(confs[key], list) and \
+                                  len(confs[key]) > 0])
+        setconf_parts = []
+        for part in [setconf_unset_part, setconf_assignment_part]:
+            if part and part != '':
+                setconf_parts.append(part)
+        combined_setconf_rule = {
+            'pattern': "({})+".format("\s*|\s*".join(setconf_parts))
+        }
+        for cmd, rule in [('GETCONF', combined_getconf_rule),
+                          ('SETCONF', combined_setconf_rule)]:
+            if rule['pattern'] != "()+":
+                if cmd not in allowed_commands:
+                    allowed_commands[cmd] = []
+                allowed_commands[cmd].append(rule)
+
+        # Parse `events`
+        events = matched_filter.get('events', {})
+        for event in events:
+            opts = events[event]
+            # Same as for the `commands` argument list, let's
+            # add an empty dict to simplify later code.
+            if opts == None:
+                opts = {}
+            allowed_events[event.upper()] = opts
+
+        # Parse `restrict-stream-events`
+        restrict_stream_events = matched_filter.get(
+            'restrict-stream-events', False
+        )
+    else:
+        status = 'no matching filter found, using an empty one'
+    return (status, filter_name, allowed_commands,
+            allowed_events, restrict_stream_events)
+
+
 def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events, client_desc, client_pid, restrict_stream_events = False):
 
     def _log(line, format_multiline=False, sep = ': '):
@@ -390,101 +467,28 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             client_desc = '{} (pid: {}, user: {}, port: {})'.format(
                 client_exe_path, client_pid, client_user, self.client_address[1]
             )
+            matchers = [
+                ('match-exe-paths', client_exe_path),
+                ('match-users',     client_user),
+            ]
         else:
             client_pid = None
             client_exe_path = ''
             client_user = ''
             client_desc = '{}:{}'.format(*self.client_address)
-        filter_name = None
-        allowed_commands = {}
-        allowed_events = {}
-        restrict_stream_events = False
-        for filter_ in self.filters:
-            if local_connection:
-                matchers = [
-                    ('match-exe-paths', client_exe_path),
-                    ('match-users',     client_user),
-                ]
-            else:
-                matchers = [
-                    ('match-hosts', client_host),
-                ]
-            if all(any(expected_val == val or val == '*' \
-                       for val in filter_.get(key, [])) \
-                   for key, expected_val in matchers):
-                filter_name = filter_['name']
-
-                # Parse `commands`
-                commands = filter_.get('commands', {})
-                allowed_commands = {}
-                for cmd in commands:
-                    allowed_args = commands[cmd]
-                    # An empty argument list allows nothing, but will
-                    # make some code below easier than if it can be
-                    # None as well.
-                    if allowed_args == None:
-                        allowed_args = []
-                    for i in range(len(allowed_args)):
-                        if isinstance(allowed_args[i], str):
-                            allowed_args[i] = {'pattern': allowed_args[i]}
-                    allowed_commands[cmd.upper()] = allowed_args
-
-                # Prase `confs`, which is just syntactic sugar
-                confs = filter_.get('confs', {})
-                combined_getconf_rule = {'pattern': "(" + "|".join([
-                    key for key in confs]) + ")"}
-                setconf_unset_part = "\s*|\s*".join([
-                    key for key in confs if isinstance(confs[key], list) and \
-                                            '' in confs[key]]
-                )
-                setconf_assignment_part = "\s*|\s*".join([
-                    "{}{}".format(
-                        key, "=({})".format("|".join(confs[key]))
-                    ) for key in confs if isinstance(confs[key], list) and \
-                                          len(confs[key]) > 0])
-                setconf_parts = []
-                for part in [setconf_unset_part, setconf_assignment_part]:
-                    if part and part != '':
-                        setconf_parts.append(part)
-                combined_setconf_rule = {
-                    'pattern': "({})+".format("\s*|\s*".join(setconf_parts))
-                }
-                for cmd, rule in [('GETCONF', combined_getconf_rule),
-                                  ('SETCONF', combined_setconf_rule)]:
-                    if rule['pattern'] != "()+":
-                        if cmd not in allowed_commands:
-                            allowed_commands[cmd] = []
-                        allowed_commands[cmd].append(rule)
-
-                # Parse `events`
-                events = filter_.get('events', {})
-                allowed_events = {}
-                for event in events:
-                    opts = events[event]
-                    # Same as for the `commands` argument list, let's
-                    # add an empty dict to simplify later code.
-                    if opts == None:
-                        opts = {}
-                    allowed_events[event.upper()] = opts
-
-                # Parse `restrict-stream-events`
-                restrict_stream_events = filter_.get(
-                    'restrict-stream-events', False
-                )
-                if restrict_stream_events and not local_connection:
-                    log(
-                        "{}: filter '{}' has `restrict-stream-events` set " +
-                        "and we are remote so the option was disabled"
-                        .format(client_desc, filter_name)
-                    )
-                    restrict_stream_events = False
-
-                # If we're here, the filter is good!
-                break
-        if filter_name:
-            status = 'loaded filter: {}'.format(filter_name)
-        else:
-            status = 'no matching filter found, using an empty one'
+            matchers = [
+                ('match-hosts', client_host),
+            ]
+        status, filter_name, allowed_commands, \
+            allowed_events, restrict_stream_events = \
+                match_and_parse_filter(self.filters, matchers)
+        if restrict_stream_events and not local_connection:
+            log(
+                "{}: filter '{}' has `restrict-stream-events` set " +
+                "and we are remote so the option was disabled"
+                .format(client_desc, filter_name)
+            )
+            restrict_stream_events = False
         log('{} connected: {}'.format(client_desc, status))
         if global_args.debug:
             log('Final rules:')
