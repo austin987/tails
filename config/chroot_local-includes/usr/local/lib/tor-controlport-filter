@@ -94,7 +94,7 @@
 # `confs` (optional) is a dictionary, and it's just syntactic sugar to
 # generate GETCONF/SETCONF rules. If a key exists, GETCONF of the
 # keyname is allowed, and if it has a non-empty list as value, those
-# values are allowed to be set. The empty string means that unsetting
+# values are allowed to be set. The empty string means that resetting
 # it is allowed. This is very useful for applications that like to
 # SETCONF on multiple configurations at the same time.
 #
@@ -205,7 +205,7 @@ def match_and_parse_filter(filters, matchers):
         confs = matched_filter.get('confs', {})
         combined_getconf_rule = {'pattern': "(" + "|".join([
             key for key in confs]) + ")"}
-        setconf_unset_part = "\s*|\s*".join([
+        setconf_reset_part = "\s*|\s*".join([
             key for key in confs if isinstance(confs[key], list) and \
                                     '' in confs[key]]
         )
@@ -215,7 +215,7 @@ def match_and_parse_filter(filters, matchers):
             ) for key in confs if isinstance(confs[key], list) and \
                                   len(confs[key]) > 0])
         setconf_parts = []
-        for part in [setconf_unset_part, setconf_assignment_part]:
+        for part in [setconf_reset_part, setconf_assignment_part]:
             if part and part != '':
                 setconf_parts.append(part)
         combined_setconf_rule = {
