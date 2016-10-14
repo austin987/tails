@@ -139,6 +139,10 @@ DEFAULT_CONTROL_SOCKET_PATH = '/var/run/tor/control'
 MAX_LINESIZE = 1024
 
 
+class NoRewriteMatch(RuntimeError):
+    pass
+
+
 def log(msg):
     print(msg, file=sys.stderr)
     sys.stderr.flush()
@@ -308,13 +312,12 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
             match = re.match(r['pattern'] + "$", line)
             if match:
                 return r['replacement'].format(*match.groups())
-        return None
+        raise NoRewriteMatch()
 
     def rewrite_matched_line(replacers, line):
-        new_line = rewrite_line(replacers, line)
-        if new_line:
-            return new_line
-        else:
+        try:
+            return rewrite_line(replacers, line)
+        except NoRewriteMatch:
             return line
 
     def rewrite_matched_lines(replacers, lines):
