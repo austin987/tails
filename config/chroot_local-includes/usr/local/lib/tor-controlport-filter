@@ -396,15 +396,13 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                 rule = allowed_events[event] or {}
                 if not rule.get('suppress', False) or \
                    global_args.disable_filtering:
+                    _event_rewriter = None
                     if 'response' in rule:
                         replacers = rule['response']
                         def _event_rewriter(line):
                             return rewrite_matched_line(replacers, line)
-                        def _event_cb(event):
-                            event_cb(event, event_rewriter=_event_rewriter)
-                    else:
-                        def _event_cb(event):
-                            event_cb(event)
+                    def _event_cb(event):
+                        event_cb(event, event_rewriter=_event_rewriter)
                     controller.add_event_listener(
                         _event_cb, getattr(stem.control.EventType, event)
                     )
