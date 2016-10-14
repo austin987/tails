@@ -464,22 +464,27 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             if not client_pid: return
             client_exe_path = exe_path_of_pid(client_pid)
             client_user = psutil.Process(client_pid).username()
-            client_desc = '{} (pid: {}, user: {}, port: {})'.format(
-                client_exe_path, client_pid, client_user, self.client_address[1]
-            )
             matchers = [
                 ('match-exe-paths', client_exe_path),
                 ('match-users',     client_user),
             ]
         else:
             client_pid = None
-            client_desc = '{}:{}'.format(*self.client_address)
             matchers = [
                 ('match-hosts', client_host),
             ]
         status, filter_name, allowed_commands, \
             allowed_events, restrict_stream_events = \
                 match_and_parse_filter(self.filters, matchers)
+        if local_connection:
+            client_desc = '{} (pid: {}, user: {}, port: {}, filter: {})'.format(
+                client_exe_path, client_pid, client_user,
+                self.client_address[1], filter_name
+            )
+        else:
+            client_desc = '{1}:{2} (filter: {0})'.format(
+                filter_name, *self.client_address
+            )
         if restrict_stream_events and not local_connection:
             log(
                 "{}: filter '{}' has `restrict-stream-events` set " +
