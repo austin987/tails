@@ -248,7 +248,7 @@ def match_and_parse_filter(filters, matchers):
             allowed_events, restrict_stream_events)
 
 
-def handle_controlport_session(controller, readh, writeh, allowed_commands, allowed_events, client_desc, client_pid, restrict_stream_events = False):
+def handle_controlport_session(controller, readh, writeh, client_desc, client_pid, allowed_commands, allowed_events, restrict_stream_events = False):
 
     def _log(line, format_multiline=False, sep = ': '):
         line = line.strip()
@@ -501,8 +501,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         disconnect_reason = "client quit"
         try:
             handle_controlport_session(controller, self.rfile, self.wfile,
-                                       allowed_commands, allowed_events,
                                        client_desc, client_pid,
+                                       allowed_commands, allowed_events,
                                        restrict_stream_events
             )
         except (ConnectionResetError, BrokenPipeError) as err:
