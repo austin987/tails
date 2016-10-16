@@ -281,11 +281,12 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
             _log("rewrote {}:\n{}\nto:\n{}".format(kind, old, new),
                  format_multiline=False)
 
-    def respond(line, raw=False):
+    def respond(line):
         if line.isspace(): return
         debug_log_send(line)
         writeh.write(bytes(line, 'ascii'))
-        if not raw: writeh.write(bytes("\r\n", 'ascii'))
+        if line[-2:] != "\r\n":
+            writeh.write(bytes("\r\n", 'ascii'))
         writeh.flush()
 
     def get_rule(line):
@@ -301,7 +302,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
             new_response = response_rewriter(response)
             debug_log_rewrite('response', response, new_response)
             response = new_response
-        respond(response, raw=True)
+        respond(response)
 
     def filter_line(line):
         _log("command filtered: {}".format(line))
@@ -355,7 +356,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                 'received event', raw_event_content, new_raw_event_content
             )
             raw_event_content = new_raw_event_content
-        respond(raw_event_content, raw=True)
+        respond(raw_event_content)
 
     subscribed_event_listeners = []
     client_streams = set()
