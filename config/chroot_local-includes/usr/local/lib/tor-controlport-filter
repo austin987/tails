@@ -296,8 +296,12 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         return next((rule for rule in allowed_args \
                      if re.match(rule['pattern'] + "$", args)), None)
 
-    def proxy_line(line, response_rewriter = None):
-        response = controller.msg(line).raw_content()
+    def proxy_line(line, args_rewriter = None, response_rewriter = None):
+        if args_rewriter:
+            new_line = args_rewriter(line)
+            debug_log_rewrite('command', line, new_line)
+            line = new_line
+        response = controller.msg(line.strip()).raw_content()
         if response_rewriter:
             new_response = response_rewriter(response)
             debug_log_rewrite('response', response, new_response)
@@ -324,15 +328,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
     def rewrite_matched_lines(replacers, lines):
         split_lines = lines.strip().split("\r\n")
         return "\r\n".join([rewrite_matched_line(replacers, line) \
-                            for line in split_lines])
-
-    def rewrite_args_in_line(replacers, line):
-        # We also want to match the command in `line` and add it back
-        # to the replacement string.
-        replacers = [{'pattern':     '^(\S+)\s+' + r['pattern'],
-                      'replacement': "{} " + r['replacement']} \
-                     for r in replacers]
-        return rewrite_line(replacers, line)
+                            for line in split_lines]) + "\r\n"
 
     def event_cb(event, event_rewriter = None):
         if restrict_stream_events and \
@@ -403,13 +399,13 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                 rule = allowed_events[event] or {}
                 if not rule.get('suppress', False) or \
                    global_args.disable_filtering:
-                    _event_rewriter = None
+                    event_rewriter = None
                     if 'response' in rule:
-                        replacers = rule['response']
                         def _event_rewriter(line):
-                            return rewrite_matched_line(replacers, line)
+                            return rewrite_matched_line(rule['response'], line)
+                        event_rewriter = _event_rewriter
                     def _event_cb(event):
-                        event_cb(event, event_rewriter=_event_rewriter)
+                        event_cb(event, event_rewriter=event_rewriter)
                     controller.add_event_listener(
                         _event_cb, getattr(stem.control.EventType, event)
                     )
@@ -419,6 +415,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         else:
             rule = get_rule(line)
             if rule:
+                args_rewriter = None
                 response_rewriter = None
 
                 if 'response' in rule:
@@ -427,11 +424,22 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                     response_rewriter = _response_rewriter
 
                 if 'replacement' in rule:
-                    new_line = rewrite_args_in_line([rule], line)
-                    debug_log_rewrite('command', line, new_line)
-                    line = new_line
+                    def _args_rewriter(line):
+                        # We also want to match the command in `line`
+                        # and add it back to the replacement string.
+                        # We make sure to keep the exact white spaces
+                        # separating the command and arguments, to not
+                        # rewrite the line unnecessarily.
+                        cmd = re.match(r"(\S+\s+).*$", line).group(1)
+                        replacer = {
+                            'pattern':     cmd + rule['pattern'],
+                            'replacement': cmd + rule['replacement']
+                        }
+                        return rewrite_line([replacer], line)
+                    args_rewriter = _args_rewriter
 
-                proxy_line(line, response_rewriter=response_rewriter)
+                proxy_line(line, args_rewriter=args_rewriter,
+                           response_rewriter=response_rewriter)
             else:
                 filter_line(line)
 
