@@ -200,7 +200,7 @@ When /^I reboot without wiping the memory$/ do
 end
 
 When /^I stop the boot at the bootloader menu$/ do
-  step 'Tails is at the boot menu'
+  step "Tails is at the boot menu's cmdline"
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do

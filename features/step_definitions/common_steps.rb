@@ -280,7 +280,7 @@ def memory_wipe_timeout
   nr_gigs_of_ram*30
 end
 
-Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
+Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   boot_timeout = 3*60
   # We need some extra time for memory wiping if rebooting
   boot_timeout += memory_wipe_timeout if reboot
@@ -338,7 +338,7 @@ Given /^Tails is at the boot menu( after rebooting)?$/ do |reboot|
 end
 
 Given /^the computer (re)?boots Tails$/ do |reboot|
-  step 'Tails is at the boot menu' + (reboot ? ' after rebooting' : '')
+  step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
@@ -582,7 +582,7 @@ Then /^Tails eventually shuts down$/ do
 end
 
 Then /^Tails eventually restarts$/ do
-  step 'Tails is at the boot menu after rebooting'
+  step "Tails is at the boot menu's cmdline after rebooting"
   step 'the computer reboots Tails'
 end
 
