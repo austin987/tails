@@ -365,6 +365,8 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
             else:
                 controller.remove_event_listener(listener)
                 subscribed_event_listeners.remove((listener, event))
+                if global_args.print_responses:
+                    _log("unsubscribed to event '{}'".format(event))
         for event in events:
             rule = allowed_events[event] or {}
             if not rule.get('suppress', False) or \
@@ -380,6 +382,11 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                     _event_cb, getattr(stem.control.EventType, event)
                 )
                 subscribed_event_listeners.append((_event_cb, event))
+                if global_args.print_responses:
+                    _log("subscribed to event '{}'".format(event))
+            else:
+                if global_args.print_responses:
+                    _log("suppressed subscription to event '{}'".format(event))
         respond("250 OK")
 
     subscribed_event_listeners = []
