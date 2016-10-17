@@ -360,14 +360,14 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
             filter_line(line)
             return
         for listener, event in subscribed_event_listeners:
-            if event in events:
-                events.remove(event)
-            else:
+            if event not in events:
                 controller.remove_event_listener(listener)
                 subscribed_event_listeners.remove((listener, event))
                 if global_args.print_responses:
                     _log("unsubscribed to event '{}'".format(event))
         for event in events:
+            if any(event == event_ for _, event_ in subscribed_event_listeners):
+                continue
             rule = allowed_events[event] or {}
             if not rule.get('suppress', False) or \
                global_args.disable_filtering:
