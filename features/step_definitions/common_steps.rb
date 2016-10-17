@@ -582,7 +582,6 @@ Then /^Tails eventually shuts down$/ do
 end
 
 Then /^Tails eventually restarts$/ do
-  step "Tails is at the boot menu's cmdline after rebooting"
   step 'the computer reboots Tails'
 end
 
