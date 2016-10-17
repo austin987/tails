@@ -404,7 +404,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         if line.isspace():
             _log('ignoring received empty (or whitespace-only) line')
             continue
-        match = re.match(r'(\S+)(\s*)(.*)\r\n$', line)
+        match = re.match(r'(\S+)(\s*)([^\r\n]*)\r?\n$', line)
         if not match:
             _log("received bad line (escapes made explicit): " + repr(line))
             # Hopefully the next line is ok...
