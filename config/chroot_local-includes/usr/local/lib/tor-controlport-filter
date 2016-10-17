@@ -288,12 +288,10 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         if not raw: writeh.write(bytes("\r\n", 'ascii'))
         writeh.flush()
 
-    def get_rule(line):
-        cmd, _, args = line.partition(' ')
-        cmd = cmd.upper()
+    def get_rule(cmd, arg_str):
         allowed_args = allowed_commands.get(cmd, [])
         return next((rule for rule in allowed_args \
-                     if re.match(rule['pattern'] + "$", args)), None)
+                     if re.match(rule['pattern'] + "$", arg_str)), None)
 
     def proxy_line(line, args_rewriter = None, response_rewriter = None):
         if args_rewriter:
@@ -398,10 +396,12 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
     subscribed_event_listeners = []
     client_streams = set()
     while True:
-        line = str(readh.readline(MAX_LINESIZE), 'ascii').strip()
+        line = str(readh.readline(MAX_LINESIZE), 'ascii')
         if not line or line.isspace(): break
         debug_log_recv(line)
-        cmd, _, args = line.partition(' ')
+        cmd, cmd_arg_sep, arg_str = \
+            re.match(r'(\S+)(\s*)(.*)\r\n$', line).groups()
+        args = arg_str.split()
         cmd = cmd.upper()
 
         if cmd == "PROTOCOLINFO":
@@ -424,11 +424,11 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         elif cmd == "SETEVENTS":
             # The control language doesn't care about case for
             # the event type.
-            events = [event.upper() for event in args.split()]
+            events = [event.upper() for event in args]
             update_event_subscriptions(events)
 
         else:
-            rule = get_rule(line)
+            rule = get_rule(cmd, arg_str)
             if rule:
                 args_rewriter = None
                 response_rewriter = None
@@ -445,10 +445,10 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                         # We make sure to keep the exact white spaces
                         # separating the command and arguments, to not
                         # rewrite the line unnecessarily.
-                        cmd = re.match(r"(\S+\s+).*$", line).group(1)
+                        prefix = cmd + cmd_arg_sep
                         replacer = {
-                            'pattern':     cmd + rule['pattern'],
-                            'replacement': cmd + rule['replacement']
+                            'pattern':     prefix + rule['pattern'],
+                            'replacement': prefix + rule['replacement']
                         }
                         return rewrite_line([replacer], line)
                     args_rewriter = _args_rewriter
