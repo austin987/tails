@@ -313,10 +313,14 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         respond("510 Command filtered")
 
     def rewrite_line(replacers, line):
+        terminator = ''
+        if line[-2:] == "\r\n":
+            terminator = "\r\n"
+            line = line[:-2]
         for r in replacers:
             match = re.match(r['pattern'] + "$", line)
             if match:
-                return r['replacement'].format(*match.groups())
+                return r['replacement'].format(*match.groups()) + terminator
         raise NoRewriteMatch()
 
     def rewrite_matched_line(replacers, line):
