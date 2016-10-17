@@ -396,11 +396,21 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
     subscribed_event_listeners = []
     client_streams = set()
     while True:
-        line = str(readh.readline(MAX_LINESIZE), 'ascii')
-        if not line or line.isspace(): break
+        binary_line = readh.readline(MAX_LINESIZE)
+        if binary_line == b'':
+            # Deal with clients that close the socket without a QUIT.
+            break
+        line = str(binary_line, 'ascii')
+        if line.isspace():
+            _log('ignoring received empty (or whitespace-only) line')
+            continue
+        match = re.match(r'(\S+)(\s*)(.*)\r\n$', line)
+        if not match:
+            _log("received bad line (escapes made explicit): " + repr(line))
+            # Hopefully the next line is ok...
+            continue
         debug_log_recv(line)
-        cmd, cmd_arg_sep, arg_str = \
-            re.match(r'(\S+)(\s*)(.*)\r\n$', line).groups()
+        cmd, cmd_arg_sep, arg_str = match.groups()
         args = arg_str.split()
         cmd = cmd.upper()
 
