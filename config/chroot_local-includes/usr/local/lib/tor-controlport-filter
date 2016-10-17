@@ -379,8 +379,9 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                global_args.disable_filtering:
                 event_rewriter = None
                 if 'response' in rule:
+                    replacers = rule['response']
                     def _event_rewriter(line):
-                        return rewrite_matched_line(rule['response'], line)
+                        return rewrite_matched_line(replacers, line)
                     event_rewriter = _event_rewriter
                 def _event_cb(event):
                     event_cb(event, event_rewriter=event_rewriter)
