@@ -367,6 +367,8 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                     _log("unsubscribed to event '{}'".format(event))
         for event in events:
             if any(event == event_ for _, event_ in subscribed_event_listeners):
+                if global_args.print_responses:
+                    _log("already subscribed to '{}'".format(event))
                 continue
             rule = allowed_events[event] or {}
             if not rule.get('suppress', False) or \
