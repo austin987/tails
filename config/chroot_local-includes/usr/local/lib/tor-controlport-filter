@@ -401,8 +401,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         line = str(readh.readline(MAX_LINESIZE), 'ascii').strip()
         if not line or line.isspace(): break
         debug_log_recv(line)
-        # This regex makes us split on unquoted whitespaces.
-        cmd, *args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', line)
+        cmd, _, args = line.partition(' ')
         cmd = cmd.upper()
 
         if cmd == "PROTOCOLINFO":
@@ -425,7 +424,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         elif cmd == "SETEVENTS":
             # The control language doesn't care about case for
             # the event type.
-            events = [event.upper() for event in args]
+            events = [event.upper() for event in args.split()]
             update_event_subscriptions(events)
 
         else:
