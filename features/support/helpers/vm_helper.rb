@@ -148,29 +148,32 @@ class VM
   end
 
   def set_cdrom_image(image)
-    image = nil if image == ''
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/disk') do |e|
-      if e.attribute('device').to_s == "cdrom"
-        if image.nil?
-          e.elements.delete('source')
-        else
-          if ! e.elements['source']
-            e.add_element('source')
-          end
-          e.elements['source'].attributes['file'] = image
-        end
-        if is_running?
-          @domain.update_device(e.to_s)
-        else
-          update(domain_xml.to_s)
-        end
-      end
+    if image == ''
+      raise "Can't set cdrom image to an empty string"
+    end
+    xml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml"))
+    xml.elements['disk/source'].attributes['file'] = image
+    if is_running?
+      @domain.attach_device(xml.to_s)
+    else
+      domain_xml = REXML::Document.new(@domain.xml_desc)
+      domain_xml.elements['domain/devices'].add_element(xml)
+      update(domain_xml.to_s)
     end
   end
 
   def remove_cdrom
-    set_cdrom_image(nil)
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements.each('domain/devices/disk') do |e|
+      if e.attribute('device').to_s == "cdrom"
+        if is_running?
+          @domain.detach_device(e.to_s)
+        else
+          domain_xml.elements['domain/devices'].delete_element(e)
+          update(domain_xml.to_s)
+        end
+      end
+    end
   rescue Libvirt::Error => e
     # While the CD-ROM is removed successfully we still get this
     # error, so let's ignore it.
@@ -185,8 +188,8 @@ class VM
     if is_running?
       raise "boot settings can only be set for inactive vms"
     end
-    set_boot_device('cdrom')
     set_cdrom_image(image)
+    set_boot_device('cdrom')
   end
 
   def list_disk_devs
