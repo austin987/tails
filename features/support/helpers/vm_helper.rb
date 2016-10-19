@@ -79,7 +79,6 @@ class VM
     rexml.elements['domain/uuid'].text = LIBVIRT_DOMAIN_UUID
     update(rexml.to_s)
     @display = Display.new(@domain_name, x_display)
-    set_cdrom_boot(TAILS_ISO)
     plug_network
   rescue Exception => e
     destroy_and_undefine
