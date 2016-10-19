@@ -147,7 +147,7 @@ class VM
   end
 
   def set_cdrom_image(image)
-    if image == ''
+    if image.nil? or image == ''
       raise "Can't set cdrom image to an empty string"
     end
     if is_running?
