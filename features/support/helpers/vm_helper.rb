@@ -150,27 +150,25 @@ class VM
     if image == ''
       raise "Can't set cdrom image to an empty string"
     end
+    if is_running?
+      raise "Can't attach a CDROM device to a running domain"
+    end
     xml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml"))
     xml.elements['disk/source'].attributes['file'] = image
-    if is_running?
-      @domain.attach_device(xml.to_s)
-    else
-      domain_xml = REXML::Document.new(@domain.xml_desc)
-      domain_xml.elements['domain/devices'].add_element(xml)
-      update(domain_xml.to_s)
-    end
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/devices'].add_element(xml)
+    update(domain_xml.to_s)
   end
 
   def remove_cdrom
+    if is_running?
+      raise "Can't detach a CDROM device from a running domain"
+    end
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/disk') do |e|
       if e.attribute('device').to_s == "cdrom"
-        if is_running?
-          @domain.detach_device(e.to_s)
-        else
-          domain_xml.elements['domain/devices'].delete_element(e)
-          update(domain_xml.to_s)
-        end
+        domain_xml.elements['domain/devices'].delete_element(e)
+        update(domain_xml.to_s)
       end
     end
   rescue Libvirt::Error => e
