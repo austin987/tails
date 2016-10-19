@@ -153,7 +153,7 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
   end
   # The account isn't fully created before we fetch our mail. For
   # instance, if we'd try to send an email before this, yet another
-  # wizard will stat, indicating (incorrectly) that we do not have an
+  # wizard will start, indicating (incorrectly) that we do not have an
   # account set up yet.
   step 'I fetch my email'
 end
