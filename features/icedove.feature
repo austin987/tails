@@ -6,7 +6,7 @@ Feature: Icedove email client
 
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
-    When I start "Icedove" via the GNOME "Internet" applications menu
+    When I start Icedove
     And Icedove has started
     And I have not configured an email account
     Then I am prompted to setup an email account

@@ -13,6 +13,19 @@ def icedove_wizard
   icedove_app.child('Mail Account Setup', roleName: 'frame')
 end
 
+When /^I start Icedove$/ do
+  workaround_pref_lines = [
+    # When we generate a random subject line it may contain one of the
+    # keywords that will make Icedove show an extra prompt when trying
+    # to send an email. Let's disable this feature.
+    'pref("mail.compose.attachment_reminder", false);'
+  ]
+  workaround_pref_lines.each do |line|
+    $vm.file_append('/etc/icedove/pref/icedove.js ', line)
+  end
+  step 'I start "Icedove" via the GNOME "Internet" applications menu'
+end
+
 Then /^Icedove has started$/ do
   icedove_main.wait(60)
 end
