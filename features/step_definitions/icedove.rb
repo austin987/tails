@@ -206,26 +206,29 @@ When /^I send an email to myself$/ do
 end
 
 Then /^I can find the email I sent to myself in my inbox$/ do
-  folder_view = icedove_main.child($config['Icedove']['address'],
-                               roleName: 'table row').parent
-  inbox = folder_view.children(roleName: 'table row', recursive: false).find do |e|
-    e.name.match(/^Inbox( .*)?$/)
+  recovery_proc = Proc.new { step 'I fetch my email' }
+  retry_tor(recovery_proc) do
+    folder_view = icedove_main.child($config['Icedove']['address'],
+                                     roleName: 'table row').parent
+    inbox = folder_view.children(roleName: 'table row', recursive: false).find do |e|
+      e.name.match(/^Inbox( .*)?$/)
+    end
+    inbox.click
+    filter = icedove_main.child('Filter these messages <Ctrl+Shift+K>',
+                                roleName: 'entry')
+    filter.typeText(@subject)
+    hit_counter = icedove_main.child('1 message')
+    hit_counter.wait
+    inbox_view = hit_counter.parent
+    message_list = inbox_view.child(roleName: 'table')
+    the_message = message_list.children(roleName: 'table row').find do |message|
+      # The message will be cropped in the list, so we cannot search
+      # for the full message.
+      message.name.start_with?("Automated test suite:")
+    end
+    assert_not_nil(the_message)
+    # Let's clean up
+    the_message.click
+    inbox_view.button('Delete').click
   end
-  inbox.click
-  filter = icedove_main.child('Filter these messages <Ctrl+Shift+K>',
-                              roleName: 'entry')
-  filter.typeText(@subject)
-  hit_counter = icedove_main.child('1 message')
-  hit_counter.wait
-  inbox_view = hit_counter.parent
-  message_list = inbox_view.child(roleName: 'table')
-  the_message = message_list.children(roleName: 'table row').find do |message|
-    # The message will be cropped in the list, so we cannot search for
-    # the full message.
-    message.name.start_with?("Automated test suite:")
-  end
-  assert_not_nil(the_message)
-  # Let's clean up
-  the_message.click
-  inbox_view.button('Delete').click
 end
