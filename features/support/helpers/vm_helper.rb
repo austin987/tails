@@ -160,6 +160,10 @@ class VM
     update(domain_xml.to_s)
   end
 
+  def eject_cdrom
+    execute_successfully('eject -m')
+  end
+
   def remove_cdrom
     if is_running?
       raise "Can't detach a CDROM device from a running domain"

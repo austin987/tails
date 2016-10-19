@@ -911,7 +911,7 @@ When /^I eject the boot medium$/ do
   dev_type = device_info(dev)['ID_TYPE']
   case dev_type
   when 'cd'
-    $vm.remove_cdrom
+    $vm.eject_cdrom
   when 'disk'
     boot_disk_name = $vm.disk_name(dev)
     $vm.unplug_drive(boot_disk_name)
