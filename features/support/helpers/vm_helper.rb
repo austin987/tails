@@ -154,7 +154,7 @@ class VM
       raise "Can't attach a CDROM device to a running domain"
     end
     xml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml"))
-    xml.elements['disk/source'].attributes['file'] = image
+    xml.elements['disk'].add_element('source', { 'file' => image })
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/devices'].add_element(xml)
     update(domain_xml.to_s)
