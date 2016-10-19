@@ -138,9 +138,19 @@ When /^I fetch my email$/ do
 end
 
 When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
-  icedove_wizard.button('Done').click
-  # The password checking can take a while...
-  icedove_wizard.wait_vanish(120)
+  # The password check can fail due to bad Tor circuits.
+  retry_tor do
+    try_for(120) do
+      if icedove_wizard.exist?
+        # Spam the button, even if it is disabled (while it is still
+        # testing the password).
+        icedove_wizard.button('Done').click
+        false
+      else
+        true
+      end
+    end
+  end
   # The account isn't fully created before we fetch our mail. For
   # instance, if we'd try to send an email before this, yet another
   # wizard will stat, indicating (incorrectly) that we do not have an
