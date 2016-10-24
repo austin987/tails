@@ -84,7 +84,7 @@ module RemoteShell
   # An IO-like object that is more or less equivalent to a File object
   # opened in rw mode.
   class File
-    def self.open(vm, path, mode, *args)
+    def self.open(vm, mode, path, *args)
       debug_log("opening file #{path} in '#{mode}' mode")
       ret = RemoteShell.communicate(vm, mode, path, *args)
       if ret.size != 1
@@ -101,15 +101,15 @@ module RemoteShell
     end
 
     def read()
-      Base64.decode64(self.class.open(@vm, @path, 'read'))
+      Base64.decode64(self.class.open(@vm, 'read', @path))
     end
 
     def write(data)
-      self.class.open(@vm, @path, 'write', Base64.encode64(data))
+      self.class.open(@vm, 'write', @path, Base64.encode64(data))
     end
 
     def append(data)
-      self.class.open(@vm, @path, 'append', Base64.encode64(data))
+      self.class.open(@vm, 'append', @path, Base64.encode64(data))
     end
   end
 end
