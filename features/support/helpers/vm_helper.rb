@@ -514,27 +514,24 @@ EOF
     execute("test -d '#{directory}'").success?
   end
 
-  def file_content(file, user = 'root')
-    # We don't quote #{file} on purpose: we sometimes pass environment variables
-    # or globs that we want to be interpreted by the shell.
-    cmd = execute("cat #{file}", :user => user)
-    assert(cmd.success?,
-           "Could not cat '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
-    return cmd.stdout
+  def file_open(path)
+    f = RemoteShell::File.new(self, path)
+    yield f if block_given
+    return f
   end
 
-  def file_append(file, lines, user = 'root')
+  def file_content(path)
+    file_open(path) { |f| f.read() }
+  end
+
+  def file_overwrite(path, lines)
     lines = lines.join("\n") if lines.class == Array
-    # Use some tricky quoting to allow any character to be appended
-    lines.gsub!("'", "'\"'\"'")
-    cmd = execute("echo '#{lines}' >> '#{file}'", :user => user)
-    assert(cmd.success?,
-           "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+    file_open(path) { |f| f.write(lines) }
   end
 
-  def file_overwrite(*args)
-    execute_successfully("rm -f '#{args.first}'")
-    file_append(*args)
+  def file_append(path, lines)
+    lines = lines.join("\n") if lines.class == Array
+    file_open(path) { |f| f.append(lines) }
   end
 
   def set_clipboard(text)

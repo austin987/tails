@@ -78,7 +78,7 @@ module Dogtail
       lines = [lines] if lines.class != Array
       script = build_script(lines)
       script_path = $vm.execute_successfully('mktemp', @opts).stdout.chomp
-      $vm.file_overwrite(script_path, script, @opts[:user])
+      $vm.file_overwrite(script_path, script)
       args = ["/usr/bin/python '#{script_path}'", @opts]
       if @opts[:allow_failure]
         $vm.execute(*args)

@@ -1,5 +1,6 @@
 require 'json'
 require 'socket'
+require 'base64'
 
 module RemoteShell
   class Failure < StandardError
@@ -14,9 +15,16 @@ module RemoteShell
     socket.puts(JSON.dump([id] + args))
     loop do
       s = socket.readline(sep = "\0").chomp("\0")
-      response_id, *rest = JSON.load(s)
+      response_id, status, *rest = JSON.load(s)
       if response_id == id
-        debug_log("#{type} returned: #{s}") if not(options[:spawn])
+        if status != "success"
+          if status == "error" and rest.class == Array and rest.size == 1
+            msg = rest.first
+            raise Failure.new("#{msg}")
+          else
+            raise "#{status}: #{rest}"
+          end
+        end
         return rest
       else
         debug_log("Dropped out-of-order remote shell response: " +
@@ -70,6 +78,48 @@ module RemoteShell
         @stdout +
         "STDERR:\n" +
         @stderr
+    end
+  end
+
+  # An IO-like object that is more or less equivalent to a File object
+  # opened in rw mode.
+  class File
+    def self.open(vm, path, mode, options = {})
+      options[:write_data] ||= nil
+      args = nil
+      if mode == 'read'
+        args = [path]
+      elsif ['write', 'append'].include?(mode)
+        assert_not_nil(options[:write_data])
+        args = [path, options[:write_data]]
+      else
+        raise "unsupported file mode '#{mode}'"
+      end
+      debug_log("opening file #{path} in '#{mode}' mode")
+      ret = RemoteShell.communicate(vm, mode, *args)
+      if ret.size != 1
+        raise RemoteShell::Failure.new("expected 1 value but got #{ret.size}")
+      end
+      debug_log("#{mode} complete")
+      return ret.first
+    end
+
+    attr_reader :vm, :path
+
+    def initialize(vm, path)
+      @vm, @path = vm, path
+    end
+
+    def read()
+      Base64.decode64(self.class.open(@vm, @path, 'read'))
+    end
+
+    def write(data)
+      self.class.open(@vm, @path, 'write', write_data: Base64.encode64(data))
+    end
+
+    def append(data)
+      self.class.open(@vm, @path, 'append', write_data: Base64.encode64(data))
     end
   end
 end

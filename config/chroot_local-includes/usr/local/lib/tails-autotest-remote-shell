@@ -11,6 +11,7 @@ from pwd import getpwnam
 from os import setgid, setuid, environ
 import serial
 from systemd.daemon import notify as sd_notify
+import base64
 
 def mk_switch_user_fn(uid, gid):
     def switch_user():
@@ -54,26 +55,48 @@ def main():
     except Exception as e:
       # port must be opened wrong, so we restart everything and pray
       # that it works.
-      print(str(e))
+      exc_str = '{}: {}'.format(type(e).__name__, str(e))
+      print(exc_str)
       port.close()
       return main()
     try:
-      id, cmd_type, user, cmd = loads(line)
+      id, cmd_type, *rest = loads(line)
+      ret = ""
+      if cmd_type in ['call', 'spawn']:
+        user, cmd = rest
+        p = run_cmd_as_user(cmd, user)
+        if cmd_type == "spawn":
+          returncode, stdout, stderr = 0, "", ""
+        else:
+          stdout_b, stderr_b = p.communicate()
+          stdout = stdout_b.decode('utf-8')
+          stderr = stderr_b.decode('utf-8')
+          returncode = p.returncode
+        ret = dumps([id, 'success', returncode, stdout, stderr]).encode('utf-8')
+      elif cmd_type in ['read', 'write', 'append']:
+        path, *rest = rest
+        open_mode = cmd_type[0] + 'b'
+        with open(path, open_mode) as f:
+          if cmd_type == 'read':
+            assert(rest == [])
+            ret = str(base64.b64encode(f.read()), 'utf-8')
+          elif cmd_type in ['write', 'append']:
+            assert(len(rest) == 1)
+            data = base64.b64decode(rest[0])
+            ret = f.write(data)
+            if ret != len(data):
+              raise IOError("we only wrote {} bytes out of {}"
+                            .format(ret, len(data)))
+        ret = dumps([id, 'success'] + [ret]).encode('utf-8')
+      else:
+        raise ValueError("unknown command type")
+      port.write(ret + b"\0")
     except Exception as e:
-      # We had a parse/pack error, so we just send a \0 as an ACK,
-      # releasing the client from blocking.
-      print(str(e))
-      port.write(b"\0")
+      raise e
+      exc_str = '{}: {}'.format(type(e).__name__, str(e))
+      print(exc_str)
+      port.write(dumps([id, 'error', exc_str]).encode('utf-8') + b"\0")
       continue
-    p = run_cmd_as_user(cmd, user)
-    if cmd_type == "spawn":
-      returncode, stdout, stderr = 0, "", ""
-    else:
-      stdout_b, stderr_b = p.communicate()
-      stdout = stdout_b.decode('utf-8')
-      stderr = stderr_b.decode('utf-8')
-      returncode = p.returncode
-    port.write(dumps([id, returncode, stdout, stderr]).encode('utf-8') + b"\0")
 
 if __name__ == "__main__":
   main()
