@@ -83,7 +83,13 @@ module Dogtail
       if @opts[:allow_failure]
         $vm.execute(*args)
       else
-        $vm.execute_successfully(*args)
+        begin
+          $vm.execute_successfully(*args)
+        rescue Exception => e
+          debug_log("Failing Dogtail script (#{script_path}):")
+          script.split("\n").each { |line| debug_log(" "*4 + line) }
+          raise e
+        end
       end
     ensure
       $vm.execute("rm -f '#{script_path}'")
