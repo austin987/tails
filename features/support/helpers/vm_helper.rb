@@ -453,8 +453,7 @@ EOF
     msg = 'hello?'
     try_for(timeout, :msg => "Remote shell seems to be down") do
       Timeout::timeout(3) do
-        c = execute_successfully("echo '#{msg}'")
-        assert(c.success? and c.stdout.chomp == msg)
+        execute_successfully("echo '#{msg}'").stdout.chomp == msg
       end
     end
   end
