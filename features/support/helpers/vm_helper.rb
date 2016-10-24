@@ -675,7 +675,7 @@ EOF
 
   def get_remote_shell_port
     domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/serial') do |e|
+    domain_xml.elements.each('domain/devices/channel') do |e|
       if e.attribute('type').to_s == "tcp"
         return e.elements['source'].attribute('service').to_s.to_i
       end

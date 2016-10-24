@@ -4,19 +4,23 @@
 # adversary with access to you *physical* serial port, which means
 # that you are screwed any way.
 
+import base64
+import fcntl
+import os
+import signal
 from subprocess import Popen, PIPE
 from sys import argv
 from json import dumps, loads
 from pwd import getpwnam
-from os import setgid, setuid, environ
-import serial
 from systemd.daemon import notify as sd_notify
-import base64
+
+REMOTE_SHELL_DEV = '/dev/virtio-ports/org.tails.remote_shell.0'
+
 
 def mk_switch_user_fn(uid, gid):
     def switch_user():
-        setgid(gid)
-        setuid(uid)
+        os.setgid(gid)
+        os.setuid(uid)
     return switch_user
 
 def run_cmd_as_user(cmd, user):
@@ -40,25 +44,29 @@ def run_cmd_as_user(cmd, user):
                preexec_fn=switch_user_fn)
 
 def main():
-  dev = argv[1]
-  port = serial.Serial(port = dev, baudrate = 4000000)
-  if not port.isOpen():
-    port.open()
+  fd = os.open(REMOTE_SHELL_DEV, os.O_RDWR|os.O_NOCTTY)
+  port = open(fd, 'wb+', buffering=0)
+  # In order to avoid busy-waiting when polling the above character
+  # device for new data sent from clients, we borrow the approach used
+  # by python-negotiator (https://github.com/xolox/python-negotiator):
+  # We add O_ASYNC so a SIGIO signal is sent to us whenever data is
+  # ready to be read from the device.
+  flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+  fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_ASYNC)
+  fcntl.fcntl(fd, fcntl.F_SETOWN, os.getpid())
+  # By default receiving a SIGIO terminates the process so we override
+  # it to do nothing instead.
+  signal.signal(signal.SIGIO, lambda *args: None)
 
   # Notify systemd that we're ready
   sd_notify('READY=1')
   sd_notify('STATUS=Processing requests...\n')
 
   while True:
-    try:
-      line = port.readline().decode('utf-8')
-    except Exception as e:
-      # port must be opened wrong, so we restart everything and pray
-      # that it works.
-      exc_str = '{}: {}'.format(type(e).__name__, str(e))
-      print(exc_str)
-      port.close()
-      return main()
+    line = ""
+    while line == "":
+        signal.sigwait([signal.SIGIO])
+        line = port.readline().decode('utf-8')
     try:
       id, cmd_type, *rest = loads(line)
       ret = ""
@@ -90,7 +98,13 @@ def main():
         ret = dumps([id, 'success'] + [ret]).encode('utf-8')
       else:
         raise ValueError("unknown command type")
-      port.write(ret + b"\0")
+      ret += b"\0"
+      # We can only write 2**15 bytes at a time to the virtio channel
+      # (seems to only affect the guest -> host direction).
+      chunk_size = 2**15
+      chunks = (ret[0+i:chunk_size+i] for i in range(0, len(ret), chunk_size))
+      for chunk in chunks:
+          port.write(chunk)
     except Exception as e:
       raise e
       exc_str = '{}: {}'.format(type(e).__name__, str(e))
