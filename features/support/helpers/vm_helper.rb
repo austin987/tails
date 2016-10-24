@@ -515,7 +515,7 @@ EOF
 
   def file_open(path)
     f = RemoteShell::File.new(self, path)
-    yield f if block_given
+    yield f if block_given?
     return f
   end
 
