@@ -84,19 +84,9 @@ module RemoteShell
   # An IO-like object that is more or less equivalent to a File object
   # opened in rw mode.
   class File
-    def self.open(vm, path, mode, options = {})
-      options[:write_data] ||= nil
-      args = nil
-      if mode == 'read'
-        args = [path]
-      elsif ['write', 'append'].include?(mode)
-        assert_not_nil(options[:write_data])
-        args = [path, options[:write_data]]
-      else
-        raise "unsupported file mode '#{mode}'"
-      end
+    def self.open(vm, path, mode, *args)
       debug_log("opening file #{path} in '#{mode}' mode")
-      ret = RemoteShell.communicate(vm, mode, *args)
+      ret = RemoteShell.communicate(vm, mode, path, *args)
       if ret.size != 1
         raise RemoteShell::Failure.new("expected 1 value but got #{ret.size}")
       end
@@ -115,11 +105,11 @@ module RemoteShell
     end
 
     def write(data)
-      self.class.open(@vm, @path, 'write', write_data: Base64.encode64(data))
+      self.class.open(@vm, @path, 'write', Base64.encode64(data))
     end
 
     def append(data)
-      self.class.open(@vm, @path, 'append', write_data: Base64.encode64(data))
+      self.class.open(@vm, @path, 'append', Base64.encode64(data))
     end
   end
 end
