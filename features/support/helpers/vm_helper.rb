@@ -431,7 +431,7 @@ EOF
       cmds << cmd
       cmd = cmds.join(" && ")
     end
-    return VMCommand.new(self, cmd, options)
+    return RemoteShell::Command.new(self, cmd, options)
   end
 
   def execute_successfully(*args)
@@ -450,7 +450,13 @@ EOF
   end
 
   def wait_until_remote_shell_is_up(timeout = 90)
-    VMCommand.wait_until_remote_shell_is_up(self, timeout)
+    msg = 'hello?'
+    try_for(timeout, :msg => "Remote shell seems to be down") do
+      Timeout::timeout(3) do
+        c = execute_successfully("echo '#{msg}'")
+        assert(c.success? and c.stdout.chomp == msg)
+      end
+    end
   end
 
   def host_to_guest_time_sync
