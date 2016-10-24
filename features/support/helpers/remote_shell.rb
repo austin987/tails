@@ -10,7 +10,7 @@ module RemoteShell
   @@request_id ||= 0
 
   def communicate(vm, *args)
-    socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
+    socket = UNIXSocket.new(vm.remote_shell_socket_path)
     id = (@@request_id += 1)
     socket.puts(JSON.dump([id] + args))
     loop do

@@ -81,6 +81,7 @@ class VM
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot(TAILS_ISO)
     plug_network
+    add_remote_shell_channel
   rescue Exception => e
     destroy_and_undefine
     raise e
@@ -418,6 +419,26 @@ EOF
     end
   end
 
+  def remote_shell_socket_path
+    "#{$config["TMPDIR"]}/remote-shell.socket"
+  end
+
+  def add_remote_shell_channel
+    if is_running?
+      raise "The remote shell channel can only be added for inactive vms"
+    end
+    channel_xml = <<-EOF
+    <channel type='unix'>
+      <source mode="bind" path='#{remote_shell_socket_path}'/>
+      <target type='virtio' name='org.tails.remote_shell.0'/>
+    </channel>
+    EOF
+    channel_rexml = REXML::Document.new(channel_xml)
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/devices'].add_element(channel_rexml)
+    update(domain_xml.to_s)
+  end
+
   def execute(cmd, options = {})
     options[:user] ||= "root"
     options[:spawn] ||= false
@@ -670,15 +691,6 @@ EOF
 
   def take_screenshot(description)
     @display.take_screenshot(description)
-  end
-
-  def get_remote_shell_port
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/channel') do |e|
-      if e.attribute('type').to_s == "tcp"
-        return e.elements['source'].attribute('service').to_s.to_i
-      end
-    end
   end
 
 end

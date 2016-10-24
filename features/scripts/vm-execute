@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
+require 'libvirt'
 require 'optparse'
+require 'rexml/document'
 begin
   require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/remote_shell.rb"
   require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/misc_helpers.rb"
@@ -12,8 +14,29 @@ $config = Hash.new
 def debug_log(*args) ; end
 
 class FakeVM
-  def get_remote_shell_port
-    1337
+  def initialize
+    domain = nil
+    @domain_xml = ""
+    begin
+      virt = Libvirt::open("qemu:///system")
+      domain = virt.lookup_domain_by_name("TailsToaster")
+      @domain_xml = domain.xml_desc
+    rescue
+      raise "There was a problem with the TailsToaster VM (is it running?)"
+    ensure
+      virt.close
+    end
+  end
+
+  def remote_shell_socket_path
+    rexml = REXML::Document.new(@domain_xml)
+    rexml.elements.each('domain/devices/channel') do |e|
+      target = e.elements['target']
+      if target.attribute('name').to_s == 'org.tails.remote_shell.0'
+        return e.elements['source'].attribute('path').to_s
+      end
+    end
+    raise "The running TailsToaster has no remote shell channel!"
   end
 end
 
