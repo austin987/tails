@@ -541,17 +541,17 @@ EOF
   end
 
   def file_content(path)
-    file_open(path) { |f| f.read() }
+    file_open(path) { |f| return f.read() }
   end
 
   def file_overwrite(path, lines)
     lines = lines.join("\n") if lines.class == Array
-    file_open(path) { |f| f.write(lines) }
+    file_open(path) { |f| return f.write(lines) }
   end
 
   def file_append(path, lines)
     lines = lines.join("\n") if lines.class == Array
-    file_open(path) { |f| f.append(lines) }
+    file_open(path) { |f| return f.append(lines) }
   end
 
   def set_clipboard(text)
