@@ -52,7 +52,7 @@ AfterConfiguration do |config|
       raise "Temporary directory '#{$config["TMPDIR"]}' must be owned by the " +
             "current user"
     end
-    FileUtils.chmod(0775, $config["TMPDIR"])
+    FileUtils.chmod(0755, $config["TMPDIR"])
   else
     begin
       FileUtils.mkdir_p($config["TMPDIR"])

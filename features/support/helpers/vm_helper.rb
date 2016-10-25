@@ -420,16 +420,27 @@ EOF
   end
 
   def remote_shell_socket_path
-    "#{$config["TMPDIR"]}/remote-shell.socket"
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    domain_rexml.elements.each('domain/devices/channel') do |e|
+      target = e.elements['target']
+      if target.attribute('name').to_s == 'org.tails.remote_shell.0'
+        return e.elements['source'].attribute('path').to_s
+      end
+    end
+    return nil
   end
 
   def add_remote_shell_channel
     if is_running?
       raise "The remote shell channel can only be added for inactive vms"
     end
+    if @remote_shell_socket_path.nil?
+      @remote_shell_socket_path =
+        "/tmp/remote-shell_" + random_alnum_string(8) + ".socket"
+    end
     channel_xml = <<-EOF
     <channel type='unix'>
-      <source mode="bind" path='#{remote_shell_socket_path}'/>
+      <source mode="bind" path='#{@remote_shell_socket_path}'/>
       <target type='virtio' name='org.tails.remote_shell.0'/>
     </channel>
     EOF
