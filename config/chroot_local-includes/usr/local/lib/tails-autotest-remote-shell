@@ -8,8 +8,9 @@ import base64
 import fcntl
 import os
 import signal
+import sys
+import traceback
 from subprocess import Popen, PIPE
-from sys import argv
 from json import dumps, loads
 from pwd import getpwnam
 from systemd.daemon import notify as sd_notify
@@ -107,8 +108,13 @@ def main():
           port.write(chunk)
           port.flush()
     except Exception as e:
+      print("Error caught while processing line:", file=sys.stderr)
+      print("    " + line, file=sys.stderr)
+      print("The error was:", file=sys.stderr)
+      traceback.print_exc(file=sys.stdout)
+      print("-----", file=sys.stderr)
+      sys.stderr.flush()
       exc_str = '{}: {}'.format(type(e).__name__, str(e))
-      print(exc_str)
       port.write(dumps([id, 'error', exc_str]).encode('utf-8') + b"\n")
       port.flush()
       continue
