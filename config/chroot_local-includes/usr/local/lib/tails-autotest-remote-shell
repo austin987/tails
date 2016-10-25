@@ -24,102 +24,106 @@ def mk_switch_user_fn(uid, gid):
         os.setuid(uid)
     return switch_user
 
+
 def run_cmd_as_user(cmd, user):
-  pwd_user = getpwnam(user)
-  switch_user_fn = mk_switch_user_fn(pwd_user.pw_uid,
-                                     pwd_user.pw_gid)
-  # We try to create an environment identical to what's expected
-  # inside Tails for the user by logging in (via `su`) as the user,
-  # setting up the GNOME shell environment, and extracting the
-  # environment via `env`; not that we will run `env` unconditionally
-  # since the former command could fail, e.g. if GNOME is not running.
-  env_cmd = '. /usr/local/lib/tails-shell-library/gnome.sh && ' + \
-            'export_gnome_env ; ' + \
-            'env'
-  wrapped_env_cmd = "su -c '{}' {}".format(env_cmd, user)
-  pipe = Popen(wrapped_env_cmd, stdout=PIPE, shell=True)
-  env_data = pipe.communicate()[0].decode('utf-8')
-  env = dict((line.split('=', 1) for line in env_data.splitlines()))
-  cwd = env['HOME']
-  return Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, env=env, cwd=cwd,
-               preexec_fn=switch_user_fn)
+    pwd_user = getpwnam(user)
+    switch_user_fn = mk_switch_user_fn(pwd_user.pw_uid,
+                                       pwd_user.pw_gid)
+    # We try to create an environment identical to what's expected
+    # inside Tails for the user by logging in (via `su`) as the user,
+    # setting up the GNOME shell environment, and extracting the
+    # environment via `env`; not that we will run `env` unconditionally
+    # since the former command could fail, e.g. if GNOME is not running.
+    env_cmd = '. /usr/local/lib/tails-shell-library/gnome.sh && ' + \
+              'export_gnome_env ; ' + \
+              'env'
+    wrapped_env_cmd = "su -c '{}' {}".format(env_cmd, user)
+    pipe = Popen(wrapped_env_cmd, stdout=PIPE, shell=True)
+    env_data = pipe.communicate()[0].decode('utf-8')
+    env = dict((line.split('=', 1) for line in env_data.splitlines()))
+    cwd = env['HOME']
+    return Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, env=env, cwd=cwd,
+                 preexec_fn=switch_user_fn)
+
 
 def main():
-  fd = os.open(REMOTE_SHELL_DEV, os.O_RDWR)
-  port = open(fd, 'wb+', buffering=0)
-  # In order to avoid busy-waiting when polling the above character
-  # device for new data sent from clients, we borrow the approach used
-  # by python-negotiator (https://github.com/xolox/python-negotiator):
-  # We add O_ASYNC so a SIGIO signal is sent to us whenever data is
-  # ready to be read from the device.
-  flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-  fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_ASYNC)
-  fcntl.fcntl(fd, fcntl.F_SETOWN, os.getpid())
-  # By default receiving a SIGIO terminates the process so we override
-  # it to do nothing instead.
-  signal.signal(signal.SIGIO, lambda *args: None)
+    fd = os.open(REMOTE_SHELL_DEV, os.O_RDWR)
+    port = open(fd, 'wb+', buffering=0)
+    # In order to avoid busy-waiting when polling the above character
+    # device for new data sent from clients, we borrow the approach used
+    # by python-negotiator (https://github.com/xolox/python-negotiator):
+    # We add O_ASYNC so a SIGIO signal is sent to us whenever data is
+    # ready to be read from the device.
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_ASYNC)
+    fcntl.fcntl(fd, fcntl.F_SETOWN, os.getpid())
+    # By default receiving a SIGIO terminates the process so we override
+    # it to do nothing instead.
+    signal.signal(signal.SIGIO, lambda *args: None)
 
-  # Notify systemd that we're ready
-  sd_notify('READY=1')
-  sd_notify('STATUS=Processing requests...\n')
+    # Notify systemd that we're ready
+    sd_notify('READY=1')
+    sd_notify('STATUS=Processing requests...\n')
 
-  while True:
-    line = ""
-    while line == "":
-        # In case the SIGIO gets lost for whatever reason, let's
-        # always poll at least once every second.
-        signal.sigtimedwait([signal.SIGIO], 1)
-        line = port.readline().decode('utf-8')
-    try:
-      id, cmd_type, *rest = loads(line)
-      ret = ""
-      if cmd_type in ['call', 'spawn']:
-        user, cmd = rest
-        p = run_cmd_as_user(cmd, user)
-        if cmd_type == "spawn":
-          returncode, stdout, stderr = 0, "", ""
-        else:
-          stdout_b, stderr_b = p.communicate()
-          stdout = stdout_b.decode('utf-8')
-          stderr = stderr_b.decode('utf-8')
-          returncode = p.returncode
-        ret = dumps([id, 'success', returncode, stdout, stderr]).encode('utf-8')
-      elif cmd_type in ['read', 'write', 'append']:
-        path, *rest = rest
-        open_mode = cmd_type[0] + 'b'
-        with open(path, open_mode) as f:
-          if cmd_type == 'read':
-            assert(rest == [])
-            ret = str(base64.b64encode(f.read()), 'utf-8')
-          elif cmd_type in ['write', 'append']:
-            assert(len(rest) == 1)
-            data = base64.b64decode(rest[0])
-            ret = f.write(data)
-            if ret != len(data):
-              raise IOError("we only wrote {} bytes out of {}"
-                            .format(ret, len(data)))
-        ret = dumps([id, 'success'] + [ret]).encode('utf-8')
-      else:
-        raise ValueError("unknown command type")
-      ret += b"\n"
-      # We can only write 2**15 bytes at a time to the virtio channel
-      # (seems to only affect the guest -> host direction).
-      chunk_size = 2**15
-      chunks = (ret[0+i:chunk_size+i] for i in range(0, len(ret), chunk_size))
-      for chunk in chunks:
-          port.write(chunk)
-          port.flush()
-    except Exception as e:
-      print("Error caught while processing line:", file=sys.stderr)
-      print("    " + line, file=sys.stderr)
-      print("The error was:", file=sys.stderr)
-      traceback.print_exc(file=sys.stdout)
-      print("-----", file=sys.stderr)
-      sys.stderr.flush()
-      exc_str = '{}: {}'.format(type(e).__name__, str(e))
-      port.write(dumps([id, 'error', exc_str]).encode('utf-8') + b"\n")
-      port.flush()
-      continue
+    while True:
+        line = ""
+        while line == "":
+            # In case the SIGIO gets lost for whatever reason, let's
+            # always poll at least once every second.
+            signal.sigtimedwait([signal.SIGIO], 1)
+            line = port.readline().decode('utf-8')
+        try:
+            id, cmd_type, *rest = loads(line)
+            ret = ""
+            if cmd_type in ['call', 'spawn']:
+                user, cmd = rest
+                p = run_cmd_as_user(cmd, user)
+                if cmd_type == "spawn":
+                    returncode, stdout, stderr = 0, "", ""
+                else:
+                    stdout_b, stderr_b = p.communicate()
+                    stdout = stdout_b.decode('utf-8')
+                    stderr = stderr_b.decode('utf-8')
+                    returncode = p.returncode
+                ret = dumps([id, 'success', returncode, stdout, stderr])
+                      .encode('utf-8')
+            elif cmd_type in ['read', 'write', 'append']:
+                path, *rest = rest
+                open_mode = cmd_type[0] + 'b'
+                with open(path, open_mode) as f:
+                    if cmd_type == 'read':
+                        assert(rest == [])
+                        ret = str(base64.b64encode(f.read()), 'utf-8')
+                    elif cmd_type in ['write', 'append']:
+                        assert(len(rest) == 1)
+                        data = base64.b64decode(rest[0])
+                        ret = f.write(data)
+                        if ret != len(data):
+                            raise IOError("we only wrote {} bytes out of {}"
+                                          .format(ret, len(data)))
+                ret = dumps([id, 'success'] + [ret]).encode('utf-8')
+            else:
+                raise ValueError("unknown command type")
+            ret += b"\n"
+            # We can only write 2**15 bytes at a time to the virtio channel
+            # (seems to only affect the guest -> host direction).
+            chunk_size = 2**15
+            chunks = (ret[0+i:chunk_size+i] for i in \
+                      range(0, len(ret), chunk_size))
+            for chunk in chunks:
+                port.write(chunk)
+                port.flush()
+        except Exception as e:
+            print("Error caught while processing line:", file=sys.stderr)
+            print("    " + line, file=sys.stderr)
+            print("The error was:", file=sys.stderr)
+            traceback.print_exc(file=sys.stdout)
+            print("-----", file=sys.stderr)
+            sys.stderr.flush()
+            exc_str = '{}: {}'.format(type(e).__name__, str(e))
+            port.write(dumps([id, 'error', exc_str]).encode('utf-8') + b"\n")
+            port.flush()
+            continue
 
 if __name__ == "__main__":
-  main()
+    main()
