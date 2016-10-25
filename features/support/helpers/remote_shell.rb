@@ -13,6 +13,7 @@ module RemoteShell
     socket = UNIXSocket.new(vm.remote_shell_socket_path)
     id = (@@request_id += 1)
     socket.puts(JSON.dump([id] + args))
+    socket.flush
     loop do
       s = socket.readline.chomp("\n")
       response_id, status, *rest = JSON.load(s)

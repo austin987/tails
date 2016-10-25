@@ -105,11 +105,13 @@ def main():
       chunks = (ret[0+i:chunk_size+i] for i in range(0, len(ret), chunk_size))
       for chunk in chunks:
           port.write(chunk)
+          port.flush()
     except Exception as e:
       raise e
       exc_str = '{}: {}'.format(type(e).__name__, str(e))
       print(exc_str)
       port.write(dumps([id, 'error', exc_str]).encode('utf-8') + b"\n")
+      port.flush()
       continue
 
 if __name__ == "__main__":
