@@ -14,7 +14,7 @@ module RemoteShell
     id = (@@request_id += 1)
     socket.puts(JSON.dump([id] + args))
     loop do
-      s = socket.readline(sep = "\0").chomp("\0")
+      s = socket.readline.chomp("\n")
       response_id, status, *rest = JSON.load(s)
       if response_id == id
         if status != "success"

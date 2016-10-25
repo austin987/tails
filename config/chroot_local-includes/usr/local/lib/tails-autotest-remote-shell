@@ -98,7 +98,7 @@ def main():
         ret = dumps([id, 'success'] + [ret]).encode('utf-8')
       else:
         raise ValueError("unknown command type")
-      ret += b"\0"
+      ret += b"\n"
       # We can only write 2**15 bytes at a time to the virtio channel
       # (seems to only affect the guest -> host direction).
       chunk_size = 2**15
@@ -109,7 +109,7 @@ def main():
       raise e
       exc_str = '{}: {}'.format(type(e).__name__, str(e))
       print(exc_str)
-      port.write(dumps([id, 'error', exc_str]).encode('utf-8') + b"\0")
+      port.write(dumps([id, 'error', exc_str]).encode('utf-8') + b"\n")
       continue
 
 if __name__ == "__main__":
