@@ -79,6 +79,7 @@ class VM
     rexml.elements['domain/uuid'].text = LIBVIRT_DOMAIN_UUID
     update(rexml.to_s)
     @display = Display.new(@domain_name, x_display)
+    set_cdrom_boot(TAILS_ISO)
     plug_network
   rescue Exception => e
     destroy_and_undefine
@@ -146,35 +147,40 @@ class VM
     update(domain_xml.to_s)
   end
 
-  def set_cdrom_image(image)
-    if image.nil? or image == ''
-      raise "Can't set cdrom image to an empty string"
-    end
+  def add_cdrom_device
     if is_running?
       raise "Can't attach a CDROM device to a running domain"
     end
-    xml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml"))
-    xml.elements['disk'].add_element('source', { 'file' => image })
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/devices'].add_element(xml)
-    update(domain_xml.to_s)
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+      raise "A CDROM device already exists"
+    end
+    cdrom_rexml = REXML::Document.new(File.read("#{@xml_path}/cdrom.xml")).root
+    domain_rexml.elements['domain/devices'].add_element(cdrom_rexml)
+    update(domain_rexml.to_s)
+  end
+
+  def remove_cdrom_device
+    if is_running?
+      raise "Can't detach a CDROM device to a running domain"
+    end
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+    if cdrom_el.nil?
+      raise "No CDROM device is present"
+    end
+    domain_rexml.elements["domain/devices"].delete_element(cdrom_el)
+    update(domain_rexml.to_s)
   end
 
   def eject_cdrom
-    execute_successfully('eject -m')
-  end
-
-  def remove_cdrom
-    if is_running?
-      raise "Can't detach a CDROM device from a running domain"
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+    if cdrom_el.nil?
+      raise "No CDROM device is present"
     end
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements.each('domain/devices/disk') do |e|
-      if e.attribute('device').to_s == "cdrom"
-        domain_xml.elements['domain/devices'].delete_element(e)
-        update(domain_xml.to_s)
-      end
-    end
+    cdrom_el.delete_element('source')
+    update(domain_rexml.to_s)
   rescue Libvirt::Error => e
     # While the CD-ROM is removed successfully we still get this
     # error, so let's ignore it.
@@ -185,9 +191,24 @@ class VM
     raise e if not(Regexp.new(acceptable_error).match(e.to_s))
   end
 
+  def set_cdrom_image(image)
+    if image.nil? or image == ''
+      raise "Can't set cdrom image to an empty string"
+    end
+    eject_cdrom
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+    cdrom_el.add_element('source', { 'file' => image })
+    update(domain_rexml.to_s)
+  end
+
   def set_cdrom_boot(image)
     if is_running?
       raise "boot settings can only be set for inactive vms"
+    end
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    if not domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+      add_cdrom_device
     end
     set_cdrom_image(image)
     set_boot_device('cdrom')
@@ -313,9 +334,13 @@ class VM
     end
     plug_drive(name, type) if not(disk_plugged?(name))
     set_boot_device('hd')
-    # For some reason setting the boot device doesn't prevent cdrom
-    # boot unless it's empty
-    remove_cdrom
+    # XXX:Stretch: since our isotesters upgraded QEMU from
+    # 2.5+dfsg-4~bpo8+1 to 2.6+dfsg-3.1~bpo8+1 it seems we must eject
+    # the CDROM to allow disk boot. This is not the case with the same
+    # version on Debian Sid. Let's hope we can remove this ugly
+    # workaround when we only support running the automated test suite
+    # on Stretch.
+    eject_cdrom
   end
 
   # XXX-9p: Shares don't work together with snapshot save+restore. See
