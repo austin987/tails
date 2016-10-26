@@ -88,7 +88,6 @@ def main():
                     stderr = stderr_b.decode('utf-8')
                     returncode = p.returncode
                 ret = json.dumps([id, 'success', returncode, stdout, stderr])
-                      .encode('utf-8')
             elif cmd_type in ['read', 'write', 'append']:
                 path, *rest = rest
                 open_mode = cmd_type[0] + 'b'
@@ -103,15 +102,15 @@ def main():
                         if ret != len(data):
                             raise IOError("we only wrote {} bytes out of {}"
                                           .format(ret, len(data)))
-                ret = json.dumps([id, 'success'] + [ret]).encode('utf-8')
+                ret = json.dumps([id, 'success'] + [ret])
             else:
                 raise ValueError("unknown command type")
-            ret += b"\n"
+            response = (ret + "\n").encode('utf-8')
             # We can only write 2**15 bytes at a time to the virtio channel
             # (seems to only affect the guest -> host direction).
             chunk_size = 2**15
-            chunks = (ret[0+i:chunk_size+i] for i in \
-                      range(0, len(ret), chunk_size))
+            chunks = (response[0+i:chunk_size+i] for i in \
+                      range(0, len(response), chunk_size))
             for chunk in chunks:
                 port.write(chunk)
                 port.flush()
