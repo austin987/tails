@@ -335,12 +335,12 @@ class VM
     plug_drive(name, type) if not(disk_plugged?(name))
     set_boot_device('hd')
     # XXX:Stretch: since our isotesters upgraded QEMU from
-    # 2.5+dfsg-4~bpo8+1 to 2.6+dfsg-3.1~bpo8+1 it seems we must eject
-    # the CDROM to allow disk boot. This is not the case with the same
+    # 2.5+dfsg-4~bpo8+1 to 2.6+dfsg-3.1~bpo8+1 it seems we must remove
+    # the CDROM device to allow disk boot. This is not the case with the same
     # version on Debian Sid. Let's hope we can remove this ugly
     # workaround when we only support running the automated test suite
     # on Stretch.
-    eject_cdrom
+    remove_cdrom_device
   end
 
   # XXX-9p: Shares don't work together with snapshot save+restore. See
