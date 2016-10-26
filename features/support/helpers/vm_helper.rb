@@ -340,7 +340,10 @@ class VM
     # version on Debian Sid. Let's hope we can remove this ugly
     # workaround when we only support running the automated test suite
     # on Stretch.
-    remove_cdrom_device
+    domain_rexml = REXML::Document.new(@domain.xml_desc)
+    if domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
+      remove_cdrom_device
+    end
   end
 
   # XXX-9p: Shares don't work together with snapshot save+restore. See
