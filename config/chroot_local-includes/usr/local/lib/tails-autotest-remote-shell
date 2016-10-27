@@ -71,7 +71,8 @@ def main():
         # We can avoid an unnecessary delay of up to one second during the
         # first iteration of this loop; if a client sends a request
         # before we run SETOWN above, the expected signal never
-        # reaches us, and we enter the loop doomed to timeout waiting
+        # reaches us, and we enter the loop and pass through the
+        # conditional doomed to a full second of mournful waiting
         # for this lost signal. :_( By trying to read before we do a
         # timed wait for the signal, this delay is avoided.
         line = port.readline().decode('utf-8')
