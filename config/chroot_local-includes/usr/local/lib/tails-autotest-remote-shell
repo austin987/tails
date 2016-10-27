@@ -68,12 +68,19 @@ def main():
     systemd.daemon.notify('STATUS=Processing requests...\n')
 
     while True:
-        line = ""
-        while line == "":
-            # In case the SIGIO gets lost for whatever reason, let's
-            # always poll at least once every second.
+        # We can avoid an unnecessary delay of up to one second the
+        # first iteration of this loop; if a client sends a request
+        # before we run SETOWN above, the expected signal never
+        # reaches us, and we enter the loop doomed to timeout waiting
+        # for this lost signal. :_( By trying to read before we do a
+        # timed wait for the signal, this delay is avoided.
+        line = port.readline().decode('utf-8')
+        if line == "":
+            # In case the SIGIO gets lost for whatever reason
+            # (e.g. the one mentioned above), let's always poll at
+            # least once every second.
             signal.sigtimedwait([signal.SIGIO], 1)
-            line = port.readline().decode('utf-8')
+            continue
         try:
             id, cmd_type, *rest = json.loads(line)
             ret = ""
