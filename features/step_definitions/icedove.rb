@@ -24,9 +24,6 @@ When /^I start Icedove$/ do
     $vm.file_append('/etc/icedove/pref/icedove.js ', line)
   end
   step 'I start "Icedove" via the GNOME "Internet" applications menu'
-end
-
-Then /^Icedove has started$/ do
   icedove_main.wait(60)
 end
 
