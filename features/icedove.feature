@@ -6,8 +6,8 @@ Feature: Icedove email client
 
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
-    When I start Icedove
     And I have not configured an email account
+    When I start Icedove
     Then I am prompted to setup an email account
 
   Scenario: Only the expected addons are installed
