@@ -58,6 +58,8 @@ module Dogtail
       @init_lines = @opts[:init_lines] || [
         "from dogtail import tree",
         "from dogtail.config import config",
+        "config.logDebugToFile = False",
+        "config.logDebugToStdOut = False",
         "config.searchShowingOnly = True",
         "application = tree.root.application('#{@app_name}')",
       ]
