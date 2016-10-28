@@ -28,8 +28,11 @@ When /^I start Icedove$/ do
 end
 
 When /^I have not configured an email account$/ do
-  icedove_prefs = $vm.file_content("/home/#{LIVE_USER}/.icedove/profile.default/prefs.js").chomp
-  assert(!icedove_prefs.include?('mail.accountmanager.accounts'))
+  conf_path = "/home/#{LIVE_USER}/.icedove/profile.default/prefs.js"
+  if $vm.file_exist?(conf_path)
+    icedove_prefs = $vm.file_content(conf_path).chomp
+    assert(!icedove_prefs.include?('mail.accountmanager.accounts'))
+  end
 end
 
 Then /^I am prompted to setup an email account$/ do
