@@ -60,6 +60,7 @@ module Dogtail
         "from dogtail.config import config",
         "config.logDebugToFile = False",
         "config.logDebugToStdOut = False",
+        "config.blinkOnActions = True",
         "config.searchShowingOnly = True",
         "application = tree.root.application('#{@app_name}')",
       ]
