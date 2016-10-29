@@ -10,6 +10,8 @@ Feature: Electrum Bitcoin client
     But persistence for "electrum" is not enabled
     Then I see a warning that Electrum is not persistent
 
+  #11697
+  @fragile
   Scenario: Using a persistent Electrum configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged

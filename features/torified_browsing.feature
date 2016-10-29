@@ -50,6 +50,17 @@ Feature: Browsing the web using the Tor Browser
     And I click the HTML5 play button
     And 1 application is playing audio after 10 seconds
 
+  @check_tor_leaks @fragile
+  Scenario: Watching a WebM video
+    Given I have started Tails from DVD and logged in and the network is connected
+    When I start the Tor Browser
+    And the Tor Browser has started and loaded the startup page
+    And I open the address "https://tails.boum.org/lib/test_suite/test.webm" in the Tor Browser
+    And I click the blocked video icon
+    And I see "TorBrowserNoScriptTemporarilyAllowDialog.png" after at most 30 seconds
+    And I accept to temporarily allow playing this video
+    Then I see "TorBrowserSampleRemoteWebMVideoFrame.png" after at most 180 seconds
+
   #11592
   @fragile
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
