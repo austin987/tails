@@ -16,6 +16,10 @@ module Dogtail
     :textentry,
   ]
 
+  TREE_API_NODE_SEARCH_FIELDS = [
+    :parent,
+  ]
+
   TREE_API_NODE_ACTIONS = [
     :click,
     :doubleClick,
@@ -54,6 +58,9 @@ module Dogtail
       @init_lines = @opts[:init_lines] || [
         "from dogtail import tree",
         "from dogtail.config import config",
+        "config.logDebugToFile = False",
+        "config.logDebugToStdOut = False",
+        "config.blinkOnActions = True",
         "config.searchShowingOnly = True",
         "application = tree.root.application('#{@app_name}')",
       ]
@@ -81,10 +88,10 @@ module Dogtail
       $vm.file_overwrite(script_path, script)
       args = ["/usr/bin/python '#{script_path}'", @opts]
       if @opts[:allow_failure]
-        $vm.execute(*args)
+        return $vm.execute(*args)
       else
         begin
-          $vm.execute_successfully(*args)
+          return $vm.execute_successfully(*args)
         rescue Exception => e
           debug_log("Failing Dogtail script (#{script_path}):")
           script.split("\n").each { |line| debug_log(" "*4 + line) }
@@ -115,6 +122,7 @@ module Dogtail
     # into the parentheses of a Python function call.
     # Example: [42, {:foo => 'bar'}] => "42, foo = 'bar'"
     def self.args_to_s(args)
+      return "" if args.size == 0
       args_list = args
       args_hash = nil
       if args_list.class == Array && args_list.last.class == Hash
@@ -134,9 +142,39 @@ module Dogtail
       end
     end
 
+    def exist?
+      @opts[:allow_failure] = true
+      # We do not want any retries since this method should return the
+      # result for the immediate situation, not for the situation up
+      # to 20 retries in the future.
+      optimization = "config.searchCutoffCount = 1"
+      @init_lines << optimization unless @init_lines.include?(optimization)
+      run.success?
+    end
+
+    def wait_vanish(timeout)
+      try_for(timeout) { not(exist?) }
+    end
+
     # Equivalent to the Tree API's Node.findChildren(), with the
     # arguments constructing a GenericPredicate to use as parameter.
     def children(*args)
+      non_predicates = [:recursive, :showingOnly]
+      findChildren_opts = []
+      findChildren_opts_hash = Hash.new
+      if args.last.class == Hash
+        args_hash = args.last
+        non_predicates.each do |opt|
+          if args_hash.has_key?(opt)
+            findChildren_opts_hash[opt] = args_hash[opt]
+            args_hash.delete(opt)
+          end
+        end
+      end
+      findChildren_opts = ""
+      if findChildren_opts_hash.size > 0
+        findChildren_opts = ", " + self.class.args_to_s([findChildren_opts_hash])
+      end
       # A fundamental assumption of ScriptProxy is that we will only
       # act on *one* object at a time. If we were to allow more, we'd
       # have to port looping, conditionals and much more into our
@@ -146,9 +184,10 @@ module Dogtail
       # internal a11y AT-SPI "path" to uniquely identify a Dogtail
       # node, so we can give handles to each of them that can be used
       # later to re-find them.
+      predicate_opts = self.class.args_to_s(args)
       find_paths_script_lines = [
         "from dogtail import predicate",
-        "for n in #{build_line}.findChildren(predicate.GenericPredicate(#{self.class.args_to_s(args)})):",
+        "for n in #{build_line}.findChildren(predicate.GenericPredicate(#{predicate_opts})#{findChildren_opts}):",
         "    print(n.path)",
       ]
       a11y_at_spi_paths = run(find_paths_script_lines).stdout.chomp.split("\n")
@@ -186,6 +225,14 @@ module Dogtail
       get_field('text')
     end
 
+    def text=(value)
+      set_field('text', value)
+    end
+
+    def name
+      get_field('name')
+    end
+
     def proxy_call(method, args)
       args_str = self.class.args_to_s(args)
       method_call = "#{method.to_s}(#{args_str})"
@@ -201,6 +248,18 @@ module Dogtail
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
         proxy_call(method, args)
+      end
+    end
+
+    TREE_API_NODE_SEARCH_FIELDS.each do |field|
+      define_method(field) do
+        Node.new(
+          @app_name,
+          @opts.merge(
+            init_lines: @init_lines,
+            components: @components + [field]
+          )
+        )
       end
     end
 
