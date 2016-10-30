@@ -599,7 +599,7 @@ method=auto
 method=auto
 EOF
   tmp_path = "/tmp/NM.#{con_name}"
-  $vm.file_overwrite(path, con_content)
+  $vm.file_overwrite(tmp_path, con_content)
   con_file = "/etc/NetworkManager/system-connections/#{con_name}"
   $vm.execute("install -m 0600 '#{tmp_path}' '#{con_file}'")
   $vm.execute_successfully("nmcli connection load '#{con_file}'")
