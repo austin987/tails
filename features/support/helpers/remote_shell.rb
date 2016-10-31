@@ -6,17 +6,23 @@ module RemoteShell
   class Failure < StandardError
   end
 
+  DEFAULT_TIMEOUT = 20*60
+
   # Counter providing unique id:s for each communicate() call.
   @@request_id ||= 0
 
-  def communicate(vm, *args)
+  def communicate(vm, *args, **opts)
+    opts[:timeout] = DEFAULT_TIMEOUT
     socket = UNIXSocket.new(vm.remote_shell_socket_path)
     id = (@@request_id += 1)
     socket.puts(JSON.dump([id] + args))
     socket.flush
     loop do
-      s = socket.readline.chomp("\n")
-      response_id, status, *rest = JSON.load(s)
+      line = nil
+      try_for(opts[:timeout], msg: "The remote shell has timed out") do
+        line = socket.readline("\n").chomp("\n")
+      end
+      response_id, status, *rest = JSON.load(line)
       if response_id == id
         if status != "success"
           if status == "error" and rest.class == Array and rest.size == 1
@@ -32,6 +38,33 @@ module RemoteShell
                   "got id #{response_id} but expected id #{id}")
       end
     end
+  rescue Failure => e
+    # This is an expected exception
+    raise e
+  rescue Exception => e
+    debug_log("The remote shell threw an exception: #{e.class.name}: #{e}")
+    debug_log("Let's check if there is any data on the socket any way...")
+    data = ""
+    begin
+      loop { try_for(5) { data += socket.read(1) } }
+    rescue Timeout::Error
+      # Expected exit from the above loop
+    rescue Exception => f
+      debug_log("Got another exception: #{f.class.name}: #{f}")
+    end
+    if data.size > 1
+      if data.end_with?("\n")
+        debug_log("The socket gave us perfectly fine data")
+      else
+        debug_log("The socket contained garbage (data without newline " +
+                  "termination)")
+      end
+      debug_log("Socket content (#{data.size} bytes):")
+      debug_log(data)
+    else
+      debug_log("The socket was empty")
+    end
+    raise e
   ensure
     socket.close if defined?(socket) && socket
   end
@@ -48,21 +81,21 @@ module RemoteShell
     # background (or running scripts that does the same) like our
     # onioncircuits wrapper, or any application we want to interact
     # with.
-    def self.execute(vm, cmd, options = {})
-      options[:user] ||= "root"
-      options[:spawn] ||= false
-      type = options[:spawn] ? "spawn" : "call"
-      debug_log("#{type}ing as #{options[:user]}: #{cmd}")
-      ret = RemoteShell.communicate(vm, type, options[:user], cmd)
-      debug_log("#{type} returned: #{ret}") if not(options[:spawn])
+    def self.execute(vm, cmd, **opts)
+      opts[:user] ||= "root"
+      opts[:spawn] ||= false
+      type = opts[:spawn] ? "spawn" : "call"
+      debug_log("#{type}ing as #{opts[:user]}: #{cmd}")
+      ret = RemoteShell.communicate(vm, type, opts[:user], cmd, **opts)
+      debug_log("#{type} returned: #{ret}") if not(opts[:spawn])
       return ret
     end
 
     attr_reader :cmd, :returncode, :stdout, :stderr
 
-    def initialize(vm, cmd, options = {})
+    def initialize(vm, cmd, **opts)
       @cmd = cmd
-      @returncode, @stdout, @stderr = self.class.execute(vm, cmd, options)
+      @returncode, @stdout, @stderr = self.class.execute(vm, cmd, **opts)
     end
 
     def success?
@@ -85,9 +118,9 @@ module RemoteShell
   # An IO-like object that is more or less equivalent to a File object
   # opened in rw mode.
   class File
-    def self.open(vm, mode, path, *args)
+    def self.open(vm, mode, path, *args, **opts)
       debug_log("opening file #{path} in '#{mode}' mode")
-      ret = RemoteShell.communicate(vm, mode, path, *args)
+      ret = RemoteShell.communicate(vm, mode, path, *args, **opts)
       if ret.size != 1
         raise RemoteShell::Failure.new("expected 1 value but got #{ret.size}")
       end

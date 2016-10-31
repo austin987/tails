@@ -28,8 +28,12 @@ end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with
 # one second breaks until it returns true, or until `timeout` seconds have
-# passed when we throw a Timeout::Error exception.
+# passed when we throw a Timeout::Error exception. If `timeout` is `nil`,
+# then we just run the code block with no timeout.
 def try_for(timeout, options = {})
+  if block_given? && timeout.nil?
+    return yield
+  end
   options[:delay] ||= 1
   last_exception = nil
   # Create a unique exception used only for this particular try_for
