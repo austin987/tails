@@ -267,5 +267,8 @@ end
 def pause(message = "Paused")
   STDERR.puts
   STDERR.puts "#{message} (Press ENTER to continue!)"
+  # Ring the ASCII bell for a helpful notification in most terminal
+  # emulators.
+  STDOUT.write "\a"
   STDIN.gets
 end
