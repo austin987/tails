@@ -77,7 +77,14 @@ def info_log(message = "", options = {})
 end
 
 def debug_log(message, options = {})
-  $debug_log_fns.each { |fn| fn.call(message, options) } if $debug_log_fns
+  options[:timestamp] ||= true
+  if $debug_log_fns
+    if options[:timestamp]
+      elapsed = (Time.now - TIME_AT_START.to_f - 3600).strftime("%H:%M:%S.%9N")
+      message = "#{elapsed}: #{message}"
+    end
+    $debug_log_fns.each { |fn| fn.call(message, options) }
+  end
 end
 
 require 'cucumber/formatter/pretty'
