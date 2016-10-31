@@ -83,7 +83,7 @@ module RemoteShell
     # with.
     def self.execute(vm, cmd, **opts)
       opts[:user] ||= "root"
-      opts[:spawn] ||= false
+      opts[:spawn] = false unless opts.has_key?(:spawn)
       type = opts[:spawn] ? "spawn" : "call"
       debug_log("#{type}ing as #{opts[:user]}: #{cmd}")
       ret = RemoteShell.communicate(vm, type, opts[:user], cmd, **opts)

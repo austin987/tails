@@ -484,7 +484,7 @@ EOF
 
   def execute(cmd, options = {})
     options[:user] ||= "root"
-    options[:spawn] ||= false
+    options[:spawn] = false unless options.has_key?(:spawn)
     if options[:libs]
       libs = options[:libs]
       options.delete(:libs)
