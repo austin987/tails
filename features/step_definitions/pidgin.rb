@@ -204,8 +204,7 @@ end
 
 def configured_pidgin_accounts
   accounts = Hash.new
-  xml = REXML::Document.new($vm.file_content('$HOME/.purple/accounts.xml',
-                                             LIVE_USER))
+  xml = REXML::Document.new($vm.file_content('$HOME/.purple/accounts.xml'))
   xml.elements.each("account/account") do |e|
     account   = e.elements["name"].text
     account_name, network = account.split("@")
@@ -264,7 +263,7 @@ def default_chan (account)
 end
 
 def pidgin_otr_keys
-  return $vm.file_content('$HOME/.purple/otr.private_key', LIVE_USER)
+  return $vm.file_content('$HOME/.purple/otr.private_key')
 end
 
 Given /^Pidgin has the expected accounts configured with random nicknames$/ do
