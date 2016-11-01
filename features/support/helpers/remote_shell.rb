@@ -12,7 +12,7 @@ module RemoteShell
   @@request_id ||= 0
 
   def communicate(vm, *args, **opts)
-    opts[:timeout] = DEFAULT_TIMEOUT
+    opts[:timeout] ||= DEFAULT_TIMEOUT
     socket = UNIXSocket.new(vm.remote_shell_socket_path)
     id = (@@request_id += 1)
     socket.puts(JSON.dump([id] + args))
