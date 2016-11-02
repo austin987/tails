@@ -80,11 +80,12 @@ def try_for(timeout, options = {})
   # ends up there immediately.
 rescue unique_timeout_exception => e
   msg = options[:msg] || 'try_for() timeout expired'
+  exc_class = options[:exception] || Timeout::Error
   if last_exception
     msg += "\nLast ignored exception was: " +
            "#{last_exception.class}: #{last_exception}"
   end
-  raise Timeout::Error.new(msg)
+  raise exc_class.new(msg)
 end
 
 class TorFailure < StandardError

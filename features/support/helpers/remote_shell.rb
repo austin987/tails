@@ -6,6 +6,13 @@ module RemoteShell
   class Failure < StandardError
   end
 
+  # Used to differentiate vs Timeout::Error, which is thrown by
+  # try_for() (by default) and often wraps around remote shell usage
+  # -- in that case we don't want to catch that "outer" exception in
+  # our handling of remote shell timeouts below.
+  class Timeout < Failure
+  end
+
   DEFAULT_TIMEOUT = 20*60
 
   # Counter providing unique id:s for each communicate() call.
@@ -19,7 +26,11 @@ module RemoteShell
     socket.flush
     loop do
       line = nil
-      try_for(opts[:timeout], msg: "The remote shell has timed out") do
+      try_for_opts = {
+        exception: Timeout,
+        msg: "The remote shell has timed out",
+      }
+      try_for(opts[:timeout], try_for_opts) do
         line = socket.readline("\n").chomp("\n")
       end
       response_id, status, *rest = JSON.load(line)
@@ -38,31 +49,33 @@ module RemoteShell
                   "got id #{response_id} but expected id #{id}")
       end
     end
-  rescue Failure => e
-    # This is an expected exception
-    raise e
-  rescue Exception => e
-    debug_log("The remote shell threw an exception: #{e.class.name}: #{e}")
-    debug_log("Let's check if there is any data on the socket any way...")
-    data = ""
-    begin
-      loop { try_for(5) { data += socket.read(1) } }
-    rescue Timeout::Error
-      # Expected exit from the above loop
-    rescue Exception => f
-      debug_log("Got another exception: #{f.class.name}: #{f}")
-    end
-    if data.size > 1
-      if data.end_with?("\n")
-        debug_log("The socket gave us perfectly fine data")
-      else
-        debug_log("The socket contained garbage (data without newline " +
-                  "termination)")
-      end
-      debug_log("Socket content (#{data.size} bytes):")
-      debug_log(data)
+  rescue Timeout => e
+    debug_log("The remote shell timed out")
+    if socket.nil?
+      debug_log("The socket is not defined")
+    elsif socket.closed?
+      debug_log("The socket is closed")
     else
-      debug_log("The socket was empty")
+      debug_log("Let's check if there is any data on the socket any way...")
+      data = ""
+      begin
+        loop { try_for(1, exception: Timeout) { data += socket.read(1) } }
+      rescue Timeout
+        # Expected exit from the above loop
+        ;
+      end
+      if data.size > 1
+        if data.end_with?("\n")
+          debug_log("The socket gave us perfectly fine data")
+        else
+          debug_log("The socket contained garbage (data without newline " +
+                    "termination)")
+        end
+        debug_log("Socket content (#{data.size} bytes):")
+        debug_log(data)
+      else
+        debug_log("The socket is empty")
+      end
     end
     raise e
   ensure
