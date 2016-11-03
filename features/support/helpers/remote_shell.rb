@@ -76,6 +76,24 @@ module RemoteShell
       else
         debug_log("The socket is empty")
       end
+      debug_log("Fetching remote shell log...")
+      begin
+        try_for(10) do
+          id = (@@request_id += 1)
+          cmd = [id, 'call', 'root', 'journalctl -u tails-autotest-remote-shell']
+          socket.puts(JSON.dump(cmd))
+          socket.flush
+          line = socket.readline("\n").chomp("\n")
+          response_id, status, ret, out, err = JSON.load(line)
+          debug_log("\n" + out)
+          assert_equal(id, response_id)
+          assert_equal(0, ret)
+          true
+        end
+      rescue Exception => f
+        debug_log("Something went wrong while fetching the remote shell log")
+        debug_log("#{f.class.name}: #{f}")
+      end
     end
     raise e
   ensure

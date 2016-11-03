@@ -75,6 +75,7 @@ def main():
         # conditional doomed to a full second of mournful waiting
         # for this lost signal. :_( By trying to read before we do a
         # timed wait for the signal, this delay is avoided.
+        print("Reading...", file=sys.stderr)
         line = port.readline().decode('utf-8')
         if line == "":
             # In case the SIGIO gets lost for whatever reason
@@ -82,8 +83,11 @@ def main():
             # least once every second.
             signal.sigtimedwait([signal.SIGIO], 1)
             continue
+        print("Got line", file=sys.stderr)
         try:
             id, cmd_type, *rest = json.loads(line)
+            print("Line has id " + str(id), file=sys.stderr)
+            print("Processing...", file=sys.stderr)
             ret = ""
             if cmd_type in ['call', 'spawn']:
                 user, cmd = rest
@@ -113,15 +117,18 @@ def main():
                 ret = json.dumps([id, 'success'] + [ret])
             else:
                 raise ValueError("unknown command type")
+            print("Done processing", file=sys.stderr)
             response = (ret + "\n").encode('utf-8')
             # We can only write 2**15 bytes at a time to the virtio channel
             # (seems to only affect the guest -> host direction).
             chunk_size = 2**15
             chunks = (response[0+i:chunk_size+i] for i in \
                       range(0, len(response), chunk_size))
+            print("Sending response...", file=sys.stderr)
             for chunk in chunks:
                 port.write(chunk)
             port.flush()
+            print("Done sending response!", file=sys.stderr)
         except Exception as e:
             print("Error caught while processing line:", file=sys.stderr)
             print("    " + line, file=sys.stderr)
