@@ -1,6 +1,7 @@
+require 'base64'
 require 'json'
 require 'socket'
-require 'base64'
+require 'timeout'
 
 module RemoteShell
   class Failure < StandardError
@@ -22,31 +23,30 @@ module RemoteShell
     opts[:timeout] ||= DEFAULT_TIMEOUT
     socket = UNIXSocket.new(vm.remote_shell_socket_path)
     id = (@@request_id += 1)
-    socket.puts(JSON.dump([id] + args))
-    socket.flush
-    loop do
-      line = nil
-      try_for_opts = {
-        exception: Timeout,
-        msg: "The remote shell has timed out",
-      }
-      try_for(opts[:timeout], try_for_opts) do
+    # Since we already have defined our own Timeout in the current
+    # scope, we have to be more careful when referring to the Timeout
+    # class from the 'timeout' module. However, note that we want it
+    # to throw our own Timeout exception.
+    Object::Timeout.timeout(opts[:timeout], Timeout) do
+      socket.puts(JSON.dump([id] + args))
+      socket.flush
+      loop do
         line = socket.readline("\n").chomp("\n")
-      end
-      response_id, status, *rest = JSON.load(line)
-      if response_id == id
-        if status != "success"
-          if status == "error" and rest.class == Array and rest.size == 1
-            msg = rest.first
-            raise Failure.new("#{msg}")
-          else
-            raise "#{status}: #{rest}"
+        response_id, status, *rest = JSON.load(line)
+        if response_id == id
+          if status != "success"
+            if status == "error" and rest.class == Array and rest.size == 1
+              msg = rest.first
+              raise Failure.new("#{msg}")
+            else
+              raise "#{status}: #{rest}"
+            end
           end
+          return rest
+        else
+          debug_log("Dropped out-of-order remote shell response: " +
+                    "got id #{response_id} but expected id #{id}")
         end
-        return rest
-      else
-        debug_log("Dropped out-of-order remote shell response: " +
-                  "got id #{response_id} but expected id #{id}")
       end
     end
   rescue Timeout => e
