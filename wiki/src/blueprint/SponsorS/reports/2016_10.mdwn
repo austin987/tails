@@ -53,3 +53,90 @@ XXX
 - C.1.8. Clean up the remainers of the old mirror pool setup
 
 XXX
+
+## C.4. Maintain our already existing services
+
+### C.4.6. Administer our services upto milestone VI
+
+We kept on answering the requests from the community, and taking care
+of security updates.
+
+New pieces of infrastructure:
+
+ * We created a virtual machine that will be used to experiment with
+   our upcoming web translation platform. This allows us to try
+   separating _system_ administration from _services_ administration:
+   we want to allow other Tails contributors to set up and maintain
+   the services they need, which will make our system administrators
+   less of a bottleneck :)
+
+ * We finished taking over from Riseup the system that hosts our ticket
+   tracker: [[!tails_ticket 11855]], [[!tails_ticket 11805]],
+   [[!tails_ticket 11843]], [[!tails_ticket 11844]].
+
+Performance and resource usage improvements:
+
+ * We made more progress on optimizing I/O settings for virtual
+   machines running on our main server ([[!tails_ticket 11817]]).
+   Our short-term goal was to get better performance out of our
+   current hardware, and we are calling this a success: we have
+   lowered IO wait times, and improved disk throughput. This also
+   allowed us to learn more about the capacity of our actual setup so
+   we can specify the hardware to purchase in 2017.
+
+ * Our new APT snapshots system generates about 7GB of data for every
+   Tails release.
+   We [[!tails_ticket 11830 desc="implemented de-duplication"]] for
+   this data, which will cut down storage costs on the long term, and
+   makes the backup process smoother on the short term.
+
+Security improvements:
+
+ * We have changed the way we create virtual machines to
+   [[!tails_ticket 10092 desc="make it safer"]], thanks to a new
+   feature in [[!debpts di-netboot-assistant]] that was implemented
+   after we requested it.
+
+ * We have [[!tails_ticket 8192 desc="enabled HTTPS"]] on (almost) all
+   the sub-domains of `tails.boum.org`, thanks to Let's Encrypt.
+   This allowed us to proceed with the next steps that will eventually
+   result in adding `tails.boum.org` to the Chrome HSTS preload list
+   (that is used by other major web browsers as well).
+
+Workflow improvements:
+
+ * We started setting up a replica of our automated ISO builds and
+   tests infrastructure. This lead to quite some refactoring of our
+   Puppet code. It will allow us to develop infrastructure changes
+   more easily outside of our production environment.
+
+Porting our infrastructure to new versions of the technologies it uses:
+
+ * We started to implement [[!tails_ticket 11384 desc="our plan"]] to
+   migrate our infrastructure to Puppet 4, proceeding with the first
+   step that was
+   [[!tails_ticket 11835 desc="upgrading our Puppet master and clients to 3.8"]].
+   Then we quickly tried to
+   [[!tails_ticket 11836 desc="stop stringifying Puppet facts"]] but
+   had no time to deal with the fallout, so we reverted this change
+   and documented what the next steps are.
+
+Bug fixes:
+
+ * We (most likely) fixed [[!tails_ticket 11803 desc="a bug"]] that
+   sometimes prevented Jenkins jobs from being created or updated.
+
+Future plans:
+
+ * We identified new aspects of our systems that need to be monitored:
+   [[!tails_ticket 11870]], [[!tails_ticket 11858]].
+
+ * We want to improve the reliability of our continuous integration
+   system, by relying less on remote network resources:
+   [[!tails_ticket 11869]].
+
+ * We started thinking about better ways to
+   [[!tails_ticket 11880 desc="handle our servers' logs"]] and
+   making plans.
+
+XXX: look at the Git history of our Puppet code
