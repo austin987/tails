@@ -49,53 +49,6 @@ module RemoteShell
         end
       end
     end
-  rescue Timeout => e
-    debug_log("The remote shell timed out")
-    if socket.nil?
-      debug_log("The socket is not defined")
-    elsif socket.closed?
-      debug_log("The socket is closed")
-    else
-      debug_log("Let's check if there is any data on the socket any way...")
-      data = ""
-      begin
-        loop { try_for(1, exception: Timeout) { data += socket.read(1) } }
-      rescue Timeout
-        # Expected exit from the above loop
-        ;
-      end
-      if data.size > 1
-        if data.end_with?("\n")
-          debug_log("The socket gave us perfectly fine data")
-        else
-          debug_log("The socket contained garbage (data without newline " +
-                    "termination)")
-        end
-        debug_log("Socket content (#{data.size} bytes):")
-        debug_log(data)
-      else
-        debug_log("The socket is empty")
-      end
-      debug_log("Fetching remote shell log...")
-      begin
-        try_for(10) do
-          id = (@@request_id += 1)
-          cmd = [id, 'call', 'root', 'journalctl -u tails-autotest-remote-shell']
-          socket.puts(JSON.dump(cmd))
-          socket.flush
-          line = socket.readline("\n").chomp("\n")
-          response_id, status, ret, out, err = JSON.load(line)
-          debug_log("\n" + out)
-          assert_equal(id, response_id)
-          assert_equal(0, ret)
-          true
-        end
-      rescue Exception => f
-        debug_log("Something went wrong while fetching the remote shell log")
-        debug_log("#{f.class.name}: #{f}")
-      end
-    end
-    raise e
   ensure
     socket.close if defined?(socket) && socket
   end
