@@ -1,0 +1,243 @@
+[[!meta title="Installation Assistant"]]
+
+In 2015, we worked on a complete rewrite on our installation
+instructions. The archive of our design process as well as pending
+issues can be found in the [[corresponding
+blueprint|blueprint/bootstrapping/assistant]].
+
+Our previous instructions forced people to jump through many different
+documentation pages and often to figure out by themselves what to do next. See
+this [[flowchart of the installation process as of
+2014|blueprint/bootstrapping/2014.fodg]].
+
+The objective was to make this a linear process, to be follow step-by-step, and
+that would take the user from our homepage up to starting on a Tails USB stick
+with a persistent volume. But this process has to be adapted to the base
+operating system of the user or their technical expertise.
+
+We decided to optimize it for first time and less technical users, while still
+being usable by expert users.
+
+The following scenarios are proposed:
+
+  - [[Install from another Tails (for PC)|install/win/clone/overview]]
+  - [[Install from another Tails (for Mac)|install/mac/clone/overview]]
+  - [[Install from Windows|install/win/usb/overview]]
+  - [[Install from Debian, Ubuntu, or Mint|install/debian/usb/overview]]
+  - [[Install from Debian, Ubuntu, or Mint using the command line and GnuPG|install/expert/usb/overview]]
+  - [[Install from other Linux distributions|install/linux/usb/overview]]
+  - [[Install from Mac OS X by burning a DVD first|install/mac/dvd/overview]]
+  - [[Install from Mac OS X and the command line|install/mac/usb/overview]]
+  - [[Burn a DVD|install/dvd]]
+  - [[Download without installing|install/download]]
+  - [[Download and verify using OpenPGP|install/download/openpgp]]
+
+The installation assistant is also adapted to cover two [[manual upgrade
+scenarios|upgrade]]:
+
+  - [[Upgrade from another Tails|upgrade/clone/overview]]
+  - [[Upgrade inside Tails|upgrade/tails/overview]]
+
+The assistant is divided into three sections:
+
+  - The [[*router*|ia#router]] which selects the scenario to follow.
+  - The [[*overview*|ia#overview]] which summarizes graphically the scenario.
+  - The [[*steps*|ia#steps]] which gives step-by-step instructions for the scenario.
+
+Implementation tricks
+---------------------
+
+The installation assistant is basically presenting very similar content in many
+different scenarios with small variations (slightly different steps, slightly
+different terminology, etc.).
+
+To reuse as much content as possible and reduce the quantity of text and
+translations, our implementation relies heavily on two tricks. Both are
+quite hackish but were the only solution we found to avoid duplicating
+massive amount of content in ikiwiki.
+
+### Ikiwiki inlines
+
+The [inline directive](https://ikiwiki.info/ikiwiki/directive/inline/) of
+ikiwiki allows embedding a file into another file to avoid duplicating content.
+It is quite limited and brittle, especially when used together with the PO
+plugin. See [[!tails_ticket 6907]]. Many inlines also slow down the build
+process quite a lot.
+
+### Conditional CSS content
+
+To adapt a piece of content reused using ikiwiki inlines to the context
+where it appears we are using CSS classes. For example, to introduce the
+program used to install an intermediary Tails on Windows and Linux we
+wrote:
+
+<pre>
+&lt;span class="windows"&gt;a program called Universal USB Installe.&lt;/span&gt;
+&lt;span class="linux"&gt;a program called GNOME Disks.&lt;/span&gt;
+</pre>
+
+The `windows` class being only displayed in the Windows scenario and the
+`linux` class being only displayed in the Linux scenario.
+
+<a id="#router"></a>
+
+Router
+------
+
+The *router* is a sequence of multiple choices that determines which
+installation scenario to follow. It is divided by operating systems:
+
+  - Windows
+  - Mac OS X
+  - Linux with `APT` and `tails-installer`: Debian, Ubuntu, or Mint
+  - Other Linux distributions
+
+But we still propose cloning as an alternative as it is easier and
+faster.
+
+- *Download only* is proposed as a minor option on the first page of the
+  router. This is an example of us optimizing for first time users: installing
+  Tails is very complex and we really want them to follow the full installation
+  instructions and not only download and try to figure out the rest by
+  themselves. This is especially true for those who think they are power users
+  which is a good share of our audience.
+
+  *Download only* is not offered as an option from the
+  sidebar of the website for the same reason and to keep the sidebar as
+  simple as possible.
+
+- Burning a DVD is also proposed as a minor option because:
+  - DVD are not very popular (13% of the WhisperBack reports received in
+    2015).
+  - DVD do not benefit from automatic upgrades, so people might be more
+    quickly out-of-date.
+  - DVD does not allow creating a persistent volume, so people cannot
+    rely on long lasting cryptographic keys to secure their
+    communication and might use weaker techniques.
+  - For these same reasons we only provide a download and links to Ubuntu
+    instructions in the scenario.
+
+- Running in a virtual machine is proposed as a minor option because:
+  - VMs are not very popular (5% of the WhisperBack reports received in
+    2015).
+  - VMs are less secure because the host operating system can monitor
+    them.
+  - VMs make it harder to create a persistent volume, so people might
+    not rely on long lasting cryptographic keys to secure their
+    communication and might use weaker techniques.
+  - For these same reasons we only provide a download and inline the
+    documentation on virtualization in the scenario.
+
+<a id="overview"></a>
+
+Overview
+--------
+
+The *overview* is a single page summarizing graphically:
+
+  - The requirements of the installation scenario in terms of hardware
+    and time. This is important so that people get ready and make sure
+    beforehand that they have everything needed to complete the
+    scenario.
+  - The different steps. This give a rough idea of what will happen
+    next and how complex it is. This is particularly important as the
+    *steps* are a single and very long page.
+
+For example, the content of the overview for installing from Debian is
+stored in `debian/usb/overview.html` which includes a common block of
+HTML stored in `install/inc/overview.html` and uses the `debian` CSS
+class to adapt to the scenario.
+
+  - Classes potentially displayed on different pages:
+    - `clone` for content involving cloning
+    - `usb` for content with a USB stick as destination device
+    - `windows` for content for Windows 
+    - `mac` for content for Mac OS X
+    - `debian` for content for Debian, Ubuntu, or Mint
+    - `expert` for content for Debian, Ubuntu, or Mint on the command line
+    - `linux` for content for other Linux
+    - `upgrade` for content for manual upgrade
+  - Classes displayed only on one page:
+    - `dvd` for [[/install/dvd|/install/dvd]]
+    - `vm` for [[/install/vm|/install/vm]]
+    - `download-only` for [[/install/download|/install/download]]
+    - `install-clone` for [[/install/clone|/install/clone]]
+    - `windows-usb` for [[/install/win/usb|/install/win/usb]]
+    - `mac-usb` for [[/install/mac/usb|/install/mac/usb]]
+    - `mac-dvd` for [[/install/mac/dvd|/install/mac/dvd]]
+    - `mac-clone` for [[/install/mac/clone|/install/mac/clone]]
+    - `debian-usb` for [[/install/debian/usb|/install/debian/usb]]
+    - `expert-usb` for [[/install|/install]]
+    - `linux-usb` for [[/install/linux/usb|/install/linux/usb]]
+    - `upgrade-clone` for [[/upgrade/clone|/upgrade/clone]]
+    - `upgrade-tails` for [[/upgrade/tails|/upgrade/tails]]
+
+<a id="steps"></a>
+
+Steps
+-----
+
+The *steps* for a given scenario is a very long page with step-by-step
+instructions of the whole process. 
+
+- It is a single page so that people can get a feeling of what is left
+  to be done. During the tests, many people were scrolling up and down
+  the page, for example while waiting for an operation to complete or
+  when feeling that they missed something earlier.
+
+- The [[download of the ISO image|ia#download]] is integrated as one of these steps.
+
+- The content of each step is written in an inline stored in
+  `install/inc/steps/*.inline.mdwn` which is inlined from the scenarios
+  themselves (for example `install/debian/usb.mdwn`) and adapted to each
+  scenario using CSS classes.
+
+<a id="download"></a>
+
+Downloading techniques
+----------------------
+
+The download of the ISO image is integrated as one of the steps in the scenario
+(but the download step only is also available as a [[standalone
+page|install/download]]).
+
+We propose three download techniques, each of them corresponding to a technique
+to verify the ISO image, to a level of authenticity at least as good as HTTPS:
+
+1. A Firefox extension, called DAVE. See the [[dedicated design
+   document|dave]] for a security analysis of this technique.
+
+1. A BitTorrent download. The Torrent file is downloaded through HTTPS
+   and BitTorrent clients automatically verifies the download once
+   completed.
+   - In Firefox, this technique is presented as a minor option.
+   - In other browser, this technique is presented with equal weight as the
+     Firefox extension.
+
+1. A direct download together with instructions to verify it using
+   OpenPGP, the signing key being downloaded over HTTPS. We assume that
+   this technique is only relevant for people who are already knowledgeable
+   about OpenPGP. As a consequence:
+
+   - For people in Debian and who feel confident with OpenPGP and the command
+     line, we advertise it as a dedicated scenario that leads them through a
+     verification of the signing key through the Debian keyring.
+
+   - For all the others, we offer it as a minor option, for example with equal
+     weight as BitTorrent for people who are running Firefox and then:
+     - We only provide simplified instructions on how to perform the
+       verification, insisting on aspects that might still be relevant for
+       this public: verification of the date, command line options,
+       warning when the signing key is not trusted, etc.
+     - We take more time to develop the verification of the signing key
+       through the OpenPGP Web of Trust.
+
+As a consequence, we don't provide a preeminent direct download link for
+everybody and are somehow *forcing* people to verify the ISO image. Some
+criticized this as a [dark pattern](http://darkpatterns.org/) but we genuinely
+believe that it is in the interest of the user to make it easier to verify the
+ISO image than to not verify it, as it:
+
+  - Provides more secure downloads.
+  - Detects uncompleted downloads that can lead to much trouble down the
+    roadmap, and the corresponding load on our help desk.
