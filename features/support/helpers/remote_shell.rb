@@ -133,7 +133,7 @@ module RemoteShell
       debug_log("opening file #{path} in '#{mode}' mode")
       ret = RemoteShell.communicate(vm, mode, path, *args, **opts)
       if ret.size != 1
-        raise RemoteShell::ServerFailure.new("expected 1 value but got #{ret.size}")
+        raise ServerFailure.new("expected 1 value but got #{ret.size}")
       end
       debug_log("#{mode} complete")
       return ret.first
