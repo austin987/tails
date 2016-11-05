@@ -66,7 +66,7 @@ module RemoteShell
               msg = rest.first
               raise Failure.new("#{msg}")
             else
-              raise "#{status}: #{rest}"
+              raise Failure.new("Uncaught exception: #{status}: #{rest}")
             end
           end
           return rest
