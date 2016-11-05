@@ -4,7 +4,7 @@ require 'socket'
 require 'timeout'
 
 module RemoteShell
-  class Failure < StandardError
+  class ServerFailure < StandardError
   end
 
   # This exception is *only* supposed to be use internally in
@@ -17,7 +17,7 @@ module RemoteShell
   # try_for() (by default) and often wraps around remote shell usage
   # -- in that case we don't want to catch that "outer" exception in
   # our handling of remote shell timeouts below.
-  class Timeout < Failure
+  class Timeout < ServerFailure
   end
 
   DEFAULT_TIMEOUT = 20*60
@@ -64,9 +64,9 @@ module RemoteShell
           if status != "success"
             if status == "error" and rest.class == Array and rest.size == 1
               msg = rest.first
-              raise Failure.new("#{msg}")
+              raise ServerFailure.new("#{msg}")
             else
-              raise Failure.new("Uncaught exception: #{status}: #{rest}")
+              raise ServerFailure.new("Uncaught exception: #{status}: #{rest}")
             end
           end
           return rest
@@ -133,7 +133,7 @@ module RemoteShell
       debug_log("opening file #{path} in '#{mode}' mode")
       ret = RemoteShell.communicate(vm, mode, path, *args, **opts)
       if ret.size != 1
-        raise RemoteShell::Failure.new("expected 1 value but got #{ret.size}")
+        raise RemoteShell::ServerFailure.new("expected 1 value but got #{ret.size}")
       end
       debug_log("#{mode} complete")
       return ret.first
