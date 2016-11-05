@@ -80,7 +80,11 @@ def main():
             # In case the SIGIO gets lost for whatever reason
             # (e.g. the one mentioned above), let's always poll at
             # least once every second.
-            signal.sigtimedwait([signal.SIGIO], 1)
+            try:
+                signal.sigtimedwait([signal.SIGIO], 1)
+            except InterruptedError:
+                # Thrown if any other signal is received.
+                pass
             continue
         try:
             id, cmd_type, *rest = json.loads(line)
