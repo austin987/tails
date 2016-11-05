@@ -98,8 +98,6 @@ module Dogtail
           raise e
         end
       end
-    ensure
-      $vm.execute("rm -f '#{script_path}'")
     end
 
     def self.value_to_s(v)
