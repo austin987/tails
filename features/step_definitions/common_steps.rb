@@ -136,7 +136,7 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I (temporarily )?create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
   $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
                                      :type => "qcow2"})
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
@@ -984,4 +984,25 @@ Then /^Tails is running version (.+)$/ do |version|
   v2 = $vm.file_content('/etc/os-release')
        .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
   assert_equal(version, v2, "The version doesn't match /etc/os-release")
+end
+
+def share_host_files(files)
+  files = [files] if files.class == String
+  assert_equal(Array, files.class)
+  disk = random_alpha_string(10)
+  step "I temporarily create an 2 GiB disk named \"#{disk}\""
+  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
+       "filesystem on disk \"#{disk}\""
+  $vm.storage.guestfs_disk_helper(disk) do |g, _|
+    partition = g.list_partitions().first
+    g.mount(partition, "/")
+    files.each { |f| g.upload(f, "/" + File.basename(f)) }
+  end
+  step "I plug USB drive \"#{disk}\""
+  mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
+  dev = $vm.disk_dev(disk)
+  partition = dev + '1'
+  $vm.execute_successfully("mount #{partition} #{mount_dir}")
+  $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
+  return mount_dir
 end
