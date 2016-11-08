@@ -1,5 +1,4 @@
-#11901: mat does not clean PDF files anymore
-@product @fragile
+@product
 Feature: Metadata Anonymization Toolkit
   As a Tails user
   I want to be able to remove leaky metadata from documents and media files
