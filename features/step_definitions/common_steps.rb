@@ -8,24 +8,6 @@ def post_vm_start_hook
   @screen.click_point(@screen.w, @screen.h/2)
 end
 
-def activate_filesystem_shares
-  # XXX-9p: First of all, filesystem shares cannot be mounted while we
-  # do a snapshot save+restore, so unmounting+remounting them seems
-  # like a good idea. However, the 9p modules get into a broken state
-  # during the save+restore, so we also would like to unload+reload
-  # them, but loading of 9pnet_virtio fails after a restore with
-  # "probe of virtio2 failed with error -2" (in dmesg) which makes the
-  # shares unavailable. Hence we leave this code commented for now.
-  #for mod in ["9pnet_virtio", "9p"] do
-  #  $vm.execute("modprobe #{mod}")
-  #end
-
-  $vm.list_shares.each do |share|
-    $vm.execute("mkdir -p #{share}")
-    $vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
-  end
-end
-
 def context_menu_helper(top, bottom, menu_item)
   try_for(60) do
     t = @screen.wait(top, 10)
@@ -39,17 +21,6 @@ def context_menu_helper(top, bottom, menu_item)
     @screen.wait_and_click(menu_item, 10)
     return
   end
-end
-
-def deactivate_filesystem_shares
-  $vm.list_shares.each do |share|
-    $vm.execute("umount #{share}")
-  end
-
-  # XXX-9p: See XXX-9p above
-  #for mod in ["9p", "9pnet_virtio"] do
-  #  $vm.execute("modprobe -r #{mod}")
-  #end
 end
 
 # This helper requires that the notification image is the one shown in
@@ -91,9 +62,6 @@ end
 def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
-
-  # XXX-9p: See XXX-9p above
-  #activate_filesystem_shares
 
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
@@ -343,7 +311,6 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
-  activate_filesystem_shares
   step 'I configure Tails to use a simulated Tor network'
 end
 
