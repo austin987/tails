@@ -57,6 +57,38 @@ maintain all by ourselves, because it was meant only for Tails' needs.
 
 So, we shouldn't try to reinvent this wheel, and use an existing, proven solution instead.
 
+GNOME Backups (Deja Dup)
+------------------------
+
+  - <https://launchpad.net/deja-dup>
+  - <https://wiki.gnome.org/Apps/DejaDup>
+
+Pros:
+
+  - Has a simple interface for configuring backups. The nicest we could
+    find and with a [clear mission statment](https://wiki.gnome.org/Apps/DejaDup/Mission).
+  - Restoration of single files or folders is integrated in Files.
+  - Notifications to start backups periodically.
+
+Cons:
+
+- Uses duplicity as back end with the following drawbacks:
+  - It forces full backups no and then making them unexpectedly
+    extremelly slower than regular incremental ones.
+  - Restoring a single file is slow.
+  - Impossible to navigate the file system, either of the last or past
+    increments without doing a full restoration.
+- No feedback whatsoever on the progress of the backup when they get started automatically.
+- Doesn't know how to ask for root password for backing up files it cannot access.
+- If files are mounted or linked in a different place, you can only
+  restore from Nautilus the original places backed up by Deja Dup. That's
+  a problem for dotfiles which are single files symlinked to $HOME and you
+  can't easily get both the Nautilus integration and the full restoration.
+- You can only add folders to be backed up or ignored by Deja-Dup (and not single files).
+- Fails to restore symlinks.
+
+See [[!tails_ticket 9888]].
+
 Tar + GPG
 ---------
 
