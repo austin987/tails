@@ -2,33 +2,12 @@
 
 [[!toc levels=2]]
 
-<div class="caution">
-<strong>Deadline: 2016-11-05</strong>
-</div>
-
-<div class="note">
-Deliverable identifiers and descriptions are not free-form: they must
-be copy'n'pasted as-is from the proposal sent to the sponsor.
-
-<pre>
-## A.n. description of subsection
-
-- A.n.m. description of deliverable: ticket numbers
-
-  status summary:
-
-  * what was done
-  * what is the outcome (how it makes Tails better)
-  * what was not done, and why
-</pre>
-</div>
-
-[Last month's activity on Redmine](https://labs.riseup.net/code/projects/tails/issues?query_id=208)
-can be helpful.
-
-This report covers the activity of Tails in October 2016.
-
-XXX: Add something about this report being the final report of the contract.
+This report covers the activity of Tails in October 2016. It is the
+final report for our current contract with OTF. We want to thank OTF
+for their support, that enabled us to deliver a large set of
+improvements to various people, including: Tails users, Tails
+contributors, users of Debian and its numerous derivatives,
+Thunderbird users, and more!
 
 Everything in this report is public.
 
@@ -36,11 +15,15 @@ Everything in this report is public.
 
 - A.1.1. Secure the Icedove autoconfig wizard
 
-This work has been merged, so this deliverable is now completed.
+  As [[reported last month|contribute/reports/SponsorS/2015/2016_09]],
+  this work has been merged, and this deliverable is now completed.
 
 - A.1.2. Make our improvements maintainable for future versions of Icedove
 
-This work has been merged, so this deliverable is now completed.
+  As [[reported last month|contribute/reports/SponsorS/2015/2016_09]],
+  this deliverable was completed: our patches were submitted to
+  Thunderbird upstream, and we keep working with them to make sure that
+  all users of Thunderbird benefit from a safer configuration wizard.
 
 # B. Improve our quality assurance process
 
@@ -48,48 +31,59 @@ This work has been merged, so this deliverable is now completed.
 
 - B.3.11. Fix newly identified issues to make our test suite more robust and faster
 
-After having worked on this continuously for over a year, the test
-suite runs faster despite testing more than before, and it reports
-much fewer false positives. We now are in a state where we can rely on
-its results as intended:
+  After having worked on this continuously for over a year, our test
+  suite runs faster despite testing more cases than before; also, it reports
+  much fewer false positives. We now are in a state where we can rely on
+  its results as intended:
 
-  - When reviewing someone else's work, they allow us to quickly rule
-    out many classes of regressions.
+  - When reviewing someone else's work, automated testing results
+    allows us to quickly rule out many classes of regressions.
   - When introducing new features and bug fixes in general, they make us
     a lot more comfortable.
 
-That said, we clearly underestimated the amount of work needed for the
-robustness part of this deliverable, and there are some outstanding
-issues still remaining before we could have no false positives. However,
-it should be stressed that the issues are rare enough that the
-automated test suite still is as useful as described in the previous
-paragraph, so we consider this a success nevertheless.
+  That said, we clearly underestimated the amount of work needed for the
+  robustness part of this deliverable, and there are some outstanding
+  issues still remaining before we could have no false positives _at all_.
+  However, it should be stressed that the issues are rare enough that the
+  automated test suite still is as useful as described in the previous
+  paragraph, so we consider this a success nevertheless.
 
-This deliverable is now completed.
+  This deliverable is now completed.
 
 - B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
 
-This work has been merged, so this deliverable is now completed.
+  This work has been merged, so this deliverable is now completed.
 
 - B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
 
-This work has been merged, so this deliverable is now completed.
+  This work has been merged, so this deliverable is now completed.
 
 # C. Scale our infrastructure
 
-## C.1. Change in depth the infrastructure of our pool of mirrors:
+## C.1. Change in depth the infrastructure of our pool of mirrors
 
-- C.1.2. Write & audit the code that makes the redirection decision from our website
+We completed the remaining bits of this deliverable, and deployed
+everything to production:
 
-XXX
+- C.1.2. Write & audit the code that makes the redirection decision from our website ([[!tails_ticket 8639]], [[!tails_ticket 8640]], [[!tails_ticket 11109]])
 
-- C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL
+  * `mirror-dispatcher.js`: our security auditor did a final
+    security review, and approved this code.
 
-XXX
+  * Download And Verification Extension (DAVE) for Firefox: our code
+    to use our new mirror pool when downloading Tails ISO images was
+    completed, merged, released and made it into Mozilla's
+    stable channel.
 
-- C.1.8. Clean up the remainers of the old mirror pool setup
+  This deliverable is now completed.
 
-XXX
+- C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL ([[!tails_ticket 8642]], [[!tails_ticket 11329]], [[!tails_ticket 10295]])
+
+  This was completed back in May.
+
+- C.1.8. Clean up the remainers of the old mirror pool setup ([[!tails_ticket 8643]], [[!tails_ticket 11284]])
+
+  This deliverable was completed as well.
 
 ## C.4. Maintain our already existing services
 
@@ -157,6 +151,10 @@ of security updates.
    [[!tails_ticket 11836 desc="stop stringifying Puppet facts"]] but
    had no time to deal with the fallout, so we reverted this change
    and documented what the next steps are.
+ * We [[!tails_ticket 11874 desc="fixed the way"]] our test suite
+   handles the pluging and unplugging of DVD devices, as well as the
+   ejection of the ISO image, to adapt to compatibility issues between
+   QEMU 2.7 and Jessie's libvirt on this matter.
 
 #### Bug fixes
 
@@ -176,4 +174,10 @@ of security updates.
    [[!tails_ticket 11880 desc="handle our servers' logs"]] and
    making plans.
 
-XXX: look at the Git history of our Puppet code
+# E. Release management
+
+## E.1.12. Tails 2.5
+
+As reported about a couple months ago, [[Tails 2.5|news/version_2.5]]
+was released on August 2. Meanwhile,
+[[Tails 2.6|news/version_2.6]] was released on September 20.
