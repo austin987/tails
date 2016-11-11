@@ -31,10 +31,10 @@ Feature: custom APT sources to build branches
     And Tails 1.0 has not been released yet
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
     When I successfully run "apt-snapshots-serials prepare-build"
-    And I successfully run "apt-mirror debian"
-    Then I should see the 0.10 tagged snapshot
-    When I successfully run "apt-mirror torproject"
-    Then I should see the 0.10 tagged snapshot
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
     When I successfully run "apt-mirror debian-security"
     Then I should see a time-based snapshot
 
@@ -77,10 +77,10 @@ Feature: custom APT sources to build branches
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
     And I checkout the 0.10 tag
     When I successfully run "apt-snapshots-serials prepare-build"
-    And I successfully run "apt-mirror debian"
-    Then I should see the 0.10 tagged snapshot
-    When I successfully run "apt-mirror torproject"
-    Then I should see the 0.10 tagged snapshot
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
     When I successfully run "apt-mirror debian-security"
     Then I should see the 0.10 tagged snapshot
 
@@ -127,10 +127,10 @@ Feature: custom APT sources to build branches
     And I am working on the bugfix/disable_gdomap branch based on stable
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
     When I successfully run "apt-snapshots-serials prepare-build"
-    And I successfully run "apt-mirror debian"
-    Then I should see the 0.10 tagged snapshot
-    When I successfully run "apt-mirror torproject"
-    Then I should see the 0.10 tagged snapshot
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
     When I successfully run "apt-mirror debian-security"
     Then I should see a time-based snapshot
 
@@ -178,10 +178,10 @@ Feature: custom APT sources to build branches
     And Tails 1.0 has not been released yet
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
     When I successfully run "apt-snapshots-serials prepare-build"
-    And I successfully run "apt-mirror debian"
-    Then I should see a time-based snapshot
-    When I successfully run "apt-mirror torproject"
-    Then I should see a time-based snapshot
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
     When I successfully run "apt-mirror debian-security"
     Then I should see a time-based snapshot
 
@@ -273,10 +273,10 @@ Feature: custom APT sources to build branches
     And I am working on the bugfix/disable_gdomap branch based on testing
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
     When I successfully run "apt-snapshots-serials prepare-build"
-    And I successfully run "apt-mirror debian"
-    Then I should see a time-based snapshot
-    When I successfully run "apt-mirror torproject"
-    Then I should see a time-based snapshot
+    And I run "apt-mirror debian"
+    Then it should fail
+    When I run "apt-mirror torproject"
+    Then it should fail
     When I successfully run "apt-mirror debian-security"
     Then I should see a time-based snapshot
 

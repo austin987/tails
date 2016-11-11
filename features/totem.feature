@@ -39,14 +39,18 @@ Feature: Using Totem
     # Due to our AppArmor aliases, /live/overlay will be treated
     # as /lib/live/mount/overlay.
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
+    Given I close Totem
+    And I copy "/home/amnesia/video.mp4" to "/home/amnesia/.purple/otr.private_key" as user "amnesia"
+    And I restart monitoring the AppArmor log of "/usr/bin/totem"
+    When I try to open "/home/amnesia/.purple/otr.private_key" with Totem
+    Then I see "TotemUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.purple/otr.private_key"
 
   @check_tor_leaks @fragile
   Scenario: Watching a WebM video over HTTPS
     Given I have started Tails from DVD and logged in and the network is connected
     Then I can watch a WebM video over HTTPs
 
-  #10720: Tails Installer freezes on Jenkins
-  @fragile
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
     # Due to bug #5571 we have to reboot to be able to use
