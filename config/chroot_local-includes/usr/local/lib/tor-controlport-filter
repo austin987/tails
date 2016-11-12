@@ -74,7 +74,13 @@
 # * `replacement`: this rewrites the arguments. The value is a Python
 #   format string (str.format()) which will be given the match groups
 #   from the match of `pattern`. The rewritten command is then proxied
-#   without the need to match any rule.
+#   without the need to match any rule. There are also some special
+#   patterns that will be replaced as follows:
+#
+#   - {client-address}: the client's IP address
+#   - {client-port}: the client's port
+#   - {server-address}: the server's IP address
+#   - {server-port}: the server's (listening) port
 #
 # * `response`: a list of dictionaries, where the `pattern` and
 #   `replacement` keys work exactly as for commands arguments, but now
@@ -251,7 +257,7 @@ def match_and_parse_filter(filters, matchers):
             allowed_events, restrict_stream_events)
 
 
-def handle_controlport_session(controller, readh, writeh, client_desc, client_pid, allowed_commands, allowed_events, restrict_stream_events = False):
+def handle_controlport_session(controller, readh, writeh, client_desc, client_pid, client_address, server_address, allowed_commands, allowed_events, restrict_stream_events = False):
 
     def _log(line, format_multiline=False, sep = ': '):
         line = line.strip()
@@ -309,6 +315,12 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         respond("510 Command filtered")
 
     def rewrite_line(replacers, line):
+        builtin_replacers = {
+            'client-address': client_address[0],
+            'client-port':    str(client_address[1]),
+            'server-address': server_address[0],
+            'server-port':    str(server_address[1]),
+        }
         terminator = ''
         if line[-2:] == "\r\n":
             terminator = "\r\n"
@@ -316,7 +328,9 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         for r in replacers:
             match = re.match(r['pattern'] + "$", line)
             if match:
-                return r['replacement'].format(*match.groups()) + terminator
+                return r['replacement'].format(
+                    *match.groups(), **builtin_replacers
+                ) + terminator
         raise NoRewriteMatch()
 
     def rewrite_matched_line(replacers, line):
@@ -548,6 +562,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         try:
             handle_controlport_session(controller, self.rfile, self.wfile,
                                        client_desc, client_pid,
+                                       self.client_address,
+                                       self.server.server_address,
                                        allowed_commands, allowed_events,
                                        restrict_stream_events
             )
