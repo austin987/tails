@@ -370,7 +370,7 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                 if global_args.print_responses:
                     _log("already subscribed to event '{}'".format(event))
                 continue
-            rule = allowed_events[event] or {}
+            rule = allowed_events.get(event, {}) or {}
             if not rule.get('suppress', False) or \
                global_args.disable_filtering:
                 event_rewriter = None
