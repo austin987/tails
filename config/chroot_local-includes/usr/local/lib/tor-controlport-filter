@@ -438,7 +438,9 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
 
         else:
             rule = get_rule(cmd, arg_str)
-            if rule:
+            if rule == None and global_args.disable_filtering:
+                rule = {}
+            if rule != None:
                 args_rewriter = None
                 response_rewriter = None
 
