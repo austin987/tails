@@ -557,9 +557,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 'events': allowed_events,
                 'restrict-stream-events': restrict_stream_events,
             }))
-        controller = self.connect_to_real_control_port()
         disconnect_reason = "client quit"
+        controller = None
         try:
+            controller = self.connect_to_real_control_port()
             handle_controlport_session(controller, self.rfile, self.wfile,
                                        client_desc, client_pid,
                                        self.client_address,
@@ -570,11 +571,15 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         except (ConnectionResetError, BrokenPipeError) as err:
             # Handle clients disconnecting abruptly
             disconnect_reason = str(err)
+        except stem.SocketError:
+            # Handle client closing its socket abruptly
+            disconnect_reason = "Client closed its socket"
         except stem.SocketClosed:
             # Handle Tor closing its socket abruptly
             disconnect_reason = "Tor closed its socket"
         finally:
-            controller.close()
+            if controller:
+                controller.close()
             log('{} disconnected: {}'.format(client_desc, disconnect_reason))
 
 
