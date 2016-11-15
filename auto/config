@@ -77,7 +77,7 @@ $RUN_LB_CONFIG \
    --mirror-chroot-security     "$DEBIAN_SECURITY_MIRROR" \
    --packages-lists="standard" \
    --tasks="standard" \
-   --linux-packages="linux-image-3.16.0-4" \
+   --linux-packages="linux-image-${KERNEL_VERSION}" \
    --syslinux-menu vesamenu \
    --syslinux-splash data/splash.png \
    --syslinux-timeout 4 \
@@ -89,7 +89,7 @@ hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LB_CONFIG \
       --architecture i386 \
-      --linux-flavours "586 amd64" \
+      --linux-flavours "686-unsigned" \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
@@ -141,6 +141,10 @@ install -m 0755 -d config/chroot_local-includes/usr/local/lib/nodejs
 install -m 0755 \
    submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
    config/chroot_local-includes/usr/local/lib/nodejs/
+
+# aufs4-standalone
+rm -rf config/chroot_local-includes/usr/src/aufs4-standalone
+cp -a submodules/aufs4-standalone config/chroot_local-includes/usr/src/
 
 # custom debootstrap script, setting some APT magic to log downloads:
 patch \

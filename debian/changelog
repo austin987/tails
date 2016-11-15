@@ -1,14 +1,156 @@
-tails (2.6) UNRELEASED; urgency=medium
+tails (2.7) UNRELEASED; urgency=medium
 
-  * Dummy entry.
+  * Security fixes
+    - Upgrade to Linux 4.7. (Closes: #11885, #11818)
+    - Upgrade to Tor 0.2.8.9. (Closes: #11832, #11891)
+    - Upgrade Tor Browser to 6.0.6 based on Firefox 45.5. (Closes: #11910)
+    - Upgrade Icedove to 1:45.4.0-1~deb8u1+tails1. (Closes: #11854,
+      #11860)
+    - Upgrade imagemagick to 8:6.8.9.9-5+deb8u5.
+    - Upgrade openssl to 1.0.1t-1+deb8u5.
+    - Upgrade libarchive to 3.1.2-11+deb8u3.
+    - Upgrade bind9 to 1:9.9.5.dfsg-9+deb8u8.
+    - Upgrade libav to 6:11.8-1~deb8u1.
+    - Upgrade ghostscript to 9.06~dfsg-2+deb8u3.
+    - Upgrade c-ares to 1.10.0-2+deb8u1.
+    - Upgrade nspr to 2:4.12-1+debu8u1.
+    - Upgrade nss to 2:3.26-1+debu8u1.
+    - Upgrade tar to 1.27.1-2+deb8u1.
+    - Upgrade curl to 7.38.0-4+deb8u5.
+    - Upgrade libgd3 to 2.1.0-5+deb8u7.
+    - Upgrade opendjk-7 to 7u111-2.6.7-2~deb8u1.
+    - Upgrade mat to 0.5.2-3+deb8u1.
+    - Upgrade libxslt to 1.1.28-2+deb8u2.
+    - Upgrade pillow to 2.6.1-2+deb8u3.
 
- -- anonym <anonym@riseup.net>  Tue, 07 Jun 2016 09:07:40 +0200
+  * Minor improvements
+    - Ship Let's encrypt intermediate certificate to prepare the
+      the next certificate renewal of our website. Also unify the
+      way our upgrades and security checkers verify this SSL
+      certificate using our dedicated perl lib code. (Closes: #11810)
 
-tails (2.5.1) UNRELEASED; urgency=medium
+  * Bugfixes
+    - Fix multiarch support in Synaptic. (Closes: #11820)
+    - Set default spelling language to en_US in Icedove. (Closes: #11037)
 
-  * Dummy entry.
+  * Build system
+    - Disable debootstrap merged-usr option. (Closes: #11903)
 
- -- intrigeri <intrigeri@debian.org>  Mon, 01 Aug 2016 10:36:45 +0000
+  * Test suite
+    - Add test for incremental upgrades. (Closes: #6309)
+    - Add tests for Icedove. (Closes: #6304)
+    - Decrease timeout to Tails Greeter to speed up testing of branches
+      where it is broken. (Closes: #11449)
+    - Add a ID field to the remote shell responses to filter out
+      unrelated ones. (Closes: #11846)
+    - Reliabily wait for the Greeter PostLogin script. (Closes: #5666)
+    - Reliabily type the kernel command line in the prompt at the boot
+      menu to ensure the remote shell is started. (Closes: #10777)
+    - Remove DVDROM device when not used, to workaround QEMU/Libvirt
+      compatibility issue. (Closes: #11874)
+
+
+ -- Tails developers <tails@boum.org>  Mon, 03 Oct 2016 23:06:51 +0200
+
+tails (2.6) unstable; urgency=medium
+
+  * Major new features and changes
+    - Install Tor 0.2.8.7. (Closes: #11351)
+    - Enable kASLR in the Linux kernel. (Closes: #11281)
+    - Upgrade Icedove to 1:45.2.0-1~deb8u1+tails1: (Closes: #11714)
+      · Drop auto-fetched configurations using Oauth2.  They do not
+        work together with Torbirdy since it disables needed
+        functionality (like JavaScript and cookies) in the embedded
+        browser. This should make auto-configuration work for GMail
+        again, for instance.  (Closes: ##11536)
+      · Pin Icedove to be installed from our APT repo. Debian's
+        Icedove packages still do not have our secure Icedove
+        autoconfig wizard patches applied, so installing them would be
+        a serious security regression. (Closes: #11613)
+      · Add missing icedove-l10n-* packages to our custom APT
+        repository (Closes: #11550)
+    - Upgrade to Linux 4.6: (Closes: #10298)
+      · Install the 686 kernel flavour instead of the obsolete 586
+        one.
+      · APT, dpkg: add amd64 architecture. The amd64 kernel flavour is
+        not built anymore for the i386 architecture, so we need to use
+        multiarch now.
+      · Build and install the out-of-tree aufs4 module. (Closes: #10298)
+      · Disable kernel modesetting for QXL: it's not compatible with
+        Jessie's QXL X.Org driver.
+
+  * Security fixes
+    - Hopefully fixed an issue which would sometimes make the Greeter
+      ignore the "disable networking" or "bridge mode"
+      options. (Closes: #11593)
+
+  * Minor improvements
+    - Install firmware-intel-sound and firmware-ti-connectivity.  This
+      adds support for some sound cards and Wi-Fi adapters.  (Closes:
+      #11502)
+    - Install OpenPGP Applet from Debian. (Closes: #10190)
+    - Port the "About Tails" dialog to python3.
+    - Run our initramfs memory erasure hook earlier (Closes:
+      #10733). The goal here is to:
+      · save a few seconds on shutdown (it might matter especially for
+        the emergency one);
+      · work in a less heavily multitasking / event-driven
+        environment, for more robust operation.
+    - Install rngd, and make rng-tools initscript return success when
+      it can't find any hardware RNG device. Most Tails systems around
+      probably have no such device, and we don't want systemd to
+      believe they failed to boot properly. (Closes: #5650)
+    - Don't force using the vboxvideo X.Org driver. According to our
+      tests, this forced setting is:
+       · harmful: it breaks X startup when the vboxvideo *kernel*
+         driver is loaded;
+       · useless: X.Org now autodetects the vboxvideo X.Org driver and
+         uses it when running in VirtualBox and the vboxvideo kernel
+         is not present.
+    - Port boot-profile to python3 (Closes: #10083). Thanks to
+      heartsucker <heartsucker@autistici.org> for the patch!
+    - Include /proc/cmdline and the content of persistent APT sources
+      in WhisperBack bug reports. (Closes: #11675, #11635)
+    - Disable non-free APT sources at boot time. (Closes: #10130)
+    - Have a dedicated page for the homepage of Tor Browser in
+      Tails. (Closes: # 11725)
+    - Only build the VirtualBox kernel modules for the 32-bit kernel.
+      It's both hard and useless to build it for 64-bit in the current
+      state of things, as long as we're shipping a 32-bit userspace.
+      Also, install virtualbox-* from jessie-backports, since the
+      version in Jessie is not compatible with Linux 4.x.
+
+  * Build system
+    - Don't install+remove dpatch during the build. It's not been
+      needed in this hook for ages.
+    - Bump BUILD_SPACE_REQUIREMENT: at least one of us needed that to
+      build feature/10298-linux-4.x-aufs with the gzipcomp option.
+
+  * Test suite
+    - Send Tails Installer's debug log to the Cucumber debug log on
+      failure. This is meant to debug #10720 since I can't
+      reproduce it locally.
+    - Give the system under testing 2 vCPUs. (Closes: #6729)
+    - Split scenarios from checks.feature. (Closes: #5707)
+    - Add retry-logic to the Synaptic tests. (Closes: #10412, #10441,
+      #10991)
+    - Run usb_upgrade.feature earlier, when there is enough free disk
+      space left. (Closes: #11582)
+    - Use more recent virtual hardware in the system under test,
+      i.e. USB 3.0 (nec-xhci) on a pc-i440fx-2.5 machine. Switching
+      USB controllers has helped with problems we see on Jenkins when
+      booting from USB (#11588). Also, there are chances that more
+      recent virtual hardware sees more testing these days, so it
+      sounds potentially useful to "upgrade".
+    - Add support for Cucumber 2.4. (Closes: #11690)
+    - Always write {pretty,debug} logs and JSON output to the artifact
+      directory.
+    - Disable info level logging on Chutney nodes to save disk
+      space. For our network all these add up to > 1 GiB and we didn't
+      take this into account when budgeting RAM to the isotesters on
+      Jenkins.
+
+ -- Tails developers <tails@boum.org>  Tue, 20 Sep 2016 04:16:33 +0200
 
 tails (2.5) unstable; urgency=medium
 
