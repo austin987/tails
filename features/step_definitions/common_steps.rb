@@ -355,7 +355,7 @@ Given /^Tails Greeter has applied all settings$/ do
   # a logind session is opened for LIVE_USER.
   try_for(120) {
     $vm.execute_successfully("loginctl").stdout
-      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s*$/) != nil
+      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s+\S+\s*$/) != nil
   }
 end
 
