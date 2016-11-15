@@ -9,13 +9,13 @@ Date:   Mon Apr 4 18:04:52 2016 +0200
     application (e.g. clicking something that isn't there won't
     work). Most importantly, this greatly simplifies situations where the
     'shown' element we are looking for is hard to exactly pinpoint since
-    it lacks properties to distinguish it from some not 'shown' element.
+    it lacks properties to distinguish it from some not 'shown' elements,
+    which is quite common when nodes lack names.
     
-    Therefore we add a `showingOnly` boolean flag to all search methods
-    where it makes sense (e.g. it doesn't make sense for Application:s
-    since they seem to always be considered not 'showing'). The default
-    will be to not do this, for backwards-compatibility, but the default
-    is configurable via a new `searchShowingOnly` config option.
+    Therefore we add a `showingOnly` boolean flag to all Node search
+    methods. The default will be to not do this, for backwards
+    compatibility, but the default is configurable via a new
+    `searchShowingOnly` config option.
 
 --- a/usr/lib/python2.7/dist-packages/dogtail/config.py
 +++ b/usr/lib/python2.7/dist-packages/dogtail/config.py
@@ -285,3 +285,5 @@ Date:   Mon Apr 4 18:04:52 2016 +0200
          if window:
              wnckWindow = window.getWnckWindow()
              return wnckWindow.get_application()
+--
+2.10.1
