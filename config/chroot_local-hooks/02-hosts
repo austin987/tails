@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+echo "Cleaning up hosts file"
+
+# By default localhost will point both to the IPv4 and IPv6 addresses,
+# but we block all IPv6 traffic, so if it ever is picked (which has
+# been observed when the tor+http APT transport tries to connect to
+# Tor's SOCKSport.)
+sed -i 's,^::1\s.*,::1 ip6-localhost ip6-loopback,' /etc/hosts
