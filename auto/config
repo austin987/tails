@@ -28,6 +28,10 @@ if grep -qs -E '^Pin:\s+release\s+.*o=Debian Backports' \
     echo "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
     exit 1
 fi
+if [ $(dpkg --print-architecture) != amd64 ] ; then
+    echo "Only amd64 build systems are supported"
+    exit 1
+fi
 
 # init variables
 RUN_LB_CONFIG="lb config noauto"
@@ -57,6 +61,7 @@ perl -pi \
 $RUN_LB_CONFIG \
    --verbose \
    --apt-recommends false \
+   --architecture amd64 \
    --backports false \
    --binary-images iso \
    --binary-indices false \
@@ -69,6 +74,7 @@ $RUN_LB_CONFIG \
    --iso-application="The Amnesic Incognito Live System" \
    --iso-publisher="https://tails.boum.org/" \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
+   --linux-flavours amd64-unsigned \
    --memtest none \
    --mirror-binary              "$DEBIAN_MIRROR" \
    --mirror-bootstrap           "$DEBIAN_MIRROR" \
@@ -83,21 +89,6 @@ $RUN_LB_CONFIG \
    --syslinux-timeout 4 \
    --initramfs=live-boot \
    ${@}
-
-# build i386 images on amd64 as well, include a bunch of kernels
-hw_arch="`dpkg --print-architecture`"
-if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
-   $RUN_LB_CONFIG \
-      --architecture i386 \
-      --linux-flavours "686-unsigned" \
-      ${@}
-# build powerpc images on powerpc64 as well, include only powerpc kernel
-elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
-   $RUN_LB_CONFIG \
-      --architecture powerpc \
-      --linux-flavours powerpc \
-      ${@}
-fi
 
 install -d config/chroot_local-includes/etc/amnesia/
 
