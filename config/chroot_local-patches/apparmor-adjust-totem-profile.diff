@@ -1,34 +1,43 @@
 diff -Naur etc/apparmor.d.orig/abstractions/totem etc/apparmor.d/abstractions/totem
 --- a/etc/apparmor.d/abstractions/totem	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/abstractions/totem	2016-11-15 11:05:25.226760160 +0000
-@@ -30,9 +30,13 @@
++++ b/etc/apparmor.d/abstractions/totem	2016-11-15 15:37:46.673914569 +0000
+@@ -30,13 +30,23 @@
  
    /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
  
++  owner @{HOME}/.cache/gstreamer-[0-9]*.[0-9]*/ rw,
 +  owner @{HOME}/.cache/gstreamer-[0-9]*.[0-9]*/registry.*.bin rw,
 +  owner @{HOME}/.cache/gstreamer-[0-9]*.[0-9]*/registry.*.bin.tmp* rw,
    owner @{HOME}/.cache/tracker/meta.db k,
    owner @{HOME}/.cache/tracker/meta.db-shm k,
+-  owner @{HOME}/.local/share/grilo-plugins/*.db{,-shm} k,
++  owner @{HOME}/.config/totem/ rwk,
 +  owner @{HOME}/.config/totem/** rwk,
-   owner @{HOME}/.local/share/grilo-plugins/*.db{,-shm} k,
++  owner @{HOME}/.local/share/grilo-plugins/ rwk,
++  owner @{HOME}/.local/share/grilo-plugins/*.db{,-shm,-journal,-wal} rwk,
 +  owner @{HOME}/.local/share/gvfs-metadata/** r,
++  owner @{HOME}/.local/share/totem/ rwk,
  
    owner @{PROC}/@{pid}/status r,
  
+   /run/udev/data/c* r,
+   /run/udev/data/+drm:card* r,
++  /run/udev/data/+usb* r,
+ 
+   /sys/devices/system/node/*/meminfo r,
++
 diff -Naur etc/apparmor.d.orig/usr.bin.totem etc/apparmor.d/usr.bin.totem
 --- a/etc/apparmor.d/usr.bin.totem	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.totem	2016-11-15 11:04:34.309007024 +0000
-@@ -9,6 +9,9 @@
++++ b/etc/apparmor.d/usr.bin.totem	2016-11-15 15:41:28.989125985 +0000
+@@ -6,6 +6,7 @@
+ /usr/bin/totem {
+   #include <abstractions/audio>
+   #include <abstractions/dconf>
++  #include <abstractions/ibus>
    #include <abstractions/python>
    #include <abstractions/totem>
  
-+  # We wrap Totem to run it with torsocks
-+  /etc/tor/torsocks.conf r,
-+
-   # Maybe in an abstraction?
-   /usr/include/**/pyconfig.h r,
- 
-@@ -16,10 +19,11 @@
+@@ -16,10 +17,11 @@
    /usr/bin/totem-video-thumbnailer Pix,
    /dev/sr* r,
  
@@ -37,14 +46,14 @@ diff -Naur etc/apparmor.d.orig/usr.bin.totem etc/apparmor.d/usr.bin.totem
    # private-files-strict is in effect.
    #include <abstractions/private-files-strict>
 -  owner @{HOME}/** rw,
-+  owner @{HOME}/[a-zA-Z0-9]*    rw,
-+  owner @{HOME}/[a-zA-Z0-9]*/** rw,
++  owner @{HOME}/[^.]*    rw,
++  owner @{HOME}/[^.]*/** rw,
  
    owner /{,var/}run/user/*/dconf/user w,
    owner /{,var/}run/user/*/at-spi2-*/   rw,
 diff -Naur etc/apparmor.d.orig/usr.bin.totem-previewers etc/apparmor.d/usr.bin.totem-previewers
 --- a/etc/apparmor.d/usr.bin.totem-previewers	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.totem-previewers	2016-11-15 11:03:45.455218617 +0000
++++ b/etc/apparmor.d/usr.bin.totem-previewers	2016-11-15 15:40:03.986959980 +0000
 @@ -6,10 +6,11 @@
  /usr/bin/totem-video-thumbnailer {
    #include <abstractions/totem>
@@ -54,8 +63,18 @@ diff -Naur etc/apparmor.d.orig/usr.bin.totem-previewers etc/apparmor.d/usr.bin.t
    # effect.
    #include <abstractions/private-files-strict>
 -  owner @{HOME}/** r,
-+  owner @{HOME}/[a-zA-Z0-9]*    rw,
-+  owner @{HOME}/[a-zA-Z0-9]*/** rw,
++  owner @{HOME}/[^.]*    rw,
++  owner @{HOME}/[^.]*/** rw,
  
    # Not needed by nautilus, but maybe other applications
    owner /**.[pP][nN][gG] w,
+@@ -28,7 +29,8 @@
+   # Allow read on anything in @{HOME}. Lenient, but private-files-strict is in
+   # effect.
+   #include <abstractions/private-files-strict>
+-  owner @{HOME}/** r,
++  owner @{HOME}/[^.]*    rw,
++  owner @{HOME}/[^.]*/** rw,
+ 
+   # Site-specific additions and overrides. See local/README for details.
+   #include <local/usr.bin.totem-previewers>
