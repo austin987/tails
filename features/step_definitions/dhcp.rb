@@ -9,11 +9,13 @@ Then /^the hostname should not have been leaked on the network$/ do
     elsif PacketFu::IPv6Packet.can_parse?(p)
       payload = PacketFu::IPv6Packet.parse(p).payload
     else
-      @sniffer.save_pcap_file
       raise "Found something in the pcap file that either is non-IP, or cannot be parsed"
     end
     if payload.match(hostname)
       raise "Hostname leak detected"
     end
   end
+rescue Exception => e
+  save_failure_artifact("Network capture", @sniffer.pcap_file)
+  raise e
 end
