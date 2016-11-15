@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Note: must run before /lib/live/config/0020-hostname since it
+# otherwise will overwrite any hosts file generated at build time with
+# a bloated one that also include the IPv6 host `::1 localhost`, which
+# can lead to IPv6 traffic, which we block, which may lead to stuff
+# breaking (for instance APT's tor+http transport).
+
+echo "- setting up hosts file"
+
+. /etc/live/config.d/hostname.conf
+
+cat > /etc/hosts << EOF
+127.0.0.1       localhost ${LIVE_HOSTNAME}
+EOF
