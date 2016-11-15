@@ -171,7 +171,7 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   debug_log("Memory fill progress: finished")
   if verify
     coverage = pattern_coverage_in_guest_ram()
-    min_coverage = 0.90
+    min_coverage = 0.85
     assert(coverage > min_coverage,
            "#{"%.3f" % (coverage*100)}% of the free memory was filled with " +
            "the pattern, but more than #{"%.3f" % (min_coverage*100)}% was " +
@@ -200,16 +200,12 @@ When /^I reboot without wiping the memory$/ do
 end
 
 When /^I stop the boot at the bootloader menu$/ do
-  @screen.wait(bootsplash, 90)
-  @screen.wait(bootsplash_tab_msg, 10)
-  @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(bootsplash_tab_msg, 1)
+  step "Tails is at the boot menu's cmdline"
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   $vm.spawn("halt")
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
+  try_for(memory_wipe_timeout, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for
     @screen.type(" ")

@@ -20,15 +20,16 @@ Then /^the network device has (its default|a spoofed) MAC address configured$/ d
   ).stdout.chomp
   if is_spoofed
     if nic_real_mac == nic_current_mac
-      save_pcap_file
       raise "The MAC address was expected to be spoofed but wasn't"
     end
   else
     if nic_real_mac != nic_current_mac
-      save_pcap_file
       raise "The MAC address is spoofed but was expected to not be"
     end
   end
+rescue Exception => e
+  save_failure_artifact("Network capture", @sniffer.pcap_file)
+  raise e
 end
 
 Then /^the real MAC address was (not )?leaked$/ do |mode|
@@ -62,14 +63,6 @@ exec '#{modprobe_divert}' "${@}"
 EOF
   $vm.file_append('/sbin/modprobe', fake_modprobe_wrapper)
   $vm.execute_successfully("chmod a+rx /sbin/modprobe")
-end
-
-When /^see the "Network card disabled" notification$/ do
-  robust_notification_wait("MACSpoofNetworkCardDisabled.png", 60)
-end
-
-When /^see the "All networking disabled" notification$/ do
-  robust_notification_wait("MACSpoofNetworkingDisabled.png", 60)
 end
 
 Then /^(\d+|no) network interface(?:s)? (?:is|are) enabled$/ do |expected_nr_nics|

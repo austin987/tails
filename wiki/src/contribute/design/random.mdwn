@@ -12,6 +12,8 @@ and the work that is left to be done.
 In addition to the Linux kernel's own entropy gathering facilities,
 Tails uses auxiliary entropy sources, that we describe below.
 
+<a id="haveged"></a>
+
 ## haveged
 
 Tails ships [HAVEGE](http://www.irisa.fr/caps/projects/hipsor/), that
@@ -30,6 +32,8 @@ avoid the situation when rngd starts first and always keeps the
 entropy pool between 1024 and 2048 bits, thus dominating the
 entropy pool.
 
+<a id="rngd"></a>
+
 ## rngd
 
 `rngd` gets entropy from a hardware RNG, if available. Otherwise, it
@@ -45,11 +49,6 @@ default configuration, and neither does Tails.
 
 Note: `rngd` (2-unofficial-mt.14-1) does not modify any parameter in
 `/proc/sys/kernel/random/`.
-
-## Simtec Electronics UDEKEY01 Entropy Key Daemon (ekeyd)
-
-[[!debpts ekeyd]] uses the Simtec Electronics Entropy Key, when
-available, to inject entropy into the kernel's pool.
 
 # Remaining concerns
 
@@ -106,7 +105,7 @@ possible cases:
   still useful to ship both `rngd` and `haveged`: it achieves our goal
   of not relying purely on either one.
 
-## Interaction between haveged, rngd, and ekeyd
+## Interaction between haveged and rngd
 
 This area is left to be researched.
 

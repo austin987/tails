@@ -1,0 +1,183 @@
+[[!meta title="Tails October 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in October 2016. It is the
+final report for our current contract with OTF. We want to thank OTF
+for their support, that enabled us to deliver a large set of
+improvements to various people, including: Tails users, Tails
+contributors, users of Debian and its numerous derivatives,
+Thunderbird users, and more!
+
+Everything in this report is public.
+
+# A. Replace Claws Mail with Icedove
+
+- A.1.1. Secure the Icedove autoconfig wizard
+
+  As [[reported last month|contribute/reports/SponsorS/2015/2016_09]],
+  this work has been merged, and this deliverable is now completed.
+
+- A.1.2. Make our improvements maintainable for future versions of Icedove
+
+  As [[reported last month|contribute/reports/SponsorS/2015/2016_09]],
+  this deliverable was completed: our patches were submitted to
+  Thunderbird upstream, and we keep working with them to make sure that
+  all users of Thunderbird benefit from a safer configuration wizard.
+
+# B. Improve our quality assurance process
+
+## B.3. Extend the coverage of our test suite
+
+- B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+  After having worked on this continuously for over a year, our test
+  suite runs faster despite testing more cases than before; also, it reports
+  much fewer false positives. We now are in a state where we can rely on
+  its results as intended:
+
+  - When reviewing someone else's work, automated testing results
+    allows us to quickly rule out many classes of regressions.
+  - When introducing new features and bug fixes in general, they make us
+    a lot more comfortable.
+
+  That said, we clearly underestimated the amount of work needed for the
+  robustness part of this deliverable, and there are some outstanding
+  issues still remaining before we could have no false positives _at all_.
+  However, it should be stressed that the issues are rare enough that the
+  automated test suite still is as useful as described in the previous
+  paragraph, so we consider this a success nevertheless.
+
+  This deliverable is now completed.
+
+- B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
+
+  This work has been merged, so this deliverable is now completed.
+
+- B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
+
+  This work has been merged, so this deliverable is now completed.
+
+# C. Scale our infrastructure
+
+## C.1. Change in depth the infrastructure of our pool of mirrors
+
+We completed the remaining bits of this deliverable, and deployed
+everything to production:
+
+- C.1.2. Write & audit the code that makes the redirection decision from our website ([[!tails_ticket 8639]], [[!tails_ticket 8640]], [[!tails_ticket 11109]])
+
+  * `mirror-dispatcher.js`: our security auditor did a final
+    security review, and approved this code.
+
+  * Download And Verification Extension (DAVE) for Firefox: our code
+    to use our new mirror pool when downloading Tails ISO images was
+    completed, merged, released and made it into Mozilla's
+    stable channel.
+
+  This deliverable is now completed.
+
+- C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL ([[!tails_ticket 8642]], [[!tails_ticket 11329]], [[!tails_ticket 10295]])
+
+  This was completed back in May.
+
+- C.1.8. Clean up the remainers of the old mirror pool setup ([[!tails_ticket 8643]], [[!tails_ticket 11284]])
+
+  This deliverable was completed as well.
+
+## C.4. Maintain our already existing services
+
+### C.4.6. Administer our services upto milestone VI
+
+We kept on answering the requests from the community, and taking care
+of security updates.
+
+#### New pieces of infrastructure
+
+ * We created a virtual machine that will be used to experiment with
+   our upcoming web translation platform. This allows us to try
+   separating _system_ administration from _services_ administration:
+   we want to allow other Tails contributors to set up and maintain
+   the services they need, which will make our system administrators
+   less of a bottleneck :)
+
+ * We finished taking over from Riseup the system that hosts our ticket
+   tracker: [[!tails_ticket 11855]], [[!tails_ticket 11805]],
+   [[!tails_ticket 11843]], [[!tails_ticket 11844]].
+
+#### Performance and resource usage improvements
+
+ * We made more progress on optimizing I/O settings for virtual
+   machines running on our main server ([[!tails_ticket 11817]]).
+   Our short-term goal was to get better performance out of our
+   current hardware, and we are calling this a success: we have
+   lowered IO wait times, and improved disk throughput. This also
+   allowed us to learn more about the capacity of our actual setup so
+   we can specify the hardware to purchase in 2017.
+
+ * Our new APT snapshots system generates about 7GB of data for every
+   Tails release.
+   We [[!tails_ticket 11830 desc="implemented de-duplication"]] for
+   this data, which will cut down storage costs on the long term, and
+   makes the backup process smoother on the short term.
+
+#### Security improvements
+
+ * We have changed the way we create virtual machines to
+   [[!tails_ticket 10092 desc="make it safer"]], thanks to a new
+   feature in [[!debpts di-netboot-assistant]] that was implemented
+   after we requested it.
+
+ * We have [[!tails_ticket 8192 desc="enabled HTTPS"]] on (almost) all
+   the sub-domains of `tails.boum.org`, thanks to Let's Encrypt.
+   This allowed us to proceed with the next steps that will eventually
+   result in adding `tails.boum.org` to the Chrome HSTS preload list
+   (that is used by other major web browsers as well).
+
+#### Workflow improvements
+
+ * We started setting up a replica of our automated ISO builds and
+   tests infrastructure. This lead to quite some refactoring of our
+   Puppet code. It will allow us to develop infrastructure changes
+   more easily outside of our production environment.
+
+#### Porting our infrastructure to new versions of the technologies it uses
+
+ * We started to implement [[!tails_ticket 11384 desc="our plan"]] to
+   migrate our infrastructure to Puppet 4, proceeding with the first
+   step that was
+   [[!tails_ticket 11835 desc="upgrading our Puppet master and clients to 3.8"]].
+   Then we quickly tried to
+   [[!tails_ticket 11836 desc="stop stringifying Puppet facts"]] but
+   had no time to deal with the fallout, so we reverted this change
+   and documented what the next steps are.
+ * We [[!tails_ticket 11874 desc="fixed the way"]] our test suite
+   handles the pluging and unplugging of DVD devices, as well as the
+   ejection of the ISO image, to adapt to compatibility issues between
+   QEMU 2.7 and Jessie's libvirt on this matter.
+
+#### Bug fixes
+
+ * We (most likely) fixed [[!tails_ticket 11803 desc="a bug"]] that
+   sometimes prevented Jenkins jobs from being created or updated.
+
+#### Future plans
+
+ * We identified new aspects of our systems that need to be monitored:
+   [[!tails_ticket 11870]], [[!tails_ticket 11858]].
+
+ * We want to improve the reliability of our continuous integration
+   system, by relying less on remote network resources:
+   [[!tails_ticket 11869]].
+
+ * We started thinking about better ways to
+   [[!tails_ticket 11880 desc="handle our servers' logs"]] and
+   making plans.
+
+# E. Release management
+
+## E.1.12. Tails 2.5
+
+As reported about a couple months ago, [[Tails 2.5|news/version_2.5]]
+was released on August 2. Meanwhile,
+[[Tails 2.6|news/version_2.6]] was released on September 20.

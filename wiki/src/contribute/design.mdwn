@@ -1173,35 +1173,21 @@ encrypt and decrypt text, and to verify OpenPGP signatures.
 
 Tails prevents dhclient from sending the hostname over the network.
 
-First, only the `keyfile` NetworkManager plugin is used; that is, the
-`ifupdown` plugin is disabled:
+We patch NetworkManager to make it never instruct dhclient to send the
+hostname in DHCP requests, until [[!gnomebug 768076]] is fixed.
 
-* this is needed, because the only the `keyfile` plugin supports
-  setting `dhcp-send-hostname` to false, while the `ifupdown` plugin
-  retrieves the hostname to send from `/etc/hostname`;
-* this is OK, because we actually don't use the functionality provided
-  by the `ifupdown` plugin (that is, reading from
-  `/etc/network/interfaces` -- that only configures the loopback
-  connection in Tails, which is itself ignored by NetworkManager
-  anyway).
-
-Second, the NetworkManager `keyfile` plugin is configured to *not*
-send the hostname over DHCP by default. Likely this can be overridden
-on a per-connection basis if one really needs to change this.
-
-Third, dhclient itself is told not to send the hostname. This is
+Also, dhclient itself is told not to send the hostname. This is
 needed because on Jessie, NetworkManager runs dhclient with the `-cf
-/var/lib/NetworkManager/dhclient-eth0.conf` option, and generates that file by
+/var/lib/NetworkManager/dhclient-$UUID-eth0.conf` option, and generates that file by
 concatenating `/etc/dhcp/dhclient.conf` with its own settings.
 
-Fourth, dhclient is told to override any hostname provided by the DHCP
+dhclient is told to override any hostname provided by the DHCP
 server with `amnesia`. This is meant to prevent dhclient hooks,
 NetworkManager and others from setting the hostname to a value
 controlled by the DHCP server.
 
+* [[!tails_gitweb_repo network-manager]]
 * [[!tails_gitweb config/chroot_local-patches/dhcp-dont-send-hostname.diff]]
-* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/conf.d/dhcp-hostname.conf]]
-* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/conf.d/plugins.conf]]
 
 ### 3.6.24 TCP timestamps
 

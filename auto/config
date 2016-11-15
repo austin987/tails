@@ -89,7 +89,7 @@ hw_arch="`dpkg --print-architecture`"
 if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
    $RUN_LB_CONFIG \
       --architecture i386 \
-      --linux-flavours "686" \
+      --linux-flavours "686-unsigned" \
       ${@}
 # build powerpc images on powerpc64 as well, include only powerpc kernel
 elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
@@ -145,6 +145,12 @@ install -m 0755 \
 # aufs4-standalone
 rm -rf config/chroot_local-includes/usr/src/aufs4-standalone
 cp -a submodules/aufs4-standalone config/chroot_local-includes/usr/src/
+
+# gnome-shell-extension-florence-indicator
+rm -rf \
+   config/chroot_local-includes/usr/share/gnome-shell/extensions/florenceIndicator@UshakovVasilii_Github.yahoo.com
+cp -a submodules/gnome-shell-extension-florence-indicator/florenceIndicator@UshakovVasilii_Github.yahoo.com/ \
+   config/chroot_local-includes/usr/share/gnome-shell/extensions/
 
 # custom debootstrap script, setting some APT magic to log downloads:
 patch \

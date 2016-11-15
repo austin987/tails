@@ -106,23 +106,6 @@ When /^Tails has booted a 64-bit kernel$/ do
          "Tails has not booted a 64-bit kernel.")
 end
 
-Then /^there is no screenshot in the live user's Pictures directory$/ do
-  pictures_directory = "/home/#{LIVE_USER}/Pictures"
-  assert($vm.execute(
-          "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
-        ).stdout.empty?,
-         "Existing screenshots were found in the live user's Pictures directory.")
-end
-
-Then /^a screenshot is saved to the live user's Pictures directory$/ do
-  pictures_directory = "/home/#{LIVE_USER}/Pictures"
-  try_for(10, :msg=> "No screenshot was created in #{pictures_directory}") do
-    !$vm.execute(
-      "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
-    ).stdout.empty?
-  end
-end
-
 Then /^the VirtualBox guest modules are available$/ do
   assert($vm.execute("modinfo vboxguest").success?,
          "The vboxguest module is not available.")
