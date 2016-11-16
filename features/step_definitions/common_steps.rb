@@ -405,38 +405,31 @@ Given /^available upgrades have been checked$/ do
   }
 end
 
-Given /^the Tor Browser has started$/ do
-  Dogtail::Application.new('Firefox').child('', roleName: "document frame").wait(60)
-end
-
-When /^I start the Tor Browser$/ do
+When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
+  if offline
+    offline_prompt = Dogtail::Application.new('zenity')
+                     .dialog('Tor is not ready')
+    offline_prompt.wait(10)
+    offline_prompt.button('Start Tor Browser').click
+  end
+  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
+  @torbrowser.wait(60)
+  if offline
+    step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
 end
 
-When /^I start the Tor Browser in offline mode$/ do
-  step "I start the Tor Browser"
-  offline_prompt = Dogtail::Application.new('zenity')
-           .dialog('Tor is not ready')
-  offline_prompt.wait(10)
-  offline_prompt.button('Start Tor Browser').click
-end
-
-Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - News'
+    title = 'Tails - Dear Tails user'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
     raise "Unsupported page: #{page}"
   end
-  step "the Tor Browser has started"
   step "\"#{title}\" has loaded in the Tor Browser"
-end
-
-Given /^the Tor Browser has started in offline mode$/ do
-  step "the Tor Browser has started"
-  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
 end
 
 When /^I request a new identity using Torbutton$/ do

@@ -40,7 +40,7 @@ Feature: Chatting anonymously using Pidgin
     Then I see the Tails roadmap URL
     When I wait 10 seconds
     And I click on the Tails roadmap URL
-    Then the Tor Browser has started and loaded the Tails roadmap
+    Then the Tor Browser loads the Tails roadmap
 
   #11453
   @check_tor_leaks @fragile
