@@ -409,6 +409,18 @@ Given /^the Tor Browser has started$/ do
   Dogtail::Application.new('Firefox').child('', roleName: "document frame").wait(60)
 end
 
+When /^I start the Tor Browser$/ do
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
+end
+
+When /^I start the Tor Browser in offline mode$/ do
+  step "I start the Tor Browser"
+  offline_prompt = Dogtail::Application.new('zenity')
+           .dialog('Tor is not ready')
+  offline_prompt.wait(10)
+  offline_prompt.button('Start Tor Browser').click
+end
+
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
@@ -425,6 +437,16 @@ end
 Given /^the Tor Browser has started in offline mode$/ do
   step "the Tor Browser has started"
   step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+end
+
+When /^I request a new identity using Torbutton$/ do
+  @screen.wait_and_click('TorButtonIcon.png', 30)
+  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+end
+
+When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
+  step 'I type "y"'
 end
 
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
@@ -561,28 +583,6 @@ end
 Given /^the package "([^"]+)" is installed$/ do |package|
   assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
-end
-
-When /^I start the Tor Browser$/ do
-  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
-end
-
-When /^I request a new identity using Torbutton$/ do
-  @screen.wait_and_click('TorButtonIcon.png', 30)
-  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
-end
-
-When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
-  @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  step 'I type "y"'
-end
-
-When /^I start the Tor Browser in offline mode$/ do
-  step "I start the Tor Browser"
-  offline_prompt = Dogtail::Application.new('zenity')
-           .dialog('Tor is not ready')
-  offline_prompt.wait(10)
-  offline_prompt.button('Start Tor Browser').click
 end
 
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
