@@ -321,14 +321,6 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
     raise "Unsupported language: #{lang}"
   end
   step 'Tails Greeter has applied all settings'
-
-  # XXX: Workaround while Tails/Stretch is affected by #11694.
-  retry_times(3) do
-    $vm.spawn('chvt 2')
-    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-    @screen.wait(desktop_started_picture, 60)
-  end
-
   step 'the Tails desktop is ready'
 end
 
