@@ -68,41 +68,43 @@ Please add to this list!
 * SSH
 
 # Design #
-The current plan is to have one executable file per service, which must implement a defined set of CLI options to configure, start and stop the service. To facilitate the creation of these service executables, a template will be created, which will usually only need marginal customization. An advantage of this design is that the functionality of a service executable is not limited to the functionality of the template. If a service needs additional functionality, it can be easily implemented for this specific service.
+Each service is defined by a separate Python module in `/usr/share/tails-server/services/`. Each service's module must contain a subclass of the `TailsService` class, which defines all the attributes and methods required by a service, e.g. to install, configure, start and stop it. If a service needs additional functionality, the subclass can override arbitrary attributes and methods of the `TailsService` base class.
 
-The CLI will provide a wrapper around these service executables, passing the arguments to the respective service executable. The service executables must provide output in a defined format, which should be easily readable and parsable - currently we plan to use YAML for this.
+Options which can be changed by the user can be defined as subclasses of `TailsServiceOption`. Default options include for example the `PersistenceOption` and the `AllowLanOption`. To add service specific options, the `TailsService.options` attribute can be overridden.
 
-The GUI will call the service executables with specific arguments and parse the output to get the information it then displays to the user. The same applies to the configuration and actions chosen by the user in the GUI.
+The Tails Server GUI monitors D-Bus to get notified when one of the services starts or stops. This implies that each service in Tails Server must have a systemd service which can be monitored this way.
 
 
 # Implementation #
-In consideration of the work in progress of porting all Tails shell scripts to Python 3, and the good reasons for this, Tails Server should also be implemented in Python 3.
+Tails Server is implemented in Python 3. 
 
 
 # Service Specification #
 
-Note: This section is currently only a proposal. It builds upon this email to the Tails-dev mailinglist: https://mailman.boum.org/pipermail/tails-dev/2016-March/010506.html
-
-For each service included in Tails Server a single executable file (using this term here in it's broader sense, which includes scripts) must be provided, which implements the following CLI options. All output must be in valid YAML syntax. The file *mumble.py* is used as an example.
+The following attributes of the `TailsService` class must be overridden by all subclasses:
 
 ## Attributes
 - name: The name of the service, as used in the CLI. This should be the same as the basename of the executable file.
-- name_in_gui: The name of the service, as displayed in the GUI. For example "Mumble".
-- description: A description of this service.
+- description: A short description of the service.
+- client_application: The name of the application which can connt to this service
 - documentation: A URL pointing to the service's page in the Tails documentation. For example "file:///usr/share/doc/tails/website/doc/tails_server/mumble.en.html".
 - packages: A list of packages that need to be installed for this service.
 - systemd_service: The name of the service's systemd service. ¹ 
-- local_port: The default port the service listens on locally.
-- remote_port: The default port the service should be listening on via the hidden service.
-- persistent_paths: List of paths of files and directories that should be made persistent via the Persistence option.
+- default_target_port: The default value of the service's target port (i.e. the port opened by the service on localhost), which is used if the user does not specify a custom target port.
 - icon_name: The name of the icon used for the service in the GUI.
-- is_installed: Bool indicating whether the service is installed or not.
-- is_enabled: Bool indicating whether the service is enabled or not.
-- address: The service's onion address.
-- hs_dir: The service's hidden service directory. For example "/var/lib/tor/mumble".
-- options: List of the service's options.
 
-¹ I spent some time thinking about whether we should require a systemd service or not. The advantage of it is that it allows us to monitor the service's status via dbus. The disadvantage is that not every service is implemented as a systemd service (or SysVinit scripts, which would suffice too, since they are used to automatically generate systemd services), for example *infinoted*, the dedicated Gobby server, doesn't have one. I like Gobby and it is one of the services I definitely want to include. I plan to ask the developer to include a systemd unit file or SysVinit scripts, but we would have to backport them to Jessie. Alternatively we could ship a systemd unit file for these services ourselves.
+
+Additionally, the following attributes might be overridden:
+
+- persistent_paths: List of paths of files and directories that should be made persistent via the Persistence option.
+- options: List of the service's options.
+- systemd_service: The name of the service's systemd service.
+- name_in_gui: The name of the service, as displayed in the GUI.
+- client_application_in_gui: The name of the application which can connect to this service, as displayed in the GUI.
+- default_virtual_port: The default value of the service's virtual port (i.e. the port exposed via the onion service), which is used if the user does not specify a custom virtual port.
+- connection_info: A summary of all information necessary to connect to the service
+- connection_info_in_gui: The connection as it should be displayed in the GUI
+
 
 ## CLI options
 
@@ -114,80 +116,27 @@ Print a mapping of attributes of the service to their current values. With *--de
     $ mumble.py info
     description: A low-latency, high quality voice chat server
     installed: true
-    enabled: true
+    running: true
     address: null
     local-port: 64738
     remote-port: 64738
-    config-files:
+    persistent-paths:
     - /etc/mumble-server.ini
     options:
+      virtual-port: 64738
+      server-password: TrR4WgC29nUjNIJ5o2VI
       persistence: false
       autostart: false
-      allow-lan-connections: false
-      server-password: PmEi9uVNH7oXMuppB7Hd
-      welcome-message: '"<br />Welcome to this server Enjoy your stay!<br />"'
+      allow-localhost: true
+      allow-lan: false
+      welcome-message: '"<br />Welcome to this server running <b>Murmur</b>.<br />Enjoy your stay!<br />"'
 
-##### Example 2
-
-    $ mumble.py info --details
-    name: mumble
-    name-in-gui: Mumble
-    description: A low-latency, high quality voice chat server
-    installed: true
-    enabled: true
-    address: jw5bojkya5xqhnvq.onion
-    local-port: 64738
-    remote-port: 64738
-    config-files:
-    - /etc/mumble-server.ini
-    options:
-    - default: false
-      description: Store service configuration and data on the persistent volume
-      display-status: true
-      name: persistence
-      name-in-gui: Persistence
-      type: !!python/name:builtins.bool ''
-      value: false
-    - default: false
-      description: Start service automatically after booting Tails
-      display-status: true
-      name: autostart
-      name-in-gui: Autostart
-      type: !!python/name:builtins.bool ''
-      value: false
-    - default: false
-      description: Allow connections from the local network
-      display-status: true
-      name: allow-lan-connections
-      name-in-gui: Allow LAN connections
-      type: !!python/name:builtins.bool ''
-      value: false
-    - default: zwAxh1hmUm9ukqKAghtq
-      description: Password required to connect to service
-      display-status: true
-      name: server-password
-      name-in-gui: Server password
-      type: !!python/name:builtins.str ''
-      value: PmEi9uVNH7oXMuppB7Hd
-    - default: ''
-      description: Welcome message sent to clients when they connect
-      display-status: false
-      name: welcome-message
-      name-in-gui: Welcome message
-      type: !!python/name:builtins.str ''
-      value: '"<br />Welcome to this server running <b>Murmur</b>.<br />Enjoy your stay!<br
-        />"'
-    hidden-service-dir: /var/lib/tor/mumble
-    packages:
-    - mumble-server
-    systemd-service: mumble-server.service
-    icon-name: mumble
 
 #### status
-Print the mapping of the *enabled* attribute to its value.
+Print the values of the service's *enabled*, *installed* and *published* attributes.
 
 #### enable
-Enables the service, which involves installing the packages, starting the service, creating the hidden service directory and reloading Tor.
+Enables the service, which involves installing the packages, starting the service, creating the onion service directory and reloading Tor.
 
 #### disable
 Stops the service.
@@ -197,33 +146,3 @@ Prints the mapping of the provided option to its value.
 
 #### set-option OPTION VALUE
 Sets the provided option to the provided value.
-
-## Service Template Module
-Most of the above attributes and functions can be provided by a service template module. With this module, creating a new service could be done like this:
-    
-    import service_template
-    import service_option_template
-    
-    class MumbleServer(service_template.TailsService):
-        name = "mumble"
-        systemd_service = "mumble-server.service"
-        description = "A low-latency, high quality voice chat server"
-        packages = ["mumble-server"]
-        local_port = 64738
-        documentation = "file:///usr/share/doc/tails/website/doc/tails_server/mumble.en.html"
-        persistent_paths = [CONFIG_FILE]
-        icon_name = "mumble"
-    
-        options = [
-            service_option_template.PersistenceOption,
-            service_option_template.AutoStartOption,
-            service_option_template.AllowLanOption,
-            ServerPasswordOption,
-            WelcomeMessageOption,
-        ]
-
-    service = MumbleServer()
-
-
-# Service Option Specification
-A service's options can be configured via the CLI and the GUI. XXX
