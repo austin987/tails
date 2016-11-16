@@ -14,7 +14,7 @@ Feature: Icedove email client
     Given I cancel setting up an email account
     When I open Icedove's Add-ons Manager
     And I click the extensions tab
-    Then I see that only the amnesia branding, Enigmail and TorBirdy addons are enabled in Icedove
+    Then I see that only the Enigmail and TorBirdy addons are enabled in Icedove
 
   Scenario: Enigmail is configured to use the correct keyserver
     Given I cancel setting up an email account
