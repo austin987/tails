@@ -3,6 +3,7 @@
 # When a non-loopback interface comes up, wait for the Live user's GNOME Shell
 # to come up. Wait 120 times one second maximum.
 
+[ -n "$1" ]      || exit 0
 [ "$1" != "lo" ] || exit 0
 [ "$2" = "up"  ] || exit 0
 

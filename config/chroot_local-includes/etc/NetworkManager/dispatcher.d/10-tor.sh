@@ -4,11 +4,11 @@
 # when it is supposed to start.
 
 # Run only when the interface is not "lo":
-if [ $1 = "lo" ]; then
+if [ -z "$1" ] || [ "$1" = "lo" ]; then
     exit 0
 fi
 
-if [ $2 = "up" ]; then
+if [ "$2" = "up" ]; then
     : # go on, that's what this script is for
 elif [ "${2}" = "down" ]; then
     systemctl --no-block stop tails-tor-has-bootstrapped.target
