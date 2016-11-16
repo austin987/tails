@@ -28,15 +28,7 @@ if [ -n "${sdmem}" ] ; then
    if [ -z "${sdmemopts}" ] ; then
       sdmemopts="v"
    fi
-   # We run one instance of sdmem per 2 GiB of RAM to deal with the
-   # x86 per-process memory limitation.
-   mem=$(free | awk '/Mem:/ { print $2 }')
-   instances=$((${mem}/(2*1024*1024)+1))
-   for i in $(seq 1 "${instances}") ; do
-      ( /usr/bin/sdmem "-${sdmemopts}" ; killall sdmem >/dev/null 2>&1 ) &
-   done
-   # Wait for sdmem jobs to finish.
-   wait
+   /usr/bin/sdmem "-${sdmemopts}"
 fi
 
 if [ "${sdmemdebug}" = 1 ] ; then
