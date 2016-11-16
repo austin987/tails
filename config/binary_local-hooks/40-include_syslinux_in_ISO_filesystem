@@ -37,7 +37,24 @@ syslinux_deb_version_in_chroot () {
 
 ### Main
 mkdir -p "$LINUX_BINARY_UTILS_DIR" "$WIN32_BINARY_UTILS_DIR" "$BINARY_MBR_DIR"
+# Copy 64-but syslinux binary
 cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
+# Copy 32-bit syslinux binary
+(
+   olddir=$(pwd)
+   workdir=$(mktemp -d)
+   cd "$workdir"
+   chroot="$olddir/chroot"
+   Chroot "$chroot" \
+      apt-get --yes download \
+      syslinux:i386="$(syslinux_deb_version_in_chroot)"
+   dpkg-deb --extract "$chroot"/syslinux_*.deb .
+   rm "$chroot"/syslinux_*.deb
+   cp ./usr/bin/syslinux "$olddir/$LINUX_BINARY_UTILS_DIR/syslinux-i386"
+   cd "$olddir"
+   rm -r "$workdir"
+)
+# Copy syslinux MBR
 cp "$CHROOT_SYSLINUX_MBR" "$BINARY_MBR_DIR/mbr.bin"
 
 cat chroot/etc/apt/sources.list chroot/etc/apt/sources.list.d/*.list \
