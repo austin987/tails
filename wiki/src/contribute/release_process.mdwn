@@ -200,6 +200,11 @@ Upgrade Tor Browser
 
 See the dedicated page: [[tor-browser]]
 
+Upgrade Icedove
+---------------
+
+See the dedicated page: [[icedove]]
+
 Update PO files
 ---------------
 
@@ -1116,6 +1121,29 @@ this, and skip what does not make sense for a RC.
    [[post-release|APT_repository/custom#workflow-post-release]]
    custom APT repository documentation. Make sure there are upgrade-description
    files for any new versions that were added.
+1. Verify that the snapshots used in the release branch are ok,
+   e.g. they use the correct snapshots, and they were bumped
+   appropriately (they should expire a bit after the next release, so
+   the dates must be ~six weeks in the future). Look carefully at the
+   output of this command:
+
+        git checkout "$RELEASE_BRANCH" && \
+        (
+            cd config/APT_snapshots.d && \
+            for ARCHIVE in * ; do
+                SERIAL="$(cat ${ARCHIVE}/serial)"
+                if [ "${SERIAL}" = 'latest' ]; then
+                    EXPIRY='never'
+                    if [ "${ARCHIVE}" != 'debian-security' ]; then
+                        echo "Warning: origin '${ARCHIVE}' is using the 'latest' snapshot, which is unexpected" >&2
+                    fi
+                else
+                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/debian/dists/${RELEASE_BRANCH}/snapshots/${SERIAL}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+               fi
+               echo "Origin '${ARCHIVE}' uses snapshot '${SERIAL}' which expires on: ${EXPIRY}"
+           done
+        )
+
 1. Push the resulting branches.
 1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
