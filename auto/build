@@ -47,6 +47,10 @@ rm -rf cache/stages_rootfs
 . config/bootstrap
 
 # save variables that are needed by chroot_local-hooks
+echo "KERNEL_VERSION=${KERNEL_VERSION}" \
+   >> config/chroot_local-includes/usr/share/amnesia/build/variables
+echo "KERNEL_SOURCE_VERSION=${KERNEL_SOURCE_VERSION}" \
+   >> config/chroot_local-includes/usr/share/amnesia/build/variables
 echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/share/amnesia/build/variables
 echo "POTFILES_DOT_IN='$(
          /bin/grep -E --no-filename '[^ #]*\.in$' po/POTFILES.in \
@@ -78,6 +82,9 @@ chmod -R go+rX config/chroot_sources
 
 # we need /debootstrap/deburis to build a manifest of used packages:
 DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keep-debootstrap-dir"
+
+# we're not ready for merged-/usr yet: Debian#843461, Tails#11903
+DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --no-merged-usr"
 
 # use our own APT repository's key:
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)

@@ -20,8 +20,9 @@ Problematic USB sticks
 
 Many SanDisk USB sticks are configured by the
 manufacturer as a fixed disk, and not as a removable disk. As a consequence,
-they require removing the `live-media=removable` boot parameter, which [[is
-dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
+they require removing the `live-media=removable` boot parameter. See troubleshooting section about
+Tails not starting entirely on [[PC|install/debian/usb#start-tails]] or
+[[Mac|install/mac/usb#start-intermediary]].
 
 * SanDisk Cruzer Edge 8GB
 * SanDisk Cruzer Extreme USB 3.0 16GB, 32GB and 64GB
@@ -212,6 +213,28 @@ Mac
   MacBook Pro 8,2 (late 2011) fail to boot from a USB stick created by
   Tails Installer.
 
+GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
+----------------------------------------------------------------------
+
+Some computers [[!tails_ticket 11095 desc="cannot start the GNOME
+desktop"]].
+
+After the <span class="application">Tails Greeter</span> they freeze, or
+sometimes fail with the message <span class="error">"Oh no! Something has gone
+wrong. A problem has occurred and the system can't recover. Please contact a
+system administrator"</span>.
+
+This issue has appeared with the following graphic adapters:
+
+- Mars XTX [Radeon HD 8790M]
+- Mars XTX [Radeon HD 8790M] (rev ff)
+- Cedar [Radeon HD 5000/6000 7350/8350 Series]
+- Broadway PRO [Mobility Radeon HD 5850]
+- RV730/M96 [Mobility Radeon HD 4650/5165]
+
+For some models, adding `radeon.modeset=0` to the
+[[startup options|/doc/first_steps/startup_options/#boot_menu]] fixes the issue.
+
 <a id="switchable_graphics"></a>
 
 Switchable graphics computers
@@ -252,6 +275,14 @@ There are two possible workarounds for this issue:
          sudo passwd
 
 For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
+
+Laptops with Intel 855GM graphic card
+-------------------------------------
+
+Laptops with graphic card Intel 855GM (as Dell Inspiron 510M)
+crash after Tails Greeter.
+
+See [[!tails_ticket 11096 desc="relevant ticket"]] for more information.
 
 <a id="chainloading"></a>
 
@@ -454,6 +485,11 @@ Touchpad configurations
     synclient FingerLow=1;
     synclient FingerHigh=1;
 
+### Acer C720 - Cypress APA Touchpad
+
+    synclient FingerLow=5;
+    synclient FingerHigh=5;
+
 Bluetooth devices don't work
 ----------------------------
 
@@ -471,6 +507,14 @@ translated in less languages than before. You can see the list of
 languages available in Tor Browser from the [Tor Browser
 homepage](https://www.torproject.org/projects/torbrowser.html.en).
 
+Playing WebM videos in the Tor Browser fails on old hardware
+------------------------------------------------------------
+
+On systems that only have one CPU code, WebM videos may fail to play
+in the Tor Browser, and show the error message: "Video can't be played
+because the file is corrupt". You can work around this by downloading
+the video and watching it in the Totem video player.
+
 <a id="automatic_upgrade_fails"></a>
 
 Tails does not boot after automatic upgrade
@@ -485,18 +529,6 @@ manually|doc/first_steps/upgrade/#manual]].
 
 Note that your Persistent Volume will be safely preserved.
 
-## Print preview is blank in Tor Browser
-
-Due to a [bug in Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1205598),
-its print preview is incompatible with the AppArmor confinement of Tor
-Browser in Tails.
-
-From the print preview, you can click
-<span class="guilabel">Print&hellip;</span> and choose
-<span class="guilabel">Print to File</span> in the list of printers to
-save it as a PDF file. Then you can open this PDF file from the file
-browser.
-
 Slow graphics operations with recent NVidia hardware
 ----------------------------------------------------
 
@@ -504,8 +536,8 @@ Graphics display operations are slow on computers with graphics
 adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
 GeForce GTX 960.
 
-This problem will likely be resolved once Tails
-[[!tails_ticket 10298 desc="includes a newer Linux kernel"]].
+This problem is likely resolved with Tails
+[[!tails_ticket 10298 desc="including a newer Linux kernel"]].
 
 <a id="restart-shell"></a>
 
@@ -521,3 +553,15 @@ Press <span class="keycap">Alt+F2</span> and type `r` to restart GNOME
 Shell, which often solves this problem.
 
 See [[!tails_ticket 10576]] for more details.
+
+Tor Browser search engine with security slider set to High requires a click
+---------------------------------------------------------------------------
+
+The custom search engine plugin shipped in Tails to localize the search engine
+in Tor Browser is still using disconnect.me, while upstream Tor Browser has
+switched to duckduckgo.com by default.
+
+Until we update the search engine plugin, users that set their Tor Browser
+security slider to High and use the search box in Tor Browser will end up after
+a redirection from disconnect.me on a page on duckduckgo.com asking them to
+click on a link to see their result without JavaScript.
