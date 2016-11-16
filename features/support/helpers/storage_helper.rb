@@ -24,7 +24,8 @@ class VMStorage
     rescue Libvirt::RetrieveError
       @pool = nil
     end
-    if @pool and not(KEEP_SNAPSHOTS)
+    if @pool and (not(KEEP_SNAPSHOTS) or
+                  (KEEP_SNAPSHOTS and not(Dir.exists?(@pool_path))))
       VMStorage.clear_storage_pool(@pool)
       @pool = nil
     end
