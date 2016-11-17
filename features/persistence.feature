@@ -31,6 +31,7 @@ Feature: Tails persistence
     # XXX: The next step succeeds (and the --debug output confirms that it's actually looking for the files) but will fail in a subsequent scenario restoring the same snapshot. This exactly what we want, but why does it work? What is guestfs's behaviour when qcow2 internal snapshots are involved?
     Then only the expected files are present on the persistence partition on USB drive "__internal"
     Given I start Tails from USB drive "__internal" with network unplugged and I login with read-only persistence enabled
+    And I capture all network traffic
     And the network is plugged
     And Tor is ready
     Then Tails is running from USB drive "__internal"
