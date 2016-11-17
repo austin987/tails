@@ -45,20 +45,20 @@ Feature: The Tor enforcement is effective
   @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified TCP connection attempts
     Given I have started Tails from DVD and logged in and the network is connected
-    When I open an untorified TCP connections to 1.2.3.4 on port 42
+    When I open an untorified TCP connection to 1.2.3.4 on port 42
     Then the untorified connection fails
     And the untorified connection is logged as dropped by the firewall
 
   @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified UDP connection attempts
     Given I have started Tails from DVD and logged in and the network is connected
-    When I open an untorified UDP connections to 1.2.3.4 on port 42
+    When I open an untorified UDP connection to 1.2.3.4 on port 42
     And the untorified connection is logged as dropped by the firewall
 
   @check_tor_leaks @fragile
   Scenario: The Tor enforcement is effective at blocking untorified ICMP connection attempts
     Given I have started Tails from DVD and logged in and the network is connected
-    When I open an untorified ICMP connections to 1.2.3.4
+    When I open an untorified ICMP connection to 1.2.3.4
     Then the untorified connection fails
     And the untorified connection is logged as dropped by the firewall
 

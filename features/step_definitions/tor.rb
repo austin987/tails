@@ -184,7 +184,7 @@ def firewall_has_dropped_packet_to?(proto, host, port)
   $vm.execute("journalctl --dmesg --output=cat | grep -qP '#{regex}'").success?
 end
 
-When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))?$/ do |proto, host, port|
+When /^I open an untorified (TCP|UDP|ICMP) connection to (\S*)(?: on port (\d+))?$/ do |proto, host, port|
   assert(!firewall_has_dropped_packet_to?(proto, host, port),
          "A #{proto} packet to #{host}" +
          (port.nil? ? "" : ":#{port}") +
