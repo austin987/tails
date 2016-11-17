@@ -37,6 +37,8 @@ Feature: Tails persistence
     And the boot device has safe access rights
     And all persistence presets are enabled
     And I switch to the "persistent-con" NetworkManager connection
+    And the network device has a spoofed MAC address configured
+    And the real MAC address was not leaked
     And there is no GNOME bookmark for the persistent Tor Browser directory
     And I write some files not expected to persist
     And I remove some files expected to persist
