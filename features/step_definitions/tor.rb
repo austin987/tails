@@ -184,7 +184,7 @@ def firewall_has_dropped_packet_to?(proto, host, port)
   $vm.execute("journalctl --dmesg --output=cat | grep -qP '#{regex}'").success?
 end
 
-When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
+When /^I open an untorified (TCP|UDP|ICMP) connection to (\S*)(?: on port (\d+))?$/ do |proto, host, port|
   assert(!firewall_has_dropped_packet_to?(proto, host, port),
          "A #{proto} packet to #{host}" +
          (port.nil? ? "" : ":#{port}") +
@@ -195,11 +195,11 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   case proto
   when "TCP"
     assert_not_nil(port)
-    cmd = "echo | netcat #{host} #{port}"
+    cmd = "echo | nc.traditional #{host} #{port}"
     user = LIVE_USER
   when "UDP"
     assert_not_nil(port)
-    cmd = "echo | netcat -u #{host} #{port}"
+    cmd = "echo | nc.traditional -u #{host} #{port}"
     user = LIVE_USER
   when "ICMP"
     cmd = "ping -c 5 #{host}"
