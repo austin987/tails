@@ -41,14 +41,15 @@ mkdir -p "$LINUX_BINARY_UTILS_DIR" "$WIN32_BINARY_UTILS_DIR" "$BINARY_MBR_DIR"
 cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
 # Copy 32-bit syslinux binary
 (
-   echo "Configuring APT architectures for the installation of syslinux"
-   echo 'APT::Architectures {"i386"; "amd64";};' \
-       > /etc/apt/apt.conf.d/13architectures
-   apt-get update
    olddir=$(pwd)
    workdir=$(mktemp -d)
    cd "$workdir"
    chroot="$olddir/chroot"
+   echo "Configuring APT architectures for the installation of syslinux"
+   Chroot "$chroot" \
+      echo 'APT::Architectures {"i386"; "amd64";};' \
+      > /etc/apt/apt.conf.d/13architectures
+      apt-get update
    syslinuxversion="$(Chroot "$chroot" dpkg-query -W -f='${Version}\n' syslinux)"
    Chroot "$chroot" \
       apt-get --yes download \
