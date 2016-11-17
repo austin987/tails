@@ -10,6 +10,7 @@ module Dogtail
     :child,
     :childLabelled,
     :childNamed,
+    :dialog,
     :menu,
     :menuItem,
     :tab,
@@ -225,6 +226,10 @@ module Dogtail
 
     def name
       get_field('name')
+    end
+
+    def roleName
+      get_field('roleName')
     end
 
     def proxy_call(method, args)
