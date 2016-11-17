@@ -195,11 +195,11 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   case proto
   when "TCP"
     assert_not_nil(port)
-    cmd = "echo | netcat #{host} #{port}"
+    cmd = "echo | nc.traditional #{host} #{port}"
     user = LIVE_USER
   when "UDP"
     assert_not_nil(port)
-    cmd = "echo | netcat -u #{host} #{port}"
+    cmd = "echo | nc.traditional -u #{host} #{port}"
     user = LIVE_USER
   when "ICMP"
     cmd = "ping -c 5 #{host}"
