@@ -184,7 +184,7 @@ def firewall_has_dropped_packet_to?(proto, host, port)
   $vm.execute("journalctl --dmesg --output=cat | grep -qP '#{regex}'").success?
 end
 
-When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
+When /^I open an untorified (TCP|UDP|ICMP) connection to (\S*)(?: on port (\d+))?$/ do |proto, host, port|
   assert(!firewall_has_dropped_packet_to?(proto, host, port),
          "A #{proto} packet to #{host}" +
          (port.nil? ? "" : ":#{port}") +
@@ -318,18 +318,23 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
 end
 
 When /^I connect Gobby to "([^"]+)"$/ do |host|
-  @screen.wait("GobbyWindow.png", 30)
-  @screen.wait("GobbyWelcomePrompt.png", 10)
-  @screen.click("GnomeCloseButton.png")
-  @screen.wait("GobbyWindow.png", 10)
+  gobby = Dogtail::Application.new('gobby-0.5')
+  gobby.child('Welcome to Gobby', roleName: 'label').wait(30)
+  gobby.button('Close').click
   # This indicates that Gobby has finished initializing itself
   # (generating DH parameters, etc.) -- before, the UI is not responsive
   # and our CTRL-t is lost.
-  @screen.wait("GobbyFailedToShareDocuments.png", 30)
+  gobby.child('Failed to share documents', roleName: 'label').wait(30)
+  gobby.menu('File').click
+  gobby.menuItem('Connect to Server...').click
   @screen.type("t", Sikuli::KeyModifier.CTRL)
-  @screen.wait("GobbyConnectPrompt.png", 10)
-  @screen.type(host + Sikuli::Key.ENTER)
-  @screen.wait("GobbyConnectionComplete.png", 60)
+  connect_dialog = gobby.dialog('Connect to Server')
+  connect_dialog.wait(10)
+  connect_dialog.child('', roleName: 'text').typeText(host)
+  connect_dialog.button('Connect').click
+  # This looks for the live user's presence entry in the chat, which
+  # will only be shown if the connection succeeded.
+  gobby.child(LIVE_USER, roleName: 'table cell').wait(60)
 end
 
 When /^the Tor Launcher autostarts$/ do
