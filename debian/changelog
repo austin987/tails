@@ -1,7 +1,60 @@
-tails (2.6~rc1) unstable; urgency=medium
+tails (2.7) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade to Linux 4.7. (Closes: #11885, #11818)
+    - Upgrade to Tor 0.2.8.9. (Closes: #11832, #11891)
+    - Upgrade Tor Browser to 6.0.6 based on Firefox 45.5. (Closes: #11910)
+    - Upgrade Icedove to 1:45.4.0-1~deb8u1+tails1. (Closes: #11854,
+      #11860)
+    - Upgrade imagemagick to 8:6.8.9.9-5+deb8u5.
+    - Upgrade openssl to 1.0.1t-1+deb8u5.
+    - Upgrade libarchive to 3.1.2-11+deb8u3.
+    - Upgrade bind9 to 1:9.9.5.dfsg-9+deb8u8.
+    - Upgrade libav to 6:11.8-1~deb8u1.
+    - Upgrade ghostscript to 9.06~dfsg-2+deb8u3.
+    - Upgrade c-ares to 1.10.0-2+deb8u1.
+    - Upgrade nspr to 2:4.12-1+debu8u1.
+    - Upgrade nss to 2:3.26-1+debu8u1.
+    - Upgrade tar to 1.27.1-2+deb8u1.
+    - Upgrade curl to 7.38.0-4+deb8u5.
+    - Upgrade libgd3 to 2.1.0-5+deb8u7.
+    - Upgrade opendjk-7 to 7u111-2.6.7-2~deb8u1.
+    - Upgrade mat to 0.5.2-3+deb8u1.
+    - Upgrade libxslt to 1.1.28-2+deb8u2.
+    - Upgrade pillow to 2.6.1-2+deb8u3.
+
+  * Minor improvements
+    - Ship Let's encrypt intermediate certificate to prepare the
+      the next certificate renewal of our website. Also unify the
+      way our upgrades and security checkers verify this SSL
+      certificate using our dedicated perl lib code. (Closes: #11810)
+
+  * Bugfixes
+    - Fix multiarch support in Synaptic. (Closes: #11820)
+    - Set default spelling language to en_US in Icedove. (Closes: #11037)
+
+  * Build system
+    - Disable debootstrap merged-usr option. (Closes: #11903)
+
+  * Test suite
+    - Add test for incremental upgrades. (Closes: #6309)
+    - Add tests for Icedove. (Closes: #6304)
+    - Decrease timeout to Tails Greeter to speed up testing of branches
+      where it is broken. (Closes: #11449)
+    - Add a ID field to the remote shell responses to filter out
+      unrelated ones. (Closes: #11846)
+    - Reliabily wait for the Greeter PostLogin script. (Closes: #5666)
+    - Reliabily type the kernel command line in the prompt at the boot
+      menu to ensure the remote shell is started. (Closes: #10777)
+    - Remove DVDROM device when not used, to workaround QEMU/Libvirt
+      compatibility issue. (Closes: #11874)
+
+ -- Tails developers <tails@boum.org>  Sun, 13 Nov 2016 14:46:04 +0100
+
+tails (2.6) unstable; urgency=medium
 
   * Major new features and changes
-    - Install Tor 0.2.8.6. (Closes: #11351)
+    - Install Tor 0.2.8.7. (Closes: #11351)
     - Enable kASLR in the Linux kernel. (Closes: #11281)
     - Upgrade Icedove to 1:45.2.0-1~deb8u1+tails1: (Closes: #11714)
       · Drop auto-fetched configurations using Oauth2.  They do not
@@ -35,7 +88,6 @@ tails (2.6~rc1) unstable; urgency=medium
       adds support for some sound cards and Wi-Fi adapters.  (Closes:
       #11502)
     - Install OpenPGP Applet from Debian. (Closes: #10190)
-    - Install gnome-sound-recorder (again). (Closes: #10950)
     - Port the "About Tails" dialog to python3.
     - Run our initramfs memory erasure hook earlier (Closes:
       #10733). The goal here is to:
@@ -84,12 +136,11 @@ tails (2.6~rc1) unstable; urgency=medium
     - Run usb_upgrade.feature earlier, when there is enough free disk
       space left. (Closes: #11582)
     - Use more recent virtual hardware in the system under test,
-      i.e. USB 3.0 (nec-xhci) on a pc-i440fx-2.5 machine. I have some
-      vague hope that switching USB controllers might help with
-      problems we see on Jenkins when booting from USB (#11588). Also,
-      there are chances that more recent virtual hardware sees more
-      testing these days, so it sounds potentially useful to
-      "upgrade".
+      i.e. USB 3.0 (nec-xhci) on a pc-i440fx-2.5 machine. Switching
+      USB controllers has helped with problems we see on Jenkins when
+      booting from USB (#11588). Also, there are chances that more
+      recent virtual hardware sees more testing these days, so it
+      sounds potentially useful to "upgrade".
     - Add support for Cucumber 2.4. (Closes: #11690)
     - Always write {pretty,debug} logs and JSON output to the artifact
       directory.
@@ -98,7 +149,7 @@ tails (2.6~rc1) unstable; urgency=medium
       take this into account when budgeting RAM to the isotesters on
       Jenkins.
 
- -- Tails developers <tails@boum.org>  Tue, 07 Jun 2016 09:07:40 +0200
+ -- Tails developers <tails@boum.org>  Tue, 20 Sep 2016 04:16:33 +0200
 
 tails (2.5) unstable; urgency=medium
 
