@@ -10,6 +10,7 @@ module Dogtail
     :child,
     :childLabelled,
     :childNamed,
+    :dialog,
     :menu,
     :menuItem,
     :tab,
