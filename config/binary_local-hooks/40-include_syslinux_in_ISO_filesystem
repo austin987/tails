@@ -28,6 +28,7 @@ BINARY_MBR_DIR='binary/utils/mbr'
 CHROOT_SYSLINUX_BIN='chroot/usr/bin/syslinux'
 CHROOT_SYSLINUX_MBR='chroot/usr/lib/SYSLINUX/gptmbr.bin'
 CHROOT_TEMP_APT_SOURCES='chroot/etc/apt/sources.list.d/tmp-deb-src.list'
+SYSLINUX_DEB_VERSION_IN_CHROOT=$(syslinux_deb_version_in_chroot)
 
 ### Functions
 
@@ -49,12 +50,12 @@ cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
    Chroot "$chroot" \
       echo 'APT::Architectures {"i386"; "amd64";};' \
       > /etc/apt/apt.conf.d/13architectures
-      apt-get update
-   syslinuxversion="$(Chroot "$chroot" dpkg-query -W -f='${Version}\n' syslinux)"
-   echo "Trying to download syslinux-i386 version ${syslinux_version}"
+   Chroot "$chroot" dpkg --add-architecture amd64
+   Chroot "$chroot" apt-get update
+   echo "Trying to download syslinux-i386 version ${SYSLINUX_DEB_VERSION_IN_CHROOT}"
    Chroot "$chroot" \
       apt-get --yes download \
-      syslinux:i386="${syslinux_version}"
+      syslinux:i386="${SYSLINUX_DEB_VERSION_IN_CHROOT}"
    echo "Extracting syslinux-i386"
    dpkg-deb --extract "$chroot"/syslinux_*.deb .
    rm "$chroot"/syslinux_*.deb
