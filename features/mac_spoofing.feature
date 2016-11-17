@@ -31,7 +31,7 @@ Feature: Spoofing MAC addresses
   Scenario: MAC address spoofing fails and macchanger returns false
     Given macchanger will fail by not spoofing and always returns false
     When I log in to a new session
-    # XXX: why the extra space in front of "disabled" in Stretch?
+    # XXX: workaround for #11941
     And I see the "Network card  disabled" notification after at most 60 seconds
     Then no network interfaces are enabled
     And the real MAC address was not leaked
@@ -41,7 +41,7 @@ Feature: Spoofing MAC addresses
   Scenario: MAC address spoofing fails and macchanger returns true
     Given macchanger will fail by not spoofing and always returns true
     When I log in to a new session
-    # XXX: why the extra space in front of "disabled" in Stretch?
+    # XXX: workaround for #11941
     And I see the "Network card  disabled" notification after at most 60 seconds
     Then no network interfaces are enabled
     And the real MAC address was not leaked
