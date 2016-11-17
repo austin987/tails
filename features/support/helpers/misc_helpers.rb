@@ -267,6 +267,9 @@ def info_log_artifact_location(type, path)
 end
 
 def pause(message = "Paused")
+  STDERR.puts
+  STDERR.puts message
+  STDERR.puts
   loop do
     STDERR.puts "Return: Continue; d: Debugging REPL"
     c = STDIN.getch
