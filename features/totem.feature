@@ -38,6 +38,12 @@ Feature: Using Totem
     # Due to our AppArmor aliases, /live/overlay will be treated
     # as /lib/live/mount/overlay.
     And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
+    Given I close Totem
+    And I copy "/home/amnesia/video.mp4" to "/home/amnesia/.purple/otr.private_key" as user "amnesia"
+    And I restart monitoring the AppArmor log of "/usr/bin/totem"
+    When I try to open "/home/amnesia/.purple/otr.private_key" with Totem
+    Then I see "TotemUnableToOpen.png" after at most 10 seconds
+    And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.purple/otr.private_key"
 
   @check_tor_leaks @fragile
   Scenario: Watching a WebM video over HTTPS
