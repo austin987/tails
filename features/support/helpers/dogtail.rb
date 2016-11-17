@@ -227,6 +227,10 @@ module Dogtail
       get_field('name')
     end
 
+    def roleName
+      get_field('roleName')
+    end
+
     def proxy_call(method, args)
       args_str = self.class.args_to_s(args)
       method_call = "#{method.to_s}(#{args_str})"
