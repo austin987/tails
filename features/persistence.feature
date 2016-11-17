@@ -26,8 +26,6 @@ Feature: Tails persistence
     And Tor is ready
     And I take note of which persistence presets are available
     When I write some files expected to persist
-    And I add a wired DHCP NetworkManager connection called "persistent-con"
-    And I add a wired DHCP NetworkManager connection from Jessie called "persistent-con-2.x"
     And I shutdown Tails and wait for the computer to power off
     # XXX: The next step succeeds (and the --debug output confirms that it's actually looking for the files) but will fail in a subsequent scenario restoring the same snapshot. This exactly what we want, but why does it work? What is guestfs's behaviour when qcow2 internal snapshots are involved?
     Then only the expected files are present on the persistence partition on USB drive "__internal"
@@ -38,18 +36,31 @@ Feature: Tails persistence
     Then Tails is running from USB drive "__internal"
     And the boot device has safe access rights
     And all persistence presets are enabled
-    And I switch to the "persistent-con" NetworkManager connection
-    And the network device has a spoofed MAC address configured
-    And the real MAC address was not leaked
-    And I switch to the "persistent-con-2.x" NetworkManager connection
-    And the network device has a spoofed MAC address configured
-    And the real MAC address was not leaked
     And there is no GNOME bookmark for the persistent Tor Browser directory
     And I write some files not expected to persist
     And I remove some files expected to persist
     And I take note of which persistence presets are available
     And I shutdown Tails and wait for the computer to power off
     Then only the expected files are present on the persistence partition on USB drive "__internal"
+
+  Scenario Outline: Creating and using a persistent NetworkManager connection
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    And the network is plugged
+    And Tor is ready
+    And I add a <version> wired DHCP NetworkManager connection called "<con_name>"
+    And I shutdown Tails and wait for the computer to power off
+    Given I start Tails from USB drive "__internal" with network unplugged and I login with read-only persistence enabled
+    And I capture all network traffic
+    And the network is plugged
+    And Tor is ready
+    And I switch to the "<con_name>" NetworkManager connection
+    And the network device has a spoofed MAC address configured
+    And the real MAC address was not leaked
+
+    Examples:
+      | version | con_name               |
+      | current | persistent-con-current |
+      | 2.x     | persistent-con-2.x     |
 
   Scenario: Deleting a Tails persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen

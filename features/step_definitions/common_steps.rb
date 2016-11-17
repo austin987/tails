@@ -578,29 +578,25 @@ Given /^the package "([^"]+)" is installed$/ do |package|
          "Package '#{package}' is not installed")
 end
 
-Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
-  $vm.execute_successfully(
-    "nmcli connection add con-name #{con_name} " + \
-    "type ethernet autoconnect yes ifname eth0"
-  )
-  try_for(10) {
-    nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
-    nm_con_list.split("\n").include? "#{con_name}"
-  }
-end
-
-Given /^I add a wired DHCP NetworkManager connection from Jessie called "([^"]+)"$/ do |con_name|
-  con_content = <<EOF
+Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
+  if version and version == '2.x'
+    con_content = <<EOF
 [connection]
 id=#{con_name}
 uuid=b04afa94-c3a1-41bf-aa12-1a743d964162
 interface-name=eth0
 type=ethernet
 EOF
-  con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-  $vm.file_overwrite(con_file, con_content)
-  $vm.execute_successfully("chmod 600 '#{con_file}'")
-  $vm.execute_successfully("nmcli connection load '#{con_file}'")
+    con_file = "/etc/NetworkManager/system-connections/#{con_name}"
+    $vm.file_overwrite(con_file, con_content)
+    $vm.execute_successfully("chmod 600 '#{con_file}'")
+    $vm.execute_successfully("nmcli connection load '#{con_file}'")
+  else
+    $vm.execute_successfully(
+      "nmcli connection add con-name #{con_name} " + \
+      "type ethernet autoconnect yes ifname eth0"
+    )
+  end
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
