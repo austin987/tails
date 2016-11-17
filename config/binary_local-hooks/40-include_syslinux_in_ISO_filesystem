@@ -39,7 +39,7 @@ SYSLINUX_DEB_VERSION_IN_CHROOT=$(syslinux_deb_version_in_chroot)
 ### Main
 mkdir -p "$LINUX_BINARY_UTILS_DIR" "$WIN32_BINARY_UTILS_DIR" "$BINARY_MBR_DIR"
 # Copy 64-but syslinux binary
-cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
+# We only need the 32-bit binary until most of the users have upgraded to 64-bit
 # Copy 32-bit syslinux binary
 (
    olddir=$(pwd)
@@ -59,7 +59,7 @@ cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
    echo "Extracting syslinux-i386"
    dpkg-deb --extract "$chroot"/syslinux_*.deb .
    rm "$chroot"/syslinux_*.deb
-   cp ./usr/bin/syslinux "$olddir/$LINUX_BINARY_UTILS_DIR/syslinux"
+   cp ./usr/bin/syslinux "$olddir/$LINUX_BINARY_UTILS_DIR/"
    cd "$olddir"
    rm -r "$workdir"
 )
