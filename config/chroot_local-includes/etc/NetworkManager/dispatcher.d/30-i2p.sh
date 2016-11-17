@@ -10,8 +10,10 @@
 i2p_is_enabled || exit 0
 
 # don't run if interface is 'lo'
-[ $1 = "lo" ] && exit 0
+if [ -z "$1" ] || [ "$1" = "lo" ]; then
+    exit 0
+fi
 
-if [ $2 = "up" ]; then
+if [ "$2" = "up" ]; then
     /usr/local/sbin/tails-i2p start &
 fi

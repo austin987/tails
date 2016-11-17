@@ -321,14 +321,6 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
     raise "Unsupported language: #{lang}"
   end
   step 'Tails Greeter has applied all settings'
-
-  # XXX: Workaround while Tails/Stretch is affected by #11694.
-  retry_times(3) do
-    $vm.spawn('chvt 2')
-    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-    @screen.wait(desktop_started_picture, 60)
-  end
-
   step 'the Tails desktop is ready'
 end
 
@@ -413,26 +405,41 @@ Given /^available upgrades have been checked$/ do
   }
 end
 
-Given /^the Tor Browser has started$/ do
-  Dogtail::Application.new('Firefox').child('', roleName: "document frame").wait(60)
+When /^I start the Tor Browser( in offline mode)?$/ do |offline|
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
+  if offline
+    offline_prompt = Dogtail::Application.new('zenity')
+                     .dialog('Tor is not ready')
+    offline_prompt.wait(10)
+    offline_prompt.button('Start Tor Browser').click
+  end
+  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
+  @torbrowser.wait(60)
+  if offline
+    step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
 end
 
-Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - News'
+    title = 'Tails - Dear Tails user'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
     raise "Unsupported page: #{page}"
   end
-  step "the Tor Browser has started"
   step "\"#{title}\" has loaded in the Tor Browser"
 end
 
-Given /^the Tor Browser has started in offline mode$/ do
-  step "the Tor Browser has started"
-  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+When /^I request a new identity using Torbutton$/ do
+  @screen.wait_and_click('TorButtonIcon.png', 30)
+  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+end
+
+When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
+  step 'I type "y"'
 end
 
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
@@ -450,10 +457,28 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  # XXX: It will be hard for us to interact with the Calendar (where
-  # the notifications are lited) without Dogtail, but it is broken
-  # here, see #11718.
-  next
+  begin
+    @screen.click("GnomeNotificationApplet.png")
+  rescue FindFailed
+    # No notifications, so we're done here.
+    next
+  end
+  @screen.wait("GnomeNotificationAppletOpened.png", 10)
+  begin
+    entries = @screen.findAll("GnomeNotificationEntry.png")
+    while(entries.hasNext) do
+      entry = entries.next
+      @screen.hide_cursor
+      @screen.click(entry)
+      @screen.wait_and_click("GnomeNotificationEntryClose.png", 10)
+    end
+  rescue FindFailed
+    # No notifications, so we're good to go.
+  end
+  @screen.hide_cursor
+  # Click anywhere to close the notification applet
+  @screen.click("GnomeApplicationsMenu.png")
+  @screen.hide_cursor
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -571,28 +596,6 @@ Given /^the package "([^"]+)" is installed$/ do |package|
          "Package '#{package}' is not installed")
 end
 
-When /^I start the Tor Browser$/ do
-  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
-end
-
-When /^I request a new identity using Torbutton$/ do
-  @screen.wait_and_click('TorButtonIcon.png', 30)
-  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
-end
-
-When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
-  @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  step 'I type "y"'
-end
-
-When /^I start the Tor Browser in offline mode$/ do
-  step "I start the Tor Browser"
-  offline_prompt = Dogtail::Application.new('zenity')
-           .dialog('Tor is not ready')
-  offline_prompt.wait(10)
-  offline_prompt.button('Start Tor Browser').click
-end
-
 Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
   $vm.execute_successfully(
     "nmcli connection add con-name #{con_name} " + \
@@ -612,7 +615,7 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
 end
 
 When /^I start and focus GNOME Terminal$/ do
-  step 'I start "GNOME Terminal" via the GNOME "Utilities" applications menu'
+  step 'I start "Terminal" via the GNOME "Utilities" applications menu'
   @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
@@ -669,12 +672,10 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  # XXX: Dogtail is broken in this use case, see #11718.
-  @screen.wait('GnomeApplicationsMenu.png', 10)
-  $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
-  @screen.wait('GnomeActivitiesOverview.png', 10)
-  @screen.type(app_name)
-  @screen.type(Sikuli::Key.ENTER)
+  app = Dogtail::Application.new('gnome-shell')
+  for element in ['Applications', submenu, app_name] do
+    app.child(element, roleName: 'label').click
+  end
 end
 
 When /^I type "([^"]+)"$/ do |string|
