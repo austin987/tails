@@ -51,9 +51,11 @@ cp "$CHROOT_SYSLINUX_BIN" "$LINUX_BINARY_UTILS_DIR/"
       > /etc/apt/apt.conf.d/13architectures
       apt-get update
    syslinuxversion="$(Chroot "$chroot" dpkg-query -W -f='${Version}\n' syslinux)"
+   echo "Trying to download syslinux-i386 version ${syslinux_version}"
    Chroot "$chroot" \
       apt-get --yes download \
       syslinux:i386="${syslinux_version}"
+   echo "Extracting syslinux-i386"
    dpkg-deb --extract "$chroot"/syslinux_*.deb .
    rm "$chroot"/syslinux_*.deb
    cp ./usr/bin/syslinux "$olddir/$LINUX_BINARY_UTILS_DIR/syslinux-i386"
