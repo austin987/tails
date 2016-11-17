@@ -589,6 +589,24 @@ Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_
   }
 end
 
+Given /^I add a wired DHCP NetworkManager connection from Jessie called "([^"]+)"$/ do |con_name|
+  con_content = <<EOF
+[connection]
+id=#{con_name}
+uuid=b04afa94-c3a1-41bf-aa12-1a743d964162
+interface-name=eth0
+type=ethernet
+EOF
+  con_file = "/etc/NetworkManager/system-connections/#{con_name}"
+  $vm.file_overwrite(con_file, con_content)
+  $vm.execute_successfully("chmod 600 '#{con_file}'")
+  $vm.execute_successfully("nmcli connection load '#{con_file}'")
+  try_for(10) {
+    nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
+    nm_con_list.split("\n").include? "#{con_name}"
+  }
+end
+
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
   $vm.execute("nmcli connection up id #{con_name}")
   try_for(60) do

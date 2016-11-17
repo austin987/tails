@@ -27,6 +27,7 @@ Feature: Tails persistence
     And I take note of which persistence presets are available
     When I write some files expected to persist
     And I add a wired DHCP NetworkManager connection called "persistent-con"
+    And I add a wired DHCP NetworkManager connection from Jessie called "persistent-con-2.x"
     And I shutdown Tails and wait for the computer to power off
     # XXX: The next step succeeds (and the --debug output confirms that it's actually looking for the files) but will fail in a subsequent scenario restoring the same snapshot. This exactly what we want, but why does it work? What is guestfs's behaviour when qcow2 internal snapshots are involved?
     Then only the expected files are present on the persistence partition on USB drive "__internal"
@@ -38,6 +39,9 @@ Feature: Tails persistence
     And the boot device has safe access rights
     And all persistence presets are enabled
     And I switch to the "persistent-con" NetworkManager connection
+    And the network device has a spoofed MAC address configured
+    And the real MAC address was not leaked
+    And I switch to the "persistent-con-2.x" NetworkManager connection
     And the network device has a spoofed MAC address configured
     And the real MAC address was not leaked
     And there is no GNOME bookmark for the persistent Tor Browser directory
