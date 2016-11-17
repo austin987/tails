@@ -591,6 +591,8 @@ EOF
     $vm.file_overwrite(con_file, con_content)
     $vm.execute_successfully("chmod 600 '#{con_file}'")
     $vm.execute_successfully("nmcli connection load '#{con_file}'")
+  elsif version and version == '3.x'
+    raise "Unsupported version '#{version}'"
   else
     $vm.execute_successfully(
       "nmcli connection add con-name #{con_name} " + \
