@@ -1,4 +1,6 @@
 require 'date'
+require 'io/console'
+require 'pry'
 require 'timeout'
 require 'test/unit'
 
@@ -272,6 +274,16 @@ end
 
 def pause(message = "Paused")
   STDERR.puts
-  STDERR.puts "#{message} (Press ENTER to continue!)"
-  STDIN.gets
+  STDERR.puts message
+  STDERR.puts
+  loop do
+    STDERR.puts "Return: Continue; d: Debugging REPL"
+    c = STDIN.getch
+    case c
+    when "\r"
+      return
+    when "d"
+      binding.pry(quiet: true)
+    end
+  end
 end
