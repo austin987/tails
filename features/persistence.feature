@@ -43,24 +43,33 @@ Feature: Tails persistence
     And I shutdown Tails and wait for the computer to power off
     Then only the expected files are present on the persistence partition on USB drive "__internal"
 
-  Scenario Outline: Creating and using a persistent NetworkManager connection
+  Scenario: Creating and using a persistent NetworkManager connection
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
     And Tor is ready
-    And I add a <version> wired DHCP NetworkManager connection called "<con_name>"
+    And I add a current wired DHCP NetworkManager connection called "persistent-con-current"
     And I shutdown Tails and wait for the computer to power off
     Given I start Tails from USB drive "__internal" with network unplugged and I login with read-only persistence enabled
     And I capture all network traffic
     And the network is plugged
     And Tor is ready
-    And I switch to the "<con_name>" NetworkManager connection
+    And I switch to the "persistent-con-current" NetworkManager connection
     And the network device has a spoofed MAC address configured
     And the real MAC address was not leaked
 
-    Examples:
-      | version | con_name               |
-      | current | persistent-con-current |
-      | 2.x     | persistent-con-2.x     |
+  Scenario: Creating and using a Jessie-area persistent NetworkManager connection
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    And the network is plugged
+    And Tor is ready
+    And I add a 2.x wired DHCP NetworkManager connection called "persistent-con-2.x"
+    And I shutdown Tails and wait for the computer to power off
+    Given I start Tails from USB drive "__internal" with network unplugged and I login with read-only persistence enabled
+    And I capture all network traffic
+    And the network is plugged
+    And Tor is ready
+    And I switch to the "persistent-con-2.x" NetworkManager connection
+    And the network device has a spoofed MAC address configured
+    And the real MAC address was not leaked
 
   Scenario: Deleting a Tails persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
