@@ -31,6 +31,5 @@ compare_po_headers() {
              echo "Real changes in potfile: substitute old PO file."
              mv ${locale}.po.new ${locale}.po
          fi;
-         rm -f ${locale}.po.new
     done
 }
