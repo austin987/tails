@@ -22,7 +22,7 @@ compare_po_headers() {
          if [ -f ${locale}.po.new ]; then
              echo "$locale file exists."
          fi;
-         if [ $(diff "${locale}.po" "${locale}.po.new" | grep -c ^@ | wc -l) -eq "1" ]; then
+         if [ $(diff "${locale}.po" "${locale}.po.new" | grep ^"> " | wc -l) -eq 1 ]; then
              if diff -aw "${locale}.po" "${locale}.po.new" | grep 'POT-Creation-Date'; then
                  echo "Only header changes in potfile, Delete new PO file."
                  rm -f ${locale}.po.new
