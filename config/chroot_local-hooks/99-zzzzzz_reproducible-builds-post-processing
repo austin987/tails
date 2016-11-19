@@ -14,10 +14,12 @@ echo "Post processing filesystem to make it reproducible"
 # are problems would manifest in much more obvious ways).
 rm /var/lib/dpkg/info/*.md5sums
 
-# Clear caches. These will be generated on-the-fly when needed instead
-# of being shipped on the image, so we'll require a bit more RAM while
-# the image will be smaller (and more reproducible!).
+# Clear caches and remove precompiled code. These will be generated
+# on-the-fly when needed instead of being shipped on the image, so
+# we'll require a bit more RAM and startup times, while the image will
+# be smaller (and more reproducible!).
 rm /var/cache/fontconfig/*
+rm /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/classes.jsa
 
 # Delete various non-deterministically generated files that will be
 # generated on the fly (at boot, or when needed) any way.
