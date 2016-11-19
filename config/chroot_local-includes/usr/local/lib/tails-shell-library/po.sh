@@ -11,7 +11,7 @@ intltool_update_po () {
    (
       cd po
       for locale in "$@" ; do
-	 intltool-update --dist --gettext-package=tails $locale
+          intltool-update --dist --gettext-package=tails $locale -o ${locale}.po.new
       done
    )
 }
