@@ -22,6 +22,8 @@ keep_old_po_files_if_header_only_changed() {
          if [ ! -f ${locale}.po.new ]; then
              echo "New PO file for ${locale} does not exist. Skipping."
              continue
+		else
+             echo "${locale} PO file exists."
          fi
          if [ $(diff "${locale}.po" "${locale}.po.new" | grep ^"> " | wc -l) -eq 1 ]; then
              if diff -aw "${locale}.po" "${locale}.po.new" | grep ^'> "POT-Creation-Date:'; then
