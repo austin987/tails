@@ -124,6 +124,9 @@ no_left_out_files || exit 3
 # Update PO files
 intltool_update_po $(po_languages)
 
+# Don't modify files if only the POT-Creation date header changed
+compare_po_headers $(po_languages)
+
 # Update files that are actually used at runtime
 refresh_mo $(po_languages)
 intltool_merge
