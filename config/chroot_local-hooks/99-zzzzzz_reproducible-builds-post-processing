@@ -4,6 +4,10 @@ set -e
 
 echo "Post processing filesystem to make it reproducible"
 
+if [ -z "${SOURCE_DATE_EPOCH}" ]; then
+    echo "SOURCE_DATE_EPOCH was not set!" >&2
+    exit 1
+fi
 
 # These files are pretty useless for us and mainly occupy space on the
 # image. They are, for instance, not useful for checking the
@@ -24,3 +28,11 @@ rm /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/classes.jsa
 # Delete various non-deterministically generated files that will be
 # generated on the fly (at boot, or when needed) any way.
 rm /etc/machine-id
+
+# Remove logs.
+rm -r /var/lib/dkms/*/*/*/*/log
+
+# Set various timestamps according to SOURCE_DATE_EPOCH.
+find / -name '%gconf-tree.xml' -print0 | \
+    xargs -0r \
+        sed -i -e 's@\bmtime="[0-9][0-9]*"@mtime="'${SOURCE_DATE_EPOCH}'"@g'
