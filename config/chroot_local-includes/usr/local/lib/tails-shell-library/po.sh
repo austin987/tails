@@ -19,8 +19,8 @@ intltool_update_po () {
 compare_po_headers() {
     cd po
     for locale in "$@" ; do
-         if [ -f ${locale}.po.new ]; then
-             echo "$locale file exists."
+         if [ ! -f ${locale}.po.new ]; then
+             continue
          fi
          if [ $(diff "${locale}.po" "${locale}.po.new" | grep ^"> " | wc -l) -eq 1 ]; then
              if diff -aw "${locale}.po" "${locale}.po.new" | grep ^'> "POT-Creation-Date:'; then
