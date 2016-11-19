@@ -84,10 +84,8 @@ def robust_notification_wait(notification_image, time_to_wait)
     found
   end
 
-  # Click anywhere to close the notification applet
-  @screen.hide_cursor
-  @screen.click("GnomeApplicationsMenu.png")
-  @screen.hide_cursor
+  # Close the notification applet
+  @screen.type(Sikuli::Key.ESC)
 end
 
 def post_snapshot_restore_hook
@@ -166,6 +164,11 @@ Given /^the network is unplugged$/ do
   $vm.unplug_network
 end
 
+Given /^the network connection is ready(?: within (\d+) seconds)?$/ do |timeout|
+  timeout ||= 30
+  try_for(timeout.to_i) { $vm.has_network? }
+end
+
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
   $vm.set_hardware_clock(DateTime.parse(time).to_time)
 end
@@ -201,7 +204,6 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    step "Tails seems to have booted normally"
     if network_unplugged.nil?
       step "Tor is ready"
       step "all notifications have disappeared"
@@ -230,7 +232,6 @@ Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I 
       end
     end
     step "I log in to a new session"
-    step "Tails seems to have booted normally"
     if network_unplugged.empty?
       step "Tor is ready"
       step "all notifications have disappeared"
@@ -256,16 +257,16 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
-def bootsplash
+def boot_menu_cmdline_image
   case @os_loader
   when "UEFI"
-    'TailsBootSplashUEFI.png'
+    'TailsBootMenuKernelCmdlineUEFI.png'
   else
-    'TailsBootSplash.png'
+    'TailsBootMenuKernelCmdline.png'
   end
 end
 
-def bootsplash_tab_msg
+def boot_menu_tab_msg_image
   case @os_loader
   when "UEFI"
     'TailsBootSplashTabMsgUEFI.png'
@@ -274,22 +275,76 @@ def bootsplash_tab_msg
   end
 end
 
-Given /^the computer (re)?boots Tails$/ do |reboot|
+def memory_wipe_timeout
+  nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+  nr_gigs_of_ram*30
+end
 
-  boot_timeout = 30
+Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
+  boot_timeout = 3*60
   # We need some extra time for memory wiping if rebooting
-  boot_timeout += 90 if reboot
+  boot_timeout += memory_wipe_timeout if reboot
+  # Simply looking for the boot splash image is not robust; sometimes
+  # sikuli is not fast enough to see it. Here we hope that spamming
+  # TAB, which will halt the boot process by showing the prompt for
+  # the kernel cmdline, will make this a bit more robust. We want this
+  # spamming to happen in parallel with Sikuli waiting for the image,
+  # but multi-threading etc is working extremely poor in our Ruby +
+  # jrb environment when Sikuli is involved. Hence we run the spamming
+  # from a separate process.
+  tab_spammer_code = <<-EOF
+    require 'libvirt'
+    tab_key_code = 0xf
+    virt = Libvirt::open("qemu:///system")
+    begin
+      domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
+      loop do
+        domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
+        sleep 0.1
+      end
+    ensure
+      virt.close
+    end
+  EOF
+  # Our UEFI firmware (OVMF) has the interesting "feature" that pressing
+  # any button will open its setup menu, so we have to exit the setup,
+  # and to not have the TAB spammer potentially interfering we pause
+  # it meanwhile.
+  dealt_with_uefi_setup = false
+  # The below code is not completely reliable, so we might have to
+  # retry by rebooting.
+  try_for(boot_timeout) do
+    begin
+      tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
+      if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
+        @screen.wait('UEFIFirmwareSetup.png', 30)
+        Process.kill("TSTP", tab_spammer.pid)
+        @screen.type(Sikuli::Key.ENTER)
+        Process.kill("CONT", tab_spammer.pid)
+        dealt_with_uefi_setup = true
+      end
+      @screen.wait(boot_menu_cmdline_image, 15)
+    rescue FindFailed => e
+      debug_log('We missed the boot menu before we could deal with it, ' +
+                'resetting...')
+      dealt_with_uefi_setup = false
+      $vm.reset
+      retry
+    ensure
+      Process.kill("TERM", tab_spammer.pid)
+      tab_spammer.close
+    end
+  end
+end
 
-  @screen.wait(bootsplash, boot_timeout)
-  @screen.wait(bootsplash_tab_msg, 10)
-  @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(bootsplash_tab_msg, 1)
-
+Given /^the computer (re)?boots Tails$/ do |reboot|
+  step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
-  @screen.wait('TailsGreeter.png', 30*60)
+  @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
   activate_filesystem_shares
+  step 'I configure Tails to use a simulated Tor network'
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
@@ -304,12 +359,14 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
+  step 'Tails Greeter has applied all settings'
+  step 'the Tails desktop is ready'
 end
 
 Given /^I enable more Tails Greeter options$/ do
   match = @screen.find('TailsGreeterMoreOptions.png')
   @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 10)
+  @screen.wait_and_click('TailsGreeterForward.png', 20)
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
@@ -324,12 +381,20 @@ Given /^I set an administration password$/ do
   @screen.type(@sudo_password)
 end
 
-Given /^Tails Greeter has dealt with the sudo password$/ do
-  f1 = "/etc/sudoers.d/tails-greeter"
-  f2 = "#{f1}-no-password-lecture"
-  try_for(20) {
-    $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
+Given /^Tails Greeter has applied all settings$/ do
+  # I.e. it is done with PostLogin, which is ensured to happen before
+  # a logind session is opened for LIVE_USER.
+  try_for(120) {
+    $vm.execute_successfully("loginctl").stdout
+      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s*$/) != nil
   }
+end
+
+def florence_keyboard_is_visible
+  $vm.execute(
+    "xdotool search --all --onlyvisible --maxdepth 1 --classname 'Florence'",
+    :user => LIVE_USER,
+  ).success?
 end
 
 Given /^the Tails desktop is ready$/ do
@@ -344,10 +409,20 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.session idle-delay 0',
     :user => LIVE_USER
   )
-end
-
-Then /^Tails seems to have booted normally$/ do
-  step "the Tails desktop is ready"
+  # We need to enable the accessibility toolkit for dogtail.
+  $vm.execute_successfully(
+    'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
+    :user => LIVE_USER,
+  )
+  # Sometimes the Florence window is not hidden on startup (#11398).
+  # Whenever that's the case, hide it ourselves and verify that it vanishes.
+  # I could not find that window using Accerciser, so I'm not using dogtail;
+  # and it doesn't feel worth it to add an image and use Sikuli, since we can
+  # instead do this programmatically with xdotool.
+  if florence_keyboard_is_visible
+    @screen.click("GnomeSystrayFlorence.png")
+    try_for(5, delay: 0.1) { ! florence_keyboard_is_visible }
+  end
 end
 
 When /^I see the 'Tor is ready' notification$/ do
@@ -387,14 +462,14 @@ end
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    picture = "TorBrowserStartupPage.png"
+    title = 'Tails - News'
   when "Tails roadmap"
-    picture = "TorBrowserTailsRoadmap.png"
+    title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
     raise "Unsupported page: #{page}"
   end
   step "the Tor Browser has started"
-  @screen.wait(picture, 120)
+  step "\"#{title}\" has loaded in the Tor Browser"
 end
 
 Given /^the Tor Browser has started in offline mode$/ do
@@ -416,8 +491,12 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  next if not(@screen.exists("GnomeNotificationApplet.png"))
-  @screen.click("GnomeNotificationApplet.png")
+  begin
+    @screen.click("GnomeNotificationApplet.png")
+  rescue FindFailed
+    # No notifications, so we're done here.
+    next
+  end
   @screen.wait("GnomeNotificationAppletOpened.png", 10)
   begin
     entries = @screen.findAll("GnomeNotificationEntry.png")
@@ -446,9 +525,10 @@ Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, ima
 end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file,
-                                :accepted_hosts => get_all_tor_nodes)
-  leaks.assert_no_leaks
+  allowed_hosts = allowed_hosts_under_tor_enforcement
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    allowed_hosts.include?({ address: c.daddr, port: c.dport })
+  end
 end
 
 Given /^I enter the sudo password in the pkexec prompt$/ do
@@ -496,16 +576,13 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually shuts down$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  timeout = nr_gibs_of_ram*5*60
-  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
+  try_for(memory_wipe_timeout, :msg => "VM is still running") do
     ! $vm.is_running?
   end
 end
 
 Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
+  step 'the computer reboots Tails'
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
@@ -535,7 +612,7 @@ Given /^package "([^"]+)" is installed$/ do |package|
 end
 
 When /^I start the Tor Browser$/ do
-  step 'I start "TorBrowser" via the GNOME "Internet" applications menu'
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -592,7 +669,7 @@ end
 
 When /^I start and focus GNOME Terminal$/ do
   step 'I start "Terminal" via the GNOME "Utilities" applications menu'
-  @screen.wait('GnomeTerminalWindow.png', 20)
+  @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
@@ -647,56 +724,10 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   end
 end
 
-def gnome_app_menu_click_helper(click_me, verify_me = nil)
-  try_for(30) do
-    @screen.hide_cursor
-    # The sensitivity for submenus to open by just hovering past them
-    # is extremely high, and may result in the wrong one
-    # opening. Hence we better avoid hovering over undesired submenus
-    # entirely by "approaching" the menu strictly horizontally.
-    r = @screen.wait(click_me, 10)
-    @screen.hover_point(@screen.w, r.getY)
-    @screen.click(r)
-    @screen.wait(verify_me, 10) if verify_me
-    return
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app, submenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
-  end
-end
-
-Given /^I start "([^"]+)" via the GNOME "([^"]+)"\/"([^"]+)" applications menu$/ do |app, submenu, subsubmenu|
-  menu_button = "GnomeApplicationsMenu.png"
-  sub_menu_entry = "GnomeApplications" + submenu + ".png"
-  sub_sub_menu_entry = "GnomeApplications" + subsubmenu + ".png"
-  application_entry = "GnomeApplications" + app + ".png"
-  try_for(120) do
-    begin
-      gnome_app_menu_click_helper(menu_button, sub_menu_entry)
-      gnome_app_menu_click_helper(sub_menu_entry, sub_sub_menu_entry)
-      gnome_app_menu_click_helper(sub_sub_menu_entry, application_entry)
-      gnome_app_menu_click_helper(application_entry)
-    rescue Exception => e
-      # Close menu, if still open
-      @screen.type(Sikuli::Key.ESC)
-      raise e
-    end
-    true
+Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
+  app = Dogtail::Application.new('gnome-shell')
+  for element in ['Applications', submenu, app_name] do
+    app.child(element, roleName: 'label').click
   end
 end
 
@@ -821,9 +852,9 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
 end
 
 Given /^a web server is running on the LAN$/ do
-  web_server_ip_addr = $vmnet.bridge_ip_addr
-  web_server_port = 8000
-  @web_server_url = "http://#{web_server_ip_addr}:#{web_server_port}"
+  @web_server_ip_addr = $vmnet.bridge_ip_addr
+  @web_server_port = 8000
+  @web_server_url = "http://#{@web_server_ip_addr}:#{@web_server_port}"
   web_server_hello_msg = "Welcome to the LAN web server!"
 
   # I've tested ruby Thread:s, fork(), etc. but nothing works due to
@@ -838,14 +869,15 @@ Given /^a web server is running on the LAN$/ do
   require "webrick"
   STDOUT.reopen("/dev/null", "w")
   STDERR.reopen("/dev/null", "w")
-  server = WEBrick::HTTPServer.new(:BindAddress => "#{web_server_ip_addr}",
-                                   :Port => #{web_server_port},
+  server = WEBrick::HTTPServer.new(:BindAddress => "#{@web_server_ip_addr}",
+                                   :Port => #{@web_server_port},
                                    :DocumentRoot => "/dev/null")
   server.mount_proc("/") do |req, res|
     res.body = "#{web_server_hello_msg}"
   end
   server.start
 EOF
+  add_lan_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
   try_for(10, :msg => "It seems the LAN web server failed to start") do
     Process.kill(0, proc.pid) == 1
@@ -921,8 +953,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at m
 end
 
 Then /^I force Tor to use a new circuit$/ do
-  debug_log("Forcing new Tor circuit...")
-  $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+  force_new_tor_circuit
 end
 
 When /^I eject the boot medium$/ do
@@ -930,11 +961,27 @@ When /^I eject the boot medium$/ do
   dev_type = device_info(dev)['ID_TYPE']
   case dev_type
   when 'cd'
-    $vm.remove_cdrom
+    $vm.eject_cdrom
   when 'disk'
     boot_disk_name = $vm.disk_name(dev)
     $vm.unplug_drive(boot_disk_name)
   else
     raise "Unsupported medium type '#{dev_type}' for boot device '#{dev}'"
   end
+end
+
+Given /^Tails is fooled to think it is running version (.+)$/ do |version|
+  $vm.execute_successfully(
+    "sed -i " +
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
+    "/etc/os-release"
+  )
+end
+
+Then /^Tails is running version (.+)$/ do |version|
+  v1 = $vm.execute_successfully('tails-version').stdout.split.first
+  assert_equal(version, v1, "The version doesn't match tails-version's output")
+  v2 = $vm.file_content('/etc/os-release')
+       .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
+  assert_equal(version, v2, "The version doesn't match /etc/os-release")
 end

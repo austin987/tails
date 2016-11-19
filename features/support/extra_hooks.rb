@@ -1,18 +1,21 @@
 # Make the code below work with cucumber >= 2.0. Once we stop
 # supporting <2.0 we should probably do this differently, but this way
 # we can easily support both at the same time.
+
 begin
   if not(Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?))
-    require 'gherkin/tag_expression'
+    if Gem::Version.new(Cucumber::VERSION) >= Gem::Version.new('2.4.0')
+      require 'cucumber/core/gherkin/tag_expression'
+    else
+      require 'gherkin/tag_expression'
+      Cucumber::Core::Gherkin = Gherkin
+    end
     class Cucumber::Core::Ast::Feature
       # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
       # cucumber-ruby-core 1.1.3, lib/cucumber/core/test/case.rb:~59.
       def accept_hook?(hook)
-        tag_expr = Gherkin::TagExpression.new(hook.tag_expressions.flatten)
-        tags = @tags.map do |t|
-          Gherkin::Formatter::Model::Tag.new(t.name, t.line)
-        end
-        tag_expr.evaluate(tags)
+        tag_expr = Cucumber::Core::Gherkin::TagExpression.new(hook.tag_expressions.flatten)
+        tag_expr.evaluate(@tags)
       end
     end
   end
@@ -53,10 +56,10 @@ if not($at_exit_print_artifacts_dir_patching_done)
       alias old_print_stats print_stats
     end
     def print_stats(*args)
-      if Dir.exists?(ARTIFACTS_DIR) and Dir.entries(ARTIFACTS_DIR).size > 2
-        @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
-        @io.puts
-      end
+      @io.puts "Artifacts directory: #{ARTIFACTS_DIR}"
+      @io.puts
+      @io.puts "Debug log:           #{ARTIFACTS_DIR}/debug.log"
+      @io.puts
       if self.class.method_defined?(:old_print_stats)
         old_print_stats(*args)
       end
@@ -104,8 +107,11 @@ module ExtraFormatters
   # anything. We only use it do hook into the correct events so we can
   # add our extra hooks.
   class ExtraHooks
-    def initialize(*args)
+    def initialize(runtime, io, options)
       # We do not care about any of the arguments.
+      # XXX: We should be able to just have `*args` for the arguments
+      # in the prototype, but since moving to cucumber 2.4 that breaks
+      # this formatter for some unknown reason.
     end
 
     def before_feature(feature)
@@ -127,8 +133,8 @@ module ExtraFormatters
 
   # The pretty formatter with debug logging mixed into its output.
   class PrettyDebug < Cucumber::Formatter::Pretty
-    def initialize(*args)
-      super(*args)
+    def initialize(runtime, io, options)
+      super(runtime, io, options)
       $debug_log_fns ||= []
       $debug_log_fns << self.method(:debug_log)
     end
@@ -160,6 +166,13 @@ AfterConfiguration do |config|
   # AfterConfiguration hook multiple times. We only want our
   # ExtraHooks formatter to be loaded once, otherwise the hooks would
   # be run miltiple times.
-  extra_hooks = ['ExtraFormatters::ExtraHooks', '/dev/null']
-  config.formats << extra_hooks if not(config.formats.include?(extra_hooks))
+  extra_hooks = [
+    ['ExtraFormatters::ExtraHooks', '/dev/null'],
+    ['Cucumber::Formatter::Pretty', "#{ARTIFACTS_DIR}/pretty.log"],
+    ['Cucumber::Formatter::Json', "#{ARTIFACTS_DIR}/cucumber.json"],
+    ['ExtraFormatters::PrettyDebug', "#{ARTIFACTS_DIR}/debug.log"],
+  ]
+  extra_hooks.each do |hook|
+    config.formats << hook if not(config.formats.include?(hook))
+  end
 end

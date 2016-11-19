@@ -535,9 +535,28 @@ feature, hence:
 
 # Remaining open questions
 
-How much info does it leak to share a single set of Tor consensus and
-descriptors files between isolated Tor state files? How much of
-a problem is that?
+* How much info does it leak to share a single set of Tor consensus and
+  descriptors files between isolated Tor state files? How much of
+  a problem is that?
 
-We must discuss the designs proposed on
-<https://trac.torproject.org/projects/tor/ticket/10969#comment:2>.
+* We must discuss the designs proposed on
+  <https://trac.torproject.org/projects/tor/ticket/10969#comment:2>.
+
+* Also see how Windows 10 computes a per-network MAC address: `addr =
+  SHA-256(SSID, macaddr , connId , secret)`; "Here *SSID* is the name
+  of the network, *macaddr* the original MAC address, and *connId*
+  a parameter that changes if the user removes (and re-adds) the
+  network to its preferred network list. The *secret* parameter is
+  a 256-bits cryptographic random number generated during system
+  initialization, unique per interface, and kept the same across
+  reboots [28]. Bits in the most significant byte of *addr* are set so
+  it becomes a locally administered, unicast address. This hash
+  construction is similar to the generation of IPv6 interface
+  identifiers as proposed in RFC 7217. It assures that systems relying
+  on fixed MAC addresses continue to work as expected, e.g., when
+  authentication is performed based on the MAC address. Users can also
+  manually instruct the OS to daily update the per-network address
+  randomly." (source: *Why MAC Address Randomization is not Enough:
+  An Analysis of Wi-Fi Network Discovery Mechanisms*)
+
+* How is this impacted by the changes brought by [[!tor_bug 12600]]?

@@ -1,0 +1,183 @@
+[[!meta title="Tails June 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in June 2016.
+
+Everything in this report is public.
+
+# A. Replace Claws Mail with Icedove
+
+## A.1.1. Secure the Icedove autoconfig wizard
+
+Despite having thouroughly tested our work on reenabling the
+autoconfiguration wizard in Icedove, we received reports, that in some
+cases where the ISP uses OAuth, as for example Gmail, people were
+unable to set up an email account. One of these issues, the spurious
+inability to set up accounts, has been resolved and will be available
+in the next Tails release ( [[!tails_ticket 11550]]). The OAuth issue
+has been identified and is currently being worked on
+([[!tails_ticket 11536]]). A third issue concerning intermittently
+failing TLS connections needs more testing ([[!tails_ticket 10933]]).
+
+## A.1.2. Make our improvements maintainable for future versions of Icedove
+
+The second iteration of our patches for Icedove has been reviewed and
+integration with upstream's testing suite has been asked for in reply.
+We've been working on writing tests for our patches, but another
+iteration of those is necessary. See the
+[[!mozbug 971347 desc="upstream bug"]] for details.
+
+The Tor project has released
+[Torbirdy 0.2.0](https://blog.torproject.org/blog/torbirdy-020-sixth-beta-release)
+on June 27th 2016. This release contains patches we wrote,
+as well as patches by Arthur Edelstein, that fix the privacy leaks
+identified initially by taqnaq. An updated Debian package is currently
+being uploaded.
+
+# B. Improve our quality assurance process
+
+## B.3. Extend the coverage of our test suite
+
+### B.3.10. Write automated tests for features added in 2016Q1
+
+We added a new test for the Tails Greeter "Disable all networking"
+option ([[!tails_ticket 10340]]).
+
+Since we dropped Vidalia as it was not maintained anymore, and replaced
+it with Tor Status and Onion Circuits, we adapted our test suite accordingly
+([[!tails_ticket 6841]]).
+
+We had to update some test suite scenarios after having enabled Tor
+Browser's font fingerprinting protection in Tails, as most of its
+related screenshots didn't work anymore ([[!tails_ticket 11097]]).
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+We've identified the reason why sometimes our test suite is not
+able to add the necessary kernel command line options to the Tails
+system it tests. The fix is not that easy to implement, and solutions
+are being worked on. A patch is under test and we intend to fix this
+issue in July ([[!tails_ticket 10777]]).
+
+We've investigated why our test suite sometimes fails because of time
+synchronization errors. Auditing our [[htpdate
+script|contribute/design/Time_syncing]] showed that it may not have the
+best defaults for it to work correctly on sloppy network connections. A
+patch has been proposed and is being tested ([[!tails_ticket 10494]]).
+
+A patch implementing a way to retry Synaptic related tests on
+network transient errors or if Synaptic segfaults is under test and will
+be proposed to be merged soon ([[!tails_ticket 10441]] and
+[[!tails_ticket 10412]]).
+
+We also implemented a similar solution on the Git scenarios, which have proven
+to be fragile because of network errors. A patch has been widely tested,
+and will likely be merged soon ([[!tails_ticket 10444]]).
+
+Thanks to Dogtail ([[!tails_ticket 10721]]), whose integration was
+worked on in the past few months, we could make a robust fix for:
+
+- The "the Tor Browser loads the (startup page|Tails roadmap) step is
+  fragile ([[!tails_ticket 10376]])
+
+and also make the implementation simpler and more future proof for:
+
+- Adjust test suite after upgrading Tor Browser to the 6.0.x series,
+  based on Firefox 45.2 ([[!tails_ticket 11403]])
+
+### B.3.13. Reorganize the "various checks" feature ([[!tails_ticket 5707]])
+
+A branch that splits this feature's scenarios into more relevant
+thematic features has been proposed for review. It should be merged
+soon.
+
+### B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
+
+A branch testing the Tails incremental upgrades have been pushed and
+proposed to review. Issues with it were raised and a fix promptly
+pushed. It's receiving the last round of review and will likely be
+merged soon.
+
+### B.3.15. Write automated tests for features added in 2016Q2
+
+A test was proposed to review, that covers a regression we have
+identified and fixed a few months ago, in one of Tails' persistence
+features ([[!tails_ticket 10840]]).
+
+We added a test for reconfiguring an existing persistence partition — we only tested
+its initial creation so far ([[!tails_ticket 10834]]).
+
+After forbidding the Tor Browser to start any external application
+(for improved security, see [[!tails_ticket 9285]]) a test that
+previously did just that was converted to a test for downloading
+files.
+
+While upgrading the Tor Browser to the 6.0.x series, based on a new
+major Firefox release (45.2, see [[!tails_ticket 11403]]) tests were
+adjusted to new application behavior and appearance of the browser's
+graphical user interface.
+
+## B.4. Freezable APT repository
+
+The system has been working fine in production for a while now, and as
+reported last month all parts of this deliverable have now been completed.
+
+In June, we have polished a bit the design documentation for the
+entire setup ([[!tails_ticket 11447]]).
+
+And, in July we want to do various polishing tasks:
+
+* If needed, write helper tools for freeze exceptions
+  ([[!tails_ticket 11448]]).
+
+* Investigate a weird issue we have identified, when a package is
+  not removed from our time-based APT snapshots, while it should be
+  ([[!tails_ticket 11496]]).
+
+* Deal with the consequences that our new APT snapshots system has
+  on our server's `apt-cacher-ng` cache size ([[!tails_ticket 11532]]).
+
+# C. Scale our infrastructure
+
+## C.1. Change in depth the infrastructure of our pool of mirrors
+
+We now have 39 active mirrors.
+
+The work that remains to be done in July is:
+
+- C.1.2. Write & audit the code that makes the redirection decision from our website ([[!tails_ticket 8639]], [[!tails_ticket 8640]], [[!tails_ticket 11109]])
+
+  * `mirror-dispatcher.js`: we are still waiting for the auditor to do
+    a final security review.
+
+  * Download And Verification Extension (DAVE) for Firefox: the code
+    needs to be reviewed by the original author of the extension and the
+    code for resuming downloads still needs to be improved and tested.
+
+- C.1.8. Clean up the remainders of the old mirror pool setup ([[!tails_ticket 8643]], [[!tails_ticket 11284]])
+
+  This is now only blocked by the work that is in progress on DAVE
+  (C.1.2).
+
+## C.4. Maintain our already existing services
+
+- C.4.6. Administer our services up to milestone VI
+
+  We kept on answering the requests from the community and taking care
+  of security updates.
+
+  We [[!tails_ticket 11213 desc="refactored"]] the Puppet bits that
+  configure our servers' firewall.
+
+  We debugged and fixed a nasty problem that prevented the `testing`
+  Git branch from being automatically tested on our infrastructure
+  ([[!tails_ticket 11499]]).
+
+  One of us participated in a Puppet sprint at
+  [DebCamp](https://debconf16.debconf.org/), where a team did improved
+  the `puppet` and `apt` modules we are using on our infrastructure.
+
+# E. Release management
+
+[[Tails 2.4|news/version_2.4]] was released on June 7.

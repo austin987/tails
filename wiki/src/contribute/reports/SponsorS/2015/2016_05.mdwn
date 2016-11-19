@@ -1,0 +1,224 @@
+[[!meta title="Tails May 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in May 2016.
+
+Everything in this report is public.
+
+# A. Replace Claws Mail with Icedove
+
+## A.1.1. Secure the Icedove autoconfig wizard
+
+Tails 2.4 has been released with our proper patches which provide the
+possibility to use the automatic account configuration of Icedove to
+discover email server configurations only, and by default, over a secure
+connection and furthermore accepting only secure options to configure
+the account. ([[!tails_ticket 6158]], [[!tails_ticket 6369]])
+
+This milestone is now completed.
+
+## A.1.2. Make our improvements maintainable for future versions of Icedove
+
+On the upstream side, our patches to Thunderbird have finally been
+reviewed ([[https://bugzilla.mozilla.org/show_bug.cgi?id=971347]]). A
+second iteration of patches has been sent to upstream, after a first
+review. As of today, the upstream requests mostly code style
+modifications so that we're now confident that upstream wants and will
+include our patches very soon.
+
+Our patches to TorBirdy have all been merged and we're now simply
+waiting for a new release of the software. This will allow us to drop
+our custom built packages and use the default Debian one, once it's
+published.
+
+This milestone is nearly completed and we hope that we can mark it as
+done before the next report.
+
+We've changed Enigmail's settings in order to use keyservers only over
+HTTPS ([[!tails_ticket 10906]]) and modified our user documentation
+accordingly. ([[!tails_ticket 11125]])
+
+# B. Improve our quality assurance process
+
+## B.3. Extend the coverage of our test suite
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+- Robustness improvements
+
+  The work that we did over the last two months on Chutney ([[!tails_ticket
+  9521]]), for Tor simulation, and Dogtail ([[!tails_ticket 10721]]), for
+  automated interaction with graphical interfaces, has started to pay off.
+
+  Since mid-April, over 60 scenarios have been made reliable and enabled in our
+  main development branch. The vast majority of these scenarios comes from
+  Chutney, for Tor simulation, as we could reuse the existing tests without
+  modification, except in a few edge cases. Now, most of the problems that with
+  had related to transient network issues are solved.
+
+  For the end of this project, we will focus on Dogtail to solve glitches when
+  interacting with graphical user interfaces. This requires rewriting the
+  problematic parts of tests under a completely different paradigm.
+
+### B.3.14. Write tests for incremental upgrades ([[!tails_ticket #6309]])
+
+  This test has been carefully designed in such a way that it can be
+  applied on *any* Tails version -- normally these upgrades can only
+  be applied to a specific Tails version. This was the main difficulty
+  in this work, and with that solved, the implementation is simple,
+  and will be finished in early June.
+
+## B.4. Freezable APT repository
+
+The work we have done has been reviewed, merged into the our main
+development branch, and successfully used while preparing Tails
+2.4~rc1. Unsurprisingly, we had to fix a couple of small bugs that
+earlier testing had not discovered, but all in all we are very
+satisfied with the results: it has been very solid and
+performed pretty well so far. We are proud to point to the first ever
+tagged snapshot, that contains only the set of packages needed for
+building Tails 2.4~rc1, and the corresponding source code:
+<http://tagged.snapshots.deb.tails.boum.org/2.4-rc1/>.
+
+Now, let's dive into the details:
+
+- B.4.3. Centralize and merge the list of needed packages
+
+  As [[explained previously|contribute/reports/SponsorS/2015/2016_03#index4h2]],
+  the original definition of this deliverable doesn't make sense
+  anymore, so here we are reporting about what now replaces it:
+
+  * Allow storing APT snapshots longer than the default when needed:
+    the code was reviewed, merged, and successfully used in production
+    while preparing Tails 2.4~rc1, so this is completed.
+
+  * Freeze and unfreeze the APT snapshots used by a branch when
+    needed: the code and corresponding documentation were reviewed,
+    merged, and used in production, so this is completed.
+
+  So we are happy to report that deliverable B.4.3 was completed in May.
+
+- B.4.5. Implement processes and tools for importing and freezing those packages ([[!tails_ticket 6299]], [[!tails_ticket 6296]])
+
+  As [[said last month|contribute/reports/SponsorS/2015/2016_04]], the
+  last remaining bits here are about handling some consequences on
+  this system:
+
+  * Garbage collection of APT repository snapshots: this was deployed
+    in production and works fine.
+
+  * Manage a very custom configuration for `apt-cacher-ng`: this was
+    reviewed, merged, and used in production since then.
+
+  * Manage the growth of the database of `reprepro`: we checked the actual data
+    in our production environment and realized that there is actually
+    no problem to be solved here; since we have enabled garbage
+    collection, the database has not grown at all.
+
+- Miscellaneous follow-ups
+
+  We have submitted upstream three branches that improve the Puppet
+  module that we use to manage `reprepro` in ways that made it compatible
+  with the needs of our freezable APT repository.
+
+  By the end of July, we will also do some polishing in various areas:
+
+  * Polish a bit the design documentation for the entire setup
+    ([[!tails_ticket 11447]]).
+
+  * If needed, write helper tools for freeze exceptions
+    ([[!tails_ticket 11448]]).
+
+  * Investigate a weird issue we have identified, when a package is
+    not removed from our time-based APT snapshots, while it should be
+    ([[!tails_ticket 11496]]).
+
+# C. Scale our infrastructure
+
+## C.1. Change in depth the infrastructure of our pool of mirrors
+
+The new mirror pool is now used by *Tails Upgrader* and the downloads from our
+website that are not supported by our *Download And Verification Extension*
+(DAVE) for Firefox, (for example release candidates) when JavaScript is enabled
+in the browser. We still have to make DAVE use the new pool of mirrors.
+
+- C.1.2. Write & audit the code that makes the redirection decision from our website ([[!tails_ticket 8639]], [[!tails_ticket 8640]], [[!tails_ticket 11109]])
+
+  * `mirror-dispatcher.js`: we are still waiting for the auditor to do
+    a final security review.
+
+  * Download And Verification Extension (DAVE) for Firefox: we have made great
+    progress. However,
+    we still need to ensure that, once a mirror is deleted, DAVE will be able to
+    resume a download that was started from another mirror.
+    We coordinated with the person who will do the code review to ensure
+    he will be available when needed.
+
+- C.1.4. Communicate with each mirror operator to adapt their configuration ([[!tails_ticket 8635]], [[!tails_ticket 11079]])
+
+  This deliverable is completed:
+
+  * All mirrors have implemented the requested changes.
+
+  * We sent a call for help to a number of fast mirror
+    operators and already have 7 more mirrors. We will pursue this
+    effort in June, even though we already reached the goals we
+    had set: we expected to have at least 30 mirrors in the pool once
+    the new infrastructure was ready, and 35 mirrors 3 months later,
+    and we already have 36 active mirrors as of May 31.
+
+- C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL ([[!tails_ticket 8642]], [[!tails_ticket 11329]], [[!tails_ticket 10295]])
+
+  This was deployed to production: all links pointing to our mirror
+  pool now use the new redirection system.
+
+  So, this deliverable is now completed.
+
+- C.1.7. Adjust update-description files for incremental upgrades ([[!tails_ticket 11123]])
+
+  We have adjusted the code of Tails Upgrader to use the new mirror
+  pool. This code has been merged and is now used by Tails Upgrader
+  in production (starting with Tails 2.4~rc1), so this deliverable is
+  completed as well.
+
+- C.1.8. Clean up the remainders of the old mirror pool setup ([[!tails_ticket 8643]], [[!tails_ticket 11284]])
+
+  This is now only blocked by the work that is in progress on DAVE
+  (C.1.2).
+
+## C.4. Maintain our already existing services
+
+- C.4.6. Administer our services up to milestone VI
+
+  We kept on answering the requests from the community and taking care
+  of security updates.
+
+  We noticed that old Puppet reports were not cleaned up as they
+  should on our infrastructure, so we fixed this and submitted a merge
+  request to the Puppet module we use to manage… Puppet itself
+  ([[!tails_ticket 11468]]).
+
+  We noticed that the four newest virtual machines which
+  continuously run our automated test suite on all ISO images built by
+  our Jenkins instance (B.2) did not reboot as intended between test
+  suite runs. We investigated the root cause of the problem and fixed
+  it ([[!tails_ticket 11467]]).
+
+  We ported different elements of our Puppet infrastructure
+  to use [Hiera](https://github.com/puppetlabs/hiera).
+  Not only this simplified a lot how we manage systems, but more
+  importantly, this allowed us to release quite a bit more of our
+  Puppet code. This is part of our strategy to treat infrastructure as
+  code and to enable more people to contribute to it without needing
+  any special credentials.
+
+  We streamlined email reporting from failed cronjobs across our
+  infrastructure, to ensure we get all notifications.
+
+  We did lots of refactoring and miscellaneous clean ups in our Puppet
+  code. Sprint cleaning!
+
+# E. Release management
+
+[[Tails 2.4~rc1|news/test_2.4-rc1]] was released for testing on May 26.

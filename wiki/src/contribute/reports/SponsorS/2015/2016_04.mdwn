@@ -1,0 +1,364 @@
+[[!meta title="Tails April 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in April 2016. We had
+a quarterly milestone (V) ending in April, so we are also summing up
+the status of our projects and deliverables at the end of
+this milestone.
+
+Everything in this report is public.
+
+# A. Replace Claws Mail with Icedove
+
+## A.1.1. Secure the Icedove autoconfig wizard ([[!tails_ticket 6154]])
+
+Our modifications to secure the Icedove autoconfig wizard have been
+merged into TorBirdy. A new version of TorBirdy is yet to be released
+though. We are currently undecided if we want to update the TorBirdy
+Debian package until this happens, or wait until we can package the
+new upstream release.
+
+TorBirdy disables Thunderbird's autoconfig wizard by default, and in
+order not to lose TorBirdy's secure options, we made some changes for
+Tails to be able to use the wizard, while still proposing only
+secure options.
+
+What these patches do:
+
+ * Use Tor's SOCKSPort for Enigmail's keyserver configuration.
+   It's not necessarily the case that users have a HTTP proxy running
+   on port 8118, and if they do it may be a non-torified one.
+   Using the Tor's SOCKSPort will always work, and be torified.
+ * Always disable remote account creation. If that is something
+   TorBirdy developers
+   want to make enabled as an option, it should be handled separately
+   from the autoconfig wizard. This fixes Tails bug [[!tails_ticket 10464]].
+ * Do not check for new messages at startup.
+
+Our current plan is to include modified versions of TorBirdy and
+Icedove in Tails 2.4, so that we can enable the secured autoconfig
+wizard, improve user experience and complete this deliverable.
+
+## A.1.2. Make our improvements maintainable for future versions of Icedove
+
+In order to make our improvements maintainable for future versions of
+Icedove, we've submitted our patches upstream, as reported earlier.
+They are currently still being reviewed but we are happy to announce
+that there has been a
+[little progress](https://bugzilla.mozilla.org/show_bug.cgi?id=971347#c34)
+on this
+process. We will follow up on this very closely in order to obtain
+a common strategy and provide these secure options to all
+Thunderbird and Icedove users.
+
+However, Thunderbird's upstream is still in the process of being
+reorganized since Mozilla has announced to give the project a new home.
+That might explain why review processes take quite some time. Thus, we
+assume that our modifications will likely not be merged before we
+release Tails 2.4. That's why we've now decided, against our previous
+decision, to ship our own, modified Icedove and TorBirdy until
+everything has been merged upstream.
+
+## Other Icedove-related work (out of the scope of this grant)
+
+What's not been done yet is to provide an AppArmor profile for the
+Icedove Debian package. However, progress has been made on this front
+too: the profile made by Simon Déziel has been reviewed and merged
+into AppArmor upstream already. That means it will now be very easy
+for us to provide a patch and ship this profile in Tails.
+
+# B. Improve our quality assurance process
+
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+In April, **779 ISO images** were automatically built by our Jenkins
+instance.
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+In April, **778 ISO images** were automatically tested by our Jenkins
+instance.
+
+- B.2.4. Implement and deploy the best solution from this research: [[!tails_ticket 5288]]
+
+  We closed a bug where our isotesters sometimes were not connecting
+  back to our Jenkins master after being rebooted, as it didn't
+  happen ever again. [[!tails_ticket 10601]]
+
+  So, this deliverable is now completed.
+
+## B.3. Extend the coverage of our test suite
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+- Robustness improvements
+
+  As discussed
+  [[last month|contribute/reports/SponsorS/2015/2016_03#index3h2]] and
+  the
+  [[one before|contribute/reports/SponsorS/2015/2016_02#index3h2]], we
+  have continued trying out new "fundamental approaches" to deal with
+  our robustness issues. This month we have looked closer at the
+  "transient network issues", of which all seem to be related to using
+  the real Tor network. Our solution ended up being to run our own
+  miniature Tor network on the automated test suite host using the Tor
+  project's own tool for running Tor network diagnostic tests,
+  [Chutney](https://gitweb.torproject.org/chutney.git). ([[!tails_ticket 9521]])
+
+  The Tor client shipped in Tails is hardcoded to use the real Tor
+  network, but after we carefully "patch" it to use our Tor network
+  during tests, everything is essentially identical to the real thing
+  from Tails' perspective, so we can trust the testing
+  results. Initial test results are very positive -- so far no
+  Tor-related test failures have been observed with this approach, so
+  it seems sufficient for our immediate needs. On the bonus-side, we
+  now have some of the features and systems in place required for our
+  long-term goal of running all network services locally for even more
+  control, performance and (most importantly) increased
+  reliability. ([[!tails_ticket 9519]], [[!tails_ticket 9520]])
+
+  This concludes our two experiments with new fundamental approaches,
+  of which both seem to be successes. The next two months will be used
+  to fully integrate them into our test suite, and use these new tools
+  to fix specific tests that we see still exhibiting these types of
+  robustness problems.
+
+## B.4. Freezable APT repository
+
+First, note that in February, we shared
+[[updated development schedule|contribute/reports/SponsorS/2015/2016_02#index4h2]]
+for this project.
+
+- B.4.1. Specify when we want to import foreign packages into which APT suites ([[!tails_ticket 9488]])
+  and B.4.4. Design freezable APT repository ([[!tails_ticket 9487]])
+
+  These were delivered in March.
+
+- B.4.2. Implement a mechanism to save the list of packages used at ISO build time ([[!tails_ticket 10748]], [[!tails_ticket 10749]])
+
+  We still have to do some polishing but are happy with how this component
+  works now.
+
+  In April, we focused on C.1 (Change in depth the infrastructure of
+  our pool of mirrors) so much that we did not manage to polish this
+  in time for Tails 2.3. So, we now aim to get this merged in time for
+  Tails 2.4.
+
+  This will allow us to store, virtually forever, all the packages needed to build
+  a given Tails release.
+
+- B.4.3. Centralize and merge the list of needed packages
+
+  As [[explained last month|contribute/reports/SponsorS/2015/2016_03#index4h2]],
+  the original definition of this deliverable doesn't make sense
+  anymore, so here we are reporting about what now replaces it:
+
+  * Allow storing APT snapshots longer than the default when needed. For
+    example to store the snapshots used during a code freeze that lasts
+    longer than usual and prevent them from being deleted by our garbage
+    collector: the
+    [corresponding script](https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-bump-apt-snapshot-valid-until)
+    was tested and works fine.
+
+  * Freeze and unfreeze the APT snapshots used by a branch when
+    needed: the
+    [corresponding script](https://git-tails.immerda.ch/tails/tree/auto/scripts/apt-snapshots-serials?h=feature/build-from-snapshots)
+    passed early testing in March, but we did not work on it April.
+    This will be one of our main focuses in May.
+
+- B.4.5. Implement processes and tools for importing and freezing those packages ([[!tails_ticket 6299]], [[!tails_ticket 6296]])
+
+  This infrastructure is described with and managed by a [Puppet
+  manifest](https://git-tails.immerda.ch/puppet-tails/tree/manifests/reprepro).
+
+  Time-based snapshots have been generated four times a day and
+  [published over HTTP](http://time-based.snapshots.deb.tails.boum.org/)
+  since months now. This has proven to be solid.
+
+  The last remaining bits here are about handling some consequences on
+  this system:
+
+  * The process for garbage collecting these snapshots was designed in March,
+    and the
+    [implementation](<https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-delete-expired-apt-snapshots>)
+    was completed in April. Spoiler alert: this was deployed in
+    production in May, and works fine.
+
+  * Manage a very custom configuration for `apt-cacher-ng`, the
+    caching proxy used to speed up building Tails ISO images, to make
+    it compatible with our time-based snapshots (see last month's
+    report for details): our proof-of-concept works, we now need to
+    integrate it into the various configuration used to build a Tails
+    ISO image.
+
+  * `reprepro`'s database grows relatively quickly, which at some
+    point creates performance issues on our server, once this system
+    has been running for months; we have set up an Icinga2 check to
+    keep an eye of the size of this database, and have researched how
+    to compact that database, together with `reprepro`'s upstream
+    author. Our current best solution works well, and we now need to
+    document the process so that our system administrators know how to
+    apply it when needed.
+
+- B.4.6. Adjust the rest of our ecosystem to the freezable APT repository ([[!tails_ticket 6303]])
+
+  The last remaining tiny blocker was completed in April, so this
+  deliverable is now done.
+
+# C. Scale our infrastructure
+
+## C.1. Change in depth the infrastructure of our pool of mirrors
+
+* C.1.1. Specify a way of describing the pool of mirrors ([[!tails_ticket 8637]], [[!tails_ticket 10284]])
+
+  As reported last month, this deliverable is done.
+
+* C.1.2. Write & audit the code that makes the redirection decision from our website ([[!tails_ticket 8639]], [[!tails_ticket 8640]], [[!tails_ticket 11109]])
+
+  The `mirror-dispatcher.js` library code was written, tested and
+  reviewed in April. An initial security audit was conducted, and
+  following up on it we have been busy implementing the auditor's
+  recommendations. We are now waiting for the auditor to do
+  a final review.
+
+  We started modifying our Download And Verification Extension for
+  Firefox to make it use the same redirection code. The general use
+  case is now supported, using our `mirror-dispatcher.js` library.
+  We now need to add support for resuming an existing download (that
+  may have been started using another mirror than the one we would
+  like to use this time). And then, we'll want other people to review
+  and audit our proposed changes.
+
+* C.1.3. Design and implement the mirrors pool administration process and tools ([[!tails_ticket 8638]], [[!tails_ticket 11122]], [[!tails_ticket 11054]], [[!tails_ticket 11335]])
+
+  We documented how our mirrors should be configured to be part of the
+  new pool of mirrors, and created the corresponding administration
+  process and tools. So this deliverable is now done.
+
+* C.1.4. Communicate with each mirror operator to adapt their configuration ([[!tails_ticket 8635]], [[!tails_ticket 11079]])
+
+  We asked mirror operators to adapt their configuration, and we are
+  pleased to say that their response time was excellent: 92% of them
+  have already applied the required changes. As a bonus, 59% of our
+  mirrors followed our suggestions and additionally set up HTTPS,
+  which paves the way towards a HTTPS-only pool of mirrors (this is
+  not part of this deliverable formally speaking, but still we did not
+  want to miss this opportunity of looking further ahead).
+
+  We still need to issue a call for more mirrors.
+
+* C.1.5. Deploy the script and the mirror pool description ([[!tails_ticket 8641]])
+
+  The script and mirror pool description are now live on our website,
+  so this deliverable is completed. They will be used in production
+  once C.1.6 is done as well.
+
+* C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL ([[!tails_ticket 8642]], [[!tails_ticket 11329]], [[!tails_ticket 10295]], [[!tails_ticket 11284]])
+
+  We prepared branches of our website that make all links pointing to
+  our mirror pool use the new redirection system, and let our
+  documentation writers know how they should implement such links in
+  the future.
+
+  Actual deployment is now only blocked by:
+
+  * One last round of audit of our redirection code (see C.1.2).
+  * Prepare our new fallback pool based on DNS, that will be used by
+    users who have JavaScript disabled in their web browser.
+
+* C.1.7. Adjust update-description files for incremental upgrades ([[!tails_ticket 11123]])
+
+  With our current design, the original definition of this deliverable
+  doesn't make sense anymore. Instead, we have adjusted the code of
+  Tails Upgrader to use the new mirror pool. This code was tested, and
+  is now waiting to be reviewed and merged.
+
+* C.1.8. Clean up the remainers of the old mirror pool setup ([[!tails_ticket 8643]])
+
+  This is currently blocked by C.1.6.
+
+Scheduling-wise, our goals are unchanged since last month: we still
+aim to deploy the new mirror pool in May but, if we are delayed, the
+deployment might have to wait until July.
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+The complete monitoring system was deployed to production, and works
+very well so far. So, we consider this deliverable as completed.
+
+- C.2.2. Set up the monitoring software and the underlying infrastructure
+
+  In April, we had only a little bit of polishing left to do on
+  this front.
+
+  We polished the Puppet code used to deploy the VPN between the
+  monitoring host and the monitored ones. [[!tails_ticket 11094]]
+
+  We configured the Icinga2 agents on the remaining half of our
+  systems. This allowed us to validate our corresponding Puppet code.
+
+  We set up different accounts for each system administrators, so that
+  they can use more efficiently Icingaweb2's integrated discussion
+  feature to comment on problems. [[!tails_ticket 11282]]
+
+  We also defined some relevant host groups and service groups, that will ease
+  scheduling downtimes, e.g. for an entire virtualization host.
+  [[!tails_ticket 11277]]
+
+  We disabled the statistics history feature that we don't use, in
+  order to save disk space. [[!tails_ticket 11368]]
+
+- C.2.4. Configure and debug the monitoring of the most critical
+  services and C.2.6. Configure and debug the monitoring of other
+  high-priority services
+
+  We wrote the last two Icinga2 custom plugins that we needed: one
+  checking if our SSH and SFTP accounts used by our automatic tests are
+  working, and another one checking if our SMTP Onion Service used by our
+  WhisperBack bug reporting tool is available.
+  [[!tails_ticket 8650]] and [[!tails_ticket 8653]]
+
+  As during March, Icinga2 already warned us of some problems in our
+  infrastructure. Some of our partitions were close to be filled and we
+  were able to fix them before it became a problem. Most notably, it
+  helped us notice that the Tor daemon running our SMTP Onion
+  Service was not upgraded to the right version when its host was,
+  leading to crashes (and restarts) of the Tor daemon every few
+  minutes, rendering the service not so
+  reliable. We fixed that by upgrading the Tor daemon.
+
+  We've then reviewed every checks to define the frequency they should
+  be run at, and the number of retries after which our system
+  administrators shall be notified. We came up with an agreement that
+  was promptly implemented, and refined after a few days of
+  evaluation. [[!tails_ticket 11358]]
+
+  In the end, all of the high-prirority and critical checks were
+  deployed early April, and we're now running 79 different checks on 19
+  different hosts.
+
+- C.2.5. Configure the receiving side of the monitoring notifications
+
+  In April, we enabled email notifications from Icinga2 to our main
+  monitoring developer's email address, so that we could evaluate
+  their volume and delay. This helped us refine checks' frequency, and
+  at the end of the month we concluded that the signal/noise ratio was
+  good enough for us to release the email notifications to our entire
+  team of system administrators. [[!tails_ticket 8651]]
+
+## C.4. Maintain our already existing services
+
+- C.4.5. Administer our services upto milestone V
+
+  We kept on answering the requests from the community and taking
+  care of security updates as covered by "C.4.5. Administer our services
+  up to milestone V".
+
+  We fixed the Postfix configuration of our monitoring host that was
+  spamming us for every emails it sent because IPv6 is disabled on this
+  host. [[!tails_ticket 11342]]
+
+# E. Release management
+
+[[Tails 2.3|news/version_2.3]] was released on April 26.

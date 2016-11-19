@@ -4,7 +4,7 @@ Given /^I create sample videos$/ do
   FileUtils.mkdir_p(@shared_video_dir_on_host)
   add_after_scenario_hook { FileUtils.rm_r(@shared_video_dir_on_host) }
   fatal_system("avconv -loop 1 -t 30 -f image2 " +
-               "-i 'features/images/TailsBootSplash.png' " +
+               "-i 'features/images/USBTailsLogo.png' " +
                "-an -vcodec libx264 -y " +
                '-filter:v "crop=in_w-mod(in_w\,2):in_h-mod(in_h\,2)" ' +
                "'#{@shared_video_dir_on_host}/video.mp4' >/dev/null 2>&1")
@@ -32,7 +32,7 @@ When /^I close Totem$/ do
 end
 
 Then /^I can watch a WebM video over HTTPs$/ do
-  test_url = 'https://webm.html5.org/test.webm'
+  test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
   recovery_on_failure = Proc.new do
     step 'I close Totem'
   end

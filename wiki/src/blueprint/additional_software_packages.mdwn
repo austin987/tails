@@ -10,10 +10,14 @@ The current limitations include:
 
   - Their Installation locks the opening of the desktop. ([[!tails_ticket 9059 desc="#9059"]])
 
-  - They are checked for updates every time Tor is restated. ([[!tails_ticket 9819 desc="#9819"]])
+  - They are checked for updates every time Tor is restarted. ([[!tails_ticket 9819 desc="#9819"]])
 
 Proposed user experience
 ========================
+
+0. Have a way to enable the feature (and its dependencies) in
+*tails-persistence-setup*. This besically means cheking both
+*APT Lists* and *APT Packages Cache* (much welcome)
 
 1. When installing a new package, either through the command line or
 through Synaptic, the user is asked whether she wants to make it
@@ -26,9 +30,9 @@ wants to remove it from the list of persistent packages.
 wizard. As the user need to be able to check the state of this feature
 outside of APT operations.
 
-4. Allow removing packages from the list in 3 (optional).
+4. Allow removing packages from the list in 3 (welcome).
 
-5. Allow adding packages to the list in 3 (optional).
+5. Allow adding packages to the list in 3 (we don't really want that, do we?).
 
 Implementation
 --------------
@@ -72,3 +76,10 @@ the opening of the desktop for several minutes, we should investigate:
 
   - A notification mechanism for APT to be started after the session is
     ready.
+
+Notes
+=====
+
+- Extract additional software lines from WhisperBack reports:
+
+      sed -i -n -e '/live-additional-software.conf =====$/,/^=====/{ /^=====/d; p; }'
