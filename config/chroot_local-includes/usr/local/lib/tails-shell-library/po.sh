@@ -16,7 +16,7 @@ intltool_update_po () {
    )
 }
 
-keep_old_po_files_if_header_only_changud() {
+keep_old_po_files_if_header_only_changed() {
     cd po
     for locale in "$@" ; do
          if [ ! -f ${locale}.po.new ]; then
