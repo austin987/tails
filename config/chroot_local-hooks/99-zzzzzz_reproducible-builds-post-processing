@@ -36,3 +36,10 @@ rm -r /var/lib/dkms/*/*/*/*/log
 find / -name '%gconf-tree.xml' -print0 | \
     xargs -0r \
         sed -i -e 's@\bmtime="[0-9][0-9]*"@mtime="'${SOURCE_DATE_EPOCH}'"@g'
+
+# Clamp mtimes. Note that we pass `-xdev` to exclude e.g. /proc and
+# /sys where we would fail.
+# Note: this should be the last thing we do in this file!
+find / -xdev -newermt "@${SOURCE_DATE_EPOCH}" -print0 | \
+    xargs -0r \
+        touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
