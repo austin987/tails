@@ -15,3 +15,22 @@ intltool_update_po () {
       done
    )
 }
+
+compare_po_headers() {
+    cd po
+    for locale in "$@" ; do
+         if [ -f ${locale}.po.new ]; then
+             echo "$locale file exists."
+         fi;
+         if [ $(diff "${locale}.po" "${locale}.po.new" | grep -c ^@ | wc -l) -eq "1" ]; then
+             if diff -aw "${locale}.po" "${locale}.po.new" | grep 'POT-Creation-Date'; then
+                 echo "Only header changes in potfile, Delete new PO file."
+                 rm -f ${locale}.po.new
+             fi;
+         else
+             echo "Real changes in potfile: substitute old PO file."
+             mv ${locale}.po.new ${locale}.po
+         fi;
+         rm -f ${locale}.po.new
+    done
+}
