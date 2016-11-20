@@ -13,10 +13,9 @@ intltool_update_po () {
         for locale in "$@" ; do
             intltool-update --dist --gettext-package=tails $locale -o ${locale}.po.new
 
-            if [ ! -f ${locale}.po.new -a ! -f ${locale}.po ]; then
-                echo "New PO file for ${locale} does not exist. Skipping."
-                continue
-            fi
+            [ -f ${locale}.po ]     || continue
+            [ -f ${locale}.po.new ] || continue
+
             if [ $(diff "${locale}.po" "${locale}.po.new" | grep -Ec '^>') -eq 1 -a \
                  $(diff "${locale}.po" "${locale}.po.new" | grep -Ec '^<') -eq 1 -a \
                  $(diff "${locale}.po" "${locale}.po.new" | grep -Ec '^[<>] "POT-Creation-Date:') -eq 2 ]; then
