@@ -122,9 +122,10 @@ def enough_free_memory_for_ram_build?
 end
 
 def is_release?
-  branch_name = `git name-rev --name-only HEAD`
-  tag_name = `git describe --exact-match HEAD 2> /dev/null`
-  STABLE_BRANCH_NAMES.include? branch_name.chomp or tag_name.chomp.length > 0
+  detached_head = `git symbolic-ref HEAD` == ""
+  `git describe --tags --exact-match HEAD 2>/dev/null`
+  is_tag = $?.success?
+  detached_head && is_tag
 end
 
 def system_cpus
