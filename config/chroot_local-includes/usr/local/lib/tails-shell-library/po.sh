@@ -17,8 +17,9 @@ intltool_update_po () {
                 echo "New PO file for ${locale} does not exist. Skipping."
                 continue
             fi
-            if [ $(diff "${locale}.po" "${locale}.po.new" | grep -c ^"> ") -eq 1 ]; then
-                if diff -aw "${locale}.po" "${locale}.po.new" | grep ^'> "POT-Creation-Date:'; then
+            if [ $(diff "${locale}.po" "${locale}.po.new") | grep -Ec ^"?>" -eq 1 && \
+                 $(diff "${locale}.po" "${locale}.po.new") | grep -Ec ^"?<" -eq 1 ]; then
+                 if diff "${locale}.po" "${locale}.po.new" | grep -E ^'(?:>|<) "POT-Creation-Date:'; then
                     echo "${locale}: Only header changes in potfile, delete new PO file."
                     rm ${locale}.po.new
                 fi
