@@ -20,7 +20,7 @@ intltool_update_po () {
             if [ $(diff "${locale}.po" "${locale}.po.new" | grep ^"> " | wc -l) -eq 1 ]; then
                 if diff -aw "${locale}.po" "${locale}.po.new" | grep ^'> "POT-Creation-Date:'; then
                     echo "${locale}: Only header changes in potfile, delete new PO file."
-                    rm -f ${locale}.po.new
+                    rm ${locale}.po.new
                 fi
             else
                 echo "${locale}: Real changes in potfile: substitute old PO file."
