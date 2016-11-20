@@ -18,11 +18,10 @@ intltool_update_po () {
                 continue
             fi
             if [ $(diff "${locale}.po" "${locale}.po.new" | grep -Ec ^'?>') -eq 1 -a \
-                 $(diff "${locale}.po" "${locale}.po.new" | grep -Ec ^'?<') -eq 1 ]; then
-                 if diff "${locale}.po" "${locale}.po.new" | grep -E ^'(?:>|<) "POT-Creation-Date:'; then
+                 $(diff "${locale}.po" "${locale}.po.new" | grep -Ec ^'?<') -eq 1 -a \
+                 $(diff "${locale}.po" "${locale}.po.new" | grep -Ec ^'(?>|<) "POT-Creation-Date:') -eq 2 ]; then
                     echo "${locale}: Only header changes in potfile, delete new PO file."
                     rm ${locale}.po.new
-                 fi
             else
                 echo "${locale}: Real changes in potfile: substitute old PO file."
                 mv ${locale}.po.new ${locale}.po
