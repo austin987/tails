@@ -9,30 +9,23 @@ po_languages () {
 
 intltool_update_po () {
    (
-      cd po
-      for locale in "$@" ; do
-          intltool-update --dist --gettext-package=tails $locale -o ${locale}.po.new
-      done
-   )
-}
+        cd po
+        for locale in "$@" ; do
+            intltool-update --dist --gettext-package=tails $locale -o ${locale}.po.new
 
-keep_old_po_files_if_header_only_changed() {
-    (
-    cd po
-    for locale in "$@" ; do
-        if [ ! -f ${locale}.po.new && ! -f ${locale}.po ]; then
-            echo "New PO file for ${locale} does not exist. Skipping."
-            continue
-        fi
-        if [ $(diff "${locale}.po" "${locale}.po.new" | grep ^"> " | wc -l) -eq 1 ]; then
-            if diff -aw "${locale}.po" "${locale}.po.new" | grep ^'> "POT-Creation-Date:'; then
-                echo "${locale}: Only header changes in potfile, Delete new PO file."
-                rm -f ${locale}.po.new
+            if [ ! -f ${locale}.po.new && ! -f ${locale}.po ]; then
+                echo "New PO file for ${locale} does not exist. Skipping."
+                continue
             fi
-        else
-            echo "${locale}: Real changes in potfile: substitute old PO file."
-            mv ${locale}.po.new ${locale}.po
-        fi
-    done
+            if [ $(diff "${locale}.po" "${locale}.po.new" | grep ^"> " | wc -l) -eq 1 ]; then
+                if diff -aw "${locale}.po" "${locale}.po.new" | grep ^'> "POT-Creation-Date:'; then
+                    echo "${locale}: Only header changes in potfile, Delete new PO file."
+                    rm -f ${locale}.po.new
+                fi
+            else
+                echo "${locale}: Real changes in potfile: substitute old PO file."
+                mv ${locale}.po.new ${locale}.po
+            fi
+        done
     )
 }
