@@ -37,17 +37,14 @@ statistics () {
 }
 
 intltool_report () {
+    rm -rf po.orig
+    cp -a po po.orig
     (
-    if [ ! -d po_orig ]; then
-        mkdir po_orig
-    fi
-    cp -r po/* po_orig/
-    cd po
-    intltool-update --report
-    cd ..
-    rm -rf po
-    mv po_orig/ po/
+        cd po
+        intltool-update --report
     )
+    rm -r po
+    mv po.orig po
 }
 
 # sanity checks
