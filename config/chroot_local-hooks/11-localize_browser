@@ -13,6 +13,9 @@ echo "Localize each supported browser locale"
 # Import language_code_from_locale()
 . /usr/local/lib/tails-shell-library/localization.sh
 
+# Import faketime_wrapper()
+. /usr/local/lib/tails-shell-library/build.sh
+
 # Import TAILS_WIKI_SUPPORTED_LANGUAGES
 . /etc/amnesia/environment
 
@@ -146,11 +149,15 @@ done < "${DESCRIPTIONS_FILE}"
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
 # Remove unwanted browser search plugins bundled in the Tor Browser.
-7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
-   'chrome/en-US/locale/browser/searchplugins/disconnect*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
+# Use faketime to not mess up the internal timestamps, and use the
+# actual epoch instead of SOURCE_DATE_EPOCH to be consistent with
+# what the Tor Browser people do.
+faketime_wrapper "$(date -d '@0')" \
+    7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
+       'chrome/en-US/locale/browser/searchplugins/disconnect*.xml' \
+       'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
+       'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
+       'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
 
 # We want our localized English Wikipedia plugin to be available in
 # all locales.

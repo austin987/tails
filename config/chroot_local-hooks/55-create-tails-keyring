@@ -4,11 +4,12 @@ set -e
 
 echo "Creating system-wide Tails GnuPG keyring"
 
-apt-get --yes install faketime
-faketime "$(date -d '@$SOURCE_DATE_EPOCH')" \
+# Import faketime_sde_wrapper()
+. /usr/local/lib/tails-shell-library/build.sh
+
+faketime_sde_wrapper \
    gpg --batch --no-default-keyring \
        --keyring /usr/share/keyrings/tails-keyring.gpg \
        --import /usr/share/doc/tails/website/*.key
-apt-get --yes purge faketime '^libfaketime*'
 
 chmod a+r /usr/share/keyrings/tails-keyring.gpg
