@@ -38,9 +38,11 @@ rm /root/.gnupg/trustdb.gpg
 # them at boot.
 rm -r /var/lib/monkeysphere/authentication/
 
-# Delete various non-deterministically generated files that will be
-# generated on the fly (at boot, or when needed) any way.
-rm /etc/machine-id
+# Empty non-deterministically generated file. If it exists and is empty, systemd
+# will automatically set up a new unique ID. But if does not exist, systemd
+# will populate /etc with preset unit settings, which will for example re-enable
+# units we have disabled (#11970).
+: > /etc/machine-id
 
 # Remove logs.
 rm -r /var/lib/dkms/*/*/*/*/log
