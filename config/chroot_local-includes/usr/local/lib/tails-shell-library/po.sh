@@ -13,7 +13,7 @@ intltool_update_po () {
         for locale in "$@" ; do
             intltool-update --dist --gettext-package=tails $locale -o ${locale}.po.new
 
-            if [ ! -f ${locale}.po.new && ! -f ${locale}.po ]; then
+            if [ ! -f ${locale}.po.new -a ! -f ${locale}.po ]; then
                 echo "New PO file for ${locale} does not exist. Skipping."
                 continue
             fi
