@@ -11,6 +11,9 @@ To release Tails you'll need some packages installed:
 
 * mktorrent and transmission-cli
 * Aufs DKMS module for your running kernel.
+* [[!debpts squashfs-tools]] that supports the
+  `-mkfs-fixed-time-timestamp` option. Install it from our custom
+  `feature-5630-deterministic-builds` APT suite.
 * tails-iuk dependencies (see debian/control in the `debian` branch of its repo)
 * tails-perl5lib dependencies (same trick than tails-iuk to get the list)
 
@@ -523,6 +526,10 @@ suite should be ready, so it is time to:
       dch --release --no-force-save-on-release --maintmaint
       git commit -m "Mark Tails ${VERSION} as released." debian/changelog
 
+* Export `SOURCE_DATE_EPOCH`:
+
+      export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
+
 * tag the release *again*, with all included files in:
   
       git tag -f -u "$TAILS_SIGNATURE_KEY" \
@@ -604,6 +611,7 @@ Example (for RC, replace `$PREVIOUS_VERSION` with e.g. `$VERSION~rc1`
 below):
 
     sudo su -c "cd $IUK_CHECKOUT && \
+      SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
       PERL5LIB=\"$PERL5LIB_CHECKOUT/lib\" \
         ./bin/tails-create-iuk \
            --squashfs-diff-name \"$VERSION.squashfs\"           \
