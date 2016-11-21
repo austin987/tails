@@ -41,41 +41,23 @@ old_build_dirs() {
 
 trap cleanup EXIT
 
-if [ -n "$JENKINS_URL" ]; then
-	if [ -z "$WORKSPACE" ]; then
-		echo "WORKSPACE environment variable is not set. Aborting." >&2
-		exit 2
-	fi
-	if [ -z "$GIT_BRANCH" ]; then
-		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
-		exit 4
-	fi
-	if [ -z "$GIT_COMMIT" ]; then
-		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
-		exit 5
-	fi
-	REV="${GIT_BRANCH##origin/}"
-	COMMIT="$GIT_COMMIT"
-	ARTIFACTS_DIR="$WORKSPACE/build-artifacts"
+# Build triggered by Vagrant
+WORKSPACE=/home/vagrant/amnesia
+ARTIFACTS_DIR=/home/vagrant
+COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify HEAD)"
+if git --git-dir=/amnesia.git symbolic-ref HEAD >/dev/null 2>&1; then
+	# We are building from a branch
+	REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
 else
-	# Build triggered by Vagrant
-	WORKSPACE=/home/vagrant/amnesia
-	ARTIFACTS_DIR=/home/vagrant
-	COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify HEAD)"
-	if git --git-dir=/amnesia.git symbolic-ref HEAD >/dev/null 2>&1; then
-		# We are building from a branch
-		REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
-	else
-		# We are (hopefully) building from a tag
-		if ! REV="${1:-$(git --git-dir=/amnesia.git describe --tags --exact-match ${COMMIT})}"; then
-			echo "It seems we are building from an untagged detached HEAD. Aborting." >&2
-			exit 1
-		fi
+	# We are (hopefully) building from a tag
+	if ! REV="${1:-$(git --git-dir=/amnesia.git describe --tags --exact-match ${COMMIT})}"; then
+		echo "It seems we are building from an untagged detached HEAD. Aborting." >&2
+		exit 1
 	fi
-	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
-	cd "$WORKSPACE"
-	git fetch --tags origin
 fi
+test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
+cd "$WORKSPACE"
+git fetch --tags origin
 
 if [ "$TAILS_RAM_BUILD" ]; then
 	remove_build_dirs
@@ -91,18 +73,10 @@ if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
 	as_root_do systemctl restart apt-cacher-ng.service
 fi
 
-if [ -n "$JENKINS_URL" ]; then
-	git clean --force -d -x
-fi
-
 install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
-fi
-
-if [ -z "$JENKINS_URL" ]; then
-	./build-website
 fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
@@ -115,13 +89,5 @@ cd "$BUILD_DIR"
 as_root_do lb config --cache false
 
 as_root_do lb build
-
-if [ -n "$JENKINS_URL" ]; then
-	ISO=$(ls *.iso)
-	for file in tails-*; do
-		sha512sum "$file" >> "$ISO.shasum"
-	done
-	gpg --batch --detach-sign --armor "$ISO.shasum"
-fi
 
 mv -f tails-* "$ARTIFACTS_DIR"
