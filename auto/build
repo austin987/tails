@@ -121,11 +121,9 @@ fi
 GIT_BASE_BRANCH=$(head -n1 config/base_branch) \
     || fatal "GIT_BASE_BRANCH could not be guessed."
 
-# Merge base branch into the branch being built, iff. we're building
-# in Jenkins, and not building from a tag, and not building the base
-# branch itself
-if [ -n "$JENKINS_URL" ] && [ -z "$GIT_TAG" ] \
-       && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
+# Merge base branch into the branch being built, if we're not building from a
+# tag, and not building the base branch itself.
+if [ -z "$GIT_TAG" ] && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
     GIT_BASE_BRANCH_COMMIT=$(git rev-parse "origin/${GIT_BASE_BRANCH}") \
 	|| fatal "Base branch's top commit could not be guessed."
 
@@ -204,14 +202,14 @@ trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 
 echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
 set -o pipefail
-[ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_START_FILENAME"
+date --utc '+%s' > "$BUILD_START_FILENAME"
 time eatmydata lb build noauto ${@}
 RET=$?
 if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
    echo "Image was successfully created"
    [ "$RET" -eq 0 ] || \
        echo "Warning: lb build exited with code $RET"
-   [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_END_FILENAME"
+   date --utc '+%s' > "$BUILD_END_FILENAME"
    if [ "$LB_BINARY_IMAGES" = iso ]; then
        ISO_FILE="${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
        print_iso_size "$ISO_FILE"
