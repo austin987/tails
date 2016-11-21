@@ -13,3 +13,9 @@ faketime_sde_wrapper() {
     fi
     faketime_wrapper "$(date -d '@${SOURCE_DATE_EPOCH}')" "${@}"
 }
+
+strip_nondeterminism_wrapper() {
+    apt-get --yes install strip-nondeterminism
+    strip-nondeterminism "${@}"
+    apt-get --yes purge strip-nondeterminism '^libfile-stripnondeterminism-perl'
+}

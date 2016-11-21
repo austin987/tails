@@ -10,7 +10,7 @@ echo "Add DDG search plugin fixup to Tor Browser 6.0.6-build6"
 # Import the TBB_INSTALL variable and supported_tor_browser_locales()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
-# Import faketime_wrapper()
+# Import strip_nondeterminism_wrapper()
 . /usr/local/lib/tails-shell-library/build.sh
 
 OMNI="${TBB_INSTALL}/browser/omni.ja"
@@ -18,11 +18,9 @@ TMP="$(mktemp -d)"
 DDG="chrome/en-US/locale/browser/searchplugins/ddg.xml"
 7z x -o"${TMP}" "${OMNI}" "${DDG}"
 sed -i 's@<Url type="text/html" method="POST" template="https://duckduckgo.com/">@<Url type="text/html" method="POST" template="https://duckduckgo.com/html">@' "${TMP}/${DDG}"
-(
-    cd "${TMP}"
-    # Same as in the 11-localize_browser hook.
-    faketime_wrapper "$(date -d '@0')" \
-        7z u -tzip "${OMNI}" .
-)
+( cd "${TMP}" ; 7z u -mtc=off -tzip "${OMNI}" . )
+tbb_timestamp="$(date --utc --date='2000-01-01 00:00:00' +%s)"
+strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
+                             "${OMNI}" 2>/dev/null
 chmod a+r "${OMNI}"
 rm -r "${TMP}"
