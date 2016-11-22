@@ -1,8 +1,18 @@
 require 'rjb'
 require 'rjbextension'
 $LOAD_PATH << ENV['SIKULI_HOME']
-require 'sikuli-script.jar'
+begin
+  require 'sikulixapi.jar'
+  USING_SIKULIX = true
+rescue LoadError
+  require 'sikuli-script.jar'
+  USING_SIKULIX = false
+end
 Rjb::load
+
+def using_sikulix?
+  USING_SIKULIX
+end
 
 package_members = [
                    "java.io.FileOutputStream",
@@ -16,11 +26,18 @@ package_members = [
                    "org.sikuli.script.Pattern",
                    "org.sikuli.script.Region",
                    "org.sikuli.script.Screen",
-                   "org.sikuli.script.Settings",
                   ]
+
+if using_sikulix?
+  package_members << "org.sikuli.basics.Settings"
+  package_members << "org.sikuli.script.ImagePath"
+else
+  package_members << "org.sikuli.script.Settings"
+end
 
 translations = Hash[
                     "org.sikuli.script", "Sikuli",
+                    "org.sikuli.basics", "Sikuli",
                     "java.lang", "Java::Lang",
                     "java.io", "Java::Io",
                    ]
@@ -193,7 +210,13 @@ def sikuli_script_proxy.new(*args)
 end
 
 # Configure sikuli
-java.lang.System.setProperty("SIKULI_IMAGE_PATH", "#{Dir.pwd}/features/images/")
+if using_sikulix?
+  Sikuli::ImagePath.add("#{Dir.pwd}/features/images/")
+else
+  java.lang.System.setProperty("SIKULI_IMAGE_PATH",
+                               "#{Dir.pwd}/features/images/")
+  ENV["SIKULI_IMAGE_PATH"] = "#{Dir.pwd}/features/images/"
+end
 
 # ruby and rjb doesn't play well together when it comes to static
 # fields (and possibly methods) so we instantiate and access the field
