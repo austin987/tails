@@ -500,9 +500,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                         if name not in filter_:
                             filter_['name'] = name
                     self.filters += filters
-            except (yaml.parser.ParserError, yaml.scanner.ScannerError):
-                log("filter '{}' has bad YAML and was not loaded!"
-                    .format(filter_file))
+            except (yaml.parser.ParserError, yaml.scanner.ScannerError) as err:
+                log("filter '{}' has bad YAML and was not loaded: {}"
+                    .format(filter_file, str(err)))
 
     def connect_to_real_control_port(self):
         with open(global_args.control_cookie_path, "rb") as f:
