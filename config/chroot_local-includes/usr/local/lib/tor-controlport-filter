@@ -189,70 +189,71 @@ def match_and_parse_filter(filters, matchers):
                        if all(any(val == expected_val or val == '*' \
                                   for val in filter_.get(key, [])) \
                               for key, expected_val in matchers)]
-    if len(matched_filters) > 0:
-        matched_filter = matched_filters[0]
-        filter_name = matched_filter['name']
-        status = 'loaded filter: {}'.format(filter_name)
-        if len(matched_filters) > 1:
-            status = 'multiple filters matched, ' + status
-
-        # Parse `commands`
-        commands = matched_filter.get('commands', {}) or {}
-        for cmd in commands:
-            allowed_args = commands[cmd]
-            # An empty argument list allows nothing, but will
-            # make some code below easier than if it can be
-            # None as well.
-            if allowed_args == None:
-                allowed_args = []
-            for i in range(len(allowed_args)):
-                if isinstance(allowed_args[i], str):
-                    allowed_args[i] = {'pattern': allowed_args[i]}
-            allowed_commands[cmd.upper()] = allowed_args
-
-        # Parse `confs`, which is just syntactic sugar
-        confs = matched_filter.get('confs', {}) or {}
-        combined_getconf_rule = {'pattern': "(" + "|".join([
-            key for key in confs]) + ")"}
-        setconf_reset_part = "\s*|\s*".join([
-            key for key in confs if isinstance(confs[key], list) and \
-                                    '' in confs[key]]
-        )
-        setconf_assignment_part = "\s*|\s*".join([
-            "{}{}".format(
-                key, "=({})".format("|".join(confs[key]))
-            ) for key in confs if isinstance(confs[key], list) and \
-                                  len(confs[key]) > 0])
-        setconf_parts = []
-        for part in [setconf_reset_part, setconf_assignment_part]:
-            if part and part != '':
-                setconf_parts.append(part)
-        combined_setconf_rule = {
-            'pattern': "({})+".format("\s*|\s*".join(setconf_parts))
-        }
-        for cmd, rule in [('GETCONF', combined_getconf_rule),
-                          ('SETCONF', combined_setconf_rule)]:
-            if rule['pattern'] != "()+":
-                if cmd not in allowed_commands:
-                    allowed_commands[cmd] = []
-                allowed_commands[cmd].append(rule)
-
-        # Parse `events`
-        events = matched_filter.get('events', {}) or {}
-        for event in events:
-            opts = events[event]
-            # Same as for the `commands` argument list, let's
-            # add an empty dict to simplify later code.
-            if opts == None:
-                opts = {}
-            allowed_events[event.upper()] = opts
-
-        # Parse `restrict-stream-events`
-        restrict_stream_events = bool(matched_filter.get(
-            'restrict-stream-events', False
-        ))
-    else:
+    if len(matched_filters) == 0:
         status = 'no matching filter found, using an empty one'
+        return (status, filter_name, allowed_commands,
+                allowed_events, restrict_stream_events)
+    matched_filter = matched_filters[0]
+    filter_name = matched_filter['name']
+    status = 'loaded filter: {}'.format(filter_name)
+    if len(matched_filters) > 1:
+        status = 'multiple filters matched, ' + status
+
+    # Parse `commands`
+    commands = matched_filter.get('commands', {}) or {}
+    for cmd in commands:
+        allowed_args = commands[cmd]
+        # An empty argument list allows nothing, but will
+        # make some code below easier than if it can be
+        # None as well.
+        if allowed_args == None:
+            allowed_args = []
+        for i in range(len(allowed_args)):
+            if isinstance(allowed_args[i], str):
+                allowed_args[i] = {'pattern': allowed_args[i]}
+        allowed_commands[cmd.upper()] = allowed_args
+
+    # Parse `confs`, which is just syntactic sugar
+    confs = matched_filter.get('confs', {}) or {}
+    combined_getconf_rule = {'pattern': "(" + "|".join([
+        key for key in confs]) + ")"}
+    setconf_reset_part = "\s*|\s*".join([
+        key for key in confs if isinstance(confs[key], list) and \
+                                '' in confs[key]]
+    )
+    setconf_assignment_part = "\s*|\s*".join([
+        "{}{}".format(
+            key, "=({})".format("|".join(confs[key]))
+        ) for key in confs if isinstance(confs[key], list) and \
+                              len(confs[key]) > 0])
+    setconf_parts = []
+    for part in [setconf_reset_part, setconf_assignment_part]:
+        if part and part != '':
+            setconf_parts.append(part)
+    combined_setconf_rule = {
+        'pattern': "({})+".format("\s*|\s*".join(setconf_parts))
+    }
+    for cmd, rule in [('GETCONF', combined_getconf_rule),
+                      ('SETCONF', combined_setconf_rule)]:
+        if rule['pattern'] != "()+":
+            if cmd not in allowed_commands:
+                allowed_commands[cmd] = []
+            allowed_commands[cmd].append(rule)
+
+    # Parse `events`
+    events = matched_filter.get('events', {}) or {}
+    for event in events:
+        opts = events[event]
+        # Same as for the `commands` argument list, let's
+        # add an empty dict to simplify later code.
+        if opts == None:
+            opts = {}
+        allowed_events[event.upper()] = opts
+
+    # Parse `restrict-stream-events`
+    restrict_stream_events = bool(matched_filter.get(
+        'restrict-stream-events', False
+    ))
     return (status, filter_name, allowed_commands,
             allowed_events, restrict_stream_events)
 
