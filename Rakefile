@@ -225,7 +225,7 @@ end
 
 def list_artifacts
   user = vagrant_ssh_config('User')
-  stdout = capture_vagrant('ssh', '-c', "find '/home/#{user}/' -maxdepth 1 " +
+  stdout = capture_vagrant('ssh', '-c', "find '/home/#{user}/amnesia/' -maxdepth 1 " +
                                         "-name 'tails-*.iso*'").first
   stdout.split("\n")
 rescue VagrantCommandError

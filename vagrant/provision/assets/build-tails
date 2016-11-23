@@ -12,13 +12,8 @@ as_root_do() {
 		${https_proxy:+https_proxy="$https_proxy"} \
 		${ftp_proxy:+ftp_proxy="$ftp_proxy"} \
 		${no_proxy:+no_proxy="$no_proxy"} \
-		${JENKINS_URL:+JENKINS_URL="$JENKINS_URL"} \
 		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="$MKSQUASHFS_OPTIONS"} \
 		"$@"
-}
-
-usable_memory() {
-	free -b | awk '/cache:/ { print $4 }'
 }
 
 cleanup() {
@@ -42,29 +37,30 @@ old_build_dirs() {
 
 trap cleanup EXIT
 
-# Build triggered by Vagrant
 WORKSPACE=/home/vagrant/amnesia
-ARTIFACTS_DIR=/home/vagrant
-COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify HEAD)"
-if git --git-dir=/amnesia.git symbolic-ref HEAD >/dev/null 2>&1; then
+
+sudo rsync -a --exclude 'vagrant/.vagrant' "/amnesia.git/" "${WORKSPACE}"
+sudo chown -R vagrant:vagrant "${WORKSPACE}"
+
+cd "$WORKSPACE"
+
+COMMIT="$(git rev-parse --verify HEAD)"
+
+if git symbolic-ref HEAD >/dev/null 2>&1; then
 	# We are building from a branch
-	REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
+	REV="${1:-$(git name-rev --name-only HEAD)}"
 else
 	# We are (hopefully) building from a tag
-	if ! REV="${1:-$(git --git-dir=/amnesia.git describe --tags --exact-match ${COMMIT})}"; then
+	if ! REV="${1:-$(git describe --tags --exact-match ${COMMIT})}"; then
 		echo "It seems we are building from an untagged detached HEAD. Aborting." >&2
 		exit 1
 	fi
 fi
-test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
-cd "$WORKSPACE"
-git fetch --tags origin
 
 if [ "$TAILS_RAM_BUILD" ]; then
 	remove_build_dirs
 fi
 
-cd "$WORKSPACE"
 git checkout --force "$REV"
 git reset --hard "$COMMIT"
 git submodule update --init
@@ -73,8 +69,6 @@ if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
 	as_root_do ./auto/scripts/update-acng-config
 	as_root_do systemctl restart apt-cacher-ng.service
 fi
-
-install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
@@ -91,4 +85,6 @@ as_root_do lb config --cache false
 
 as_root_do lb build
 
-mv -f tails-* "$ARTIFACTS_DIR"
+if [ "$TAILS_RAM_BUILD" ]; then
+	mv -f tails-* "$WORKSPACE/"
+fi
