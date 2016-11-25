@@ -39,6 +39,8 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 # In-VM proxy URL
 INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
+ENV['ARTIFACTS'] ||= '.'
+
 class VagrantCommandError < StandardError
 end
 
@@ -316,7 +318,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
         # compromise libvirt's network config or the user running the
         # command to modify the #{hostname} below.
         '-o', 'StrictHostKeyChecking=no',
-        "#{user}@#{hostname}:#{artifact}", '.'
+        "#{user}@#{hostname}:#{artifact}", "#{ENV['ARTIFACTS']}"
       )
     )
     raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
