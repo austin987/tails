@@ -193,7 +193,7 @@ security critical bugs were fixed.
     user is told to do a manual upgrade.
 
   If:
-  
+
   * the update-description files have been published on the
     *alpha* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
   * and the IUK has been published already (see
@@ -201,7 +201,7 @@ security critical bugs were fixed.
     and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
 
   then:
-  
+
         echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
         tails-upgrade-frontend-wrapper
 
@@ -298,3 +298,30 @@ language. You *really* have to reboot between each language.
 * Check that all seems well during init: (automate: [[!tails_ticket 10277]])
   - `systemctl --failed --all` should say `0 loaded units listed`
   - the output of `journalctl` should seem OK.
+
+# DAVE
+
+* Visit https://tails.boum.org/install/debian/usb in a Firefox-based browser.
+  Verify that you can install the Firefox Addon. Start downloading a Tails image
+  and copy the used mirror URL.
+  * The URL should only start with dl.amnesia.boum.org if Javascript is disabled
+    in your browser. Otherwise it should contain a mirror URL from
+    <https://tails.boum.org/mirrors.json>
+  * Verify that pausing and resuming the download from this URL works.
+  * Verify that when you start the download, you can see it appear in the download
+    list (Ctrl+Shift+Y).
+* Test a disabled mirror (Possible only in FF > 51 because of <https://bugzilla.mozilla.org/show_bug.cgi?id=1275289>.)
+  * Do not use Firefox over Tor.
+  * To disable Firefox's internal DNS cache, navigate to `about:config` and set
+    these prefererences:
+    * `network.dnsCacheExpirationGracePeriod = 0`
+    * `network.dnsCacheExpiration = 0`
+    * `network.dnsCacheEntries = 0`
+  * To enable logging, in `about:config` add these preferences:
+    * `extensions.dave@tails.boum.org.sdk.console.logLevel = all`
+    * `extensions.sdk.console.logLevel = "all"`
+  * Then edit your /etc/hosts file to point the URL of the previously used mirror to 127.0.0.1.
+  * Now reload the download page, and try to resume the download again.
+  * In the Firefox console (Ctrl+Alt+J) you should see the `mirror.blob` variable pointing
+    to a different mirror.
+   This should work.
