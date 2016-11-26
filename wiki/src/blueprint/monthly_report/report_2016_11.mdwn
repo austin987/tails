@@ -24,6 +24,87 @@ Code
 XXX: List important code work that is not covered already by the Release
      section (for example, the changes being worked on for the next version).
 
+Tails based on Debian 9 (Stretch)
+---------------------------------
+
+We made lots of progress on porting Tails to Debian 9 (Stretch).
+This work culminated with the
+[[release of Tails 3.0~alpha1|news/test_3.0-alpha1]].
+
+* Merged the devel Git branch, and upgraded to a current snapshot of
+  the Debian archive.
+* Switched userspace to 64-bit (x86_64).
+* By running our [[manual test suite|contribute/release_process/test]]
+  on Stretch-based ISO images and testing our entire
+  [[documentation|doc]], we identified a few regressions and
+  [[!tails_ticket 11916 desc="documentation that needs updating"]].
+* [[!tails_ticket 11789 desc="GNOME with its default black theme"]]
+* Fixed a long-standing issue with
+  [[!tails_ticket 7018 desc="the firewall not being set up during early boot"]].
+* Fixed the Greeter
+  [[!tails_ticket 11694 desc="not switching to the Desktop VT upon login"]],
+  and
+  [[!tails_ticket 11919 desc="not displaying the More Options window properly"]].
+* Test suite:
+  - Fixed [[!tails_ticket 11698 desc="a bug in the debugging code"]].
+  - Ported great numbers of test cases to Stretch, including the
+    persistence, Tor enforcement, encryption, Evince and MAC spoofing ones.
+* Verified that
+  [[!tails_ticket 11812 desc="tails-security-check's CA pinning is repaired"]].
+* Verified that MAC address spoofing works in various cases,
+  including [[!tails_ticket 11943 desc="Wi-Fi connections"]] and
+  existing persistent network connections created on Tails 2.x.
+* Switch to
+  [[!tails_ticket 11829 desc="using the aufs kernel module from Debian"]].
+* Made progress on porting to GnuPG v2: [[!tails_ticket 11905]],
+  [[!tails_ticket 11948]].
+* Removed [[!tails_ticket 7687 desc="ekeyd"]] and
+  [[!tails_ticket 11534 desc="obsolete udev rules"]].
+* Fixed handling of `/etc/hosts`.
+
+Reproducible ISO build
+----------------------
+
+We had an initial sprint about [[blueprint/reproducible_builds]].
+We are very happy with the progress we've made: the tree that becomes
+`filesystem.squashfs` is now almost fully reproducible; so is also the
+tree that is the basis for automatic upgrades. Along the way, we've
+contributed a number of patches to Debian and upstream projects.
+
+* Make our PO files update reproducibly, by
+  [[!tails_ticket 11967 desc="not updating them unless something other than POT-Creation-Date has changed"]].
+* live-build:
+  - Use xorriso, that honors the
+    [SOURCE_DATE_EPOCH](https://reproducible-builds.org/specs/source-date-epoch/)
+    variable, to build the ISO filesystem reproducibly.
+  - Expose the `SOURCE_DATE_EPOCH` variable when running scripts
+    inside the chroot.
+  - Clamp mtimes to `SOURCE_DATE_EPOCH` in the chroot and
+    binary filesystems.
+  - Use `SOURCE_DATE_EPOCH` to populate `/.disk/info` timestamp.
+  - Use `SOURCE_DATE_EPOCH` when templating syslinux templates.
+* Made mksquashfs honor `SOURCE_DATE_EPOCH` for the filesystem
+  creation date, and had it clamp mtimes to `SOURCE_DATE_EPOCH`.
+* Incremental upgrade kits:
+  - Made aufs white-outs reproducible.
+  - Made aufs pseudo-links permanent, so that they are reproducible.
+  - Passed `--sort=name --clamp-mtime --mtime=@$SOURCE_DATE_EPOCH`
+    to tar.
+* Made [[!tails_ticket 11966 desc="our web site build reproducibly"]]…
+  and then discovered [[!tails_ticket 11987 desc="more bits"]] that
+  are not generated in a deterministic way, which lead us to discover
+  that our `cleanall` build option did not clean as well as it should
+  ([[!tails_gitweb_commit 541bbe5fd3c1127232ce271041f9dddb94e3f5d7 desc="fix"]]).
+* [Eliminated](https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/99-zzzzzz_reproducible-builds-post-processing?h=feature/5630-deterministic-builds)
+  various causes for non-determinism, such as caches and other
+  generated files.
+* On the infrastructure side of things:
+  - Vagrant boxes management: we came up with a new design that
+    will be reflected on the blueprint shortly.
+  - Experimented with using our Vagrant + libvirt build system
+    on one of our Jenkins ISO builders, and started work towards
+    migrating them all.
+
 Documentation and website
 =========================
 
