@@ -39,6 +39,19 @@ gpg --export C7988EA7A358D82E | sudo apt-key add -
 # packages used when building Tails (#6297).
 echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
 
+# Ensure that the apt-cacher-ng cache disk is formated and mounted
+if [ ! -b /dev/vdb1 ]; then
+	echo '1,,83' > sfdisk /dev/vdb
+	mkfs.ext4 /dev/vdb1
+fi
+
+[ -d /var/cache/apt-cacher-ng/ ] || \
+	install -o root -g root -m 755 -d /var/cache/apt-cacher-ng
+
+if ! mountpoint -q /var/cache/apt-cacher-ng; then
+	mount /dev/vdb1 /var/cache/apt-cacher-ng
+fi
+
 apt-get update
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 
