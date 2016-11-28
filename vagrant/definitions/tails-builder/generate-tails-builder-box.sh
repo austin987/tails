@@ -11,10 +11,14 @@ USERNAME="vagrant"
 PASSWORD="vagrant"
 SIZE="20G"
 HOSTNAME="vagrant-${DISTRIBUTION}"
-DATE_STAMP="$(date +%Y%m%d)"
-TARGET_NAME="tails-builder-${ARCHITECTURE}-${DISTRIBUTION}-${DATE_STAMP}"
+TARGET_NAME=$(grep -Po "tails-builder-${ARCHITECTURE}-${DISTRIBUTION}-\d{10}" ../../Vagrantfile)
+SERIAL=$(echo "${TARGET_NAME}" | grep -Po '\d{10}')
 TARGET_IMG="${TARGET_NAME}.qcow2"
 TARGET_BOX="${TARGET_NAME}.box"
+
+DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
+gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
+    --import ../../../config/chroot_sources/tails.chroot.gpg
 
 sudo vmdebootstrap \
     --arch "${ARCHITECTURE}" \
@@ -26,7 +30,8 @@ sudo vmdebootstrap \
     --hostname "${HOSTNAME}" \
     --log-level "debug" \
     --mbr \
-    --mirror "http://ftp.us.debian.org/debian" \
+    --mirror "http://time-based.snapshots.deb.tails.boum.org/debian/${SERIAL}" \
+    --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg" \
     --owner "${SUDO_USER:-${USER}}" \
     --kernel-package "linux-image-${ARCHITECTURE}" \
     --package "ca-certificates" \
