@@ -7,12 +7,6 @@ module RemoteShell
   class ServerFailure < StandardError
   end
 
-  # This exception is *only* supposed to be use internally in
-  # communicate() -- in particular it must not be raised by a
-  # Timeout.timeout() wrapping around communicate() or any use of it.
-  class SocketReadTimeout < Exception
-  end
-
   # Used to differentiate vs Timeout::Error, which is thrown by
   # try_for() (by default) and often wraps around remote shell usage
   # -- in that case we don't want to catch that "outer" exception in
@@ -27,7 +21,7 @@ module RemoteShell
 
   def communicate(vm, *args, **opts)
     opts[:timeout] ||= DEFAULT_TIMEOUT
-    socket = UNIXSocket.new(vm.remote_shell_socket_path)
+    socket = TCPSocket.new("127.0.0.1", vm.get_remote_shell_port)
     id = (@@request_id += 1)
     # Since we already have defined our own Timeout in the current
     # scope, we have to be more careful when referring to the Timeout
@@ -37,28 +31,7 @@ module RemoteShell
       socket.puts(JSON.dump([id] + args))
       socket.flush
       loop do
-        # Calling socket.readline() and then just wait for the data to
-        # arrive is prone to stalling for some reason. A timed read()
-        # can perhaps work around this.
-        line_init = nil
-        begin
-          Object::Timeout.timeout(1, SocketReadTimeout) do
-            line_init = socket.read(1)
-          end
-        rescue SocketReadTimeout
-          next
-        end
-        # There may be a race above: imagine if we time out after
-        # reading one byte from the socket, but before it's stored in
-        # our variable. That would mean we lose that byte. Note that
-        # we always must succeed reading one byte *and* storing it the
-        # next time, so at most one byte can be lost. Luckily, since
-        # we know what the first byte must be, when can easily detect
-        # and correct for this.
-        if line_init != '['
-          line_init = '[' + line_init
-        end
-        line = line_init + socket.readline("\n").chomp("\n")
+        line = socket.readline("\n").chomp("\n")
         response_id, status, *rest = JSON.load(line)
         if response_id == id
           if status != "success"
