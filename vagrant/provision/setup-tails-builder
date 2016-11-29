@@ -45,8 +45,19 @@ if [ ! -b /dev/vdb1 ]; then
 	mkfs.ext4 /dev/vdb1
 fi
 
-[ -d /var/cache/apt-cacher-ng/ ] || \
+if [ -d /var/cache/apt-cacher-ng/ ]; then
+	if ! mountpoint -q /var/cache/apt-cacher-ng; then
+		echo "A previous installation has been detected, migrating APT data."
+		mount /dev/vdb1 /mnt
+		rsync -a /var/cache/apt-cacher-ng/ /mnt/
+		rm -rf /var/cache/apt-cacher-ng/*
+		umount /mnt/
+		echo "Migration done. You may want to recreate your vagrant box to save disk space."
+	fi
+
+else
 	install -o root -g root -m 755 -d /var/cache/apt-cacher-ng
+fi
 
 if ! mountpoint -q /var/cache/apt-cacher-ng; then
 	mount /dev/vdb1 /var/cache/apt-cacher-ng
