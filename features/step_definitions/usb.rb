@@ -78,7 +78,10 @@ end
 
 def usb_install_helper(name)
   @screen.wait('USBTailsLogo.png', 10)
-  if @screen.exists("USBCannotUpgrade.png")
+  text = Dogtail::Application.new('tails-installer')
+         .child('', roleName: 'text').text
+  dev = $vm.disk_dev(name)
+  if text.match(/It is impossible to upgrade the device .+ #{dev}\d* /)
     raise UpgradeNotSupported
   end
   begin
