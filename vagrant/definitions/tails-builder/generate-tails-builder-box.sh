@@ -20,7 +20,8 @@ DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
     --import ../../../config/chroot_sources/tails.chroot.gpg
 
-sudo vmdebootstrap \
+sudo ${http_proxy:+http_proxy="$http_proxy"} \
+    vmdebootstrap \
     --arch "${ARCHITECTURE}" \
     --distribution "${DISTRIBUTION}" \
     --image "${TARGET_IMG}" \
