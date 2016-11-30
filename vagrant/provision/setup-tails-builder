@@ -2,6 +2,28 @@
 
 set -e
 
+if ! grep -qs 'ref:' /amnesia.git/.git/HEAD; then
+	tag="$(git --git-dir=/amnesia.git/.git/ describe --tags --exact-match HEAD 2>/dev/null)"
+	if [ ! -z "${tag}" ]; then
+		current_head_name="${tag}"
+	else
+		current_head_name="$(cat /amnesia.git/.git/HEAD)"
+	fi
+else
+	current_head_name="$(git --git-dir=/amnesia.git/.git/ rev-parse --abbrev-ref HEAD)"
+fi
+
+
+if [ ! -f /var/lib/vagrant_box_build_from ]; then
+	echo "${current_head_name}" > /var/lib/vagrant_box_build_from
+else
+	if [ "$(cat /var/lib/vagrant_box_build_from)" != "${current_head_name}" ]; then
+		echo "E: The current VM has been created to build $(cat /var/lib/vagrant_box_build_from)."
+		echo "E: Please first use rake vm:destroy before trying to build again."
+		exit 1
+	fi
+fi
+
 export DEBIAN_FRONTEND=noninteractive
 
 # Do not use virtual machine proxy before apt-cacher-ng is installed
@@ -56,7 +78,6 @@ apt-get -y install \
         dpkg-dev \
         eatmydata \
         gettext \
-        git \
         ikiwiki \
         intltool \
         libfile-slurp-perl \

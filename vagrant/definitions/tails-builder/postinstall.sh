@@ -30,7 +30,7 @@ EOF
 apt-key add /tmp/tails.binary.gpg
 
 echo "I: Installing extra dependencies..."
-apt-get -y install grub2 openssh-server curl
+apt-get -y install grub2 openssh-server curl git
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
