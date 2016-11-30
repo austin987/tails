@@ -6,7 +6,6 @@ set -o pipefail
 
 BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
 CONFIG=config/APT_snapshots.d
-ORIGINS=$(cd $CONFIG; ls -d *)
 
 get_latest_serial() {
 	origin=$1
@@ -14,7 +13,19 @@ get_latest_serial() {
 		| awk -F': ' '/^Archive serial: / {print $2}'
 }
 
-action="${1:-cat}"
+if [ $# -eq 0 ]; then
+	action="cat"
+	ORIGINS="$(cd ${CONFIG}; ls -d *)"
+else
+	action="${1}"
+	shift
+	if [ $# -eq 0 ]; then
+		ORIGINS="$(cd ${CONFIG}; ls -d *)"
+	else
+		ORIGINS="${@}"
+	fi
+fi
+
 case "$action" in
 	cat)
 		for origin in $ORIGINS; do

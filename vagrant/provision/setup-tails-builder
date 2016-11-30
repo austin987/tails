@@ -33,7 +33,10 @@ if [ "$http_proxy" = "http://$(hostname -f):3142" ] &&
 	http_proxy=''
 fi
 
-rm -f /etc/apt/preferences.d/* /etc/apt/sources.list.d/*
+# Store basebox serial before regenerating APT sources
+stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
+rm -rf /etc/apt/preferences.d/* /etc/apt/sources.list*
+mkdir /etc/apt/sources.list.d
 
 # Add our builder-jessie repository for live-build, and pin it low
 echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list
@@ -53,9 +56,44 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
 	Pin-Priority: 500
 EOF
 
+BASE_URL="http://time-based.snapshots.deb.tails.boum.org"
+
+latest_serial(){
+	local archive="${1}"
+	get_serial="$(/amnesia.git/auto/scripts/apt-snapshots-serials get-latest ${archive})"
+	echo "${get_serial#${1}: }"
+}
+
+# Set the APT repo sources depending on the branch
+base_branch="$(cat /amnesia.git/config/base_branch)"
+
+case "${base_branch}" in
+	devel|testing|feature/stretch)
+		serial="$(latest_serial debian)"
+		;;
+	stable)
+		serial="${stable_serial}"
+		;;
+esac
+
+echo "deb ${BASE_URL}/debian/${serial} jessie main" > /etc/apt/sources.list
+# Always set the latest serial for debian-security
+security_serial="$(latest_serial debian-security)"
+echo "deb ${BASE_URL}/debian-security/${security_serial} jessie/updates main" >> /etc/apt/sources.list.d/jessie-updates.list
+
 # We need a newer version of debootstrap for saving the list of
 # packages used when building Tails (#6297).
-echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
+echo "deb ${BASE_URL}/debian/${serial} jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list
+
+cat > /etc/apt/preferences.d/jessie-backports << EOF
+Package: *
+Pin: release n=jessie-backports
+Pin-Priority: 100
+
+Package: debootstrap
+Pin: release n=jessie-backports
+Pin-Priority: 991
+EOF
 
 apt-get update
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
