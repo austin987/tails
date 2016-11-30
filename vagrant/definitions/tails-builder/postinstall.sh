@@ -27,6 +27,7 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
+apt-key add /tmp/tails.binary.gpg
 
 echo "I: Installing extra dependencies..."
 apt-get -y install grub2 openssh-server curl
