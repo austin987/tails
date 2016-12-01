@@ -29,6 +29,9 @@ APT::Install-Suggests "false";
 EOF
 apt-key add /tmp/tails.binary.gpg
 
+apt-get update
+apt-get -y dist-upgrade
+
 echo "I: Installing extra dependencies..."
 apt-get -y install grub2 openssh-server curl git
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
