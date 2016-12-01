@@ -99,12 +99,8 @@ intltool_merge () {
    grep -E --no-filename '[^ #]*\.(desktop|directory)\.in$' po/POTFILES.in \
       | while read infile ; do
            intltool-merge --quiet --desktop-style --utf8 \
-	      po "$infile" "${infile%.in}"
+           po "$infile" "${infile%.in}"
         done
-}
-
-intltool_report () {
-   (cd po && intltool-update --report --gettext-package=tails)
 }
 
 ### Main
@@ -128,6 +124,3 @@ intltool_update_po $(po_languages)
 refresh_mo $(po_languages)
 intltool_merge
 chmod +x config/chroot_local-includes/etc/skel/Desktop/*.desktop
-
-# Report back
-intltool_report
