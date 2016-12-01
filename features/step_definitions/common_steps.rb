@@ -5,7 +5,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click_point(@screen.w, @screen.h/2)
+  @screen.click_point(@screen.w - 1, @screen.h/2)
 end
 
 def activate_filesystem_shares
@@ -462,7 +462,7 @@ end
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - News'
+    title = 'Tails - Dear Tails user'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
