@@ -203,7 +203,7 @@ def sikuli_script_proxy.new(*args)
   end
 
   def s.hide_cursor
-    self.hover_point(self.w, self.h/2)
+    self.hover_point(self.w - 1, self.h/2)
   end
 
   s
