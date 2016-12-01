@@ -253,7 +253,7 @@ After('@product') do |scenario|
       info_log
       info_log_artifact_location(type, artifact_path)
     end
-    pause("Scenario failed") if $config["PAUSE_ON_FAIL"]
+    pause("Scenario failed") if $config["INTERACTIVE_DEBUGGING"]
   else
     if @video_path && File.exist?(@video_path) && not($config['CAPTURE_ALL'])
       FileUtils.rm(@video_path)
