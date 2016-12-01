@@ -49,7 +49,11 @@ set -e
 set -u
 
 umask 0022
-sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' /etc/apt/sources.list \
+sed --regexp-extended -e 's,^deb(\s+.*),deb\1 contrib non-free,' \
+   /etc/apt/sources.list \
+   > /etc/apt/sources.list.d/tmp-deb.list
+sed --regexp-extended -e 's,^deb(\s+),deb-src\1,' \
+   /etc/apt/sources.list.d/tmp-deb.list \
    > /etc/apt/sources.list.d/tmp-deb-src.list
 apt-get update
 apt-get install dctrl-tools
