@@ -593,6 +593,11 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # Sometimes the next button too fast, before the menu has settled
+  # down to its final size and the icon we want to click is in its
+  # final position. dogtail might allow us to fix that, but given how
+  # rare this problem is, it's not worth the effort.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -603,6 +608,9 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # See comment on /^I request a shutdown using the emergency shutdown applet$/
+  # that explains why we need to wait.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
