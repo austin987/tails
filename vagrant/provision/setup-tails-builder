@@ -35,28 +35,6 @@ fi
 
 # Store basebox serial before regenerating APT sources
 stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
-rm -rf /etc/apt/preferences.d/* /etc/apt/sources.list*
-mkdir /etc/apt/sources.list.d
-
-# Add our builder-jessie repository for live-build, and pin it low
-echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
-	Package: *
-	Pin: origin deb.tails.boum.org
-	Pin-Priority: 99
-EOF
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
-	Package: live-build
-	Pin: origin deb.tails.boum.org
-	Pin-Priority: 500
-EOF
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
-	Package: syslinux-utils
-	Pin: origin deb.tails.boum.org
-	Pin-Priority: 500
-EOF
-
-BASE_URL="http://time-based.snapshots.deb.tails.boum.org"
 
 latest_serial(){
 	local archive="${1}"
@@ -70,30 +48,15 @@ base_branch="$(cat /amnesia.git/config/base_branch)"
 case "${base_branch}" in
 	devel|testing|feature/stretch)
 		serial="$(latest_serial debian)"
-		;;
-	stable)
-		serial="${stable_serial}"
-		;;
+		sed -i -e "s/${stable_serial}/${serial}/g" /etc/apt/sources.list
+		# We need a newer version of debootstrap for saving the list of
+		# packages used when building Tails (#6297).
+		sed -i -e "s/${stable_serial}/${serial}/g" /etc/apt/sources.list.d/jessie-backports.list
 esac
 
-echo "deb ${BASE_URL}/debian/${serial} jessie main" > /etc/apt/sources.list
 # Always set the latest serial for debian-security
 security_serial="$(latest_serial debian-security)"
-echo "deb ${BASE_URL}/debian-security/${security_serial} jessie/updates main" >> /etc/apt/sources.list.d/jessie-updates.list
-
-# We need a newer version of debootstrap for saving the list of
-# packages used when building Tails (#6297).
-echo "deb ${BASE_URL}/debian/${serial} jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list
-
-cat > /etc/apt/preferences.d/jessie-backports << EOF
-Package: *
-Pin: release n=jessie-backports
-Pin-Priority: 100
-
-Package: debootstrap
-Pin: release n=jessie-backports
-Pin-Priority: 991
-EOF
+sed -i -e "s/${stable_serial}/${security_serial}/g" /etc/apt/sources.list.d/jessie-updates.list
 
 apt-get update
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
@@ -113,6 +76,7 @@ apt-get -y dist-upgrade
 # Those are needed to build Tails
 apt-get -y install \
         debootstrap/jessie-backports \
+        git \
         dpkg-dev \
         eatmydata \
         gettext \

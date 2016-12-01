@@ -27,14 +27,83 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
+
+echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
+
+echo "I: Install jessie/updates and jessie-backports suites."
+cat "/etc/apt/sources.list" | \
+	sed -e 's/debian/debian-security/' | \
+	sed -e 's/jessie/jessie\/updates/' \
+	> "/etc/apt/sources.list.d/jessie-updates.list"
+
+cat "/etc/apt/sources.list" | \
+	sed -e 's/jessie/jessie-backports/' \
+	> "/etc/apt/sources.list.d/jessie-backports.list"
+
+echo "I: Adding our builder-jessie suite with live-build and syslinux, pin it low."
+echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
+	Package: *
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 99
+EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
+	Package: live-build
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 500
+EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
+	Package: syslinux-utils
+	Pin: origin deb.tails.boum.org
+	Pin-Priority: 500
+EOF
+
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
+	Package: *
+	Pin: release n=jessie-backports
+	Pin-Priority: 100
+
+	Package: debootstrap
+	Pin: release n=jessie-backports
+	Pin-Priority: 991
+EOF
 
 apt-get update
 apt-get -y dist-upgrade
 
 echo "I: Installing extra dependencies..."
-apt-get -y install grub2 openssh-server curl git
+apt-get -y install grub2 openssh-server curl
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
+
+echo "I: Installing Tails build dependencies."
+apt-get -y install \
+        debootstrap/jessie-backports \
+        git \
+        dpkg-dev \
+        eatmydata \
+        gettext \
+        ikiwiki \
+        intltool \
+        libfile-slurp-perl \
+        liblist-moreutils-perl \
+        live-build \
+        rsync \
+        syslinux-utils \
+        time \
+        whois \
+        libfile-chdir-perl \
+        libhtml-scrubber-perl \
+        libhtml-template-perl \
+        libtext-multimarkdown-perl \
+        libtimedate-perl \
+        liburi-perl libhtml-parser-perl \
+        libxml-simple-perl \
+        libyaml-libyaml-perl po4a \
+        libyaml-perl \
+        libyaml-syck-perl \
+        perlmagick \
+        wdg-html-validator
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
 echo "UseDNS no" >>/etc/ssh/sshd_config
