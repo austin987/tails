@@ -457,28 +457,10 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  begin
-    @screen.click("GnomeNotificationApplet.png")
-  rescue FindFailed
-    # No notifications, so we're done here.
-    next
-  end
-  @screen.wait("GnomeNotificationAppletOpened.png", 10)
-  begin
-    entries = @screen.findAll("GnomeNotificationEntry.png")
-    while(entries.hasNext) do
-      entry = entries.next
-      @screen.hide_cursor
-      @screen.click(entry)
-      @screen.wait_and_click("GnomeNotificationEntryClose.png", 10)
-    end
-  rescue FindFailed
-    # No notifications, so we're good to go.
-  end
-  @screen.hide_cursor
-  # Click anywhere to close the notification applet
-  @screen.click("GnomeApplicationsMenu.png")
-  @screen.hide_cursor
+  # XXX: It will be hard for us to interact with the Calendar (where
+  # the notifications are lited) without Dogtail, but it is broken
+  # here, see #11718.
+  next
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -578,6 +560,11 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # Sometimes the next button too fast, before the menu has settled
+  # down to its final size and the icon we want to click is in its
+  # final position. dogtail might allow us to fix that, but given how
+  # rare this problem is, it's not worth the effort.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -588,6 +575,9 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # See comment on /^I request a shutdown using the emergency shutdown applet$/
+  # that explains why we need to wait.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
@@ -596,11 +586,27 @@ Given /^the package "([^"]+)" is installed$/ do |package|
          "Package '#{package}' is not installed")
 end
 
-Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
-  $vm.execute_successfully(
-    "nmcli connection add con-name #{con_name} " + \
-    "type ethernet autoconnect yes ifname eth0"
-  )
+Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
+  if version and version == '2.x'
+    con_content = <<EOF
+[connection]
+id=#{con_name}
+uuid=b04afa94-c3a1-41bf-aa12-1a743d964162
+interface-name=eth0
+type=ethernet
+EOF
+    con_file = "/etc/NetworkManager/system-connections/#{con_name}"
+    $vm.file_overwrite(con_file, con_content)
+    $vm.execute_successfully("chmod 600 '#{con_file}'")
+    $vm.execute_successfully("nmcli connection load '#{con_file}'")
+  elsif version and version == '3.x'
+    raise "Unsupported version '#{version}'"
+  else
+    $vm.execute_successfully(
+      "nmcli connection add con-name #{con_name} " + \
+      "type ethernet autoconnect yes ifname eth0"
+    )
+  end
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
@@ -615,7 +621,7 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
 end
 
 When /^I start and focus GNOME Terminal$/ do
-  step 'I start "Terminal" via the GNOME "Utilities" applications menu'
+  step 'I start "GNOME Terminal" via the GNOME "Utilities" applications menu'
   @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
@@ -672,10 +678,12 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  app = Dogtail::Application.new('gnome-shell')
-  for element in ['Applications', submenu, app_name] do
-    app.child(element, roleName: 'label').click
-  end
+  # XXX: Dogtail is broken in this use case, see #11718.
+  @screen.wait('GnomeApplicationsMenu.png', 10)
+  $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
+  @screen.wait('GnomeActivitiesOverview.png', 10)
+  @screen.type(app_name)
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 When /^I type "([^"]+)"$/ do |string|

@@ -30,10 +30,21 @@ statistics () {
     )
     TRANSLATED_WC=$(
         msgattrib --translated --no-fuzzy --no-obsolete --no-wrap $PO_MESSAGES \
-	    | count_original_words
+        | count_original_words
     )
     echo "  - $lang: $(($TRANSLATED*100/$TOTAL))% ($TRANSLATED) strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy, $(($TRANSLATED_WC*100/$TOTAL_WC))% words translated"
     rm -f $PO_FILES $PO_MESSAGES
+}
+
+intltool_report () {
+    rm -rf po.orig
+    cp -a po po.orig
+    (
+        cd po
+        intltool-update --report
+    )
+    rm -r po
+    mv po.orig po
 }
 
 # sanity checks
@@ -48,7 +59,13 @@ else
     exit 1
 fi
 
+# all program's PO files
+echo "## All programs"
+echo ""
+intltool_report
+
 # all PO files
+echo ""
 echo "## All the website"
 echo ""
 
