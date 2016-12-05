@@ -1,4 +1,4 @@
-tails (2.8) UNRELEASED; urgency=medium
+tails (2.10) UNRELEASED; urgency=medium
 
   * Dummy entry.
   * Tails Greeter: use gdm-password instead of gdm-autologin,
@@ -9,11 +9,61 @@ tails (2.8) UNRELEASED; urgency=medium
 
  -- bertagaz <bertagaz@haze>  Tue, 15 Nov 2016 23:19:34 +0100
 
-tails (2.7.1) UNRELEASED; urgency=medium
+tails (2.7.2) UNRELEASED; urgency=medium
 
-  * Emergency release. 
+  * Dummy entry.
 
- -- bertagaz <bertagaz@haze>  Tue, 15 Nov 2016 23:23:11 +0100
+ -- Tails developers <tails@boum.org>  Thu, 01 Dec 2016 04:44:26 +0100
+
+tails (2.7.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 6.0.7 (build3) based on Firefox 45.5.1.
+    - Upgrade gstreamer0.10-based packages to 0.10.31-3+nmu4+deb8u2.
+    - Upgrade imagemagick-based packages to 8:6.8.9.9-5+deb8u6.
+    - Upgrade libicu52 to 52.1-8+deb8u4.
+    - Upgrade vim-based packages to 2:7.4.488-7+deb8u1.
+
+  * Minor improvements
+    - Reserve 64 MiB for the kernel and 128 MiB for privileged
+      processes before the memory is wiped. We hope that this might
+      help (but not solve, sadly) some crashes experienced while
+      wiping the memory.
+
+  * Build system
+    - Make the wiki shipped inside Tails build deterministically
+      (Closes: #11966):
+      * Enable ikiwiki's "deterministic" option, and require it when
+        building.
+      * Use our custom backport of discount (2.2.1-1~bpo8+1~0.tails1),
+        to fix reproducibility issues (Debian#782315). This can be
+        dropped once our ISO builders use Stretch.
+      * Install ikiwiki from our builder-jessie APT suite, to make the
+        pagestats plugin output deterministic.
+    - refresh-translations: don't update PO files unless something
+      other than POT-Creation-Date was changed. (Closes: #11967)
+    - Fix Vagrant's is_release? check. Per auto/build, we consider it
+      a release when we build from detached head, and HEAD is tagged.
+    - Enforce `cleanall` when building a release. I.e. don't allow the
+      user supplied options to override this behaviour. This is
+      important since Vagrant caches wiki builds, and we do not want
+      leftovers from a previous builds ending up in a release. Also,
+      this is required for making Tails images build reproducibly.
+    - Make the build system's `cleanall` option really clean
+      everything.  At the moment it doesn't clean the cached wiki
+      build (which basically was its only job).
+    - import-package: support contrib and non-free sections.
+
+  * Test suite
+    - Wait a bit between opening the shutdown applet menu, and
+      clicking one of its widgets. (Closes: #11616).
+    - Adapt Icedove test after removing the amnesia branding add-on.
+      (Closes: #11906)
+    - Replace --pause-on-fail with --interactive-debugging. It does
+      the same thing, but also offers an interactive Ruby shell, via
+      pry, with the Cucumber world context.
+
+ -- Tails developers <tails@boum.org>  Wed, 30 Nov 2016 17:27:37 +0100
 
 tails (2.7) unstable; urgency=medium
 
