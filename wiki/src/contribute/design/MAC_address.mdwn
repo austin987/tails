@@ -409,7 +409,10 @@ leaks issue, in addition to other reasons for being discarded:
   DHCP requests) has already occurred.
 
 * NetworkManager's own support for MAC address randomization: see
-  [[!tails_ticket 11293]] for details.
+  [[!tails_ticket 11293]] for details. We explicitly disable
+  `cloned-mac-address` handling, as the default on Debian Stretch
+  is to reset the MAC address to the permanent one:
+  [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/conf.d/spoof-mac.conf]].
 
 * systemd integration: We did not use systemd yet back when we made
   this design decision.

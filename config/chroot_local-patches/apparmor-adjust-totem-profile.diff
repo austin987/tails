@@ -1,16 +1,22 @@
-diff -Naur etc/apparmor.d.orig/abstractions/totem etc/apparmor.d/abstractions/totem
+diff -Naur a/etc/apparmor.d/abstractions/totem b/etc/apparmor.d/abstractions/totem
 --- a/etc/apparmor.d/abstractions/totem	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/abstractions/totem	2016-11-15 15:37:46.673914569 +0000
-@@ -30,13 +30,23 @@
++++ b/etc/apparmor.d/abstractions/totem	2016-11-18 10:42:07.902658411 +0000
+@@ -30,13 +30,26 @@
  
    /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
  
+-  owner @{HOME}/.cache/tracker/meta.db k,
+-  owner @{HOME}/.cache/tracker/meta.db-shm k,
+-  owner @{HOME}/.local/share/grilo-plugins/*.db{,-shm} k,
 +  owner @{HOME}/.cache/gstreamer-[0-9]*.[0-9]*/ rw,
 +  owner @{HOME}/.cache/gstreamer-[0-9]*.[0-9]*/registry.*.bin rw,
 +  owner @{HOME}/.cache/gstreamer-[0-9]*.[0-9]*/registry.*.bin.tmp* rw,
-   owner @{HOME}/.cache/tracker/meta.db k,
-   owner @{HOME}/.cache/tracker/meta.db-shm k,
--  owner @{HOME}/.local/share/grilo-plugins/*.db{,-shm} k,
++  owner @{HOME}/.cache/thumbnails/** rw,
++  owner @{HOME}/.cache/totem/** rwk,
++  owner @{HOME}/.cache/totem-* rwk,
++  owner @{HOME}/.cache/tracker/db-locale.txt r,
++  owner @{HOME}/.cache/tracker/meta.db{,-shm,-journal,-wal} rwk,
++  owner @{HOME}/.cache/tracker/ontologies.gvdb r,
 +  owner @{HOME}/.config/totem/ rwk,
 +  owner @{HOME}/.config/totem/** rwk,
 +  owner @{HOME}/.local/share/grilo-plugins/ rwk,
@@ -25,10 +31,9 @@ diff -Naur etc/apparmor.d.orig/abstractions/totem etc/apparmor.d/abstractions/to
 +  /run/udev/data/+usb* r,
  
    /sys/devices/system/node/*/meminfo r,
-+
-diff -Naur etc/apparmor.d.orig/usr.bin.totem etc/apparmor.d/usr.bin.totem
+diff -Naur a/etc/apparmor.d/usr.bin.totem b/etc/apparmor.d/usr.bin.totem
 --- a/etc/apparmor.d/usr.bin.totem	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.totem	2016-11-15 15:41:28.989125985 +0000
++++ b/etc/apparmor.d/usr.bin.totem	2016-11-18 10:42:07.902658411 +0000
 @@ -6,6 +6,7 @@
  /usr/bin/totem {
    #include <abstractions/audio>
@@ -37,8 +42,11 @@ diff -Naur etc/apparmor.d.orig/usr.bin.totem etc/apparmor.d/usr.bin.totem
    #include <abstractions/python>
    #include <abstractions/totem>
  
-@@ -16,10 +17,11 @@
+@@ -14,12 +15,14 @@
+ 
+   /usr/bin/totem r,
    /usr/bin/totem-video-thumbnailer Pix,
++  /usr/lib/@{multiarch}/libtotem-plparser[0-9]*/totem-pl-parser/* ix,
    /dev/sr* r,
  
 -  # Allow read and write on anything in @{HOME}. Lenient, but
@@ -51,10 +59,10 @@ diff -Naur etc/apparmor.d.orig/usr.bin.totem etc/apparmor.d/usr.bin.totem
  
    owner /{,var/}run/user/*/dconf/user w,
    owner /{,var/}run/user/*/at-spi2-*/   rw,
-diff -Naur etc/apparmor.d.orig/usr.bin.totem-previewers etc/apparmor.d/usr.bin.totem-previewers
+diff -Naur a/etc/apparmor.d/usr.bin.totem-previewers b/etc/apparmor.d/usr.bin.totem-previewers
 --- a/etc/apparmor.d/usr.bin.totem-previewers	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.totem-previewers	2016-11-15 15:40:03.986959980 +0000
-@@ -6,10 +6,11 @@
++++ b/etc/apparmor.d/usr.bin.totem-previewers	2016-11-18 10:43:59.736805950 +0000
+@@ -6,16 +6,17 @@
  /usr/bin/totem-video-thumbnailer {
    #include <abstractions/totem>
  
@@ -68,6 +76,13 @@ diff -Naur etc/apparmor.d.orig/usr.bin.totem-previewers etc/apparmor.d/usr.bin.t
  
    # Not needed by nautilus, but maybe other applications
    owner /**.[pP][nN][gG] w,
+   owner /**.[jJ][pP]{,[eE]}[gG] w,
+ 
+-  /usr/bin/totem-video-thumbnailer r,
++  /usr/bin/totem-video-thumbnailer rm,
+ 
+   # Site-specific additions and overrides. See local/README for details.
+   #include <local/usr.bin.totem-previewers>
 @@ -28,7 +29,8 @@
    # Allow read on anything in @{HOME}. Lenient, but private-files-strict is in
    # effect.

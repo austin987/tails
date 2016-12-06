@@ -321,14 +321,6 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
     raise "Unsupported language: #{lang}"
   end
   step 'Tails Greeter has applied all settings'
-
-  # XXX: Workaround while Tails/Stretch is affected by #11694.
-  retry_times(3) do
-    $vm.spawn('chvt 2')
-    desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-    @screen.wait(desktop_started_picture, 60)
-  end
-
   step 'the Tails desktop is ready'
 end
 
@@ -413,26 +405,41 @@ Given /^available upgrades have been checked$/ do
   }
 end
 
-Given /^the Tor Browser has started$/ do
-  Dogtail::Application.new('Firefox').child('', roleName: "document frame").wait(60)
+When /^I start the Tor Browser( in offline mode)?$/ do |offline|
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
+  if offline
+    offline_prompt = Dogtail::Application.new('zenity')
+                     .dialog('Tor is not ready')
+    offline_prompt.wait(10)
+    offline_prompt.button('Start Tor Browser').click
+  end
+  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
+  @torbrowser.wait(60)
+  if offline
+    step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
 end
 
-Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - News'
+    title = 'Tails - Dear Tails user'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
     raise "Unsupported page: #{page}"
   end
-  step "the Tor Browser has started"
   step "\"#{title}\" has loaded in the Tor Browser"
 end
 
-Given /^the Tor Browser has started in offline mode$/ do
-  step "the Tor Browser has started"
-  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+When /^I request a new identity using Torbutton$/ do
+  @screen.wait_and_click('TorButtonIcon.png', 30)
+  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+end
+
+When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
+  step 'I type "y"'
 end
 
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
@@ -553,6 +560,11 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # Sometimes the next button too fast, before the menu has settled
+  # down to its final size and the icon we want to click is in its
+  # final position. dogtail might allow us to fix that, but given how
+  # rare this problem is, it's not worth the effort.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -563,6 +575,9 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # See comment on /^I request a shutdown using the emergency shutdown applet$/
+  # that explains why we need to wait.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
@@ -571,33 +586,27 @@ Given /^the package "([^"]+)" is installed$/ do |package|
          "Package '#{package}' is not installed")
 end
 
-When /^I start the Tor Browser$/ do
-  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
-end
-
-When /^I request a new identity using Torbutton$/ do
-  @screen.wait_and_click('TorButtonIcon.png', 30)
-  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
-end
-
-When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
-  @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  step 'I type "y"'
-end
-
-When /^I start the Tor Browser in offline mode$/ do
-  step "I start the Tor Browser"
-  offline_prompt = Dogtail::Application.new('zenity')
-           .dialog('Tor is not ready')
-  offline_prompt.wait(10)
-  offline_prompt.button('Start Tor Browser').click
-end
-
-Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
-  $vm.execute_successfully(
-    "nmcli connection add con-name #{con_name} " + \
-    "type ethernet autoconnect yes ifname eth0"
-  )
+Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
+  if version and version == '2.x'
+    con_content = <<EOF
+[connection]
+id=#{con_name}
+uuid=b04afa94-c3a1-41bf-aa12-1a743d964162
+interface-name=eth0
+type=ethernet
+EOF
+    con_file = "/etc/NetworkManager/system-connections/#{con_name}"
+    $vm.file_overwrite(con_file, con_content)
+    $vm.execute_successfully("chmod 600 '#{con_file}'")
+    $vm.execute_successfully("nmcli connection load '#{con_file}'")
+  elsif version and version == '3.x'
+    raise "Unsupported version '#{version}'"
+  else
+    $vm.execute_successfully(
+      "nmcli connection add con-name #{con_name} " + \
+      "type ethernet autoconnect yes ifname eth0"
+    )
+  end
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"

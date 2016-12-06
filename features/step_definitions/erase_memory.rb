@@ -79,9 +79,9 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
-  kernel_mem_reserved_k = 64*1024
+  kernel_mem_reserved_k = 64*1024 # Duplicated in /usr/share/initramfs-tools/scripts/init-premount/memory_wipe
   kernel_mem_reserved_m = convert_to_MiB(kernel_mem_reserved_k, 'k')
-  admin_mem_reserved_k = 128*1024
+  admin_mem_reserved_k = 128*1024 # Duplicated in /usr/share/initramfs-tools/scripts/init-premount/memory_wipe
   admin_mem_reserved_m = convert_to_MiB(admin_mem_reserved_k, 'k')
   kernel_mem_settings = [
     # Let's avoid killing other random processes, and instead focus on
