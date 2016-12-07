@@ -140,7 +140,20 @@ Given /^I setup a filesystem share containing a sample PDF$/ do
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
-  @screen.wait("SupportDocumentation#{@language}.png", 120)
+  if @language == 'German'
+    expected_title = 'Tails - Hilfe & Support'
+    expected_heading = 'Die Dokumentation durchsuchen'
+  else
+    expected_title = 'Tails - Support'
+    expected_heading = 'Search the documentation'
+  end
+  step "\"#{expected_title}\" has loaded in the Tor Browser"
+  headings = Dogtail::Application.new('Firefox')
+             .child(expected_title, roleName: 'document frame')
+             .children(roleName: 'heading')
+  assert(
+    headings.any? { |heading| heading.text == expected_heading }
+  )
 end
 
 Then /^MAT can clean some sample PDF file$/ do
