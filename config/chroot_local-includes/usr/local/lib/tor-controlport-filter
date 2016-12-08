@@ -12,13 +12,13 @@
 # dictionary looking something like this:
 #
 #     - name: blabla
-#       match-exe-paths:
+#       exe-paths:
 #         - path_to_executable
 #         ...
-#       match-users:
+#       users:
 #         - user
 #         ...
-#       match-hosts:
+#       hosts:
 #         - host
 #         ...
 #       commands:
@@ -43,27 +43,27 @@
 # duplicates!). It is advisable to define one filter per file, and
 # give helpful filenames instead of using this field.
 #
-# A filter is matched if for each of the relevant `match-*` rules at
+# A filter is matched if for each of the relevant qualifiers at
 # least one of the elements match the client. For local (loopback)
-# clients the following match rules are needed:
+# clients the following qualifiers are relevant:
 #
-# * `match-exe-paths`: a list of strings, each describing the path to
+# * `exe-paths`: a list of strings, each describing the path to
 #   the binary or script of the client with `*` matching
 #   anything. While this matcher always works for binaries, it only
 #   works for scripts with an enabled AppArmor profile (not
 #   necessarily enforced, complain mode is good enough).
 #
-# * `match-users`: a list of strings, each describing the user of the
+# * `users`: a list of strings, each describing the user of the
 #   client with `*` matching anything.
 #
-# For remote (non-local) clients, the following match rules are
-# needed:
+# For remote (non-local) clients, the following qualifiers are
+# relevant:
 #
-# * match-hosts: a list of strings, each describing the IPv4 address
+# * hosts: a list of strings, each describing the IPv4 address
 #   of the client with `*` matching anything.
 #
-# A filter can serve both local and remote clients by having all
-# `match-*` rules.
+# A filter can serve both local and remote clients by having
+# qualifiers of both types.
 #
 # `commands` (optional) is a list where each item is a dictionary with
 # the obligatory `pattern` key, which is a regular expression that is
@@ -525,13 +525,13 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             client_exe_path = exe_path_of_pid(client_pid)
             client_user = psutil.Process(client_pid).username()
             matchers = [
-                ('match-exe-paths', client_exe_path),
-                ('match-users',     client_user),
+                ('exe-paths', client_exe_path),
+                ('users',     client_user),
             ]
         else:
             client_pid = None
             matchers = [
-                ('match-hosts', client_host),
+                ('hosts', client_host),
             ]
         status, filter_name, allowed_commands, \
             allowed_events, restrict_stream_events = \
