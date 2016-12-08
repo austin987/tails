@@ -193,11 +193,12 @@ def match_and_parse_filter(filters, matchers):
         status = 'no matching filter found, using an empty one'
         return (status, filter_name, allowed_commands,
                 allowed_events, restrict_stream_events)
+    elif len(matched_filters) > 1:
+        raise RuntimeError('multiple filters matched: ' +
+                           ', '.join(matched_filters))
     matched_filter = matched_filters[0]
     filter_name = matched_filter['name']
     status = 'loaded filter: {}'.format(filter_name)
-    if len(matched_filters) > 1:
-        status = 'multiple filters matched, ' + status
 
     # Parse `commands`
     commands = matched_filter.get('commands', {}) or {}
