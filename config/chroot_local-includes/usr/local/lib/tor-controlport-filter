@@ -543,10 +543,14 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             allowed_events, restrict_stream_events = \
                 match_and_parse_filter(self.filters, matchers)
         if local_connection:
-            client_desc = '{} (pid: {}, user: {}, port: {}, filter: {})'.format(
-                client_exe_path, client_pid, client_user,
-                self.client_address[1], filter_name
-            )
+             client_desc = '{exe} (pid: {pid}, user: {user}, port: {port}, ' +
+                           'filter: {filter_name})'.format(
+                               exe = client_exe_path,
+                               pid = client_pid,
+                               user = client_user,
+                               port = self.client_address[1],
+                               filter_name = filter_name
+                           )
         else:
             client_desc = '{1}:{2} (filter: {0})'.format(
                 filter_name, *self.client_address
