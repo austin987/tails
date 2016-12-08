@@ -139,14 +139,9 @@ DEFAULT_LISTEN_PORT = 9051
 DEFAULT_COOKIE_PATH = '/var/run/tor/control.authcookie'
 DEFAULT_CONTROL_SOCKET_PATH = '/var/run/tor/control'
 
-# Limit the length of a line, to prevent DoS attacks trying to
-# crash this filter proxy by sending infinitely long lines.
-MAX_LINESIZE = 1024
-
 
 class NoRewriteMatch(RuntimeError):
     pass
-
 
 def log(msg):
     print(msg, file=sys.stderr)
@@ -180,24 +175,35 @@ def exe_path_of_pid(pid):
             return psutil.Process(pid).exe()
 
 
-def handle_controlport_session(controller, readh, writeh, client_desc, client_pid, client_address, server_address, allowed_commands, allowed_events, restrict_stream_events = False):
+class FilteredControlPortProxySession:
+    # Limit the length of a line, to prevent DoS attacks trying to
+    # crash this filter proxy by sending infinitely long lines.
+    MAX_LINESIZE = 1024
 
-    def _log(line, format_multiline=False, sep = ': '):
-        line = line.strip()
-        if format_multiline and "\n" in line:
-            sep += "(multi-line)\n"
-            line = textwrap.indent(line, ' '*4)
-        log(client_desc + sep + line)
-
-    def debug_log_send(line):
+    def __init__(self, handler):
+        self.allowed_commands = handler.allowed_commands
+        self.allowed_events = handler.allowed_events
+        self.client_pid = handler.client_pid
+        self.controller = handler.controller
+        self.debug_log = handler.debug_log
+        self.filter_name = handler.filter_name
+        self.handler = handler
+        self.restrict_stream_events = handler.restrict_stream_events
+        self.rfile = handler.rfile
+        self.server_address = handler.server_address
+        self.wfile = handler.wfile
+        self.client_streams = set()
+        self.subscribed_event_listeners = []
+    
+    def debug_log_send(self, line):
         if global_args.print_responses:
-            _log(line, format_multiline=True, sep=': <- ')
+            self.debug_log(line, format_multiline=True, sep=': <- ')
 
-    def debug_log_recv(line):
+    def debug_log_recv(self, line):
         if global_args.print_requests:
-            _log(line, format_multiline=True, sep=': -> ')
+            self.debug_log(line, format_multiline=True, sep=': -> ')
 
-    def debug_log_rewrite(kind, old, new):
+    def debug_log_rewrite(self, kind, old, new):
         if kind not in ['command', 'received event', 'response'] or \
            (kind == 'command' and not global_args.print_responses) or \
            (kind in ['received event', 'response'] and \
@@ -206,43 +212,43 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
         if new != old:
             old = textwrap.indent(old.strip(), ' '*4)
             new = textwrap.indent(new.strip(), ' '*4)
-            _log("rewrote {}:\n{}\nto:\n{}".format(kind, old, new),
-                 format_multiline=False)
+            self.debug_log("rewrote {}:\n{}\nto:\n{}".format(kind, old, new),
+                           format_multiline=False)
 
-    def respond(line, raw=False):
+    def respond(self, line, raw=False):
         if line.isspace(): return
-        debug_log_send(line)
-        writeh.write(bytes(line, 'ascii'))
-        if not raw: writeh.write(bytes("\r\n", 'ascii'))
-        writeh.flush()
+        self.debug_log_send(line)
+        self.wfile.write(bytes(line, 'ascii'))
+        if not raw: self.wfile.write(bytes("\r\n", 'ascii'))
+        self.wfile.flush()
 
-    def get_rule(cmd, arg_str):
-        allowed_args = allowed_commands.get(cmd, [])
+    def get_rule(self, cmd, arg_str):
+        allowed_args = self.allowed_commands.get(cmd, [])
         return next((rule for rule in allowed_args \
                      if re.match(rule['pattern'] + "$", arg_str)), None)
 
-    def proxy_line(line, args_rewriter = None, response_rewriter = None):
+    def proxy_line(self, line, args_rewriter = None, response_rewriter = None):
         if args_rewriter:
             new_line = args_rewriter(line)
-            debug_log_rewrite('command', line, new_line)
+            self.debug_log_rewrite('command', line, new_line)
             line = new_line
-        response = controller.msg(line.strip()).raw_content()
+        response = self.controller.msg(line.strip()).raw_content()
         if response_rewriter:
             new_response = response_rewriter(response)
-            debug_log_rewrite('response', response, new_response)
+            self.debug_log_rewrite('response', response, new_response)
             response = new_response
-        respond(response, raw=True)
+        self.respond(response, raw=True)
 
-    def filter_line(line):
-        _log("command filtered: {}".format(line))
-        respond("510 Command filtered")
+    def filter_line(self, line):
+        self.debug_log("command filtered: {}".format(line))
+        self.respond("510 Command filtered")
 
-    def rewrite_line(replacers, line):
+    def rewrite_line(self, replacers, line):
         builtin_replacers = {
-            'client-address': client_address[0],
-            'client-port':    str(client_address[1]),
-            'server-address': server_address[0],
-            'server-port':    str(server_address[1]),
+            'client-address': self.client_address[0],
+            'client-port':    str(self.client_address[1]),
+            'server-address': self.server_address[0],
+            'server-port':    str(self.server_address[1]),
         }
         terminator = ''
         if line[-2:] == "\r\n":
@@ -256,168 +262,191 @@ def handle_controlport_session(controller, readh, writeh, client_desc, client_pi
                 ) + terminator
         raise NoRewriteMatch()
 
-    def rewrite_matched_line(replacers, line):
+    def rewrite_matched_line(self, replacers, line):
         try:
-            return rewrite_line(replacers, line)
+            return self.rewrite_line(replacers, line)
         except NoRewriteMatch:
             return line
 
-    def rewrite_matched_lines(replacers, lines):
+    def rewrite_matched_lines(self, replacers, lines):
         split_lines = lines.strip().split("\r\n")
-        return "\r\n".join([rewrite_matched_line(replacers, line) \
+        return "\r\n".join([self.rewrite_matched_line(replacers, line) \
                             for line in split_lines]) + "\r\n"
 
-    def event_cb(event, event_rewriter = None):
-        if restrict_stream_events and \
+    def event_cb(self, event, event_rewriter = None):
+        if self.restrict_stream_events and \
            isinstance(event, stem.response.events.StreamEvent) and \
            not global_args.disable_filtering:
-            if event.id not in client_streams:
+            if event.id not in self.client_streams:
                 if event.status in [stem.StreamStatus.NEW,
                                     stem.StreamStatus.NEWRESOLVE] and \
-                   client_pid == pid_of_laddr((event.source_address,
-                                               event.source_port)):
-                    client_streams.add(event.id)
+                   self.client_pid == pid_of_laddr((event.source_address,
+                                                    event.source_port)):
+                    self.client_streams.add(event.id)
                 else:
                     return
             elif event.status in [stem.StreamStatus.FAILED,
                                   stem.StreamStatus.CLOSED]:
-                client_streams.remove(event.id)
+                self.client_streams.remove(event.id)
         raw_event_content = event.raw_content()
         if event_rewriter:
             new_raw_event_content = event_rewriter(raw_event_content)
-            debug_log_rewrite(
+            self.debug_log_rewrite(
                 'received event', raw_event_content, new_raw_event_content
             )
             raw_event_content = new_raw_event_content
             if raw_event_content.strip() == '':
                 return
-        respond(raw_event_content, raw=True)
+        self.respond(raw_event_content, raw=True)
 
-    def update_event_subscriptions(events):
+    def update_event_subscriptions(self, events):
         if not global_args.disable_filtering and \
-           any(event not in allowed_events for event in events):
-            filter_line(line)
+           any(event not in self.allowed_events for event in events):
+            self.filter_line(line)
             return
-        for listener, event in subscribed_event_listeners:
+        for listener, event in self.subscribed_event_listeners:
             if event not in events:
-                controller.remove_event_listener(listener)
-                subscribed_event_listeners.remove((listener, event))
+                self.controller.remove_event_listener(listener)
+                self.subscribed_event_listeners.remove((listener, event))
                 if global_args.print_responses:
-                    _log("unsubscribed from event '{}'".format(event))
+                    self.debug_log("unsubscribed from event '{}'".format(event))
         for event in events:
-            if any(event == event_ for _, event_ in subscribed_event_listeners):
+            if any(event == event_ for _, event_ in self.subscribed_event_listeners):
                 if global_args.print_responses:
-                    _log("already subscribed to event '{}'".format(event))
+                    self.debug_log("already subscribed to event '{}'"
+                                   .format(event))
                 continue
-            rule = allowed_events.get(event, {}) or {}
+            rule = self.allowed_events.get(event, {}) or {}
             if not rule.get('suppress', False) or \
                global_args.disable_filtering:
                 event_rewriter = None
                 if 'response' in rule:
                     replacers = rule['response']
                     def _event_rewriter(line):
-                        return rewrite_matched_line(replacers, line)
+                        return self.rewrite_matched_line(replacers, line)
                     event_rewriter = _event_rewriter
                 def _event_cb(event):
-                    event_cb(event, event_rewriter=event_rewriter)
-                controller.add_event_listener(
+                    self.event_cb(event, event_rewriter=event_rewriter)
+                self.controller.add_event_listener(
                     _event_cb, getattr(stem.control.EventType, event)
                 )
-                subscribed_event_listeners.append((_event_cb, event))
+                self.subscribed_event_listeners.append((_event_cb, event))
                 if global_args.print_responses:
-                    _log("subscribed to event '{}'".format(event))
+                    self.debug_log("subscribed to event '{}'".format(event))
             else:
                 if global_args.print_responses:
-                    _log("suppressed subscription to event '{}'".format(event))
-        respond("250 OK")
+                    self.debug_log("suppressed subscription to event '{}'"
+                              .format(event))
+        self.respond("250 OK")
 
-    subscribed_event_listeners = []
-    client_streams = set()
-    while True:
-        binary_line = readh.readline(MAX_LINESIZE)
-        if binary_line == b'':
-            # Deal with clients that close the socket without a QUIT.
-            break
-        line = str(binary_line, 'ascii')
-        if line.isspace():
-            _log('ignoring received empty (or whitespace-only) line')
-            continue
-        match = re.match(
-            r'(?P<cmd>\S+)(?P<cmd_arg_sep>\s*)(?P<arg_str>[^\r\n]*)\r?\n$', line
-        )
-        if not match:
-            _log("received bad line (escapes made explicit): " + repr(line))
-            # Hopefully the next line is ok...
-            continue
-        debug_log_recv(line)
-        cmd         = match.group('cmd')
-        cmd_arg_sep = match.group('cmd_arg_sep')
-        arg_str     = match.group('arg_str')
-        args = arg_str.split()
-        cmd = cmd.upper()
+    def handle(self):
+        while True:
+            binary_line = self.rfile.readline(self.MAX_LINESIZE)
+            if binary_line == b'':
+                # Deal with clients that close the socket without a QUIT.
+                break
+            line = str(binary_line, 'ascii')
+            if line.isspace():
+                self.debug_log('ignoring received empty (or whitespace-only) ' +
+                               'line')
+                continue
+            match = re.match(
+                r'(?P<cmd>\S+)(?P<cmd_arg_sep>\s*)(?P<arg_str>[^\r\n]*)\r?\n$',
+                line
+            )
+            if not match:
+                self.debug_log("received bad line (escapes made explicit): " +
+                               repr(line))
+                # Hopefully the next line is ok...
+                continue
+            self.debug_log_recv(line)
+            cmd         = match.group('cmd')
+            cmd_arg_sep = match.group('cmd_arg_sep')
+            arg_str     = match.group('arg_str')
+            args = arg_str.split()
+            cmd = cmd.upper()
 
-        if cmd == "PROTOCOLINFO":
-            # Stem calls PROTOCOLINFO before authenticating. Tell the
-            # client that there is no authentication.
-            respond("250-PROTOCOLINFO 1")
-            respond("250-AUTH METHODS=NULL")
-            respond("250-VERSION Tor=\"{}\"".format(controller.get_version()))
-            respond("250 OK")
+            if cmd == "PROTOCOLINFO":
+                # Stem calls PROTOCOLINFO before authenticating. Tell the
+                # client that there is no authentication.
+                self.respond("250-PROTOCOLINFO 1")
+                self.respond("250-AUTH METHODS=NULL")
+                self.respond("250-VERSION Tor=\"{}\""
+                             .format(self.controller.get_version()))
+                self.respond("250 OK")
 
-        elif cmd == "AUTHENTICATE":
-            # We have already authenticated, and the filtered port is
-            # access-restricted according to our filter instead.
-            respond("250 OK")
+            elif cmd == "AUTHENTICATE":
+                # We have already authenticated, and the filtered port is
+                # access-restricted according to our filter instead.
+                self.respond("250 OK")
 
-        elif cmd == "QUIT":
-            respond("250 closing connection")
-            break
+            elif cmd == "QUIT":
+                self.respond("250 closing connection")
+                break
 
-        elif cmd == "SETEVENTS":
-            # The control language doesn't care about case for
-            # the event type.
-            events = [event.upper() for event in args]
-            update_event_subscriptions(events)
+            elif cmd == "SETEVENTS":
+                # The control language doesn't care about case for
+                # the event type.
+                events = [event.upper() for event in args]
+                self.update_event_subscriptions(events)
 
-        else:
-            rule = get_rule(cmd, arg_str)
-            if rule == None and global_args.disable_filtering:
-                rule = {}
-            if rule != None:
-                args_rewriter = None
-                response_rewriter = None
-
-                if 'response' in rule:
-                    def _response_rewriter(lines):
-                        return rewrite_matched_lines(rule['response'], lines)
-                    response_rewriter = _response_rewriter
-
-                if 'replacement' in rule:
-                    def _args_rewriter(line):
-                        # We also want to match the command in `line`
-                        # and add it back to the replacement string.
-                        # We make sure to keep the exact white spaces
-                        # separating the command and arguments, to not
-                        # rewrite the line unnecessarily.
-                        prefix = cmd + cmd_arg_sep
-                        replacer = {
-                            'pattern':     prefix + rule['pattern'],
-                            'replacement': prefix + rule['replacement']
-                        }
-                        return rewrite_line([replacer], line)
-                    args_rewriter = _args_rewriter
-
-                proxy_line(line, args_rewriter=args_rewriter,
-                           response_rewriter=response_rewriter)
             else:
-                filter_line(line)
+                rule = self.get_rule(cmd, arg_str)
+                if rule == None and global_args.disable_filtering:
+                    rule = {}
+                if rule != None:
+                    args_rewriter = None
+                    response_rewriter = None
+
+                    if 'response' in rule:
+                        def _response_rewriter(lines):
+                            return self.rewrite_matched_lines(rule['response'],
+                                                              lines)
+                        response_rewriter = _response_rewriter
+
+                    if 'replacement' in rule:
+                        def _args_rewriter(line):
+                            # We also want to match the command in `line`
+                            # and add it back to the replacement string.
+                            # We make sure to keep the exact white spaces
+                            # separating the command and arguments, to not
+                            # rewrite the line unnecessarily.
+                            prefix = cmd + cmd_arg_sep
+                            replacer = {
+                                'pattern':     prefix + rule['pattern'],
+                                'replacement': prefix + rule['replacement']
+                            }
+                            return self.rewrite_line([replacer], line)
+                        args_rewriter = _args_rewriter
+
+                    self.proxy_line(line, args_rewriter=args_rewriter,
+                                    response_rewriter=response_rewriter)
+                else:
+                    self.filter_line(line)
 
 
 class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 
+    def debug_log(self, line, format_multiline=False, sep = ': '):
+        line = line.strip()
+        if format_multiline and "\n" in line:
+            sep += "(multi-line)\n"
+            line = textwrap.indent(line, ' '*4)
+        log(self.client_desc + sep + line)
+
     def setup(self):
         super(type(self), self).setup()
+        self.allowed_commands = {}
+        self.allowed_events = {}
+        self.client_desc = None
+        self.client_pid = None
+        self.client_streams = set()
+        self.controller = None
+        self.filter_name = None
         self.filters = []
+        self.restrict_stream_events = False
+        self.server_address = self.server.server_address
+        self.subscribed_event_listeners = []
         for filter_file in glob.glob('/etc/tor-controlport-filter.d/*.yml'):
             try:
                 with open(filter_file, "rb") as fh:
@@ -431,7 +460,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 log("filter '{}' has bad YAML and was not loaded: {}"
                     .format(filter_file, str(err)))
 
-    def add_allowed_commands(commands, allowed_commands):
+    def add_allowed_commands(self, commands):
         for cmd in commands:
             allowed_args = commands[cmd]
             # An empty argument list allows nothing, but will
@@ -442,9 +471,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             for i in range(len(allowed_args)):
                 if isinstance(allowed_args[i], str):
                     allowed_args[i] = {'pattern': allowed_args[i]}
-            allowed_commands[cmd.upper()] = allowed_args
+            self.allowed_commands[cmd.upper()] = allowed_args
 
-    def add_allowed_confs_commands(confs, allowed_commands):
+    def add_allowed_confs_commands(self, confs):
         combined_getconf_rule = {'pattern': "(" + "|".join([
             key for key in confs]) + ")"}
         setconf_reset_part = "\s*|\s*".join([
@@ -466,49 +495,40 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         for cmd, rule in [('GETCONF', combined_getconf_rule),
                           ('SETCONF', combined_setconf_rule)]:
             if rule['pattern'] != "()+":
-                if cmd not in allowed_commands:
-                    allowed_commands[cmd] = []
-                allowed_commands[cmd].append(rule)
+                if cmd not in self.allowed_commands:
+                    self.allowed_commands[cmd] = []
+                self.allowed_commands[cmd].append(rule)
 
-    def add_allowed_events(events, allowed_events):
+    def add_allowed_events(self, events):
         for event in events:
             opts = events[event]
             # Same as for the `commands` argument list, let's
             # add an empty dict to simplify later code.
             if opts == None:
                 opts = {}
-            allowed_events[event.upper()] = opts
+            self.allowed_events[event.upper()] = opts
 
-    def match_and_parse_filter(filters, matchers):
-        filter_name = None
-        allowed_commands = {}
-        allowed_events = {}
-        restrict_stream_events = False
-        matched_filters = [filter_ for filter_ in filters \
+    def match_and_parse_filter(self, matchers):
+        matched_filters = [filter_ for filter_ in self.filters \
                            if all(any(val == expected_val or val == '*' \
                                       for val in filter_.get(key, [])) \
                                   for key, expected_val in matchers)]
         if len(matched_filters) == 0:
-            status = 'no matching filter found, using an empty one'
-            return (status, filter_name, allowed_commands,
-                    allowed_events, restrict_stream_events)
+            return
         elif len(matched_filters) > 1:
             raise RuntimeError('multiple filters matched: ' +
                                ', '.join(matched_filters))
         matched_filter = matched_filters[0]
-        filter_name = matched_filter['name']
-        status = 'loaded filter: {}'.format(filter_name)
+        self.filter_name = matched_filter['name']
         commands = matched_filter.get('commands', {}) or {}
-        self.add_allowed_commands(commands, allowed_commands)
+        self.add_allowed_commands(commands)
         confs = matched_filter.get('confs', {}) or {}
-        self.add_allowed_confs_commands(confs, allowed_commands)
+        self.add_allowed_confs_commands(confs)
         events = matched_filter.get('events', {}) or {}
-        self.add_allowed_events(events, allowed_events)
-        restrict_stream_events = bool(matched_filter.get(
+        self.add_allowed_events(events)
+        self.restrict_stream_events = bool(matched_filter.get(
             'restrict-stream-events', False
         ))
-        return (status, filter_name, allowed_commands,
-                allowed_events, restrict_stream_events)
 
     def connect_to_real_control_port(self):
         with open(global_args.control_cookie_path, "rb") as f:
@@ -523,63 +543,60 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         client_host = self.client_address[0]
         local_connection = ipaddress.ip_address(client_host).is_loopback
         if local_connection:
-            client_pid = pid_of_laddr(self.client_address)
+            self.client_pid = pid_of_laddr(self.client_address)
             # Deal with the race between looking up the PID, and the
             # client being killed before we find the PID.
-            if not client_pid: return
-            client_exe_path = exe_path_of_pid(client_pid)
-            client_user = psutil.Process(client_pid).username()
+            if not self.client_pid: return
+            client_exe_path = exe_path_of_pid(self.client_pid)
+            client_user = psutil.Process(self.client_pid).username()
             matchers = [
                 ('exe-paths', client_exe_path),
                 ('users',     client_user),
             ]
         else:
-            client_pid = None
+            self.client_pid = None
             matchers = [
                 ('hosts', client_host),
             ]
-        status, filter_name, allowed_commands, \
-            allowed_events, restrict_stream_events = \
-                self.match_and_parse_filter(self.filters, matchers)
+        self.match_and_parse_filter(matchers)
         if local_connection:
-             client_desc = '{exe} (pid: {pid}, user: {user}, port: {port}, ' +
-                           'filter: {filter_name})'.format(
-                               exe = client_exe_path,
-                               pid = client_pid,
-                               user = client_user,
-                               port = self.client_address[1],
-                               filter_name = filter_name
-                           )
+            self.client_desc = '{exe} (pid: {pid}, user: {user}, ' \
+                               'port: {port}, filter: {filter_name})'.format(
+                                   exe = client_exe_path,
+                                   pid = self.client_pid,
+                                   user = client_user,
+                                   port = self.client_address[1],
+                                   filter_name = self.filter_name
+                               )
         else:
-            client_desc = '{1}:{2} (filter: {0})'.format(
-                filter_name, *self.client_address
+            self.client_desc = '{1}:{2} (filter: {0})'.format(
+                self.filter_name, *self.client_address
             )
-        if restrict_stream_events and not local_connection:
-            log(
-                "{}: filter '{}' has `restrict-stream-events` set " +
+        if self.restrict_stream_events and not local_connection:
+            self.debug_log(
+                "filter '{}' has `restrict-stream-events` set " \
                 "and we are remote so the option was disabled"
-                .format(client_desc, filter_name)
+                .format(self.filter_name)
             )
-            restrict_stream_events = False
-        log('{} connected: {}'.format(client_desc, status))
+            self.restrict_stream_events = False
+
+        if len(self.filters) == 0:
+            status = 'no matching filter found, using an empty one'
+        else:
+            status = 'loaded filter: {}'.format(self.filter_name)
+        log('{} connected: {}'.format(self.client_desc, status))
         if global_args.debug:
             log('Final rules:')
             log(yaml.dump({
-                'commands': allowed_commands,
-                'events': allowed_events,
-                'restrict-stream-events': restrict_stream_events,
+                'commands': self.allowed_commands,
+                'events': self.allowed_events,
+                'restrict-stream-events': self.restrict_stream_events,
             }))
         disconnect_reason = "client quit"
-        controller = None
         try:
-            controller = self.connect_to_real_control_port()
-            handle_controlport_session(controller, self.rfile, self.wfile,
-                                       client_desc, client_pid,
-                                       self.client_address,
-                                       self.server.server_address,
-                                       allowed_commands, allowed_events,
-                                       restrict_stream_events
-            )
+            self.controller = self.connect_to_real_control_port()
+            session = FilteredControlPortProxySession(self)
+            session.handle()
         except (ConnectionResetError, BrokenPipeError) as err:
             # Handle clients disconnecting abruptly
             disconnect_reason = str(err)
@@ -590,9 +607,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             # Handle Tor closing its socket abruptly
             disconnect_reason = "Tor closed its socket"
         finally:
-            if controller:
-                controller.close()
-            log('{} disconnected: {}'.format(client_desc, disconnect_reason))
+            if self.controller:
+                self.controller.close()
+            log('{} disconnected: {}'.format(self.client_desc,
+                                             disconnect_reason))
 
 
 class FilteredControlPortProxy(socketserver.ThreadingTCPServer):
