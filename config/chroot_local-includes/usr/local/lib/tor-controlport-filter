@@ -180,28 +180,7 @@ def exe_path_of_pid(pid):
             return psutil.Process(pid).exe()
 
 
-def match_and_parse_filter(filters, matchers):
-    filter_name = None
-    allowed_commands = {}
-    allowed_events = {}
-    restrict_stream_events = False
-    matched_filters = [filter_ for filter_ in filters \
-                       if all(any(val == expected_val or val == '*' \
-                                  for val in filter_.get(key, [])) \
-                              for key, expected_val in matchers)]
-    if len(matched_filters) == 0:
-        status = 'no matching filter found, using an empty one'
-        return (status, filter_name, allowed_commands,
-                allowed_events, restrict_stream_events)
-    elif len(matched_filters) > 1:
-        raise RuntimeError('multiple filters matched: ' +
-                           ', '.join(matched_filters))
-    matched_filter = matched_filters[0]
-    filter_name = matched_filter['name']
-    status = 'loaded filter: {}'.format(filter_name)
-
-    # Parse `commands`
-    commands = matched_filter.get('commands', {}) or {}
+def add_allowed_commands(commands, allowed_commands):
     for cmd in commands:
         allowed_args = commands[cmd]
         # An empty argument list allows nothing, but will
@@ -214,8 +193,7 @@ def match_and_parse_filter(filters, matchers):
                 allowed_args[i] = {'pattern': allowed_args[i]}
         allowed_commands[cmd.upper()] = allowed_args
 
-    # Parse `confs`, which is just syntactic sugar
-    confs = matched_filter.get('confs', {}) or {}
+def add_allowed_confs_commands(confs, allowed_commands):
     combined_getconf_rule = {'pattern': "(" + "|".join([
         key for key in confs]) + ")"}
     setconf_reset_part = "\s*|\s*".join([
@@ -241,8 +219,7 @@ def match_and_parse_filter(filters, matchers):
                 allowed_commands[cmd] = []
             allowed_commands[cmd].append(rule)
 
-    # Parse `events`
-    events = matched_filter.get('events', {}) or {}
+def add_allowed_events(events, allowed_events):
     for event in events:
         opts = events[event]
         # Same as for the `commands` argument list, let's
@@ -251,7 +228,31 @@ def match_and_parse_filter(filters, matchers):
             opts = {}
         allowed_events[event.upper()] = opts
 
-    # Parse `restrict-stream-events`
+def match_and_parse_filter(filters, matchers):
+    filter_name = None
+    allowed_commands = {}
+    allowed_events = {}
+    restrict_stream_events = False
+    matched_filters = [filter_ for filter_ in filters \
+                       if all(any(val == expected_val or val == '*' \
+                                  for val in filter_.get(key, [])) \
+                              for key, expected_val in matchers)]
+    if len(matched_filters) == 0:
+        status = 'no matching filter found, using an empty one'
+        return (status, filter_name, allowed_commands,
+                allowed_events, restrict_stream_events)
+    elif len(matched_filters) > 1:
+        raise RuntimeError('multiple filters matched: ' +
+                           ', '.join(matched_filters))
+    matched_filter = matched_filters[0]
+    filter_name = matched_filter['name']
+    status = 'loaded filter: {}'.format(filter_name)
+    commands = matched_filter.get('commands', {}) or {}
+    add_allowed_commands(commands, allowed_commands)
+    confs = matched_filter.get('confs', {}) or {}
+    add_allowed_confs_commands(confs, allowed_commands)
+    events = matched_filter.get('events', {}) or {}
+    add_allowed_events(events, allowed_events)
     restrict_stream_events = bool(matched_filter.get(
         'restrict-stream-events', False
     ))
