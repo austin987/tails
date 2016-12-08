@@ -180,86 +180,6 @@ def exe_path_of_pid(pid):
             return psutil.Process(pid).exe()
 
 
-def add_allowed_commands(commands, allowed_commands):
-    for cmd in commands:
-        allowed_args = commands[cmd]
-        # An empty argument list allows nothing, but will
-        # make some code below easier than if it can be
-        # None as well.
-        if allowed_args == None:
-            allowed_args = []
-        for i in range(len(allowed_args)):
-            if isinstance(allowed_args[i], str):
-                allowed_args[i] = {'pattern': allowed_args[i]}
-        allowed_commands[cmd.upper()] = allowed_args
-
-def add_allowed_confs_commands(confs, allowed_commands):
-    combined_getconf_rule = {'pattern': "(" + "|".join([
-        key for key in confs]) + ")"}
-    setconf_reset_part = "\s*|\s*".join([
-        key for key in confs if isinstance(confs[key], list) and \
-                                '' in confs[key]]
-    )
-    setconf_assignment_part = "\s*|\s*".join([
-        "{}=({})".format(
-            key, "|".join(confs[key])
-        ) for key in confs if isinstance(confs[key], list) and \
-                              len(confs[key]) > 0])
-    setconf_parts = []
-    for part in [setconf_reset_part, setconf_assignment_part]:
-        if part and part != '':
-            setconf_parts.append(part)
-    combined_setconf_rule = {
-        'pattern': "({})+".format("\s*|\s*".join(setconf_parts))
-    }
-    for cmd, rule in [('GETCONF', combined_getconf_rule),
-                      ('SETCONF', combined_setconf_rule)]:
-        if rule['pattern'] != "()+":
-            if cmd not in allowed_commands:
-                allowed_commands[cmd] = []
-            allowed_commands[cmd].append(rule)
-
-def add_allowed_events(events, allowed_events):
-    for event in events:
-        opts = events[event]
-        # Same as for the `commands` argument list, let's
-        # add an empty dict to simplify later code.
-        if opts == None:
-            opts = {}
-        allowed_events[event.upper()] = opts
-
-def match_and_parse_filter(filters, matchers):
-    filter_name = None
-    allowed_commands = {}
-    allowed_events = {}
-    restrict_stream_events = False
-    matched_filters = [filter_ for filter_ in filters \
-                       if all(any(val == expected_val or val == '*' \
-                                  for val in filter_.get(key, [])) \
-                              for key, expected_val in matchers)]
-    if len(matched_filters) == 0:
-        status = 'no matching filter found, using an empty one'
-        return (status, filter_name, allowed_commands,
-                allowed_events, restrict_stream_events)
-    elif len(matched_filters) > 1:
-        raise RuntimeError('multiple filters matched: ' +
-                           ', '.join(matched_filters))
-    matched_filter = matched_filters[0]
-    filter_name = matched_filter['name']
-    status = 'loaded filter: {}'.format(filter_name)
-    commands = matched_filter.get('commands', {}) or {}
-    add_allowed_commands(commands, allowed_commands)
-    confs = matched_filter.get('confs', {}) or {}
-    add_allowed_confs_commands(confs, allowed_commands)
-    events = matched_filter.get('events', {}) or {}
-    add_allowed_events(events, allowed_events)
-    restrict_stream_events = bool(matched_filter.get(
-        'restrict-stream-events', False
-    ))
-    return (status, filter_name, allowed_commands,
-            allowed_events, restrict_stream_events)
-
-
 def handle_controlport_session(controller, readh, writeh, client_desc, client_pid, client_address, server_address, allowed_commands, allowed_events, restrict_stream_events = False):
 
     def _log(line, format_multiline=False, sep = ': '):
@@ -511,6 +431,85 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
                 log("filter '{}' has bad YAML and was not loaded: {}"
                     .format(filter_file, str(err)))
 
+    def add_allowed_commands(commands, allowed_commands):
+        for cmd in commands:
+            allowed_args = commands[cmd]
+            # An empty argument list allows nothing, but will
+            # make some code below easier than if it can be
+            # None as well.
+            if allowed_args == None:
+                allowed_args = []
+            for i in range(len(allowed_args)):
+                if isinstance(allowed_args[i], str):
+                    allowed_args[i] = {'pattern': allowed_args[i]}
+            allowed_commands[cmd.upper()] = allowed_args
+
+    def add_allowed_confs_commands(confs, allowed_commands):
+        combined_getconf_rule = {'pattern': "(" + "|".join([
+            key for key in confs]) + ")"}
+        setconf_reset_part = "\s*|\s*".join([
+            key for key in confs if isinstance(confs[key], list) and \
+                                    '' in confs[key]]
+        )
+        setconf_assignment_part = "\s*|\s*".join([
+            "{}=({})".format(
+                key, "|".join(confs[key])
+            ) for key in confs if isinstance(confs[key], list) and \
+                                  len(confs[key]) > 0])
+        setconf_parts = []
+        for part in [setconf_reset_part, setconf_assignment_part]:
+            if part and part != '':
+                setconf_parts.append(part)
+        combined_setconf_rule = {
+            'pattern': "({})+".format("\s*|\s*".join(setconf_parts))
+        }
+        for cmd, rule in [('GETCONF', combined_getconf_rule),
+                          ('SETCONF', combined_setconf_rule)]:
+            if rule['pattern'] != "()+":
+                if cmd not in allowed_commands:
+                    allowed_commands[cmd] = []
+                allowed_commands[cmd].append(rule)
+
+    def add_allowed_events(events, allowed_events):
+        for event in events:
+            opts = events[event]
+            # Same as for the `commands` argument list, let's
+            # add an empty dict to simplify later code.
+            if opts == None:
+                opts = {}
+            allowed_events[event.upper()] = opts
+
+    def match_and_parse_filter(filters, matchers):
+        filter_name = None
+        allowed_commands = {}
+        allowed_events = {}
+        restrict_stream_events = False
+        matched_filters = [filter_ for filter_ in filters \
+                           if all(any(val == expected_val or val == '*' \
+                                      for val in filter_.get(key, [])) \
+                                  for key, expected_val in matchers)]
+        if len(matched_filters) == 0:
+            status = 'no matching filter found, using an empty one'
+            return (status, filter_name, allowed_commands,
+                    allowed_events, restrict_stream_events)
+        elif len(matched_filters) > 1:
+            raise RuntimeError('multiple filters matched: ' +
+                               ', '.join(matched_filters))
+        matched_filter = matched_filters[0]
+        filter_name = matched_filter['name']
+        status = 'loaded filter: {}'.format(filter_name)
+        commands = matched_filter.get('commands', {}) or {}
+        self.add_allowed_commands(commands, allowed_commands)
+        confs = matched_filter.get('confs', {}) or {}
+        self.add_allowed_confs_commands(confs, allowed_commands)
+        events = matched_filter.get('events', {}) or {}
+        self.add_allowed_events(events, allowed_events)
+        restrict_stream_events = bool(matched_filter.get(
+            'restrict-stream-events', False
+        ))
+        return (status, filter_name, allowed_commands,
+                allowed_events, restrict_stream_events)
+
     def connect_to_real_control_port(self):
         with open(global_args.control_cookie_path, "rb") as f:
             cookie = f.read()
@@ -541,7 +540,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             ]
         status, filter_name, allowed_commands, \
             allowed_events, restrict_stream_events = \
-                match_and_parse_filter(self.filters, matchers)
+                self.match_and_parse_filter(self.filters, matchers)
         if local_connection:
              client_desc = '{exe} (pid: {pid}, user: {user}, port: {port}, ' +
                            'filter: {filter_name})'.format(
