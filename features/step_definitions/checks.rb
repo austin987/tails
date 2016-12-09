@@ -129,7 +129,20 @@ Then /^the VirtualBox guest modules are available$/ do
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
-  @screen.wait("SupportDocumentation#{@language}.png", 120)
+  if @language == 'German'
+    expected_title = 'Tails - Hilfe & Support'
+    expected_heading = 'Die Dokumentation durchsuchen'
+  else
+    expected_title = 'Tails - Support'
+    expected_heading = 'Search the documentation'
+  end
+  step "\"#{expected_title}\" has loaded in the Tor Browser"
+  headings = Dogtail::Application.new('Firefox')
+             .child(expected_title, roleName: 'document frame')
+             .children(roleName: 'heading')
+  assert(
+    headings.any? { |heading| heading.text == expected_heading }
+  )
 end
 
 Given /^I plug and mount a USB drive containing a sample PDF$/ do

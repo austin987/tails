@@ -95,11 +95,12 @@ if [ -n "$JENKINS_URL" ]; then
 	git clean --force -d -x
 fi
 
-install -m 0755 -d "$ARTIFACTS_DIR"
-
 if [ "$TAILS_CLEAN_BUILD" ]; then
 	as_root_do lb clean --all
+	git clean -fdx
 fi
+
+install -m 0755 -d "$ARTIFACTS_DIR"
 
 if [ -z "$JENKINS_URL" ]; then
 	./build-website
