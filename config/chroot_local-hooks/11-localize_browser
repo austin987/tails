@@ -111,11 +111,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     cp "${BRANDING_TEMPLATE_FILE}" "${TARGET_BRANDING_FILE}"
     for KEY in browser.search.defaultenginename \
                browser.search.selectedEngine; do
-        PLUGIN="Disconnect.me - ${LOCALIZED_LANG}"
-        if ! grep -q "<ShortName>${PLUGIN}</ShortName>" "${DISCONNECT_PLUGIN}"; then
-            echo "Trying to make search plugin '${PLUGIN}' the default for ${TARGET_LOCALE} but it unexpectedly wasn't the one we generated earlier" >&2
-            exit 1
-        fi
+        PLUGIN="DuckDuckGo"
         set_simple_config_key "${TARGET_BRANDING_FILE}" "${KEY}" "${PLUGIN}"
     done
     TBB_DICTIONARIES_DIR="${TBB_INSTALL}/dictionaries"
