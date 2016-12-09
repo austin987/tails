@@ -4,7 +4,8 @@ set -e
 
 echo "Localize each supported browser locale"
 
-# Import the TBB_INSTALL variable and supported_tor_browser_locales()
+# Import the TBB_INSTALL and TBB_EXT variables and
+# supported_tor_browser_locales()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 # Import set_simple_config_key()
@@ -154,10 +155,16 @@ rm -r "${BROWSER_LOCALIZATION_DIR}"
 # Remove unwanted browser search plugins bundled in the Tor Browser.
 7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
    'chrome/en-US/locale/browser/searchplugins/ddg*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/disconnect*.xml' \
    'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
    'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
    'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
+for pack in "${TBB_EXT}"/langpack-*.xpi; do
+    7z d -tzip "${pack}" \
+       'browser/chrome/*/locale/browser/searchplugins/ddg*.xml' \
+       'browser/chrome/*/locale/browser/searchplugins/startpage*.xml' \
+       'browser/chrome/*/locale/browser/searchplugins/wikipedia*.xml' \
+       'browser/chrome/*/locale/browser/searchplugins/yahoo*.xml'
+done
 
 # We want our localized English Wikipedia plugin to be available in
 # all locales.
@@ -173,8 +180,9 @@ rm -r "${BROWSER_LOCALIZATION_DIR}"
     done
 )
 
-# All generated files must be world-readable.
+# All generated and modified files must remain world-readable.
 chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
-              "${BRANDING_DIR}"
+              "${BRANDING_DIR}" \
+              "${TBB_EXT}"
 
 apt-get --yes purge imagemagick
