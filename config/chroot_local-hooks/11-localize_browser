@@ -100,6 +100,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     base64 "${LOCALIZED_WIKIPEDIA_ICON_PATH}" | tr -d "\n" > \
            "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
     sed -e "s/\${LANG_CODE}/${LANG_CODE}/" \
+        -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
         -e "/\${BASE64_PNG_16x16}/ r ${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}" \
         -e "/\${BASE64_PNG_16x16}/d" \
         "${BROWSER_LOCALIZATION_DIR}/wikipedia.xml-template" > \
