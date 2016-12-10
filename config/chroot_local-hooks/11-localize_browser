@@ -154,6 +154,11 @@ done < "${DESCRIPTIONS_FILE}"
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
 # Remove unwanted browser search plugins bundled in the Tor Browser.
+# Note for posterity: the searchplugins/list.txt file must not be
+# removed! It must list the filename (excl. .xml) of each plugin
+# present, otherwise they won't work. It's not a problem to list
+# nonexisting ones, so as long as we delete plugins we do not have to
+# alter it.
 7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
    'chrome/en-US/locale/browser/searchplugins/ddg*.xml' \
    'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
