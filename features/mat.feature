@@ -6,8 +6,8 @@ Feature: Metadata Anonymization Toolkit
   # In this feature we cannot restore from snapshots since it's
   # incompatible with filesystem shares.
 
-  Scenario: MAT can clean a PDF file
+  Scenario: MAT can clean a PNG file
     Given a computer
-    And I setup a filesystem share containing a sample PDF
+    And I setup a filesystem share containing a sample PNG
     And I start Tails from DVD with network unplugged and I login
-    Then MAT can clean some sample PDF file
+    Then MAT can clean some sample PNG file
