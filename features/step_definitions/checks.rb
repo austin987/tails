@@ -161,6 +161,10 @@ Then /^MAT can clean some sample PNG file$/ do
     png_name = File.basename(png_on_host)
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
     step "I copy \"#{@shared_png_dir_on_guest}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
+    raw_check_cmd = "grep --quiet --fixed-strings --text " +
+                    "'Created with GIMP' '#{png_on_guest}'"
+    assert($vm.execute(raw_check_cmd, user: LIVE_USER).success?,
+           'The comment is not present in the PNG')
     check_before = $vm.execute_successfully("mat --check '#{png_on_guest}'",
                                             :user => LIVE_USER).stdout
     assert(check_before.include?("#{png_on_guest} is not clean"),
@@ -170,6 +174,8 @@ Then /^MAT can clean some sample PNG file$/ do
                                            :user => LIVE_USER).stdout
     assert(check_after.include?("#{png_on_guest} is clean"),
            "MAT failed to clean '#{png_on_host}'")
+    assert($vm.execute(raw_check_cmd, user: LIVE_USER).failure?,
+           'The comment is still present in the PNG')
     $vm.execute_successfully("rm '#{png_on_guest}'")
   end
 end
