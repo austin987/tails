@@ -965,8 +965,9 @@ def share_host_files(files)
   files = [files] if files.class == String
   assert_equal(Array, files.class)
   disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
-  # Let's add an extra MiB for filesysten overhead etc.
-  disk_size += convert_to_bytes(1, 'MiB')
+  # Let's add some extra space for filesysten overhead etc.
+  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.10).ceil].max
+  STDERR.puts "XXX #{disk_size}"
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
   step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
