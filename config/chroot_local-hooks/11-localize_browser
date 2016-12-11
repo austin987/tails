@@ -78,8 +78,13 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
         "${TARGET_SEARCHPLUGINS_DIR}/startpage-${MOZILLA_LOCALE}.xml"
 
     DDG_PLUGIN="${TARGET_SEARCHPLUGINS_DIR}/ddg-${MOZILLA_LOCALE}.xml"
+    DDG_LANG_UI="${NORMAL_LOCALE}"
+    if [ "${DDG_LANG_UI}" = "vi_VN" ]; then
+        # DDG uses a non-standard locale for Vietnamese
+        DDG_LANG_UI="vi_VI"
+    fi
     sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
-        -e "s/\${LANG_UI}/${NORMAL_LOCALE}/" \
+        -e "s/\${LANG_UI}/${DDG_LANG_UI}/" \
         "${BROWSER_LOCALIZATION_DIR}/ddg.xml-template" > \
         "${DDG_PLUGIN}"
 
