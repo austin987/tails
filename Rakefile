@@ -139,27 +139,27 @@ def system_cpus
 end
 
 task :parse_build_options do
-  options = ''
+  options = []
 
   # Default to in-memory builds if there is enough RAM available
-  options += 'ram ' if enough_free_memory_for_ram_build?
+  options << 'ram' if enough_free_memory_for_ram_build?
 
   # Default to build using the in-VM proxy
-  options += 'vmproxy '
+  options << 'vmproxy'
 
   # Default to fast compression on development branches
-  options += 'gzipcomp ' unless is_release?
+  options << 'gzipcomp' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
-  options += "cpus=#{cpus} " if cpus
+  options << "cpus=#{cpus}" if cpus
 
-  options += ENV['TAILS_BUILD_OPTIONS'] if ENV['TAILS_BUILD_OPTIONS']
+  options += ENV['TAILS_BUILD_OPTIONS'].split if ENV['TAILS_BUILD_OPTIONS']
 
   # Make sure release builds are clean
-  options += 'cleanall ' if is_release?
+  options << 'cleanall' if is_release?
 
-  options.split(' ').each do |opt|
+  options.each do |opt|
     case opt
     # Memory build settings
     when 'ram'
