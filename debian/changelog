@@ -1,3 +1,62 @@
+tails (2.9) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 6.0.8 based on Firefox 45.6. If you pay
+      close attention you'll see that we import -build1 but there was
+      a -build2. The only change is Tor Button 1.9.5.13 which makes
+      some changes to the donation campaign banner in `about:tor`,
+      which we safely can skip. (Closes: #12028)
+    - Upgrade Icedove to 45.5.1-1~deb8u1+tails1. (Closes: #12029)
+
+  * Minor improvements
+    - Switch to DuckDuckGo as the default search engine in the tor
+      Browser. This is what Tor Browser has, and Disconnect.me (the
+      previous default) has been re-directing to DDG for some time,
+      which has been confusing users. In addition, we localize the DDG
+      user interface for the locales with availablelangpacks. (Closes:
+      #11913)
+    - Improve the display name for the Wikipedia search plugin.
+    - Enable contrib and non-free for our own APT repos.
+    - Upgrade Tor to 0.2.8.10. (Closes: #12015)
+    - Upgrade obfs4proxy to 0.0.7-1~tpo1.
+
+  * Bugfixes
+    - AppArmor Totem profile: add permissions needed to avoid warning
+      on startup. (Closes: #11984)
+    - Upgrade the VirtualBox Guest additions and modules to version
+      5.1.8. This should prevent Xorg from crashing unless the video
+      memory for the VMs are significantly bumped. (Closes: #11965)
+      Users will still have to enable I/O APIC due to a bug in Linux.
+    - Drop unwanted search plugins from the Tor Browser langpacks.
+      Otherwise they are only removed from English locales. Note that
+      the langpacks contain copies of the English plugins, not
+      localized versions, so we actually lose nothing.
+
+  * Test suite
+    - Add support for SikuliX, which recently hit Debian Unstable,
+      while still supporting Sikuli for Jessie users. (Closes: #11991)
+    - Fix some instances where we were trying to use the mouse outside
+      of the Sikuli screen.
+    - Use "TorBirdy" instead of "amnesia branding" as the "anchor"
+      addon.  I.e. the addon that we use to find the other ones. The
+      "amnesia branding" addon has been removed, so we must use
+      something else. (Fixup: #11906)
+    - Dogtailify "the support documentation page opens in Tor Browser"
+      step. We previously relied on Sikuli, and the image was made
+      outdated thanks to our donation campaign. No more! (Closes:
+      #11911)
+    - Resolve dl.amnesia.boum.org instead of picking a static address.
+      Just hours after updating the dustri.org IP address, its web
+      server went down => test suite failures. Let's make this test as
+      robust as actually downloading the Tails ISO image -- if that
+      fails, we probably have more serious problems on our hands than
+      a failing test suite. (Closes: #11960)
+    - Switch MAT scenario from testing PDFs to PNGs. Also add
+      anti-test and test using using a tool *different* from MAT, the
+      tool being tested here. (Closes: #11901)
+
+ -- Tails Developers <tails@boum.org>  Mon, 12 Dec 2016 18:13:35 +0100
+
 tails (2.7.1) unstable; urgency=medium
 
   * Security fixes
