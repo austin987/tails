@@ -159,7 +159,7 @@ task :parse_build_options do
   # Make sure release builds are clean
   options << 'cleanall' if is_release?
 
-  options.each do |opt|
+  options.uniq.each do |opt|
     case opt
     # Memory build settings
     when 'ram'
