@@ -23,7 +23,7 @@ the scripts snippets found on this page:
 * version numbers (see [[contribute/release_schedule#versioning]]):
 
       export VERSION=$(dpkg-parsechangelog -SVersion)
-      export TAG=$(echo "$VERSION" | sed -e 's,~,-,')
+      export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
       export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
 
 * `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
@@ -138,9 +138,9 @@ Common steps for point and major releases
 
 Reset the release branch's `config/base_branch`:
 
-        echo "${RELEASE_BRANCH}" > config/base_branch && \
+        echo "${RELEASE_BRANCH:?}" > config/base_branch && \
            git commit config/base_branch \
-               -m "Restore ${RELEASE_BRANCH}'s base branch."
+               -m "Restore ${RELEASE_BRANCH:?}'s base branch."
 
 Update included files
 =====================
@@ -181,7 +181,7 @@ and then run the `import-translations` script that is in the
 main Tails repository. For example:
 
 	cd whisperback
-	"$RELEASE_CHECKOUT"/import-translations
+	"${RELEASE_CHECKOUT:?}"/import-translations
 
 If the `import-translations` script fails to import translations for
 the current package, manually copy updated PO files from the
@@ -193,7 +193,7 @@ Add and commit.
 
 Then check the PO files:
 
-	"$RELEASE_CHECKOUT"/submodules/jenkins-tools/slaves/check_po
+	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
 
 Correct any displayed error, then commit the changes if any.
 
@@ -226,7 +226,7 @@ Pull updated translations for languages translated in Transifex,
 refresh the code PO files,
 and commit the result, including new PO files:
 
-	cd "$RELEASE_CHECKOUT" && \
+	cd "${RELEASE_CHECKOUT:?}" && \
 	./import-translations  && \
 	./refresh-translations && \
 	./submodules/jenkins-tools/slaves/check_po && \
@@ -288,7 +288,7 @@ Update other base branches
 4. Push the modified branches to Git:
 
         git push origin                          \
-           "${RELEASE_BRANCH}:${RELEASE_BRANCH}" \
+           "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
            feature/stretch:feature/stretch       \
            devel:devel
 
@@ -301,8 +301,8 @@ Changelog
 Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
-	git checkout "$RELEASE_BRANCH" && \
-	./release $VERSION $PREVIOUS_VERSION
+	git checkout "${RELEASE_BRANCH:?}" && \
+	./release ${VERSION:?} ${PREVIOUS_VERSION:?}
 
 This populates the Changelog with the Git log entries.
 
@@ -316,15 +316,15 @@ Then, gather other useful information from:
   Volume Assistant, etc.);
 * the diff between the previous version's `.packages` file and the one
   from the to-be-released ISO;
-* the "Fix committed" section on the *Release Manager View for $VERSION*
+* the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
   in Redmine.
 
 Finally, sanity check the version and commit:
 
-	if [ "$(dpkg-parsechangelog -SVersion)" = "${VERSION}" ]; then
-	    git commit debian/changelog -m "Update changelog for $VERSION."
+	if [ "$(dpkg-parsechangelog -SVersion)" = "${VERSION:?}" ]; then
+	    git commit debian/changelog -m "Update changelog for ${VERSION:?}."
 	else
-	    echo 'Error: version mismatch: please compare $VERSION with the last entry in debian/changelog'
+	    echo 'Error: version mismatch: please compare ${VERSION:?} with the last entry in debian/changelog'
 	fi
 
 Included website
@@ -348,12 +348,12 @@ matches the date of the future signature.
 
 	RELEASE_DATE='2015-11-03'
 
-	echo "$VERSION"      > wiki/src/inc/stable_i386_version.html
-	echo -n "$RELEASE_DATE" > wiki/src/inc/stable_i386_date.html
-	sed -ri "s%news/version_.*]]%news/version_$VERSION]]%" wiki/src/inc/stable_i386_release_notes.*
-	$EDITOR wiki/src/inc/*.html
+	echo "${VERSION:?}"      > wiki/src/inc/stable_i386_version.html
+	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_i386_date.html
+	sed -ri "s%news/version_.*]]%news/version_${VERSION:?}]]%" wiki/src/inc/stable_i386_release_notes.*
+	${EDITOR:?} wiki/src/inc/*.html
 	./build-website
-	git commit wiki/src/inc/ -m "Update version and date for $VERSION."
+	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
 
 ### features and design documentation
 
@@ -369,7 +369,7 @@ the new release. This e.g. ensures that the RC call for translation
 points translators to up-to-date PO files:
 
 	./build-website && git add wiki/src && git commit -m 'Update website PO files.'
-	git push origin "${RELEASE_BRANCH}:${RELEASE_BRANCH}"
+	git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"
 
 Call for translation
 ====================
@@ -383,7 +383,7 @@ translators|contribute/how/translate]].
 
 To get a list of changes on the website:
 
-    git diff --stat ${PREVIOUS_VERSION}.. -- \
+    git diff --stat ${PREVIOUS_VERSION:?}.. -- \
         *.{mdwn,html} \
         ':!wiki/src/blueprint*' \
         ':!wiki/src/contribute*' \
@@ -405,16 +405,16 @@ and a good practice is to import it to a tmpfs to limit the risks that
 the private key material is written to disk:
 
     export GNUPGHOME=$(mktemp -d)
-    sudo mount -t ramfs ramfs "$GNUPGHOME"
-    sudo chown $(id -u):$(id -g) "$GNUPGHOME"
-    sudo chmod 0700 "$GNUPGHOME"
-    gpg --homedir $HOME/.gnupg --export $TAILS_SIGNATURE_KEY | gpg --import
+    sudo mount -t ramfs ramfs "${GNUPGHOME:?}"
+    sudo chown $(id -u):$(id -g) "${GNUPGHOME:?}"
+    sudo chmod 0700 "${GNUPGHOME:?}"
+    gpg --homedir ${HOME:?}/.gnupg --export ${TAILS_SIGNATURE_KEY:?} | gpg --import
     gpg --import path/to/private-key
 
 Let's also ensure that strong digest algorithms are used for our
 signatures, like the defaults we set in Tails:
 
-    cp config/chroot_local-includes/etc/skel/.gnupg/gpg.conf "$GNUPGHOME"
+    cp config/chroot_local-includes/etc/skel/.gnupg/gpg.conf "${GNUPGHOME:?}"
 
 Build the almost-final image
 ============================
@@ -426,15 +426,15 @@ Build the almost-final image
 4. Record where the manifest of needed packages is stored:
 
         export PACKAGES_MANIFEST=XXX ; \
-        [ -f "$PACKAGES_MANIFEST" ] || echo "ERROR: PACKAGES_MANIFEST is incorrect"
+        [ -f "${PACKAGES_MANIFEST:?}" ] || echo "ERROR: PACKAGES_MANIFEST is incorrect"
 
 
 Tag the release in Git
 ======================
 
-	git tag -u "$TAILS_SIGNATURE_KEY" \
-	  -m "tagging version ${VERSION}" "${TAG}" && \
-	git push --tags origin "${RELEASE_BRANCH}"
+	git tag -u "${TAILS_SIGNATURE_KEY:?}" \
+	  -m "tagging version ${VERSION:?}" "${TAG:?}" && \
+	git push --tags origin "${RELEASE_BRANCH:?}"
 
 (Pushing the tag is needed so that the APT repository is updated, and
 the Tails APT configuration works at build and boot time. It might be
@@ -453,7 +453,7 @@ Prepare the versioned APT suites
 
 * Prepare tagged snapshots of upstream APT repositories:
 
-          ./bin/tag-apt-snapshots "$PACKAGES_MANIFEST" "$TAG"
+          ./bin/tag-apt-snapshots "${PACKAGES_MANIFEST:?}" "${TAG:?}"
 
   Note:
 
@@ -521,18 +521,18 @@ suite should be ready, so it is time to:
 * Mark the version as "released" in the changelog:
 
       dch --release --no-force-save-on-release --maintmaint
-      git commit -m "Mark Tails ${VERSION} as released." debian/changelog
+      git commit -m "Mark Tails ${VERSION:?} as released." debian/changelog
 
 * tag the release *again*, with all included files in:
   
-      git tag -f -u "$TAILS_SIGNATURE_KEY" \
-              -m "tagging version ${VERSION}" "${TAG}" && \
-      git push origin "${RELEASE_BRANCH}" && \
+      git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
+              -m "tagging version ${VERSION:?}" "${TAG:?}" && \
+      git push origin "${RELEASE_BRANCH:?}" && \
       git push --tags --force
 
 * check out the release tag:
 
-      git checkout "${TAG}"
+      git checkout "${TAG:?}"
 
 * build the final image!
 
@@ -541,26 +541,26 @@ suite should be ready, so it is time to:
 
 * check out the release branch again:
 
-      git checkout "${RELEASE_BRANCH}"
+      git checkout "${RELEASE_BRANCH:?}"
 
 Generate the OpenPGP signatures and Torrents
 ============================================
 
 First, create a directory with a suitable name and go there:
 
-	mkdir "$ISOS/tails-i386-$VERSION" && \
-	cd "$ISOS/tails-i386-$VERSION"
+	mkdir "${ISOS:?}/tails-i386-${VERSION:?}" && \
+	cd "${ISOS:?}/tails-i386-${VERSION:?}"
 
 Second, move the built image to this brand new directory:
 
-	mv "$ARTIFACTS/tails-i386-$VERSION.iso" \
-	   "$ISOS/tails-i386-$VERSION/"
+	mv "${ARTIFACTS:?}/tails-i386-${VERSION:?}.iso" \
+	   "${ISOS:?}/tails-i386-${VERSION:?}/"
 
 Third, generate detached OpenPGP signatures for the image to be
 published, in the same directory as the image and with a `.sig`
 extension; e.g.
 
-	gpg --armor --default-key "$TAILS_SIGNATURE_KEY" --detach-sign *.iso
+	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso
 	rename 's,\.asc$,.sig,' *.asc
 
 Fourth, go up to the parent directory, create a `.torrent` file and
@@ -570,14 +570,14 @@ check the generated `.torrent` files metainfo:
 	mktorrent \
 	  -a 'udp://tracker.torrent.eu.org:451' \
 	  -a 'udp://tracker.coppersurfer.tk:6969'   \
-	  "tails-i386-${VERSION}" && \
-	transmission-show tails-i386-$VERSION.torrent
+	  "tails-i386-${VERSION:?}" && \
+	transmission-show tails-i386-${VERSION:?}.torrent
 
 Lastly, let's set some variables to be used later:
 
-    ISO_PATH="${ISOS}/tails-i386-${VERSION}/tails-i386-${VERSION}.iso"
-    ISO_SHA256SUM="$(sha256sum "${ISO_PATH}" | cut -f 1 -d ' ' | tr -d '\n')"
-    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH}")"
+    ISO_PATH="${ISOS:?}/tails-i386-${VERSION:?}/tails-i386-${VERSION:?}.iso"
+    ISO_SHA256SUM="$(sha256sum "${ISO_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
+    ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH:?}")"
 
 <a id="prepare-iuk"></a>
 
@@ -600,16 +600,16 @@ Use `tails-create-iuk` to build the following IUKs:
   that'll be used for the incremental upgrade paths to the
   next version.
 
-Example (for RC, replace `$PREVIOUS_VERSION` with e.g. `$VERSION~rc1`
+Example (for RC, replace `${PREVIOUS_VERSION:?}` with e.g. `${VERSION:?}~rc1`
 below):
 
-    sudo su -c "cd $IUK_CHECKOUT && \
-      PERL5LIB=\"$PERL5LIB_CHECKOUT/lib\" \
+    sudo su -c "cd ${IUK_CHECKOUT:?} && \
+      PERL5LIB=\"${PERL:?}5LIB_CHECKOUT/lib\" \
         ./bin/tails-create-iuk \
-           --squashfs-diff-name \"$VERSION.squashfs\"           \
-           --old-iso \"$ISOS/tails-i386-$PREVIOUS_VERSION/tails-i386-$PREVIOUS_VERSION.iso\" \
-           --new-iso \"$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso\"          \
-           --outfile \"$ISOS/Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk\""
+           --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
+           --old-iso \"${ISOS:?}/tails-i386-${PREVIOUS_VERSION:?}/tails-i386-${PREVIOUS_VERSION:?}.iso\" \
+           --new-iso \"${ISOS:?}/tails-i386-${VERSION:?}/tails-i386-${VERSION:?}.iso\"          \
+           --outfile \"${ISOS:?}/Tails_i386_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk\""
 
 Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
@@ -635,18 +635,18 @@ Prepare upgrade-description files
    This is what `tails-iuk-generate-ugrade-description-files` tool
    does:
 
-       ( cd $IUK_CHECKOUT && \
+       ( cd ${IUK_CHECKOUT:?} && \
        ./bin/tails-iuk-generate-upgrade-description-files \
-           --version "$VERSION" \
-           --next-version "$NEXT_PLANNED_VERSION" \
-           --next-version "${NEXT_PLANNED_VERSION}~rc1" \
-           --next-version "${VERSION}.1" \
-           --iso "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso" \
-           --previous-version "$PREVIOUS_VERSION" \
-           --previous-version "${VERSION}~rc1" \
-           --iuks "$ISOS" \
-           --release-checkout "$RELEASE_CHECKOUT" \
-           --major-release "$MAJOR_RELEASE" \
+           --version "${VERSION:?}" \
+           --next-version "${NEXT_PLANNED_VERSION:?}" \
+           --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
+           --next-version "${VERSION:?}.1" \
+           --iso "${ISOS:?}/tails-i386-${VERSION:?}/tails-i386-${VERSION:?}.iso" \
+           --previous-version "${PREVIOUS_VERSION:?}" \
+           --previous-version "${VERSION:?}~rc1" \
+           --iuks "${ISOS:?}" \
+           --release-checkout "${RELEASE_CHECKOUT:?}" \
+           --major-release "${MAJOR_RELEASE:?}" \
        )
 
    Note:
@@ -667,23 +667,23 @@ Prepare upgrade-description files
    * If preparing a release candidate, add `--channel alpha`
    * If preparing a release candidate, drop all `--next-version`
      arguments, and instead pass (**untested!**)
-     `--next-version $(echo $VERSION | sed -e 's,~rc*$,,')`
+     `--next-version $(echo ${VERSION:?} | sed -e 's,~rc*$,,')`
    * If preparing a point-release, pass neither
-     `--next-version "${VERSION}.1"`,
-     nor `--next-version "${VERSION}.1~rc1"`
+     `--next-version "${VERSION:?}.1"`,
+     nor `--next-version "${VERSION:?}.1~rc1"`
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
 
-       find "${RELEASE_CHECKOUT}/wiki/src/upgrade/" \
+       find "${RELEASE_CHECKOUT:?}/wiki/src/upgrade/" \
           -type f -name upgrades.yml | \
           while read udf; do
-              if [ -n "$(git status --porcelain "${udf}")" ]; then
-                  gpg -u "${TAILS_SIGNATURE_KEY}" --armor --detach-sign "${udf}"
-                  mv "${udf}.asc" "${udf}.pgp"
+              if [ -n "$(git status --porcelain "${udf:?}")" ]; then
+                  gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign "${udf:?}"
+                  mv "${udf:?}.asc" "${udf:?}.pgp"
                   ( \
-                    cd $IUK_CHECKOUT && \
-                    ./bin/tails-iuk-check-upgrade-description-file "${udf}" \
+                    cd ${IUK_CHECKOUT:?} && \
+                    ./bin/tails-iuk-check-upgrade-description-file "${udf:?}" \
                   ) || break
               fi
           done
@@ -692,11 +692,11 @@ Prepare upgrade-description files
    signatures to the Git branch used to prepare the release (`stable`
    or `testing`):
 
-       ( cd "$RELEASE_CHECKOUT" && git add wiki/src/upgrade && \
+       ( cd "${RELEASE_CHECKOUT:?}" && git add wiki/src/upgrade && \
           git commit -m "Update upgrade-description files." )
 
 1. If preparing a release candidate, move the generated or updated
-   files to `$MASTER_CHECKOUT`, commit and push: given the updates are
+   files to `${MASTER_CHECKOUT:?}`, commit and push: given the updates are
    advertised on the *alpha* channel, while all users use the *stable*
    one by default, this will allow you to more easily test the IUK
    without impacting anyone.
@@ -708,16 +708,16 @@ release is out this UDF should be removed?
    release in the alpha channel in the master branch, modify its content
    accordingly, sign it, commit and push
 
-       stable_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION}/i386/stable/upgrades.yml"
-       alpha_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION}/i386/alpha/upgrades.yml"
+       stable_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION:?}/i386/stable/upgrades.yml"
+       alpha_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION:?}/i386/alpha/upgrades.yml"
 
-       cd $MASTER_CHECKOUT && \
-         git show ${RELEASE_BRANCH}:${stable_udf} \
-           | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf} && \
-           gpg -u "${TAILS_SIGNATURE_KEY}" --armor --detach-sign ${alpha_udf} && \
-             mv ${alpha_udf}.asc ${alpha_udf}.gpg && \
-               git commit -m 'Add alpha UDF channel for ${PREVIOUS_VERSION} to ${VERSION}' \
-                 ${alpha_udf}* && git push origin master:master
+       cd ${MASTER_CHECKOUT:?} && \
+         git show ${RELEASE_BRANCH:?}:${stable_udf:?} \
+           | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf:?} && \
+           gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${alpha_udf:?} && \
+             mv ${alpha_udf:?}.asc ${alpha_udf:?}.gpg && \
+               git commit -m 'Add alpha UDF channel for ${PREVIOUS_VERSION:?} to ${VERSION:?}' \
+                 ${alpha_udf:?}* && git push origin master:master
 
 
 Prepare the ISO description file for DAVE
@@ -727,18 +727,18 @@ If preparing a RC, skip this part.
 
 Update the ISO description file (IDF) used by the browser extension:
 
-    cat > "$RELEASE_CHECKOUT"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
+    cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
     ---
     build-target: i386
     channel: stable
     product-name: Tails
-    version: '${VERSION}'
+    version: '${VERSION:?}'
     target-files:
     - sha256: ${ISO_SHA256SUM}
-      size: ${ISO_SIZE_IN_BYTES}
-      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-${VERSION}/tails-i386-${VERSION}.iso
+      size: ${ISO_SIZE_IN_BYTES:?}
+      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-${VERSION:?}/tails-i386-${VERSION:?}.iso
     EOF
-    ( cd "${RELEASE_CHECKOUT}" && \
+    ( cd "${RELEASE_CHECKOUT:?}" && \
       git add wiki/src/install/v1/Tails/i386/stable/latest.yml && \
       git commit -m "Update IDF file for DAVE." )
 
@@ -759,10 +759,10 @@ Test them with a BitTorrent client running in a different place.
 
 ## Download and seed image from lizard
 
-    scp "$ISOS/tails-i386-$VERSION.torrent" \
+    scp "${ISOS:?}/tails-i386-${VERSION:?}.torrent" \
        bittorrent.lizard: && \
        ssh bittorrent.lizard \
-         transmission-remote --add tails-i386-$VERSION.torrent \
+         transmission-remote --add tails-i386-${VERSION:?}.torrent \
            --find /var/lib/transmission-daemon/downloads/
 
 <a id="publish-iuk"></a>
@@ -776,32 +776,32 @@ rsync.lizard:
 
     ssh lizard.tails.boum.org \
         scp -3 -r \
-            bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-i386-$VERSION \
+            bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-i386-${VERSION:?} \
             rsync.lizard:
     ssh rsync.lizard << EOF
       sudo chown -R root:rsync_tails \
-         tails-i386-$VERSION \
-         Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
+         tails-i386-${VERSION:?} \
+         Tails_i386_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk && \
       sudo chmod -R u=rwX,go=rX \
-         tails-i386-$VERSION \
-         Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk && \
-      sudo mv tails-i386-$VERSION \
-              /srv/rsync/tails/tails/$DIST/ && \
-      sudo mv Tails_i386_${PREVIOUS_VERSION}_to_${VERSION}.iuk \
-              /srv/rsync/tails/tails/$DIST/iuk/
+         tails-i386-${VERSION:?} \
+         Tails_i386_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk && \
+      sudo mv tails-i386-${VERSION:?} \
+              /srv/rsync/tails/tails/${DIST:?}/ && \
+      sudo mv Tails_i386_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk \
+              /srv/rsync/tails/tails/${DIST:?}/iuk/
     EOF
 
 Update the time in `project/trace` file on the primary rsync mirror
 and on the live wiki (even for a release candidate):
 
 	TRACE_TIME=$(date +%s) &&
-	echo $TRACE_TIME | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
-	[ -n "$MASTER_CHECKOUT" ] && \
-	echo $TRACE_TIME > "$MASTER_CHECKOUT/wiki/src/inc/trace" &&
+	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	[ -n "${MASTER_CHECKOUT:?}" ] && \
+	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
 	(
-	   cd "$MASTER_CHECKOUT" && \
+	   cd "${MASTER_CHECKOUT:?}" && \
 	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading $VERSION." && \
+	      -m "Updating trace file after uploading ${VERSION:?}." && \
 	   git push origin master
 	)
 
@@ -816,7 +816,7 @@ Update the website and Git repository
 =====================================
 
 What follows in this section happens on the release branch in
-`$RELEASE_CHECKOUT`.
+`${RELEASE_CHECKOUT:?}`.
 
 If preparing a final release
 ----------------------------
@@ -826,36 +826,36 @@ Skip this part if preparing a RC.
 Rename the `.packages` file to remove the `.iso` and build date parts
 of its name:
 
-	mv "$ARTIFACTS"/tails-i386-"$VERSION".iso.packages \
-	   "$ARTIFACTS/tails-i386-$VERSION.packages"
+	mv "${ARTIFACTS:?}"/tails-i386-"${VERSION:?}".iso.packages \
+	   "${ARTIFACTS:?}/tails-i386-${VERSION:?}.packages"
 
 Rename the manifest of needed packages as well:
 
-	mv "$PACKAGES_MANIFEST" "$ARTIFACTS/tails-i386-$VERSION.build-manifest"
+	mv "${PACKAGES_MANIFEST:?}" "${ARTIFACTS:?}/tails-i386-${VERSION:?}.build-manifest"
 
 Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
 `.torrent.sig` files into the website repository:
 
-	cp "$ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso.sig" \
-	   "$ARTIFACTS/tails-i386-$VERSION.build-manifest" \
-	   "$ARTIFACTS/tails-i386-$VERSION.packages" \
-	   "$ISOS/tails-i386-$VERSION.torrent" \
-	   "$RELEASE_CHECKOUT/wiki/src/torrents/files/"
+	cp "${ISOS:?}/tails-i386-${VERSION:?}/tails-i386-${VERSION:?}.iso.sig" \
+	   "${ARTIFACTS:?}/tails-i386-${VERSION:?}.build-manifest" \
+	   "${ARTIFACTS:?}/tails-i386-${VERSION:?}.packages" \
+	   "${ISOS:?}/tails-i386-${VERSION:?}.torrent" \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
 Remove from `wiki/src/torrents/files/` any remaining file from the
 previous release (including any RC).
 
 Update the size of the ISO image in `inc/*`:
 
-        LC_NUMERIC=C ls -l -h $ISOS/tails-i386-$VERSION/tails-i386-$VERSION.iso | \
+        LC_NUMERIC=C ls -l -h ${ISOS:?}/tails-i386-${VERSION:?}/tails-i386-${VERSION:?}.iso | \
           cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' \
-          > "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_iso_size.html"
+          > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_i386_iso_size.html"
 
 Generate the expected signature verification output:
 
-      gpg --keyid-format 0xlong --verify "${ISO_PATH}.sig" "${ISO_PATH}" 2>&1 | \
+      gpg --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
       sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
-      "$RELEASE_CHECKOUT/wiki/src/inc/stable_i386_gpg_signature_output.html"
+      "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_i386_gpg_signature_output.html"
 
 Update the [[support/known_issues]] page:
 
@@ -863,7 +863,7 @@ Update the [[support/known_issues]] page:
 - Remove older known issues that are fixed by the new release.
 
 Write the announcement for the release in
-`wiki/src/news/version_$TAG.mdwn`. See the [[release notes
+`wiki/src/news/version_${TAG:?}.mdwn`. See the [[release notes
 documentation|contribute/how/documentation/release_notes]]
 
 XXX: we should probably merge that into the above liked documentation.
@@ -881,7 +881,7 @@ XXX: we should probably merge that into the above liked documentation.
 
 Write an announcement listing the security bugs affecting the previous
 version in
-`wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION}.mdwn`
+`wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
 in order to let the users of the old versions
 know that they have to upgrade. Date it a few days before the ISO
 image to be released was *built*. Including:
@@ -904,12 +904,12 @@ Skip this part if preparing a final release.
 
 Copy the `.iso.sig` file into the website repository:
 
-	cp "${ISO_PATH}.sig" \
-	   "$ISOS/tails-i386-${VERSION}.torrent" \
-	      "${MASTER_CHECKOUT}/wiki/src/torrents/files/"
+	cp "${ISO_PATH:?}.sig" \
+	   "${ISOS:?}/tails-i386-${VERSION:?}.torrent" \
+	      "${MASTER_CHECKOUT:?}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
-`$MASTER_CHECKOUT/wiki/src/news/test_$TAG.mdwn`, including:
+`${MASTER_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
 
 - Update the `meta title` directive.
 - Update the `meta date` directive.
@@ -922,7 +922,7 @@ Write the announcement for the release in
   references to links:
 
       sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
-          wiki/src/news/test_${TAG}.mdwn
+          wiki/src/news/test_${TAG:?}.mdwn
 
 In any case
 -----------
@@ -936,7 +936,7 @@ release out officially.
 Then, record the last commit before putting the release out for real:
 
 	git add wiki/src && \
-	git commit -m "releasing version ${VERSION}"
+	git commit -m "releasing version ${VERSION:?}"
 
 Testing
 =======
@@ -977,7 +977,7 @@ Test downloading the ISO and IUK over HTTP.
 
 Make sure every active mirror in the pool has the new version:
 
-	./check-mirrors.rb --allow-multiple --fast tails-i386-$VERSION
+	./check-mirrors.rb --allow-multiple --fast tails-i386-${VERSION:?}
 
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
 notify their administrators.
@@ -1000,13 +1000,13 @@ If preparing a release candidate, just push the `master` branch:
 If preparing an actual release, push the last commits to our Git
 repository like this:
 
-    ( cd "$RELEASE_CHECKOUT" && \
-      git push origin "$RELEASE_BRANCH:$RELEASE_BRANCH" \
+    ( cd "${RELEASE_CHECKOUT:?}" && \
+      git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
                       devel:devel \
     ) && \
-    ( cd "$MASTER_CHECKOUT" && \
+    ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/$RELEASE_BRANCH" && \
+      git merge "origin/${RELEASE_BRANCH:?}" && \
       git push origin master:master \
     )
 
@@ -1021,7 +1021,7 @@ tracker. For a list of candidates, see:
 
 * the [issues in *Fix committed*
   status](https://labs.riseup.net/code/projects/tails/issues?query_id=111);
-* the "Fix committed" section on the *Release Manager View for $VERSION*
+* the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
   in Redmine.
 
 Then, mark the just-released Redmine milestone as done: go to the
@@ -1036,18 +1036,18 @@ this release.
     find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
-            url="https://labs.riseup.net/code/issues/${ticket}"
-            url_content=$(curl --fail --silent ${url})
+            url="https://labs.riseup.net/code/issues/${ticket:?}"
+            url_content=$(curl --fail --silent ${url:?})
             if [ "${?}" -ne 0 ]; then
-                echo "Failed to fetch ${url} so manually investigate #${ticket}" >&2
+                echo "Failed to fetch ${url:?} so manually investigate #${ticket:?}" >&2
                 continue
             fi
-            ticket_status=$(echo "${url_content}" | \
+            ticket_status=$(echo "${url_content:?}" | \
                 sed -n 's,^.*<th class="status">Status:</th><td class="status">\([^<]\+\)</td>.*$,\1,p')
-            if [ "${ticket_status}" != "New" ] && \
-               [ "${ticket_status}" != "Confirmed" ] && \
-               [ "${ticket_status}" != "In Progress" ]; then
-                echo "It seems ticket #${ticket} has been fixed (Status: ${ticket_status}) so please find all instances in the wiki and fix them. Ticket URL: ${url}"
+            if [ "${ticket_status:?}" != "New" ] && \
+               [ "${ticket_status:?}" != "Confirmed" ] && \
+               [ "${ticket_status:?}" != "In Progress" ]; then
+                echo "It seems ticket #${ticket:?} has been fixed (Status: ${ticket_status:?}) so please find all instances in the wiki and fix them. Ticket URL: ${url:?}"
             fi
         done
 
@@ -1141,14 +1141,14 @@ this, and skip what does not make sense for a RC.
 1. Delete Git branches that were merged:
 
         bare_repo=$(mktemp -d)
-        (cd "$MASTER_CHECKOUT" && git fetch) && \
-        (cd "$MASTER_CHECKOUT" && git submodule update) && \
-        git clone --bare --reference "$MASTER_CHECKOUT" \
+        (cd "${MASTER_CHECKOUT:?}" && git fetch) && \
+        (cd "${MASTER_CHECKOUT:?}" && git submodule update) && \
+        git clone --bare --reference "${MASTER_CHECKOUT:?}" \
            boum_org_amnesia@webmasters.boum.org:wiki.git \
-           "$bare_repo" && \
+           "${bare_repo:?}" && \
         PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
-           --repo "$bare_repo" && \
-        rm -rf "$bare_repo"
+           --repo "${bare_repo:?}" && \
+        rm -rf "${bare_repo:?}"
 
 1. Remove all old versions in `wiki/src/upgrade/v1/Tails` and
    `debian/changelog` that were never released. Explanation: the
@@ -1171,27 +1171,27 @@ this, and skip what does not make sense for a RC.
    the dates must be ~six weeks in the future). Look carefully at the
    output of this command:
 
-        git checkout "$RELEASE_BRANCH" && \
+        git checkout "${RELEASE_BRANCH:?}" && \
         (
             cd config/APT_snapshots.d && \
             for ARCHIVE in * ; do
-                SERIAL="$(cat ${ARCHIVE}/serial)"
-                if [ "${SERIAL}" = 'latest' ]; then
+                SERIAL="$(cat ${ARCHIVE:?}/serial)"
+                if [ "${SERIAL:?}" = 'latest' ]; then
                     EXPIRY='never'
-                    if [ "${ARCHIVE}" != 'debian-security' ]; then
-                        echo "Warning: origin '${ARCHIVE}' is using the 'latest' snapshot, which is unexpected" >&2
+                    if [ "${ARCHIVE:?}" != 'debian-security' ]; then
+                        echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
                     fi
                 else
-                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/debian/dists/${RELEASE_BRANCH}/snapshots/${SERIAL}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/debian/dists/${RELEASE_BRANCH:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
                fi
-               echo "Origin '${ARCHIVE}' uses snapshot '${SERIAL}' which expires on: ${EXPIRY}"
+               echo "Origin '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
            done
         )
 
 1. Push the resulting branches.
 1. Make sure Jenkins manages to build all updated major branches fine:
    <https://jenkins.tails.boum.org/>.
-1. Delete the _Release Manager View for $VERSION_ Redmine custom query.
+1. Delete the _Release Manager View for ${VERSION_:?} Redmine custom query.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
