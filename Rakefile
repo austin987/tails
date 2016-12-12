@@ -191,6 +191,8 @@ task :parse_build_options do
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
     when 'noprovision'
       ENV['TAILS_NO_AUTO_PROVISION'] = '1'
+    else
+      raise "Unknown Tails build option '#{opt}'"
     end
   end
 end
