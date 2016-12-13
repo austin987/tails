@@ -5,7 +5,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click_point(@screen.w, @screen.h/2)
+  @screen.click_point(@screen.w - 1, @screen.h/2)
 end
 
 def activate_filesystem_shares
@@ -257,16 +257,16 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
-def bootsplash
+def boot_menu_cmdline_image
   case @os_loader
   when "UEFI"
-    'TailsBootSplashUEFI.png'
+    'TailsBootMenuKernelCmdlineUEFI.png'
   else
-    'TailsBootSplash.png'
+    'TailsBootMenuKernelCmdline.png'
   end
 end
 
-def bootsplash_tab_msg
+def boot_menu_tab_msg_image
   case @os_loader
   when "UEFI"
     'TailsBootSplashTabMsgUEFI.png'
@@ -275,17 +275,70 @@ def bootsplash_tab_msg
   end
 end
 
-Given /^the computer (re)?boots Tails$/ do |reboot|
+def memory_wipe_timeout
+  nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+  nr_gigs_of_ram*30
+end
 
-  boot_timeout = 30
+Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
+  boot_timeout = 3*60
   # We need some extra time for memory wiping if rebooting
-  boot_timeout += 90 if reboot
+  boot_timeout += memory_wipe_timeout if reboot
+  # Simply looking for the boot splash image is not robust; sometimes
+  # sikuli is not fast enough to see it. Here we hope that spamming
+  # TAB, which will halt the boot process by showing the prompt for
+  # the kernel cmdline, will make this a bit more robust. We want this
+  # spamming to happen in parallel with Sikuli waiting for the image,
+  # but multi-threading etc is working extremely poor in our Ruby +
+  # jrb environment when Sikuli is involved. Hence we run the spamming
+  # from a separate process.
+  tab_spammer_code = <<-EOF
+    require 'libvirt'
+    tab_key_code = 0xf
+    virt = Libvirt::open("qemu:///system")
+    begin
+      domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
+      loop do
+        domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
+        sleep 0.1
+      end
+    ensure
+      virt.close
+    end
+  EOF
+  # Our UEFI firmware (OVMF) has the interesting "feature" that pressing
+  # any button will open its setup menu, so we have to exit the setup,
+  # and to not have the TAB spammer potentially interfering we pause
+  # it meanwhile.
+  dealt_with_uefi_setup = false
+  # The below code is not completely reliable, so we might have to
+  # retry by rebooting.
+  try_for(boot_timeout) do
+    begin
+      tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
+      if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
+        @screen.wait('UEFIFirmwareSetup.png', 30)
+        Process.kill("TSTP", tab_spammer.pid)
+        @screen.type(Sikuli::Key.ENTER)
+        Process.kill("CONT", tab_spammer.pid)
+        dealt_with_uefi_setup = true
+      end
+      @screen.wait(boot_menu_cmdline_image, 15)
+    rescue FindFailed => e
+      debug_log('We missed the boot menu before we could deal with it, ' +
+                'resetting...')
+      dealt_with_uefi_setup = false
+      $vm.reset
+      retry
+    ensure
+      Process.kill("TERM", tab_spammer.pid)
+      tab_spammer.close
+    end
+  end
+end
 
-  @screen.wait(bootsplash, boot_timeout)
-  @screen.wait(bootsplash_tab_msg, 10)
-  @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(bootsplash_tab_msg, 1)
-
+Given /^the computer (re)?boots Tails$/ do |reboot|
+  step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
@@ -409,7 +462,7 @@ end
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - News'
+    title = 'Tails - Dear Tails user'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
@@ -523,16 +576,13 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually shuts down$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  timeout = nr_gibs_of_ram*5*60
-  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
+  try_for(memory_wipe_timeout, :msg => "VM is still running") do
     ! $vm.is_running?
   end
 end
 
 Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
+  step 'the computer reboots Tails'
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
@@ -543,6 +593,11 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # Sometimes the next button too fast, before the menu has settled
+  # down to its final size and the icon we want to click is in its
+  # final position. dogtail might allow us to fix that, but given how
+  # rare this problem is, it's not worth the effort.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -553,6 +608,9 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # See comment on /^I request a shutdown using the emergency shutdown applet$/
+  # that explains why we need to wait.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
@@ -911,7 +969,7 @@ When /^I eject the boot medium$/ do
   dev_type = device_info(dev)['ID_TYPE']
   case dev_type
   when 'cd'
-    $vm.remove_cdrom
+    $vm.eject_cdrom
   when 'disk'
     boot_disk_name = $vm.disk_name(dev)
     $vm.unplug_drive(boot_disk_name)
