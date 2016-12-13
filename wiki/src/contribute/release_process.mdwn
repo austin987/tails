@@ -708,16 +708,23 @@ Prepare upgrade-description files
    release in the alpha channel in the master branch, modify its content
    accordingly, sign it, commit and push
 
-       stable_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION:?}/i386/stable/upgrades.yml"
-       alpha_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION:?}/i386/alpha/upgrades.yml"
+       # If more old versions are supported, add them (whitespace
+       # separated) to this variable
+       SUPPORTED_OLD_VERSIONS="${PREVIOUS_VERSION:?}"
+
        ( \
          cd ${MASTER_CHECKOUT:?} && \
          git fetch && \
-         git show origin/${RELEASE_BRANCH:?}:${stable_udf:?} \
-           | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf:?} && \
-         gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${alpha_udf:?} && \
-         mv ${alpha_udf:?}.asc ${alpha_udf:?}.pgp && \
-         git commit -m 'Add alpha UDF channel for ${PREVIOUS_VERSION:?} to ${VERSION:?}' ${alpha_udf:?}* && \
+         for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
+           stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/i386/stable/upgrades.yml" && \
+           alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/i386/alpha/upgrades.yml" && \
+           git show origin/${RELEASE_BRANCH:?}:${stable_udf:?} \
+             | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf:?} && \
+           gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${alpha_udf:?} && \
+           mv ${alpha_udf:?}.asc ${alpha_udf:?}.pgp && \
+           git add ${alpha_udf:?}* ; \
+         done && \
+         git commit -m 'Add incremental upgrades on the alpha channel for Tails ${VERSION:?}' && \
          git push origin master:master \
        )
 
