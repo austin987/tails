@@ -537,7 +537,8 @@ suite should be ready, so it is time to:
 * build the final image!
 
 * compare the new build manifest with the one from the previous,
-  almost final build; they should be identical
+  almost final build; they should be identical (XXX: except for
+  the `debian-security` serial, right?).
 
 * check out the release branch again:
 
@@ -604,7 +605,7 @@ Example (for RC, replace `${PREVIOUS_VERSION:?}` with e.g. `${VERSION:?}~rc1`
 below):
 
     sudo su -c "cd ${IUK_CHECKOUT:?} && \
-      PERL5LIB=\"${PERL:?}5LIB_CHECKOUT/lib\" \
+      PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
         ./bin/tails-create-iuk \
            --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
            --old-iso \"${ISOS:?}/tails-i386-${PREVIOUS_VERSION:?}/tails-i386-${PREVIOUS_VERSION:?}.iso\" \
@@ -692,8 +693,11 @@ Prepare upgrade-description files
    signatures to the Git branch used to prepare the release (`stable`
    or `testing`):
 
-       ( cd "${RELEASE_CHECKOUT:?}" && git add wiki/src/upgrade && \
-          git commit -m "Update upgrade-description files." )
+       ( \
+         cd "${RELEASE_CHECKOUT:?}" && git add wiki/src/upgrade && \
+         git commit -m "Update upgrade-description files." && \
+         git push origin ${RELEASE_BRANCH:?} \
+       )
 
 1. If preparing a release candidate, move the generated or updated
    files to `${MASTER_CHECKOUT:?}`, commit and push: given the updates are
@@ -701,23 +705,29 @@ Prepare upgrade-description files
    one by default, this will allow you to more easily test the IUK
    without impacting anyone.
 
-XXX: Untested yet. This step was missing to test the incremental upgrades
-during the manual test suite, but then should we also document that once the
-release is out this UDF should be removed?
 1. If preparing a point release, copy the generated UDF for the previous
    release in the alpha channel in the master branch, modify its content
    accordingly, sign it, commit and push
 
-       stable_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION:?}/i386/stable/upgrades.yml"
-       alpha_udf="wiki/src/upgrade/v1/Tails/${PREVIOUS_VERSION:?}/i386/alpha/upgrades.yml"
+       # If more old versions are supported, add them (whitespace
+       # separated) to this variable
+       SUPPORTED_OLD_VERSIONS="${PREVIOUS_VERSION:?}"
 
-       cd ${MASTER_CHECKOUT:?} && \
-         git show ${RELEASE_BRANCH:?}:${stable_udf:?} \
-           | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf:?} && \
+       ( \
+         cd ${MASTER_CHECKOUT:?} && \
+         git fetch && \
+         for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
+           stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/i386/stable/upgrades.yml" && \
+           alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/i386/alpha/upgrades.yml" && \
+           git show origin/${RELEASE_BRANCH:?}:${stable_udf:?} \
+             | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf:?} && \
            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${alpha_udf:?} && \
-             mv ${alpha_udf:?}.asc ${alpha_udf:?}.gpg && \
-               git commit -m 'Add alpha UDF channel for ${PREVIOUS_VERSION:?} to ${VERSION:?}' \
-                 ${alpha_udf:?}* && git push origin master:master
+           mv ${alpha_udf:?}.asc ${alpha_udf:?}.pgp && \
+           git add ${alpha_udf:?}* ; \
+         done && \
+         git commit -m "Add incremental upgrades on the alpha channel for Tails ${VERSION:?}" && \
+         git push origin master:master \
+       )
 
 
 Prepare the ISO description file for DAVE
@@ -1118,6 +1128,8 @@ this, and skip what does not make sense for a RC.
    stable release on the mirrors.
 1. Remove any remaining RC for the just-published release from
    the mirrors.
+1. Revert the commits adding `alpha` channel incremental upgrades to
+   the just released version.
 1. Remove IUKs that are more than 6 months old from
    `/{stable,alpha}/iuk` on the rsync server:
    - first check that it's not going to remove anything we want to keep:
