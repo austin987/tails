@@ -463,7 +463,7 @@ EOF
       cmds << cmd
       cmd = cmds.join(" && ")
     end
-    return RemoteShell::Command.new(self, cmd, options)
+    return RemoteShell::ShellCommand.new(self, cmd, options)
   end
 
   def execute_successfully(*args)

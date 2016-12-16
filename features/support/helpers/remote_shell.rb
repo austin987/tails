@@ -56,7 +56,7 @@ module RemoteShell
   module_function :communicate
   private :communicate
 
-  class Command
+  class ShellCommand
     # If `:spawn` is false the server will block until it has finished
     # executing `cmd`. If it's true the server won't block, and the
     # response will always be [0, "", ""] (only used as an
@@ -69,7 +69,7 @@ module RemoteShell
       opts[:spawn] = false unless opts.has_key?(:spawn)
       type = opts[:spawn] ? "spawn" : "call"
       debug_log("#{type}ing as #{opts[:user]}: #{cmd}")
-      ret = RemoteShell.communicate(vm, type, opts[:user], cmd, **opts)
+      ret = RemoteShell.communicate(vm, 'sh_' + type, opts[:user], cmd, **opts)
       debug_log("#{type} returned: #{ret}") if not(opts[:spawn])
       return ret
     end
@@ -98,12 +98,51 @@ module RemoteShell
     end
   end
 
+  class PythonCommand
+    def self.execute(vm, code, **opts)
+      opts[:user] ||= "root"
+      show_code = code.chomp
+      if show_code["\n"]
+        show_code = "\n" + show_code
+      end
+      debug_log("executing Python as #{opts[:user]}: #{show_code}")
+      ret = RemoteShell.communicate(
+        vm, 'python_execute', opts[:user], code, **opts
+      )
+      debug_log("execution complete")
+      return ret
+    end
+
+    attr_reader :code, :exception, :stdout, :stderr
+
+    def initialize(vm, code, **opts)
+      @code = code
+      @exception, @stdout, @stderr = self.class.execute(vm, code, **opts)
+    end
+
+    def success?
+      return @exception == nil
+    end
+
+    def failure?
+      return not(success?)
+    end
+
+    def to_s
+      "Exception: #{@exception}\n" +
+        "STDOUT:\n" +
+        @stdout +
+        "STDERR:\n" +
+        @stderr
+    end
+  end
+
   # An IO-like object that is more or less equivalent to a File object
   # opened in rw mode.
   class File
     def self.open(vm, mode, path, *args, **opts)
       debug_log("opening file #{path} in '#{mode}' mode")
-      ret = RemoteShell.communicate(vm, mode, path, *args, **opts)
+      ret = RemoteShell.communicate(vm, 'file_' + mode, path, *args, **opts)
       if ret.size != 1
         raise ServerFailure.new("expected 1 value but got #{ret.size}")
       end

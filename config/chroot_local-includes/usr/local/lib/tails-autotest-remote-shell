@@ -6,6 +6,7 @@
 
 import base64
 import fcntl
+import io
 import json
 import os
 import pwd
@@ -14,22 +15,86 @@ import signal
 import subprocess
 import sys
 import systemd.daemon
+import textwrap
 import traceback
 
 REMOTE_SHELL_DEV = '/dev/ttyS0'
 
 
-def mk_switch_user_fn(uid, gid):
+def mk_switch_user_fn(user):
+    pwd_user = pwd.getpwnam(user)
     def switch_user():
-        os.setgid(gid)
-        os.setuid(uid)
+        os.setgid(pwd_user.pw_gid)
+        os.setuid(pwd_user.pw_uid)
     return switch_user
 
 
+# Dogtail does not seem to support the root user interacting with
+# other users' applications, and it does not support Python 3 (which
+# this script is written in) so let's wrap around an interactive
+# Python shell started as a subprocess.
+class PythonSession:
+    def __init__(self, user = None):
+        interactive_shell_code = '; '.join([
+            "import sys",
+            "import code",
+            "sys.ps1 = ''",
+            "sys.ps2 = ''",
+            "code.interact(banner='')",
+            ])
+        if not user:
+            user = pwd.getpwuid(os.getuid()).pw_name
+        self.process = subprocess.Popen(
+            ["python2", "-u", "-c", interactive_shell_code],
+            bufsize = 0,
+            shell=False,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            preexec_fn=mk_switch_user_fn(user)
+        )
+        init_code = """
+            import cStringIO
+            import json
+            import sys
+            orig_stdout = sys.stdout
+            orig_stderr = sys.stderr
+            """.replace('            ', '').lstrip()
+        self.process.stdin.write(init_code.encode())
+        self.process.stdin.flush()
+
+    def execute(self, code):
+        # This wrapping ensures that we can run almost any reasonable
+        # code and capture what it does.
+        wrapper = """
+            fake_stdout = cStringIO.StringIO()
+            fake_stderr = cStringIO.StringIO()
+            sys.stdout = fake_stdout
+            sys.stderr = fake_stderr
+            exc = None
+            try:
+            {code}
+            except Exception as e:
+                exc = '%s: %s' % (type(e).__name__, str(e))
+            # This newline is needed to end the `try` statement.
+
+            sys.stdout = orig_stdout
+            sys.stderr = orig_stderr
+            out_data = fake_stdout.getvalue()
+            err_data = fake_stderr.getvalue()
+            fake_stdout.close()
+            fake_stderr.close()
+            print(json.dumps([exc, out_data, err_data]))
+            """.replace('            ', '').lstrip()
+        indented_code = textwrap.indent(code, prefix=' '*4)
+        wrapped_code = wrapper.format(code=indented_code)
+        self.process.stdin.write(wrapped_code.encode())
+        self.process.stdin.flush()
+        return str(self.process.stdout.readline().strip(), 'utf-8')
+
+
 def run_cmd_as_user(cmd, user):
-    pwd_user = pwd.getpwnam(user)
-    switch_user_fn = mk_switch_user_fn(pwd_user.pw_uid,
-                                       pwd_user.pw_gid)
+    switch_user_fn = mk_switch_user_fn(user)
     # We try to create an environment identical to what's expected
     # inside Tails for the user by logging in (via `su`) as the user,
     # setting up the GNOME shell environment, and extracting the
@@ -51,6 +116,7 @@ def run_cmd_as_user(cmd, user):
 
 def main():
     port = serial.Serial(port = REMOTE_SHELL_DEV, baudrate = 4000000)
+    python_sessions = dict()
 
     # Notify systemd that we're ready
     systemd.daemon.notify('READY=1')
@@ -61,10 +127,10 @@ def main():
         try:
             id, cmd_type, *rest = json.loads(line)
             ret = ""
-            if cmd_type in ['call', 'spawn']:
+            if cmd_type in ['sh_call', 'sh_spawn']:
                 user, cmd = rest
                 p = run_cmd_as_user(cmd, user)
-                if cmd_type == "spawn":
+                if cmd_type == "sh_spawn":
                     returncode, stdout, stderr = 0, "", ""
                 else:
                     stdout_b, stderr_b = p.communicate()
@@ -72,14 +138,22 @@ def main():
                     stderr = stderr_b.decode('utf-8')
                     returncode = p.returncode
                 ret = json.dumps([id, 'success', returncode, stdout, stderr])
-            elif cmd_type in ['read', 'write', 'append']:
+            elif cmd_type == 'python_execute':
+                user, code = rest
+                if user not in python_sessions:
+                    python_sessions[user] = PythonSession(user)
+                session = python_sessions[user]
+                result_str = session.execute(code)
+                result = json.loads(result_str)
+                ret = json.dumps([id, 'success'] + result)
+            elif cmd_type in ['file_read', 'file_write', 'file_append']:
                 path, *rest = rest
-                open_mode = cmd_type[0] + 'b'
+                open_mode = cmd_type[5] + 'b'
                 with open(path, open_mode) as f:
-                    if cmd_type == 'read':
+                    if cmd_type == 'file_read':
                         assert(rest == [])
                         ret = str(base64.b64encode(f.read()), 'utf-8')
-                    elif cmd_type in ['write', 'append']:
+                    elif cmd_type in ['file_write', 'file_append']:
                         assert(len(rest) == 1)
                         data = base64.b64decode(rest[0])
                         ret = f.write(data)
