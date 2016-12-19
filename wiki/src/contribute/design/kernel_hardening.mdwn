@@ -47,6 +47,21 @@ command line, `slab_nomerge` is implied. But having `slab_nomerge`
 explicitely declared can help prevent regressions where disabling of
 debugging features is desired but re-enabling of merging is not.
 
+#### `vsyscall=none`
+
+Virtual syscalls are the obsolete predecessor of vDSO calls.
+Unfortunately, both `vsyscall=native` and `vsyscall=emulate` (the
+default) have a negative security impact, with the latter a little
+less so. Namely, they provide a target for any attacker who has
+control of the return instruction pointer, which is increasingly
+common these days now that attackers need to resort to ROP and similar
+attacks which target a process' control flow. The impact of this is
+with reduced compatibility, however only legacy statically compiled
+binaries and old versions of glibc used vsyscalls. All software on
+modern Tails uses vDSO instead. If for some reason a program does try
+to use a vsyscall, the process will crash with a memory access
+violation, and won't bring the whole system down.
+
 #### `mce=0`
 
 Mostly useful for systems with ECC memory, setting `mce` to 0 will
