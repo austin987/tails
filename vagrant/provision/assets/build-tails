@@ -29,8 +29,13 @@ cleanup() {
 
 remove_build_dirs() {
 	for mountpoint in $(old_build_dirs | tac) ; do
+		tries=0
 		sudo lsof | grep --fixed-strings "$mountpoint" || true
-		sudo umount -f -l "$mountpoint"
+		while ! sudo umount -f --verbose "$mountpoint" && [ $tries -lt 12 ]; do
+			sudo fuser --ismountpoint --mount "$mountpoint" --kill
+			sleep 5
+			tries=$(expr $tries + 1)
+		done
 		sudo rm -rf "$mountpoint"
 	done
 }
