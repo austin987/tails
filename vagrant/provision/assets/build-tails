@@ -29,7 +29,7 @@ cleanup() {
 
 remove_build_dirs() {
 	for mountpoint in $(old_build_dirs | tac) ; do
-		sudo lsof | grep --fixed-strings "on $mountpoint" || true
+		sudo lsof | grep --fixed-strings "$mountpoint" || true
 		sudo umount -f -l "$mountpoint"
 		sudo rm -rf "$mountpoint"
 	done
