@@ -51,7 +51,7 @@ chosen URL, and set `TBB_VERSION` to the desired Tor Browser version, for
 example:
 
     TBB_DIST_URL=https://people.torproject.org/~mikeperry/builds/4.5-build5/
-    TBB_VERSION=4.5
+    TBB_VERSION=4.5-build5
 
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
@@ -86,7 +86,7 @@ Lastly, commit:
 
 Then do the same operation for the 64-bit tarballs:
 
-    git checkout feature/8183-64bit-userspace && \
+    git checkout feature/stretch && \
     grep --color=never "\<tor-browser-linux64-.*\.tar.xz$" sha256sums-unsigned-build.txt > \
          config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt && \
     echo "${TBB_DIST_URL}" | sed "s,^https://,http://," > \
@@ -176,7 +176,7 @@ Import a new set of Tor Browser tarballs
        cd "$TAILS_GIT_REPO" && git checkout "$TBB_IMPORT_BRANCH"
        TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")"
        current_branch=$(git -C "$TAILS_GIT_REPO" branch | awk '/^\* / { print $2 }')
-       for branch in "$current_branch" feature/8183-64bit-userspace ; do
+       for branch in "$current_branch" feature/stretch ; do
           git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
           | while read expected_sha256 tarball; do
              (
@@ -225,7 +225,7 @@ Adjust the URL in the main Git repository
     cd "$TAILS_GIT_REPO" && \
     git checkout "$TBB_IMPORT_BRANCH"
     current_branch=$(git branch | awk '/^\* / { print $2 }')
-    for branch in "$current_branch" feature/8183-64bit-userspace ; do
+    for branch in "$current_branch" feature/stretch ; do
        git checkout "$branch" && \
        echo "http://torbrowser-archive.tails.boum.org/${TBB_VERSION}/" > \
             config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
