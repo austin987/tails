@@ -335,7 +335,9 @@ end
 
 Given /^I enable the specific Tor configuration option$/ do
   open_greeter_additional_settings()
-  @screen.click('TailsGreeterTorConf.png')
+  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
+  @screen.wait_and_click("TailsGreeterSpecificTorConfiguration.png", 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
 Given /^I set an administration password$/ do
