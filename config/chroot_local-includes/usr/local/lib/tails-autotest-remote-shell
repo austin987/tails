@@ -24,6 +24,7 @@ REMOTE_SHELL_DEV = '/dev/ttyS0'
 def mk_switch_user_fn(user):
     pwd_user = pwd.getpwnam(user)
     def switch_user():
+        os.initgroups(user, pwd_user.pw_gid)
         os.setgid(pwd_user.pw_gid)
         os.setuid(pwd_user.pw_uid)
     return switch_user
