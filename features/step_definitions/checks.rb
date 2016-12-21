@@ -243,12 +243,9 @@ end
 
 When /^I disable all networking in the Tails Greeter$/ do
   open_greeter_additional_settings()
-  begin
-    @screen.click('TailsGreeterDisableAllNetworking.png')
-  rescue FindFailed
-    @screen.type(Sikuli::Key.PAGE_DOWN)
-    @screen.click('TailsGreeterDisableAllNetworking.png')
-  end
+  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
+  @screen.wait_and_click('TailsGreeterDisableAllNetworking.png', 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|
