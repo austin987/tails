@@ -313,7 +313,10 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   when 'German'
     @language = "German"
     @screen.wait_and_click('TailsGreeterLanguage.png', 10)
-    @screen.wait_and_click("TailsGreeterLanguage#{@language}.png", 10)
+    @screen.wait('TailsGreeterLanguagePopover.png', 10)
+    @screen.type(@language)
+    sleep(2) # Gtk needs some time to filter the results
+    @screen.type(Sikuli::Key.ENTER)
     @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
   when ''
     @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
