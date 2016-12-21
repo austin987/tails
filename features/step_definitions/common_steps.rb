@@ -324,22 +324,27 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   step 'the Tails desktop is ready'
 end
 
-Given /^I enable more Tails Greeter options$/ do
-  match = @screen.find('TailsGreeterMoreOptions.png')
-  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 20)
-  @screen.wait('TailsGreeterLoginButton.png', 20)
+def open_greeter_additional_settings
+  @screen.click('TailsGreeterAddMoreOptions.png')
+  @screen.wait('TailsGreeterAdditionalSettingsDialog.png', 10)
+end
+
+Given /^I open Tails Greeter additional settings dialog$/ do
+  open_greeter_additional_settings()
 end
 
 Given /^I enable the specific Tor configuration option$/ do
+  open_greeter_additional_settings()
   @screen.click('TailsGreeterTorConf.png')
 end
 
 Given /^I set an administration password$/ do
-  @screen.wait("TailsGreeterAdminPassword.png", 20)
+  open_greeter_additional_settings()
+  @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^Tails Greeter has applied all settings$/ do

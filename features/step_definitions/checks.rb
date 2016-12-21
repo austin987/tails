@@ -242,6 +242,7 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
 end
 
 When /^I disable all networking in the Tails Greeter$/ do
+  open_greeter_additional_settings()
   begin
     @screen.click('TailsGreeterDisableAllNetworking.png')
   rescue FindFailed
