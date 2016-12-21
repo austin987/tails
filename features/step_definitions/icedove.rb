@@ -32,7 +32,7 @@ When /^I start Icedove$/ do
     $vm.file_append('/etc/icedove/pref/icedove.js ', line)
   end
   step 'I start "Icedove" via the GNOME "Internet" applications menu'
-  icedove_main.wait(60)
+  icedove_main
 end
 
 When /^I have not configured an email account$/ do
@@ -44,7 +44,7 @@ When /^I have not configured an email account$/ do
 end
 
 Then /^I am prompted to setup an email account$/ do
-  icedove_wizard.wait(30)
+  icedove_wizard
 end
 
 Then /^I cancel setting up an email account$/ do
@@ -57,7 +57,6 @@ Then /^I open Icedove's Add-ons Manager$/ do
   @icedove_addons = icedove_app.child(
     'Add-ons Manager - Icedove Mail/News', roleName: 'frame'
   )
-  @icedove_addons.wait
 end
 
 Then /^I click the extensions tab$/ do
@@ -111,7 +110,7 @@ end
 
 Then /^I see that Torbirdy is configured to use Tor$/ do
   icedove_main.child(roleName: 'status bar')
-    .child('TorBirdy Enabled:    Tor', roleName: 'label').wait
+    .child('TorBirdy Enabled:    Tor', roleName: 'label')
 end
 
 When /^I enter my email credentials into the autoconfiguration wizard$/ do
@@ -121,7 +120,7 @@ When /^I enter my email credentials into the autoconfiguration wizard$/ do
     .typeText($config['Icedove']['password'])
   icedove_wizard.button('Continue').click
   # This button is shown if and only if a configuration has been found
-  icedove_wizard.button('Done').wait(120)
+  try_for(120) { icedove_wizard.button('Done') }
 end
 
 Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server is secure (.+)$/ do |type, protocol|
@@ -140,21 +139,27 @@ When /^I fetch my email$/ do
 
   icedove_main.child('Mail Toolbar', roleName: 'tool bar')
     .button('Get Messages').click
-  fetch_progress = icedove_main.child(roleName: 'status bar')
-                     .child(roleName: 'progress bar')
-  fetch_progress.wait_vanish(120)
+  try_for(120) do
+    begin
+      icedove_main.child(roleName: 'status bar', retry: false)
+        .child(roleName: 'progress bar', retry: false)
+      false
+    rescue
+      true
+    end
+  end
 end
 
 When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
   # The password check can fail due to bad Tor circuits.
   retry_tor do
     try_for(120) do
-      if icedove_wizard.exist?
+      begin
         # Spam the button, even if it is disabled (while it is still
         # testing the password).
         icedove_wizard.button('Done').click
         false
-      else
+      rescue
         true
       end
     end
@@ -196,7 +201,6 @@ end
 When /^I send an email to myself$/ do
   icedove_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
   compose_window = icedove_app.child('Write: (no subject)')
-  compose_window.wait(10)
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
     .typeText($config['Icedove']['address'])
   # The randomness of the subject will make it easier for us to later
@@ -210,7 +214,9 @@ When /^I send an email to myself$/ do
     .typeText('test')
   compose_window.child('Composition Toolbar', roleName: 'tool bar')
     .button('Send').click
-  compose_window.wait_vanish(120)
+  try_for(120) do
+    not compose_window.exist?
+  end
 end
 
 Then /^I can find the email I sent to myself in my inbox$/ do
@@ -221,7 +227,6 @@ Then /^I can find the email I sent to myself in my inbox$/ do
                                 roleName: 'entry')
     filter.typeText(@subject)
     hit_counter = icedove_main.child('1 message')
-    hit_counter.wait
     inbox_view = hit_counter.parent
     message_list = inbox_view.child(roleName: 'table')
     the_message = message_list.children(roleName: 'table row').find do |message|

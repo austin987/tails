@@ -45,59 +45,51 @@ module Dogtail
   #     menu.click()
   #
   # i.e. the object referenced by `menu` is never modified by method
-  # calls and can be used as expected. This explains why
-  # `proxy_call()` below returns a new instance instead of adding
-  # appending the new component the proxied method call would result
-  # in.
+  # calls and can be used as expected.
 
   class Application
+    @@node_counter ||= 0
 
     def initialize(app_name, opts = {})
+      @var = "node#{@@node_counter += 1}"
       @app_name = app_name
       @opts = opts
-      @init_lines = @opts[:init_lines] || [
-        "from dogtail import tree",
-        "from dogtail.config import config",
-        "config.logDebugToFile = False",
-        "config.logDebugToStdOut = False",
-        "config.blinkOnActions = True",
-        "config.searchShowingOnly = True",
-        "application = tree.root.application('#{@app_name}')",
-      ]
-      @components = @opts[:components] || ['application']
-    end
-
-    def build_script(lines)
-      (
-        ["#!/usr/bin/python"] +
-        @init_lines +
-        lines
-      ).join("\n")
-    end
-
-    def build_line
-      @components.join('.')
-    end
-
-    def run(lines = nil)
       @opts[:user] ||= LIVE_USER
-      lines ||= [build_line]
-      lines = [lines] if lines.class != Array
-      script = build_script(lines)
-      script_path = $vm.execute_successfully('mktemp', @opts).stdout.chomp
-      $vm.file_overwrite(script_path, script)
-      args = ["/usr/bin/python '#{script_path}'", @opts]
-      if @opts[:allow_failure]
-        return $vm.execute(*args)
-      else
-        begin
-          return $vm.execute_successfully(*args)
-        rescue Exception => e
-          debug_log("Failing Dogtail script (#{script_path}):")
-          script.split("\n").each { |line| debug_log(" "*4 + line) }
-          raise e
-        end
+      @find_code = "dogtail.tree.root.application('#{@app_name}')"
+      init_script = [
+        "import dogtail.config",
+        "import dogtail.tree",
+        "import dogtail.predicate",
+        "dogtail.config.logDebugToFile = False",
+        "dogtail.config.logDebugToStdOut = False",
+        "dogtail.config.blinkOnActions = True",
+        "dogtail.config.searchShowingOnly = True",
+        "#{@var} = #{@find_code}",
+      ]
+      run(init_script)
+    end
+
+    def to_s
+      @var
+    end
+
+    def run(code)
+      code = code.join("\n") if code.class == Array
+      c = RemoteShell::PythonCommand.new($vm, code, user: @opts[:user])
+      if c.failure?
+        raise RuntimeError.new("The Dogtail script raised: #{c.exception}")
       end
+      return c
+    end
+
+    def exist?
+      run("dogtail.config.searchCutoffCount = 0")
+      run(@find_code)
+      return true
+    rescue
+      return false
+    ensure
+      run("dogtail.config.searchCutoffCount = 20")
     end
 
     def self.value_to_s(v)
@@ -132,28 +124,6 @@ module Dogtail
       ).join(', ')
     end
 
-    def wait(timeout = nil)
-      if timeout
-        try_for(timeout) { run }
-      else
-        run
-      end
-    end
-
-    def exist?
-      @opts[:allow_failure] = true
-      # We do not want any retries since this method should return the
-      # result for the immediate situation, not for the situation up
-      # to 20 retries in the future.
-      optimization = "config.searchCutoffCount = 1"
-      @init_lines << optimization unless @init_lines.include?(optimization)
-      run.success?
-    end
-
-    def wait_vanish(timeout)
-      try_for(timeout) { not(exist?) }
-    end
-
     # Equivalent to the Tree API's Node.findChildren(), with the
     # arguments constructing a GenericPredicate to use as parameter.
     def children(*args)
@@ -173,50 +143,24 @@ module Dogtail
       if findChildren_opts_hash.size > 0
         findChildren_opts = ", " + self.class.args_to_s([findChildren_opts_hash])
       end
-      # A fundamental assumption of ScriptProxy is that we will only
-      # act on *one* object at a time. If we were to allow more, we'd
-      # have to port looping, conditionals and much more into our
-      # script generation, which is insane.
-      # However, since references are lost between script runs (=
-      # Application.run()) we need to be a bit tricky here. We use the
-      # internal a11y AT-SPI "path" to uniquely identify a Dogtail
-      # node, so we can give handles to each of them that can be used
-      # later to re-find them.
       predicate_opts = self.class.args_to_s(args)
-      find_paths_script_lines = [
-        "from dogtail import predicate",
-        "for n in #{build_line}.findChildren(predicate.GenericPredicate(#{predicate_opts})#{findChildren_opts}):",
-        "    print(n.path)",
+      nodes_var = "nodes#{@@node_counter += 1}"
+      find_script = [
+        "#{nodes_var} = #{@var}.findChildren(dogtail.predicate.GenericPredicate(#{predicate_opts})#{findChildren_opts})",
+        "print(len(#{nodes_var}))",
       ]
-      a11y_at_spi_paths = run(find_paths_script_lines).stdout.chomp.split("\n")
-                          .grep(Regexp.new('^/org/a11y/atspi/accessible/'))
-                          .map { |path| path.chomp }
-      a11y_at_spi_paths.map do |path|
-        more_init_lines = [
-          "from dogtail import predicate",
-          "node = None",
-          "for n in #{build_line}.findChildren(predicate.GenericPredicate()):",
-          "    if str(n.path) == '#{path}':",
-          "        node = n",
-          "        break",
-          "assert(node)",
-        ]
-        Node.new(
-          @app_name,
-          @opts.merge(
-            init_lines: @init_lines + more_init_lines,
-            components: ['node']
-          )
-        )
+      size = run(find_script).stdout.chomp.to_i
+      return size.times.map do |i|
+        Node.new("#{nodes_var}[#{i}]", @opts)
       end
     end
 
     def get_field(key)
-      run("print(#{build_line}.#{key})").stdout.chomp
+      run("print(#{@var}.#{key})").stdout.chomp
     end
 
     def set_field(key, value)
-      run("#{build_line}.#{key} = #{self.class.value_to_s(value)}")
+      run("#{@var}.#{key} = #{self.class.value_to_s(value)}")
     end
 
     def text
@@ -231,33 +175,17 @@ module Dogtail
       get_field('name')
     end
 
-    def proxy_call(method, args)
-      args_str = self.class.args_to_s(args)
-      method_call = "#{method.to_s}(#{args_str})"
-      Node.new(
-        @app_name,
-        @opts.merge(
-          init_lines: @init_lines,
-          components: @components + [method_call]
-        )
-      )
-    end
-
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
-        proxy_call(method, args)
+        args_str = self.class.args_to_s(args)
+        method_call = "#{method.to_s}(#{args_str})"
+        Node.new("#{@var}.#{method_call}", @opts)
       end
     end
 
     TREE_API_NODE_SEARCH_FIELDS.each do |field|
       define_method(field) do
-        Node.new(
-          @app_name,
-          @opts.merge(
-            init_lines: @init_lines,
-            components: @components + [field]
-          )
-        )
+        Node.new("#{@var}.#{field}", @opts)
       end
     end
 
@@ -265,15 +193,28 @@ module Dogtail
 
   class Node < Application
 
+    def initialize(expr, opts = {})
+      @expr = expr
+      @opts = opts
+      @opts[:user] ||= LIVE_USER
+      @find_code = expr
+      @var = "node#{@@node_counter += 1}"
+      run("#{@var} = #{@find_code}")
+    end
+
     TREE_API_NODE_SEARCHES.each do |method|
       define_method(method) do |*args|
-        proxy_call(method, args)
+        args_str = self.class.args_to_s(args)
+        method_call = "#{method.to_s}(#{args_str})"
+        Node.new("#{@var}.#{method_call}", @opts)
       end
     end
 
     TREE_API_NODE_ACTIONS.each do |method|
       define_method(method) do |*args|
-        proxy_call(method, args).run
+        args_str = self.class.args_to_s(args)
+        method_call = "#{method.to_s}(#{args_str})"
+        run("#{@var}.#{method_call}")
       end
     end
 

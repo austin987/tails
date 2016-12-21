@@ -103,7 +103,7 @@ module RemoteShell
       opts[:user] ||= "root"
       show_code = code.chomp
       if show_code["\n"]
-        show_code = "\n" + show_code
+        show_code = "\n" + show_code.lines.map { |l| " "*4 + l.chomp } .join("\n")
       end
       debug_log("executing Python as #{opts[:user]}: #{show_code}")
       ret = RemoteShell.communicate(
