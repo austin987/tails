@@ -29,11 +29,15 @@ Feature: Icedove email client
     Given I cancel setting up an email account
     Then I see that Torbirdy is configured to use Tor
 
+  #11890
+  @fragile
   Scenario: Icedove's autoconfiguration wizard defaults to IMAP and secure protocols
     When I enter my email credentials into the autoconfiguration wizard
     Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
     Then the autoconfiguration wizard's choice for the outgoing server is secure SMTP
 
+  #11890
+  @fragile
   Scenario: Icedove can send emails, and receive emails over IMAP
     When I enter my email credentials into the autoconfiguration wizard
     Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
@@ -42,6 +46,8 @@ Feature: Icedove email client
     And I fetch my email
     Then I can find the email I sent to myself in my inbox
 
+  #11890
+  @fragile
   Scenario: Icedove can download the inbox with POP3
     When I enter my email credentials into the autoconfiguration wizard
     Then the autoconfiguration wizard's choice for the incoming server is secure IMAP
