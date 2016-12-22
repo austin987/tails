@@ -1,8 +1,118 @@
-tails (2.7.1) UNRELEASED; urgency=medium
+tails (2.9.2) UNRELEASED; urgency=medium
 
-  * Emergency release. 
+  * Dummy entry.
 
- -- bertagaz <bertagaz@haze>  Tue, 15 Nov 2016 23:23:11 +0100
+ -- Tails developers <tails@boum.org>  Wed, 14 Dec 2016 21:04:55 +0100
+
+tails (2.9.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 6.0.8 based on Firefox 45.6. If you pay
+      close attention you'll see that we import -build1 but there was
+      a -build2. The only change is Tor Button 1.9.5.13 which makes
+      some changes to the donation campaign banner in `about:tor`,
+      which we safely can skip. (Closes: #12028)
+    - Upgrade Icedove to 45.5.1-1~deb8u1+tails1. (Closes: #12029)
+    - Upgrade APT-related packages to 1.0.9.8.4.
+
+  * Minor improvements
+    - Switch to DuckDuckGo as the default search engine in the tor
+      Browser. This is what Tor Browser has, and Disconnect.me (the
+      previous default) has been re-directing to DDG for some time,
+      which has been confusing users. In addition, we localize the DDG
+      user interface for the locales with availablelangpacks. (Closes:
+      #11913)
+    - Improve the display name for the Wikipedia search plugin.
+    - Enable contrib and non-free for our own APT repos.
+    - Upgrade Tor to 0.2.8.10. (Closes: #12015)
+    - Upgrade obfs4proxy to 0.0.7-1~tpo1.
+
+  * Bugfixes
+    - AppArmor Totem profile: add permissions needed to avoid warning
+      on startup. (Closes: #11984)
+    - Upgrade the VirtualBox Guest additions and modules to version
+      5.1.8. This should prevent Xorg from crashing unless the video
+      memory for the VMs are significantly bumped. (Closes: #11965)
+      Users will still have to enable I/O APIC due to a bug in Linux.
+    - Drop unwanted search plugins from the Tor Browser langpacks.
+      Otherwise they are only removed from English locales. Note that
+      the langpacks contain copies of the English plugins, not
+      localized versions, so we actually lose nothing.
+
+  * Test suite
+    - Add support for SikuliX, which recently hit Debian Unstable,
+      while still supporting Sikuli for Jessie users. (Closes: #11991)
+    - Fix some instances where we were trying to use the mouse outside
+      of the Sikuli screen.
+    - Use "TorBirdy" instead of "amnesia branding" as the "anchor"
+      addon.  I.e. the addon that we use to find the other ones. The
+      "amnesia branding" addon has been removed, so we must use
+      something else. (Fixup: #11906)
+    - Dogtailify "the support documentation page opens in Tor Browser"
+      step. We previously relied on Sikuli, and the image was made
+      outdated thanks to our donation campaign. No more! (Closes:
+      #11911)
+    - Resolve dl.amnesia.boum.org instead of picking a static address.
+      Just hours after updating the dustri.org IP address, its web
+      server went down => test suite failures. Let's make this test as
+      robust as actually downloading the Tails ISO image -- if that
+      fails, we probably have more serious problems on our hands than
+      a failing test suite. (Closes: #11960)
+    - Switch MAT scenario from testing PDFs to PNGs. Also add
+      anti-test and test using using a tool *different* from MAT, the
+      tool being tested here. (Closes: #11901)
+
+ -- Tails Developers <tails@boum.org>  Wed, 14 Dec 2016 13:19:16 +0100
+
+tails (2.7.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 6.0.7 (build3) based on Firefox 45.5.1.
+    - Upgrade gstreamer0.10-based packages to 0.10.31-3+nmu4+deb8u2.
+    - Upgrade imagemagick-based packages to 8:6.8.9.9-5+deb8u6.
+    - Upgrade libicu52 to 52.1-8+deb8u4.
+    - Upgrade vim-based packages to 2:7.4.488-7+deb8u1.
+
+  * Minor improvements
+    - Reserve 64 MiB for the kernel and 128 MiB for privileged
+      processes before the memory is wiped. We hope that this might
+      help (but not solve, sadly) some crashes experienced while
+      wiping the memory.
+
+  * Build system
+    - Make the wiki shipped inside Tails build deterministically
+      (Closes: #11966):
+      * Enable ikiwiki's "deterministic" option, and require it when
+        building.
+      * Use our custom backport of discount (2.2.1-1~bpo8+1~0.tails1),
+        to fix reproducibility issues (Debian#782315). This can be
+        dropped once our ISO builders use Stretch.
+      * Install ikiwiki from our builder-jessie APT suite, to make the
+        pagestats plugin output deterministic.
+    - refresh-translations: don't update PO files unless something
+      other than POT-Creation-Date was changed. (Closes: #11967)
+    - Fix Vagrant's is_release? check. Per auto/build, we consider it
+      a release when we build from detached head, and HEAD is tagged.
+    - Enforce `cleanall` when building a release. I.e. don't allow the
+      user supplied options to override this behaviour. This is
+      important since Vagrant caches wiki builds, and we do not want
+      leftovers from a previous builds ending up in a release. Also,
+      this is required for making Tails images build reproducibly.
+    - Make the build system's `cleanall` option really clean
+      everything.  At the moment it doesn't clean the cached wiki
+      build (which basically was its only job).
+    - import-package: support contrib and non-free sections.
+
+  * Test suite
+    - Wait a bit between opening the shutdown applet menu, and
+      clicking one of its widgets. (Closes: #11616).
+    - Adapt Icedove test after removing the amnesia branding add-on.
+      (Closes: #11906)
+    - Replace --pause-on-fail with --interactive-debugging. It does
+      the same thing, but also offers an interactive Ruby shell, via
+      pry, with the Cucumber world context.
+
+ -- Tails developers <tails@boum.org>  Wed, 30 Nov 2016 17:27:37 +0100
 
 tails (2.7) unstable; urgency=medium
 
