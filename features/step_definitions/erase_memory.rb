@@ -179,10 +179,25 @@ end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   $vm.spawn("halt")
-  try_for(memory_wipe_timeout, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
+
+  check_if_memory_wipe_finished = Proc.new do
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for
     @screen.type(" ")
     @screen.find('MemoryWipeCompleted.png')
+    sleep 1
+  end
+
+  begin
+    retry_action(
+      memory_wipe_timeout,
+      :operation_name => "Checking if memory wipe has finished",
+      &check_if_memory_wipe_finished
+    )
+  rescue MaxRetriesFailure
+    puts "Cannot tell if memory wipe completed."
+    puts "One possible reason for this is a garbled display,"
+    puts "so let's go on and rely on the next steps to check"
+    puts "how well memory was wiped."
   end
 end
