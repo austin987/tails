@@ -127,7 +127,7 @@ Then /^I connect to an SFTP server on the Internet$/ do
   end
 
   retry_tor(recovery_proc) do
-    step 'I start "Files" via the GNOME "Accessories" applications menu'
+    step 'I start "Nautilus" via the GNOME "Accessories" applications menu'
     @screen.wait_and_click("GnomeFilesConnectToServer.png", 10)
     @screen.wait("GnomeConnectToServerWindow.png", 10)
     @screen.type("sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port)
