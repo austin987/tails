@@ -313,7 +313,10 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   when 'German'
     @language = "German"
     @screen.wait_and_click('TailsGreeterLanguage.png', 10)
-    @screen.wait_and_click("TailsGreeterLanguage#{@language}.png", 10)
+    @screen.wait('TailsGreeterLanguagePopover.png', 10)
+    @screen.type(@language)
+    sleep(2) # Gtk needs some time to filter the results
+    @screen.type(Sikuli::Key.ENTER)
     @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
   when ''
     @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
@@ -324,22 +327,29 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   step 'the Tails desktop is ready'
 end
 
-Given /^I enable more Tails Greeter options$/ do
-  match = @screen.find('TailsGreeterMoreOptions.png')
-  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 20)
-  @screen.wait('TailsGreeterLoginButton.png', 20)
+def open_greeter_additional_settings
+  @screen.click('TailsGreeterAddMoreOptions.png')
+  @screen.wait('TailsGreeterAdditionalSettingsDialog.png', 10)
+end
+
+Given /^I open Tails Greeter additional settings dialog$/ do
+  open_greeter_additional_settings()
 end
 
 Given /^I enable the specific Tor configuration option$/ do
-  @screen.click('TailsGreeterTorConf.png')
+  open_greeter_additional_settings()
+  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
+  @screen.wait_and_click("TailsGreeterSpecificTorConfiguration.png", 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
 Given /^I set an administration password$/ do
-  @screen.wait("TailsGreeterAdminPassword.png", 20)
+  open_greeter_additional_settings()
+  @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^Tails Greeter has applied all settings$/ do
