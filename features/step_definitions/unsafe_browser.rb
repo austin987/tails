@@ -13,7 +13,8 @@ def supported_torbrowser_languages
   File.read(localization_descriptions).split("\n").map do |line|
     # The line will be of the form "xx:YY:..." or "xx-YY:YY:..."
     first, second = line.sub('-', '_').split(':')
-    candidates = ["#{first}_#{second}.utf8", "#{first}.utf8",
+    candidates = ["#{first}_#{second}.UTF-8", "#{first}_#{second}.utf8",
+                  "#{first}.UTF-8", "#{first}.utf8",
                   "#{first}_#{second}", first]
     when_not_found = Proc.new { raise "Could not find a locale for '#{line}'" }
     candidates.find(when_not_found) do |candidate|
