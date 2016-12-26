@@ -5,6 +5,6 @@ Feature: Metadata Anonymization Toolkit
 
   Scenario: MAT can clean a PNG file
     Given a computer
-    And I setup a filesystem share containing a sample PNG
     And I start Tails from DVD with network unplugged and I login
+    And I plug and mount a USB drive containing a sample PNG
     Then MAT can clean some sample PNG file
