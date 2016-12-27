@@ -11,8 +11,7 @@ Feature: Spoofing MAC addresses
     And the network is plugged
 
   Scenario: MAC address spoofing is disabled
-    When I enable more Tails Greeter options
-    And I disable MAC spoofing in Tails Greeter
+    When I disable MAC spoofing in Tails Greeter
     And I log in to a new session
     And Tor is ready
     Then 1 network interface is enabled

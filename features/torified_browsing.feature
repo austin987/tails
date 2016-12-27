@@ -105,7 +105,7 @@ Feature: Browsing the web using the Tor Browser
   Scenario: The "Tails documentation" link on the Desktop works
     Given I have started Tails from DVD and logged in and the network is connected
     When I double-click on the "Tails documentation" link on the Desktop
-    Then I see "TailsOfflineDocHomepage.png" after at most 10 seconds
+    Then I see "TailsOfflineDocHomepage.png" after at most 20 seconds
 
   Scenario: The Tor Browser uses TBB's shared libraries
     Given I have started Tails from DVD and logged in and the network is connected

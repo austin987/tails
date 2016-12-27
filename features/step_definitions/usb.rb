@@ -343,12 +343,9 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 end
 
 Given /^I enable persistence$/ do
-  @screen.wait('TailsGreeterPersistence.png', 10)
-  @screen.type(Sikuli::Key.SPACE)
-  @screen.wait('TailsGreeterPersistencePassphrase.png', 10)
-  match = @screen.find('TailsGreeterPersistencePassphrase.png')
-  @screen.click(match.getCenter.offset(match.w*2, match.h/2))
-  @screen.type(@persistence_password)
+  @screen.wait_and_click('TailsGreeterPersistencePassphrase.png', 10)
+  @screen.type(@persistence_password + Sikuli::Key.ENTER)
+  @screen.wait('TailsGreeterPersistenceUnlocked.png', 30)
 end
 
 def tails_persistence_enabled?
