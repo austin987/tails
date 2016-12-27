@@ -181,11 +181,14 @@ When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   $vm.spawn("halt")
 
   check_if_memory_wipe_finished = Proc.new do
+    # Ideally we would want this proc to run in exactly 1s, so that retry_action
+    # would take exactly memory_wipe_timeout seconds. But it takes some time
+    # to run @screen.type and @screen.find, that depends on the host system,
+    # so we can't simply "sleep X".
     # We spam keypresses to prevent console blanking from hiding the
     # image we're waiting for
     @screen.type(" ")
     @screen.find('MemoryWipeCompleted.png')
-    sleep 1
   end
 
   begin
