@@ -179,15 +179,17 @@ end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   $vm.spawn("halt")
-  try_for(memory_wipe_timeout, msg: "memory wipe didn't finish, probably the VM crashed") do
-    # We spam keypresses to prevent console blanking from hiding the
-    # image we're waiting for
-    @screen.type(" ")
-    @screen.find('MemoryWipeCompleted.png')
+  begin
+    try_for(memory_wipe_timeout, msg: "memory wipe didn't finish, probably the VM crashed") do
+      # We spam keypresses to prevent console blanking from hiding the
+      # image we're waiting for
+      @screen.type(" ")
+      @screen.find('MemoryWipeCompleted.png')
+    end
+  rescue Timeout::Error
+    puts "Cannot tell if memory wipe completed. " +
+         "One possible reason for this is a garbled display, " +
+         "so let's go on and rely on the next steps to check " +
+         "how well memory was wiped."
   end
-rescue Timeout::Error
-  puts "Cannot tell if memory wipe completed. " +
-       "One possible reason for this is a garbled display, " +
-       "so let's go on and rely on the next steps to check " +
-       "how well memory was wiped."
 end
