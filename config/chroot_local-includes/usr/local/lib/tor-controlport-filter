@@ -143,6 +143,9 @@ DEFAULT_CONTROL_SOCKET_PATH = '/var/run/tor/control'
 class NoRewriteMatch(RuntimeError):
     pass
 
+class CommandFiltered(RuntimeError):
+    pass
+
 
 def log(msg):
     print(msg, file=sys.stderr)
@@ -243,10 +246,6 @@ class FilteredControlPortProxySession:
             response = new_response
         self.respond(response, raw=True)
 
-    def filter_line(self, line):
-        self.debug_log("command filtered: {}".format(line))
-        self.respond("510 Command filtered")
-
     def rewrite_line(self, replacers, line):
         builtin_replacers = {
             'client-address': self.client_address[0],
@@ -306,8 +305,7 @@ class FilteredControlPortProxySession:
     def update_event_subscriptions(self, events):
         if not global_args.disable_filtering and \
            any(event not in self.allowed_events for event in events):
-            self.filter_line(line)
-            return
+            raise CommandFiltered()
         for listener, event in self.subscribed_event_listeners:
             if event not in events:
                 self.controller.remove_event_listener(listener)
@@ -345,6 +343,10 @@ class FilteredControlPortProxySession:
 
     def handle(self):
         while True:
+            self.handle_next_line()
+
+    def handle_next_line(self):
+        try:
             binary_line = self.rfile.readline(self.MAX_LINESIZE)
             if binary_line == b'':
                 # Deal with clients that close the socket without a QUIT.
@@ -426,7 +428,10 @@ class FilteredControlPortProxySession:
                     self.proxy_line(line, args_rewriter=args_rewriter,
                                     response_rewriter=response_rewriter)
                 else:
-                    self.filter_line(line)
+                    raise CommandFiltered()
+            except CommandFiltered:
+                self.debug_log("command filtered: {}".format(line))
+                self.respond("510 Command filtered")
 
 
 class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
