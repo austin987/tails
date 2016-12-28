@@ -206,11 +206,7 @@ end
 
 def memory_wipe_timeout
   nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  timeout = nr_gigs_of_ram*30
-  assert(timeout < 9*60,
-         "The memory wipe timeout is #{timeout}s which is exceeding" +
-         "(or close enough to) the 10m timeout imposed by debug=wipemem")
-  return timeout
+  nr_gigs_of_ram*30
 end
 
 Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
