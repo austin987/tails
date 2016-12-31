@@ -40,19 +40,22 @@ if [ -n "${sdmem}" ] ; then
       sdmemopts="v"
    fi
    /usr/bin/sdmem "-${sdmemopts}"
+   echo "Memory has been wiped!"
 fi
 
 if [ "${sdmemdebug}" = 1 ] ; then
    clear
    echo "Going to sleep 10 minutes. Happy dumping!"
-   sleep 600
+   sleep 1200
 fi
 
 case "${sdmem}" in
    halt)
+      echo "Powering off..."
       /sbin/poweroff -fd
       ;;
    reboot)
+      echo "Restarting..."
       /sbin/reboot -fd
       ;;
    *)

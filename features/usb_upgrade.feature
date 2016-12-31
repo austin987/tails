@@ -11,9 +11,8 @@ Feature: Upgrading an old Tails USB installation
   # dependencies (which are documented below).
 
   Scenario: Try to "Upgrade from ISO" Tails to a pristine USB drive
-    Given a computer
-    And I setup a filesystem share containing the Tails ISO
-    And I start Tails from DVD with network unplugged and I login
+    Given I have started Tails from DVD without network and logged in
+    And I plug and mount a USB drive containing the Tails ISO
     And I temporarily create a 4 GiB disk named "pristine"
     And I plug USB drive "pristine"
     When I start Tails Installer in "Upgrade from ISO" mode
@@ -27,9 +26,8 @@ Feature: Upgrading an old Tails USB installation
     Then I am told that the destination device cannot be upgraded
 
   Scenario: Try to "Upgrade from ISO" Tails to a USB drive with GPT and a FAT partition
-    Given a computer
-    And I setup a filesystem share containing the Tails ISO
-    And I start Tails from DVD with network unplugged and I login
+    Given I have started Tails from DVD without network and logged in
+    And I plug and mount a USB drive containing the Tails ISO
     And I temporarily create a 4 GiB disk named "gptfat"
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
@@ -128,8 +126,8 @@ Feature: Upgrading an old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from an ISO image, running on the old version
     Given a computer
     And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And I setup a filesystem share containing the Tails ISO
     When I start Tails from USB drive "old" with network unplugged and I login
+    And I plug and mount a USB drive containing the Tails ISO
     And I plug USB drive "to_upgrade"
     And I do a "Upgrade from ISO" on USB drive "to_upgrade"
     Then the ISO's Tails is installed on USB drive "to_upgrade"
@@ -137,10 +135,9 @@ Feature: Upgrading an old Tails USB installation
 
   # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
-    Given a computer
+    Given I have started Tails from DVD without network and logged in
+    And I plug and mount a USB drive containing the Tails ISO
     And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And I setup a filesystem share containing the Tails ISO
-    And I start Tails from DVD with network unplugged and I login
     And I plug USB drive "to_upgrade"
     And I do a "Upgrade from ISO" on USB drive "to_upgrade"
     Then the ISO's Tails is installed on USB drive "to_upgrade"

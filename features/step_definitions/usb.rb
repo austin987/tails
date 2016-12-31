@@ -165,17 +165,7 @@ When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   end
 end
 
-Given /^I setup a filesystem share containing the Tails ISO$/ do
-  shared_iso_dir_on_host = "#{$config["TMPDIR"]}/shared_iso_dir"
-  @shared_iso_dir_on_guest = "/tmp/shared_iso_dir"
-  FileUtils.mkdir_p(shared_iso_dir_on_host)
-  FileUtils.cp(TAILS_ISO, shared_iso_dir_on_host)
-  add_after_scenario_hook { FileUtils.rm_r(shared_iso_dir_on_host) }
-  $vm.add_share(shared_iso_dir_on_host, @shared_iso_dir_on_guest)
-end
-
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
-  iso_path_on_guest = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   step 'I start Tails Installer in "Upgrade from ISO" mode'
   @installer.child('Use existing Live system ISO:', roleName: 'label')
     .parent.button('(None)').click
@@ -183,7 +173,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   file_chooser.wait(10)
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   # The only visible text element will be the path entry
-  file_chooser.child(roleName: 'text').text = iso_path_on_guest
+  file_chooser.child(roleName: 'text').text = @iso_path
   file_chooser.button('Open').click
   usb_install_helper(name)
 end
@@ -287,10 +277,9 @@ Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
 end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
-  iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   $vm.execute("mkdir -p #{iso_root}")
-  $vm.execute("mount -o loop #{iso} #{iso_root}")
+  $vm.execute("mount -o loop #{@iso_path} #{iso_root}")
   tails_is_installed_helper(target_name, iso_root, "isolinux")
   $vm.execute("umount #{iso_root}")
 end
@@ -343,12 +332,9 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 end
 
 Given /^I enable persistence$/ do
-  @screen.wait('TailsGreeterPersistence.png', 10)
-  @screen.type(Sikuli::Key.SPACE)
-  @screen.wait('TailsGreeterPersistencePassphrase.png', 10)
-  match = @screen.find('TailsGreeterPersistencePassphrase.png')
-  @screen.click(match.getCenter.offset(match.w*2, match.h/2))
-  @screen.type(@persistence_password)
+  @screen.wait_and_click('TailsGreeterPersistencePassphrase.png', 10)
+  @screen.type(@persistence_password + Sikuli::Key.ENTER)
+  @screen.wait('TailsGreeterPersistenceUnlocked.png', 30)
 end
 
 def tails_persistence_enabled?

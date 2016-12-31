@@ -14,7 +14,6 @@ Feature: Keyserver interaction with GnuPG
 
   Scenario: Fetching OpenPGP keys using GnuPG should work and be done over Tor.
     When I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI
-    Then GnuPG uses the configured keyserver
     And the GnuPG fetch is successful
     And the "10CC5BC7" key is in the live user's public keyring
 

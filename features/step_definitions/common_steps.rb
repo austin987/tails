@@ -8,24 +8,6 @@ def post_vm_start_hook
   @screen.click_point(@screen.w - 1, @screen.h/2)
 end
 
-def activate_filesystem_shares
-  # XXX-9p: First of all, filesystem shares cannot be mounted while we
-  # do a snapshot save+restore, so unmounting+remounting them seems
-  # like a good idea. However, the 9p modules get into a broken state
-  # during the save+restore, so we also would like to unload+reload
-  # them, but loading of 9pnet_virtio fails after a restore with
-  # "probe of virtio2 failed with error -2" (in dmesg) which makes the
-  # shares unavailable. Hence we leave this code commented for now.
-  #for mod in ["9pnet_virtio", "9p"] do
-  #  $vm.execute("modprobe #{mod}")
-  #end
-
-  $vm.list_shares.each do |share|
-    $vm.execute("mkdir -p #{share}")
-    $vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
-  end
-end
-
 def context_menu_helper(top, bottom, menu_item)
   try_for(60) do
     t = @screen.wait(top, 10)
@@ -41,23 +23,9 @@ def context_menu_helper(top, bottom, menu_item)
   end
 end
 
-def deactivate_filesystem_shares
-  $vm.list_shares.each do |share|
-    $vm.execute("umount #{share}")
-  end
-
-  # XXX-9p: See XXX-9p above
-  #for mod in ["9p", "9pnet_virtio"] do
-  #  $vm.execute("modprobe -r #{mod}")
-  #end
-end
-
 def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
-
-  # XXX-9p: See XXX-9p above
-  #activate_filesystem_shares
 
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
@@ -97,7 +65,7 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I (temporarily )?create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
   $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
                                      :type => "qcow2"})
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
@@ -304,7 +272,6 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
-  activate_filesystem_shares
   step 'I configure Tails to use a simulated Tor network'
 end
 
@@ -313,7 +280,10 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   when 'German'
     @language = "German"
     @screen.wait_and_click('TailsGreeterLanguage.png', 10)
-    @screen.wait_and_click("TailsGreeterLanguage#{@language}.png", 10)
+    @screen.wait('TailsGreeterLanguagePopover.png', 10)
+    @screen.type(@language)
+    sleep(2) # Gtk needs some time to filter the results
+    @screen.type(Sikuli::Key.ENTER)
     @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
   when ''
     @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
@@ -324,22 +294,29 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   step 'the Tails desktop is ready'
 end
 
-Given /^I enable more Tails Greeter options$/ do
-  match = @screen.find('TailsGreeterMoreOptions.png')
-  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 20)
-  @screen.wait('TailsGreeterLoginButton.png', 20)
+def open_greeter_additional_settings
+  @screen.click('TailsGreeterAddMoreOptions.png')
+  @screen.wait('TailsGreeterAdditionalSettingsDialog.png', 10)
+end
+
+Given /^I open Tails Greeter additional settings dialog$/ do
+  open_greeter_additional_settings()
 end
 
 Given /^I enable the specific Tor configuration option$/ do
-  @screen.click('TailsGreeterTorConf.png')
+  open_greeter_additional_settings()
+  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
+  @screen.wait_and_click("TailsGreeterSpecificTorConfiguration.png", 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
 Given /^I set an administration password$/ do
-  @screen.wait("TailsGreeterAdminPassword.png", 20)
+  open_greeter_additional_settings()
+  @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^Tails Greeter has applied all settings$/ do
@@ -939,4 +916,28 @@ Then /^Tails is running version (.+)$/ do |version|
   v2 = $vm.file_content('/etc/os-release')
        .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
   assert_equal(version, v2, "The version doesn't match /etc/os-release")
+end
+
+def share_host_files(files)
+  files = [files] if files.class == String
+  assert_equal(Array, files.class)
+  disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
+  # Let's add some extra space for filesysten overhead etc.
+  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.10).ceil].max
+  disk = random_alpha_string(10)
+  step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
+  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
+       "filesystem on disk \"#{disk}\""
+  $vm.storage.guestfs_disk_helper(disk) do |g, _|
+    partition = g.list_partitions().first
+    g.mount(partition, "/")
+    files.each { |f| g.upload(f, "/" + File.basename(f)) }
+  end
+  step "I plug USB drive \"#{disk}\""
+  mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
+  dev = $vm.disk_dev(disk)
+  partition = dev + '1'
+  $vm.execute_successfully("mount #{partition} #{mount_dir}")
+  $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
+  return mount_dir
 end

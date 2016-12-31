@@ -106,17 +106,6 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-Given /^I setup a filesystem share containing a sample PNG$/ do
-  shared_png_dir_on_host = "#{$config["TMPDIR"]}/shared_png_dir"
-  @shared_png_dir_on_guest = "/tmp/shared_png_dir"
-  FileUtils.mkdir_p(shared_png_dir_on_host)
-  Dir.glob("#{MISC_FILES_DIR}/*.png") do |png_file|
-    FileUtils.cp(png_file, shared_png_dir_on_host)
-  end
-  add_after_scenario_hook { FileUtils.rm_r(shared_png_dir_on_host) }
-  $vm.add_share(shared_png_dir_on_host, @shared_png_dir_on_guest)
-end
-
 Then /^the support documentation page opens in Tor Browser$/ do
   if @language == 'German'
     expected_title = 'Tails - Hilfe & Support'
@@ -134,11 +123,15 @@ Then /^the support documentation page opens in Tor Browser$/ do
   )
 end
 
+Given /^I plug and mount a USB drive containing a sample PNG$/ do
+  @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))
+end
+
 Then /^MAT can clean some sample PNG file$/ do
   for png_on_host in Dir.glob("#{MISC_FILES_DIR}/*.png") do
     png_name = File.basename(png_on_host)
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
-    step "I copy \"#{@shared_png_dir_on_guest}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
+    step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
     raw_check_cmd = "grep --quiet --fixed-strings --text " +
                     "'Created with GIMP' '#{png_on_guest}'"
     assert($vm.execute(raw_check_cmd, user: LIVE_USER).success?,
@@ -242,12 +235,10 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
 end
 
 When /^I disable all networking in the Tails Greeter$/ do
-  begin
-    @screen.click('TailsGreeterDisableAllNetworking.png')
-  rescue FindFailed
-    @screen.type(Sikuli::Key.PAGE_DOWN)
-    @screen.click('TailsGreeterDisableAllNetworking.png')
-  end
+  open_greeter_additional_settings()
+  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
+  @screen.wait_and_click('TailsGreeterDisableAllNetworking.png', 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|
