@@ -2,6 +2,8 @@ This is about [[!tails_ticket 5630]].
 
 [[!toc levels=2]]
 
+<div class="why">
+
 # Why we want reproducible builds
 
 ## List of reasons why
@@ -516,3 +518,74 @@ It would be great if one didn't have to trust a given Vagrant basebox
 we published, and could instead build their own. Their resulting basebox
 doesn't have to be identical to ours, but it must be similar enough to
 produce ISO images that are identical to ours.
+
+<a id="custom-Debian-packages"></a>
+
+## Integrate custom Debian package builds in the automated ISO builds
+
+In our first iteration of reproducible ISO builds, we treat the
+content of the Debian package repositories used during the build
+process as trusted input. These repositories are of two kinds:
+
+ * snapshots of the Debian archive, hosted on our own infrastructure,
+   and signed by our own key; Tails system administrators have the
+   power to modify the content of these snapshots; an attacker who
+   takes control of the relevant server can do the same; this will be
+   improved later, and is outside of the scope of the work described
+   in this section;
+
+ * our [[custom APT repository|contribute/APT_repository/custom]],
+   that stores our custom Debian packages; in addition to the people
+   listed above (system administrators, successful attackers), Tails
+   developers with commit rights can modify the content of this
+   repository. The current standard process is that a developer builds
+   a package locally, and uploads it to our custom APT repository.
+   This entails a number of problems that we are going to discuss now.
+
+Here are some problems that come with our current handling of custom
+Debian packages:
+
+ * Each developer needs to set up and maintain a local build
+   environment for Debian packages. Such error-prone busywork is
+   best avoided.
+
+ * Our custom Debian packages may not build reproducibly across
+   different developers' systems. So, one can't reproduce the build of
+   a given ISO unless they use the exact packages that were uploaded
+   to our custom APT repository. This brings the same
+   [[set of problems|reproducible_builds#why]] that lead us to make
+   our ISO image build reproducibly. For example, the state of our Git
+   tree does not fully define what an ISO built from it will be, which
+   makes reviewing and auditing harder than it should be.
+
+ * Preparing a Tails release requires to build and upload a few
+   packages by hand. This work is tedious and error-prone, and
+   increases our time to mitigation for security issues.
+
+ * Preparing a Tails release requires special credentials on our
+   infrastructure, while we are moving towards Git access
+   being enough.
+
+The way we have chosen to address these problems in the future is to
+have our custom Debian packages built automatically, in a reproducible
+manner, as part of building a Tails ISO image.
+
+There are a number of open questions:
+
+ * Is it better to apply this build process change to _all_ ISO
+   builds, or only to selected ones, e.g. actual releases?
+
+ * Shall the Debian packages built as part of the ISO build be
+   uploaded, stored and published somewhere? Or should they be
+   considered as intermediate results we can just throw away after
+   installing them?
+
+ * If we upload these packages, how will they be verified by future
+   builds using them?
+
+ * How exactly shall these custom Debian packages be built? Can we do
+   this inside the Vagrant build virtual machine?
+
+Part of this project will therefore be to research and discuss these
+topics with the affected parties, and come up with user stories and
+with a fitting design.
