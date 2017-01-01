@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+echo "Tweaking AppArmor profiles"
+
+# Pass all profiles the attach_disconnected flag,
+# that's needed for compatibility with overlayfs (#9045)
+find /etc/apparmor.d/ -type f -maxdepth 1 \
+     -exec perl -pi -E 's,([a-z]+\s+){,$1flags=(attach_disconnected) {,' '{}' \;
