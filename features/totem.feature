@@ -25,21 +25,8 @@ Feature: Using Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
     Given I close Totem
-    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" exists
-    And I restart monitoring the AppArmor log of "/usr/bin/totem"
-    When I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4" with Totem
-    Then I see "TotemUnableToOpen.png" after at most 10 seconds
-    And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
-    Given I close Totem
-    And the file "/live/overlay/home/amnesia/.gnupg/video.mp4" exists
-    And I restart monitoring the AppArmor log of "/usr/bin/totem"
-    When I try to open "/live/overlay/home/amnesia/.gnupg/video.mp4" with Totem
-    Then I see "TotemUnableToOpen.png" after at most 10 seconds
-    # Due to our AppArmor aliases, /live/overlay will be treated
-    # as /lib/live/mount/overlay.
-    And AppArmor has denied "/usr/bin/totem" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/video.mp4"
-    Given I close Totem
-    And I copy "/home/amnesia/video.mp4" to "/home/amnesia/.purple/otr.private_key" as user "amnesia"
+    And I copy the sample videos to "/home/amnesia/.purple/otr.private_key" as user "amnesia"
+    And the file "/home/amnesia/.purple/otr.private_key" exists
     And I restart monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/home/amnesia/.purple/otr.private_key" with Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
