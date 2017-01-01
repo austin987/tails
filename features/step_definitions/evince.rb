@@ -18,8 +18,3 @@ Then /^I can print the current document to "([^"]+)"$/ do |output_file|
     $vm.file_exist?(output_file)
   }
 end
-
-When /^I close Evince$/ do
-  @screen.type("w", Sikuli::KeyModifier.CTRL)
-  step 'process "evince" has stopped running after at most 20 seconds'
-end
