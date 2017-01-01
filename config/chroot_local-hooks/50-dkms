@@ -13,7 +13,6 @@ apt-get install --yes build-essential dkms
 # Installing the headers triggers the building of the modules for that kernel
 apt-get install --yes \
     "linux-headers-${KERNEL_VERSION}-amd64" \
-    aufs-dkms \
     virtualbox-guest-dkms
 
 # clean the build directory
@@ -21,7 +20,6 @@ apt-get install --yes \
 
 # virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before the package gets purged.
-rm /var/lib/dpkg/info/aufs-dkms.prerm
 rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
 
 # Also copy the udev rules installed by virtualbox-guest-dkms to enable guest
