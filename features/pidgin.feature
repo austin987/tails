@@ -84,12 +84,6 @@ Feature: Chatting anonymously using Pidgin
     And I see Pidgin's account manager window
     And I close Pidgin's account manager window
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
-    When I close Pidgin's certificate import failure dialog
-    And I close Pidgin's certificate manager
-    Then I cannot add a certificate from the "/lib/live/mount/overlay/home/amnesia/.gnupg" directory to Pidgin
-    When I close Pidgin's certificate import failure dialog
-    And I close Pidgin's certificate manager
-    Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
   #11584
   @check_tor_leaks @fragile
