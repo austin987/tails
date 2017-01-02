@@ -25,7 +25,7 @@ Feature: Using Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.gnupg/video.mp4"
     Given I close Totem
-    And I copy the sample videos to "/home/amnesia/.purple/otr.private_key" as user "amnesia"
+    And I copy "/home/amnesia/video.mp4" to "/home/amnesia/.purple/otr.private_key" as user "amnesia"
     And the file "/home/amnesia/.purple/otr.private_key" exists
     And I restart monitoring the AppArmor log of "/usr/bin/totem"
     When I try to open "/home/amnesia/.purple/otr.private_key" with Totem
