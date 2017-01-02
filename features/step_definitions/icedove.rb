@@ -59,7 +59,7 @@ end
 Then /^I see that only the (.+) addons are enabled in Icedove$/ do |addons|
   expected_addons = addons.split(/, | and /)
   actual_addons =
-    @icedove_addons.child('amnesia branding', roleName: 'label')
+    @icedove_addons.child('TorBirdy', roleName: 'label')
     .parent.parent.children(roleName: 'list item', recursive: false)
     .map { |item| item.name }
   expected_addons.each do |addon|
