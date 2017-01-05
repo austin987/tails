@@ -35,6 +35,9 @@ sudo ARCHITECTURE="${ARCHITECTURE}" \
      --kernel-package "linux-image-${ARCHITECTURE}" \
      --package "ca-certificates" \
      --package "wget" \
+     --package "grub2" \
+     --package "openssh-server" \
+     --package "curl" \
      --root-password="${PASSWORD}" \
      --size "${SIZE}" \
      --sudo \
