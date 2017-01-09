@@ -141,9 +141,15 @@ DEFAULT_CONTROL_SOCKET_PATH = '/var/run/tor/control'
 
 
 class NoRewriteMatch(RuntimeError):
+    """
+    Error when no matching rewrite rule was found but one was expected.
+    """
     pass
 
 class CommandFiltered(RuntimeError):
+    """
+    Error when no whitelist rule matches a command and its arguments.
+    """
     pass
 
 
@@ -180,6 +186,13 @@ def exe_path_of_pid(pid):
 
 
 class FilteredControlPortProxySession:
+    """
+    Class used to deal with a single session, delegated from the handler
+    (FilteredControlPortProxyHandler). Its main job is proxying the traffic
+    between the client and the real control port, blocking or rewriting
+    it as dictated by the filter rule set.
+    """
+
     # Limit the length of a line, to prevent DoS attacks trying to
     # crash this filter proxy by sending infinitely long lines.
     MAX_LINESIZE = 1024
@@ -434,6 +447,13 @@ class FilteredControlPortProxySession:
 
 
 class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
+    """
+    Class handing each control port connection and collecting information
+    about the origin and using it to find a matching filter rule set. It
+    then delegates the session handling (the actual filtering) to a
+    FilteredControlPortProxySession object.
+    """
+
     def debug_log(self, line, format_multiline=False, sep=': '):
         line = line.strip()
         if format_multiline and "\n" in line:
@@ -623,6 +643,10 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
 
 
 class FilteredControlPortProxy(socketserver.ThreadingTCPServer):
+    """
+    Simple subclass just setting some defaults differently.
+    """
+
     # So we can restart when the listening port if in TIME_WAIT state
     # after an abrupt shutdown.
     allow_reuse_address = True
