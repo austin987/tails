@@ -9,7 +9,7 @@ Feature: Installing packages through APT
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
 
   Scenario: APT sources are configured correctly
-    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,deb.tails.boum.org,deb.torproject.org"
+    Then the only hosts in APT sources are "vwakviie2ienjx6t.onion,sgvtcaew4bxjd7ln.onion,jenw7xbd6tf7vfhp.onion,sdscoq7snqtznauu.onion"
 
   @check_tor_leaks
   Scenario: Install packages using apt
