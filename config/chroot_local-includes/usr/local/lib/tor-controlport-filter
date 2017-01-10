@@ -146,12 +146,6 @@ class NoRewriteMatch(RuntimeError):
     """
     pass
 
-class CommandFiltered(RuntimeError):
-    """
-    Error when no whitelist rule matches a command and its arguments.
-    """
-    pass
-
 
 def log(msg):
     print(msg, file=sys.stderr)
@@ -258,6 +252,10 @@ class FilteredControlPortProxySession:
             response = new_response
         self.respond(response, raw=True)
 
+    def filter_line(self, line):
+        self.debug_log("command filtered: {}".format(line))
+        self.respond("510 Command filtered")
+
     def rewrite_line(self, replacers, line):
         builtin_replacers = {
             'client-address': self.client_address[0],
@@ -315,9 +313,6 @@ class FilteredControlPortProxySession:
         self.respond(raw_event_content, raw=True)
 
     def update_event_subscriptions(self, events):
-        if not global_args.disable_filtering and \
-           any(event not in self.allowed_events for event in events):
-            raise CommandFiltered()
         for listener, event in self.subscribed_event_listeners:
             if event not in events:
                 self.controller.remove_event_listener(listener)
@@ -355,10 +350,6 @@ class FilteredControlPortProxySession:
 
     def handle(self):
         while True:
-            self.handle_next_line()
-
-    def handle_next_line(self):
-        try:
             binary_line = self.rfile.readline(self.MAX_LINESIZE)
             if binary_line == b'':
                 # Deal with clients that close the socket without a QUIT.
@@ -406,7 +397,11 @@ class FilteredControlPortProxySession:
                 # The control language doesn't care about case for
                 # the event type.
                 events = [event.upper() for event in args]
-                self.update_event_subscriptions(events)
+                if not global_args.disable_filtering and \
+                   any(event not in self.allowed_events for event in events):
+                    self.filter_line(line)
+                else:
+                    self.update_event_subscriptions(events)
 
             else:
                 rule = self.get_rule(cmd, arg_str)
@@ -440,10 +435,7 @@ class FilteredControlPortProxySession:
                     self.proxy_line(line, args_rewriter=args_rewriter,
                                     response_rewriter=response_rewriter)
                 else:
-                    raise CommandFiltered()
-            except CommandFiltered:
-                self.debug_log("command filtered: {}".format(line))
-                self.respond("510 Command filtered")
+                    self.filter_line(line)
 
 
 class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
