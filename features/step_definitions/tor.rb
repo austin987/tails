@@ -292,17 +292,16 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
   info = stream_isolation_info(application)
   expected_ports = [info[:socksport]]
   expected_ports << 9051 if info[:controller]
-  expected_addrs = expected_ports.map { |port| "127.0.0.1:#{port}" }
   assert_not_nil(@process_monitor_log)
   log_lines = $vm.file_content(@process_monitor_log).split("\n")
   assert(log_lines.size > 0,
          "Couldn't see any connection made by #{application} so " \
          "something is wrong")
   log_lines.each do |line|
-    addr_port = line.split(/\s+/)[4]
-    assert(expected_addrs.include?(addr_port),
-           "#{application} should only connect to #{expected_addrs} but " \
-           "was seen connecting to #{addr_port}")
+    ip_port = line.split(/\s+/)[4]
+    assert(expected_ports.map { |port| "127.0.0.1:#{port}" }.include?(ip_port),
+           "#{application} should only connect to #{expected_ports} but " \
+           "was seen connecting to #{ip_port}")
   end
 end
 
