@@ -13,11 +13,13 @@ Feature: Installing packages through APT
 
   @check_tor_leaks
   Scenario: Install packages using apt
-    When I update APT using apt
+    When I configure APT to use non-onion sources
+    And I update APT using apt
     Then I should be able to install a package using apt
 
   @check_tor_leaks
   Scenario: Install packages using Synaptic
-    When I start Synaptic
+    When I configure APT to use non-onion sources
+    And I start Synaptic
     And I update APT using Synaptic
     Then I should be able to install a package using Synaptic
