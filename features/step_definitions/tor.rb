@@ -256,7 +256,8 @@ def stream_isolation_info(application)
   when "Tor Browser"
     {
       :grep_monitor_expr => '/firefox\>',
-      :socksport => 9150
+      :socksport => 9150,
+      :controller => true,
     }
   when "Gobby"
     {
@@ -288,7 +289,10 @@ When /^I monitor the network connections of (.*)$/ do |application|
 end
 
 Then /^I see that (.+) is properly stream isolated$/ do |application|
-  expected_port = stream_isolation_info(application)[:socksport]
+  info = stream_isolation_info(application)
+  expected_ports = [info[:socksport]]
+  expected_ports << 9051 if info[:controller]
+  expected_addrs = expected_ports.map { |port| "127.0.0.1:#{port}" }
   assert_not_nil(@process_monitor_log)
   log_lines = $vm.file_content(@process_monitor_log).split("\n")
   assert(log_lines.size > 0,
@@ -296,9 +300,9 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
          "something is wrong")
   log_lines.each do |line|
     addr_port = line.split(/\s+/)[4]
-    assert_equal("127.0.0.1:#{expected_port}", addr_port,
-                 "#{application} should use SocksPort #{expected_port} but " \
-                 "was seen connecting to #{addr_port}")
+    assert(expected_addrs.include?(addr_port),
+           "#{application} should only connect to #{expected_addrs} but " \
+           "was seen connecting to #{addr_port}")
   end
 end
 
