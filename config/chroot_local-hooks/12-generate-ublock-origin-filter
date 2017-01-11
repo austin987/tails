@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+apt-get install sqlite3
+
+echo "Converting uBlock database dump into sqlite blob"
+
+mkdir /etc/tor-browser/profile/extension-data/
+cp /usr/share/tails/ublock-origin/ublock0.dump /etc/tor-browser/profile/extension-data/
+
+cat /etc/tor-browser/profile/extension-data/ublock0.dump | sqlite3 /etc/tor-browser/profile/extension-data/ublock0.sqlite
+
+rm /etc/tor-browser/profile/extension-data/ublock0.dump
+
+echo "Created uBlock sqlite blob successfully"
+
+apt-get purge --remove --yes sqlite3
+
