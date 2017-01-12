@@ -157,8 +157,8 @@ The patterns+settings file is stored as a converted sqlite text dump in
        echo '.dump' | sqlite3 ublock0.sqlite | \
            grep -v "cached_asset_content://cache://compiled-" | \
            awk '!/^INSERT/; /^INSERT/ {print $0 | "sort -n"}' | \
-           sed 's_\\n_\\n\n_g' | \
-           sed "/^INSERT INTO \"settings\" VALUES('\(remoteBlacklists\|cached_asset_entries\)'/"'s_,_,\\n\n_g' > \
+           sed 's_\\n_\\n\r\n_g' | \
+           sed "/^INSERT INTO \"settings\" VALUES('\(remoteBlacklists\|cached_asset_entries\)'/"'s_,_,\r\n_g' > \
            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump`
 
 8. Commit:
