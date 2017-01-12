@@ -95,7 +95,7 @@ pref("browser.download.panel.shown", true);
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
 
-// AdBlock Plus and the amnesia branding extensions are not signed and
+// uBlock Origin and the amnesia branding extensions are not signed and
 // therefore disabled by default for FF 45+ *unless* we set this
 // option. This is only a temporary stop gap. See #11419.
 pref("xpinstall.signatures.required", false);
