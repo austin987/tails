@@ -6,12 +6,16 @@ apt-get install sqlite3
 
 echo "Converting uBlock database dump into sqlite blob"
 
-mkdir /etc/tor-browser/profile/extension-data/
-cp /usr/share/tails/ublock-origin/ublock0.dump /etc/tor-browser/profile/extension-data/
+DUMP="/usr/share/tails/ublock-origin/ublock0.dump"
+DATABASE="/etc/tor-browser/profile/extension-data/ublock0.sqlite"
 
-cat /etc/tor-browser/profile/extension-data/ublock0.dump | sqlite3 /etc/tor-browser/profile/extension-data/ublock0.sqlite
+mkdir -p "$(dirname "${DATABASE}")"
 
-rm /etc/tor-browser/profile/extension-data/ublock0.dump
+# The sed expression simply means: remove all CRLF ("\r\n"). The use
+# of labels is simply to make this able to remove multiple CRLF to
+# create a single (long) line. In the end, this restores the
+# diff-friendly dump to the original sqlite dump.
+sed ':a;N;$!ba;s_\r\n__g' "${DUMP}" | sqlite3 "${DATABASE}"
 
 echo "Created uBlock sqlite blob successfully"
 
