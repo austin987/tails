@@ -25,14 +25,6 @@ pref("extensions.torbutton.show_slider_notification", false);
 // Disable the Tor Browser's automatic update checking
 pref("app.update.enabled", false);
 
-// Adblock Plus preferences
-pref("extensions.adblockplus.correctTypos", false);
-pref("extensions.adblockplus.currentVersion", "2.7.3");
-pref("extensions.adblockplus.savestats", false);
-pref("extensions.adblockplus.showinaddonbar", false);
-pref("extensions.adblockplus.showintoolbar", false);
-pref("extensions.adblockplus.subscriptions_autoupdate", false);
-
 // Suppress prompt and always spoof useragent as English
 pref("extensions.torbutton.spoof_english", true);
 pref("extensions.torbutton.prompted_language", true);
