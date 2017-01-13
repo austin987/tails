@@ -2,11 +2,9 @@
 
 set -e
 
-echo "Installing sqlite3 for uBlock patterns+settings file conversion"
+echo "Converting uBlock database dump into sqlite blob"
 
 apt-get install --yes sqlite3
-
-echo "Converting uBlock database dump into sqlite blob"
 
 DUMP="/usr/share/tails/ublock-origin/ublock0.dump"
 DATABASE="/etc/tor-browser/profile/extension-data/ublock0.sqlite"
@@ -21,4 +19,4 @@ sed ':a;N;$!ba;s_\r\n__g' "${DUMP}" | sqlite3 "${DATABASE}"
 
 echo "Created uBlock sqlite blob successfully"
 
-apt-get purge --remove --yes sqlite3
+apt-get purge --yes sqlite3
