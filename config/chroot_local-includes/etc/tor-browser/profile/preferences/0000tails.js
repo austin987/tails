@@ -38,6 +38,10 @@ pref("extensions.torbutton.test_enabled", false); // Tails-specific
 pref("extensions.torbutton.tor_memory_jar", true);
 pref("extensions.torbutton.control_port", 9051);
 
+// Not setting this prevents some add-on GUI elements from appearing
+// on the first run of the browser, e.g. uBlock Origin's button.
+pref("extensions.torbutton.inserted_button", true);
+
 // These must be set to the same value to prevent Torbutton from
 // flashing its upgrade notification.
 pref("extensions.torbutton.lastBrowserVersion", "Tails");
