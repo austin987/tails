@@ -15,8 +15,6 @@ When /^a bitcoin wallet is (|not )present$/ do |existing|
 end
 
 When /^I create a new bitcoin wallet$/ do
-  @screen.wait("ElectrumConnectServer.png", 10)
-  @screen.wait_and_click("ElectrumNextButton.png", 10)
   @screen.wait("ElectrumNoWallet.png", 10)
   @screen.wait_and_click("ElectrumNextButton.png", 10)
   @screen.wait("ElectrumCreateNewSeed.png", 10)
@@ -44,7 +42,7 @@ Then /^I see a warning that Electrum is not persistent$/ do
 end
 
 Then /^I am prompted to configure Electrum$/ do
-  @screen.wait("ElectrumConnectServer.png", 60)
+  @screen.wait("ElectrumNoWallet.png", 60)
 end
 
 Then /^I see the main Electrum client window$/ do
