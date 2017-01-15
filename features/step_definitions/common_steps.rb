@@ -545,12 +545,12 @@ end
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
   nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   timeout = nr_gibs_of_ram*5*60
-  # Work around Tails bug #11730, where something goes wrong when we
+  # Work around Tails bug #11786, where something goes wrong when we
   # kexec to the new kernel for memory wiping and gets dropped to a
   # BusyBox shell instead.
   try_for(timeout) do
-    if @screen.exists('TailsBug11730.png')
-      puts "We were hit by bug #11730: memory wiping got stuck"
+    if @screen.existsAny(['TailsBug11786a.png', 'TailsBug11786b.png'])
+      puts "We were hit by bug #11786: memory wiping got stuck"
       if mode == 'restarts'
         $vm.reset
       else
