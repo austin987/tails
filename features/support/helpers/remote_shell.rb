@@ -62,9 +62,8 @@ module RemoteShell
     # response will always be [0, "", ""] (only used as an
     # ACK). execute() will always block until a response is received,
     # though. Spawning is useful when starting processes in the
-    # background (or running scripts that does the same) like our
-    # onioncircuits wrapper, or any application we want to interact
-    # with.
+    # background (or running scripts that does the same) or any
+    # application we want to interact with.
     def self.execute(vm, cmd, **opts)
       opts[:user] ||= "root"
       opts[:spawn] = false unless opts.has_key?(:spawn)
