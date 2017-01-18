@@ -25,8 +25,8 @@ class VMCommand
   # response will always be [0, "", ""] (only used as an
   # ACK). execute() will always block until a response is received,
   # though. Spawning is useful when starting processes in the
-  # background (or running scripts that does the same) like our
-  # onioncircuits wrapper, or any application we want to interact with.
+  # background (or running scripts that does the same) or any
+  # application we want to interact with.
   def VMCommand.execute(vm, cmd, options = {})
     options[:user] ||= "root"
     options[:spawn] ||= false

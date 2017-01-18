@@ -122,9 +122,10 @@ def enough_free_memory_for_ram_build?
 end
 
 def is_release?
-  branch_name = `git name-rev --name-only HEAD`
-  tag_name = `git describe --exact-match HEAD 2> /dev/null`
-  STABLE_BRANCH_NAMES.include? branch_name.chomp or tag_name.chomp.length > 0
+  detached_head = `git symbolic-ref HEAD` == ""
+  `git describe --tags --exact-match HEAD 2>/dev/null`
+  is_tag = $?.success?
+  detached_head && is_tag
 end
 
 def system_cpus
@@ -138,26 +139,27 @@ def system_cpus
 end
 
 task :parse_build_options do
-  options = ''
+  options = []
 
   # Default to in-memory builds if there is enough RAM available
-  options += 'ram ' if enough_free_memory_for_ram_build?
+  options << 'ram' if enough_free_memory_for_ram_build?
 
   # Default to build using the in-VM proxy
-  options += 'vmproxy '
+  options << 'vmproxy'
 
   # Default to fast compression on development branches
-  options += 'gzipcomp ' unless is_release?
-
-  # Make sure release builds are clean
-  options += 'cleanall ' if is_release?
+  options << 'gzipcomp' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
-  options += "cpus=#{cpus} " if cpus
+  options << "cpus=#{cpus}" if cpus
 
-  options += ENV['TAILS_BUILD_OPTIONS'] if ENV['TAILS_BUILD_OPTIONS']
-  options.split(' ').each do |opt|
+  options += ENV['TAILS_BUILD_OPTIONS'].split if ENV['TAILS_BUILD_OPTIONS']
+
+  # Make sure release builds are clean
+  options << 'cleanall' if is_release?
+
+  options.uniq.each do |opt|
     case opt
     # Memory build settings
     when 'ram'
@@ -189,6 +191,8 @@ task :parse_build_options do
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
     when 'noprovision'
       ENV['TAILS_NO_AUTO_PROVISION'] = '1'
+    else
+      raise "Unknown Tails build option '#{opt}'"
     end
   end
 end
