@@ -25,7 +25,8 @@ PASSWORD="$(cat "${MUMBLE}/password")"
 
 # Configure mumble-server
 
-sed -i "s%^database=/var/lib/mumble-server/mumble-server.sqlite%database=${MUMBLE}/mumble-server.sqlite%" "${CONFIG}"
+DATABASE="${MUMBLE}/mumble-server.sqlite"
+sed -i "s%^database=/var/lib/mumble-server/mumble-server.sqlite%database=${DATABASE}%" "${CONFIG}"
 sed -i "s%^serverpassword=$%serverpassword=${PASSWORD}%" "${CONFIG}"
 if [ -n "${MUMBLE_LISTEN_ON_LAN}" ]; then
     sed -i "s%^host=%#host=%" "${CONFIG}"
@@ -38,10 +39,10 @@ fi
 apt-get --yes --quiet --quiet install sqlite3
 
 systemctl start mumble-server # To generate the database
-chown mumble-server:mumble-server "${MUMBLE}/mumble-server.sqlite"
+chown mumble-server:mumble-server "${DATABASE}"
 systemctl stop  mumble-server # To unlock database
 
-FINGERPRINT="$(sqlite3 "${MUMBLE}/mumble-server.sqlite" "select value from config where key = 'certificate';" | openssl x509 -fingerprint | head -n 1 | cut -d '=' -f 2)"
+FINGERPRINT="$(sqlite3 "${DATABASE}" "select value from config where key = 'certificate';" | openssl x509 -fingerprint | head -n 1 | cut -d '=' -f 2)"
 
 # Configure Tor hidden service
 
@@ -52,6 +53,7 @@ install -o debian-tor -g debian-tor -m 700 -d "${PERSISTENCE}/tor/mumble-server"
 grep --quiet "^/dev/mapper/TailsData_unlocked ${ONION}" /proc/mounts || mount --bind "${PERSISTENCE}/tor/mumble-server" "${ONION}"
 grep --quiet "^HiddenServiceDir ${ONION}$" /etc/tor/torrc || echo "HiddenServiceDir ${ONION}" >> /etc/tor/torrc
 grep --quiet "^HiddenServicePort ${PORT}$" /etc/tor/torrc || echo "HiddenServicePort ${PORT}" >> /etc/tor/torrc
+
 
 # Restart Tor and Mumble server
 
