@@ -38,6 +38,7 @@ fi
 apt-get --yes --quiet --quiet install sqlite3
 
 systemctl start mumble-server # To generate the database
+chown mumble-server:mumble-server "${MUMBLE}/mumble-server.sqlite"
 systemctl stop  mumble-server # To unlock database
 
 FINGERPRINT="$(sqlite3 "${MUMBLE}/mumble-server.sqlite" "select value from config where key = 'certificate';" | openssl x509 -fingerprint | head -n 1 | cut -d '=' -f 2)"
