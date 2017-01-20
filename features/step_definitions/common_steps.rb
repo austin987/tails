@@ -57,6 +57,7 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Close the notification applet
   @screen.type(Sikuli::Key.ESC)
+  @screen.waitVanish('GnomeNotificationAppletOpened.png', 10)
 end
 
 def post_snapshot_restore_hook
