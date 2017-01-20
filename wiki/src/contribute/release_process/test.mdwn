@@ -101,13 +101,10 @@ tracked by tickets prefixed with `todo/test_suite:`.
 # Icedove
 
 * Check mail over IMAP using:
-  - a "clearnet" IMAP server.
   - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
 * Check mail over POP using:
-  - a "clearnet" POP server.
   - a hidden service POP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
 * Send an email using:
-  - a "clearnet" SMTP server.
   - a hidden service SMTP server (see above).
 
 * Check that the profile works and is torified:
@@ -156,9 +153,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 * Check you cannot login as root with `su` neither with the `amnesia` password nor
   with the `live` one. (automate: [[!tails_ticket 10274]])
-* Check that the `$TAILS_USER_PASSWORD` variable, if still existing in the system
-  environment after the boot has finished, does not contain the clear text
-  password. (automate: [[!tails_ticket 10275]])
 
 # Virtualization support
 
@@ -172,7 +166,7 @@ security critical bugs were fixed.
 
 # APT (automate: [[!tails_ticket 8164 desc="#8164"]])
 
-     grep -r deb.tails.boum.org /etc/apt/sources.list*
+     grep -r jenw7xbd6tf7vfhp.onion /etc/apt/sources.list*
 
 * Make sure the Tails repository suite in matching the release tag (for example
   the release version number) is in APT sources.
@@ -181,7 +175,7 @@ security critical bugs were fixed.
 
 <a id="incremental-upgrades"></a>
 
-# Incremental upgrades (automate: [[!tails_ticket 6309 desc="#6309"]])
+# Incremental upgrades
 
 * List the versions from which an upgrade paths to this one is described.
   In the `stable` or `testing` branch:
@@ -199,7 +193,7 @@ security critical bugs were fixed.
     user is told to do a manual upgrade.
 
   If:
-  
+
   * the update-description files have been published on the
     *alpha* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
   * and the IUK has been published already (see
@@ -207,7 +201,7 @@ security critical bugs were fixed.
     and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
 
   then:
-  
+
         echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
         tails-upgrade-frontend-wrapper
 
@@ -295,8 +289,6 @@ language. You *really* have to reboot between each language.
   - Type something in the textarea.
   - Right-click and select a language.
   - Verify that the spelling suggestion are from that language. (automate: [[!tails_ticket 10271]])
-* Once [[!tails_ticket 5962]] is fixed, the browser spelling dictionary must be
-  localized (for languages that are supported by our branding extension). (automate: [[!tails_ticket 10272]])
 
 # Misc
 
@@ -306,3 +298,33 @@ language. You *really* have to reboot between each language.
 * Check that all seems well during init: (automate: [[!tails_ticket 10277]])
   - `systemctl --failed --all` should say `0 loaded units listed`
   - the output of `journalctl` should seem OK.
+
+# DAVE
+
+* Visit <https://tails.boum.org/install/debian/usb> in a Firefox-based
+  browser. Verify that you can install the Firefox Addon. Start
+  downloading a Tails image and copy the used mirror URL.
+  - The URL should only start with dl.amnesia.boum.org if Javascript
+    is disabled in your browser. Otherwise it should contain a mirror
+    URL from <https://tails.boum.org/mirrors.json>
+  - Verify that pausing and resuming the download from this URL works.
+  - Verify that when you start the download, you can see it appear in
+    the download list (Ctrl+Shift+Y).
+* Test a disabled mirror (Possible only in FF > 51 because of
+  <https://bugzilla.mozilla.org/show_bug.cgi?id=1275289>.)
+  - Do not use Firefox over Tor.
+  - To disable Firefox's internal DNS cache, navigate to
+    `about:config` and set these prefererences:
+    * `network.dnsCacheExpirationGracePeriod = 0`
+    * `network.dnsCacheExpiration = 0`
+    * `network.dnsCacheEntries = 0`
+  - To enable logging, in `about:config` add these preferences:
+    * `extensions.dave@tails.boum.org.sdk.console.logLevel = "all"`
+    * `extensions.sdk.console.logLevel = "all"`
+  - Then edit your `/etc/hosts` file to point the URL of the previously
+    used mirror to 127.0.0.1.
+  - Now reload the download page, and try to resume the download
+    again.
+  - In the Firefox console (Ctrl+Shift+J) you should see the
+    `mirror.blob` variable pointing to a different mirror. This
+    should work.

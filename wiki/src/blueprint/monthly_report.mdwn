@@ -16,9 +16,9 @@ The month in the list corresponds to the month to be reported about. For
 example, the report about April in the list will be written at the
 beginning of May.
 
-  - June: sajolida
-  - July: emmapeel
-  - August: intrigeri
+  - November: sajolida
+  - December: emmapeel
+  - January: u
 
 Checklist
 =========
@@ -38,24 +38,32 @@ Checklist
 Publishing
 ==========
 
-- Move report to `news/report_YEAR_MO.mdwn`.
-- Tweet about the report:
-     - "In MONTH we worked on [...] and much more: https://tails.boum.org/news/report_YEAR_MO."
-     - If you don't have access to our Twitter account send you text
-       for the tweet along with your merge request for the report.
-- Send link to tor-reports@lists.torproject.org and tails-project@boum.org
-   - `To: tails-project@boum.org`
-   - `Cc: tor-reports@lists.torproject.org`
-   - `Subject: Tails report for XXXXXXXX YYYY`
-   - `Reply-to: tails-project@boum.org`
-- Make sure that we already have a volunteer for next month, or
-  otherwise raise the issue on tails-project@boum.org and update the
-  [[list of volunteers|monthly_report#coordinators]].
+- If you don't have the commit bit on our main repo, notify
+  tails-project@boum.org when you think that the report is ready for
+  publication.
+
+- If you have the commit bit on our main repo, you can do the
+  publication:
+
+  - Move report to `news/report_YEAR_MO.mdwn`.
+  - Tweet about the report:
+       - "In MONTH we worked on [...] and more: https://tails.boum.org/news/report_YEAR_MO."
+       - If you don't have access to our Twitter account send you text
+         for the tweet along with your merge request for the report.
+  - Send link to tor-reports@lists.torproject.org and tails-project@boum.org
+     - `To: tails-project@boum.org`
+     - `Cc: tor-reports@lists.torproject.org`
+     - `Subject: Tails report for XXXXXXXX YYYY`
+     - `Reply-to: tails-project@boum.org`
+  - Make sure that we already have a volunteer for next month, or
+    otherwise raise the issue on tails-project@boum.org and update the
+    [[list of volunteers|monthly_report#coordinators]].
 
 Template
 ========
 
     \[[!meta title="Tails report for MONTH, YEAR"]]
+    \[[!meta  date="XXX"]]
 
     \[[!toc]]
 
@@ -69,10 +77,11 @@ Template
     The following changes were introduced in Tails VERSION:
 
     XXX: Copy the "Changes" section of the release notes, and compact a bit:
-           - Remove lines about software upgrade (that's not Tails itself).
-           - Remove screenshots.
-           - Remove "New features" and "Upgrades and changes" headlines.
-           - Remove line about Changelog.
+
+    * Remove lines about software upgrade (that's not Tails itself).
+    * Remove screenshots.
+    * Remove "New features" and "Upgrades and changes" headlines.
+    * Remove line about Changelog.
 
     Code
     ====
@@ -83,8 +92,14 @@ Template
     Documentation and website
     =========================
 
+    XXX: Explore the Git history:
+
+             git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+
     User experience
     ===============
+
+    XXX: Check the archives of tails-ux: https://mailman.boum.org/pipermail/tails-ux/
 
     Infrastructure
     ==============
@@ -132,6 +147,11 @@ Template
     ===========
 
     XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
+    XXX: Add the output of (adjust month!):
+
+        git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
+        git submodule update --init && \
+        ./wiki/src/contribute/l10n_tricks/language_statistics.sh
 
     Metrics
     =======

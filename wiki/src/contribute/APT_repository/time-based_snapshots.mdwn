@@ -86,14 +86,14 @@ that shall be used during the freeze:
 Thaw snapshots
 --------------
 
-For example, to encode in the `$RELEASE_BRANCH` Git branch the fact
+For example, to encode in the `devel` Git branch the fact
 that it is not frozen anymore, that is remove the indication that
 a specific set of APT repository snapshots must be used:
 
-        git checkout "$RELEASE_BRANCH" && \
+        git checkout devel && \
         ./auto/scripts/apt-snapshots-serials thaw && \
         git commit \
-            -m 'Thaw APT snapshots after Tails $VERSION was released.' \
+            -m "Thaw APT snapshots after Tails $VERSION was released." \
             config/APT_snapshots.d/*/serial
 
 <a id="bump-expiration-date"></a>
@@ -155,6 +155,8 @@ For example, when we stopped tracking Wheezy, we did:
        | xargs -n 1 reprepro _removereferences \
     && reprepro deleteunreferenced
 
+<a id="freeze-exception"></a>
+
 Freeze exception
 ----------------
 
@@ -164,6 +166,14 @@ Freeze exception
    [[custom APT repository|contribute/APT repository/custom]], in the
    suite corresponding to the branch that we want to see this
    package in.
+
+   For example:
+
+           PBUILDER_OPTIONS='--basetgz /var/cache/pbuilder/base-jessie-i386.tgz' \
+           TARGET_DIST='testing' \
+           ./bin/import-package libgsecuredelete
+
+   See [[!tails_gitweb bin/import-package]] for more detailed usage information.
 
 2. If the imported package comes from a Debian distribution whose
    pinning value is at least 990 in `config/chroot_apt/preferences`:
@@ -211,7 +221,7 @@ a distribution, keeping references to the packages it contains.
 
 Compared to the "snapshots as full-blown distributions + `reprepro
 pull`" option we
-[used in our initial experiments](https://labs.riseup.net/code/issues/6295#note-14),
+[[!tails_ticket 6295#note-14 desc="used in our initial experiments"]],
 we are saving _a lot_ on database size, and thus in performance,
 because reprepro does less tracking on snapshots, than what it does
 for real distributions.

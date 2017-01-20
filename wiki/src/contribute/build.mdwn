@@ -6,7 +6,8 @@ Git repository and branches
 ===========================
 
 You will need to clone the Tails Git repository, and to checkout the
-branch that you want to build (most likely, _not_ `master`): learn
+branch that you want to build. This branch should be based on `stable`
+or `devel` (most likely, _not_ `master`): learn
 more about [[our Git branches layout|contribute/git#main-repo]].
 
 <a id="vagrant"></a>
@@ -30,7 +31,7 @@ For details how Vagrant is setup, see its
 ## Installing the dependencies in Debian
 
 If you run Debian Jessie, you must install a few dependencies from
-Debian Stretch, and one of Tails' repos until [!debbug 823395]] is fixed:
+Debian Stretch, and one of Tails' repos until [[!debbug 823395]] is fixed:
 
     sudo tee /etc/apt/sources.list.d/stretch.list <<EOF
     deb http://ftp.us.debian.org/debian/ stretch main
@@ -149,6 +150,14 @@ do so is to run:
 
 This needs to be done before any other operations.
 
+<div class="bug">
+
+At least one step of the build does not honor the external proxy
+settings, so outgoing Internet connections from the build VM must be
+allowed to go through anyway.
+
+</div>
+
 Build options
 -------------
 
@@ -235,10 +244,9 @@ uncommitted changes. This behaviour can be controlled by:
 
 The fastest build you could pretend to get can be done by setting:
 
-    export TAILS_BUILD_OPTIONS="ram cache extproxy gzipcomp"
+    export TAILS_BUILD_OPTIONS="ram extproxy gzipcomp"
 
-This will force the build to happen in RAM and allow skipping the
-boostrap stage if one is cached, and will use use an HTTP proxy
+This will force the build to happen in RAM, and will use use an HTTP proxy
 external to the virtual machine, and SquashFS compression will be done
 using *gzip*.
 
@@ -294,6 +302,7 @@ The following Debian packages need to be installed:
         dpkg-dev \
         eatmydata \
         gettext \
+        ikiwiki \
         intltool \
         libfile-slurp-perl \
         liblist-moreutils-perl \
@@ -311,8 +320,7 @@ The following Debian packages need to be installed:
   expected versions):
 
       apt-get install \
-        debootstrap/jessie-backports \
-        ikiwiki/jessie-backports
+        debootstrap/jessie-backports
 
 Configure live-build
 --------------------

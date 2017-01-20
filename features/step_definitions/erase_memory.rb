@@ -64,7 +64,7 @@ Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
   puts "Detected #{@detected_ram_m} MiB of RAM"
   min_ram_m = convert_to_MiB(min_ram.to_i, unit)
   # All RAM will not be reported by `free`, so we allow a 196 MB gap
-  gap = convert_to_MiB(196, "MiB")
+  gap = convert_to_MiB(256, "MiB")
   assert(@detected_ram_m + gap >= min_ram_m, "Didn't detect enough RAM")
 end
 
@@ -105,9 +105,9 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
-  kernel_mem_reserved_k = 64*1024
+  kernel_mem_reserved_k = 64*1024 # Duplicated in /usr/share/initramfs-tools/scripts/init-premount/memory_wipe
   kernel_mem_reserved_m = convert_to_MiB(kernel_mem_reserved_k, 'k')
-  admin_mem_reserved_k = 128*1024
+  admin_mem_reserved_k = 128*1024 # Duplicated in /usr/share/initramfs-tools/scripts/init-premount/memory_wipe
   admin_mem_reserved_m = convert_to_MiB(admin_mem_reserved_k, 'k')
   kernel_mem_settings = [
     # Let's avoid killing other random processes, and instead focus on
@@ -181,7 +181,7 @@ end
 
 Then /^I find very few patterns in the guest's memory$/ do
   coverage = pattern_coverage_in_guest_ram()
-  max_coverage = 0.005
+  max_coverage = 0.008
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
@@ -200,19 +200,28 @@ When /^I reboot without wiping the memory$/ do
 end
 
 When /^I stop the boot at the bootloader menu$/ do
-  @screen.wait(bootsplash, 90)
-  @screen.wait(bootsplash_tab_msg, 10)
-  @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(bootsplash_tab_msg, 1)
+  step "Tails is at the boot menu's cmdline"
 end
 
 When /^I shutdown and wait for Tails to finish wiping the memory$/ do
   $vm.spawn("halt")
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  try_for(nr_gibs_of_ram*5*60, { :msg => "memory wipe didn't finish, probably the VM crashed" }) do
-    # We spam keypresses to prevent console blanking from hiding the
-    # image we're waiting for
-    @screen.type(" ")
-    @screen.find('MemoryWipeCompleted.png')
+  match = nil
+  begin
+    try_for(memory_wipe_timeout, msg: "memory wipe didn't finish, probably the VM crashed") do
+      # We spam keypresses to prevent console blanking from hiding the
+      # image we're waiting for
+      @screen.type(" ")
+      match, _ = @screen.findAny(
+         ['MemoryWipeCompleted.png', 'TailsBug11786a.png', 'TailsBug11786b.png']
+      )
+      match != nil
+    end
+    # Just throw the same exception as a if the try_for would fail
+    raise Timeout::Error if match != 'MemoryWipeCompleted.png'
+  rescue Timeout::Error
+    puts "Cannot tell if memory wipe completed. " +
+         "One possible reason for this is #11786, " +
+         "so let's go on and rely on the next steps to check " +
+         "how well memory was wiped."
   end
 end

@@ -63,8 +63,8 @@ targeted at current Tails, as said above. More specifically:
 * The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
   to use as its "upstream" branch. Make sure to check them out when setting up the repository
   for the first time.
-* For Ubuntu, we want to support the current Ubuntu version (currently `wily`), the
-  upcoming version, currently (`xenial`) and the current LTS, from 16.04 on (currently
+* For Ubuntu, we want to support the current Ubuntu version (currently `yakkety`), the
+  upcoming version (currently `zesty`), and the current LTS (currently
   `xenial`).
   We do not maintain any Git branches related to Ubuntu releases, as simply the changelog
   entries are modified.
@@ -197,6 +197,23 @@ Add a signed tag to the Git repository and push the changes:
                     "$PACKAGING_BRANCH" \
                     pristine-tar
 
+If you are a member of the Debian pkg-privacy team
+--------------------------------------------------
+
+Add the remote:
+
+    git remote add debian ssh://git.debian.org/git/pkg-privacy/packages/tails-installer.git
+
+Then push:
+
+    git push --tags debian "$UPSTREAM_BRANCH" \
+                    "$PACKAGING_BRANCH" \
+                    pristine-tar
+
+Never force push! If `git push` fails you may have to merge back in
+e.g. `debian/pristine-tag` into your local `pristine-tar` and push
+again. Also push it to `origin`, in that case.
+
 Add the Debian package to Tails
 -------------------------------
 
@@ -244,7 +261,7 @@ You'll need to configure the dput tool to upload to the PPA and put into
 
     [ppa-tails-installer]
     fqdn = ppa.launchpad.net
-    method = sftp
+    method = ftp
     incoming = ~tails-team/ubuntu/tails-installer/
     login = your_launchpad_id
     allow_unsigned_uploads = 0

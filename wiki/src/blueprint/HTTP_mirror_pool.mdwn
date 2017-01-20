@@ -4,107 +4,15 @@
 
 # The plan
 
-## Big picture
-
-We decided to implement a two-way strategy for this feature:
-
-* We have dispatcher code, in JavaScript, that DAVE uses to dynamically modify the
-  hostname, in the download link it gets from the ISO description file
-  (IDF), so that each user is pointed to random mirror.
-  - [public read-only mirror of the Git repository](https://git-tails.immerda.ch/mirror-pool-dispatcher/)
-  - Vanilla JS (no frameworks)
-  - The code is deployed live: <https://tails.boum.org/lib/js/mirror-dispatcher.js>
-  - The library code has three consumers it must work with:
-    * a Firefox extension (DAVE)
-    * our website, for downloads we offer outside of the Installation
-      Assistant, that are not supported by DAVE, such as images for
-      release candidates; and in any case, for browsers that DAVE does
-      not support
-    * Tails Upgrader, that runs the library code with Node.js
-  - Configuration for the JS is loaded from a JSON file hosted on our
-    website.
-    See [[the configuration section|HTTP_mirror_pool#configuration]]
-    for details.
-
-* Keep using DNS to point to 3-5 fast and reliable mirrors. This will be
-  the fallback for some use cases. So we still need a DNS dynamic update
-  system; we can simply re-purpose the one we already have
-  (`dl.amnesia.boum.org`). This fallback DNS pool will be used:
-  - by people who do not use JS, when downloading from our website
-  - for the [[wget download option|install/expert/usb]]
-
-<a id="deployment"></a>
-
-## Deployment plan
-
-This only include steps for which ordering is critical. There are a few
-other auxiliary tasks, tracked as sub-tasks of [[!tails_ticket 7161]],
-that can be dealt with independently.
-
-1. Make (almost) all downloads use the new mirror pool:
-   * website: [[!tails_ticket 8642]]
-   * Dave: [[!tails_ticket 11109]]
-   * ~~Upgrader: [[!tails_ticket 11123]]~~
-2. Shrink our DNS pool into a small, fallback one: [[!tails_ticket 11284]]
-3. Have the second audit of our mirror pool dispatcher library completed: [[!tails_ticket 8640]]
-
-<a id="configuration"></a>
-
-# Mirror pool configuration
-
-The client dispatcher code fetches the mirror pool configuration file
-from our website.
-
-The configuration file is written in JSON (and not YAML), to avoid the
-need to use a third-party parser.
-
-The configuration file is stored in a dedicated Git repository
-([[!tails_gitweb_repo mirror-pool desc="public read-only mirror"]]),
-that is added to our website with the ikiwiki underlay mechanism.
-Using a separate Git repository gives us finer-grained access control
-possibilities in the long run, e.g. we may want to let people who
-don't have commit access to Git maintain the mirrors pool. Note that
-we'll need to serve the configuration file from outside our website if
-we ever want to do so: an _underlay_ can affect our website in ways
-that are probably (almost?) as bad as what one can do with Git access
-to the website itself.
-
-The configuration file is essentially a list of mirrors, and for each
-of them we need a few values:
-
- * url_prefix: whatever needs to be pre-pended to the path to an ISO
-   (e.g. `/stable/tails-i386-2.0/tails-i386-2.0.iso`) that is shared
-   between all mirrors, to form a complete URL to that ISO; for
-   example:
-   - in the old mirror pool design, this would be
-     `http://dl.amnesia.boum.org/tails`
-   - in the new mirror pool design, this could be e.g.
-     `http://42.dl.amnesia.boum.org/tails` (for mirrors who want to
-     use the unique VirtualHost we provide them), or something they
-     deal with themselves, e.g. `https://mirrors.kernel.org/tails`
-
- * weight: the probability this mirror has to be picked by the
-   dispatcher code, expressed as a non-negative integer; weight
-   0 means that the mirror is currently disabled, and will never be
-   redirected to
-
- * email (optional): the email address of the mirror's operator
-
- * notes (optional): various additional notes that can be useful to
-   the managers of the mirror pool
-
-For a more formal, and probably more up-to-date definition of the data
-model, better see
-[its JSON schema](https://git-tails.immerda.ch/mirror-pool/tree/schema.json).
-
-Here is
-[an example configuration file](https://git-tails.immerda.ch/mirror-pool/tree/example-mirrors.json).
+See the corresponding [[design document|contribute/design/mirrors]].
 
 <a id="speed"></a>
 
 # Speed
 
-This is mainly for [[!tails_ticket 10295]].
+This is mainly for [[!tails_ticket 10295]]. We keep this information
+around because it provides potentially useful data wrt. the reasons
+why we picked some mirrors, but not others, for the fallback DNS pool.
 
 ## Fast & reliable enough mirrors
 
@@ -118,6 +26,7 @@ Germany, upstream network should not be the limiting factor for most
 practical purposes here.
 
 * 5.45.108.219 aka https://tails.mirror.metalgamer.eu/tails/ (Germany):
+  - one glitch in August, 2016
   - from lizard: 8.21 MB/s, 6.87 MB/s, 7.48 MB/s
   - from D.C.: 10.1 MB/s, 9.84 MB/s, 10.1 MB/s
   - from Germany: 37.7 MB/s, 43.4 MB/s, 37.2 MB/s
@@ -130,6 +39,8 @@ practical purposes here.
   - from France: avg. 14.5 MB/s, stdev 3.4 MB/s
   - from Netherlands: 54.0 MB/s, 52.7 MB/s, 51.7 MB/s
 * 195.154.14.189 aka https://16.dl.amnesia.boum.org/tails/ (France):
+  - being moved to another IP (163.172.39.92 aka https://28.dl.amnesia.boum.org/tails/)
+    so we're not adding it yet
   - from lizard: 5.08 MB/s, 5.25 MB/s, 6.26 MB/s, 6.33 MB/s, 6.17 MB/s
   - from D.C.: 4.65 MB/s, 7.21 MB/s, 7.01 MB/s
   - from Germany: 22.4 MB/s, 21.6 MB/s, 22.6 MB/s
@@ -147,6 +58,13 @@ practical purposes here.
   - from Germany: 15.5 MB/s, 17.1 MB/s, 16.1 MB/s
   - from France: avg. 10.4 MB/s, stdev. 2.7 MB/s
   - from Netherlands: 25.2 MB/s, 66.3 MB/s, 43.9 MB/s
+- 198.145.20.143 and 149.20.37.36, aka mirrors.kernel.org
+- 208.80.154.15 aka mirrors.wikimedia.org
+* 169.229.226.30 aka https://mirrors.ocf.berkeley.edu/tails/ (California)
+  - from lizard: 10.3MB/s, 11.0MB/s, 11.2MB/s
+  - from D.C.: 8.23 MB/s, 7.45 MB/s, 8.50 MB/s
+  - from Germany: 5.01 MB/s, 6.25 MB/s, 5.90 MB/s
+  - from Netherlands: 16.0 MB/s, 12.7 MB/s, 14.7 MB/s
 
 ## Too slow mirrors
 
@@ -208,10 +126,6 @@ practical purposes here.
   - from Germany: 16.7MB/s, 27.9MB/s, 24.5MB/s
   - from France: avg. 11.9 MB/s, stdev 2.3 MB/s
   - from Netherlands: 21.5 MB/s, 21.9 MB/s, 23.3 MB/s
-
-## Inadequate mirrors for other reason
-
-* https://mirrors.ocf.berkeley.edu/tails/ (California): lacks dl.a.b.o vhost
 
 ## Not reliable enough mirrors
 

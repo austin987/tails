@@ -562,6 +562,8 @@ that might de-anonymize or facilitate recording of a user, such as
 hardware [keyloggers](http://en.wikipedia.org/wiki/Keylogger). Thus a
 virtual keyboard (usable with the mouse) MUST be available.
 
+<a id="spec-entropy"></a>
+
 #### 2.6.3.8 Entropy
 
 Some crucial applications of the PELD, such as the Tor client, make
@@ -820,10 +822,10 @@ those are mainly for usability issues and similar.
 ### 3.6.1 The Tor™ software
 
 The Tor software is currently configured as a client only (onion
-proxy). The client listens on a control port 9051
-(using cookie authentication), as a transparent proxy on port 9040
-(only used for remapped hidden services) and as a DNS server on port
-8853.
+proxy). The client listens for control connections on port 9052 (using
+cookie authentication) which is non-standard (see about the "control
+port filter" below), as a transparent proxy on port 9040 (only used
+for remapped hidden services) and as a DNS server on port 8853.
 
 The client listens on a few SOCKS ports (the rationale being detailed
 on the [[Tor stream isolation design
@@ -839,11 +841,17 @@ If a compromised software had access to the Tor control port,
 an attacker who controls it could simply ask Tor the public
 IP through the `GETINFO address` command.
 To prevent this, access to the Tor control port is only
-granted to the `root` and `tor-launcher` users, as well as to the
-members of the `debian-tor` group, such as the `onioncircuits` user
-(that is used to run Onion Circuits).
-A filtering proxy to the control port exists, so
-Torbutton still can perform safe commands like `SIGNAL NEWNYM`.
+granted to the `root` user, as well as to the
+members of the `debian-tor` group (via the control socket).
+A filtering proxy to the control port runs on port 9051 (i.e. the default
+Tor ControlPort), so for instance
+Torbutton still can perform safe commands like `SIGNAL NEWNYM`. It
+allows defining fine-grained access whitelists of commands (and their
+argunents) and events on a per-application basis, which can enforce
+rules like "this `$user` (e.g. `amnesia`) when running this
+`$application` (e.g. `/usr/bin/onionshare`) can only run these commands
+(`ADD_ONION` etc.) and listen to these events (e.g. `HS_DESC`, which is
+expected after a successfull use of `ADD_ONION`)".
 
 We disabled the default warning messages of Tor (`WarnPlaintextPorts`)
 when connecting to ports 110 (POP3) and 143 (IMAP). These ports are used
@@ -852,7 +860,7 @@ providers recommend and even enforce StartTLS on these ports, the effect
 of these warnings were most of the time counterproductive as people had
 to click through needlessly scary security warnings.
 
-- [[!tails_gitweb config/chroot_local-hooks/06-adduser_onioncircuits]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-controlport-filter.d/]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tor-controlport-filter.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tor-controlport-filter]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
@@ -863,7 +871,6 @@ Status extension provides a permanent visual indication of whether Tor
 has bootstrapped already.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/onioncircuits]]
 
 <a id="dns"></a>
 
@@ -976,7 +983,7 @@ The default profile is split from the binaries and application data:
 As for extensions we have the following differences:
 
 * Tails also installs the
-  [Adblock plus](https://addons.mozilla.org/fr/firefox/addon/1865/)
+  [uBlock Origin](https://github.com/gorhill/uBlock/)
   extension to protect against many tracking possibilities by removing
   most ads.
 
@@ -1164,10 +1171,8 @@ restart actions, as well as screen locking.
 
 - [[!tails_gitweb_dir config/chroot_local-includes/usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org]]
 
-The Tails OpenPGP applet allows to symmetrically and asymmetrically
+The Tails [[!debpts openpgp-applet desc="OpenPGP applet"]] allows to symmetrically and asymmetrically
 encrypt and decrypt text, and to verify OpenPGP signatures.
-
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/gpgApplet]]
 
 ### 3.6.23 DHCP hostname leaks
 
@@ -1190,8 +1195,8 @@ send the hostname over DHCP by default. Likely this can be overridden
 on a per-connection basis if one really needs to change this.
 
 Third, dhclient itself is told not to send the hostname. This is
-needed because on Wheezy, NetworkManager runs dhclient with the `-cf
-/var/run/nm-dhclient-eth0.conf` option, and generates that file by
+needed because on Jessie, NetworkManager runs dhclient with the `-cf
+/var/lib/NetworkManager/dhclient-eth0.conf` option, and generates that file by
 concatenating `/etc/dhcp/dhclient.conf` with its own settings.
 
 Fourth, dhclient is told to override any hostname provided by the DHCP
@@ -1418,7 +1423,7 @@ issues|support/known_issues]] page.
 However the fact that different browser extensions are installed in Tails and in
 the TBB surely allows more sophisticated attacks that usual fingerprint
 as returned by tools such as <https://panopticlick.eff.org/> and
-<http://ip-check.info/>. For example, the fact that Adblock is removing
+<http://ip-check.info/>. For example, the fact that uBlock Origin is removing
 ads could be analysed.
 
 From the point of view of the local network administrator, Tails is

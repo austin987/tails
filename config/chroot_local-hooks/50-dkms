@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+set -u
 
 echo "Building VirtualBox guest modules"
 
@@ -9,27 +10,29 @@ if [ "$hw_arch" != i386 -a "$hw_arch" != amd64 ]; then
    exit 0
 fi
 
-gcc_version=4.8
+. /usr/share/amnesia/build/variables
 
 # the -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes build-essential dkms dpatch
-apt-get install --yes gcc-${gcc_version}
-apt-get install --yes virtualbox-guest-utils virtualbox-guest-dkms virtualbox-guest-x11
+apt-get install --yes build-essential dkms
 
-# Have the modules built for every installed kernel
-for KERNEL in /boot/vmlinuz-* ; do
-   KERNEL_VERSION="$(basename ${KERNEL} | sed -e 's|vmlinuz-||')"
-   MODULES_VERSION="$(dpkg-query -W -f='${Version\n}' virtualbox-guest-dkms)"
+# Note: we only build for the 32-bit kernel, since building for 64-bit is too painful
+# with multiarch; and anyway, the 64-bit kernel module doesn't play well with
+# a 32-bit userspace (https://www.virtualbox.org/ticket/8336), which is why
+# we instruct users to set up a 32-bit VM.
 
-   # Installing the headers should trigger the building of the modules for that kernel
-   apt-get install --yes linux-headers-$KERNEL_VERSION
-   # Only build and install if it was not done already
-   if [ ! "$(dkms status -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION)" ]; then
-      dkms build -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
-      dkms install -k $KERNEL_VERSION -m virtualbox-guest -v $MODULES_VERSION
-   fi
+# Installing the headers triggers the building of the modules for that kernel
+apt-get install --yes \
+    "linux-headers-${KERNEL_VERSION}-686" \
+    virtualbox-guest-dkms
 
-done
+MODULES_VERSION="$(dpkg-query -W -f='${Version}\n' virtualbox-guest-dkms \
+		       | sed -E 's,-.*,,')"
+dkms build \
+    -a i386 -k "${KERNEL_VERSION}-686" \
+    -m virtualbox-guest -v "$MODULES_VERSION"
+dkms install \
+    -a i386 -k "${KERNEL_VERSION}-686" \
+    -m virtualbox-guest -v "$MODULES_VERSION"
 
 # clean the build directory
 rm -r /var/lib/dkms/virtualbox-guest/

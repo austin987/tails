@@ -9,6 +9,44 @@ See the thread on tails-dev:
 
 <https://mailman.boum.org/pipermail/tails-dev/2014-April/005388.html>
 
+
+Roadmap
+=======
+
+- Research which requirements are really needed by our users
+- Evaluate existing tools based on these requirements 
+- Implement the missing features, integrate into Tails 
+- Write end-user documentation
+- Write automated tests
+- Evaluate UX
+
+
+Requirements
+============
+
+MUST
+----
+
+- Allow backup of Persistent folder
+- Allow backup on Local storage
+- Encrypt backups
+- Preserve permissions and ownership
+- Understandable error messages
+- Require administrator password when hitting a file not readable by amnesia
+  (eg. private key of onion services).
+
+SHOULD
+------
+
+- Allow backup on a remote storage
+  - ownCloud
+- Feature a backup history
+- Backing up everything in persistence (eg APT)
+- Only send the delta from previous backup (i.e incremental update)
+- Automated reminder
+- Include, exclude lists
+
+
 Backup techniques
 =================
 
@@ -18,6 +56,41 @@ And once we take it all into account, then we get a large piece of code to
 maintain all by ourselves, because it was meant only for Tails' needs.
 
 So, we shouldn't try to reinvent this wheel, and use an existing, proven solution instead.
+
+GNOME Backups (Deja Dup)
+------------------------
+
+  - <https://launchpad.net/deja-dup>
+  - <https://wiki.gnome.org/Apps/DejaDup>
+
+Pros:
+
+  - Has a simple interface for configuring backups. The nicest we could
+    find and with a [clear mission statment](https://wiki.gnome.org/Apps/DejaDup/Mission).
+  - Restoration of single files or folders is integrated in Files.
+  - Notifications to start backups periodically.
+  - Supports different kinds of remote: FTP, SSH, WebDAV, and Windows
+    share are displayed in the graphical interface, duplicity supports
+    [many more](http://duplicity.nongnu.org/).
+
+Cons:
+
+- Uses duplicity as back end with the following drawbacks:
+  - It forces full backups no and then making them unexpectedly
+    extremelly slower than regular incremental ones.
+  - Restoring a single file is slow.
+  - Impossible to navigate the file system, either of the last or past
+    increments without doing a full restoration.
+- No feedback whatsoever on the progress of the backup when they get started automatically.
+- Doesn't know how to ask for root password for backing up files it cannot access.
+- If files are mounted or linked in a different place, you can only
+  restore from Nautilus the original places backed up by Deja Dup. That's
+  a problem for dotfiles which are single files symlinked to $HOME and you
+  can't easily get both the Nautilus integration and the full restoration.
+- You can only add folders to be backed up or ignored by Deja-Dup (and not single files).
+- Fails to restore symlinks.
+
+See [[!tails_ticket 9888]].
 
 Tar + GPG
 ---------
@@ -43,6 +116,7 @@ backup file format.
 ### Cons
 
 - Duplicity creates tons of messy files on the file system.
+- And requires users to do a full backup from time to time when using incremental backups
 
 Loopback LUKS
 -------------
@@ -65,13 +139,16 @@ layer of encryption (such as a LUKS container file, or something else) if we
 want to support encrypting with a passphrase (and I think we should).
 
 grsync + encrypted device
-------------------------------
+-------------------------
 
 [grsync](http://www.opbyte.it/grsync/) is a GUI for the renown and rock-solid `rsync`, already shipped in Tails.
 
 Grsync is [packaged for debian](https://packages.debian.org/squeeze/grsync).
 
 The documentation for the creation of the encrypted device [[is already written|doc/encryption_and_privacy/encrypted_volumes]].
+
+It has a rock-science interface, basically displaying the complexity of
+the command line options in a graphical way.
 
 ### How to test?
 
@@ -93,7 +170,7 @@ The documentation for the creation of the encrypted device [[is already written|
 
 * grsync should check if enough space is available on the destination before running.
   Update: rsync 3.1.0 [introduces](https://rsync.samba.org/ftp/rsync/src/rsync-3.1.0-NEWS) a `--preallocate` option.
-  (Tails actually ships rsync 3.0.9)
+  <del>(Tails actually ships rsync 3.0.9</del> Tails 2.6 ships rsync 3.1.1)
 * grsync should ask for confirmation when the option "Delete on the destination" is activated
 * when user double-click on a `.grsync` file, a window appears to confirm which file to open. This may be confusing.
 
@@ -131,6 +208,29 @@ well as incremental backups.
 * still requires a script of some sort to drive it
 * probably requires a gui to make it simple to use
 
+borgbackup
+----------
+
+<https://borgbackup.readthedocs.io/en/stable/index.html>
+
+Borg is the perfect backup back end. It supports increments, encryption,
+data deduplication, local and remote backups, and mounting backups as
+FUSE file systems. And it way faster than obnam which advertises similar
+properties. But it doesn't have a graphical user interface.
+
+[Packages](https://packages.debian.org/search?suite=all&arch=i386&searchon=names&keywords=borgbackup) for borgbackup are in Jessie Backports and in Strech
+
+restic
+-------
+
+<https://restic.github.io/>
+
+Ristic looks very similar to borgbackup. It is a small CLI tool for incremental, authenticated, and confidential backups of files.
+
+It is not clear where the tools differ and it would be nice to have a comparison of both tools.
+
+[Packages](https://packages.debian.org/search?suite=all&section=all&arch=i386&searchon=names&keywords=restic) are for restic are in Strech.
+
 Clone everything
 ----------------
 
@@ -159,7 +259,15 @@ partition if the destination USB is already a Tails USB stick.
 Other solutions
 ---------------
 
-We should investigate how others have already solved this problem.
+  - [sbackup](https://tracker.debian.org/pkg/sbackup), Simple Backup:
+    unmaintained since 2008.
+
+  - [Lucky Backup](https://tracker.debian.org/pkg/luckybackup): seems
+    very oldish and not really active.
+
+  - [Back In Time](https://github.com/bit-team/backintime) which has a
+    GNOME frontend. It does snapshots with hardlinks to reduce space.
+    Can do local and SSH as remote.
 
 User experience
 ===============

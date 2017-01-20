@@ -5,25 +5,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click_point(@screen.w, @screen.h/2)
-end
-
-def activate_filesystem_shares
-  # XXX-9p: First of all, filesystem shares cannot be mounted while we
-  # do a snapshot save+restore, so unmounting+remounting them seems
-  # like a good idea. However, the 9p modules get into a broken state
-  # during the save+restore, so we also would like to unload+reload
-  # them, but loading of 9pnet_virtio fails after a restore with
-  # "probe of virtio2 failed with error -2" (in dmesg) which makes the
-  # shares unavailable. Hence we leave this code commented for now.
-  #for mod in ["9pnet_virtio", "9p"] do
-  #  $vm.execute("modprobe #{mod}")
-  #end
-
-  $vm.list_shares.each do |share|
-    $vm.execute("mkdir -p #{share}")
-    $vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
-  end
+  @screen.click_point(@screen.w - 1, @screen.h/2)
 end
 
 def context_menu_helper(top, bottom, menu_item)
@@ -39,17 +21,6 @@ def context_menu_helper(top, bottom, menu_item)
     @screen.wait_and_click(menu_item, 10)
     return
   end
-end
-
-def deactivate_filesystem_shares
-  $vm.list_shares.each do |share|
-    $vm.execute("umount #{share}")
-  end
-
-  # XXX-9p: See XXX-9p above
-  #for mod in ["9p", "9pnet_virtio"] do
-  #  $vm.execute("modprobe -r #{mod}")
-  #end
 end
 
 # This helper requires that the notification image is the one shown in
@@ -92,9 +63,6 @@ def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
 
-  # XXX-9p: See XXX-9p above
-  #activate_filesystem_shares
-
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
@@ -136,7 +104,7 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I (temporarily )?create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
   $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
                                      :type => "qcow2"})
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
@@ -162,6 +130,11 @@ end
 
 Given /^the network is unplugged$/ do
   $vm.unplug_network
+end
+
+Given /^the network connection is ready(?: within (\d+) seconds)?$/ do |timeout|
+  timeout ||= 30
+  try_for(timeout.to_i) { $vm.has_network? }
 end
 
 Given /^the hardware clock is set to "([^"]*)"$/ do |time|
@@ -252,16 +225,16 @@ When /^I destroy the computer$/ do
   $vm.destroy_and_undefine
 end
 
-def bootsplash
+def boot_menu_cmdline_image
   case @os_loader
   when "UEFI"
-    'TailsBootSplashUEFI.png'
+    'TailsBootMenuKernelCmdlineUEFI.png'
   else
-    'TailsBootSplash.png'
+    'TailsBootMenuKernelCmdline.png'
   end
 end
 
-def bootsplash_tab_msg
+def boot_menu_tab_msg_image
   case @os_loader
   when "UEFI"
     'TailsBootSplashTabMsgUEFI.png'
@@ -270,22 +243,74 @@ def bootsplash_tab_msg
   end
 end
 
-Given /^the computer (re)?boots Tails$/ do |reboot|
+def memory_wipe_timeout
+  nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+  nr_gigs_of_ram*30
+end
 
-  boot_timeout = 30
+Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
+  boot_timeout = 3*60
   # We need some extra time for memory wiping if rebooting
-  boot_timeout += 90 if reboot
+  boot_timeout += memory_wipe_timeout if reboot
+  # Simply looking for the boot splash image is not robust; sometimes
+  # sikuli is not fast enough to see it. Here we hope that spamming
+  # TAB, which will halt the boot process by showing the prompt for
+  # the kernel cmdline, will make this a bit more robust. We want this
+  # spamming to happen in parallel with Sikuli waiting for the image,
+  # but multi-threading etc is working extremely poor in our Ruby +
+  # jrb environment when Sikuli is involved. Hence we run the spamming
+  # from a separate process.
+  tab_spammer_code = <<-EOF
+    require 'libvirt'
+    tab_key_code = 0xf
+    virt = Libvirt::open("qemu:///system")
+    begin
+      domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
+      loop do
+        domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
+        sleep 0.1
+      end
+    ensure
+      virt.close
+    end
+  EOF
+  # Our UEFI firmware (OVMF) has the interesting "feature" that pressing
+  # any button will open its setup menu, so we have to exit the setup,
+  # and to not have the TAB spammer potentially interfering we pause
+  # it meanwhile.
+  dealt_with_uefi_setup = false
+  # The below code is not completely reliable, so we might have to
+  # retry by rebooting.
+  try_for(boot_timeout) do
+    begin
+      tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
+      if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
+        @screen.wait('UEFIFirmwareSetup.png', 30)
+        Process.kill("TSTP", tab_spammer.pid)
+        @screen.type(Sikuli::Key.ENTER)
+        Process.kill("CONT", tab_spammer.pid)
+        dealt_with_uefi_setup = true
+      end
+      @screen.wait(boot_menu_cmdline_image, 15)
+    rescue FindFailed => e
+      debug_log('We missed the boot menu before we could deal with it, ' +
+                'resetting...')
+      dealt_with_uefi_setup = false
+      $vm.reset
+      retry
+    ensure
+      Process.kill("TERM", tab_spammer.pid)
+      tab_spammer.close
+    end
+  end
+end
 
-  @screen.wait(bootsplash, boot_timeout)
-  @screen.wait(bootsplash_tab_msg, 10)
-  @screen.type(Sikuli::Key.TAB)
-  @screen.waitVanish(bootsplash_tab_msg, 1)
-
+Given /^the computer (re)?boots Tails$/ do |reboot|
+  step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
-  @screen.wait('TailsGreeter.png', 30*60)
+  @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
-  activate_filesystem_shares
   step 'I configure Tails to use a simulated Tor network'
 end
 
@@ -301,14 +326,14 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
-  step 'Tails Greeter has dealt with the sudo password'
+  step 'Tails Greeter has applied all settings'
   step 'the Tails desktop is ready'
 end
 
 Given /^I enable more Tails Greeter options$/ do
   match = @screen.find('TailsGreeterMoreOptions.png')
   @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 10)
+  @screen.wait_and_click('TailsGreeterForward.png', 20)
   @screen.wait('TailsGreeterLoginButton.png', 20)
 end
 
@@ -323,11 +348,12 @@ Given /^I set an administration password$/ do
   @screen.type(@sudo_password)
 end
 
-Given /^Tails Greeter has dealt with the sudo password$/ do
-  f1 = "/etc/sudoers.d/tails-greeter"
-  f2 = "#{f1}-no-password-lecture"
-  try_for(30) {
-    $vm.execute("test -e '#{f1}' -o -e '#{f2}'").success?
+Given /^Tails Greeter has applied all settings$/ do
+  # I.e. it is done with PostLogin, which is ensured to happen before
+  # a logind session is opened for LIVE_USER.
+  try_for(120) {
+    $vm.execute_successfully("loginctl").stdout
+      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s*$/) != nil
   }
 end
 
@@ -516,17 +542,29 @@ Given /^I kill the process "([^"]+)"$/ do |process|
   }
 end
 
-Then /^Tails eventually shuts down$/ do
+Then /^Tails eventually (shuts down|restarts)$/ do |mode|
   nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
   timeout = nr_gibs_of_ram*5*60
-  try_for(timeout, :msg => "VM is still running after #{timeout} seconds") do
-    ! $vm.is_running?
+  # Work around Tails bug #11786, where something goes wrong when we
+  # kexec to the new kernel for memory wiping and gets dropped to a
+  # BusyBox shell instead.
+  try_for(timeout) do
+    if @screen.existsAny(['TailsBug11786a.png', 'TailsBug11786b.png'])
+      puts "We were hit by bug #11786: memory wiping got stuck"
+      if mode == 'restarts'
+        $vm.reset
+      else
+        $vm.power_off
+      end
+    else
+      if mode == 'restarts'
+        @screen.find('TailsBootSplash.png')
+        true
+      else
+        ! $vm.is_running?
+      end
+    end
   end
-end
-
-Then /^Tails eventually restarts$/ do
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  @screen.wait('TailsBootSplash.png', nr_gibs_of_ram*5*60)
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
@@ -537,6 +575,11 @@ end
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # Sometimes the next button too fast, before the menu has settled
+  # down to its final size and the icon we want to click is in its
+  # final position. dogtail might allow us to fix that, but given how
+  # rare this problem is, it's not worth the effort.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
 end
 
@@ -547,6 +590,9 @@ end
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  # See comment on /^I request a shutdown using the emergency shutdown applet$/
+  # that explains why we need to wait.
+  step 'I wait 5 seconds'
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
@@ -613,7 +659,7 @@ end
 
 When /^I start and focus GNOME Terminal$/ do
   step 'I start "Terminal" via the GNOME "Utilities" applications menu'
-  @screen.wait('GnomeTerminalWindow.png', 20)
+  @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
 When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
@@ -905,11 +951,51 @@ When /^I eject the boot medium$/ do
   dev_type = device_info(dev)['ID_TYPE']
   case dev_type
   when 'cd'
-    $vm.remove_cdrom
+    $vm.eject_cdrom
   when 'disk'
     boot_disk_name = $vm.disk_name(dev)
     $vm.unplug_drive(boot_disk_name)
   else
     raise "Unsupported medium type '#{dev_type}' for boot device '#{dev}'"
   end
+end
+
+Given /^Tails is fooled to think it is running version (.+)$/ do |version|
+  $vm.execute_successfully(
+    "sed -i " +
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
+    "/etc/os-release"
+  )
+end
+
+Then /^Tails is running version (.+)$/ do |version|
+  v1 = $vm.execute_successfully('tails-version').stdout.split.first
+  assert_equal(version, v1, "The version doesn't match tails-version's output")
+  v2 = $vm.file_content('/etc/os-release')
+       .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
+  assert_equal(version, v2, "The version doesn't match /etc/os-release")
+end
+
+def share_host_files(files)
+  files = [files] if files.class == String
+  assert_equal(Array, files.class)
+  disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
+  # Let's add some extra space for filesysten overhead etc.
+  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.10).ceil].max
+  disk = random_alpha_string(10)
+  step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
+  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
+       "filesystem on disk \"#{disk}\""
+  $vm.storage.guestfs_disk_helper(disk) do |g, _|
+    partition = g.list_partitions().first
+    g.mount(partition, "/")
+    files.each { |f| g.upload(f, "/" + File.basename(f)) }
+  end
+  step "I plug USB drive \"#{disk}\""
+  mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
+  dev = $vm.disk_dev(disk)
+  partition = dev + '1'
+  $vm.execute_successfully("mount #{partition} #{mount_dir}")
+  $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
+  return mount_dir
 end

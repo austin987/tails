@@ -3,7 +3,7 @@
 set -e
 set -u
 
-PERL_PROGS="/usr/local/bin/gpgApplet /usr/local/bin/tails-security-check \
+PERL_PROGS="/usr/local/bin/tails-security-check \
    /usr/local/lib/tails-htp-notify-user \
    /usr/local/lib/tails-virt-notify-user"
 PYTHON_PROGS="/etc/whisperback/config.py \
@@ -99,12 +99,8 @@ intltool_merge () {
    grep -E --no-filename '[^ #]*\.(desktop|directory)\.in$' po/POTFILES.in \
       | while read infile ; do
            intltool-merge --quiet --desktop-style --utf8 \
-	      po "$infile" "${infile%.in}"
+           po "$infile" "${infile%.in}"
         done
-}
-
-intltool_report () {
-   (cd po && intltool-update --report --gettext-package=tails)
 }
 
 ### Main
@@ -127,6 +123,3 @@ intltool_update_po $(po_languages)
 # Update files that are actually used at runtime
 refresh_mo $(po_languages)
 intltool_merge
-
-# Report back
-intltool_report

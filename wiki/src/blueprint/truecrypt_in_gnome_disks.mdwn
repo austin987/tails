@@ -1,0 +1,36 @@
+[[!meta title="Add TrueCrypt support to GNOME Disks"]]
+
+ * Selling points++: can benefit Debian, Ubuntu, Qubes OS and Subgraph
+   OS users. Not only Tails.
+ * We only aim to support _unlocking_ TrueCrypt volumes. If there's
+   time left we can add support for _creating_ them, but it's not a
+   hard requirement.
+ * GNOME Disks seems file-backed TC volumes are very commonly used, so
+   it's a use case we probably *must* support. But our user survey
+   (see below) will confirm this hypothesis.
+ * Ideally it should work just the same way it does for LUKS volumes
+   (they appear in Places, and can be unlocked via Files), so no
+   UX/design is required for block-device-backed volumes… but
+   file-backed volumes are different.
+ * GNOME Disks has an "Attach Disk Image" feature, so it definitely
+   has support for loop/file-backed storage devices. Still, it's not
+   100% clear how hard it will be to add TC unlocking support in
+   there, so we need time to evaluate that, and if it's hard, to
+   evaluate other tools (zulucrypt-gui at least) in terms of
+   functionality & usability, before we can decide which tool we will
+   provide to unlock file-backed TC volumes.
+ * GNOME Disks does not have something equivalent to creating a fresh
+   disk image (not based on an existing disk) so we'd need to add that
+   if we have time to support _creating_ file-backed TC volumes.
+ * It's not 100% clear to us what exact set of features are needed for
+   supporting existing TC volumes in Tails. E.g. do we need to support
+   nested, hidden, file-backed volumes? It might be that some features
+   are very little used, and very hard to implement. So we'll do a
+   need-finding survey and an evaluation of the implementation cost;
+   these two sources of info will allow us to do a cost/benefit
+   analysis and to decide what exactly we will support. (E.g. it's not
+   completely clear how to fit in opening TC hidden volumes in GNOME
+   disks (may need to input *two* passphrases).  So it would be easier
+   to focus on getting support for non-nested volumes
+   only... especially if actual Tails+TC users do not use this
+   feature, so we shouldn't spend time on it any way.)

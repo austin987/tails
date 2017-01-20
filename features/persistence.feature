@@ -1,5 +1,4 @@
-#10720: Tails Installer freezes on Jenkins
-@product @fragile
+@product
 Feature: Tails persistence
   As a Tails user
   I want to use Tails persistence feature
@@ -55,3 +54,10 @@ Feature: Tails persistence
     And all notifications have disappeared
     When I delete the persistent partition
     Then there is no persistence partition on USB drive "__internal"
+
+  Scenario: Dotfiles persistence
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    When I write some dotfile expected to persist
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then the expected persistent dotfile is present in the filesystem

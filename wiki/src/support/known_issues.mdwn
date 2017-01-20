@@ -20,8 +20,9 @@ Problematic USB sticks
 
 Many SanDisk USB sticks are configured by the
 manufacturer as a fixed disk, and not as a removable disk. As a consequence,
-they require removing the `live-media=removable` boot parameter, which [[is
-dangerous|doc/first_steps/bug_reporting/tails_does_not_start#entirely]].
+they require removing the `live-media=removable` boot parameter. See troubleshooting section about
+Tails not starting entirely on [[PC|install/debian/usb#start-tails]] or
+[[Mac|install/mac/usb#start-intermediary]].
 
 * SanDisk Cruzer Edge 8GB
 * SanDisk Cruzer Extreme USB 3.0 16GB, 32GB and 64GB
@@ -152,13 +153,13 @@ Does not start Tails 1.2.3 created using Tails Installer.
 HP Pavilion dv7
 ---------------
 
-Since Tails 1.3, gets stuck at the boot menu, whether Tails is installed manually or using
+Since Tails 1.3, gets stuck at the Boot Loader Menu, whether Tails is installed manually or using
 Tails Installer.
 
 HP ProBook
 ----------
 
-With UEFI enabled, when chosing a boot device, select `Boot From EFI File` and
+With UEFI enabled, when choosing a boot device, select `Boot From EFI File` and
 then `Filesystem Tails` and `EFI/BOOT/bootx64.efi`.
 
 That workaround applied to, at least, the following HP ProBook:
@@ -174,7 +175,7 @@ Does not start Tails 1.1 from USB installed manually in Linux.
 Lenovo IdeaPad z585
 -------------------
 
-Goes back continuously to boot menu on Tails installed on DVD.
+Goes back continuously to Boot Loader Menu on Tails installed on DVD.
 
 Clevo W258CU, ThinkPad X220, X121e, T420i, T410, T520, W520, T530, E325, and E530
 ---------------------------------------------------------------------------------
@@ -203,7 +204,7 @@ Mac
   <http://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
 * MacBook Pro 5,5 does not boot with Tails in UEFI mode.
 * MacBook Pro 5,1 17" (Nvidia GeForce 9400M): one must add the
-  `nouveau.noaccel=1` boot parameters so that the display
+  `nouveau.noaccel=1` boot parameter so that the display
   works properly.
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
@@ -211,6 +212,29 @@ Mac
 * Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and
   MacBook Pro 8,2 (late 2011) fail to boot from a USB stick created by
   Tails Installer.
+* MacBook Pro 6,2 fails to display <span class="application">Tails Greeter</span>.
+
+GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
+----------------------------------------------------------------------
+
+Some computers [[!tails_ticket 11095 desc="cannot start the GNOME
+desktop"]].
+
+After the <span class="application">Tails Greeter</span> they freeze, or
+sometimes fail with the message <span class="error">"Oh no! Something has gone
+wrong. A problem has occurred and the system can't recover. Please contact a
+system administrator"</span>.
+
+This issue has appeared with the following graphic adapters:
+
+- Mars XTX [Radeon HD 8790M]
+- Mars XTX [Radeon HD 8790M] (rev ff)
+- Cedar [Radeon HD 5000/6000 7350/8350 Series]
+- Broadway PRO [Mobility Radeon HD 5850]
+- RV730/M96 [Mobility Radeon HD 4650/5165]
+
+For some models, adding `radeon.modeset=0` to the
+[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
 
 <a id="switchable_graphics"></a>
 
@@ -231,7 +255,7 @@ There are two possible workarounds for this issue:
 * Expert Linux users can also do the following:
 
   1. Add the `i915.modeset=0 rootpw=pass` option in the
-     [[boot menu|doc/first_steps/startup_options#boot_menu]].
+     [[Boot Loader Menu|doc/first_steps/startup_options#boot_loader_menu]].
 
   2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
      following content:
@@ -252,6 +276,14 @@ There are two possible workarounds for this issue:
          sudo passwd
 
 For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
+
+Laptops with Intel 855GM graphic card
+-------------------------------------
+
+Laptops with graphic card Intel 855GM (as Dell Inspiron 510M)
+crash after Tails Greeter.
+
+See [[!tails_ticket 11096 desc="relevant ticket"]] for more information.
 
 <a id="chainloading"></a>
 
@@ -412,11 +444,11 @@ class="application">Tor Browser</span> inside and outside of Tails:
 Other issues
 ============
 
-Boot menu has display issues
-----------------------------
+Boot Loader Menu has display issues
+-----------------------------------
 
 Since Tails 1.1, on some hardware (ThinkPad X230, MacBook Pro 8,1),
-the boot menu is not displayed properly. Tails starts fine, though.
+the Boot Loader Menu is not displayed properly. Tails starts fine, though.
 
 Connecting to FTP servers is not possible
 -----------------------------------------
@@ -454,6 +486,11 @@ Touchpad configurations
     synclient FingerLow=1;
     synclient FingerHigh=1;
 
+### Acer C720 - Cypress APA Touchpad
+
+    synclient FingerLow=5;
+    synclient FingerHigh=5;
+
 Bluetooth devices don't work
 ----------------------------
 
@@ -471,6 +508,14 @@ translated in less languages than before. You can see the list of
 languages available in Tor Browser from the [Tor Browser
 homepage](https://www.torproject.org/projects/torbrowser.html.en).
 
+Playing WebM videos in the Tor Browser fails on old hardware
+------------------------------------------------------------
+
+On systems that only have one CPU code, WebM videos may fail to play
+in the Tor Browser, and show the error message: "Video can't be played
+because the file is corrupt". You can work around this by downloading
+the video and watching it in the Totem video player.
+
 <a id="automatic_upgrade_fails"></a>
 
 Tails does not boot after automatic upgrade
@@ -485,18 +530,6 @@ manually|doc/first_steps/upgrade/#manual]].
 
 Note that your Persistent Volume will be safely preserved.
 
-## Print preview is blank in Tor Browser
-
-Due to a [bug in Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1205598),
-its print preview is incompatible with the AppArmor confinement of Tor
-Browser in Tails.
-
-From the print preview, you can click
-<span class="guilabel">Print&hellip;</span> and choose
-<span class="guilabel">Print to File</span> in the list of printers to
-save it as a PDF file. Then you can open this PDF file from the file
-browser.
-
 Slow graphics operations with recent NVidia hardware
 ----------------------------------------------------
 
@@ -504,8 +537,8 @@ Graphics display operations are slow on computers with graphics
 adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
 GeForce GTX 960.
 
-This problem will likely be resolved once Tails
-[[!tails_ticket 10298 desc="includes a newer Linux kernel"]].
+This problem is likely resolved with Tails
+[[!tails_ticket 10298 desc="including a newer Linux kernel"]].
 
 <a id="restart-shell"></a>
 
@@ -520,4 +553,33 @@ be visible.
 Press <span class="keycap">Alt+F2</span> and type `r` to restart GNOME
 Shell, which often solves this problem.
 
-See [[!tails_ticket 10576]] and [[!tails_ticket 10807]] for more details.
+See [[!tails_ticket 10576]] for more details.
+
+Tor Browser search engine with security slider set to High requires a click
+---------------------------------------------------------------------------
+
+The custom search engine plugin shipped in Tails to localize the search engine
+in Tor Browser is still using disconnect.me, while upstream Tor Browser has
+switched to duckduckgo.com by default.
+
+Until we update the search engine plugin, users that set their Tor Browser
+security slider to High and use the search box in Tor Browser will end up after
+a redirection from disconnect.me on a page on duckduckgo.com asking them to
+click on a link to see their result without JavaScript.
+
+<a id="vb-apic"></a>
+
+Tails does not boot on Virtualbox 32-bit VM
+-------------------------------------------
+
+There is a [bug in Linux 4.7](https://patchwork.kernel.org/patch/9357253/)
+which prevents Tails from booting without I/O APIC enabled. To enable it:
+
+  1. Select the Tails virtual machine.
+  1. Choose <span class="menuchoice">
+     <span class="guimenu">Machine</span>&nbsp;▸
+     <span class="guimenuitem">Settings...</span></span>.
+  1. Select **System** in the left pane.
+  1. In the **Extended Features** section of the **Motherboard** tab, make
+     sure that **Enable I/O APIC** is enabled.
+  1. Click **OK**.

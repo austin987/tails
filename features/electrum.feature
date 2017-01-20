@@ -10,7 +10,7 @@ Feature: Electrum Bitcoin client
     But persistence for "electrum" is not enabled
     Then I see a warning that Electrum is not persistent
 
-  #10720: Tails Installer freezes on Jenkins
+  #11697
   @fragile
   Scenario: Using a persistent Electrum configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
@@ -21,7 +21,7 @@ Feature: Electrum Bitcoin client
     Then persistence for "electrum" is enabled
     When I start Electrum through the GNOME menu
     But a bitcoin wallet is not present
-    Then I am prompted to create a new wallet
+    Then I am prompted to configure Electrum
     When I create a new bitcoin wallet
     Then a bitcoin wallet is present
     And I see the main Electrum client window

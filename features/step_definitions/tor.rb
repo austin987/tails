@@ -256,7 +256,8 @@ def stream_isolation_info(application)
   when "Tor Browser"
     {
       :grep_monitor_expr => '/firefox\>',
-      :socksport => 9150
+      :socksport => 9150,
+      :controller => true,
     }
   when "Gobby"
     {
@@ -288,17 +289,19 @@ When /^I monitor the network connections of (.*)$/ do |application|
 end
 
 Then /^I see that (.+) is properly stream isolated$/ do |application|
-  expected_port = stream_isolation_info(application)[:socksport]
+  info = stream_isolation_info(application)
+  expected_ports = [info[:socksport]]
+  expected_ports << 9051 if info[:controller]
   assert_not_nil(@process_monitor_log)
   log_lines = $vm.file_content(@process_monitor_log).split("\n")
   assert(log_lines.size > 0,
          "Couldn't see any connection made by #{application} so " \
          "something is wrong")
   log_lines.each do |line|
-    addr_port = line.split(/\s+/)[4]
-    assert_equal("127.0.0.1:#{expected_port}", addr_port,
-                 "#{application} should use SocksPort #{expected_port} but " \
-                 "was seen connecting to #{addr_port}")
+    ip_port = line.split(/\s+/)[4]
+    assert(expected_ports.map { |port| "127.0.0.1:#{port}" }.include?(ip_port),
+           "#{application} should only connect to #{expected_ports} but " \
+           "was seen connecting to #{ip_port}")
   end
 end
 
@@ -393,22 +396,4 @@ When /^all Internet traffic has only flowed through the configured pluggable tra
   assert_all_connections(@sniffer.pcap_file) do |c|
     @bridge_hosts.include?({ address: c.daddr, port: c.dport })
   end
-end
-
-Then /^the Tor binary is configured to use the expected Tor authorities$/ do
-  tor_auths = Set.new
-  tor_binary_orport_strings = $vm.execute_successfully(
-    "strings /usr/bin/tor | grep -E 'orport=[0-9]+'").stdout.chomp.split("\n")
-  tor_binary_orport_strings.each do |potential_auth_string|
-    auth_regex = /^\S+ orport=\d+( bridge)?( no-v2)?( v3ident=[A-Z0-9]{40})? ([0-9\.]+):\d+( [A-Z0-9]{4}){10}$/
-    m = auth_regex.match(potential_auth_string)
-    if m
-      auth_ipv4_addr = m[4]
-      tor_auths << auth_ipv4_addr
-    end
-  end
-  expected_tor_auths = Set.new(TOR_AUTHORITIES)
-  assert_equal(expected_tor_auths, tor_auths,
-               "The Tor binary does not have the expected Tor authorities " +
-               "configured")
 end
