@@ -45,15 +45,22 @@ def pcap_connections_helper(pcap_file, opts = {})
       next if opts[:ignore_dhcp]
     end
 
-    connections << {
+    packet_info = {
       mac_saddr: eth_packet.eth_saddr,
       mac_daddr: eth_packet.eth_daddr,
       protocol: protocol,
-      saddr: ip_packet.ip_saddr,
-      daddr: ip_packet.ip_daddr,
       sport: sport,
       dport: dport,
     }
+    # It seems *Packet.parse can return nil despite *Packet.can_parse?
+    # returning true.
+    if ip_packet
+      packet_info[:saddr] = ip_packet.ip_saddr
+      packet_info[:daddr] = ip_packet.ip_daddr
+    else
+      puts "We were hit by #11508. PacketFu bug? Packet info: #{packet_info}"
+    end
+    connections << packet_info
   end
   connections.uniq.map { |p| OpenStruct.new(p) }
 end
