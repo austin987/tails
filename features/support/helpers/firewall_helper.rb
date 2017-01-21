@@ -65,15 +65,20 @@ def pcap_connections_helper(pcap_file, opts = {})
   connections.uniq.map { |p| OpenStruct.new(p) }
 end
 
+class FirewallAssertionFailedError < Test::Unit::AssertionFailedError
+end
+
 # These assertions are made from the perspective of the system under
 # testing when it comes to the concepts of "source" and "destination".
 def assert_all_connections(pcap_file, opts = {}, &block)
   all = pcap_connections_helper(pcap_file, opts)
   good = all.find_all(&block)
   bad = all - good
-  save_failure_artifact("Network capture", pcap_file) unless bad.empty?
-  assert(bad.empty?, "Unexpected connections were made:\n" +
-                     bad.map { |e| "  #{e}" } .join("\n"))
+  unless bad.empty?
+    raise FirewallAssertionFailedError.new(
+            "Unexpected connections were made:\n" +
+            bad.map { |e| "  #{e}" } .join("\n"))
+  end
 end
 
 def assert_no_connections(pcap_file, opts = {}, &block)
