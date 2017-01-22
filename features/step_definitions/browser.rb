@@ -107,6 +107,8 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   if browser == "Tor Browser"
     retry_method = method(:retry_tor)
+  elsif browser == "I2P Browser"
+    retry_method = method(:retry_i2p)
   else
     retry_method = Proc.new { |p, &b| retry_action(10, recovery_proc: p, &b) }
   end
