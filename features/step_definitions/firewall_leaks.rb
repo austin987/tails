@@ -1,5 +1,5 @@
 Then(/^the firewall leak detector has detected leaks$/) do
-  assert_raise(Test::Unit::AssertionFailedError) do
+  assert_raise(FirewallAssertionFailedError) do
     step 'all Internet traffic has only flowed through Tor'
   end
 end

@@ -45,17 +45,27 @@ def pcap_connections_helper(pcap_file, opts = {})
       next if opts[:ignore_dhcp]
     end
 
-    connections << {
+    packet_info = {
       mac_saddr: eth_packet.eth_saddr,
       mac_daddr: eth_packet.eth_daddr,
       protocol: protocol,
-      saddr: ip_packet.ip_saddr,
-      daddr: ip_packet.ip_daddr,
       sport: sport,
       dport: dport,
     }
+    # It seems *Packet.parse can return nil despite *Packet.can_parse?
+    # returning true.
+    if ip_packet
+      packet_info[:saddr] = ip_packet.ip_saddr
+      packet_info[:daddr] = ip_packet.ip_daddr
+    else
+      puts "We were hit by #11508. PacketFu bug? Packet info: #{packet_info}"
+    end
+    connections << packet_info
   end
   connections.uniq.map { |p| OpenStruct.new(p) }
+end
+
+class FirewallAssertionFailedError < Test::Unit::AssertionFailedError
 end
 
 # These assertions are made from the perspective of the system under
@@ -64,9 +74,11 @@ def assert_all_connections(pcap_file, opts = {}, &block)
   all = pcap_connections_helper(pcap_file, opts)
   good = all.find_all(&block)
   bad = all - good
-  save_failure_artifact("Network capture", pcap_file) unless bad.empty?
-  assert(bad.empty?, "Unexpected connections were made:\n" +
-                     bad.map { |e| "  #{e}" } .join("\n"))
+  unless bad.empty?
+    raise FirewallAssertionFailedError.new(
+            "Unexpected connections were made:\n" +
+            bad.map { |e| "  #{e}" } .join("\n"))
+  end
 end
 
 def assert_no_connections(pcap_file, opts = {}, &block)
