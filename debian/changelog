@@ -1,10 +1,10 @@
-tails (2.10) UNRELEASED; urgency=medium
+tails (2.10.1) UNRELEASED; urgency=medium
 
   * Dummy.
 
- -- anonym <anonym@riseup.net>  Fri, 13 Jan 2017 14:22:56 +0100
+ -- anonym <anonym@riseup.net>  Tue, 24 Jan 2017 14:01:50 +0100
 
-tails (2.10~rc1) unstable; urgency=medium
+tails (2.10) unstable; urgency=medium
 
   * Major new features and changes
     - Upgrade the Linux kernel to 4.8.0-0.bpo.2 (Closes: #11886).
@@ -26,11 +26,18 @@ tails (2.10~rc1) unstable; urgency=medium
         it possible to pass the listen port, and Tor control
         cookie/socket paths as arguments (Closes: #6742). We hear
         Whonix plan to use it! :)
-    - Upgrade Tor to 0.2.9.8-2~d80.jessie+1, the new stable series
+    - Upgrade Tor to 0.2.9.9-1~d80.jessie+1, the new stable series
       (Closes: #12012).
 
   * Security fixes
+    - Upgrade Tor Browser to 6.5 based on Firefox 45.7 (Closes: #12159)
     - Upgrade Icedove to 1:45.6.0-1~deb8u1+tail1s.
+    - Upgrade bind9-packages to 1:9.9.5.dfsg-9+deb8u9.
+    - Upgrade pcscd to 1.8.13-1+deb8u1.
+    - Upgrade libgd3 to 2.1.0-5+deb8u8.
+    - Upgrade libxml2 to 2.9.1+dfsg1-5+deb8u4.
+    - Upgrade tor to 0.2.9.9-1~d80.jessie+1.
+    - Upgrade samba-libs to 2:4.2.14+dfsg-0+deb8u2.
 
   * Minor improvements
     - Enable and use the Debian Jessie proposed-updates APT
@@ -74,6 +81,16 @@ tails (2.10~rc1) unstable; urgency=medium
     - Drop kernel.dmesg_restrict customization: it's enabled by
       default since 4.8.4-1~exp1 (Closes: #11886).
     - Upgrade Electrum to 2.7.9-1.
+    - Make the Electrum proxy configuration apply after upgrading to
+      2.7.9-1. These changes incidentally makes Electrum behave nicer:
+      users will now not be presented the network configuration part
+      of the setup wizard -- a server will be picked randomly, and
+      Electrum will auto-connect. The automated test suite is adjusted
+      accordingly (Closes: #12140).
+    - Remove unused Browser profile seed file localstore.rdf which was
+      made obsolete in Firefox 34.
+    - Tor Browser: switch from pt-PT to pt-BR langpack. The upstream
+      Tor Browser did this in version 6.5 (Refs: #12159).
 
   * Bugfixes
     - Tails Greeter:
@@ -92,6 +109,14 @@ tails (2.10~rc1) unstable; urgency=medium
     - Fix firewall startup during early boot, by referring to the
       "amnesia" user via its UID (Closes: #7018).
     - Include all amd64-microcodes.
+    - refresh-translations: ignore
+      config/chroot_local-includes/usr/share/doc/tails/website/.
+      Otherwise, if the website has been built already, PO tools
+      complain that there are files with translatable strings in
+      there, which are not listed in POTFILES.in.
+    - Make uBlock Origin's button appear on first run. Otherwise it
+      will only appear on browser runs after the first one. This bug
+      also affected Adblock Plus (Closes: #12145).
 
   * Build system
     - Be more careful when unmounting the tmpfs used as workspace
@@ -100,6 +125,13 @@ tails (2.10~rc1) unstable; urgency=medium
     - Upgrade the Vagrant basebox to 20170105. The only big change is
       that we now install the backported kernel in the builder VM, to
       make building possible on Debian Sid (Closes: #12081).
+    - Ensure the VirtualBox guest DKMS modules are built for the
+      kernel we want them for. In some situations, depending on the
+      version of the running kernel, the modules would not be built
+      for the 686 kernel, which is the one that needs the VirtualBox
+      guest modules.  This commit ensures the VirtualBox guest modules
+      are built and installed regardless of the how the build
+      environment looks like (Closes: #12139).
 
   * Test suite
     - Replace the filesystem shares support with a helper for easily
@@ -115,8 +147,28 @@ tails (2.10~rc1) unstable; urgency=medium
       the real Tor network (Refs: #11556).
     - Allow connections to Tor's control port during stream isolation
       tests, but only for those applications where we expect that.
+    - Fix Electrum tests after upgrading to 2.7.9-1.
+    - Make encryption.feature pass for Tails 2.10~rc1.
+    - Adapt tests after the Donation campaign was disabled (Refs:
+      #12134).
+    - Fix 'The "Tails documentation" link on the Desktop works'
+      scenario. The TailsOfflineDocHomepage.png image doesn't match
+      what we see any more (I have no clue why), so let's use Dogtail
+      and solve this once and for all, hopefully.
+    - Work around Tails freezing during memory wiping. These
+      workarounds should be reverted once #11786 is fixed
+      properly. (Refs: #10776, #11786)
+    - Support both xtigervncviewer and xtightvncviewer for --view.
+      xtightvncviewer is a transitional package in Sid, which depends
+      on tigervnc-viewer (which ships xtigervncviewer), so by keeping
+      the dep and supporting both binaries, --view will work on both
+      Sid and Jessie (Closes: #12129).
+    - Test suite: bump image after upgrading to Tor Browser 6.5 (Refs:
+      #12159).
+    - Add debugging info for when PacketFu misbehaves, and be more
+      careful when to save pcap artifacts (Refs: #11508).
 
- -- Tails Developers <tails@boum.org>  Thu, 12 Jan 2017 23:50:39 +0100
+ -- Tails developers <tails@boum.org>  Mon, 23 Jan 2017 11:38:37 +0100
 
 tails (2.9.1) unstable; urgency=medium
 
