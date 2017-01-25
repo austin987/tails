@@ -481,7 +481,7 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         for filter_file in glob.glob('/etc/tor-controlport-filter.d/*.yml'):
             try:
                 with open(filter_file, "rb") as fh:
-                    filters = yaml.load(fh.read())
+                    filters = yaml.safe_load(fh.read())
                     name = re.sub(r'\.yml$', '', os.path.basename(filter_file))
                     for filter_ in filters:
                         if name not in filter_:
