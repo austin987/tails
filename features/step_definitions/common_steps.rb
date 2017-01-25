@@ -716,7 +716,7 @@ end
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
   app = Dogtail::Application.new('gnome-shell')
   for element in ['Applications', submenu, app_name] do
-    app.child(element, roleName: 'label').click
+    app.child(element, roleName: 'label', showingOnly: true).click
   end
 end
 
