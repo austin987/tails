@@ -106,7 +106,7 @@ Feature: Browsing the web using the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I double-click on the "Tails documentation" link on the Desktop
     Then the Tor Browser has started
-    And I see "TailsOfflineDocHomepage.png" after at most 10 seconds
+    And "Tails - Getting started..." has loaded in the Tor Browser
 
   Scenario: The Tor Browser uses TBB's shared libraries
     Given I have started Tails from DVD and logged in and the network is connected

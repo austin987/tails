@@ -1,6 +1,6 @@
 // As suggested in TBB's start-tor-browser script for system-wide Tor
 // instances
-pref("extensions.torbutton.banned_ports", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9061,9062,9150,9052");
+pref("extensions.torbutton.banned_ports", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9061,9062,9150,9051");
 pref("extensions.torbutton.custom.socks_host", "127.0.0.1");
 pref("extensions.torbutton.custom.socks_port", 9150);
 pref("extensions.torbutton.launch_warning",  false);
@@ -10,28 +10,12 @@ pref("extensions.torbutton.use_privoxy", false);
 
 // Tails-specific configuration below
 
-// Disable the Tor Browser's per-tab circuit view. It demands more
-// from the Tor control port than our tor-controlport-filter currently
-// handles (concurrent, asynchronous connections). Besides, not
-// exposing the stream/circuit level info to the browser (or user
-// running as the browser) is a nice hardening feature, and part of
-// why we introduced the control port filter in the first place.
-pref("extensions.torbutton.display_circuit", false);
-
 // Since the slider notification will be shown everytime at each Tails
 // boot, which is bad (nagging) UX, we disable it.
 pref("extensions.torbutton.show_slider_notification", false);
 
 // Disable the Tor Browser's automatic update checking
 pref("app.update.enabled", false);
-
-// Adblock Plus preferences
-pref("extensions.adblockplus.correctTypos", false);
-pref("extensions.adblockplus.currentVersion", "2.7.3");
-pref("extensions.adblockplus.savestats", false);
-pref("extensions.adblockplus.showinaddonbar", false);
-pref("extensions.adblockplus.showintoolbar", false);
-pref("extensions.adblockplus.subscriptions_autoupdate", false);
 
 // Suppress prompt and always spoof useragent as English
 pref("extensions.torbutton.spoof_english", true);
@@ -52,7 +36,11 @@ pref("extensions.torbutton.startup", true);
 pref("extensions.torbutton.startup_state", 1);
 pref("extensions.torbutton.test_enabled", false); // Tails-specific
 pref("extensions.torbutton.tor_memory_jar", true);
-pref("extensions.torbutton.control_port", 9052);
+pref("extensions.torbutton.control_port", 9051);
+
+// Not setting this prevents some add-on GUI elements from appearing
+// on the first run of the browser, e.g. uBlock Origin's button.
+pref("extensions.torbutton.inserted_button", true);
 
 // These must be set to the same value to prevent Torbutton from
 // flashing its upgrade notification.
@@ -103,7 +91,7 @@ pref("browser.download.panel.shown", true);
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
 
-// AdBlock Plus and the amnesia branding extensions are not signed and
+// uBlock Origin and the amnesia branding extensions are not signed and
 // therefore disabled by default for FF 45+ *unless* we set this
 // option. This is only a temporary stop gap. See #11419.
 pref("xpinstall.signatures.required", false);
