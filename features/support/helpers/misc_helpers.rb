@@ -266,7 +266,14 @@ def info_log_artifact_location(type, path)
   info_log("#{type.capitalize}: #{path}")
 end
 
+def notify_user(message)
+  alarm_script = $config['NOTIFY_USER_COMMAND']
+  return if alarm_script.nil? || alarm_script.empty?
+  cmd_helper(alarm_script.gsub('%m', message))
+end
+
 def pause(message = "Paused")
+  notify_user(message)
   STDERR.puts
   STDERR.puts message
   STDERR.puts
