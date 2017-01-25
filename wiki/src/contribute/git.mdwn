@@ -313,10 +313,53 @@ at <https://git-tails.immerda.ch/>. Here is how to get it created.
    - who else needs write access to the repository, plus their SSH RSA
      public key.
 
-Once your repository has been created, see:
+Once your repository has been created, clone it:
 
-* [[addresses for Git clone and web access|contribute/git#other-repositories]]
-* [[immerda's documentation|contribute/git#immerda]]
+* If you want to encrypt the content of your new Git repository with
+  OpenPGP, go through some arcane
+  [[initialization ritual|contribute/git#initialize-git-remote-gcrypt]]
+  to reach wisdom, bliss and enlightenment.
+* Otherwise (lucky you!), see:
+  - [[addresses for Git clone and web access|contribute/git#other-repositories]]
+  - [[immerda's documentation|contribute/git#immerda]].
+
+<a id="initialize-git-remote-gcrypt"></a>
+
+Initializing a git-remote-gcrypt repository
+===========================================
+
+Clone the new, empty repository in a way that tells Git it's going to
+be encrypted:
+
+	git clone gcrypt::tails@git-tails.immerda.ch:$REPOSITORY
+
+Change directory into the newly cloned repository:
+
+	cd $REPOSITORY
+
+Decide whether you want to hide to the immerda administrators which
+OpenPGP keys this repository will be encrypted for (note that this has
+severe usability drawbacks). Skip to the next step if you really want
+that. Otherwise:
+
+	git config gcrypt.publish-participants true
+
+Tell Git which OpenPGP keys the repository will be encrypted for:
+
+	git config gcrypt.participants "LIST OF OPENPGP FINGERPRINTS"
+
+Write some setup instructions for your team-mates, e.g. copy and
+paste the `git config` command(s) you have just run:
+
+	editor README
+
+Add these setup instructions to the repository and commit:
+
+	git add README && git commit -m 'Add setup documentation.'
+
+Push:
+
+	git push -u origin master
 
 Troubleshooting
 ===============
