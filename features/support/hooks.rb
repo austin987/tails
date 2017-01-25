@@ -244,6 +244,11 @@ After('@product') do |scenario|
     info_log("Scenario failed at time #{elapsed}")
     screen_capture = @screen.capture
     save_failure_artifact("Screenshot", screen_capture.getFilename)
+    if scenario.exception.kind_of?(FirewallAssertionFailedError)
+      Dir.glob("#{$config["TMPDIR"]}/*.pcap").each do |pcap_file|
+        save_failure_artifact("Network capture", pcap_file)
+      end
+    end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
       artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")

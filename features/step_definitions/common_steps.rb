@@ -558,7 +558,7 @@ Then /^Tails eventually (shuts down|restarts)$/ do |mode|
       end
     else
       if mode == 'restarts'
-        @screen.find('TailsBootSplash.png')
+        @screen.find('TailsGreeter.png')
         true
       else
         ! $vm.is_running?
