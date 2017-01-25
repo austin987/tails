@@ -163,6 +163,7 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
         true
       end
     end
+    true
   end
   # The account isn't fully created before we fetch our mail. For
   # instance, if we'd try to send an email before this, yet another
