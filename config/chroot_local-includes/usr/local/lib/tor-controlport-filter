@@ -122,14 +122,17 @@
 # clients.
 
 import argparse
+import fcntl
 import glob
 import ipaddress
 import os.path
 import psutil
 import re
+import socket
 import socketserver
 import stem
 import stem.control
+import struct
 import sys
 import textwrap
 import yaml
@@ -177,6 +180,15 @@ def exe_path_of_pid(pid):
             return exe_path_match.group(1)
         else:
             return psutil.Process(pid).exe()
+
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', bytes(ifname[:15], 'utf-8'))
+    )[20:24])
 
 
 class FilteredControlPortProxySession:
@@ -662,6 +674,12 @@ def main():
              "(default: {})".format(DEFAULT_LISTEN_PORT)
     )
     parser.add_argument(
+        "--listen-interface",
+        type=str, metavar='INTERFACE',
+        help="specifies the interface on which the server listens " +
+             "(default: NULL)"
+    )
+    parser.add_argument(
         "--control-cookie-path",
         type=str, metavar='PATH', default=DEFAULT_COOKIE_PATH,
         help="specifies the path to Tor's control authentication cookie " +
@@ -694,7 +712,14 @@ def main():
     global_args.__dict__['print_requests'] = global_args.complain or \
                                              global_args.debug
     global_args.__dict__['print_responses'] = global_args.debug
-    address = (global_args.listen_address, global_args.listen_port)
+    if global_args.listen_interface:
+        ip_address = get_ip_address(global_args.listen_interface)
+        if global_args.debug:
+            log("IP address for interface {} : {}".format(
+                global_args.listen_interface,ip_address))
+    else:
+        ip_address = global_args.listen_address
+    address = (ip_address, global_args.listen_port)
     server = FilteredControlPortProxy(address, FilteredControlPortProxyHandler)
     log("Tor control port filter started, listening on {}:{}".format(*address))
     try:
