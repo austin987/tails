@@ -7,6 +7,12 @@ module RemoteShell
   class ServerFailure < StandardError
   end
 
+  # This exception is *only* supposed to be use internally in
+  # communicate() -- in particular it must not be raised by a
+  # Timeout.timeout() wrapping around communicate() or any use of it.
+  class SocketReadTimeout < Exception
+  end
+
   # Used to differentiate vs Timeout::Error, which is thrown by
   # try_for() (by default) and often wraps around remote shell usage
   # -- in that case we don't want to catch that "outer" exception in
@@ -22,7 +28,7 @@ module RemoteShell
 
   def communicate(vm, *args, **opts)
     opts[:timeout] ||= DEFAULT_TIMEOUT
-    socket = TCPSocket.new('127.0.0.1', vm.get_remote_shell_port)
+    socket = UNIXSocket.new(vm.remote_shell_socket_path)
     id = (@@request_id += 1)
     # Since we already have defined our own Timeout in the current
     # scope, we have to be more careful when referring to the Timeout
@@ -33,7 +39,7 @@ module RemoteShell
       socket.flush
       loop do
         line = socket.readline("\n").chomp("\n")
-        response_id, status, *rest = JSON.parse(line)
+        response_id, status, *rest = JSON.load(line)
         if response_id == id
           if status != 'success'
             # rubocop:disable Style/GuardClause

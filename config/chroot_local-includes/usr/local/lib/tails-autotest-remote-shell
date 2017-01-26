@@ -10,7 +10,6 @@ import io
 import json
 import os
 import pwd
-import serial
 import signal
 import subprocess
 import sys
@@ -18,7 +17,7 @@ import systemd.daemon
 import textwrap
 import traceback
 
-REMOTE_SHELL_DEV = '/dev/ttyS0'
+REMOTE_SHELL_DEV = '/dev/virtio-ports/org.tails.remote_shell.0'
 
 
 def mk_switch_user_fn(user):
@@ -123,15 +122,44 @@ def run_cmd_as_user(cmd, user):
 
 
 def main():
-    port = serial.Serial(port = REMOTE_SHELL_DEV, baudrate = 4000000)
     python_sessions = dict()
+    fd = os.open(REMOTE_SHELL_DEV, os.O_RDWR)
+    port = open(fd, 'wb+', buffering=0)
+    # In order to avoid busy-waiting when polling the above character
+    # device for new data sent from clients, we borrow the approach used
+    # by python-negotiator (https://github.com/xolox/python-negotiator):
+    # We add O_ASYNC so a SIGIO signal is sent to us whenever data is
+    # ready to be read from the device.
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_ASYNC)
+    fcntl.fcntl(fd, fcntl.F_SETOWN, os.getpid())
+    # By default receiving a SIGIO terminates the process so we override
+    # it to do nothing instead.
+    signal.signal(signal.SIGIO, lambda *args: None)
 
     # Notify systemd that we're ready
     systemd.daemon.notify('READY=1')
     systemd.daemon.notify('STATUS=Processing requests...\n')
 
     while True:
+        # We can avoid an unnecessary delay of up to one second during the
+        # first iteration of this loop; if a client sends a request
+        # before we run SETOWN above, the expected signal never
+        # reaches us, and we enter the loop and pass through the
+        # conditional doomed to a full second of mournful waiting
+        # for this lost signal. :_( By trying to read before we do a
+        # timed wait for the signal, this delay is avoided.
         line = port.readline().decode('utf-8')
+        if line == "":
+            # In case the SIGIO gets lost for whatever reason
+            # (e.g. the one mentioned above), let's always poll at
+            # least once every second.
+            try:
+                signal.sigtimedwait([signal.SIGIO], 1)
+            except InterruptedError:
+                # Thrown if any other signal is received.
+                pass
+            continue
         try:
             id, cmd_type, *rest = json.loads(line)
             ret = ""
@@ -172,7 +200,13 @@ def main():
             else:
                 raise ValueError("unknown command type")
             response = (ret + "\n").encode('utf-8')
-            port.write(response)
+            # We can only write 2**15 bytes at a time to the virtio channel
+            # (seems to only affect the guest -> host direction).
+            chunk_size = 2**15
+            chunks = (response[0+i:chunk_size+i] for i in \
+                      range(0, len(response), chunk_size))
+            for chunk in chunks:
+                port.write(chunk)
             port.flush()
         except Exception as e:
             print("Error caught while processing line:", file=sys.stderr)
