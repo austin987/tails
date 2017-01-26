@@ -13,6 +13,14 @@ def icedove_wizard
   icedove_app.child('Mail Account Setup', roleName: 'frame')
 end
 
+def icedove_inbox
+  folder_view = icedove_main.child($config['Icedove']['address'],
+                                   roleName: 'table row').parent
+  folder_view.children(roleName: 'table row', recursive: false).find do |e|
+    e.name.match(/^Inbox( .*)?$/)
+  end
+end
+
 When /^I start Icedove$/ do
   workaround_pref_lines = [
     # When we generate a random subject line it may contain one of the
@@ -208,12 +216,7 @@ end
 Then /^I can find the email I sent to myself in my inbox$/ do
   recovery_proc = Proc.new { step 'I fetch my email' }
   retry_tor(recovery_proc) do
-    folder_view = icedove_main.child($config['Icedove']['address'],
-                                     roleName: 'table row').parent
-    inbox = folder_view.children(roleName: 'table row', recursive: false).find do |e|
-      e.name.match(/^Inbox( .*)?$/)
-    end
-    inbox.click
+    icedove_inbox.click
     filter = icedove_main.child('Filter these messages <Ctrl+Shift+K>',
                                 roleName: 'entry')
     filter.typeText(@subject)
@@ -231,4 +234,19 @@ Then /^I can find the email I sent to myself in my inbox$/ do
     the_message.click
     inbox_view.button('Delete').click
   end
+end
+
+Then /^my Icedove inbox is non-empty$/ do
+  icedove_inbox.click
+  # The button is located on the first row in the message list, the
+  # one that shows the column labels (Subject, From, ...).
+  message_list = icedove_main.child('Select columns to display',
+                                    roleName: 'push button')
+                 .parent.parent
+  visible_messages = message_list.children(recursive: false,
+                                           roleName: 'table row')
+  # The first element is the column label row, which is not a message,
+  # so let's remove it.
+  visible_messages.shift
+  assert(visible_messages.size > 0)
 end

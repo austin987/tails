@@ -56,12 +56,6 @@ Pre-freeze
 The [[contribute/working_together/roles/release_manager]] role
 documentation has more tasks that should be done early enough.
 
-Update Tor Browser preferences
-------------------------------
-
-* update `extensions.adblockplus.currentVersion` in
-  `config/chroot_local-includes/etc/tor-browser/profile/preferences/0000tails.js`
-
 Update Icedove preferences
 ------------------------------
 
@@ -145,26 +139,34 @@ Reset the release branch's `config/base_branch`:
 Update included files
 =====================
 
-AdBlock patterns
+uBlock patterns and settings file
 ----------------
 
-Patterns are stored in
-`config/chroot_local-includes/etc/tor-browser/profile/adblockplus/`.
+The patterns+settings file is stored as a converted sqlite text dump in
+`config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump`.
 
 1. Boot Tails
-2. Start the tor Browser and open *Tools* → *Addons*
-3. Select *Adblock Plus* in extensions
-4. Open *Preferences* → *Filter preferences…*
-5. For each filters, click *Actions* → *Update filters*
-6. Close the Tor Browser
-7. Copy the `.tor-browser/profile.default/adblockplus/patterns.ini` from
-   this Tor Browser instance to the
-   `config/chroot_local-includes/etc/tor-browser/profile/adblockplus`
-   directory in the Tails Git checkout.
+2. Start the Tor Browser and open the uBlock dashboard by clicking on the uBlock icon.
+3. Select the tab *3rd-party filters*
+4. Click on the button *Update now* to update all used patterns
+5. Close the Tor Browser
+7. Copy the `.tor-browser/profile.default/extension-data/ublock0.sqlite`
+   from this Tor Browser instance into the root of Tails' Git repo and
+   run the following command:
+
+       echo '.dump' | sqlite3 ublock0.sqlite | \
+           grep -v "cached_asset_content://cache://compiled-" | \
+           awk '!/^INSERT/; /^INSERT/ {print $0 | "sort -n"}' | \
+           sed 's_\\n_\\n\r\n_g' | \
+           sed "/^INSERT INTO \"settings\" VALUES('\(remoteBlacklists\|cached_asset_entries\)'/"'s_,_,\r\n_g' > \
+           config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
+
 8. Commit:
 
-       git commit -m 'Update AdBlock Plus patterns.' \
-          config/chroot_local-includes/etc/tor-browser/profile/adblockplus/patterns.ini
+       git commit -m 'Update uBlock Origin patterns + settings file.' \
+          config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
+
+9. Remove the original `ublock0.sqlite` from the Git root.
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -537,8 +539,11 @@ suite should be ready, so it is time to:
 * build the final image!
 
 * compare the new build manifest with the one from the previous,
-  almost final build; they should be identical (XXX: except for
-  the `debian-security` serial, right?).
+  almost final build; they should be identical, except that the
+  `debian-security` serial/reference might be higher. To ensure we get
+  the final build's .build-manufest, please run:
+
+      export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-i386-${VERSION:?}.iso.build-manifest"
 
 * check out the release branch again:
 
@@ -588,12 +593,16 @@ Prepare incremental upgrades
 Build the Incremental Upgrade Kits
 ----------------------------------
 
+Incremental upgrades may be skipped if the delta is too big (like when
+migrating to a new Debian release) or if there are changes outside of
+the scope for IUKs (like partition table changes). Use common sense!
+
 Use `tails-create-iuk` to build the following IUKs:
 
-* From the previous stable release, e.g. 1.0 to 1.0.1 or 1.0 to
-  1.0.1~rc1. This may be skipped if the delta is too big (like when
-  migrating to a new Debian release) or if there are changes outside
-  of the scope for IUKs (like partition table changes).
+* From the two previous *planned* releases, and any emergency releases
+  in between and after. This should be, more or less, all releases for
+  the last 12 weeks (although irregularities in Firefox release
+  schedule may add or remove a few weeks).
 
 * From the last RC for the version being released, e.g. 1.0~rc1 to
   1.0. This should be done even if there was no IUK generated from the
@@ -601,16 +610,19 @@ Use `tails-create-iuk` to build the following IUKs:
   that'll be used for the incremental upgrade paths to the
   next version.
 
-Example (for RC, replace `${PREVIOUS_VERSION:?}` with e.g. `${VERSION:?}~rc1`
-below):
+Include each such version in a white-space separated list called
+`IUK_SOURCE_VERSIONS`, (e.g. `IUK_SOURCE_VERSIONS="2.8 2.9 2.9.1 2.10~rc1"`)
+and run the following:
 
-    sudo su -c "cd ${IUK_CHECKOUT:?} && \
-      PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
-        ./bin/tails-create-iuk \
-           --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
-           --old-iso \"${ISOS:?}/tails-amd64-${PREVIOUS_VERSION:?}/tails-amd64-${PREVIOUS_VERSION:?}.iso\" \
-           --new-iso \"${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso\"          \
-           --outfile \"${ISOS:?}/Tails_amd64_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk\""
+    for source_version in ${IUK_SOURCE_VERSIONS}; do
+        sudo su -c "cd ${IUK_CHECKOUT:?} && \
+          PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
+            ./bin/tails-create-iuk \
+               --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
+               --old-iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
+               --new-iso \"${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso\"          \
+               --outfile \"${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\""
+    done
 
 Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
@@ -668,7 +680,7 @@ Prepare upgrade-description files
    * If preparing a release candidate, add `--channel alpha`
    * If preparing a release candidate, drop all `--next-version`
      arguments, and instead pass (**untested!**)
-     `--next-version $(echo ${VERSION:?} | sed -e 's,~rc*$,,')`
+     `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
    * If preparing a point-release, pass neither
      `--next-version "${VERSION:?}.1"`,
      nor `--next-version "${VERSION:?}.1~rc1"`
@@ -985,7 +997,8 @@ Wait for the HTTP mirrors to catch up
 
 Test downloading the ISO and IUK over HTTP.
 
-Make sure every active mirror in the pool has the new version:
+Make sure every active mirror in the pool has the new version (when
+releasing an RC, add `--channel alpha`):
 
 	./check-mirrors.rb --allow-multiple --fast tails-amd64-${VERSION:?}
 

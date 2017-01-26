@@ -7,18 +7,19 @@ Feature: Installing packages through APT
 
   Scenario: APT sources are configured correctly
     Given I have started Tails from DVD without network and logged in
-    Then the only hosts in APT sources are "ftp.us.debian.org,security.debian.org,deb.tails.boum.org,deb.torproject.org"
+    Then the only hosts in APT sources are "vwakviie2ienjx6t.onion,sgvtcaew4bxjd7ln.onion,jenw7xbd6tf7vfhp.onion,sdscoq7snqtznauu.onion"
 
   @check_tor_leaks
   Scenario: Install packages using apt
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
+    When I configure APT to use non-onion sources
     And I update APT using apt
-    When I install "cowsay" using apt
-    Then the package "cowsay" is installed
+    Then I should be able to install a package using apt
 
   @check_tor_leaks
   Scenario: Install packages using Synaptic
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
+    When I configure APT to use non-onion sources
     And I start Synaptic
     And I update APT using Synaptic
     When I install "cowsay" using Synaptic

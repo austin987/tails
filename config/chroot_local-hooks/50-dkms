@@ -16,6 +16,15 @@ apt-get install --yes \
     aufs-dkms \
     virtualbox-guest-dkms
 
+MODULES_VERSION="$(dpkg-query -W -f='${Version}\n' virtualbox-guest-dkms \
+		       | sed -E 's,-.*,,')"
+dkms build \
+    -a i386 -k "${KERNEL_VERSION}-686" \
+    -m virtualbox-guest -v "$MODULES_VERSION"
+dkms install \
+    -a i386 -k "${KERNEL_VERSION}-686" \
+    -m virtualbox-guest -v "$MODULES_VERSION"
+
 # clean the build directory
 # rm -r /var/lib/dkms/virtualbox-guest/
 

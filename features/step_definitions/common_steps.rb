@@ -400,7 +400,7 @@ end
 Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - Dear Tails user'
+    title = 'Tails - News'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
@@ -507,12 +507,14 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  # Work around Tails bug #11730, where something goes wrong when we
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+  timeout = nr_gibs_of_ram*5*60
+  # Work around Tails bug #11786, where something goes wrong when we
   # kexec to the new kernel for memory wiping and gets dropped to a
   # BusyBox shell instead.
-  try_for(memory_wipe_timeout) do
-    if @screen.exists('TailsBug11730.png')
-      puts "We were hit by bug #11730: memory wiping got stuck"
+  try_for(timeout) do
+    if @screen.existsAny(['TailsBug11786a.png', 'TailsBug11786b.png'])
+      puts "We were hit by bug #11786: memory wiping got stuck"
       if mode == 'restarts'
         $vm.reset
       else
@@ -520,7 +522,7 @@ Then /^Tails eventually (shuts down|restarts)$/ do |mode|
       end
     else
       if mode == 'restarts'
-        @screen.find(boot_menu_tab_msg_image)
+        @screen.find('TailsGreeter.png')
         true
       else
         ! $vm.is_running?
