@@ -166,7 +166,7 @@ security critical bugs were fixed.
 
 # APT (automate: [[!tails_ticket 8164 desc="#8164"]])
 
-     grep -r deb.tails.boum.org /etc/apt/sources.list*
+     grep -r jenw7xbd6tf7vfhp.onion /etc/apt/sources.list*
 
 * Make sure the Tails repository suite in matching the release tag (for example
   the release version number) is in APT sources.
@@ -305,13 +305,16 @@ language. You *really* have to reboot between each language.
   browser. Verify that you can install the Firefox Addon. Start
   downloading a Tails image and copy the used mirror URL.
   - The URL should only start with dl.amnesia.boum.org if Javascript
-    is disabled in your browser. Otherwise it should contain a mirror
-    URL from <https://tails.boum.org/mirrors.json>
+    is disabled in your browser (requires a restart!). Otherwise it should
+    contain a mirror URL from <https://tails.boum.org/mirrors.json>
   - Verify that pausing and resuming the download from this URL works.
   - Verify that when you start the download, you can see it appear in
     the download list (Ctrl+Shift+Y).
 * Test a disabled mirror (Possible only in FF > 51 because of
   <https://bugzilla.mozilla.org/show_bug.cgi?id=1275289>.)
+  - Disabled mirrors have `"weight": 0` in
+    https://tails.boum.org/mirrors.json so just pick one of them. If
+    there's none, skip this test.
   - Do not use Firefox over Tor.
   - To disable Firefox's internal DNS cache, navigate to
     `about:config` and set these prefererences:
@@ -325,6 +328,10 @@ language. You *really* have to reboot between each language.
     used mirror to 127.0.0.1.
   - Now reload the download page, and try to resume the download
     again.
+    XXX: How is it ensured that the disabled mirror we picked above is
+    used?
   - In the Firefox console (Ctrl+Shift+J) you should see the
-    `mirror.blob` variable pointing to a different mirror. This
-    should work.
+    `mirror.blob` variable pointing to a different mirror. This should
+    work.
+    XXX: Please provide more instructions for how to find this
+    variable, possibly with a (large but shortened) example.

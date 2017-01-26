@@ -79,3 +79,12 @@ no_abort() {
     fi
     return 0
 }
+
+is_package_installed() {
+    local package_name package_status
+    package_name="${1}"
+    package_status="$(no_abort dpkg-query --show \
+                      --showformat='${db:Status-Status}' "${package_name}" \
+                      2>/dev/null)"
+    [ "${package_status}" = "installed" ]
+}
