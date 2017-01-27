@@ -80,7 +80,9 @@ def debug_log(message, options = {})
   options[:timestamp] = true unless options.has_key?(:timestamp)
   if $debug_log_fns
     if options[:timestamp]
-      elapsed = (Time.now - TIME_AT_START.to_f - 3600).strftime("%H:%M:%S.%9N")
+      # Force UTC so the local timezone difference vs UTC won't be
+      # added to the result.
+      elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime("%H:%M:%S.%9N")
       message = "#{elapsed}: #{message}"
     end
     $debug_log_fns.each { |fn| fn.call(message, options) }
