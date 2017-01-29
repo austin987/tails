@@ -77,7 +77,16 @@ def info_log(message = "", options = {})
 end
 
 def debug_log(message, options = {})
-  $debug_log_fns.each { |fn| fn.call(message, options) } if $debug_log_fns
+  options[:timestamp] = true unless options.has_key?(:timestamp)
+  if $debug_log_fns
+    if options[:timestamp]
+      # Force UTC so the local timezone difference vs UTC won't be
+      # added to the result.
+      elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime("%H:%M:%S.%9N")
+      message = "#{elapsed}: #{message}"
+    end
+    $debug_log_fns.each { |fn| fn.call(message, options) }
+  end
 end
 
 require 'cucumber/formatter/pretty'
