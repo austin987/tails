@@ -558,7 +558,7 @@ Then /^Tails eventually (shuts down|restarts)$/ do |mode|
       end
     else
       if mode == 'restarts'
-        @screen.find('TailsBootSplash.png')
+        @screen.find('TailsGreeter.png')
         true
       else
         ! $vm.is_running?
@@ -638,11 +638,10 @@ method=auto
 [ipv4]
 method=auto
 EOF
-  con_content.split("\n").each do |line|
-    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
-  end
+  tmp_path = "/tmp/NM.#{con_name}"
+  $vm.file_overwrite(tmp_path, con_content)
   con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
+  $vm.execute("install -m 0600 '#{tmp_path}' '#{con_file}'")
   $vm.execute_successfully("nmcli connection load '#{con_file}'")
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
