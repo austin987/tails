@@ -452,7 +452,7 @@ EOF
 
   def execute(cmd, options = {})
     options[:user] ||= "root"
-    options[:spawn] ||= false
+    options[:spawn] = false unless options.has_key?(:spawn)
     if options[:libs]
       libs = options[:libs]
       options.delete(:libs)
@@ -463,7 +463,7 @@ EOF
       cmds << cmd
       cmd = cmds.join(" && ")
     end
-    return VMCommand.new(self, cmd, options)
+    return RemoteShell::Command.new(self, cmd, options)
   end
 
   def execute_successfully(*args)
@@ -482,7 +482,12 @@ EOF
   end
 
   def wait_until_remote_shell_is_up(timeout = 90)
-    VMCommand.wait_until_remote_shell_is_up(self, timeout)
+    msg = 'hello?'
+    try_for(timeout, :msg => "Remote shell seems to be down") do
+      Timeout::timeout(3) do
+        execute_successfully("echo '#{msg}'").stdout.chomp == msg
+      end
+    end
   end
 
   def host_to_guest_time_sync
@@ -540,27 +545,24 @@ EOF
     execute("test -d '#{directory}'").success?
   end
 
-  def file_content(file, user = 'root')
-    # We don't quote #{file} on purpose: we sometimes pass environment variables
-    # or globs that we want to be interpreted by the shell.
-    cmd = execute("cat #{file}", :user => user)
-    assert(cmd.success?,
-           "Could not cat '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
-    return cmd.stdout
+  def file_open(path)
+    f = RemoteShell::File.new(self, path)
+    yield f if block_given?
+    return f
   end
 
-  def file_append(file, lines, user = 'root')
+  def file_content(path)
+    file_open(path) { |f| return f.read() }
+  end
+
+  def file_overwrite(path, lines)
     lines = lines.join("\n") if lines.class == Array
-    # Use some tricky quoting to allow any character to be appended
-    lines.gsub!("'", "'\"'\"'")
-    cmd = execute("echo '#{lines}' >> '#{file}'", :user => user)
-    assert(cmd.success?,
-           "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+    file_open(path) { |f| return f.write(lines) }
   end
 
-  def file_overwrite(*args)
-    execute_successfully("rm -f '#{args.first}'")
-    file_append(*args)
+  def file_append(path, lines)
+    lines = lines.join("\n") if lines.class == Array
+    file_open(path) { |f| return f.append(lines) }
   end
 
   def set_clipboard(text)

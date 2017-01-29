@@ -85,15 +85,19 @@ module Dogtail
       lines = [lines] if lines.class != Array
       script = build_script(lines)
       script_path = $vm.execute_successfully('mktemp', @opts).stdout.chomp
-      $vm.file_overwrite(script_path, script, @opts[:user])
+      $vm.file_overwrite(script_path, script)
       args = ["/usr/bin/python '#{script_path}'", @opts]
       if @opts[:allow_failure]
-        ret = $vm.execute(*args)
+        return $vm.execute(*args)
       else
-        ret = $vm.execute_successfully(*args)
+        begin
+          return $vm.execute_successfully(*args)
+        rescue Exception => e
+          debug_log("Failing Dogtail script (#{script_path}):")
+          script.split("\n").each { |line| debug_log(" "*4 + line) }
+          raise e
+        end
       end
-      $vm.execute("rm -f '#{script_path}'")
-      ret
     end
 
     def self.value_to_s(v)
