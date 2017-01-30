@@ -2,7 +2,8 @@
 
 require 'optparse'
 begin
-  require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/exec_helper.rb"
+  require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/remote_shell.rb"
+  require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/misc_helpers.rb"
 rescue LoadError => e
   raise "This script must be run from within Tails' Git directory."
 end
@@ -45,7 +46,7 @@ opt_parser = OptionParser.new do |opts|
 end
 opt_parser.parse!(ARGV)
 cmd = ARGV.join(" ")
-c = VMCommand.new(FakeVM.new, cmd, cmd_opts)
+c = RemoteShell::Command.new(FakeVM.new, cmd, cmd_opts)
 puts "Return status: #{c.returncode}"
 puts "STDOUT:\n#{c.stdout}"
 puts "STDERR:\n#{c.stderr}"

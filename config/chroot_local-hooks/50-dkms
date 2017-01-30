@@ -16,6 +16,15 @@ apt-get install --yes \
     aufs-dkms \
     virtualbox-guest-dkms
 
+MODULES_VERSION="$(dpkg-query -W -f='${Version}\n' virtualbox-guest-dkms \
+		       | sed -E 's,-.*,,')"
+dkms build \
+    -a amd64 -k "${KERNEL_VERSION}-amd64" \
+    -m virtualbox-guest -v "$MODULES_VERSION"
+dkms install \
+    -a amd64 -k "${KERNEL_VERSION}-amd64" \
+    -m virtualbox-guest -v "$MODULES_VERSION"
+
 # clean the build directory
 # rm -r /var/lib/dkms/virtualbox-guest/
 

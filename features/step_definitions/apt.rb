@@ -2,13 +2,33 @@ require 'uri'
 
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
-  $vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line { |line|
+  apt_sources = $vm.execute_successfully(
+    "cat /etc/apt/sources.list /etc/apt/sources.list.d/*"
+  ).stdout.chomp
+  apt_sources.each_line do |line|
     next if ! line.start_with? "deb"
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
       raise "Bad APT source '#{line}'"
     end
-  }
+  end
+end
+
+When /^I configure APT to use non-onion sources$/ do
+  script = <<-EOF
+  use strict;
+  use warnings FATAL => "all";
+  s{vwakviie2ienjx6t[.]onion}{ftp.us.debian.org};
+  s{sgvtcaew4bxjd7ln[.]onion}{security.debian.org};
+  s{sdscoq7snqtznauu[.]onion}{deb.torproject.org};
+  s{jenw7xbd6tf7vfhp[.]onion}{deb.tails.boum.org};
+EOF
+  # VMCommand:s cannot handle newlines, and they're irrelevant in the
+  # above perl script any way
+  script.delete!("\n")
+  $vm.execute_successfully(
+    "perl -pi -E '#{script}' /etc/apt/sources.list /etc/apt/sources.list.d/*"
+  )
 end
 
 When /^I update APT using apt$/ do

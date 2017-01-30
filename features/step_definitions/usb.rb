@@ -101,7 +101,8 @@ def usb_install_helper(name)
     @installer.child('Information', roleName: 'alert')
       .child('Installation complete!', roleName: 'label').wait(30*60)
   rescue FindFailed => e
-    debug_log("Tails Installer debug log:\n" + $vm.file_content('/tmp/tails-installer-*'))
+    path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
+    debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
     raise e
   end
 end
