@@ -32,7 +32,7 @@ When /^I start Icedove$/ do
     $vm.file_append('/etc/icedove/pref/icedove.js ', line)
   end
   step 'I start "Icedove" via the GNOME "Internet" applications menu'
-  icedove_main
+  try_for(60) { icedove_main }
 end
 
 When /^I have not configured an email account$/ do
