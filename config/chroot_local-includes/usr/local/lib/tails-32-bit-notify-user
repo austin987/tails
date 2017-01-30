@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+#man{{{
+
+=head1 NAME
+
+tails-32-bit-notify-user
+
+=head1 VERSION
+
+Version X.XX
+
+=head1 AUTHOR
+
+Tails dev team <amnesia@boum.org>
+See https://tails.boum.org/.
+
+=cut
+
+#}}}
+
+use Desktop::Notify;
+use IPC::System::Simple qw{capturex $EXITVAL};
+use Locale::gettext;
+use Net::DBus::Reactor;
+use POSIX;
+
+### initialization
+setlocale(LC_MESSAGES, "");
+textdomain("tails");
+
+### callbacks
+
+sub action_cb {
+    my $reactor = shift;
+    exec(
+        '/usr/local/bin/tor-browser',
+        'https://tails.boum.org/news/Tails_3.0_will_require_a_64-bit_processor/'
+    );
+    $reactor->shutdown;
+}
+
+### main
+
+my $architecture = capturex(qw{/bin/uname -m});
+chomp $architecture;
+exit 0 if $architecture eq 'x86_64';
+
+my $reactor = Net::DBus::Reactor->main;
+
+my $notify  = Desktop::Notify->new();
+$notify->action_callback(sub { action_cb($reactor, @_) });
+$notify->close_callback(sub { $reactor->shutdown; });
+
+my $summary = gettext("Warning: Tails 3.0 won't work on this computer!");
+my $body    = gettext("Tails 3.0 will require a 64-bit processor.");
+$notify->create(summary => $summary,
+                body    => $body,
+                actions => { 'moreinfo'  => gettext('Learn more'), },
+                hints   => { 'transient' => 1, },
+                timeout => 0)->show();
+
+$reactor->run;
