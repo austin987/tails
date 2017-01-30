@@ -224,11 +224,7 @@ Then /^I can find the email I sent to myself in my inbox$/ do
     hit_counter.wait
     inbox_view = hit_counter.parent
     message_list = inbox_view.child(roleName: 'table')
-    the_message = message_list.children(roleName: 'table row').find do |message|
-      # The message will be cropped in the list, so we cannot search
-      # for the full message.
-      message.name.start_with?("Automated test suite:")
-    end
+    the_message = message_list.child(@subject, roleName: 'table cell')
     assert_not_nil(the_message)
     # Let's clean up
     the_message.click
