@@ -379,11 +379,6 @@ Given /^persistence is disabled$/ do
   assert(!tails_persistence_enabled?, "Persistence is enabled")
 end
 
-Given /^I enable read-only persistence$/ do
-  step "I enable persistence"
-  @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
-end
-
 def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions

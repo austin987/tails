@@ -143,7 +143,7 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro|
+Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
   if network_unplugged.empty?
     step "the network is plugged"
@@ -153,13 +153,7 @@ Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I 
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
-    if ! persistence_on.empty?
-      if persistence_ro.empty?
-        step "I enable persistence"
-      else
-        step "I enable read-only persistence"
-      end
-    end
+    step "I enable persistence" if persistence_on
     step "I log in to a new session"
     if network_unplugged.empty?
       step "Tor is ready"
