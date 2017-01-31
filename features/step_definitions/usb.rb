@@ -166,6 +166,11 @@ When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   end
 end
 
+Given /^I plug and mount a USB drive containing the Tails ISO$/ do
+  iso_dir = share_host_files(TAILS_ISO)
+  @iso_path = "#{iso_dir}/#{File.basename(TAILS_ISO)}"
+end
+
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   step 'I start Tails Installer in "Upgrade from ISO" mode'
   @installer.child('Use existing Live system ISO:', roleName: 'label')

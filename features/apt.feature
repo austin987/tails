@@ -14,7 +14,8 @@ Feature: Installing packages through APT
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
     When I configure APT to use non-onion sources
     And I update APT using apt
-    Then I should be able to install a package using apt
+    And I install "cowsay" using Synaptic
+    Then the package "cowsay" is installed
 
   @check_tor_leaks
   Scenario: Install packages using Synaptic
