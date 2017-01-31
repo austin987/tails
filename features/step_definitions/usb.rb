@@ -91,7 +91,7 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  if tails_installer_match_status('It is impossible to upgrade the device')
+  if tails_installer_match_status(/It is impossible to upgrade the device .+ #{$vm.disk_dev(name)}\d* /)
     raise UpgradeNotSupported
   end
   assert(tails_installer_is_device_selected?(name))
