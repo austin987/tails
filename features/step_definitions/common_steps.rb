@@ -124,43 +124,43 @@ end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
-  if network_unplugged.nil?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    if network_unplugged.nil?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
-  if network_unplugged.empty?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
     step "I enable persistence" if persistence_on
     step "I log in to a new session"
-    if network_unplugged.empty?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
