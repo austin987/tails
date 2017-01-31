@@ -280,10 +280,10 @@ def stream_isolation_info(application)
 end
 
 When /^I monitor the network connections of (.*)$/ do |application|
-  @process_monitor_log = "/tmp/netstat.log"
+  @process_monitor_log = "/tmp/ss.log"
   info = stream_isolation_info(application)
   $vm.spawn("while true; do " +
-            "  netstat -taupen | grep \"#{info[:grep_monitor_expr]}\"; " +
+            "  ss -taupen | grep \"#{info[:grep_monitor_expr]}\"; " +
             "  sleep 0.1; " +
             "done > #{@process_monitor_log}")
 end

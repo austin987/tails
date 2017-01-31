@@ -69,9 +69,9 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
 end
 
 Then /^no unexpected services are listening for network connections$/ do
-  netstat_cmd = $vm.execute("netstat -ltupn")
-  assert netstat_cmd.success?
-  for line in netstat_cmd.stdout.chomp.split("\n") do
+  ss_cmd = $vm.execute("ss -ltupn")
+  assert ss_cmd.success?
+  for line in ss_cmd.stdout.chomp.split("\n") do
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
     if proto == "tcp"
