@@ -243,35 +243,38 @@ def stream_isolation_info(application)
   case application
   when "htpdate"
     {
-      :grep_monitor_expr => '/curl\>',
+      :grep_monitor_expr => 'users:(("curl"',
       :socksport => 9062
     }
-  when "tails-security-check", "tails-upgrade-frontend-wrapper"
-    # We only grep connections with ESTABLISHED state since `perl`
-    # is also used by monkeysphere's validation agent, which LISTENs
+  when "tails-security-check"
     {
-      :grep_monitor_expr => '\<ESTABLISHED\>.\+/perl\>',
+      :grep_monitor_expr => 'users:(("tails-security-"',
+      :socksport => 9062
+    }
+  when "tails-upgrade-frontend-wrapper"
+    {
+      :grep_monitor_expr => 'users:(("tails-iuk-get-u"',
       :socksport => 9062
     }
   when "Tor Browser"
     {
-      :grep_monitor_expr => '/firefox\>',
+      :grep_monitor_expr => 'users:(("firefox"',
       :socksport => 9150,
       :controller => true,
     }
   when "Gobby"
     {
-      :grep_monitor_expr => '/gobby\>',
+      :grep_monitor_expr => 'users:(("gobby-0.5"',
       :socksport => 9050
     }
   when "SSH"
     {
-      :grep_monitor_expr => '/\(nc\|ssh\)\>',
+      :grep_monitor_expr => 'users:(("\(nc\|ssh\)"',
       :socksport => 9050
     }
   when "whois"
     {
-      :grep_monitor_expr => '/whois\>',
+      :grep_monitor_expr => 'users:(("whois"',
       :socksport => 9050
     }
   else
@@ -283,7 +286,7 @@ When /^I monitor the network connections of (.*)$/ do |application|
   @process_monitor_log = "/tmp/ss.log"
   info = stream_isolation_info(application)
   $vm.spawn("while true; do " +
-            "  ss -taupen | grep \"#{info[:grep_monitor_expr]}\"; " +
+            "  ss -taupen | grep '#{info[:grep_monitor_expr]}'; " +
             "  sleep 0.1; " +
             "done > #{@process_monitor_log}")
 end
@@ -298,7 +301,7 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
          "Couldn't see any connection made by #{application} so " \
          "something is wrong")
   log_lines.each do |line|
-    ip_port = line.split(/\s+/)[4]
+    ip_port = line.split(/\s+/)[5]
     assert(expected_ports.map { |port| "127.0.0.1:#{port}" }.include?(ip_port),
            "#{application} should only connect to #{expected_ports} but " \
            "was seen connecting to #{ip_port}")
