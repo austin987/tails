@@ -327,14 +327,6 @@ activate_volumes ()
 
 	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
-		# Migrate Squeeze-era NetworkManager persistence setting to Wheezy.
-		migrate_persistence_preset '/home/amnesia/.gconf/system/networking/connections' 'nm-connections' \
-			'/etc/NetworkManager/system-connections' 'nm-system-connections' "$conf"
-		# disable pre-Wheezy NM persistence setting
-		sed -r -i \
-			-e 's,^(/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections)$,#\1,' \
-			"$conf"
-
 		# Migrate Claws-mail persistence setting to Icedove
 		migrate_persistence_preset '/home/amnesia/.claws-mail' 'claws-mail' \
 			'/home/amnesia/.icedove' 'icedove' "$conf"
