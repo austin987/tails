@@ -651,7 +651,8 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  # XXX: Dogtail is broken in this use case, see #11718.
+  # XXX: Dogtail is buggy when interacting with the Applications menu
+  # (see #11718) so we use the GNOME Applications Overview instead.
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
