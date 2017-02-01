@@ -61,7 +61,7 @@ loop do
 end
 
 # Constants that are statically initialized.
-CONFIGURED_KEYSERVER_HOSTNAME = 'hkps.pool.sks-keyservers.net'
+CONFIGURED_KEYSERVER_HOSTNAME = 'jirk5u4osbsr34t5.onion'
 LIBVIRT_DOMAIN_NAME = "TailsToaster"
 LIBVIRT_DOMAIN_UUID = "203552d5-819c-41f3-800e-2c8ef2545404"
 LIBVIRT_NETWORK_NAME = "TailsToasterNet"
