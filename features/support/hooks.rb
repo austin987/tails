@@ -187,6 +187,10 @@ AfterFeature('@product') do
       end
     end
   end
+  $vmstorage.list_volumes.each do |vol_name|
+    next if vol_name == '__internal'
+    $vmstorage.delete_volume(vol_name)
+  end
 end
 
 # Cucumber Before hooks are executed in the order they are listed, and
