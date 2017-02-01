@@ -657,7 +657,7 @@ Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_na
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
   @screen.type(app_name)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
 When /^I type "([^"]+)"$/ do |string|
