@@ -144,7 +144,7 @@ Then /^I verify the SSH fingerprint for the SFTP server$/ do
     Dogtail::Application.new('gnome-shell').child('Log In Anyway').exist?
   end
   # Here we'd like to click on the button using Dogtail, but something
-  # is buggyso let's just use the keyboard.
+  # is buggy so let's just use the keyboard.
   @screen.type(Sikuli::Key.ENTER)
 end
 
