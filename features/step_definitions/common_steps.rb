@@ -428,10 +428,15 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  # XXX: It will be hard for us to interact with the Calendar (where
-  # the notifications are lited) without Dogtail, but it is broken
-  # here, see #11718.
-  next
+  # These magic coordinates always locates GNOME's clock in the top
+  # bar, which when clicked opens the calendar.
+  x, y = 512, 10
+  @screen.click_point(x, y)
+  @screen.wait_and_click('GnomeCloseAllNotificationsButton.png', 10)
+  try_for(10) do
+    Dogtail::Application.new('gnome-shell').child('No Notifications').exist?
+  end
+  @screen.click_point(x, y)
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
