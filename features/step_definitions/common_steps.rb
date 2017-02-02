@@ -944,3 +944,7 @@ def share_host_files(files)
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
   return mount_dir
 end
+
+When /^Tails system time is magically synchronized$/ do
+  $vm.host_to_guest_time_sync
+end
