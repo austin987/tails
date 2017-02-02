@@ -22,8 +22,6 @@ Feature: Icedove email client
     And I enable Enigmail's expert settings
     When I click Enigmail's Keyserver tab
     Then I see that Enigmail is configured to use the correct keyserver
-    When I click Enigmail's Advanced tab
-    Then I see that Enigmail is configured to use the correct SOCKS proxy
 
   Scenario: Torbirdy is configured to use Tor
     Given I cancel setting up an email account

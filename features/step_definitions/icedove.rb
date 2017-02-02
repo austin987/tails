@@ -93,13 +93,6 @@ Then /^I click Enigmail's (.+) tab$/ do |tab_name|
   @enigmail_prefs.child(tab_name, roleName: 'page tab').click
 end
 
-Then /^I see that Enigmail is configured to use the correct keyserver$/ do
-  keyservers = @enigmail_prefs.child(
-    'Specify your keyserver(s):', roleName: 'entry'
-  ).text
-  assert_equal("hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}", keyservers)
-end
-
 Then /^I see that Enigmail is configured to use the correct SOCKS proxy$/ do
   gnupg_parameters = @enigmail_prefs.child(
     'Additional parameters for GnuPG', roleName: 'entry'
