@@ -1,0 +1,16 @@
+#! /bin/sh
+
+set -e
+
+echo "Work around a gksu bug to make it possible to start graphical applications in the Root Terminal"
+
+echo '
+# Workaround a gksu bug making X11 application not start in
+# the Root Terminal
+if echo "${XAUTHORITY}" | grep -q "^/tmp/libgksu-"; then
+    mkdir -p "$(dirname "${XAUTHORITY}")"
+    . /etc/live/config.d/username.conf
+    cp "/run/user/$(id -u ${LIVE_USERNAME})/gdm/Xauthority" "${XAUTHORITY}"
+    unset LIVE_USERNAME
+fi
+' >> /root/.bashrc
