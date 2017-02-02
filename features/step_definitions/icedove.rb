@@ -93,15 +93,6 @@ Then /^I click Enigmail's (.+) tab$/ do |tab_name|
   @enigmail_prefs.child(tab_name, roleName: 'page tab').click
 end
 
-Then /^I see that Enigmail is configured to use the correct SOCKS proxy$/ do
-  gnupg_parameters = @enigmail_prefs.child(
-    'Additional parameters for GnuPG', roleName: 'entry'
-  ).text
-  assert_not_nil(
-    gnupg_parameters['--keyserver-options http-proxy=socks5h://127.0.0.1:9050']
-  )
-end
-
 Then /^I see that Torbirdy is configured to use Tor$/ do
   icedove_main.child(roleName: 'status bar')
     .child('TorBirdy Enabled:    Tor', roleName: 'label').wait
