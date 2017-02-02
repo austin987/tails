@@ -78,21 +78,6 @@ Then /^I see that only the (.+) addons are enabled in Icedove$/ do |addons|
   assert_equal(0, actual_addons.size)
 end
 
-When /^I go into Enigmail's preferences$/ do
-  $vm.focus_window('Icedove')
-  @screen.type("a", Sikuli::KeyModifier.ALT)
-  icedove_main.child('Preferences', roleName: 'menu item').click
-  @enigmail_prefs = icedove_app.dialog('Enigmail Preferences')
-end
-
-When /^I enable Enigmail's expert settings$/ do
-  @enigmail_prefs.button('Display Expert Settings and Menus').click
-end
-
-Then /^I click Enigmail's (.+) tab$/ do |tab_name|
-  @enigmail_prefs.child(tab_name, roleName: 'page tab').click
-end
-
 Then /^I see that Torbirdy is configured to use Tor$/ do
   icedove_main.child(roleName: 'status bar')
     .child('TorBirdy Enabled:    Tor', roleName: 'label').wait
