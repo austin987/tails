@@ -40,7 +40,7 @@ def pcap_connections_helper(pcap_file, opts = {})
     if protocol == "udp" and
        sport == 68 and
        dport == 67 and
-       ip_packet.ip_saddr == '0.0.0.0' and
+       eth_packet.eth_daddr == "ff:ff:ff:ff:ff:ff" and
        ip_packet.ip_daddr == "255.255.255.255"
       next if opts[:ignore_dhcp]
     end
