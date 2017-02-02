@@ -164,9 +164,8 @@ The patterns+settings file is stored as a converted sqlite text dump in
 8. Commit:
 
        git commit -m 'Update uBlock Origin patterns + settings file.' \
-          config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
-
-9. Remove the original `ublock0.sqlite` from the Git root.
+          config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
+       && rm ublock0.sqlite
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -645,11 +644,12 @@ Prepare upgrade-description files
    * create a new upgrade-description for the version being released,
      that expresses that *no* upgrade is available for that one yet.
 
-   This is what `tails-iuk-generate-ugrade-description-files` tool
+   This is what `tails-iuk-generate-upgrade-description-files` tool
    does:
 
        ( cd ${IUK_CHECKOUT:?} && \
        ./bin/tails-iuk-generate-upgrade-description-files \
+           --build-target amd64 \
            --version "${VERSION:?}" \
            --next-version "${NEXT_PLANNED_VERSION:?}" \
            --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \

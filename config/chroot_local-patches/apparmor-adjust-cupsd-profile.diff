@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.sbin.cupsd	2016-01-13 16:52:34.000000000 +0000
-+++ b/etc/apparmor.d/usr.sbin.cupsd	2016-01-17 02:07:41.965052679 +0000
+--- a/etc/apparmor.d/usr.sbin.cupsd	2017-01-18 13:06:44.000000000 +0000
++++ b/etc/apparmor.d/usr.sbin.cupsd	2017-01-30 12:21:27.499144568 +0000
 @@ -4,6 +4,8 @@
  
  #include <tunables/global>
@@ -23,15 +23,18 @@
    /etc/foomatic/* r,
    /etc/gai.conf r,
    /etc/papersize r,
-@@ -70,7 +73,7 @@
+@@ -70,9 +73,9 @@
    @{PROC}/*/auxv r,
    @{PROC}/sys/crypto/** r,
    /sys/** r,
 -  /usr/bin/* ixr,
 +  /usr/bin/{[^h],h[^p],hp[^i],hpi[^j],hpij[^s]}* ixr,
    /usr/sbin/* ixr,
-   /{usr/,}bin/* ixr,
+-  /{usr/,}bin/* ixr,
++  /{usr/,}bin/{[^h],h[^p],hp[^i],hpi[^j],hpij[^s]}* ixr,
    /{usr/,}sbin/* ixr,
+   /usr/lib/** rm,
+ 
 @@ -80,7 +83,10 @@
    /usr/lib/cups/backend/bluetooth ixr,
    /usr/lib/cups/backend/dnssd ixr,
@@ -90,4 +93,3 @@
    @{HOME}/PDF/ rw,
    @{HOME}/PDF/* rw,
    /usr/bin/gs ixr,
-

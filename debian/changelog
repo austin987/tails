@@ -1,20 +1,115 @@
-tails (3.0) UNRELEASED; urgency=medium
+tails (3.0~beta1) experimental; urgency=medium
 
-  * Dummy entry.
+  * All changes brought by Tails 2.7.1, 2.9.1 and 2.10.
 
- -- intrigeri <intrigeri@boum.org>  Sat, 19 Nov 2016 20:30:16 +0000
+  * Major new features and changes
+    - Redesigned Tails Greeter.
+    - Upgrade to a new snapshot (2017013002) of the Debian and Torproject
+      APT repositories.
+    - Upgrade Linux to 4.9.0-1.
 
-tails (2.12) UNRELEASED; urgency=medium
+  * Security fixes
+    - Reject packets sent on the LAN to the NetBIOS name service
+      (Closes: #11944).
+    - Seahorse: use the Tor OnionBalance hidden service pool,
+      which provides transport encryption and authentication of the keyserver.
 
-  * Dummy.
+  * Minor improvements
+    - Include adwaita-qt* and enable it by default, so that Qt applications
+      integrate nicely into a GNOME environment (Closes: #11790).
+    - Add support for the TREZOR hardware wallet in Electrum (Closes: #10964).
+    - AppArmor: allow all programs to read /etc/tor/torsocks.conf via
+      abstractions/base, to ease maintenance.
+    - Don't (try to) bind the Power button to the shutdown action
+      (Closes: #12004).
+    - Enable natural scrolling (Closes: #11969).
+    - Update uBlock Origin patterns + settings file.
+    - live-persist: remove Squeeze → Wheezy migration code.
+    - Update pre-existing persistent GnuPG configuration on login
+      (Closes: #12201).
+    - Upgrader: use the alpha channel when the next version will be an
+      alpha, beta, or RC. This will allow users of 3.0~betaN to upgrade to
+      the next beta or RC, without having to type any command-line
+      (Closes: #12206).
 
- -- anonym <anonym@riseup.net>  Wed, 25 Jan 2017 01:32:33 +0100
+  * Bugfixes
+    - Fix "upgrade from ISO" when run from a 32-bit system,
+      such as Tails 2.x (Closes: #11873).
+    - Fix ability to read videos over HTTPS with Totem (Closes: #11963).
+    - Re-introduce default directories in $HOME, which fixes
+      Spice file transfers (Closes: #11968).
+    - Re-enable tap-to-click (Closes: #11993).
+    - Lower systemd's DefaultTimeoutStopSec, to get rid of a long delay
+      before memory wiping starts. This also prevents shutdown from ever
+      being blocked by any buggy service that takes a while to stop
+      (Closes: #12061).
+    - Drop Jessie APT sources.
+    - Re-add VirtualBox DKMS modules.
+    - Fix GnuPG communication with keyservers, by using the Tor OnionBalance
+      hidden service pool (Closes: #12202).
+    - Fix Enigmail communication with keyservers, by teaching Torbirdy
+      not to break it (Closes: #11948):
+      · Patch Torbirdy to allow not breaking keyserver communication when
+        using GnuPG v2.1+, and to use a better default keyserver.
+      · Torbirdy: enable the new behaviour made possible by the aforementioned
+        patch (extensions.enigmail.already_torified).
+      · Torbirdy: drop our custom keyserver configuration, since the
+        aforementioned patch makes it the default.
 
-tails (2.11) UNRELEASED; urgency=medium
+  * Removed features
+    - Don't install gnome-system-log anymore (Closes: #12133).
+      It's deprecated in GNOME, and mostly useless anyway as it's not
+      Journal-aware. It's replacement (gnome-logs) is not usable
+      enough in the context of Tails, and most users who can read logs
+      should manage to do it with journalctl, so don't install it either.
+    - Drop multiarch handling: Tails 3.0 will be amd64-only (Closes: #11961).
 
-  * Dummy.
+  * Build system
+    - Disable eatmydata usage and caching: in current Stretch, debootstrap fails
+      if we use eatmydata + the operation mode picked by live-build when caching
+      is enabled (Closes: #12052).
+    - Bump disk space (and memory for in-RAM builds) requirements.
+    - Follow replacement of python-reportbug with python3-reportbug.
+    - Don't try to deinstall packages that are unknown on Stretch.
+    - Move AppArmor aliases to a dedicated file, and include it.
+      This will avoid maintaining these settings as a patch.
+    - Don't attempt to remove the usr.bin.chromium-browser AppArmor profile:
+      it's not shipped in Debian anymore.
 
- -- anonym <anonym@riseup.net>  Tue, 24 Jan 2017 14:01:50 +0100
+  * Test suite
+    - Add optional pause() notification (Closes: #12175).
+    - Make the remote shell's file operations robust (Closes: #11887).
+    - Update a number of test cases for Stretch, sometimes by converting
+      them to Dogtail.
+    - Drop usage and tests of read-only persistence.
+      We won't have this option anymore, and it's not even sure we'll
+      reintroduce it (Refs: #12093, Closes: #12055).
+    - Adjust CONFIGURED_KEYSERVER_HOSTNAME to match current settings.
+    - Test suite: clean up disks between features.
+
+  * Adjustments for Debian 9 (Stretch) with no or very little user-visible impact
+    - Adjust dpkg-divert path: it has moved.
+    - Replace xfonts-wqy with fonts-wqy-microhei + fonts-wqy-zenhei.
+      The former was removed from Debian testing, and the latter are recommended
+      by task-chinese-s-desktop and task-chinese-t-desktop.
+    - Install virtualbox* from sid.
+      It was removed from testing due to https://bugs.debian.org/794466.
+    - Drop deprecated settings from org/gnome/settings-daemon/plugins/power.
+    - Update settings name in org/gnome/desktop/peripherals/touchpad, and drop
+      deprecated ones.
+    - Adjust to changed Liferea's .desktop filename.
+    - Also torify Liferea when started via its (new) D-Bus service.
+    - Install hunspell-pt-br instead of hunspell-pt-pt.
+      Tor Browser 6.5 moved from pt-PT to pt-BR, which is fine vs
+      spellcheckers in Jessie since its hunspell-pt provides both -pt and
+      -br, but in Stretch they are separate packages.
+    - AppArmor: adjust usr.sbin.cupsd profile so it loads successfully
+      (Closes: #12116).
+    - Migrate from netstat to ss.
+    - Update extensions.enigmail.configuredVersion.
+    - Remove the jessie-proposed-updates APT sources.
+
+ -- Tails developers <tails@boum.org>  Wed, 01 Feb 2017 19:23:03 +0000
 
 tails (2.10) unstable; urgency=medium
 

@@ -167,8 +167,10 @@ Feature: Upgrading an old Tails USB installation
     Then Tails is running version 1.1~test
     And all persistence presets are enabled
     And the file system changes introduced in version 1.1~test are present
+    # Our IUK sets a release date that can make Tor bootstrapping impossible
+    Given Tails system time is magically synchronized
     When the network is plugged
-    And the network connection is ready within 30 seconds
+    And Tor is ready
     And all notifications have disappeared
     # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
     And I successfully start the Unsafe Browser

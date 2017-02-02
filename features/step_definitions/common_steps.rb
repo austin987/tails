@@ -124,49 +124,43 @@ end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
-  if network_unplugged.nil?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    if network_unplugged.nil?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
-  if network_unplugged.empty?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
-    if ! persistence_on.empty?
-      if persistence_ro.empty?
-        step "I enable persistence"
-      else
-        step "I enable read-only persistence"
-      end
-    end
+    step "I enable persistence" if persistence_on
     step "I log in to a new session"
-    if network_unplugged.empty?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
@@ -360,6 +354,7 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
+  step 'I see the "Tor is ready" notification after at most 30 seconds'
   if $vm.execute('systemctl is-system-running').failure?
     units_status = $vm.execute('systemctl').stdout
     raise "At least one system service failed to start:\n#{units_status}"
@@ -434,10 +429,15 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  # XXX: It will be hard for us to interact with the Calendar (where
-  # the notifications are lited) without Dogtail, but it is broken
-  # here, see #11718.
-  next
+  # These magic coordinates always locates GNOME's clock in the top
+  # bar, which when clicked opens the calendar.
+  x, y = 512, 10
+  @screen.click_point(x, y)
+  @screen.wait_and_click('GnomeCloseAllNotificationsButton.png', 10)
+  try_for(10) do
+    Dogtail::Application.new('gnome-shell').child('No Notifications').exist?
+  end
+  @screen.click_point(x, y)
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -657,12 +657,13 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  # XXX: Dogtail is broken in this use case, see #11718.
+  # XXX: Dogtail is buggy when interacting with the Applications menu
+  # (see #11718) so we use the GNOME Applications Overview instead.
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
   @screen.type(app_name)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -942,4 +943,8 @@ def share_host_files(files)
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
   return mount_dir
+end
+
+When /^Tails system time is magically synchronized$/ do
+  $vm.host_to_guest_time_sync
 end
