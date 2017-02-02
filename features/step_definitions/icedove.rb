@@ -97,7 +97,7 @@ Then /^I see that Enigmail is configured to use the correct keyserver$/ do
   keyservers = @enigmail_prefs.child(
     'Specify your keyserver(s):', roleName: 'entry'
   ).text
-  assert_equal("hkps://#{CONFIGURED_KEYSERVER_HOSTNAME}", keyservers)
+  assert_equal("hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}", keyservers)
 end
 
 Then /^I see that Enigmail is configured to use the correct SOCKS proxy$/ do
