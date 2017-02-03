@@ -354,7 +354,7 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  step 'I see the "Tor is ready" notification after at most 30 seconds'
+  step 'I see the "Tor is ready" notification after at most 120 seconds'
   if $vm.execute('systemctl is-system-running').failure?
     units_status = $vm.execute('systemctl').stdout
     raise "At least one system service failed to start:\n#{units_status}"
