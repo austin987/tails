@@ -433,9 +433,13 @@ Given /^all notifications have disappeared$/ do
   # bar, which when clicked opens the calendar.
   x, y = 512, 10
   @screen.click_point(x, y)
-  @screen.wait_and_click('GnomeCloseAllNotificationsButton.png', 10)
-  try_for(10) do
-    Dogtail::Application.new('gnome-shell').child('No Notifications').exist?
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  try_for(30) do
+    if gnome_shell.child('No Notifications', roleName: 'label').exist?
+      true
+    else
+      @screen.click('GnomeCloseAllNotificationsButton.png')
+    end
   end
   @screen.click_point(x, y)
 end
