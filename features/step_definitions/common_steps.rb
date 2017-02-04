@@ -432,16 +432,15 @@ Given /^all notifications have disappeared$/ do
   # These magic coordinates always locates GNOME's clock in the top
   # bar, which when clicked opens the calendar.
   x, y = 512, 10
-  @screen.click_point(x, y)
   gnome_shell = Dogtail::Application.new('gnome-shell')
-  try_for(30) do
-    if gnome_shell.child('No Notifications', roleName: 'label').exist?
-      true
-    else
+  retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
+    @screen.click_point(x, y)
+    unless gnome_shell.child('No Notifications', roleName: 'label').exist?
       @screen.click('GnomeCloseAllNotificationsButton.png')
     end
+    gnome_shell.child('No Notifications', roleName: 'label').exist?
   end
-  @screen.click_point(x, y)
+  @screen.type(Sikuli::Key.ESC)
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
