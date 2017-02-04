@@ -13,10 +13,10 @@ Feature: Keyserver interaction with GnuPG
    Then Seahorse is configured to use the correct keyserver
 
   Scenario: Fetching OpenPGP keys using GnuPG should work and be done over Tor.
+    Given GnuPG uses the configured keyserver
     When I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI
-    Then GnuPG uses the configured keyserver
     And the GnuPG fetch is successful
-    And the "10CC5BC7" key is in the live user's public keyring
+    Then the "10CC5BC7" key is in the live user's public keyring
 
   Scenario: Fetching OpenPGP keys using Seahorse should work and be done over Tor.
     When I fetch the "10CC5BC7" OpenPGP key using Seahorse
