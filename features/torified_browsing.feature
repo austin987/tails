@@ -93,7 +93,8 @@ Feature: Browsing the web using the Tor Browser
   Scenario: The "Tails documentation" link on the Desktop works
     Given I have started Tails from DVD and logged in and the network is connected
     When I double-click on the "Tails documentation" link on the Desktop
-    Then I see "TailsOfflineDocHomepage.png" after at most 20 seconds
+    Then the Tor Browser has started
+    And "Tails - Getting started..." has loaded in the Tor Browser
 
   Scenario: The Tor Browser uses TBB's shared libraries
     Given I have started Tails from DVD and logged in and the network is connected
@@ -149,7 +150,7 @@ Feature: Browsing the web using the Tor Browser
     And I add a bookmark to eff.org in the Tor Browser
     And I warm reboot the computer
     And the computer reboots Tails
-    And I enable read-only persistence
+    And I enable persistence
     And I log in to a new session
     And I start the Tor Browser in offline mode
     Then the Tor Browser has a bookmark to eff.org

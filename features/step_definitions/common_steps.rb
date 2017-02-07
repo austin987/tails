@@ -124,49 +124,43 @@ end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
-  if network_unplugged.nil?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    if network_unplugged.nil?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
-  if network_unplugged.empty?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
-    if ! persistence_on.empty?
-      if persistence_ro.empty?
-        step "I enable persistence"
-      else
-        step "I enable read-only persistence"
-      end
-    end
+    step "I enable persistence" if persistence_on
     step "I log in to a new session"
-    if network_unplugged.empty?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
@@ -400,7 +394,7 @@ end
 Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - Dear Tails user'
+    title = 'Tails - News'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
@@ -434,10 +428,18 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  # XXX: It will be hard for us to interact with the Calendar (where
-  # the notifications are lited) without Dogtail, but it is broken
-  # here, see #11718.
-  next
+  # These magic coordinates always locates GNOME's clock in the top
+  # bar, which when clicked opens the calendar.
+  x, y = 512, 10
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
+    @screen.click_point(x, y)
+    unless gnome_shell.child('No Notifications', roleName: 'label').exist?
+      @screen.click('GnomeCloseAllNotificationsButton.png')
+    end
+    gnome_shell.child('No Notifications', roleName: 'label').exist?
+  end
+  @screen.type(Sikuli::Key.ESC)
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -507,12 +509,14 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  # Work around Tails bug #11730, where something goes wrong when we
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+  timeout = nr_gibs_of_ram*5*60
+  # Work around Tails bug #11786, where something goes wrong when we
   # kexec to the new kernel for memory wiping and gets dropped to a
   # BusyBox shell instead.
-  try_for(memory_wipe_timeout) do
-    if @screen.exists('TailsBug11730.png')
-      puts "We were hit by bug #11730: memory wiping got stuck"
+  try_for(timeout) do
+    if @screen.existsAny(['TailsBug11786a.png', 'TailsBug11786b.png'])
+      puts "We were hit by bug #11786: memory wiping got stuck"
       if mode == 'restarts'
         $vm.reset
       else
@@ -520,7 +524,7 @@ Then /^Tails eventually (shuts down|restarts)$/ do |mode|
       end
     else
       if mode == 'restarts'
-        @screen.find(boot_menu_tab_msg_image)
+        @screen.find('TailsGreeter.png')
         true
       else
         ! $vm.is_running?
@@ -655,12 +659,13 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  # XXX: Dogtail is broken in this use case, see #11718.
+  # XXX: Dogtail is buggy when interacting with the Applications menu
+  # (see #11718) so we use the GNOME Applications Overview instead.
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
   @screen.type(app_name)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -940,4 +945,8 @@ def share_host_files(files)
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
   return mount_dir
+end
+
+When /^Tails system time is magically synchronized$/ do
+  $vm.host_to_guest_time_sync
 end

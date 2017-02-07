@@ -91,7 +91,7 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  if tails_installer_match_status('It is impossible to upgrade the device')
+  if tails_installer_match_status(/It is impossible to upgrade the device .+ #{$vm.disk_dev(name)}\d* /)
     raise UpgradeNotSupported
   end
   assert(tails_installer_is_device_selected?(name))
@@ -101,7 +101,8 @@ def usb_install_helper(name)
     @installer.child('Information', roleName: 'alert')
       .child('Installation complete!', roleName: 'label').wait(30*60)
   rescue FindFailed => e
-    debug_log("Tails Installer debug log:\n" + $vm.file_content('/tmp/tails-installer-*'))
+    path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
+    debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
     raise e
   end
 end
@@ -163,6 +164,11 @@ When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   else
     raise "The USB installer should not succeed"
   end
+end
+
+Given /^I plug and mount a USB drive containing the Tails ISO$/ do
+  iso_dir = share_host_files(TAILS_ISO)
+  @iso_path = "#{iso_dir}/#{File.basename(TAILS_ISO)}"
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
@@ -376,11 +382,6 @@ end
 
 Given /^persistence is disabled$/ do
   assert(!tails_persistence_enabled?, "Persistence is enabled")
-end
-
-Given /^I enable read-only persistence$/ do
-  step "I enable persistence"
-  @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
 end
 
 def boot_device
