@@ -85,7 +85,7 @@ When /^I go into Enigmail's preferences$/ do
 end
 
 When /^I enable Enigmail's expert settings$/ do
-  @enigmail_prefs.button('Display Expert Settings and Menus').click
+  @enigmail_prefs.button('Display Expert Settings and Menus').press
 end
 
 Then /^I click Enigmail's (.+) tab$/ do |tab_name|
