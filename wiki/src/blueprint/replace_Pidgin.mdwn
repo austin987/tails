@@ -86,9 +86,11 @@ The client must support SASL authentication.
 
 ## Gajim
 
-XMPP client in Debian with plugins for OTR and OMEMO (Signal-like) but
-no IRC. Tickets were created and rejected some time ago
+XMPP client in Debian with plugins for OTR and [OMEMO](https://en.wikipedia.org/wiki/OMEMO) (Signal-like, [XEP-0384](http://xmpp.org/extensions/xep-0384.html)) but no IRC. Tickets were created and rejected some time ago
 ([[!tails_ticket 7868]] and [[!tails_ticket 11541]]) but might be worth
 reconsidering after updating this blueprint ([[!tails_ticket 11686]]).
 
 People from Security-in-a-Box have used it successfully in Tails.
+
+Gajim ships with a plugin called "plugin installer" which allows a user to download new plugins. This sounds suspicious for security, because plugins are pieces of code running with full privilege. The implementation in Debian use unverified TLS connection, which is very very open to MITM. The development version has switched to verified HTTPS connection and is trying to make it more robust.
+However, I think that Tails should not ship this plugin at all: it allows a user to download code without needing sudo. We could work debian-side to separate gajim-plugininstaller in a separate package so that Tails can choose not to install it?

@@ -24,7 +24,8 @@ class VMStorage
     rescue Libvirt::RetrieveError
       @pool = nil
     end
-    if @pool and not(KEEP_SNAPSHOTS)
+    if @pool and (not(KEEP_SNAPSHOTS) or
+                  (KEEP_SNAPSHOTS and not(Dir.exists?(@pool_path))))
       VMStorage.clear_storage_pool(@pool)
       @pool = nil
     end
@@ -143,13 +144,7 @@ class VMStorage
   end
 
   def disk_mklabel(name, parttype)
-    disk = {
-      :path => disk_path(name),
-      :opts => {
-        :format => disk_format(name)
-      }
-    }
-    guestfs_disk_helper(disk) do |g, disk_handle|
+    guestfs_disk_helper(name) do |g, disk_handle|
       g.part_init(disk_handle, parttype)
     end
   end
@@ -157,13 +152,7 @@ class VMStorage
   def disk_mkpartfs(name, parttype, fstype, opts = {})
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
-    disk = {
-      :path => disk_path(name),
-      :opts => {
-        :format => disk_format(name)
-      }
-    }
-    guestfs_disk_helper(disk) do |g, disk_handle|
+    guestfs_disk_helper(name) do |g, disk_handle|
       g.part_disk(disk_handle, parttype)
       g.part_set_name(disk_handle, 1, opts[:label]) if opts[:label]
       primary_partition = g.list_partitions()[0]
@@ -181,13 +170,7 @@ class VMStorage
   end
 
   def disk_mkswap(name, parttype)
-    disk = {
-      :path => disk_path(name),
-      :opts => {
-        :format => disk_format(name)
-      }
-    }
-    guestfs_disk_helper(disk) do |g, disk_handle|
+    guestfs_disk_helper(name) do |g, disk_handle|
       g.part_disk(disk_handle, parttype)
       primary_partition = g.list_partitions()[0]
       g.mkswap(primary_partition)
@@ -205,7 +188,13 @@ class VMStorage
                          Guestfs::EVENT_TRACE)
     g.set_autosync(1)
     disks.each do |disk|
-      g.add_drive_opts(disk[:path], disk[:opts])
+      if disk.class == String
+        g.add_drive_opts(disk_path(disk), format: disk_format(disk))
+      elsif disk.class == Hash
+        g.add_drive_opts(disk[:path], disk[:opts])
+      else
+        raise "cannot handle type '#{disk.class}'"
+      end
     end
     g.launch()
     yield(g, *g.list_devices())

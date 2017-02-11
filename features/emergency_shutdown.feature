@@ -1,15 +1,11 @@
 @product
 Feature: Emergency shutdown
 
-  #11616
-  @fragile
   Scenario: The emergency shutdown applet can shutdown Tails
     Given I have started Tails from DVD without network and logged in
     When I request a shutdown using the emergency shutdown applet
     Then Tails eventually shuts down
 
-  #11616
-  @fragile
   Scenario: The emergency shutdown applet can reboot Tails
     Given I have started Tails from DVD without network and logged in
     When I request a reboot using the emergency shutdown applet

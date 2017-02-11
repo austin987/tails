@@ -150,6 +150,14 @@ do so is to run:
 
 This needs to be done before any other operations.
 
+<div class="bug">
+
+At least one step of the build does not honor the external proxy
+settings, so outgoing Internet connections from the build VM must be
+allowed to go through anyway.
+
+</div>
+
 Build options
 -------------
 
@@ -236,10 +244,9 @@ uncommitted changes. This behaviour can be controlled by:
 
 The fastest build you could pretend to get can be done by setting:
 
-    export TAILS_BUILD_OPTIONS="ram cache extproxy gzipcomp"
+    export TAILS_BUILD_OPTIONS="ram extproxy gzipcomp"
 
-This will force the build to happen in RAM and allow skipping the
-boostrap stage if one is cached, and will use use an HTTP proxy
+This will force the build to happen in RAM, and will use use an HTTP proxy
 external to the virtual machine, and SquashFS compression will be done
 using *gzip*.
 
@@ -295,6 +302,7 @@ The following Debian packages need to be installed:
         dpkg-dev \
         eatmydata \
         gettext \
+        ikiwiki \
         intltool \
         libfile-slurp-perl \
         liblist-moreutils-perl \
@@ -312,8 +320,7 @@ The following Debian packages need to be installed:
   expected versions):
 
       apt-get install \
-        debootstrap/jessie-backports \
-        ikiwiki/jessie-backports
+        debootstrap/jessie-backports
 
 Configure live-build
 --------------------

@@ -37,26 +37,10 @@ use Carp::Assert::More;
 use Fatal qw{open close};
 use Locale::gettext;
 use POSIX;
+use Tails::Download::HTTPS;
+use Try::Tiny;
 use XML::Atom;
 use XML::Atom::Feed;
-
-### Initialization
-
-use IO::Socket::SSL;
-use Net::SSLeay;
-BEGIN {
-    my $cafile = $ENV{HTTPS_CA_FILE};
-    $cafile  //= '/usr/local/etc/ssl/certs/tails.boum.org-CA.pem';
-    assert(-e $cafile);
-    assert(-f $cafile);
-    assert(-r $cafile);
-    assert(-s $cafile);
-    IO::Socket::SSL::set_ctx_defaults(
-        verify_mode => Net::SSLeay->VERIFY_PEER(),
-        ca_file     => $cafile,
-    );
-}
-use LWP::UserAgent; # needs to be *after* IO::Socket::SSL's initialization
 
 setlocale(LC_MESSAGES, "");
 textdomain("tails");
@@ -89,18 +73,12 @@ sub atom_str {
     my $url = shift;
     assert_defined($url);
 
-    $ENV{HTTPS_VERSION} = 3;
-
-    my $ua  = LWP::UserAgent->new;
-    $ua->proxy([qw(http https)] => 'socks://127.0.0.1:9062')
-        unless $ENV{DISABLE_PROXY};
-    my $req = HTTP::Request->new('GET', $url);
-    my $res = $ua->request($req);
-    if (defined $res && $res->is_success) {
-        return $res->content;
-    }
-
-    return undef;
+    my $downloader = Tails::Download::HTTPS->new(
+        max_download_size => 256 * 2**10,
+    );
+    my $content;
+    try { $content = $downloader->get_url($url); };
+    defined $content ? return $content : return undef;
 }
 
 =head2 get_entries

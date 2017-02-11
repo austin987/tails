@@ -48,6 +48,14 @@ def persistent_volumes_mountpoints
   $vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
+def recover_from_upgrader_failure
+    $vm.execute('killall tails-upgrade-frontend tails-upgrade-frontend-wrapper zenity')
+    # Remove unnecessary sleep for retry
+    $vm.execute_successfully('sed -i "/^sleep 30$/d" ' +
+                             '/usr/local/bin/tails-upgrade-frontend-wrapper')
+    $vm.spawn('tails-upgrade-frontend-wrapper', user: LIVE_USER)
+end
+
 Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
   $vm.storage.clone_to_new_disk(from, to)
 end
@@ -70,7 +78,10 @@ end
 
 def usb_install_helper(name)
   @screen.wait('USBTailsLogo.png', 10)
-  if @screen.exists("USBCannotUpgrade.png")
+  text = Dogtail::Application.new('tails-installer')
+         .child('', roleName: 'text').text
+  dev = $vm.disk_dev(name)
+  if text.match(/It is impossible to upgrade the device .+ #{dev}\d* /)
     raise UpgradeNotSupported
   end
   begin
@@ -145,13 +156,9 @@ When /^I am told that the destination device cannot be upgraded$/ do
   @screen.find("USBCannotUpgrade.png")
 end
 
-Given /^I setup a filesystem share containing the Tails ISO$/ do
-  shared_iso_dir_on_host = "#{$config["TMPDIR"]}/shared_iso_dir"
-  @shared_iso_dir_on_guest = "/tmp/shared_iso_dir"
-  FileUtils.mkdir_p(shared_iso_dir_on_host)
-  FileUtils.cp(TAILS_ISO, shared_iso_dir_on_host)
-  add_after_scenario_hook { FileUtils.rm_r(shared_iso_dir_on_host) }
-  $vm.add_share(shared_iso_dir_on_host, @shared_iso_dir_on_guest)
+Given /^I plug and mount a USB drive containing the Tails ISO$/ do
+  iso_dir = share_host_files(TAILS_ISO)
+  @iso_path = "#{iso_dir}/#{File.basename(TAILS_ISO)}"
 end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
@@ -163,8 +170,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @screen.wait_and_click('GnomeFileDiagHome.png', 10)
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   @screen.wait('GnomeFileDiagTypeFilename.png', 10)
-  iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
-  @screen.type(iso)
+  @screen.type(@iso_path)
   @screen.wait_and_click('GnomeFileDiagOpenButton.png', 10)
   usb_install_helper(name)
 end
@@ -268,10 +274,9 @@ Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
 end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
-  iso = "#{@shared_iso_dir_on_guest}/#{File.basename(TAILS_ISO)}"
   iso_root = "/mnt/iso"
   $vm.execute("mkdir -p #{iso_root}")
-  $vm.execute("mount -o loop #{iso} #{iso_root}")
+  $vm.execute("mount -o loop #{@iso_path} #{iso_root}")
   tails_is_installed_helper(target_name, iso_root, "isolinux")
   $vm.execute("umount #{iso_root}")
 end
@@ -631,4 +636,111 @@ end
 
 Then /^no USB drive is selected$/ do
   @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
+end
+
+Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|
+  assert_equal('1.1~test', version)
+  upgrade_applied = not_present.nil?
+  chroot_browser = "#{chroot_browser.downcase}-browser" if chroot_browser
+  changes = [
+    {
+      filesystem: :rootfs,
+      path: 'some_new_file',
+      status: :added,
+      new_content: <<-EOF
+Some content
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'etc/amnesia/version',
+      status: :modified,
+      new_content: <<-EOF
+#{version} - 20380119
+ffffffffffffffffffffffffffffffffffffffff
+live-build: 3.0.5+really+is+2.0.12-0.tails2
+live-boot: 4.0.2-1
+live-config: 4.0.4-1
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'etc/os-release',
+      status: :modified,
+      new_content: <<-EOF
+TAILS_PRODUCT_NAME="Tails"
+TAILS_VERSION_ID="#{version}"
+      EOF
+    },
+    {
+      filesystem: :rootfs,
+      path: 'usr/share/common-licenses/BSD',
+      status: :removed
+    },
+    {
+      filesystem: :medium,
+      path: 'utils/linux/syslinux',
+      status: :removed
+    },
+  ]
+  changes.each do |change|
+    case change[:filesystem]
+    when :rootfs
+      path = '/'
+      path += "var/lib/#{chroot_browser}/chroot/" if chroot_browser
+      path += change[:path]
+    when :medium
+      path = '/lib/live/mount/medium/' + change[:path]
+    else
+      raise "Unknown filesysten '#{change[:filesystem]}'"
+    end
+    case change[:status]
+    when :removed
+      assert_equal(!upgrade_applied, $vm.file_exist?(path))
+    when :added
+      assert_equal(upgrade_applied, $vm.file_exist?(path))
+      if upgrade_applied && change[:new_content]
+        assert_equal(change[:new_content], $vm.file_content(path))
+      end
+    when :modified
+      assert($vm.file_exist?(path))
+      if upgrade_applied
+        assert_not_nil(change[:new_content])
+        assert_equal(change[:new_content], $vm.file_content(path))
+      end
+    else
+      raise "Unknown status '#{change[:status]}'"
+    end
+  end
+end
+
+Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |version|
+  recovery_proc = Proc.new do
+    recover_from_upgrader_failure
+  end
+  failure_pic = 'TailsUpgraderFailure.png'
+  success_pic = "TailsUpgraderUpgradeTo#{version}.png"
+  retry_tor(recovery_proc) do
+    match, _ = @screen.waitAny([success_pic, failure_pic], 2*60)
+    assert_equal(success_pic, match)
+  end
+end
+
+When /^I agree to install the incremental upgrade$/ do
+  @screen.click('TailsUpgraderUpgradeNowButton.png')
+end
+
+Then /^I can successfully install the incremental upgrade to version (.+)$/ do |version|
+  step 'I agree to install the incremental upgrade'
+  recovery_proc = Proc.new do
+    recover_from_upgrader_failure
+    step "I am proposed to install an incremental upgrade to version #{version}"
+    step 'I agree to install the incremental upgrade'
+  end
+  failure_pic = 'TailsUpgraderFailure.png'
+  success_pic = "TailsUpgraderDone.png"
+  retry_tor(recovery_proc) do
+    match, _ = @screen.waitAny([success_pic, failure_pic], 2*60)
+    assert_equal(success_pic, match)
+  end
 end

@@ -58,7 +58,7 @@ def main():
       port.close()
       return main()
     try:
-      cmd_type, user, cmd = loads(line)
+      id, cmd_type, user, cmd = loads(line)
     except Exception as e:
       # We had a parse/pack error, so we just send a \0 as an ACK,
       # releasing the client from blocking.
@@ -73,7 +73,7 @@ def main():
       stdout = stdout_b.decode('utf-8')
       stderr = stderr_b.decode('utf-8')
       returncode = p.returncode
-    port.write(dumps([returncode, stdout, stderr]).encode('utf-8') + b"\0")
+    port.write(dumps([id, returncode, stdout, stderr]).encode('utf-8') + b"\0")
 
 if __name__ == "__main__":
   main()
