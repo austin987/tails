@@ -76,6 +76,7 @@ apt-get -y install \
         libfile-slurp-perl \
         liblist-moreutils-perl \
         live-build \
+        psmisc \
         rsync \
         syslinux-utils \
         time \
@@ -126,9 +127,3 @@ done
 apt-get -y autoremove
 apt-get -y clean
 perl /usr/lib/apt-cacher-ng/expire-caller.pl || echo "The clean-up of apt-cacher-ng's cache failed: this is not fatal and most likely just means that some disk space could not be reclaimed -- in order to fix that situation you need to manually investigate /var/log/apt-cacher-ng/main_*.html " >&2
-
-# XXX: Remove this once we generate a basebox > 20160226
-if grep -q "^AcceptEnv" /etc/ssh/sshd_config; then
-    sed -i 's/^AcceptEnv/#AcceptEnv/' /etc/ssh/sshd_config
-    systemctl reload ssh.service
-fi

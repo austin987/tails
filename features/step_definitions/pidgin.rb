@@ -35,7 +35,7 @@ def focus_pidgin_irc_conversation_window(account)
     # for a message from InfoServ first then default to looking for '#i2p'
     try_for(20) do
       begin
-        $vm.focus_window('InfoServ')
+        $vm.focus_window('irc.echelon.i2p')
       rescue ExecutionFailedInVM
         $vm.focus_window('#i2p')
       end
