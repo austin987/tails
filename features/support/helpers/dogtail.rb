@@ -56,7 +56,7 @@ module Dogtail
       @opts = opts
       @opts[:user] ||= LIVE_USER
       @find_code = "dogtail.tree.root.application('#{@app_name}')"
-      init_script = [
+      script_lines = [
         "import dogtail.config",
         "import dogtail.tree",
         "import dogtail.predicate",
@@ -66,7 +66,7 @@ module Dogtail
         "dogtail.config.searchShowingOnly = True",
         "#{@var} = #{@find_code}",
       ]
-      run(init_script)
+      run(script_lines)
     end
 
     def to_s
@@ -145,11 +145,11 @@ module Dogtail
       end
       predicate_opts = self.class.args_to_s(args)
       nodes_var = "nodes#{@@node_counter += 1}"
-      find_script = [
+      find_script_lines = [
         "#{nodes_var} = #{@var}.findChildren(dogtail.predicate.GenericPredicate(#{predicate_opts})#{findChildren_opts})",
         "print(len(#{nodes_var}))",
       ]
-      size = run(find_script).stdout.chomp.to_i
+      size = run(find_script_lines).stdout.chomp.to_i
       return size.times.map do |i|
         Node.new("#{nodes_var}[#{i}]", @opts)
       end
