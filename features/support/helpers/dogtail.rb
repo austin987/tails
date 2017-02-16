@@ -202,10 +202,6 @@ module Dogtail
       run("#{@var} = #{@find_code}")
     end
 
-    def press
-      run("#{@var}.doActionNamed('press')")
-    end
-
     TREE_API_NODE_SEARCHES.each do |method|
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
