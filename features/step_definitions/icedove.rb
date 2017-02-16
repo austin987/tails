@@ -85,7 +85,14 @@ When /^I go into Enigmail's preferences$/ do
 end
 
 When /^I enable Enigmail's expert settings$/ do
-  @enigmail_prefs.button('Display Expert Settings and Menus').click
+  # Clicking the "Display..." button sometimes fails, presumably
+  # because the GUI hasn't loaded completely (or perhaps the button
+  # gets its action connected *after* the button is displayed?), so we
+  # have to verify that the click actually happened.
+  retry_action(5) do
+    @enigmail_prefs.button('Display Expert Settings and Menus').click
+    @enigmail_prefs.button('Hide Expert Settings and Menus')
+  end
 end
 
 Then /^I click Enigmail's (.+) tab$/ do |tab_name|
