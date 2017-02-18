@@ -57,6 +57,7 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Close the notification applet
   @screen.type(Sikuli::Key.ESC)
+  @screen.waitVanish('GnomeNotificationAppletOpened.png', 10)
 end
 
 def post_snapshot_restore_hook
@@ -638,11 +639,10 @@ method=auto
 [ipv4]
 method=auto
 EOF
-  con_content.split("\n").each do |line|
-    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
-  end
+  tmp_path = "/tmp/NM.#{con_name}"
+  $vm.file_overwrite(tmp_path, con_content)
   con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
+  $vm.execute("install -m 0600 '#{tmp_path}' '#{con_file}'")
   $vm.execute_successfully("nmcli connection load '#{con_file}'")
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout

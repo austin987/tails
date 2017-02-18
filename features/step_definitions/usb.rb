@@ -90,7 +90,8 @@ def usb_install_helper(name)
     @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
     @screen.wait('USBInstallationComplete.png', 30*60)
   rescue FindFailed => e
-    debug_log("Tails Installer debug log:\n" + $vm.file_content('/tmp/tails-installer-*'))
+    path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
+    debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
     raise e
   end
 end
