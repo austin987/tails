@@ -15,10 +15,10 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
 end
 
 Given /^no proposed-updates APT suite is enabled$/ do
-  $vm.file_content("/etc/apt/sources.list /etc/apt/sources.list.d/*").chomp.each_line do |line|
-    assert(not(line.match("-proposed-updates")),
-           "proposed-updates APT source found: #{line}")
-  end
+  apt_sources = $vm.execute_successfully(
+    'cat /etc/apt/sources.list /etc/apt/sources.list.d/*'
+  ).stdout
+  assert_no_match(/\s\S+-proposed-updates\s/, apt_sources)
 end
 
 When /^I configure APT to use non-onion sources$/ do
