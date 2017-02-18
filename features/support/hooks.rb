@@ -187,6 +187,10 @@ AfterFeature('@product') do
       end
     end
   end
+  $vmstorage.list_volumes.each do |vol_name|
+    next if vol_name == '__internal'
+    $vmstorage.delete_volume(vol_name)
+  end
 end
 
 # Cucumber Before hooks are executed in the order they are listed, and
@@ -258,7 +262,12 @@ After('@product') do |scenario|
       info_log
       info_log_artifact_location(type, artifact_path)
     end
-    pause("Scenario failed") if $config["INTERACTIVE_DEBUGGING"]
+    if $config["INTERACTIVE_DEBUGGING"]
+      pause(
+        "Scenario failed: #{scenario.name}. " +
+        "The error was: #{scenario.exception.class.name}: #{scenario.exception}"
+      )
+    end
   else
     if @video_path && File.exist?(@video_path) && not($config['CAPTURE_ALL'])
       FileUtils.rm(@video_path)

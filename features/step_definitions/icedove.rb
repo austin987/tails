@@ -78,37 +78,6 @@ Then /^I see that only the (.+) addons are enabled in Icedove$/ do |addons|
   assert_equal(0, actual_addons.size)
 end
 
-When /^I go into Enigmail's preferences$/ do
-  $vm.focus_window('Icedove')
-  @screen.type("a", Sikuli::KeyModifier.ALT)
-  icedove_main.child('Preferences', roleName: 'menu item').click
-  @enigmail_prefs = icedove_app.dialog('Enigmail Preferences')
-end
-
-When /^I enable Enigmail's expert settings$/ do
-  @enigmail_prefs.button('Display Expert Settings and Menus').click
-end
-
-Then /^I click Enigmail's (.+) tab$/ do |tab_name|
-  @enigmail_prefs.child(tab_name, roleName: 'page tab').click
-end
-
-Then /^I see that Enigmail is configured to use the correct keyserver$/ do
-  keyservers = @enigmail_prefs.child(
-    'Specify your keyserver(s):', roleName: 'entry'
-  ).text
-  assert_equal('hkps://hkps.pool.sks-keyservers.net', keyservers)
-end
-
-Then /^I see that Enigmail is configured to use the correct SOCKS proxy$/ do
-  gnupg_parameters = @enigmail_prefs.child(
-    'Additional parameters for GnuPG', roleName: 'entry'
-  ).text
-  assert_not_nil(
-    gnupg_parameters['--keyserver-options http-proxy=socks5h://127.0.0.1:9050']
-  )
-end
-
 Then /^I see that Torbirdy is configured to use Tor$/ do
   icedove_main.child(roleName: 'status bar')
     .child('TorBirdy Enabled:    Tor', roleName: 'label').wait
@@ -224,11 +193,7 @@ Then /^I can find the email I sent to myself in my inbox$/ do
     hit_counter.wait
     inbox_view = hit_counter.parent
     message_list = inbox_view.child(roleName: 'table')
-    the_message = message_list.children(roleName: 'table row').find do |message|
-      # The message will be cropped in the list, so we cannot search
-      # for the full message.
-      message.name.start_with?("Automated test suite:")
-    end
+    the_message = message_list.child(@subject, roleName: 'table cell')
     assert_not_nil(the_message)
     # Let's clean up
     the_message.click

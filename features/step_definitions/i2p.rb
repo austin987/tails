@@ -77,14 +77,6 @@ Then /^the I2P homepage loads in I2P Browser$/ do
   end
 end
 
-Then /^I see a notification that I2P failed to start$/ do
-  robust_notification_wait('I2PFailedToStart.png', 2 * 60)
-end
-
 Then /^I see shared client tunnels in the I2P router console$/ do
   @screen.wait('I2PSharedClientTunnels.png', 15 * 60)
-end
-
-Then /^I see a notification that I2P is not ready$/ do
-  robust_notification_wait('I2PBootstrapFailure.png', 4 * 60)
 end

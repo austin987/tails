@@ -69,20 +69,12 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
 end
 
 Then /^no unexpected services are listening for network connections$/ do
-  netstat_cmd = $vm.execute("netstat -ltupn")
-  assert netstat_cmd.success?
-  for line in netstat_cmd.stdout.chomp.split("\n") do
+  for line in $vm.execute_successfully("ss -ltupn").stdout.chomp.split("\n") do
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
-    if proto == "tcp"
-      proc_index = 6
-    elsif proto == "udp"
-      proc_index = 5
-    else
-      next
-    end
-    laddr, lport = splitted[3].split(":")
-    proc = splitted[proc_index].split("/")[1]
+    next unless ['tcp', 'udp'].include?(proto)
+    laddr, lport = splitted[4].split(":")
+    proc = /users:\(\("([^"]+)"/.match(splitted[6])[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
       if SERVICES_EXPECTED_ON_ALL_IFACES.include? [proc, laddr, lport] or
@@ -96,31 +88,9 @@ Then /^no unexpected services are listening for network connections$/ do
   end
 end
 
-When /^Tails has booted a 32-bit kernel$/ do
-  assert(! $vm.execute("uname -r | grep -qs 'amd64$'").success?,
-         "Tails has not booted a 32-bit kernel.")
-end
-
 When /^Tails has booted a 64-bit kernel$/ do
   assert($vm.execute("uname -r | grep -qs 'amd64$'").success?,
          "Tails has not booted a 64-bit kernel.")
-end
-
-Then /^there is no screenshot in the live user's Pictures directory$/ do
-  pictures_directory = "/home/#{LIVE_USER}/Pictures"
-  assert($vm.execute(
-          "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
-        ).stdout.empty?,
-         "Existing screenshots were found in the live user's Pictures directory.")
-end
-
-Then /^a screenshot is saved to the live user's Pictures directory$/ do
-  pictures_directory = "/home/#{LIVE_USER}/Pictures"
-  try_for(10, :msg=> "No screenshot was created in #{pictures_directory}") do
-    !$vm.execute(
-      "find '#{pictures_directory}' -name 'Screenshot*.png' -maxdepth 1"
-    ).stdout.empty?
-  end
 end
 
 Then /^the VirtualBox guest modules are available$/ do
@@ -257,12 +227,10 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
 end
 
 When /^I disable all networking in the Tails Greeter$/ do
-  begin
-    @screen.click('TailsGreeterDisableAllNetworking.png')
-  rescue FindFailed
-    @screen.type(Sikuli::Key.PAGE_DOWN)
-    @screen.click('TailsGreeterDisableAllNetworking.png')
-  end
+  open_greeter_additional_settings()
+  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
+  @screen.wait_and_click('TailsGreeterDisableAllNetworking.png', 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|

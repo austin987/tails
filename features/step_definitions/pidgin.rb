@@ -204,8 +204,9 @@ end
 
 def configured_pidgin_accounts
   accounts = Hash.new
-  xml = REXML::Document.new($vm.file_content('$HOME/.purple/accounts.xml',
-                                             LIVE_USER))
+  xml = REXML::Document.new(
+    $vm.file_content("/home/#{LIVE_USER}/.purple/accounts.xml")
+  )
   xml.elements.each("account/account") do |e|
     account   = e.elements["name"].text
     account_name, network = account.split("@")
@@ -264,7 +265,7 @@ def default_chan (account)
 end
 
 def pidgin_otr_keys
-  return $vm.file_content('$HOME/.purple/otr.private_key', LIVE_USER)
+  return $vm.file_content("/home/#{LIVE_USER}/.purple/otr.private_key")
 end
 
 Given /^Pidgin has the expected accounts configured with random nicknames$/ do
@@ -286,10 +287,6 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
   end
   assert(expected.empty?, "These Pidgin accounts are not configured: " +
          "#{expected}")
-end
-
-When /^I start Pidgin through the GNOME menu$/ do
-  step 'I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu'
 end
 
 When /^I open Pidgin's account manager window$/ do
@@ -433,7 +430,7 @@ end
 
 def pidgin_add_certificate_from (cert_file)
   # Here, we need a certificate that is not already in the NSS database
-  step "I copy \"/usr/share/ca-certificates/spi-inc.org/spi-cacert-2008.crt\" to \"#{cert_file}\" as user \"amnesia\""
+  step "I copy \"/usr/share/ca-certificates/mozilla/CNNIC_ROOT.crt\" to \"#{cert_file}\" as user \"amnesia\""
 
   $vm.focus_window('Buddy List')
   @screen.wait_and_click('PidginToolsMenu.png', 10)

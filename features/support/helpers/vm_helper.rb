@@ -391,42 +391,6 @@ class VM
     return convert_to_bytes(size, unit)
   end
 
-  def set_arch(arch)
-    raise "System architecture can only be set to inactive vms" if is_running?
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/os/type'].attributes['arch'] = arch
-    update(domain_xml.to_s)
-  end
-
-  def add_hypervisor_feature(feature)
-    raise "Hypervisor features can only be added to inactive vms" if is_running?
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/features'].add_element(feature)
-    update(domain_xml.to_s)
-  end
-
-  def drop_hypervisor_feature(feature)
-    raise "Hypervisor features can only be fropped from inactive vms" if is_running?
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/features'].delete_element(feature)
-    update(domain_xml.to_s)
-  end
-
-  def disable_pae_workaround
-    # add_hypervisor_feature("nonpae") results in a libvirt error, and
-    # drop_hypervisor_feature("pae") alone won't disable pae. Hence we
-    # use this workaround.
-    xml = <<EOF
-  <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
-    <qemu:arg value='-cpu'/>
-    <qemu:arg value='qemu32,-pae'/>
-  </qemu:commandline>
-EOF
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain'].add_element(REXML::Document.new(xml))
-    update(domain_xml.to_s)
-  end
-
   def set_os_loader(type)
     if is_running?
       raise "boot settings can only be set for inactive vms"
@@ -452,7 +416,7 @@ EOF
 
   def execute(cmd, options = {})
     options[:user] ||= "root"
-    options[:spawn] ||= false
+    options[:spawn] = false unless options.has_key?(:spawn)
     if options[:libs]
       libs = options[:libs]
       options.delete(:libs)
@@ -463,7 +427,7 @@ EOF
       cmds << cmd
       cmd = cmds.join(" && ")
     end
-    return VMCommand.new(self, cmd, options)
+    return RemoteShell::Command.new(self, cmd, options)
   end
 
   def execute_successfully(*args)
@@ -482,7 +446,12 @@ EOF
   end
 
   def wait_until_remote_shell_is_up(timeout = 90)
-    VMCommand.wait_until_remote_shell_is_up(self, timeout)
+    msg = 'hello?'
+    try_for(timeout, :msg => "Remote shell seems to be down") do
+      Timeout::timeout(3) do
+        execute_successfully("echo '#{msg}'").stdout.chomp == msg
+      end
+    end
   end
 
   def host_to_guest_time_sync
@@ -540,27 +509,24 @@ EOF
     execute("test -d '#{directory}'").success?
   end
 
-  def file_content(file, user = 'root')
-    # We don't quote #{file} on purpose: we sometimes pass environment variables
-    # or globs that we want to be interpreted by the shell.
-    cmd = execute("cat #{file}", :user => user)
-    assert(cmd.success?,
-           "Could not cat '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
-    return cmd.stdout
+  def file_open(path)
+    f = RemoteShell::File.new(self, path)
+    yield f if block_given?
+    return f
   end
 
-  def file_append(file, lines, user = 'root')
+  def file_content(path)
+    file_open(path) { |f| return f.read() }
+  end
+
+  def file_overwrite(path, lines)
     lines = lines.join("\n") if lines.class == Array
-    # Use some tricky quoting to allow any character to be appended
-    lines.gsub!("'", "'\"'\"'")
-    cmd = execute("echo '#{lines}' >> '#{file}'", :user => user)
-    assert(cmd.success?,
-           "Could not append to '#{file}':\n#{cmd.stdout}\n#{cmd.stderr}")
+    file_open(path) { |f| return f.write(lines) }
   end
 
-  def file_overwrite(*args)
-    execute_successfully("rm -f '#{args.first}'")
-    file_append(*args)
+  def file_append(path, lines)
+    lines = lines.join("\n") if lines.class == Array
+    file_open(path) { |f| return f.append(lines) }
   end
 
   def set_clipboard(text)

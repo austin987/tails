@@ -33,7 +33,7 @@ Feature: Browsing the web using the Unsafe Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
     And I close the Unsafe Browser
-    Then I see the Unsafe Browser stop notification
+    Then I see the "Shutting down the Unsafe Browser..." notification after at most 60 seconds
     And the Unsafe Browser chroot is torn down
 
   #11458
@@ -41,6 +41,11 @@ Feature: Browsing the web using the Unsafe Browser
   Scenario: Starting a second instance of the Unsafe Browser results in an error message being shown.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
+    # Wait for whatever facility the GNOME Activities Overview uses to
+    # learn about which applications are running to "settle". Without
+    # this sleep, it is confused and it's impossible to start a new
+    # instance (it will just switch to the one we already started).
+    And I wait 10 seconds
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 

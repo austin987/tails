@@ -23,42 +23,6 @@ def context_menu_helper(top, bottom, menu_item)
   end
 end
 
-# This helper requires that the notification image is the one shown in
-# the notification applet's list, not the notification pop-up.
-def robust_notification_wait(notification_image, time_to_wait)
-  error_msg = "Didn't not manage to open the notification applet"
-  wait_start = Time.now
-  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
-    @screen.hide_cursor
-    @screen.click("GnomeNotificationApplet.png")
-    @screen.wait("GnomeNotificationAppletOpened.png", 10)
-  end
-
-  error_msg = "Didn't not see notification '#{notification_image}'"
-  time_to_wait -= (Time.now - wait_start).ceil
-  try_for(time_to_wait, :delay => 0, :msg => error_msg) do
-    found = false
-    entries = @screen.findAll("GnomeNotificationEntry.png")
-    while(entries.hasNext) do
-      entry = entries.next
-      @screen.hide_cursor
-      @screen.click(entry)
-      close_entry = @screen.wait("GnomeNotificationEntryClose.png", 10)
-      if @screen.exists(notification_image)
-        found = true
-        @screen.click(close_entry)
-        break
-      else
-        @screen.click(entry)
-      end
-    end
-    found
-  end
-
-  # Close the notification applet
-  @screen.type(Sikuli::Key.ESC)
-end
-
 def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
@@ -66,24 +30,21 @@ def post_snapshot_restore_hook
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  if $vm.has_network?
-    if $vm.execute("systemctl --quiet is-active tor@default.service").success?
-      $vm.execute("systemctl stop tor@default.service")
-      $vm.execute("rm -f /var/log/tor/log")
-      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
-      $vm.host_to_guest_time_sync
-      $vm.spawn("restart-tor")
-      wait_until_tor_is_working
-      if $vm.file_content('/proc/cmdline').include?(' i2p')
-        $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
-        # we "killall tails-i2p" to prevent multiple
-        # copies of the script from running
-        $vm.execute_successfully('killall tails-i2p')
-        $vm.spawn('/usr/local/sbin/tails-i2p start')
-      end
-    end
-  else
-    $vm.host_to_guest_time_sync
+  $vm.host_to_guest_time_sync
+  if $vm.execute("systemctl --quiet is-active tor@default.service").success?
+    $vm.execute("systemctl stop tor@default.service")
+    $vm.execute("rm -f /var/log/tor/log")
+    $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
+    $vm.spawn("restart-tor")
+    wait_until_tor_is_working
+  end
+  # ... and the same goes for I2P's tunnel state.
+  if $vm.execute("systemctl --quiet is-active i2p.service").success?
+    $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
+    # We "killall tails-i2p" to prevent multiple copies of the script
+    # from running, which seems to happen for strange reasons.
+    $vm.execute_successfully('killall tails-i2p')
+    $vm.spawn('/usr/local/sbin/tails-i2p start')
   end
 end
 
@@ -163,49 +124,43 @@ end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
-  if network_unplugged.nil?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    if network_unplugged.nil?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with(| read-only) persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, persistence_ro|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
-  if network_unplugged.empty?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
-    if ! persistence_on.empty?
-      if persistence_ro.empty?
-        step "I enable persistence"
-      else
-        step "I enable read-only persistence"
-      end
-    end
+    step "I enable persistence" if persistence_on
     step "I log in to a new session"
-    if network_unplugged.empty?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
@@ -319,7 +274,10 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   when 'German'
     @language = "German"
     @screen.wait_and_click('TailsGreeterLanguage.png', 10)
-    @screen.wait_and_click("TailsGreeterLanguage#{@language}.png", 10)
+    @screen.wait('TailsGreeterLanguagePopover.png', 10)
+    @screen.type(@language)
+    sleep(2) # Gtk needs some time to filter the results
+    @screen.type(Sikuli::Key.ENTER)
     @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
   when ''
     @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
@@ -330,22 +288,29 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   step 'the Tails desktop is ready'
 end
 
-Given /^I enable more Tails Greeter options$/ do
-  match = @screen.find('TailsGreeterMoreOptions.png')
-  @screen.click(match.getCenter.offset(match.w/2, match.h*2))
-  @screen.wait_and_click('TailsGreeterForward.png', 20)
-  @screen.wait('TailsGreeterLoginButton.png', 20)
+def open_greeter_additional_settings
+  @screen.click('TailsGreeterAddMoreOptions.png')
+  @screen.wait('TailsGreeterAdditionalSettingsDialog.png', 10)
+end
+
+Given /^I open Tails Greeter additional settings dialog$/ do
+  open_greeter_additional_settings()
 end
 
 Given /^I enable the specific Tor configuration option$/ do
-  @screen.click('TailsGreeterTorConf.png')
+  open_greeter_additional_settings()
+  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
+  @screen.wait_and_click("TailsGreeterSpecificTorConfiguration.png", 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
 Given /^I set an administration password$/ do
-  @screen.wait("TailsGreeterAdminPassword.png", 20)
+  open_greeter_additional_settings()
+  @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^Tails Greeter has applied all settings$/ do
@@ -353,22 +318,15 @@ Given /^Tails Greeter has applied all settings$/ do
   # a logind session is opened for LIVE_USER.
   try_for(120) {
     $vm.execute_successfully("loginctl").stdout
-      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s*$/) != nil
+      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s+\S+\s*$/) != nil
   }
-end
-
-def florence_keyboard_is_visible
-  $vm.execute(
-    "xdotool search --all --onlyvisible --maxdepth 1 --classname 'Florence'",
-    :user => LIVE_USER,
-  ).success?
 end
 
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
-  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-  @screen.wait("GnomeSystrayFlorence.png", 180)
   @screen.wait(desktop_started_picture, 180)
+  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
+  @screen.wait("GnomeSystrayFlorence.png", 30)
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
@@ -381,19 +339,16 @@ Given /^the Tails desktop is ready$/ do
     'gsettings set org.gnome.desktop.interface toolkit-accessibility true',
     :user => LIVE_USER,
   )
-  # Sometimes the Florence window is not hidden on startup (#11398).
-  # Whenever that's the case, hide it ourselves and verify that it vanishes.
-  # I could not find that window using Accerciser, so I'm not using dogtail;
-  # and it doesn't feel worth it to add an image and use Sikuli, since we can
-  # instead do this programmatically with xdotool.
-  if florence_keyboard_is_visible
-    @screen.click("GnomeSystrayFlorence.png")
-    try_for(5, delay: 0.1) { ! florence_keyboard_is_visible }
-  end
 end
 
-When /^I see the 'Tor is ready' notification$/ do
-  robust_notification_wait('TorIsReadyNotification.png', 300)
+When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |title, timeout|
+  timeout = timeout ? timeout.to_i : nil
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  notification_list = gnome_shell.child(
+    'No Notifications', roleName: 'label', showingOnly: false
+  ).parent.parent
+  notification_list.child(title, roleName: 'label', showingOnly: false)
+    .wait(timeout)
 end
 
 Given /^Tor is ready$/ do
@@ -421,12 +376,22 @@ Given /^available upgrades have been checked$/ do
   }
 end
 
-Given /^the Tor Browser has started$/ do
-  tor_browser_picture = "TorBrowserWindow.png"
-  @screen.wait(tor_browser_picture, 60)
+When /^I start the Tor Browser( in offline mode)?$/ do |offline|
+  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
+  if offline
+    offline_prompt = Dogtail::Application.new('zenity')
+                     .dialog('Tor is not ready')
+    offline_prompt.wait(10)
+    offline_prompt.button('Start Tor Browser').click
+  end
+  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
+  @torbrowser.wait(60)
+  if offline
+    step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
 end
 
-Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
     title = 'Tails - News'
@@ -435,18 +400,23 @@ Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tail
   else
     raise "Unsupported page: #{page}"
   end
-  step "the Tor Browser has started"
   step "\"#{title}\" has loaded in the Tor Browser"
 end
 
-Given /^the Tor Browser has started in offline mode$/ do
-  @screen.wait("TorBrowserOffline.png", 60)
+When /^I request a new identity using Torbutton$/ do
+  @screen.wait_and_click('TorButtonIcon.png', 30)
+  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+end
+
+When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
+  @screen.wait('GnomeQuestionDialogIcon.png', 30)
+  step 'I type "y"'
 end
 
 Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   url = "https://www.eff.org"
   step "I open the address \"#{url}\" in the Tor Browser"
-  @screen.wait("TorBrowserOffline.png", 5)
+  step 'the Tor Browser shows the "The proxy server is refusing connections" error'
   @screen.type("d", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserBookmarkPrompt.png", 10)
   @screen.type(url + Sikuli::Key.ENTER)
@@ -458,28 +428,18 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  begin
-    @screen.click("GnomeNotificationApplet.png")
-  rescue FindFailed
-    # No notifications, so we're done here.
-    next
-  end
-  @screen.wait("GnomeNotificationAppletOpened.png", 10)
-  begin
-    entries = @screen.findAll("GnomeNotificationEntry.png")
-    while(entries.hasNext) do
-      entry = entries.next
-      @screen.hide_cursor
-      @screen.click(entry)
-      @screen.wait_and_click("GnomeNotificationEntryClose.png", 10)
+  # These magic coordinates always locates GNOME's clock in the top
+  # bar, which when clicked opens the calendar.
+  x, y = 512, 10
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
+    @screen.click_point(x, y)
+    unless gnome_shell.child('No Notifications', roleName: 'label').exist?
+      @screen.click('GnomeCloseAllNotificationsButton.png')
     end
-  rescue FindFailed
-    # No notifications, so we're good to go.
+    gnome_shell.child('No Notifications', roleName: 'label').exist?
   end
-  @screen.hide_cursor
-  # Click anywhere to close the notification applet
-  @screen.click("GnomeApplicationsMenu.png")
-  @screen.hide_cursor
+  @screen.type(Sikuli::Key.ESC)
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -502,15 +462,21 @@ Given /^I enter the sudo password in the pkexec prompt$/ do
   step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
 end
 
-def deal_with_polkit_prompt (image, password)
+def deal_with_polkit_prompt(password, opts = {})
+  opts[:expect_success] ||= true
+  image = 'PolicyKitAuthPrompt.png'
   @screen.wait(image, 60)
   @screen.type(password)
   @screen.type(Sikuli::Key.ENTER)
-  @screen.waitVanish(image, 10)
+  if opts[:expect_success]
+    @screen.waitVanish(image, 20)
+  else
+    @screen.wait('PolicyKitAuthFailure.png', 20)
+  end
 end
 
 Given /^I enter the "([^"]*)" password in the pkexec prompt$/ do |password|
-  deal_with_polkit_prompt('PolicyKitAuthPrompt.png', password)
+  deal_with_polkit_prompt(password)
 end
 
 Given /^process "([^"]+)" is (not )?running$/ do |process, not_running|
@@ -596,54 +562,32 @@ When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
-Given /^package "([^"]+)" is installed$/ do |package|
+Given /^the package "([^"]+)" is installed$/ do |package|
   assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
 end
 
-When /^I start the Tor Browser$/ do
-  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
-end
-
-When /^I request a new identity using Torbutton$/ do
-  @screen.wait_and_click('TorButtonIcon.png', 30)
-  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
-end
-
-When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
-  @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  step 'I type "y"'
-end
-
-When /^I start the Tor Browser in offline mode$/ do
-  step "I start the Tor Browser"
-  @screen.wait_and_click("TorBrowserOfflinePrompt.png", 10)
-  @screen.click("TorBrowserOfflinePromptStart.png")
-end
-
-Given /^I add a wired DHCP NetworkManager connection called "([^"]+)"$/ do |con_name|
-  con_content = <<EOF
-[802-3-ethernet]
-duplex=full
-
+Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
+  if version and version == '2.x'
+    con_content = <<EOF
 [connection]
 id=#{con_name}
-uuid=bbc60668-1be0-11e4-a9c6-2f1ce0e75bf1
-type=802-3-ethernet
-timestamp=1395406011
-
-[ipv6]
-method=auto
-
-[ipv4]
-method=auto
+uuid=b04afa94-c3a1-41bf-aa12-1a743d964162
+interface-name=eth0
+type=ethernet
 EOF
-  con_content.split("\n").each do |line|
-    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
+    con_file = "/etc/NetworkManager/system-connections/#{con_name}"
+    $vm.file_overwrite(con_file, con_content)
+    $vm.execute_successfully("chmod 600 '#{con_file}'")
+    $vm.execute_successfully("nmcli connection load '#{con_file}'")
+  elsif version and version == '3.x'
+    raise "Unsupported version '#{version}'"
+  else
+    $vm.execute_successfully(
+      "nmcli connection add con-name #{con_name} " + \
+      "type ethernet autoconnect yes ifname eth0"
+    )
   end
-  con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
-  $vm.execute_successfully("nmcli connection load '#{con_file}'")
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
@@ -658,7 +602,7 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
 end
 
 When /^I start and focus GNOME Terminal$/ do
-  step 'I start "Terminal" via the GNOME "Utilities" applications menu'
+  step 'I start "GNOME Terminal" via the GNOME "Utilities" applications menu'
   @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
@@ -715,10 +659,13 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  app = Dogtail::Application.new('gnome-shell')
-  for element in ['Applications', submenu, app_name] do
-    app.child(element, roleName: 'label').click
-  end
+  # XXX: Dogtail is buggy when interacting with the Applications menu
+  # (see #11718) so we use the GNOME Applications Overview instead.
+  @screen.wait('GnomeApplicationsMenu.png', 10)
+  $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
+  @screen.wait('GnomeActivitiesOverview.png', 10)
+  @screen.type(app_name)
+  @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -998,4 +945,8 @@ def share_host_files(files)
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
   return mount_dir
+end
+
+When /^Tails system time is magically synchronized$/ do
+  $vm.host_to_guest_time_sync
 end

@@ -30,8 +30,12 @@ end
 
 # Call block (ignoring any exceptions it may throw) repeatedly with
 # one second breaks until it returns true, or until `timeout` seconds have
-# passed when we throw a Timeout::Error exception.
+# passed when we throw a Timeout::Error exception. If `timeout` is `nil`,
+# then we just run the code block with no timeout.
 def try_for(timeout, options = {})
+  if block_given? && timeout.nil?
+    return yield
+  end
   options[:delay] ||= 1
   last_exception = nil
   # Create a unique exception used only for this particular try_for
@@ -78,11 +82,12 @@ def try_for(timeout, options = {})
   # ends up there immediately.
 rescue unique_timeout_exception => e
   msg = options[:msg] || 'try_for() timeout expired'
+  exc_class = options[:exception] || Timeout::Error
   if last_exception
     msg += "\nLast ignored exception was: " +
            "#{last_exception.class}: #{last_exception}"
   end
-  raise Timeout::Error.new(msg)
+  raise exc_class.new(msg)
 end
 
 class TorFailure < StandardError
@@ -127,6 +132,10 @@ def retry_action(max_retries, options = {}, &block)
     begin
       block.call
       return
+    rescue NameError => e
+      # NameError most likely means typos, and hiding that is rarely
+      # (never?) a good idea, so we rethrow them.
+      raise e
     rescue Exception => e
       if retries <= max_retries
         debug_log("#{options[:operation_name]} failed (Try #{retries} of " +
@@ -142,6 +151,8 @@ def retry_action(max_retries, options = {}, &block)
     end
   end
 end
+
+alias :retry_times :retry_action
 
 def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
@@ -266,9 +277,19 @@ def info_log_artifact_location(type, path)
   info_log("#{type.capitalize}: #{path}")
 end
 
+def notify_user(message)
+  alarm_script = $config['NOTIFY_USER_COMMAND']
+  return if alarm_script.nil? || alarm_script.empty?
+  cmd_helper(alarm_script.gsub('%m', message))
+end
+
 def pause(message = "Paused")
+  notify_user(message)
   STDERR.puts
   STDERR.puts message
+  # Ring the ASCII bell for a helpful notification in most terminal
+  # emulators.
+  STDOUT.write "\a"
   STDERR.puts
   loop do
     STDERR.puts "Return: Continue; d: Debugging REPL"

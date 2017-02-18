@@ -3,7 +3,7 @@ require 'packetfu'
 # Returns the unique edges (based on protocol, source/destination
 # address/port) in the graph of all network flows.
 def pcap_connections_helper(pcap_file, opts = {})
-  opts[:ignore_dhcp] ||= true
+  opts[:ignore_dhcp] = true unless opts.has_key?(:ignore_dhcp)
   connections = Array.new
   packets = PacketFu::PcapFile.new.file_to_array(:filename => pcap_file)
   packets.each do |p|
@@ -40,7 +40,7 @@ def pcap_connections_helper(pcap_file, opts = {})
     if protocol == "udp" and
        sport == 68 and
        dport == 67 and
-       ip_packet.ip_saddr == '0.0.0.0' and
+       eth_packet.eth_daddr == "ff:ff:ff:ff:ff:ff" and
        ip_packet.ip_daddr == "255.255.255.255"
       next if opts[:ignore_dhcp]
     end
