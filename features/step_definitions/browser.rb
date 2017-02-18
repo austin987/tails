@@ -94,16 +94,21 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     @screen.type('v', Sikuli::KeyModifier.CTRL)
     @screen.type(Sikuli::Key.ENTER)
   end
-  open_address.call
+  recovery_on_failure = Proc.new do
+    @screen.type(Sikuli::Key.ESC)
+    @screen.waitVanish('BrowserReloadButton.png', 3)
+    open_address.call
+  end
   if browser == "Tor Browser"
-    recovery_on_failure = Proc.new do
-      @screen.type(Sikuli::Key.ESC)
-      @screen.waitVanish('BrowserReloadButton.png', 3)
-      open_address.call
-    end
-    retry_tor(recovery_on_failure) do
-      @screen.wait('BrowserReloadButton.png', 120)
-    end
+    retry_method = method(:retry_tor)
+  elsif browser == "I2P Browser"
+    retry_method = method(:retry_i2p)
+  else
+    retry_method = Proc.new { |p, &b| retry_action(10, recovery_proc: p, &b) }
+  end
+  open_address.call
+  retry_method.call(recovery_on_failure) do
+    @screen.wait('BrowserReloadButton.png', 120)
   end
 end
 
