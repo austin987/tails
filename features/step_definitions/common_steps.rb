@@ -423,8 +423,11 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  tor_browser_picture = "TorBrowserWindow.png"
-  @screen.wait(tor_browser_picture, 60)
+  try_for(60) do
+    Dogtail::Application.new('Firefox')
+      .child(roleName: 'frame', recursive: false)
+      .exist?
+  end
 end
 
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|

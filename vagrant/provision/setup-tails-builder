@@ -42,8 +42,10 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
 EOF
 
 # We don't want to use apt-cacher-ng for gpg
-http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
-gpg --export C7988EA7A358D82E | sudo apt-key add -
+if [ "${TAILS_OFFLINE_MODE}" != 1 ]; then
+    http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
+    gpg --export C7988EA7A358D82E | sudo apt-key add -
+fi
 
 # We need a newer version of debootstrap for saving the list of
 # packages used when building Tails (#6297).
@@ -53,7 +55,10 @@ apt-get update
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 
 # Install custom configuration for apt-cacher-ng and restart
-install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
+ACNG_CONF=/etc/apt-cacher-ng/acng.conf
+install -o root -g root -m 644 /vagrant/provision/assets/acng.conf "${ACNG_CONF}"
+[ "${TAILS_OFFLINE_MODE}" = 1 ] || TAILS_OFFLINE_MODE=0
+sed -i "s/^Offlinemode:.*$/Offlinemode: ${TAILS_OFFLINE_MODE}/" "${ACNG_CONF}"
 service apt-cacher-ng restart
 
 # Restore local HTTP proxy if needed
