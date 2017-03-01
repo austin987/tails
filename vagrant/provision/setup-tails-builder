@@ -56,8 +56,10 @@ fi
 # packages used when building Tails (#6297).
 echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
 
-apt-get update
-apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
+if ! systemctl --quiet is-active apt-cacher-ng.service; then
+    apt-get update
+    apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
+fi
 
 # Install custom configuration for apt-cacher-ng and restart
 ACNG_CONF=/etc/apt-cacher-ng/acng.conf
@@ -70,6 +72,8 @@ service apt-cacher-ng restart
 if [ "$LOCAL_HTTP_PROXY" ]; then
 	http_proxy="$LOCAL_HTTP_PROXY"
 fi
+
+apt-get update
 
 # Upgrade if needed
 apt-get -y dist-upgrade
