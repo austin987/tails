@@ -103,7 +103,7 @@ def force_new_tor_circuit()
   if $__last_newnym
     elapsed = Time.now - $__last_newnym
     # We sleep an extra second to avoid tight timings.
-    sleep rate - elapsed + 1 if 0 < elapsed &&  elapsed < rate
+    sleep rate - elapsed + 1 if 0 < elapsed && elapsed < rate
   end
   $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
   $__last_newnym = Time.now

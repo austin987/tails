@@ -64,8 +64,9 @@ When /^I start Synaptic$/ do
   @synaptic = Dogtail::Application.new('synaptic')
   # The seemingly spurious space is needed because that is how this
   # frame is named...
-  @synaptic.child('Synaptic Package Manager ', roleName: 'frame',
-                  recursive: false).wait
+  @synaptic.child(
+    'Synaptic Package Manager ', roleName: 'frame', recursive: false
+  )
 end
 
 When /^I update APT using Synaptic$/ do
@@ -96,7 +97,6 @@ Then /^I install "(.+)" using Synaptic$/ do |package_name|
   retry_tor(recovery_proc) do
     @synaptic.button('Search').click
     find_dialog = @synaptic.dialog('Find')
-    find_dialog.wait(10)
     find_dialog.child(roleName: 'text').typeText(package_name)
     find_dialog.button('Search').click
     package_list = @synaptic.child('Installed Version',
@@ -104,10 +104,12 @@ Then /^I install "(.+)" using Synaptic$/ do |package_name|
     package_entry = package_list.child(package_name, roleName: 'table cell')
     package_entry.doubleClick
     @synaptic.button('Apply').click
-    apply_prompt = @synaptic.dialog('Summary')
-    apply_prompt.wait(60)
+    apply_prompt = nil
+    try_for(60) { apply_prompt = @synaptic.dialog('Summary'); true }
     apply_prompt.button('Apply').click
-    @synaptic.child('Changes applied', roleName: 'frame',
-                    recursive: false).wait(4*60)
+    try_for(4*60) do
+      @synaptic.child('Changes applied', roleName: 'frame', recursive: false)
+      true
+    end
   end
 end
