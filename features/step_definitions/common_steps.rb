@@ -57,6 +57,7 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Close the notification applet
   @screen.type(Sikuli::Key.ESC)
+  @screen.waitVanish('GnomeNotificationAppletOpened.png', 10)
 end
 
 def post_snapshot_restore_hook
@@ -422,8 +423,11 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  tor_browser_picture = "TorBrowserWindow.png"
-  @screen.wait(tor_browser_picture, 60)
+  try_for(60) do
+    Dogtail::Application.new('Firefox')
+      .child(roleName: 'frame', recursive: false)
+      .exist?
+  end
 end
 
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
@@ -716,7 +720,7 @@ end
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
   app = Dogtail::Application.new('gnome-shell')
   for element in ['Applications', submenu, app_name] do
-    app.child(element, roleName: 'label').click
+    app.child(element, roleName: 'label', showingOnly: true).click
   end
 end
 
