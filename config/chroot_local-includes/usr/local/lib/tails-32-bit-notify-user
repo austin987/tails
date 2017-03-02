@@ -23,9 +23,9 @@ See https://tails.boum.org/.
 #}}}
 
 use Desktop::Notify;
-use IPC::System::Simple qw{capturex $EXITVAL};
 use Locale::gettext;
 use Net::DBus::Reactor;
+use Path::Tiny;
 use POSIX;
 
 ### initialization
@@ -45,9 +45,7 @@ sub action_cb {
 
 ### main
 
-my $architecture = capturex(qw{/bin/uname -m});
-chomp $architecture;
-exit 0 if $architecture eq 'x86_64';
+exit 0 if grep {/^flags\s+:.*\s[l][m]\s/xms} path('/proc/cpuinfo')->lines_utf8;
 
 my $reactor = Net::DBus::Reactor->main;
 
