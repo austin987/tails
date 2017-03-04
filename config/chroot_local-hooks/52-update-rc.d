@@ -2,32 +2,6 @@
 
 set -e
 
-CUSTOM_INITSCRIPTS="
-"
-
-PATCHED_INITSCRIPTS="
-alsa-utils
-haveged
-hwclock.sh
-i2p
-kexec-load
-laptop-mode
-memlockd
-saned
-spice-vdagent
-tor
-"
-
-echo "Configuring boot sequence"
-
-# The patches to adjust the runlevels are applied to the chroot
-# after the packages have been installed. So we need to remove them first,
-# to re-install them with our settings.
-insserv -r $PATCHED_INITSCRIPTS
-
-# Re-install overriden initscripts and install our custom ones.
-insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
-
 ### Tweak systemd unit files
 
 # Workaround for https://bugs.debian.org/714957
