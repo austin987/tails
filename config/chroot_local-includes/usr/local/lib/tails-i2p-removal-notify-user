@@ -35,11 +35,13 @@ textdomain("tails");
 
 sub action_cb {
     my $reactor = shift;
-    exec(
-        '/usr/local/bin/tails-documentation',
-        'doc/anonymous_internet/i2p',
-        'removal',
-    );
+    unless (fork) {
+        exec(
+            '/usr/local/bin/tails-documentation',
+            'doc/anonymous_internet/i2p',
+            'removal',
+        );
+    }
     $reactor->shutdown;
 }
 
