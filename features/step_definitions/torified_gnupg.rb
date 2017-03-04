@@ -75,8 +75,14 @@ When /^the Seahorse operation is successful$/ do
 end
 
 When /^GnuPG uses the configured keyserver$/ do
-  assert(@gnupg_recv_key_res.stderr[CONFIGURED_KEYSERVER_HOSTNAME],
-         "GnuPG's stderr did not mention keyserver #{CONFIGURED_KEYSERVER_HOSTNAME}")
+  dirmngr_request = $vm.execute_successfully(
+    'gpg-connect-agent --dirmngr "keyserver --hosttable" /bye'
+  )
+  server = dirmngr_request.stdout.chomp.lines[1].split[4]
+  assert_equal(
+    CONFIGURED_KEYSERVER_HOSTNAME, server,
+    "GnuPG's dirmngr does not use the correct keyserver"
+  )
 end
 
 When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|

@@ -354,7 +354,6 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  step 'I see the "Tor is ready" notification after at most 30 seconds'
   if $vm.execute('systemctl is-system-running').failure?
     units_status = $vm.execute('systemctl').stdout
     raise "At least one system service failed to start:\n#{units_status}"
@@ -382,13 +381,18 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
                      .dialog('Tor is not ready')
-    offline_prompt.wait(10)
     offline_prompt.button('Start Tor Browser').click
   end
-  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
-  @torbrowser.wait(60)
+  @torbrowser = Dogtail::Application.new('Firefox')
+  step "the Tor Browser has started#{offline}"
   if offline
     step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
+end
+
+Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
+  try_for(60) do
+    @torbrowser.child(roleName: 'frame', recursive: false).exist?
   end
 end
 
@@ -432,12 +436,15 @@ Given /^all notifications have disappeared$/ do
   # These magic coordinates always locates GNOME's clock in the top
   # bar, which when clicked opens the calendar.
   x, y = 512, 10
-  @screen.click_point(x, y)
-  @screen.wait_and_click('GnomeCloseAllNotificationsButton.png', 10)
-  try_for(10) do
-    Dogtail::Application.new('gnome-shell').child('No Notifications').exist?
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
+    @screen.click_point(x, y)
+    unless gnome_shell.child('No Notifications', roleName: 'label').exist?
+      @screen.click('GnomeCloseAllNotificationsButton.png')
+    end
+    gnome_shell.child('No Notifications', roleName: 'label').exist?
   end
-  @screen.click_point(x, y)
+  @screen.type(Sikuli::Key.ESC)
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|

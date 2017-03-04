@@ -50,7 +50,7 @@ Feature: Browsing the web using the Tor Browser
     And I click the HTML5 play button
     And 1 application is playing audio after 10 seconds
 
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Watching a WebM video
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
