@@ -23,6 +23,7 @@ See https://tails.boum.org/.
 #}}}
 
 use Desktop::Notify;
+use English '-no_match_vars';
 use Locale::gettext;
 use Net::DBus::Reactor;
 use POSIX;
@@ -55,7 +56,7 @@ $notify->close_callback(sub { $reactor->shutdown; });
 
 my $summary = gettext("Warning: I2P will be removed in Tails 2.12");
 $notify->create(summary => $summary,
-                actions => { 'moreinfo'  => gettext('Learn more'), },
+                actions => { "moreinfo_$PID" => gettext('Learn more'), },
                 hints   => { 'transient' => 1, },
                 timeout => 0)->show();
 

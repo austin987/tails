@@ -23,6 +23,7 @@ See https://tails.boum.org/.
 #}}}
 
 use Desktop::Notify;
+use English '-no_match_vars';
 use IPC::System::Simple qw{capturex $EXITVAL};
 use Locale::gettext;
 use Net::DBus::Reactor;
@@ -79,7 +80,7 @@ else {
 
 $notify->create(summary => $summary,
                 body    => $body,
-                actions => { 'moreinfo'  => gettext('Learn more'), },
+                actions => { "moreinfo_$PID" => gettext('Learn more'), },
                 hints   => { 'transient' => 1, },
                 timeout => 0)->show();
 
