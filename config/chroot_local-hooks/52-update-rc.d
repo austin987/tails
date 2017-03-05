@@ -48,6 +48,7 @@ systemctl enable tails-tor-has-bootstrapped-flag-file.service
 systemctl enable tor-controlport-filter.service
 
 # Enable our own systemd user unit files
+systemctl --global enable tails-32-bit-notify-user.service
 systemctl --global enable tails-add-GNOME-bookmarks.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
