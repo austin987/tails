@@ -1204,20 +1204,20 @@ this, and skip what does not make sense for a RC.
                         echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
                     fi
                 else
-                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/debian/dists/${RELEASE_BRANCH:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/stable/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
                fi
                echo "Origin '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
            done
         )
 
 1. Push the resulting branches.
-1. Make sure Jenkins manages to build all updated major branches fine:
+1. Make sure Jenkins manages to build all updated major branches:
    <https://jenkins.tails.boum.org/>.
-1. Delete the _Release Manager View for ${VERSION_:?} Redmine custom query.
+1. Delete the _Release Manager View for ${VERSION_:?}_ Redmine custom query.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
-1. If you will be the release manager for the next release, look at the
+1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager]].
 
