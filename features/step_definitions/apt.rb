@@ -14,6 +14,13 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   end
 end
 
+Given /^no proposed-updates APT suite is enabled$/ do
+  apt_sources = $vm.execute_successfully(
+    'cat /etc/apt/sources.list /etc/apt/sources.list.d/*'
+  ).stdout
+  assert_no_match(/\s\S+-proposed-updates\s/, apt_sources)
+end
+
 When /^I configure APT to use non-onion sources$/ do
   script = <<-EOF
   use strict;
