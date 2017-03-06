@@ -36,7 +36,11 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
 end
 
 Then /^I double-click the Report an Error launcher on the desktop$/ do
-  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+  # Sometimes the double-click is lost (#12131).
+  retry_action(10) do
+    @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+    step 'the Tor Browser has started'
+  end
 end
 
 Then /^the live user has been setup by live\-boot$/ do
