@@ -51,7 +51,6 @@ systemctl --global enable tails-32-bit-notify-user.service
 systemctl --global enable tails-add-GNOME-bookmarks.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
-systemctl --global enable tails-i2p-removal-notify-user.service
 systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
