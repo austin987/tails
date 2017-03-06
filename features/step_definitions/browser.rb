@@ -94,16 +94,21 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     @screen.type('v', Sikuli::KeyModifier.CTRL)
     @screen.type(Sikuli::Key.ENTER)
   end
-  open_address.call
+  recovery_on_failure = Proc.new do
+    @screen.type(Sikuli::Key.ESC)
+    @screen.waitVanish('BrowserReloadButton.png', 3)
+    open_address.call
+  end
   if browser == "Tor Browser"
-    recovery_on_failure = Proc.new do
-      @screen.type(Sikuli::Key.ESC)
-      @screen.waitVanish('BrowserReloadButton.png', 3)
-      open_address.call
-    end
-    retry_tor(recovery_on_failure) do
-      @screen.wait('BrowserReloadButton.png', 120)
-    end
+    retry_method = method(:retry_tor)
+  elsif browser == "I2P Browser"
+    retry_method = method(:retry_i2p)
+  else
+    retry_method = Proc.new { |p, &b| retry_action(10, recovery_proc: p, &b) }
+  end
+  open_address.call
+  retry_method.call(recovery_on_failure) do
+    @screen.wait('BrowserReloadButton.png', 120)
   end
 end
 
@@ -119,12 +124,12 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   end
   expected_title = "#{title} - #{browser_name}"
   app = Dogtail::Application.new('Firefox')
-  app.child(expected_title, roleName: 'frame').wait(60)
+  try_for(60) { app.child(expected_title, roleName: 'frame') }
   # The 'Reload current page' button (graphically shown as a looping
   # arrow) is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
-  app.child(reload_action, roleName: 'push button').wait(60)
+  try_for(60) { app.child(reload_action, roleName: 'push button') }
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -223,9 +228,6 @@ end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   page = @torbrowser.child("Problem loading page", roleName: "document frame")
-  # Important to wait here since children() won't retry but return the
-  # immediate results
-  page.wait
   headers = page.children(roleName: "heading")
   found = headers.any? { |heading| heading.text == error }
   raise "Could not find the '#{error}' error in the Tor Browser" unless found

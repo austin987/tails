@@ -381,13 +381,18 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
                      .dialog('Tor is not ready')
-    offline_prompt.wait(10)
     offline_prompt.button('Start Tor Browser').click
   end
-  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
-  @torbrowser.wait(60)
+  @torbrowser = Dogtail::Application.new('Firefox')
+  step "the Tor Browser has started#{offline}"
   if offline
     step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
+end
+
+Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
+  try_for(60) do
+    @torbrowser.child(roleName: 'frame', recursive: false).exist?
   end
 end
 

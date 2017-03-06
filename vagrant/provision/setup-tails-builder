@@ -7,6 +7,11 @@ export DEBIAN_FRONTEND=noninteractive
 # Do not use virtual machine proxy before apt-cacher-ng is installed
 if [ "$http_proxy" = "http://$(hostname -f):3142" ] &&
    ! [ -f /etc/apt-cacher-ng/acng.conf ]; then
+	if [ "${TAILS_OFFLINE_MODE}" = 1 ]; then
+		echo "When using the VM proxy the first build must be " \
+		     "made without offline mode" >&2
+		exit 1
+	fi
 	LOCAL_HTTP_PROXY="$http_proxy"
 	http_proxy=''
 fi
@@ -42,24 +47,33 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
 EOF
 
 # We don't want to use apt-cacher-ng for gpg
-http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
-gpg --export C7988EA7A358D82E | sudo apt-key add -
+if [ "${TAILS_OFFLINE_MODE}" != 1 ]; then
+    http_proxy="" gpg --keyserver hkps.pool.sks-keyservers.net --recv-key C7988EA7A358D82E
+    gpg --export C7988EA7A358D82E | sudo apt-key add -
+fi
 
 # We need a newer version of debootstrap for saving the list of
 # packages used when building Tails (#6297).
 echo 'deb http://ftp.us.debian.org/debian jessie-backports main' > /etc/apt/sources.list.d/jessie-backports.list
 
-apt-get update
-apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
+if ! systemctl --quiet is-active apt-cacher-ng.service; then
+    apt-get update
+    apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
+fi
 
 # Install custom configuration for apt-cacher-ng and restart
-install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
+ACNG_CONF=/etc/apt-cacher-ng/acng.conf
+install -o root -g root -m 644 /vagrant/provision/assets/acng.conf "${ACNG_CONF}"
+[ "${TAILS_OFFLINE_MODE}" = 1 ] || TAILS_OFFLINE_MODE=0
+sed -i "s/^Offlinemode:.*$/Offlinemode: ${TAILS_OFFLINE_MODE}/" "${ACNG_CONF}"
 service apt-cacher-ng restart
 
 # Restore local HTTP proxy if needed
 if [ "$LOCAL_HTTP_PROXY" ]; then
 	http_proxy="$LOCAL_HTTP_PROXY"
 fi
+
+apt-get update
 
 # Upgrade if needed
 apt-get -y dist-upgrade
