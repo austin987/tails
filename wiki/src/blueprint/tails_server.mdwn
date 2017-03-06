@@ -2,7 +2,7 @@
 
 [[!toc levels=3]]
 
-# Vision #
+# Vision
 
 Tails Server should provide a user-friendly way to start onion services that facilitate group collaboration, communication, and data sharing.
 
@@ -35,12 +35,14 @@ In order to achieve this vision, the following problems have to be solved:
 * Presenting the onion address and client credentials to the user in a way that s/he can easily share them with clients.
 * Implementing a proper CLI and GUI to configure and activate services.
 
-## List of services which could be nice if integrated in Tails Server ##
+## List of services which could be nice if integrated in Tails Server
+
 Please add to this list!
 
 * Collaborative text editor
   * Gobby
-  * Etherpad (requires web server)
+  * Etherpad (requires web server) (no debian package)
+  * [CryptPad](https://cryptpad.fr/)
 * VoIP
   * Mumble
 * Web server
@@ -67,7 +69,8 @@ Please add to this list!
   * IRCD-Hybrid
 * SSH
 
-# Design #
+# Design
+
 Each service is defined by a separate Python module in `/usr/share/tails-server/services/`. Each service's module must contain a subclass of the `TailsService` class, which defines all the attributes and methods required by a service, e.g. to install, configure, start and stop it. If a service needs additional functionality, the subclass can override arbitrary attributes and methods of the `TailsService` base class.
 
 Options which can be changed by the user can be defined as subclasses of `TailsServiceOption`. Default options include for example the `PersistenceOption` and the `AllowLanOption`. To add service specific options, the `TailsService.options` attribute can be overridden.
@@ -75,15 +78,17 @@ Options which can be changed by the user can be defined as subclasses of `TailsS
 The Tails Server GUI monitors D-Bus to get notified when one of the services starts or stops. This implies that each service in Tails Server must have a systemd service which can be monitored this way.
 
 
-# Implementation #
+# Implementation
+
 Tails Server is implemented in Python 3. 
 
 
-# Service Specification #
+# Service Specification
 
 The following attributes of the `TailsService` class must be overridden by all subclasses:
 
 ## Attributes
+
 - name: The name of the service, as used in the CLI. This should be the same as the basename of the executable file.
 - description: A short description of the service.
 - client_application: The name of the application which can connt to this service
@@ -149,6 +154,7 @@ Sets the provided option to the provided value.
 
 
 # Obligatory Client Authentication
+
 My current proposal is that, until we can use a Tor version with the [next generation onion services](https://gitweb.torproject.org/torspec.git/tree/proposals/224-rend-spec-ng.txt) in Tails, Tails Server should enforce the use of client authentication, i.e. it will not be shown as an option to the user and will always be turned on. We could add a somehow hidden option (maybe a command line option) to disable client authentication, so that users who know about the risk still have a way to use Tails Server without client authentication.
 
 The reasoning for this is that users running onion services in Tails currently face an increased risk of deanonymization. In the default Tor configuration, the first Tor node that the Tor client connects to stays the same for a longer time, currently 60 days. This node is called the entry guard. The reasoning is to reduce the risk of using a bad entry node, because the entry guard is the only node in the Tor network that knows the real IP address of the Tor user. An attacker controlling the entry guard gains important information about the Tor user, which can lead to deanonymization.
