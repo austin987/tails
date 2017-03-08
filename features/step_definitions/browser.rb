@@ -1,7 +1,5 @@
 Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
   case browser_type
-  when 'Tor'
-    try_for(60) { Dogtail::Application.new('Firefox').child(roleName: 'frame') }
   when 'Unsafe'
     @screen.wait("UnsafeBrowserHomepage.png", 360)
   when 'I2P'
@@ -123,13 +121,12 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
     reload_action = 'Reload current page'
   end
   expected_title = "#{title} - #{browser_name}"
-  app = Dogtail::Application.new('Firefox')
-  app.child(expected_title, roleName: 'frame').wait(60)
+  try_for(60) { @torbrowser.child(expected_title, roleName: 'frame') }
   # The 'Reload current page' button (graphically shown as a looping
   # arrow) is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
-  app.child(reload_action, roleName: 'push button').wait(60)
+  try_for(60) { @torbrowser.child(reload_action, roleName: 'push button') }
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -228,9 +225,6 @@ end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   page = @torbrowser.child("Problem loading page", roleName: "document frame")
-  # Important to wait here since children() won't retry but return the
-  # immediate results
-  page.wait
   headers = page.children(roleName: "heading")
   found = headers.any? { |heading| heading.text == error }
   raise "Could not find the '#{error}' error in the Tor Browser" unless found
