@@ -39,6 +39,7 @@ Then /^I double-click the Report an Error launcher on the desktop$/ do
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
     @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+    @torbrowser = Dogtail::Application.new('Firefox')
     step 'the Tor Browser has started'
   end
 end
