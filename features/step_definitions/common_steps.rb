@@ -730,6 +730,7 @@ end
 
 When /^I double-click on the "Tails documentation" link on the Desktop$/ do
   @screen.wait_and_double_click("DesktopTailsDocumentationIcon.png", 10)
+  @torbrowser = Dogtail::Application.new('Firefox')
 end
 
 When /^I click the blocked video icon$/ do
