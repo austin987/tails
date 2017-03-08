@@ -8,6 +8,9 @@ sed -i 's,^\(\#\?\s*deb\(-src\)\?\s\+\)http://,\1tor+http://,' \
 sed -E -i 's,\s+non-free$,,' \
            /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 
+sed -E -i '/^deb(-src)?\s+\S+\s+\S+-proposed-updates\s+/d' \
+           /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+
 echo '
 
 ### Time-based snapshots
@@ -85,3 +88,5 @@ s{
 }{$1tor+http://jenw7xbd6tf7vfhp.onion/$2}xms;
 
 ' | perl -pi - /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+
+find /etc/apt/sources.list* -size 0 -delete
