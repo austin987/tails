@@ -124,12 +124,12 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   end
   expected_title = "#{title} - #{browser_name}"
   app = Dogtail::Application.new('Firefox')
-  try_for(60) { app.child(expected_title, roleName: 'frame') }
+  app.child(expected_title, roleName: 'frame').wait(60)
   # The 'Reload current page' button (graphically shown as a looping
   # arrow) is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
-  try_for(60) { app.child(reload_action, roleName: 'push button') }
+  app.child(reload_action, roleName: 'push button').wait(60)
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -228,6 +228,9 @@ end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   page = @torbrowser.child("Problem loading page", roleName: "document frame")
+  # Important to wait here since children() won't retry but return the
+  # immediate results
+  page.wait
   headers = page.children(roleName: "heading")
   found = headers.any? { |heading| heading.text == error }
   raise "Could not find the '#{error}' error in the Tor Browser" unless found
