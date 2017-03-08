@@ -114,6 +114,12 @@ end
 When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
   installer_launcher = Dogtail::Application.new('tails-installer-launcher')
+                         .child('Tails Installer', roleName: 'frame')
+  # Sometimes Dogtail will find the button and click it before it is
+  # shown (searchShowingOnly is not perfect) which generally means
+  # clicking somewhere on the Terminal => the click is lost *and* the
+  # installer does no go to the foreground. So let's wait a bit extra.
+  sleep 3
   installer_launcher.button(mode).click
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
