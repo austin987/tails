@@ -1,4 +1,4 @@
-Then /^the (Tor|Unsafe|I2P) Browser has started$/ do |browser_type|
+Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
   case browser_type
   when 'Tor'
     try_for(60) { Dogtail::Application.new('Firefox').child(roleName: 'frame') }
