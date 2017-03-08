@@ -99,11 +99,11 @@ end
 def force_new_tor_circuit()
   debug_log("Forcing new Tor circuit...")
   # Tor rate limits NEWNYM to at most one per 10 second period.
-  rate = 10
+  interval = 10
   if $__last_newnym
     elapsed = Time.now - $__last_newnym
     # We sleep an extra second to avoid tight timings.
-    sleep rate - elapsed + 1 if 0 < elapsed &&  elapsed < rate
+    sleep interval - elapsed + 1 if 0 < elapsed && elapsed < interval
   end
   $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
   $__last_newnym = Time.now

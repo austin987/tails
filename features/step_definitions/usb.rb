@@ -98,8 +98,12 @@ def usb_install_helper(name)
   begin
     @installer.button('Install Tails').click
     @installer.child('Question', roleName: 'alert').button('Yes').click
-    @installer.child('Information', roleName: 'alert')
-      .child('Installation complete!', roleName: 'label').wait(30*60)
+    try_for(30*60) do
+      @installer
+        .child('Information', roleName: 'alert')
+        .child('Installation complete!', roleName: 'label')
+      true
+    end
   rescue FindFailed => e
     path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
     debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
@@ -110,10 +114,9 @@ end
 When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
   installer_launcher = Dogtail::Application.new('tails-installer-launcher')
-  installer_launcher.wait(10)
   installer_launcher.button(mode).click
   @installer = Dogtail::Application.new('tails-installer')
-  @installer.child('Tails Installer', roleName: 'frame').wait
+  @installer.child('Tails Installer', roleName: 'frame')
 end
 
 Then /^Tails Installer detects that a device is too small$/ do
@@ -137,8 +140,9 @@ When /^I am suggested to do a "Install by cloning"$/ do
 end
 
 Then /^a suitable USB device is (?:still )?not found$/ do
-  @installer.child('No device suitable to install Tails could be found',
-                   roleName: 'label').wait(30)
+  @installer.child(
+    'No device suitable to install Tails could be found', roleName: 'label'
+  )
 end
 
 Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
@@ -176,7 +180,6 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   @installer.child('Use existing Live system ISO:', roleName: 'label')
     .parent.button('(None)').click
   file_chooser = @installer.child('Select a File', roleName: 'file chooser')
-  file_chooser.wait(10)
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   # The only visible text element will be the path entry
   file_chooser.child(roleName: 'text').text = @iso_path
