@@ -112,7 +112,7 @@ Then /^the support documentation page opens in Tor Browser$/ do
     expected_heading = 'Search the documentation'
   end
   step "\"#{expected_title}\" has loaded in the Tor Browser"
-  headings = Dogtail::Application.new('Firefox')
+  headings = @torbrowser
              .child(expected_title, roleName: 'document frame')
              .children(roleName: 'heading')
   assert(

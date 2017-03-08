@@ -121,13 +121,12 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
     reload_action = 'Reload current page'
   end
   expected_title = "#{title} - #{browser_name}"
-  app = Dogtail::Application.new('Firefox')
-  try_for(60) { app.child(expected_title, roleName: 'frame') }
+  try_for(60) { @torbrowser.child(expected_title, roleName: 'frame') }
   # The 'Reload current page' button (graphically shown as a looping
   # arrow) is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
-  try_for(60) { app.child(reload_action, roleName: 'push button') }
+  try_for(60) { @torbrowser.child(reload_action, roleName: 'push button') }
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
