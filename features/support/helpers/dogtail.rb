@@ -83,6 +83,12 @@ module Dogtail
       return c
     end
 
+    def child?(*args)
+      !!child(*args)
+    rescue
+      false
+    end
+
     def exist?
       run("dogtail.config.searchCutoffCount = 0")
       run(@find_code)

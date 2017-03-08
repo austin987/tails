@@ -141,7 +141,7 @@ end
 
 Then /^I verify the SSH fingerprint for the SFTP server$/ do
   try_for(30) do
-    Dogtail::Application.new('gnome-shell').child('Log In Anyway').exist?
+    Dogtail::Application.new('gnome-shell').child?('Log In Anyway')
   end
   # Here we'd like to click on the button using Dogtail, but something
   # is buggy so let's just use the keyboard.
@@ -151,6 +151,6 @@ end
 Then /^I successfully connect to the SFTP server$/ do
   try_for(60) do
     Dogtail::Application.new('nautilus')
-      .child("#{@sftp_username} on #{@sftp_host}").exist?
+      .child?("#{@sftp_username} on #{@sftp_host}")
   end
 end
