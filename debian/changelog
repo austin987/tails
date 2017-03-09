@@ -1,8 +1,159 @@
-tails (3.0~beta2) UNRELEASED; urgency=medium
+tails (3.0~beta3) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Dummy entry for next beta release.
 
- -- intrigeri <tails@boum.org>  Thu, 02 Feb 2017 15:13:50 +0000
+ -- Tails developers <tails@boum.org>  Wed, 08 Mar 2017 18:55:03 +0000
+
+tails (3.0~beta2) unstable; urgency=medium
+
+  * All changes brought by Tails 2.11, except:
+    - the test suite changes, that are not all compatible with this branch;
+    - the "Tails 3.0 will require a 64-bit processor" notification:
+      this advance warning is not useful on a release series
+      that's 64-bit only.
+
+  * Major new features and changes
+    - Upgrade to a new snapshot of the Debian APT repositories (2017030802),
+      and of the Torproject ones (2017030801).
+    - Upgrade Linux to 4.9.0-2 (version 4.9.13-1).
+
+  * Minor improvements
+    - Improve GNOME Shell Window List styling. (Closes: #12233)
+
+  * Bugfixes
+    - Make it possible to start graphical applications in the Root Terminal.
+      (part of #12000)
+
+  * Test suite
+    - Improve robustness when dealing with notifications. (Closes: #11464)
+    - Bump timeout when waiting for 'Tor is ready' notification.
+    - Fix the incremental upgrade test.
+    - Drop a few obsolete test cases, update a number of images.
+    - Adapt firewall leak test to new DHCP source IP address.
+    - Adjust Seahorse and Enigmail tests to the keyserver that is now used.
+
+ -- Tails developers <tails@boum.org>  Wed, 08 Mar 2017 16:29:44 +0000
+
+tails (2.11) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 6.5.1 based on Firefox 45.8. (Closes:
+      #12283)
+    - Fix CVE-2017-6074 (local root privilege escalation) by disabling
+      the 'dccp' module. (Closes: #12280)
+    - Disable kernel modules for some uncommon network protocol. These
+      are the ones recommended by CIS. (Part of: #6457)
+    - Disable modules we blacklist for security reasons. Blacklisted
+      (via `blacklist MODULENAME`) modules are only blocked from being
+      loaded during the boot process, but are still loadable with an
+      explicit `modprobe MODULENAME`, and (worse!) via kernel module
+      auto-loading.
+    - Upgrade linux-image-4.8.0-0.bpo.2-686-unsigned to 4.8.15-2~bpo8+2.
+    - Upgrade bind9 to 1:9.9.5.dfsg-9+deb8u10.
+    - Upgrade imagemagick to 8:6.8.9.9-5+deb8u7.
+    - Upgrade libevent-2.0-5 to 2.0.21-stable-2+deb8u1.
+    - Upgrade libgd3 to 2.1.0-5+deb8u9.
+    - Upgrade libjasper1 to 1.900.1-debian1-2.4+deb8u2.
+    - Upgrade liblcms2-2 to 2.6-3+deb8u1.
+    - Upgrade libxpm4 to 1:3.5.12-0+deb8u1.
+    - Upgrade login to 1:4.2-3+deb8u3.
+    - Upgrade ntfs-3g to 1:2014.2.15AR.2-1+deb8u3.
+    - Upgrade openjdk-7-jre to 7u121-2.6.8-2~deb8u1.
+    - Upgrade openssl to 1.0.1t-1+deb8u6.
+    - Upgrade tcpdump to 4.9.0-1~deb8u1.
+    - Upgrade vim to 2:7.4.488-7+deb8u2.
+    - Upgrade libreoffice to 1:4.3.3-2+deb8u6.
+
+  * Minor improvements
+    - import-translations: also import PO files for French from
+      Transifex. The translation team for French switched to Transifex
+      even for our custom programs:
+      https://mailman.boum.org/pipermail/tails-l10n/2016-November/004312.html
+    - Notify the user, if running on a 32-bit processor, that it won't
+      be supported in Tails 3.0 anymore. (Closes: #12193)
+    - Notify I2P users that I2P will be removed in Tails
+      2.12. (Closes: #12271)
+
+  * Bugfixes
+    - Disable -proposed-updates at boot time. If a Debian point
+      release happens right after a freeze but we have decided to
+      enable it before the freeze to get (at least most of) it, then
+      we get in the situation where -proposed-updates is enabled in
+      the final release, which we don't want. We only want it enabled
+      at build time. (Closes: #12169)
+    - Ferm: Use the variable when referring to the Live user. The
+      firewall will fail to start during early boot otherwise since
+      the "amnesia" user hasn't been created yet. (Closes: #12208)
+    - Tor Browser: Don't show offline warning when opening local
+      documentation. (Closes: #12269)
+    - tails-virt-notify-user: use the tails-documentation helper to
+      improve UX when one is not connected to Tor yet, and display
+      localized doc when available.
+    - Fix rare issue causing automatic upgrades to not apply properly
+      (Closes: #8449, and hopefully #11839 as well):
+      * Allow the tails-install-iuk user to run "/usr/bin/nocache
+        /bin/cp *" as root.
+      * Install tails-iuk 2.8, which will use nocache for various file
+        operations, and sync writes to the installation medium.
+    - Install Linux 4.8.15 to prevent GNOME from freezing with Intel
+      GM965/GL960 Integrated Graphics. (Closes: #12217, but fixes tons
+      of other small bugs)
+
+  * Build system
+    - Add 'offline' option, making it possible to build Tails offline
+      (if all needed resources are present in your cache). (Closes:
+      #12272)
+
+  * Test suite
+    - Encapsulate exec_helper's class to not "pollute" the global
+      namespace with all our helpers. This is an example of how we can
+      work towards #9030.
+    - Extend remote shell with *safe* file operations. Now we can
+      read/write/append *any* characters without worrying that it will
+      do crazy things by being passed through the shell, as was the
+      case before.  This commit also:
+      * adds some better reporting of errors happening on the server
+        side by communicating back the exception thrown.
+      * removes the `user` parameter from the VM.file_* methods. They
+        were not used, any way, and simply do not feel like they
+        fit. I think the only reason we had it initially was because
+        it was implemented via the command interface, where a user
+        concept makes a lot of sense.
+    - debug_log() Dogtail script content on failure.
+    - Add a very precise timestamp to each debug_log().
+    - Make robust_notification_wait() ensure the applet is closed. In
+      robust_notification_wait() when we close the notification
+      applet, other windows may change position, creating a racy
+      situation for any immediately following action aimed at one such
+      window. (Closes: #10381)
+    - Fix I2P's Pidgin test. The initial conversation (that determines
+      the title of the conversation window) is now made by a different
+      IRC service than before.
+    - Use lossless compression for the VNC viewer with --view.
+      Otherwise the VNC viewer is not a good place to extract test
+      suite images from, at least with xtigervncviewer.
+    - Add optional pause() notification feature to the test suite. It
+      will run a user-configurable arbitrary shell command when
+      pause() is called, e.g. on failure when --interactive-debugging
+      is used. This is pretty useful when multitasking with long test
+      suite runs, so you immediately are notified when a test fails
+      (or when you reached a temporary pause() breakpoint).  (Closes:
+      #12175)
+    - Add the possibility to run Python code in a persistent session
+      in the remote shell and use this for Dogtail to significantly
+      improve its performance by saving state and reusing it between
+      commands. This changes the semantics of the creation of Dogtail
+      objects. Previously they just created the code that then would
+      be run once an actionable method was called (.wait, .click etc),
+      but now it works like in Python, that Dogtail will try to find
+      the graphical element upon object creation. (Closes: #12059)
+    - Test that we don't ship any -proposed-updates APT sources.
+      (Closes: #12169)
+    - Make force_new_tor_circuit() respect NEWNYM rate limiting.
+    - Add retry magic for lost click when opening Tails' documentation
+      from the desktop launcher. (Closes: #12131)
+
+ -- Tails developers <tails@boum.org>  Mon, 06 Mar 2017 17:14:52 +0100
 
 tails (3.0~beta1) experimental; urgency=medium
 

@@ -86,8 +86,9 @@ When /^I update APT using Synaptic$/ do
     try_for(15*60, :msg => "Took too much time to download the APT data") {
       !$vm.has_process?("/usr/lib/apt/methods/tor+http")
     }
-    if @synaptic.child(roleName: 'dialog', recursive: false).child('Error', roleName: 'icon', retry: false).exist?
-      raise "Updating APT with Synaptic failed."
+    assert_raise(RuntimeError) do
+      @synaptic.child(roleName: 'dialog', recursive: false)
+        .child('Error', roleName: 'icon', retry: false)
     end
     if !$vm.has_process?("synaptic")
       raise "Synaptic process vanished, did it segfault again?"

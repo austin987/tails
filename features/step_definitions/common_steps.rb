@@ -347,8 +347,9 @@ When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |titl
   notification_list = gnome_shell.child(
     'No Notifications', roleName: 'label', showingOnly: false
   ).parent.parent
-  notification_list.child(title, roleName: 'label', showingOnly: false)
-    .wait(timeout)
+  try_for(timeout) do
+    notification_list.child?(title, roleName: 'label', showingOnly: false)
+  end
 end
 
 Given /^Tor is ready$/ do
@@ -392,7 +393,7 @@ end
 
 Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
   try_for(60) do
-    @torbrowser.child(roleName: 'frame', recursive: false).exist?
+    @torbrowser.child?(roleName: 'frame', recursive: false)
   end
 end
 
@@ -439,10 +440,10 @@ Given /^all notifications have disappeared$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
     @screen.click_point(x, y)
-    unless gnome_shell.child('No Notifications', roleName: 'label').exist?
+    unless gnome_shell.child?('No Notifications', roleName: 'label')
       @screen.click('GnomeCloseAllNotificationsButton.png')
     end
-    gnome_shell.child('No Notifications', roleName: 'label').exist?
+    gnome_shell.child?('No Notifications', roleName: 'label')
   end
   @screen.type(Sikuli::Key.ESC)
 end
@@ -729,6 +730,7 @@ end
 
 When /^I double-click on the "Tails documentation" link on the Desktop$/ do
   @screen.wait_and_double_click("DesktopTailsDocumentationIcon.png", 10)
+  @torbrowser = Dogtail::Application.new('Firefox')
 end
 
 When /^I click the blocked video icon$/ do
