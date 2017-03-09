@@ -23,6 +23,7 @@ See https://tails.boum.org/.
 #}}}
 
 use Desktop::Notify;
+use English '-no_match_vars';
 use IPC::System::Simple qw{capturex $EXITVAL};
 use Locale::gettext;
 use Net::DBus::Reactor;
@@ -36,10 +37,13 @@ textdomain("tails");
 
 sub action_cb {
     my $reactor = shift;
-    exec(
-        '/usr/local/bin/tor-browser',
-        'file:///usr/share/doc/tails/website/doc/advanced_topics/virtualization.en.html#security'
-    );
+    unless (fork) {
+        exec(
+            '/usr/local/bin/tails-documentation',
+            'doc/advanced_topics/virtualization',
+            'security'
+        );
+    }
     $reactor->shutdown;
 }
 
@@ -76,7 +80,7 @@ else {
 
 $notify->create(summary => $summary,
                 body    => $body,
-                actions => { 'moreinfo'  => gettext('Learn more'), },
+                actions => { "moreinfo_$PID" => gettext('Learn more'), },
                 hints   => { 'transient' => 1, },
                 timeout => 0)->show();
 
