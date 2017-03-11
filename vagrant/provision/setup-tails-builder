@@ -18,6 +18,9 @@ fi
 
 rm -f /etc/apt/preferences.d/* /etc/apt/sources.list.d/*
 
+# Configure apt to retry
+echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
+
 # Add our builder-jessie repository for live-build, and pin it low
 echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
