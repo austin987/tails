@@ -2,32 +2,6 @@
 
 set -e
 
-CUSTOM_INITSCRIPTS="
-"
-
-PATCHED_INITSCRIPTS="
-alsa-utils
-haveged
-hwclock.sh
-i2p
-kexec-load
-laptop-mode
-memlockd
-saned
-spice-vdagent
-tor
-"
-
-echo "Configuring boot sequence"
-
-# The patches to adjust the runlevels are applied to the chroot
-# after the packages have been installed. So we need to remove them first,
-# to re-install them with our settings.
-insserv -r $PATCHED_INITSCRIPTS
-
-# Re-install overriden initscripts and install our custom ones.
-insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
-
 ### Tweak systemd unit files
 
 # Workaround for https://bugs.debian.org/714957
@@ -48,6 +22,7 @@ systemctl enable tor-controlport-filter.service
 systemctl --global enable tails-add-GNOME-bookmarks.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
+systemctl --global enable tails-i2p-removal-notify-user.service
 systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
@@ -91,15 +66,3 @@ systemctl mask hwclock-save.service
 
 # Do not run timesyncd: we have our own time synchronization mechanism
 systemctl mask systemd-timesyncd.service
-
-# Unmute and sanitize mixer levels at boot time
-# (`systemctl unmask` does not support initscripts on Jessie,
-# hence the manual unmasking)
-dpkg-divert --add --rename --divert \
-	    /lib/systemd/system/alsa-utils.service.orig \
-	    /lib/systemd/system/alsa-utils.service
-# Disable the ALSA state store/restore systemd services (that lack mixer
-# levels unmuting/sanitizing), we use the legacy initscript instead
-systemctl mask alsa-restore.service
-systemctl mask alsa-state.service
-systemctl mask alsa-store.service

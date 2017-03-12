@@ -167,12 +167,12 @@ def reach_checkpoint(name)
       post_snapshot_restore_hook
     end
     debug_log(scenario_indent + "Checkpoint: #{checkpoint_description}",
-              :color => :white)
+              color: :white, timestamp: false)
     step_action = "Given"
     if parent_checkpoint
       parent_description = checkpoints[parent_checkpoint][:description]
       debug_log(step_indent + "#{step_action} #{parent_description}",
-                :color => :green)
+                color: :green, timestamp: false)
       step_action = "And"
     end
     steps.each do |s|
@@ -181,10 +181,11 @@ def reach_checkpoint(name)
       rescue Exception => e
         debug_log(scenario_indent +
                   "Step failed while creating checkpoint: #{s}",
-                  :color => :red)
+                  color: :red, timestamp: false)
         raise e
       end
-      debug_log(step_indent + "#{step_action} #{s}", :color => :green)
+      debug_log(step_indent + "#{step_action} #{s}",
+                color: :green, timestamp: false)
       step_action = "And"
     end
     $vm.save_snapshot(name)

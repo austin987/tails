@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Rationale: onionshare depends on torbrowser-launcher, which we don't
+# want (since we install Tor Browser in a different way), so it is
+# installed by now. Let's replace it with a fake package.
+
+# Note: this hook must run before the (currently named)
+# 19-install-tor-browser-AppArmor-profile hook since the real
+# torbrowser-launcher package installs a profile for tor-browser with
+# the same name, and this hook will remove it.
+
+set -e
+set -u
+
+echo "Install a fake torbrowser-launcher package"
+
+# Import install_fake_package
+. /usr/local/lib/tails-shell-library/build.sh
+
+REAL_PKG_VERSION="$(dpkg-query -W -f='${Version}\n' torbrowser-launcher)"
+FAKE_PKG_VERSION="${REAL_PKG_VERSION}+tails.fake1"
+install_fake_package torbrowser-launcher "${FAKE_PKG_VERSION}" gnome

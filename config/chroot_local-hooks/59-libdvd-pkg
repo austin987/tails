@@ -4,6 +4,9 @@ set -u
 
 echo "Installing libdvd-pkg"
 
+# Import install_fake_package
+. /usr/local/lib/tails-shell-library/build.sh
+
 apt-get --yes install libdvd-pkg
 dpkg-reconfigure libdvd-pkg
 
@@ -12,31 +15,8 @@ dpkg-reconfigure libdvd-pkg
 # libdvd-pkg. libdvd-pkg however depends on build-essential, which is
 # explicitly removed. So instead we build/install a fake libdvd-pkg
 # without the build-essential dependency to satisfy libdvdcss2.
-tmp="$(mktemp -d)"
-apt-get install --yes equivs
-
 LIBDVD_PKG_VERSION="$(dpkg-query -s libdvd-pkg | grep Version | cut -d ' ' -f2)+fake1"
-
-cat > "${tmp}/libdvd-pkg-${LIBDVD_PKG_VERSION}.control" << EOF
-Section: multimedia
-Priority: optional
-Homepage: https://tails.boum.org/
-Standards-Version: 3.6.2
-
-Package: libdvd-pkg
-Version: ${LIBDVD_PKG_VERSION}
-Maintainer: Tails developers <amnesia@boum.org>
-Architecture: all
-Description: (Fake) libdvd-pkg package
- Provide placeholder to keep libdvdcss2 happy.
-EOF
-
-(
-    cd "${tmp}"
-    equivs-build "libdvd-pkg-${LIBDVD_PKG_VERSION}.control"
-    dpkg -i "libdvd-pkg_${LIBDVD_PKG_VERSION}_all.deb"
-)
-rm -rf "${tmp}" /usr/src/libdvd-pkg
+install_fake_package libdvd-pkg "${LIBDVD_PKG_VERSION}" multimedia
 
 # Verify installed packages:
 for x in libdvd-pkg

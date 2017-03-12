@@ -91,17 +91,22 @@ class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  if tails_installer_match_status('It is impossible to upgrade the device')
+  if tails_installer_match_status(/It is impossible to upgrade the device .+ #{$vm.disk_dev(name)}\d* /)
     raise UpgradeNotSupported
   end
   assert(tails_installer_is_device_selected?(name))
   begin
     @installer.button('Install Tails').click
     @installer.child('Question', roleName: 'alert').button('Yes').click
-    @installer.child('Information', roleName: 'alert')
-      .child('Installation complete!', roleName: 'label').wait(30*60)
+    try_for(30*60) do
+      @installer
+        .child('Information', roleName: 'alert')
+        .child('Installation complete!', roleName: 'label')
+      true
+    end
   rescue FindFailed => e
-    debug_log("Tails Installer debug log:\n" + $vm.file_content('/tmp/tails-installer-*'))
+    path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
+    debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
     raise e
   end
 end
@@ -109,10 +114,15 @@ end
 When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
   installer_launcher = Dogtail::Application.new('tails-installer-launcher')
-  installer_launcher.wait(10)
+                         .child('Tails Installer', roleName: 'frame')
+  # Sometimes Dogtail will find the button and click it before it is
+  # shown (searchShowingOnly is not perfect) which generally means
+  # clicking somewhere on the Terminal => the click is lost *and* the
+  # installer does no go to the foreground. So let's wait a bit extra.
+  sleep 3
   installer_launcher.button(mode).click
   @installer = Dogtail::Application.new('tails-installer')
-  @installer.child('Tails Installer', roleName: 'frame').wait
+  @installer.child('Tails Installer', roleName: 'frame')
 end
 
 Then /^Tails Installer detects that a device is too small$/ do
@@ -136,8 +146,9 @@ When /^I am suggested to do a "Install by cloning"$/ do
 end
 
 Then /^a suitable USB device is (?:still )?not found$/ do
-  @installer.child('No device suitable to install Tails could be found',
-                   roleName: 'label').wait(30)
+  @installer.child(
+    'No device suitable to install Tails could be found', roleName: 'label'
+  )
 end
 
 Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
@@ -165,12 +176,16 @@ When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
   end
 end
 
+Given /^I plug and mount a USB drive containing the Tails ISO$/ do
+  iso_dir = share_host_files(TAILS_ISO)
+  @iso_path = "#{iso_dir}/#{File.basename(TAILS_ISO)}"
+end
+
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   step 'I start Tails Installer in "Upgrade from ISO" mode'
   @installer.child('Use existing Live system ISO:', roleName: 'label')
     .parent.button('(None)').click
   file_chooser = @installer.child('Select a File', roleName: 'file chooser')
-  file_chooser.wait(10)
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   # The only visible text element will be the path entry
   file_chooser.child(roleName: 'text').text = @iso_path
@@ -376,11 +391,6 @@ end
 
 Given /^persistence is disabled$/ do
   assert(!tails_persistence_enabled?, "Persistence is enabled")
-end
-
-Given /^I enable read-only persistence$/ do
-  step "I enable persistence"
-  @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
 end
 
 def boot_device

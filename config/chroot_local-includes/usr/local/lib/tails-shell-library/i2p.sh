@@ -51,7 +51,7 @@ i2p_reseed_status() {
 }
 
 i2p_built_a_tunnel() {
-    netstat -nlp | grep -qwF "$(i2p_eep_proxy_address)"
+    ss -nlp | grep -qwF "$(i2p_eep_proxy_address)"
 }
 
 i2p_router_console_address() {
@@ -59,7 +59,7 @@ i2p_router_console_address() {
 }
 
 i2p_router_console_is_ready() {
-    netstat -nlp | grep -qwF "$(i2p_router_console_address)"
+    ss -nlp | grep -qwF "$(i2p_router_console_address)"
 }
 
 set_best_i2p_router_console_lang() {

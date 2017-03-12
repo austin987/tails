@@ -31,7 +31,7 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_BUILD']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
@@ -175,6 +175,8 @@ task :parse_build_options do
       ENV['http_proxy'] = INTERNAL_HTTP_PROXY
     when 'noproxy'
       ENV['http_proxy'] = nil
+    when 'offline'
+      ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
     when 'gzipcomp'
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip -Xcompression-level 1'
@@ -193,6 +195,15 @@ task :parse_build_options do
       ENV['TAILS_NO_AUTO_PROVISION'] = '1'
     else
       raise "Unknown Tails build option '#{opt}'"
+    end
+  end
+
+  if ENV['TAILS_OFFLINE_MODE'] == '1'
+    if ENV['http_proxy'].nil?
+      abort "You must use a caching proxy when building offline"
+    end
+    if ENV['TAILS_NO_AUTO_PROVISION'] == '1'
+      abort "Offline mode requires provisioning"
     end
   end
 end

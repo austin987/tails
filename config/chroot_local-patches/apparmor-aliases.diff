@@ -9,34 +9,27 @@ diff -Naur etc/apparmor.d.orig/abstractions/base etc/apparmor.d/abstractions/bas
    /etc/writable/localtime        r,
    /usr/share/locale-bundle/**    r,
    /usr/share/locale-langpack/**  r,
-@@ -49,17 +50,19 @@
-   # available everywhere
-   /etc/ld.so.cache               mr,
-   /lib{,32,64}/ld{,32,64}-*.so   mrix,
--  /lib{,32,64}/**/ld{,32,64}-*.so     mrix,
-+  /lib{32,64}/**/ld{,32,64}-*.so     mrix,
-+  /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/ld{,32,64}-*.so     mrix,
-   /lib/@{multiarch}/ld{,32,64}-*.so    mrix,
-   /lib/tls/i686/{cmov,nosegneg}/ld-*.so     mrix,
-   /lib/i386-linux-gnu/tls/i686/{cmov,nosegneg}/ld-*.so     mrix,
-   /opt/*-linux-uclibc/lib/ld-uClibc*so* mrix,
+@@ -56,10 +57,12 @@
+   /opt/*-linux-uclibc/lib/ld-uClibc*so* mr,
  
    # we might as well allow everything to use common libraries
--  /lib{,32,64}/**                r,
-+  /lib{32,64}/**                r,
-+  /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**                r,
-   /lib{,32,64}/lib*.so*          mr,
--  /lib{,32,64}/**/lib*.so*       mr,
--  /lib/@{multiarch}/**            r,
-+  /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/lib*.so*       mr,
-+  /lib/@{multiarch}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**            r,
-   /lib/@{multiarch}/lib*.so*      mr,
-   /lib/@{multiarch}/**/lib*.so*   mr,
-   /usr/lib{,32,64}/**            r,
+-  /{usr/,}lib{,32,64}/**                r,
+-  /{usr/,}lib{,32,64}/lib*.so*          mr,
+-  /{usr/,}lib{,32,64}/**/lib*.so*       mr,
+-  /{usr/,}lib/@{multiarch}/**            r,
++  /{usr/,}lib{32,64}/**                r,
++  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**                r,
++  /{usr/,}lib{,32,64}/lib*.so*       mr,
++  /{usr/,}lib{32,64}/**/lib*.so*       mr,
++  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/lib*.so*       mr,
++  /{usr/,}lib/@{multiarch}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**            r,
+   /{usr/,}lib/@{multiarch}/lib*.so*      mr,
+   /{usr/,}lib/@{multiarch}/**/lib*.so*   mr,
+   /{usr/,}lib/tls/i686/{cmov,nosegneg}/lib*.so*    mr,
 diff -Naur '--exclude=cache' /etc/apparmor.d.orig/abstractions/ubuntu-helpers /etc/apparmor.d/abstractions/ubuntu-helpers
 --- a/etc/apparmor.d.orig/abstractions/ubuntu-helpers	2013-07-10 22:05:57.000000000 +0000
 +++ b/etc/apparmor.d/abstractions/ubuntu-helpers	2015-06-03 18:16:42.022380000 +0000
-@@ -66,8 +66,8 @@
+@@ -64,8 +64,8 @@
    # in limited libraries so glibc's secure execution should be enough to not
    # require the santized_helper (ie, LD_PRELOAD will only use standard system
    # paths (man ld.so)).
@@ -47,7 +40,7 @@ diff -Naur '--exclude=cache' /etc/apparmor.d.orig/abstractions/ubuntu-helpers /e
    /opt/google/chrome/chrome-sandbox PUxr,
    /opt/google/chrome/google-chrome Pixr,
    /opt/google/chrome/chrome Pixr,
-@@ -76,7 +76,8 @@
+@@ -74,7 +74,8 @@
    # Full access
    / r,
    /** rwkl,
@@ -57,15 +50,3 @@ diff -Naur '--exclude=cache' /etc/apparmor.d.orig/abstractions/ubuntu-helpers /e
  
    # Dangerous files
    audit deny owner /**/* m,              # compiled libraries
-diff -Naur '--exclude=cache' /etc/apparmor.d.orig/tunables/alias /etc/apparmor.d/tunables/alias
---- a/etc/apparmor.d.orig/tunables/alias	2013-07-10 22:05:57.000000000 +0000
-+++ b/etc/apparmor.d/tunables/alias	2015-06-03 18:12:46.426380000 +0000
-@@ -14,3 +14,7 @@
- #
- # Or if mysql databases are stored in /home:
- # alias /var/lib/mysql/ -> /home/mysql/,
-+
-+alias / -> /lib/live/mount/overlay/,
-+alias / -> /lib/live/mount/rootfs/*.squashfs/,
-+
-
