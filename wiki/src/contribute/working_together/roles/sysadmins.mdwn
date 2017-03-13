@@ -117,8 +117,9 @@ We use Redmine tickets for public discussion and tasks management:
 * [[documentation|contribute/APT repository/custom]]
 * access: anyone can read, Tails core developers can write
 * tools: [[!debpts reprepro]]
-* configuration: `tails::reprepro::custom` class
-  in [[!tails_gitweb_repo puppet-tails]]
+* configuration:
+  - `tails::reprepro::custom` class in [[!tails_gitweb_repo puppet-tails]]
+  - signing keys are managed with the `tails_secrets_apt` Puppet module
 
 ### Time-based snapshots of APT repositories
 
@@ -128,8 +129,10 @@ We use Redmine tickets for public discussion and tasks management:
 * [[documentation|contribute/APT repository/time-based snapshots]]
 * access: anyone can read, release managers have write access
 * tools: [[!debpts reprepro]]
-* configuration: `tails::reprepro::snapshots::time_based` class
-  in [[!tails_gitweb_repo puppet-tails]]
+* configuration:
+  - `tails::reprepro::snapshots::time_based` class in
+    [[!tails_gitweb_repo puppet-tails]]
+  - signing keys are managed with the `tails_secrets_apt` Puppet module
 
 ### Tagged snapshots of APT repositories
 
@@ -139,8 +142,10 @@ We use Redmine tickets for public discussion and tasks management:
 * access: anyone can read, release managers can create and publish new
   snapshots
 * tools: [[!debpts reprepro]]
-* configuration: `tails::reprepro::snapshots::tagged` class
-  in [[!tails_gitweb_repo puppet-tails]]
+* configuration:
+  - `tails::reprepro::snapshots::tagged` class in
+    [[!tails_gitweb_repo puppet-tails]]
+  - signing keys are managed with the `tails_secrets_apt` Puppet module
 
 ## Bitcoind
 
@@ -207,6 +212,7 @@ We use Redmine tickets for public discussion and tasks management:
     * `tails::monitoring::satellite` class in [[!tails_gitweb_repo puppet-tails]],
   - agents:
     * `tails::monitoring::agent` class in [[!tails_gitweb_repo puppet-tails]]
+  - private keys are managed with the `tails_secrets_monitoring` Puppet module
 * documentation:
   - [[How to add checks to our monitoring setup|roles/sysadmins/adding_icinga2_checks]]
 
@@ -232,8 +238,11 @@ We use Redmine tickets for public discussion and tasks management:
       `tails::jenkins::slave::iso_builder` and `tails::tester` classes in
       [[!tails_gitweb_repo puppet-tails]]
     * some configuration in the manifest ([[!tails_ticket 7106]])
+    * signing keys are managed with the `tails_secrets_jenkins` Puppet module
   - web server:
     * some configuration in the manifest ([[!tails_ticket 7107]])
+
+<a id="rsync"></a>
 
 ## rsync
 
@@ -242,7 +251,10 @@ We use Redmine tickets for public discussion and tasks management:
 * access: read-only for those who need it, read-write for Tails core
   developers
 * tools: [[!debpts rsync]]
-* configuration: `tails::rsync` in [[!tails_gitweb_repo puppet-tails]]
+* configuration:
+  - `tails::rsync` in [[!tails_gitweb_repo puppet-tails]]
+  - users and credentials are managed with the `tails_secrets_rsync`
+    Puppet module
 
 ## Tor bridge
 
@@ -276,9 +288,23 @@ We use Redmine tickets for public discussion and tasks management:
   - hard-coded manifest snippets and files on the puppetmaster
     ([[!tails_ticket 6938]])
 
+<a id="weblate"></a>
+
+## Weblate
+
+* URL: <https://translate.tails.boum.org/>
+* purpose: web interface for translators
+* admins: emmapeel, spriver
+* tools: [Weblate](https://weblate.org/)
+* configuration:
+  - `tails::weblate` class in [[!tails_gitweb_repo puppet-tails]]
+
 ## WhisperBack relay
 
 * purpose: forward bug reports sent with WhisperBack to <tails-bugs@boum.org>
 * access: public; WhisperBack (and hence, any bug reporter) uses it
 * tools: [[!debpts postfix desc="Postfix"]]
-* configuration: `tails::whisperback::relay` in [[!tails_gitweb_repo puppet-tails]]
+* configuration:
+  - `tails::whisperback::relay` in [[!tails_gitweb_repo puppet-tails]]
+  - private keys are managed with the `tails_secrets_whisperback`
+    Puppet module

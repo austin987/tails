@@ -31,7 +31,7 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_BUILD']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
@@ -139,27 +139,27 @@ def system_cpus
 end
 
 task :parse_build_options do
-  options = ''
+  options = []
 
   # Default to in-memory builds if there is enough RAM available
-  options += 'ram ' if enough_free_memory_for_ram_build?
+  options << 'ram' if enough_free_memory_for_ram_build?
 
   # Default to build using the in-VM proxy
-  options += 'vmproxy '
+  options << 'vmproxy'
 
   # Default to fast compression on development branches
-  options += 'gzipcomp ' unless is_release?
+  options << 'gzipcomp' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
-  options += "cpus=#{cpus} " if cpus
+  options << "cpus=#{cpus}" if cpus
 
-  options += ENV['TAILS_BUILD_OPTIONS'] if ENV['TAILS_BUILD_OPTIONS']
+  options += ENV['TAILS_BUILD_OPTIONS'].split if ENV['TAILS_BUILD_OPTIONS']
 
   # Make sure release builds are clean
-  options += 'cleanall ' if is_release?
+  options << 'cleanall' if is_release?
 
-  options.split(' ').each do |opt|
+  options.uniq.each do |opt|
     case opt
     # Memory build settings
     when 'ram'
@@ -175,6 +175,8 @@ task :parse_build_options do
       ENV['http_proxy'] = INTERNAL_HTTP_PROXY
     when 'noproxy'
       ENV['http_proxy'] = nil
+    when 'offline'
+      ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
     when 'gzipcomp'
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
@@ -191,6 +193,17 @@ task :parse_build_options do
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
     when 'noprovision'
       ENV['TAILS_NO_AUTO_PROVISION'] = '1'
+    else
+      raise "Unknown Tails build option '#{opt}'"
+    end
+  end
+
+  if ENV['TAILS_OFFLINE_MODE'] == '1'
+    if ENV['http_proxy'].nil?
+      abort "You must use a caching proxy when building offline"
+    end
+    if ENV['TAILS_NO_AUTO_PROVISION'] == '1'
+      abort "Offline mode requires provisioning"
     end
   end
 end

@@ -4,7 +4,8 @@ set -e
 
 echo "Localize each supported browser locale"
 
-# Import the TBB_INSTALL variable and supported_tor_browser_locales()
+# Import the TBB_INSTALL and TBB_EXT variables and
+# supported_tor_browser_locales()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 # Import set_simple_config_key()
@@ -58,7 +59,11 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     # Mozilla's xx-YY fromat. Over all, the greatest difficulty in
     # this whole script is really to know when to use the correct
     # locale format, since Firefox isn't very consistent in it.
-    NORMAL_LOCALE="$(echo "${MOZILLA_LOCALE}" | tr - _)"
+    if echo "${MOZILLA_LOCALE}" | grep -q '-'; then
+        NORMAL_LOCALE="$(echo "${MOZILLA_LOCALE}" | tr - _)"
+    else
+        NORMAL_LOCALE="${MOZILLA_LOCALE}_${LOCATION}"
+    fi
     LANG_CODE="$(language_code_from_locale "${NORMAL_LOCALE}")"
     TARGET_SEARCHPLUGINS_DIR="${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/${MOZILLA_LOCALE}"
     mkdir -p "${TARGET_SEARCHPLUGINS_DIR}"
@@ -72,11 +77,16 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
         "${BROWSER_LOCALIZATION_DIR}/startpage.xml-template" > \
         "${TARGET_SEARCHPLUGINS_DIR}/startpage-${MOZILLA_LOCALE}.xml"
 
-    DISCONNECT_PLUGIN="${TARGET_SEARCHPLUGINS_DIR}/disconnect-${MOZILLA_LOCALE}.xml"
+    DDG_PLUGIN="${TARGET_SEARCHPLUGINS_DIR}/ddg-${MOZILLA_LOCALE}.xml"
+    DDG_LANG_UI="${NORMAL_LOCALE}"
+    if [ "${DDG_LANG_UI}" = "vi_VN" ]; then
+        # DDG uses a non-standard locale for Vietnamese
+        DDG_LANG_UI="vi_VI"
+    fi
     sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
-        -e "s/\${LOCATION}/${LOCATION}/" \
-        "${BROWSER_LOCALIZATION_DIR}/disconnect.xml-template" > \
-        "${DISCONNECT_PLUGIN}"
+        -e "s/\${LANG_UI}/${DDG_LANG_UI}/" \
+        "${BROWSER_LOCALIZATION_DIR}/ddg.xml-template" > \
+        "${DDG_PLUGIN}"
 
     # We generate a Wikipedia plugin with localized icons since we
     # want to provide both English and the locale's plugin, and
@@ -95,6 +105,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     base64 "${LOCALIZED_WIKIPEDIA_ICON_PATH}" | tr -d "\n" > \
            "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
     sed -e "s/\${LANG_CODE}/${LANG_CODE}/" \
+        -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
         -e "/\${BASE64_PNG_16x16}/ r ${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}" \
         -e "/\${BASE64_PNG_16x16}/d" \
         "${BROWSER_LOCALIZATION_DIR}/wikipedia.xml-template" > \
@@ -111,16 +122,16 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     cp "${BRANDING_TEMPLATE_FILE}" "${TARGET_BRANDING_FILE}"
     for KEY in browser.search.defaultenginename \
                browser.search.selectedEngine; do
-        PLUGIN="Disconnect.me - ${LOCALIZED_LANG}"
-        if ! grep -q "<ShortName>${PLUGIN}</ShortName>" "${DISCONNECT_PLUGIN}"; then
-            echo "Trying to make search plugin '${PLUGIN}' the default for ${TARGET_LOCALE} but it unexpectedly wasn't the one we generated earlier" >&2
+        PLUGIN="DuckDuckGo - ${LOCALIZED_LANG}"
+        if ! grep -q "<ShortName>${PLUGIN}</ShortName>" "${DDG_PLUGIN}"; then
+            echo "Trying to make search plugin '${PLUGIN}' the default for ${MOZILLA_LOCALE} but it unexpectedly wasn't the one we generated earlier" >&2
             exit 1
         fi
         set_simple_config_key "${TARGET_BRANDING_FILE}" "${KEY}" "${PLUGIN}"
     done
     TBB_DICTIONARIES_DIR="${TBB_INSTALL}/dictionaries"
     unset SPELLCHECKER_LOCALE
-    for LOCALE in "${LANG_CODE}_${LOCATION}" "${LANG_CODE}"; do
+    for LOCALE in "${NORMAL_LOCALE}" "${LANG_CODE}"; do
         if [ -e "${TBB_DICTIONARIES_DIR}/${LOCALE}.dic" ]; then
             SPELLCHECKER_LOCALE="${LOCALE}"
         fi
@@ -148,11 +159,23 @@ done < "${DESCRIPTIONS_FILE}"
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
 # Remove unwanted browser search plugins bundled in the Tor Browser.
+# Note for posterity: the searchplugins/list.txt file must not be
+# removed! It must list the filename (excl. .xml) of each plugin
+# present, otherwise they won't work. It's not a problem to list
+# nonexisting ones, so as long as we delete plugins we do not have to
+# alter it.
 7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
-   'chrome/en-US/locale/browser/searchplugins/disconnect*.xml' \
+   'chrome/en-US/locale/browser/searchplugins/ddg*.xml' \
    'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
    'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
    'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
+for pack in "${TBB_EXT}"/langpack-*.xpi; do
+    7z d -tzip "${pack}" \
+       'browser/chrome/*/locale/browser/searchplugins/ddg*.xml' \
+       'browser/chrome/*/locale/browser/searchplugins/startpage*.xml' \
+       'browser/chrome/*/locale/browser/searchplugins/wikipedia*.xml' \
+       'browser/chrome/*/locale/browser/searchplugins/yahoo*.xml'
+done
 
 # We want our localized English Wikipedia plugin to be available in
 # all locales.
@@ -168,8 +191,9 @@ rm -r "${BROWSER_LOCALIZATION_DIR}"
     done
 )
 
-# All generated files must be world-readable.
+# All generated and modified files must remain world-readable.
 chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
-              "${BRANDING_DIR}"
+              "${BRANDING_DIR}" \
+              "${TBB_EXT}"
 
 apt-get --yes purge imagemagick
