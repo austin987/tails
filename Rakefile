@@ -171,10 +171,13 @@ task :parse_build_options do
     when 'extproxy'
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
       ENV['http_proxy'] = EXTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY_TYPE'] = 'extproxy'
     when 'vmproxy'
       ENV['http_proxy'] = INTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
     when 'noproxy'
       ENV['http_proxy'] = nil
+      ENV['TAILS_PROXY_TYPE'] = 'noproxy'
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
