@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+set -u
+
+# We modify /etc/kernel/postinst.d/apt-auto-removal via chroot_local-patches,
+# but this happens too late: the kernel has already been installed,
+# and a non-deterministic (depending on the build system's kernel)
+# auto-removal file has already been generated. So let's re-generate it.
+
+echo "Re-generating APT auto-removal config file"
+
+/etc/kernel/postinst.d/apt-auto-removal
