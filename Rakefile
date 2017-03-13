@@ -30,8 +30,10 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 # Branches that are considered 'stable' (used to select SquashFS compression)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
-# Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_BUILD']
+# Environment variables that will be exported to the provisioning and
+# build scripts.
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_BUILD', 'TAILS_PROXY_TYPE']
+ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
