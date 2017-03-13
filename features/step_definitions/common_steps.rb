@@ -57,6 +57,7 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Close the notification applet
   @screen.type(Sikuli::Key.ESC)
+  @screen.waitVanish('GnomeNotificationAppletOpened.png', 10)
 end
 
 def post_snapshot_restore_hook
@@ -422,8 +423,11 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  tor_browser_picture = "TorBrowserWindow.png"
-  @screen.wait(tor_browser_picture, 60)
+  try_for(60) do
+    Dogtail::Application.new('Firefox')
+      .child(roleName: 'frame', recursive: false)
+      .exist?
+  end
 end
 
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
@@ -558,7 +562,7 @@ Then /^Tails eventually (shuts down|restarts)$/ do |mode|
       end
     else
       if mode == 'restarts'
-        @screen.find('TailsBootSplash.png')
+        @screen.find('TailsGreeter.png')
         true
       else
         ! $vm.is_running?
@@ -638,11 +642,10 @@ method=auto
 [ipv4]
 method=auto
 EOF
-  con_content.split("\n").each do |line|
-    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
-  end
+  tmp_path = "/tmp/NM.#{con_name}"
+  $vm.file_overwrite(tmp_path, con_content)
   con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
+  $vm.execute("install -m 0600 '#{tmp_path}' '#{con_file}'")
   $vm.execute_successfully("nmcli connection load '#{con_file}'")
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
@@ -717,7 +720,7 @@ end
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
   app = Dogtail::Application.new('gnome-shell')
   for element in ['Applications', submenu, app_name] do
-    app.child(element, roleName: 'label').click
+    app.child(element, roleName: 'label', showingOnly: true).click
   end
 end
 
