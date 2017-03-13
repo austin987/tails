@@ -19,6 +19,9 @@ PROFILE="${HOME}/.tor-browser/profile.default"
 # Import exec_firefox() and configure_best_tor_browser_locale()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
 # Allow Torbutton access to the control port filter (for new identity).
 # Setting a password is required, otherwise Torbutton attempts to
 # read the authentication cookie file instead, which fails.
@@ -32,8 +35,8 @@ export TOR_NO_DISPLAY_NETWORK_SETTINGS='yes'
 
 
 ask_for_confirmation() {
-    # Skip dialog if user is already running Tor Browser:
-    if pgrep -u amnesia -f "${TBB_INSTALL}/firefox" ; then
+    if [ "${TOR_BROWSER_SKIP_OFFLINE_WARNING:-}" = 'yes' ] || \
+       pgrep -u "${LIVE_USERNAME}" -f "${TBB_INSTALL}/firefox"; then
         return
     fi
 
