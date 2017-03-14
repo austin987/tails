@@ -6,6 +6,7 @@ set -u
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
 
 SERIAL="${1}"
+COMMENT="${2:-}"
 ARCHITECTURE="amd64"
 DISTRIBUTION="jessie"
 USERNAME="vagrant"
@@ -13,6 +14,9 @@ PASSWORD="vagrant"
 SIZE="20G"
 HOSTNAME="vagrant-${DISTRIBUTION}"
 TARGET_NAME="tails-builder-${ARCHITECTURE}-${DISTRIBUTION}-${SERIAL}"
+if [ -n "${COMMENT}" ]; then
+   TARGET_NAME="${TARGET_NAME}+${COMMENT}"
+fi
 TARGET_IMG="${TARGET_NAME}.qcow2"
 TARGET_BOX="${TARGET_NAME}.box"
 
