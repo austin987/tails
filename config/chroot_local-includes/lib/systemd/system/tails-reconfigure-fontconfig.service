@@ -1,0 +1,19 @@
+# We need to generate the fontconfig cache.
+# For a deterministic build we do that at boot time.
+
+[Unit]
+Description=Generate fontconfig caches
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/dpkg-reconfigure fontconfig
+RemainAfterExit=yes
+CapabilityBoundingSet=
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=yes
+
+[Install]
+WantedBy=multi-user.target
