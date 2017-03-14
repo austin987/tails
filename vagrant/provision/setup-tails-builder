@@ -38,18 +38,6 @@ latest_serial(){
 	echo "${get_serial#${1}: }"
 }
 
-# Set the APT repo sources depending on the branch
-base_branch="$(cat /amnesia.git/config/base_branch)"
-
-case "${base_branch}" in
-	devel|testing|feature/stretch)
-		serial="$(latest_serial debian)"
-		sed -i -e "s/${stable_serial}/${serial}/g" /etc/apt/sources.list
-		# We need a newer version of debootstrap for saving the list of
-		# packages used when building Tails (#6297).
-		sed -i -e "s/${stable_serial}/${serial}/g" /etc/apt/sources.list.d/jessie-backports.list
-esac
-
 # Always set the latest serial for debian-security
 security_serial="$(latest_serial debian-security)"
 sed -i -e "s/${stable_serial}/${security_serial}/g" /etc/apt/sources.list.d/jessie-updates.list
