@@ -31,7 +31,10 @@ stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
 
 latest_serial(){
 	local archive="${1}"
-	get_serial="$(/amnesia.git/auto/scripts/apt-snapshots-serials get-latest ${archive})"
+        get_serial="$(
+            cd /amnesia.git
+            auto/scripts/apt-snapshots-serials get-latest ${archive}
+        )"
 	echo "${get_serial#${1}: }"
 }
 
