@@ -38,10 +38,6 @@ latest_serial(){
 	echo "${get_serial#${1}: }"
 }
 
-# Always set the latest serial for debian-security
-security_serial="$(latest_serial debian-security)"
-sed -i -e "s/${stable_serial}/${security_serial}/g" /etc/apt/sources.list.d/jessie-updates.list
-
 if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
     # Ensure that the apt-cacher-ng cache disk is formated and mounted
     if [ ! -b /dev/vdb1 ]; then
@@ -60,6 +56,10 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
     echo "Offlinemode: ${TAILS_OFFLINE_MODE}" > /etc/apt-cacher-ng/network.conf
     systemctl restart apt-cacher-ng.service
 fi
+
+# Always set the latest serial for debian-security
+security_serial="$(latest_serial debian-security)"
+sed -i -e "s/${stable_serial}/${security_serial}/g" /etc/apt/sources.list.d/jessie-updates.list
 
 # Upgrade if needed
 apt-get update
