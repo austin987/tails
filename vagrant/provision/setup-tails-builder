@@ -65,13 +65,13 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
         mount /dev/vdb1 /var/cache/apt-cacher-ng
         chown -R apt-cacher-ng:apt-cacher-ng /var/cache/apt-cacher-ng
     fi
-fi
 
-# Install custom configuration for apt-cacher-ng and restart
-install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
-[ "${TAILS_OFFLINE_MODE}" = 1 ] || TAILS_OFFLINE_MODE=0
-echo "Offlinemode: ${TAILS_OFFLINE_MODE}" > /etc/apt-cacher-ng/network.conf
-systemctl restart apt-cacher-ng.service
+    # Install custom configuration for apt-cacher-ng and restart
+    install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
+    [ "${TAILS_OFFLINE_MODE}" = 1 ] || TAILS_OFFLINE_MODE=0
+    echo "Offlinemode: ${TAILS_OFFLINE_MODE}" > /etc/apt-cacher-ng/network.conf
+    systemctl restart apt-cacher-ng.service
+fi
 
 # Upgrade if needed
 apt-get update
