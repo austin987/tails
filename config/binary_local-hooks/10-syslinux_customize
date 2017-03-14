@@ -37,12 +37,16 @@ perl -pni -E 'exit if m{^label[[:blank:]]+help$}' "${CFG_FILE}"
 
 Echo_message "customize syslinux menu"
 
-sed -i -e "s/Boot menu/Boot Tails/" "${CFG_FILE}"
+sed -i -e "s/Boot menu//" "${CFG_FILE}"
+sed -i -e "s/menu label Live/menu label Tails/" "${SYSLINUX_PATH}"/live*.cfg
+sed -i -r -e 's/(menu label .* )\(failsafe\)/\1(Troubleshooting Mode)/' \
+    "${SYSLINUX_PATH}"/live*.cfg
 
 cat > "${SYSLINUX_PATH}/tails.cfg" << EOF
 menu color sel      *           #ffffffff   #55555555   *
 menu color hotsel   1;7;37;40   #ffffffff   #22222222   *
 
+menu width 53
 menu vshift 12
 menu rows 7
 menu helpmsgrow 15

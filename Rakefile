@@ -30,10 +30,18 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 # Branches that are considered 'stable' (used to select SquashFS compression)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
-# Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD']
+# Environment variables that will be exported to the provisioning and
+# build scripts.
+EXPORTED_VARIABLES = [
+  'MKSQUASHFS_OPTIONS',
+  'TAILS_CLEAN_BUILD',
+  'TAILS_OFFLINE_BUILD',
+  'TAILS_PROXY',
+  'TAILS_PROXY_TYPE',
+  'TAILS_RAM_BUILD',
+]
+ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
-# Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
 # In-VM proxy URL
@@ -139,27 +147,27 @@ def system_cpus
 end
 
 task :parse_build_options do
-  options = ''
+  options = []
 
   # Default to in-memory builds if there is enough RAM available
-  options += 'ram ' if enough_free_memory_for_ram_build?
+  options << 'ram' if enough_free_memory_for_ram_build?
 
   # Default to build using the in-VM proxy
-  options += 'vmproxy '
+  options << 'vmproxy'
 
   # Default to fast compression on development branches
-  options += 'gzipcomp ' unless is_release?
+  options << 'gzipcomp' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
-  options += "cpus=#{cpus} " if cpus
+  options << "cpus=#{cpus}" if cpus
 
-  options += ENV['TAILS_BUILD_OPTIONS'] if ENV['TAILS_BUILD_OPTIONS']
+  options += ENV['TAILS_BUILD_OPTIONS'].split if ENV['TAILS_BUILD_OPTIONS']
 
   # Make sure release builds are clean
-  options += 'cleanall ' if is_release?
+  options << 'cleanall' if is_release?
 
-  options.split(' ').each do |opt|
+  options.uniq.each do |opt|
     case opt
     # Memory build settings
     when 'ram'
@@ -170,11 +178,16 @@ task :parse_build_options do
     # HTTP proxy settings
     when 'extproxy'
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
-      ENV['http_proxy'] = EXTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY_TYPE'] = 'extproxy'
     when 'vmproxy'
-      ENV['http_proxy'] = INTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY'] = INTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
     when 'noproxy'
-      ENV['http_proxy'] = nil
+      ENV['TAILS_PROXY'] = nil
+      ENV['TAILS_PROXY_TYPE'] = 'noproxy'
+    when 'offline'
+      ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
     when 'gzipcomp'
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
@@ -191,6 +204,17 @@ task :parse_build_options do
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
     when 'noprovision'
       ENV['TAILS_NO_AUTO_PROVISION'] = '1'
+    else
+      raise "Unknown Tails build option '#{opt}'"
+    end
+  end
+
+  if ENV['TAILS_OFFLINE_MODE'] == '1'
+    if ENV['TAILS_PROXY'].nil?
+      abort "You must use a caching proxy when building offline"
+    end
+    if ENV['TAILS_NO_AUTO_PROVISION'] == '1'
+      abort "Offline mode requires provisioning"
     end
   end
 end
@@ -244,11 +268,11 @@ task :ensure_clean_home_directory => ['vm:up'] do
 end
 
 task :validate_http_proxy do
-  if ENV['http_proxy']
-    proxy_host = URI.parse(ENV['http_proxy']).host
+  if ENV['TAILS_PROXY']
+    proxy_host = URI.parse(ENV['TAILS_PROXY']).host
 
     if proxy_host.nil?
-      ENV['http_proxy'] = nil
+      ENV['TAILS_PROXY'] = nil
       $stderr.puts "Ignoring invalid HTTP proxy."
       return
     end
@@ -257,7 +281,7 @@ task :validate_http_proxy do
       abort 'Using an HTTP proxy listening on the loopback is doomed to fail. Aborting.'
     end
 
-    $stderr.puts "Using HTTP proxy: #{ENV['http_proxy']}"
+    $stderr.puts "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
   else
     $stderr.puts "No HTTP proxy set."
   end
@@ -329,12 +353,6 @@ namespace :vm do
   task :up => ['parse_build_options', 'validate_http_proxy'] do
     case vm_state
     when :not_created
-      # Do not use non-existant in-VM proxy to download the basebox
-      if ENV['http_proxy'] == INTERNAL_HTTP_PROXY
-        ENV['http_proxy'] = nil
-        restore_internal_proxy = true
-      end
-
       $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
         This is the first time that the Tails builder virtual machine is
@@ -358,7 +376,6 @@ namespace :vm do
       END_OF_MESSAGE
     end
     run_vagrant('up')
-    ENV['http_proxy'] = INTERNAL_HTTP_PROXY if restore_internal_proxy
   end
 
   desc 'SSH into the builder VM'

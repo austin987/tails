@@ -27,6 +27,7 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
+echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
 
 echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
@@ -72,9 +73,15 @@ EOF
 apt-get update
 apt-get -y dist-upgrade
 
-echo "I: Installing extra dependencies..."
+echo "I: Installing Vagrant dependencies..."
 apt-get -y install grub2 openssh-server curl
+
+echo "I: Configuring GRUB..."
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
+
+echo "I: Upgrading to the backported kernel..."
+apt-get -y purge 'linux-image-*'
+apt-get -y install -t "${DISTRIBUTION}-backports" "linux-image-${ARCHITECTURE}"
 
 echo "I: Installing Tails build dependencies."
 apt-get -y install \

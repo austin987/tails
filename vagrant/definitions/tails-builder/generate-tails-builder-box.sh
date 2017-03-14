@@ -21,28 +21,28 @@ gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
     --import ../../../config/chroot_sources/tails.chroot.gpg
 
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
-    vmdebootstrap \
-    --arch "${ARCHITECTURE}" \
-    --distribution "${DISTRIBUTION}" \
-    --image "${TARGET_IMG}" \
-    --convert-qcow2 \
-    --enable-dhcp \
-    --grub \
-    --hostname "${HOSTNAME}" \
-    --log-level "debug" \
-    --mbr \
-    --mirror "http://time-based.snapshots.deb.tails.boum.org/debian/${SERIAL}" \
-    --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg" \
-    --owner "${SUDO_USER:-${USER}}" \
-    --kernel-package "linux-image-${ARCHITECTURE}" \
-    --package "ca-certificates" \
-    --package "wget" \
-    --root-password="${PASSWORD}" \
-    --size "${SIZE}" \
-    --sudo \
-    --user "${USERNAME}/${PASSWORD}" \
-    --customize "$(pwd)/customize.sh" \
-    --verbose
+     vmdebootstrap \
+     --arch "${ARCHITECTURE}" \
+     --distribution "${DISTRIBUTION}" \
+     --image "${TARGET_IMG}" \
+     --convert-qcow2 \
+     --enable-dhcp \
+     --grub \
+     --hostname "${HOSTNAME}" \
+     --log-level "debug" \
+     --mbr \
+     --mirror "http://time-based.snapshots.deb.tails.boum.org/debian/${SERIAL}" \
+     --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg" \
+     --owner "${SUDO_USER:-${USER}}" \
+     --kernel-package "linux-image-${ARCHITECTURE}" \
+     --package "ca-certificates" \
+     --package "wget" \
+     --root-password="${PASSWORD}" \
+     --size "${SIZE}" \
+     --sudo \
+     --user "${USERNAME}/${PASSWORD}" \
+     --customize "$(pwd)/customize.sh" \
+     --verbose
 
 /usr/share/vagrant-plugins/vagrant-libvirt/tools/create_box.sh \
     "${TARGET_IMG}" "${TARGET_BOX}"

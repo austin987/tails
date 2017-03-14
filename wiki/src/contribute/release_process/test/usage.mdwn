@@ -122,6 +122,13 @@ by the local configuration file:
   failure screenshots, pcap files and disk images. Defaults to
   `"/tmp/TailsToaster"`.
 
+* `NOTIFY_USER_COMMAND`: String value. This arbitrary shell command
+  will be executed whenever `pause()` is called, e.g. on test failure
+  when `INTERACTIVE_DEBUGGING` (`--interactive-debugging`) is
+  enabled. This is pretty useful when multitasking with long test
+  suite runs, so you immediately are notified when a test fails (or
+  when you reached a temporary `pause()` breakpoint).
+
 ## "Secret" configuration
 
 This section describes the formats for all secret configurations that
@@ -200,3 +207,13 @@ where `$TYPE` is `SSH` or `SFTP`. Secrets must be specified for both `SSH` and
 `SFTP`.  If `port` is not specified, `22`will be used.
 
 The SSH test expects the remote system to have a default `bash` shell prompt.
+
+### Icedove
+
+These settings are required for `icedove.feature`.  The format is:
+
+    Icedove:
+      address:  user@example.com
+      password: trustno1
+
+The email account's inbox must contain at least one email at all times.

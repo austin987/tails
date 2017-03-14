@@ -8,6 +8,9 @@ sed -i 's,^\(\#\?\s*deb\(-src\)\?\s\+\)http://,\1tor+http://,' \
 sed -E -i 's,\s+non-free$,,' \
            /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 
+sed -E -i '/^deb(-src)?\s+\S+\s+\S+-proposed-updates\s+/d' \
+           /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+
 echo '
 
 ### Time-based snapshots
@@ -20,7 +23,7 @@ s{
    /[0-9]{10} # serial
    /?
    (\s+)
-}{$1tor+http://ftp.us.debian.org/debian/$2}xms;
+}{$1tor+http://vwakviie2ienjx6t.onion/debian/$2}xms;
 
 s{
    ^
@@ -30,7 +33,7 @@ s{
    /[0-9]{10} # serial
    /?
    (\s+)
-}{$1tor+http://security.debian.org/$2}xms;
+}{$1tor+http://sgvtcaew4bxjd7ln.onion/$2}xms;
 
 s{
    ^
@@ -40,7 +43,7 @@ s{
    /[0-9]{10} # serial
    /?
    (\s+)
-}{$1tor+http://deb.torproject.org/torproject.org/$2}xms;
+}{$1tor+http://sdscoq7snqtznauu.onion/torproject.org/$2}xms;
 
 ### Tagged snapshots
 
@@ -52,7 +55,7 @@ s{
    /debian
    /?
    (\s+)
-}{$1tor+http://ftp.us.debian.org/debian/$2}xms;
+}{$1tor+http://vwakviie2ienjx6t.onion/debian/$2}xms;
 
 s{
    ^
@@ -62,7 +65,7 @@ s{
    /debian-security
    /?
    (\s+)
-}{$1tor+http://security.debian.org/$2}xms;
+}{$1tor+http://sgvtcaew4bxjd7ln.onion/$2}xms;
 
 s{
    ^
@@ -72,6 +75,18 @@ s{
    /torproject
    /?
    (\s+)
-}{$1tor+http://deb.torproject.org/torproject.org/$2}xms;
+}{$1tor+http://sdscoq7snqtznauu.onion/torproject.org/$2}xms;
+
+### Custom APT repository
+
+s{
+   ^
+   (deb(?:-src)?\s+)
+   tor[+]https?://deb[.]tails[.]boum[.]org
+   /?
+   (\s+)
+}{$1tor+http://jenw7xbd6tf7vfhp.onion/$2}xms;
 
 ' | perl -pi - /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+
+find /etc/apt/sources.list* -size 0 -delete
