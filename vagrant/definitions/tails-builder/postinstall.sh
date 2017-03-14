@@ -74,7 +74,7 @@ apt-get update
 apt-get -y dist-upgrade
 
 echo "I: Installing Vagrant dependencies..."
-apt-get -y install grub2 openssh-server curl
+apt-get -y install ca-certificates curl grub2 openssh-server wget
 
 echo "I: Configuring GRUB..."
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub

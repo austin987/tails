@@ -35,8 +35,6 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
      --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg" \
      --owner "${SUDO_USER:-${USER}}" \
      --kernel-package "linux-image-${ARCHITECTURE}" \
-     --package "ca-certificates" \
-     --package "wget" \
      --root-password="${PASSWORD}" \
      --size "${SIZE}" \
      --sudo \
