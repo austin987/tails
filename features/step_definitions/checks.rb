@@ -36,7 +36,11 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
 end
 
 Then /^I double-click the Report an Error launcher on the desktop$/ do
-  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+  # Sometimes the double-click is lost (#12131).
+  retry_action(10) do
+    @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+    step 'the Tor Browser has started'
+  end
 end
 
 Then /^the live user has been setup by live\-boot$/ do
@@ -128,17 +132,6 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-Given /^I setup a filesystem share containing a sample PDF$/ do
-  shared_pdf_dir_on_host = "#{$config["TMPDIR"]}/shared_pdf_dir"
-  @shared_pdf_dir_on_guest = "/tmp/shared_pdf_dir"
-  FileUtils.mkdir_p(shared_pdf_dir_on_host)
-  Dir.glob("#{MISC_FILES_DIR}/*.pdf") do |pdf_file|
-    FileUtils.cp(pdf_file, shared_pdf_dir_on_host)
-  end
-  add_after_scenario_hook { FileUtils.rm_r(shared_pdf_dir_on_host) }
-  $vm.add_share(shared_pdf_dir_on_host, @shared_pdf_dir_on_guest)
-end
-
 Then /^the support documentation page opens in Tor Browser$/ do
   if @language == 'German'
     expected_title = 'Tails - Hilfe & Support'
@@ -156,23 +149,35 @@ Then /^the support documentation page opens in Tor Browser$/ do
   )
 end
 
-Then /^MAT can clean some sample PDF file$/ do
-  for pdf_on_host in Dir.glob("#{MISC_FILES_DIR}/*.pdf") do
-    pdf_name = File.basename(pdf_on_host)
-    pdf_on_guest = "/home/#{LIVE_USER}/#{pdf_name}"
-    step "I copy \"#{@shared_pdf_dir_on_guest}/#{pdf_name}\" to \"#{pdf_on_guest}\" as user \"#{LIVE_USER}\""
-    check_before = $vm.execute_successfully("mat --check '#{pdf_on_guest}'",
+Given /^I plug and mount a USB drive containing a sample PNG$/ do
+  @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))
+end
+
+Then /^MAT can clean some sample PNG file$/ do
+  for png_on_host in Dir.glob("#{MISC_FILES_DIR}/*.png") do
+    png_name = File.basename(png_on_host)
+    png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
+    step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
+    raw_check_cmd = "grep --quiet --fixed-strings --text " +
+                    "'Created with GIMP' '#{png_on_guest}'"
+    assert($vm.execute(raw_check_cmd, user: LIVE_USER).success?,
+           'The comment is not present in the PNG')
+    check_before = $vm.execute_successfully("mat --check '#{png_on_guest}'",
                                             :user => LIVE_USER).stdout
-    assert(check_before.include?("#{pdf_on_guest} is not clean"),
-           "MAT failed to see that '#{pdf_on_host}' is dirty")
-    $vm.execute_successfully("mat '#{pdf_on_guest}'", :user => LIVE_USER)
-    check_after = $vm.execute_successfully("mat --check '#{pdf_on_guest}'",
+    assert(check_before.include?("#{png_on_guest} is not clean"),
+           "MAT failed to see that '#{png_on_host}' is dirty")
+    $vm.execute_successfully("mat '#{png_on_guest}'", :user => LIVE_USER)
+    check_after = $vm.execute_successfully("mat --check '#{png_on_guest}'",
                                            :user => LIVE_USER).stdout
-    assert(check_after.include?("#{pdf_on_guest} is clean"),
-           "MAT failed to clean '#{pdf_on_host}'")
-    $vm.execute_successfully("rm '#{pdf_on_guest}'")
+    assert(check_after.include?("#{png_on_guest} is clean"),
+           "MAT failed to clean '#{png_on_host}'")
+    assert($vm.execute(raw_check_cmd, user: LIVE_USER).failure?,
+           'The comment is still present in the PNG')
+    $vm.execute_successfully("rm '#{png_on_guest}'")
   end
 end
+
+
 
 Then /^AppArmor is enabled$/ do
   assert($vm.execute("aa-status").success?, "AppArmor is not enabled")

@@ -7,9 +7,7 @@ Feature: Localization
   @doc
   Scenario: The Report an Error launcher will open the support documentation in supported non-English locales
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
-    And the network is plugged
     And I log in to a new session in German
-    And Tor is ready
     When I double-click the Report an Error launcher on the desktop
     Then the support documentation page opens in Tor Browser
 
