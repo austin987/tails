@@ -112,6 +112,11 @@ apt-get -y install \
         perlmagick \
         wdg-html-validator
 
+apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
+# We have no /proc, so `systemctl stop` won't work
+kill $(cat /var/run/apt-cacher-ng/pid)
+systemctl disable apt-cacher-ng.service
+
 echo "I: Disable DNS checks to speed-up SSH logins..."
 echo "UseDNS no" >>/etc/ssh/sshd_config
 

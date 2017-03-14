@@ -26,18 +26,6 @@ else
 	fi
 fi
 
-# Do not use virtual machine proxy before apt-cacher-ng is installed
-if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ] &&
-   ! [ -f /etc/apt-cacher-ng/acng.conf ]; then
-	if [ "${TAILS_OFFLINE_MODE}" = 1 ]; then
-		echo "When using the VM proxy the first build must be " \
-		     "made without offline mode" >&2
-		exit 1
-	fi
-	LOCAL_HTTP_PROXY="$http_proxy"
-	http_proxy=''
-fi
-
 # Store basebox serial before regenerating APT sources
 stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
 
@@ -70,34 +58,20 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
         mkfs.ext4 /dev/vdb1
     fi
 
-    [ -d /var/cache/apt-cacher-ng/ ] || \
-        adduser --quiet --system --group --home /var/cache/apt-cacher-ng apt-cacher-ng
-
     if ! mountpoint -q /var/cache/apt-cacher-ng; then
         mount /dev/vdb1 /var/cache/apt-cacher-ng
         chown -R apt-cacher-ng:apt-cacher-ng /var/cache/apt-cacher-ng
     fi
 fi
 
-if ! systemctl --quiet is-active apt-cacher-ng.service; then
-    apt-get update
-    apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
-fi
-
 # Install custom configuration for apt-cacher-ng and restart
 install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
 [ "${TAILS_OFFLINE_MODE}" = 1 ] || TAILS_OFFLINE_MODE=0
 echo "Offlinemode: ${TAILS_OFFLINE_MODE}" > /etc/apt-cacher-ng/network.conf
-service apt-cacher-ng restart
-
-# Restore local HTTP proxy if needed
-if [ "$LOCAL_HTTP_PROXY" ]; then
-	http_proxy="$LOCAL_HTTP_PROXY"
-fi
-
-apt-get update
+systemctl restart apt-cacher-ng.service
 
 # Upgrade if needed
+apt-get update
 apt-get -y dist-upgrade
 
 # Add build script
