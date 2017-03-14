@@ -31,6 +31,8 @@ fi
 
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
      LC_ALL=${LC_ALL} \
+     ARCHITECTURE=${ARCHITECTURE} \
+     DISTRIBUTION=${DISTRIBUTION} \
      vmdebootstrap \
      --arch "${ARCHITECTURE}" \
      --distribution "${DISTRIBUTION}" \
