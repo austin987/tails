@@ -32,15 +32,17 @@ echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
 echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
 
-echo "I: Install jessie/updates and jessie-backports suites."
+echo "I: Add standard APT suites."
 cat "/etc/apt/sources.list" | \
-	sed -e 's/debian/debian-security/' | \
-	sed -e 's/jessie/jessie\/updates/' \
+	sed -e 's/jessie/jessie-updates/' \
 	> "/etc/apt/sources.list.d/jessie-updates.list"
 
 cat "/etc/apt/sources.list" | \
 	sed -e 's/jessie/jessie-backports/' \
 	> "/etc/apt/sources.list.d/jessie-backports.list"
+
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${SECURITY_SERIAL}/ jessie/updates main" \
+	> "/etc/apt/sources.list.d/jessie-security.list"
 
 echo "I: Adding our builder-jessie suite with live-build and syslinux, pin it low."
 echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list

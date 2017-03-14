@@ -21,6 +21,12 @@ TARGET_IMG="${TARGET_NAME}.qcow2"
 TARGET_BOX="${TARGET_NAME}.box"
 LC_ALL=C
 
+SECURITY_SERIAL="$(
+    cd ../../.. && \
+    auto/scripts/apt-snapshots-serials get-latest debian-security | \
+        sed s/^debian-security:[^0-9]*// \
+)"
+
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
     --import ../../../config/chroot_sources/tails.chroot.gpg
@@ -33,6 +39,7 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
      LC_ALL=${LC_ALL} \
      ARCHITECTURE=${ARCHITECTURE} \
      DISTRIBUTION=${DISTRIBUTION} \
+     SECURITY_SERIAL=${SECURITY_SERIAL} \
      vmdebootstrap \
      --arch "${ARCHITECTURE}" \
      --distribution "${DISTRIBUTION}" \
