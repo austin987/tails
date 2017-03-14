@@ -49,6 +49,6 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
 /usr/share/vagrant-plugins/vagrant-libvirt/tools/create_box.sh \
     "${TARGET_IMG}" "${TARGET_BOX}"
 
-rm -f "${TARGET_IMG}"*
+rm -rf "${TARGET_IMG}"* "${DEBOOTSTRAP_GNUPG_HOMEDIR}"
 
 exit 0
