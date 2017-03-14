@@ -19,6 +19,7 @@ if [ -n "${COMMENT}" ]; then
 fi
 TARGET_IMG="${TARGET_NAME}.qcow2"
 TARGET_BOX="${TARGET_NAME}.box"
+LC_ALL=C
 
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
@@ -29,6 +30,7 @@ if [ ! -e "${DEBOOTSTRAP_GNUPG_PUBRING}" ]; then
 fi
 
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
+     LC_ALL=${LC_ALL} \
      vmdebootstrap \
      --arch "${ARCHITECTURE}" \
      --distribution "${DISTRIBUTION}" \
