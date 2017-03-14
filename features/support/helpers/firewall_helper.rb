@@ -1,5 +1,11 @@
 require 'packetfu'
 
+def looks_like_dhcp_packet?(eth_packet, protocol, sport, dport, ip_packet)
+  protocol == "udp" && sport == 68 && dport == 67 && 
+    eth_packet.eth_daddr == "ff:ff:ff:ff:ff:ff" &&
+    ip_packet && ip_packet.ip_daddr == "255.255.255.255"
+end
+
 # Returns the unique edges (based on protocol, source/destination
 # address/port) in the graph of all network flows.
 def pcap_connections_helper(pcap_file, opts = {})
@@ -37,13 +43,9 @@ def pcap_connections_helper(pcap_file, opts = {})
       raise "Found something that cannot be parsed"
     end
 
-    if protocol == "udp" and
-       sport == 68 and
-       dport == 67 and
-       eth_packet.eth_daddr == "ff:ff:ff:ff:ff:ff" and
-       ip_packet.ip_daddr == "255.255.255.255"
-      next if opts[:ignore_dhcp]
-    end
+    next if opts[:ignore_dhcp] &&
+            looks_like_dhcp_packet?(eth_packet, protocol,
+                                    sport, dport, ip_packet)
 
     packet_info = {
       mac_saddr: eth_packet.eth_saddr,
@@ -53,7 +55,7 @@ def pcap_connections_helper(pcap_file, opts = {})
       dport: dport,
     }
     # It seems *Packet.parse can return nil despite *Packet.can_parse?
-    # returning true.
+    # returning true. (#11508)
     if ip_packet
       packet_info[:saddr] = ip_packet.ip_saddr
       packet_info[:daddr] = ip_packet.ip_daddr

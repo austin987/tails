@@ -1,0 +1,44 @@
+From a9b56a0101628ac04aad0d4e50363b9c18566832 Mon Sep 17 00:00:00 2001
+From: Chris Lamb <lamby@debian.org>
+Date: Mon, 13 Mar 2017 11:02:49 +0100
+Subject: auto-removal: Ignore running kernel if attempting a reproducible
+ build
+
+If one is attempting to create a reproducible ISO image we do not want to
+include the build system's kernel version, not only due to it breaking
+reproducibility, but it could be somewhat misleading and/or the
+wrong thing to put in this file anyway.
+
+Closes: #857632
+---
+ debian/apt.auto-removal.sh | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/debian/apt.auto-removal.sh b/debian/apt.auto-removal.sh
+index df9048c..2c32b0c 100644
+--- a/etc/kernel/postinst.d/apt-auto-removal
++++ b/etc/kernel/postinst.d/apt-auto-removal
+@@ -29,6 +29,11 @@ unamer="$(uname -r | tr '[A-Z]' '[a-z]')"
+ if [ -n "$unamer" ]; then
+ 	running_version="$(echo "$list" | awk "\$1 == \"$unamer\" { print \$2;exit; }")"
+ fi
++# ignore the currently running version if attempting a reproducible build
++if [ -n "${SOURCE_DATE_EPOCH}" ]; then
++	unamer=""
++	running_version=""
++fi
+ latest_version="$(echo "$debverlist" | sed -n 1p)"
+ previous_version="$(echo "$debverlist" | sed -n 2p)"
+ 
+@@ -62,7 +67,7 @@ $list
+ # list of different kernel versions:
+ $debverlist
+ # Installing kernel: $installed_version ($1)
+-# Running kernel: $running_version ($unamer)
++# Running kernel: ${running_version:-ignored} (${unamer:-ignored})
+ # Last kernel: $latest_version
+ # Previous kernel: $previous_version
+ # Kernel versions list to keep:
+-- 
+cgit v0.12
+
