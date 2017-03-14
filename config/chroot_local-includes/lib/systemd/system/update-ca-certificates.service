@@ -1,0 +1,19 @@
+# We remove /etc/ssl/certs/java/cacert at build-time to ensure a
+# deterministic build, so we need to re-create it at boot time.
+
+[Unit]
+Description=Update /etc/ssl/certs and ca-certificates.crt
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/update-ca-certificates --fresh
+RemainAfterExit=yes
+CapabilityBoundingSet=
+PrivateDevices=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=yes
+
+[Install]
+WantedBy=multi-user.target
