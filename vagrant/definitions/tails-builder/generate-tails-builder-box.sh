@@ -19,6 +19,10 @@ TARGET_BOX="${TARGET_NAME}.box"
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
     --import ../../../config/chroot_sources/tails.chroot.gpg
+DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.kbx"
+if [ ! -e "${DEBOOTSTRAP_GNUPG_PUBRING}" ]; then
+    DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg"
+fi
 
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
      vmdebootstrap \
@@ -32,7 +36,7 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
      --log-level "debug" \
      --mbr \
      --mirror "http://time-based.snapshots.deb.tails.boum.org/debian/${SERIAL}" \
-     --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg" \
+     --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_PUBRING}" \
      --owner "${SUDO_USER:-${USER}}" \
      --kernel-package "linux-image-${ARCHITECTURE}" \
      --root-password="${PASSWORD}" \
