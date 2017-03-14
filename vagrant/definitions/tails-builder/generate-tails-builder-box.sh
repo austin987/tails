@@ -5,14 +5,14 @@ set -u
 # Based on ypcs' scripts found at:
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
 
+SERIAL="${1}"
 ARCHITECTURE="amd64"
 DISTRIBUTION="jessie"
 USERNAME="vagrant"
 PASSWORD="vagrant"
 SIZE="20G"
 HOSTNAME="vagrant-${DISTRIBUTION}"
-TARGET_NAME=$(grep -Po "tails-builder-${ARCHITECTURE}-${DISTRIBUTION}-\d{10}" ../../Vagrantfile)
-SERIAL=$(echo "${TARGET_NAME}" | grep -Po '\d{10}')
+TARGET_NAME="tails-builder-${ARCHITECTURE}-${DISTRIBUTION}-${SERIAL}"
 TARGET_IMG="${TARGET_NAME}.qcow2"
 TARGET_BOX="${TARGET_NAME}.box"
 

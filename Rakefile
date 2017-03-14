@@ -403,9 +403,12 @@ namespace :basebox do
 
   desc 'Generate a new base box'
   task :create do
+    debian_snapshot_serial =
+      `auto/scripts/apt-snapshots-serials cat debian`.chomp.split.last
+    raise 'invalid serial' unless /^\d{10}$/.match(debian_snapshot_serial)
     box_dir = VAGRANT_PATH + '/definitions/tails-builder'
     Dir.chdir(box_dir) do
-      `./generate-tails-builder-box.sh`
+      `./generate-tails-builder-box.sh #{debian_snapshot_serial}`
       raise 'Base box generation failed!' unless $?.success?
     end
     box = Dir.glob("#{box_dir}/*.box").sort_by {|f| File.mtime(f) } .last
