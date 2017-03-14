@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+require 'libvirt'
 require 'open3'
 require 'rbconfig'
 require 'uri'
@@ -202,8 +203,9 @@ task :parse_build_options do
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
-    when 'noprovision'
-      ENV['TAILS_NO_AUTO_PROVISION'] = '1'
+    # Developer convenience features
+    when 'keeprunning'
+      $keep_running = true
     else
       raise "Unknown Tails build option '#{opt}'"
     end
@@ -212,9 +214,6 @@ task :parse_build_options do
   if ENV['TAILS_OFFLINE_MODE'] == '1'
     if ENV['TAILS_PROXY'].nil?
       abort "You must use a caching proxy when building offline"
-    end
-    if ENV['TAILS_NO_AUTO_PROVISION'] == '1'
-      abort "Offline mode requires provisioning"
     end
   end
 end
@@ -314,11 +313,6 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
   end
 
-  # Let's make sure that, unless you know what you are doing and
-  # explicitly disable this, we always provision in order to ensure
-  # a valid, up-to-date build system.
-  run_vagrant('provision') unless ENV['TAILS_NO_AUTO_PROVISION']
-
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                  collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
   run_vagrant('ssh', '-c', "#{exported_env} build-tails")
@@ -345,7 +339,45 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     )
     raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
   end
-  remove_artifacts
+  clean_up_vm unless $keep_running
+end
+
+def box_name(vagrantfile_contents = nil)
+  vagrantfile_contents ||= open('vagrant/Vagrantfile') { |f| f.read }
+  /^\s*config.vm.box = '([^']+)'/.match(vagrantfile_contents)[1]
+end
+
+def has_box?(name = nil)
+  name ||= box_name
+  !!capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/)
+end
+
+def domain_name(name = nil)
+  name ||= box_name
+  # Vagrant drops some characters when creating the domain and volumes
+  # based on the box name.
+  "#{name.delete('+')}_default"
+end
+
+def clean_up_vm(name = domain_name)
+  $virt = Libvirt::open("qemu:///system")
+  domain = $virt.list_all_domains.find { |d| d.name == name }
+  if domain
+    domain.destroy if domain.active?
+    domain.undefine
+  end
+  begin
+    $virt
+      .lookup_storage_pool_by_name('default')
+      .lookup_volume_by_name("#{name}.img")
+      .delete
+  rescue Libvirt::RetrieveError
+    # Expected if the pool or disk does not exist
+  end
+  # Use capture_ instead of run_ to suppress output
+  capture_vagrant('destroy', '--force')
+ensure
+  $virt.close
 end
 
 namespace :vm do
@@ -353,27 +385,21 @@ namespace :vm do
   task :up => ['parse_build_options', 'validate_http_proxy'] do
     case vm_state
     when :not_created
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
+      clean_up_vm
+      unless has_box?
+        $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
 
-        This is the first time that the Tails builder virtual machine is
-        started. The virtual machine template is about 300 MB to download,
-        so the process might take some time.
+          This is the first time that the Tails builder virtual machine is
+          started. The virtual machine template is about 250 MB to download,
+          so the process might take some time.
 
-        Please remember to shut the virtual machine down once your work on
-        Tails is done:
+          Please remember to shut the virtual machine down once your work on
+          Tails is done:
 
-            $ rake vm:halt
+              $ rake vm:halt
 
-      END_OF_MESSAGE
-    when :poweroff
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
-
-        Starting Tails builder virtual machine. This might take a short while.
-        Please remember to shut it down once your work on Tails is done:
-
-            $ rake vm:halt
-
-      END_OF_MESSAGE
+        END_OF_MESSAGE
+      end
     end
     run_vagrant('up')
   end
@@ -393,9 +419,9 @@ namespace :vm do
     run_vagrant('provision')
   end
 
-  desc 'Destroy build virtual machine (clean up all files)'
+  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data)"
   task :destroy do
-    run_vagrant('destroy', '--force')
+    clean_up_vm
   end
 end
 
