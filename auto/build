@@ -78,6 +78,10 @@ chmod -R go+rX config/chroot_local-includes/var
 chmod -R go+rX config/chroot_apt
 chmod -R go+rX config/chroot_sources
 
+# normalize file timestamps
+find config/binary_local-includes config/chroot_local-includes \
+     -exec touch --date="@$SOURCE_DATE_EPOCH" '{}' \;
+
 # build the image
 
 # we need /debootstrap/deburis to build a manifest of used packages:
