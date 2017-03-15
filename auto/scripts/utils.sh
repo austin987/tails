@@ -3,7 +3,7 @@
 # Returns "" if in undetached head
 git_current_branch() {
 	local git_ref
-	if git_ref="$(git symbolic-ref HEAD)"; then
+	if git_ref="$(git symbolic-ref HEAD) 2>/dev/null"; then
 	    echo "${git_ref#refs/heads/}"
 	else
 	    echo ""
@@ -15,7 +15,7 @@ git_in_detached_head() {
 }
 
 git_commit_from_ref() {
-	git rev-parse --verify "${@}"
+	git rev-parse --verify "${@}" 2>/dev/null
 }
 
 git_current_commit() {
