@@ -1,11 +1,39 @@
 # This library is meant to be used in bash, with "set -e" and "set -u".
 
-current_branch() {
-	git branch | awk '/^\* / { print $2 }'
+# Returns "" if in undetached head
+git_current_branch() {
+	local git_ref
+	if git_ref="$(git symbolic-ref HEAD)"; then
+	    echo "${git_ref#refs/heads/}"
+	else
+	    echo ""
+	fi
 }
 
-on_a_tag() {
-	git describe --tags --exact-match $(git rev-parse --verify HEAD 2>/dev/null) >/dev/null 2>/dev/null
+git_in_detached_head() {
+	[ -z "${git_current_branch}" ]
+}
+
+git_commit_from_ref() {
+	git rev-parse --verify "${@}"
+}
+
+git_current_commit() {
+	git_commit_from_ref "${@}" HEAD
+}
+
+# Returns "" if not a tag
+git_tag_from_commit() {
+	git describe --tags --exact-match "${1}" 2>/dev/null || :
+}
+
+# Returns "" if not on a tag
+git_current_tag() {
+	git_tag_from_commit $(git_current_commit)
+}
+
+git_on_a_tag() {
+	[ -n "$(git_current_tag)" ]
 }
 
 base_branch() {
@@ -43,3 +71,7 @@ version_in_changelog() {
 previous_version_in_changelog() {
 	dpkg-parsechangelog --offset 1 --count 1 | awk '/^Version: / { print $2 }'
 }
+
+if [ -n "${@}" ]; then
+	eval "${@}"
+fi
