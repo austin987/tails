@@ -298,7 +298,7 @@ task :maybe_clean_up_builder_vms do
 end
 
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_http_proxy', 'vm:up', 'ensure_clean_home_directory'] do
 
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
