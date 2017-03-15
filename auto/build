@@ -2,14 +2,11 @@
 
 set -x
 
+. "$(dirname $0)/utils.sh"
+
 umask 022
 
 ### functions
-
-fatal () {
-   echo "$*" >&2
-   exit 1
-}
 
 syslinux_utils_upstream_version () {
    dpkg-query -W -f='${Version}\n' syslinux-utils | \
@@ -101,15 +98,14 @@ export MKSQUASHFS_OPTIONS
 # get git branch or tag so we can set the basename appropriately, i.e.:
 # * if we build from a tag: tails-$ARCH-$TAG.iso
 # * otherwise:              tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
-if GIT_REF="$(git symbolic-ref HEAD)"; then
-    GIT_BRANCH="${GIT_REF#refs/heads/}"
+GIT_BRANCH="$(git_current_branch)"
+if [ -n "${GIT_BRANCH}" ]; then
     CLEAN_GIT_BRANCH=$(echo "$GIT_BRANCH" | sed 's,/,_,g')
-    GIT_SHORT_ID="$(git rev-parse --short HEAD)"
+    GIT_SHORT_ID="$(git_current_commit --short)"
     BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_BRANCH}-${AMNESIA_VERSION}-${AMNESIA_NOW}-${GIT_SHORT_ID}"
 else
-    GIT_CURRENT_COMMIT="$(git rev-parse HEAD)"
-    if GIT_TAG="$(git describe --tags --exact-match ${GIT_CURRENT_COMMIT})"; then
-        CLEAN_GIT_TAG=$(echo "$GIT_TAG" | tr '/-' '_~')
+    if git_on_a_tag; then
+        CLEAN_GIT_TAG=$(git_current_tag | tr '/-' '_~')
 	BUILD_BASENAME="tails-${LB_ARCHITECTURE}-${CLEAN_GIT_TAG}"
     else
 	# this shouldn't reasonably happen (e.g. only if you checkout a
@@ -118,13 +114,13 @@ else
     fi
 fi
 
-GIT_BASE_BRANCH=$(head -n1 config/base_branch) \
+GIT_BASE_BRANCH=$(base_branch) \
     || fatal "GIT_BASE_BRANCH could not be guessed."
 
 # Merge base branch into the branch being built, iff. we're building
 # in Jenkins, and not building from a tag, and not building the base
 # branch itself
-if [ -n "$JENKINS_URL" ] && [ -z "$GIT_TAG" ] \
+if [ -n "$JENKINS_URL" ] && ! git_on_a_tag \
        && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
     GIT_BASE_BRANCH_COMMIT=$(git rev-parse "origin/${GIT_BASE_BRANCH}") \
 	|| fatal "Base branch's top commit could not be guessed."
@@ -136,7 +132,7 @@ if [ -n "$JENKINS_URL" ] && [ -z "$GIT_TAG" ] \
 
     # Adjust BUILD_BASENAME to embed the base branch name and its top commit
     CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
-    GIT_BASE_BRANCH_SHORT_ID=$(git rev-parse --short "origin/${GIT_BASE_BRANCH}") \
+    GIT_BASE_BRANCH_SHORT_ID=$(git_commit_from_ref --short "origin/${GIT_BASE_BRANCH}") \
 	|| fatal "Base branch's top commit short ID could not be guessed."
     BUILD_BASENAME="${BUILD_BASENAME}+${CLEAN_GIT_BASE_BRANCH}"
     BUILD_BASENAME="${BUILD_BASENAME}@${GIT_BASE_BRANCH_SHORT_ID}"
