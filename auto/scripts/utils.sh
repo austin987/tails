@@ -32,6 +32,17 @@ git_current_tag() {
 	git_tag_from_commit $(git_current_commit)
 }
 
+# Try to describe what currently is checked out. Returns "" (i.e. no
+# way to describe it) if Git HEAD is not tagged and if we are in
+# detached HEAD
+git_current_head_name() {
+	if git_in_detached_head; then
+		git_current_tag
+	else
+		git_current_branch
+	fi
+}
+
 git_on_a_tag() {
 	[ -n "$(git_current_tag)" ]
 }
