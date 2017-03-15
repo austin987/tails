@@ -11,7 +11,7 @@ git_current_branch() {
 }
 
 git_in_detached_head() {
-	[ -z "${git_current_branch}" ]
+	[ -z "$(git_current_branch)" ]
 }
 
 git_commit_from_ref() {
