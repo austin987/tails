@@ -33,7 +33,6 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
-  'TAILS_CLEAN_BUILD',
   'TAILS_OFFLINE_MODE',
   'TAILS_PROXY',
   'TAILS_PROXY_TYPE',
@@ -200,9 +199,6 @@ task :parse_build_options do
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
-    # Clean-up settings
-    when 'cleanall'
-      ENV['TAILS_CLEAN_BUILD'] = '1'
     # Virtual CPUs settings
     when /cpus=(\d+)/
       ENV['TAILS_BUILD_CPUS'] = $1
