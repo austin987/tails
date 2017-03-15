@@ -300,60 +300,62 @@ end
 desc 'Build Tails'
 task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_vm', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
 
-  if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
-    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+  begin
+    if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-      The virtual machine is not currently set with enough memory to
-      perform an in-memory build. Either remove the `ram` option from
-      the TAILS_BUILD_OPTIONS environment variable, or shut the
-      virtual machine down using `rake vm:halt` before trying again.
+        The virtual machine is not currently set with enough memory to
+        perform an in-memory build. Either remove the `ram` option from
+        the TAILS_BUILD_OPTIONS environment variable, or shut the
+        virtual machine down using `rake vm:halt` before trying again.
 
-    END_OF_MESSAGE
-    abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
-  end
+      END_OF_MESSAGE
+      abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
+    end
 
-  if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
-    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+    if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-      The virtual machine is currently running with #{current_vm_cpus}
-      virtual CPU(s). In order to change that number, you need to
-      stop the VM first, using `rake vm:halt`. Otherwise, please
-      adjust the `cpus` options accordingly.
+        The virtual machine is currently running with #{current_vm_cpus}
+        virtual CPU(s). In order to change that number, you need to
+        stop the VM first, using `rake vm:halt`. Otherwise, please
+        adjust the `cpus` options accordingly.
 
-    END_OF_MESSAGE
-    abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
-  end
+      END_OF_MESSAGE
+      abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
+    end
 
-  exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
-                 collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-  run_vagrant('ssh', '-c', "#{exported_env} build-tails")
+    exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
+                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+    run_vagrant('ssh', '-c', "#{exported_env} build-tails")
 
-  artifacts = list_artifacts
-  raise 'No build artifacts was found!' if artifacts.empty?
-  user     = vagrant_ssh_config('User')
-  hostname = vagrant_ssh_config('HostName')
-  key_file = vagrant_ssh_config('IdentityFile')
-  $stderr.puts "Retrieving artifacts from Vagrant build box."
-  artifacts.each do |artifact|
-    run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
-    Process.wait(
-      Kernel.spawn(
-        'scp',
-        '-i', key_file,
-        # We need this since the user will not necessarily have a
-        # known_hosts entry. It is safe since an attacker must
-        # compromise libvirt's network config or the user running the
-        # command to modify the #{hostname} below.
-        '-o', 'StrictHostKeyChecking=no',
-        '-o', 'UserKnownHostsFile=/dev/null',
-        "#{user}@#{hostname}:#{artifact}", '.'
+    artifacts = list_artifacts
+    raise 'No build artifacts was found!' if artifacts.empty?
+    user     = vagrant_ssh_config('User')
+    hostname = vagrant_ssh_config('HostName')
+    key_file = vagrant_ssh_config('IdentityFile')
+    $stderr.puts "Retrieving artifacts from Vagrant build box."
+    artifacts.each do |artifact|
+      run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
+      Process.wait(
+        Kernel.spawn(
+          'scp',
+          '-i', key_file,
+          # We need this since the user will not necessarily have a
+          # known_hosts entry. It is safe since an attacker must
+          # compromise libvirt's network config or the user running the
+          # command to modify the #{hostname} below.
+          '-o', 'StrictHostKeyChecking=no',
+          '-o', 'UserKnownHostsFile=/dev/null',
+          "#{user}@#{hostname}:#{artifact}", '.'
+        )
       )
-    )
-    raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
+      raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
+    end
+    clean_up_vm unless $keep_running
+  ensure
+    clean_up_vm if $force_cleanup
   end
-  clean_up_vm unless $keep_running
-ensure
-  clean_up_vm if $force_cleanup
 end
 
 def box_name(vagrantfile_contents = open('vagrant/Vagrantfile') { |f| f.read })
