@@ -51,4 +51,4 @@ find / -name '%gconf-tree.xml' -print0 | \
 # Post-process /etc/shadow by setting the sp_lstchg field to the number of days
 # since SOURCE_DATE_EPOCH instead of 1st Jan 1970. (#12339)
 cut -d: -f1 /etc/shadow | \
-	xargs -L1 chage -d "$(($(date --utc --date "@${SOURCE_DATE_EPOCH}" "+%s") / 86400))"
+	xargs -L1 chage --lastday "$(($(date --utc --date "@${SOURCE_DATE_EPOCH}" "+%s") / 86400))"
