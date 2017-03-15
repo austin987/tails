@@ -188,6 +188,8 @@ task :parse_build_options do
     # Virtual CPUs settings
     when /cpus=(\d+)/
       ENV['TAILS_BUILD_CPUS'] = $1
+    when /cpumodel=([a-zA-Z0-9_-]+)/
+      ENV['TAILS_BUILD_CPU_MODEL'] = $1
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
