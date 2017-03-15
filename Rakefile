@@ -210,6 +210,9 @@ task :parse_build_options do
     when 'forcecleanup'
       $force_cleanup = true
       $keep_running = false
+    when 'rescue'
+      $keep_running = true
+      ENV['TAILS_BUILD_FAILURE_RESCUE'] = '1'
     else
       raise "Unknown Tails build option '#{opt}'"
     end

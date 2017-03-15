@@ -47,7 +47,9 @@ old_build_dirs() {
 	perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:aufs|tmpfs|devpts-live|proc-live|sysfs-live) on (/tmp/tails-build(?:-tmpfs)?\.[/[:alnum:]]+)}))'
 }
 
-trap cleanup EXIT
+if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
+	trap cleanup EXIT
+fi
 
 if [ -n "$JENKINS_URL" ]; then
 	if [ -z "$WORKSPACE" ]; then
