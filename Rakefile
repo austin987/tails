@@ -356,18 +356,15 @@ ensure
   clean_up_vm if $force_cleanup
 end
 
-def box_name(vagrantfile_contents = nil)
-  vagrantfile_contents ||= open('vagrant/Vagrantfile') { |f| f.read }
+def box_name(vagrantfile_contents = open('vagrant/Vagrantfile') { |f| f.read })
   /^\s*config.vm.box = '([^']+)'/.match(vagrantfile_contents)[1]
 end
 
-def has_box?(name = nil)
-  name ||= box_name
+def has_box?(name = box_name)
   !!capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/)
 end
 
-def domain_name(name = nil)
-  name ||= box_name
+def domain_name(name = box_name)
   # Vagrant drops some characters when creating the domain and volumes
   # based on the box name.
   "#{name.delete('+')}_default"
