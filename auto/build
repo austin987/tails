@@ -60,6 +60,7 @@ echo "POTFILES_DOT_IN='$(
 
 # fix permissions on some source files that will be copied as is to the chroot.
 # they may be wrong, e.g. if the Git repository was cloned with a strict umask.
+chown    0:0   config/chroot_local-includes/etc/resolv.conf
 chmod -R go+rX config/binary_local-includes/
 chmod -R go+rX config/chroot_local-includes/etc
 chmod    0440  config/chroot_local-includes/etc/sudoers.d/*
@@ -78,6 +79,10 @@ chmod -R go+rX config/chroot_local-includes/var
 chmod -R go+rX config/chroot_apt
 chmod -R go+rX config/chroot_sources
 
+# normalize file timestamps
+find config/binary_local-includes config/chroot_local-includes \
+     -exec touch --date="@$SOURCE_DATE_EPOCH" '{}' \;
+
 # build the image
 
 # we need /debootstrap/deburis to build a manifest of used packages:
@@ -94,7 +99,7 @@ DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_HOMEDIR/p
 
 export DEBOOTSTRAP_OPTIONS
 
-: ${MKSQUASHFS_OPTIONS:='-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K -no-fragments'}
+: ${MKSQUASHFS_OPTIONS:='-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K'}
 MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/amnesia/build/mksquashfs-excludes"
 export MKSQUASHFS_OPTIONS
 
