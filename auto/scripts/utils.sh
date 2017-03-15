@@ -3,7 +3,7 @@
 # Returns "" if in undetached head
 git_current_branch() {
 	local git_ref
-	if git_ref="$(git symbolic-ref HEAD) 2>/dev/null"; then
+	if git_ref="$(git symbolic-ref HEAD 2>/dev/null)"; then
 	    echo "${git_ref#refs/heads/}"
 	else
 	    echo ""
