@@ -293,12 +293,12 @@ task :validate_http_proxy do
   end
 end
 
-task :maybe_clean_up_vm do
-  clean_up_vm if $force_cleanup
+task :maybe_clean_up_builder_vms do
+  clean_up_builder_vms if $force_cleanup
 end
 
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_vm', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
 
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
@@ -352,9 +352,9 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
       )
       raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
     end
-    clean_up_vm unless $keep_running
+    clean_up_builder_vms unless $keep_running
   ensure
-    clean_up_vm if $force_cleanup
+    clean_up_builder_vms if $force_cleanup
   end
 end
 
@@ -372,23 +372,50 @@ def domain_name(name = box_name)
   "#{name.delete('+')}_default"
 end
 
-def clean_up_vm(name = domain_name)
+def clean_up_builder_vms
   $virt = Libvirt::open("qemu:///system")
-  domain = $virt.list_all_domains.find { |d| d.name == name }
-  if domain
+
+  clean_up_domain = Proc.new do |domain|
+    next if domain.nil?
     domain.destroy if domain.active?
     domain.undefine
+    begin
+      $virt
+        .lookup_storage_pool_by_name('default')
+        .lookup_volume_by_name("#{domain.name}.img")
+        .delete
+    rescue Libvirt::RetrieveError
+      # Expected if the pool or disk does not exist
+    end
   end
-  begin
-    $virt
-      .lookup_storage_pool_by_name('default')
-      .lookup_volume_by_name("#{name}.img")
-      .delete
-  rescue Libvirt::RetrieveError
-    # Expected if the pool or disk does not exist
-  end
-  # Use capture_ instead of run_ to suppress output
-  capture_vagrant('destroy', '--force')
+
+  # Let's ensure that the VM we are about to create is cleaned up ...
+  previous_domain = $virt.list_all_domains.find { |d| d.name == domain_name }
+  clean_up_domain.call(previous_domain)
+
+  # ... and the same for any residual VM based on another box (=>
+  # another domain name) that Vagrant still keeps track of.
+  old_domain =
+    begin
+      old_domain_uuid =
+        open('vagrant/.vagrant/machines/default/libvirt/id', 'r') { |f| f.read }
+        .strip
+      $virt.lookup_domain_by_uuid(old_domain_uuid)
+    rescue Errno::ENOENT, Libvirt::RetrieveError
+      # Expected if we don't have vagrant/.vagrant, or if the VM was
+      # undefined for other reasons (e.g. manually).
+      nil
+    end
+  clean_up_domain.call(old_domain)
+
+  # We could use `vagrant destroy` here but due to vagrant-libvirt's
+  # upstream issue #746 we then risk losing the apt-cacher-ng data.
+  # Since we essentially implement `vagrant destroy` without this bug
+  # above, bit in a way so it works even if `vagrant/.vagrant` does
+  # not exist, let's just do what is sagest, i.e. avoiding `vagrant
+  # destroy`. For details, see the upstream issue:
+  #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/746
+  FileUtils.rm_rf('vagrant/.vagrant')
 ensure
   $virt.close
 end
@@ -398,7 +425,7 @@ namespace :vm do
   task :up => ['parse_build_options', 'validate_http_proxy'] do
     case vm_state
     when :not_created
-      clean_up_vm
+      clean_up_builder_vms
       unless has_box?
         $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
 
@@ -434,7 +461,7 @@ namespace :vm do
 
   desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data)"
   task :destroy do
-    clean_up_vm
+    clean_up_builder_vms
   end
 end
 
