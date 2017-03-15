@@ -39,7 +39,6 @@ EXPORTED_VARIABLES = [
   'TAILS_RAM_BUILD',
   'TAILS_BUILD_GIT_COMMIT',
   'TAILS_BUILD_GIT_REF',
-  'TAILS_BUILD_WORKSPACE_DIR',
 ]
 ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
@@ -315,7 +314,6 @@ task :setup_environment => ['validate_git_state'] do
             "(validate_git_state must be buggy)"
     end
   end
-  ENV['TAILS_BUILD_WORKSPACE_DIR'] ||= "/home/vagrant/amnesia"
 end
 
 task :maybe_clean_up_builder_vms do
