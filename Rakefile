@@ -31,8 +31,6 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 # Branches that are considered 'stable' (used to select SquashFS compression)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
-# Environment variables that will be exported to the provisioning and
-# build scripts.
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
   'TAILS_CLEAN_BUILD',
