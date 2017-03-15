@@ -11,6 +11,12 @@ Import_GnuPG_key ()
 	    --import /usr/share/doc/tails/website/tails-signing.key
 	chmod -R go+rX /usr/share/tails-iuk/trusted_gnupg_homedir/*
 
+	echo "- importing Tails help desk's GnuPG key into WhisperBack's keyring"
+	gpg --batch --no-default-keyring \
+	    --keyring /usr/share/keyrings/tails-keyring.gpg \
+	    --import /usr/share/doc/tails/website/*.key
+	chmod a+r /usr/share/keyrings/tails-keyring.gpg
+
 	# Creating state file
 	touch /var/lib/live/config/import-gnupg-key	
 }
