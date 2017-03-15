@@ -66,24 +66,15 @@ if [ -n "$JENKINS_URL" ]; then
 		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
 		exit 5
 	fi
-	REV="${GIT_BRANCH##origin/}"
+	REF="${GIT_BRANCH##origin/}"
 	COMMIT="$GIT_COMMIT"
 	ARTIFACTS_DIR="$WORKSPACE/build-artifacts"
 else
 	# Build triggered by Vagrant
-	WORKSPACE=/home/vagrant/amnesia
-	ARTIFACTS_DIR=/home/vagrant
-	COMMIT="$(git --git-dir=/amnesia.git/.git rev-parse --verify HEAD)"
-	if git --git-dir=/amnesia.git/.git symbolic-ref HEAD >/dev/null 2>&1; then
-		# We are building from a branch
-		REV="${1:-$(git --git-dir=/amnesia.git/.git name-rev --name-only HEAD)}"
-	else
-		# We are (hopefully) building from a tag
-		if ! REV="${1:-$(git --git-dir=/amnesia.git/.git describe --tags --exact-match ${COMMIT})}"; then
-			echo "It seems we are building from an untagged detached HEAD. Aborting." >&2
-			exit 1
-		fi
-	fi
+	WORKSPACE="${TAILS_BUILD_WORKSPACE_DIR}"
+	ARTIFACTS_DIR="${TAILS_BUILD_ARTIFACTS_DIR}"
+	COMMIT="${TAILS_BUILD_COMMIT}"
+        REF="${TAILS_BUILD_COMMIT}"
 	test -d "$WORKSPACE" || git clone --no-local /amnesia.git/.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch --tags origin
@@ -94,7 +85,7 @@ if [ "$TAILS_RAM_BUILD" ]; then
 fi
 
 cd "$WORKSPACE"
-git checkout --force "$REV"
+git checkout --force "${REF}"
 git reset --hard "$COMMIT"
 git submodule update --init
 
