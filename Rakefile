@@ -49,6 +49,15 @@ INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 class VagrantCommandError < StandardError
 end
 
+def git_helper(*args)
+  stdout = `sh auto/scripts/utils.sh git_#{args.join(' ')}`
+  if args.first.end_with?('?')
+    return $?.success?
+  else
+    return stdout
+  end
+end
+
 # Runs the vagrant command, letting stdout/stderr through. Throws an
 # exception unless the vagrant command succeeds.
 def run_vagrant(*args)
@@ -129,10 +138,7 @@ def enough_free_memory_for_ram_build?
 end
 
 def is_release?
-  detached_head = `git symbolic-ref HEAD` == ""
-  `git describe --tags --exact-match HEAD 2>/dev/null`
-  is_tag = $?.success?
-  detached_head && is_tag
+  git_helper('in_detached_head?') && git_helper('on_a_tag?')
 end
 
 def system_cpus
