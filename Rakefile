@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+require 'libvirt'
 require 'open3'
 require 'rbconfig'
 require 'uri'
@@ -30,10 +31,15 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 # Branches that are considered 'stable' (used to select SquashFS compression)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
-# Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_MODE']
+EXPORTED_VARIABLES = [
+  'MKSQUASHFS_OPTIONS',
+  'TAILS_OFFLINE_MODE',
+  'TAILS_PROXY',
+  'TAILS_PROXY_TYPE',
+  'TAILS_RAM_BUILD',
+]
+ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
-# Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 
 # In-VM proxy URL
@@ -42,6 +48,17 @@ INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 ENV['ARTIFACTS'] ||= '.'
 
 class VagrantCommandError < StandardError
+end
+
+def git_helper(*args)
+  question = args.first.end_with?('?')
+  args.first.sub!(/\?$/, '')
+  stdout = `sh auto/scripts/utils.sh git_#{args.join(' ')}`
+  if question
+    return $?.success?
+  else
+    return stdout
+  end
 end
 
 # Runs the vagrant command, letting stdout/stderr through. Throws an
@@ -124,10 +141,7 @@ def enough_free_memory_for_ram_build?
 end
 
 def is_release?
-  detached_head = `git symbolic-ref HEAD` == ""
-  `git describe --tags --exact-match HEAD 2>/dev/null`
-  is_tag = $?.success?
-  detached_head && is_tag
+  git_helper('in_detached_head?') && git_helper('on_a_tag?')
 end
 
 def system_cpus
@@ -172,11 +186,14 @@ task :parse_build_options do
     # HTTP proxy settings
     when 'extproxy'
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
-      ENV['http_proxy'] = EXTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY_TYPE'] = 'extproxy'
     when 'vmproxy'
-      ENV['http_proxy'] = INTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY'] = INTERNAL_HTTP_PROXY
+      ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
     when 'noproxy'
-      ENV['http_proxy'] = nil
+      ENV['TAILS_PROXY'] = nil
+      ENV['TAILS_PROXY_TYPE'] = 'noproxy'
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
@@ -184,28 +201,30 @@ task :parse_build_options do
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
-    # Clean-up settings
-    when 'cleanall'
-      ENV['TAILS_CLEAN_BUILD'] = '1'
     # Virtual CPUs settings
     when /cpus=(\d+)/
       ENV['TAILS_BUILD_CPUS'] = $1
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
-    when 'noprovision'
-      ENV['TAILS_NO_AUTO_PROVISION'] = '1'
+    # Developer convenience features
+    when 'keeprunning'
+      $keep_running = true
+      $force_cleanup = false
+    when 'forcecleanup'
+      $force_cleanup = true
+      $keep_running = false
+    when 'rescue'
+      $keep_running = true
+      ENV['TAILS_BUILD_FAILURE_RESCUE'] = '1'
     else
       raise "Unknown Tails build option '#{opt}'"
     end
   end
 
   if ENV['TAILS_OFFLINE_MODE'] == '1'
-    if ENV['http_proxy'].nil?
+    if ENV['TAILS_PROXY'].nil?
       abort "You must use a caching proxy when building offline"
-    end
-    if ENV['TAILS_NO_AUTO_PROVISION'] == '1'
-      abort "Offline mode requires provisioning"
     end
   end
 end
@@ -259,11 +278,11 @@ task :ensure_clean_home_directory => ['vm:up'] do
 end
 
 task :validate_http_proxy do
-  if ENV['http_proxy']
-    proxy_host = URI.parse(ENV['http_proxy']).host
+  if ENV['TAILS_PROXY']
+    proxy_host = URI.parse(ENV['TAILS_PROXY']).host
 
     if proxy_host.nil?
-      ENV['http_proxy'] = nil
+      ENV['TAILS_PROXY'] = nil
       $stderr.puts "Ignoring invalid HTTP proxy."
       return
     end
@@ -272,71 +291,137 @@ task :validate_http_proxy do
       abort 'Using an HTTP proxy listening on the loopback is doomed to fail. Aborting.'
     end
 
-    $stderr.puts "Using HTTP proxy: #{ENV['http_proxy']}"
+    $stderr.puts "Using HTTP proxy: #{ENV['TAILS_PROXY']}"
   else
     $stderr.puts "No HTTP proxy set."
   end
 end
 
+task :maybe_clean_up_builder_vms do
+  clean_up_builder_vms if $force_cleanup
+end
+
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_http_proxy', 'vm:up', 'ensure_clean_home_directory'] do
 
-  if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
-    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+  begin
+    if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-      The virtual machine is not currently set with enough memory to
-      perform an in-memory build. Either remove the `ram` option from
-      the TAILS_BUILD_OPTIONS environment variable, or shut the
-      virtual machine down using `rake vm:halt` before trying again.
+        The virtual machine is not currently set with enough memory to
+        perform an in-memory build. Either remove the `ram` option from
+        the TAILS_BUILD_OPTIONS environment variable, or shut the
+        virtual machine down using `rake vm:halt` before trying again.
 
-    END_OF_MESSAGE
-    abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
-  end
+      END_OF_MESSAGE
+      abort 'Not enough memory for the virtual machine to run an in-memory build. Aborting.'
+    end
 
-  if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
-    $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
+    if ENV['TAILS_BUILD_CPUS'] && current_vm_cpus != ENV['TAILS_BUILD_CPUS'].to_i
+      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
 
-      The virtual machine is currently running with #{current_vm_cpus}
-      virtual CPU(s). In order to change that number, you need to
-      stop the VM first, using `rake vm:halt`. Otherwise, please
-      adjust the `cpus` options accordingly.
+        The virtual machine is currently running with #{current_vm_cpus}
+        virtual CPU(s). In order to change that number, you need to
+        stop the VM first, using `rake vm:halt`. Otherwise, please
+        adjust the `cpus` options accordingly.
 
-    END_OF_MESSAGE
-    abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
-  end
+      END_OF_MESSAGE
+      abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
+    end
 
-  # Let's make sure that, unless you know what you are doing and
-  # explicitly disable this, we always provision in order to ensure
-  # a valid, up-to-date build system.
-  run_vagrant('provision') unless ENV['TAILS_NO_AUTO_PROVISION']
+    exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
+                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
+    run_vagrant('ssh', '-c', "#{exported_env} build-tails")
 
-  exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
-                 collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-  run_vagrant('ssh', '-c', "#{exported_env} build-tails")
-
-  artifacts = list_artifacts
-  raise 'No build artifacts was found!' if artifacts.empty?
-  user     = vagrant_ssh_config('User')
-  hostname = vagrant_ssh_config('HostName')
-  key_file = vagrant_ssh_config('IdentityFile')
-  $stderr.puts "Retrieving artifacts from Vagrant build box."
-  artifacts.each do |artifact|
-    run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
-    Process.wait(
-      Kernel.spawn(
-        'scp',
-        '-i', key_file,
-        # We need this since the user will not necessarily have a
-        # known_hosts entry. It is safe since an attacker must
-        # compromise libvirt's network config or the user running the
-        # command to modify the #{hostname} below.
-        '-o', 'StrictHostKeyChecking=no',
-        "#{user}@#{hostname}:#{artifact}", "#{ENV['ARTIFACTS']}"
+    artifacts = list_artifacts
+    raise 'No build artifacts was found!' if artifacts.empty?
+    user     = vagrant_ssh_config('User')
+    hostname = vagrant_ssh_config('HostName')
+    key_file = vagrant_ssh_config('IdentityFile')
+    $stderr.puts "Retrieving artifacts from Vagrant build box."
+    artifacts.each do |artifact|
+      run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
+      Process.wait(
+        Kernel.spawn(
+          'scp',
+          '-i', key_file,
+          # We need this since the user will not necessarily have a
+          # known_hosts entry. It is safe since an attacker must
+          # compromise libvirt's network config or the user running the
+          # command to modify the #{hostname} below.
+          '-o', 'StrictHostKeyChecking=no',
+          '-o', 'UserKnownHostsFile=/dev/null',
+          "#{user}@#{hostname}:#{artifact}", "#{ENV['ARTIFACTS']}"
+        )
       )
-    )
-    raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
+      raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
+    end
+    clean_up_builder_vms unless $keep_running
+  ensure
+    clean_up_builder_vms if $force_cleanup
   end
-  remove_artifacts
+end
+
+def box_name(vagrantfile_contents = open('vagrant/Vagrantfile') { |f| f.read })
+  /^\s*config.vm.box = '([^']+)'/.match(vagrantfile_contents)[1]
+end
+
+def has_box?(name = box_name)
+  !!capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/)
+end
+
+def domain_name(name = box_name)
+  # Vagrant drops some characters when creating the domain and volumes
+  # based on the box name.
+  "#{name.delete('+')}_default"
+end
+
+def clean_up_builder_vms
+  $virt = Libvirt::open("qemu:///system")
+
+  clean_up_domain = Proc.new do |domain|
+    next if domain.nil?
+    domain.destroy if domain.active?
+    domain.undefine
+    begin
+      $virt
+        .lookup_storage_pool_by_name('default')
+        .lookup_volume_by_name("#{domain.name}.img")
+        .delete
+    rescue Libvirt::RetrieveError
+      # Expected if the pool or disk does not exist
+    end
+  end
+
+  # Let's ensure that the VM we are about to create is cleaned up ...
+  previous_domain = $virt.list_all_domains.find { |d| d.name == domain_name }
+  clean_up_domain.call(previous_domain)
+
+  # ... and the same for any residual VM based on another box (=>
+  # another domain name) that Vagrant still keeps track of.
+  old_domain =
+    begin
+      old_domain_uuid =
+        open('vagrant/.vagrant/machines/default/libvirt/id', 'r') { |f| f.read }
+        .strip
+      $virt.lookup_domain_by_uuid(old_domain_uuid)
+    rescue Errno::ENOENT, Libvirt::RetrieveError
+      # Expected if we don't have vagrant/.vagrant, or if the VM was
+      # undefined for other reasons (e.g. manually).
+      nil
+    end
+  clean_up_domain.call(old_domain)
+
+  # We could use `vagrant destroy` here but due to vagrant-libvirt's
+  # upstream issue #746 we then risk losing the apt-cacher-ng data.
+  # Since we essentially implement `vagrant destroy` without this bug
+  # above, bit in a way so it works even if `vagrant/.vagrant` does
+  # not exist, let's just do what is sagest, i.e. avoiding `vagrant
+  # destroy`. For details, see the upstream issue:
+  #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/746
+  FileUtils.rm_rf('vagrant/.vagrant')
+ensure
+  $virt.close
 end
 
 namespace :vm do
@@ -344,36 +429,28 @@ namespace :vm do
   task :up => ['parse_build_options', 'validate_http_proxy'] do
     case vm_state
     when :not_created
-      # Do not use non-existant in-VM proxy to download the basebox
-      if ENV['http_proxy'] == INTERNAL_HTTP_PROXY
-        ENV['http_proxy'] = nil
-        restore_internal_proxy = true
+      clean_up_builder_vms
+      unless has_box?
+        $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
+
+          This is the first time that the Tails builder virtual machine is
+          started. The virtual machine template is about 250 MB to download,
+          so the process might take some time.
+
+          Please remember to shut the virtual machine down once your work on
+          Tails is done:
+
+              $ rake vm:halt
+
+        END_OF_MESSAGE
       end
-
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
-
-        This is the first time that the Tails builder virtual machine is
-        started. The virtual machine template is about 300 MB to download,
-        so the process might take some time.
-
-        Please remember to shut the virtual machine down once your work on
-        Tails is done:
-
-            $ rake vm:halt
-
-      END_OF_MESSAGE
-    when :poweroff
-      $stderr.puts <<-END_OF_MESSAGE.gsub(/^        /, '')
-
-        Starting Tails builder virtual machine. This might take a short while.
-        Please remember to shut it down once your work on Tails is done:
-
-            $ rake vm:halt
-
-      END_OF_MESSAGE
     end
-    run_vagrant('up')
-    ENV['http_proxy'] = INTERNAL_HTTP_PROXY if restore_internal_proxy
+    begin
+      run_vagrant('up')
+    rescue VagrantCommandError => e
+      clean_up_builder_vms if $force_cleanup
+      raise e
+    end
   end
 
   desc 'SSH into the builder VM'
@@ -391,9 +468,9 @@ namespace :vm do
     run_vagrant('provision')
   end
 
-  desc 'Destroy build virtual machine (clean up all files)'
+  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data)"
   task :destroy do
-    run_vagrant('destroy', '--force')
+    clean_up_builder_vms
   end
 end
 
@@ -401,9 +478,12 @@ namespace :basebox do
 
   desc 'Generate a new base box'
   task :create do
+    debian_snapshot_serial =
+      `auto/scripts/apt-snapshots-serials cat debian`.chomp.split.last
+    raise 'invalid serial' unless /^\d{10}$/.match(debian_snapshot_serial)
     box_dir = VAGRANT_PATH + '/definitions/tails-builder'
     Dir.chdir(box_dir) do
-      `./generate-tails-builder-box.sh`
+      `./generate-tails-builder-box.sh #{debian_snapshot_serial}`
       raise 'Base box generation failed!' unless $?.success?
     end
     box = Dir.glob("#{box_dir}/*.box").sort_by {|f| File.mtime(f) } .last

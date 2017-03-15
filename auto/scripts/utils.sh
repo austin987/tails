@@ -1,11 +1,50 @@
 # This library is meant to be used in bash, with "set -e" and "set -u".
 
-current_branch() {
-	git branch | awk '/^\* / { print $2 }'
+# Returns "" if in undetached head
+git_current_branch() {
+	local git_ref
+	if git_ref="$(git symbolic-ref HEAD) 2>/dev/null"; then
+	    echo "${git_ref#refs/heads/}"
+	else
+	    echo ""
+	fi
 }
 
-on_a_tag() {
-	git describe --tags --exact-match $(git rev-parse --verify HEAD 2>/dev/null) >/dev/null 2>/dev/null
+git_in_detached_head() {
+	[ -z "${git_current_branch}" ]
+}
+
+git_commit_from_ref() {
+	git rev-parse --verify "${@}" 2>/dev/null
+}
+
+git_current_commit() {
+	git_commit_from_ref "${@}" HEAD
+}
+
+# Returns "" if not a tag
+git_tag_from_commit() {
+	git describe --tags --exact-match "${1}" 2>/dev/null || :
+}
+
+# Returns "" if not on a tag
+git_current_tag() {
+	git_tag_from_commit $(git_current_commit)
+}
+
+# Try to describe what currently is checked out. Returns "" (i.e. no
+# way to describe it) if Git HEAD is not tagged and if we are in
+# detached HEAD
+git_current_head_name() {
+	if git_in_detached_head; then
+		git_current_tag
+	else
+		git_current_branch
+	fi
+}
+
+git_on_a_tag() {
+	[ -n "$(git_current_tag)" ]
 }
 
 base_branch() {
@@ -43,3 +82,7 @@ version_in_changelog() {
 previous_version_in_changelog() {
 	dpkg-parsechangelog --offset 1 --count 1 | awk '/^Version: / { print $2 }'
 }
+
+if [ "$(basename ${0})" = utils.sh ] && [ -n "${@}" ]; then
+	eval "${@}"
+fi

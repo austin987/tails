@@ -5,6 +5,10 @@
 set -e
 set -x
 
+if [ -n "${TAILS_PROXY:-}" ]; then
+	export http_proxy="${TAILS_PROXY}"
+fi
+
 as_root_do() {
 	sudo \
 		${RSYNC_PROXY:+RSYNC_PROXY="$RSYNC_PROXY"} \
@@ -41,7 +45,9 @@ old_build_dirs() {
 	perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:aufs|tmpfs|devpts-live|proc-live|sysfs-live) on (/tmp/tails-build(?:-tmpfs)?\.[/[:alnum:]]+)}))'
 }
 
-trap cleanup EXIT
+if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
+	trap cleanup EXIT
+fi
 
 WORKSPACE=/home/vagrant/amnesia
 
@@ -74,11 +80,6 @@ git submodule update --init
 if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
 	as_root_do ./auto/scripts/update-acng-config
 	as_root_do systemctl restart apt-cacher-ng.service
-fi
-
-if [ "$TAILS_CLEAN_BUILD" ]; then
-	as_root_do lb clean --all
-	git clean -fdx
 fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)

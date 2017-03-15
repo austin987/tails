@@ -23,7 +23,7 @@ output_overlay_apt_binary_sources() {
 }
 
 on_base_branch() {
-	local current_branch=$(current_branch)
+	local current_branch=$(git_current_branch)
 
 	for base_branch in $BASE_BRANCHES ; do
 		if [ "$current_branch" = "$base_branch" ] ; then
@@ -42,9 +42,9 @@ on_base_branch() {
 [ "$(cat config/base_branch | wc -l)" -eq 1 ] \
     || fatal 'config/base_branch must contain exactly one line'
 
-if on_base_branch && ! [ "$(base_branch)" = "$(current_branch)" ] ; then
+if on_base_branch && ! [ "$(base_branch)" = "$(git_current_branch)" ] ; then
 	echo "base_branch: $(base_branch)" >&2
-	echo "current_branch: $(current_branch)" >&2
+	echo "current_branch: $(git_current_branch)" >&2
 	fatal "In a base branch, config/base_branch must match the current branch."
 fi
 
