@@ -83,7 +83,7 @@ previous_version_in_changelog() {
 	dpkg-parsechangelog --offset 1 --count 1 | awk '/^Version: / { print $2 }'
 }
 
-if [ "$(basename ${0})" = utils.sh ] && [ -n "${@}" ]; then
+if [ "$(basename ${0})" = utils.sh ] && [ -n "${1}" ]; then
 	if grep -q "^${1}() {$" "${0}"; then
 		eval "${@}"
 	else
