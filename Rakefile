@@ -206,6 +206,10 @@ task :parse_build_options do
     # Developer convenience features
     when 'keeprunning'
       $keep_running = true
+      $force_cleanup = false
+    when 'forcecleanup'
+      $force_cleanup = true
+      $keep_running = false
     else
       raise "Unknown Tails build option '#{opt}'"
     end
@@ -286,8 +290,12 @@ task :validate_http_proxy do
   end
 end
 
+task :maybe_clean_up_vm do
+  clean_up_vm if $force_cleanup
+end
+
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_vm', 'ensure_clean_home_directory', 'validate_http_proxy', 'vm:up'] do
 
   if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
     $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
@@ -341,6 +349,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
     raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
   end
   clean_up_vm unless $keep_running
+ensure
+  clean_up_vm if $force_cleanup
 end
 
 def box_name(vagrantfile_contents = nil)
