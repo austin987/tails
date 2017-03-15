@@ -4,7 +4,9 @@
 
 set -e
 
-export http_proxy="${TAILS_PROXY}"
+if [ -n "${TAILS_PROXY:-}" ]; then
+	export http_proxy="${TAILS_PROXY}"
+fi
 
 as_root_do() {
 	sudo \
