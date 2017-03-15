@@ -185,7 +185,9 @@ task :parse_build_options do
     # Clean-up settings
     when 'cleanall'
       ENV['TAILS_CLEAN_BUILD'] = '1'
-    # Virtual CPUs settings
+    # Virtual hardware settings
+    when /machinetype=([a-zA-Z0-9_.-]+)/
+      ENV['TAILS_BUILD_MACHINE_TYPE'] = $1
     when /cpus=(\d+)/
       ENV['TAILS_BUILD_CPUS'] = $1
     when /cpumodel=([a-zA-Z0-9_-]+)/
