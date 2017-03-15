@@ -31,7 +31,7 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_MODE']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_MODE', 'TAILS_DATE_OFFSET']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
@@ -191,6 +191,8 @@ task :parse_build_options do
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
+    when /dateoffset=([-+]\d+)/
+      ENV['TAILS_DATE_OFFSET'] = $1
     when 'noprovision'
       ENV['TAILS_NO_AUTO_PROVISION'] = '1'
     else
