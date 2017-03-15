@@ -334,6 +334,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'ensure_clean_
         # compromise libvirt's network config or the user running the
         # command to modify the #{hostname} below.
         '-o', 'StrictHostKeyChecking=no',
+        '-o', 'UserKnownHostsFile=/dev/null',
         "#{user}@#{hostname}:#{artifact}", '.'
       )
     )
