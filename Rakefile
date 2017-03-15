@@ -37,6 +37,10 @@ EXPORTED_VARIABLES = [
   'TAILS_PROXY',
   'TAILS_PROXY_TYPE',
   'TAILS_RAM_BUILD',
+  'TAILS_BUILD_GIT_COMMIT',
+  'TAILS_BUILD_GIT_REF',
+  'TAILS_BUILD_WORKSPACE_DIR',
+  'TAILS_BUILD_ARTIFACTS_DIR',
 ]
 ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
@@ -297,12 +301,31 @@ task :validate_http_proxy do
   end
 end
 
+task :validate_git_state do
+  if git_helper('in_detached_head?') && not(git_helper('on_a_tag?'))
+    raise 'We are in detached head but the current commit is not tagged'
+  end
+end
+
+task :setup_environment => ['validate_git_state'] do
+  ENV['TAILS_BUILD_GIT_COMMIT'] = git_helper('current_commit')
+  ENV['TAILS_BUILD_GIT_REF'] = git_helper('current_head_name')
+  ['TAILS_BUILD_GIT_COMMIT', 'TAILS_BUILD_GIT_REF'].each do |var|
+    if ENV[var].empty?
+      raise "Variable '#{var}' is empty, which should not be possible" +
+            "(validate_git_state must be buggy)"
+    end
+  end
+  ENV['TAILS_BUILD_WORKSPACE_DIR'] ||= "/home/vagrant/amnesia"
+  ENV['TAILS_BUILD_ARTIFACTS_DIR'] ||= "/home/vagrant"
+end
+
 task :maybe_clean_up_builder_vms do
   clean_up_builder_vms if $force_cleanup
 end
 
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_http_proxy', 'vm:up', 'ensure_clean_home_directory'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'vm:up', 'ensure_clean_home_directory'] do
 
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
@@ -426,7 +449,7 @@ end
 
 namespace :vm do
   desc 'Start the build virtual machine'
-  task :up => ['parse_build_options', 'validate_http_proxy'] do
+  task :up => ['parse_build_options', 'validate_http_proxy', 'setup_environment'] do
     case vm_state
     when :not_created
       clean_up_builder_vms

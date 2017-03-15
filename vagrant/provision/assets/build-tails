@@ -49,29 +49,21 @@ if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
 	trap cleanup EXIT
 fi
 
-WORKSPACE=/home/vagrant/amnesia
+WORKSPACE="${TAILS_BUILD_WORKSPACE_DIR}"
 
 test -d "$WORKSPACE" || git clone --no-local /amnesia.git/.git "$WORKSPACE"
 cd "$WORKSPACE"
+git fetch --tags origin
 
-COMMIT="$(git rev-parse --verify HEAD)"
-
-if git symbolic-ref HEAD >/dev/null 2>&1; then
-	# We are building from a branch
-	REV="${1:-$(git name-rev --name-only HEAD)}"
-else
-	# We are (hopefully) building from a tag
-	if ! REV="${1:-$(git describe --tags --exact-match ${COMMIT})}"; then
-		echo "It seems we are building from an untagged detached HEAD. Aborting." >&2
-		exit 1
-	fi
-fi
+ARTIFACTS_DIR="${TAILS_BUILD_ARTIFACTS_DIR}"
+COMMIT="${TAILS_BUILD_COMMIT}"
+REF="${TAILS_BUILD_COMMIT}"
 
 if [ "$TAILS_RAM_BUILD" ]; then
 	remove_build_dirs
 fi
 
-git checkout --force "$REV"
+git checkout --force "${REF}"
 git reset --hard "$COMMIT"
 git submodule update --init
 

@@ -5,12 +5,10 @@ set -e
 export http_proxy="${TAILS_PROXY}"
 export DEBIAN_FRONTEND=noninteractive
 
-. /amnesia.git/auto/scripts/utils.sh
-
 if [ ! -f /var/lib/vagrant_box_build_from ]; then
-	echo "$(git_current_head_name)" > /var/lib/vagrant_box_build_from
+	echo "${TAILS_BUILD_GIT_REF}" > /var/lib/vagrant_box_build_from
 else
-	if [ "$(cat /var/lib/vagrant_box_build_from)" != "$(git_current_head_name)" ]; then
+	if [ "$(cat /var/lib/vagrant_box_build_from)" != "${TAILS_BUILD_GIT_REF}" ]; then
 		echo "E: The current VM has been created to build $(cat /var/lib/vagrant_box_build_from)."
 		echo "E: Please first use rake vm:destroy before trying to build again."
 		exit 1
