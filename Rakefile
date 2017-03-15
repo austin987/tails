@@ -31,7 +31,7 @@ VAGRANT_PATH = File.expand_path('../vagrant', __FILE__)
 STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 # Environment variables that will be exported to the build script
-EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_BUILD']
+EXPORTED_VARIABLES = ['http_proxy', 'MKSQUASHFS_OPTIONS', 'TAILS_RAM_BUILD', 'TAILS_CLEAN_BUILD', 'TAILS_OFFLINE_MODE']
 
 # Let's save the http_proxy set before playing with it
 EXTERNAL_HTTP_PROXY = ENV['http_proxy']
