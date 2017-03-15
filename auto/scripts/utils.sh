@@ -91,7 +91,7 @@ previous_version_in_changelog() {
 #
 if [ "$(basename ${0})" = utils.sh ] && [ -n "${1}" ]; then
 	if grep -q "^${1}() {$" "${0}"; then
-		eval "${@}"
+		eval "\"\${@}\""
 	else
 		echo "unknown shell function: ${1}" >&2
 		exit 1
