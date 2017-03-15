@@ -441,7 +441,12 @@ namespace :vm do
         END_OF_MESSAGE
       end
     end
-    run_vagrant('up')
+    begin
+      run_vagrant('up')
+    rescue VagrantCommandError => e
+      clean_up_builder_vms if $force_cleanup
+      raise e
+    end
   end
 
   desc 'SSH into the builder VM'
