@@ -9,6 +9,7 @@ systemctl enable memlockd.service
 
 # Enable our own systemd unit files
 systemctl enable tails-autotest-remote-shell.service
+systemctl enable tails-reconfigure-fontconfig.service
 systemctl enable tails-reconfigure-kexec.service
 systemctl enable tails-reconfigure-memlockd.service
 systemctl enable tails-sdmem-on-media-removal.service
@@ -18,7 +19,6 @@ systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
 systemctl enable tor-controlport-filter.service
 systemctl enable update-ca-certificates.service
-systemctl enable tails-reconfigure-fontconfig.service
 
 # Enable our own systemd user unit files
 systemctl --global enable tails-add-GNOME-bookmarks.service
