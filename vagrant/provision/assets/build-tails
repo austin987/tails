@@ -51,9 +51,7 @@ fi
 
 WORKSPACE=/home/vagrant/amnesia
 
-sudo rsync -a --exclude 'vagrant/.vagrant' "/amnesia.git/" "${WORKSPACE}"
-sudo chown -R vagrant:vagrant "${WORKSPACE}"
-
+test -d "$WORKSPACE" || git clone --no-local /amnesia.git/.git "$WORKSPACE"
 cd "$WORKSPACE"
 
 COMMIT="$(git rev-parse --verify HEAD)"
