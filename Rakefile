@@ -87,6 +87,12 @@ def capture_vagrant(*args)
   return stdout, stderr
 end
 
+[:run_vagrant, :capture_vagrant].each do |m|
+  define_method "#{m}_ssh" do |*args|
+    method(m).call('ssh', '-c', *args)
+  end
+end
+
 def vagrant_ssh_config(key)
   # Cache results
   if $vagrant_ssh_config.nil?
@@ -100,7 +106,7 @@ def vagrant_ssh_config(key)
 end
 
 def current_vm_cpus
-  capture_vagrant('ssh', '-c', 'grep -c "^processor\s*:" /proc/cpuinfo').first.chomp.to_i
+  capture_vagrant_ssh('grep -c "^processor\s*:" /proc/cpuinfo').first.chomp.to_i
 end
 
 def vm_state
@@ -129,7 +135,7 @@ def enough_free_host_memory_for_ram_build?
 end
 
 def free_vm_memory
-  capture_vagrant('ssh', '-c', 'free').first.chomp.split[16].to_i
+  capture_vagrant_ssh('free').first.chomp.split[16].to_i
 end
 
 def enough_free_vm_memory_for_ram_build?
@@ -266,7 +272,7 @@ end
 
 def list_artifacts
   user = vagrant_ssh_config('User')
-  stdout = capture_vagrant('ssh', '-c', "find '/home/#{user}/amnesia/' -maxdepth 1 " +
+  stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " +
                                         "-name 'tails-*.iso*'").first
   stdout.split("\n")
 rescue VagrantCommandError
@@ -275,7 +281,7 @@ end
 
 def remove_artifacts
   list_artifacts.each do |artifact|
-    run_vagrant('ssh', '-c', "sudo rm -f '#{artifact}'")
+    run_vagrant_ssh("sudo rm -f '#{artifact}'")
   end
 end
 
@@ -361,7 +367,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
 
     exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                    collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-    run_vagrant('ssh', '-c', "#{exported_env} build-tails")
+    run_vagrant_ssh("#{exported_env} build-tails")
 
     artifacts = list_artifacts
     raise 'No build artifacts was found!' if artifacts.empty?
@@ -370,7 +376,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
     key_file = vagrant_ssh_config('IdentityFile')
     $stderr.puts "Retrieving artifacts from Vagrant build box."
     artifacts.each do |artifact|
-      run_vagrant('ssh', '-c', "sudo chown #{user} '#{artifact}'")
+      run_vagrant_ssh("sudo chown #{user} '#{artifact}'")
       Process.wait(
         Kernel.spawn(
           'scp',
