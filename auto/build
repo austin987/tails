@@ -119,8 +119,9 @@ GIT_BASE_BRANCH=$(base_branch) \
 
 if [ "${TAILS_MERGE_BASE_BRANCH}" = 1 ] && \
        ! git_on_a_tag && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
-    GIT_BASE_BRANCH_COMMIT=$(git rev-parse "origin/${GIT_BASE_BRANCH}") \
-	|| fatal "Base branch's top commit could not be guessed."
+    GIT_BASE_BRANCH_COMMIT=$(git_base_branch_head)
+    [ -n "${GIT_BASE_BRANCH_COMMIT}" ] \
+        || fatal "Base branch's top commit could not be guessed."
 
     echo "Merging base branch origin/${GIT_BASE_BRANCH}"
     echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
@@ -129,8 +130,9 @@ if [ "${TAILS_MERGE_BASE_BRANCH}" = 1 ] && \
 
     # Adjust BUILD_BASENAME to embed the base branch name and its top commit
     CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
-    GIT_BASE_BRANCH_SHORT_ID=$(git_commit_from_ref --short "origin/${GIT_BASE_BRANCH}") \
-	|| fatal "Base branch's top commit short ID could not be guessed."
+    GIT_BASE_BRANCH_SHORT_ID=$(git_base_branch_head --short)
+    [ -n "${GIT_BASE_BRANCH_SHORT_ID}" ] \
+        || fatal "Base branch's top commit short ID could not be guessed."
     BUILD_BASENAME="${BUILD_BASENAME}+${CLEAN_GIT_BASE_BRANCH}"
     BUILD_BASENAME="${BUILD_BASENAME}@${GIT_BASE_BRANCH_SHORT_ID}"
 fi
