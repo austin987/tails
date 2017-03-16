@@ -15,10 +15,10 @@ as_root_do() {
 		${ftp_proxy:+ftp_proxy="${ftp_proxy}"} \
 		${no_proxy:+no_proxy="${no_proxy}"} \
 		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS}"} \
-                ${TAILS_MERGE_BASE_BRANCH:+TAILS_MERGE_BASE_BRANCH="${TAILS_MERGE_BASE_BRANCH}"} \
-		${TAILS_GIT_COMMIT:+TAILS_GIT_COMMIT="${TAILS_GIT_COMMIT}"} \
-		${TAILS_GIT_REF:+TAILS_GIT_REF="${TAILS_GIT_REF}"} \
-		${TAILS_BASE_BRANCH_GIT_COMMIT:+TAILS_BASE_BRANCH_GIT_COMMIT="${TAILS_BASE_BRANCH_GIT_COMMIT}"} \
+                ${MERGE_BASE_BRANCH:+MERGE_BASE_BRANCH="${MERGE_BASE_BRANCH}"} \
+		${GIT_COMMIT:+GIT_COMMIT="${GIT_COMMIT}"} \
+		${GIT_REF:+GIT_REF="${GIT_REF}"} \
+		${BASE_BRANCH_GIT_COMMIT:+BASE_BRANCH_GIT_COMMIT="${BASE_BRANCH_GIT_COMMIT}"} \
 		"${@}"
 }
 
@@ -56,8 +56,8 @@ TAILS_GIT_DIR="/home/vagrant/amnesia"
 sudo rsync -a "/amnesia.git/.git" "${TAILS_GIT_DIR}"
 sudo chown -R vagrant:vagrant "${TAILS_GIT_DIR}"
 cd "${TAILS_GIT_DIR}"
-git checkout --force "${TAILS_GIT_REF}"
-git reset --hard "${TAILS_GIT_COMMIT}"
+git checkout --force "${GIT_REF}"
+git reset --hard "${GIT_COMMIT}"
 git submodule update --init
 
 if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
