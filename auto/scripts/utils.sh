@@ -16,8 +16,9 @@ git_in_detached_head() {
 	[ -z "$(git_current_branch)" ]
 }
 
+# Returns "" if ref does not exist
 git_commit_from_ref() {
-	git rev-parse --verify "${@}" 2>/dev/null
+	git rev-parse --verify "${@}" 2>/dev/null || :
 }
 
 git_current_commit() {
