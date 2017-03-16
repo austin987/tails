@@ -47,6 +47,7 @@ old_build_dirs() {
 
 if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
 	trap cleanup EXIT
+	remove_build_dirs
 fi
 
 WORKSPACE="/home/vagrant/amnesia"
@@ -59,10 +60,6 @@ git fetch --tags origin
 
 COMMIT="${TAILS_BUILD_GIT_COMMIT}"
 REF="${TAILS_BUILD_GIT_REF}"
-
-if [ "$TAILS_RAM_BUILD" ]; then
-	remove_build_dirs
-fi
 
 git checkout --force "${REF}"
 git reset --hard "$COMMIT"
