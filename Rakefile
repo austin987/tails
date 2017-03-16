@@ -483,7 +483,7 @@ namespace :vm do
   end
 
   desc 'Re-run virtual machine setup'
-  task :provision => ['parse_build_options', 'validate_http_proxy'] do
+  task :provision => ['parse_build_options', 'validate_http_proxy', 'setup_environment'] do
     run_vagrant('provision')
   end
 
