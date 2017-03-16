@@ -53,10 +53,10 @@ if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
 	remove_build_dirs
 fi
 
-WORKSPACE="/home/vagrant/amnesia"
-sudo rsync -a "/amnesia.git/.git" "${WORKSPACE}"
-sudo chown -R vagrant:vagrant "${WORKSPACE}"
-cd "${WORKSPACE}"
+TAILS_GIT_DIR="/home/vagrant/amnesia"
+sudo rsync -a "/amnesia.git/.git" "${TAILS_GIT_DIR}"
+sudo chown -R vagrant:vagrant "${TAILS_GIT_DIR}"
+cd "${TAILS_GIT_DIR}"
 git checkout --force "${REF}"
 git reset --hard "$COMMIT"
 git submodule update --init
@@ -70,11 +70,11 @@ BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "$TAILS_RAM_BUILD" ]; then
 	as_root_do mount -t tmpfs -o "noatime,size=100%,mode=0770,uid=root,gid=${USER}" tmpfs "${BUILD_DIR}"
 fi
-as_root_do rsync -a "$WORKSPACE"/ "$BUILD_DIR"/
+as_root_do rsync -a "${TAILS_GIT_DIR}"/ "$BUILD_DIR"/
 
 cd "$BUILD_DIR"
 as_root_do lb config --cache false
 
 as_root_do lb build
 
-mv -f tails-* "$WORKSPACE/"
+mv -f tails-* "$[TAILS_GIT_DIR}/"
