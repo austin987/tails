@@ -223,7 +223,7 @@ task :parse_build_options do
       ENV['TAILS_BUILD_FAILURE_RESCUE'] = '1'
     # Jenkins
     when 'mergebasebranch'
-      ENV['TAILS_MERGE_BASE_BRANCH'] = '1'
+      ENV['MERGE_BASE_BRANCH'] = '1'
     else
       raise "Unknown Tails build option '#{opt}'"
     end
