@@ -5,6 +5,9 @@
 set -e
 set -x
 
+COMMIT="${TAILS_BUILD_GIT_COMMIT}"
+REF="${TAILS_BUILD_GIT_REF}"
+
 if [ -n "${TAILS_PROXY:-}" ]; then
 	export http_proxy="${TAILS_PROXY}"
 fi
@@ -51,16 +54,9 @@ if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
 fi
 
 WORKSPACE="/home/vagrant/amnesia"
-
-sudo rsync -a --exclude 'vagrant/.vagrant' "/amnesia.git/" "${WORKSPACE}"
+sudo rsync -a "/amnesia.git/.git" "${WORKSPACE}"
 sudo chown -R vagrant:vagrant "${WORKSPACE}"
-
-cd "$WORKSPACE"
-git fetch --tags origin
-
-COMMIT="${TAILS_BUILD_GIT_COMMIT}"
-REF="${TAILS_BUILD_GIT_REF}"
-
+cd "${WORKSPACE}"
 git checkout --force "${REF}"
 git reset --hard "$COMMIT"
 git submodule update --init
