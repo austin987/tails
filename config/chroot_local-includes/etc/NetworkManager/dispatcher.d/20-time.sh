@@ -48,10 +48,6 @@ if [ -e "$TORDATE_DONE_FILE" ]; then
 fi
 
 
-### Create status directory
-install -o root -g root -m 0755 -d ${TORDATE_DIR}
-
-
 ### Functions
 
 log() {
