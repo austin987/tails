@@ -434,7 +434,7 @@ def clean_up_builder_vms
   # We could use `vagrant destroy` here but due to vagrant-libvirt's
   # upstream issue #746 we then risk losing the apt-cacher-ng data.
   # Since we essentially implement `vagrant destroy` without this bug
-  # above, bit in a way so it works even if `vagrant/.vagrant` does
+  # above, but in a way so it works even if `vagrant/.vagrant` does
   # not exist, let's just do what is sagest, i.e. avoiding `vagrant
   # destroy`. For details, see the upstream issue:
   #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/746
