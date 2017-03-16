@@ -33,6 +33,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
+  'TAILS_MERGE_BASE_BRANCH',
   'TAILS_OFFLINE_MODE',
   'TAILS_PROXY',
   'TAILS_PROXY_TYPE',
@@ -219,6 +220,9 @@ task :parse_build_options do
     when 'rescue'
       $keep_running = true
       ENV['TAILS_BUILD_FAILURE_RESCUE'] = '1'
+    # Jenkins
+    when 'mergebasebranch'
+      ENV['TAILS_MERGE_BASE_BRANCH'] = '1'
     else
       raise "Unknown Tails build option '#{opt}'"
     end
