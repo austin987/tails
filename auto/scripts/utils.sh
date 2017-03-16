@@ -1,5 +1,7 @@
 # This library is meant to be used in bash, with "set -e" and "set -u".
 
+BASE_BRANCHES="stable testing devel feature/stretch"
+
 # Returns "" if in undetached head
 git_current_branch() {
 	local git_ref
@@ -49,6 +51,20 @@ git_on_a_tag() {
 
 base_branch() {
 	cat config/base_branch | head -n1
+}
+
+base_branches() {
+	echo ${BASE_BRANCHES}
+}
+
+on_base_branch() {
+	for base_branch in $BASE_BRANCHES ; do
+		if [ "$(git_current_branch)" = "${base_branch}" ] ; then
+			return 0
+		fi
+	done
+
+	return 1
 }
 
 branch_name_to_suite() {

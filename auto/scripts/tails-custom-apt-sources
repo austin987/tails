@@ -7,7 +7,6 @@ set -u
 
 APT_MIRROR_URL="http://deb.tails.boum.org/"
 DEFAULT_COMPONENTS="main contrib non-free"
-BASE_BRANCHES="stable testing devel feature/jessie"
 
 output_apt_binary_source() {
 	local suite="$1"
@@ -20,18 +19,6 @@ output_overlay_apt_binary_sources() {
 	for suite in $(ls config/APT_overlays.d) ; do
 		output_apt_binary_source "$suite"
 	done
-}
-
-on_base_branch() {
-	local current_branch=$(git_current_branch)
-
-	for base_branch in $BASE_BRANCHES ; do
-		if [ "$current_branch" = "$base_branch" ] ; then
-			return 0
-		fi
-	done
-
-	return 1
 }
 
 ### Sanity checks
