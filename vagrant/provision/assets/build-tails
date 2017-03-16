@@ -53,9 +53,19 @@ if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
 fi
 
 TAILS_GIT_DIR="/home/vagrant/amnesia"
-sudo rsync -a "/amnesia.git/.git" "${TAILS_GIT_DIR}"
-sudo chown -R vagrant:vagrant "${TAILS_GIT_DIR}"
+if [ ! -d "${TAILS_GIT_DIR}" ]; then
+    git clone /amnesia.git/.git "${TAILS_GIT_DIR}"
+fi
 cd "${TAILS_GIT_DIR}"
+# Mirror the branches amnesia.git tracks on its "origin" remote as if
+# they were on our own "origin" remote, (i.e. under the origin/$REF
+# name), even if it's untrue (our own "origin" is amnesia.git and has
+# only one local ref, which is the branch we work on and that it has
+# checked out as a local tracking branch). We need this for the base
+# branch merge we do (if the 'mergebasebranch'/TAILS_MERGE_BASE_BRANCH
+# option is set) later in auto/build.
+git config remote.origin.fetch +refs/remotes/origin/*:refs/remotes/origin/*
+git fetch --tags
 git checkout --force "${GIT_REF}"
 git reset --hard "${GIT_COMMIT}"
 git submodule update --init
