@@ -75,6 +75,11 @@ if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
 	as_root_do systemctl restart apt-cacher-ng.service
 fi
 
+# Since $TAILS_GIT_DIR is guaranteed persistent until the VM is shutdown
+# let's build the website while there so it is cached throughout
+# the session. This will make rebuilds after failures much faster.
+./build-website
+
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "${TAILS_RAM_BUILD}" ]; then
 	as_root_do mount -t tmpfs -o "noatime,size=100%,mode=0770,uid=root,gid=${USER}" tmpfs "${BUILD_DIR}"
