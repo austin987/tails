@@ -51,7 +51,9 @@ fi
 
 WORKSPACE="/home/vagrant/amnesia"
 
-test -d "$WORKSPACE" || git clone /amnesia.git/.git "$WORKSPACE"
+sudo rsync -a --exclude 'vagrant/.vagrant' "/amnesia.git/" "${WORKSPACE}"
+sudo chown -R vagrant:vagrant "${WORKSPACE}"
+
 cd "$WORKSPACE"
 git fetch --tags origin
 
