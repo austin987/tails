@@ -314,7 +314,7 @@ end
 
 And /^I re-run htpdate$/ do
   $vm.execute_successfully("service htpdate stop && " \
-                           "rm -f /var/run/htpdate/* && " \
+                           "rm -f /run/htpdate/* && " \
                            "systemctl --no-block start htpdate.service")
   step "the time has synced"
 end

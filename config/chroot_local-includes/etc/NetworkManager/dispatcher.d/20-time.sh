@@ -21,7 +21,7 @@
 
 ### Init variables
 
-TORDATE_DIR=/var/run/tordate
+TORDATE_DIR=/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
 TOR_CONSENSUS=${TOR_DIR}/cached-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-microdesc-consensus
