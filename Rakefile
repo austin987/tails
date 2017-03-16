@@ -40,6 +40,7 @@ EXPORTED_VARIABLES = [
   'TAILS_RAM_BUILD',
   'TAILS_GIT_COMMIT',
   'TAILS_GIT_REF',
+  'TAILS_BASE_BRANCH_GIT_COMMIT',
 ]
 ENV['EXPORTED_VARIABLES'] = EXPORTED_VARIABLES.join(' ')
 
@@ -311,8 +312,9 @@ end
 
 task :setup_environment => ['validate_git_state'] do
   ENV['TAILS_GIT_COMMIT'] = git_helper('current_commit')
+  ENV['TAILS_BASE_BRANCH_GIT_COMMIT'] = git_helper('base_branch_head')
   ENV['TAILS_GIT_REF'] = git_helper('current_head_name')
-  ['TAILS_GIT_COMMIT', 'TAILS_GIT_REF'].each do |var|
+  ['TAILS_GIT_COMMIT', 'TAILS_GIT_REF', 'TAILS_BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible" +
             "(validate_git_state must be buggy)"

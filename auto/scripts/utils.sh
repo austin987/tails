@@ -68,6 +68,11 @@ on_base_branch() {
 	return 1
 }
 
+# Returns the top commit ref of the base branch
+git_base_branch_head() {
+	git rev-parse base_branch
+}
+
 branch_name_to_suite() {
 	local branch="$1"
 
