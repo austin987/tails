@@ -311,9 +311,14 @@ task :validate_git_state do
 end
 
 task :setup_environment => ['validate_git_state'] do
-  ENV['GIT_COMMIT'] = git_helper('current_commit')
+  # On Jenkins we want to import GIT_COMMIT and GIT_BRANCH from the
+  # environment. When Jenkins supports building from tags we will have
+  # to look at what to set GIT_REF to again (hopefully Jenkins will
+  # export GIT_TAG or something).
+  ENV['GIT_COMMIT'] ||= git_helper('current_commit')
+  ENV['GIT_REF'] = ENV['GIT_BRANCH'] || git_helper('current_head_name')
+
   ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('base_branch_head')
-  ENV['GIT_REF'] = git_helper('current_head_name')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible" +
