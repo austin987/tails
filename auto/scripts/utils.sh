@@ -70,7 +70,7 @@ on_base_branch() {
 
 # Returns the top commit ref of the base branch
 git_base_branch_head() {
-	git rev-parse "$(base_branch)"
+	git_commit_from_ref "$(base_branch)"
 }
 
 branch_name_to_suite() {
