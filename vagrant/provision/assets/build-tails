@@ -3,9 +3,6 @@
 set -e
 set -x
 
-COMMIT="${TAILS_BUILD_GIT_COMMIT}"
-REF="${TAILS_BUILD_GIT_REF}"
-
 if [ -n "${TAILS_PROXY:-}" ]; then
 	export http_proxy="${TAILS_PROXY}"
 fi
@@ -55,8 +52,8 @@ TAILS_GIT_DIR="/home/vagrant/amnesia"
 sudo rsync -a "/amnesia.git/.git" "${TAILS_GIT_DIR}"
 sudo chown -R vagrant:vagrant "${TAILS_GIT_DIR}"
 cd "${TAILS_GIT_DIR}"
-git checkout --force "${REF}"
-git reset --hard "${COMMIT}"
+git checkout --force "${TAILS_GIT_REF}"
+git reset --hard "${TAILS_GIT_COMMIT}"
 git submodule update --init
 
 if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then

@@ -6,9 +6,9 @@ export http_proxy="${TAILS_PROXY}"
 export DEBIAN_FRONTEND=noninteractive
 
 if [ ! -f /var/lib/vagrant_box_build_from ]; then
-	echo "${TAILS_BUILD_GIT_REF}" > /var/lib/vagrant_box_build_from
+	echo "${TAILS_GIT_REF}" > /var/lib/vagrant_box_build_from
 else
-	if [ "$(cat /var/lib/vagrant_box_build_from)" != "${TAILS_BUILD_GIT_REF}" ]; then
+	if [ "$(cat /var/lib/vagrant_box_build_from)" != "${TAILS_GIT_REF}" ]; then
 		echo "E: The current VM has been created to build $(cat /var/lib/vagrant_box_build_from)."
 		echo "E: Please first use rake vm:destroy before trying to build again."
 		exit 1
