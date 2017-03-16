@@ -55,7 +55,7 @@ end
 def git_helper(*args)
   question = args.first.end_with?('?')
   args.first.sub!(/\?$/, '')
-  stdout = `sh auto/scripts/utils.sh git_#{args.join(' ')}`
+  stdout = `sh auto/scripts/utils.sh git_#{args.join(' ')}`.chomp
   if question
     return $?.success?
   else
