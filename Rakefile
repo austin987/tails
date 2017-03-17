@@ -322,7 +322,7 @@ task :setup_environment => ['validate_git_state'] do
   # export GIT_TAG or something).
   ENV['GIT_COMMIT'] ||= git_helper('current_commit')
   ENV['GIT_REF'] = ENV['GIT_BRANCH'] || git_helper('current_head_name')
-  ENV['GIT_REF'].sub!(/^origin\//, '')
+  ENV['GIT_REF'] = ENV['GIT_REF'].sub(/^origin\//, '')
 
   ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
