@@ -285,7 +285,6 @@ def remove_artifacts
   end
 end
 
-desc "Make sure the vagrant user's home directory has no undesired artifacts"
 task :ensure_clean_home_directory => ['vm:up'] do
   remove_artifacts
 end
