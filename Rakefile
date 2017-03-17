@@ -89,7 +89,7 @@ end
 
 [:run_vagrant, :capture_vagrant].each do |m|
   define_method "#{m}_ssh" do |*args|
-    method(m).call('ssh', '-c', *args)
+    method(m).call('ssh', '-c', *args, '--', '-q')
   end
 end
 
