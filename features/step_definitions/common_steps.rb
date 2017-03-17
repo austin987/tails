@@ -366,14 +366,14 @@ Given /^Tor has built a circuit$/ do
 end
 
 Given /^the time has synced$/ do
-  ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
+  ["/run/tordate/done", "/run/htpdate/success"].each do |file|
     try_for(300) { $vm.execute("test -e #{file}").success? }
   end
 end
 
 Given /^available upgrades have been checked$/ do
   try_for(300) {
-    $vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+    $vm.execute("test -e '/run/tails-upgrader/checked_upgrades'").success?
   }
 end
 
