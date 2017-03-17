@@ -732,9 +732,9 @@ end
 When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
   image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
   # Sometimes the double-click is lost (#12131).
-  @trobrowser = nil
+  @torbrowser = nil
   retry_action(10) do
-    @screen.wait_and_double_click(image, 10) unless @trobrowser
+    @screen.wait_and_double_click(image, 10) unless @torbrowser
     step 'the Tor Browser has started'
   end
 end
