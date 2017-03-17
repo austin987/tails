@@ -188,7 +188,7 @@ When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   file_chooser = @installer.child('Select a File', roleName: 'file chooser')
   @screen.type("l", Sikuli::KeyModifier.CTRL)
   # The only visible text element will be the path entry
-  file_chooser.child(roleName: 'text').text = @iso_path
+  file_chooser.child(roleName: 'text').typeText(@iso_path + '\n')
   file_chooser.button('Open').click
   usb_install_helper(name)
 end
