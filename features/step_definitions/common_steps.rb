@@ -384,7 +384,6 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
                      .dialog('Tor is not ready')
     offline_prompt.button('Start Tor Browser').click
   end
-  @torbrowser = Dogtail::Application.new('Firefox')
   step "the Tor Browser has started#{offline}"
   if offline
     step 'the Tor Browser shows the "The proxy server is refusing connections" error'
@@ -393,6 +392,7 @@ end
 
 Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
   try_for(60) do
+    @torbrowser = Dogtail::Application.new('Firefox')
     @torbrowser.child?(roleName: 'frame', recursive: false)
   end
 end
@@ -728,9 +728,15 @@ When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) secon
   assert_equal(nb.to_i, pulseaudio_sink_inputs)
 end
 
-When /^I double-click on the "Tails documentation" link on the Desktop$/ do
-  @screen.wait_and_double_click("DesktopTailsDocumentationIcon.png", 10)
-  @torbrowser = Dogtail::Application.new('Firefox')
+
+When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
+  image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
+  # Sometimes the double-click is lost (#12131).
+  @trobrowser = nil
+  retry_action(10) do
+    @screen.wait_and_double_click(image, 10) unless @trobrowser
+    step 'the Tor Browser has started'
+  end
 end
 
 When /^I click the blocked video icon$/ do
