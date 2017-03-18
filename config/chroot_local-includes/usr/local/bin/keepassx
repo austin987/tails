@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+# Start the migration from the old keepassx database to the new format used in
+# Stretch.
+
+if mountpoint -q /home/amnesia/Persistent; then
+	if [ -e /home/amnesia/Persistent/keepassx.kbd ] && \
+		[ ! -e /home/amnesia/Persistent/keepassx.kbdx ]; then
+	/usr/bin/keepassx /home/amnesia/Persistent/keepassx.kbd
+	fi
+fi
