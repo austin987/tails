@@ -2,12 +2,25 @@
 
 set -e
 
-# Start the migration from the old keepassx database to the new format used in
-# Stretch.
+if mountpoint -q /home/amnesia/Persistent; then
+	# Move to the Persistent folder to save the migrated database in the
+	# right folder by default.
+	cd /home/amnesia/Persistent
 
-if [ -e /home/amnesia/Persistent/keepassx.kbd ] && \
-	[ ! -e /home/amnesia/Persistent/keepassx.kdbx ]; then
-/usr/bin/keepassx /home/amnesia/Persistent/keepassx.kdb
+	# Move the already migrated data to the right place
+	if [ -e '/home/amnesia/Persistent/New database.kdbx' ]; then
+		mv '/home/amnesia/Persistent/New database.kdbx' \
+			'/home/amnesia/Persistent/keepassx.kdbx'
+	fi
+
+	# Start the migration from the old keepassx database to the new format used in
+	# Stretch.
+	if [ -e /home/amnesia/Persistent/keepassx.kdb ] && \
+		[ ! -e /home/amnesia/Persistent/keepassx.kdbx ]; then
+		/usr/bin/keepassx /home/amnesia/Persistent/keepassx.kdb
+	else
+		/usr/bin/keepassx
+	fi
 else
 	/usr/bin/keepassx
 fi
