@@ -1,9 +1,12 @@
+def chutney_src_dir
+  "#{GIT_DIR}/submodules/chutney"
+end
+
 def ensure_chutney_is_running
   # Ensure that a fresh chutney instance is running, and that it will
   # be cleaned upon exit. We only do it once, though, since the same
   # setup can be used throughout the same test suite run.
   if not($chutney_initialized)
-    chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
     chutney_listen_address = $vmnet.bridge_ip_addr
     chutney_script = "#{chutney_src_dir}/chutney"
     assert(
@@ -112,7 +115,6 @@ When /^I configure Tails to use a simulated Tor network$/ do
   ]
   # We run one client in chutney so we easily can grep the generated
   # DirAuthority lines and use them.
-  chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
   client_torrcs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*client/torrc"
   )
