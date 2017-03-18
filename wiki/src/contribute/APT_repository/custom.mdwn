@@ -58,7 +58,7 @@ Else, it adds:
   `config/APT_overlays.d/*`; note that only the name of such
   files matters, and their content is ignored.
 
-In practice, `config/APT_overlays.d/` contains:
+In practice, `config/APT_overlays.d/` should contain:
 
 * for a topic branch:
   - if needed, a file that is named like the branch's own overlay APT
@@ -107,7 +107,12 @@ Creating a new branch
 ---------------------
 
 Push your branch to Git and wait a few minutes for the new APT suite
-to appear on <https://deb.tails.boum.org/dists/>.
+to appear on <https://deb.tails.boum.org/dists/>. You can look up the
+name of that suite there.
+
+Then, you probably want to drop a new file in
+`config/APT_overlays.d/`, named after the APT suite corresponding to
+your new branch. See details in the *Build system* section above.
 
 Importing a new package
 -----------------------
@@ -161,8 +166,8 @@ with the `changestool(1)` command, from [[!debpkg reprepro]]).
 
 Remove all `buildinfo` and `dbgsym` lines from the `.changes` file.
 
-If the `.orig.tar.gz` is present neither in the `.changes` file nor in
-our custom APT repository, add it using:
+If the `.orig.tar.{gz,bz2,xz}` tarball is present neither in the
+`.changes` file nor in our custom APT repository, add it using:
 
 	$ changestool $CHANGES_FILE includeallsources
 
