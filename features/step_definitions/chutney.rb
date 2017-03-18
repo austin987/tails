@@ -147,18 +147,22 @@ def chutney_onionservice_info
 end
 
 def chutney_onionservice_redir(remote_address, remote_port)
-  local_address, local_port, _ = chutney_onionservice_info
-  job = IO.popen(
-    ['/usr/bin/redir',
-     "#{local_address}:#{local_port}",
-     "#{remote_address}:#{remote_port}"]
-  )
-  add_after_scenario_hook do
+  kill_redir = Proc.new do
     begin
-      Process.kill("TERM", job.pid)
+      Process.kill("TERM", $chutney_onionservice_job.pid)
     rescue
       # noop
     end
   end
-  return job
+  if $chutney_onionservice_job
+    kill_redir.call
+  end
+  local_address, local_port, _ = chutney_onionservice_info
+  $chutney_onionservice_job = IO.popen(
+    ['/usr/bin/redir',
+     "#{local_address}:#{local_port}",
+     "#{remote_address}:#{remote_port}"]
+  )
+  add_after_scenario_hook { kill_redir.call }
+  return $chutney_onionservice_job
 end

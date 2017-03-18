@@ -46,13 +46,6 @@ When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |
 end
 
 def setup_onion_keyserver
-  if @onion_keyserver_job
-    begin
-      Process.kill("TERM", @onion_keyserver_job.pid)
-    rescue
-      # noop
-    end
-  end
   resolver = Resolv::DNS.new
   keyservers = resolver.getaddresses('pool.sks-keyservers.net').select do |addr|
     addr.class == Resolv::IPv4
