@@ -54,12 +54,15 @@ def pcap_connections_helper(pcap_file, opts = {})
       sport: sport,
       dport: dport,
     }
-    # It seems *Packet.parse can return nil despite *Packet.can_parse?
-    # returning true. (#11508)
-    if ip_packet
+    # It seems *Packet.parse can return an IP packet without source
+    # and/or destination address. (#11508)
+    begin
       packet_info[:saddr] = ip_packet.ip_saddr
       packet_info[:daddr] = ip_packet.ip_daddr
-    else
+    rescue NoMethodError
+      # noop
+    end
+    if not(packet_info.has_key?(:saddr)) || not(packet_info.has_key?(:daddr))
       puts "We were hit by #11508. PacketFu bug? Packet info: #{packet_info}"
     end
     connections << packet_info
