@@ -1,3 +1,5 @@
+require 'resolv'
+
 class OpenPGPKeyserverCommunicationError < StandardError
 end
 
@@ -43,6 +45,25 @@ When /^the "([^"]+)" OpenPGP key is not in the live user's public keyring$/ do |
          "The '#{keyid}' key is in the live user's public keyring.")
 end
 
+def setup_onion_keyserver
+  if @onion_keyserver_job
+    begin
+      Process.kill("TERM", @onion_keyserver_job.pid)
+    rescue
+      # noop
+    end
+  end
+  resolver = Resolv::DNS.new
+  keyservers = resolver.getaddresses('pool.sks-keyservers.net').select do |addr|
+    addr.class == Resolv::IPv4
+  end
+  onion_keyserver_address = keyservers.sample
+  hkp_port = 11371
+  @onion_keyserver_job = chutney_onionservice_redir(
+    onion_keyserver_address, hkp_port
+  )
+end
+
 When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
   # Make keyid an instance variable so we can reference it in the Seahorse
   # keysyncing step.
@@ -52,7 +73,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signat
   else
     importopts = ''
   end
-  retry_tor do
+  retry_tor(Proc.new { setup_onion_keyserver }) do
     @gnupg_recv_key_res = $vm.execute_successfully(
       "timeout 120 gpg --batch #{importopts} --recv-key '#{@fetched_openpgp_keyid}'",
       :user => LIVE_USER)
@@ -103,6 +124,7 @@ end
 
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = Proc.new do
+    setup_onion_keyserver
     # The version of Seahorse in Jessie will abort with a
     # segmentation fault whenever there's any sort of network error while
     # syncing keys. This will usually happens after clicking away the error
@@ -161,6 +183,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
   end
 
   recovery_proc = Proc.new do
+    setup_onion_keyserver
     @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
     @screen.type("w", Sikuli::KeyModifier.CTRL)
   end
@@ -194,7 +217,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
 end
 
 Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |app|
-  chutney_onionservice_redir('pool.sks-keyservers.net', 11371)
+  setup_onion_keyserver
   _, _, onion_address, onion_port = chutney_onionservice_info
   case app
   when 'GnuPG'
