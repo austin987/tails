@@ -217,7 +217,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
 end
 
 Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |app|
-  setup_onion_keyserver
+  setup_onion_keyserver unless @onion_keyserver_job
   _, _, onion_address, onion_port = chutney_onionservice_info
   case app
   when 'GnuPG'
