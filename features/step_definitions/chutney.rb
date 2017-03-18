@@ -128,3 +128,36 @@ end
 When /^Tails is using the real Tor network$/ do
   assert($vm.execute('grep "TestingTorNetwork 1" /etc/torrc').failure?)
 end
+
+def chutney_onionservice_info
+  hs_hostname_file_path = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*hs/hidden_service/hostname"
+  ).first
+  hs_hostname = open(hs_hostname_file_path, 'r') do |f|
+    f.read.chomp
+  end
+  hs_torrc_path = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*hs/torrc"
+  ).first
+  _, hs_port, _ = open(hs_torrc_path, 'r') do |f|
+    f.grep(/^HiddenServicePort/).first.split
+  end
+  [hs_hostname, hs_port]
+end
+
+def chutney_onionservice_redir(remote_address, remote_port)
+  local_address, local_port, _ = chutney_onionservice_info
+  job = IO.popen(
+    ['/usr/bin/redir',
+     "#{local_address}:#{local_port}",
+     "#{remote_address}:#{remote_port}"]
+  )
+  add_after_scenario_hook do
+    begin
+      Process.kill("TERM", job.pid)
+    rescue
+      # noop
+    end
+  end
+  return job
+end
