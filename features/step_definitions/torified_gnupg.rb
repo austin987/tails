@@ -74,17 +74,6 @@ When /^the Seahorse operation is successful$/ do
   $vm.has_process?('seahorse')
 end
 
-When /^GnuPG uses the configured keyserver$/ do
-  dirmngr_request = $vm.execute_successfully(
-    'gpg-connect-agent --dirmngr "keyserver --hosttable" /bye'
-  )
-  server = dirmngr_request.stdout.chomp.lines[1].split[4]
-  assert_equal(
-    CONFIGURED_KEYSERVER_HOSTNAME, server,
-    "GnuPG's dirmngr does not use the correct keyserver"
-  )
-end
-
 When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|
   delay = 10 unless delay
   try_for(delay.to_i, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
@@ -204,9 +193,43 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
   end
 end
 
-Then /^Seahorse is configured to use the correct keyserver$/ do
-  @gnome_keyservers = YAML.load($vm.execute_successfully('gsettings get org.gnome.crypto.pgp keyservers',
-                                                         :user => LIVE_USER).stdout)
-  assert_equal(1, @gnome_keyservers.count, 'Seahorse should only have one keyserver configured.')
-  assert_equal('hkp://' + CONFIGURED_KEYSERVER_HOSTNAME, @gnome_keyservers[0])
+Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |app|
+  chutney_onionservice_redir('pool.sks-keyservers.net', 11371)
+  _, _, onion_address, onion_port = chutney_onionservice_info
+  case app
+  when 'GnuPG'
+    # Validate the shipped configuration ...
+    dirmngr_request = $vm.execute_successfully(
+      'gpg-connect-agent --dirmngr "keyserver --hosttable" /bye'
+    )
+    server = dirmngr_request.stdout.chomp.lines[1].split[4]
+    assert_equal(
+      CONFIGURED_KEYSERVER_HOSTNAME, server,
+      "GnuPG's dirmngr does not use the correct keyserver"
+    )
+    # ... before replacing it
+    $vm.execute_successfully(
+      "sed -i 's/#{CONFIGURED_KEYSERVER_HOSTNAME}/#{onion_address}:#{onion_port}/' " +
+      "'/home/#{LIVE_USER}/.gnupg/dirmngr.conf'"
+    )
+  when 'Seahorse'
+    # Validate the shipped configuration ...
+    @gnome_keyservers = YAML.load(
+      $vm.execute_successfully(
+        'gsettings get org.gnome.crypto.pgp keyservers',
+        user: LIVE_USER
+      ).stdout
+    )
+    assert_equal(1, @gnome_keyservers.count,
+                 'Seahorse should only have one keyserver configured.')
+    assert_equal(
+      'hkp://' + CONFIGURED_KEYSERVER_HOSTNAME, @gnome_keyservers[0],
+      "GnuPG's dirmngr does not use the correct keyserver"
+    )
+    # ... before replacing it
+    $vm.execute_successfully(
+      "gsettings set org.gnome.crypto.pgp keyservers \"['hkp://#{onion_address}:#{onion_port}']\"",
+      user: LIVE_USER
+    )
+  end
 end

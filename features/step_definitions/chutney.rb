@@ -139,10 +139,11 @@ def chutney_onionservice_info
   hs_torrc_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/torrc"
   ).first
-  _, hs_port, _ = open(hs_torrc_path, 'r') do |f|
+  _, hs_port, local_address_port = open(hs_torrc_path, 'r') do |f|
     f.grep(/^HiddenServicePort/).first.split
   end
-  [hs_hostname, hs_port]
+  local_address, local_port  = local_address_port.split(':')
+  [local_address, local_port, hs_hostname, hs_port]
 end
 
 def chutney_onionservice_redir(remote_address, remote_port)
