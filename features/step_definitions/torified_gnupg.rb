@@ -199,12 +199,9 @@ Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |ap
   case app
   when 'GnuPG'
     # Validate the shipped configuration ...
-    dirmngr_request = $vm.execute_successfully(
-      'gpg-connect-agent --dirmngr "keyserver --hosttable" /bye'
-    )
-    server = dirmngr_request.stdout.chomp.lines[1].split[4]
+    server = /keyserver\s+(\S+)$/.match($vm.file_content("/home/#{LIVE_USER}/.gnupg/dirmngr.conf"))[1]
     assert_equal(
-      CONFIGURED_KEYSERVER_HOSTNAME, server,
+      "hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}", server,
       "GnuPG's dirmngr does not use the correct keyserver"
     )
     # ... before replacing it
