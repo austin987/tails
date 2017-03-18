@@ -164,9 +164,8 @@ The patterns+settings file is stored as a converted sqlite text dump in
 8. Commit:
 
        git commit -m 'Update uBlock Origin patterns + settings file.' \
-          config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
-
-9. Remove the original `ublock0.sqlite` from the Git root.
+          config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
+       && rm ublock0.sqlite
 
 Upgrade bundled binary Debian packages
 --------------------------------------
@@ -541,7 +540,7 @@ suite should be ready, so it is time to:
 * compare the new build manifest with the one from the previous,
   almost final build; they should be identical, except that the
   `debian-security` serial/reference might be higher. To ensure we get
-  the final build's .build-manufest, please run:
+  the final build's .build-manifest, please run:
 
       export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
@@ -645,7 +644,7 @@ Prepare upgrade-description files
    * create a new upgrade-description for the version being released,
      that expresses that *no* upgrade is available for that one yet.
 
-   This is what `tails-iuk-generate-ugrade-description-files` tool
+   This is what `tails-iuk-generate-upgrade-description-files` tool
    does:
 
        ( cd ${IUK_CHECKOUT:?} && \
@@ -1123,9 +1122,6 @@ to do it.
 Amnesia news
 ------------
 
-XXX: During the 2.7 release, the related email was not sent to the list,
-despite the news having the announce tag.
-
 The release announcement are automatically sent to `amnesia-news@`
 (thanks to the `announce` flag) on an hourly basis, but it will be
 stuck in the moderation
@@ -1208,20 +1204,20 @@ this, and skip what does not make sense for a RC.
                         echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
                     fi
                 else
-                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/debian/dists/${RELEASE_BRANCH:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/stable/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
                fi
                echo "Origin '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
            done
         )
 
 1. Push the resulting branches.
-1. Make sure Jenkins manages to build all updated major branches fine:
+1. Make sure Jenkins manages to build all updated major branches:
    <https://jenkins.tails.boum.org/>.
-1. Delete the _Release Manager View for ${VERSION_:?} Redmine custom query.
+1. Delete the _Release Manager View for ${VERSION_:?}_ Redmine custom query.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
-1. If you will be the release manager for the next release, look at the
+1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager]].
 

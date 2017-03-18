@@ -86,6 +86,7 @@ $RUN_LB_CONFIG \
    --packages-lists="standard" \
    --tasks="standard" \
    --linux-packages="linux-image-${KERNEL_VERSION}" \
+   --security false \
    --syslinux-menu vesamenu \
    --syslinux-splash data/splash.png \
    --syslinux-timeout 4 \
@@ -112,6 +113,9 @@ cat >> config/chroot_local-includes/etc/os-release <<EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="$AMNESIA_VERSION"
 EOF
+if echo "$AMNESIA_VERSION" | grep -qs -E '~(alpha|beta|rc)[0-9]*$' ; then
+    echo 'TAILS_CHANNEL="alpha"' >> config/chroot_local-includes/etc/os-release
+fi
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog

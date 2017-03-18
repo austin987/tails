@@ -124,43 +124,43 @@ end
 
 Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
-  if network_unplugged.nil?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
     step "I log in to a new session"
-    if network_unplugged.nil?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"(| with network unplugged)( and I login(| with persistence enabled))?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
-  if network_unplugged.empty?
-    step "the network is plugged"
-  else
+  if network_unplugged
     step "the network is unplugged"
+  else
+    step "the network is plugged"
   end
   step "I start the computer"
   step "the computer boots Tails"
   if do_login
     step "I enable persistence" if persistence_on
     step "I log in to a new session"
-    if network_unplugged.empty?
+    if network_unplugged
+      step "all notifications have disappeared"
+    else
       step "Tor is ready"
       step "all notifications have disappeared"
       step "available upgrades have been checked"
-    else
-      step "all notifications have disappeared"
     end
   end
 end
@@ -347,8 +347,9 @@ When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |titl
   notification_list = gnome_shell.child(
     'No Notifications', roleName: 'label', showingOnly: false
   ).parent.parent
-  notification_list.child(title, roleName: 'label', showingOnly: false)
-    .wait(timeout)
+  try_for(timeout) do
+    notification_list.child?(title, roleName: 'label', showingOnly: false)
+  end
 end
 
 Given /^Tor is ready$/ do
@@ -365,14 +366,14 @@ Given /^Tor has built a circuit$/ do
 end
 
 Given /^the time has synced$/ do
-  ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
+  ["/run/tordate/done", "/run/htpdate/success"].each do |file|
     try_for(300) { $vm.execute("test -e #{file}").success? }
   end
 end
 
 Given /^available upgrades have been checked$/ do
   try_for(300) {
-    $vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+    $vm.execute("test -e '/run/tails-upgrader/checked_upgrades'").success?
   }
 end
 
@@ -381,13 +382,18 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
                      .dialog('Tor is not ready')
-    offline_prompt.wait(10)
     offline_prompt.button('Start Tor Browser').click
   end
-  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
-  @torbrowser.wait(60)
+  step "the Tor Browser has started#{offline}"
   if offline
     step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
+end
+
+Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
+  try_for(60) do
+    @torbrowser = Dogtail::Application.new('Firefox')
+    @torbrowser.child?(roleName: 'frame', recursive: false)
   end
 end
 
@@ -428,10 +434,18 @@ Given /^the Tor Browser has a bookmark to eff.org$/ do
 end
 
 Given /^all notifications have disappeared$/ do
-  # XXX: It will be hard for us to interact with the Calendar (where
-  # the notifications are lited) without Dogtail, but it is broken
-  # here, see #11718.
-  next
+  # These magic coordinates always locates GNOME's clock in the top
+  # bar, which when clicked opens the calendar.
+  x, y = 512, 10
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
+    @screen.click_point(x, y)
+    unless gnome_shell.child?('No Notifications', roleName: 'label')
+      @screen.click('GnomeCloseAllNotificationsButton.png')
+    end
+    gnome_shell.child?('No Notifications', roleName: 'label')
+  end
+  @screen.type(Sikuli::Key.ESC)
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -651,12 +665,13 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  # XXX: Dogtail is broken in this use case, see #11718.
+  # XXX: Dogtail is buggy when interacting with the Applications menu
+  # (see #11718) so we use the GNOME Applications Overview instead.
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
   @screen.type(app_name)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -713,8 +728,14 @@ When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) secon
   assert_equal(nb.to_i, pulseaudio_sink_inputs)
 end
 
-When /^I double-click on the "Tails documentation" link on the Desktop$/ do
-  @screen.wait_and_double_click("DesktopTailsDocumentationIcon.png", 10)
+When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
+  image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
+  info = xul_application_info('Tor Browser')
+  # Sometimes the double-click is lost (#12131).
+  retry_action(10) do
+    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    step 'the Tor Browser has started'
+  end
 end
 
 When /^I click the blocked video icon$/ do
@@ -936,4 +957,8 @@ def share_host_files(files)
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
   return mount_dir
+end
+
+When /^Tails system time is magically synchronized$/ do
+  $vm.host_to_guest_time_sync
 end

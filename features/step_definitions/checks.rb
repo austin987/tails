@@ -35,10 +35,6 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
   end
 end
 
-Then /^I double-click the Report an Error launcher on the desktop$/ do
-  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
-end
-
 Then /^the live user has been setup by live\-boot$/ do
   assert($vm.execute("test -e /var/lib/live/config/user-setup").success?,
          "live-boot failed its user-setup")
@@ -69,20 +65,12 @@ Then /^the live user owns its home dir and it has normal permissions$/ do
 end
 
 Then /^no unexpected services are listening for network connections$/ do
-  netstat_cmd = $vm.execute("netstat -ltupn")
-  assert netstat_cmd.success?
-  for line in netstat_cmd.stdout.chomp.split("\n") do
+  for line in $vm.execute_successfully("ss -ltupn").stdout.chomp.split("\n") do
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
-    if proto == "tcp"
-      proc_index = 6
-    elsif proto == "udp"
-      proc_index = 5
-    else
-      next
-    end
-    laddr, lport = splitted[3].split(":")
-    proc = splitted[proc_index].split("/")[1]
+    next unless ['tcp', 'udp'].include?(proto)
+    laddr, lport = splitted[4].split(":")
+    proc = /users:\(\("([^"]+)"/.match(splitted[6])[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
       if SERVICES_EXPECTED_ON_ALL_IFACES.include? [proc, laddr, lport] or
@@ -115,7 +103,7 @@ Then /^the support documentation page opens in Tor Browser$/ do
     expected_heading = 'Search the documentation'
   end
   step "\"#{expected_title}\" has loaded in the Tor Browser"
-  headings = Dogtail::Application.new('Firefox')
+  headings = @torbrowser
              .child(expected_title, roleName: 'document frame')
              .children(roleName: 'heading')
   assert(

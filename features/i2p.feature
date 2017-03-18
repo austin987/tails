@@ -1,4 +1,4 @@
-@product
+@product @fragile
 Feature: I2P
   As a Tails user
   I *might* want to use I2P

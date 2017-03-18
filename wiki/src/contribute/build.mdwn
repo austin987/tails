@@ -110,6 +110,10 @@ run `newgrp` and reload the `kvm` module(s)).
 
         rm -r ~/.vagrant.d
 
+* If Vagrant fails to start the Tails builder VM with an error similar
+  to `Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0`,
+  see [[!tails_ticket 11411]].
+
 ## Building Tails using Vagrant
 
 Once all dependencies are installed, get the Tails sources and
@@ -196,6 +200,13 @@ The following flags can be used to force a specific behaviour:
  * **vmproxy**: use the local proxy configured in the virtual machine even
    if a local HTTP proxy is set.
  * **noproxy**: do not use any HTTP proxy.
+
+### Network settings
+
+ * **offline**: This option will make the build system do its best to
+   not depend on the network, e.g. if you use the VM's caching proxy
+   if will *only* use cached APT lists and packages. Use this when you
+   do not have an Internet connection.
 
 ### SquashFS compression settings
 
@@ -301,7 +312,6 @@ The following Debian packages need to be installed:
       apt-get install \
         dpkg-dev \
         gettext \
-        ikiwiki \
         intltool \
         libfile-slurp-perl \
         liblist-moreutils-perl \
@@ -319,7 +329,8 @@ The following Debian packages need to be installed:
   expected versions):
 
       apt-get install \
-        debootstrap/jessie-backports
+        debootstrap/jessie-backports \
+        ikiwiki/jessie-backports
 
 Configure live-build
 --------------------
