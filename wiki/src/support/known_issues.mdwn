@@ -296,15 +296,8 @@ Add `video=SVIDEO-1:d` on the boot command line to work around this problem.
 
 See [[!tails_ticket 12217 desc="relevant ticket"]] for more information.
 
-<a id="chainloading"></a>
-
-Chainloading Tails from GRUB
-----------------------------
-
-To workaround problems in booting Tails on laptops with UEFI support, it is
-possible to chainload the syslinux on the ISO image from another boot loader
-that is already working on the laptop, like GRUB. Be careful not to modify at
-all the options of syslinux in the process.
+Slow graphics operations with recent NVidia hardware
+----------------------------------------------------
 
 The following commands, run from the GRUB shell, might be helpful:
 
@@ -454,6 +447,22 @@ class="application">Tor Browser</span> inside and outside of Tails:
 
 Other issues
 ============
+
+<a id="chainloading"></a>
+
+Chainloading Tails from GRUB
+----------------------------
+
+To workaround problems in booting Tails on laptops with UEFI support, it is
+possible to chainload the syslinux on the ISO image from another boot loader
+that is already working on the laptop, like GRUB. Be careful not to modify at
+all the options of syslinux in the process.
+
+The following commands, run from the GRUB shell, might be helpful:
+
+    set root=(hd1)
+    chainloader +1
+    boot
 
 Boot Loader Menu has display issues
 -----------------------------------
