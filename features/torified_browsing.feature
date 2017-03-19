@@ -102,9 +102,9 @@ Feature: Browsing the web using the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
 
   @doc
-  Scenario: The "Tails documentation" link on the Desktop works
+  Scenario: The Tails documentation launcher on the desktop works
     Given I have started Tails from DVD and logged in and the network is connected
-    When I double-click on the "Tails documentation" link on the Desktop
+    When I double-click on the Tails documentation launcher on the desktop
     Then the Tor Browser has started
     And "Tails - Getting started..." has loaded in the Tor Browser
 
