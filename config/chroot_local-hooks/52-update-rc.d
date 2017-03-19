@@ -22,7 +22,6 @@ systemctl enable tor-controlport-filter.service
 systemctl --global enable tails-add-GNOME-bookmarks.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
-systemctl --global enable tails-i2p-removal-notify-user.service
 systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
@@ -45,9 +44,6 @@ systemctl enable  cups.socket
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
-
-# We don't run these services by default
-systemctl disable i2p.service
 
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
 for suffix in halt kexec poweroff reboot shutdown ; do

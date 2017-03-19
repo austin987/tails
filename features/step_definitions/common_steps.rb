@@ -38,14 +38,6 @@ def post_snapshot_restore_hook
     $vm.spawn("restart-tor")
     wait_until_tor_is_working
   end
-  # ... and the same goes for I2P's tunnel state.
-  if $vm.execute("systemctl --quiet is-active i2p.service").success?
-    $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
-    # We "killall tails-i2p" to prevent multiple copies of the script
-    # from running, which seems to happen for strange reasons.
-    $vm.execute_successfully('killall tails-i2p')
-    $vm.spawn('/usr/local/sbin/tails-i2p start')
-  end
 end
 
 Given /^a computer$/ do
