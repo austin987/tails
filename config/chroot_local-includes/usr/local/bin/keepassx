@@ -8,11 +8,10 @@ OLD_DB="${PERSISTENT_DATA_DIR}/keepassx.kdb"
 MIGRATED_DB="${PERSISTENT_DATA_DIR}/New database.kdbx"
 NEW_DB="${PERSISTENT_DATA_DIR}/keepassx.kdbx"
 
-# There's a migrated but badly named DB => rename it
-# and rely on the default configuration to ensure it's loaded:
+# There's a migrated but badly named DB => rename it before opening it:
 if [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
 	mv "$MIGRATED_DB" "$NEW_DB"
-	/usr/bin/keepassx "$@"
+	/usr/bin/keepassx "$NEW_DB"
 
 # There's an old DB but no new one => import the old DB:
 elif mountpoint -q "$PERSISTENT_DATA_DIR" \
@@ -29,7 +28,6 @@ elif mountpoint -q "$PERSISTENT_DATA_DIR" \
 
 	# Avoid the user being prompted to open the old DB on next run.
 	mv "$OLD_DB" "${OLD_DB}.bak"
-	cp /etc/skel/.config/keepassx2.ini "${HOME}/.config/keepassx/"
 
 # Default case:
 else
