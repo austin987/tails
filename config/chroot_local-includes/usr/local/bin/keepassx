@@ -14,7 +14,7 @@ if mountpoint -q "$PERSISTENT_DATA_DIR"; then
 	cd "$PERSISTENT_DATA_DIR"
 
 	# Move the already migrated data to the right place
-	if [ -e "$MIGRATED_DB" ]; then
+	if [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
 		mv "$MIGRATED_DB" "$NEW_DB"
 	fi
 
