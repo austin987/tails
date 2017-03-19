@@ -30,7 +30,7 @@ end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
   failed = Array.new
-  supported_torbrowser_languages.each do |lang|
+  supported_torbrowser_languages.sample(3).each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
       step "the Unsafe Browser has started"
