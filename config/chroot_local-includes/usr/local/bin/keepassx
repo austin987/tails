@@ -3,15 +3,39 @@
 set -e
 set -u
 
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
 PERSISTENT_DATA_DIR="${HOME}/Persistent"
 OLD_DB="${PERSISTENT_DATA_DIR}/keepassx.kdb"
 MIGRATED_DB="${PERSISTENT_DATA_DIR}/New database.kdbx"
 NEW_DB="${PERSISTENT_DATA_DIR}/keepassx.kdbx"
 
+prompt_for_database_renaming() {
+    local dialog_msg="<b><big>`gettext \"Your Keepassx database has an unsupported filename."`</big></b>
+
+`gettext \"Keepassx is configured in Tails to read its passwords database in a file named keepassx.kdbx. You seem to have named this database differently.\"`
+
+`gettext \"Do you want to rename your database for better integration in Tails?\"`
+"
+    local launch="`gettext \"_Launch\"`"
+    local exit="`gettext \"_Exit\"`"
+    zenity --question --title "" --text "${dialog_msg}" --default-cancel \
+           --ok-label "${launch}" --cancel-label "${exit}"
+}
+
 # There's a migrated but badly named DB => rename it before opening it:
 if [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
 	mv "$MIGRATED_DB" "$NEW_DB"
 	/usr/bin/keepassx "$NEW_DB"
+
+# New database file is not named keepassx.kdbx, ask for renaming it.
+elif [ "$(find /home/amnesia/Persistent/ -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ] && \
+	[ "$(find /home/amnesia/Persistent/ -name 'keepassx.kdbx' 2>/dev/null | wc -l)" = "0" ]; then
+	if prompt_for_database_renaming; then
+		mv /home/amnesia/Persistent/*.kdbx /home/amnesia/Persistent/keepassx.kdbx
+	fi
 
 # There's an old DB but no new one => import the old DB:
 elif mountpoint -q "$PERSISTENT_DATA_DIR" \
