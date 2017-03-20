@@ -52,11 +52,14 @@ INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 ENV['ARTIFACTS'] ||= '.'
 
 class CommandError < StandardError
-  attr_reader :stderr
+  attr_reader :status, :stderr
 
-  def initialize(message = nil, stderr = nil)
-    super(message % {stderr: stderr})
-    @stderr = stderr
+  def initialize(message = nil, opts = {})
+    opts[:status] ||= nil
+    opts[:stderr] ||= nil
+    @status = opts[:status]
+    @stderr = opts[:stderr]
+    super(message % {status: @status, stderr: @stderr})
   end
 end
 
@@ -64,16 +67,16 @@ def run_command(*args)
   Process.wait Kernel.spawn(*args)
   if $?.exitstatus != 0
     raise CommandError.new("command #{command} failed with exit status " +
-                           "#{$?.exitstatus}")
+                           "%{status}", status: $?.exitstatus)
   end
 end
 
 def capture_command(*args)
-  stdout, stderr, proc_status =
-    Open3.capture3(*args)
+  stdout, stderr, proc_status = Open3.capture3(*args)
   if proc_status.exitstatus != 0
     raise CommandError.new("command #{args} failed with exit status " +
-                        "#{proc_status.exitstatus}: %{stderr}", stderr)
+                           "%{status}: %{stderr}",
+                           stderr: stderr, status: proc_status.exitstatus)
   end
   return stdout, stderr
 end
@@ -81,9 +84,15 @@ end
 def git_helper(*args)
   question = args.first.end_with?('?')
   args.first.sub!(/\?$/, '')
-  stdout, _ = capture_command('auto/scripts/utils.sh', *args)
+  status = 0
+  stdout = ''
+  begin
+    stdout, _ = capture_command('auto/scripts/utils.sh', *args)
+  rescue CommandError => e
+    status = e.status
+  end
   if question
-    return $?.success?
+    return status == 0
   else
     return stdout.chomp
   end
@@ -95,19 +104,19 @@ end
 # Runs the vagrant command, letting stdout/stderr through. Throws an
 # exception unless the vagrant command succeeds.
 def run_vagrant(*args)
-  run(*args)
-rescue CommandError
+  run_command('vagrant', *args, :chdir => './vagrant')
+rescue CommandError => e
   raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
-                             "status #{$?.exitstatus}")
+                             "status #{e.status}")
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
 # returns [stdout, stderr, Preocess:Status].
 def capture_vagrant(*args)
-  capture_command(*args)
+  capture_command('vagrant', *args, :chdir => './vagrant')
 rescue CommandError => e
   raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
-                             "status #{proc_status.exitstatus}: #{e.stderr}")
+                             "status #{e.status}: #{e.stderr}")
 end
 
 [:run_vagrant, :capture_vagrant].each do |m|
@@ -348,7 +357,7 @@ task :setup_environment => ['validate_git_state'] do
     end
   end
 
-  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('base_branch_head')
+  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible" +
@@ -502,7 +511,6 @@ task :test do
     end
   end
   run_command('./run_test_suite', *args)
-  return
 end
 
 namespace :vm do
