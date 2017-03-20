@@ -123,7 +123,7 @@ When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
   installer_launcher.button(mode).click
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
-  # ... and something similar (for consequtive steps) again.
+  # ... and something similar (for consecutive steps) again.
   sleep 3
   $vm.focus_window('Tails Installer')
 end
