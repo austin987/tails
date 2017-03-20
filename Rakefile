@@ -51,40 +51,64 @@ INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
 ENV['ARTIFACTS'] ||= '.'
 
-class VagrantCommandError < StandardError
+class CommandError < StandardError
+  attr_reader :stderr
+
+  def initialize(message = nil, stderr = nil)
+    super(message % {stderr: stderr})
+    @stderr = stderr
+  end
+end
+
+def run_command(*args)
+  Process.wait Kernel.spawn(*args)
+  if $?.exitstatus != 0
+    raise CommandError.new("command #{command} failed with exit status " +
+                           "#{$?.exitstatus}")
+  end
+end
+
+def capture_command(*args)
+  stdout, stderr, proc_status =
+    Open3.capture3(*args)
+  if proc_status.exitstatus != 0
+    raise CommandError.new("command #{args} failed with exit status " +
+                        "#{proc_status.exitstatus}: %{stderr}", stderr)
+  end
+  return stdout, stderr
 end
 
 def git_helper(*args)
   question = args.first.end_with?('?')
   args.first.sub!(/\?$/, '')
-  stdout = `sh auto/scripts/utils.sh git_#{args.join(' ')}`.chomp
+  args.first = 'git_' + args.first
+  stdout, _ = capture_command('auto/scripts/utils.sh', *args)
   if question
     return $?.success?
   else
-    return stdout
+    return stdout.chomp
   end
+end
+
+class VagrantCommandError < CommandError
 end
 
 # Runs the vagrant command, letting stdout/stderr through. Throws an
 # exception unless the vagrant command succeeds.
 def run_vagrant(*args)
-  Process.wait Kernel.spawn('vagrant', *args, :chdir => './vagrant')
-  if $?.exitstatus != 0
-    raise(VagrantCommandError, "'vagrant #{args}' command failed: " +
-                               "#{$?.exitstatus}")
-  end
+  run(*args)
+rescue CommandError
+  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
+                             "status #{$?.exitstatus}")
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
 # returns [stdout, stderr, Preocess:Status].
 def capture_vagrant(*args)
-  stdout, stderr, proc_status =
-    Open3.capture3('vagrant', *args, :chdir => './vagrant')
-  if proc_status.exitstatus != 0
-    raise(VagrantCommandError, "'vagrant #{args}' command failed: " +
-                               "#{proc_status.exitstatus}")
-  end
-  return stdout, stderr
+  capture_command(*args)
+rescue CommandError => e
+  raise(VagrantCommandError, "'vagrant #{args}' command failed with exit " +
+                             "status #{proc_status.exitstatus}: #{e.stderr}")
 end
 
 [:run_vagrant, :capture_vagrant].each do |m|
@@ -458,6 +482,27 @@ def clean_up_builder_vms
   FileUtils.rm_rf('vagrant/.vagrant')
 ensure
   $virt.close
+end
+
+def on_jenkins?
+  !!ENV['JENKINS_URL']
+end
+
+desc 'Test Tails'
+task :test do
+  args = ARGV.drop_while { |x| x == 'test' || x == '--' }
+  if on_jenkins?
+    args += ['--'] unless args.include? '--'
+    if not(is_release?)
+      args += ['--tag', '~@fragile']
+    end
+    base_branch = git_helper('base_branch')
+    if git_helper('only_doc_changes_since?', "origin/#{base_branch}") then
+      args += ['--tag', '@doc']
+    end
+  end
+  run_command('./run_test_suite', *args)
+  return
 end
 
 namespace :vm do
