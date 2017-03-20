@@ -111,7 +111,7 @@ previous_version_in_changelog() {
 # $ auto/scripts/utils.sh git_commit_from_ref 3.0-beta2
 # eca83a88a9dd958b16b4d5b04fea3ea503a3815d
 #
-if [ "$(basename ${0})" = utils.sh ] && [ -n "${1}" ]; then
+if grep -q __utils_sh_magic_5773fa52-0d1a-11e7-a606-0021ccc177a7 "${0}" && [ -n "${1}" ]; then
 	if grep -q "^${1}() {$" "${0}"; then
 		eval "\"\${@}\""
 	else
