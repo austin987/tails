@@ -33,11 +33,12 @@ if [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
 # New database file is not named keepassx.kdbx, prompt for renaming it.
 elif [ "$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ] && \
 	[ "$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name 'keepassx.kdbx' 2>/dev/null | wc -l)" = "0" ]; then
+	user_db="$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
 	if prompt_for_database_renaming; then
-		mv "$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name '*.kdbx' 2>/dev/null)" "${NEW_DB}"
+		mv "${user_db}" "${NEW_DB}"
 		/usr/bin/keepassx "${NEW_DB}"
 	else
-		/usr/bin/keepassx "$@"
+		/usr/bin/keepassx "${user_db}"
 	fi
 
 # There's an old DB but no new one => import the old DB:
