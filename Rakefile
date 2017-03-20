@@ -174,7 +174,7 @@ def enough_free_memory_for_ram_build?
 end
 
 def is_release?
-  git_helper('git_in_detached_head?') && git_helper('git_on_a_tag?')
+  git_helper('git_on_a_tag?')
 end
 
 def system_cpus
@@ -339,15 +339,16 @@ task :validate_git_state do
 end
 
 task :setup_environment => ['validate_git_state'] do
-  # On Jenkins we want to import GIT_COMMIT and GIT_BRANCH from the
-  # environment. When Jenkins supports building from tags we will have
-  # to look at what to set GIT_REF to again (hopefully Jenkins will
-  # export GIT_TAG or something).
   ENV['GIT_COMMIT'] ||= git_helper('git_current_commit')
-  ENV['GIT_REF'] = ENV['GIT_BRANCH'] || git_helper('git_current_head_name')
-  ENV['GIT_REF'] = ENV['GIT_REF'].sub(/^origin\//, '')
+  ENV['GIT_REF'] ||= git_helper('git_current_head_name')
+  if on_jenkins?
+    jenkins_branch = (ENV['GIT_BRANCH'] || '').sub(/^origin\//, '')
+    if not(is_release?) && jenkins_branch != ENV['GIT_REF']
+      raise "We expected to build the Git ref '#{ENV['GIT_REF']}', but GIT_REF in the environment says '#{jenkins_branch}'. Aborting!"
+    end
+  end
 
-  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('git_base_branch_head')
+  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible" +
