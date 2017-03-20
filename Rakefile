@@ -81,7 +81,6 @@ end
 def git_helper(*args)
   question = args.first.end_with?('?')
   args.first.sub!(/\?$/, '')
-  args.first = 'git_' + args.first
   stdout, _ = capture_command('auto/scripts/utils.sh', *args)
   if question
     return $?.success?
@@ -175,7 +174,7 @@ def enough_free_memory_for_ram_build?
 end
 
 def is_release?
-  git_helper('in_detached_head?') && git_helper('on_a_tag?')
+  git_helper('git_in_detached_head?') && git_helper('git_on_a_tag?')
 end
 
 def system_cpus
@@ -334,7 +333,7 @@ task :validate_http_proxy do
 end
 
 task :validate_git_state do
-  if git_helper('in_detached_head?') && not(git_helper('on_a_tag?'))
+  if git_helper('git_in_detached_head?') && not(git_helper('git_on_a_tag?'))
     raise 'We are in detached head but the current commit is not tagged'
   end
 end
@@ -344,11 +343,11 @@ task :setup_environment => ['validate_git_state'] do
   # environment. When Jenkins supports building from tags we will have
   # to look at what to set GIT_REF to again (hopefully Jenkins will
   # export GIT_TAG or something).
-  ENV['GIT_COMMIT'] ||= git_helper('current_commit')
-  ENV['GIT_REF'] = ENV['GIT_BRANCH'] || git_helper('current_head_name')
+  ENV['GIT_COMMIT'] ||= git_helper('git_current_commit')
+  ENV['GIT_REF'] = ENV['GIT_BRANCH'] || git_helper('git_current_head_name')
   ENV['GIT_REF'] = ENV['GIT_REF'].sub(/^origin\//, '')
 
-  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('base_branch_head')
+  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible" +
@@ -497,7 +496,7 @@ task :test do
       args += ['--tag', '~@fragile']
     end
     base_branch = git_helper('base_branch')
-    if git_helper('only_doc_changes_since?', "origin/#{base_branch}") then
+    if git_helper('git_only_doc_changes_since?', "origin/#{base_branch}") then
       args += ['--tag', '@doc']
     end
   end
