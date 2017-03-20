@@ -205,9 +205,6 @@ task :parse_build_options do
 
   options += ENV['TAILS_BUILD_OPTIONS'].split if ENV['TAILS_BUILD_OPTIONS']
 
-  # Make sure release builds are clean
-  options << 'cleanall' if is_release?
-
   options.uniq.each do |opt|
     case opt
     # Memory build settings
