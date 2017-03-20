@@ -168,7 +168,11 @@ Then /^the Unsafe Browser has no proxy configured$/ do
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do
-  @screen.wait("UnsafeBrowserDNSError.png", 30)
+  assert_not_nil(
+    Dogtail::Application.new('zenity')
+    .child(roleName: 'label')
+    .text['No DNS server was obtained']
+  )
 end
 
 Then /^I configure the Unsafe Browser to check for updates more frequently$/ do

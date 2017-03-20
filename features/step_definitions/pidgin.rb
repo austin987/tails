@@ -466,4 +466,5 @@ end
 
 When /^I click on the Tails roadmap URL$/ do
   @screen.click('PidginTailsRoadmapUrl.png')
+  try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
 end
