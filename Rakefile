@@ -229,6 +229,9 @@ task :parse_build_options do
     # SquashFS compression settings
     when 'gzipcomp'
       ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
+      if is_release?
+        raise 'We must use the default compression when building releases!'
+      end
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
     # Virtual CPUs settings
