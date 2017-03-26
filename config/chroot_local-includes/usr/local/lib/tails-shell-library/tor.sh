@@ -11,7 +11,7 @@ get_tor_control_port() {
 }
 
 tor_control_send() {
-	COOKIE=/var/run/tor/control.authcookie
+	COOKIE=/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
 	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
 	    nc 127.0.0.1 $(get_tor_control_port) | tr -d "\r"
