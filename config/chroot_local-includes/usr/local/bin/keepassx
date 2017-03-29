@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -e
+set -u
+
+PERSISTENT_DATA_DIR="${HOME}/Persistent"
+OLD_DB="${PERSISTENT_DATA_DIR}/keepassx.kdb"
+MIGRATED_DB="${PERSISTENT_DATA_DIR}/New database.kdbx"
+NEW_DB="${PERSISTENT_DATA_DIR}/keepassx.kdbx"
+
+# There's a migrated but badly named DB => rename it before opening it:
+if [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
+	mv "$MIGRATED_DB" "$NEW_DB"
+	/usr/bin/keepassx "$NEW_DB"
+
+# There's an old DB but no new one => import the old DB:
+elif mountpoint -q "$PERSISTENT_DATA_DIR" \
+      && ! [ -e "$NEW_DB" ] \
+      &&   [ -e "$OLD_DB" ]; then
+
+	# Ensure $PERSISTENT_DATA_DIR is pre-selected for saving
+	# the migrated database
+	cd "$PERSISTENT_DATA_DIR"
+
+	# Trigger the migration from the old KeePassX database to the new format
+	# used in KeePassX 2.0.x.
+	/usr/bin/keepassx "$OLD_DB"
+
+	# Avoid the user being prompted to open the old DB on next run.
+	mv "$OLD_DB" "${OLD_DB}.bak"
+
+# Default case:
+else
+	/usr/bin/keepassx "$@"
+fi
