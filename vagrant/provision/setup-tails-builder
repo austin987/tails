@@ -18,6 +18,9 @@ fi
 
 rm -f /etc/apt/preferences.d/* /etc/apt/sources.list.d/*
 
+# Configure apt to retry
+echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
+
 # Add our builder-jessie repository for live-build, and pin it low
 echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
@@ -27,11 +30,6 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 EOF
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/discount <<EOF
 	Package: discount libmarkdown2 libmarkdown2-dev
-	Pin: origin deb.tails.boum.org
-	Pin-Priority: 500
-EOF
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/ikiwiki <<EOF
-	Package: ikiwiki
 	Pin: origin deb.tails.boum.org
 	Pin-Priority: 500
 EOF
@@ -45,6 +43,8 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
 	Pin: origin deb.tails.boum.org
 	Pin-Priority: 500
 EOF
+# remove obsolete pinning
+rm -f /etc/apt/preferences.d/ikiwiki
 
 # We don't want to use apt-cacher-ng for gpg
 if [ "${TAILS_OFFLINE_MODE}" != 1 ]; then
@@ -83,7 +83,7 @@ apt-get -y install \
         dpkg-dev \
         gettext \
         git \
-        ikiwiki \
+        ikiwiki/jessie-backports \
         intltool \
         libfile-slurp-perl \
         liblist-moreutils-perl \

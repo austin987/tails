@@ -90,9 +90,9 @@ Feature: Browsing the web using the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
 
   @doc
-  Scenario: The "Tails documentation" link on the Desktop works
+  Scenario: The Tails documentation launcher on the desktop works
     Given I have started Tails from DVD and logged in and the network is connected
-    When I double-click on the "Tails documentation" link on the Desktop
+    When I double-click on the Tails documentation launcher on the desktop
     Then the Tor Browser has started
     And "Tails - Getting started..." has loaded in the Tor Browser
 
@@ -146,7 +146,7 @@ Feature: Browsing the web using the Tor Browser
     And all persistent filesystems have safe access rights
     And all persistence configuration files have safe access rights
     And all persistent directories have safe access rights
-    And I start the Tor Browser in offline mode
+    When I start the Tor Browser in offline mode
     And I add a bookmark to eff.org in the Tor Browser
     And I warm reboot the computer
     And the computer reboots Tails
