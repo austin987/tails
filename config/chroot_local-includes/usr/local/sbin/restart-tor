@@ -14,10 +14,6 @@ _LOG_TAG="$(basename $0)"
 
 systemctl restart tor@default.service
 
-# The Tor log is removed to ensure `tor_bootstrap_progress`'s output will be
-# accurate.
-rm -f /var/log/tor/log
-
 if try_for 270 '[ "$(tor_bootstrap_progress)" -eq 100 ]'; then
     log "Tor has successfully bootstrapped."
 else
