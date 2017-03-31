@@ -6,10 +6,6 @@ TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
-get_tor_control_port() {
-	sed -n 's/^ControlPort[[:space:]]\+\([[:digit:]]\+\)/\1/p' "${TOR_RC}"
-}
-
 get_tor_control_socket_path() {
 	local res
 	res=$(sed -n 's/^ControlSocket[[:space:]]\+\(.\+\)$/\1/p' "${TOR_RC}")
