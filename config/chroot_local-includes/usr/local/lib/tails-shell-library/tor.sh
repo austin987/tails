@@ -10,11 +10,23 @@ get_tor_control_port() {
 	sed -n 's/^ControlPort[[:space:]]\+\([[:digit:]]\+\)/\1/p' "${TOR_RC}"
 }
 
+get_tor_control_socket_path() {
+	local res
+	res=$(sed -n 's/^ControlSocket[[:space:]]\+\(.\+\)$/\1/p' "${TOR_RC}")
+	if [ "${res}" -eq 0 ]; then
+		echo ""
+	elif [ -z "${res}" ] && [ -S /var/run/tor/control ]; then
+		echo /var/run/tor/control
+	else
+		echo "${res}"
+	fi
+}
+
 tor_control_send() {
 	COOKIE=/var/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
 	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    nc 127.0.0.1 $(get_tor_control_port) | tr -d "\r"
+	    socat - UNIX-CONNECT:$(get_tor_control_socket_path) | tr -d "\r"
 }
 
 # This function may be dangerous to use. See "Potential Tor bug" below.
