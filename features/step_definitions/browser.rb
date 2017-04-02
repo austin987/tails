@@ -6,23 +6,15 @@ When /^I start the Unsafe Browser(?: through the GNOME menu)?$/ do
   step "I start \"Unsafe Browser\" via the GNOME \"Internet\" applications menu"
 end
 
-Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
-  robust_notification_wait("UnsafeBrowserStartNotification.png", 60)
-end
-
 When /^I successfully start the Unsafe Browser$/ do
   step "I start the Unsafe Browser"
   step "I see and accept the Unsafe Browser start verification"
-  step "I see the Unsafe Browser start notification and wait for it to close"
+  step "I see the \"Starting the Unsafe Browser...\" notification after at most 60 seconds"
   step "the Unsafe Browser has started"
 end
 
 When /^I close the Unsafe Browser$/ do
   @screen.type("q", Sikuli::KeyModifier.CTRL)
-end
-
-Then /^I see the Unsafe Browser stop notification$/ do
-  robust_notification_wait("UnsafeBrowserStopNotification.png", 60)
 end
 
 def xul_application_info(application)

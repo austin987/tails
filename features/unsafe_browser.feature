@@ -33,7 +33,7 @@ Feature: Browsing the web using the Unsafe Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
     And I close the Unsafe Browser
-    Then I see the Unsafe Browser stop notification
+    Then I see the "Shutting down the Unsafe Browser..." notification after at most 60 seconds
     And the Unsafe Browser chroot is torn down
 
   #11458

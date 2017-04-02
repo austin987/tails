@@ -1,8 +1,84 @@
-tails (3.0~beta3) UNRELEASED; urgency=medium
+tails (3.0~beta4) UNRELEASED; urgency=medium
 
-  * Dummy entry for next beta release.
+  * Dummy entry.
 
- -- Tails developers <tails@boum.org>  Wed, 08 Mar 2017 18:55:03 +0000
+ -- Tails developers <tails@boum.org>  Mon, 20 Mar 2017 14:03:41 +0100
+
+tails (3.0~beta3) unstable; urgency=medium
+
+  * Major new features and changes
+    - Make the "Formats" settings in Tails Greeter take effect (Closes: #12079,
+      new feature that was broken since it was introduced in 3.0~alpha1).
+    - Upgrade to a new snapshot of the Debian and Torproject
+      APT repositories (2017031702).
+
+  * Removed features
+    - Stop including I2P: we decided (#11276) to remove I2P, due to our failure
+      at finding someone to maintain it in Tails (Closes: #12263).
+
+  * Security fixes
+    - Upgrade MAT to 0.6.1-4: fixes silent failure of the Nautilus
+      contextual menu extension.
+    - Ensure /etc/resolv.conf is owned by root:root in the SquashFS
+      (Closes: #12343).
+    - Protect against CVE-2017-2636 by disabling the n-hdlc kernel module
+      (Closes: #12315).
+
+  * Minor improvements
+    - Reintroduce the X11 guest utilities for VirtualBox (regression
+      introduced in 3.0~beta2).
+    - Upgrade X.Org server and the modesetting driver (hopefully helps
+      fixing #12219).
+    - Automate the migration from KeePassX databases generated on Tails 2.x
+      to the format required by KeePassX 2.0.x (Closes: #10956, #12369).
+    - Add keyboard shortcuts in Tails Greeter (Closes: #12186, #12063).
+    - Install dbus-user-session (regression introduced in 3.0~beta2).
+    - Manage temporary directories in a declarative way (tmpfiles.d).
+    - Replace references to the /var/run compatibility symlink
+      with the canonical /run.
+    - Update our Torbirdy patchset to the latest one sent upstream.
+    - Install mesa-utils, so that Qt 5 can detect whether software based
+      rendering is needed.
+    - Have Tails Greeter honor the "debug" kernel command-line option,
+      for easier debugging (Closes: #12373).
+    - Refactor Tails Greeter to reduce code duplication (Closes: #12247).
+
+  * Bugfixes
+    - Fix sizing of zenity dialogs (Closes: #12313, regression introduced
+      in 3.0~alpha1).
+    - Fix confusing, spurious error messages in command-line applications
+      wrapped with torsocks:
+      · Ship a /etc/mailname file with content "localhost".
+        Otherwise something (Git? libc6?) tries to resolve the "amnesia" host
+        name, which fails, and a confusing error message is displayed
+        (Closes: #12205, regression introduced in 3.0~alpha1).
+      · Have torsocks allow UDP connections to the loopback interface,
+        with AllowOutboundLocalhost 2 (Closes: #11736).
+
+  * Test suite
+    - Improve debugging info logging for PacketFu parsing issues,
+      and implement a plausible fix (refs: #11508).
+    - Try to make "double-click on desktop launcher" more reliable.
+    - Fix selection of ISO in Tails Installer.
+    - Re-enable the GnuPG tests that require a keyserver, pointing them
+      to an Onion service we run on Chutney, that redirects all TCP traffic
+      to a real, clearnet keyserver (Closes: #12211).
+    - Implement a workaround for checking the configured keyserver in GnuPG,
+      until a better fix is implemented (refs: #12371).
+    - Fix the "Report an Error launcher" scenario in German.
+
+  * Build system
+    - Retry curl and APT operations up to 20 times to make the ISO build
+      more robust wrt. unreliable Internet connectivity.
+      Thanks to Arnaud <arnaud@preev.io> for the patch!
+    - Install ikiwiki from jessie-backports, instead of our patched one
+      (Closes: #12051).
+    - Clean up libdvd-pkg build files, again (Closes: #11273).
+    - Rakefile: fix TAILS_OFFLINE_BUILD exported variable name.
+    - Adjust apt-mirror to support branches based on feature/stretch
+      that don't use frozen APT snapshots.
+
+ -- Tails developers <tails@boum.org>  Sun, 19 Mar 2017 15:10:28 +0100
 
 tails (3.0~beta2) unstable; urgency=medium
 
