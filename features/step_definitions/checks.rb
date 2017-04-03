@@ -207,13 +207,8 @@ def get_apparmor_status(pid)
 end
 
 Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
-  if process == 'i2p'
-    $vm.execute_successfully('service i2p status')
-    pid = $vm.file_content('/run/i2p/i2p.pid').chomp
-  else
-    assert($vm.has_process?(process), "Process #{process} not running.")
-    pid = $vm.pidof(process)[0]
-  end
+  assert($vm.has_process?(process), "Process #{process} not running.")
+  pid = $vm.pidof(process)[0]
   assert_equal(mode, get_apparmor_status(pid))
 end
 

@@ -75,13 +75,6 @@ def post_snapshot_restore_hook
       $vm.host_to_guest_time_sync
       $vm.spawn("restart-tor")
       wait_until_tor_is_working
-      if $vm.file_content('/proc/cmdline').include?(' i2p')
-        $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
-        # we "killall tails-i2p" to prevent multiple
-        # copies of the script from running
-        $vm.execute_successfully('killall tails-i2p')
-        $vm.spawn('/usr/local/sbin/tails-i2p start')
-      end
     end
   else
     $vm.host_to_guest_time_sync
