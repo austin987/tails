@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+require 'date'
 require 'libvirt'
 require 'open3'
 require 'rbconfig'
@@ -593,4 +594,22 @@ namespace :basebox do
     END_OF_MESSAGE
   end
 
+  def basebox_date(box)
+    Date.parse(/^tails-builder-[^-]+-[^-]+-(\d{8})/.match(box)[1])
+  end
+
+  desc 'Remove all base boxes older than six months'
+  task :clean_old do
+    boxes = capture_vagrant('box', 'list').first.lines
+            .grep(/^tails-builder-.*/)
+            .map { |x| x.chomp.sub(/\s.*$/, '') }
+    # We always want to keep the newest basebox
+    boxes.sort! { |a, b| basebox_date(a) < basebox_date(b) }
+    boxes.pop
+    boxes.each do |box|
+      if basebox_date(box) < Date.today - 365.0/2.0
+        run_vagrant('box', 'remove', '--force', box)
+      end
+    end
+  end
 end
