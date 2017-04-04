@@ -125,11 +125,6 @@ def retry_tor(recovery_proc = nil, &block)
                :operation_name => 'Tor operation', &block)
 end
 
-def retry_i2p(recovery_proc = nil, &block)
-  retry_action(15, :recovery_proc => recovery_proc,
-               :operation_name => 'I2P operation', &block)
-end
-
 def retry_action(max_retries, options = {}, &block)
   assert(max_retries.is_a?(Integer), "max_retries must be an integer")
   options[:recovery_proc] ||= nil
