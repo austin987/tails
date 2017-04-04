@@ -473,7 +473,7 @@ class VM
 
   def select_virtual_desktop(desktop_number, user = LIVE_USER)
     assert(desktop_number >= 0 && desktop_number <=3,
-           "Only values between 0 and 3 are valid virtual desktop numbers")
+           "Only values between 0 and 1 are valid virtual desktop numbers")
     execute_successfully(
       "xdotool set_desktop '#{desktop_number}'",
       :user => user
@@ -494,11 +494,17 @@ class VM
       # Often when xdotool fails to focus a window it'll work when retried
       # after redrawing the screen.  Switching to a new virtual desktop then
       # back seems to be a reliable way to handle this.
-      select_virtual_desktop(3)
+      # Sadly we have to rely on a lot of sleep() here since there's
+      # little on the screen etc that we truly can rely on.
+      sleep 5
+      select_virtual_desktop(1)
+      sleep 5
       select_virtual_desktop(0)
-      sleep 5 # there aren't any visual indicators which can be used here
+      sleep 5
       do_focus(window_title, user)
     end
+  rescue
+    # noop
   end
 
   def file_exist?(file)
