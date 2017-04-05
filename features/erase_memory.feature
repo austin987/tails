@@ -11,8 +11,8 @@ Feature: System memory erasure on shutdown
 # by the kernel). So we test that some important bits of memory are erased
 # _before_ shutdown.
 
-  Scenario: Erasure of memory freed by a killed userspace process
+  Scenario: Erasure of memory freed by killed userspace processes
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
-    When I fill the guest's memory with a known pattern
+    When I fill the guest's memory with a known pattern and the allocating processes get killed
     Then I find very few patterns in the guest's memory

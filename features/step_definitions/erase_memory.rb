@@ -102,7 +102,7 @@ Given /^I prepare Tails for memory erasure tests$/ do
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 end
 
-Given /^I fill the guest's memory with a known pattern$/ do
+Given /^I fill the guest's memory with a known pattern and the allocating processes get killed$/ do
   # To be sure that we fill all memory we run one fillram instance for
   # each GiB of detected memory, rounded up. To maintain stability we
   # prioritize the fillram instances to be OOM killed. We also kill
