@@ -161,14 +161,6 @@ Then /^I find very few patterns in the guest's memory$/ do
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
-Then /^I find many patterns in the guest's memory$/ do
-  coverage = pattern_coverage_in_guest_ram()
-  min_coverage = 0.9
-  assert(coverage > min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
-         "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
-end
-
 When /^I reboot without wiping the memory$/ do
   $vm.reset
 end
