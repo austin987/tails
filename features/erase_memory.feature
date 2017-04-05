@@ -22,6 +22,6 @@ Feature: System memory erasure on shutdown
     And I prepare Tails for memory erasure tests
     And I find very few patterns in the guest's memory
     When I mount a 128 MiB tmpfs on "/mnt" and fill it with a known pattern
-    Then patterns cover at least 99% of the tmpfs size in the guest's memory
+    Then patterns cover at least 99% of the test FS size in the guest's memory
     When I umount "/mnt"
     Then I find very few patterns in the guest's memory

@@ -135,31 +135,40 @@ Given /^I fill the guest's memory with a known pattern and the allocating proces
   debug_log("Memory fill progress: finished")
 end
 
+def avail_space_in_mountpoint_kB(mountpoint)
+  return $vm.execute_successfully(
+    "df --output=avail '#{mountpoint}'"
+  ).stdout.split("\n")[1].to_i
+end
+
+def assert_filesystem_is_full(mountpoint)
+  avail_space = avail_space_in_mountpoint_kB(mountpoint)
+  assert(
+    avail_space == 0,
+    "#{avail_space} kB is still free on #{mountpoint}," +
+    "while this filesystem was expected to be full"
+  )
+end
+
 When /^I mount a (\d+) MiB tmpfs on "([^"]+)" and fill it with a known pattern$/ do |size_MiB, mountpoint|
   size_MiB = size_MiB.to_i
-  @tmpfs_size_MiB = size_MiB
+  @tmp_filesystem_size_b = convert_to_bytes(size_MiB, 'MiB')
   $vm.execute_successfully(
     "mount -t tmpfs -o 'size=#{size_MiB}M' tmpfs '#{mountpoint}'"
   )
   $vm.execute_successfully(
     "while echo wipe_didnt_work >> '#{mountpoint}/file'; do true ; done"
    )
-  avail_space_in_tmpfs_kB = $vm.execute_successfully(
-    "df --output=avail '#{mountpoint}'"
-  ).stdout.split("\n")[1].to_i
-  assert(
-    avail_space_in_tmpfs_kB < 32,
-    "#{avail_space_in_tmpfs_kB} kB is still free on #{mountpoint}," +
-    "but less than 32 kB was expected"
-  )
+  assert_filesystem_is_full(mountpoint)
 end
 
-Then /^patterns cover at least (\d+)% of the tmpfs size in the guest's memory$/ do |expected_coverage|
-  reference_memory_b = convert_to_bytes(@tmpfs_size_MiB, 'MiB')
+Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$/ do |expected_coverage|
+  reference_memory_b = @tmp_filesystem_size_b
+  tmp_filesystem_size_MiB = convert_from_bytes(@tmp_filesystem_size_b, 'MiB')
   coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = expected_coverage.to_f / 100
   assert(coverage > min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the tmpfs size (#{@tmpfs_size_MiB} MiB) " +
+         "#{"%.3f" % (coverage*100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " +
          "has the pattern, but more than #{"%.3f" % (min_coverage*100)}% " +
          "was expected")
 end
