@@ -972,11 +972,10 @@ def mount_USB_drive(disk, fs)
     $vm.execute_successfully("mount #{partition} #{@tmp_usb_drive_mount_dir}")
     @tmp_filesystem_is_encrypted = false
   end
+  @tmp_filesystem_disk = disk
+  @tmp_filesystem_fs = fs
   @tmp_filesystem_partition = partition
-  @tmp_filesystem_size_b = convert_to_bytes(
-    avail_space_in_mountpoint_kB(@tmp_usb_drive_mount_dir),
-    'KB'
-  )
+  return @tmp_usb_drive_mount_dir
 end
 
 When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
@@ -986,7 +985,15 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
   step "I create a gpt partition labeled \"#{disk}\" with " +
        "an #{fs} on disk \"#{disk}\""
   step "I plug USB drive \"#{disk}\""
-  mount_USB_drive(disk, fs)
+  mount_dir = mount_USB_drive(disk, fs)
+  @tmp_filesystem_size_b = convert_to_bytes(
+    avail_space_in_mountpoint_kB(mount_dir),
+    'KB'
+  )
+end
+
+When(/^I mount the USB drive again$/) do
+  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_fs)
 end
 
 When(/^I umount the USB drive$/) do

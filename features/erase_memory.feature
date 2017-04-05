@@ -26,22 +26,36 @@ Feature: System memory erasure on shutdown
     When I umount "/mnt"
     Then I find very few patterns in the guest's memory
 
-  Scenario: Erasure of write disk cache on unmount: vfat
+  Scenario: Erasure of read and write disk caches on unmount: vfat
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
     When I plug and mount a 128 MiB USB drive with a vfat filesystem
     Then I find very few patterns in the guest's memory
+    # write cache
     When I fill the USB drive with a known pattern
     Then patterns cover at least 99% of the test FS size in the guest's memory
     When I umount the USB drive
     Then I find very few patterns in the guest's memory
+    # read cache
+    When I mount the USB drive again
+    And I read the content of the test FS
+    Then patterns cover at least 99% of the test FS size in the guest's memory
+    When I umount the USB drive
+    Then I find very few patterns in the guest's memory
 
-  Scenario: Erasure of write disk cache on unmount: LUKS-encrypted ext4
+  Scenario: Erasure of read and write disk caches on unmount: LUKS-encrypted ext4
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
     When I plug and mount a 128 MiB USB drive with an ext4 filesystem encrypted with password "asdf"
     Then I find very few patterns in the guest's memory
+    # write cache
     When I fill the USB drive with a known pattern
+    Then patterns cover at least 99% of the test FS size in the guest's memory
+    When I umount the USB drive
+    Then I find very few patterns in the guest's memory
+    # read cache
+    When I mount the USB drive again
+    And I read the content of the test FS
     Then patterns cover at least 99% of the test FS size in the guest's memory
     When I umount the USB drive
     Then I find very few patterns in the guest's memory

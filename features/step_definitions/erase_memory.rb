@@ -169,6 +169,10 @@ When(/^I fill the USB drive with a known pattern$/) do
   assert_filesystem_is_full(@tmp_usb_drive_mount_dir)
 end
 
+When(/^I read the content of the test FS$/) do
+  $vm.execute_successfully("cat #{@tmp_usb_drive_mount_dir}/file >/dev/null")
+end
+
 Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$/ do |expected_coverage|
   reference_memory_b = @tmp_filesystem_size_b
   tmp_filesystem_size_MiB = convert_from_bytes(@tmp_filesystem_size_b, 'MiB')
