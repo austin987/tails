@@ -33,15 +33,6 @@ def detected_ram_in_MiB
   return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
-Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
-  @detected_ram_m = detected_ram_in_MiB
-  puts "Detected #{@detected_ram_m} MiB of RAM"
-  min_ram_m = convert_to_MiB(min_ram.to_i, unit)
-  # All RAM will not be reported by `free`, so we allow a 196 MB gap
-  gap = convert_to_MiB(256, "MiB")
-  assert(@detected_ram_m + gap >= min_ram_m, "Didn't detect enough RAM")
-end
-
 def pattern_coverage_in_guest_ram
   assert_not_nil(
     @free_mem_before_fill_b,
@@ -111,9 +102,7 @@ Given /^I prepare Tails for memory erasure tests$/ do
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 end
 
-Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do |dont_verify|
-  verify = dont_verify.empty?
-
+Given /^I fill the guest's memory with a known pattern$/ do
   # To be sure that we fill all memory we run one fillram instance for
   # each GiB of detected memory, rounded up. To maintain stability we
   # prioritize the fillram instances to be OOM killed. We also kill
@@ -147,14 +136,6 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
     ! $vm.has_process?("fillram")
   end
   debug_log("Memory fill progress: finished")
-  if verify
-    coverage = pattern_coverage_in_guest_ram()
-    min_coverage = 0.85
-    assert(coverage > min_coverage,
-           "#{"%.3f" % (coverage*100)}% of the free memory was filled with " +
-           "the pattern, but more than #{"%.3f" % (min_coverage*100)}% was " +
-           "expected")
-  end
 end
 
 Then /^I find very few patterns in the guest's memory$/ do

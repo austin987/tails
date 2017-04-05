@@ -14,5 +14,5 @@ Feature: System memory erasure on shutdown
   Scenario: Erasure of memory freed by a killed userspace process
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
-    When I fill the guest's memory with a known pattern without verifying
+    When I fill the guest's memory with a known pattern
     Then I find very few patterns in the guest's memory
