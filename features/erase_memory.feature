@@ -4,15 +4,14 @@ Feature: System memory erasure on shutdown
   when I shutdown Tails
   I want the system memory to be free from sensitive data.
 
-  Scenario: Memory erasure
-    Given a computer
-    And the computer has 8 GiB of RAM
-    And I set Tails to boot with options "debug=wipemem"
-    And I start Tails from DVD with network unplugged and I login
-    Then at least 8 GiB of RAM was detected
-    And process "memlockd" is running
-    And process "udev-watchdog" is running
-    And udev-watchdog is monitoring the correct device
-    When I fill the guest's memory with a known pattern
-    And I shutdown and wait for Tails to finish wiping the memory
+# These tests rely on the Linux kernel's memory poisoning features.
+# The feature is called "on shutdown" as this is the security guarantee
+# we document, but in practice we have no good way to test behavior on shutdown
+# per-se (known patterns allocated in memory will be erased _before_ shutdown
+# by the kernel). So we test that some important bits of memory are erased
+# _before_ shutdown.
+
+  Scenario: Erasure of memory freed by a killed userspace process
+    Given I have started Tails from DVD without network and logged in
+    When I fill the guest's memory with a known pattern without verifying
     Then I find very few patterns in the guest's memory
