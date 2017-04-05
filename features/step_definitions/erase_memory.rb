@@ -162,6 +162,13 @@ When /^I mount a (\d+) MiB tmpfs on "([^"]+)" and fill it with a known pattern$/
   assert_filesystem_is_full(mountpoint)
 end
 
+When(/^I fill the USB drive with a known pattern$/) do
+  $vm.execute_successfully(
+    "while echo wipe_didnt_work >> '#{@tmp_usb_drive_mount_dir}/file'; do true ; done"
+   )
+  assert_filesystem_is_full(@tmp_usb_drive_mount_dir)
+end
+
 Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$/ do |expected_coverage|
   reference_memory_b = @tmp_filesystem_size_b
   tmp_filesystem_size_MiB = convert_from_bytes(@tmp_filesystem_size_b, 'MiB')
