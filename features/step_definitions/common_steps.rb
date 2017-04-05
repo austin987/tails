@@ -48,10 +48,6 @@ Given /^a computer$/ do
   $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
-Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
-  $vm.set_ram_size(size, unit)
-end
-
 Given /^the computer is set to boot from the Tails DVD$/ do
   $vm.set_cdrom_boot(TAILS_ISO)
 end
@@ -193,15 +189,8 @@ def boot_menu_tab_msg_image
   end
 end
 
-def memory_wipe_timeout
-  nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  nr_gigs_of_ram*30
-end
-
 Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   boot_timeout = 3*60
-  # We need some extra time for memory wiping if rebooting
-  boot_timeout += memory_wipe_timeout if reboot
   # Simply looking for the boot splash image is not robust; sometimes
   # sikuli is not fast enough to see it. Here we hope that spamming
   # TAB, which will halt the boot process by showing the prompt for
@@ -511,26 +500,12 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  timeout = nr_gibs_of_ram*5*60
-  # Work around Tails bug #11786, where something goes wrong when we
-  # kexec to the new kernel for memory wiping and gets dropped to a
-  # BusyBox shell instead.
-  try_for(timeout) do
-    if @screen.existsAny(['TailsBug11786a.png', 'TailsBug11786b.png'])
-      puts "We were hit by bug #11786: memory wiping got stuck"
-      if mode == 'restarts'
-        $vm.reset
-      else
-        $vm.power_off
-      end
+  try_for(3*60) do
+    if mode == 'restarts'
+      @screen.find('TailsGreeter.png')
+      true
     else
-      if mode == 'restarts'
-        @screen.find('TailsGreeter.png')
-        true
-      else
-        ! $vm.is_running?
-      end
+      ! $vm.is_running?
     end
   end
 end

@@ -191,33 +191,6 @@ Then /^I find very few patterns in the guest's memory$/ do
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
-When /^I reboot without wiping the memory$/ do
-  $vm.reset
-end
-
 When /^I stop the boot at the bootloader menu$/ do
   step "Tails is at the boot menu's cmdline"
-end
-
-When /^I shutdown and wait for Tails to finish wiping the memory$/ do
-  $vm.spawn("halt")
-  match = nil
-  begin
-    try_for(memory_wipe_timeout, msg: "memory wipe didn't finish, probably the VM crashed") do
-      # We spam keypresses to prevent console blanking from hiding the
-      # image we're waiting for
-      @screen.type(" ")
-      match, _ = @screen.findAny(
-         ['MemoryWipeCompleted.png', 'TailsBug11786a.png', 'TailsBug11786b.png']
-      )
-      match != nil
-    end
-    # Just throw the same exception as a if the try_for would fail
-    raise Timeout::Error if match != 'MemoryWipeCompleted.png'
-  rescue Timeout::Error
-    puts "Cannot tell if memory wipe completed. " +
-         "One possible reason for this is #11786, " +
-         "so let's go on and rely on the next steps to check " +
-         "how well memory was wiped."
-  end
 end
