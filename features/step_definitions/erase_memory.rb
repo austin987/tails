@@ -58,7 +58,7 @@ def pattern_coverage_in_guest_ram
   patterns_m = convert_to_MiB(patterns_b, 'b')
   coverage = patterns_b.to_f/@free_mem_before_fill_b
   puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
-       "out of #{free_mem_before_fill_m} MiB initial free memory)"
+       "(out of #{free_mem_before_fill_m} MiB reference memory)"
   return coverage
 end
 
@@ -136,6 +136,40 @@ Given /^I fill the guest's memory with a known pattern and the allocating proces
     ! $vm.has_process?("fillram")
   end
   debug_log("Memory fill progress: finished")
+end
+
+When /^I mount a (\d+) MiB tmpfs on "([^"]+)" and fill it with a known pattern$/ do |size_MiB, mountpoint|
+  size_MiB = size_MiB.to_i
+  @tmpfs_size_MiB = size_MiB
+  $vm.execute_successfully(
+    "mount -t tmpfs -o 'size=#{size_MiB}M' tmpfs '#{mountpoint}'"
+  )
+  $vm.execute_successfully(
+    "while echo wipe_didnt_work >> '#{mountpoint}/file'; do true ; done"
+   )
+  avail_space_in_tmpfs_kB = $vm.execute_successfully(
+    "df --output=avail '#{mountpoint}'"
+  ).stdout.split("\n")[1].to_i
+  assert(
+    avail_space_in_tmpfs_kB < 32,
+    "#{avail_space_in_tmpfs_kB} kB is still free on #{mountpoint}," +
+    "but less than 32 kB was expected"
+  )
+end
+
+Then /^patterns cover at least (\d+)% of the tmpfs size in the guest's memory$/ do |expected_coverage|
+  # XXX: workaround pattern_coverage_in_guest_ram()'s lack of flexibility
+  @free_mem_before_fill_b = convert_to_bytes(@tmpfs_size_MiB, 'MiB')
+  coverage = pattern_coverage_in_guest_ram()
+  min_coverage = expected_coverage.to_f / 100
+  assert(coverage > min_coverage,
+         "#{"%.3f" % (coverage*100)}% of the tmpfs size (#{@tmpfs_size_MiB} MiB) " +
+         "has the pattern, but more than #{"%.3f" % (min_coverage*100)}% " +
+         "was expected")
+end
+
+When(/^I umount "([^"]*)"$/) do |mount_arg|
+  $vm.execute_successfully("umount '#{mount_arg}'")
 end
 
 Then /^I find very few patterns in the guest's memory$/ do

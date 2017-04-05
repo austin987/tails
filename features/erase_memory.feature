@@ -16,3 +16,12 @@ Feature: System memory erasure on shutdown
     And I prepare Tails for memory erasure tests
     When I fill the guest's memory with a known pattern and the allocating processes get killed
     Then I find very few patterns in the guest's memory
+
+  Scenario: Erasure of tmpfs data on unmount
+    Given I have started Tails from DVD without network and logged in
+    And I prepare Tails for memory erasure tests
+    And I find very few patterns in the guest's memory
+    When I mount a 128 MiB tmpfs on "/mnt" and fill it with a known pattern
+    Then patterns cover at least 99% of the tmpfs size in the guest's memory
+    When I umount "/mnt"
+    Then I find very few patterns in the guest's memory
