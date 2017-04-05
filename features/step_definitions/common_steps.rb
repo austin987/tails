@@ -952,13 +952,7 @@ def share_host_files(files)
   return mount_dir
 end
 
-When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
-  disk_size = convert_to_bytes(size_MiB.to_i, 'MiB')
-  disk = random_alpha_string(10)
-  step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
-  step "I create a gpt partition labeled \"#{disk}\" with " +
-       "an #{fs} on disk \"#{disk}\""
-  step "I plug USB drive \"#{disk}\""
+def mount_USB_drive(disk, fs)
   @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
   dev = $vm.disk_dev(disk)
   partition = dev + '1'
@@ -983,6 +977,16 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
     avail_space_in_mountpoint_kB(@tmp_usb_drive_mount_dir),
     'KB'
   )
+end
+
+When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
+  disk_size = convert_to_bytes(size_MiB.to_i, 'MiB')
+  disk = random_alpha_string(10)
+  step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
+  step "I create a gpt partition labeled \"#{disk}\" with " +
+       "an #{fs} on disk \"#{disk}\""
+  step "I plug USB drive \"#{disk}\""
+  mount_USB_drive(disk, fs)
 end
 
 When(/^I umount the USB drive$/) do
