@@ -33,12 +33,9 @@ def detected_ram_in_MiB
   return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
-def pattern_coverage_in_guest_ram
-  assert_not_nil(
-    @free_mem_before_fill_b,
-    "@free_mem_before_fill_b is not set, probably the required 'I fill the " +
-    "guest's memory ...' step was not run")
-  free_mem_before_fill_m = convert_to_MiB(@free_mem_before_fill_b, 'b')
+def pattern_coverage_in_guest_ram(reference_memory_b)
+  assert_not_nil(reference_memory_b)
+  reference_memory_m = convert_to_MiB(reference_memory_b, 'b')
   dump = "#{$config["TMPDIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
@@ -56,9 +53,9 @@ def pattern_coverage_in_guest_ram
   # Pattern is 16 bytes long
   patterns_b = patterns*16
   patterns_m = convert_to_MiB(patterns_b, 'b')
-  coverage = patterns_b.to_f/@free_mem_before_fill_b
+  coverage = patterns_b.to_f/reference_memory_b
   puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
-       "(out of #{free_mem_before_fill_m} MiB reference memory)"
+       "(out of #{reference_memory_m} MiB reference memory)"
   return coverage
 end
 
@@ -158,9 +155,8 @@ When /^I mount a (\d+) MiB tmpfs on "([^"]+)" and fill it with a known pattern$/
 end
 
 Then /^patterns cover at least (\d+)% of the tmpfs size in the guest's memory$/ do |expected_coverage|
-  # XXX: workaround pattern_coverage_in_guest_ram()'s lack of flexibility
-  @free_mem_before_fill_b = convert_to_bytes(@tmpfs_size_MiB, 'MiB')
-  coverage = pattern_coverage_in_guest_ram()
+  reference_memory_b = convert_to_bytes(@tmpfs_size_MiB, 'MiB')
+  coverage = pattern_coverage_in_guest_ram(reference_memory_b)
   min_coverage = expected_coverage.to_f / 100
   assert(coverage > min_coverage,
          "#{"%.3f" % (coverage*100)}% of the tmpfs size (#{@tmpfs_size_MiB} MiB) " +
@@ -173,7 +169,7 @@ When(/^I umount "([^"]*)"$/) do |mount_arg|
 end
 
 Then /^I find very few patterns in the guest's memory$/ do
-  coverage = pattern_coverage_in_guest_ram()
+  coverage = pattern_coverage_in_guest_ram(@free_mem_before_fill_b)
   max_coverage = 0.008
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
