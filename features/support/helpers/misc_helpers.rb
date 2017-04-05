@@ -135,6 +135,10 @@ def retry_action(max_retries, options = {}, &block)
     begin
       block.call
       return
+    rescue NameError => e
+      # NameError most likely means typos, and hiding that is rarely
+      # (never?) a good idea, so we rethrow them.
+      raise e
     rescue Exception => e
       if retries <= max_retries
         debug_log("#{options[:operation_name]} failed (Try #{retries} of " +
@@ -150,6 +154,8 @@ def retry_action(max_retries, options = {}, &block)
     end
   end
 end
+
+alias :retry_times :retry_action
 
 def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }

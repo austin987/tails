@@ -6,32 +6,32 @@ Feature: Installing Tails to a USB drive
   Scenario: Try installing Tails to a too small USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 2 GiB disk named "too-small-device"
-    And I start Tails Installer in "Clone & Install" mode
+    And I start Tails Installer in "Install by cloning" mode
     But a suitable USB device is not found
+    And no USB drive is selected
     When I plug USB drive "too-small-device"
     Then Tails Installer detects that a device is too small
-    And a suitable USB device is not found
+    And no USB drive is selected
     When I unplug USB drive "too-small-device"
-    And I create a 4 GiB disk named "big-enough"
+    And I temporarily create a 4 GiB disk named "big-enough"
     And I plug USB drive "big-enough"
     Then the "big-enough" USB drive is selected
 
   Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "temp"
-    And I start Tails Installer in "Clone & Install" mode
+    And I start Tails Installer in "Install by cloning" mode
     But a suitable USB device is not found
     When I plug USB drive "temp"
     Then the "temp" USB drive is selected
     When I unplug USB drive "temp"
-    Then no USB drive is selected
-    And a suitable USB device is not found
+    Then a suitable USB device is not found
 
   Scenario: Installing Tails to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "install"
     And I plug USB drive "install"
-    And I "Clone & Install" Tails to USB drive "install"
+    And I "Install by cloning" Tails to USB drive "install"
     Then the running Tails is installed on USB drive "install"
     But there is no persistence partition on USB drive "install"
 
@@ -65,7 +65,7 @@ Feature: Installing Tails to a USB drive
     And I temporarily create a 4 GiB disk named "mbr"
     And I create a msdos label on disk "mbr"
     And I plug USB drive "mbr"
-    And I "Clone & Install" Tails to USB drive "mbr"
+    And I "Install by cloning" Tails to USB drive "mbr"
     Then the running Tails is installed on USB drive "mbr"
     But there is no persistence partition on USB drive "mbr"
     When I shutdown Tails and wait for the computer to power off
@@ -74,18 +74,18 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
-  Scenario: Cat:ing a Tails isohybrid to a USB drive and booting it, then trying to upgrading it but ending up having to do a fresh installation, which boots
+  Scenario: Writing a Tails isohybrid to a USB drive and booting it, then trying to upgrading it but ending up having to do a fresh installation, which boots
     Given a computer
     And I temporarily create a 4 GiB disk named "isohybrid"
-    And I cat an ISO of the Tails image to disk "isohybrid"
+    And I write the Tails ISO image to disk "isohybrid"
     And I start Tails from USB drive "isohybrid" with network unplugged and I login
     Then Tails is running from USB drive "isohybrid"
     When I shutdown Tails and wait for the computer to power off
     And I start Tails from DVD with network unplugged and I login
-    And I try a "Clone & Upgrade" Tails to USB drive "isohybrid"
-    Then I am suggested to do a "Clone & Install"
+    And I fail to "Upgrade by cloning" Tails to USB drive "isohybrid"
+    Then I am suggested to do a "Install by cloning"
     When I kill the process "tails-installer"
-    And I "Clone & Install" Tails to USB drive "isohybrid"
+    And I "Install by cloning" Tails to USB drive "isohybrid"
     Then the running Tails is installed on USB drive "isohybrid"
     But there is no persistence partition on USB drive "isohybrid"
     When I shutdown Tails and wait for the computer to power off

@@ -34,7 +34,6 @@ def checkpoints
       :description => "I have started Tails from DVD without network and logged in with bridge mode enabled",
       :parent_checkpoint => "tails-greeter",
       :steps => [
-        'I enable more Tails Greeter options',
         'I enable the specific Tor configuration option',
         'I log in to a new session',
         'all notifications have disappeared',
@@ -46,7 +45,6 @@ def checkpoints
       :description => "I have started Tails from DVD without network and logged in with an administration password",
       :parent_checkpoint => "tails-greeter",
       :steps => [
-        'I enable more Tails Greeter options',
         'I set an administration password',
         'I log in to a new session',
       ],
@@ -70,7 +68,7 @@ def checkpoints
       :steps => [
         'I create a 4 GiB disk named "__internal"',
         'I plug USB drive "__internal"',
-        'I "Clone & Install" Tails to USB drive "__internal"',
+        'I "Install by cloning" Tails to USB drive "__internal"',
         'the running Tails is installed on USB drive "__internal"',
         'there is no persistence partition on USB drive "__internal"',
         'I shutdown Tails and wait for the computer to power off',

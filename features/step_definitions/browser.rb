@@ -1,7 +1,3 @@
-Then /^I see the Unsafe Browser start notification and wait for it to close$/ do
-  robust_notification_wait("UnsafeBrowserStartNotification.png", 60)
-end
-
 Then /^the Unsafe Browser has started$/ do
   @screen.wait("UnsafeBrowserHomepage.png", 360)
 end
@@ -13,16 +9,12 @@ end
 When /^I successfully start the Unsafe Browser$/ do
   step "I start the Unsafe Browser"
   step "I see and accept the Unsafe Browser start verification"
-  step "I see the Unsafe Browser start notification and wait for it to close"
+  step "I see the \"Starting the Unsafe Browser...\" notification after at most 60 seconds"
   step "the Unsafe Browser has started"
 end
 
 When /^I close the Unsafe Browser$/ do
   @screen.type("q", Sikuli::KeyModifier.CTRL)
-end
-
-Then /^I see the Unsafe Browser stop notification$/ do
-  robust_notification_wait("UnsafeBrowserStopNotification.png", 60)
 end
 
 def xul_application_info(application)
@@ -117,13 +109,12 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
     reload_action = 'Reload current page'
   end
   expected_title = "#{title} - #{browser_name}"
-  app = Dogtail::Application.new('Firefox')
-  try_for(60) { app.child(expected_title, roleName: 'frame') }
+  try_for(60) { @torbrowser.child(expected_title, roleName: 'frame') }
   # The 'Reload current page' button (graphically shown as a looping
   # arrow) is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
-  try_for(60) { app.child(reload_action, roleName: 'push button') }
+  try_for(60) { @torbrowser.child(reload_action, roleName: 'push button') }
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -221,8 +212,7 @@ Then /^Tails homepage loads in the Unsafe Browser$/ do
 end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
-  firefox = Dogtail::Application.new('Firefox')
-  page = firefox.child("Problem loading page", roleName: "document frame")
+  page = @torbrowser.child("Problem loading page", roleName: "document frame")
   headers = page.children(roleName: "heading")
   found = headers.any? { |heading| heading.text == error }
   raise "Could not find the '#{error}' error in the Tor Browser" unless found

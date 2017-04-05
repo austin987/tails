@@ -179,7 +179,7 @@ task :parse_build_options do
       ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
     when 'gzipcomp'
-      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
+      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip -Xcompression-level 1'
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
     # Clean-up settings

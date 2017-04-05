@@ -391,42 +391,6 @@ class VM
     return convert_to_bytes(size, unit)
   end
 
-  def set_arch(arch)
-    raise "System architecture can only be set to inactive vms" if is_running?
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/os/type'].attributes['arch'] = arch
-    update(domain_xml.to_s)
-  end
-
-  def add_hypervisor_feature(feature)
-    raise "Hypervisor features can only be added to inactive vms" if is_running?
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/features'].add_element(feature)
-    update(domain_xml.to_s)
-  end
-
-  def drop_hypervisor_feature(feature)
-    raise "Hypervisor features can only be fropped from inactive vms" if is_running?
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/features'].delete_element(feature)
-    update(domain_xml.to_s)
-  end
-
-  def disable_pae_workaround
-    # add_hypervisor_feature("nonpae") results in a libvirt error, and
-    # drop_hypervisor_feature("pae") alone won't disable pae. Hence we
-    # use this workaround.
-    xml = <<EOF
-  <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
-    <qemu:arg value='-cpu'/>
-    <qemu:arg value='qemu32,-pae'/>
-  </qemu:commandline>
-EOF
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain'].add_element(REXML::Document.new(xml))
-    update(domain_xml.to_s)
-  end
-
   def set_os_loader(type)
     if is_running?
       raise "boot settings can only be set for inactive vms"
@@ -509,7 +473,7 @@ EOF
 
   def select_virtual_desktop(desktop_number, user = LIVE_USER)
     assert(desktop_number >= 0 && desktop_number <=3,
-           "Only values between 0 and 3 are valid virtual desktop numbers")
+           "Only values between 0 and 1 are valid virtual desktop numbers")
     execute_successfully(
       "xdotool set_desktop '#{desktop_number}'",
       :user => user
@@ -530,11 +494,17 @@ EOF
       # Often when xdotool fails to focus a window it'll work when retried
       # after redrawing the screen.  Switching to a new virtual desktop then
       # back seems to be a reliable way to handle this.
-      select_virtual_desktop(3)
+      # Sadly we have to rely on a lot of sleep() here since there's
+      # little on the screen etc that we truly can rely on.
+      sleep 5
+      select_virtual_desktop(1)
+      sleep 5
       select_virtual_desktop(0)
-      sleep 5 # there aren't any visual indicators which can be used here
+      sleep 5
       do_focus(window_title, user)
     end
+  rescue
+    # noop
   end
 
   def file_exist?(file)

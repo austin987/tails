@@ -14,8 +14,6 @@ if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
 fi
 
-export LB_BOOTSTRAP_INCLUDE='eatmydata'
-
 # sanity checks
 if grep -qs -E '^Pin:\s+release\s+.*a=' config/chroot_apt/preferences ; then
     echo "Found unsupported a= syntax in config/chroot_apt/preferences,"
@@ -28,12 +26,16 @@ if grep -qs -E '^Pin:\s+release\s+.*o=Debian Backports' \
     echo "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
     exit 1
 fi
+if [ $(dpkg --print-architecture) != amd64 ] ; then
+    echo "Only amd64 build systems are supported"
+    exit 1
+fi
 
 # init variables
 RUN_LB_CONFIG="lb config noauto"
 
 # init config/ with defaults for the target distribution
-$RUN_LB_CONFIG --distribution jessie ${@}
+$RUN_LB_CONFIG --distribution stretch ${@}
 
 # set up everything for time-based snapshots:
 apt-snapshots-serials prepare-build
@@ -57,9 +59,14 @@ perl -pi \
 $RUN_LB_CONFIG \
    --verbose \
    --apt-recommends false \
+   --architecture amd64 \
    --backports false \
    --binary-images iso \
    --binary-indices false \
+   --cache          false \
+   --cache-indices  false \
+   --cache-packages false \
+   --cache-stages   false \
    --checksums none \
    --bootappend-live "${AMNESIA_APPEND}" \
    --bootstrap debootstrap \
@@ -69,6 +76,7 @@ $RUN_LB_CONFIG \
    --iso-application="The Amnesic Incognito Live System" \
    --iso-publisher="https://tails.boum.org/" \
    --iso-volume="TAILS ${AMNESIA_FULL_VERSION}" \
+   --linux-flavours amd64-unsigned \
    --memtest none \
    --mirror-binary              "$DEBIAN_MIRROR" \
    --mirror-bootstrap           "$DEBIAN_MIRROR" \
@@ -78,26 +86,12 @@ $RUN_LB_CONFIG \
    --packages-lists="standard" \
    --tasks="standard" \
    --linux-packages="linux-image-${KERNEL_VERSION}" \
+   --security false \
    --syslinux-menu vesamenu \
    --syslinux-splash data/splash.png \
    --syslinux-timeout 4 \
    --initramfs=live-boot \
    ${@}
-
-# build i386 images on amd64 as well, include a bunch of kernels
-hw_arch="`dpkg --print-architecture`"
-if [ "$hw_arch" = i386 -o "$hw_arch" = amd64 ]; then
-   $RUN_LB_CONFIG \
-      --architecture i386 \
-      --linux-flavours "686-unsigned" \
-      ${@}
-# build powerpc images on powerpc64 as well, include only powerpc kernel
-elif [ "$hw_arch" = powerpc -o "$hw_arch" = powerpc64 ]; then
-   $RUN_LB_CONFIG \
-      --architecture powerpc \
-      --linux-flavours powerpc \
-      ${@}
-fi
 
 install -d config/chroot_local-includes/etc/amnesia/
 
@@ -119,6 +113,9 @@ cat >> config/chroot_local-includes/etc/os-release <<EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="$AMNESIA_VERSION"
 EOF
+if echo "$AMNESIA_VERSION" | grep -qs -E '~(alpha|beta|rc)[0-9]*$' ; then
+    echo 'TAILS_CHANNEL="alpha"' >> config/chroot_local-includes/etc/os-release
+fi
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
@@ -142,9 +139,11 @@ install -m 0755 \
    submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
    config/chroot_local-includes/usr/local/lib/nodejs/
 
-# aufs4-standalone
-rm -rf config/chroot_local-includes/usr/src/aufs4-standalone
-cp -a submodules/aufs4-standalone config/chroot_local-includes/usr/src/
+# gnome-shell-extension-florence-indicator
+rm -rf \
+   config/chroot_local-includes/usr/share/gnome-shell/extensions/florenceIndicator@UshakovVasilii_Github.yahoo.com
+cp -a submodules/gnome-shell-extension-florence-indicator/florenceIndicator@UshakovVasilii_Github.yahoo.com/ \
+   config/chroot_local-includes/usr/share/gnome-shell/extensions/
 
 # custom debootstrap script, setting some APT magic to log downloads:
 patch \
