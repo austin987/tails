@@ -999,7 +999,7 @@ end
 When(/^I umount the USB drive$/) do
   $vm.execute_successfully("umount #{@tmp_usb_drive_mount_dir}")
   if @tmp_filesystem_is_encrypted
-    $vm.execute("cryptsetup luksClose #{@tmp_filesystem_partition}")
+    $vm.execute_successfully("cryptsetup luksClose #{@tmp_filesystem_disk}_unlocked")
   end
 end
 
