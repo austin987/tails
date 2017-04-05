@@ -1,3 +1,10 @@
 #!/bin/sh
 
 echo 3 > /proc/sys/vm/drop_caches
+
+if [ -e /run/tails_shutdown_debugging ] ; then
+    /bin/plymouth quit
+    /bin/stty sane < /dev/console
+    echo "Going to sleep 10 minutes. Happy dumping!" > /dev/console
+    sleep 600
+fi
