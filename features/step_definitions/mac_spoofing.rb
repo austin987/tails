@@ -101,8 +101,8 @@ Then /^the MAC spoofing panic mode disabled networking$/ do
   end
 end
 
-When /^I hotplug a network device$/ do
-  initial_nr_nics = all_ethernet_nics.size
+When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wait|
+  initial_nr_nics = wait ? all_ethernet_nics.size : nil
   xml = <<-EOF
     <interface type='network'>
       <alias name='net1'/>
@@ -113,7 +113,9 @@ When /^I hotplug a network device$/ do
     </interface>
   EOF
   $vm.plug_device(xml)
-  try_for(20) do
-    all_ethernet_nics.size >= initial_nr_nics + 1
+  if wait
+    try_for(20) do
+      all_ethernet_nics.size >= initial_nr_nics + 1
+    end
   end
 end

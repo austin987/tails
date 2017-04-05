@@ -17,7 +17,7 @@ Feature: Spoofing MAC addresses
     And Tor is ready
     Then 1 network interface is enabled
     And the 1st network device has its real MAC address configured
-    When I hotplug a network device
+    When I hotplug a network device and wait for it to be initialized
     Then 2 network interfaces are enabled
     And the 2nd network device has its real MAC address configured
     And some network device leaked the real MAC address
@@ -27,7 +27,7 @@ Feature: Spoofing MAC addresses
     And Tor is ready
     Then 1 network interface is enabled
     And the 1st network device has a spoofed MAC address configured
-    When I hotplug a network device
+    When I hotplug a network device and wait for it to be initialized
     Then 2 network interfaces are enabled
     And the 2nd network device has a spoofed MAC address configured
     And no network device leaked the real MAC address
