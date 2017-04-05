@@ -71,8 +71,8 @@ def pattern_coverage_in_guest_ram
   return coverage
 end
 
-Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do |dont_verify|
-  verify = dont_verify.empty?
+Given /^I prepare Tails for memory erasure tests$/ do
+  @detected_ram_m = detected_ram_in_MiB
 
   # Free some more memory by dropping the caches etc.
   $vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
@@ -109,6 +109,10 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
   free_mem_before_fill_m = @detected_ram_m - used_mem_before_fill_m -
                           kernel_mem_reserved_m - admin_mem_reserved_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
+end
+
+Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do |dont_verify|
+  verify = dont_verify.empty?
 
   # To be sure that we fill all memory we run one fillram instance for
   # each GiB of detected memory, rounded up. To maintain stability we
