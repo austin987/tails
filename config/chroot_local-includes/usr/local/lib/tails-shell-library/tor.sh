@@ -6,18 +6,25 @@ TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
-get_tor_control_port() {
-	sed -n 's/^ControlPort[[:space:]]\+\([[:digit:]]\+\)/\1/p' "${TOR_RC}"
+get_tor_control_socket_path() {
+	local res
+	res=$(sed -n 's/^ControlSocket[[:space:]]\+\(.\+\)$/\1/p' "${TOR_RC}")
+	if [ "${res}" -eq 0 ]; then
+		echo ""
+	elif [ -z "${res}" ] && [ -S /var/run/tor/control ]; then
+		echo /var/run/tor/control
+	else
+		echo "${res}"
+	fi
 }
 
 tor_control_send() {
 	COOKIE=/var/run/tor/control.authcookie
 	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
 	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    nc 127.0.0.1 $(get_tor_control_port) | tr -d "\r"
+	    socat - UNIX-CONNECT:$(get_tor_control_socket_path) | tr -d "\r"
 }
 
-# This function may be dangerous to use. See "Potential Tor bug" below.
 # Only handles GETINFO keys with single-line answers
 tor_control_getinfo() {
 	tor_control_send "GETINFO ${1}" | \
@@ -34,28 +41,14 @@ tor_control_setconf() {
 }
 
 tor_bootstrap_progress() {
-	RES=$(grep -o "\[notice\] Bootstrapped [[:digit:]]\+%:" ${TOR_LOG} | \
-	    tail -n1 | sed "s|\[notice\] Bootstrapped \([[:digit:]]\+\)%:|\1|")
-	if [ -z "${RES:-}" ] ; then
-		RES=0
-	fi
-	echo -n "$RES"
+       local res
+       res=$(tor_control_getinfo status/bootstrap-phase | \
+                    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/')
+       echo ${res:-0}
 }
 
-# Potential Tor bug: it seems like using this version makes Tor get
-# stuck at "Bootstrapped 5%" quite often. Is Tor sensitive to opening
-# control ports and/or issuing "getinfo status/bootstrap-phase" during
-# early bootstrap? Because of this we fallback to greping the log.
-#tor_bootstrap_progress() {
-#	tor_control_getinfo status/bootstrap-phase | \
-#	    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/'
-#}
-
 tor_is_working() {
-	[ -e $TOR_DESCRIPTORS ] || [ -e $NEW_TOR_DESCRIPTORS ] || return 1
-
-	TOR_BOOTSTRAP_PROGRESS=$(tor_bootstrap_progress)
-	[ "${TOR_BOOTSTRAP_PROGRESS:-}" -eq 100 ]
+	[ "$(tor_bootstrap_progress)" -eq 100 ]
 }
 
 tor_append_to_torrc () {
