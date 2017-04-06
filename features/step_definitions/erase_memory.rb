@@ -61,7 +61,7 @@ Given /^I prepare Tails for memory erasure tests$/ do
   step "I drop all kernel caches"
 
   # Have our initramfs-pre-shutdown-hook sleep for a while
-  $vm.execute_successfully("touch /run/tails_shutdown_debugging")
+  $vm.execute_successfully("touch /run/initramfs/tails_shutdown_debugging")
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
@@ -239,7 +239,6 @@ When(/^I drop all kernel caches$/) do
   $vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
 end
 
-When(/^I trigger shutdown and wait for the system to be almost halted$/) do
+When(/^I trigger shutdown$/) do
   $vm.spawn("halt")
-  @screen.wait('ShutdownAlmostCompleted.png', 60)
 end

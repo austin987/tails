@@ -24,6 +24,26 @@ problems (e.g. [[!tails_ticket 12354]], [[!tails_ticket 11786]]).
 So it was removed in Tails 3.0, and Tails now relies on the Linux
 kernel's freed memory poisoning feature.
 
+But memory poisoning only works when memory is actually freed,
+and a regular shutdown would not free the memory used by the aufs
+read-write branch. So we use the `systemd-shutdown` ability to return
+to the initramfs, to ensure the root filesystem is unmounted.
+
+The initramfs is unpacked in `/run/initramfs` at boot time:
+
+ * [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/initramfs-shutdown.service]]
+ * [[!tails_gitweb config/chroot_local-includes/usr/local/lib/initramfs-restore]]
+ * [[!tails_gitweb config/chroot_local-includes/usr/local/lib/udev-watchdog-wrapper]]
+
+… so that the copy of `systemd-shutdown` that runs in the real,
+non-initramfs system can switch root into `/run/initramfs`, and run
+another copy of `systemd-shutdown` that's
+[[!tails_gitweb config/chroot_local-includes/usr/share/initramfs-tools/hooks/shutdown desc="included"]]
+in the initramfs. That one will unmount all filesystems, run
+[[!tails_gitweb config/chroot_local-includes/usr/local/lib/initramfs-pre-shutdown-hook desc="a custom hook"]]
+that helps us automatically test this behavior, and finally perform
+the requested poweroff/reboot action.
+
 #### Triggers
 
 Different kinds of events trigger the memory erasure process. All lead
@@ -64,5 +84,3 @@ to memory erasure time.
 - [[!tails_gitweb config/chroot_local-includes/etc/memlockd.cfg]]
 - [[!tails_gitweb config/chroot_local-patches/keep_memlockd_on_shutdown.diff]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/memlockd.service.d/oom.conf]]
-- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-reconfigure-memlockd.service]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-reconfigure-memlockd]]

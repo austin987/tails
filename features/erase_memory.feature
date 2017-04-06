@@ -66,12 +66,14 @@ Feature: System memory erasure on shutdown
     # ensure the pattern is in memory due to tmpfs, not to disk cache
     And I drop all kernel caches
     Then patterns cover at least 128 MiB in the guest's memory
-    When I trigger shutdown and wait for the system to be almost halted
+    When I trigger shutdown
+    And I wait 20 seconds
     Then I find very few patterns in the guest's memory
 
   Scenario: Erasure of read and write disk caches of persistent data on shutdown
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And I prepare Tails for memory erasure tests
     When I fill a 128 MiB file with a known pattern on the persistent filesystem
-    When I trigger shutdown and wait for the system to be almost halted
+    When I trigger shutdown
+    And I wait 20 seconds
     Then I find very few patterns in the guest's memory
