@@ -159,14 +159,10 @@ Sign the kernel:
 	EOF
 	chroot ${MNT} sh /boot/sign-kernel.sh
 
+
 Write the signed kernel to the kernel partition:
 
-	dd if=${MNT}/boot/vmlinuz.signed of=${KERNEL_PART}
-
-Mark the newly written kernel partition as good and set the
-priority:
-
-	cgpt add -i 1 -S 1 -T 5 -P 12 ${DEV}
+	dd bs=1M if=${MNT}/boot/vmlinuz.signed of=${KERNEL_PART}
 
 Copy the ChromeOS kernel modules into the root filesystem:
 
@@ -181,6 +177,11 @@ Copy the non-free firmware for the wifi device:
 Umount the filesystems:
 
 	umount ${MNT}
+
+Mark the newly written kernel partition as good and set the
+priority:
+
+	cgpt add -i 1 -S 1 -T 5 -P 12 ${DEV}
 
 ## Kernel approach 2 - Debian's kernel
 
