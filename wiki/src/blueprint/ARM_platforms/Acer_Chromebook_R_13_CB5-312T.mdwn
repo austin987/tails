@@ -9,6 +9,7 @@ with a CB5-312T K2L7.
 
 # Resources
 
+* <http://forums.debian.net/viewtopic.php?t=103468>
 * <https://wiki.debian.org/InstallingDebianOn/Asus/C201>
 * <https://wiki.debian.org/InstallingDebianOn/Acer/Chromebook_13_CB5-311-T8BT>
 * <https://wiki.debian.org/InstallingDebianOn/Samsung/ARMChromebook>
@@ -34,7 +35,22 @@ that's not enabled in Debian currently:
 We should try enabling it in a custom kernel before requesting for
 these modules to be shipped in the Debian one.
 
-# Do this on any Debian machine (does not have to be ARM)
+<https://wiki.debian.org/InstallingDebianOn/Asus/C201> says:  "If you
+are running a newer ChromeOS, CONFIG_VT may be disabled in the kernel.
+this prevents the creation of consoles and the starting of Xorg from
+current stable. You need to install a tool that uses the framebuffer
+directly to interact with your new operating system. A patch is
+available and tested, but has yet to make it to the point of being
+submittable to the Xorg development team. See:
+<http://demo1.faikvm.com/trac/wiki/C201>". Might this explain why
+the ChromeOS kernel doesn't display anything, even if it has
+`DRM_MEDIATEK` enabled?
+
+# On a Debian machine
+
+<div class="note">This Debian machine does not have to be ARM.</div>
+
+Set some variables:
 
 	DEV=/dev/sdb
 	ROOT_PART=${DEV}2
