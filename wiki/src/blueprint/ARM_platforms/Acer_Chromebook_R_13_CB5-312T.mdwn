@@ -70,7 +70,7 @@ Partitioning the device:
 	sudo parted --script ${DEV} mklabel gpt
 	sudo cgpt create ${DEV}
 
-Below is for a 4 GiB USB drive, adjust if needed.
+Below is for a 8 GiB device, adjust if needed.
 
 	sudo cgpt add -t kernel -l kernel -b 34 -s 65536 ${DEV}
 	sudo cgpt add -t data -l / -b 65570 -s ${DATA_PART_SIZE} ${DEV}
@@ -276,7 +276,7 @@ valid device to boot from):
 
 Install the kernel:
 
-	dd if=vmlinuz.signed of=${DEV}
+	dd bs=1M if=${MNT}/boot/vmlinuz.signed of=${KERNEL_PART}
 
 Mark the newly written kernel partition as good and set the
 priority:
