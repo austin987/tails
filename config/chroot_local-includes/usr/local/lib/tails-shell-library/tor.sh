@@ -1,28 +1,40 @@
 #!/bin/sh
 
+TOR_RC_DEFAULTS=/usr/share/tor/tor-service-defaults-torrc
 TOR_RC=/etc/tor/torrc
 TOR_LOG=/var/log/tor/log
 TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
-get_tor_control_socket_path() {
-	local res
-	res=$(sed -n 's/^ControlSocket[[:space:]]\+\(.\+\)$/\1/p' "${TOR_RC}")
-	if [ "${res}" -eq 0 ]; then
-		echo ""
-	elif [ -z "${res}" ] && [ -S /var/run/tor/control ]; then
-		echo /var/run/tor/control
-	else
-		echo "${res}"
-	fi
+tor_rc_lookup() {
+	grep --no-filename "^${1}\s" "${TOR_RC_DEFAULTS}" "${TOR_RC}" | \
+	    sed --regexp-extended "s/^${1}\s+(.+)$/\1/" | tail -n1
+}
+
+tor_control_socket_path() {
+	local path
+	path="$(tor_rc_lookup ControlSocket | awk '{ print $1 }')"
+	[ -S "${path}" ] && echo "${path}"
+}
+
+tor_control_cookie_path() {
+	local path
+	path="$(tor_rc_lookup CookieAuthFile)"
+	[ -e "${path}" ] && echo "${path}"
 }
 
 tor_control_send() {
-	COOKIE=/var/run/tor/control.authcookie
-	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
-	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    socat - UNIX-CONNECT:$(get_tor_control_socket_path) | tr -d "\r"
+	local socket_path cookie_path hexcookie
+	socket_path="$(tor_control_socket_path)"
+	cookie_path="$(tor_control_cookie_path)"
+	if [ -S "${socket_path}" ] && [ -e "${cookie_path}" ]; then
+		hexcookie=$(xxd -c 32 -g 0 "${cookie_path}" | cut -d' ' -f2)
+		/bin/echo -ne "AUTHENTICATE ${hexcookie}\r\n${1}\r\nQUIT\r\n" | \
+		    /bin/nc.openbsd -U "${socket_path}" | tr -d "\r"
+	else
+		return 1
+	fi
 }
 
 # Only handles GETINFO keys with single-line answers
