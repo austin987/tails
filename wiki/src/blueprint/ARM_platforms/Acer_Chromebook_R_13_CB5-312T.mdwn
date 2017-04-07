@@ -24,27 +24,39 @@ mode start screen I press Ctrl+U, and then the display shuts down but
 the computer remains running indefinitely. So it seems that an attempt
 at booting actually happens; if the signing is messed up, or the
 partitions don't look right, I should just get an error beep when
-pressing Ctrl+U.
+pressing Ctrl+U. -- anonym
 
-This might be fixed by enabling the `DRM_MEDIATEK` Kconfig option,
-that's not enabled in Debian currently:
-
-* <https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2e726dc4b4e2dd3ae3fe675f9d3af88a2d593ee1>
-* <https://lists.freedesktop.org/archives/dri-devel/2016-May/108049.html>
-
-We should try enabling it in a custom kernel before requesting for
-these modules to be shipped in the Debian one.
-
-<https://wiki.debian.org/InstallingDebianOn/Asus/C201> says:  "If you
+Also, at least with the ChromeOS kernel (not tried with the Debian one
+yet), when booting from a USB stick that blinks on access, there's
+quite some blinking after booting, then a ~20 seconds break (with
+`rootdelay=20`), then lots more blinking (if I install gdm3), and then
+a little bit more here and then. But blindly typing
+`root\n$ROOT_PASSWORD\npoweroff` doesn't turn the machine off, and
+pressing TAB (for shell completion) doesn't trigger more blinking.
+So it looks like the system might actually have started, but provides
+no VT. Interestingly,
+<https://wiki.debian.org/InstallingDebianOn/Asus/C201> says: "If you
 are running a newer ChromeOS, CONFIG_VT may be disabled in the kernel.
 this prevents the creation of consoles and the starting of Xorg from
 current stable. You need to install a tool that uses the framebuffer
 directly to interact with your new operating system. A patch is
 available and tested, but has yet to make it to the point of being
 submittable to the Xorg development team. See:
-<http://demo1.faikvm.com/trac/wiki/C201>". Might this explain why
-the ChromeOS kernel doesn't display anything, even if it has
-`DRM_MEDIATEK` enabled?
+<http://demo1.faikvm.com/trac/wiki/C201>". Might this explain why the
+ChromeOS kernel doesn't display anything, even if it has
+`DRM_MEDIATEK` enabled? FWIW I've found
+[instructions for the CB5-311](http://wiki.baserock.org/guides/baserock-native-cb5-311/)
+that build a modified ChromeOS kernel with `CONFIG_VT` enabled.
+-- intrigeri
+
+Wrt. the Debian kernel, the black screen might be fixed by enabling the
+`DRM_MEDIATEK` Kconfig option, that's not enabled in Debian currently:
+
+* <https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=2e726dc4b4e2dd3ae3fe675f9d3af88a2d593ee1>
+* <https://lists.freedesktop.org/archives/dri-devel/2016-May/108049.html>
+
+We should try enabling it in a custom kernel before requesting for
+these modules to be shipped in the Debian one.
 
 # On a Debian machine
 
@@ -159,6 +171,9 @@ Sign the kernel:
 	EOF
 	chroot ${MNT} sh /boot/sign-kernel.sh
 
+XXX: the resulting `vmlinuz.signed` is 5.9M large, while
+`chromeos.kernel.signed` was 16M. Might it be that the ChromeOS one
+embeds some kernel modules we need?
 
 Write the signed kernel to the kernel partition:
 
@@ -185,13 +200,66 @@ priority:
 
 	cgpt add -i 1 -S 1 -T 5 -P 12 ${DEV}
 
+### Debugging
+
+I (intrigeri) have also tried:
+
+	console=tty0 printk.time=1 nosplash rootwait root=/dev/mmcblk1p2 ro rootfstype=ext4 lsm.module_locking=0 debug
+	console=tty0 console=tty1 printk.time=1 nosplash rootwait root=/dev/mmcblk1p2 rw rootfstype=ext4 lsm.module_locking=0 debug
+	printk.time=1 nosplash rootwait root=/dev/mmcblk1p2 ro rootfstype=ext4 lsm.module_locking=0 debug
+	loglevel=7 init=/sbin/init oops=panic panic=-1 noinitrd vt.global_cursor_default=0 printk.time=1 nosplash rootwait root=/dev/mmcblk1p2 ro rootfstype=ext4 lsm.module_locking=0 debug
+	console=tty1 printk.time=1 nosplash rootdelay=20 root=/dev/mmcblk1p2 rw rootfstype=ext4 lsm.module_locking=0 debug
+
+I've also tried:
+
+ * installing more stuff inside the rootfs:
+   `tasksel install standard && apt install console-setup`
+
+And finally these two ones did something different, i.e. the screen
+stays black and desperately empty, but this time its backlight is
+turned on:
+
+	console=tty1 printk.time=1 nosplash rootwait root=/dev/mmcblk0p2 ro rootfstype=ext4 lsm.module_locking=0 debug
+	console=tty0 printk.time=1 nosplash rootwait root=/dev/mmcblk0p2 ro rootfstype=ext4 lsm.module_locking=0 debug
+
+Now, `/dev/mmcblk0` is really the internal flash storage, and not my
+micro-SD, as pointing `root=` to the ChromeOS root partition like this
+does start ChromeOS:
+
+	console=tty1 printk.time=1 nosplash rootwait root=/dev/mmcblk0p5 ro rootfstype=ext4 lsm.module_locking=0 debug
+
+So to sum up, FWIW the "backlight turns on" behavior happens when…
+`root=` is pointed to a ChromeOS kernel partition (that's definitely
+not ext4). So, at least this kernel _is_ able to turn on backlight,
+and for some reason it apparently does not until it has found its root
+partition (even if it fails to mount it).
+
+Note that even after dropping `rootwait` and `rootdelay=`, the
+backlight doesn't turn on.
+
+Try:
+
+ * disable verified boot: `crossystem dev_boot_signed_only=0`
+
+If none of these work, I'll drop the ball and will try to make
+a (possibly modified) Debian kernel work instead.
+
 ## Kernel approach 2 - Debian's kernel
+
+XXX: the following command installs a kernel that's already signed
+for Secure Boot. Try the `-unsigned` one, in case that signature
+may cause problems with the ChromeOS firmware.
 
 	chroot ${MNT} apt install linux-image-arm64
 
-We need `mt8173-evb.dtb` but it's not present in Debian's kernel possibly due to:
-[[!debbug 833561]] so I got it from ubuntu xenial's (although I probably should
+We need `mt8173-evb.dtb` but it's not present in Debian's kernel
+because `CONFIG_ARCH_MEDIATEK` is not enabled, so I got it from ubuntu
+xenial's (although I probably should
 compile myself): `linux-image-4.8.0-34-generic_4.8.0-34.36-16.04.1_arm64.deb`.
+
+> I grabbed it from
+> http://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux/linux-image-4.10.0-19-generic_4.10.0-19.21_arm64.deb -- intrigeri
+
 Put it in `${MNT}/boot`.
 
 chroot into `${MNT}`, then:
@@ -285,3 +353,6 @@ Mark the newly written kernel partition as good and set the
 priority:
 
 	cgpt add -i 1 -S 1 -T 5 -P 12 ${DEV}
+
+The resulting USB stick blinks endlessly after pressing CTRL+U,
+and the backlight remains off. -- intrigeri
