@@ -40,12 +40,12 @@ tor_control_send() {
 # Only handles GETINFO keys with single-line answers
 tor_control_getinfo() {
 	tor_control_send "GETINFO ${1}" | \
-	    sed -n "s|^250-${1}=\(.*\)$|\1|p"
+	    sed --regexp-extended -n "s|^250-${1}=(.*)$|\1|p"
 }
 
 tor_control_getconf() {
 	tor_control_send "GETCONF ${1}" | \
-            sed -n "s|^250 ${1}=\(.*\)$|\1|p"
+            sed --regexp-extended -n "s|^250 ${1}=(.*)$|\1|p"
 }
 
 tor_control_setconf() {
@@ -55,7 +55,7 @@ tor_control_setconf() {
 tor_bootstrap_progress() {
        local res
        res=$(tor_control_getinfo status/bootstrap-phase | \
-                    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/')
+                    sed --regexp-extended 's/^.* BOOTSTRAP PROGRESS=([[:digit:]]+) .*$/\1/')
        echo ${res:-0}
 }
 
