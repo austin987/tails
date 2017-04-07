@@ -12,12 +12,6 @@ tor_rc_lookup() {
 	    sed --regexp-extended "s/^${1}\s+(.+)$/\1/" | tail -n1
 }
 
-tor_control_socket_path() {
-	local path
-	path="$(tor_rc_lookup ControlSocket | awk '{ print $1 }')"
-	[ -S "${path}" ] && echo "${path}"
-}
-
 tor_control_cookie_path() {
 	local path
 	path="$(tor_rc_lookup CookieAuthFile)"
@@ -25,13 +19,13 @@ tor_control_cookie_path() {
 }
 
 tor_control_send() {
-	local socket_path cookie_path hexcookie
-	socket_path="$(tor_control_socket_path)"
+	local control_port cookie_path hexcookie
+	control_port="$(tor_rc_lookup ControlPort)"
 	cookie_path="$(tor_control_cookie_path)"
-	if [ -S "${socket_path}" ] && [ -e "${cookie_path}" ]; then
+	if [ -e "${cookie_path}" ] && [ -n "${control_port}" ]; then
 		hexcookie=$(xxd -c 32 -g 0 "${cookie_path}" | cut -d' ' -f2)
 		/bin/echo -ne "AUTHENTICATE ${hexcookie}\r\n${1}\r\nQUIT\r\n" | \
-		    /bin/nc.openbsd -U "${socket_path}" | tr -d "\r"
+		    /bin/nc 127.0.0.1 "${control_port}" | tr -d "\r"
 	else
 		return 1
 	fi
