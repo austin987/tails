@@ -53,44 +53,64 @@ the ChromeOS kernel doesn't display anything, even if it has
 Set some variables:
 
 	DEV=/dev/sdb
-	ROOT_PART=${DEV}2
 	MNT=/mnt/debian
-	mkdir -p ${MNT}
+	DATA_PART_SIZE=15292383
+	sudo mkdir -p ${MNT}
+
+If using a USB drive:
+
+	ROOT_PART=${DEV}2
+
+Else, if using a micro-SD card:
+
+	ROOT_PART=${DEV}p2
 
 Partitioning the device:
 
-	parted --script ${DEV} mklabel gpt
-	cgpt create ${DEV}
+	sudo parted --script ${DEV} mklabel gpt
+	sudo cgpt create ${DEV}
 
 Below is for a 4 GiB USB drive, adjust if needed.
 
-	# Too small for Debian's kernel + initrd:
-	#cgpt add -t kernel -l kernel -b 34 -s 32768 ${DEV}
-	#cgpt add -t data -l / -b 32802 -s 15325151 ${DEV}
-	# so let's double it:
-	cgpt add -t kernel -l kernel -b 34 -s 65536 ${DEV}
-	cgpt add -t data -l / -b 65570 -s 15292383 ${DEV}
-	blockdev --rereadpt ${DEV}
-	mkfs.ext4 ${ROOT_PART}
-	mount ${ROOT_PART} ${MNT}
-	debootstrap --arch=arm64 --foreign stretch ${MNT} http://ftp.de.debian.org/debian
+	sudo cgpt add -t kernel -l kernel -b 34 -s 65536 ${DEV}
+	sudo cgpt add -t data -l / -b 65570 -s ${DATA_PART_SIZE} ${DEV}
+	sudo blockdev --rereadpt ${DEV}
+	sudo mkfs.ext4 ${ROOT_PART}
+	sudo mount ${ROOT_PART} ${MNT}
+	sudo debootstrap --arch=arm64 --foreign stretch ${MNT} http://ftp.de.debian.org/debian
 
 Unmount the filesystems
 
-	umount ${MNT}
+	sudo umount ${MNT}
 
-# From now on, everything happens on the Chromebook
+# On the Chromebook
+
+Enable developer mode.
+
+At the ChromeOS Greeter screen, configure a Wi-Fi connection.
+
+Enter a shell with `CTRL + ALT + Next` (the `Next` key is F2, on the
+top row of the keyboard).
+
+Enable booting a self-signed kernel from USB/micro-SD:
+
+	enable_dev_usb_boot
+
+Set some variables:
 
 	DEV=/dev/sda
 	ROOT_PART=${DEV}2
 	KERNEL_PART=${DEV}1
-	MNT=/mnt/debian
+	MNT=/media/debian
 	mkdir -p ${MNT}
 
-Unmount from wherever ChromeOS decided to auto-mount the device,
-remount where we want it:
+If using a USB stick, unmount from wherever ChromeOS decided to
+auto-mount the device (apparently micro-SD are not auto-mounted):
 
 	umount ${ROOT_PART}
+
+In any case, mount the Debian root filesystem where we want it:
+
 	mount ${ROOT_PART} ${MNT}
 
 Complete the bootstrap:
