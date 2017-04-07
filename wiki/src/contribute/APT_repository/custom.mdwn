@@ -58,12 +58,12 @@ Else, it adds:
   `config/APT_overlays.d/*`; note that only the name of such
   files matters, and their content is ignored.
 
-In practice, `config/APT_overlays.d/` contains:
+In practice, `config/APT_overlays.d/` should contain:
 
 * for a topic branch:
   - if needed, a file that is named like the branch's own overlay APT
     suite; e.g. for the `bugfix/12345-whatever` branch, it would be
-    called `config/APT_overlays.d/bugfix-12345-whatever.suite`
+    called `config/APT_overlays.d/bugfix-12345-whatever`
   - any file representing APT suites that came from merging its base
     branch into this topic branch, that is:
 * for a base branch (`stable`, `testing`, `devel` or
@@ -107,7 +107,12 @@ Creating a new branch
 ---------------------
 
 Push your branch to Git and wait a few minutes for the new APT suite
-to appear on <https://deb.tails.boum.org/dists/>.
+to appear on <https://deb.tails.boum.org/dists/>. You can look up the
+name of that suite there.
+
+Then, you probably want to drop a new file in
+`config/APT_overlays.d/`, named after the APT suite corresponding to
+your new branch. See details in the *Build system* section above.
 
 Importing a new package
 -----------------------
@@ -161,9 +166,14 @@ with the `changestool(1)` command, from [[!debpkg reprepro]]).
 
 Remove all `buildinfo` and `dbgsym` lines from the `.changes` file.
 
-If the `.orig.gz` is not present in the `.changes` file, add it using
+If the `.orig.tar.{gz,bz2,xz}` tarball is present neither in the
+`.changes` file nor in our custom APT repository, add it using:
 
 	$ changestool $CHANGES_FILE includeallsources
+
+Make sure that the `.changes` file lists the _binary_ packages too:
+Tails has no package auto-builder that would build them from source
+for you.
 
 Sign the `.changes` file with a key that is in the uploaders list:
 
