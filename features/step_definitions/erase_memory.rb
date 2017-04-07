@@ -95,6 +95,10 @@ Given /^I prepare Tails for memory erasure tests$/ do
   free_mem_before_fill_m = @detected_ram_m - used_mem_before_fill_m -
                           kernel_mem_reserved_m - admin_mem_reserved_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
+
+  ['initramfs-shutdown', 'memlockd', 'tails-shutdown-on-media-removal'].each do |srv|
+    assert($vm.execute("systemctl status #{srv}.service").success?)
+  end
 end
 
 Given /^I fill the guest's memory with a known pattern and the allocating processes get killed$/ do
@@ -216,6 +220,10 @@ end
 
 When /^I stop the boot at the bootloader menu$/ do
   step "Tails is at the boot menu's cmdline"
+end
+
+When /^I wait for Tails to finish wiping the memory$/ do
+  @screen.wait("MemoryWipeCompleted.png", 30)
 end
 
 When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) filesystem$/) do |size_MiB, fs|
