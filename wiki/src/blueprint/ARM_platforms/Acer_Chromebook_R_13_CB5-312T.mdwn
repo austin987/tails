@@ -319,14 +319,14 @@ chroot into `${MNT}`, then:
 
 	mkimage -f kernel-initrd.its kernel-initrd.itb
 
-	echo "console=tty1 debug root=/dev/sda2 rw rootwait printk.time=1 nosplash lsm.module_locking=0" > cmdline
+	echo "console=tty1 debug root=/dev/sda2 rw rootwait printk.time=1 nosplash lsm.module_locking=0" > kernel.flags
 
 	vbutil_kernel --pack vmlinuz.signed \
 	      --keyblock /usr/share/vboot/devkeys/kernel.keyblock \
 	      --version 1 \
 	      --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk \
-	      --config cmdline \
-	      --bootloader cmdline \
+	      --config kernel.flags \
+	      --bootloader kernel.flags \
 	      --vmlinuz kernel-initrd.itb \
 	      --arch arm
 
