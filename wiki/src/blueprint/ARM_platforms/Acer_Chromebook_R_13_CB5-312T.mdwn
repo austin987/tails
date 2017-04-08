@@ -14,9 +14,13 @@ with a CB5-312T K2L7.
 * <https://wiki.debian.org/InstallingDebianOn/Acer/Chromebook_13_CB5-311-T8BT>
 * <https://wiki.debian.org/InstallingDebianOn/Samsung/ARMChromebook>
 * <https://www.chromium.org/chromium-os/developer-information-for-chrome-os-devices/custom-firmware>
+* <https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
 * Interesting Debian packages: `vboot-utils vboot-kernel-utils u-boot-tools`
 
 # Current status
+
+**Update**: see "Kernel approach 4: Arch Linux kernel" for the most
+promising status update so far.
 
 Both with the Chrome OS kernel and the Debian kernel approaches I end
 up with something that fails in the exact same way: at the developer
@@ -26,15 +30,14 @@ at booting actually happens; if the signing is messed up, or the
 partitions don't look right, I should just get an error beep when
 pressing Ctrl+U. -- anonym
 
-Also, at least with the ChromeOS kernel (not tried with the Debian one
-yet), when booting from a USB stick that blinks on access, there's
-quite some blinking after booting, then a ~20 seconds break (with
-`rootdelay=20`), then lots more blinking (if I install gdm3), and then
-a little bit more here and then. But blindly typing
-`root\n$ROOT_PASSWORD\npoweroff` doesn't turn the machine off, and
-pressing TAB (for shell completion) doesn't trigger more blinking.
-So it looks like the system might actually have started, but provides
-no VT. Interestingly,
+Also, with the ChromeOS kernel, when booting from a USB stick that
+blinks on access, there's quite some blinking after booting, then
+a ~20 seconds break (with `rootdelay=20`), then lots more blinking (if
+I install gdm3), and then a little bit more here and then. But blindly
+typing `root\n$ROOT_PASSWORD\npoweroff\n` doesn't turn the machine
+off, and pressing TAB (for shell completion) doesn't trigger more
+blinking. So it looks like the system might actually have started, but
+provides no VT. Interestingly,
 <https://wiki.debian.org/InstallingDebianOn/Asus/C201> says: "If you
 are running a newer ChromeOS, CONFIG_VT may be disabled in the kernel.
 this prevents the creation of consoles and the starting of Xorg from
@@ -44,9 +47,8 @@ available and tested, but has yet to make it to the point of being
 submittable to the Xorg development team. See:
 <http://demo1.faikvm.com/trac/wiki/C201>". Might this explain why the
 ChromeOS kernel doesn't display anything, even if it has
-`DRM_MEDIATEK` enabled? FWIW I've found
-[instructions for the CB5-311](http://wiki.baserock.org/guides/baserock-native-cb5-311/)
-that build a modified ChromeOS kernel with `CONFIG_VT` enabled.
+`DRM_MEDIATEK` enabled? See below an attempt at booting a modified
+ChromeOS kernel with `CONFIG_VT` enabled.
 -- intrigeri
 
 Wrt. the Debian kernel, the black screen might be fixed by enabling the
@@ -431,9 +433,14 @@ and set `arch = "arm64"` since that's what this kernel is:
 	};
 	EOF
 
-The resulting USB stick blinks endlessly after pressing CTRL+U,
-and the backlight remains off. Note that I've run `mkimage` and
-`vbutil_kernel` on a x86_64 system, in case it matters.
+Note that I've run `mkimage` and `vbutil_kernel` on a x86_64 system,
+in case it matters.
+
+The resulting USB stick blinks endlessly after pressing CTRL+U, and
+the backlight remains off, which is exactly the same as what I see
+when trying to boot the Debian kernel. So I suspect something is wrong
+in our `.its` file or in the process (`mkimage`, `vbutil_kernel`) we
+use to generate a signed FIT image out of it.
 
 These yield the same result:
 
@@ -441,3 +448,55 @@ These yield the same result:
    `.its`/`.itb` (unsure that `mt8173-evb.dtb` is the right one)
  * passing `--arch aarch64` to `vbutil_kernel`
  * passing `-D "-I dts -O dtb -p 1024"` to `mkimage`
+
+## Kernel approach 4: Arch Linux kernel
+
+I've followed
+<https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
+to install Arch Linux on a USB stick, and it booted flawlessly.
+BTW, it says the board is a Mediatek Elm rev3.
+
+So this seems to be the best starting point for us currently.
+
+So, let's try booting Debian with the Arch Linux kernel, kernel
+modules and firmware. The following instructions assumes that
+the partitioning and debootstrap steps have been done already.
+
+	ARCH_LINUX_ROOTFS=/path/to/the/extracted/rootfs
+
+	sudo mount "${ROOT_PART:?}" "${MNT:?}"
+	sudo rsync -av "${ARCH_LINUX_ROOTFS:?}"/boot/ \
+	        "${MNT:?}"/boot/
+	sudo rsync -av "${ARCH_LINUX_ROOTFS:?}"/lib/firmware/ \
+	        "${MNT:?}"/lib/firmware/
+	sudo rsync -av "${ARCH_LINUX_ROOTFS:?}"/lib/modules/ \
+	        "${MNT:?}"/lib/modules/
+	sudo find "${MNT:?}"/lib/modules/ -name *.ko.gz \
+	          -exec gunzip '{}' \;
+	sudo dd bs=1M if="${MNT:?}/boot/vmlinux.kpart" of="${KERNEL_PART:?}"
+	sync
+	sudo umount "${MNT:?}"
+
+Boot from the USB stick, log in as root, and run `depmod` so that the
+kernel modules we have uncompressed (as the version of `kmod` in
+Debian Stretch does not support compressed ones) are indexed.
+Then reboot.
+
+### Status
+
+ * Debian Stretch boots fine and starts GDM (if installed).
+ * I can log into a GNOME on Wayland session.
+ * The "Search" key (that replaces Caps Lock) is mapped to Super, i.e.
+   it opens the Overview in GNOME Shell.
+ * Touchpad: tap-to-click (once enabled) and two-finger scrolling work.
+ * Wi-Fi works.
+ * Display backlight brightness can be adjusted with the GNOME Shell
+   UI (in the top-right menu).
+ * The GNOME sound preferences show no sound device, and I see error
+   messages in the Journal about `mtk-rt5650 sound`.
+ * The GNOME UI doesn't notice when AC power is disconnected.
+ * Accelerometer and automatic screen rotation: mostly works, not as
+   clever as I hoped.
+ * Touchscreen: basically works, but I didn't try to exercise it much.
+   It seems that some parts of the GNOME UI don't work with touch but
+   _only_ when the display is rotated (e.g. flipped to tablet mode).
