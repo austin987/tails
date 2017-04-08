@@ -277,18 +277,17 @@ chroot into `${MNT}`, then:
 	            description = "vmlinuz";
 	            data = /incbin/("vmlinuz-4.9.0-2-arm64");
 	            type = "kernel_noload";
-	            arch = "arm";
+	            arch = "arm64";
 	            os = "linux";
 	            compression = "none";
-	            hash@1{
-	                algo = "sha1";
-	            };
-	        };
+	            load = <0>;
+	            entry = <0>;
+            };
 	        fdt@1{
 	            description = "dtb";
 	            data = /incbin/("mt8173-evb.dtb");
 	            type = "flat_dt";
-	            arch = "arm";
+	            arch = "arm64";
 	            compression = "none";
 	            hash@1{
 	                algo = "sha1";
@@ -298,7 +297,7 @@ chroot into `${MNT}`, then:
 	            description = "initrd.img";
 	            data = /incbin/("initrd.img-4.9.0-2-arm64");
 	            type = "ramdisk";
-	            arch = "arm";
+	            arch = "arm64";
 	            os = "linux";
 	            compression = "none";
 	            hash@1{
@@ -311,7 +310,7 @@ chroot into `${MNT}`, then:
 	        conf@1{
 	            kernel = "kernel@1";
 	            fdt = "fdt@1";
-	                ramdisk = "ramdisk@1";
+	            ramdisk = "ramdisk@1";
 	        };
 	    };
 	};
