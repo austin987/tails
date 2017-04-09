@@ -1,6 +1,6 @@
 This is about [[!tails_ticket 10972]].
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 Related pages
 =============
@@ -119,9 +119,9 @@ Useful, up-to-date lists of devices can be found there:
 
 ## Drivers
 
-Let's see how current Debian supports ARM Chromebooks.
+### Debian
 
-XXX
+Let's see how current (early 2016) Debian supports ARM Chromebooks.
 
 * Acer Chromebook 13 (CB5), Tegra K1
   - [[!debwiki InstallingDebianOn/Acer/Chromebook_13_CB5-311-T8BT]]
@@ -135,12 +135,42 @@ XXX
 
 * HP Chromebook 14 (some models), Tegra K1
 
-Kali seems to provide one image per supported system
+XXX: update this section with newer information, e.g. after
+we've managed to boot a Debian kernel on an
+[[Acer Chromebook R 13|ARM_platforms/Acer_Chromebook_R_13_CB5-312T]].
+
+### How others handle it
+
+Kali provides one image per supported system
 ([list of images](https://www.offensive-security.com/kali-linux-arm-images/),
 [documentation](http://docs.kali.org/category/kali-on-arm)).
 Their
 [build scripts](https://github.com/offensive-security/kali-arm-build-scripts)
-also display lots of machine-specific variations.
+display lots of machine-specific variations, e.g. kernel version,
+additional drivers and firmware, X.Org and ALSA configuration.
+
+Arch Linux provides
+[one image](https://archlinuxarm.org/about/downloads) per
+[supported board](https://archlinuxarm.org/wiki/Platforms), and indeed
+their installation instructions point to a different rootfs tarball,
+each with a different kernel, e.g. the peach (ChromeOS 3.8 armv7h
+kernel), veyron (ChromeOS 3.14 armv7h kernel), oak (ChromeOS 3.18
+aarch64 kernel) ones. But they also have more generic images, e.g.
+ARMv7 Multi-platform, ARMv7 Chromebook, and ARMv8 AArch64
+Multi-platform ones, that ship with the mainline kernel and a bunch of
+dtb files. It's not clear how doable it would be to create an image
+that works well on devices that have different boards: including all
+the needed dtb files seems easy, but is there a single (e.g. ChromeOS)
+kernel version that has all the needed drivers and firmware?
+
+The [Arch Linux ARM PKGBUILDs repository](https://github.com/archlinuxarm/PKGBUILDs)
+have all their ARM-specific changes. In particular:
+
+* <https://github.com/archlinuxarm/PKGBUILDs/tree/master/alarm>
+  has ARM-specific packages, mostly firmware, drivers and bootloaders
+* <https://github.com/archlinuxarm/PKGBUILDs/tree/master/core/>
+  has the build information for various kernels (including `.its`
+  files, `mkimage` and `vbutil_kernel` command lines)
 
 Bootloader
 ==========
