@@ -1,39 +1,45 @@
 #!/bin/sh
 
+TOR_RC_DEFAULTS=/usr/share/tor/tor-service-defaults-torrc
 TOR_RC=/etc/tor/torrc
 TOR_LOG=/var/log/tor/log
 TOR_DIR=/var/lib/tor
 TOR_DESCRIPTORS=${TOR_DIR}/cached-microdescs
 NEW_TOR_DESCRIPTORS=${TOR_DESCRIPTORS}.new
 
-get_tor_control_socket_path() {
-	local res
-	res=$(sed -n 's/^ControlSocket[[:space:]]\+\(.\+\)$/\1/p' "${TOR_RC}")
-	if [ "${res}" -eq 0 ]; then
-		echo ""
-	elif [ -z "${res}" ] && [ -S /var/run/tor/control ]; then
-		echo /var/run/tor/control
-	else
-		echo "${res}"
-	fi
+tor_rc_lookup() {
+	grep --no-filename "^${1}\s" "${TOR_RC_DEFAULTS}" "${TOR_RC}" | \
+	    sed --regexp-extended "s/^${1}\s+(.+)$/\1/" | tail -n1
+}
+
+tor_control_cookie_path() {
+	local path
+	path="$(tor_rc_lookup CookieAuthFile)"
+	[ -e "${path}" ] && echo "${path}"
 }
 
 tor_control_send() {
-	COOKIE=/var/run/tor/control.authcookie
-	HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
-	/bin/echo -ne "AUTHENTICATE ${HEXCOOKIE}\r\n${1}\r\nQUIT\r\n" | \
-	    socat - UNIX-CONNECT:$(get_tor_control_socket_path) | tr -d "\r"
+	local control_port cookie_path hexcookie
+	control_port="$(tor_rc_lookup ControlPort)"
+	cookie_path="$(tor_control_cookie_path)"
+	if [ -e "${cookie_path}" ] && [ -n "${control_port}" ]; then
+		hexcookie=$(xxd -c 32 -g 0 "${cookie_path}" | cut -d' ' -f2)
+		/bin/echo -ne "AUTHENTICATE ${hexcookie}\r\n${1}\r\nQUIT\r\n" | \
+		    /bin/nc 127.0.0.1 "${control_port}" | tr -d "\r"
+	else
+		return 1
+	fi
 }
 
 # Only handles GETINFO keys with single-line answers
 tor_control_getinfo() {
 	tor_control_send "GETINFO ${1}" | \
-	    sed -n "s|^250-${1}=\(.*\)$|\1|p"
+	    sed --regexp-extended -n "s|^250-${1}=(.*)$|\1|p"
 }
 
 tor_control_getconf() {
 	tor_control_send "GETCONF ${1}" | \
-            sed -n "s|^250 ${1}=\(.*\)$|\1|p"
+            sed --regexp-extended -n "s|^250 ${1}=(.*)$|\1|p"
 }
 
 tor_control_setconf() {
@@ -43,7 +49,7 @@ tor_control_setconf() {
 tor_bootstrap_progress() {
        local res
        res=$(tor_control_getinfo status/bootstrap-phase | \
-                    sed 's/^.* BOOTSTRAP PROGRESS=\([[:digit:]]\+\) .*$/\1/')
+                    sed --regexp-extended 's/^.* BOOTSTRAP PROGRESS=([[:digit:]]+) .*$/\1/')
        echo ${res:-0}
 }
 
