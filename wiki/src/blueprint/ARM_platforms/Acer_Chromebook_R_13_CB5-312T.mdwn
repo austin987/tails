@@ -87,6 +87,11 @@ Partitioning the device:
 
 Below is for a 8 GiB device, adjust if needed.
 
+XXX: the kernel partition is (still) too small for a Stretch kernel +
+the gzip-compressed initrd generated from a running Debian desktop
+system. Compressing it with xz (as instructed below) fixes that, but it
+would be nice to be a bit more generous during the partitioning stage :)
+
 	sudo cgpt add -t kernel -l kernel -b 34 -s 65536 ${DEV}
 	sudo cgpt add -t data -l / -b 65570 -s ${DATA_PART_SIZE} ${DEV}
 	sudo blockdev --rereadpt ${DEV}
@@ -245,35 +250,39 @@ a Debian userspace needs.
 
 ## Kernel approach 2 - Debian's kernel
 
-XXX: the following command installs a kernel that's already signed
-for Secure Boot. Try the `-unsigned` one, in case that signature
-may cause problems with the ChromeOS firmware.
+From inside ChromeOS:
 
-	chroot ${MNT} apt install linux-image-arm64
+	chroot "${MNT:?}" apt install initramfs-tools
+	chroot "${MNT:?}" sed -i'' 's,^COMPRESS=.*,COMPRESS=xz,' \
+	   /etc/initramfs-tools/initramfs.conf
+	chroot "${MNT:?}" apt install linux-image-4.*-arm64-unsigned
 
-We need `mt8173-evb.dtb` but it's not present in Debian's kernel
-because `CONFIG_ARCH_MEDIATEK` is not enabled, so I got it from ubuntu
-xenial's (although I probably should
-compile myself): `linux-image-4.8.0-34-generic_4.8.0-34.36-16.04.1_arm64.deb`.
+Note that we're using the `-unsigned` kernel, in case the Secure Boot
+signature on the signed one causes problems with the ChromeOS firmware.
 
-> I grabbed it from
-> http://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux/linux-image-4.10.0-19-generic_4.10.0-19.21_arm64.deb -- intrigeri
+Then go back to a Debian system, and:
 
-Put it in `${MNT}/boot`.
+	sudo mount ${ROOT_PART} ${MNT}
 
-chroot into `${MNT}`, then:
+We need some `mt8173-*.dtb` compiled device tree descriptors, but
+they are not present in Debian's kernel because `CONFIG_ARCH_MEDIATEK`
+is not enabled. So to start with, we use the ones shipped in Arch Linux
+2017-04 rootfs for "oak" platforms. (Note: Ubuntu
+[includes](http://ports.ubuntu.com/ubuntu-ports/pool/main/l/linux/linux-image-4.10.0-19-generic_4.10.0-19.21_arm64.deb)
+`mt8173-evb.dtb` (evb = "evaluation board"), but that's not enough for
+the system we're testing on.)
 
-	cd /boot
+Put them in `${MNT}/boot/dtbs.archlinux/mediatek/`.
 
-	cat > kernel-initrd.its <<EOF
+Then prepare the FIT (`.itb`) image:
+
+	sudo tee "${MNT:?}/boot/vmlinuz-Debian.its" <<EOF
 	/dts-v1/;
-
 	/ {
-	    description = "Linux kernel image with one or more FDT blobs";
-	    #address-cells = <1>;
+	    description = "Chrome OS kernel image with one or more FDT blobs";
 	    images {
 	        kernel@1{
-	            description = "vmlinuz";
+	            description = "kernel";
 	            data = /incbin/("vmlinuz-4.9.0-2-arm64");
 	            type = "kernel_noload";
 	            arch = "arm64";
@@ -281,10 +290,90 @@ chroot into `${MNT}`, then:
 	            compression = "none";
 	            load = <0>;
 	            entry = <0>;
-            };
+	        };
 	        fdt@1{
-	            description = "dtb";
-	            data = /incbin/("mt8173-evb.dtb");
+	            description = "mt8173-elm-rev0.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-elm-rev0.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@2{
+	            description = "mt8173-elm-rev1.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-elm-rev1.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@3{
+	            description = "mt8173-elm-rev3.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-elm-rev3.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@4{
+	            description = "mt8173-hana-rev0.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-hana-rev0.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@5{
+	            description = "mt8173-oak-rev2.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-oak-rev2.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@6{
+	            description = "mt8173-oak-rev3.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-oak-rev3.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@7{
+	            description = "mt8173-oak-rev4.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-oak-rev4.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@8{
+	            description = "mt8173-oak-rev5.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-oak-rev5.dtb");
+	            type = "flat_dt";
+	            arch = "arm64";
+	            compression = "none";
+	            hash@1{
+	                algo = "sha1";
+	            };
+	        };
+	        fdt@9{
+	            description = "mt8173-oak-rev6.dtb";
+	            data = /incbin/("dtbs.archlinux/mediatek/mt8173-oak-rev6.dtb");
 	            type = "flat_dt";
 	            arch = "arm64";
 	            compression = "none";
@@ -311,22 +400,63 @@ chroot into `${MNT}`, then:
 	            fdt = "fdt@1";
 	            ramdisk = "ramdisk@1";
 	        };
+	        conf@2{
+	            kernel = "kernel@1";
+	            fdt = "fdt@2";
+	            ramdisk = "ramdisk@1";
+	        };
+	        conf@3{
+	            kernel = "kernel@1";
+	            fdt = "fdt@3";
+	            ramdisk = "ramdisk@1";
+	        };
+	        conf@4{
+	            kernel = "kernel@1";
+	            fdt = "fdt@4";
+	            ramdisk = "ramdisk@1";
+	        };
+	        conf@5{
+	            kernel = "kernel@1";
+	            fdt = "fdt@5";
+	            ramdisk = "ramdisk@1";
+	        };
+	        conf@6{
+	            kernel = "kernel@1";
+	            fdt = "fdt@6";
+	            ramdisk = "ramdisk@1";
+	        };
+	        conf@7{
+	            kernel = "kernel@1";
+	            fdt = "fdt@7";
+	            ramdisk = "ramdisk@1";
+	        };
+	        conf@8{
+	            kernel = "kernel@1";
+	            fdt = "fdt@8";
+	            ramdisk = "ramdisk@1";
+	        };
+	        conf@9{
+	            kernel = "kernel@1";
+	            fdt = "fdt@9";
+	            ramdisk = "ramdisk@1";
+	        };
 	    };
 	};
 	EOF
-
-	mkimage -f kernel-initrd.its kernel-initrd.itb
-
-	echo "console=tty1 debug root=/dev/sda2 rw rootwait printk.time=1 nosplash lsm.module_locking=0" > kernel.flags
-
-	vbutil_kernel --pack vmlinuz.signed \
+	sudo mkimage -D "-I dts -O dtb -p 2048" \
+	      -f "${MNT:?}/boot/vmlinuz-Debian.its" \
+	      "${MNT:?}/boot/vmlinuz-Debian.itb" && \
+	echo "console=tty1 init=/sbin/init root=PARTUUID=%U/PARTNROFF=1 rootwait rw nosplash" \
+	   > cmdline.Debian && \
+	dd if=/dev/zero of=bootloader.bin bs=512 count=1 && \
+	sudo vbutil_kernel --pack "${MNT:?}/boot/vmlinuz-Debian.signed" \
 	      --keyblock /usr/share/vboot/devkeys/kernel.keyblock \
 	      --version 1 \
 	      --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk \
-	      --config kernel.flags \
-	      --bootloader kernel.flags \
-	      --vmlinuz kernel-initrd.itb \
-	      --arch arm
+	      --config cmdline.Debian \
+	      --bootloader bootloader.bin \
+	      --vmlinuz "${MNT:?}/boot/vmlinuz-Debian.itb" \
+	      --arch aarch64
 
 **Just for the record**, here's a supposed alternative to above
 `vbutil_kernel` command but it seems to work worse (Ctrl+U at the
@@ -343,9 +473,11 @@ valid device to boot from):
 	    --vmlinuz kernel-initrd.itb \
 	    --pack vmlinuz.signed \
 
-Install the kernel:
+Install the FIT image:
 
-	dd bs=1M if=${MNT}/boot/vmlinuz.signed of=${KERNEL_PART}
+	sudo dd bs=1M if="${MNT:?}/boot/vmlinuz-Debian.signed" \
+	   of="${KERNEL_PART:?}" && \
+	sync
 
 Mark the newly written kernel partition as good and set the
 priority:
@@ -353,14 +485,18 @@ priority:
 	cgpt add -i 1 -S 1 -T 5 -P 12 ${DEV}
 
 The resulting USB stick blinks endlessly after pressing CTRL+U,
-and the backlight remains off. -- intrigeri
-
+and the backlight remains off.
 
 ### Next things to try
 
- * installing the _uncompressed_ kernel
- * Arch Linux'
-   [`.its` file, `mkimage` and `vbutil_kernel` command lines](https://github.com/archlinuxarm/PKGBUILDs/blob/master/core/linux-oak/PKGBUILD#L118)
+ * define `compression` in the `.its` file: the initrd we've tried so
+   far were either gzip- or xz-compressed
+ * [rebuild](https://kernel-handbook.alioth.debian.org/ch-common-tasks.html#s-common-building)
+   the Debian kernel with the `CONFIG_ARCH_MEDIATEK` and
+   `CONFIG_DRM_MEDIATEK` Kconfig options enabled; and while we're at it,
+   get some more inspiration from the
+   [kernel that allowed us to boot Debian on this machine](https://github.com/archlinuxarm/PKGBUILDs/blob/master/core/linux-oak/config),
+   e.g. enable `CONFIG_VIDEO_MEDIATEK_*`, `CONFIG_SND_SOC_MEDIATEK`
 
 ## Kernel approach 3 - custom Chrome OS kernel
 
