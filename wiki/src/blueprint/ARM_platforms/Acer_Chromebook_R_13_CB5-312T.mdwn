@@ -487,6 +487,55 @@ priority:
 The resulting USB stick blinks endlessly after pressing CTRL+U,
 and the backlight remains off.
 
+### Custom Debian kernel
+
+	apt install linux-source libssl-dev
+	cd /usr/src
+	tar xaf linux-source-*.tar.xz
+	cd linux-source-*
+	cp /boot/config-* .config
+	make oldconfig
+	scripts/config --disable DEBUG_INFO
+	scripts/config --enable  ARCH_MEDIATEK
+	scripts/config --enable  DRM_MEDIATEK
+	scripts/config --enable  DRM_MEDIATEK_HDMI
+	scripts/config --enable  VIDEO_MEDIATEK_VPU
+	scripts/config --enable  VIDEO_MEDIATEK_MDP
+	scripts/config --enable  VIDEO_MEDIATEK_VCODEC
+	scripts/config --enable  VIDEO_MEDIATEK_JPEG
+	scripts/config --enable  SND_SOC_MEDIATEK
+	scripts/config --module  SND_SOC_MT8173
+	scripts/config --module  SND_SOC_MT8173_MAX98090
+	scripts/config --module  SND_SOC_MT8173_RT5650
+	scripts/config --module  SND_SOC_MT8173_RT5650_RT5514
+	scripts/config --module  SND_SOC_MT8173_RT5650_RT5676
+	scripts/config --enable  ARM_MT8173_CPUFREQ
+	scripts/config --enable  NET_VENDOR_MEDIATEK
+	scripts/config --enable  I2C_MT65XX
+	scripts/config --enable  SPI_MT65XX
+	scripts/config --enable  PINCTRL_MT8173
+	scripts/config --module  MEDIATEK_MT6577_AUXADC
+	scripts/config --module  MTK_THERMAL
+	scripts/config --module  MEDIATEK_WATCHDOG
+	scripts/config --disable SERIAL_8250_MT6577
+	scripts/config --disable SND_SOC_MT2701
+	scripts/config --enable  USB
+	scripts/config --enable  USB_XHCI_HCD
+	scripts/config --enable  USB_XHCI_MTK
+	scripts/config --enable  PHY_MT65XX_USB3
+	scripts/config --enable  COMMON_CLK_MT8125
+	scripts/config --enable  COMMON_CLK_MT8173
+	scripts/config --enable  MTK_IOMMU
+	scripts/config --enable  MTK_PMIC_WRAP
+	scripts/config --enable  MTK_SCPSYS
+	scripts/config --module  PWM_MTK_DISP
+	scripts/config --module  MTK_EFUSE
+	scripts/config --disable MODULE_SIG_ALL
+	scripts/config --disable MODULE_SIG_KEY and
+	scripts/config --disable SYSTEM_TRUSTED_KEYS
+	make oldconfig
+	make deb-pkg
+
 ### Next things to try
 
  * define `compression` in the `.its` file: the initrd we've tried so
@@ -614,6 +663,8 @@ Then reboot.
 ### Next things to try
 
  * Arch Linux ARMv8 AArch64 Multi-platform rootfs tarball, that ships
-   with a mainline kernel: it'll probably tell us what's the hardware
+   with a mainline kernel
+   ([config](https://github.com/archlinuxarm/PKGBUILDs/tree/master/core/linux-aarch64)):
+   it'll probably tell us what's the hardware
    support level we can possibly get with a Debian kernel (assuming
    all the needed build options are enabled) currently.
