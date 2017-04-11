@@ -51,8 +51,16 @@ install_tor_browser() {
     destination="${2}"
 
     tmp="$(mktemp -d)"
-    tar -xf "${bundle}" -C "${tmp}" tor-browser_en-US
-    prep="${tmp}"/tor-browser_en-US/Browser
+    tar -xf "${bundle}" -C "${tmp}"
+    if [ -d "${tmp}"/tor-browser_en-US ]; then
+        prep="${tmp}"/tor-browser_en-US/Browser
+    elif [ -d "${tmp}"/tor-browser ]; then
+        # TBB nightly builds
+        prep="${tmp}"/tor-browser/Browser
+    else
+        echo "The main bundle's top level directory is wrong" >&2
+        exit 1
+    fi
 
     # Enable our myspell/hunspell dictionaries. TBB only provides the
     # one for en-US, but Debian's seems more comprehensive, so we'll
@@ -164,7 +172,14 @@ TBB_TARBALLS="$(grep "\<tor-browser-linux64-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}
 
 # We'll use the en-US bundle as our basis; only langpacks will be
 # installed from the other bundles.
-MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux64-.*_en-US.tar.xz")"
+MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux64-.*_en-US.tar.xz" || :)"
+NIGHTLY_BUILD=
+if [ -z "${MAIN_TARBALL}" ] && [ "$(echo $TBB_TARBALLS | awk '{ print $2 }')" = 'tor-browser-linux64-tbb-nightly_ALL.tar.xz' ]; then
+    # Except for TBB nightly builds; then there is only one bundle
+    # containing all langbacks
+    MAIN_TARBALL='tor-browser-linux64-tbb-nightly_ALL.tar.xz'
+    NIGHTLY_BUILD=yes
+fi
 TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
 TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
 
@@ -178,7 +193,9 @@ download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 
 mkdir -p "${TBB_EXT}"
-install_langpacks_from_bundles "${TMP}" "${TBB_EXT}"
+if [ "${NIGHTLY_BUILD}" != yes ]; then
+    install_langpacks_from_bundles "${TMP}" "${TBB_EXT}"
+fi
 
 rm -r "${TMP}"
 
