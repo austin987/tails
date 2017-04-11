@@ -574,12 +574,8 @@ the partitioning and debootstrap steps have been done already.
 	          -exec gunzip '{}' \;
 	sudo dd bs=1M if="${MNT:?}/boot/vmlinux.kpart" of="${KERNEL_PART:?}"
 	sync
+	sudo depmod --basedir "${MNT:?}" 3.18.0-6-ARCH
 	sudo umount "${MNT:?}"
-
-Boot from the USB stick, log in as root, and run `depmod` so that the
-kernel modules we have uncompressed (as the version of `kmod` in
-Debian Stretch does not support compressed ones) are indexed.
-Then reboot.
 
 ### Status
 
