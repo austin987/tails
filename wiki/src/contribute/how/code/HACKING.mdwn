@@ -1,4 +1,4 @@
-# Tails hacking
+[[!meta title="Writing code for Tails"]]
 
 Hi, prospective Tails contributor! This document is intended to
 quickly (in 20 minutes!) get you up to speed on how to write code for
@@ -14,7 +14,9 @@ Tails; it will only introduce you how to *write* code for Tails. Once
 you have something to contribute, please read our
 [[extensive instructions for contributors|contribute/how/code]].
 
-## Git branch organization
+[[!toc levels=2]]
+
+# Git branch organization
 
 * `master`: as soon as something is pushed to this branch in Tails
   main git repository, the live Tails' website is rebuilt. This branch
@@ -51,7 +53,7 @@ during the build to determine which packages from Tails APT repo to
 install (see some details about this below).
 
 
-## Important files and directories
+# Important files and directories
 
 Some of the more important files during build, and for running Tails
 sessions, are listed below. In general, just look at the existing
@@ -59,7 +61,7 @@ files or content to understand the format -- we won't explain them
 fully here most of the time.
 
 
-### config/chroot_sources/
+## config/chroot_sources/
 
 The files in here determine which APT repositories to use during
 build, and in the resulting Tails image.
@@ -81,7 +83,7 @@ preferred solution is always to have the packages available in
 Debian.
 
 
-### config/chroot_apt/preferences
+## config/chroot_apt/preferences
 
 The `/etc/apt/preferences` file that will be used during the build
 process, and later copied in to the resulting Tails filesystem. We use
@@ -90,7 +92,7 @@ a package) that is not in the stable Debian release, you will have to
 add a pinning rule in this file in order to make it install.
 
 
-### config/chroot_local-packageslists/tails-common.list
+## config/chroot_local-packageslists/tails-common.list
 
 The primary list of packages to install in Tails. Sometimes extra
 magic has to be done when installing a package, and then we install it
@@ -100,14 +102,14 @@ make sure to add a pinning rule (see `config/chroot_apt/preferences`
 above).
 
 
-### config/chroot_local-packages/
+## config/chroot_local-packages/
 
 If you put a `.deb` here, it will be installed with high priority
 (disregarding the rules in `config/chroot_apt/preferences`). This is
 useful for testing purposes only!
 
 
-### config/base_branch
+## config/base_branch
 
 This encodes which base branch (see above) the current branch is based
 on (the base branches themselves are "based" on themselves). In
@@ -117,7 +119,7 @@ suite will be used). These APT suites are the place where we upload
 all our custom Debian packages.
 
 
-### config/APT_overlays.d/
+## config/APT_overlays.d/
 
 Each file here corresponds to an APT suite on `deb.tails.boum.org` to
 be used. E.g. if we have `config/APT_overlays.d/feature-1234-example`
@@ -131,7 +133,7 @@ Tails releases, and gives us very exact control of which branches gets
 which packages.
 
 
-### config/APT_snapshots.d/
+## config/APT_snapshots.d/
 
 The APT repositories used to install packages during the build process
 are snapshotted several times per day. The files in here simply encode
@@ -146,13 +148,13 @@ changes in `deb.tails.boum.org` (but then you should just merge your
 base branch, and all should be good again).
 
 
-### config/binary_*
+## config/binary_*
 
 These files are about what will happen outside of Tails filesystem, on
 the ISO9660 filesystem of the resulting `.iso` image.
 
 
-### config/chroot_local-includes/
+## config/chroot_local-includes/
 
 These files and directories will be copied into the Tails file system,
 overwriting existing file. This is the main way to include e.g. static
@@ -160,7 +162,7 @@ configurations, custom scripts, and similar things not handled by
 Debian packages.
 
 
-### config/chroot_local-patches/
+## config/chroot_local-patches/
 
 These patches will be applied on `/` of the Tails filesystem right
 after `config/chroot_local-includes/` is copied in. Here we patch
@@ -173,7 +175,7 @@ well as our desired change (and we get build failures as a
 which is nice).
 
 
-### config/chroot_local-hooks/
+## config/chroot_local-hooks/
 
 These scripts will run right after the patches in
 `config/chroot_local-patches/` are applied. Here we can pretty much do
@@ -183,7 +185,7 @@ files (images, configurations, even some scripts), cleaning up
 unneeded files etc.
 
 
-### config/chroot_local-includes/lib/live/config/
+## config/chroot_local-includes/lib/live/config/
 
 These scripts will be run early during Tails' boot process, in lexical
 order. Quite a few of them are installed by the `live-config` package,
@@ -193,14 +195,14 @@ prior to that any reference to it won't work (e.g. in the build-hooks
 in `config/chroot_local-hooks/`).
 
 
-### config/chroot_local-includes/etc/skel/
+## config/chroot_local-includes/etc/skel/
 
 This is the seed for the Live user's (`amnesia` for now) home
 directory. Put static application configuration files ("dot files" and
 "dot dirs") here!
 
 
-### config/chroot_local-includes/usr/share/tails/
+## config/chroot_local-includes/usr/share/tails/
 
 A directory where we dump Tails-specific files with no obvious place
 to live. Generally these are files needed during build (and then we
@@ -208,7 +210,7 @@ clean them up with a build hook) or during Tails operation (e.g. by
 some script).
 
 
-### config/chroot_local-includes/usr/local/
+## config/chroot_local-includes/usr/local/
 
 This is where we put most of the custom scripts shipped in Tails. Some
 honorable mentions are:
@@ -224,7 +226,7 @@ honorable mentions are:
   for "libraries" often included in the above scripts.
 
 
-## Overview of the build process
+# Overview of the build process
 
 The order of how things are applied matters greatly. In terms of the
 files and directories you have learned about above, this is how Tails
@@ -246,7 +248,7 @@ is built, in order:
 9. The ISO9660 filesystem used in the resulting `.iso` image is
    created according to `config/binary_*`.
 
-## Building Tails
+# Building Tails
 
 Just follow the "Using Vagrant" section in our
 [[contribute/build#vagrant]] instruction. Copy-pasting the shell
