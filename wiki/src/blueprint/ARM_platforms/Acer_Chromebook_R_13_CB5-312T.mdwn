@@ -616,6 +616,7 @@ On a Debian arm64 system:
 	cd linux-source-*
 	cp /boot/config-* .config
 	make oldconfig
+	scripts/config --disable EFI_STUB
 	scripts/config --disable DEBUG_INFO
 	scripts/config --enable  ARCH_MEDIATEK
 	scripts/config --enable  DRM_MEDIATEK
@@ -1072,13 +1073,6 @@ steps have been done already.
 Same result as with the Debian kernels, which tends to confirm there's
 something wrong either in the vmlinuz/initrd format, or in the way we
 embed them in the FIT image.
-
-Note that the `Image` file I've used is
-[EFI-stubbed](https://www.kernel.org/doc/Documentation/efi-stub.txt),
-just like the Debian kernels, and this might explain our problems: we
-might have to specify an entry point after the EFI stub, or to remove
-the EFI stub, or to build a custom kernel without that stub,
-or something.
 
 Another idea would be to have the Chromebook's bootloader
 [load our own GRUB](https://wiki.linaro.org/LEG/Engineering/Kernel/GRUBonUBOOT),
