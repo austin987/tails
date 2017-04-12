@@ -189,7 +189,7 @@ regardless of the context it runs in. These strategies are not
 mutually exclusive, and for the sake of pragmatism, the other projects
 who are working on reproducible builds combine them.
 
-We pragmatically expect that we will need to the same: we will
+We pragmatically expect that we will need to do the same: we will
 "freeze" the build context just enough to eliminate most variations
 the build tools cannot cope with in a deterministic manner, and based
 on this we will modify the build process itself, to make it
@@ -224,6 +224,37 @@ It would also be good to make it easy to recreate a build environment
 that's close to a given frozen one. It is out of the scope of this
 first iteration, but we are confident that we can implement the above
 in a way that makes it easy enough to add this property later.
+
+### Implementation details
+
+Following a discussion, we decided to implement it this way as a first iteration:
+
+* We will encode in our Git repo which vagrant basebox should be used to build
+  the ISO. This way we'll be able to use a dedicated basebox for a branch if
+  it needs changes in the build system. The vagrant/Vagrantfile file is
+  probably the right place to do that as it already encode the basebox name,
+  which contains a timestamp almost similar than the one we use for APT
+  snapshots.
+* The basebox APT sources will be configured to use a specific APT snapshot, so
+  that we can freeze the build environment.
+* This APT snapshot will have a long `Valid-Until` field, set to something like 6
+  months.
+* Only the debian-security APT source will be using Debian's APT repository, so
+  that we get security fixes. This will probably not influence the
+  reproducibility of the ISO.
+* We'll update the basebox at every Debian point release. [[!tails_ticket 11982]]
+* A new VM will be created from the basebox for each build. After the build,
+  the VM is destroyed.  [[!tails_ticket 11980]] and [[!tails_ticket 11981]]
+* The VM will encode (in a file) the branch for which it has been created for.
+  The ISO build will abort if the branch being built is not the same as the
+  one for which the VM has been created initially.
+* To ensure that the `apt-cacher-ng` cache is not lost when the VM is destroyed,
+  it will be moved in a dedicated virtual disk, and plugged into every new VM.
+  In our Jenkins setup we will instead use the `apt-cacher-ng` we have to share
+  the APT cache between build VMs and save disk space. [[!tails_ticket 11979]]
+
+* In a later iteration, we could add an option so that the VM is kept running
+  and reused for subsequent builds of the same branch.
 
 ## Make Tails ISO build in a reproducible manner
 
@@ -346,45 +377,6 @@ such as:
    to them.
 
 # Various ideas
-
-## Static build environment
-
-Currently we try to keep our build system up-to-date, but that can
-introduce subtle problems in the context of building
-reproducibly. What if some bugfix, e.g. in `mksquashfs`, slightly
-changes some output that
-will end up in our image? Hence it seems we'll avoid a lot of problems
-if we fix the build environment.
-
-We could get this for our current Vagrant-based build system by
-leveraging our freezable APT repo: a normal `rake build` doesn't try
-to be reproducible -- it uses a VM with normal upgrades just like now.
-However, we add an option to make a build reproducible, which then
-creates a new builder VM from the basebox, and uses some frozen APT
-suite whose serial is encoded in Git to provision it.
-
-Initially we could easily use time-based snapshots, making Tails
-builds reproducible until the snapshot expires (six weeks? we have
-tools to adjust expiration date, so we can pick whatever duration we
-want, taking into account hardware resources and actual usefulness), but it
-could be extended to infinity if we could generate a manifest of which
-packages the builder VM needs and put them in a tagged partial APT
-snapshot. If we then also host our baseboxes somewhere indefinitely
-(so not the mirrors probably) Tails can be built reproducibly as long
-as our infra remains operational.
-
-A variant of this is that we always do reproducible builds, and then
-always have our build system use some tagged partial APT snapshot and
-that we update this (via making a new snapshot and encode its name
-in Git) regularly (e.g. when there's a security update). We may even
-be able to automate parts of this (e.g. Jenkins publishes a branch
-pointing to an updated snapshot *it* generated, that we then can merge
-into all branches). If we go with this approach we have to deal with the
-case where a branch modifies the build VM (e.g. by installing some
-extra build dependency) -- in this case the work flow probably has to
-be that a new VM is created, because we do not want to have to deal
-with re-installing the correct versions when switching between
-branches.
 
 ## Debian (or nothing!) as trust anchor when building Tails
 
