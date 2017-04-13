@@ -437,7 +437,7 @@ def box_name(vagrantfile_contents = open('vagrant/Vagrantfile') { |f| f.read })
 end
 
 def has_box?(name = box_name)
-  !!capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/)
+  not(capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/).empty?)
 end
 
 def domain_name(name = box_name)
