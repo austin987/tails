@@ -514,6 +514,9 @@ task :test do
   run_command('./run_test_suite', *args)
 end
 
+desc 'Clean up all build related files'
+task :clean_all => ['vm:destroy', 'basebox:clean_all']
+
 namespace :vm do
   desc 'Start the build virtual machine'
   task :up => ['parse_build_options', 'validate_http_proxy', 'setup_environment'] do
