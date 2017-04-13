@@ -598,11 +598,20 @@ namespace :basebox do
     Date.parse(/^tails-builder-[^-]+-[^-]+-(\d{8})/.match(box)[1])
   end
 
+  def baseboxes
+    capture_vagrant('box', 'list').first.lines
+      .grep(/^tails-builder-.*/)
+      .map { |x| x.chomp.sub(/\s.*$/, '') }
+  end
+
+  desc 'Remove all base boxes'
+  task :clean_all do
+    baseboxes.each { |box| run_vagrant('box', 'remove', '--force', box) }
+  end
+
   desc 'Remove all base boxes older than six months'
   task :clean_old do
-    boxes = capture_vagrant('box', 'list').first.lines
-            .grep(/^tails-builder-.*/)
-            .map { |x| x.chomp.sub(/\s.*$/, '') }
+    boxes = baseboxes
     # We always want to keep the newest basebox
     boxes.sort! { |a, b| basebox_date(a) < basebox_date(b) }
     boxes.pop
