@@ -15,9 +15,6 @@ else
 	fi
 fi
 
-# Store basebox serial before regenerating APT sources
-stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
-
 latest_serial(){
 	local archive="${1}"
         get_serial="$(
@@ -47,6 +44,7 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
 fi
 
 # Always set the latest serial for debian-security
+stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
 security_serial="$(latest_serial debian-security)"
 sed -i -e "s/${stable_serial}/${security_serial}/g" /etc/apt/sources.list.d/jessie-updates.list
 
