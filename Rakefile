@@ -519,24 +519,10 @@ task :clean_all => ['vm:destroy', 'basebox:clean_all']
 
 namespace :vm do
   desc 'Start the build virtual machine'
-  task :up => ['parse_build_options', 'validate_http_proxy', 'setup_environment'] do
+  task :up => ['parse_build_options', 'validate_http_proxy', 'setup_environment', 'basebox:create'] do
     case vm_state
     when :not_created
       clean_up_builder_vms
-      unless has_box?
-        $stderr.puts <<-END_OF_MESSAGE.gsub(/^          /, '')
-
-          This is the first time that the Tails builder virtual machine is
-          started. The virtual machine template is about 250 MB to download,
-          so the process might take some time.
-
-          Please remember to shut the virtual machine down once your work on
-          Tails is done:
-
-              $ rake vm:halt
-
-        END_OF_MESSAGE
-      end
     end
     begin
       run_vagrant('up')
@@ -569,33 +555,29 @@ end
 
 namespace :basebox do
 
-  desc 'Generate a new base box'
+  desc 'Create and import the base box unless already done'
   task :create do
-    debian_snapshot_serial =
-      `auto/scripts/apt-snapshots-serials cat debian`.chomp.split.last
-    raise 'invalid serial' unless /^\d{10}$/.match(debian_snapshot_serial)
-    box_dir = VAGRANT_PATH + '/definitions/tails-builder'
-    Dir.chdir(box_dir) do
-      `./generate-tails-builder-box.sh #{debian_snapshot_serial}`
-      raise 'Base box generation failed!' unless $?.success?
-    end
-    box = Dir.glob("#{box_dir}/*.box").sort_by {|f| File.mtime(f) } .last
+    next if has_box?
     $stderr.puts <<-END_OF_MESSAGE.gsub(/^      /, '')
 
-      You have successfully generated a new Vagrant base box:
-
-          #{box}
-
-      To install the new base box, please run:
-
-          $ vagrant box add #{box}
-
-      To actually make Tails build using this base box, the `config.vm.box` key
-      in `vagrant/Vagrantfile` has to be updated. Please check the documentation
-      for details.
+      This is the first time we are using this Vagrant base box so we
+      will have to bootstrap by building it from scratch. This will
+      take around 20 minutes (depending on your hardware) plus the
+      time needed for downloading around 250 MiB of Debian packages.
 
     END_OF_MESSAGE
-  end
+    # args will be either [serial] or [serial, comment]
+    args = /^tails-builder-(?:[^-]+)-(?:[^-]+)-(\d{10})(?:-(.+))?$/.match(box_name)[1,2].select { |m| not(m.nil?) }
+    box_dir = VAGRANT_PATH + '/definitions/tails-builder'
+    Dir.chdir(box_dir) do
+      run_command('./generate-tails-builder-box.sh', *args)
+    end
+    # Let's use an absolute path since run_vagrant changes the working
+    # directory but File.delete doesn't
+    box_path = "#{Dir.pwd}/vagrant/definitions/tails-builder/#{box_name}.box"
+    run_vagrant('box', 'add', '--name', box_name, box_path)
+    File.delete(box_path)
+    end
 
   def basebox_date(box)
     Date.parse(/^tails-builder-[^-]+-[^-]+-(\d{8})/.match(box)[1])
