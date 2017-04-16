@@ -28,23 +28,9 @@ def wait_and_focus(img, time = 10, window)
 end
 
 def focus_pidgin_irc_conversation_window(account)
-  if account == 'I2P'
-    # After connecting to Irc2P messages are sent from services. Most of the
-    # time the services will send their messages right away. If there's lag we
-    # may in fact join the channel _before_ the message is received. We'll look
-    # for a message from InfoServ first then default to looking for '#i2p'
-    try_for(20) do
-      begin
-        $vm.focus_window('InfoServ')
-      rescue ExecutionFailedInVM
-        $vm.focus_window('#i2p')
-      end
-    end
-  else
-    account = account.sub(/^irc\./, '')
-    try_for(20) do
-      $vm.focus_window(".*#{Regexp.escape(account)}$")
-    end
+  account = account.sub(/^irc\./, '')
+  try_for(20) do
+    $vm.focus_window(".*#{Regexp.escape(account)}$")
   end
 end
 
@@ -204,8 +190,9 @@ end
 
 def configured_pidgin_accounts
   accounts = Hash.new
-  xml = REXML::Document.new($vm.file_content('$HOME/.purple/accounts.xml',
-                                             LIVE_USER))
+  xml = REXML::Document.new(
+    $vm.file_content("/home/#{LIVE_USER}/.purple/accounts.xml")
+  )
   xml.elements.each("account/account") do |e|
     account   = e.elements["name"].text
     account_name, network = account.split("@")
@@ -244,13 +231,6 @@ def chan_image (account, channel, image)
         'welcome'          => 'PidginTailsChannelWelcome',
       }
     },
-    'I2P' => {
-      '#i2p'    => {
-        'roster'           => 'PidginI2PChannelEntry',
-        'conversation_tab' => 'PidginI2PConversationTab',
-        'welcome'          => 'PidginI2PChannelWelcome',
-      }
-    }
   }
   return images[account][channel][image] + ".png"
 end
@@ -258,13 +238,12 @@ end
 def default_chan (account)
   chans = {
     'conference.riseup.net' => 'tails',
-    'I2P'          => '#i2p',
   }
   return chans[account]
 end
 
 def pidgin_otr_keys
-  return $vm.file_content('$HOME/.purple/otr.private_key', LIVE_USER)
+  return $vm.file_content("/home/#{LIVE_USER}/.purple/otr.private_key")
 end
 
 Given /^Pidgin has the expected accounts configured with random nicknames$/ do
@@ -286,10 +265,6 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
   end
   assert(expected.empty?, "These Pidgin accounts are not configured: " +
          "#{expected}")
-end
-
-When /^I start Pidgin through the GNOME menu$/ do
-  step 'I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu'
 end
 
 When /^I open Pidgin's account manager window$/ do
@@ -347,8 +322,7 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       deactivate_and_activate_pidgin_account(account)
     end
   end
-  retrier_method = account == 'I2P' ? method(:retry_i2p) : method(:retry_tor)
-  retrier_method.call(recovery_on_failure) do
+  retry_tor(recovery_on_failure) do
     begin
       $vm.focus_window('Buddy List')
     rescue ExecutionFailedInVM
@@ -433,7 +407,7 @@ end
 
 def pidgin_add_certificate_from (cert_file)
   # Here, we need a certificate that is not already in the NSS database
-  step "I copy \"/usr/share/ca-certificates/spi-inc.org/spi-cacert-2008.crt\" to \"#{cert_file}\" as user \"amnesia\""
+  step "I copy \"/usr/share/ca-certificates/mozilla/CNNIC_ROOT.crt\" to \"#{cert_file}\" as user \"amnesia\""
 
   $vm.focus_window('Buddy List')
   @screen.wait_and_click('PidginToolsMenu.png', 10)
@@ -492,4 +466,5 @@ end
 
 When /^I click on the Tails roadmap URL$/ do
   @screen.click('PidginTailsRoadmapUrl.png')
+  try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
 end

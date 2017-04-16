@@ -74,12 +74,13 @@ and then update `debian/changelog` again if needed.
 
 Commit `debian/changelog`:
 
-        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')
+        git commit debian/changelog \
+            -m "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))
 
 Git-Dch: Ignore
 "
 
-Build a Debian package (use a Jessie/i386 chroot):
+Build a Debian package (use a Jessie/amd64 chroot):
 
     gbp buildpackage
 

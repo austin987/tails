@@ -5,7 +5,7 @@ pref("extensions.update.enabled", false);
 // Disable fetching of the new tab page's Tiles links/ads. Ads are
 // generally unwanted, and also the fetching is a "phone home" type of
 // feature that generates traffic at least the first time the browser
-// is started. It won't work in e.g. the I2P Browser, too.
+// is started.
 pref("browser.newtabpage.directory.source", "");
 pref("browser.newtabpage.directory.ping", "");
 // ... and disable the explanation shown the first time

@@ -325,16 +325,9 @@ activate_volumes ()
 		fi
 	done
 
+	# Migrate persistence settings
 	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
-		# Migrate Squeeze-era NetworkManager persistence setting to Wheezy.
-		migrate_persistence_preset '/home/amnesia/.gconf/system/networking/connections' 'nm-connections' \
-			'/etc/NetworkManager/system-connections' 'nm-system-connections' "$conf"
-		# disable pre-Wheezy NM persistence setting
-		sed -r -i \
-			-e 's,^(/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections)$,#\1,' \
-			"$conf"
-
 		# Migrate Claws-mail persistence setting to Icedove
 		migrate_persistence_preset '/home/amnesia/.claws-mail' 'claws-mail' \
 			'/home/amnesia/.icedove' 'icedove' "$conf"
@@ -382,6 +375,31 @@ activate_volumes ()
 		umask "$OLD_UMASK"
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
+
+	# Update persistent GnuPG configuration for Stretch
+	if mountpoint --quiet /home/amnesia/.gnupg ; then
+		# Install current dirmngr.conf if there is no persistent one
+		if [ ! -e /home/amnesia/.gnupg/dirmngr.conf ]
+		then
+			install --owner amnesia --group amnesia --mode 0600 \
+			        /etc/skel/.gnupg/dirmngr.conf \
+			        /home/amnesia/.gnupg/dirmngr.conf \
+			|| warning "Could not install dirmngr.conf"
+		fi
+		# Disable gpg.conf settings that either are obsolete,
+		# or would break communication with keyservers
+		if [ -e /home/amnesia/.gnupg/gpg.conf ]
+		then
+			obsolete_keyserver_options_str='http-proxy|ca-cert-file'
+			obsolete_keyserver_options_bool='no-try-dns-srv|no-honor-keyserver-url'
+			sed -i --regexp-extended \
+			    "s/^(keyserver\s+)/#\1/ ; \
+			     s/^(keyserver-options\s+($obsolete_keyserver_options_str)=)/\#\\1/ ; \
+			     s/^(keyserver-options\s+($obsolete_keyserver_options_bool))\$/\#\\1/" \
+			    /home/amnesia/.gnupg/gpg.conf \
+			|| warning "Could not update gpg.conf"
+		fi
+	fi
 
 	for vol in ${open_volumes}
 	do

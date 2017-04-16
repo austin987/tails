@@ -18,32 +18,6 @@ def checkpoints
       ],
     },
 
-    'with-no-network-and-i2p' => {
-      :temporary => true,
-      :description => 'I have started Tails from DVD with I2P enabled and logged in',
-      :steps => [
-        'I set Tails to boot with options "i2p"',
-        'the network is unplugged',
-        'I start the computer',
-        'the computer boots Tails',
-        'I log in to a new session',
-      ],
-    },
-
-    'with-network-and-i2p' => {
-      :temporary => true,
-      :description => 'I have started Tails from DVD with I2P enabled and logged in and the network is connected',
-      :parent_checkpoint => "with-no-network-and-i2p",
-      :steps => [
-        'the network is plugged',
-        'Tor is ready',
-        'I2P is running',
-        'all notifications have disappeared',
-        'available upgrades have been checked',
-        "I2P's reseeding completed",
-      ],
-    },
-
     'with-network-logged-in' => {
       :description => "I have started Tails from DVD and logged in and the network is connected",
       :parent_checkpoint => "no-network-logged-in",
@@ -60,7 +34,6 @@ def checkpoints
       :description => "I have started Tails from DVD without network and logged in with bridge mode enabled",
       :parent_checkpoint => "tails-greeter",
       :steps => [
-        'I enable more Tails Greeter options',
         'I enable the specific Tor configuration option',
         'I log in to a new session',
         'all notifications have disappeared',
@@ -72,7 +45,6 @@ def checkpoints
       :description => "I have started Tails from DVD without network and logged in with an administration password",
       :parent_checkpoint => "tails-greeter",
       :steps => [
-        'I enable more Tails Greeter options',
         'I set an administration password',
         'I log in to a new session',
       ],
@@ -96,7 +68,7 @@ def checkpoints
       :steps => [
         'I create a 4 GiB disk named "__internal"',
         'I plug USB drive "__internal"',
-        'I "Clone & Install" Tails to USB drive "__internal"',
+        'I "Install by cloning" Tails to USB drive "__internal"',
         'the running Tails is installed on USB drive "__internal"',
         'there is no persistence partition on USB drive "__internal"',
         'I shutdown Tails and wait for the computer to power off',
@@ -169,12 +141,12 @@ def reach_checkpoint(name)
       post_snapshot_restore_hook
     end
     debug_log(scenario_indent + "Checkpoint: #{checkpoint_description}",
-              :color => :white)
+              color: :white, timestamp: false)
     step_action = "Given"
     if parent_checkpoint
       parent_description = checkpoints[parent_checkpoint][:description]
       debug_log(step_indent + "#{step_action} #{parent_description}",
-                :color => :green)
+                color: :green, timestamp: false)
       step_action = "And"
     end
     steps.each do |s|
@@ -183,10 +155,11 @@ def reach_checkpoint(name)
       rescue Exception => e
         debug_log(scenario_indent +
                   "Step failed while creating checkpoint: #{s}",
-                  :color => :red)
+                  color: :red, timestamp: false)
         raise e
       end
-      debug_log(step_indent + "#{step_action} #{s}", :color => :green)
+      debug_log(step_indent + "#{step_action} #{s}",
+                color: :green, timestamp: false)
       step_action = "And"
     end
     $vm.save_snapshot(name)

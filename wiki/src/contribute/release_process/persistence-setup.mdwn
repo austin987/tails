@@ -59,12 +59,13 @@ Update `debian/changelog`:
 
 Commit `debian/changelog`:
 
-        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')
+        git commit debian/changelog \
+            -m "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))
 
 Git-Dch: Ignore
 "
 
-Build a Debian package (use a Jessie/i386 chroot, that
+Build a Debian package (use a Jessie/amd64 chroot, that
 has 1. either tails-perl5lib installed, or the Tails APT repository
 configured; and 2. `jessie-backports` APT sources configured):
 
