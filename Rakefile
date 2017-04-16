@@ -67,7 +67,7 @@ end
 def run_command(*args)
   Process.wait Kernel.spawn(*args)
   if $?.exitstatus != 0
-    raise CommandError.new("command #{command} failed with exit status " +
+    raise CommandError.new("command #{args} failed with exit status " +
                            "%{status}", status: $?.exitstatus)
   end
 end
