@@ -35,6 +35,10 @@ if [ ! -e "${DEBOOTSTRAP_GNUPG_PUBRING}" ]; then
     DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.gpg"
 fi
 
+# vmdebootstrap will fail if some of the files it wants to create
+# already exists
+rm -f "${TARGET_NAME}".*
+
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
      LC_ALL=${LC_ALL} \
      ARCHITECTURE=${ARCHITECTURE} \
