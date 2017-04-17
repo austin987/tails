@@ -17,6 +17,7 @@ systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
 systemctl enable tor-controlport-filter.service
+systemctl enable var-tmp.mount
 
 # Enable our own systemd user unit files
 systemctl --global enable tails-add-GNOME-bookmarks.service
