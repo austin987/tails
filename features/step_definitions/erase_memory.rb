@@ -20,11 +20,6 @@ Given /^udev-watchdog is monitoring the correct device$/ do
   assert_equal(udev_watchdog_monitored_device, boot_device)
 end
 
-def which_kernel
-  kernel_path = $vm.execute_successfully("tails-get-bootinfo kernel").stdout.chomp
-  return File.basename(kernel_path)
-end
-
 def used_ram_in_MiB
   return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
 end
