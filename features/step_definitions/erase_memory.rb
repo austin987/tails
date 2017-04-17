@@ -55,7 +55,7 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   patterns_m = convert_to_MiB(patterns_b, 'b')
   coverage = patterns_b.to_f/reference_memory_b
   puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
-       "(out of #{reference_memory_m} MiB reference memory)"
+       "out of #{reference_memory_m} MiB reference memory)"
   return coverage
 end
 
