@@ -1,8 +1,61 @@
 tails (3.0~beta4) UNRELEASED; urgency=medium
 
-  * Dummy entry.
+  * All changes brought by Tails 2.12.
 
- -- Tails developers <tails@boum.org>  Mon, 20 Mar 2017 14:03:41 +0100
+  * Security improvements
+    - Enable the buddy page allocator free poisoning (Closes: #12089).
+    - Enable slub/slab allocator free poisoning (Closes: #12090).
+
+  * Minor improvements
+    - Firewall: forbid the _apt user to talk to DNS ports. APT works very well
+      without DNS access since we only have Onion APT sources, so let's silence
+      the logs.
+    - Replace Pidgin's "systray" icon with the guifications plugin
+      (Closes: #11741). We're trying to remove as much as we can from
+      the set of icons managed by TopIcons extension flavours, in the hope
+      it's enough to cancel the problems we've seen with them (#10576, #11737).
+    - Disable apt-daily.timer, that can only cause problems in our context
+      (Closes: #12390).
+    - Do not let pppd-dns manage /etc/resolv.conf (Closes: #12401).
+    - Ensure rootless X.Org can access /dev/fb0 when started by GDM.
+    - Include the amdgpu module in the initramfs (refs: #12218).
+    - Tails Greeter: don't mention 'firewall' anymore (#12382).
+    - Tails Greeter: avoid the popover menu for Formats being cut,
+      in most cases (Closes: #12249).
+    - Tails Greeter: disable the screensaver (Closes: #12370).
+    - Tails Greeter: fix behavior when pressing Enter in the language selection
+      menu (Closes: #12359).
+
+  * Bugfixes
+    - Install speech-dispatcher-espeak-ng to fix the Orca screen reader
+      (Closes: #12389).
+    - Install xserver-xorg-video-intel and use it on a few graphics adapters
+      that are not supported correctly by the modesetting driver (refs: #12219).
+      More PCI IDs will be added as new affected hardware is reported.
+
+  * Test suite
+    - Run on a Q35 2.8 machine (Closes: #11605).
+    - Deprecate xtightvncviewer in favor of tigervnc-viewer.
+    - Test the Unsafe Browser in 3 random supported languages, not all.
+      This should be enough to identify most future regressions in this area,
+      and will be much faster than testing them all.
+    - Pidgin tests: switch to an image that doesn't depend on the
+      topic of tails@conference.riseup.net.
+    - Fix a problematic use of try_for.
+    - Fix VM.select_virtual_desktop() and VM.do_focus().
+    - Random Gherkin improvements.
+    - Fix a focus issue for GNOME Terminal vs. Tails Installer.
+    - Adjust to kernel memory poisoning being enabled, which breaks the way
+      we used to test memory erasure (refs: #12354):
+      · Drop "no memory erasure" and "memory erasure" tests, that can't work
+        anymore.
+      · Test erasure of memory freed by a killed userspace process.
+      · Test that memory poisoning applies to unmounted tmpfs.
+      · Test that memory poisoning applies to read and write cache
+        for unmounted vfat and LUKS-encrypted ext4.
+      · Run erase_memory a bit later, it requires less disk space nowadays.
+
+ -- Tails developers <tails@boum.org>  Mon, 17 Apr 2017 17:37:04 +0000
 
 tails (2.12) UNRELEASED; urgency=medium
 
