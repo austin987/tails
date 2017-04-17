@@ -8,7 +8,7 @@ def udev_watchdog_monitored_device
   ps_output_scan = ps_output.scan(/^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/)
   assert_equal(ps_output_scan.count, 1, "There should be one udev-watchdog running.")
   monitored_out = ps_output_scan.flatten[0]
-  assert(!monitored_out.nil?)
+  assert_not_nil(monitored_out)
   monitored_device_id = $vm.file_content('/sys' + monitored_out + '/dev').chomp
   monitored_device =
     $vm.execute_successfully(
@@ -138,8 +138,8 @@ end
 
 def assert_filesystem_is_full(mountpoint)
   avail_space = avail_space_in_mountpoint_kB(mountpoint)
-  assert(
-    avail_space == 0,
+  assert_equal(
+    0, avail_space,
     "#{avail_space} kB is still free on #{mountpoint}," +
     "while this filesystem was expected to be full"
   )
