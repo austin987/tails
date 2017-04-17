@@ -112,13 +112,15 @@ fi
 
 install -m 0755 -d "$ARTIFACTS_DIR"
 
-as_root_do timedatectl set-ntp true
-echo -n "Waiting for the time to be synchronized..."
-while ! ntp_synchronized; do
-	sleep 1
-	echo -n "."
-done
-echo " done."
+if [ "${TAILS_OFFLINE_MODE}" != 1 ]; then
+	as_root_do timedatectl set-ntp true
+	echo -n "Waiting for the time to be synchronized..."
+	while ! ntp_synchronized; do
+		sleep 1
+		echo -n "."
+	done
+	echo " done."
+fi
 if [ -n "$TAILS_DATE_OFFSET" ]; then
 	as_root_do timedatectl set-ntp false
 	DESIRED_DATE=$(date --utc --date="${TAILS_DATE_OFFSET} days" '+%F %T')
