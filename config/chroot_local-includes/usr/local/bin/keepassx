@@ -26,12 +26,14 @@ prompt_for_database_renaming() {
 }
 
 # There's a migrated DB named 'New database' => rename it before opening it:
-if [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
+if mountpoint -q "$PERSISTENT_DATA_DIR" && \
+    [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
     mv "$MIGRATED_DB" "$NEW_DB"
     /usr/bin/keepassx "$NEW_DB"
 
 # New database file is not named keepassx.kdbx, prompt for renaming it.
-elif ! [ -e "${NEW_DB}" ] && \
+elif mountpoint -q "$PERSISTENT_DATA_DIR" && \
+    ! [ -e "${NEW_DB}" ] && \
     [ "$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ]; then
     user_db="$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
     if prompt_for_database_renaming; then
