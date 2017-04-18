@@ -27,37 +27,37 @@ prompt_for_database_renaming() {
 
 # There's a migrated DB named 'New database' => rename it before opening it:
 if [ -e "$MIGRATED_DB" ] && ! [ -e "$NEW_DB" ]; then
-	mv "$MIGRATED_DB" "$NEW_DB"
-	/usr/bin/keepassx "$NEW_DB"
+    mv "$MIGRATED_DB" "$NEW_DB"
+    /usr/bin/keepassx "$NEW_DB"
 
 # New database file is not named keepassx.kdbx, prompt for renaming it.
 elif [ "$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ] && \
-	[ "$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name 'keepassx.kdbx' 2>/dev/null | wc -l)" = "0" ]; then
-	user_db="$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
-	if prompt_for_database_renaming; then
-		mv "${user_db}" "${NEW_DB}"
-		/usr/bin/keepassx "${NEW_DB}"
-	else
-		/usr/bin/keepassx "${user_db}"
-	fi
+    [ "$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name 'keepassx.kdbx' 2>/dev/null | wc -l)" = "0" ]; then
+    user_db="$(find $PERSISTENT_DATA_DIR -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
+    if prompt_for_database_renaming; then
+        mv "${user_db}" "${NEW_DB}"
+        /usr/bin/keepassx "${NEW_DB}"
+    else
+        /usr/bin/keepassx "${user_db}"
+    fi
 
 # There's an old DB but no new one => import the old DB:
 elif mountpoint -q "$PERSISTENT_DATA_DIR" \
-      && ! [ -e "$NEW_DB" ] \
-      &&   [ -e "$OLD_DB" ]; then
+    && ! [ -e "$NEW_DB" ] \
+    &&   [ -e "$OLD_DB" ]; then
 
-	# Ensure $PERSISTENT_DATA_DIR is pre-selected for saving
-	# the migrated database
-	cd "$PERSISTENT_DATA_DIR"
+    # Ensure $PERSISTENT_DATA_DIR is pre-selected for saving
+    # the migrated database
+    cd "$PERSISTENT_DATA_DIR"
 
-	# Trigger the migration from the old KeePassX database to the new format
-	# used in KeePassX 2.0.x.
-	/usr/bin/keepassx "$OLD_DB"
+    # Trigger the migration from the old KeePassX database to the new format
+    # used in KeePassX 2.0.x.
+    /usr/bin/keepassx "$OLD_DB"
 
-	# Avoid the user being prompted to open the old DB on next run.
-	mv "$OLD_DB" "${OLD_DB}.bak"
+    # Avoid the user being prompted to open the old DB on next run.
+    mv "$OLD_DB" "${OLD_DB}.bak"
 
 # Default case:
 else
-	/usr/bin/keepassx "$@"
+    /usr/bin/keepassx "$@"
 fi
