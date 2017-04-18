@@ -51,6 +51,15 @@ repository used to prepare the release (typically `stable` or `testing`):
 
     export TAILS_GIT_CHECKOUT=XXX
 
+Export source date epoch:
+
+    export SOURCE_DATE_EPOCH=$(date \
+       --utc \
+       --date="$(dpkg-parsechangelog \
+                    --file "$TAILS_GIT_CHECKOUT/debian/changelog" \
+                    --show-field=Date)" \
+       +%s)
+
 Update version number in `bin/tails-create-iuk`, commit all files that
 need to be.
 
