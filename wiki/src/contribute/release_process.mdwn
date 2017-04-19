@@ -534,8 +534,8 @@ suite should be ready, so it is time to:
   
       git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
               -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-      git push origin "${RELEASE_BRANCH:?}" && \
-      git push --tags --force
+      git push --tags --force && \
+      git push origin "${RELEASE_BRANCH:?}"
 
 * check out the release tag:
 
@@ -545,8 +545,8 @@ suite should be ready, so it is time to:
 
 * compare the new build manifest with the one from the previous,
   almost final build; they should be identical, except that the
-  `debian-security` serial/reference might be higher. To ensure we get
-  the final build's .build-manifest, please run:
+  `debian-security` serial might be higher. To ensure we publish
+  the final build's `.build-manifest`, please run:
 
       export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
@@ -1083,11 +1083,6 @@ this release.
 Remember that ticket expressions, e.g. `[[!tails_ticket 1234]]`, can
 span several lines, so finding the ones reported by the above code
 *might* be harder than `git grep "tails_ticket 1234"`.
-
-XMPP
-----
-
-Update the topic in our [[chatroom|chat]].
 
 Twitter
 -------
