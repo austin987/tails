@@ -125,11 +125,6 @@ def retry_tor(recovery_proc = nil, &block)
                :operation_name => 'Tor operation', &block)
 end
 
-def retry_i2p(recovery_proc = nil, &block)
-  retry_action(15, :recovery_proc => recovery_proc,
-               :operation_name => 'I2P operation', &block)
-end
-
 def retry_action(max_retries, options = {}, &block)
   assert(max_retries.is_a?(Integer), "max_retries must be an integer")
   options[:recovery_proc] ||= nil
@@ -156,16 +151,13 @@ def retry_action(max_retries, options = {}, &block)
   end
 end
 
+class TorBootstrapFailure < StandardError
+end
+
 def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
-rescue Timeout::Error => e
-  c = $vm.execute("journalctl SYSLOG_IDENTIFIER=restart-tor")
-  if c.success?
-    debug_log("From the journal:\n" + c.stdout.sub(/^/, "  "))
-  else
-    debug_log("Nothing was in the journal about 'restart-tor'")
-  end
-  raise e
+rescue Timeout::Error
+  raise TorBootstrapFailure.new('Tor failed to bootstrap')
 end
 
 def convert_bytes_mod(unit)

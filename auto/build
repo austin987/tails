@@ -57,6 +57,7 @@ echo "POTFILES_DOT_IN='$(
 
 # fix permissions on some source files that will be copied as is to the chroot.
 # they may be wrong, e.g. if the Git repository was cloned with a strict umask.
+chown    0:0   config/chroot_local-includes/etc/resolv.conf
 chmod -R go+rX config/binary_local-includes/
 chmod -R go+rX config/chroot_local-includes/etc
 chmod    0440  config/chroot_local-includes/etc/sudoers.d/*
@@ -87,7 +88,14 @@ DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --no-merged-usr"
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "$DEBOOTSTRAP_GNUPG_HOMEDIR" \
     --import config/chroot_sources/tails.chroot.gpg
-DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
+if [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg" ]; then
+    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
+elif [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx" ]; then
+    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx"
+else
+   fatal "No debootstrap GnuPG keyring was created."
+fi
+DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_KEYRING"
 
 export DEBOOTSTRAP_OPTIONS
 
