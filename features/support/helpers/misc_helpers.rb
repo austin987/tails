@@ -157,16 +157,13 @@ end
 
 alias :retry_times :retry_action
 
+class TorBootstrapFailure < StandardError
+end
+
 def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
-rescue Timeout::Error => e
-  c = $vm.execute("journalctl SYSLOG_IDENTIFIER=restart-tor")
-  if c.success?
-    debug_log("From the journal:\n" + c.stdout.sub(/^/, "  "))
-  else
-    debug_log("Nothing was in the journal about 'restart-tor'")
-  end
-  raise e
+rescue Timeout::Error
+  raise TorBootstrapFailure.new('Tor failed to bootstrap')
 end
 
 def convert_bytes_mod(unit)
