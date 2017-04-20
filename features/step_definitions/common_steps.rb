@@ -30,13 +30,16 @@ def post_snapshot_restore_hook
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  $vm.host_to_guest_time_sync
-  if $vm.execute("systemctl --quiet is-active tor@default.service").success?
-    $vm.execute("systemctl stop tor@default.service")
-    $vm.execute("rm -f /var/log/tor/log")
-    $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
-    $vm.spawn("restart-tor")
-    wait_until_tor_is_working
+  if $vm.has_network?
+    if $vm.execute("systemctl --quiet is-active tor@default.service").success?
+      $vm.execute("systemctl stop tor@default.service")
+      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
+      $vm.host_to_guest_time_sync
+      $vm.execute("systemctl start tor@default.service")
+      wait_until_tor_is_working
+    end
+  else
+    $vm.host_to_guest_time_sync
   end
 end
 
@@ -950,6 +953,57 @@ def share_host_files(files)
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
   return mount_dir
+end
+
+def mount_USB_drive(disk, fs)
+  @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
+  dev = $vm.disk_dev(disk)
+  partition = dev + '1'
+  if /\bencrypted with password\b/.match(fs)
+    password = /encrypted with password "([^"]+)"/.match(fs)[1]
+    assert_not_nil(password)
+    luks_mapping = "#{disk}_unlocked"
+    $vm.execute_successfully(
+      "echo #{password} | " +
+      "cryptsetup luksOpen #{partition} #{luks_mapping}"
+    )
+    $vm.execute_successfully(
+      "mount /dev/mapper/#{luks_mapping} #{@tmp_usb_drive_mount_dir}"
+    )
+    @tmp_filesystem_is_encrypted = true
+  else
+    $vm.execute_successfully("mount #{partition} #{@tmp_usb_drive_mount_dir}")
+    @tmp_filesystem_is_encrypted = false
+  end
+  @tmp_filesystem_disk = disk
+  @tmp_filesystem_fs = fs
+  @tmp_filesystem_partition = partition
+  return @tmp_usb_drive_mount_dir
+end
+
+When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
+  disk_size = convert_to_bytes(size_MiB.to_i, 'MiB')
+  disk = random_alpha_string(10)
+  step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
+  step "I create a gpt partition labeled \"#{disk}\" with " +
+       "an #{fs} on disk \"#{disk}\""
+  step "I plug USB drive \"#{disk}\""
+  mount_dir = mount_USB_drive(disk, fs)
+  @tmp_filesystem_size_b = convert_to_bytes(
+    avail_space_in_mountpoint_kB(mount_dir),
+    'KB'
+  )
+end
+
+When(/^I mount the USB drive again$/) do
+  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_fs)
+end
+
+When(/^I umount the USB drive$/) do
+  $vm.execute_successfully("umount #{@tmp_usb_drive_mount_dir}")
+  if @tmp_filesystem_is_encrypted
+    $vm.execute_successfully("cryptsetup luksClose #{@tmp_filesystem_disk}_unlocked")
+  end
 end
 
 When /^Tails system time is magically synchronized$/ do

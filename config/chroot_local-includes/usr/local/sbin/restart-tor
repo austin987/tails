@@ -2,7 +2,7 @@
 
 set -e
 
-# Import try_for() and clock_gettime_monotonic()
+# Import try_for()
 . /usr/local/lib/tails-shell-library/common.sh
 
 # Import tor_bootstrap_progress()
@@ -12,40 +12,11 @@ set -e
 . /usr/local/lib/tails-shell-library/log.sh
 _LOG_TAG="$(basename $0)"
 
-# The Tor log is removed to ensure `tor_bootstrap_progress`'s output will be
-# accurate.
-clear_tor_log() {
-   rm -f /var/log/tor/log
-}
-
-clear_tor_log
 systemctl restart tor@default.service
 
-# The main point of this script is to restart Tor if bootstrapping stalls for
-# more than 20 seconds
-
-bootstrap_progress=0
-last_bootstrap_change=$(clock_gettime_monotonic)
-
-maybe_restart_tor() {
-    local new_bootstrap_progress=$(tor_bootstrap_progress)
-    if [ $new_bootstrap_progress -eq 100 ]; then
-        log "Tor has successfully bootstrapped."
-        return 0
-    elif [ $new_bootstrap_progress -gt $bootstrap_progress ]; then
-        bootstrap_progress=$new_bootstrap_progress
-        last_bootstrap_change=$(clock_gettime_monotonic)
-        return 1
-    elif [ $(expr $(clock_gettime_monotonic) - $last_bootstrap_change) -ge 20 ]; then
-        log "Tor seems to have stalled while bootstrapping. Restarting Tor."
-        clear_tor_log
-        systemctl restart tor@default.service
-        bootstrap_progress=0
-        last_bootstrap_change=$(clock_gettime_monotonic)
-        return 1
-    else
-        return 1
-    fi
-}
-
-try_for 270 maybe_restart_tor
+if try_for 270 '[ "$(tor_bootstrap_progress)" -eq 100 ]'; then
+    log "Tor has successfully bootstrapped."
+else
+    log "Tor failed to bootstrap"
+    exit 1
+fi
