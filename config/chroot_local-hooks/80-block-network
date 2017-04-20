@@ -5,6 +5,7 @@ set -e
 echo "Generating blocklist for all network devices"
 
 find /lib/modules/*/kernel/drivers/net \
+     /lib/modules/*/kernel/drivers/staging/rtl* \
      -name "*.ko" -printf "install %f /bin/true\n" | \
   sed 's/\.ko / /' | \
   sort -u > /etc/modprobe.d/all-net-blacklist.conf
