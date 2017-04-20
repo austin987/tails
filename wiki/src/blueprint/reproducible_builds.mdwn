@@ -378,45 +378,6 @@ such as:
 
 # Various ideas
 
-## Static build environment
-
-Currently we try to keep our build system up-to-date, but that can
-introduce subtle problems in the context of building
-reproducibly. What if some bugfix, e.g. in `mksquashfs`, slightly
-changes some output that
-will end up in our image? Hence it seems we'll avoid a lot of problems
-if we fix the build environment.
-
-We could get this for our current Vagrant-based build system by
-leveraging our freezable APT repo: a normal `rake build` doesn't try
-to be reproducible -- it uses a VM with normal upgrades just like now.
-However, we add an option to make a build reproducible, which then
-creates a new builder VM from the basebox, and uses some frozen APT
-suite whose serial is encoded in Git to provision it.
-
-Initially we could easily use time-based snapshots, making Tails
-builds reproducible until the snapshot expires (six weeks? we have
-tools to adjust expiration date, so we can pick whatever duration we
-want, taking into account hardware resources and actual usefulness), but it
-could be extended to infinity if we could generate a manifest of which
-packages the builder VM needs and put them in a tagged partial APT
-snapshot. If we then also host our baseboxes somewhere indefinitely
-(so not the mirrors probably) Tails can be built reproducibly as long
-as our infra remains operational.
-
-A variant of this is that we always do reproducible builds, and then
-always have our build system use some tagged partial APT snapshot and
-that we update this (via making a new snapshot and encode its name
-in Git) regularly (e.g. when there's a security update). We may even
-be able to automate parts of this (e.g. Jenkins publishes a branch
-pointing to an updated snapshot *it* generated, that we then can merge
-into all branches). If we go with this approach we have to deal with the
-case where a branch modifies the build VM (e.g. by installing some
-extra build dependency) -- in this case the work flow probably has to
-be that a new VM is created, because we do not want to have to deal
-with re-installing the correct versions when switching between
-branches.
-
 ## Debian (or nothing!) as trust anchor when building Tails
 
 Note: this goal should probably not be part of our first iteration of
