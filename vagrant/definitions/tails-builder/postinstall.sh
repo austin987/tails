@@ -97,6 +97,7 @@ apt-get -y install \
         libfile-slurp-perl \
         liblist-moreutils-perl \
         live-build \
+        lsof \
         rsync \
         syslinux-utils \
         time \
