@@ -53,7 +53,6 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
      --grub \
      --hostname "${HOSTNAME}" \
      --log-level "debug" \
-     --mbr \
      --mirror "http://time-based.snapshots.deb.tails.boum.org/debian/${SERIAL}" \
      --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_PUBRING}" \
      --owner "${SUDO_USER:-${USER}}" \
