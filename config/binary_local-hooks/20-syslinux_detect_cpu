@@ -15,14 +15,8 @@ Read_conffiles config/all config/bootstrap config/common config/binary
 Set_defaults
 
 # Safeguards
-if [ "${LB_BOOTLOADER}" != "syslinux" ]
-then
-	exit 0
-fi
-if [ "${LB_ARCHITECTURE}" != "i386" ]
-then
-	exit 0
-fi
+[ "${LB_BOOTLOADER}"   = "syslinux" ] || exit 0
+[ "${LB_ARCHITECTURE}" = "amd64"    ] || exit 0
 
 # Seems like we'll have work to do
 Echo_message "adding CPU autodetection to the syslinux menu"
@@ -53,9 +47,9 @@ Restore_cache cache/packages_binary
 Install_package
 
 # Copy necessary syslinux modules
-for module in ifcpu64.c32
+for module in cat.c32 ifcpu64.c32
 do
-	cp "chroot/usr/lib/syslinux/${module}" "${SYSLINUX_PATH}/"
+	cp "chroot/usr/lib/syslinux/modules/bios/${module}" "${SYSLINUX_PATH}/"
 done
 
 # Saving cache
@@ -68,13 +62,13 @@ Remove_package
 cat > "${SYSLINUX_CFG}" <<EOF
 label select_menu
        com32 ifcpu64.c32
-       append menu_amd64 -- menu_486 -- menu_486
-label menu_amd64
+       append menu_64 -- menu_32 -- menu_32
+label menu_64
        kernel vesamenu.c32
-       append liveamd64.cfg
-label menu_486
-       kernel vesamenu.c32
-       append live486.cfg
+       append live64.cfg
+label menu_32
+       com32 cat.c32
+       append sorry32.txt
 default select_menu
 prompt 0
 EOF
@@ -83,21 +77,11 @@ EOF
 # state to the defaults
 sed -i -e "1i prompt 0\ntimeout 40\n" "${SYSLINUX_MENU_CFG}"
 
-# Copy and adapt live.cfg for each kernel
-for arch in 486 amd64
-do
-	(
-		echo "include menu.cfg"
-
-		if [ $arch = 486 ]; then
-		   append=""
-		else
-		   append=2
-		fi
-		sed -e "s,/vmlinuz$,/vmlinuz${append}, ; s,initrd\.img,initrd${append}.img," "${SYSLINUX_LIVE_CFG}"
-	) | sed -n -e '/^label live-amd64.*/ { q } ; p' \
-	  > "${SYSLINUX_PATH}/live${arch}.cfg"
-done
+# Generate a live$arch.cfg for each architecture
+(
+	echo "include menu.cfg"
+	sed -n -e '/^label live-amd64.*/ { q } ; p' "${SYSLINUX_LIVE_CFG}"
+) > "${SYSLINUX_PATH}/live64.cfg"
 
 # Don't load live.cfg from menu.cfg:
 # syslinux_cfg automatically loads arch-specific menus

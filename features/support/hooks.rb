@@ -14,13 +14,14 @@ AfterConfiguration do |config|
   prioritized_features = [
     # Features not using snapshots but using large amounts of scratch
     # space for other reasons:
-    'features/erase_memory.feature',
     'features/untrusted_partitions.feature',
     # Features using temporary snapshots:
     'features/apt.feature',
     'features/root_access_control.feature',
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
+    # Features using large amounts of scratch space for other reasons:
+    'features/erase_memory.feature',
     # This feature needs the almost biggest snapshot (USB install,
     # excluding persistence) and will create yet another disk and
     # install Tails on it. This should be the peak of disk usage.
@@ -185,6 +186,10 @@ AfterFeature('@product') do
         VM.remove_snapshot(name)
       end
     end
+  end
+  $vmstorage.list_volumes.each do |vol_name|
+    next if vol_name == '__internal'
+    $vmstorage.delete_volume(vol_name)
   end
 end
 

@@ -73,22 +73,37 @@ Given /^the computer is set to boot in UEFI mode$/ do
   @os_loader = 'UEFI'
 end
 
+def tails_installer_selected_device
+  @installer.child('Target Device:', roleName: 'label').parent
+    .child('', roleName: 'combo box', recursive: false).name
+end
+
+def tails_installer_is_device_selected?(name)
+  device = $vm.disk_dev(name)
+  tails_installer_selected_device[/#{device}\d*$/]
+end
+
+def tails_installer_match_status(pattern)
+  @installer.child('', roleName: 'text').text[pattern]
+end
+
 class UpgradeNotSupported < StandardError
 end
 
 def usb_install_helper(name)
-  @screen.wait('USBTailsLogo.png', 10)
-  text = Dogtail::Application.new('tails-installer')
-         .child('', roleName: 'text').text
-  dev = $vm.disk_dev(name)
-  if text.match(/It is impossible to upgrade the device .+ #{dev}\d* /)
+  if tails_installer_match_status(/It is impossible to upgrade the device .+ #{$vm.disk_dev(name)}\d* /)
     raise UpgradeNotSupported
   end
+  assert(tails_installer_is_device_selected?(name))
   begin
-    @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-    @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
-    @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
-    @screen.wait('USBInstallationComplete.png', 30*60)
+    @installer.button('Install Tails').click
+    @installer.child('Question', roleName: 'alert').button('Yes').click
+    try_for(30*60) do
+      @installer
+        .child('Information', roleName: 'alert')
+        .child('Installation complete!', roleName: 'label')
+      true
+    end
   rescue FindFailed => e
     path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
     debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
@@ -96,65 +111,72 @@ def usb_install_helper(name)
   end
 end
 
-When /^I start Tails Installer$/ do
-  step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
-  @screen.wait('USBCloneAndInstall.png', 30)
-end
-
 When /^I start Tails Installer in "([^"]+)" mode$/ do |mode|
-  step 'I start Tails Installer'
-  case mode
-  when 'Clone & Install'
-    @screen.wait_and_click('USBCloneAndInstall.png', 10)
-  when 'Clone & Upgrade'
-    @screen.wait_and_click('USBCloneAndUpgrade.png', 10)
-  when 'Upgrade from ISO'
-    @screen.wait_and_click('USBUpgradeFromISO.png', 10)
-  else
-    raise "Unsupported mode '#{mode}'"
-  end
+  step 'I run "export DEBUG=1 ; tails-installer-launcher" in GNOME Terminal'
+  installer_launcher = Dogtail::Application.new('tails-installer-launcher')
+                         .child('Tails Installer', roleName: 'frame')
+  # Sometimes Dogtail will find the button and click it before it is
+  # shown (searchShowingOnly is not perfect) which generally means
+  # clicking somewhere on the Terminal => the click is lost *and* the
+  # installer does no go to the foreground. So let's wait a bit extra.
+  sleep 3
+  installer_launcher.button(mode).click
+  @installer = Dogtail::Application.new('tails-installer')
+  @installer.child('Tails Installer', roleName: 'frame')
+  # ... and something similar (for consecutive steps) again.
+  sleep 3
+  $vm.focus_window('Tails Installer')
 end
 
 Then /^Tails Installer detects that a device is too small$/ do
-  @screen.wait('TailsInstallerTooSmallDevice.png', 10)
-end
-
-When /^I "Clone & Install" Tails to USB drive "([^"]+)"$/ do |name|
-  step 'I start Tails Installer in "Clone & Install" mode'
-  usb_install_helper(name)
-end
-
-When /^I "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
-  step 'I start Tails Installer in "Clone & Upgrade" mode'
-  usb_install_helper(name)
-end
-
-When /^I try a "Clone & Upgrade" Tails to USB drive "([^"]+)"$/ do |name|
-  begin
-    step "I \"Clone & Upgrade\" Tails to USB drive \"#{name}\""
-  rescue UpgradeNotSupported
-    # this is what we expect
-  else
-    raise "The USB installer should not succeed"
+  try_for(10) do
+    tails_installer_match_status(/^The device .* is too small to install Tails/)
   end
-end
-
-When /^I try to "Upgrade from ISO" USB drive "([^"]+)"$/ do |name|
-  begin
-    step "I do a \"Upgrade from ISO\" on USB drive \"#{name}\""
-  rescue UpgradeNotSupported
-    # this is what we expect
-  else
-    raise "The USB installer should not succeed"
-  end
-end
-
-When /^I am suggested to do a "Clone & Install"$/ do
-  @screen.find("USBCannotUpgrade.png")
 end
 
 When /^I am told that the destination device cannot be upgraded$/ do
-  @screen.find("USBCannotUpgrade.png")
+  try_for(10) do
+    tails_installer_match_status(/^It is impossible to upgrade the device/)
+  end
+end
+
+When /^I am suggested to do a "Install by cloning"$/ do
+  try_for(10) do
+    tails_installer_match_status(
+      /You should instead use "Install by cloning" to upgrade Tails/
+    )
+  end
+end
+
+Then /^a suitable USB device is (?:still )?not found$/ do
+  @installer.child(
+    'No device suitable to install Tails could be found', roleName: 'label'
+  )
+end
+
+Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
+  try_for(30) do
+    if mode == 'no'
+      tails_installer_selected_device == ''
+    else
+      tails_installer_is_device_selected?(name)
+    end
+  end
+end
+
+When /^I "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
+  step "I start Tails Installer in \"#{mode}\" mode"
+  usb_install_helper(name)
+end
+
+When /^I fail to "([^"]*)" Tails to USB drive "([^"]+)"$/ do |mode, name|
+  begin
+    step "I \"#{mode}\" Tails to USB drive \"#{name}\""
+  rescue UpgradeNotSupported
+    # this is what we expect
+  else
+    raise "The USB installer should not succeed"
+  end
 end
 
 Given /^I plug and mount a USB drive containing the Tails ISO$/ do
@@ -164,15 +186,13 @@ end
 
 When /^I do a "Upgrade from ISO" on USB drive "([^"]+)"$/ do |name|
   step 'I start Tails Installer in "Upgrade from ISO" mode'
-  @screen.wait('USBUseLiveSystemISO.png', 10)
-  match = @screen.find('USBUseLiveSystemISO.png')
-  @screen.click(match.getCenter.offset(0, match.h*2))
-  @screen.wait('USBSelectISO.png', 10)
-  @screen.wait_and_click('GnomeFileDiagHome.png', 10)
+  @installer.child('Use existing Live system ISO:', roleName: 'label')
+    .parent.button('(None)').click
+  file_chooser = @installer.child('Select a File', roleName: 'file chooser')
   @screen.type("l", Sikuli::KeyModifier.CTRL)
-  @screen.wait('GnomeFileDiagTypeFilename.png', 10)
-  @screen.type(@iso_path)
-  @screen.wait_and_click('GnomeFileDiagOpenButton.png', 10)
+  # The only visible text element will be the path entry
+  file_chooser.child(roleName: 'text').typeText(@iso_path + '\n')
+  file_chooser.button('Open').click
   usb_install_helper(name)
 end
 
@@ -330,12 +350,9 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 end
 
 Given /^I enable persistence$/ do
-  @screen.wait('TailsGreeterPersistence.png', 10)
-  @screen.type(Sikuli::Key.SPACE)
-  @screen.wait('TailsGreeterPersistencePassphrase.png', 10)
-  match = @screen.find('TailsGreeterPersistencePassphrase.png')
-  @screen.click(match.getCenter.offset(match.w*2, match.h/2))
-  @screen.type(@persistence_password)
+  @screen.wait_and_click('TailsGreeterPersistencePassphrase.png', 10)
+  @screen.type(@persistence_password + Sikuli::Key.ENTER)
+  @screen.wait('TailsGreeterPersistenceUnlocked.png', 30)
 end
 
 def tails_persistence_enabled?
@@ -377,11 +394,6 @@ end
 
 Given /^persistence is disabled$/ do
   assert(!tails_persistence_enabled?, "Persistence is enabled")
-end
-
-Given /^I enable read-only persistence$/ do
-  step "I enable persistence"
-  @screen.wait_and_click('TailsGreeterPersistenceReadOnly.png', 10)
 end
 
 def boot_device
@@ -625,18 +637,6 @@ Then /^Tails has started in UEFI mode$/ do
 
 Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   $vm.storage.disk_mklabel(name, type)
-end
-
-Then /^a suitable USB device is (?:still )?not found$/ do
-  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
-end
-
-Then /^the "(?:[^"]+)" USB drive is selected$/ do
-  @screen.wait("TailsInstallerQEMUHardDisk.png", 30)
-end
-
-Then /^no USB drive is selected$/ do
-  @screen.wait("TailsInstallerNoQEMUHardDisk.png", 30)
 end
 
 Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|

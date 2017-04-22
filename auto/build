@@ -91,7 +91,14 @@ DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --no-merged-usr"
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "$DEBOOTSTRAP_GNUPG_HOMEDIR" \
     --import config/chroot_sources/tails.chroot.gpg
-DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
+if [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg" ]; then
+    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
+elif [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx" ]; then
+    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx"
+else
+   fatal "No debootstrap GnuPG keyring was created."
+fi
+DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_KEYRING"
 
 export DEBOOTSTRAP_OPTIONS
 
@@ -206,7 +213,7 @@ trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
 set -o pipefail
 [ -z "$JENKINS_URL" ] || date --utc '+%s' > "$BUILD_START_FILENAME"
-time eatmydata lb build noauto ${@}
+time lb build noauto ${@}
 RET=$?
 if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
    echo "Image was successfully created"
