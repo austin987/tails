@@ -28,11 +28,12 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
     # Ensure that the apt-cacher-ng cache disk is formated and mounted
     if [ ! -b /dev/vdb1 ]; then
         echo '1,,83' | sfdisk /dev/vdb
-        mkfs.ext4 /dev/vdb1
+        mkfs.ext4 -m 0 /dev/vdb1
     fi
 
     if ! mountpoint -q /var/cache/apt-cacher-ng; then
-        mount /dev/vdb1 /var/cache/apt-cacher-ng
+        e2fsck -f -p /dev/vdb1
+        mount -o relatime,journal_checksum /dev/vdb1 /var/cache/apt-cacher-ng
         chown -R apt-cacher-ng:apt-cacher-ng /var/cache/apt-cacher-ng
     fi
 
