@@ -451,7 +451,18 @@ def clean_up_builder_vms
 
   clean_up_domain = Proc.new do |domain|
     next if domain.nil?
-    domain.destroy if domain.active?
+    if domain.active?
+      begin
+        run_vagrant_ssh("mountpoint -q /var/cache/apt-cacher-ng")
+      rescue VagrantCommandError
+        # Nothing to unmount.
+      else
+        run_vagrant_ssh("sudo systemctl stop apt-cacher-ng.service")
+        run_vagrant_ssh("sudo umount /var/cache/apt-cacher-ng")
+        run_vagrant_ssh("sudo sync")
+      end
+      domain.destroy
+    end
     domain.undefine
     begin
       $virt
