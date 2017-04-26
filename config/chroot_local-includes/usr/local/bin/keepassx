@@ -13,14 +13,16 @@ MIGRATED_DB="${PERSISTENT_DATA_DIR}/New database.kdbx"
 NEW_DB="${PERSISTENT_DATA_DIR}/keepassx.kdbx"
 
 prompt_for_database_renaming() {
-    local dialog_msg="<b><big>`gettext \"Your KeePassX database has an unsupported filename.\"`</big></b>
+    local dialog_msg="<b><big>`gettext \"Do you want to rename your <i>KeePassX</i> database?\"`</big></b>
 
-`gettext \"KeePassX is configured by default in Tails to read the Persistent password database in a file named keepassx.kdbx.\nYou have named it differently, which will break future migrations.\"`
+`gettext \"You have a <i>KeePassX</i> database in your <i>Persistent</i> folder:\"`
 
-`gettext \"Do you want to rename your database for better integration in Tails?\"`
+<i>${1}</i>
+
+`gettext \"Renaming it to <i>keepassx.kdbx</i> would allow <i>KeePassX</i> to open it automatically in the future.\"`
 "
     local rename="`gettext \"Rename\"`"
-    local open="`gettext \"Open anyway\"`"
+    local open="`gettext \"Keep current name\"`"
     zenity --question --title "" --text "${dialog_msg}" --default-cancel \
            --ok-label "${rename}" --cancel-label "${open}"
 }
@@ -36,7 +38,7 @@ elif mountpoint -q "$PERSISTENT_DATA_DIR" && \
     ! [ -e "${NEW_DB}" ] && \
     [ "$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ]; then
     user_db="$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
-    if prompt_for_database_renaming; then
+    if prompt_for_database_renaming "${user_db}"; then
         mv "${user_db}" "${NEW_DB}"
         /usr/bin/keepassx "${NEW_DB}"
     else
