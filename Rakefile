@@ -451,18 +451,7 @@ def clean_up_builder_vms
 
   clean_up_domain = Proc.new do |domain|
     next if domain.nil?
-    if domain.active?
-      begin
-        run_vagrant_ssh("mountpoint -q /var/cache/apt-cacher-ng")
-      rescue VagrantCommandError
-        # Nothing to unmount.
-      else
-        run_vagrant_ssh("sudo systemctl stop apt-cacher-ng.service")
-        run_vagrant_ssh("sudo umount /var/cache/apt-cacher-ng")
-        run_vagrant_ssh("sudo sync")
-      end
-      domain.destroy
-    end
+    domain.destroy if domain.active?
     domain.undefine
     begin
       $virt
@@ -476,6 +465,17 @@ def clean_up_builder_vms
 
   # Let's ensure that the VM we are about to create is cleaned up ...
   previous_domain = $virt.list_all_domains.find { |d| d.name == domain_name }
+  if previous_domain.active?
+    begin
+      run_vagrant_ssh("mountpoint -q /var/cache/apt-cacher-ng")
+    rescue VagrantCommandError
+    # Nothing to unmount.
+    else
+      run_vagrant_ssh("sudo systemctl stop apt-cacher-ng.service")
+      run_vagrant_ssh("sudo umount /var/cache/apt-cacher-ng")
+      run_vagrant_ssh("sudo sync")
+    end
+  end
   clean_up_domain.call(previous_domain)
 
   # ... and the same for any residual VM based on another box (=>
