@@ -44,6 +44,7 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
      ARCHITECTURE=${ARCHITECTURE} \
      DISTRIBUTION=${DISTRIBUTION} \
      SECURITY_SERIAL=${SECURITY_SERIAL} \
+     SERIAL=${SERIAL} \
      vmdebootstrap \
      --arch "${ARCHITECTURE}" \
      --distribution "${DISTRIBUTION}" \

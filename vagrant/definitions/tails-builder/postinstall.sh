@@ -45,20 +45,20 @@ echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${SECUR
 	> "/etc/apt/sources.list.d/jessie-security.list"
 
 echo "I: Adding our builder-jessie suite with live-build and syslinux, pin it low."
-echo 'deb http://deb.tails.boum.org/ builder-jessie main' > /etc/apt/sources.list.d/tails.list
+echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
-	Pin: origin deb.tails.boum.org
+	Pin: release o=Tails,a=builder-jessie
 	Pin-Priority: 99
 EOF
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Package: live-build
-	Pin: origin deb.tails.boum.org
+	Pin: release o=Tails,a=builder-jessie
 	Pin-Priority: 500
 EOF
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/syslinux-utils <<EOF
 	Package: syslinux-utils
-	Pin: origin deb.tails.boum.org
+	Pin: release o=Tails,a=builder-jessie
 	Pin-Priority: 500
 EOF
 
