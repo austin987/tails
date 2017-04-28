@@ -465,7 +465,7 @@ def clean_up_builder_vms
 
   # Let's ensure that the VM we are about to create is cleaned up ...
   previous_domain = $virt.list_all_domains.find { |d| d.name == domain_name }
-  if previous_domain.active?
+  if previous_domain && previous_domain.active?
     begin
       run_vagrant_ssh("mountpoint -q /var/cache/apt-cacher-ng")
     rescue VagrantCommandError
