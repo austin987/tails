@@ -21,7 +21,7 @@ Feature: Electrum Bitcoin client
     Then persistence for "electrum" is enabled
     When I start Electrum through the GNOME menu
     But a bitcoin wallet is not present
-    Then I am prompted to create a new wallet
+    Then I am prompted to configure Electrum
     When I create a new bitcoin wallet
     Then a bitcoin wallet is present
     And I see the main Electrum client window

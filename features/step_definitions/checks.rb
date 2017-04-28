@@ -36,7 +36,11 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
 end
 
 Then /^I double-click the Report an Error launcher on the desktop$/ do
-  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+  # Sometimes the double-click is lost (#12131).
+  retry_action(10) do
+    @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+    step 'the Tor Browser has started'
+  end
 end
 
 Then /^the live user has been setup by live\-boot$/ do
@@ -128,17 +132,6 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-Given /^I setup a filesystem share containing a sample PNG$/ do
-  shared_png_dir_on_host = "#{$config["TMPDIR"]}/shared_png_dir"
-  @shared_png_dir_on_guest = "/tmp/shared_png_dir"
-  FileUtils.mkdir_p(shared_png_dir_on_host)
-  Dir.glob("#{MISC_FILES_DIR}/*.png") do |png_file|
-    FileUtils.cp(png_file, shared_png_dir_on_host)
-  end
-  add_after_scenario_hook { FileUtils.rm_r(shared_png_dir_on_host) }
-  $vm.add_share(shared_png_dir_on_host, @shared_png_dir_on_guest)
-end
-
 Then /^the support documentation page opens in Tor Browser$/ do
   if @language == 'German'
     expected_title = 'Tails - Hilfe & Support'
@@ -156,11 +149,15 @@ Then /^the support documentation page opens in Tor Browser$/ do
   )
 end
 
+Given /^I plug and mount a USB drive containing a sample PNG$/ do
+  @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))
+end
+
 Then /^MAT can clean some sample PNG file$/ do
   for png_on_host in Dir.glob("#{MISC_FILES_DIR}/*.png") do
     png_name = File.basename(png_on_host)
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
-    step "I copy \"#{@shared_png_dir_on_guest}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
+    step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
     raw_check_cmd = "grep --quiet --fixed-strings --text " +
                     "'Created with GIMP' '#{png_on_guest}'"
     assert($vm.execute(raw_check_cmd, user: LIVE_USER).success?,
@@ -210,13 +207,8 @@ def get_apparmor_status(pid)
 end
 
 Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
-  if process == 'i2p'
-    $vm.execute_successfully('service i2p status')
-    pid = $vm.file_content('/run/i2p/i2p.pid').chomp
-  else
-    assert($vm.has_process?(process), "Process #{process} not running.")
-    pid = $vm.pidof(process)[0]
-  end
+  assert($vm.has_process?(process), "Process #{process} not running.")
+  pid = $vm.pidof(process)[0]
   assert_equal(mode, get_apparmor_status(pid))
 end
 

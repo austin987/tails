@@ -23,10 +23,10 @@ Given /^I generate an OpenPGP key named "([^"]+)" with password "([^"]+)"$/ do |
      Passphrase: #{pwd}
      %commit
 EOF
-  gpg_key_recipie.split("\n").each do |line|
-    $vm.execute("echo '#{line}' >> /tmp/gpg_key_recipie", :user => LIVE_USER)
-  end
-  c = $vm.execute("gpg --batch --gen-key < /tmp/gpg_key_recipie",
+  recipe_path = '/tmp/gpg_key_recipe'
+  $vm.file_overwrite(recipe_path, gpg_key_recipie)
+  $vm.execute("chown #{LIVE_USER}:#{LIVE_USER} #{recipe_path}")
+  c = $vm.execute("gpg --batch --gen-key < #{recipe_path}",
                   :user => LIVE_USER)
   assert(c.success?, "Failed to generate OpenPGP key:\n#{c.stderr}")
 end

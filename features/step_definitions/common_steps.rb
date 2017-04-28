@@ -8,24 +8,6 @@ def post_vm_start_hook
   @screen.click_point(@screen.w - 1, @screen.h/2)
 end
 
-def activate_filesystem_shares
-  # XXX-9p: First of all, filesystem shares cannot be mounted while we
-  # do a snapshot save+restore, so unmounting+remounting them seems
-  # like a good idea. However, the 9p modules get into a broken state
-  # during the save+restore, so we also would like to unload+reload
-  # them, but loading of 9pnet_virtio fails after a restore with
-  # "probe of virtio2 failed with error -2" (in dmesg) which makes the
-  # shares unavailable. Hence we leave this code commented for now.
-  #for mod in ["9pnet_virtio", "9p"] do
-  #  $vm.execute("modprobe #{mod}")
-  #end
-
-  $vm.list_shares.each do |share|
-    $vm.execute("mkdir -p #{share}")
-    $vm.execute("mount -t 9p -o trans=virtio #{share} #{share}")
-  end
-end
-
 def context_menu_helper(top, bottom, menu_item)
   try_for(60) do
     t = @screen.wait(top, 10)
@@ -39,17 +21,6 @@ def context_menu_helper(top, bottom, menu_item)
     @screen.wait_and_click(menu_item, 10)
     return
   end
-end
-
-def deactivate_filesystem_shares
-  $vm.list_shares.each do |share|
-    $vm.execute("umount #{share}")
-  end
-
-  # XXX-9p: See XXX-9p above
-  #for mod in ["9p", "9pnet_virtio"] do
-  #  $vm.execute("modprobe -r #{mod}")
-  #end
 end
 
 # This helper requires that the notification image is the one shown in
@@ -86,14 +57,12 @@ def robust_notification_wait(notification_image, time_to_wait)
 
   # Close the notification applet
   @screen.type(Sikuli::Key.ESC)
+  @screen.waitVanish('GnomeNotificationAppletOpened.png', 10)
 end
 
 def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
-
-  # XXX-9p: See XXX-9p above
-  #activate_filesystem_shares
 
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
@@ -101,18 +70,10 @@ def post_snapshot_restore_hook
   if $vm.has_network?
     if $vm.execute("systemctl --quiet is-active tor@default.service").success?
       $vm.execute("systemctl stop tor@default.service")
-      $vm.execute("rm -f /var/log/tor/log")
       $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
       $vm.host_to_guest_time_sync
-      $vm.spawn("restart-tor")
+      $vm.execute("systemctl start tor@default.service")
       wait_until_tor_is_working
-      if $vm.file_content('/proc/cmdline').include?(' i2p')
-        $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
-        # we "killall tails-i2p" to prevent multiple
-        # copies of the script from running
-        $vm.execute_successfully('killall tails-i2p')
-        $vm.spawn('/usr/local/sbin/tails-i2p start')
-      end
     end
   else
     $vm.host_to_guest_time_sync
@@ -136,7 +97,7 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I (temporarily )?create a (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
   $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
                                      :type => "qcow2"})
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
@@ -343,7 +304,6 @@ Given /^the computer (re)?boots Tails$/ do |reboot|
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
-  activate_filesystem_shares
   step 'I configure Tails to use a simulated Tor network'
 end
 
@@ -455,14 +415,17 @@ Given /^available upgrades have been checked$/ do
 end
 
 Given /^the Tor Browser has started$/ do
-  tor_browser_picture = "TorBrowserWindow.png"
-  @screen.wait(tor_browser_picture, 60)
+  try_for(60) do
+    Dogtail::Application.new('Firefox')
+      .child(roleName: 'frame', recursive: false)
+      .exist?
+  end
 end
 
 Given /^the Tor Browser (?:has started and )?load(?:ed|s) the (startup page|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - Dear Tails user'
+    title = 'Tails - News'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
@@ -575,14 +538,29 @@ Given /^I kill the process "([^"]+)"$/ do |process|
   }
 end
 
-Then /^Tails eventually shuts down$/ do
-  try_for(memory_wipe_timeout, :msg => "VM is still running") do
-    ! $vm.is_running?
+Then /^Tails eventually (shuts down|restarts)$/ do |mode|
+  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
+  timeout = nr_gibs_of_ram*5*60
+  # Work around Tails bug #11786, where something goes wrong when we
+  # kexec to the new kernel for memory wiping and gets dropped to a
+  # BusyBox shell instead.
+  try_for(timeout) do
+    if @screen.existsAny(['TailsBug11786a.png', 'TailsBug11786b.png'])
+      puts "We were hit by bug #11786: memory wiping got stuck"
+      if mode == 'restarts'
+        $vm.reset
+      else
+        $vm.power_off
+      end
+    else
+      if mode == 'restarts'
+        @screen.find('TailsGreeter.png')
+        true
+      else
+        ! $vm.is_running?
+      end
+    end
   end
-end
-
-Then /^Tails eventually restarts$/ do
-  step 'the computer reboots Tails'
 end
 
 Given /^I shutdown Tails and wait for the computer to power off$/ do
@@ -656,11 +634,10 @@ method=auto
 [ipv4]
 method=auto
 EOF
-  con_content.split("\n").each do |line|
-    $vm.execute("echo '#{line}' >> /tmp/NM.#{con_name}")
-  end
+  tmp_path = "/tmp/NM.#{con_name}"
+  $vm.file_overwrite(tmp_path, con_content)
   con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-  $vm.execute("install -m 0600 '/tmp/NM.#{con_name}' '#{con_file}'")
+  $vm.execute("install -m 0600 '#{tmp_path}' '#{con_file}'")
   $vm.execute_successfully("nmcli connection load '#{con_file}'")
   try_for(10) {
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
@@ -735,7 +712,7 @@ end
 Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
   app = Dogtail::Application.new('gnome-shell')
   for element in ['Applications', submenu, app_name] do
-    app.child(element, roleName: 'label').click
+    app.child(element, roleName: 'label', showingOnly: true).click
   end
 end
 
@@ -992,4 +969,28 @@ Then /^Tails is running version (.+)$/ do |version|
   v2 = $vm.file_content('/etc/os-release')
        .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
   assert_equal(version, v2, "The version doesn't match /etc/os-release")
+end
+
+def share_host_files(files)
+  files = [files] if files.class == String
+  assert_equal(Array, files.class)
+  disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
+  # Let's add some extra space for filesysten overhead etc.
+  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.10).ceil].max
+  disk = random_alpha_string(10)
+  step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
+  step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
+       "filesystem on disk \"#{disk}\""
+  $vm.storage.guestfs_disk_helper(disk) do |g, _|
+    partition = g.list_partitions().first
+    g.mount(partition, "/")
+    files.each { |f| g.upload(f, "/" + File.basename(f)) }
+  end
+  step "I plug USB drive \"#{disk}\""
+  mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
+  dev = $vm.disk_dev(disk)
+  partition = dev + '1'
+  $vm.execute_successfully("mount #{partition} #{mount_dir}")
+  $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
+  return mount_dir
 end

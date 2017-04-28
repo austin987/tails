@@ -29,22 +29,21 @@ not be able to bootstrap. With "incorrect" we specifically mean when
 the time is outside the current Tor network consensus'
 (`/var/lib/tor/cached-microdesc-consensus`) validity lifetime (e.g.
 the `valid-after` and `valid-until` fields). When Tor fails to
-bootstrap, Tails is effectively useless for networking (at least for
-what we intend with it).
+bootstrap, Tails is effectively useless for networking.
 
-It should be noted that the clock just have to be off by a few hours
+It should be noted that the clock just has to be off by a few hours
 for Tor to become completely unable to bootstrap, and that's not very
 uncommon. Certain OSes (including Windows up to Windows 8 at least)
-set's the BIOS clock to the local time, and since Tails uses UTC (and
-assumes the BIOS clock is UTC), this becomes a problem for everyone
-but people living in the GMT+0/UTC timezone. Hence this is a very
+set the BIOS clock to the local time, and since Tails uses UTC (and
+assumes the BIOS clock is UTC), this becomes a problem for every user
+but those living in the GMT+0/UTC timezone. Hence this is a very
 serious problem.
 
 What we want
 ------------
 
-We want a mechanism to avoid the above problem that doesn't have
-a network fingerprint unique to Tails. Some people may think NTP,
+We want a mechanism to avoid the above problem. This mechanism must not
+have a network fingerprint unique to Tails. Some people may think NTP,
 which is widely used, but NTP is unauthenticated, so a MitM attack
 would let an attacker set the system time, which later may be used to
 fingerprint the Tails user for applications/protocols that leak the
@@ -71,8 +70,8 @@ Some other requirements about this mechanism:
 * it has to work with pluggable transports;
 * it has to work when not doing a full bootstrap, e.g.
   when `/var/lib/tor` is persistent;
-* Tor is a bit fragile when it comes to time jumps when it's at the
-  early bootstrap stages. For instance, in tordate have to restart Tor
+* Tor is a bit fragile when it comes to time jumps during
+  early bootstrap stages. For instance, in @tordate@ we have to restart Tor
   after setting the time according to the fetched consensus, otherwise
   it just idles, at least sometimes. This will have to be solved too;
 * it should help improve the UX we provide while Tor is boostrapping
@@ -110,6 +109,13 @@ That's what ChromeOS does when the time is too wrong:
 
 #### First iteration
 
+Relevant tickets: [[!tails_ticket 10819]], [[!tails_ticket 6284]],
+[[!tails_ticket 12094]].
+
+* What's called *Tails Clock* below is the widget that will display
+  the current time within the GNOME desktop, in whatever timezone the
+  user prefers, which we call the *display timezone*. The system
+  timezone remains UTC in all cases.
 * From current tordate, we keep only the mechanism that detects if Tor
   fails to bootstrap due to time-related reasons. Whenever this
   happens, we open a GUI that lets the user set the correct time and
@@ -123,11 +129,10 @@ That's what ChromeOS does when the time is too wrong:
   replayed Tor consensus.
 * We need Tails Clock: otherwise, we would let the user set the
   correct time in their preferred timezone, but then the feedback we
-  would give them (in the GNOME clock applet) would let them think the
+  would give them (in the GNOME clock display) would let them think the
   operation has failed, since it would still display time in UTC.
   We have to avoid making the UX worse this way, hence the need for
-  Tails Clock (and then, for porting it to GNOME Shell for
-  Tails/Jessie). The config source for the timezone used by Tails
+  Tails Clock. The config source for the timezone used by Tails
   Clock must be shared with the time input GUI, to provide
   a consistent UX. The interface used by Tails Clock and by the
   upcoming time input GUI could perhaps be shared; this raises
@@ -141,8 +146,8 @@ That's what ChromeOS does when the time is too wrong:
 
 #### Second iteration
 
-We stop using htpdate to set the system clock, but we keep it around
-as a way to detect a replayed Tor consensus: if the time delta
+We stop using htpdate to *set* the system clock, but we keep it around
+as a way to *detect* a replayed Tor consensus: if the time delta
 detected by htpdate is too big:
 
 * we warn the user that something fishy may be going on, and try to
@@ -155,12 +160,12 @@ much once we're there.
 
 #### Integration with the new Greeter
 
-Once [[!tails_ticket 5464]] is done, the user will have the
-opportunity to choose their preferred timezone in the Greeter.
-And then, most likely we'll want to provide them feedback about what
-Tails thinks the resulting local time is. And in turn, the UI that
-provides that feedback can as well allow users to set the system time
-if it's wrong.
+We need to give the user will have the opportunity to choose their
+preferred timezone in the Greeter ([[!tails_ticket 11645]]). And then,
+most likely we'll want to provide them feedback about what Tails
+thinks the resulting local time is. And in turn, the UI that provides
+that feedback can as well allow users to set the system time if
+it's wrong ([[!tails_ticket 11641]]).
 
 The chosen timezone information should be re-used both by Tails Clock
 and by the time input GUI that lets users correct the system time if
