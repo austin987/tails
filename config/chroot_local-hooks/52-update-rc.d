@@ -17,12 +17,12 @@ systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
 systemctl enable tor-controlport-filter.service
+systemctl enable var-tmp.mount
 
 # Enable our own systemd user unit files
 systemctl --global enable tails-add-GNOME-bookmarks.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
-systemctl --global enable tails-i2p-removal-notify-user.service
 systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
@@ -46,9 +46,6 @@ systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
 
-# We don't run these services by default
-systemctl disable i2p.service
-
 # Don't hide tails-kexec's shutdown messages with an empty splash screen
 for suffix in halt kexec poweroff reboot shutdown ; do
    systemctl mask "plymouth-${suffix}.service"
@@ -66,3 +63,9 @@ systemctl mask hwclock-save.service
 
 # Do not run timesyncd: we have our own time synchronization mechanism
 systemctl mask systemd-timesyncd.service
+
+# apt-daily.service can only cause problems in our context (#12390)
+systemctl mask apt-daily.timer
+
+# Do not let pppd-dns manage /etc/resolv.conf
+systemctl mask pppd-dns.service

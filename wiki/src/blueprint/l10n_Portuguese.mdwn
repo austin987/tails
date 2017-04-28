@@ -1,0 +1,103 @@
+[[!toc levels=6]]
+
+---
+
+# Lista de e-mails
+
+A tradução do Tails para português é organizada em uma lista de e-mails. O formulário de inscrição está lá embaixo no título "** Inscrevendo-se na lista tails-l10n-pt-br@boum.org **": <https://mailman.boum.org/listinfo/tails-l10n-pt-br>
+
+---
+
+# Fluxo de trabalho para tradução para o português
+
+## Preparação
+
+Antes de seguir o fluxo de trabalho, você precisa fazer o seguinte:
+
+* Instale o `git` e o `poedit`.  
+* Escolha um diretório dentro do qual será armazenada uma cópia do repositório do Tails. Nas instruções a seguir, esse diretório é chamado `diretorio-base/`.  
+* Veja a [[documentação no site do tails sobre como traduzir usando repositórios git|/contribute/how/translate/with_Git/]] *(em inglês - ajude a traduzir!)*. As instruções dadas aqui são um pouco diferentes, principalmente no que se refere é submissão das modificações. Ao invés de utilizar um repositório remoto, nós utilizamos um arquivo com as diferenças e a lista de tradução para essa parte do trabalho.  
+* Se tiver qualquer dúvida, escreva para a lista!  
+
+## Fluxo
+
+O fluxo de trabalho para tradução e submissão das alterações é o seguinte:
+
+### Copiar repositório
+
+Copie ou atualize o reposiório do Tails. Nos comandos, substitua diretorio-base/ pelo caminho para o diretório base escolhido. 
+
+Copie o repositório, caso ainda não possua uma cópia local:  
+
+    cd diretorio-base/
+    git clone git://git.tails.boum.org/tails
+    cd tails/
+
+Configure os meta-dados do git para anonimizacao da traducao  
+
+    git config user.name "Tails developers"
+    git config user.email "tails@boum.org"
+
+Atualize o repositório, caso já possua uma cópia local:  
+
+    cd diretorio-base/tails
+    git checkout master
+    git pull origin master
+
+
+### Crie um ramo de trabalho
+
+Substitua `nome-do-ramo-de-trabalho` por algo significativo relacionado ao que você está traduzindo, por exemplo `atualizacao-da-documentacao`. O nome do ramo de trabalho não pode conter espaços.  
+
+    git checkout -b nome-do-ramo-de-trabalho
+
+### Traduza
+
+Traduza arquivos com a extensão `.pt.po` usando [poedit](https://poedit.net/). Este editor está incluído no Tails por padrão.
+
+### Teste
+
+[[Gere os arquivos estáticos para testar as alterações|/contribute/build/website/]]. Se precisar consertar algo, volte para o ítem anterior.  
+
+### Salve
+
+Congele uma versão do que foi alterado:  
+
+    git commit -a -m "[l10n] [pt-br] succinct description of changes"
+
+### Gerar patch
+
+Gere um arquivo com as diferenças entre o ramo de trabalho e o ramo principal:  
+
+    git format-patch master
+
+O resultado desse comando é o nome de um arquivo que é gerado com as diferenças entre o seu ramo de trabalho e o ramo principal.  
+
+### Envie para a lista
+
+Envie o arquivo gerado para a lista aguarde que as diferenças sejam revisadas e inseridas no ramo principal.  
+
+### Atualize
+
+Atualize o ramo principal, e verifique que suas alterações foram incluídas no ramo principal.  
+
+    git checkout master
+    git pull origin HEAD
+
+[[Gere os arquivos estáticos|/contribute/build/website/]] para verificar que suas alterações foram incluídas no ramo principal.  
+
+Apague o ramo de trabalho. O comando a seguir apaga o ramo de trabalho, só faça depois de ter certeza que as modificações foram incluídas no ramo principal.  
+
+    git branch -D nome-do-ramo-de-trabalho
+
+## Continue
+
+Comece de novo, a partir do passo número 1. :)
+
+*Texto adaptado da [descrição da lista de e-mails](https://mailman.boum.org/listinfo/tails-l10n-pt-br)*
+
+---
+
+# Transifex
+
+`TODO`: Adicionar informação sobre tradução utilizando Transifex
