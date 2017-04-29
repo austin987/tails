@@ -1,14 +1,111 @@
-tails (2.12) UNRELEASED; urgency=medium
-
-  * Dummy.
-
- -- anonym <anonym@riseup.net>  Wed, 25 Jan 2017 01:32:33 +0100
-
-tails (2.11.1) UNRELEASED; urgency=medium
+tails (3.0) UNRELEASED; urgency=medium
 
   * Dummy entry.
 
- -- Tails developers <tails@boum.org>  Tue, 07 Mar 2017 19:24:29 +0100
+ -- Tails developers <tails@boum.org>  Fri, 07 Apr 2017 16:11:09 +0200
+
+tails (2.12.1) UNRELEASED; urgency=medium
+
+  * Dummy entry.
+
+ -- Tails developers <tails@boum.org>  Wed, 19 Apr 2017 19:18:06 +0200
+
+tails (2.12) unstable; urgency=medium
+
+  * Major changes
+    - Completely remove I2P. :( We have decided to remove I2P (see
+      #11276) due to our failure of finding someone interested in
+      maintaining it in Tails (Closes: #12263).
+    - Upgrade the Linux kernel to 4.9.13-1~bpo8+1 (Closes: #12122).
+
+  * Security fixes
+    - Upgrade Tor Browser to 6.5.2 based on Firefox 45.9. (Closes:
+      #12444)
+    - Mount a dedicated filesystem on /var/tmp, to mitigate the
+      hardlinks permissions open by the user-tmp abstraction. See
+      https://labs.riseup.net/code/issues/9949#note-23 for details
+      (Closes: #12125).
+    - Protect against CVE-2017-2636 by disabling the n-hdlc kernel
+      module (Closes: #12315).
+    - Ensure /etc/resolv.conf is owned by root:root in the SquashFS.
+      lb_chroot_resolv will "cp -a" it from the source tree, so it
+      inherits its ownership from the whoever cloned the Git
+      repository. This has two problems. First, this results in unsafe
+      permissions on this file (e.g. a Vagrant build results in the
+      'amnesia' user having write access to it).
+    - Upgrade libjasper1 to 1.900.1-debian1-2.4+deb8u3
+    - Upgrade gstreamer and its plugins to 1.4.4-2+deb8u1.
+    - Upgrade eject to 2.1.5+deb1+cvs20081104-13.1+deb8u1.
+    - Upgrade imagemagick to 8:6.8.9.9-5+deb8u8.
+    - Upgrade pidgin to 2.11.0-0+deb8u2.
+    - Upgrade samba to 2:4.2.14+dfsg-0+deb8u5.
+
+
+  * Minor improvements
+    - Don't add the live user to the "audio" group. This should not be
+      needed on a modern Linux desktop system anymore (Closes:
+      #12209).
+    - Install virtualbox-* 5.1.14-dfsg-3~bpo8+1 from our custom APT
+      repository (Closes: #12307).
+    - Install virtualbox-guest-* from sid. The version currently in
+      jessie-backports is not compatible with Linux 4.9, and there's
+      basically no chance that it gets updated (the maintainer asked
+      for them to be *removed* from jessie-backports) (Closes:
+      #12298).
+    - Pull ttdnsd from our custom APT repository. It's gone from the
+      TorProject one. We removed ttdnsd on feature/stretch already, so
+      we'll need to pull it from our custom APT repository only for
+      the next 3 months.
+    - Clean up libdvd-pkg build files, again.  This cleanup operation
+      was mistakenly removed in commit c4e8744 (Closes: #11273).
+    - Install gnome-sound-recorder (Closes #10950). Thanks to Austin
+      English <austinenglish@gmail.com> for the patch!
+    - Stop restarting tor if bootstrapping stalls. It seems tor might
+      have fixed the issues we used (see: #10238, #9516) to experience
+      with the bootstrap process stalling and requiring a restart to
+      kickstart it (Closes: #12411).
+    - tor.sh: communicate via the UNIX socket instead of TCP port.
+      This makes the library usable when run inside systemd units that
+      have `PrivateNetwork=yes` set.
+    - Get tor's bootstrap progress via GETINFO instead of log
+      grep:ing.
+    - Upgrade tor to 0.2.9.10-1~d80.jessie+1
+
+  * Bugfixes
+    - mirror-pool-dispatcher: bump maximum expected mirrors.json size
+      to 32 KiB. This fixes an error where Tails Upgrader would
+      complain with "cannot choose a download server" (Closes:
+      #11735).
+
+  * Build system
+    - Retry curl and APT operations up to 20 times to make the ISO
+      build more robust wrt. unreliable Internet connectivity. Thanks
+      to Arnaud <arnaud@preev.io> for the patch!
+    - Install ikiwiki from jessie-backports, instead of our patched
+      one. Our changes were merged in 3.20161219, and jessie-backports
+      now has 3.20170111~bpo8+1 (Closes: #12051).
+    - Fix FTBFS when installing a .deb via config/chroot_local-packages
+      by being more flexible when matching local packages in the apt
+      list file (Closes: #12374). Thanks to Arnaud <arnaud@preev.io>
+      for the patch!
+    - auto/build: support Stretch's GnuPG v2 keyring filename.
+
+  * Test suite
+    - Try possible fix for #11508. IPv6Packet:s' source is accessed by
+      `.ipv6_saddr`, not `ip_saddr` (that's for IPv4Packet). So, let's
+      just try and see which one of the two each packet has, because
+      one of them must be there! Also, given that UDPPacket can be
+      either IPv4 or IPv6 it seems safest to try to parse each packet
+      as IPv6Packet first -- that way we keep looking at transport
+      layer protocols for IPv4 only, and treat everything IPv6 as the
+      same, which makes sense, since we should block all IPv6, so
+      everything should be treated the same at all times.
+    - Changes due to #12411:
+      * Raise special exception for Tor bootstrap failures.
+      * Remove obsolete debug logging now that we don't log anything
+        interesting for `restart-tor` any more.
+
+ -- Tails developers <tails@boum.org>  Tue, 18 Apr 2017 17:41:46 +0200
 
 tails (2.11) unstable; urgency=medium
 

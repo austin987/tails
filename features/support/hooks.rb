@@ -18,7 +18,6 @@ AfterConfiguration do |config|
     'features/untrusted_partitions.feature',
     # Features using temporary snapshots:
     'features/apt.feature',
-    'features/i2p.feature',
     'features/root_access_control.feature',
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
@@ -130,7 +129,7 @@ def save_failure_artifact(type, path)
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
-# are Tor (or I2P) nodes or located on the LAN. However, when we try
+# are Tor nodes or located on the LAN. However, when we try
 # to verify that only such hosts are contacted we have a problem --
 # we run all Tor nodes (via Chutney) *and* LAN hosts (used on some
 # tests) on the same host, the one running the test suite. Hence we

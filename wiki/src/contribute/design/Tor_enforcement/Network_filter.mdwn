@@ -1,8 +1,8 @@
 One serious security issue is that we don't know what software will
 attempt to contact the network and whether their proxy settings are
 set up to use the Tor SOCKS proxy correctly.
-This is solved by blocking all outbound Internet traffic except Tor
-(and I2P when enabled), and explicitly configuring all applications to use one of
+This is solved by blocking all outbound Internet traffic except Tor,
+and explicitly configuring all applications to use one of
 these.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/ferm/ferm.conf]]
@@ -18,32 +18,11 @@ Tor itself obviously has to connect to the Internet without going
 through the Tor network. This is achieved by special-casing
 connections originating from the `debian-tor` Unix user.
 
-#### I2P
-
-[I2P](https://geti2p.net/) (*Invisible Internet Project*) is
-yet another anonymizing network
-(load-balanced unspoofable packet switching network) that provides
-access to eepsites (.i2p tld); eepsites are a bit like Tor hidden
-services. Some users would like to be able to access eepsites from
-Tails.
-
-Like the `debian-tor` user, the `i2psvc` user is allowed to connect
-*directly* to the Internet. Any rules granting the `i2psvc` user access are only
-applied if the user explicitly enables I2P at the boot prompt.  See
-[[the design document dedicated to Tails use of I2P|I2P]] for details.
-
 #### Unsafe Browser and the `clearnet` user
 
 The `clearnet` user used to run the
 [[contribute/design/Unsafe_Browser]] is granted full network access
 (but no loopback access) in order to deal with captive portals.
-
-#### I2P Browser and the `i2pbrowser` user
-
-The [[contribute/design/I2P_Browser]] is run by the `i2pbrowser` user. This
-account is granted access to ports 4444, 7657, and 7658 on the loopback device *if*
-I2P is enabled at the boot prompt. Sites outside of I2P cannot be reached by
-the `i2pbrowser` user.
 
 #### Local Area Network (LAN)
 
@@ -84,8 +63,7 @@ Tor does not support IPv6 yet so IPv6 communication is blocked.
 #### UDP, ICMP and other non-TCP protocols
 
 Tor only supports TCP. Non-TCP traffic to the Internet, such as UDP
-datagrams and ICMP packets, is dropped unless it's going through I2P,
-which supports UDP.
+datagrams and ICMP packets, is dropped.
 
 An unfortunate consequence of fully blocking ICMP is that [[!wikipedia
 Path MTU Discovery]] is broken. We workaround this problem by enabling
