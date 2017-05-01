@@ -246,3 +246,18 @@ Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |ap
     )
   end
 end
+
+Then /^GnuPG's dirmngr uses the configured keyserver$/ do
+  _, _, onion_keyserver_address, _ = chutney_onionservice_info
+  dirmngr_request = $vm.execute_successfully(
+    'gpg-connect-agent --dirmngr "keyserver --hosttable" /bye', user: LIVE_USER
+  )
+  server = dirmngr_request.stdout.chomp.lines[1].split[4]
+  server = /keyserver\s+(\S+)$/.match(
+    $vm.file_content("/home/#{LIVE_USER}/.gnupg/dirmngr.conf")
+  )[1]
+  assert_equal(
+    "hkp://#{onion_keyserver_address}:5858", server,
+    "GnuPG's dirmngr does not use the correct keyserver"
+  )
+end
