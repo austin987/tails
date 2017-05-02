@@ -158,7 +158,7 @@ Feature: Browsing the web using the Tor Browser
     And all persistent filesystems have safe access rights
     And all persistence configuration files have safe access rights
     And all persistent directories have safe access rights
-    And I start the Tor Browser in offline mode
+    When I start the Tor Browser in offline mode
     And I add a bookmark to eff.org in the Tor Browser
     And I warm reboot the computer
     And the computer reboots Tails

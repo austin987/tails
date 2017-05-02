@@ -30,7 +30,7 @@ end
 
 Then /^the Unsafe Browser works in all supported languages$/ do
   failed = Array.new
-  supported_torbrowser_languages.each do |lang|
+  supported_torbrowser_languages.sample(3).each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
       step "the Unsafe Browser has started"
@@ -168,7 +168,11 @@ Then /^the Unsafe Browser has no proxy configured$/ do
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do
-  @screen.wait("UnsafeBrowserDNSError.png", 30)
+  assert_not_nil(
+    Dogtail::Application.new('zenity')
+    .child(roleName: 'label')
+    .text['No DNS server was obtained']
+  )
 end
 
 Then /^I configure the Unsafe Browser to check for updates more frequently$/ do

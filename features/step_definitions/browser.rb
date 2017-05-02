@@ -1,24 +1,19 @@
-Then /^the (Unsafe|I2P) Browser has started$/ do |browser_type|
-  case browser_type
-  when 'Unsafe'
-    @screen.wait("UnsafeBrowserHomepage.png", 360)
-  when 'I2P'
-    step 'the I2P router console is displayed in I2P Browser'
-  end
+Then /^the Unsafe Browser has started$/ do
+  @screen.wait("UnsafeBrowserHomepage.png", 360)
 end
 
-When /^I start the (Unsafe|I2P) Browser(?: through the GNOME menu)?$/ do |browser_type|
-  step "I start \"#{browser_type} Browser\" via the GNOME \"Internet\" applications menu"
+When /^I start the Unsafe Browser(?: through the GNOME menu)?$/ do
+  step "I start \"Unsafe Browser\" via the GNOME \"Internet\" applications menu"
 end
 
-When /^I successfully start the (Unsafe|I2P) Browser$/ do |browser_type|
-  step "I start the #{browser_type} Browser"
-  step "I see and accept the Unsafe Browser start verification" unless browser_type == 'I2P'
-  step "I see the \"Starting the #{browser_type} Browser...\" notification after at most 60 seconds"
-  step "the #{browser_type} Browser has started"
+When /^I successfully start the Unsafe Browser$/ do
+  step "I start the Unsafe Browser"
+  step "I see and accept the Unsafe Browser start verification"
+  step "I see the \"Starting the Unsafe Browser...\" notification after at most 60 seconds"
+  step "the Unsafe Browser has started"
 end
 
-When /^I close the (?:Unsafe|I2P) Browser$/ do
+When /^I close the Unsafe Browser$/ do
   @screen.type("q", Sikuli::KeyModifier.CTRL)
 end
 
@@ -39,11 +34,6 @@ def xul_application_info(application)
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
     new_tab_button_image = "UnsafeBrowserNewTabButton.png"
-  when "I2P Browser"
-    user = "i2pbrowser"
-    cmd_regex = "#{binary} .* -profile /home/#{user}/\.i2p-browser/profile\.default"
-    chroot = "/var/lib/i2p-browser/chroot"
-    new_tab_button_image = "I2PBrowserNewTabButton.png"
   when "Tor Launcher"
     user = "tor-launcher"
     # We do not enable AppArmor confinement for the Tor Launcher.
@@ -99,8 +89,6 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   if browser == "Tor Browser"
     retry_method = method(:retry_tor)
-  elsif browser == "I2P Browser"
-    retry_method = method(:retry_i2p)
   else
     retry_method = Proc.new { |p, &b| retry_action(10, recovery_proc: p, &b) }
   end
