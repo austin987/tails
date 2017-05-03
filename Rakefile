@@ -600,9 +600,24 @@ namespace :basebox do
       .map { |x| x.chomp.sub(/\s.*$/, '') }
   end
 
+  def clean_up_basebox(box)
+    run_vagrant('box', 'remove', '--force', box)
+    begin
+      $virt = Libvirt::open("qemu:///system")
+      $virt
+        .lookup_storage_pool_by_name('default')
+        .lookup_volume_by_name("#{box}_vagrant_box_image_0.img")
+        .delete
+    rescue Libvirt::RetrieveError
+      # Expected if the pool or disk does not exist
+    ensure
+      $virt.close
+    end
+  end
+
   desc 'Remove all base boxes'
   task :clean_all do
-    baseboxes.each { |box| run_vagrant('box', 'remove', '--force', box) }
+    baseboxes.each { |box| clean_up_basebox(box) }
   end
 
   desc 'Remove all base boxes older than six months'
@@ -613,7 +628,7 @@ namespace :basebox do
     boxes.pop
     boxes.each do |box|
       if basebox_date(box) < Date.today - 365.0/2.0
-        run_vagrant('box', 'remove', '--force', box)
+        clean_up_basebox(box)
       end
     end
   end
