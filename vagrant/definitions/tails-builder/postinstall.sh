@@ -108,7 +108,8 @@ apt-get -y install \
         libyaml-perl \
         libyaml-syck-perl \
         perlmagick \
-        wdg-html-validator
+        wdg-html-validator \
+        psmisc
 
 # If apt-cacher-ng is running on the host using the default port, the
 # installation will fail, so let's prevent the daemon from
