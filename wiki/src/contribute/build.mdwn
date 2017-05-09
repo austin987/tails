@@ -66,7 +66,8 @@ Now we can install all the dependencies:
         qemu-system-x86 \
         qemu-utils \
         vagrant \
-        vagrant-libvirt
+        vagrant-libvirt \
+        vmdebootstrap
     sudo systemctl restart libvirtd
 
 Make sure that the user that is supposed to initiate the build command
@@ -162,6 +163,15 @@ allowed to go through anyway.
 
 </div>
 
+Resulting ISO handling
+----------------------
+
+To tell the build system in which directory the resulting ISO should be
+stored, use:
+
+    ARTIFACTS='/path/to/directory'
+
+
 Build options
 -------------
 
@@ -221,16 +231,6 @@ Forcing a specific behaviour can be done using:
  * **gzipcomp**: always use *gzip* to create the SquashFS.
  * **defaultcomp**: always use the default compression algorithm.
 
-### Clean-up settings
-
-Some operations are preserved accross builds. Currently they are:
-
-* The wiki (for documentation).
-
-In case you want to delete all these, the following option is available:
-
- * **cleanall**: force a clean up before starting the build.
-
 ### Virtual CPUs settings
 
 The number of virtual CPUs that are allocated in the virtual machine can be
@@ -250,6 +250,26 @@ uncommitted changes. This behaviour can be controlled by:
 
  * **ignorechanges**: allow to make a build that will ignore changes in the Git
    repository.
+
+### Developer convenience settings
+
+ * **keeprunning**: do not clean up the builder VM on build
+   success. The wiki will be cached for subsequent builds with this
+   option set.
+
+ * **forcecleanup**: ensure a new builder VM is used for `rake build`,
+   and also clean up this VM after the build, no matter if it
+   succeeded or not.
+
+ * **rescue**: implies **keeprunning** and will also not clean up the
+   build directory, which is useful for investigating build failures.
+
+### Jenkins
+
+  * **mergebasebranch**: if building from a branch (not tag!) this
+    forces a merge of the base branch before the build process starts
+    for real. This is mostly meant for our Jenkins deployment, so use
+    at your own risk.
 
 ### Example
 
