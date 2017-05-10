@@ -28,13 +28,13 @@ output_time_based_snapshot() {
 
 SERIAL=$(cat "config/APT_snapshots.d/$ARCHIVE/serial")
 RESOLVED_SERIAL=$(cat "tmp/APT_snapshots.d/$ARCHIVE/serial")
-BASE_BRANCH=$(base_branch)
+BASE_BRANCH=$(git_base_branch)
 CURRENT_BRANCH=$(git_current_branch)
 
 if [ "$BASE_BRANCH" = stable ] \
        || [ "$BASE_BRANCH" = testing ] \
        || [ "$CURRENT_BRANCH" = feature/stretch ] \
-       || ( on_a_tag && [ "$BASE_BRANCH" = feature/stretch ] ) \
+       || ( git_on_a_tag && [ "$BASE_BRANCH" = feature/stretch ] ) \
 then
     case "$ARCHIVE" in
        debian-security)
