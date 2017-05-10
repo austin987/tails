@@ -163,7 +163,6 @@ rm -rf \
    /var/cache/apt/*.bin \
    /var/cache/apt/archives/*.deb \
    /var/log/installer \
-   /var/lib/dhcp/* \
-    || :
+   /var/lib/dhcp/*
 
 exit 0
