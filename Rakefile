@@ -432,14 +432,12 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
   end
 end
 
-def has_box?(name = box_name)
-  not(capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/).empty?)
+def has_box?
+  not(capture_vagrant('box', 'list').grep(/^#{box_name}\s+\(libvirt,/).empty?)
 end
 
-def domain_name(name = box_name)
-  # Vagrant drops some characters when creating the domain and volumes
-  # based on the box name.
-  "#{name.delete('+')}_default"
+def domain_name
+  "#{box_name}_default"
 end
 
 def clean_up_builder_vms
