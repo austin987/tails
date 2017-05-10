@@ -110,17 +110,8 @@ apt-get -y install \
         perlmagick \
         wdg-html-validator
 
-# If apt-cacher-ng is running on the host using the default port, the
-# installation will fail, so let's prevent the daemon from
-# auto-starting. We want that any way since we will only start it
-# inside the VM if the "in-VM proxy" is to be used.
-cat > /usr/sbin/policy-rc.d <<EOF
-#!/bin/sh
-exit 101
-EOF
-chmod a+x /usr/sbin/policy-rc.d
+# Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
-rm /usr/sbin/policy-rc.d
 systemctl disable apt-cacher-ng.service
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
