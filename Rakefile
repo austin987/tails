@@ -404,7 +404,7 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
     run_vagrant_ssh("#{exported_env} build-tails")
 
     artifacts = list_artifacts
-    raise 'No build artifacts was found!' if artifacts.empty?
+    raise 'No build artifacts were found!' if artifacts.empty?
     user     = vagrant_ssh_config('User')
     hostname = vagrant_ssh_config('HostName')
     key_file = vagrant_ssh_config('IdentityFile')
