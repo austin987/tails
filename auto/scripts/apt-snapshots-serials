@@ -7,6 +7,7 @@ set -o pipefail
 BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
 CONFIG=config/APT_snapshots.d
 SERIAL_ONLY=
+FREEZE_EXCEPTIONS=debian-security
 
 get_latest_serial() {
 	origin=$1
@@ -22,6 +23,10 @@ else
 	shift
 	if [ "${1:-}" = --print-serials-only ]; then
 		SERIAL_ONLY=yes
+		shift
+	fi
+	if [ "${1:-}" = --freeze-debian-security ]; then
+		FREEZE_EXCEPTIONS=
 		shift
 	fi
 	if [ $# -eq 0 ]; then
@@ -49,7 +54,7 @@ case "$action" in
 			serial_file="$CONFIG/$origin/serial"
 			git=$(cat $serial_file)
 			case "$origin" in
-				debian-security)
+				${FREEZE_EXCEPTIONS})
 					new=latest
 					;;
 				*)
