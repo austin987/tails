@@ -409,23 +409,22 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
     hostname = vagrant_ssh_config('HostName')
     key_file = vagrant_ssh_config('IdentityFile')
     $stderr.puts "Retrieving artifacts from Vagrant build box."
-    artifacts.each do |artifact|
-      run_vagrant_ssh("sudo chown #{user} '#{artifact}'")
-      Process.wait(
-        Kernel.spawn(
-          'scp',
-          '-i', key_file,
-          # We need this since the user will not necessarily have a
-          # known_hosts entry. It is safe since an attacker must
-          # compromise libvirt's network config or the user running the
-          # command to modify the #{hostname} below.
-          '-o', 'StrictHostKeyChecking=no',
-          '-o', 'UserKnownHostsFile=/dev/null',
-          "#{user}@#{hostname}:#{artifact}", "#{ENV['ARTIFACTS']}"
-        )
-      )
-      raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
-    end
+    run_vagrant_ssh(
+      "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
+    )
+    fetch_command = [
+      'scp',
+      '-i', key_file,
+      # We need this since the user will not necessarily have a
+      # known_hosts entry. It is safe since an attacker must
+      # compromise libvirt's network config or the user running the
+      # command to modify the #{hostname} below.
+      '-o', 'StrictHostKeyChecking=no',
+      '-o', 'UserKnownHostsFile=/dev/null',
+    ]
+    fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
+    fetch_command << ENV['ARTIFACTS']
+    run_command(*fetch_command)
     clean_up_builder_vms unless $keep_running
   ensure
     clean_up_builder_vms if $force_cleanup
