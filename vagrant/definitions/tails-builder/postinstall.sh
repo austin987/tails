@@ -41,11 +41,11 @@ cat "/etc/apt/sources.list" | \
 	sed -e 's/jessie/jessie-backports/' \
 	> "/etc/apt/sources.list.d/jessie-backports.list"
 
-echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${SECURITY_SERIAL}/ jessie/updates main" \
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ jessie/updates main" \
 	> "/etc/apt/sources.list.d/jessie-security.list"
 
 echo "I: Adding our builder-jessie suite with live-build, pin it low."
-echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
+echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
 	Pin: release o=Tails,n=builder-jessie

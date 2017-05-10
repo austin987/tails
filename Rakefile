@@ -432,10 +432,6 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
   end
 end
 
-def box_name(vagrantfile_contents = open('vagrant/Vagrantfile') { |f| f.read })
-  /^\s*config.vm.box = '([^']+)'/.match(vagrantfile_contents)[1]
-end
-
 def has_box?(name = box_name)
   not(capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/).empty?)
 end
@@ -577,15 +573,11 @@ namespace :basebox do
       time needed for downloading around 250 MiB of Debian packages.
 
     END_OF_MESSAGE
-    # args will be either [serial] or [serial, comment]
-    args = /^tails-builder-(?:[^-]+)-(?:[^-]+)-(\d{10})(?:-(.+))?$/.match(box_name)[1,2].select { |m| not(m.nil?) }
     box_dir = VAGRANT_PATH + '/definitions/tails-builder'
-    Dir.chdir(box_dir) do
-      run_command('./generate-tails-builder-box.sh', *args)
-    end
+    run_command("#{box_dir}/generate-tails-builder-box.sh")
     # Let's use an absolute path since run_vagrant changes the working
     # directory but File.delete doesn't
-    box_path = "#{Dir.pwd}/vagrant/definitions/tails-builder/#{box_name}.box"
+    box_path = "#{box_dir}/#{box_name}.box"
     run_vagrant('box', 'add', '--name', box_name, box_path)
     File.delete(box_path)
     end
