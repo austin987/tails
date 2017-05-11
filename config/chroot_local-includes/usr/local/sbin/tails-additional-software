@@ -120,6 +120,12 @@ def upgrade_additional_packages():
 Please check your network connection, try to restart Tails, or read the system \
 log to understand better the problem."))
         return False
+    # Remove outdated package from the local package cache. This is needed is
+    # we disable apt-daily.timer, which would else take care of this cleanup.
+    apt_get_returncode = _launch_apt_get(["autoclean"])
+    if apt_get_returncode:
+        syslog.syslog(syslog.LOG_WARNING,
+             "Warning: autoclean failed, proceeding anyway.")
     if install_additional_packages():
         _notify(_("Your additional software"),
              _("The upgrade was successful."))
