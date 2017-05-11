@@ -67,6 +67,7 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
 	Pin-Priority: 991
 EOF
 
+echo "I: Upgrading system..."
 apt-get update
 apt-get -y dist-upgrade
 
@@ -111,6 +112,7 @@ apt-get -y install \
         wdg-html-validator
 
 # Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
+echo "I: Installing the caching proxy..."
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 systemctl disable apt-cacher-ng.service
 
