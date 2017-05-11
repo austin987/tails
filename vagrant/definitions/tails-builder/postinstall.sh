@@ -27,7 +27,9 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
-echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
+cat > /etc/apt/apt.conf.d/99retries << EOF
+APT::Acquire::Retries "20";
+EOF
 
 echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
@@ -67,6 +69,7 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
 	Pin-Priority: 991
 EOF
 
+echo "I: Upgrading system..."
 apt-get update
 apt-get -y dist-upgrade
 
@@ -112,6 +115,7 @@ apt-get -y install \
         psmisc
 
 # Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
+echo "I: Installing the caching proxy..."
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 systemctl disable apt-cacher-ng.service
 
