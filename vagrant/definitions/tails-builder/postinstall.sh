@@ -27,7 +27,9 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
-echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
+cat > /etc/apt/apt.conf.d/99retries << EOF
+APT::Acquire::Retries "20";
+EOF
 
 echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
