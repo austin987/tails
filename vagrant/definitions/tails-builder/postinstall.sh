@@ -27,7 +27,9 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
-echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
+cat > /etc/apt/apt.conf.d/99retries << EOF
+APT::Acquire::Retries "20";
+EOF
 
 echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
@@ -67,6 +69,7 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
 	Pin-Priority: 991
 EOF
 
+echo "I: Upgrading system..."
 apt-get update
 apt-get -y dist-upgrade
 
@@ -111,17 +114,9 @@ apt-get -y install \
         wdg-html-validator \
         psmisc
 
-# If apt-cacher-ng is running on the host using the default port, the
-# installation will fail, so let's prevent the daemon from
-# auto-starting. We want that any way since we will only start it
-# inside the VM if the "in-VM proxy" is to be used.
-cat > /usr/sbin/policy-rc.d <<EOF
-#!/bin/sh
-exit 101
-EOF
-chmod a+x /usr/sbin/policy-rc.d
+# Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
+echo "I: Installing the caching proxy..."
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
-rm /usr/sbin/policy-rc.d
 systemctl disable apt-cacher-ng.service
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
