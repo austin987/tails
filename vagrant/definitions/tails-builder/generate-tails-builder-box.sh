@@ -5,27 +5,33 @@ set -u
 # Based on ypcs' scripts found at:
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
 
-SERIAL="${1}"
-COMMENT="${2:-}"
-ARCHITECTURE="amd64"
-DISTRIBUTION="jessie"
+GIT_DIR="$(git rev-parse --show-toplevel)"
+cd "${GIT_DIR}/vagrant/definitions/tails-builder"
+
+build_setting() {
+    ruby -I "${GIT_DIR}/vagrant/lib" \
+         -e "require 'tails_build_settings.rb'; print ${1}"
+}
+
+get_serial() {
+    "${GIT_DIR}/auto/scripts/apt-snapshots-serials" \
+        cat --print-serials-only "${1}"
+}
+
+TARGET_NAME="$(build_setting box_name)"
+TARGET_IMG="${TARGET_NAME}.qcow2"
+TARGET_BOX="${TARGET_NAME}.box"
+ARCHITECTURE="$(build_setting ARCHITECTURE)"
+DISTRIBUTION="$(build_setting DISTRIBUTION)"
+HOSTNAME="vagrant-${DISTRIBUTION}"
 USERNAME="vagrant"
 PASSWORD="vagrant"
 SIZE="20G"
-HOSTNAME="vagrant-${DISTRIBUTION}"
-TARGET_NAME="tails-builder-${ARCHITECTURE}-${DISTRIBUTION}-${SERIAL}"
-if [ -n "${COMMENT}" ]; then
-   TARGET_NAME="${TARGET_NAME}-${COMMENT}"
-fi
-TARGET_IMG="${TARGET_NAME}.qcow2"
-TARGET_BOX="${TARGET_NAME}.box"
 LC_ALL=C
 
-SECURITY_SERIAL="$(
-    cd ../../.. && \
-    auto/scripts/apt-snapshots-serials get-latest debian-security | \
-        sed s/^debian-security:[^0-9]*// \
-)"
+DEBIAN_SERIAL="$(get_serial debian)"
+DEBIAN_SECURITY_SERIAL="$(get_serial debian-security)"
+TAILS_SERIAL="$(get_serial tails)"
 
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
@@ -43,8 +49,9 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
      LC_ALL=${LC_ALL} \
      ARCHITECTURE=${ARCHITECTURE} \
      DISTRIBUTION=${DISTRIBUTION} \
-     SECURITY_SERIAL=${SECURITY_SERIAL} \
-     SERIAL=${SERIAL} \
+     DEBIAN_SERIAL=${DEBIAN_SERIAL} \
+     DEBIAN_SECURITY_SERIAL=${DEBIAN_SECURITY_SERIAL} \
+     TAILS_SERIAL=${TAILS_SERIAL} \
      vmdebootstrap \
      --arch "${ARCHITECTURE}" \
      --distribution "${DISTRIBUTION}" \
@@ -54,7 +61,7 @@ sudo ${http_proxy:+http_proxy="$http_proxy"} \
      --grub \
      --hostname "${HOSTNAME}" \
      --log-level "debug" \
-     --mirror "http://time-based.snapshots.deb.tails.boum.org/debian/${SERIAL}" \
+     --mirror "http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}" \
      --debootstrapopts "keyring=${DEBOOTSTRAP_GNUPG_PUBRING}" \
      --owner "${SUDO_USER:-${USER}}" \
      --kernel-package "linux-image-${ARCHITECTURE}" \
