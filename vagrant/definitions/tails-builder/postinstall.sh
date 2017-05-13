@@ -41,11 +41,11 @@ cat "/etc/apt/sources.list" | \
 	sed -e 's/jessie/jessie-backports/' \
 	> "/etc/apt/sources.list.d/jessie-backports.list"
 
-echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${SECURITY_SERIAL}/ jessie/updates main" \
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ jessie/updates main" \
 	> "/etc/apt/sources.list.d/jessie-security.list"
 
 echo "I: Adding our builder-jessie suite with live-build, pin it low."
-echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
+echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
 	Pin: release o=Tails,n=builder-jessie
@@ -110,17 +110,8 @@ apt-get -y install \
         perlmagick \
         wdg-html-validator
 
-# If apt-cacher-ng is running on the host using the default port, the
-# installation will fail, so let's prevent the daemon from
-# auto-starting. We want that any way since we will only start it
-# inside the VM if the "in-VM proxy" is to be used.
-cat > /usr/sbin/policy-rc.d <<EOF
-#!/bin/sh
-exit 101
-EOF
-chmod a+x /usr/sbin/policy-rc.d
+# Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
-rm /usr/sbin/policy-rc.d
 systemctl disable apt-cacher-ng.service
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
@@ -163,7 +154,6 @@ rm -rf \
    /var/cache/apt/*.bin \
    /var/cache/apt/archives/*.deb \
    /var/log/installer \
-   /var/lib/dhcp/* \
-    || :
+   /var/lib/dhcp/*
 
 exit 0
