@@ -69,8 +69,12 @@ Options affecting the 'activate' action:
 "
 }
 
+escape() {
+	printf "%s\n" "${2}" | sed --regexp-extended "s/[${1}]/\\\&/g"
+}
+
 escape_dots() {
-	printf "%s\n" $1 | sed 's/\./\\./g'
+	escape . "${@}"
 }
 
 add_persistence_preset()
@@ -87,6 +91,14 @@ add_persistence_preset()
 		    >> "${CONFIG}" || error "Failed to make ${PRESET}: $?"
 		warning "Successfully made ${PRESET} persistent"
 	fi
+}
+
+remove_persistence_preset()
+{
+	local PRESET="${1}"
+	local CONFIG="${2}"
+	# We have to be careful to escape the delimiter (and . as usual)
+	sed -i "\_^$(escape '._' "${PRESET}")\s_d" "${CONFIG}"
 }
 
 is_preset_enabled() {
@@ -111,6 +123,21 @@ migrate_persistence_preset()
 		add_persistence_preset "${NEW}" "${NEW_SOURCE}" \
 		                       "${CONFIG}"
 	fi
+}
+
+migrate_icedove_to_thunderbird() {
+	local CONFIG="${1}"
+	local PERSISTENCE_DIR="$(dirname "${CONFIG}")"
+	if   [ -d "${PERSISTENCE_DIR}/thunderbird" ] || \
+	   ! [ -d "${PERSISTENCE_DIR}/icedove" ]
+	then
+		return
+	fi
+	mv "${PERSISTENCE_DIR}/icedove" "${PERSISTENCE_DIR}/thunderbird"
+	add_persistence_preset /home/amnesia/.thunderbird thunderbird "${conf}"
+	remove_persistence_preset /home/amnesia/.icedove "${conf}"
+	# The script /usr/local/bin/thunderbird takes care of the rest of
+	# the migration when starting Thunderbird.
 }
 
 # We override live-boot's logging facilities to get more useful error messages
@@ -344,6 +371,8 @@ activate_volumes ()
 		# Migrate Claws-mail persistence setting to Icedove
 		migrate_persistence_preset '/home/amnesia/.claws-mail' 'claws-mail' \
 			'/home/amnesia/.icedove' 'icedove' "$conf"
+
+		migrate_icedove_to_thunderbird "${conf}"
 	done
 
 	# Fix permissions on persistent directories that were created

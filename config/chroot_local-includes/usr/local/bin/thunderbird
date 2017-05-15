@@ -62,6 +62,16 @@ start_thunderbird() {
     unset SESSION_MANAGER
 
     configure_default_incoming_protocol
+
+    # Apply only the relevant parts of Debian's Icedove → Thunderbird
+    # migration procedure.
+    TB_PROFILE_FOLDER="${THUNDERBIRD_CONFIG_DIR}"
+    if [ ! -f "${TB_PROFILE_FOLDER}/.migrated" ]; then
+        . /usr/lib/thunderbird/thunderbird-wrapper-helper.sh
+        do_fix_mimetypes_rdf
+        do_create_migrated_mark_file
+    fi
+
     /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
 
