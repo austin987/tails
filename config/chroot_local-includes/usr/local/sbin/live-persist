@@ -6,6 +6,11 @@ error ()
 	exit 1
 }
 
+warning ()
+{
+	echo "warning: ${@}" >&2
+}
+
 # import Cmdline_old()
 . /lib/live/boot/9990-cmdline-old \
 	|| error 'Could not source /lib/live/boot/9990-cmdline-old'
@@ -93,11 +98,6 @@ migrate_persistence_preset()
 			warning "Successfully made $NEW_PRESET persistent"
 		fi
 	fi
-}
-
-warning ()
-{
-	echo "warning: ${@}" >&2
 }
 
 # We override live-boot's logging facilities to get more useful error messages
