@@ -55,7 +55,7 @@ Then /^I open Thunderbird's Add-ons Manager$/ do
   thunderbird_main.button('AppMenu').click
   thunderbird_main.child('Add-ons', roleName: 'menu item').click
   @thunderbird_addons = thunderbird_app.child(
-    'Add-ons Manager - Thunderbird Mail/News', roleName: 'frame'
+    'Add-ons Manager - Mozilla Thunderbird', roleName: 'frame'
   )
 end
 
@@ -104,7 +104,7 @@ When /^I fetch my email$/ do
   account = thunderbird_main.child($config['Thunderbird']['address'],
                                roleName: 'table row')
   account.click
-  thunderbird_main = thunderbird_app.child("#{$config['Thunderbird']['address']} - Thunderbird Mail/News", roleName: 'frame')
+  thunderbird_main = thunderbird_app.child("#{$config['Thunderbird']['address']} - Mozilla Thunderbird", roleName: 'frame')
 
   thunderbird_main.child('Mail Toolbar', roleName: 'tool bar')
     .button('Get Messages').click
