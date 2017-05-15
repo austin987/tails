@@ -73,6 +73,22 @@ escape_dots() {
 	printf "%s\n" $1 | sed 's/\./\\./g'
 }
 
+add_persistence_preset()
+{
+	local PRESET="${1}"
+	local PRESET_SOURCE="${2}"
+	local CONFIG="${3}"
+	if [ "${PERSISTENCE_READONLY}" = true ]
+	then
+		warning "We are trying to add a persistence preset while" \
+		        "persistence is in read-only mode"
+	else
+		echo "${PRESET}	source=${PRESET_SOURCE}" \
+		    >> "${CONFIG}" || error "Failed to make ${PRESET}: $?"
+		warning "Successfully made ${PRESET} persistent"
+	fi
+}
+
 migrate_persistence_preset()
 {
 	local OLD_PRESET="${1}"
@@ -88,15 +104,8 @@ migrate_persistence_preset()
 		"$CONFIG"
 	then
 		warning "Need to make $NEW_PRESET persistent"
-		if [ "$PERSISTENCE_READONLY" = true ]
-		then
-			warning "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
-		else
-			echo "$NEW_PRESET	source=$NEW_PRESET_SOURCE" \
-				>> "$CONFIG" \
-				|| error "Failed to make $NEW_PRESET: $?"
-			warning "Successfully made $NEW_PRESET persistent"
-		fi
+		add_persistence_preset "${NEW_PRESET}" "${NEW_PRESET_SOURCE}" \
+		                       "${CONFIG}"
 	fi
 }
 
