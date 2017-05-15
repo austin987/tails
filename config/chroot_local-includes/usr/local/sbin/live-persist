@@ -89,22 +89,26 @@ add_persistence_preset()
 	fi
 }
 
+is_preset_enabled() {
+	local PRESET="${1}"
+	local PRESET_SOURCE="${2}"
+	local CONFIG="${3}"
+	grep --extended-regexp --line-regex --quiet --no-messages \
+	     -e "$(escape_dots ${PRESET})\s+source=${PRESET_SOURCE}" "$CONFIG"
+}
+
 migrate_persistence_preset()
 {
-	local OLD_PRESET="${1}"
-	local OLD_PRESET_SOURCE="${2}"
-	local NEW_PRESET="${3}"
-	local NEW_PRESET_SOURCE="${4}"
+	local OLD="${1}"
+	local OLD_SOURCE="${2}"
+	local NEW="${3}"
+	local NEW_SOURCE="${4}"
 	local CONFIG="${5}"
-	if grep -E -qs --line-regex \
-		-e "$(escape_dots ${OLD_PRESET})\s+source=${OLD_PRESET_SOURCE}" \
-		"$CONFIG" \
-		&& ! grep -E -qs --line-regex \
-		-e "$(escape_dots ${NEW_PRESET})\s+source=${NEW_PRESET_SOURCE}" \
-		"$CONFIG"
+	if   is_preset_enabled "${OLD}" "${OLD_SOURCE}" "${CONFIG}" && \
+	   ! is_preset_enabled "${NEW}" "${NEW_SOURCE}" "${CONFIG}"
 	then
-		warning "Need to make $NEW_PRESET persistent"
-		add_persistence_preset "${NEW_PRESET}" "${NEW_PRESET_SOURCE}" \
+		warning "Need to make ${NEW} persistent"
+		add_persistence_preset "${NEW}" "${NEW_SOURCE}" \
 		                       "${CONFIG}"
 	fi
 }
