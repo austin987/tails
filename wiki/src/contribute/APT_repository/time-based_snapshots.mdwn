@@ -77,9 +77,21 @@ that shall be used during the freeze:
 
         git checkout "$RELEASE_BRANCH" && \
         ./auto/scripts/apt-snapshots-serials freeze && \
+
+Normally when freezing the APT snapshots used when building Tails we
+also freeze the snapshots used to generate our builder VM:
+
+        ( \
+            cd vagrant/definitions/tails-builder && \
+            ../../../auto/scripts/apt-snapshots-serials freeze --freeze-debian-security \
+        )
+
+Then commit:
+
         git commit \
             -m "Freeze APT snapshots for ${VERSION}." \
-            config/APT_snapshots.d/*/serial
+            config/APT_snapshots.d/*/serial \
+            vagrant/definitions/tails-builder/config/APT_snapshots.d/*/serial
 
 <a id="thaw"></a>
 
@@ -127,15 +139,17 @@ days from now:
 
 	git checkout "$RELEASE_BRANCH" && \
 	(
-	   cd config/APT_snapshots.d && \
-	   for ARCHIVE in * ; do
-           if ! grep -qs '^latest$' "$ARCHIVE"/serial; then
-               ssh reprepro-time-based-snapshots@incoming.deb.tails.boum.org \
-                   tails-bump-apt-snapshot-valid-until \
-                       "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" \
-                       "$DAYS_FROM_NOW"
-           fi
-	   done
+        for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
+            cd "${dir}" && \
+	        for ARCHIVE in * ; do
+                if ! grep -qs '^latest$' "$ARCHIVE"/serial; then
+                    ssh reprepro-time-based-snapshots@incoming.deb.tails.boum.org \
+                        tails-bump-apt-snapshot-valid-until \
+                            "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" \
+                            "$DAYS_FROM_NOW"
+                fi
+	        done
+        done
 	)
 
 Stop tracking a distribution
