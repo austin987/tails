@@ -50,7 +50,3 @@ pref("mailnews.auto_config.oauth2.enabled", false);
 // resolver, but over HTTPS to some DNS web service, but that web
 // service could still be targeted.
 pref("mailnews.auto_config.dns_mx_lookup.enabled", false);
-// Given our AppArmor sandboxing, Thunderbird will not be allowed to
-// open external applications, so let's not offer the option to the user,
-// and instead only propose them to save downloaded files.
-pref("browser.download.forbid_open_with", true);
