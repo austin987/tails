@@ -10,34 +10,11 @@ set -u
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-CLAWSMAIL_CONFIG_DIR="${HOME}/.claws-mail"
 THUNDERBIRD_CONFIG_DIR="${HOME}/.thunderbird"
 PROFILE="${THUNDERBIRD_CONFIG_DIR}/profile.default"
 
-claws_mail_config_is_persistent() {
-    [ "$(findmnt --noheadings --output SOURCE --target "${CLAWSMAIL_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/claws-mail]" ]
-}
-
 thunderbird_config_is_persistent() {
     [ "$(findmnt --noheadings --output SOURCE --target "${THUNDERBIRD_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/thunderbird]" ]
-}
-
-warn_about_claws_mail_persistence() {
-
-    local dialog_msg="<b><big>`gettext \"The <b>Claws Mail</b> persistence feature is activated.\"`</big></b>
-
-`gettext \"If you have emails saved in <b>Claws Mail</b>, you should <a href='https://tails.boum.org/doc/anonymous_internet/claws_mail_to_icedove'>migrate your data</a> before starting <b>Thunderbird</b>.\"`"
-
-    if [ -f "${PROFILE}/prefs.js" ]; then
-        dialog_msg="${dialog_msg}
-
-`gettext \"If you already migrated your emails to <b>Thunderbird</b>, you should <a href='https://tails.boum.org/doc/anonymous_internet/claws_mail_to_icedove#delete'>delete all your <b>Claws Mail</b> data</a> to remove this warning.\"`"
-    fi
-
-    local launch="`gettext \"_Launch\"`"
-    local exit="`gettext \"_Exit\"`"
-    zenity --question --title "" --text "${dialog_msg}" --default-cancel \
-           --ok-label "${launch}" --cancel-label "${exit}"
 }
 
 configure_default_incoming_protocol() {
@@ -74,9 +51,5 @@ start_thunderbird() {
 
     /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
-
-if claws_mail_config_is_persistent && [ -f "${CLAWSMAIL_CONFIG_DIR}/accountrc" ]; then
-   warn_about_claws_mail_persistence || exit 0
-fi
 
 start_thunderbird "${@}"
