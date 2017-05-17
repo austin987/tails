@@ -537,9 +537,11 @@ suite should be ready, so it is time to:
       git push --tags --force && \
       git push origin "${RELEASE_BRANCH:?}"
 
-* check out the release tag:
-
-      git checkout "${TAG:?}"
+   Note: for Jenkins to build the release you must push the release
+   branch with its tip tagged. I.e. if you deviate from the above
+   commands by e.g. committing a commit in between `gut tag` and the
+   first `git push` then Jenkins won't build from the tag -- please
+   avoid that!
 
 * build the final image!
 
@@ -1161,6 +1163,14 @@ this, and skip what does not make sense for a RC.
                     -not -name '*~test_*~test.iuk' -delete \
              \"
 
+1. Check how much space our mirrors will need:
+
+        ssh rsync.lizard du -sh /srv/rsync/tails
+
+   Compare it to the minimum disk space we ask of our mirror operators
+   (30 GiB) and determine if any further action is needed to either
+   reduce our usage by deleting stuff, or asking them to give us more
+   space.
 1. Delete Git branches that were merged:
 
         bare_repo=$(mktemp -d)

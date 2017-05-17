@@ -70,12 +70,7 @@ The Tails persistent volume is a LUKS-encrypted GPT partition, labeled
 Specifications
 ==============
 
-Once a persistent volume is enabled, two operation modes are
-supported:
-
-* read-write access: changes to persistent files are saved
-* read-only access to **only** be able to *use* persistent files
-  (e.g. a GnuPG keyring) without leaving any new trace.
+Once a persistent volume is enabled, changes to persistent files are saved.
 
 Moreover:
 
@@ -120,11 +115,6 @@ That's why we have decided to:
   option to create symlinks from the root of a non-persistent
   directory (e.g. `$HOME`) to regular files stored in
   a persistent location (e.g. `.gitconfig`, `.vimrc`, etc.)
-
-The read-only mode was implemented by merging the persistent
-volume with a "diff" branch on ramdisk using aufs, and mount the
-resultant device, so that the mountpoint is seen as writable by
-applications but no actual change is made on disk.
 
 The code we ship lives in the `tmp-persistent-custom` branch in
 our [[live-boot Git repository|contribute/git]]. We build packages
@@ -269,8 +259,7 @@ we've written a graphical [[!tails_todo boot_menu]]:
 
 #### Design
 
-* asks whether to enable persistence at all; if yes, read-only or
-  read-write
+* asks whether to enable persistence at all;
 * ask list of possibly valid persistent containers to `live-persist`
 * initial implementation (MVC -speak): the model (`live-persist` and
   tails-greeter code that runs it) supports enabling multiple
@@ -290,8 +279,6 @@ backend / tails-greeter interface
 ### Long story short
 
 0. The user chooses to toggle persistence on in `tails-greeter`.
-0. Still in `tails-greeter`, the user chooses if s/he wants read-only
-   or read-write persistence.
 0. `tails-greeter` asks `live-boot` the list of possibly valid
    persistent containers.
 0. For each such volume, `tails-greeter` asks the user to enter the
