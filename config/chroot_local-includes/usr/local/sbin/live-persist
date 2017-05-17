@@ -97,8 +97,11 @@ remove_persistence_preset()
 {
 	local PRESET="${1}"
 	local CONFIG="${2}"
-	# We have to be careful to escape the delimiter (and . as usual)
-	sed -i "\_^$(escape '._' "${PRESET}")\s_d" "${CONFIG}"
+	# The intent here is to simply remove the line starting with
+	# $PRESET, but since it is a path, and sed uses / as delimiter
+	# for patterns we can use together with d, we have to escape /
+	# (and . as usual).
+	sed -i "/^$(escape './' "${PRESET}")\s/d" "${CONFIG}"
 }
 
 is_preset_enabled() {
