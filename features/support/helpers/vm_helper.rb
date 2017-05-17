@@ -174,6 +174,10 @@ class VM
   end
 
   def eject_cdrom
+    execute_successfully('/usr/bin/eject -m')
+  end
+
+  def remove_cdrom_image
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
     if cdrom_el.nil?
@@ -195,7 +199,7 @@ class VM
     if image.nil? or image == ''
       raise "Can't set cdrom image to an empty string"
     end
-    eject_cdrom
+    remove_cdrom_image
     domain_rexml = REXML::Document.new(@domain.xml_desc)
     cdrom_el = domain_rexml.elements["domain/devices/disk[@device='cdrom']"]
     cdrom_el.add_element('source', { 'file' => image })
