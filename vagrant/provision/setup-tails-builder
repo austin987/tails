@@ -17,11 +17,10 @@ fi
 
 latest_serial(){
 	local archive="${1}"
-        get_serial="$(
-            cd /amnesia.git
-            auto/scripts/apt-snapshots-serials get-latest ${archive}
-        )"
-	echo "${get_serial#${1}: }"
+	(
+		cd /amnesia.git
+		auto/scripts/apt-snapshots-serials get-latest --print-serials-only ${archive}
+        )
 }
 
 if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
