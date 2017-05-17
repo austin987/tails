@@ -411,46 +411,39 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
     run_vagrant_ssh("#{exported_env} build-tails")
 
     artifacts = list_artifacts
-    raise 'No build artifacts was found!' if artifacts.empty?
+    raise 'No build artifacts were found!' if artifacts.empty?
     user     = vagrant_ssh_config('User')
     hostname = vagrant_ssh_config('HostName')
     key_file = vagrant_ssh_config('IdentityFile')
     $stderr.puts "Retrieving artifacts from Vagrant build box."
-    artifacts.each do |artifact|
-      run_vagrant_ssh("sudo chown #{user} '#{artifact}'")
-      Process.wait(
-        Kernel.spawn(
-          'scp',
-          '-i', key_file,
-          # We need this since the user will not necessarily have a
-          # known_hosts entry. It is safe since an attacker must
-          # compromise libvirt's network config or the user running the
-          # command to modify the #{hostname} below.
-          '-o', 'StrictHostKeyChecking=no',
-          '-o', 'UserKnownHostsFile=/dev/null',
-          "#{user}@#{hostname}:#{artifact}", "#{ENV['ARTIFACTS']}"
-        )
-      )
-      raise "Failed to fetch artifact '#{artifact}'" unless $?.success?
-    end
+    run_vagrant_ssh(
+      "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
+    )
+    fetch_command = [
+      'scp',
+      '-i', key_file,
+      # We need this since the user will not necessarily have a
+      # known_hosts entry. It is safe since an attacker must
+      # compromise libvirt's network config or the user running the
+      # command to modify the #{hostname} below.
+      '-o', 'StrictHostKeyChecking=no',
+      '-o', 'UserKnownHostsFile=/dev/null',
+    ]
+    fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
+    fetch_command << ENV['ARTIFACTS']
+    run_command(*fetch_command)
     clean_up_builder_vms unless $keep_running
   ensure
     clean_up_builder_vms if $force_cleanup
   end
 end
 
-def box_name(vagrantfile_contents = open('vagrant/Vagrantfile') { |f| f.read })
-  /^\s*config.vm.box = '([^']+)'/.match(vagrantfile_contents)[1]
+def has_box?
+  not(capture_vagrant('box', 'list').grep(/^#{box_name}\s+\(libvirt,/).empty?)
 end
 
-def has_box?(name = box_name)
-  not(capture_vagrant('box', 'list').grep(/^#{name}\s+\(libvirt,/).empty?)
-end
-
-def domain_name(name = box_name)
-  # Vagrant drops some characters when creating the domain and volumes
-  # based on the box name.
-  "#{name.delete('+')}_default"
+def domain_name
+  "#{box_name}_default"
 end
 
 def clean_up_builder_vms
@@ -584,15 +577,11 @@ namespace :basebox do
       time needed for downloading around 250 MiB of Debian packages.
 
     END_OF_MESSAGE
-    # args will be either [serial] or [serial, comment]
-    args = /^tails-builder-(?:[^-]+)-(?:[^-]+)-(\d{10})(?:-(.+))?$/.match(box_name)[1,2].select { |m| not(m.nil?) }
     box_dir = VAGRANT_PATH + '/definitions/tails-builder'
-    Dir.chdir(box_dir) do
-      run_command('./generate-tails-builder-box.sh', *args)
-    end
+    run_command("#{box_dir}/generate-tails-builder-box.sh")
     # Let's use an absolute path since run_vagrant changes the working
     # directory but File.delete doesn't
-    box_path = "#{Dir.pwd}/vagrant/definitions/tails-builder/#{box_name}.box"
+    box_path = "#{box_dir}/#{box_name}.box"
     run_vagrant('box', 'add', '--name', box_name, box_path)
     File.delete(box_path)
     end

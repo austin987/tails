@@ -21,10 +21,9 @@ require_relative 'lib/tails_build_settings'
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
 Vagrant.configure("2") do |config|
-  config.vm.box = 'tails-builder-amd64-jessie-2017042704-feature-11980'
+  config.vm.box = box_name
   config.vm.box_url = "http://dl.amnesia.boum.org/tails/project/vagrant/#{config.vm.box}.box"
-  config.vm.box_download_checksum_type = "sha256"
-  config.vm.box_download_checksum = '9cd2df4b0b5f520b46fbfc126f46a56d0f7c2f20462d9b64bbdf75acd75edc49'
+  config.vm.box_url = "http://127.0.0.1/dev/null"
   ENV['EXPORTED_VARIABLES'] ||= ""
   env_vars = ENV.select { |k,v| ENV['EXPORTED_VARIABLES'].split.include?(k) }
                    .map { |k, v| "#{k}='#{v}'" } .join(' ')

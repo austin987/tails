@@ -27,7 +27,9 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
-echo 'APT::Acquire::Retries "20";' > /etc/apt/apt.conf.d/99retries
+cat > /etc/apt/apt.conf.d/99retries << EOF
+APT::Acquire::Retries "20";
+EOF
 
 echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
@@ -41,11 +43,11 @@ cat "/etc/apt/sources.list" | \
 	sed -e 's/jessie/jessie-backports/' \
 	> "/etc/apt/sources.list.d/jessie-backports.list"
 
-echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${SECURITY_SERIAL}/ jessie/updates main" \
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ jessie/updates main" \
 	> "/etc/apt/sources.list.d/jessie-security.list"
 
 echo "I: Adding our builder-jessie suite with live-build, pin it low."
-echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
+echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
 	Pin: release o=Tails,n=builder-jessie
@@ -67,6 +69,7 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
 	Pin-Priority: 991
 EOF
 
+echo "I: Upgrading system..."
 apt-get update
 apt-get -y dist-upgrade
 
@@ -115,6 +118,7 @@ apt-get -y install \
 apt-get -y install dbus
 
 # Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
+echo "I: Installing the caching proxy..."
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 systemctl disable apt-cacher-ng.service
 
@@ -158,7 +162,6 @@ rm -rf \
    /var/cache/apt/*.bin \
    /var/cache/apt/archives/*.deb \
    /var/log/installer \
-   /var/lib/dhcp/* \
-    || :
+   /var/lib/dhcp/*
 
 exit 0
