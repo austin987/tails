@@ -685,8 +685,10 @@ Prepare upgrade-description files
      make this work, one must _not_ pass `--previous-version 1.1`,
      that would remove the existing incremental upgrade path from 1.1
      to 1.1.1.
-   * If preparing a release candidate, add `--channel alpha`
-   * If preparing a release candidate, drop all `--next-version`
+   * If preparing anything but a final release (e.g. an alpha, beta
+     or RC), add `--channel alpha`
+   * If preparing anything but a final release (e.g. an alpha, beta
+     or RC), drop all `--next-version`
      arguments, and instead pass (**untested!**)
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
    * If preparing a point-release, pass neither
@@ -719,7 +721,8 @@ Prepare upgrade-description files
          git push origin ${RELEASE_BRANCH:?} \
        )
 
-1. If preparing a release candidate, move the generated or updated
+1. If preparing anything but a final release (e.g. an alpha, beta
+   or RC), move the generated or updated
    files to `${MASTER_CHECKOUT:?}`, commit and push: given the updates are
    advertised on the *alpha* channel, while all users use the *stable*
    one by default, this will allow you to more easily test the IUK
