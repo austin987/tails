@@ -25,7 +25,7 @@ set -x
 
 platform="i386-efi"
 outdir="binary/EFI/BOOT/grub/$platform"
-efi_name="ia32"
+efi_name="IA32"
 
 grub_cpmodules () {
 	if [ -z "$1" ] || [ -z "$2" ]; then
@@ -78,10 +78,10 @@ Echo_message 'including GRUB EFI for ia32 in the ISO filesystem'
 
 # Build the core image
 Chroot chroot grub-mkimage -O "$platform" \
-	-o "/tmp/boot$efi_name.efi" -p "/efi/boot/grub" \
+	-o "/tmp/BOOT$efi_name.EFI" -p "/efi/boot/grub" \
 	search configfile normal tar fat part_gpt linux \
 	gzio
-mv "chroot/tmp/boot$efi_name.efi" "binary/EFI/BOOT/boot$efi_name.efi"
+mv "chroot/tmp/BOOT$efi_name.EFI" "binary/EFI/BOOT/BOOT$efi_name.EFI"
 
 mkdir -p "$outdir"
 grub_cpmodules "$outdir" "$platform"
