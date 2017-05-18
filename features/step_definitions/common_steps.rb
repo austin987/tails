@@ -930,12 +930,13 @@ def share_host_files(files)
   return mount_dir
 end
 
-def mount_USB_drive(disk, fs)
+def mount_USB_drive(disk, fs_options = {})
+  fs_options[:encrypted] ||= false
   @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
   dev = $vm.disk_dev(disk)
   partition = dev + '1'
-  if /\bencrypted with password\b/.match(fs)
-    password = /encrypted with password "([^"]+)"/.match(fs)[1]
+  if fs_options[:encrypted]
+    password = fs_options[:password]
     assert_not_nil(password)
     luks_mapping = "#{disk}_unlocked"
     $vm.execute_successfully(
@@ -945,13 +946,11 @@ def mount_USB_drive(disk, fs)
     $vm.execute_successfully(
       "mount /dev/mapper/#{luks_mapping} #{@tmp_usb_drive_mount_dir}"
     )
-    @tmp_filesystem_is_encrypted = true
   else
     $vm.execute_successfully("mount #{partition} #{@tmp_usb_drive_mount_dir}")
-    @tmp_filesystem_is_encrypted = false
   end
   @tmp_filesystem_disk = disk
-  @tmp_filesystem_fs = fs
+  @tmp_filesystem_options = fs_options
   @tmp_filesystem_partition = partition
   return @tmp_usb_drive_mount_dir
 end
@@ -963,7 +962,13 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
   step "I create a gpt partition labeled \"#{disk}\" with " +
        "an #{fs} on disk \"#{disk}\""
   step "I plug USB drive \"#{disk}\""
-  mount_dir = mount_USB_drive(disk, fs)
+  fs_options = {}
+  fs_options[:filesystem] = /(.*) filesystem/.match(fs)[1]
+  if /\bencrypted with password\b/.match(fs)
+    fs_options[:encrypted] = true
+    fs_options[:password] = /encrypted with password "([^"]+)"/.match(fs)[1]
+  end
+  mount_dir = mount_USB_drive(disk, fs_options)
   @tmp_filesystem_size_b = convert_to_bytes(
     avail_space_in_mountpoint_kB(mount_dir),
     'KB'
@@ -971,12 +976,12 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
 end
 
 When(/^I mount the USB drive again$/) do
-  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_fs)
+  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_options)
 end
 
 When(/^I umount the USB drive$/) do
   $vm.execute_successfully("umount #{@tmp_usb_drive_mount_dir}")
-  if @tmp_filesystem_is_encrypted
+  if @tmp_filesystem_options[:encrypted]
     $vm.execute_successfully("cryptsetup luksClose #{@tmp_filesystem_disk}_unlocked")
   end
 end
