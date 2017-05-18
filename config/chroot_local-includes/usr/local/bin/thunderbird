@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -e
+set -u
+
+# Import set_mozilla_pref()
+. /usr/local/lib/tails-shell-library/tor-browser.sh
+
+THUNDERBIRD_CONFIG_DIR="${HOME}/.thunderbird"
+PROFILE="${THUNDERBIRD_CONFIG_DIR}/profile.default"
+
+thunderbird_config_is_persistent() {
+    [ "$(findmnt --noheadings --output SOURCE --target "${THUNDERBIRD_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/thunderbird]" ]
+}
+
+configure_default_incoming_protocol() {
+    # For extensions.torbirdy.defaultprotocol, POP = 0, IMAP = 1
+    local default_protocol
+    if thunderbird_config_is_persistent; then
+        default_protocol=0
+    else
+        default_protocol=1
+    fi
+    set_mozilla_pref "${PROFILE}/preferences/0000tails.js" \
+                     "extensions.torbirdy.defaultprotocol" \
+                     "${default_protocol}"
+}
+
+start_thunderbird() {
+   # Give Thunderbird its own temp directory, similar rationale to a1fd1f0f & #9558.
+    TMPDIR="${PROFILE}/tmp"
+    mkdir --mode=0700 -p "$TMPDIR"
+    export TMPDIR
+
+    unset SESSION_MANAGER
+
+    configure_default_incoming_protocol
+
+    # Apply only the relevant parts of Debian's Icedove → Thunderbird
+    # migration procedure.
+    TB_PROFILE_FOLDER="${THUNDERBIRD_CONFIG_DIR}"
+    if [ ! -f "${TB_PROFILE_FOLDER}/.migrated" ]; then
+        . /usr/lib/thunderbird/thunderbird-wrapper-helper.sh
+        do_fix_mimetypes_rdf
+        do_create_migrated_mark_file
+    fi
+
+    /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
+}
+
+start_thunderbird "${@}"
