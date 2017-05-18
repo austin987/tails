@@ -48,10 +48,6 @@ Given /^a computer$/ do
   $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
-Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
-  $vm.set_ram_size(size, unit)
-end
-
 Given /^the computer is set to boot from the Tails DVD$/ do
   $vm.set_cdrom_boot(TAILS_ISO)
 end
@@ -193,15 +189,8 @@ def boot_menu_tab_msg_image
   end
 end
 
-def memory_wipe_timeout
-  nr_gigs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  nr_gigs_of_ram*30
-end
-
 Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   boot_timeout = 3*60
-  # We need some extra time for memory wiping if rebooting
-  boot_timeout += memory_wipe_timeout if reboot
   # Simply looking for the boot splash image is not robust; sometimes
   # sikuli is not fast enough to see it. Here we hope that spamming
   # TAB, which will halt the boot process by showing the prompt for
@@ -323,6 +312,7 @@ Given /^the Tails desktop is ready$/ do
   @screen.wait(desktop_started_picture, 180)
   # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
   @screen.wait("GnomeSystrayFlorence.png", 30)
+  @screen.wait("DesktopTailsDocumentation.png", 30)
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
@@ -511,26 +501,12 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  nr_gibs_of_ram = convert_from_bytes($vm.get_ram_size_in_bytes, 'GiB').ceil
-  timeout = nr_gibs_of_ram*5*60
-  # Work around Tails bug #11786, where something goes wrong when we
-  # kexec to the new kernel for memory wiping and gets dropped to a
-  # BusyBox shell instead.
-  try_for(timeout) do
-    if @screen.existsAny(['TailsBug11786a.png', 'TailsBug11786b.png'])
-      puts "We were hit by bug #11786: memory wiping got stuck"
-      if mode == 'restarts'
-        $vm.reset
-      else
-        $vm.power_off
-      end
+  try_for(3*60) do
+    if mode == 'restarts'
+      @screen.find('TailsGreeter.png')
+      true
     else
-      if mode == 'restarts'
-        @screen.find('TailsGreeter.png')
-        true
-      else
-        ! $vm.is_running?
-      end
+      ! $vm.is_running?
     end
   end
 end
@@ -955,12 +931,13 @@ def share_host_files(files)
   return mount_dir
 end
 
-def mount_USB_drive(disk, fs)
+def mount_USB_drive(disk, fs_options = {})
+  fs_options[:encrypted] ||= false
   @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
   dev = $vm.disk_dev(disk)
   partition = dev + '1'
-  if /\bencrypted with password\b/.match(fs)
-    password = /encrypted with password "([^"]+)"/.match(fs)[1]
+  if fs_options[:encrypted]
+    password = fs_options[:password]
     assert_not_nil(password)
     luks_mapping = "#{disk}_unlocked"
     $vm.execute_successfully(
@@ -970,13 +947,11 @@ def mount_USB_drive(disk, fs)
     $vm.execute_successfully(
       "mount /dev/mapper/#{luks_mapping} #{@tmp_usb_drive_mount_dir}"
     )
-    @tmp_filesystem_is_encrypted = true
   else
     $vm.execute_successfully("mount #{partition} #{@tmp_usb_drive_mount_dir}")
-    @tmp_filesystem_is_encrypted = false
   end
   @tmp_filesystem_disk = disk
-  @tmp_filesystem_fs = fs
+  @tmp_filesystem_options = fs_options
   @tmp_filesystem_partition = partition
   return @tmp_usb_drive_mount_dir
 end
@@ -988,7 +963,13 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
   step "I create a gpt partition labeled \"#{disk}\" with " +
        "an #{fs} on disk \"#{disk}\""
   step "I plug USB drive \"#{disk}\""
-  mount_dir = mount_USB_drive(disk, fs)
+  fs_options = {}
+  fs_options[:filesystem] = /(.*) filesystem/.match(fs)[1]
+  if /\bencrypted with password\b/.match(fs)
+    fs_options[:encrypted] = true
+    fs_options[:password] = /encrypted with password "([^"]+)"/.match(fs)[1]
+  end
+  mount_dir = mount_USB_drive(disk, fs_options)
   @tmp_filesystem_size_b = convert_to_bytes(
     avail_space_in_mountpoint_kB(mount_dir),
     'KB'
@@ -996,12 +977,12 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
 end
 
 When(/^I mount the USB drive again$/) do
-  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_fs)
+  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_options)
 end
 
 When(/^I umount the USB drive$/) do
   $vm.execute_successfully("umount #{@tmp_usb_drive_mount_dir}")
-  if @tmp_filesystem_is_encrypted
+  if @tmp_filesystem_options[:encrypted]
     $vm.execute_successfully("cryptsetup luksClose #{@tmp_filesystem_disk}_unlocked")
   end
 end

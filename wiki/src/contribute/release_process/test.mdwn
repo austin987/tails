@@ -98,7 +98,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Running `/usr/local/lib/getTorBrowserUserAgent` should produce the User-Agent set by the
   installed version of Torbutton, and used in the Tor Browser. (automate: [[!tails_ticket 10268]])
 
-# Icedove
+# Thunderbird
 
 * Check mail over IMAP using:
   - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
@@ -108,19 +108,19 @@ tracked by tickets prefixed with `todo/test_suite:`.
   - a hidden service SMTP server (see above).
 
 * Check that the profile works and is torified:
-  1. Send an email using Icedove and a non-anonymizing SMTP relay (a
+  1. Send an email using Thunderbird and a non-anonymizing SMTP relay (a
      SMTP relay that writes the IP address of the client it is
      relaying email for in the Received header).
   1. Then check that email's headers once received, especially the
      `Received:` one.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
   at the application level:
-  1. Start Icedove using the GNOME Applications menu.
-  2. Disable SSL/TLS for SMTP in Icedove (so take precautions for not
+  1. Start Thunderbird using the GNOME Applications menu.
+  2. Disable SSL/TLS for SMTP in Thunderbird (so take precautions for not
      leaking your password in plaintext by either changing it
      temporarily or using a disposable account). Or better, configure
      StartTLS, since it will send two EHLO/HELO: one before TLS is
-     initiated; one after. The assumption here is that Icedove will
+     initiated; one after. The assumption here is that Thunderbird will
      send the same both times.
   3. Run `sudo tcpdump -n -i lo -w dump` while sending an email to
      capture the packets before Tor encrypts it, then close
@@ -130,12 +130,12 @@ tracked by tickets prefixed with `todo/test_suite:`.
   4. Check the dump for the HELO/EHLO message and
      verify that it only contains `127.0.0.1`:
      `sudo tcpdump -A -r dump | grep EHLO`
-* Make sure Icedove Mail use its dedicated `SocksPort` (see "SocksPort
+* Make sure Thunderbird Mail use its dedicated `SocksPort` (see "SocksPort
   for the MUA" in `/etc/tor/torrc`) when connecting to IMAP / POP3 /
   SMTP servers (both clearnet and hidden services) by monitoring the
   output of this command:
 
-      sudo watch -n 0.1 'ss -taupen | grep icedove'
+      sudo watch -n 0.1 'ss -taupen | grep thunderbird'
 
 # Tor
 
@@ -189,14 +189,14 @@ tracked by tickets prefixed with `todo/test_suite:`.
   If:
 
   * the update-description files have been published on the
-    *alpha* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
+    *test* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
   * and the IUK has been published already (see
     <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>
     and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
 
   then:
 
-        echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
+        echo 'TAILS_CHANNEL="test"' | sudo tee --append /etc/os-release && \
         tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
