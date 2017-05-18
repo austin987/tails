@@ -10,7 +10,6 @@ systemctl enable memlockd.service
 # Enable our own systemd unit files
 systemctl enable onion-grater.service
 systemctl enable tails-autotest-remote-shell.service
-systemctl enable tails-reconfigure-fontconfig.service
 systemctl enable tails-reconfigure-kexec.service
 systemctl enable tails-reconfigure-memlockd.service
 systemctl enable tails-sdmem-on-media-removal.service
