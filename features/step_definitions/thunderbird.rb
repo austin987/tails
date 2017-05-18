@@ -14,7 +14,7 @@ def thunderbird_wizard
 end
 
 def thunderbird_inbox
-  folder_view = thunderbird_main.child($config['Thunderbird']['address'],
+  folder_view = thunderbird_main.child($config['Icedove']['address'],
                                    roleName: 'table row').parent
   folder_view.children(roleName: 'table row', recursive: false).find do |e|
     e.name.match(/^Inbox( .*)?$/)
@@ -84,9 +84,9 @@ end
 
 When /^I enter my email credentials into the autoconfiguration wizard$/ do
   thunderbird_wizard.child('Email address:', roleName: 'entry')
-    .typeText($config['Thunderbird']['address'])
+    .typeText($config['Icedove']['address'])
   thunderbird_wizard.child('Password:', roleName: 'entry')
-    .typeText($config['Thunderbird']['password'])
+    .typeText($config['Icedove']['password'])
   thunderbird_wizard.button('Continue').click
   # This button is shown if and only if a configuration has been found
   try_for(120) { thunderbird_wizard.button('Done') }
@@ -101,10 +101,10 @@ Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server 
 end
 
 When /^I fetch my email$/ do
-  account = thunderbird_main.child($config['Thunderbird']['address'],
+  account = thunderbird_main.child($config['Icedove']['address'],
                                roleName: 'table row')
   account.click
-  thunderbird_main = thunderbird_app.child("#{$config['Thunderbird']['address']} - Mozilla Thunderbird", roleName: 'frame')
+  thunderbird_main = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
 
   thunderbird_main.child('Mail Toolbar', roleName: 'tool bar')
     .button('Get Messages').click
@@ -165,14 +165,14 @@ When /^I alter the email configuration to use (.*) over a hidden services$/ do |
   end
   entry = thunderbird_wizard.child(entry_name, roleName: 'entry')
   entry.text = ''
-  entry.typeText($config['Thunderbird']["#{protocol.downcase}_hidden_service"])
+  entry.typeText($config['Icedove']["#{protocol.downcase}_hidden_service"])
 end
 
 When /^I send an email to myself$/ do
   thunderbird_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
   compose_window = thunderbird_app.child('Write: (no subject)')
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
-    .typeText($config['Thunderbird']['address'])
+    .typeText($config['Icedove']['address'])
   # The randomness of the subject will make it easier for us to later
   # find *exactly* this email. This makes it safe to run several tests
   # in parallel.
