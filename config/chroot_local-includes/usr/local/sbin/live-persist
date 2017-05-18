@@ -6,6 +6,11 @@ error ()
 	exit 1
 }
 
+warning ()
+{
+	echo "warning: ${@}" >&2
+}
+
 # import Cmdline_old()
 . /lib/live/boot/9990-cmdline-old \
 	|| error 'Could not source /lib/live/boot/9990-cmdline-old'
@@ -64,40 +69,78 @@ Options affecting the 'activate' action:
 "
 }
 
+escape() {
+	printf "%s\n" "${2}" | sed --regexp-extended "s/[${1}]/\\\&/g"
+}
+
 escape_dots() {
-	printf "%s\n" $1 | sed 's/\./\\./g'
+	escape . "${@}"
+}
+
+add_persistence_preset()
+{
+	local PRESET="${1}"
+	local PRESET_SOURCE="${2}"
+	local CONFIG="${3}"
+	if [ "${PERSISTENCE_READONLY}" = true ]
+	then
+		warning "We are trying to add a persistence preset while" \
+		        "persistence is in read-only mode"
+	else
+		echo "${PRESET}	source=${PRESET_SOURCE}" \
+		    >> "${CONFIG}" || error "Failed to make ${PRESET}: $?"
+		warning "Successfully made ${PRESET} persistent"
+	fi
+}
+
+remove_persistence_preset()
+{
+	local PRESET="${1}"
+	local CONFIG="${2}"
+	# The intent here is to simply remove the line starting with
+	# $PRESET, but since it is a path, and sed uses / as delimiter
+	# for patterns we can use together with d, we have to escape /
+	# (and . as usual).
+	sed -i "/^$(escape './' "${PRESET}")\s/d" "${CONFIG}"
+}
+
+is_preset_enabled() {
+	local PRESET="${1}"
+	local PRESET_SOURCE="${2}"
+	local CONFIG="${3}"
+	grep --extended-regexp --line-regex --quiet --no-messages \
+	     -e "$(escape_dots ${PRESET})\s+source=${PRESET_SOURCE}" "$CONFIG"
 }
 
 migrate_persistence_preset()
 {
-	local OLD_PRESET="${1}"
-	local OLD_PRESET_SOURCE="${2}"
-	local NEW_PRESET="${3}"
-	local NEW_PRESET_SOURCE="${4}"
+	local OLD="${1}"
+	local OLD_SOURCE="${2}"
+	local NEW="${3}"
+	local NEW_SOURCE="${4}"
 	local CONFIG="${5}"
-	if grep -E -qs --line-regex \
-		-e "$(escape_dots ${OLD_PRESET})\s+source=${OLD_PRESET_SOURCE}" \
-		"$CONFIG" \
-		&& ! grep -E -qs --line-regex \
-		-e "$(escape_dots ${NEW_PRESET})\s+source=${NEW_PRESET_SOURCE}" \
-		"$CONFIG"
+	if   is_preset_enabled "${OLD}" "${OLD_SOURCE}" "${CONFIG}" && \
+	   ! is_preset_enabled "${NEW}" "${NEW_SOURCE}" "${CONFIG}"
 	then
-		warning "Need to make $NEW_PRESET persistent"
-		if [ "$PERSISTENCE_READONLY" = true ]
-		then
-			warning "Persistence configuration needs to be migrated, but read only was selected; please retry in read-write mode"
-		else
-			echo "$NEW_PRESET	source=$NEW_PRESET_SOURCE" \
-				>> "$CONFIG" \
-				|| error "Failed to make $NEW_PRESET: $?"
-			warning "Successfully made $NEW_PRESET persistent"
-		fi
+		warning "Need to make ${NEW} persistent"
+		add_persistence_preset "${NEW}" "${NEW_SOURCE}" \
+		                       "${CONFIG}"
 	fi
 }
 
-warning ()
-{
-	echo "warning: ${@}" >&2
+migrate_icedove_to_thunderbird() {
+	local CONFIG="${1}"
+	local PERSISTENCE_DIR="$(dirname "${CONFIG}")"
+	if   [ -d "${PERSISTENCE_DIR}/thunderbird" ] || \
+	   ! [ -d "${PERSISTENCE_DIR}/icedove" ]
+	then
+		return
+	fi
+	mv "${PERSISTENCE_DIR}/icedove" "${PERSISTENCE_DIR}/thunderbird"
+	add_persistence_preset /home/amnesia/.thunderbird thunderbird "${conf}"
+	remove_persistence_preset /home/amnesia/.icedove "${conf}"
+	# The script /usr/local/bin/thunderbird takes care of the rest of
+	# the migration when starting Thunderbird.
 }
 
 # We override live-boot's logging facilities to get more useful error messages
@@ -331,6 +374,8 @@ activate_volumes ()
 		# Migrate Claws-mail persistence setting to Icedove
 		migrate_persistence_preset '/home/amnesia/.claws-mail' 'claws-mail' \
 			'/home/amnesia/.icedove' 'icedove' "$conf"
+
+		migrate_icedove_to_thunderbird "${conf}"
 	done
 
 	# Fix permissions on persistent directories that were created
