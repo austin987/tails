@@ -8,12 +8,11 @@ set -e
 systemctl enable memlockd.service
 
 # Enable our own systemd unit files
+systemctl enable initramfs-shutdown.service
 systemctl enable onion-grater.service
 systemctl enable tails-autotest-remote-shell.service
-systemctl enable tails-reconfigure-kexec.service
-systemctl enable tails-reconfigure-memlockd.service
-systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
+systemctl enable tails-shutdown-on-media-removal.service
 systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
@@ -45,11 +44,6 @@ systemctl enable  cups.socket
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
-
-# Don't hide tails-kexec's shutdown messages with an empty splash screen
-for suffix in halt kexec poweroff reboot shutdown ; do
-   systemctl mask "plymouth-${suffix}.service"
-done
 
 # systemd-networkd fallbacks to Google's nameservers when no other nameserver
 # is provided by the network configuration. In Jessie, this service is disabled
