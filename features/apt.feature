@@ -8,6 +8,7 @@ Feature: Installing packages through APT
   Scenario: APT sources are configured correctly
     Given I have started Tails from DVD without network and logged in
     Then the only hosts in APT sources are "vwakviie2ienjx6t.onion,sgvtcaew4bxjd7ln.onion,jenw7xbd6tf7vfhp.onion,sdscoq7snqtznauu.onion"
+    And no proposed-updates APT suite is enabled
 
   @check_tor_leaks
   Scenario: Install packages using apt

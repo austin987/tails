@@ -27,18 +27,97 @@ cat > /etc/apt/apt.conf.d/99recommends << EOF
 APT::Install-Recommends "false";
 APT::Install-Suggests "false";
 EOF
+cat > /etc/apt/apt.conf.d/99retries << EOF
+APT::Acquire::Retries "20";
+EOF
 
-echo "I: Adding custom APT sources..."
-echo "deb ${MIRROR} ${DISTRIBUTION}-backports main" > \
-     "/etc/apt/sources.list.d/${DISTRIBUTION}-backports.list"
+echo "I: Install Tails APT repo signing key."
+apt-key add /tmp/tails.binary.gpg
+
+echo "I: Add standard APT suites."
+cat "/etc/apt/sources.list" | \
+	sed -e 's/jessie/jessie-updates/' \
+	> "/etc/apt/sources.list.d/jessie-updates.list"
+
+cat "/etc/apt/sources.list" | \
+	sed -e 's/jessie/jessie-backports/' \
+	> "/etc/apt/sources.list.d/jessie-backports.list"
+
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ jessie/updates main" \
+	> "/etc/apt/sources.list.d/jessie-security.list"
+
+echo "I: Adding our builder-jessie suite with live-build, pin it low."
+echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
+	Package: *
+	Pin: release o=Tails,n=builder-jessie
+	Pin-Priority: 99
+EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
+	Package: live-build
+	Pin: release o=Tails,n=builder-jessie
+	Pin-Priority: 500
+EOF
+
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
+	Package: *
+	Pin: release n=jessie-backports
+	Pin-Priority: 100
+
+	Package: debootstrap
+	Pin: release n=jessie-backports
+	Pin-Priority: 991
+EOF
+
+echo "I: Upgrading system..."
 apt-get update
+apt-get -y dist-upgrade
+
+echo "I: Installing Vagrant dependencies..."
+apt-get -y install ca-certificates curl grub2 openssh-server wget
+
+echo "I: Configuring GRUB..."
+sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 
 echo "I: Upgrading to the backported kernel..."
 apt-get -y purge 'linux-image-*'
 apt-get -y install -t "${DISTRIBUTION}-backports" "linux-image-${ARCHITECTURE}"
 
-echo "I: Configuring GRUB..."
-sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
+echo "I: Installing Tails build dependencies."
+apt-get -y install \
+        debootstrap/jessie-backports \
+        git \
+        dpkg-dev \
+        eatmydata \
+        gettext \
+        ikiwiki \
+        intltool \
+        libfile-slurp-perl \
+        liblist-moreutils-perl \
+        live-build \
+        lsof \
+        rsync \
+        syslinux-utils \
+        time \
+        whois \
+        libfile-chdir-perl \
+        libhtml-scrubber-perl \
+        libhtml-template-perl \
+        libtext-multimarkdown-perl \
+        libtimedate-perl \
+        liburi-perl libhtml-parser-perl \
+        libxml-simple-perl \
+        libyaml-libyaml-perl po4a \
+        libyaml-perl \
+        libyaml-syck-perl \
+        perlmagick \
+        wdg-html-validator \
+        psmisc
+
+# Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
+echo "I: Installing the caching proxy..."
+apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
+systemctl disable apt-cacher-ng.service
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
 echo "UseDNS no" >>/etc/ssh/sshd_config
@@ -80,11 +159,6 @@ rm -rf \
    /var/cache/apt/*.bin \
    /var/cache/apt/archives/*.deb \
    /var/log/installer \
-   /var/lib/dhcp/* \
-    || :
-
-echo "I: Zeroing out the free space to save space in the final image..."
-dd if=/dev/zero of=/EMPTY bs=1M || :
-rm -f /EMPTY || :
+   /var/lib/dhcp/*
 
 exit 0

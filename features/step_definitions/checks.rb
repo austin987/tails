@@ -35,10 +35,6 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
   end
 end
 
-Then /^I double-click the Report an Error launcher on the desktop$/ do
-  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
-end
-
 Then /^the live user has been setup by live\-boot$/ do
   assert($vm.execute("test -e /var/lib/live/config/user-setup").success?,
          "live-boot failed its user-setup")
@@ -107,7 +103,7 @@ Then /^the support documentation page opens in Tor Browser$/ do
     expected_heading = 'Search the documentation'
   end
   step "\"#{expected_title}\" has loaded in the Tor Browser"
-  headings = Dogtail::Application.new('Firefox')
+  headings = @torbrowser
              .child(expected_title, roleName: 'document frame')
              .children(roleName: 'heading')
   assert(
@@ -173,13 +169,8 @@ def get_apparmor_status(pid)
 end
 
 Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
-  if process == 'i2p'
-    $vm.execute_successfully('service i2p status')
-    pid = $vm.file_content('/run/i2p/i2p.pid').chomp
-  else
-    assert($vm.has_process?(process), "Process #{process} not running.")
-    pid = $vm.pidof(process)[0]
-  end
+  assert($vm.has_process?(process), "Process #{process} not running.")
+  pid = $vm.pidof(process)[0]
   assert_equal(mode, get_apparmor_status(pid))
 end
 

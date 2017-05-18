@@ -30,21 +30,16 @@ def post_snapshot_restore_hook
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
   # Time jumps and incorrect clocks also confuses Tor in many ways.
-  $vm.host_to_guest_time_sync
-  if $vm.execute("systemctl --quiet is-active tor@default.service").success?
-    $vm.execute("systemctl stop tor@default.service")
-    $vm.execute("rm -f /var/log/tor/log")
-    $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
-    $vm.spawn("restart-tor")
-    wait_until_tor_is_working
-  end
-  # ... and the same goes for I2P's tunnel state.
-  if $vm.execute("systemctl --quiet is-active i2p.service").success?
-    $vm.execute_successfully('/usr/local/sbin/tails-i2p stop')
-    # We "killall tails-i2p" to prevent multiple copies of the script
-    # from running, which seems to happen for strange reasons.
-    $vm.execute_successfully('killall tails-i2p')
-    $vm.spawn('/usr/local/sbin/tails-i2p start')
+  if $vm.has_network?
+    if $vm.execute("systemctl --quiet is-active tor@default.service").success?
+      $vm.execute("systemctl stop tor@default.service")
+      $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
+      $vm.host_to_guest_time_sync
+      $vm.execute("systemctl start tor@default.service")
+      wait_until_tor_is_working
+    end
+  else
+    $vm.host_to_guest_time_sync
   end
 end
 
@@ -252,11 +247,12 @@ Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
                 'resetting...')
       dealt_with_uefi_setup = false
       $vm.reset
-      retry
+      raise e
     ensure
       Process.kill("TERM", tab_spammer.pid)
       tab_spammer.close
     end
+    true
   end
 end
 
@@ -347,8 +343,9 @@ When /^I see the "(.+)" notification(?: after at most (\d+) seconds)?$/ do |titl
   notification_list = gnome_shell.child(
     'No Notifications', roleName: 'label', showingOnly: false
   ).parent.parent
-  notification_list.child(title, roleName: 'label', showingOnly: false)
-    .wait(timeout)
+  try_for(timeout) do
+    notification_list.child?(title, roleName: 'label', showingOnly: false)
+  end
 end
 
 Given /^Tor is ready$/ do
@@ -365,14 +362,14 @@ Given /^Tor has built a circuit$/ do
 end
 
 Given /^the time has synced$/ do
-  ["/var/run/tordate/done", "/var/run/htpdate/success"].each do |file|
+  ["/run/tordate/done", "/run/htpdate/success"].each do |file|
     try_for(300) { $vm.execute("test -e #{file}").success? }
   end
 end
 
 Given /^available upgrades have been checked$/ do
   try_for(300) {
-    $vm.execute("test -e '/var/run/tails-upgrader/checked_upgrades'").success?
+    $vm.execute("test -e '/run/tails-upgrader/checked_upgrades'").success?
   }
 end
 
@@ -381,13 +378,18 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
                      .dialog('Tor is not ready')
-    offline_prompt.wait(10)
     offline_prompt.button('Start Tor Browser').click
   end
-  @torbrowser = Dogtail::Application.new('Firefox').child('', roleName: 'frame')
-  @torbrowser.wait(60)
+  step "the Tor Browser has started#{offline}"
   if offline
     step 'the Tor Browser shows the "The proxy server is refusing connections" error'
+  end
+end
+
+Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
+  try_for(60) do
+    @torbrowser = Dogtail::Application.new('Firefox')
+    @torbrowser.child?(roleName: 'frame', recursive: false)
   end
 end
 
@@ -434,10 +436,10 @@ Given /^all notifications have disappeared$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
     @screen.click_point(x, y)
-    unless gnome_shell.child('No Notifications', roleName: 'label').exist?
+    unless gnome_shell.child?('No Notifications', roleName: 'label')
       @screen.click('GnomeCloseAllNotificationsButton.png')
     end
-    gnome_shell.child('No Notifications', roleName: 'label').exist?
+    gnome_shell.child?('No Notifications', roleName: 'label')
   end
   @screen.type(Sikuli::Key.ESC)
 end
@@ -722,8 +724,14 @@ When /^(no|\d+) application(?:s?) (?:is|are) playing audio(?:| after (\d+) secon
   assert_equal(nb.to_i, pulseaudio_sink_inputs)
 end
 
-When /^I double-click on the "Tails documentation" link on the Desktop$/ do
-  @screen.wait_and_double_click("DesktopTailsDocumentationIcon.png", 10)
+When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
+  image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
+  info = xul_application_info('Tor Browser')
+  # Sometimes the double-click is lost (#12131).
+  retry_action(10) do
+    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    step 'the Tor Browser has started'
+  end
 end
 
 When /^I click the blocked video icon$/ do
@@ -945,6 +953,57 @@ def share_host_files(files)
   $vm.execute_successfully("mount #{partition} #{mount_dir}")
   $vm.execute_successfully("chmod -R a+rX '#{mount_dir}'")
   return mount_dir
+end
+
+def mount_USB_drive(disk, fs)
+  @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
+  dev = $vm.disk_dev(disk)
+  partition = dev + '1'
+  if /\bencrypted with password\b/.match(fs)
+    password = /encrypted with password "([^"]+)"/.match(fs)[1]
+    assert_not_nil(password)
+    luks_mapping = "#{disk}_unlocked"
+    $vm.execute_successfully(
+      "echo #{password} | " +
+      "cryptsetup luksOpen #{partition} #{luks_mapping}"
+    )
+    $vm.execute_successfully(
+      "mount /dev/mapper/#{luks_mapping} #{@tmp_usb_drive_mount_dir}"
+    )
+    @tmp_filesystem_is_encrypted = true
+  else
+    $vm.execute_successfully("mount #{partition} #{@tmp_usb_drive_mount_dir}")
+    @tmp_filesystem_is_encrypted = false
+  end
+  @tmp_filesystem_disk = disk
+  @tmp_filesystem_fs = fs
+  @tmp_filesystem_partition = partition
+  return @tmp_usb_drive_mount_dir
+end
+
+When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
+  disk_size = convert_to_bytes(size_MiB.to_i, 'MiB')
+  disk = random_alpha_string(10)
+  step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
+  step "I create a gpt partition labeled \"#{disk}\" with " +
+       "an #{fs} on disk \"#{disk}\""
+  step "I plug USB drive \"#{disk}\""
+  mount_dir = mount_USB_drive(disk, fs)
+  @tmp_filesystem_size_b = convert_to_bytes(
+    avail_space_in_mountpoint_kB(mount_dir),
+    'KB'
+  )
+end
+
+When(/^I mount the USB drive again$/) do
+  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_fs)
+end
+
+When(/^I umount the USB drive$/) do
+  $vm.execute_successfully("umount #{@tmp_usb_drive_mount_dir}")
+  if @tmp_filesystem_is_encrypted
+    $vm.execute_successfully("cryptsetup luksClose #{@tmp_filesystem_disk}_unlocked")
+  end
 end
 
 When /^Tails system time is magically synchronized$/ do

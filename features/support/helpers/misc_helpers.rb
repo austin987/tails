@@ -98,7 +98,15 @@ end
 
 def force_new_tor_circuit()
   debug_log("Forcing new Tor circuit...")
+  # Tor rate limits NEWNYM to at most one per 10 second period.
+  interval = 10
+  if $__last_newnym
+    elapsed = Time.now - $__last_newnym
+    # We sleep an extra second to avoid tight timings.
+    sleep interval - elapsed + 1 if 0 < elapsed && elapsed < interval
+  end
   $vm.execute_successfully('tor_control_send "signal NEWNYM"', :libs => 'tor')
+  $__last_newnym = Time.now
 end
 
 # This will retry the block up to MAX_NEW_TOR_CIRCUIT_RETRIES
@@ -115,11 +123,6 @@ def retry_tor(recovery_proc = nil, &block)
   retry_action($config['MAX_NEW_TOR_CIRCUIT_RETRIES'],
                :recovery_proc => tor_recovery_proc,
                :operation_name => 'Tor operation', &block)
-end
-
-def retry_i2p(recovery_proc = nil, &block)
-  retry_action(15, :recovery_proc => recovery_proc,
-               :operation_name => 'I2P operation', &block)
 end
 
 def retry_action(max_retries, options = {}, &block)
@@ -154,16 +157,13 @@ end
 
 alias :retry_times :retry_action
 
+class TorBootstrapFailure < StandardError
+end
+
 def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
-rescue Timeout::Error => e
-  c = $vm.execute("journalctl SYSLOG_IDENTIFIER=restart-tor")
-  if c.success?
-    debug_log("From the journal:\n" + c.stdout.sub(/^/, "  "))
-  else
-    debug_log("Nothing was in the journal about 'restart-tor'")
-  end
-  raise e
+rescue Timeout::Error
+  raise TorBootstrapFailure.new('Tor failed to bootstrap')
 end
 
 def convert_bytes_mod(unit)

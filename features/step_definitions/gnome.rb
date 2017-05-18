@@ -20,5 +20,5 @@ When /^the "(.+)" notification is sent$/ do |title|
 end
 
 Then /^the "(.+)" notification is shown to the user$/ do |title|
-  Dogtail::Application.new('gnome-shell').child(title).wait
+  Dogtail::Application.new('gnome-shell').child(title)
 end

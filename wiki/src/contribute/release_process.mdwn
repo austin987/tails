@@ -45,10 +45,8 @@ the scripts snippets found on this page:
 * `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
   `perl5lib` Git repository.
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
-
-Also configure dch for this session:
-
-    export DEBEMAIL='Tails developers <tails@boum.org>'
+* `export DEBEMAIL='tails@boum.org'`
+* `export DEBFULLNAME='Tails developers'`
 
 Pre-freeze
 ==========
@@ -154,10 +152,18 @@ The patterns+settings file is stored as a converted sqlite text dump in
    from this Tor Browser instance into the root of Tails' Git repo and
    run the following command:
 
+       # For posterity: the general idea is to introduce \r\n as a
+       # token where we have made a line break to make the dump more
+       # diff-friendly (and, hence, Git-friendly). The most complex
+       # expression is the one done with perl, where we employ
+       # negative lookahead. What it means, is: replace single
+       # occurrences of | except when followed by \\n.
        echo '.dump' | sqlite3 ublock0.sqlite | \
            grep -v "cached_asset_content://cache://compiled-" | \
            awk '!/^INSERT/; /^INSERT/ {print $0 | "sort -n"}' | \
            sed 's_\\n_\\n\r\n_g' | \
+           sed 's_,_,\r\n_g' | \
+           perl -pi -e 's/([^|])\|((?!\||\\n).)/\1\|\r\n\2/g' | \
            sed "/^INSERT INTO \"settings\" VALUES('\(remoteBlacklists\|cached_asset_entries\)'/"'s_,_,\r\n_g' > \
            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
 
@@ -528,19 +534,21 @@ suite should be ready, so it is time to:
   
       git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
               -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-      git push origin "${RELEASE_BRANCH:?}" && \
-      git push --tags --force
+      git push --tags --force && \
+      git push origin "${RELEASE_BRANCH:?}"
 
-* check out the release tag:
-
-      git checkout "${TAG:?}"
+   Note: for Jenkins to build the release you must push the release
+   branch with its tip tagged. I.e. if you deviate from the above
+   commands by e.g. committing a commit in between `gut tag` and the
+   first `git push` then Jenkins won't build from the tag -- please
+   avoid that!
 
 * build the final image!
 
 * compare the new build manifest with the one from the previous,
   almost final build; they should be identical, except that the
-  `debian-security` serial/reference might be higher. To ensure we get
-  the final build's .build-manifest, please run:
+  `debian-security` serial might be higher. To ensure we publish
+  the final build's `.build-manifest`, please run:
 
       export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
@@ -1078,11 +1086,6 @@ Remember that ticket expressions, e.g. `[[!tails_ticket 1234]]`, can
 span several lines, so finding the ones reported by the above code
 *might* be harder than `git grep "tails_ticket 1234"`.
 
-XMPP
-----
-
-Update the topic in our [[chatroom|chat]].
-
 Twitter
 -------
 
@@ -1160,6 +1163,14 @@ this, and skip what does not make sense for a RC.
                     -not -name '*~test_*~test.iuk' -delete \
              \"
 
+1. Check how much space our mirrors will need:
+
+        ssh rsync.lizard du -sh /srv/rsync/tails
+
+   Compare it to the minimum disk space we ask of our mirror operators
+   (30 GiB) and determine if any further action is needed to either
+   reduce our usage by deleting stuff, or asking them to give us more
+   space.
 1. Delete Git branches that were merged:
 
         bare_repo=$(mktemp -d)
@@ -1204,20 +1215,20 @@ this, and skip what does not make sense for a RC.
                         echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
                     fi
                 else
-                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/debian/dists/${RELEASE_BRANCH:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/stable/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
                fi
                echo "Origin '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
            done
         )
 
 1. Push the resulting branches.
-1. Make sure Jenkins manages to build all updated major branches fine:
+1. Make sure Jenkins manages to build all updated major branches:
    <https://jenkins.tails.boum.org/>.
-1. Delete the _Release Manager View for ${VERSION_:?} Redmine custom query.
+1. Delete the _Release Manager View for ${VERSION_:?}_ Redmine custom query.
 1. Ensure the next few releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
-1. If you will be the release manager for the next release, look at the
+1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager]].
 
