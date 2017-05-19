@@ -58,6 +58,11 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Pin: release o=Tails,n=builder-jessie
 	Pin-Priority: 500
 EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
+	Package: discount libmarkdown2 libmarkdown2-dev
+	Pin: release o=Tails,n=builder-jessie
+	Pin-Priority: 500
+EOF
 
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
 	Package: *
