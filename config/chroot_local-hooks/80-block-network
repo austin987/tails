@@ -35,13 +35,12 @@ generate_blocking_line() {
 
 BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
 
-find /lib/modules/*/kernel/drivers/net -name "*.ko" | \
-    generate_blocking_line > "${BLACKLIST}"
+(
+    find /lib/modules/*/kernel/drivers/net -name "*.ko" | \
+        generate_blocking_line && \
 
-# Let's try to find the network divers in the staging directory as well
-find /lib/modules/*/kernel/drivers/staging/ -name "*.ko" | \
-    net_module_filter | \
-    generate_blocking_line \
-    >> "${BLACKLIST}"
-
-sort -u "${BLACKLIST}" --output="${BLACKLIST}"
+    # Let's try to find the network divers in the staging directory as well
+    find /lib/modules/*/kernel/drivers/staging/ -name "*.ko" | \
+        net_module_filter | \
+        generate_blocking_line
+) | sort -u > "${BLACKLIST}"
