@@ -4,8 +4,36 @@ set -e
 
 echo "Generating blocklist for all network devices"
 
-find /lib/modules/*/kernel/drivers/net \
-     /lib/modules/*/kernel/drivers/staging/rtl* \
-     -name "*.ko" -printf "install %f /bin/true\n" | \
-  sed 's/\.ko / /' | \
-  sort -u > /etc/modprobe.d/all-net-blacklist.conf
+is_net_module() {
+    # Here we assume that if any of the patterns below are matched, it
+    # is a network dirver. This is not comprehensive, but should be
+    # enough for the staging directory (worst case we blacklist some
+    # shitty non-network driver by mistake).
+    /sbin/modinfo "${1}" | \
+        grep -q --extended-regexp \
+             -e "^depends:\s*(cfg|lib|mac)80211" \
+             -e "^parm:\s*ifname:"
+}
+
+net_module_filter() {
+    local path
+    local name
+    while read path; do
+        if is_net_module "${path}"; then
+            name="$(basename "${path}" | sed 's/\.ko$//')"
+            printf "install ${name} /bin/true\n"
+        fi
+    done
+}
+
+BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
+
+find /lib/modules/*/kernel/drivers/net -name "*.ko" \
+     -printf "install %f /bin/true\n" | \
+    sed 's/\.ko / /' > "${BLACKLIST}"
+
+# Let's try to find the network divers in the staging directory as well
+find /lib/modules/*/kernel/drivers/staging/ -name "*.ko" | \
+    net_module_filter >> "${BLACKLIST}"
+
+sort -u "${BLACKLIST}" --output="${BLACKLIST}"
