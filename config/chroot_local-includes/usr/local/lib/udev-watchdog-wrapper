@@ -51,9 +51,17 @@ do_stop() {
 		/usr/bin/eject -m "${BOOT_DEVICE}" || true
 	fi
 
-	/usr/bin/pkill gdm3 || true
-	/etc/init.d/kexec-load stop  || true
-	/lib/systemd/system-shutdown/tails-kexec || true
+	# Kill everything run by amnesia or Debian-gdm, otherwise emergency
+	# shutdown fails for some reason. Incidentally, this also allows
+	# the test suite to look for a known message ("Happy dumping!")
+	# on the screen.
+	/bin/loginctl --signal=9 kill-user amnesia || true
+	/bin/systemctl stop gdm.service || true
+	/bin/systemctl --signal=9 kill gdm.service || true
+	/bin/loginctl --signal=9 kill-user Debian-gdm || true
+
+	# Finally, return to the initramfs and poweroff the system
+	/bin/systemctl --force poweroff
 }
 
 

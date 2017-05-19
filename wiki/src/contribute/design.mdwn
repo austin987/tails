@@ -1032,17 +1032,17 @@ for the [[Unsafe Browser]], although it is
 user-isolated and use a separate profile with very different
 configuration.
 
-### 3.6.14 Icedove
+### 3.6.14 Thunderbird
 
-Icedove, in combination with TorBirdy, sends email through Tor.
+Thunderbird, in combination with TorBirdy, sends email through Tor.
 
-Icedove itself leaks a lot of data and makes DNS requests, for example by
+Thunderbird itself leaks a lot of data and makes DNS requests, for example by
 retrieving mail server configurations from a remote server over an insecure
 channel. This is prevented by the TorBirdy extension as well as by custom
-patches for Icedove in Tails, which we are currently in the process of
+patches for Thunderbird in Tails, which we are currently in the process of
 upstreaming ([[!tails_ticket 11215]]).
 
-Icedove generates `Message-ID` headers using the hostname part of
+Thunderbird generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
@@ -1052,10 +1052,10 @@ disclosing the real IP address and hostname.
 Torbirdy disables HTML email and inline attachments
 in order to get rid of a whole class of privacy concerns.
 Furthermore, when setting up an IMAP account, the drafts folder, instead
-of being remote, is set to `~$HOME/.icedove/Local Folders`.
+of being remote, is set to `~$HOME/.thunderbird/Local Folders`.
 
 The original TorBirdy extension disables automatic email configuration
-through Icedove's email configuration wizard. This wizard is enabled in
+through Thunderbird's email configuration wizard. This wizard is enabled in
 Tails. This is possible because our patches allow using only secure protocols
 for the domain and ISPDB lookups as well as for the actual mail account
 configuration. In detail this means:
@@ -1074,13 +1074,13 @@ manual configuration.
 
 OpenPGP support is provided by the Enigmail addon.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/icedove/pref/icedove.js]]
+- [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
 - [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
 - [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
 - [[!tails_gitweb config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff]]
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.icedove]] is copied to
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.thunderbird]] is copied to
   the user's `$HOME` at boot time
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/icedove]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
 
 ### 3.6.15 Pidgin
 
@@ -1143,7 +1143,7 @@ Tails puts the wireless devices in a sensible state at boot time.
 
 At boot time, Tails unblocks Wi-Fi, WWAN and WiMAX radios, unblocks
 Bluetooth radio (so that it can be dealt another way:
-[[todo/protect_against_external_bus_memory_forensics]]), and
+[[!tails_ticket 5451 desc="protect against external bus memory forensics"]]), and
 soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-set-wireless-devices-state.service]]

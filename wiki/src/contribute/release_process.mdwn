@@ -25,6 +25,7 @@ the scripts snippets found on this page:
       export VERSION=$(dpkg-parsechangelog -SVersion)
       export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
       export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
+      export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
 
 * `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
   (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
@@ -54,11 +55,11 @@ Pre-freeze
 The [[contribute/working_together/roles/release_manager]] role
 documentation has more tasks that should be done early enough.
 
-Update Icedove preferences
+Update Thunderbird preferences
 ------------------------------
 
 * update `extensions.enigmail.configuredVersion` in
-  `config/chroot_local-includes/etc/skel/.icedove/profile.default/preferences/0000tails.js`
+  `config/chroot_local-includes/etc/skel/.thunderbird/profile.default/preferences/0000tails.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -221,10 +222,10 @@ Upgrade Tor Browser
 
 See the dedicated page: [[tor-browser]]
 
-Upgrade Icedove
+Upgrade Thunderbird
 ---------------
 
-See the dedicated page: [[icedove]]
+See the dedicated page: [[thunderbird]]
 
 Update PO files
 ---------------
@@ -309,7 +310,7 @@ Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
-	./release ${VERSION:?} ${PREVIOUS_VERSION:?}
+	./release ${VERSION:?} ${PREVIOUS_TAG:?}
 
 This populates the Changelog with the Git log entries.
 
@@ -685,8 +686,10 @@ Prepare upgrade-description files
      make this work, one must _not_ pass `--previous-version 1.1`,
      that would remove the existing incremental upgrade path from 1.1
      to 1.1.1.
-   * If preparing a release candidate, add `--channel alpha`
-   * If preparing a release candidate, drop all `--next-version`
+   * If preparing anything but a final release (e.g. an alpha, beta
+     or RC), add `--channel alpha`
+   * If preparing anything but a final release (e.g. an alpha, beta
+     or RC), drop all `--next-version`
      arguments, and instead pass (**untested!**)
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
    * If preparing a point-release, pass neither
@@ -719,15 +722,14 @@ Prepare upgrade-description files
          git push origin ${RELEASE_BRANCH:?} \
        )
 
-1. If preparing a release candidate, move the generated or updated
-   files to `${MASTER_CHECKOUT:?}`, commit and push: given the updates are
-   advertised on the *alpha* channel, while all users use the *stable*
-   one by default, this will allow you to more easily test the IUK
-   without impacting anyone.
+1. If preparing anything but a final release (e.g. an alpha, beta
+   or RC), copy the generated or updated files to
+   `${MASTER_CHECKOUT:?}`, replace `channel: alpha` with `channel:
+   test`, sign them, commit and push.
 
-1. If preparing a point release, copy the generated UDF for the previous
-   release in the alpha channel in the master branch, modify its content
-   accordingly, sign it, commit and push
+1. Else, if preparing a final release, copy the generated UDF for the previous
+   release to the *test* channel in `$MASTER_CHECKOUT`, modify its content
+   accordingly, sign it, commit and push:
 
        # If more old versions are supported, add them (whitespace
        # separated) to this variable
@@ -738,14 +740,14 @@ Prepare upgrade-description files
          git fetch && \
          for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
            stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
-           alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
+           test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
            git show origin/${RELEASE_BRANCH:?}:${stable_udf:?} \
-             | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf:?} && \
-           gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${alpha_udf:?} && \
-           mv ${alpha_udf:?}.asc ${alpha_udf:?}.pgp && \
-           git add ${alpha_udf:?}* ; \
+             | sed -e 's/channel: stable/channel: test/' > ${test_udf:?} && \
+           gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+           mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+           git add ${test_udf:?}* ; \
          done && \
-         git commit -m "Add incremental upgrades on the alpha channel for Tails ${VERSION:?}" && \
+         git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
          git push origin master:master \
        )
 
@@ -932,6 +934,10 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
+Copy the updated or or updated update-description files and their
+detached signatures to `${MASTER_CHECKOUT:?}`. They should be on the
+*alpha* channel.
+
 Copy the `.iso.sig` file into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
@@ -956,6 +962,9 @@ Write the announcement for the release in
 
 In any case
 -----------
+
+If preparing a final release, what follows happens in
+`$RELEASE_CHECKOUT`. Else, it happens in `$MASTER_CHECKOUT`.
 
 Generate PO files for the announcements with `./build-website`.
 

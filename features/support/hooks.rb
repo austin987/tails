@@ -21,6 +21,7 @@ AfterConfiguration do |config|
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
     # Features using large amounts of scratch space for other reasons:
+    'features/emergency_shutdown.feature',
     'features/erase_memory.feature',
     # This feature needs the almost biggest snapshot (USB install,
     # excluding persistence) and will create yet another disk and
