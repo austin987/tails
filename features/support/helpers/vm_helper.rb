@@ -50,11 +50,6 @@ class VMNet
     IPAddr.new(net_xml.elements['network/ip'].attributes['address']).to_s
   end
 
-  def guest_real_mac
-    net_xml = REXML::Document.new(@net.xml_desc)
-    net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
-  end
-
   def bridge_mac
     File.open("/sys/class/net/#{bridge_name}/address", "rb").read.chomp
   end
@@ -103,8 +98,20 @@ class VM
     end
   end
 
-  def real_mac
-    @vmnet.guest_real_mac
+  def real_mac(alias_name)
+    REXML::Document.new(@domain.xml_desc)
+      .elements["domain/devices/interface[@type='network']/" +
+                "alias[@name='#{alias_name}']"]
+      .parent.elements['mac'].attributes['address'].to_s
+  end
+
+  def all_real_macs
+    macs = []
+    REXML::Document.new(@domain.xml_desc)
+      .elements.each("domain/devices/interface[@type='network']") do |nic|
+      macs << nic.elements['mac'].attributes['address'].to_s
+    end
+    macs
   end
 
   def set_hardware_clock(time)
@@ -227,6 +234,16 @@ class VM
     return ret
   end
 
+  def plug_device(xml)
+    if is_running?
+      @domain.attach_device(xml.to_s)
+    else
+      domain_xml = REXML::Document.new(@domain.xml_desc)
+      domain_xml.elements['domain/devices'].add_element(xml)
+      update(domain_xml.to_s)
+    end
+  end
+
   def plug_drive(name, type)
     if disk_plugged?(name)
       raise "disk '#{name}' already plugged"
@@ -256,13 +273,7 @@ class VM
     xml.elements['disk/target'].attributes['bus'] = type
     xml.elements['disk/target'].attributes['removable'] = removable_usb if removable_usb
 
-    if is_running?
-      @domain.attach_device(xml.to_s)
-    else
-      domain_xml = REXML::Document.new(@domain.xml_desc)
-      domain_xml.elements['domain/devices'].add_element(xml)
-      update(domain_xml.to_s)
-    end
+    plug_device(xml)
   end
 
   def disk_xml_desc(name)
