@@ -1,8 +1,111 @@
 tails (3.0~rc1) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Major changes
+    - Install Thunderbird 1:45.8.0-3+tails2 and handle the Icedove → Thunderbird
+      migration, including wrt. persistent data (Closes: #11712, #12242).
+      This package also has the patch from
+      https://bugzilla.mozilla.org/show_bug.cgi?id=1281959 applied,
+      to ease future integration of the Thunderbird AppArmor profile.
+      Also, drop the Claws → Icedove migration path.
+    - Upgrade to a new snapshot of the Debian and Torproject
+      APT repositories: 2017051803 (Closes: #12554).
+    - Upgrade Linux packages to the Debian kernel 4.9.0-3, based on
+      mainline Linux 4.9.25.
+    - Replace the kexec-based memory erasure feature with the Linux kernel's
+      memory poisoning (Closes: #12354, #12428). The kexec-based implementation
+      was not reliable enough and provided a poor UX. Instead, we now return
+      to the initramfs on shutdown and unmount all filesystems there, so their
+      content and corresponding caches are erased.
 
- -- Tails developers <tails@boum.org>  Wed, 19 Apr 2017 14:44:23 +0000
+  * Minor improvements
+    - Add a HACKING document for new code contributors.
+    - Rename tor-controlport-filter to onion-grater.
+    - Improve onion-grater; thanks to Joy SN <joysn1980@yahoo.com>
+      for the original patches (Closes: #12173):
+      · add --listen-interface
+      · make stdout/stderr unbuffered to ensure Python exceptions are logged
+      · use yaml.safe_load()
+    - Improve KeePassX database migration handling (refs: #12375).
+    - Electrum: set coin selection strategy to 'Privacy' (Closes: #12177).
+    - Allow Onion Circuits to access /proc/pid/status.
+    - Make gdm-shell-tails.desktop more similar to the one shipped
+      in gnome-shell 3.22.3-3 (refs: #12364).
+    - Greeter: have the help window point to updated documentation,
+      use WebKit2 instead of the deprecated WebKit, and hide the sidebar
+      and banner.
+    - Use exec to start KeePassX, i.e. avoid leaving the wrapper running.
+
+  * Bugfixes
+    - Install xserver-xorg-legacy, to fix support for various graphics
+      adapters that still don't work with rootless X.Org (Closes: #12542).
+    - Use the "intel" X.Org driver for Intel Q35 and Intel Atom
+      D4xx/D5xx/N4xx/N5xx graphics controllers (refs: #12219).
+    - Give UEFI bootloaders upper-case filenames (Closes: #12511).
+      Some UEFI firmware, such as the one in the ThinkPad X220, only recognize
+      them if they have an upper-case name.
+    - KeePassX: enable "Automatically save after each change" again,
+      like we did in Tails 2.x (fixes a regression introduced
+      in 3.0~beta3).
+    - Install packages needed by the "Test speakers" functionality
+      (Closes: #12549).
+
+  * Test suite
+    - Check that dirmngr used the configured keyserver (Closes: #12371).
+    - Sanity check that Chutney starts all nodes in the network.
+    - Disable the Sandbox option for all nodes, until Tor#21943
+      is fixed (Closes: #12512).
+    - Wait for the desktop icons to be displayed in the "Tails desktop is ready"
+      step. Let's not try interacting with the desktop earlier.
+    - Add tests for memory erasure on "normal" shutdown (refs: #12428).
+    - Add tests for memory erasure on "emergency" shutdown, and run some
+      with network enabled (refs: #12354).
+    - Have eject_cdrom run eject(1) like it used to do in the past.
+      Otherwise the machine is immediately halted and we cannot test
+      whether memory has been erased.
+    - Pass mount_USB_drive structured data instead of free-form text.
+
+  * Build system
+    - Generate the Vagrant base box locally as part of the build process,
+      instead of downloading it: one less binary blob as input in the build
+      process (refs: #12409).
+    - Use Vagrant for builds on Jenkins too (Closes: #11972).
+    - Tell build script to be more verbose.
+    - Respect the 'ARTIFACTS' environment variable if set.
+    - Add a second disk to handle the apt-cacher-ng cache, and store
+      the corresponding logs in there (Closes: #11979).
+    - Use APT snapshots in Vagrant build VMs, create/use a basebox that matches
+      the branch/tag/commit being tested, and provision a new VM for each build
+      (Closes: #11980, #11981).
+    - Ship all build dependencies in the Vagrant basebox, to save some
+      time when building ISOs.
+    - Make basebox generation compatible with both GnuPG 1.x and 2.x.
+    - Set LC_ALL=C, mostly to suppress some warnings.
+    - Support forcing VM cleanup before/after build.
+    - Add tasks for cleaning up old or all base boxes (refs: #12409).
+    - Add build option useful for debugging build failures.
+    - Remove obsolete build options.
+    - Make auto/scripts/utils.sh more reusable, use it in Rakefile,
+      auto/build and setup-tails-builder.
+    - Add an option controlling whether to merge the base branch.
+    - Add "rake test" target and import logics from puppet-tails'
+      wrap_test_suite script.
+    - Build Tails as a release simply when HEAD is tagged, i.e. we do not
+      require building from a detached head any more.
+    - Sanity check compression choice when building a release.
+    - Use the host's resolv.conf when building the Vagrant base box.
+      Since systemd-networkd is used to manage resolv.conf inside the base box,
+      and it hasn't been initialized yet (we are not booting it, just chrooting
+      into it) DNS is broken otherwise.
+    - Release process: "release" a new base box when freezing.
+    - Chown/scp artifacts with a single command to limit overhead and warnings
+      noise caused by repeated SSH calls.
+
+  * Fix automatic upgrades when one is already applied (refs: #12501).
+    This fixes the detection of stacked SquashFS via aufs by bilibop, as reported on
+    https://bugs.debian.org/861685. Cherry-picked from upstream Git, will be in
+    bilibop 0.5.3 (and perhaps 0.5.2.1 if such a thing is released for Stretch).
+
+ -- Tails developers <tails@boum.org>  Fri, 19 May 2017 15:15:30 +0000
 
 tails (3.0~beta4) unstable; urgency=medium
 
