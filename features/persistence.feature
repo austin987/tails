@@ -41,8 +41,8 @@ Feature: Tails persistence
     And the network is plugged
     And Tor is ready
     And I switch to the "persistent-con-current" NetworkManager connection
-    And the network device has a spoofed MAC address configured
-    And the real MAC address was not leaked
+    And the 1st network device has a spoofed MAC address configured
+    And no network device leaked the real MAC address
 
   Scenario: Creating and using a Jessie-area persistent NetworkManager connection
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
@@ -55,8 +55,8 @@ Feature: Tails persistence
     And the network is plugged
     And Tor is ready
     And I switch to the "persistent-con-2.x" NetworkManager connection
-    And the network device has a spoofed MAC address configured
-    And the real MAC address was not leaked
+    And the 1st network device has a spoofed MAC address configured
+    And no network device leaked the real MAC address
 
   Scenario: Deleting a Tails persistent partition
     Given I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
