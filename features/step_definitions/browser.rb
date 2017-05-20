@@ -22,7 +22,7 @@ def xul_application_info(application)
     'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
   ).stdout.chomp
   address_bar_image = "BrowserAddressBar.png"
-  unused_tbb_libs = ['libnssdbm3.so']
+  unused_tbb_libs = ['libnssdbm3.so', "libmozavcodec.so", "libmozavutil.so"]
   case application
   when "Tor Browser"
     user = LIVE_USER
