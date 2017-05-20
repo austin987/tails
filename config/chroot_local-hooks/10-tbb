@@ -86,12 +86,13 @@ install_tor_browser() {
     torlauncher_version="$(sed -n \
         's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p' \
         "${TOR_LAUNCHER_INSTALL}/install.rdf")"
+    SOURCE_DATE_YYYYMMDD=$(date --utc --date="@$SOURCE_DATE_EPOCH" '+%Y%m%d')
     cat > "${TOR_LAUNCHER_INSTALL}/application.ini" << EOF
 [App]
 Vendor=TorProject
 Name=TorLauncher
 Version=${torlauncher_version}
-BuildID=$(date +%Y%m%d)
+BuildID=${SOURCE_DATE_YYYYMMDD}
 ID=tor-launcher@torproject.org
 
 [Gecko]
