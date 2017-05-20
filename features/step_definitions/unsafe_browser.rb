@@ -91,7 +91,7 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
   assert_equal(5, mozilla_uris_counter,
                "Unexpected number (#{mozilla_uris_counter}) of mozilla " \
                "bookmarks")
-  assert_equal(3, places_uris_counter,
+  assert_equal(2, places_uris_counter,
                "Unexpected number (#{places_uris_counter}) of places " \
                "bookmarks")
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
@@ -114,7 +114,7 @@ Then /^I can start the Unsafe Browser again$/ do
 end
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
-  socks_proxy = 'c' # Alt+c for socks proxy
+  socks_proxy = 'C' # Alt+Shift+c for socks proxy
   no_proxy    = 'y' # Alt+y for no proxy
   proxies = [[no_proxy, nil, nil]]
   socksport_lines =
@@ -126,7 +126,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   proxies.each do |proxy_type, proxy_host, proxy_port|
     @screen.hide_cursor
 
-    # Open proxy settings and select manual proxy configuration
+    # Open proxy settings
     @screen.click('UnsafeBrowserMenuButton.png')
     @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
     @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
@@ -135,11 +135,16 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
     @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
     @screen.wait_and_click('UnsafeBrowserProxySettingsWindow.png', 10)
-    @screen.type("m", Sikuli::KeyModifier.ALT)
 
-    # Configure the proxy
-    @screen.type(proxy_type, Sikuli::KeyModifier.ALT)  # Select correct proxy type
-    @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port) if proxy_type != no_proxy
+    # Ensure the desired proxy configuration
+    if proxy_type == no_proxy
+      @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
+      @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
+    else
+      @screen.type("M", Sikuli::KeyModifier.ALT)
+      @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
+      @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port)
+    end
 
     # Close settings
     @screen.click('UnsafeBrowserProxySettingsOkButton.png')

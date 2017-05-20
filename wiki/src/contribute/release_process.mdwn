@@ -27,6 +27,7 @@ the scripts snippets found on this page:
       export VERSION=$(dpkg-parsechangelog -SVersion)
       export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
       export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
+      export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
 
 * `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
   (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
@@ -309,7 +310,7 @@ Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
-	./release ${VERSION:?} ${PREVIOUS_VERSION:?}
+	./release ${VERSION:?} ${PREVIOUS_TAG:?}
 
 This populates the Changelog with the Git log entries.
 

@@ -1,0 +1,18 @@
+# Known issues
+
+* The persistent Tor Browser bookmarks feature is broken if you enable
+  it for the first time in Tails 3.0~rc1; any persistent bookmarks
+  from before will still work.
+  
+  You can workaround this as follows, after you start Tails the first
+  time with Browser bookmarks persistence enabled:
+  
+  # Start Tor Browser and let it load
+  # Close Tor Browser
+  # Run this in a Terminal:
+  
+      cp /home/amnesia/.tor-browser/profile.default/places.sqlite \
+         /home/amnesia/.mozilla/firefox/bookmarks/places.sqlite
+      rm /home/amnesia/.tor-browser/profile.default/places.sqlite*
+      ln -s /home/amnesia/.mozilla/firefox/bookmarks/places.sqlite \
+            /home/amnesia/.tor-browser/profile.default/places.sqlite
