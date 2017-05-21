@@ -113,7 +113,12 @@ Then /^I receive a response from my friend( in the multi-user chat)?$/ do |multi
   else
     $vm.focus_window(@friend_name)
   end
-  @screen.wait("PidginFriendExpectedAnswer.png", 20)
+  try_for(60) do
+    if @screen.exists('PidginServerMessage.png')
+      @screen.click('PidginDialogCloseButton.png')
+    end
+    @screen.find('PidginFriendExpectedAnswer.png')
+  end
 end
 
 When /^I start an OTR session with my friend$/ do
@@ -278,7 +283,7 @@ When /^I see Pidgin's account manager window$/ do
 end
 
 When /^I close Pidgin's account manager window$/ do
-  @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
+  @screen.wait_and_click("PidginDialogCloseButton.png", 10)
 end
 
 When /^I close Pidgin$/ do
@@ -455,6 +460,9 @@ end
 
 When /^I see the Tails roadmap URL$/ do
   try_for(60) do
+    if @screen.exists('PidginServerMessage.png')
+      @screen.click('PidginDialogCloseButton.png')
+    end
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
