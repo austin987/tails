@@ -66,7 +66,8 @@ Now we can install all the dependencies:
         qemu-system-x86 \
         qemu-utils \
         vagrant \
-        vagrant-libvirt
+        vagrant-libvirt \
+        vmdebootstrap
     sudo systemctl restart libvirtd
 
 Make sure that the user that is supposed to initiate the build command
@@ -110,6 +111,10 @@ run `newgrp` and reload the `kvm` module(s)).
 
         rm -r ~/.vagrant.d
 
+* If Vagrant fails to start the Tails builder VM with an error similar
+  to `Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0`,
+  see [[!tails_ticket 11411]].
+
 ## Building Tails using Vagrant
 
 Once all dependencies are installed, get the Tails sources and
@@ -150,6 +155,23 @@ do so is to run:
 
 This needs to be done before any other operations.
 
+<div class="bug">
+
+At least one step of the build does not honor the external proxy
+settings, so outgoing Internet connections from the build VM must be
+allowed to go through anyway.
+
+</div>
+
+Resulting ISO handling
+----------------------
+
+To tell the build system in which directory the resulting ISO should be
+stored, use:
+
+    ARTIFACTS='/path/to/directory'
+
+
 Build options
 -------------
 
@@ -189,6 +211,13 @@ The following flags can be used to force a specific behaviour:
    if a local HTTP proxy is set.
  * **noproxy**: do not use any HTTP proxy.
 
+### Network settings
+
+ * **offline**: This option will make the build system do its best to
+   not depend on the network, e.g. if you use the VM's caching proxy
+   if will *only* use cached APT lists and packages. Use this when you
+   do not have an Internet connection.
+
 ### SquashFS compression settings
 
 One of the most expensive operations when building Tails is the creation
@@ -201,16 +230,6 @@ Forcing a specific behaviour can be done using:
 
  * **gzipcomp**: always use *gzip* to create the SquashFS.
  * **defaultcomp**: always use the default compression algorithm.
-
-### Clean-up settings
-
-Some operations are preserved accross builds. Currently they are:
-
-* The wiki (for documentation).
-
-In case you want to delete all these, the following option is available:
-
- * **cleanall**: force a clean up before starting the build.
 
 ### Virtual CPUs settings
 
@@ -232,14 +251,33 @@ uncommitted changes. This behaviour can be controlled by:
  * **ignorechanges**: allow to make a build that will ignore changes in the Git
    repository.
 
+### Developer convenience settings
+
+ * **keeprunning**: do not clean up the builder VM on build
+   success. The wiki will be cached for subsequent builds with this
+   option set.
+
+ * **forcecleanup**: ensure a new builder VM is used for `rake build`,
+   and also clean up this VM after the build, no matter if it
+   succeeded or not.
+
+ * **rescue**: implies **keeprunning** and will also not clean up the
+   build directory, which is useful for investigating build failures.
+
+### Jenkins
+
+  * **mergebasebranch**: if building from a branch (not tag!) this
+    forces a merge of the base branch before the build process starts
+    for real. This is mostly meant for our Jenkins deployment, so use
+    at your own risk.
+
 ### Example
 
 The fastest build you could pretend to get can be done by setting:
 
-    export TAILS_BUILD_OPTIONS="ram cache extproxy gzipcomp"
+    export TAILS_BUILD_OPTIONS="ram extproxy gzipcomp"
 
-This will force the build to happen in RAM and allow skipping the
-boostrap stage if one is cached, and will use use an HTTP proxy
+This will force the build to happen in RAM, and will use use an HTTP proxy
 external to the virtual machine, and SquashFS compression will be done
 using *gzip*.
 

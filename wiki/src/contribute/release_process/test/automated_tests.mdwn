@@ -350,25 +350,6 @@ Although very rare, the remote shell can get into a state where it
 stops responding, resulting in the test suite waiting for a response
 forever.
 
-## Host-to-guest filesystem shares are incompatibile with snapshots
-
-Filesystem shares cannot (due to QEMU limitations) be added to an
-active VM, and cannot (due to QEMU limitations) be active
-(i.e. mounted) during a snapshot save. For this reason, don't use
-filesystem shares in combination with snapshots. For more
-information, see [[!tails_ticket 5571]].
-
-On a more practical note, you *can* add a filesystem share if you
-restore a snapshot and then power off the computer, which still is
-worth it when there's a big setup cost, e.g. when Tails is running
-from USB with persistence enabled. So something like this is valid,
-for example:
-
-    Given Tails has booted without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen
-    And I shutdown Tails and wait for the computer to power off
-    And I setup some filesystem share ...
-    And I start Tails from USB drive "current" with network unplugged and I login with persistence enabled
-
 ## Plugging SATA drives
 
 When creating a disk (at least when backed by a `raw` image) via the

@@ -6,8 +6,7 @@ set -u
 . "$(dirname $0)/utils.sh"
 
 APT_MIRROR_URL="http://deb.tails.boum.org/"
-DEFAULT_COMPONENTS="main"
-BASE_BRANCHES="stable testing devel feature/jessie"
+DEFAULT_COMPONENTS="main contrib non-free"
 
 output_apt_binary_source() {
 	local suite="$1"
@@ -22,18 +21,6 @@ output_overlay_apt_binary_sources() {
 	done
 }
 
-on_base_branch() {
-	local current_branch=$(current_branch)
-
-	for base_branch in $BASE_BRANCHES ; do
-		if [ "$current_branch" = "$base_branch" ] ; then
-			return 0
-		fi
-	done
-
-	return 1
-}
-
 ### Sanity checks
 
 [ -d config/APT_overlays.d ] || fatal 'config/APT_overlays.d/ does not exist'
@@ -42,9 +29,9 @@ on_base_branch() {
 [ "$(cat config/base_branch | wc -l)" -eq 1 ] \
     || fatal 'config/base_branch must contain exactly one line'
 
-if on_base_branch && ! [ "$(base_branch)" = "$(current_branch)" ] ; then
+if on_base_branch && ! [ "$(base_branch)" = "$(git_current_branch)" ] ; then
 	echo "base_branch: $(base_branch)" >&2
-	echo "current_branch: $(current_branch)" >&2
+	echo "current_branch: $(git_current_branch)" >&2
 	fatal "In a base branch, config/base_branch must match the current branch."
 fi
 
