@@ -34,6 +34,20 @@ def focus_pidgin_irc_conversation_window(account)
   end
 end
 
+def pidgin_dbus_call(method, *args)
+  dbus_send(
+    'im.pidgin.purple.PurpleService',
+    '/im/pidgin/purple/PurpleObject',
+    "im.pidgin.purple.PurpleInterface.#{method}",
+    *args, user: LIVE_USER
+  )
+end
+
+def pidgin_account_connected?(account, prpl_protocol)
+  account_id = pidgin_dbus_call('PurpleAccountsFind', account, prpl_protocol)
+  pidgin_dbus_call('PurpleAccountIsConnected', account_id) == 1
+end
+
 When /^I create my XMPP account$/ do
   account = xmpp_account("Tails_account")
   @screen.click("PidginAccountManagerAddButton.png")
@@ -60,6 +74,11 @@ When /^I create my XMPP account$/ do
 end
 
 Then /^Pidgin automatically enables my XMPP account$/ do
+  account = xmpp_account("Tails_account")
+  jid = account["username"] + '@' + account["domain"]
+  try_for(3*60) do
+    pidgin_account_connected?(jid, 'prpl-jabber')
+  end
   $vm.focus_window('Buddy List')
   @screen.wait("PidginAvailableStatus.png", 60*3)
 end
