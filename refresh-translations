@@ -89,7 +89,16 @@ no_left_out_files () {
 intltool_update_pot () {
    (
       cd po
+      cp -a tails.pot tails.pot.orig
       intltool-update --pot --gettext-package=tails
+
+      if diff_without_pot_creation_date tails.pot.orig tails.pot ; then
+         echo "Only header changes in tails.pot, restoring the old one."
+         mv tails.pot.orig tails.pot
+      else
+         echo "Real changes in tails.pot: keeping the updated one."
+         rm tails.pot.orig
+      fi
    )
 }
 

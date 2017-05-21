@@ -34,6 +34,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
+  'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
   'TAILS_OFFLINE_MODE',
   'TAILS_PROXY',
@@ -244,12 +245,18 @@ task :parse_build_options do
       end
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
-    # Virtual CPUs settings
+    # Virtual hardware settings
+    when /machinetype=([a-zA-Z0-9_.-]+)/
+      ENV['TAILS_BUILD_MACHINE_TYPE'] = $1
     when /cpus=(\d+)/
       ENV['TAILS_BUILD_CPUS'] = $1
+    when /cpumodel=([a-zA-Z0-9_-]+)/
+      ENV['TAILS_BUILD_CPU_MODEL'] = $1
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
+    when /dateoffset=([-+]\d+)/
+      ENV['TAILS_DATE_OFFSET'] = $1
     # Developer convenience features
     when 'keeprunning'
       $keep_running = true

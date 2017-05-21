@@ -1,4 +1,10 @@
-tails (3.0~rc1) UNRELEASED; urgency=medium
+tails (3.0) UNRELEASED; urgency=medium
+
+  * Dummy entry for next release.
+
+ -- Tails developers <tails@boum.org>  Sun, 21 May 2017 18:33:20 +0000
+
+tails (3.0~rc1) unstable; urgency=medium
 
   * Major changes
     - Install Thunderbird 1:45.8.0-3+tails2 and handle the Icedove → Thunderbird
@@ -16,10 +22,25 @@ tails (3.0~rc1) UNRELEASED; urgency=medium
       was not reliable enough and provided a poor UX. Instead, we now return
       to the initramfs on shutdown and unmount all filesystems there, so their
       content and corresponding caches are erased.
+    - Upgrade Tor Browser to 7.0a4 based on Firefox 52.1.1esr (Closes:
+      #12115, #12464):
+      * Unfortunately e10s (multi-process Firefox) is disabled (#12569).
+      * Unfortunately persistent bookmarks created for the first time
+        in Tails 3.0~rc1 is broken (#12568).
+      * Adds exceptions for the extensions Tails installs on top of
+        the vanilla Tor Beowser (Closes: #11419).
+    - Upgrade tor to 0.3.0.7-1 (Closes: #12485) and log both to the
+      usual file and the journal (Closes: #12412).
+    - Merge the code that makes Tails almost build reproducibly (Refs:
+      #5630); we still have issues with the fontconfig cache (Refs:
+      #12567).
 
   * Minor improvements
-    - Add a HACKING document for new code contributors.
-    - Rename tor-controlport-filter to onion-grater.
+    - Add a HACKING document for new code contributors (Closes:
+      #12164).
+    - Rename tor-controlport-filter to onion-grater (Closes: #12394)
+      and import patches killing the delta against Whonix version
+      (Closes: #12173).
     - Improve onion-grater; thanks to Joy SN <joysn1980@yahoo.com>
       for the original patches (Closes: #12173):
       · add --listen-interface
@@ -34,6 +55,11 @@ tails (3.0~rc1) UNRELEASED; urgency=medium
       use WebKit2 instead of the deprecated WebKit, and hide the sidebar
       and banner.
     - Use exec to start KeePassX, i.e. avoid leaving the wrapper running.
+    - htpdate pool: replace www.sarava.org with leap.se. The former
+      has been down for a while and it's not clear when it's going to
+      be stable again. The latter should be reliable.
+    - When generating the network device blacklist, also blacklist
+      network drivers from the staging directory (Closes: #12363).
 
   * Bugfixes
     - Install xserver-xorg-legacy, to fix support for various graphics
@@ -48,6 +74,8 @@ tails (3.0~rc1) UNRELEASED; urgency=medium
       in 3.0~beta3).
     - Install packages needed by the "Test speakers" functionality
       (Closes: #12549).
+    - Fix automatic upgrades when one is already applied (Closed:
+      #12501).
 
   * Test suite
     - Check that dirmngr used the configured keyserver (Closes: #12371).
@@ -63,6 +91,8 @@ tails (3.0~rc1) UNRELEASED; urgency=medium
       Otherwise the machine is immediately halted and we cannot test
       whether memory has been erased.
     - Pass mount_USB_drive structured data instead of free-form text.
+    - Test that MAC spoofing and "Disable network" works for
+      hotplugged networking devices (Refs: #12362).
 
   * Build system
     - Generate the Vagrant base box locally as part of the build process,
@@ -99,13 +129,11 @@ tails (3.0~rc1) UNRELEASED; urgency=medium
     - Release process: "release" a new base box when freezing.
     - Chown/scp artifacts with a single command to limit overhead and warnings
       noise caused by repeated SSH calls.
+    - Add a build options to use a custom CPU model, and custom
+      machine type, for reproducibility testing (refs: #12345).
+    - Add support for installing Tor Browser nightly builds.
 
-  * Fix automatic upgrades when one is already applied (refs: #12501).
-    This fixes the detection of stacked SquashFS via aufs by bilibop, as reported on
-    https://bugs.debian.org/861685. Cherry-picked from upstream Git, will be in
-    bilibop 0.5.3 (and perhaps 0.5.2.1 if such a thing is released for Stretch).
-
- -- Tails developers <tails@boum.org>  Fri, 19 May 2017 15:15:30 +0000
+ -- Tails developers <tails@boum.org>  Sat, 20 May 2017 16:48:45 +0200
 
 tails (3.0~beta4) unstable; urgency=medium
 

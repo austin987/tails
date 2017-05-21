@@ -233,14 +233,20 @@ Forcing a specific behaviour can be done using:
 
 ### Virtual CPUs settings
 
-The number of virtual CPUs that are allocated in the virtual machine can be
-customized through:
+The number and type of virtual CPUs that are allocated in the virtual
+machine can be customized through:
 
  * **cpus=_n_**: allocate _n_ CPUs to the virtual machine.
+   Obviously you should not allocate more virtual CPUs than the number
+   of cores available to the host system. When using Linux, the number
+   of CPUs allocated will default to be the same as the host system.
 
-Obviously you should not allocate more virtual CPUs than the number of cores
-available to the host system. When using Linux, the number of CPUs allocated
-will default to be the same as the host system.
+ * **cpumodel=_model_**: type of the CPUs allocated to the virtual
+   machine. See
+   [the corresponding libvirt documentation](https://libvirt.org/formatdomain.html#elementsCPU).
+
+ * **machinetype=_type_**: type of the QEMU machine; see the output of
+   `qemu-system-x86_64 -machine help` for available options.
 
 ### Git settings
 
@@ -250,6 +256,14 @@ uncommitted changes. This behaviour can be controlled by:
 
  * **ignorechanges**: allow to make a build that will ignore changes in the Git
    repository.
+
+### Other variations useful for testing build reproducibility
+
+An offset can be applied to the current date in the virtual machine
+through:
+
+ * **dateoffset=_+n_**, **dateoffset=_-n_**: change the virtual
+   machine system time by _+n_ or _-n_ days.
 
 ### Developer convenience settings
 

@@ -10,13 +10,16 @@
 # These configuration files are actually shell scripts, and are
 # sourced by various other scripts.
 
+export SOURCE_DATE_EPOCH="$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" +%s)"
+export SOURCE_DATE_YYYYMMDD="$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" +%Y%m%d)"
+
 # Base for the string that will be passed to "lb config --bootappend-live"
 # FIXME: see [[bugs/sdmem_on_eject_broken_for_CD]] for explanation why we
 # need to set block.events_dfl_poll_msecs
 AMNESIA_APPEND="live-media=removable apparmor=1 security=apparmor nopersistence noprompt timezone=Etc/UTC block.events_dfl_poll_msecs=1000 splash noautologin module=Tails kaslr slab_nomerge slub_debug=FZP mce=0 vsyscall=none page_poison=1 union=aufs"
 
 # Options passed to isohybrid
-AMNESIA_ISOHYBRID_OPTS="-h 255 -s 63"
+AMNESIA_ISOHYBRID_OPTS="-h 255 -s 63 --id 42 --verbose"
 
 # Minimal upstream version of syslinux-utils we need
 REQUIRED_SYSLINUX_UTILS_UPSTREAM_VERSION="6.03~pre20"
@@ -38,9 +41,8 @@ fi
 
 # Compute the current Amnesia's version once for all
 AMNESIA_NOW="`date --utc '+%Y%m%dT%H%MZ'`"
-AMNESIA_TODAY="`date '+%Y%m%d'`"
 AMNESIA_VERSION="`dpkg-parsechangelog -SVersion`"
-AMNESIA_FULL_VERSION="${AMNESIA_VERSION} - ${AMNESIA_TODAY}"
+AMNESIA_FULL_VERSION="${AMNESIA_VERSION} - ${SOURCE_DATE_YYYYMMDD}"
 
 # Developpers' data used by git-dch, debcommit and friends in the release script
 AMNESIA_DEV_FULLNAME='Tails developers'
