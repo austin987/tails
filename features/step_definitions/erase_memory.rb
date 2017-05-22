@@ -8,7 +8,7 @@ def udev_watchdog_monitored_device
   ps_output_scan = ps_output.scan(/^#{Regexp.escape(udev_watchdog_cmd)}\s(\S+)\s(?:cd|disk)$/)
   assert_equal(ps_output_scan.count, 1, "There should be one udev-watchdog running.")
   monitored_out = ps_output_scan.flatten[0]
-  assert(!monitored_out.nil?)
+  assert_not_nil(monitored_out)
   monitored_device_id = $vm.file_content('/sys' + monitored_out + '/dev').chomp
   monitored_device =
     $vm.execute_successfully(
@@ -20,37 +20,6 @@ Given /^udev-watchdog is monitoring the correct device$/ do
   assert_equal(udev_watchdog_monitored_device, boot_device)
 end
 
-Given /^the computer is a modern 64-bit system$/ do
-  $vm.set_arch("x86_64")
-  $vm.drop_hypervisor_feature("nonpae")
-  $vm.add_hypervisor_feature("pae")
-end
-
-Given /^the computer is an old pentium without the PAE extension$/ do
-  $vm.set_arch("i686")
-  $vm.drop_hypervisor_feature("pae")
-  # libvirt claim the following feature doesn't exit even though
-  # it's listed in the hvm i686 capabilities...
-#  $vm.add_hypervisor_feature("nonpae")
-  # ... so we use a workaround until we can figure this one out.
-  $vm.disable_pae_workaround
-end
-
-def which_kernel
-  kernel_path = $vm.execute_successfully("tails-get-bootinfo kernel").stdout.chomp
-  return File.basename(kernel_path)
-end
-
-Given /^the PAE kernel is running$/ do
-  kernel = which_kernel
-  assert_equal("vmlinuz2", kernel)
-end
-
-Given /^the non-PAE kernel is running$/ do
-  kernel = which_kernel
-  assert_equal("vmlinuz", kernel)
-end
-
 def used_ram_in_MiB
   return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $3 }'").stdout.chomp.to_i
 end
@@ -59,21 +28,9 @@ def detected_ram_in_MiB
   return $vm.execute_successfully("free -m | awk '/^Mem:/ { print $2 }'").stdout.chomp.to_i
 end
 
-Given /^at least (\d+) ([[:alpha:]]+) of RAM was detected$/ do |min_ram, unit|
-  @detected_ram_m = detected_ram_in_MiB
-  puts "Detected #{@detected_ram_m} MiB of RAM"
-  min_ram_m = convert_to_MiB(min_ram.to_i, unit)
-  # All RAM will not be reported by `free`, so we allow a 196 MB gap
-  gap = convert_to_MiB(256, "MiB")
-  assert(@detected_ram_m + gap >= min_ram_m, "Didn't detect enough RAM")
-end
-
-def pattern_coverage_in_guest_ram
-  assert_not_nil(
-    @free_mem_before_fill_b,
-    "@free_mem_before_fill_b is not set, probably the required 'I fill the " +
-    "guest's memory ...' step was not run")
-  free_mem_before_fill_m = convert_to_MiB(@free_mem_before_fill_b, 'b')
+def pattern_coverage_in_guest_ram(reference_memory_b)
+  assert_not_nil(reference_memory_b)
+  reference_memory_m = convert_to_MiB(reference_memory_b, 'b')
   dump = "#{$config["TMPDIR"]}/memdump"
   # Workaround: when dumping the guest's memory via core_dump(), libvirt
   # will create files that only root can read. We therefore pre-create
@@ -91,17 +48,20 @@ def pattern_coverage_in_guest_ram
   # Pattern is 16 bytes long
   patterns_b = patterns*16
   patterns_m = convert_to_MiB(patterns_b, 'b')
-  coverage = patterns_b.to_f/@free_mem_before_fill_b
+  coverage = patterns_b.to_f/reference_memory_b
   puts "Pattern coverage: #{"%.3f" % (coverage*100)}% (#{patterns_m} MiB " +
-       "out of #{free_mem_before_fill_m} MiB initial free memory)"
+       "out of #{reference_memory_m} MiB reference memory)"
   return coverage
 end
 
-Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do |dont_verify|
-  verify = dont_verify.empty?
+Given /^I prepare Tails for memory erasure tests$/ do
+  @detected_ram_m = detected_ram_in_MiB
 
   # Free some more memory by dropping the caches etc.
-  $vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
+  step "I drop all kernel caches"
+
+  # Have our initramfs-pre-shutdown-hook sleep for a while
+  $vm.execute_successfully("touch /run/initramfs/tails_shutdown_debugging")
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
@@ -136,6 +96,12 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
                           kernel_mem_reserved_m - admin_mem_reserved_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 
+  ['initramfs-shutdown', 'memlockd', 'tails-shutdown-on-media-removal'].each do |srv|
+    assert($vm.execute("systemctl status #{srv}.service").success?)
+  end
+end
+
+Given /^I fill the guest's memory with a known pattern and the allocating processes get killed$/ do
   # To be sure that we fill all memory we run one fillram instance for
   # each GiB of detected memory, rounded up. To maintain stability we
   # prioritize the fillram instances to be OOM killed. We also kill
@@ -169,59 +135,118 @@ Given /^I fill the guest's memory with a known pattern(| without verifying)$/ do
     ! $vm.has_process?("fillram")
   end
   debug_log("Memory fill progress: finished")
-  if verify
-    coverage = pattern_coverage_in_guest_ram()
-    min_coverage = 0.90
-    assert(coverage > min_coverage,
-           "#{"%.3f" % (coverage*100)}% of the free memory was filled with " +
-           "the pattern, but more than #{"%.3f" % (min_coverage*100)}% was " +
-           "expected")
-  end
+end
+
+def avail_space_in_mountpoint_kB(mountpoint)
+  return $vm.execute_successfully(
+    "df --output=avail '#{mountpoint}'"
+  ).stdout.split("\n")[1].to_i
+end
+
+def assert_filesystem_is_full(mountpoint)
+  avail_space = avail_space_in_mountpoint_kB(mountpoint)
+  assert_equal(
+    0, avail_space,
+    "#{avail_space} kB is still free on #{mountpoint}," +
+    "while this filesystem was expected to be full"
+  )
+end
+
+When /^I mount a (\d+) MiB tmpfs on "([^"]+)" and fill it with a known pattern$/ do |size_MiB, mountpoint|
+  size_MiB = size_MiB.to_i
+  @tmp_filesystem_size_b = convert_to_bytes(size_MiB, 'MiB')
+  $vm.execute_successfully(
+    "mount -t tmpfs -o 'size=#{size_MiB}M' tmpfs '#{mountpoint}'"
+  )
+  $vm.execute_successfully(
+    "while echo wipe_didnt_work >> '#{mountpoint}/file'; do true ; done"
+   )
+  assert_filesystem_is_full(mountpoint)
+end
+
+When(/^I fill the USB drive with a known pattern$/) do
+  $vm.execute_successfully(
+    "while echo wipe_didnt_work >> '#{@tmp_usb_drive_mount_dir}/file'; do true ; done"
+   )
+  assert_filesystem_is_full(@tmp_usb_drive_mount_dir)
+end
+
+When(/^I read the content of the test FS$/) do
+  $vm.execute_successfully("cat #{@tmp_usb_drive_mount_dir}/file >/dev/null")
+end
+
+Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$/ do |expected_coverage|
+  reference_memory_b = @tmp_filesystem_size_b
+  tmp_filesystem_size_MiB = convert_from_bytes(@tmp_filesystem_size_b, 'MiB')
+  coverage = pattern_coverage_in_guest_ram(reference_memory_b)
+  min_coverage = expected_coverage.to_f / 100
+  assert(coverage > min_coverage,
+         "#{"%.3f" % (coverage*100)}% of the test FS size (#{tmp_filesystem_size_MiB} MiB) " +
+         "has the pattern, but more than #{"%.3f" % (min_coverage*100)}% " +
+         "was expected")
+end
+
+Then(/^patterns cover at least (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
+  reference_memory_b = convert_to_bytes(expected_patterns_MiB.to_i, 'MiB')
+  coverage = pattern_coverage_in_guest_ram(reference_memory_b)
+  min_coverage = 1
+  assert(coverage >= min_coverage,
+         "#{"%.3f" % (coverage*100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
+         "has the pattern, but more than #{"%.3f" % (min_coverage*100)}% " +
+         "was expected")
+end
+
+Then(/^patterns cover less than (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
+  reference_memory_b = convert_to_bytes(expected_patterns_MiB.to_i, 'MiB')
+  coverage = pattern_coverage_in_guest_ram(reference_memory_b)
+  max_coverage = 1
+  assert(coverage < max_coverage,
+         "#{"%.3f" % (coverage*100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
+         "has the pattern, but less than #{"%.3f" % (max_coverage*100)}% " +
+         "was expected")
+end
+
+When(/^I umount "([^"]*)"$/) do |mount_arg|
+  $vm.execute_successfully("umount '#{mount_arg}'")
 end
 
 Then /^I find very few patterns in the guest's memory$/ do
-  coverage = pattern_coverage_in_guest_ram()
+  coverage = pattern_coverage_in_guest_ram(@free_mem_before_fill_b)
   max_coverage = 0.008
   assert(coverage < max_coverage,
          "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
-Then /^I find many patterns in the guest's memory$/ do
-  coverage = pattern_coverage_in_guest_ram()
-  min_coverage = 0.9
-  assert(coverage > min_coverage,
-         "#{"%.3f" % (coverage*100)}% of the free memory still has the " +
-         "pattern, but more than #{"%.3f" % (min_coverage*100)}% was expected")
-end
-
-When /^I reboot without wiping the memory$/ do
-  $vm.reset
-end
-
 When /^I stop the boot at the bootloader menu$/ do
   step "Tails is at the boot menu's cmdline"
 end
 
-When /^I shutdown and wait for Tails to finish wiping the memory$/ do
-  $vm.spawn("halt")
-  match = nil
-  begin
-    try_for(memory_wipe_timeout, msg: "memory wipe didn't finish, probably the VM crashed") do
-      # We spam keypresses to prevent console blanking from hiding the
-      # image we're waiting for
-      @screen.type(" ")
-      match, _ = @screen.findAny(
-         ['MemoryWipeCompleted.png', 'TailsBug11786a.png', 'TailsBug11786b.png']
-      )
-      match != nil
-    end
-    # Just throw the same exception as a if the try_for would fail
-    raise Timeout::Error if match != 'MemoryWipeCompleted.png'
-  rescue Timeout::Error
-    puts "Cannot tell if memory wipe completed. " +
-         "One possible reason for this is #11786, " +
-         "so let's go on and rely on the next steps to check " +
-         "how well memory was wiped."
+When /^I wait for Tails to finish wiping the memory$/ do
+  @screen.wait("MemoryWipeCompleted.png", 30)
+end
+
+When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) filesystem$/) do |size_MiB, fs|
+  pattern = "wipe_didnt_work\n"
+  pattern_nb = (convert_to_bytes(size_MiB.to_i, 'MiB') / pattern.size).floor
+  if fs == 'root'
+    dest_file = "/" + random_alpha_string(10)
+  elsif fs == 'persistent'
+    dest_file = "/home/amnesia/Persistent/" + random_alpha_string(10)
+  else
+    raise "This should not happen"
   end
+  $vm.execute_successfully(
+    "for i in $(seq 1 #{pattern_nb}) ; do " +
+    "   echo wipe_didnt_work >> '#{dest_file}' ; " +
+    "done"
+   )
+end
+
+When(/^I drop all kernel caches$/) do
+  $vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
+end
+
+When(/^I trigger shutdown$/) do
+  $vm.spawn("halt")
 end

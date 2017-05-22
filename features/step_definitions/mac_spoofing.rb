@@ -5,36 +5,48 @@ def all_ethernet_nics
 end
 
 When /^I disable MAC spoofing in Tails Greeter$/ do
+  open_greeter_additional_settings()
   @screen.wait_and_click("TailsGreeterMACSpoofing.png", 30)
+  @screen.wait_and_click("TailsGreeterDisableMACSpoofing.png", 10)
+  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
 end
 
-Then /^the network device has (its default|a spoofed) MAC address configured$/ do |mode|
+Then /^the (\d+)(?:st|nd|rd|th) network device has (its real|a spoofed) MAC address configured$/ do |dev_nr, mode|
   is_spoofed = (mode == "a spoofed")
-  nic = "eth0"
-  assert_equal([nic], all_ethernet_nics,
-               "We only expected NIC #{nic} but these are present: " +
-               all_ethernet_nics.join(", "))
-  nic_real_mac = $vm.real_mac
+  alias_name = "net#{dev_nr.to_i - 1}"
+  nic_real_mac = $vm.real_mac(alias_name)
+  nic = "eth#{dev_nr.to_i - 1}"
   nic_current_mac = $vm.execute_successfully(
     "get_current_mac_of_nic #{nic}", :libs => 'hardware'
   ).stdout.chomp
-  if is_spoofed
-    if nic_real_mac == nic_current_mac
-      save_pcap_file
-      raise "The MAC address was expected to be spoofed but wasn't"
+  begin
+    if is_spoofed
+      if nic_real_mac == nic_current_mac
+        raise "The MAC address was expected to be spoofed but wasn't"
+      end
+    else
+      if nic_real_mac != nic_current_mac
+        raise "The MAC address is spoofed but was expected to not be"
+      end
     end
-  else
-    if nic_real_mac != nic_current_mac
-      save_pcap_file
-      raise "The MAC address is spoofed but was expected to not be"
+  rescue Exception => e
+    save_failure_artifact("Network capture", @sniffer.pcap_file)
+    raise e
+  end
+end
+
+Then /^no network device leaked the real MAC address$/ do
+  macs = $vm.all_real_macs
+  assert_all_connections(@sniffer.pcap_file) do |c|
+    macs.all? do |mac|
+      not [c.mac_saddr, c.mac_daddr].include?(mac)
     end
   end
 end
 
-Then /^the real MAC address was (not )?leaked$/ do |mode|
-  is_leaking = mode.nil?
-  assert_all_connections(@sniffer.pcap_file) do |c|
-    [c.mac_saddr, c.mac_daddr].include?($vm.real_mac) == is_leaking
+Then /^some network device leaked the real MAC address$/ do
+  assert_raise(FirewallAssertionFailedError) do
+    step 'no network device leaked the real MAC address'
   end
 end
 
@@ -64,14 +76,6 @@ EOF
   $vm.execute_successfully("chmod a+rx /sbin/modprobe")
 end
 
-When /^see the "Network card disabled" notification$/ do
-  robust_notification_wait("MACSpoofNetworkCardDisabled.png", 60)
-end
-
-When /^see the "All networking disabled" notification$/ do
-  robust_notification_wait("MACSpoofNetworkingDisabled.png", 60)
-end
-
 Then /^(\d+|no) network interface(?:s)? (?:is|are) enabled$/ do |expected_nr_nics|
   # note that "no".to_i => 0 in Ruby.
   expected_nr_nics = expected_nr_nics.to_i
@@ -91,6 +95,25 @@ Then /^the MAC spoofing panic mode disabled networking$/ do
         "#{function} #{nic}", :libs => 'hardware'
       ).stdout.chomp
       assert_equal("", addr, "NIC #{nic} was assigned address #{addr}")
+    end
+  end
+end
+
+When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wait|
+  initial_nr_nics = wait ? all_ethernet_nics.size : nil
+  xml = <<-EOF
+    <interface type='network'>
+      <alias name='net1'/>
+      <mac address='52:54:00:11:22:33'/>
+      <source network='TailsToasterNet'/>
+      <model type='virtio'/>
+      <link state='up'/>
+    </interface>
+  EOF
+  $vm.plug_device(xml)
+  if wait
+    try_for(20) do
+      all_ethernet_nics.size >= initial_nr_nics + 1
     end
   end
 end

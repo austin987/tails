@@ -5,6 +5,14 @@ See [[!tails_ticket 11143]] and [[!tails_ticket 10951]] for the
 discussion that lead to this choice of parameters. Most of what
 follows come straight from what "cypherpunks" wrote there.
 
+### `page_poison`
+
+"[Clear memory at free], wiping any sensitive data so it doesn't have an
+opportunity to leak in various ways (e.g. accidentally uninitialized
+structures or padding), and that certain types of use-after-free flaws
+cannot be exploited since the memory has been wiped"
+(<https://outflux.net/blog/archives/2016/09/30/security-things-in-linux-v4-6/>)
+
 #### `slab_nomerge`
 
 Disables the merging of slabs of similar sizes. Many times some
@@ -20,9 +28,9 @@ slight increase in kernel memory utilization. `slabinfo -a` can be
 used to tell what the memory footprint increase would be on
 a given system.
 
-#### `slub_debug=FZ`
+#### `slub_debug=FZP`
 
-Enables sanity checks (F) and redzoning (Z). Sanity checks are
+Enables sanity checks (F), redzoning (Z) and poisoning (P). Sanity checks are
 self-evident and come with a modest performance impact, but this is
 unlikely to be significant on an average Tails system. The checks are
 basic but are still useful both for security and as a debugging
@@ -30,17 +38,10 @@ measure. Redzoning adds extra areas around slabs that detect when
 a slab is overwritten past its real size, which can help detect
 overflows. Its performance impact is negligible.
 
-We did consider adding the P value which enables poisoning.
 Poisoning writes an arbitrary value to freed objects, so any
 modification or reference to that object after being freed or before
 being initialized will be detected and prevented. This prevents many
-types of use-after-free vulns at little perf cost. Unfortunately, the
-default poison value points into userland and might make exploitation
-easier on systems without SMAP (aka most systems), so we excluded the
-P for now. We'll look into it more to see if the trade-offs (increased
-vulnerability to dereferencing into userland memory in exchange for
-increased resistence to UAFs) are worth it, but until then it's been left
-out to be safe.
+types of use-after-free vulnerabilities at little performance cost.
 
 An additional note: any time `slub_debug=` is put in the kernel
 command line, `slab_nomerge` is implied. But having `slab_nomerge`
