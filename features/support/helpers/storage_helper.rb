@@ -79,6 +79,10 @@ class VMStorage
     VMStorage.clear_storage_pool_volumes(@pool)
   end
 
+  def list_volumes
+    @pool.list_volumes
+  end
+
   def delete_volume(name)
     @pool.lookup_volume_by_name(name).delete
   end

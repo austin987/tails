@@ -27,7 +27,7 @@ Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:
   $vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
 end
 
-Given /^I cat an ISO of the Tails image to disk "([^"]+)"$/ do |name|
+Given /^I write the Tails ISO image to disk "([^"]+)"$/ do |name|
   src_disk = {
     :path => TAILS_ISO,
     :opts => {
@@ -55,7 +55,7 @@ end
 Then /^Tails Greeter has( not)? detected a persistence partition$/ do |no_persistence|
   expecting_persistence = no_persistence.nil?
   @screen.find('TailsGreeter.png')
-  found_persistence = ! @screen.exists('TailsGreeterPersistence.png').nil?
+  found_persistence = ! @screen.exists('TailsGreeterPersistencePassphrase.png').nil?
   assert_equal(expecting_persistence, found_persistence,
                "Persistence is unexpectedly#{no_persistence} enabled")
 end

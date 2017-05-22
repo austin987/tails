@@ -6,10 +6,22 @@
 VIRTUAL_MACHINE_HOSTNAME = 'vagrant-jessie'
 
 # Approximate amount of extra space needed for builds
-BUILD_SPACE_REQUIREMENT = 9*1024
+BUILD_SPACE_REQUIREMENT = 12.5*1024
 
 # Virtual machine memory size for on-disk builds
 VM_MEMORY_FOR_DISK_BUILDS = 512
 
 # Virtual machine memory size for in-memory builds
 VM_MEMORY_FOR_RAM_BUILDS = VM_MEMORY_FOR_DISK_BUILDS + BUILD_SPACE_REQUIREMENT
+
+# The builder VM's platform
+ARCHITECTURE = "amd64"
+DISTRIBUTION = "jessie"
+
+# The name of the Vagrant box
+def box_name
+  git_root = `git rev-parse --show-toplevel`.chomp
+  shortid, date = `git log -1 --date="format:%Y%m%d" --pretty="%h %ad" -- \
+                   #{git_root}/vagrant/definitions/tails-builder/`.chomp.split
+  return "tails-builder-#{ARCHITECTURE}-#{DISTRIBUTION}-#{date}-#{shortid}"
+end

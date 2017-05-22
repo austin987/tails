@@ -121,25 +121,36 @@ Then /^I connect to an SFTP server on the Internet$/ do
 
   recovery_proc = Proc.new do
     step 'I kill the process "ssh"'
-    @screen.type(Sikuli::Key.ESC)
-    @screen.click("GnomeCloseTopButton.png")
-    @screen.waitVanish("GnomeCloseTopButton.png", 10)
+    step 'I kill the process "nautilus"'
   end
 
   retry_tor(recovery_proc) do
-    step 'I start "Files" via the GNOME "Accessories" applications menu'
-    @screen.wait_and_click("GnomeFilesConnectToServer.png", 10)
-    @screen.wait("GnomeConnectToServerWindow.png", 10)
-    @screen.type("sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port)
-    @screen.wait_and_click("GnomeConnectToServerConnectButton.png", 10)
+    step 'I start "Nautilus" via the GNOME "Accessories" applications menu'
+    nautilus = Dogtail::Application.new('nautilus')
+    nautilus.child(roleName: 'frame')
+    nautilus.child('Other Locations', roleName: 'label').click
+    connect_bar = nautilus.child('Connect to Server', roleName: 'label').parent
+    connect_bar
+      .child(roleName: 'filler', recursive: false)
+      .child(roleName: 'text', recursive: false)
+      .text = "sftp://" + @sftp_username + "@" + @sftp_host + ":" + @sftp_port
+    connect_bar.button('Connect', recursive: false).click
     step "I verify the SSH fingerprint for the SFTP server"
   end
 end
 
 Then /^I verify the SSH fingerprint for the SFTP server$/ do
-  @screen.wait_and_click("GnomeSSHVerificationConfirm.png", 2*60)
+  try_for(30) do
+    Dogtail::Application.new('gnome-shell').child?('Log In Anyway')
+  end
+  # Here we'd like to click on the button using Dogtail, but something
+  # is buggy so let's just use the keyboard.
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Then /^I successfully connect to the SFTP server$/ do
-  @screen.wait("GnomeSSHSuccess.png", 60)
+  try_for(60) do
+    Dogtail::Application.new('nautilus')
+      .child?("#{@sftp_username} on #{@sftp_host}")
+  end
 end

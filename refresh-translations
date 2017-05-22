@@ -4,14 +4,13 @@ set -e
 set -u
 
 PERL_PROGS="/usr/local/bin/tails-security-check \
-   /usr/local/lib/tails-32-bit-notify-user \
    /usr/local/lib/tails-htp-notify-user \
    /usr/local/lib/tails-virt-notify-user"
 PYTHON_PROGS="/etc/whisperback/config.py \
    /usr/local/bin/tails-about /usr/local/sbin/tails-additional-software"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
    /usr/local/bin/electrum \
-   /usr/local/bin/icedove \
+   /usr/local/bin/keepassx \
    /usr/local/bin/tails-upgrade-frontend-wrapper \
    /usr/local/lib/tails-spoof-mac \
    /usr/local/bin/tor-browser \
@@ -90,7 +89,16 @@ no_left_out_files () {
 intltool_update_pot () {
    (
       cd po
+      cp -a tails.pot tails.pot.orig
       intltool-update --pot --gettext-package=tails
+
+      if diff_without_pot_creation_date tails.pot.orig tails.pot ; then
+         echo "Only header changes in tails.pot, restoring the old one."
+         mv tails.pot.orig tails.pot
+      else
+         echo "Real changes in tails.pot: keeping the updated one."
+         rm tails.pot.orig
+      fi
    )
 }
 
@@ -122,3 +130,4 @@ intltool_update_po $(po_languages)
 # Update files that are actually used at runtime
 refresh_mo $(po_languages)
 intltool_merge
+chmod +x config/chroot_local-includes/etc/skel/Desktop/*.desktop
