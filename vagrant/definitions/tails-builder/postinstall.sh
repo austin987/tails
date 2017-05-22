@@ -58,6 +58,11 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Pin: release o=Tails,n=builder-jessie
 	Pin-Priority: 500
 EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/discount <<EOF
+	Package: discount libmarkdown2 libmarkdown2-dev
+	Pin: release o=Tails,n=builder-jessie
+	Pin-Priority: 500
+EOF
 
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
 	Package: *
@@ -113,6 +118,9 @@ apt-get -y install \
         perlmagick \
         wdg-html-validator \
         psmisc
+
+# Ensure we can use timedatectl
+apt-get -y install dbus
 
 # Start apt-cacher-ng inside the VM only if the "in-VM proxy" is to be used.
 echo "I: Installing the caching proxy..."

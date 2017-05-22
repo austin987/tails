@@ -47,23 +47,23 @@ Then /^Tails clock is less than (\d+) minutes incorrect$/ do |max_diff_mins|
   puts "Time was #{diff} seconds off"
 end
 
-Then /^the system clock is just past Tails' build date$/ do
+Then /^the system clock is just past Tails' source date$/ do
   system_time_str = $vm.execute_successfully('date').to_s
   system_time = DateTime.parse(system_time_str).to_time
-  build_time_cmd = 'sed -n -e "1s/^.* - \([0-9]\+\)$/\1/p;q" ' +
-                   '/etc/amnesia/version'
-  build_time_str = $vm.execute_successfully(build_time_cmd).to_s
-  build_time = DateTime.parse(build_time_str).to_time
-  diff = system_time - build_time  # => in seconds
+  source_time_cmd = 'sed -n -e "1s/^.* - \([0-9]\+\)$/\1/p;q" ' +
+                    '/etc/amnesia/version'
+  source_time_str = $vm.execute_successfully(source_time_cmd).to_s
+  source_time = DateTime.parse(source_time_str).to_time
+  diff = system_time - source_time  # => in seconds
   # Half an hour should be enough to boot Tails on any reasonable
   # hardware and VM setup.
   max_diff = 30*60
   assert(diff > 0,
          "The system time (#{system_time}) is before the Tails " +
-         "build date (#{build_time})")
+         "source date (#{source_time})")
   assert(diff <= max_diff,
          "The system time (#{system_time}) is more than #{max_diff} seconds " +
-         "past the build date (#{build_time})")
+         "past the source date (#{source_time})")
 end
 
 Then /^Tails' hardware clock is close to the host system's time$/ do
