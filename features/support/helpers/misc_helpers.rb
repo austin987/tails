@@ -302,3 +302,43 @@ def pause(message = "Paused")
     end
   end
 end
+
+def dbus_send(service, object_path, method, *args, **opts)
+  opts ||= {}
+  ruby_type_to_dbus_type = {
+    String => 'string',
+    Fixnum => 'int32',
+  }
+  typed_args = args.map do |arg|
+    type = ruby_type_to_dbus_type[arg.class]
+    assert_not_nil(type, "No DBus type conversion for Ruby type '#{arg.class}'")
+    "#{type}:#{arg}"
+  end
+  ret = $vm.execute_successfully(
+    "dbus-send --print-reply --dest=#{service} #{object_path} " +
+    "    #{method} #{typed_args.join(' ')}",
+    **opts
+  ).stdout.lines
+  # The first line written is about timings and other stuff we don't
+  # care about; we only care about the return values.
+  ret.shift
+  ret.map! do |s|
+    type, val = /^\s*(\S+)\s+(\S+)$/.match(s)[1,2]
+    case type
+    when 'string'
+      # Unquote
+      val[1, val.length - 2]
+    when 'int32'
+      val.to_i
+    else
+      raise "No Ruby type conversion for DBus type '#{type}'"
+    end
+  end
+  if ret.size == 0
+    return nil
+  elsif ret.size == 1
+    return ret.first
+  else
+    return ret
+  end
+end

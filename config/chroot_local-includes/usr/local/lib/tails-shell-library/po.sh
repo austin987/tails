@@ -7,6 +7,15 @@ po_languages () {
    done
 }
 
+diff_without_pot_creation_date () {
+   old="$1"
+   new="$2"
+
+   [ $(diff "$old" "$new" | grep -Ec '^>') -eq 1 -a \
+     $(diff "$old" "$new" | grep -Ec '^<') -eq 1 -a \
+     $(diff "$old" "$new" | grep -Ec '^[<>] "POT-Creation-Date:') -eq 2 ]
+}
+
 intltool_update_po () {
    (
         cd po
@@ -16,9 +25,7 @@ intltool_update_po () {
             [ -f ${locale}.po ]     || continue
             [ -f ${locale}.po.new ] || continue
 
-            if [ $(diff "${locale}.po" "${locale}.po.new" | grep -Ec '^>') -eq 1 -a \
-                 $(diff "${locale}.po" "${locale}.po.new" | grep -Ec '^<') -eq 1 -a \
-                 $(diff "${locale}.po" "${locale}.po.new" | grep -Ec '^[<>] "POT-Creation-Date:') -eq 2 ]; then
+            if diff_without_pot_creation_date "${locale}.po" "${locale}.po.new"; then
                     echo "${locale}: Only header changes in potfile, delete new PO file."
                     rm ${locale}.po.new
             else

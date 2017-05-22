@@ -1,0 +1,54 @@
+#! /bin/sh
+
+set -e
+
+echo "Post processing filesystem to make it reproducible"
+
+if [ -z "${SOURCE_DATE_EPOCH}" ]; then
+    echo "SOURCE_DATE_EPOCH was not set!" >&2
+    exit 1
+fi
+
+# These files are pretty useless for us and mainly occupy space on the
+# image. They are, for instance, not useful for checking the
+# authenticity of the filesystem (an external verification tool and
+# source of these checksums would be required), and checking for
+# corruption is less relevant in Tails' context, where the system
+# partition is read-only (the point being: if they do differ, chances
+# are problems would manifest in much more obvious ways).
+rm /var/lib/dpkg/info/*.md5sums
+
+# Clear caches and remove precompiled code. These will be generated
+# on-the-fly when needed instead of being shipped on the image, so
+# we'll require a bit more RAM and startup times, while the image will
+# be smaller (and more reproducible!).
+rm /etc/console-setup/cached_setup_keyboard.sh
+rm /var/cache/ldconfig/aux-cache
+rm /var/lib/systemd/catalog/database
+
+# Delete non-deterministically generated files, that should not be shared among
+# all Tails systems anyway. We don't ship SSHd, so we don't bother generating
+# them at boot.
+rm -r /var/lib/monkeysphere/authentication/
+
+# Empty non-deterministically generated file. If it exists and is empty, systemd
+# will automatically set up a new unique ID. But if does not exist, systemd
+# will populate /etc with preset unit settings, which will for example re-enable
+# units we have disabled (#11970).
+: > /etc/machine-id
+
+# Remove logs.
+rm -r /var/lib/dkms/*/*/*/*/log
+
+# Set various timestamps according to SOURCE_DATE_EPOCH.
+find / -name '%gconf-tree.xml' -print0 | \
+    xargs -0r \
+        sed -i -e 's@\bmtime="[0-9][0-9]*"@mtime="'${SOURCE_DATE_EPOCH}'"@g'
+
+# Post-process /etc/shadow by setting the sp_lstchg field to the number of days
+# since SOURCE_DATE_EPOCH instead of 1st Jan 1970. (#12339)
+# XXX:Buster: drop this if https://bugs.debian.org/857803 is fixed.
+cut -d: -f1 /etc/shadow | \
+    xargs -L1 \
+        chage --lastday \
+            "$(($(date --utc --date "@${SOURCE_DATE_EPOCH}" "+%s") / 86400))"

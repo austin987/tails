@@ -83,6 +83,7 @@ When /^I update APT using Synaptic$/ do
   end
   retry_tor(recovery_proc) do
     @synaptic.button('Reload').click
+    sleep 10 # It might take some time before APT starts downloading
     try_for(15*60, :msg => "Took too much time to download the APT data") {
       !$vm.has_process?("/usr/lib/apt/methods/tor+http")
     }
