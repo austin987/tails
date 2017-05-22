@@ -1,15 +1,93 @@
 # This library is meant to be used in bash, with "set -e" and "set -u".
 
-current_branch() {
-	git branch | awk '/^\* / { print $2 }'
+BASE_BRANCHES="stable testing devel feature/stretch"
+
+# Returns "" if in undetached head
+git_current_branch() {
+	local git_ref
+	if git_ref="$(git symbolic-ref HEAD 2>/dev/null)"; then
+		echo "${git_ref#refs/heads/}"
+	else
+		echo ""
+	fi
 }
 
-on_a_tag() {
-	git describe --tags --exact-match $(git rev-parse --verify HEAD 2>/dev/null) >/dev/null 2>/dev/null
+git_in_detached_head() {
+	[ -z "$(git_current_branch)" ]
+}
+
+# Returns "" if ref does not exist
+git_commit_from_ref() {
+	git rev-parse --verify "${@}" 2>/dev/null || :
+}
+
+git_current_commit() {
+	git_commit_from_ref "${@}" HEAD
+}
+
+# Returns "" if not a tag
+git_tag_from_commit() {
+	git describe --tags --exact-match "${1}" 2>/dev/null || :
+}
+
+# Returns "" if not on a tag
+git_current_tag() {
+	git_tag_from_commit $(git_current_commit)
+}
+
+# Try to describe what currently is checked out. Returns "" if we are
+# in detached HEAD, otherwise, in order, the tag pointing to HEAD, or
+# the current branch.
+git_current_head_name() {
+	local ret
+	ret="$(git_current_tag)"
+	if [ -z "${ret}" ]; then
+		ret="$(git_current_branch)"
+	fi
+	echo "${ret}"
+}
+
+git_on_a_tag() {
+	[ -n "$(git_current_tag)" ]
+}
+
+git_only_doc_changes_since() {
+	local commit non_doc_diff
+	commit="$(git_commit_from_ref ${1})"
+	non_doc_diff="$(git diff \
+		${commit}... \
+		-- \
+		'*' \
+		':!/wiki' \
+		':!/ikiwiki.setup' \
+		':!/ikiwiki-cgi.setup' \
+		':!*.po' \
+	)"
+
+	[ -z "${non_doc_diff}" ]
 }
 
 base_branch() {
 	cat config/base_branch | head -n1
+}
+
+base_branches() {
+	echo ${BASE_BRANCHES}
+}
+
+on_base_branch() {
+	for base_branch in $BASE_BRANCHES ; do
+		if [ "$(git_current_branch)" = "${base_branch}" ] ; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+# Returns the top commit ref of the base branch
+git_base_branch_head() {
+	git_commit_from_ref "${@}" origin/"$(base_branch)"
 }
 
 branch_name_to_suite() {
@@ -43,3 +121,18 @@ version_in_changelog() {
 previous_version_in_changelog() {
 	dpkg-parsechangelog --offset 1 --count 1 | awk '/^Version: / { print $2 }'
 }
+
+# Make it so that when this script is called, any function defined in
+# this script can be invoked via arguments, e.g.:
+#
+# $ auto/scripts/utils.sh git_commit_from_ref 3.0-beta2
+# eca83a88a9dd958b16b4d5b04fea3ea503a3815d
+#
+if grep -q __utils_sh_magic_5773fa52-0d1a-11e7-a606-0021ccc177a7 "${0}" && [ -n "${1}" ]; then
+	if grep -q "^${1}() {$" "${0}"; then
+		eval "\"\${@}\""
+	else
+		echo "unknown shell function: ${1}" >&2
+		exit 1
+	fi
+fi

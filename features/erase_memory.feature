@@ -6,10 +6,9 @@ Feature: System memory erasure on shutdown
 
 # These tests rely on the Linux kernel's memory poisoning features.
 # The feature is called "on shutdown" as this is the security guarantee
-# we document, but in practice we have no good way to test behavior on shutdown
-# per-se (known patterns allocated in memory will be erased _before_ shutdown
-# by the kernel). So we test that some important bits of memory are erased
-# _before_ shutdown.
+# we document, but in practice we test that some important bits of memory
+# are erased _before_ shutdown, while for some others we really test
+# behavior at shutdown time.
 
   Scenario: Erasure of memory freed by killed userspace processes
     Given I have started Tails from DVD without network and logged in
@@ -58,4 +57,23 @@ Feature: System memory erasure on shutdown
     And I read the content of the test FS
     Then patterns cover at least 99% of the test FS size in the guest's memory
     When I umount the USB drive
+    Then I find very few patterns in the guest's memory
+
+  Scenario: Erasure of the aufs read-write branch on shutdown
+    Given I have started Tails from DVD without network and logged in
+    And I prepare Tails for memory erasure tests
+    When I fill a 128 MiB file with a known pattern on the root filesystem
+    # ensure the pattern is in memory due to tmpfs, not to disk cache
+    And I drop all kernel caches
+    Then patterns cover at least 128 MiB in the guest's memory
+    When I trigger shutdown
+    And I wait 20 seconds
+    Then I find very few patterns in the guest's memory
+
+  Scenario: Erasure of read and write disk caches of persistent data on shutdown
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    And I prepare Tails for memory erasure tests
+    When I fill a 128 MiB file with a known pattern on the persistent filesystem
+    When I trigger shutdown
+    And I wait 20 seconds
     Then I find very few patterns in the guest's memory

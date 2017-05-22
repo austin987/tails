@@ -58,7 +58,10 @@ Given /^I prepare Tails for memory erasure tests$/ do
   @detected_ram_m = detected_ram_in_MiB
 
   # Free some more memory by dropping the caches etc.
-  $vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
+  step "I drop all kernel caches"
+
+  # Have our initramfs-pre-shutdown-hook sleep for a while
+  $vm.execute_successfully("touch /run/initramfs/tails_shutdown_debugging")
 
   # The (guest) kernel may freeze when approaching full memory without
   # adjusting the OOM killer and memory overcommitment limitations.
@@ -92,6 +95,10 @@ Given /^I prepare Tails for memory erasure tests$/ do
   free_mem_before_fill_m = @detected_ram_m - used_mem_before_fill_m -
                           kernel_mem_reserved_m - admin_mem_reserved_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
+
+  ['initramfs-shutdown', 'memlockd', 'tails-shutdown-on-media-removal'].each do |srv|
+    assert($vm.execute("systemctl status #{srv}.service").success?)
+  end
 end
 
 Given /^I fill the guest's memory with a known pattern and the allocating processes get killed$/ do
@@ -179,6 +186,26 @@ Then /^patterns cover at least (\d+)% of the test FS size in the guest's memory$
          "was expected")
 end
 
+Then(/^patterns cover at least (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
+  reference_memory_b = convert_to_bytes(expected_patterns_MiB.to_i, 'MiB')
+  coverage = pattern_coverage_in_guest_ram(reference_memory_b)
+  min_coverage = 1
+  assert(coverage >= min_coverage,
+         "#{"%.3f" % (coverage*100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
+         "has the pattern, but more than #{"%.3f" % (min_coverage*100)}% " +
+         "was expected")
+end
+
+Then(/^patterns cover less than (\d+) MiB in the guest's memory$/) do |expected_patterns_MiB|
+  reference_memory_b = convert_to_bytes(expected_patterns_MiB.to_i, 'MiB')
+  coverage = pattern_coverage_in_guest_ram(reference_memory_b)
+  max_coverage = 1
+  assert(coverage < max_coverage,
+         "#{"%.3f" % (coverage*100)}% of the expected size (#{expected_patterns_MiB} MiB) " +
+         "has the pattern, but less than #{"%.3f" % (max_coverage*100)}% " +
+         "was expected")
+end
+
 When(/^I umount "([^"]*)"$/) do |mount_arg|
   $vm.execute_successfully("umount '#{mount_arg}'")
 end
@@ -191,33 +218,35 @@ Then /^I find very few patterns in the guest's memory$/ do
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
-When /^I reboot without wiping the memory$/ do
-  $vm.reset
-end
-
 When /^I stop the boot at the bootloader menu$/ do
   step "Tails is at the boot menu's cmdline"
 end
 
-When /^I shutdown and wait for Tails to finish wiping the memory$/ do
-  $vm.spawn("halt")
-  match = nil
-  begin
-    try_for(memory_wipe_timeout, msg: "memory wipe didn't finish, probably the VM crashed") do
-      # We spam keypresses to prevent console blanking from hiding the
-      # image we're waiting for
-      @screen.type(" ")
-      match, _ = @screen.findAny(
-         ['MemoryWipeCompleted.png', 'TailsBug11786a.png', 'TailsBug11786b.png']
-      )
-      match != nil
-    end
-    # Just throw the same exception as a if the try_for would fail
-    raise Timeout::Error if match != 'MemoryWipeCompleted.png'
-  rescue Timeout::Error
-    puts "Cannot tell if memory wipe completed. " +
-         "One possible reason for this is #11786, " +
-         "so let's go on and rely on the next steps to check " +
-         "how well memory was wiped."
+When /^I wait for Tails to finish wiping the memory$/ do
+  @screen.wait("MemoryWipeCompleted.png", 30)
+end
+
+When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) filesystem$/) do |size_MiB, fs|
+  pattern = "wipe_didnt_work\n"
+  pattern_nb = (convert_to_bytes(size_MiB.to_i, 'MiB') / pattern.size).floor
+  if fs == 'root'
+    dest_file = "/" + random_alpha_string(10)
+  elsif fs == 'persistent'
+    dest_file = "/home/amnesia/Persistent/" + random_alpha_string(10)
+  else
+    raise "This should not happen"
   end
+  $vm.execute_successfully(
+    "for i in $(seq 1 #{pattern_nb}) ; do " +
+    "   echo wipe_didnt_work >> '#{dest_file}' ; " +
+    "done"
+   )
+end
+
+When(/^I drop all kernel caches$/) do
+  $vm.execute_successfully("echo 3 > /proc/sys/vm/drop_caches")
+end
+
+When(/^I trigger shutdown$/) do
+  $vm.spawn("halt")
 end

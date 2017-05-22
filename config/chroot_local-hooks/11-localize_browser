@@ -14,6 +14,9 @@ echo "Localize each supported browser locale"
 # Import language_code_from_locale()
 . /usr/local/lib/tails-shell-library/localization.sh
 
+# Import strip_nondeterminism_wrapper()
+. /usr/local/lib/tails-shell-library/build.sh
+
 # Import TAILS_WIKI_SUPPORTED_LANGUAGES
 . /etc/amnesia/environment
 
@@ -162,17 +165,24 @@ rm -r "${BROWSER_LOCALIZATION_DIR}"
 # present, otherwise they won't work. It's not a problem to list
 # nonexisting ones, so as long as we delete plugins we do not have to
 # alter it.
-7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
+7z d -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
    'chrome/en-US/locale/browser/searchplugins/ddg*.xml' \
    'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
    'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
    'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
+# For consistency, fixup the internal timestamps of these archives with
+# the same ones used by the Tor Browser instead of SOURCE_DATE_EPOCH.
+tbb_timestamp="$(date --date='2000-01-01 00:00:00' +%s)"
+strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
+                             "${TBB_INSTALL}/browser/omni.ja" 2>/dev/null
 for pack in "${TBB_EXT}"/langpack-*.xpi; do
-    7z d -tzip "${pack}" \
+    7z d -mtc=off -tzip "${pack}" \
        'browser/chrome/*/locale/browser/searchplugins/ddg*.xml' \
        'browser/chrome/*/locale/browser/searchplugins/startpage*.xml' \
        'browser/chrome/*/locale/browser/searchplugins/wikipedia*.xml' \
        'browser/chrome/*/locale/browser/searchplugins/yahoo*.xml'
+    strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
+                                 "${pack}" 2>/dev/null
 done
 
 # We want our localized English Wikipedia plugin to be available in

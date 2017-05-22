@@ -57,6 +57,18 @@ def ensure_chutney_is_running
       chutney_data_dir_cleanup.call unless KEEP_SNAPSHOTS
     end
 
+    # We have to sanity check that all nodes are running because
+    # `chutney start` will return success even if some nodes fail.
+    running, total = 0, -1
+    status = chutney_cmd.call('status')
+    match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
+    assert_not_nil(match, "Chutney's status did not contain the expected " +
+                          "string listing the number of running nodes")
+    running, total = match[1,2].map { |x| x.to_i }
+    assert_equal(
+      total, running, "Chutney is only running #{running}/#{total} nodes"
+    )
+
     $chutney_initialized = true
   end
 end

@@ -11,7 +11,9 @@ To release Tails you'll need some packages installed:
 
 * mktorrent and transmission-cli
 * Aufs DKMS module for your running kernel.
-* tails-iuk dependencies (see debian/control in the `debian` branch of its repo)
+* [[!debpts squashfs-tools]] that honors `$SOURCE_DATE_EPOCH`.
+  Install it from our custom `feature-5630-deterministic-builds` APT suite.
+* tails-iuk dependencies, including suggested packages (see debian/control in the `debian` branch of its repo)
 * tails-perl5lib dependencies (same trick than tails-iuk to get the list)
 
 Environment
@@ -25,6 +27,7 @@ the scripts snippets found on this page:
       export VERSION=$(dpkg-parsechangelog -SVersion)
       export TAG=$(echo "${VERSION:?}" | sed -e 's,~,-,')
       export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
+      export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
 
 * `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
   (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
@@ -54,11 +57,11 @@ Pre-freeze
 The [[contribute/working_together/roles/release_manager]] role
 documentation has more tasks that should be done early enough.
 
-Update Icedove preferences
+Update Thunderbird preferences
 ------------------------------
 
 * update `extensions.enigmail.configuredVersion` in
-  `config/chroot_local-includes/etc/skel/.icedove/profile.default/preferences/0000tails.js`
+  `config/chroot_local-includes/etc/skel/.thunderbird/profile.default/preferences/0000tails.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -106,9 +109,7 @@ If we are at freeze time for a major release:
    during the freeze.
 
 6. Make it so the time-based APT repository snapshots are kept around
-   long enough, by bumping their `Valid-Until` to 10 days after the
-   next major release (the one _after_ the one you're preparing)'s
-   scheduled date:
+   long enough, by bumping their `Valid-Until` to 6 months from now:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
 
@@ -163,7 +164,7 @@ The patterns+settings file is stored as a converted sqlite text dump in
            awk '!/^INSERT/; /^INSERT/ {print $0 | "sort -n"}' | \
            sed 's_\\n_\\n\r\n_g' | \
            sed 's_,_,\r\n_g' | \
-           perl -pi -e 's/([^|])\|((?!\||\\n).)/\1\|\r\n\2/g' | \
+           perl -p -e 's/([^|])\|((?!\||\\n).)/\1\|\r\n\2/g' | \
            sed "/^INSERT INTO \"settings\" VALUES('\(remoteBlacklists\|cached_asset_entries\)'/"'s_,_,\r\n_g' > \
            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
 
@@ -221,10 +222,10 @@ Upgrade Tor Browser
 
 See the dedicated page: [[tor-browser]]
 
-Upgrade Icedove
+Upgrade Thunderbird
 ---------------
 
-See the dedicated page: [[icedove]]
+See the dedicated page: [[thunderbird]]
 
 Update PO files
 ---------------
@@ -309,7 +310,7 @@ Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
-	./release ${VERSION:?} ${PREVIOUS_VERSION:?}
+	./release ${VERSION:?} ${PREVIOUS_TAG:?}
 
 This populates the Changelog with the Git log entries.
 
@@ -530,6 +531,10 @@ suite should be ready, so it is time to:
       dch --release --no-force-save-on-release --maintmaint
       git commit -m "Mark Tails ${VERSION:?} as released." debian/changelog
 
+* Export `SOURCE_DATE_EPOCH`:
+
+      export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
+
 * tag the release *again*, with all included files in:
   
       git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
@@ -537,9 +542,11 @@ suite should be ready, so it is time to:
       git push --tags --force && \
       git push origin "${RELEASE_BRANCH:?}"
 
-* check out the release tag:
-
-      git checkout "${TAG:?}"
+   Note: for Jenkins to build the release you must push the release
+   branch with its tip tagged. I.e. if you deviate from the above
+   commands by e.g. committing a commit in between `gut tag` and the
+   first `git push` then Jenkins won't build from the tag -- please
+   avoid that!
 
 * build the final image!
 
@@ -621,6 +628,8 @@ and run the following:
 
     for source_version in ${IUK_SOURCE_VERSIONS}; do
         sudo su -c "cd ${IUK_CHECKOUT:?} && \
+          SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
+          LC_ALL=C \
           PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
             ./bin/tails-create-iuk \
                --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
@@ -683,8 +692,10 @@ Prepare upgrade-description files
      make this work, one must _not_ pass `--previous-version 1.1`,
      that would remove the existing incremental upgrade path from 1.1
      to 1.1.1.
-   * If preparing a release candidate, add `--channel alpha`
-   * If preparing a release candidate, drop all `--next-version`
+   * If preparing anything but a final release (e.g. an alpha, beta
+     or RC), add `--channel alpha`
+   * If preparing anything but a final release (e.g. an alpha, beta
+     or RC), drop all `--next-version`
      arguments, and instead pass (**untested!**)
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
    * If preparing a point-release, pass neither
@@ -717,15 +728,14 @@ Prepare upgrade-description files
          git push origin ${RELEASE_BRANCH:?} \
        )
 
-1. If preparing a release candidate, move the generated or updated
-   files to `${MASTER_CHECKOUT:?}`, commit and push: given the updates are
-   advertised on the *alpha* channel, while all users use the *stable*
-   one by default, this will allow you to more easily test the IUK
-   without impacting anyone.
+1. If preparing anything but a final release (e.g. an alpha, beta
+   or RC), copy the generated or updated files to
+   `${MASTER_CHECKOUT:?}`, replace `channel: alpha` with `channel:
+   test`, sign them, commit and push.
 
-1. If preparing a point release, copy the generated UDF for the previous
-   release in the alpha channel in the master branch, modify its content
-   accordingly, sign it, commit and push
+1. Else, if preparing a final release, copy the generated UDF for the previous
+   release to the *test* channel in `$MASTER_CHECKOUT`, modify its content
+   accordingly, sign it, commit and push:
 
        # If more old versions are supported, add them (whitespace
        # separated) to this variable
@@ -736,14 +746,14 @@ Prepare upgrade-description files
          git fetch && \
          for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
            stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
-           alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
+           test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
            git show origin/${RELEASE_BRANCH:?}:${stable_udf:?} \
-             | sed -e 's/channel: stable/channel: alpha/' > ${alpha_udf:?} && \
-           gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${alpha_udf:?} && \
-           mv ${alpha_udf:?}.asc ${alpha_udf:?}.pgp && \
-           git add ${alpha_udf:?}* ; \
+             | sed -e 's/channel: stable/channel: test/' > ${test_udf:?} && \
+           gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+           mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+           git add ${test_udf:?}* ; \
          done && \
-         git commit -m "Add incremental upgrades on the alpha channel for Tails ${VERSION:?}" && \
+         git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
          git push origin master:master \
        )
 
@@ -930,6 +940,10 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
+Copy the updated or or updated update-description files and their
+detached signatures to `${MASTER_CHECKOUT:?}`. They should be on the
+*alpha* channel.
+
 Copy the `.iso.sig` file into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
@@ -954,6 +968,9 @@ Write the announcement for the release in
 
 In any case
 -----------
+
+If preparing a final release, what follows happens in
+`$RELEASE_CHECKOUT`. Else, it happens in `$MASTER_CHECKOUT`.
 
 Generate PO files for the announcements with `./build-website`.
 
@@ -1161,6 +1178,14 @@ this, and skip what does not make sense for a RC.
                     -not -name '*~test_*~test.iuk' -delete \
              \"
 
+1. Check how much space our mirrors will need:
+
+        ssh rsync.lizard du -sh /srv/rsync/tails
+
+   Compare it to the minimum disk space we ask of our mirror operators
+   (30 GiB) and determine if any further action is needed to either
+   reduce our usage by deleting stuff, or asking them to give us more
+   space.
 1. Delete Git branches that were merged:
 
         bare_repo=$(mktemp -d)
@@ -1190,8 +1215,7 @@ this, and skip what does not make sense for a RC.
    files for any new versions that were added.
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
-   appropriately (they should expire a bit after the next release, so
-   the dates must be ~six weeks in the future). Look carefully at the
+   appropriately (they should expire in a few months). Look carefully at the
    output of this command:
 
         git checkout "${RELEASE_BRANCH:?}" && \
