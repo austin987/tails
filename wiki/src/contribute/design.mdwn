@@ -860,9 +860,9 @@ providers recommend and even enforce StartTLS on these ports, the effect
 of these warnings were most of the time counterproductive as people had
 to click through needlessly scary security warnings.
 
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-controlport-filter.d/]]
-- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tor-controlport-filter.service]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/tor-controlport-filter]]
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/onion-grater.d/]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/onion-grater.service]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/onion-grater]]
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]
 
 [[!tails_gitweb_repo onioncircuits desc="Onion Circuits"]] allows the
@@ -884,12 +884,13 @@ Tails does not include any HTTP proxy anymore.
 
 ### 3.6.5 SOCKS libraries
 
-tsocks and torify are installed. Since Tor-ification is done at a
+torsocks and torify are installed. Since Tor-ification is done at a
 lower level (in-kernel network filter, Tor-ified DNS), these tools are
 actually unnecessary. They are solely included due to dependencies and
 configured for completeness.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/tor/tor-tsocks.conf]]
+- [[!tails_gitweb config/chroot_local-hooks/09-torsocks-configuration]]
 
 ### 3.6.6 Network Filter
 
@@ -1031,17 +1032,17 @@ for the [[Unsafe Browser]], although it is
 user-isolated and use a separate profile with very different
 configuration.
 
-### 3.6.14 Icedove
+### 3.6.14 Thunderbird
 
-Icedove, in combination with TorBirdy, sends email through Tor.
+Thunderbird, in combination with TorBirdy, sends email through Tor.
 
-Icedove itself leaks a lot of data and makes DNS requests, for example by
+Thunderbird itself leaks a lot of data and makes DNS requests, for example by
 retrieving mail server configurations from a remote server over an insecure
 channel. This is prevented by the TorBirdy extension as well as by custom
-patches for Icedove in Tails, which we are currently in the process of
+patches for Thunderbird in Tails, which we are currently in the process of
 upstreaming ([[!tails_ticket 11215]]).
 
-Icedove generates `Message-ID` headers using the hostname part of
+Thunderbird generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
 any user location information.
 
@@ -1051,10 +1052,10 @@ disclosing the real IP address and hostname.
 Torbirdy disables HTML email and inline attachments
 in order to get rid of a whole class of privacy concerns.
 Furthermore, when setting up an IMAP account, the drafts folder, instead
-of being remote, is set to `~$HOME/.icedove/Local Folders`.
+of being remote, is set to `~$HOME/.thunderbird/Local Folders`.
 
 The original TorBirdy extension disables automatic email configuration
-through Icedove's email configuration wizard. This wizard is enabled in
+through Thunderbird's email configuration wizard. This wizard is enabled in
 Tails. This is possible because our patches allow using only secure protocols
 for the domain and ISPDB lookups as well as for the actual mail account
 configuration. In detail this means:
@@ -1073,13 +1074,13 @@ manual configuration.
 
 OpenPGP support is provided by the Enigmail addon.
 
-- [[!tails_gitweb config/chroot_local-includes/etc/icedove/pref/icedove.js]]
+- [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
 - [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
 - [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
 - [[!tails_gitweb config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff]]
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.icedove]] is copied to
+- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.thunderbird]] is copied to
   the user's `$HOME` at boot time
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/icedove]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
 
 ### 3.6.15 Pidgin
 
@@ -1120,8 +1121,8 @@ output, to avoid automatically locating and retrieving keys, and to
 disregard the preferred keyserver assigned to specific keys.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
-- [[!tails_gitweb config/chroot_local-includes/etc/ssl/certs/sks-keyservers.netCA.pem]]
-- [[!tails_gitweb config/chroot_local-includes/usr/share/amnesia/gconf/desktop_pgp.xml]]
+- [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/dirmngr.conf]]
+- [[!tails_gitweb config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults]]
 - hkpms is available in Debian: [[!debpkg msva-perl]]
 
 ### 3.6.17 Persistence feature
@@ -1142,7 +1143,7 @@ Tails puts the wireless devices in a sensible state at boot time.
 
 At boot time, Tails unblocks Wi-Fi, WWAN and WiMAX radios, unblocks
 Bluetooth radio (so that it can be dealt another way:
-[[todo/protect_against_external_bus_memory_forensics]]), and
+[[!tails_ticket 5451 desc="protect against external bus memory forensics"]]), and
 soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-set-wireless-devices-state.service]]
@@ -1153,7 +1154,6 @@ soft-blocks all other kinds of wireless devices (e.g. UWB, GPS, FM).
 The OpenSSH client is configured to use the Tor SOCKS proxy.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/ssh/ssh_config]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/lib/connect-socks]]
 
 ### 3.6.21 Incremental upgrades
 
@@ -1180,35 +1180,21 @@ encrypt and decrypt text, and to verify OpenPGP signatures.
 
 Tails prevents dhclient from sending the hostname over the network.
 
-First, only the `keyfile` NetworkManager plugin is used; that is, the
-`ifupdown` plugin is disabled:
+We patch NetworkManager to make it never instruct dhclient to send the
+hostname in DHCP requests, until [[!gnomebug 768076]] is fixed.
 
-* this is needed, because the only the `keyfile` plugin supports
-  setting `dhcp-send-hostname` to false, while the `ifupdown` plugin
-  retrieves the hostname to send from `/etc/hostname`;
-* this is OK, because we actually don't use the functionality provided
-  by the `ifupdown` plugin (that is, reading from
-  `/etc/network/interfaces` -- that only configures the loopback
-  connection in Tails, which is itself ignored by NetworkManager
-  anyway).
-
-Second, the NetworkManager `keyfile` plugin is configured to *not*
-send the hostname over DHCP by default. Likely this can be overridden
-on a per-connection basis if one really needs to change this.
-
-Third, dhclient itself is told not to send the hostname. This is
+Also, dhclient itself is told not to send the hostname. This is
 needed because on Jessie, NetworkManager runs dhclient with the `-cf
-/var/lib/NetworkManager/dhclient-eth0.conf` option, and generates that file by
+/var/lib/NetworkManager/dhclient-$UUID-eth0.conf` option, and generates that file by
 concatenating `/etc/dhcp/dhclient.conf` with its own settings.
 
-Fourth, dhclient is told to override any hostname provided by the DHCP
+dhclient is told to override any hostname provided by the DHCP
 server with `amnesia`. This is meant to prevent dhclient hooks,
 NetworkManager and others from setting the hostname to a value
 controlled by the DHCP server.
 
+* [[!tails_gitweb_repo network-manager]]
 * [[!tails_gitweb config/chroot_local-patches/dhcp-dont-send-hostname.diff]]
-* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/conf.d/dhcp-hostname.conf]]
-* [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/conf.d/plugins.conf]]
 
 ### 3.6.24 TCP timestamps
 
@@ -1364,11 +1350,9 @@ Backports](http://backports.debian.org/) as a compromise between
 stability and recent hardware support. Recent Intel and AMD microcode
 are included as well.
 
-The x86 hardware architecture is the main supported one.
+The x86-64 hardware architecture is the only supported one.
 
-A 64-bit Linux kernel (*amd64* flavour) and a 32-bit one (*486*
-flavor, for maximal backward-compatibility) are provided. The best
-supported one is used.
+A 64-bit Linux kernel (*amd64* flavour) and userspace are included.
 
 * [[!tails_gitweb auto/config]]
 * [[!tails_gitweb config/binary_local-hooks/20-syslinux_detect_cpu]]
@@ -1399,10 +1383,8 @@ UDP and IPv6 are a problem. The Tor network does not support any of
 those yet. Outgoing UDP and IPv6 packets are dropped altogether by
 netfilter for this reason.
 
-Support of [[!tails_ticket 6070 desc="arbitrary DNS queries"]] is only
-provided by ttdnsd listening
-on 127.0.0.2. ttdnsd has proved too be far too buggy to be inserted in
-the default DNS resolution chain.
+Support of [[!tails_ticket 6070 desc="arbitrary DNS queries"]] is not
+provided anymore since we removed ttdnsd in Tails 3.0.
 
 Some tools currently available to command-line users lack the
 integration into Tails and/or graphical user interface that would be

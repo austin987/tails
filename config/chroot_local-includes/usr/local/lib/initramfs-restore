@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+set -u
+
+WORKDIR=$(/bin/mktemp -d)
+
+/usr/bin/unmkinitramfs \
+    "$(/usr/local/bin/tails-get-bootinfo initrd)" \
+    "$WORKDIR"
+
+# We should not need any kernel modules in there at shutdown time,
+# and they take 66% of the entire uncompressed initramfs size, so
+# let's save some RAM.
+/bin/rm -rf "$WORKDIR"/main/lib/modules
+
+/bin/mv "$WORKDIR"/main/* /run/initramfs/
+
+/bin/rm -rf "$WORKDIR"

@@ -16,3 +16,7 @@ pref("browser.search.geoSpecificDefaults", false);
 // Without setting this, the Download Management page will not update
 // the progress being made.
 pref("browser.download.panel.shown", true);
+
+// Web pages does not render when e10s is enabled, so we have to
+// disable it. Note that the "user_"-prefix is required.
+user_pref("browser.tabs.remote.autostart.2", false);

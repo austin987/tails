@@ -66,7 +66,7 @@ with GnuPG:
 Filter the tarballs we want and make them available at build time,
 when the tarballs are fetched:
 
-    grep --color=never "\<tor-browser-linux32-.*\.tar.xz$" sha256sums-unsigned-build.txt > \
+    grep --color=never "\<tor-browser-linux64-.*\.tar.xz$" sha256sums-unsigned-build.txt > \
          config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
 Then update the URL to the one chosen above:
@@ -85,16 +85,6 @@ checksum file.
 
 Lastly, commit:
 
-    git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
-        -m "Upgrade Tor Browser to ${TBB_VERSION}."
-
-Then do the same operation for the 64-bit tarballs:
-
-    git checkout feature/stretch && \
-    grep --color=never "\<tor-browser-linux64-.*\.tar.xz$" sha256sums-unsigned-build.txt > \
-         config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt && \
-    echo "${TBB_DIST_URL}" | sed "s,^https://,http://," > \
-         config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
     git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
         -m "Upgrade Tor Browser to ${TBB_VERSION}."
 
@@ -180,7 +170,7 @@ Import a new set of Tor Browser tarballs
        cd "$TAILS_GIT_REPO" && git checkout "$TBB_IMPORT_BRANCH"
        TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")"
        current_branch=$(git -C "$TAILS_GIT_REPO" branch | awk '/^\* / { print $2 }')
-       for branch in "$current_branch" feature/stretch ; do
+       for branch in "$current_branch" ; do
           git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
           | while read expected_sha256 tarball; do
              (
@@ -229,7 +219,7 @@ Adjust the URL in the main Git repository
     cd "$TAILS_GIT_REPO" && \
     git checkout "$TBB_IMPORT_BRANCH"
     current_branch=$(git branch | awk '/^\* / { print $2 }')
-    for branch in "$current_branch" feature/stretch ; do
+    for branch in "$current_branch" ; do
        git checkout "$branch" && \
        echo "http://torbrowser-archive.tails.boum.org/${TBB_VERSION}/" > \
             config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \

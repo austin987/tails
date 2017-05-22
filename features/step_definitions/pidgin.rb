@@ -34,6 +34,20 @@ def focus_pidgin_irc_conversation_window(account)
   end
 end
 
+def pidgin_dbus_call(method, *args)
+  dbus_send(
+    'im.pidgin.purple.PurpleService',
+    '/im/pidgin/purple/PurpleObject',
+    "im.pidgin.purple.PurpleInterface.#{method}",
+    *args, user: LIVE_USER
+  )
+end
+
+def pidgin_account_connected?(account, prpl_protocol)
+  account_id = pidgin_dbus_call('PurpleAccountsFind', account, prpl_protocol)
+  pidgin_dbus_call('PurpleAccountIsConnected', account_id) == 1
+end
+
 When /^I create my XMPP account$/ do
   account = xmpp_account("Tails_account")
   @screen.click("PidginAccountManagerAddButton.png")
@@ -60,6 +74,11 @@ When /^I create my XMPP account$/ do
 end
 
 Then /^Pidgin automatically enables my XMPP account$/ do
+  account = xmpp_account("Tails_account")
+  jid = account["username"] + '@' + account["domain"]
+  try_for(3*60) do
+    pidgin_account_connected?(jid, 'prpl-jabber')
+  end
   $vm.focus_window('Buddy List')
   @screen.wait("PidginAvailableStatus.png", 60*3)
 end
@@ -113,7 +132,12 @@ Then /^I receive a response from my friend( in the multi-user chat)?$/ do |multi
   else
     $vm.focus_window(@friend_name)
   end
-  @screen.wait("PidginFriendExpectedAnswer.png", 20)
+  try_for(60) do
+    if @screen.exists('PidginServerMessage.png')
+      @screen.click('PidginDialogCloseButton.png')
+    end
+    @screen.find('PidginFriendExpectedAnswer.png')
+  end
 end
 
 When /^I start an OTR session with my friend$/ do
@@ -267,10 +291,6 @@ Given /^Pidgin has the expected accounts configured with random nicknames$/ do
          "#{expected}")
 end
 
-When /^I start Pidgin through the GNOME menu$/ do
-  step 'I start "Pidgin Internet Messenger" via the GNOME "Internet" applications menu'
-end
-
 When /^I open Pidgin's account manager window$/ do
   @screen.wait_and_click('PidginMenuAccounts.png', 20)
   @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
@@ -282,7 +302,7 @@ When /^I see Pidgin's account manager window$/ do
 end
 
 When /^I close Pidgin's account manager window$/ do
-  @screen.wait_and_click("PidginAccountManagerCloseButton.png", 10)
+  @screen.wait_and_click("PidginDialogCloseButton.png", 10)
 end
 
 When /^I close Pidgin$/ do
@@ -411,7 +431,7 @@ end
 
 def pidgin_add_certificate_from (cert_file)
   # Here, we need a certificate that is not already in the NSS database
-  step "I copy \"/usr/share/ca-certificates/spi-inc.org/spi-cacert-2008.crt\" to \"#{cert_file}\" as user \"amnesia\""
+  step "I copy \"/usr/share/ca-certificates/mozilla/CNNIC_ROOT.crt\" to \"#{cert_file}\" as user \"amnesia\""
 
   $vm.focus_window('Buddy List')
   @screen.wait_and_click('PidginToolsMenu.png', 10)
@@ -459,6 +479,9 @@ end
 
 When /^I see the Tails roadmap URL$/ do
   try_for(60) do
+    if @screen.exists('PidginServerMessage.png')
+      @screen.click('PidginDialogCloseButton.png')
+    end
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
@@ -470,4 +493,5 @@ end
 
 When /^I click on the Tails roadmap URL$/ do
   @screen.click('PidginTailsRoadmapUrl.png')
+  try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
 end
