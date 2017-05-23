@@ -21,7 +21,6 @@ AfterConfiguration do |config|
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
     # Features using large amounts of scratch space for other reasons:
-    'features/emergency_shutdown.feature',
     'features/erase_memory.feature',
     # This feature needs the almost biggest snapshot (USB install,
     # excluding persistence) and will create yet another disk and
@@ -29,6 +28,9 @@ AfterConfiguration do |config|
     'features/usb_install.feature',
     # This feature needs a copy of the ISO and creates a new disk.
     'features/usb_upgrade.feature',
+    # This feature needs a very big snapshot (USB install with persistence)
+    # and another, network-enabled snapshot.
+    'features/emergency_shutdown.feature',
   ]
   feature_files = config.feature_files
   # The &-intersection is specified to keep the element ordering of
