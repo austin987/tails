@@ -160,7 +160,7 @@ HP ProBook
 ----------
 
 With UEFI enabled, when choosing a boot device, select `Boot From EFI File` and
-then `Filesystem Tails` and `EFI/BOOT/bootx64.efi`.
+then `Filesystem Tails` and `EFI/BOOT/BOOTX64.EFI`.
 
 That workaround applied to, at least, the following HP ProBook:
 
@@ -213,6 +213,9 @@ Mac
   MacBook Pro 8,2 (late 2011) fail to boot from a USB stick created by
   Tails Installer.
 
+Graphics issues
+===============
+
 GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
 ----------------------------------------------------------------------
 
@@ -248,10 +251,10 @@ Adding `radeon.dpm=0` to the
 [[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
 fixes the issue.
 
-<a id="switchable_graphics"></a>
+<a id="switchable_graphics_black_screen"></a>
 
-Switchable graphics computers
------------------------------
+Black screen with switchable graphics computers
+-----------------------------------------------
 
 Some computers with switchable graphics (such as Optimus) fail to
 choose a video card and end up on a black screen. This has been
@@ -289,6 +292,15 @@ There are two possible workarounds for this issue:
 
 For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
 
+<a id=switchable_graphics_segfault></a>
+
+Segmentation Fault with switchable graphics computers
+-----------------------------------------------------
+
+With some computers with switchable graphics, Tails 2.1\* can't open a GNOME session and keeps returning to the greeter.
+
+Booting in Troubleshooting Mode works, as well as adding the `modeprobe.blacklist=nouveau` to the [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
+
 Laptops with Intel 855GM graphic card
 -------------------------------------
 
@@ -325,21 +337,15 @@ adapters. If this happens to you:
    [[report a bug|doc/first_steps/bug_reporting]]. Include the exact
    model of your Intel graphics adapter.
 
-<a id="chainloading"></a>
+Slow graphics operations with recent NVidia hardware
+----------------------------------------------------
 
-Chainloading Tails from GRUB
-----------------------------
+Graphics display operations are slow on computers with graphics
+adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
+GeForce GTX 960.
 
-To workaround problems in booting Tails on laptops with UEFI support, it is
-possible to chainload the syslinux on the ISO image from another boot loader
-that is already working on the laptop, like GRUB. Be careful not to modify at
-all the options of syslinux in the process.
-
-The following commands, run from the GRUB shell, might be helpful:
-
-    set root=(hd1)
-    chainloader +1
-    boot
+This problem is likely resolved with Tails
+[[!tails_ticket 10298 desc="including a newer Linux kernel"]].
 
 <a id="wi-fi"></a>
 
@@ -406,50 +412,6 @@ the DVD anymore.
 
 See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
 
-<a id="fails-to-shutdown"></a>
-
-Tails fails to completely shutdown or restart
----------------------------------------------
-
-When stopping Tails on some hardware, the memory wipe procedure fails to
-complete: the display gets scrambled, but the computer doesn't
-completely shutdown or restart. Sometimes the caps-lock button light of
-the keyboard flashes.
-
-<div class="caution">
-
-When this happens, there is no guarantee that the memory is wiped entirely.
-
-</div>
-
-This issue has been reported on the following hardware:
-
-  - Acer Aspire e1-572
-  - Apple when booting from a USB stick:
-    - MacBook Air 5,1
-    - MacBook Air 5,2 (using a device installed with Tails Installer)
-    - MacBook Air 6,2
-    - MacBook Pro 7,1 13-inch (mid 2010)
-    - MacBook Pro 9,2 13-inch (mid 2012)
-    - MacBook Pro 8,1 13-inch (late 2011)
-    - MacBook Pro 10,2
-    - MacBook Pro Retina 11,1 (late 2013)
-    - MacBook Pro Retina 13-inch (early 2015)
-  - Dell Inc. Studio 1458
-  - Dell Latitude E6230
-  - Dell XPS 8500
-  - Fujitsu Lifebook AH531/GFO, only on regular shutdown, emergency
-    shutdown works
-  - Hewlett-Packard HP ENVY x360
-  - Hewlett-Packard HP Pavilion dv6 Notebook PC
-  - Hewlett-Packard HP ProBook 450 G0
-  - Lenovo ThinkPad X61, only on emergency shutdown when pulling out the
-    USB stick
-  - Lenovo ThinkPad X220
-  - Microsoft Surface Pro 3
-  - Samsung N150P
-  - Toshiba Satellite C855D
-
 <a id="fingerprint"></a>
 
 Browser fingerprint
@@ -470,6 +432,22 @@ class="application">Tor Browser</span> inside and outside of Tails:
 
 Other issues
 ============
+
+<a id="chainloading"></a>
+
+Chainloading Tails from GRUB
+----------------------------
+
+To workaround problems in booting Tails on laptops with UEFI support, it is
+possible to chainload the syslinux on the ISO image from another boot loader
+that is already working on the laptop, like GRUB. Be careful not to modify at
+all the options of syslinux in the process.
+
+The following commands, run from the GRUB shell, might be helpful:
+
+    set root=(hd1)
+    chainloader +1
+    boot
 
 Boot Loader Menu has display issues
 -----------------------------------
@@ -556,16 +534,6 @@ To fix this problem, you can [[update your Tails
 manually|doc/first_steps/upgrade/#manual]].
 
 Note that your Persistent Volume will be safely preserved.
-
-Slow graphics operations with recent NVidia hardware
-----------------------------------------------------
-
-Graphics display operations are slow on computers with graphics
-adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
-GeForce GTX 960.
-
-This problem is likely resolved with Tails
-[[!tails_ticket 10298 desc="including a newer Linux kernel"]].
 
 <a id="restart-shell"></a>
 
