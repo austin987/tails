@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # The MIT License
 # 
@@ -33,7 +33,6 @@
 # The datafile should be a bunch of words from some language
 # with minimal punctuation or garbage (# starts a comment). 
 
-from __future__ import with_statement
 from optparse import OptionParser
 import random
 import re
@@ -77,13 +76,13 @@ class Pseudolanguage:
                 for word in self.data[f]:
                     word += ' '
                     if len(word) > 3:
-                        if self.inits.has_key(word[0:2]):
+                        if word[0:2] in self.inits:
                             self.inits[word[0:2]].append(word[2:3])
                         else:
                             self.inits[word[0:2]] = [word[2:3]]
                     pos = 0
                     while pos < len(word)-2:
-                        if self.pairs.has_key(word[pos:pos+2]):
+                        if word[pos:pos+2] in self.pairs:
                             self.pairs[word[pos:pos+2]].append(word[pos+2])
                         else:
                             self.pairs[word[pos:pos+2]] = [word[pos+2]]
@@ -93,16 +92,16 @@ class Pseudolanguage:
     def dump(self):
         """Print the current parsed data; use pickle for inflatable dumps"""
         self.parse()
-        print 'name = """', self.name, '"""'
-        print "dump = { 'inits': ", self.inits, ","
-        print "'pairs': ", self.pairs, " }"
+        print('name = """', self.name, '"""')
+        print("dump = { 'inits': ", self.inits, ",")
+        print("'pairs': ", self.pairs, " }")
 
     def generate(self, number, min, max):
         """Generate list of words of min and max lengths"""
         self.parse()
         wordlist = []
         while len(wordlist) < number:
-            word = random.choice(self.inits.keys())
+            word = random.choice(list(self.inits.keys()))
             while word.find(' ') == -1:
                 word += random.choice(self.pairs[word[-2:]])
             word = word.strip()
@@ -134,4 +133,4 @@ if __name__ == '__main__':
     else:
         results = aLanguage.generate(options.num, options.min, options.max)
         for word in results:
-            print word
+            print(word)
