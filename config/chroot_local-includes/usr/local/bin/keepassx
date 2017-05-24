@@ -39,12 +39,12 @@ elif mountpoint -q "$PERSISTENT_DATA_DIR" && \
     ! [ -e "${NEW_DB}" ] && \
     [ "$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ]; then
     user_db="$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
-    if ! [ -e "${PERSISTENT_DATA_DIR}/.no_keepassx_migration" ]; then
+    if ! [ -e "${PERSISTENT_DATA_DIR}/.no_keepassx_db_renaming" ]; then
         if prompt_for_database_renaming "${user_db}"; then
             mv "${user_db}" "${NEW_DB}"
             exec /usr/bin/keepassx "${NEW_DB}"
         else
-            touch "${PERSISTENT_DATA_DIR}/.no_keepassx_migration"
+            touch "${PERSISTENT_DATA_DIR}/.no_keepassx_db_renaming"
             exec /usr/bin/keepassx "${user_db}"
         fi
     fi
