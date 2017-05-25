@@ -70,6 +70,25 @@ to memory erasure time.
 - [[!tails_gitweb config/chroot_local-patches/keep_memlockd_on_shutdown.diff]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/memlockd.service.d/oom.conf]]
 
+#### Limitations
+
+As discussed in
+[an email thread](https://mailman.boum.org/pipermail/tails-dev/2017-January/011128.html)
+with the authors of `PAX_MEMORY_SANITIZE`, kernel memory poisoning
+does not clear _all_ kinds of memory once it's freed:
+
+ * we enable free poisoning for the buddy allocator and the slub/slab
+   ones, but there may be other ways the Linux kernel allocates
+   memory, that are not subject to poisoning;
+ * on shutdown all process memory is freed (and thus erased), but some
+   kernel memory is not erased on shutdown, and is currently
+   not erased.
+
+It's not obvious that our previous approaches (see below) did any
+better, and this one is much more reliable, so we think this trade-off
+is the most sensible one with the resources and skills currently
+available for Tails.
+
 #### Obsolete approaches
 
 The initial implementation of the Tails memory erasure feature
