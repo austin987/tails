@@ -1,16 +1,6 @@
 @product
 Feature: Emergency shutdown
 
-  Scenario: The shutdown applet can shutdown Tails
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I request a shutdown using the emergency shutdown applet
-    Then Tails eventually shuts down
-
-  Scenario: The shutdown applet can reboot Tails
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I request a reboot using the emergency shutdown applet
-    Then Tails eventually restarts
-
   # Test something close to real-world usage, without interfering,
   # i.e. without the "I prepare Tails for memory erasure tests" step;
   # and test that Tails eventually shuts down, which we don't do in
