@@ -229,28 +229,28 @@ in a way that makes it easy enough to add this property later.
 
 Following a discussion, we decided to implement it this way as a first iteration:
 
-* We will encode in our Git repo which vagrant basebox should be used to build
-  the ISO. This way we'll be able to use a dedicated basebox for a branch if
-  it needs changes in the build system. The vagrant/Vagrantfile file is
-  probably the right place to do that as it already encode the basebox name,
-  which contains a timestamp almost similar than the one we use for APT
-  snapshots.
-* The basebox APT sources will be configured to use a specific APT snapshot, so
-  that we can freeze the build environment.
-* This APT snapshot will have a long `Valid-Until` field, set to something like 6
-  months.
+* To freeze the build environment, we use APT snapshots in the same way
+  we do in the Tails build system, by storing the serials for the various
+  APT repositories in a directory inside the vagrant one.
 * Only the debian-security APT source will be using Debian's APT repository, so
   that we get security fixes. This will probably not influence the
   reproducibility of the ISO.
-* We'll update the basebox at every Debian point release. [[!tails_ticket 11982]]
+* To ensure that changes in the build process are still taken into account when
+  using a basebox, we dynamically set the name of the basebox by
+  appending the short ID of the last commit in the vagrant directory in
+  the related branch, as well as its date, to the name of the basebox.
+* We update the basebox APT snapshots serials at every Debian point
+  release. [[!tails_ticket 11982]]
+* Thus, the APT snapshots will have a long `Valid-Until` field, set to
+  something like 6 months.
 * A new VM will be created from the basebox for each build. After the build,
   the VM is destroyed.  [[!tails_ticket 11980]] and [[!tails_ticket 11981]]
 * The VM will encode (in a file) the branch for which it has been created for.
-  The ISO build will abort if the branch being built is not the same as the
+  The ISO build aborts if the branch being built is not the same as the
   one for which the VM has been created initially.
 * To ensure that the `apt-cacher-ng` cache is not lost when the VM is destroyed,
-  it will be moved in a dedicated virtual disk, and plugged into every new VM.
-  In our Jenkins setup we will instead use the `apt-cacher-ng` we have to share
+  it is moved in a dedicated virtual disk, and plugged into every new VM.
+  In our Jenkins setup we instead use the `apt-cacher-ng` we have to share
   the APT cache between build VMs and save disk space. [[!tails_ticket 11979]]
 
 * In a later iteration, we could add an option so that the VM is kept running
@@ -332,14 +332,18 @@ builds reproducible, and even more so for Debian-based projects.
 ## Adjust our infrastructure accordingly
 
 We will adapt our server infrastructure to support this project.
+
+We will re-use the Vagrant-based build system we have created for
+developers: that build system will need to support reproducible builds
+anyway.
+
 There are two aspects to it.
 
-First of all, we will need to host a number of "frozen" build
-environments, and make them available through the Internet.
-Depending on how long we want to keep build environments about past
-Tails releases available, this may require a lot of disk space and
-bandwidth, so we will probably need to adjust our
-infrastructure accordingly.
+First of all, we will need to host a number of baseboxes that the
+isobuilders will generate before each build (if locally unavailable).
+This way they can re-use them rather than rebuild them each time. This
+means having enough disk space for the vagrant.d directory in the
+Jenkins user home, as well as in the libvirt storage partition.
 
 Secondly, we will enable our existing QA processes to build ISO
 images:
@@ -350,16 +354,11 @@ images:
    the output (we may want to use an up-to-date build environment
    instead of a frozen one).
 
-To achieve this, we will most likely re-use the Vagrant-based build
-system we have created for developers: that build system will need to
-support reproducible builds anyway. Still, the integration into our
-Jenkins setup will require us to go through a few additional steps,
-such as:
+Still, the integration into our Jenkins setup will require us to go
+through a few additional steps, such as:
 
  * The virtual machines used as Jenkins "slaves" to build ISO images
-   will need fast access to various frozen build environments (that
-   is, a bunch of large files). We can do this e.g. via network file
-   sharing, or by maintaining a local cache.
+   will need to store a number of different baseboxes.
 
  * For simplicity and security reasons, we will be using nested
    virtualization, i.e. Vagrant will start the desired ISO build
