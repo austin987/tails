@@ -7,27 +7,6 @@ is erased upon process termination.
 
 #### The big picture
 
-##### Obsolete approaches
-
-The initial implementation of the Tails memory erasure feature
-suffered from flaws that were demonstrated by [[external
-audit|security/audits/Blackhat_De-Anonymizing_Live_CDs]]. In short, it
-only erased free memory and let data in the aufs read-write branch in
-recoverable state.
-
-Then, in order to erase the biggest possible part of the system memory,
-a new implementation, shipped from Tails 0.7 to 2.12, runs in a
-fresh environment provided by a newly started Linux kernel. This way,
-a given part of the memory either is *used* by the memory erasure
-process itself or it is considered as free and thus *erased* by this
-process; in any case, it is at least overwritten once.
-
-Sadly, this approach suffered from severe usability and reliability
-problems (e.g. [[!tails_ticket 12354]], [[!tails_ticket 11786]]).
-So it was removed in Tails 3.0.
-
-##### Current approach
-
 Tails now relies on the Linux kernel's freed memory poisoning feature.
 
 But memory poisoning only works when memory is actually freed,
@@ -90,3 +69,22 @@ to memory erasure time.
 - [[!tails_gitweb config/chroot_local-includes/etc/memlockd.cfg]]
 - [[!tails_gitweb config/chroot_local-patches/keep_memlockd_on_shutdown.diff]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/memlockd.service.d/oom.conf]]
+
+#### Obsolete approaches
+
+The initial implementation of the Tails memory erasure feature
+suffered from flaws that were demonstrated by [[external
+audit|security/audits/Blackhat_De-Anonymizing_Live_CDs]]. In short, it
+only erased free memory and let data in the aufs read-write branch in
+recoverable state.
+
+Then, in order to erase the biggest possible part of the system memory,
+a new implementation, shipped from Tails 0.7 to 2.12, runs in a
+fresh environment provided by a newly started Linux kernel. This way,
+a given part of the memory either is *used* by the memory erasure
+process itself or it is considered as free and thus *erased* by this
+process; in any case, it is at least overwritten once.
+
+Sadly, this approach suffered from severe usability and reliability
+problems (e.g. [[!tails_ticket 12354]], [[!tails_ticket 11786]]).
+So it was removed in Tails 3.0.
