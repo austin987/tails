@@ -620,7 +620,7 @@ namespace :basebox do
   task :clean_old do
     boxes = baseboxes
     # We always want to keep the newest basebox
-    boxes.sort! { |a, b| basebox_date(a) < basebox_date(b) }
+    boxes.sort! { |a, b| basebox_date(a) <=> basebox_date(b) }
     boxes.pop
     boxes.each do |box|
       if basebox_date(box) < Date.today - 365.0/2.0
