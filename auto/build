@@ -139,6 +139,7 @@ if [ "${TAILS_MERGE_BASE_BRANCH}" = 1 ] && \
     echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
     git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
 	|| fatal "Failed to merge base branch."
+    git submodule update --init
 
     # Adjust BUILD_BASENAME to embed the base branch name and its top commit
     CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
