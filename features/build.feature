@@ -346,22 +346,22 @@ Feature: custom APT sources to build branches
     And I should see the 'feature-7756-reintroduce-whisperback' suite
 
   Scenario: build from a feature branch with overlays based on devel
-    Given I am working on the feature/icedove branch based on devel
-    And config/APT_overlays.d contains 'feature-icedove'
+    Given I am working on the feature/thunderbird branch based on devel
+    And config/APT_overlays.d contains 'feature-thunderbird'
     And config/APT_overlays.d contains 'bugfix-bar'
     When I successfully run tails-custom-apt-sources
     Then I should see the 'devel' suite
-    And I should see the 'feature-icedove' suite
+    And I should see the 'feature-thunderbird' suite
     And I should see the 'bugfix-bar' suite
 
   Scenario: build from a feature branch without overlays based on devel
-    Given I am working on the feature/icedove branch based on devel
+    Given I am working on the feature/thunderbird branch based on devel
     And the config/APT_overlays.d directory is empty
     When I successfully run tails-custom-apt-sources
     Then I should see only the 'devel' suite
 
   Scenario: build from a feature branch based on devel with no encoded time-based snapshot
-    Given I am working on the feature/icedove branch based on devel
+    Given I am working on the feature/thunderbird branch based on devel
     And no frozen APT snapshot is encoded in config/APT_snapshots.d
     When I successfully run "apt-snapshots-serials prepare-build"
     And I successfully run "apt-mirror debian"
@@ -372,7 +372,7 @@ Feature: custom APT sources to build branches
     Then I should see a time-based snapshot
 
   Scenario: build from a feature branch based on devel with encoded time-based snapshots
-    Given I am working on the feature/icedove branch based on devel
+    Given I am working on the feature/thunderbird branch based on devel
     And frozen APT snapshots are encoded in config/APT_snapshots.d
     When I successfully run "apt-snapshots-serials prepare-build"
     And I run "apt-mirror debian"
@@ -392,7 +392,7 @@ Feature: custom APT sources to build branches
     And I should see the 'bugfix-bar' suite
 
   Scenario: build from a feature branch without overlays based on feature/jessie
-    Given I am working on the feature/icedove branch based on feature/jessie
+    Given I am working on the feature/thunderbird branch based on feature/jessie
     And the config/APT_overlays.d directory is empty
     When I successfully run tails-custom-apt-sources
     Then I should see only the 'feature-jessie' suite
