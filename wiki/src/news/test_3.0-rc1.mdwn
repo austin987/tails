@@ -28,7 +28,7 @@ Changes since Tails 3.0~beta4 include:
 * Migrate from Icedove to Thunderbird (only cosmetic).
 
 Technical details of all the changes are listed in the
-[Changelog](https://git-tails.immerda.ch/tails/plain/debian/changelog?h=feature/stretch).
+[Changelog](https://git-tails.immerda.ch/tails/plain/debian/changelog?h=devel).
 
 # How to test Tails 3.0~rc1?
 
@@ -92,19 +92,26 @@ Known issues in 3.0~rc1
 * The persistent Tor Browser bookmarks feature is broken if you enable
   it for the first time in Tails 3.0~rc1; any persistent bookmarks
   from before will still work.
-  
+
   You can workaround this as follows, after you start Tails the first
   time with Browser bookmarks persistence enabled:
-  
+
   1. Start Tor Browser and let it load
   2. Close Tor Browser
   3. Run this in a Terminal:
-  
+
          cp /home/amnesia/.tor-browser/profile.default/places.sqlite \
             /home/amnesia/.mozilla/firefox/bookmarks/places.sqlite
          rm /home/amnesia/.tor-browser/profile.default/places.sqlite*
          ln -s /home/amnesia/.mozilla/firefox/bookmarks/places.sqlite \
                /home/amnesia/.tor-browser/profile.default/places.sqlite
+
+* [[!tails_ticket 12580 desc="Thunderbird email client fails to load for some
+  users"]]. You can fix this by creating a file called *.migrated* in
+  the folder of your Thunderbird profile. To do so, run this command in a
+  Terminal:
+
+      touch /home/amnesia/.thunderbird/profile.default/.migrated
 
 * [Open tickets for Tails 3.0~rc1](https://labs.riseup.net/code/projects/tails/issues?per_page=100&query_id=242)
 

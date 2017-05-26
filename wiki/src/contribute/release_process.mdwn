@@ -279,17 +279,17 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
-2. Merge `devel` into `feature/stretch` following the instructions for
+2. Merge `devel` into `feature/buster` following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
    Given that these two branches' APT suites have diverged a lot, and
    that `tails-merge-suite` currently happily overwrites newer
    packages in the target with older packages from the source, it's
    probably easier to just merge each individual APT overlay that was
-   just merged into the release branch into `feature/stretch`'s APT
+   just merged into the release branch into `feature/buster`'s APT
    suite. Also, most of our just upgraded bundled packages
    (e.g. `tails-greeter`) may need to be rebuilt for Stretch.
 
-3. Ensure that the release, `devel` and `feature/stretch` branches
+3. Ensure that the release, `devel` and `feature/buster` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
@@ -297,7 +297,7 @@ Update other base branches
 
         git push origin                          \
            "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
-           feature/stretch:feature/stretch       \
+           feature/buster:feature/buster       \
            devel:devel
 
 Update more included files
