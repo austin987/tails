@@ -74,9 +74,7 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
 	Pin-Priority: 991
 EOF
 
-echo "I: Upgrading system..."
 apt-get update
-apt-get -y dist-upgrade
 
 echo "I: Installing Vagrant dependencies..."
 apt-get -y install ca-certificates curl grub2 openssh-server wget
@@ -126,6 +124,9 @@ apt-get -y install dbus
 echo "I: Installing the caching proxy..."
 apt-get -o Dpkg::Options::="--force-confold" -y install apt-cacher-ng
 systemctl disable apt-cacher-ng.service
+
+echo "I: Upgrading system..."
+apt-get -y dist-upgrade
 
 echo "I: Disable DNS checks to speed-up SSH logins..."
 echo "UseDNS no" >>/etc/ssh/sshd_config
