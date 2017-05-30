@@ -227,7 +227,8 @@ in a way that makes it easy enough to add this property later.
 
 ### Implementation details
 
-Following a discussion, we decided to implement it this way as a first iteration:
+After lots of research, discussion and experiments, we settled on the
+following implementation for our first iteration:
 
 * To freeze the build environment, we use APT snapshots in the same way
   we do in the Tails build system, by storing the serials for the various
@@ -253,8 +254,9 @@ Following a discussion, we decided to implement it this way as a first iteration
   one it has been started for initially.
 * To ensure that the `apt-cacher-ng` cache is not lost when the VM is destroyed,
   it is moved in a dedicated virtual disk, and plugged into every new VM.
-  In our Jenkins setup we instead use the `apt-cacher-ng` we have to share
-  the APT cache between build VMs and save disk space. [[!tails_ticket 11979]]
+  In our Jenkins setup we instead use an existing, external
+  `apt-cacher-ng` in order to share the APT cache between build VMs
+  and save disk space ([[!tails_ticket 11979]]).
 
 
 ## Make Tails ISO build in a reproducible manner
