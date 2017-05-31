@@ -67,6 +67,43 @@ XXX: Report only if more scenarios have been written and add the diff from the p
 
 XXX: intrigeri
 
+After a long discussion, we [[!tails_ticket 12409 desc="decided"]] not
+to publish any Vagrant basebox at all: the key argument in favour of
+this major design change was to remove one huge binary blob from the
+list of trusted inputs needed for building a Tails ISO image.
+This will substantially increase the value of Tails ISO images
+building reproducibly. This decision has a few nice side effects,
+including:
+
+ * the properties of the basebox required to build a given state of our
+   code base are entirely encoded in the corresponding Git commit;
+ * changes in the ISO build box definition don't require building and
+   uploading a new basebox.
+
+Then we made enough progress to migrate our Continuous Integration
+platform to the build system used by developers. This is now running
+in production, not exactly smoothly yet (as explained below), but well
+enough to keep supporting our development and quality assurance
+processes. For details, see [[!tails_ticket 11972]],
+[[!tails_ticket 11979]], [[!tails_ticket 11980]],
+[[!tails_ticket 11981]], [[!tails_ticket 12017]], and
+[[!tails_ticket 11006]].
+
+Then we had to deal with a number of issues that we were not in
+a position to identify before submitting this brand new system to
+a real-world workload. Some are fixed already
+([[!tails_ticket 12530]], [[!tails_ticket 12578]],
+[[!tails_ticket 12565]], [[!tails_ticket 12541]],
+[[!tails_ticket 12529]], [[!tails_ticket 12575]],
+[[!tails_ticket 12606]]). Work is still in progress on some other
+problems: they are our Continuous Integration engineers' top priority,
+and should be fully resolved in the next couple of months.
+
+Finally, we have [[!tails_ticket desc="set up"]] automated tests for
+the reproducibility of our ISO image. Obviously, the results of these
+tests
+[are publicly available](https://nightly.tails.boum.org/reproducibly_build_Tails_ISO_testing/builds/).
+
 Funding
 =======
 
