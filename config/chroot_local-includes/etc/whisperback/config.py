@@ -82,7 +82,7 @@ confirm that you are using Tails.
 
 # The path to the OpenPGP keyring to use. If None, use OpenPGP default
 # keyring.
-gnupg_keyring = "/usr/share/keyrings/tails-keyring.gpg"
+gnupg_keyring = "/usr/share/keyrings/whisperback-keyring.gpg"
 
 # RECIPIENT
 #

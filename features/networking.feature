@@ -16,6 +16,9 @@ Feature: Networking
     And I disable all networking in the Tails Greeter
     And I log in to a new session
     Then no network interfaces are enabled
+    When I hotplug a network device
+    And I wait 10 seconds
+    Then no network interfaces are enabled
 
   #11463
   @fragile

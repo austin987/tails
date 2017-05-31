@@ -38,8 +38,17 @@ Vagrant.configure("2") do |config|
     domain.management_network_guest_ipv6 = 'no'
     domain.connect_via_ssh = false
     domain.machine_arch = 'x86_64'
-    domain.machine_type = 'q35'
-    domain.cpu_mode = 'host-passthrough'
+    if ENV['TAILS_BUILD_MACHINE_TYPE']
+      domain.machine_type = ENV['TAILS_BUILD_MACHINE_TYPE']
+    else
+      domain.machine_type = 'q35'
+    end
+    if ENV['TAILS_BUILD_CPU_MODEL']
+      domain.cpu_mode  = 'custom'
+      domain.cpu_model = ENV['TAILS_BUILD_CPU_MODEL']
+    else
+      domain.cpu_mode = 'host-passthrough'
+    end
     domain.emulator_path = '/usr/bin/qemu-system-x86_64'
     domain.memory = ENV['TAILS_RAM_BUILD'] ? VM_MEMORY_FOR_RAM_BUILDS :
                                              VM_MEMORY_FOR_DISK_BUILDS
