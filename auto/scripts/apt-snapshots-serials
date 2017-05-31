@@ -6,7 +6,8 @@ set -o pipefail
 
 BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
 CONFIG=config/APT_snapshots.d
-ORIGINS=$(cd $CONFIG; ls -d *)
+SERIAL_ONLY=
+FREEZE_EXCEPTIONS=debian-security
 
 get_latest_serial() {
 	origin=$1
@@ -14,18 +15,38 @@ get_latest_serial() {
 		| awk -F': ' '/^Archive serial: / {print $2}'
 }
 
-action="${1:-cat}"
+if [ $# -eq 0 ]; then
+	action="cat"
+	ORIGINS="$(cd ${CONFIG}; ls -d *)"
+else
+	action="${1}"
+	shift
+	if [ "${1:-}" = --print-serials-only ]; then
+		SERIAL_ONLY=yes
+		shift
+	fi
+	if [ "${1:-}" = --freeze-debian-security ]; then
+		FREEZE_EXCEPTIONS=
+		shift
+	fi
+	if [ $# -eq 0 ]; then
+		ORIGINS="$(cd ${CONFIG}; ls -d *)"
+	else
+		ORIGINS="${@}"
+	fi
+fi
+
 case "$action" in
 	cat)
 		for origin in $ORIGINS; do
-			echo -n "$origin: "
+			[ -z "${SERIAL_ONLY}" ] && echo -n "$origin: "
 			cat "$CONFIG/$origin/serial"
 		done
 	;;
 	get-latest)
 		for origin in $ORIGINS; do
-			online=$(get_latest_serial $origin)
-			echo "$origin: $online"
+			[ -z "${SERIAL_ONLY}" ] && echo -n "$origin: "
+			get_latest_serial $origin
 		done
 	;;
 	freeze)
@@ -33,7 +54,7 @@ case "$action" in
 			serial_file="$CONFIG/$origin/serial"
 			git=$(cat $serial_file)
 			case "$origin" in
-				debian-security)
+				${FREEZE_EXCEPTIONS})
 					new=latest
 					;;
 				*)
