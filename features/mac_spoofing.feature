@@ -15,15 +15,21 @@ Feature: Spoofing MAC addresses
     And I log in to a new session
     And Tor is ready
     Then 1 network interface is enabled
-    And the network device has its default MAC address configured
-    And the real MAC address was leaked
+    And the 1st network device has its real MAC address configured
+    When I hotplug a network device and wait for it to be initialized
+    Then 2 network interfaces are enabled
+    And the 2nd network device has its real MAC address configured
+    And some network device leaked the real MAC address
 
   Scenario: MAC address spoofing is successful
     When I log in to a new session
     And Tor is ready
     Then 1 network interface is enabled
-    And the network device has a spoofed MAC address configured
-    And the real MAC address was not leaked
+    And the 1st network device has a spoofed MAC address configured
+    When I hotplug a network device and wait for it to be initialized
+    Then 2 network interfaces are enabled
+    And the 2nd network device has a spoofed MAC address configured
+    And no network device leaked the real MAC address
 
   #10774
   @fragile
@@ -33,7 +39,7 @@ Feature: Spoofing MAC addresses
     # XXX: workaround for #11941
     And I see the "Network card  disabled" notification after at most 60 seconds
     Then no network interfaces are enabled
-    And the real MAC address was not leaked
+    And no network device leaked the real MAC address
 
   #10774
   @fragile
@@ -43,7 +49,7 @@ Feature: Spoofing MAC addresses
     # XXX: workaround for #11941
     And I see the "Network card  disabled" notification after at most 60 seconds
     Then no network interfaces are enabled
-    And the real MAC address was not leaked
+    And no network device leaked the real MAC address
 
   #10774
   @fragile
@@ -54,7 +60,7 @@ Feature: Spoofing MAC addresses
     And I see the "All networking disabled" notification after at most 60 seconds
     Then 1 network interface is enabled
     But the MAC spoofing panic mode disabled networking
-    And the real MAC address was not leaked
+    And no network device leaked the real MAC address
 
   Scenario: The MAC address is not leaked when booting Tails
     Given a computer
@@ -62,4 +68,4 @@ Feature: Spoofing MAC addresses
     When I start the computer
     Then the computer boots Tails
     And no network interfaces are enabled
-    And the real MAC address was not leaked
+    And no network device leaked the real MAC address

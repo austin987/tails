@@ -28,7 +28,6 @@ TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS_HARDLINK=${TOR_UNVERIFIED_CONSENSUS}.bak
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
-VERSION_FILE=/etc/amnesia/version
 
 ### Exit conditions
 
