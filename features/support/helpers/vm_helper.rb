@@ -127,6 +127,11 @@ class VM
     update(domain_rexml.to_s)
   end
 
+  def network_link_state
+    REXML::Document.new(@domain.xml_desc)
+      .elements['domain/devices/interface/link'].attributes['state']
+  end
+
   def set_network_link_state(state)
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/devices/interface/link'].attributes['state'] = state
@@ -458,7 +463,7 @@ class VM
   end
 
   def has_network?
-    return execute("/sbin/ifconfig eth0 | grep -q 'inet addr'").success?
+    network_link_state == 'up'
   end
 
   def has_process?(process)
