@@ -95,10 +95,17 @@ if [ -n "$TAILS_DATE_OFFSET" ]; then
 	as_root_do timedatectl set-time "$DESIRED_DATE"
 fi
 
-# Since $TAILS_GIT_DIR is guaranteed persistent until the VM is shutdown
-# let's build the website while there so it is cached throughout
-# the session. This will make rebuilds after failures much faster.
-./build-website
+if [ "${TAILS_MERGE_BASE_BRANCH}" != 1 ]; then
+	# Since $TAILS_GIT_DIR is guaranteed persistent until the VM
+	# is shutdown let's build the website while there so it is
+	# cached throughout the session. This will make rebuilds after
+	# failures much faster.
+	# We don't do this when the "merge base branch" option is
+	# enabled, since ./build-website updates PO files, resulting
+	# in a conflict when the base branch is merged later in case
+	# it updates the same PO files.
+	./build-website
+fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "${TAILS_RAM_BUILD}" ]; then
