@@ -1,53 +1,105 @@
-[[!meta  title="Tails report for May, 2017"]]
-[[!meta  date="DATE"]]
+[[!meta title="Tails report for May, 2017"]]
+[[!meta date="DATE"]]
 
 [[!toc ]]
 
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
+* We've finished testing and releasing Tails 3.0~rc1.
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
-
-The following changes were introduced in Tails VERSION:
-
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
-
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+* Tails 3.0 is [[scheduled for June 13th|contribute/calendar]].
 
 Code
 ====
 
-XXX: List important code work that is not covered already by the Release
-     section (for example, the changes being worked on for the next version).
-
 ## Reproducible builds
+
+Here are some details about our work in April and May on making Tails
+reproducible. This effort is covered by the Mozilla Open Source Support
+award (MOSS) that we've received.
+
+### Current status
 
 In March we [[reported|news/report_2017_03]] that we had finally seen
 an ISO image build reproducibly on several machines. Since then we
-kept working on this front:
+kept working on this front.
 
- * XXX: u.
- * See the [[Infrastructure section|report_2017_05#infrastructure]]
-   for our work on other aspects of this project.
+Our automatic upgrades are now reproducible, however, one
+remaining issue currently blocks us from claiming that our ISO images
+are too. We are confident that this issue will be solved within a few months.
+
+### Reproducible website build
+
+In March we've made great progress to get our website build
+reproducibly.  Later on, we realized that ikiwiki resized some
+images of our website which sometimes contained timestamped metadata,
+thus making the ISO image build unreproducibly. We have worked around this on
+our side ([[!tails_ticket 12526]]), and will fix the root cause of the
+problem in ikiwiki upstream ([[!tails_ticket 12525]]).
+
+### The blocker: fontconfig
+
+The cloud which hides the blue skies and the sun in the reproducible
+builds solar system today, and which is our sole remaining problem to
+make our ISO image build reproducibly is this: we ship a cache for fonts
+in Tails. However, this cache is currently not generated in a
+reproducible manner. In March we
+tried moving its generation out of the ISO, however, it makes Tails
+start slower and resulted in too many unreliable test failures. Thus, we
+decided to move it back into the ISO image and to try and fix the root cause of
+the problem instead. We filed [[!debbug 863427]], but
+we already know that our patch is not yet enough to fix the problem,
+although it greatly reduces the number of differences from 75 to 5
+([[!tails_ticket 12567]]); so we'll keep working on it.
+
+### ISO image and IUKs
+
+Our automatic upgrades are now reproducible ([[!tails_ticket 12630]]).
+
+When we generate the ISO image using isohybrid, we pass it an ID. We
+tried setting this ID to `$SOURCE_DATE_EPOCH` which resulted in a
+reproducible, but non-hybrid, ISO. Thus, we decided to pass a fixed ID
+instead: [[!tails_ticket 12453]].
+
+### The bright future
+
+Remaining technical issues are tracked on [[!tails_ticket 12608]].
+
+We are working on documenting how to modify our release process to
+ensure the ISO images we publish are reproducible
+([[!tails_ticket 12628]], [[!tails_ticket 12629]]).
+
+For those of our users who want to verify their own ISO builds against ours,
+we'll soon document how to do that ([[!tails_ticket 12630]]).
+
+### Infrastructure
+
+See the [[Infrastructure section|report_2017_05#infrastructure]]
+for our work on the infrastructural aspects of this project.
 
 Documentation and website
 =========================
 
-We have published the [[Tails Social contract|contribute/working_together/social_contract]]
+- We have published the [[Tails Social contract|contribute/working_together/social_contract]].
 
-XXX: Explore the Git history:
+- We finished updating all our documentation to Tails 3.0, based on
+  Debian Stretch.
 
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+- We updated our documentation to a new layout of the *Universal USB
+  Installer* for Windows and scaled its screenshots to fix an issue
+  reported by [[!tails_ticket 11527 desc="huertanix"]].
+
+- We updated our documentation of the [[build system|contribute/build]],
+  as a result of the work on reproducible builds.
 
 User experience
 ===============
 
-XXX: Check the archives of tails-ux: https://mailman.boum.org/pipermail/tails-ux/
+- We started experimenting with *Piwik* to do web analytics.
+
+- We continued redesigning the [main window of *Tails
+  Installer*](https://mailman.boum.org/pipermail/tails-ux/2017-May/003374.html).
 
 <a id="infrastructure"></a>
 
@@ -64,8 +116,6 @@ XXX: Report only if more scenarios have been written and add the diff from the p
        - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
 
 ## Reproducible builds
-
-XXX: intrigeri
 
 After a long discussion, we [[!tails_ticket 12409 desc="decided"]] not
 to publish any Vagrant basebox at all: the key argument in favour of
@@ -99,19 +149,23 @@ a real-world workload. Some are fixed already
 problems: they are our Continuous Integration engineers' top priority,
 and should be fully resolved in the next couple of months.
 
-Finally, we have [[!tails_ticket desc="set up"]] automated tests for
+Finally, we have [[!tails_ticket 12579 desc="set up"]] automated tests for
 the reproducibility of our ISO image. Obviously, the results of these
 tests
 [are publicly available](https://nightly.tails.boum.org/reproducibly_build_Tails_ISO_testing/builds/).
 
+
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
+- We are still in the process of discussing our proposal with OTF, and
+  reworking it accordingly.
 
-       git log --patch --since='1 December' --until='1 January' origin/master
+- We've submitted a proposal to [Lush Digital
+  Fund](https://uk.lush.com/article/introducing-digital-fund).
 
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
+- We started migrating our European fiscal sponsor from Zwiebelfreunde
+  to [CCT, the Center for the Cultivation of Technology](https://techcultivation.org/).
 
 Outreach
 ========
@@ -121,20 +175,22 @@ Past events
 
 * gagz and geb did a presentation and a workshop of Tails at the [CPML](http://medias-libres.org) yearly meeting.
 
-Upcoming events
----------------
-
 On-going discussions
 ====================
 
-XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
+- We started discussion if we want to skip the release of Tails 2.12 and
+  instead [release Tails 3.0 right
+  away](https://mailman.boum.org/pipermail/tails-dev/2017-May/011451.html).
+
+- The news on the update of our build system [received a lot of
+  answers](https://mailman.boum.org/pipermail/tails-dev/2017-May/011416.html).
 
 Press and testimonials
 ======================
 
-XXX: Copy content from press/media_appearances_2016.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
+* 2016-08-05: [A step-by-step guide on how to download, install, and start using Tails, the world's most secure
+  platform](http://www.techrepublic.com/article/getting-started-with-tails-the-encrypted-leave-no-trace-operating-system/)
+  by Dan Patterson in TechRepublic.
 
 Translation
 ===========
@@ -151,6 +207,6 @@ Metrics
 
 * Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
 * SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-* WHISPERBACK bug reports were received through WhisperBack.
+* 110 bug reports were received through WhisperBack.
 
 XXX: Ask tails@boum.org for these numbers.
