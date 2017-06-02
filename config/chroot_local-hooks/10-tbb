@@ -118,8 +118,12 @@ EOF
 # TBB works around the lack of code signing for its extensions by
 # hacking in exceptions. We do the same!
 apply_extension_code_signing_hacks () {
-    local destination tmp
+    local destination tmp tbb_timestamp
     destination="${1}"
+
+    # For consistency we'll set timestamps of files we modify to the
+    # same one used by the Tor Browser instead of SOURCE_DATE_EPOCH.
+    tbb_timestamp="$(date --date='2000-01-01 00:00:00' +%s)"
 
     tmp="$(mktemp -d)"
     (
@@ -156,7 +160,9 @@ diff -Naur a/modules/addons/XPIProvider.jsm b/modules/addons/XPIProvider.jsm
      return true;
    }
 EOF
-        7z u -tzip "${TBB_INSTALL}/omni.ja" \
+        touch --date="@${tbb_timestamp}" modules/addons/XPIProvider.jsm \
+              chrome/toolkit/content/mozapps/extensions/extensions.js
+        7z u -mtc=off -tzip "${TBB_INSTALL}/omni.ja" \
            modules/addons/XPIProvider.jsm \
            chrome/toolkit/content/mozapps/extensions/extensions.js
 
@@ -178,16 +184,21 @@ diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
              break;
            }
 EOF
-        7z u -tzip "${TBB_INSTALL}/browser/omni.ja" \
+        touch --date="@${tbb_timestamp}" components/nsBrowserGlue.js
+        7z u -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
            components/nsBrowserGlue.js
         # These binaries are generated from the above modified files
         # so we have to remove them. This will have a performance
         # impact that probably is unnoticeable for humans, but TBB 7.5
         # won't ship any of these binaries any way, so we'll converge.
-        7z d -tzip "${TBB_INSTALL}/omni.ja" \
+        7z d -mtc=off -tzip "${TBB_INSTALL}/omni.ja" \
            jsloader/resource/gre/modules/addons/XPIProvider.jsm
-        7z d -tzip "${TBB_INSTALL}/browser/omni.ja" \
+        7z d -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
            jsloader/resource/app/components/nsBrowserGlue.js
+        for archive in "${TBB_INSTALL}/omni.ja" "${TBB_INSTALL}/browser/omni.ja"; do
+            strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
+                                         "${archive}" 2>/dev/null
+        done
     )
 }
 
