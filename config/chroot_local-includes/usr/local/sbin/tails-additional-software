@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import gettext
+import glob
 import os.path
 import pwd
 import subprocess
@@ -12,6 +13,9 @@ _ = gettext.gettext
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = PERSISTENCE_DIR + "/live-additional-software.conf"
 ACTIVATION_FILE = "/run/live-additional-software/activated"
+APT_ARCHIVES_DIR = "/var/cache/apt/archives"
+APT_LISTS_DIR = "/var/lib/apt/lists"
+OBSOLETE_APT_LIST_SUFFIX = "_binary-i386_Packages"
 
 
 def _launch_apt_get(specific_args):
@@ -102,6 +106,7 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: persistence is not mounted, exiting")
         return True
+    clear_obsolete_cache(OBSOLETE_APT_LIST_SUFFIX)
     packages = get_additional_packages()
     if not packages:
         syslog.syslog(syslog.LOG_WARNING,
@@ -175,6 +180,16 @@ def create_additional_packages_list():
     os.chown(PACKAGES_LIST_FILE,
              pwd.getpwnam('tails-persistence-setup').pw_uid,
              pwd.getpwnam('tails-persistence-setup').pw_gid)
+
+
+def clear_obsolete_cache(obsolete_apt_list_suffix):
+    """Delete cached packages when a package list matches pattern
+    """
+    if glob.glob(APT_LISTS_DIR + "/*" + obsolete_apt_list_suffix):
+        syslog.syslog("Clearing cache because at least one package list "
+                      "has suffix '%s'." % obsolete_apt_list_suffix)
+        for deb in glob.glob(APT_ARCHIVES_DIR + "/*.deb"):
+            os.remove(deb)
 
 
 def is_activated():
