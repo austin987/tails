@@ -152,6 +152,8 @@ def upgrade_additional_packages():
         return False
     # Remove outdated packages from the local package cache. This is needed as
     # we disable apt-daily.timer, which would else take care of this cleanup.
+    # Note: this does not remove packages from other architectures, hence
+    # the need for the clear_obsolete_cache() function.
     apt_get_returncode = _launch_apt_get(["autoclean"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING,
