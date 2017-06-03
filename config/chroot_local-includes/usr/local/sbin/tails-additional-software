@@ -106,7 +106,11 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: persistence is not mounted, exiting")
         return True
-    clear_obsolete_cache(OBSOLETE_APT_LIST_SUFFIX)
+    try:
+        clear_obsolete_cache(OBSOLETE_APT_LIST_SUFFIX)
+    except:
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Warning: failed to clear obsolete cached packages")
     packages = get_additional_packages()
     if not packages:
         syslog.syslog(syslog.LOG_WARNING,
