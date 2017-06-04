@@ -90,7 +90,3 @@ pref("browser.download.panel.shown", true);
 // open external applications, so let's not offer the option to the user,
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
-
-// Web pages does not render when e10s is enabled, so we have to
-// disable it. Note that the "user_"-prefix is required.
-user_pref("browser.tabs.remote.autostart.2", false);
