@@ -77,8 +77,8 @@ pref("browser.newtabpage.directory.ping", "");
 pref("browser.newtabpage.introShown", true);
 
 // Don't use geographically specific search prefs, like
-// browser.search.*.US for US locales. Our generated amnesia branding
-// add-on localizes search-engines in an incompatible but equivalent
+// browser.search.*.US for US locales. Our generated localization
+// profiles localizes search-engines in an incompatible but equivalent
 // way.
 pref("browser.search.geoSpecificDefaults", false);
 
