@@ -32,7 +32,7 @@ kept working on this front.
 
 Our automatic upgrades are now reproducible, however, one
 remaining issue currently blocks us from claiming that our ISO images
-are too. We are confident that this issue will be solved within a few months.
+are too. We are confident that this issue will be solved within a few weeks.
 
 ### Reproducible website build
 
@@ -111,14 +111,22 @@ User experience
 Infrastructure
 ==============
 
-XXX: Count the number of tests in /features at the beginning of next month
+- We upgraded some more of our systems to Debian Stretch.
 
-         git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-         git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
+- We have started to research piwik as a candidate for a web analytics platform
+  for our website ([[!tails_ticket 12563]]).
 
-XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
+- We have continued the efforts to optimize our systems resources, by
+  playing with different settings of the NUMA balancing ([[!tails_ticket 11179]]).
 
-       - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
+- We have adapted our CI infrastructure to be able to bring back the
+  email notification mechanism for build and test failures, at least for
+  branches which tickets are in "Ready For QA" state in Redmine ([[!tails_ticket 11355]]).
+  This will be unleashed in June so that we'll be able to gather statitics
+  about false positives in our CI notifications to developers.
+
+- Most of our efforts have been focused on upgrading our infrastructure
+  to support reproducible builds, see below.
 
 ## Reproducible builds
 
@@ -183,7 +191,7 @@ Past events
 On-going discussions
 ====================
 
-- We started discussion if we want to skip the release of Tails 2.12 and
+- We started to discuss if we want to skip the release of Tails 2.12 and
   instead [release Tails 3.0 right
   away](https://mailman.boum.org/pipermail/tails-dev/2017-May/011451.html).
 
@@ -200,18 +208,29 @@ Press and testimonials
 Translation
 ===========
 
-XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
-XXX: Add the output of (adjust month!):
+## All the website
 
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 59% (2977) strings translated, 5% strings fuzzy, 52% words translated
+  - fa: 43% (2200) strings translated, 9% strings fuzzy, 47% words translated
+  - fr: 87% (4357) strings translated, 1% strings fuzzy, 85% words translated
+  - it: 31% (1585) strings translated, 4% strings fuzzy, 28% words translated
+  - pt: 28% (1443) strings translated, 8% strings fuzzy, 25% words translated
+
+Total original words: 52.798
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 82% (1537) strings translated, 10% strings fuzzy, 82% words translated
+  - fa: 37% (695) strings translated, 10% strings fuzzy, 39% words translated
+  - fr: 98% (1843) strings translated, 1% strings fuzzy, 98% words translated
+  - it: 78% (1473) strings translated, 11% strings fuzzy, 78% words translated
+  - pt: 48% (910) strings translated, 13% strings fuzzy, 49% words translated
+
+Total original words: 17.079
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of Tails ISO from our website.
+* Tails has been started more than 694.165 times this month. This makes 22.392 boots a day on average.
+* 13.181 downloads of the OpenPGP signature of Tails ISO from our website.
 * 110 bug reports were received through WhisperBack.
-
-XXX: Ask tails@boum.org for these numbers.
