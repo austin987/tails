@@ -977,6 +977,17 @@ browser profiles (and other XUL applications).
 
 - [[!tails_gitweb config/chroot_local-hooks/10-tbb]]
 
+We only modify this Tor Browser installation slightly:
+
+* We add a mandatory signing exception for the uBlock Origin add-on.
+* We add/replace some search engine plugins with out own localized
+  versions:
+  - [[!tails_gitweb config/chroot_local-hooks/11-localize_browser]]
+* We use the myspell/hunspell dictionaries provided by Debian.
+* We employ `[mozilla.cfg](https://developer.mozilla.org/en-US/Firefox/Enterprise_deployment)`
+  to restore support for the `browser.search.defaultenginename` pref,
+  otherwise this default gets messed up due to the localization we do.
+
 The default profile is split from the binaries and application data:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser]]
@@ -1022,8 +1033,6 @@ the Internet:
 The remaining configuration differences can be found in:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser/preferences/0000tails.js]]
-- [[!tails_gitweb config/chroot_local-hooks/11-localize_browser]]
-- [[!tails_gitweb config/chroot_local-hooks/13-override-tbb-branding]]
 - [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
 - [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
 
