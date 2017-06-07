@@ -214,6 +214,9 @@ Mac
   Tails Installer.
 * MacBook Pro 6,2 fails to display <span class="application">Tails Greeter</span>.
 
+Graphics issues
+===============
+
 GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
 ----------------------------------------------------------------------
 
@@ -236,10 +239,23 @@ This issue has appeared with the following graphic adapters:
 For some models, adding `radeon.modeset=0` to the
 [[startup options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
 
-<a id="switchable_graphics"></a>
+Tails Greeter fails to start with some AMD/ATI Radeon graphic adapters
+----------------------------------------------------------------------
 
-Switchable graphics computers
------------------------------
+Some computers [[!tails_ticket 12218 desc="cannot start Tails Greeter"]].
+
+This issue has appeared with the following graphic adapters:
+
+- AMD Radeon R9 390
+
+Adding `radeon.dpm=0` to the
+[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
+fixes the issue.
+
+<a id="switchable_graphics_black_screen"></a>
+
+Black screen with switchable graphics computers
+-----------------------------------------------
 
 Some computers with switchable graphics (such as Optimus) fail to
 choose a video card and end up on a black screen. This has been
@@ -277,6 +293,19 @@ There are two possible workarounds for this issue:
 
 For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
 
+<a id=switchable_graphics_segfault></a>
+
+Cannot start GNOME session with switchable graphics computers
+-------------------------------------------------------------
+
+On some computers with switchable graphics, Tails 2.10 and later fails
+to start the GNOME session and keeps returning to [[Tails
+Greeter|doc/first_steps/startup_options#greeter]].
+
+Starting in **Troubleshooting Mode** works, as well as adding the
+`modeprobe.blacklist=nouveau` to the [[startup
+options|doc/first_steps/startup_options#boot_loader_menu]].
+
 Laptops with Intel 855GM graphic card
 -------------------------------------
 
@@ -285,21 +314,23 @@ crash after Tails Greeter.
 
 See [[!tails_ticket 11096 desc="relevant ticket"]] for more information.
 
-<a id="chainloading"></a>
+Laptops with Intel GM965/GL960 graphic card
+-------------------------------------------
 
-Chainloading Tails from GRUB
-----------------------------
+Laptops with graphic card Intel GM965/GL960 crash while running Tails.
+Add `video=SVIDEO-1:d` on the boot command line to work around this problem.
 
-To workaround problems in booting Tails on laptops with UEFI support, it is
-possible to chainload the syslinux on the ISO image from another boot loader
-that is already working on the laptop, like GRUB. Be careful not to modify at
-all the options of syslinux in the process.
+See [[!tails_ticket 12217 desc="relevant ticket"]] for more information.
 
-The following commands, run from the GRUB shell, might be helpful:
+Slow graphics operations with recent NVidia hardware
+----------------------------------------------------
 
-    set root=(hd1)
-    chainloader +1
-    boot
+Graphics display operations are slow on computers with graphics
+adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
+GeForce GTX 960.
+
+This problem is likely resolved with Tails
+[[!tails_ticket 10298 desc="including a newer Linux kernel"]].
 
 <a id="wi-fi"></a>
 
@@ -319,7 +350,7 @@ The `wl` driver is not included in Tails because it is proprietary.
 
 To find out if your Wi-Fi interface requires the `wl` driver:
 
-1. Execute the following command in a [[terminal|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#index3h2]]:
+1. Execute the following command in a [[terminal|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#terminal]]:
 
        lspci -nn | grep Network
 
@@ -444,6 +475,22 @@ class="application">Tor Browser</span> inside and outside of Tails:
 Other issues
 ============
 
+<a id="chainloading"></a>
+
+Chainloading Tails from GRUB
+----------------------------
+
+To workaround problems in booting Tails on laptops with UEFI support, it is
+possible to chainload the syslinux on the ISO image from another boot loader
+that is already working on the laptop, like GRUB. Be careful not to modify at
+all the options of syslinux in the process.
+
+The following commands, run from the GRUB shell, might be helpful:
+
+    set root=(hd1)
+    chainloader +1
+    boot
+
 Boot Loader Menu has display issues
 -----------------------------------
 
@@ -529,16 +576,6 @@ To fix this problem, you can [[update your Tails
 manually|doc/first_steps/upgrade/#manual]].
 
 Note that your Persistent Volume will be safely preserved.
-
-Slow graphics operations with recent NVidia hardware
-----------------------------------------------------
-
-Graphics display operations are slow on computers with graphics
-adapters of the NVidia [[!wikipedia GeForce 900 series]], such as the
-GeForce GTX 960.
-
-This problem is likely resolved with Tails
-[[!tails_ticket 10298 desc="including a newer Linux kernel"]].
 
 <a id="restart-shell"></a>
 

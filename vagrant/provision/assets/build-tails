@@ -1,42 +1,44 @@
 #!/bin/sh
 
-# This script is used by both our Vagrant and Jenkins -based build environments.
-
 set -e
+set -x
+
+if [ -n "${TAILS_PROXY:-}" ]; then
+	export http_proxy="${TAILS_PROXY}"
+fi
 
 as_root_do() {
 	sudo \
-		${RSYNC_PROXY:+RSYNC_PROXY="$RSYNC_PROXY"} \
-		${http_proxy:+http_proxy="$http_proxy"} \
-		${https_proxy:+https_proxy="$https_proxy"} \
-		${ftp_proxy:+ftp_proxy="$ftp_proxy"} \
-		${no_proxy:+no_proxy="$no_proxy"} \
-		${JENKINS_URL:+JENKINS_URL="$JENKINS_URL"} \
-		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="$MKSQUASHFS_OPTIONS"} \
-		"$@"
-}
-
-usable_memory() {
-	free -b | awk '/cache:/ { print $4 }'
+		${RSYNC_PROXY:+RSYNC_PROXY="${RSYNC_PROXY}"} \
+		${http_proxy:+http_proxy="${http_proxy}"} \
+		${https_proxy:+https_proxy="${https_proxy}"} \
+		${ftp_proxy:+ftp_proxy="${ftp_proxy}"} \
+		${no_proxy:+no_proxy="${no_proxy}"} \
+		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS}"} \
+                ${TAILS_MERGE_BASE_BRANCH:+TAILS_MERGE_BASE_BRANCH="${TAILS_MERGE_BASE_BRANCH}"} \
+		${GIT_COMMIT:+GIT_COMMIT="${GIT_COMMIT}"} \
+		${GIT_REF:+GIT_REF="${GIT_REF}"} \
+		${BASE_BRANCH_GIT_COMMIT:+BASE_BRANCH_GIT_COMMIT="${BASE_BRANCH_GIT_COMMIT}"} \
+		"${@}"
 }
 
 cleanup() {
-	[ -n "$BUILD_DIR" ] || return 0
+	[ -n "${BUILD_DIR}" ] || return 0
 	cd /
 	remove_build_dirs
-	sudo rm -rf "$BUILD_DIR"
+	sudo rm -rf "${BUILD_DIR}"
 }
 
 remove_build_dirs() {
 	for mountpoint in $(old_build_dirs | tac) ; do
 		tries=0
-		sudo lsof | grep --fixed-strings "$mountpoint" || true
-		while ! sudo umount -f --verbose "$mountpoint" && [ $tries -lt 12 ]; do
-			sudo fuser --ismountpoint --mount "$mountpoint" --kill
+		sudo lsof | grep --fixed-strings "${mountpoint}" || true
+		while ! sudo umount -f --verbose "${mountpoint}" && [ $tries -lt 12 ]; do
+			sudo fuser --ismountpoint --mount "${mountpoint}" --kill
 			sleep 5
 			tries=$(expr $tries + 1)
 		done
-		sudo rm -rf "$mountpoint"
+		sudo rm -rf "${mountpoint}"
 	done
 }
 
@@ -45,51 +47,27 @@ old_build_dirs() {
 	perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:aufs|tmpfs|devpts-live|proc-live|sysfs-live) on (/tmp/tails-build(?:-tmpfs)?\.[/[:alnum:]]+)}))'
 }
 
-trap cleanup EXIT
-
-if [ -n "$JENKINS_URL" ]; then
-	if [ -z "$WORKSPACE" ]; then
-		echo "WORKSPACE environment variable is not set. Aborting." >&2
-		exit 2
-	fi
-	if [ -z "$GIT_BRANCH" ]; then
-		echo "GIT_BRANCH environment variable is not set. Aborting." >&2
-		exit 4
-	fi
-	if [ -z "$GIT_COMMIT" ]; then
-		echo "GIT_COMMIT environment variable is not set. Aborting." >&2
-		exit 5
-	fi
-	REV="${GIT_BRANCH##origin/}"
-	COMMIT="$GIT_COMMIT"
-	ARTIFACTS_DIR="$WORKSPACE/build-artifacts"
-else
-	# Build triggered by Vagrant
-	WORKSPACE=/home/vagrant/amnesia
-	ARTIFACTS_DIR=/home/vagrant
-	COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify HEAD)"
-	if git --git-dir=/amnesia.git symbolic-ref HEAD >/dev/null 2>&1; then
-		# We are building from a branch
-		REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
-	else
-		# We are (hopefully) building from a tag
-		if ! REV="${1:-$(git --git-dir=/amnesia.git describe --tags --exact-match ${COMMIT})}"; then
-			echo "It seems we are building from an untagged detached HEAD. Aborting." >&2
-			exit 1
-		fi
-	fi
-	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
-	cd "$WORKSPACE"
-	git fetch --tags origin
-fi
-
-if [ "$TAILS_RAM_BUILD" ]; then
+if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
+	trap cleanup EXIT
 	remove_build_dirs
 fi
 
-cd "$WORKSPACE"
-git checkout --force "$REV"
-git reset --hard "$COMMIT"
+TAILS_GIT_DIR="/home/vagrant/amnesia"
+if [ ! -d "${TAILS_GIT_DIR}" ]; then
+    git clone /amnesia.git/.git "${TAILS_GIT_DIR}"
+fi
+cd "${TAILS_GIT_DIR}"
+# Mirror the branches amnesia.git tracks on its "origin" remote as if
+# they were on our own "origin" remote, (i.e. under the origin/$REF
+# name), even if it's untrue (our own "origin" is amnesia.git and has
+# only one local ref, which is the branch we work on and that it has
+# checked out as a local tracking branch). We need this for the base
+# branch merge we do (if the 'mergebasebranch'/TAILS_MERGE_BASE_BRANCH
+# option is set) later in auto/build.
+git config remote.origin.fetch +refs/remotes/origin/*:refs/remotes/origin/*
+git fetch --tags
+git checkout --force "${GIT_REF}"
+git reset --hard "${GIT_COMMIT}"
 git submodule update --init
 
 if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
@@ -97,38 +75,20 @@ if as_root_do systemctl --quiet is-active apt-cacher-ng.service ; then
 	as_root_do systemctl restart apt-cacher-ng.service
 fi
 
-if [ -n "$JENKINS_URL" ]; then
-	git clean --force -d -x
-fi
-
-if [ "$TAILS_CLEAN_BUILD" ]; then
-	as_root_do lb clean --all
-	git clean -fdx
-fi
-
-install -m 0755 -d "$ARTIFACTS_DIR"
-
-if [ -z "$JENKINS_URL" ]; then
-	./build-website
-fi
+# Since $TAILS_GIT_DIR is guaranteed persistent until the VM is shutdown
+# let's build the website while there so it is cached throughout
+# the session. This will make rebuilds after failures much faster.
+./build-website
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
-if [ "$TAILS_RAM_BUILD" ]; then
+if [ "${TAILS_RAM_BUILD}" ]; then
 	as_root_do mount -t tmpfs -o "noatime,size=100%,mode=0770,uid=root,gid=${USER}" tmpfs "${BUILD_DIR}"
 fi
-as_root_do rsync -a "$WORKSPACE"/ "$BUILD_DIR"/
+as_root_do rsync -a "${TAILS_GIT_DIR}"/ "${BUILD_DIR}"/
 
-cd "$BUILD_DIR"
+cd "${BUILD_DIR}"
 as_root_do lb config --cache false
 
 as_root_do lb build
 
-if [ -n "$JENKINS_URL" ]; then
-	ISO=$(ls *.iso)
-	for file in tails-*; do
-		sha512sum "$file" >> "$ISO.shasum"
-	done
-	gpg --batch --detach-sign --armor "$ISO.shasum"
-fi
-
-mv -f tails-* "$ARTIFACTS_DIR"
+mv -f tails-* "${TAILS_GIT_DIR}/"

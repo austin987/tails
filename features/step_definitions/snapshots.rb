@@ -18,32 +18,6 @@ def checkpoints
       ],
     },
 
-    'with-no-network-and-i2p' => {
-      :temporary => true,
-      :description => 'I have started Tails from DVD with I2P enabled and logged in',
-      :steps => [
-        'I set Tails to boot with options "i2p"',
-        'the network is unplugged',
-        'I start the computer',
-        'the computer boots Tails',
-        'I log in to a new session',
-      ],
-    },
-
-    'with-network-and-i2p' => {
-      :temporary => true,
-      :description => 'I have started Tails from DVD with I2P enabled and logged in and the network is connected',
-      :parent_checkpoint => "with-no-network-and-i2p",
-      :steps => [
-        'the network is plugged',
-        'Tor is ready',
-        'I2P is running',
-        'all notifications have disappeared',
-        'available upgrades have been checked',
-        "I2P's reseeding completed",
-      ],
-    },
-
     'with-network-logged-in' => {
       :description => "I have started Tails from DVD and logged in and the network is connected",
       :parent_checkpoint => "no-network-logged-in",
@@ -169,12 +143,12 @@ def reach_checkpoint(name)
       post_snapshot_restore_hook
     end
     debug_log(scenario_indent + "Checkpoint: #{checkpoint_description}",
-              :color => :white)
+              color: :white, timestamp: false)
     step_action = "Given"
     if parent_checkpoint
       parent_description = checkpoints[parent_checkpoint][:description]
       debug_log(step_indent + "#{step_action} #{parent_description}",
-                :color => :green)
+                color: :green, timestamp: false)
       step_action = "And"
     end
     steps.each do |s|
@@ -183,10 +157,11 @@ def reach_checkpoint(name)
       rescue Exception => e
         debug_log(scenario_indent +
                   "Step failed while creating checkpoint: #{s}",
-                  :color => :red)
+                  color: :red, timestamp: false)
         raise e
       end
-      debug_log(step_indent + "#{step_action} #{s}", :color => :green)
+      debug_log(step_indent + "#{step_action} #{s}",
+                color: :green, timestamp: false)
       step_action = "And"
     end
     $vm.save_snapshot(name)

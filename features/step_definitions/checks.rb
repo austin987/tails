@@ -36,7 +36,11 @@ Then /^the shipped (?:Debian repository key|OpenPGP key ([A-Z0-9]+)) will be val
 end
 
 Then /^I double-click the Report an Error launcher on the desktop$/ do
-  @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+  # Sometimes the double-click is lost (#12131).
+  retry_action(10) do
+    @screen.wait_and_double_click('DesktopReportAnError.png', 30)
+    step 'the Tor Browser has started'
+  end
 end
 
 Then /^the live user has been setup by live\-boot$/ do
@@ -203,13 +207,8 @@ def get_apparmor_status(pid)
 end
 
 Then /^the running process "(.+)" is confined with AppArmor in (complain|enforce) mode$/ do |process, mode|
-  if process == 'i2p'
-    $vm.execute_successfully('service i2p status')
-    pid = $vm.file_content('/run/i2p/i2p.pid').chomp
-  else
-    assert($vm.has_process?(process), "Process #{process} not running.")
-    pid = $vm.pidof(process)[0]
-  end
+  assert($vm.has_process?(process), "Process #{process} not running.")
+  pid = $vm.pidof(process)[0]
   assert_equal(mode, get_apparmor_status(pid))
 end
 
