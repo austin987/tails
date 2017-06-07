@@ -15,7 +15,7 @@ set_mozilla_pref() {
     value="${3}"
     # Sometimes we might want to do e.g. user_pref
     prefix="${4:-pref}"
-    sed -i "/^${prefix}(\"${name}\",/d" "${file}"
+    [ -e "${file}" ] && sed -i "/^${prefix}(\"${name}\",/d" "${file}"
     echo "${prefix}(\"${name}\", ${value});" >> "${file}"
 }
 
@@ -93,7 +93,12 @@ configure_xulrunner_app_locale() {
 }
 
 configure_best_tor_browser_locale() {
-    configure_xulrunner_app_locale "${1}" "$(guess_best_tor_browser_locale)"
+    local profile best_locale
+    profile="${1}"
+    best_locale="$(guess_best_tor_browser_locale)"
+    configure_xulrunner_app_locale "${profile}" "${best_locale}"
+    cat "/etc/tor-browser/locale-profiles/${best_locale}.js" \
+        >> "${profile}/preferences/0000locale.js"
 }
 
 configure_best_tor_launcher_locale() {
