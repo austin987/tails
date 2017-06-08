@@ -364,7 +364,7 @@ Given /^available upgrades have been checked$/ do
 end
 
 When /^I start the Tor Browser( in offline mode)?$/ do |offline|
-  step 'I start "Tor Browser" via the GNOME "Internet" applications menu'
+  step 'I start "Tor Browser" via GNOME Activities Overview'
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
                      .dialog('Tor is not ready')
@@ -580,7 +580,7 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
 end
 
 When /^I start and focus GNOME Terminal$/ do
-  step 'I start "GNOME Terminal" via the GNOME "Utilities" applications menu'
+  step 'I start "GNOME Terminal" via GNOME Activities Overview'
   @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
@@ -636,9 +636,7 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
   end
 end
 
-Given /^I start "([^"]+)" via the GNOME "([^"]+)" applications menu$/ do |app_name, submenu|
-  # XXX: Dogtail is buggy when interacting with the Applications menu
-  # (see #11718) so we use the GNOME Applications Overview instead.
+Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
