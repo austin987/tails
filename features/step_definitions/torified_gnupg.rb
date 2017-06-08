@@ -22,7 +22,7 @@ def start_or_restart_seahorse
   if @withgpgapplet
     seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletManageKeys.png')
   else
-    step 'I start "Passwords and Keys" via the GNOME "Utilities" applications menu'
+    step 'I start "Passwords and Keys" via GNOME Activities Overview'
   end
   step 'Seahorse has opened'
 end

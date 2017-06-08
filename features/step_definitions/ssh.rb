@@ -125,7 +125,7 @@ Then /^I connect to an SFTP server on the Internet$/ do
   end
 
   retry_tor(recovery_proc) do
-    step 'I start "Nautilus" via the GNOME "Accessories" applications menu'
+    step 'I start "Nautilus" via GNOME Activities Overview'
     nautilus = Dogtail::Application.new('nautilus')
     nautilus.child(roleName: 'frame')
     nautilus.child('Other Locations', roleName: 'label').click

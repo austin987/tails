@@ -32,7 +32,7 @@ Feature: Tor stream isolation is effective
   @fragile
   Scenario: Gobby is using the default SocksPort
     When I monitor the network connections of Gobby
-    And I start "Gobby" via the GNOME "Internet" applications menu
+    And I start "Gobby" via GNOME Activities Overview
     And I connect Gobby to "gobby.debian.org"
     Then I see that Gobby is properly stream isolated
 
