@@ -9,14 +9,21 @@ and major upgrades to a lot of the included software.
 
 XXX: I'm not 100% convinced by the part "security improvements in depth"... Opinions welcome!
 
+Debian 9 (Stretch) will be [released on June
+17](https://lists.debian.org/debian-devel-announce/2017/05/msg00002.html).
+It is the first time that we are releasing a new version of Tails almost
+at the same time as its new version of Debian. This was an important
+objective for us as it is beneficial to both our users and users of
+Debian in general and strengthen our [[relationship with
+upstream|contribute/relationship_with_upstream]]:
+
+- Our users can benefit from the cool changes in Debian earlier.
+- We can detect and fix issues in the new version of Debian while it is
+  still in development so that our work also benefits Debian earlier.
+
 This release also fixes [[many security
 issues|security/Numerous_security_holes_in_2.12]] and users should
 upgrade as soon as possible.
-
-XXX: Sync with Debian release (June 17).
-  - Tails 2.0 was released 9 months after Debian Stretch
-  - Tails 1.1 was released 14 months after Debian Wheezy
-  - importance of relationship with upstream
 
 [[!toc levels=1]]
 
@@ -26,14 +33,19 @@ XXX: Sync with Debian release (June 17).
 
 ### New startup and shutdown experience
 
-- XXX: Tails Greeter :sajolida:
-  - https://tails.boum.org/blueprint/greeter_revamp_UI/
-  - screenshot
-  - long process + thank you
-  - main benefits: easier for international audience, accessibility features, what else?
-    - screen keyboard (for some layouts)
-    - screen reader (usability bugs)
-    - zoom
+- *Tails Greeter*, the application to configure Tails at startup, has
+  been completely redesigned for ease of use:
+  - All options are available from a single window.
+  - Language and region settings are displayed first to benefit our
+    international audience.
+  - Accessibility features can be enabled from the start.
+
+  This has been a long process, started three years ago with the UX team of
+  [NUMA Paris](https://paris.numa.co/) and lead only by volunteers. Join us on
+  [[tails-ux@boum.org|about/contact#tails-ux]] to participate in future
+  designs!
+
+  [[!img tails-greeter.png link="no"]]
 
 - XXX: Memory wipe: #5417 :spriver:
   - more robust
@@ -43,9 +55,13 @@ XXX: Sync with Debian release (June 17).
 
 ### Polishing the desktop
 
-- XXX: Black theme: #11789 :sajolida:
+- We switched to the default black theme of GNOME which has a more
+  modern and discrete look:
 
-- XXX: Interesting changes in GNOME 3.22 :cbrownstein:
+  [[!img black-theme.png link="no"]]
+
+- Tails 3.0 benefits from many other small improvements to the GNOME desktop:
+
   - *Files* has been redesigned to reduce clutter and make the interface easier
     to use. Also, several new features have been added, such as the ability to
     rename multiple files at the same time, and the ability to extract
@@ -62,6 +78,12 @@ XXX: Sync with Debian release (June 17).
   - [[news/Tails_3.0_will_require_a_64-bit_processor]]
 
 - XXX: most binaries are hardened with PIE
+
+- Update *Tor Browser* to 7.0 (based on Firefox 52 ESR) which is
+  [multiprocess](https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox)
+  and enables [content
+  sandboxing](https://wiki.mozilla.org/Security/Sandbox). This should
+  make it harder to exploit security vulnerabilities in the browser.
 
 - XXX: Reproducible build
   - ask anonym and intrigeri whether 3.0 will be reproducible, from
@@ -96,33 +118,41 @@ XXX: Sync with Debian release (June 17).
   - people were asking for KeePassX 2 a lot
   - cross-platform inter-operability?
 
-- XXX: Tor Browser 7, Firefox 45.x → Firefox 52.x
-  - check Firefox release notes
-  - check Tor Browser release notes:
-    https://blog.torproject.org/blog/tor-browser-70-released
-
 ## Upgrades and changes
 
-- XXX: Removal of read-only persistence: #12361
-  - is it worth mentioning?
+- The *Pidgin* tray icon was removed from the top navigation bar and
+  replaced by popup notifications. To activate the tray icon again,
+  choose
+  <span class="menuchoice">
+    <span class="guimenu">Tools</span>&nbsp;▸
+    <span class="guisubmenu">Preferences</span>&nbsp;▸
+    <span class="guimenuitem">Interface</span>
+    <span class="guimenuitem">System Tray Icon</span>
+  </span> in *Pidgin* and select <span class="guilabel">Always</span> or
+  <span class="guilabel">On unread messages</span>.
 
-- XXX: Pidgin Guification: #11741
+  [[!img pidgin.png link="no"]]
 
+- *Icedove* was renamed as *Thunderbird*, its original name, inheriting
+  this change from Debian.
 
-- XXX: Icedove renamed into Thunderbird
+- The read-only option of the persistent storage was removed. It was
+  used by very few users, created confusion, and lead to unexpected
+  issues. ([[!tails_ticket 12093]])
 
 ## Fixed problems
 
-- XXX: Upgrading X.Org makes Tails usable on more machines
-  - check Git history
+- The new *X.Org* display server in Tails 3.0 should work on more newer
+  graphical hardware.
 
-- XXX: Fixed UEFI boot on some machines
+- UEFI boot has been fixed on some machines (ThinkPad X220).
 
 For more details, read our [[!tails_gitweb debian/changelog desc="changelog"]].
 
 # Known issues
 
-None specific to this release.
+- Tails fails to start on some computers with [[Intel graphical
+  hardware|support/known_issues#xorg-driver]].
 
 See the list of [[long-standing issues|support/known_issues]].
 
@@ -130,12 +160,7 @@ See the list of [[long-standing issues|support/known_issues]].
 
 - To install, follow our [[installation instructions|install]].
 
-- To upgrade, ...
-
-  XXX: There won't be any automatic upgrades.
-
-  If you cannot do an automatic upgrade or if you fail to start after an
-  automatic upgrade, please try to do a [[manual upgrade|upgrade]].
+- To upgrade, all users have to do a [[manual upgrade|upgrade]].
 
 - [[Download Tails 3.0.|install/download]]
 
