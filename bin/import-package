@@ -19,7 +19,7 @@
 #
 # Example:
 #
-#   PBUILDER_OPTIONS='--basetgz /var/cache/pbuilder/base-jessie-i386.tgz' \
+#   PBUILDER_OPTIONS='--basetgz /var/cache/pbuilder/base-sid-amd64.tgz' \
 #   TARGET_DIST='testing' \
 #   ./bin/import-package libgsecuredelete
 
@@ -76,7 +76,7 @@ EOF
    rm script
 
    REMOTE_WORKDIR=$(ssh "$REMOTE_USER_AT_HOST" mktemp -d)
-   scp -r * "$REMOTE_USER_AT_HOST":"$REMOTE_WORKDIR"/
+   scp * "$REMOTE_USER_AT_HOST":"$REMOTE_WORKDIR"/
    ssh "$REMOTE_USER_AT_HOST" \
        "reprepro includedsc '$TARGET_DIST' '$REMOTE_WORKDIR'/*.dsc && \
         reprepro includedeb '$TARGET_DIST' '$REMOTE_WORKDIR'/*.deb && \
