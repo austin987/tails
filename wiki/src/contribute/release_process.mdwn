@@ -803,14 +803,23 @@ Test them with a BitTorrent client running in a different place.
 Publish the ISO and IUK over HTTP
 ---------------------------------
 
-Upload the images to the primary rsync mirror. Best practice is to first
-let bittorrent.lizard download the image, and then copy it from there to
-rsync.lizard:
+Upload the IUKs to the primary rsync mirror:
+
+    for source_version in ${IUK_SOURCE_VERSIONS}; do
+       rsync --partial --inplace --progress -v \
+          "${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk" \
+          rsync.lizard:
+    done
+
+Upload the ISO to the primary rsync mirror:
 
     ssh lizard.tails.boum.org \
         scp -3 -r \
             bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-amd64-${VERSION:?} \
             rsync.lizard:
+
+Move files in place with proper ownership and permissions:
+
     ssh rsync.lizard << EOF
       sudo chown -R root:rsync_tails \
          tails-amd64-${VERSION:?} \
