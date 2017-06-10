@@ -3,7 +3,7 @@ Then /^the Unsafe Browser has started$/ do
 end
 
 When /^I start the Unsafe Browser(?: through the GNOME menu)?$/ do
-  step "I start \"Unsafe Browser\" via the GNOME \"Internet\" applications menu"
+  step "I start \"Unsafe Browser\" via GNOME Activities Overview"
 end
 
 When /^I successfully start the Unsafe Browser$/ do
