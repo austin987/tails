@@ -1,8 +1,97 @@
 tails (3.0) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Major changes
+    - Upgrade Tor Browser to 7.0.1 (Closes: #12635, #12657).
+    - Upgrade to a new snapshot of the Debian and Torproject
+      APT repositories: respectively 2017060904 and 2017060903
+      (Closes: #12609).
 
- -- Tails developers <tails@boum.org>  Sun, 21 May 2017 18:33:20 +0000
+  * Minor improvements
+    - Tor Browser: enable Electrolysis (e10s), i.e. render content in a separate
+      child process, which will allow to improve performance and security
+      further along the road. This required us to drop our branding add-on
+      and re-implement its functionality in our Tor Browser wrapper
+      (Closes: #12569).
+    - Clean obsolete cached packages when using the Additional Software Packages
+      feature (Closes: #12400).
+    - Improve KeePassX database migration handling (Closes: #12375).
+    - Upgrade OnionShare to 0.9.2, from Debian sid as it has been removed
+      from Stretch (Closes: #12610).
+    - Upgrade Tor to 0.3.0.8 (Closes: #12656).
+    - Drop obsolete bilibop patch, that was applied in 0.5.2.1.
+    - Include disk space usage information in the WhisperBack bug reports.
+    - Reorder technical details in WhisperBack bug reports in way that makes
+      more sense when reading them.
+    - Convert lc.py to Python 3.
+    - Simplify some Python code thanks to subprocess.check_ouput.
+    - Set the initial keyboard focus on the "Start Tails" button
+      in Tails Greeter (Closes: #12509).
+    - Convert Tails Greeter's Debian packaging to current best practices.
+
+  * Bugfixes
+    - Fix persistent Thunderbird configuration migration when there is
+      a mimeTypes.rdf, that doesn't contain any associations to "icedove"
+      or "/usr/bin/iceweasel" (Closes: #12580).
+    - Fix persistent browser bookmarks, by generating them from an sqlite dump
+      (Closes: #12568).
+    - Use the "intel" X.Org driver for Intel Atom/Celeron/Pentium Processor
+      x5-E8000/J3xxx/N3xxx Integrated Graphics Controller.
+    - `exec' from our Thunderbird wrapper so it doesn't remain running.
+    - Tails Installer: don't allow installing on non-removable drives
+      (Closes: #10731).
+    - Fetch the torbrowser-launcher sources from Debian sid:
+      it's been removed from Debian testing.
+      Refresh torbrowser-AppArmor-profile.patch accordingly.
+    - Unsafe Browser: remove the search bar, that's currently buggy
+      and its presence only encourages unsupported usage (Closes: #12573).
+    - Unsafe Browser: disable searching in the address bar. It can result
+      in leaking hostnames and credentials to the default search
+      engine operator (Closes: #12540).
+    - Make our omni.ja modifications reproducible (Closes: #12620).
+    - Generate the fontconfig cache in a reproducible manner (Closes: #12567).
+    - Don't include torrents/rss.html in the ISO. It's not generated
+      in a deterministic manner and is worthless in the ISO (Closes: #12619).
+    - Improve the language → default keyboard layout mapping
+      in Tails Greeter (Closes: #12547).
+    - Don't close Tails Greeter's main window when Alt-F4 is pressed
+      (Closes: #12462).
+
+  * Test suite
+    - Run emergency_shutdown.feature after usb_*.feature, to reduce disk
+      space requirements (Closes: #12565).
+    - Deal with server messages in Pidgin.
+    - Improve Pidgin connectivity check robustness.
+    - Flag the Synaptic test as fragile (i.e. #12586).
+    - Optimization: only test once that Tails, booted on DVD, eventually
+      shuts down after wiping memory.
+    - Move tests about the shutdown applet to a dedicated feature,
+      as they have nothing to do with Tails' "emergency" shutdown feature.
+    - Adapt the network connectivity check to Stretch, and improve it to check
+      both link and IP connectivity (Closes: #12602).
+    - Apply a fix from upstream Git to mutter, to fix some of its interactions
+      with dogtail (Closes: #11718).
+    - Mark "Scenario: Watching a WebM video" as fragile (i.e. #10442).
+
+  * Build system
+    - Set create_box -e, to make the vagrant box generation a bit more robust.
+      (Closes: #12578).
+    - Install kernel from backports and Tails build deps before performing
+      APT upgrade, to avoid useless bandwidth usage (Closes: #12529).
+    - Update submodules after merging the base branch (Closes: #12556).
+    - Rakefile: fix date comparison in basebox:clean_old (Closes: #12575).
+    - Rakefile: have basebox:clean_old delete baseboxes more than 4 months old
+      (refs: #12576).
+    - Also check for fuzzy patches' .orig files at the end of our build hooks,
+      so we detect any fuzzy patches applied by hooks (Closes: #12617).
+    - Remove .orig files for patches we allow to be fuzzy.
+    - Don't pre-build the wiki when mergebasebranch is enabled.
+      When pre-building the wiki, we modify the PO files which results in a
+      conflict from the base branch merge in case it modifies the same
+      files, which breaks the build (Closes: #12611).
+    - Rakefile: add a task that removes all tails-builder-* libvirt volumes
+      (Closes: #12599).
+
+ -- Tails developers <tails@boum.org>  Sat, 10 Jun 2017 08:44:56 +0000
 
 tails (3.0~rc1) unstable; urgency=medium
 
