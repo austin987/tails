@@ -53,21 +53,22 @@ targeted at current Tails, as said above. More specifically:
 * The `debian/$codename-backports` branch is used to prepare packages
   that we upload to the official backports repository for Debian `$codename`.
   E.g. here we want to have `debian/jessie-backports` soon after the initially
-  uploaded package reaches Debian testing. The tags on this branch are also called
-  `debian/$package_version`. In practice this is something like
-  `debian/4.0+dfsg-1~bpo8+1`.
+  uploaded package reaches Debian testing. The tags on this branch are
+  also called `debian/$package_version`. In practice this is something
+  like `debian/4.0+dfsg-1~bpo8+1`.
 * The `tails/$codename` branch is used to prepare packages that we upload
   to the Tails APT repo, but not to Debian -- e.g. `4.*` as currently used on
   Tails/Jessie will never be uploaded to Debian.
-* Additionally, we use `tails/$feature` branches for other Tails-specific packaging branches.
-* The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what we tell `gbp`
-  to use as its "upstream" branch. Make sure to check them out when setting up the repository
-  for the first time.
-* For Ubuntu, we want to support the current Ubuntu version (currently `yakkety`), the
-  upcoming version (currently `zesty`), and the current LTS (currently
-  `xenial`).
-  We do not maintain any Git branches related to Ubuntu releases, as simply the changelog
-  entries are modified.
+* Additionally, we use `tails/$feature` branches for other
+  Tails-specific packaging branches.
+* The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what
+  we tell `gbp` to use as its "upstream" branch. Make sure to check
+  them out when setting up the repository for the first time.
+* For Ubuntu, we want to support the current Ubuntu version (currently
+  `yakkety`), the upcoming version (currently `zesty`), and the
+  current LTS (currently `xenial`).
+  We do not maintain any Git branches related to Ubuntu releases, as
+  simply the changelog entries are modified.
 
 Topic branches
 --------------
@@ -136,6 +137,11 @@ Checkout the packaging branch:
 	export PACKAGING_BRANCH=tails/jessie
 	git checkout "$PACKAGING_BRANCH"
 
+Merge Debian packaging changes:
+
+    git fetch debian && \
+    git merge debian/sid
+
 Verify that `debian/gbp.conf` references the correct upstream and Debian (packaging) branches,
 and that `pristine-tar` usage is enabled, e.g.:
 
@@ -146,7 +152,8 @@ and that `pristine-tar` usage is enabled, e.g.:
 
 Extract the upstream and packaging branch from gbp.conf:
 
-	export UPSTREAM_BRANCH=`gbp config buildpackage.upstream-branch | sed -r -e 's,.*=,,'`
+	export UPSTREAM_BRANCH=$(gbp config buildpackage.upstream-branch \
+                             | sed -r -e 's,.*=,,')
 
 Create a DFSG-compatible tarball from the previously created Git
 archive and reimport it into the source tree. This merges, into the
@@ -212,7 +219,7 @@ Then push:
                     pristine-tar
 
 Never force push! If `git push` fails you may have to merge back in
-e.g. `debian/pristine-tag` into your local `pristine-tar` and push
+e.g. `debian/pristine-tar` into your local `pristine-tar` and push
 again. Also push it to `origin`, in that case.
 
 Add the Debian package to Tails
