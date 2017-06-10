@@ -1,4 +1,173 @@
 [[!meta date="Tue Jun 13 12:34:56 2017"]]
+[[!meta title="Tails 3.0 is out"]]
+[[!tag announce]]
 
-* Mention that pressing the power, sleep, hibernate or suspend button doesn't trigger emergency
-  shutdown anymore.
+We are especially proud to present you Tails 3.0, the first version of Tails
+based on Debian 9 (Stretch). It brings a completely new startup and shutdown
+experience, a lot of polishing to the desktop, security improvements in depth,
+and major upgrades to a lot of the included software.
+
+XXX: I'm not 100% convinced by the part "security improvements in depth"... Opinions welcome!
+
+Debian 9 (Stretch) will be [released on June
+17](https://lists.debian.org/debian-devel-announce/2017/05/msg00002.html).
+It is the first time that we are releasing a new version of Tails almost
+at the same time as its new version of Debian. This was an important
+objective for us as it is beneficial to both our users and users of
+Debian in general and strengthen our [[relationship with
+upstream|contribute/relationship_with_upstream]]:
+
+- Our users can benefit from the cool changes in Debian earlier.
+- We can detect and fix issues in the new version of Debian while it is
+  still in development so that our work also benefits Debian earlier.
+
+This release also fixes [[many security
+issues|security/Numerous_security_holes_in_2.12]] and users should
+upgrade as soon as possible.
+
+[[!toc levels=1]]
+
+# Changes
+
+## New features
+
+### New startup and shutdown experience
+
+- *Tails Greeter*, the application to configure Tails at startup, has
+  been completely redesigned for ease of use:
+  - All options are available from a single window.
+  - Language and region settings are displayed first to benefit our
+    international audience.
+  - Accessibility features can be enabled from the start.
+
+  This has been a long process, started three years ago with the UX team of
+  [NUMA Paris](https://paris.numa.co/) and lead only by volunteers. Join us on
+  [[tails-ux@boum.org|about/contact#tails-ux]] to participate in future
+  designs!
+
+  [[!img tails-greeter.png link="no"]]
+
+- XXX: Memory wipe: #5417 :spriver:
+  - more robust
+  - invisible
+  - better experience
+  - technicalities: https://tails.boum.org/contribute/design/memory_erasure
+
+### Polishing the desktop
+
+- We switched to the default black theme of GNOME which has a more
+  modern and discrete look:
+
+  [[!img black-theme.png link="no"]]
+
+- Tails 3.0 benefits from many other small improvements to the GNOME desktop:
+
+  - *Files* has been redesigned to reduce clutter and make the interface easier
+    to use. Several new features have been added, such as the ability to
+    rename multiple files at the same time and the ability to extract
+    compressed files without needing a separate application.
+  - The Message Tray has been replaced by a new message list, allowing easy
+    access to previous notifications. Notification popups have also been
+    repositioned to make them more noticeable.
+  - Shortcut windows have been added to help you discover keyboard shortcuts in
+    GNOME applications.
+
+### Security improvements in depth
+
+- XXX: 64-bits only ISO images :spriver:
+  - [[news/Tails_3.0_will_require_a_64-bit_processor]]
+  - harder to bruteforce offsets/addresses, ASLR becomes stronger in
+    that sense as is PIE support
+  - most binaries are hardened with PIE
+  - https://en.wikipedia.org/wiki/Position-independent_code#Position-independent_executables
+
+- Update *Tor Browser* to 7.0 (based on Firefox 52 ESR) which is
+  [multiprocess](https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox)
+  and enables [content
+  sandboxing](https://wiki.mozilla.org/Security/Sandbox). This should
+  make it harder to exploit security vulnerabilities in the browser.
+
+- XXX: Reproducible build
+  - ask anonym and intrigeri whether 3.0 will be reproducible, from
+    https://tails.boum.org/blueprint/monthly_report/report_2017_05/ I
+    understand that it's not the case yet
+  - see #11997#note-6
+
+### Major upgrades to included software
+
+- XXX: Major versions of included software: :cbrownstein:
+  - this is all I could spot in the diff, but maybe not all of it is
+    worth mentioning
+  - maybe check if changes are significant enough
+  - maybe list only most popular software if changes are not that big
+  - audacity		2.0.6-2		2.1.2-2
+  - bookletimposer	0.2-2		2.5.3+dfsg-3
+  - dasher		4.11		5.0.0
+  - enigmail		2:1.8.2-4	2:1.9.6-2
+  - git			1:2.1.4-2.1	1:2.11.0-2
+  - inkscape		0.48.5-3        0.92.1-1
+  - keepassx		0.4.3		2.0.3-1
+    - [[doc/encryption_and_privacy/manage_passwords#migration]]
+  - keyringer		0.3.7-1		0.5.0-2
+  - libreoffice-core	1:4.3.3-2	1:5.2.6-2
+  - liferea		1.10.12-1	1.12~rc2-2
+  - mat			0.5.2-3		0.6.1-4
+  - pitivi		0.93-4.2	0.98-1.1
+  - scribus		1.4.4		1.4.6
+  - synaptic		0.81.2		0.84.2
+
+## Upgrades and changes
+
+- The *Pidgin* tray icon was removed from the top navigation bar and
+  replaced by popup notifications. To activate the tray icon again,
+  choose
+  <span class="menuchoice">
+    <span class="guimenu">Tools</span>&nbsp;▸
+    <span class="guisubmenu">Preferences</span>&nbsp;▸
+    <span class="guimenuitem">Interface</span>
+    <span class="guimenuitem">System Tray Icon</span>
+  </span> in *Pidgin* and select <span class="guilabel">Always</span> or
+  <span class="guilabel">On unread messages</span>.
+
+  [[!img pidgin.png link="no"]]
+
+- *Icedove* was renamed as *Thunderbird*, its original name, inheriting
+  this change from Debian.
+
+- The read-only option of the persistent storage was removed. It was
+  used by very few users, created confusion, and lead to unexpected
+  issues. ([[!tails_ticket 12093]])
+
+## Fixed problems
+
+- The new *X.Org* display server in Tails 3.0 should work on more newer
+  graphical hardware.
+
+- UEFI boot has been fixed on some machines (ThinkPad X220).
+
+For more details, read our [[!tails_gitweb debian/changelog desc="changelog"]].
+
+# Known issues
+
+- Tails fails to start on some computers with [[Intel graphical
+  hardware|support/known_issues#xorg-driver]].
+
+See the list of [[long-standing issues|support/known_issues]].
+
+# Get Tails 3.0
+
+- To install, follow our [[installation instructions|install]].
+
+- To upgrade, all users have to do a [[manual upgrade|upgrade]].
+
+- [[Download Tails 3.0.|install/download]]
+
+# What's coming up?
+
+Tails 3.1 is [[scheduled|contribute/calendar]] for August 8.
+
+Have a look at our [[!tails_roadmap]] to see where we are heading to.
+
+We need your help and there are many ways to [[contribute to
+Tails|contribute]] ([[donating|donate#3.0]] is only one of
+them). Come [[talk to us|about/contact#tails-dev]]!
