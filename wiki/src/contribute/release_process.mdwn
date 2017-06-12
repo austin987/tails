@@ -750,6 +750,7 @@ Prepare upgrade-description files
           for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
             stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
+            mkdir -p "$(dirname "$test_udf")" && \
             git show origin/${WEBSITE_RELEASE_BRANCH:?}:${stable_udf:?} \
               | sed -e 's/channel: stable/channel: test/' > ${test_udf:?} && \
             gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
