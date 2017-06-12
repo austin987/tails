@@ -865,6 +865,35 @@ Push the released ISO to our Tails ISO history git-annex repo, so that
 our isotesters can fetch it from there for their testing. How to do so
 is described in our internal Git repo.
 
+Testing
+=======
+
+1. Using `check-mirrors`, choose a fast mirror that already has the
+   tentative ISO. E.g. <https://mirrors.kernel.org/tails/> or
+   <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
+   of bandwidth.
+1. Email <tails-testers@boum.org> to ask them to test the tentative
+   ISO, pointing them to the up-to-date mirror you've found previously.
+1. Set up a pad and copy the [[manual test
+   suite|contribute/release_process/test]] in it.
+1. Email <tails@boum.org> and potential contributors (see
+   `manual_testers.mdwn` in the internal Git repository) that tests
+   may start:
+   - point them to the up-to-date mirror you've found previously
+   - make it clear what's the deadline
+   - make it clear where and how you expect to get feedback
+   - attach the Torrent
+   - attach the `.packages` file
+1. Make sure someone is committed to run the automated test suite.
+1. Make sure that enough people are here to run the tests, that they
+   report their results in due time, and that they make it clear when
+   they're leaving for good.
+1. Fill the holes and make sure that the manual test suite is done in
+   due time.
+1. Triage test results, reproduce bugs as needed, decide what the next
+   step is and make sure it happens: add to known issues? file ticket?
+   release blocker?
+
 Update the website and Git repository
 =====================================
 
@@ -981,35 +1010,6 @@ Then, record the last commit before putting the release out for real:
 	git add wiki/src && \
 	git commit -m "releasing version ${VERSION:?}"
 
-Testing
-=======
-
-1. Using `check-mirrors`, choose a fast mirror that already has the
-   tentative ISO. E.g. <https://mirrors.kernel.org/tails/> or
-   <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
-   of bandwidth.
-1. Email <tails-testers@boum.org> to ask them to test the tentative
-   ISO, pointing them to the up-to-date mirror you've found previously.
-1. Set up a pad and copy the [[manual test
-   suite|contribute/release_process/test]] in it.
-1. Email <tails@boum.org> and potential contributors (see
-   `manual_testers.mdwn` in the internal Git repository) that tests
-   may start:
-   - point them to the up-to-date mirror you've found previously
-   - make it clear what's the deadline
-   - make it clear where and how you expect to get feedback
-   - attach the Torrent
-   - attach the `.packages` file
-1. Make sure someone is committed to run the automated test suite.
-1. Make sure that enough people are here to run the tests, that they
-   report their results in due time, and that they make it clear when
-   they're leaving for good.
-1. Fill the holes and make sure that the manual test suite is done in
-   due time.
-1. Triage test results, reproduce bugs as needed, decide what the next
-   step is and make sure it happens: add to known issues? file ticket?
-   release blocker?
-
 Go wild!
 ========
 
@@ -1026,11 +1026,12 @@ releasing an RC, add `--channel alpha`):
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
 notify their administrators.
 
-Sanity check
-------------
+Sanity checks
+-------------
 
-Verify once more that the TBB we ship is still the most recent (see
-above).
+* Check the outcome of the "Testing" section above.
+* Verify once more that the TBB we ship is still the most recent (see
+  above).
 
 Push
 ----
