@@ -769,6 +769,17 @@ If preparing a RC, skip this part.
 
 Update the ISO description file (IDF) used by the browser extension:
 
+    cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
+    ---
+    build-target: amd64
+    channel: stable
+    product-name: Tails
+    version: '${VERSION:?}'
+    target-files:
+    - sha256: ${ISO_SHA256SUM}
+      size: ${ISO_SIZE_IN_BYTES:?}
+      url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
+    EOF
     cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/amd64/stable/latest.yml <<EOF
     ---
     build-target: amd64
