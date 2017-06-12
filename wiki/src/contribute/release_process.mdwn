@@ -1216,9 +1216,11 @@ this, and skip what does not make sense for a RC.
    space.
 1. Delete Git branches that were merged:
 
+        cd "${MASTER_CHECKOUT:?}" && \
+        git checkout master && \
+        git fetch && \
+        git submodule update && \
         bare_repo=$(mktemp -d)
-        (cd "${MASTER_CHECKOUT:?}" && git fetch) && \
-        (cd "${MASTER_CHECKOUT:?}" && git submodule update) && \
         git clone --bare --reference "${MASTER_CHECKOUT:?}" \
            boum_org_amnesia@webmasters.boum.org:wiki.git \
            "${bare_repo:?}" && \
