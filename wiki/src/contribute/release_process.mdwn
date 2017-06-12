@@ -706,7 +706,7 @@ Prepare upgrade-description files
            while read udf; do
                if [ -n "$(git status --porcelain "${udf:?}")" ]; then
                    gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign "${udf:?}"
-                   mv "${udf:?}.asc" "${udf:?}.pgp"
+                   mv --force "${udf:?}.asc" "${udf:?}.pgp"
                    ( \
                      cd ${IUK_CHECKOUT:?} && \
                      ./bin/tails-iuk-check-upgrade-description-file "${udf:?}" \
