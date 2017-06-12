@@ -50,6 +50,7 @@ the scripts snippets found on this page:
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export DEBEMAIL='tails@boum.org'`
 * `export DEBFULLNAME='Tails developers'`
+* `export WEBSITE_RELEASE_BRANCH="web/release-${VERSION:?}"`
 
 Pre-freeze
 ==========
@@ -552,9 +553,15 @@ suite should be ready, so it is time to:
 
         export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
-* check out the release branch again:
+* check out a new branch:
 
-      git checkout "${RELEASE_BRANCH:?}"
+        git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" "${TAG:?}" && \
+        git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
+
+  (as soon as a new commit is created on `$RELEASE_BRANCH`, its ISO
+  build will start failing until a new changelog entry is created,
+  which we don't want to do on `$RELEASE_BRANCH` before it's merged
+  into `master` at release time)
 
 Generate the OpenPGP signatures and Torrents
 ============================================
@@ -715,13 +722,13 @@ Prepare upgrade-description files
            done
 
 1. Add and commit the upgrade-description files and their detached
-   signatures to the Git branch used to prepare the release (`stable`
-   or `testing`):
+   signatures to the Git branch used to prepare the release
+   (`$WEBSITE_RELEASE_BRANCH`):
 
         ( \
           cd "${RELEASE_CHECKOUT:?}" && git add wiki/src/upgrade && \
           git commit -m "Update upgrade-description files." && \
-          git push origin ${RELEASE_BRANCH:?} \
+          git push origin ${WEBSITE_RELEASE_BRANCH:?} \
         )
 
 1. If preparing anything but a final release (e.g. an alpha, beta
@@ -743,7 +750,7 @@ Prepare upgrade-description files
           for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
             stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
-            git show origin/${RELEASE_BRANCH:?}:${stable_udf:?} \
+            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${stable_udf:?} \
               | sed -e 's/channel: stable/channel: test/' > ${test_udf:?} && \
             gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
             mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
@@ -1043,12 +1050,13 @@ If preparing an actual release, push the last commits to our Git
 repository like this:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
-                      devel:devel \
+      git push origin \
+          "${WEBSITE_RELEASE_BRANCH:?}:${WEBSITE_RELEASE_BRANCH:?}" \
+          devel:devel \
     ) && \
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/${RELEASE_BRANCH:?}" && \
+      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
       git push origin master:master \
     )
 
