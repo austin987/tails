@@ -1,5 +1,5 @@
 Then /^I start Electrum through the GNOME menu$/ do
-  step "I start \"Electrum Bitcoin Wallet\" via the GNOME \"Internet\" applications menu"
+  step "I start \"Electrum Bitcoin Wallet\" via GNOME Activities Overview"
 end
 
 When /^a bitcoin wallet is (|not )present$/ do |existing|
