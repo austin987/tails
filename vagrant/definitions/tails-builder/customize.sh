@@ -15,6 +15,7 @@ cp "${CURDIR}/postinstall.sh" "${ROOT}/postinstall.sh"
 cp "${CURDIR}/../../../config/chroot_sources/tails.binary.gpg" "${ROOT}/tmp/"
 chmod +x "${ROOT}/postinstall.sh"
 
+# Disable daemon auto-start
 cat > "${ROOT}/usr/sbin/policy-rc.d" <<EOF
 #!/bin/sh
 exit 101

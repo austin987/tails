@@ -3,7 +3,7 @@
 set -e
 
 # Run only when the interface is not "lo":
-if [ "$1" = "lo" ]; then
+if [ -z "$1" ] || [ "$1" = "lo" ]; then
         exit 0
 fi
 

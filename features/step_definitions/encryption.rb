@@ -32,7 +32,7 @@ EOF
 end
 
 When /^I type a message into gedit$/ do
-  step 'I start "gedit" via the GNOME "Accessories" applications menu'
+  step 'I start "gedit" via GNOME Activities Overview'
   @screen.wait_and_click("GeditWindow.png", 20)
   # We don't have a good visual indicator for when we can continue. Without the
   # sleep we may start typing in the gedit window far too soon, causing
