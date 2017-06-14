@@ -8,15 +8,14 @@ Feature: Keyserver interaction with GnuPG
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
     And the "10CC5BC7" OpenPGP key is not in the live user's public keyring
-
-  Scenario: Seahorse is configured to use the correct keyserver
-   Then Seahorse is configured to use the correct keyserver
+    And GnuPG is configured to use Chutney's onion keyserver
+    And Seahorse is configured to use Chutney's onion keyserver
 
   Scenario: Fetching OpenPGP keys using GnuPG should work and be done over Tor.
     When I fetch the "10CC5BC7" OpenPGP key using the GnuPG CLI
-    Then GnuPG uses the configured keyserver
     And the GnuPG fetch is successful
-    And the "10CC5BC7" key is in the live user's public keyring
+    Then the "10CC5BC7" key is in the live user's public keyring
+    And GnuPG's dirmngr uses the configured keyserver
 
   Scenario: Fetching OpenPGP keys using Seahorse should work and be done over Tor.
     When I fetch the "10CC5BC7" OpenPGP key using Seahorse

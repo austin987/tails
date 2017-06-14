@@ -34,6 +34,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
+  'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
   'TAILS_OFFLINE_MODE',
   'TAILS_PROXY',
@@ -238,18 +239,24 @@ task :parse_build_options do
       ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
     when 'gzipcomp'
-      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip'
+      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip -Xcompression-level 1'
       if is_release?
         raise 'We must use the default compression when building releases!'
       end
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
-    # Virtual CPUs settings
+    # Virtual hardware settings
+    when /machinetype=([a-zA-Z0-9_.-]+)/
+      ENV['TAILS_BUILD_MACHINE_TYPE'] = $1
     when /cpus=(\d+)/
       ENV['TAILS_BUILD_CPUS'] = $1
+    when /cpumodel=([a-zA-Z0-9_-]+)/
+      ENV['TAILS_BUILD_CPU_MODEL'] = $1
     # Git settings
     when 'ignorechanges'
       ENV['TAILS_BUILD_IGNORE_CHANGES'] = '1'
+    when /dateoffset=([-+]\d+)/
+      ENV['TAILS_DATE_OFFSET'] = $1
     # Developer convenience features
     when 'keeprunning'
       $keep_running = true
@@ -498,6 +505,28 @@ ensure
   $virt.close
 end
 
+desc "Remove all libvirt volumes named tails-builder-* (run at your own risk!)"
+task :clean_up_libvirt_volumes do
+  $virt = Libvirt::open("qemu:///system")
+  begin
+    pool = $virt.lookup_storage_pool_by_name('default')
+  rescue Libvirt::RetrieveError
+    # Expected if the pool does not exist
+  else
+    for disk in pool.list_volumes do
+      if /^tails-builder-/.match(disk)
+        begin
+          pool.lookup_volume_by_name(disk).delete
+        rescue Libvirt::RetrieveError
+          # Expected if the disk does not exist
+        end
+      end
+    end
+  ensure
+    $virt.close
+  end
+end
+
 def on_jenkins?
   !!ENV['JENKINS_URL']
 end
@@ -613,10 +642,10 @@ namespace :basebox do
   task :clean_old do
     boxes = baseboxes
     # We always want to keep the newest basebox
-    boxes.sort! { |a, b| basebox_date(a) < basebox_date(b) }
+    boxes.sort! { |a, b| basebox_date(a) <=> basebox_date(b) }
     boxes.pop
     boxes.each do |box|
-      if basebox_date(box) < Date.today - 365.0/2.0
+      if basebox_date(box) < Date.today - 365.0/3.0
         clean_up_basebox(box)
       end
     end

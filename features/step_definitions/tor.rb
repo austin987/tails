@@ -184,7 +184,7 @@ def firewall_has_dropped_packet_to?(proto, host, port)
   $vm.execute("journalctl --dmesg --output=cat | grep -qP '#{regex}'").success?
 end
 
-When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+))? that is expected to fail$/ do |proto, host, port|
+When /^I open an untorified (TCP|UDP|ICMP) connection to (\S*)(?: on port (\d+))?$/ do |proto, host, port|
   assert(!firewall_has_dropped_packet_to?(proto, host, port),
          "A #{proto} packet to #{host}" +
          (port.nil? ? "" : ":#{port}") +
@@ -195,11 +195,11 @@ When /^I open an untorified (TCP|UDP|ICMP) connections to (\S*)(?: on port (\d+)
   case proto
   when "TCP"
     assert_not_nil(port)
-    cmd = "echo | netcat #{host} #{port}"
+    cmd = "echo | nc.traditional #{host} #{port}"
     user = LIVE_USER
   when "UDP"
     assert_not_nil(port)
-    cmd = "echo | netcat -u #{host} #{port}"
+    cmd = "echo | nc.traditional -u #{host} #{port}"
     user = LIVE_USER
   when "ICMP"
     cmd = "ping -c 5 #{host}"
@@ -243,35 +243,38 @@ def stream_isolation_info(application)
   case application
   when "htpdate"
     {
-      :grep_monitor_expr => '/curl\>',
+      :grep_monitor_expr => 'users:(("curl"',
       :socksport => 9062
     }
-  when "tails-security-check", "tails-upgrade-frontend-wrapper"
-    # We only grep connections with ESTABLISHED state since `perl`
-    # is also used by monkeysphere's validation agent, which LISTENs
+  when "tails-security-check"
     {
-      :grep_monitor_expr => '\<ESTABLISHED\>.\+/perl\>',
+      :grep_monitor_expr => 'users:(("tails-security-"',
+      :socksport => 9062
+    }
+  when "tails-upgrade-frontend-wrapper"
+    {
+      :grep_monitor_expr => 'users:(("tails-iuk-get-u"',
       :socksport => 9062
     }
   when "Tor Browser"
     {
-      :grep_monitor_expr => '/firefox\>',
+      :grep_monitor_expr => 'users:(("firefox"',
       :socksport => 9150,
       :controller => true,
     }
   when "Gobby"
     {
-      :grep_monitor_expr => '/gobby\>',
+      :grep_monitor_expr => 'users:(("gobby-0.5"',
       :socksport => 9050
     }
   when "SSH"
     {
-      :grep_monitor_expr => '/\(connect-proxy\|ssh\)\>',
+      :grep_monitor_expr => 'users:(("\(nc\|ssh\)"',
       :socksport => 9050
     }
   when "whois"
     {
-      :grep_monitor_expr => '/whois\>',
+      :grep_monitor_expr => 'users:(("whois"',
       :socksport => 9050
     }
   else
@@ -280,10 +283,10 @@ def stream_isolation_info(application)
 end
 
 When /^I monitor the network connections of (.*)$/ do |application|
-  @process_monitor_log = "/tmp/netstat.log"
+  @process_monitor_log = "/tmp/ss.log"
   info = stream_isolation_info(application)
   $vm.spawn("while true; do " +
-            "  netstat -taupen | grep \"#{info[:grep_monitor_expr]}\"; " +
+            "  ss -taupen | grep '#{info[:grep_monitor_expr]}'; " +
             "  sleep 0.1; " +
             "done > #{@process_monitor_log}")
 end
@@ -298,7 +301,7 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
          "Couldn't see any connection made by #{application} so " \
          "something is wrong")
   log_lines.each do |line|
-    ip_port = line.split(/\s+/)[4]
+    ip_port = line.split(/\s+/)[5]
     assert(expected_ports.map { |port| "127.0.0.1:#{port}" }.include?(ip_port),
            "#{application} should only connect to #{expected_ports} but " \
            "was seen connecting to #{ip_port}")
@@ -311,7 +314,7 @@ end
 
 And /^I re-run htpdate$/ do
   $vm.execute_successfully("service htpdate stop && " \
-                           "rm -f /var/run/htpdate/* && " \
+                           "rm -f /run/htpdate/* && " \
                            "systemctl --no-block start htpdate.service")
   step "the time has synced"
 end
@@ -321,18 +324,22 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
 end
 
 When /^I connect Gobby to "([^"]+)"$/ do |host|
-  @screen.wait("GobbyWindow.png", 30)
-  @screen.wait("GobbyWelcomePrompt.png", 10)
-  @screen.click("GnomeCloseButton.png")
-  @screen.wait("GobbyWindow.png", 10)
+  gobby = Dogtail::Application.new('gobby-0.5')
+  gobby.child('Welcome to Gobby', roleName: 'label')
+  gobby.button('Close').click
   # This indicates that Gobby has finished initializing itself
   # (generating DH parameters, etc.) -- before, the UI is not responsive
   # and our CTRL-t is lost.
-  @screen.wait("GobbyFailedToShareDocuments.png", 30)
+  gobby.child('Failed to share documents', roleName: 'label')
+  gobby.menu('File').click
+  gobby.menuItem('Connect to Server...').click
   @screen.type("t", Sikuli::KeyModifier.CTRL)
-  @screen.wait("GobbyConnectPrompt.png", 10)
-  @screen.type(host + Sikuli::Key.ENTER)
-  @screen.wait("GobbyConnectionComplete.png", 60)
+  connect_dialog = gobby.dialog('Connect to Server')
+  connect_dialog.child('', roleName: 'text').typeText(host)
+  connect_dialog.button('Connect').click
+  # This looks for the live user's presence entry in the chat, which
+  # will only be shown if the connection succeeded.
+  try_for(60) { gobby.child(LIVE_USER, roleName: 'table cell'); true }
 end
 
 When /^the Tor Launcher autostarts$/ do

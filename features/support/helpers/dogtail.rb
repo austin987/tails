@@ -10,6 +10,7 @@ module Dogtail
     :child,
     :childLabelled,
     :childNamed,
+    :dialog,
     :menu,
     :menuItem,
     :tab,
@@ -80,6 +81,12 @@ module Dogtail
         raise RuntimeError.new("The Dogtail script raised: #{c.exception}")
       end
       return c
+    end
+
+    def child?(*args)
+      !!child(*args)
+    rescue
+      false
     end
 
     def exist?
@@ -173,6 +180,10 @@ module Dogtail
 
     def name
       get_field('name')
+    end
+
+    def roleName
+      get_field('roleName')
     end
 
     TREE_API_APP_SEARCHES.each do |method|

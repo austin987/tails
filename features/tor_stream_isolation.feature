@@ -26,13 +26,13 @@ Feature: Tor stream isolation is effective
   Scenario: The Tor Browser is using the web browser-specific SocksPort
     When I monitor the network connections of Tor Browser
     And I start the Tor Browser
-    And the Tor Browser has started and loaded the startup page
+    And the Tor Browser loads the startup page
     Then I see that Tor Browser is properly stream isolated
 
   @fragile
   Scenario: Gobby is using the default SocksPort
     When I monitor the network connections of Gobby
-    And I start "Gobby" via the GNOME "Internet" applications menu
+    And I start "Gobby" via GNOME Activities Overview
     And I connect Gobby to "gobby.debian.org"
     Then I see that Gobby is properly stream isolated
 
