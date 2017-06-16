@@ -30,18 +30,15 @@ the resulting system, are determined by the content of the
 `config/base_branch` and `config/APT_overlays.d/*` files. See details in
 the *Build system* section below.
 
+Basically, a cronjob fetches the Tails Git repository every
+few minutes, detects new branches, and accordingly create new suites
+in the custom APT repository.
+
 We manage our APT repository with
 [reprepro](http://mirrorer.alioth.debian.org/).
-
-The Puppet modules used to manage this part of our infrastructure are
-listed on our [[contribute/Git]] page.
-
-Basically, a cronjob fetches and scans the Tails Git repository every
-few minutes, detects new branches, and accordingly:
-
-- generates `conf/distributions`
-- generates `conf/incoming`
-- create new suites in the APT repository
+See the corresponding
+[[documentation|contribute/working_together/roles/sysadmins#custom-apt-repository]]
+for details.
 
 Build system
 ============
@@ -61,12 +58,12 @@ Else, it adds:
   `config/APT_overlays.d/*`; note that only the name of such
   files matters, and their content is ignored.
 
-In practice, `config/APT_overlays.d/` contains:
+In practice, `config/APT_overlays.d/` should contain:
 
 * for a topic branch:
   - if needed, a file that is named like the branch's own overlay APT
     suite; e.g. for the `bugfix/12345-whatever` branch, it would be
-    called `config/APT_overlays.d/bugfix-12345-whatever.suite`
+    called `config/APT_overlays.d/bugfix-12345-whatever`
   - any file representing APT suites that came from merging its base
     branch into this topic branch, that is:
 * for a base branch (`stable`, `testing`, `devel` or
@@ -93,7 +90,7 @@ able to work on topic branches forked off `feature/jessie`.
 SSH access
 ==========
 
-One must configure their SSH client to connect to the APT server:
+Configure your SSH client to connect to the APT server:
 
 	Host incoming.deb.tails.boum.org
 		Port 3003
@@ -101,9 +98,7 @@ One must configure their SSH client to connect to the APT server:
 HTTP access
 ===========
 
-This is the http:// public APT repository used at Tails
-build time. The `tails::reprepro` Puppet class sets nginx up to
-serve that.
+The custom APT repository can be browsed at <https://deb.tails.boum.org/>.
 
 Workflow
 ========
@@ -112,7 +107,12 @@ Creating a new branch
 ---------------------
 
 Push your branch to Git and wait a few minutes for the new APT suite
-to appear.
+to appear on <https://deb.tails.boum.org/dists/>. You can look up the
+name of that suite there.
+
+Then, you probably want to drop a new file in
+`config/APT_overlays.d/`, named after the APT suite corresponding to
+your new branch. See details in the *Build system* section above.
 
 Importing a new package
 -----------------------
@@ -164,6 +164,19 @@ Carefully check the `.changes` file (especially the `Distribution`
 control field, and the included files list; the former can be fixed
 with the `changestool(1)` command, from [[!debpkg reprepro]]).
 
+Remove all `buildinfo` and `dbgsym` lines from the `.changes` file.
+XXX: still needed? We now run reprepro from Stretch, that supports
+both in theory.
+
+If the `.orig.tar.{gz,bz2,xz}` tarball is present neither in the
+`.changes` file nor in our custom APT repository, add it using:
+
+	$ changestool $CHANGES_FILE includeallsources
+
+Make sure that the `.changes` file lists the _binary_ packages too:
+Tails has no package auto-builder that would build them from source
+for you.
+
 Sign the `.changes` file with a key that is in the uploaders list:
 
 	$ debsign $CHANGES_FILE
@@ -171,6 +184,10 @@ Sign the `.changes` file with a key that is in the uploaders list:
 Upload the files to the incoming queue:
 
 	$ dupload --to tails $CHANGES_FILE
+
+or, using dput:
+
+	$ dput tails $CHANGES_FILE
 
 reprepro will automatically notice the new files and import them into
 the suite specified in your `.changes` file.
@@ -318,13 +335,30 @@ If you just put out a final release:
 * increment the version number in devel's `debian/changelog` to match
   the next major release, so that
   next builds from the `devel` branch do not use the APT suite meant
-  for the last release
+  for the last release:
+
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout devel && \
+        dch --newversion "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
+
 * increment the version number in stable's `debian/changelog` to match
   the next point release, so that
   next builds from the `stable` branch do not use the APT suite meant
-  for the last release
+  for the last release:
 
-If you just released a RC:
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout stable && \
+        dch --newversion "${NEXT_PLANNED_MINOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${NEXT_PLANNED_MINOR_VERSION:?}."
+
+
+If you just released a RC (XXX: please automate these steps during the
+3.2~rc1 release process, based on the above commands):
 
 * add a dummy changelog entry (for the upcoming, non-RC version) in
   the branch used for the release (`stable` or `testing`), so that the
@@ -352,7 +386,8 @@ Giving access to a core developer
 ---------------------------------
 
 1. Give SSH access to the `reprepro` user on the system that hosts
-   reprepro (using the `ssh_authorized_key` Puppet resource).
+   reprepro (using the `ssh_authorized_key` Puppet resource, until
+   [[!tails_ticket 12346]] is resolved).
 2. Import the developer's public GnuPG key into the `reprepro` user's
    GnuPG keyring -- should be doable using Puppet, some day
 3. Add the developer's OpenPGP key ID to `$reprepro_uploaders` in our

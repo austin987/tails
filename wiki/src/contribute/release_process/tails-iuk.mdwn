@@ -5,7 +5,7 @@
 Pre-requisites
 =============
 
-* a Jessie system
+* a Stretch system
 * Tails' `devel` APT suite enabled
 * the right version of the `tails-perl5lib` package installed
 * a user that has sudo credentials
@@ -32,7 +32,8 @@ Update POT and PO files
 
     git checkout master && \
         ( cd po && make pot && make update-po ) && \
-        git commit po -m 'Update POT and PO files.'
+        git add po && \
+        git commit -m 'Update POT and PO files.'
 
 Make an upstream release
 ========================
@@ -49,6 +50,15 @@ Export location of a checkout of the branch of the main Tails Git
 repository used to prepare the release (typically `stable` or `testing`):
 
     export TAILS_GIT_CHECKOUT=XXX
+
+Export source date epoch:
+
+    export SOURCE_DATE_EPOCH=$(date \
+       --utc \
+       --date="$(dpkg-parsechangelog \
+                    --file "$TAILS_GIT_CHECKOUT/debian/changelog" \
+                    --show-field=Date)" \
+       +%s)
 
 Update version number in `bin/tails-create-iuk`, commit all files that
 need to be.
@@ -95,22 +105,23 @@ and then update `debian/changelog` again if needed.
 
 Commit `debian/changelog`:
 
-    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')
+    git commit debian/changelog \
+        -m "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))
 
 Git-Dch: Ignore
 "
 
-Build a Debian package (use a Jessie chroot with the right version of
+Build a Debian package (use a Stretch chroot with the right version of
 `tails-perl5lib` installed), add a signed tag to the repository and
 push the changes:
 
     gbp buildpackage && \
     gbp buildpackage --git-tag-only --git-sign-tags && \
-    git push origin master:master \
+    git push --follow-tags origin \
+                    master:master \
                     debian:debian \
                     pristine-tar:pristine-tar \
-                    upstream:upstream && \
-    git push --tags
+                    upstream:upstream
 
 Add the Debian package to Tails
 ===============================

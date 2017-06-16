@@ -75,7 +75,8 @@ mac_spoof_panic() {
     fi
     module=$(get_module_used_by_nic "${nic}")
     nic_name="$(get_name_of_nic ${nic})"
-    echo "blacklist ${module}" >> /etc/modprobe.d/"${module}"-blacklist.conf
+    echo "install ${module} /bin/true" >> \
+         /etc/modprobe.d/"${module}"-blacklist.conf
     unload_module_and_rev_deps "${module}" || :
     if nic_exists "${nic}"; then
         log "Failed to unload module ${module} of NIC ${nic}."

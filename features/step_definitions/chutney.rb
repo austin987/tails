@@ -1,9 +1,12 @@
+def chutney_src_dir
+  "#{GIT_DIR}/submodules/chutney"
+end
+
 def ensure_chutney_is_running
   # Ensure that a fresh chutney instance is running, and that it will
   # be cleaned upon exit. We only do it once, though, since the same
   # setup can be used throughout the same test suite run.
   if not($chutney_initialized)
-    chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
     chutney_listen_address = $vmnet.bridge_ip_addr
     chutney_script = "#{chutney_src_dir}/chutney"
     assert(
@@ -53,6 +56,18 @@ def ensure_chutney_is_running
       chutney_cmd.call('stop')
       chutney_data_dir_cleanup.call unless KEEP_SNAPSHOTS
     end
+
+    # We have to sanity check that all nodes are running because
+    # `chutney start` will return success even if some nodes fail.
+    running, total = 0, -1
+    status = chutney_cmd.call('status')
+    match = Regexp.new('^(\d+)/(\d+) nodes are running$').match(status)
+    assert_not_nil(match, "Chutney's status did not contain the expected " +
+                          "string listing the number of running nodes")
+    running, total = match[1,2].map { |x| x.to_i }
+    assert_equal(
+      total, running, "Chutney is only running #{running}/#{total} nodes"
+    )
 
     $chutney_initialized = true
   end
@@ -112,7 +127,6 @@ When /^I configure Tails to use a simulated Tor network$/ do
   ]
   # We run one client in chutney so we easily can grep the generated
   # DirAuthority lines and use them.
-  chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
   client_torrcs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*client/torrc"
   )
@@ -125,4 +139,55 @@ end
 
 When /^Tails is using the real Tor network$/ do
   assert($vm.execute('grep "TestingTorNetwork 1" /etc/torrc').failure?)
+end
+
+def chutney_onionservice_info
+  hs_hostname_file_path = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*hs/hidden_service/hostname"
+  ).first
+  hs_hostname = open(hs_hostname_file_path, 'r') do |f|
+    f.read.chomp
+  end
+  hs_torrc_path = Dir.glob(
+    "#{$config['TMPDIR']}/chutney-data/nodes/*hs/torrc"
+  ).first
+  _, hs_port, local_address_port = open(hs_torrc_path, 'r') do |f|
+    f.grep(/^HiddenServicePort/).first.split
+  end
+  local_address, local_port  = local_address_port.split(':')
+  [local_address, local_port, hs_hostname, hs_port]
+end
+
+def chutney_onionservice_redir(remote_address, remote_port)
+  kill_redir = Proc.new do
+    begin
+      Process.kill("TERM", $chutney_onionservice_job.pid)
+    rescue
+      # noop
+    end
+  end
+  if $chutney_onionservice_job
+    kill_redir.call
+  end
+  local_address, local_port, _ = chutney_onionservice_info
+  # XXX:Stretch: revert the commit introducing this command once we
+  # stop supporting the test suite on Debian Jessie.
+  redir_cmd = ['/usr/bin/redir']
+  redir_version = Gem::Version.new(cmd_helper(redir_cmd + ['--version']))
+  if redir_version < Gem::Version.new('3.0')
+    redir_cmd += [
+      "--laddr", local_address,
+      "--lport", local_port,
+      "--caddr", remote_address,
+      "--cport", remote_port,
+    ]
+  else
+    redir_cmd += [
+      "#{local_address}:#{local_port}",
+      "#{remote_address}:#{remote_port}",
+    ]
+  end
+  $chutney_onionservice_job = IO.popen(redir_cmd)
+  add_after_scenario_hook { kill_redir.call }
+  return $chutney_onionservice_job
 end

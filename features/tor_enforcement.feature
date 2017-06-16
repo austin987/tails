@@ -12,7 +12,6 @@ Feature: The Tor enforcement is effective
     And the firewall's NAT rules only redirect traffic for Tor's TransPort and DNSPort
     And the firewall is configured to block all external IPv6 traffic
 
-  @fragile
   Scenario: Anti test: Detecting TCP leaks from the Unsafe Browser with the firewall leak detector
     Given I have started Tails from DVD and logged in and the network is connected
     And I capture all network traffic
@@ -45,21 +44,20 @@ Feature: The Tor enforcement is effective
   @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified TCP connection attempts
     Given I have started Tails from DVD and logged in and the network is connected
-    When I open an untorified TCP connections to 1.2.3.4 on port 42 that is expected to fail
+    When I open an untorified TCP connection to 1.2.3.4 on port 42
     Then the untorified connection fails
     And the untorified connection is logged as dropped by the firewall
 
   @check_tor_leaks
   Scenario: The Tor enforcement is effective at blocking untorified UDP connection attempts
     Given I have started Tails from DVD and logged in and the network is connected
-    When I open an untorified UDP connections to 1.2.3.4 on port 42 that is expected to fail
-    Then the untorified connection fails
+    When I open an untorified UDP connection to 1.2.3.4 on port 42
     And the untorified connection is logged as dropped by the firewall
 
   @check_tor_leaks @fragile
   Scenario: The Tor enforcement is effective at blocking untorified ICMP connection attempts
     Given I have started Tails from DVD and logged in and the network is connected
-    When I open an untorified ICMP connections to 1.2.3.4 that is expected to fail
+    When I open an untorified ICMP connection to 1.2.3.4
     Then the untorified connection fails
     And the untorified connection is logged as dropped by the firewall
 

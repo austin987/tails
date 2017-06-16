@@ -19,7 +19,7 @@
 #
 # Example:
 #
-#   PBUILDER_OPTIONS='--basetgz /var/cache/pbuilder/base-jessie-i386.tgz' \
+#   PBUILDER_OPTIONS='--basetgz /var/cache/pbuilder/base-sid-amd64.tgz' \
 #   TARGET_DIST='testing' \
 #   ./bin/import-package libgsecuredelete
 
@@ -32,7 +32,7 @@ SRC_PKG="$1"
 GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 . "$GIT_TOPLEVEL_DIR"/auto/scripts/utils.sh
 PBUILDER_OPTIONS="${PBUILDER_OPTIONS:-}"
-TARGET_DIST="${TARGET_DIST:-$(branch_name_to_suite $(current_branch))}"
+TARGET_DIST="${TARGET_DIST:-$(branch_name_to_suite $(git_current_branch))}"
 REMOTE_USER_AT_HOST='reprepro@incoming.deb.tails.boum.org'
 
 umask 0022
@@ -76,7 +76,7 @@ EOF
    rm script
 
    REMOTE_WORKDIR=$(ssh "$REMOTE_USER_AT_HOST" mktemp -d)
-   scp -r * "$REMOTE_USER_AT_HOST":"$REMOTE_WORKDIR"/
+   scp * "$REMOTE_USER_AT_HOST":"$REMOTE_WORKDIR"/
    ssh "$REMOTE_USER_AT_HOST" \
        "reprepro includedsc '$TARGET_DIST' '$REMOTE_WORKDIR'/*.dsc && \
         reprepro includedeb '$TARGET_DIST' '$REMOTE_WORKDIR'/*.deb && \

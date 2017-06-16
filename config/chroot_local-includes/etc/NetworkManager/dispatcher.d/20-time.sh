@@ -21,19 +21,18 @@
 
 ### Init variables
 
-TORDATE_DIR=/var/run/tordate
+TORDATE_DIR=/run/tordate
 TORDATE_DONE_FILE=${TORDATE_DIR}/done
 TOR_CONSENSUS=${TOR_DIR}/cached-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS=${TOR_DIR}/unverified-microdesc-consensus
 TOR_UNVERIFIED_CONSENSUS_HARDLINK=${TOR_UNVERIFIED_CONSENSUS}.bak
 INOTIFY_TIMEOUT=60
 DATE_RE='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
-VERSION_FILE=/etc/amnesia/version
 
 ### Exit conditions
 
 # Run only when the interface is not "lo":
-if [ "$1" = "lo" ]; then
+if [ -z "$1" ] || [ "$1" = "lo" ]; then
 	exit 0
 fi
 
@@ -46,10 +45,6 @@ fi
 if [ -e "$TORDATE_DONE_FILE" ]; then
 	exit 0
 fi
-
-
-### Create status directory
-install -o root -g root -m 0755 -d ${TORDATE_DIR}
 
 
 ### Functions

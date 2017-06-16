@@ -5,7 +5,7 @@
 Install build and test dependencies
 ===================================
 
-In a Jessie system, as a user that has sudo credentials:
+In a Stretch system, as a user that has sudo credentials:
 
     git checkout debian && \
     sudo apt install devscripts && \
@@ -26,7 +26,8 @@ Update POT and PO files
 
     git checkout master && \
         ( cd po && make pot && make update-po ) && \
-        git commit po -m 'Update POT and PO files.'
+        git add po && \
+        git commit -m 'Update POT and PO files.'
 
 Make an upstream release
 ========================
@@ -74,12 +75,13 @@ and then update `debian/changelog` again if needed.
 
 Commit `debian/changelog`:
 
-        git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')
+        git commit debian/changelog \
+            -m "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))
 
 Git-Dch: Ignore
 "
 
-Build a Debian package (use a Jessie/i386 chroot):
+Build a Debian package (use a Stretch/amd64 chroot):
 
     gbp buildpackage
 
@@ -87,11 +89,11 @@ If everything is fine, add a signed tag to the repository and push the
 changes:
 
     gbp buildpackage --git-tag-only --git-sign-tags && \
-    git push origin master:master \
+    git push --follow-tags origin \
+                    master:master \
                     debian:debian \
                     pristine-tar:pristine-tar \
-                    upstream:upstream && \
-    git push --tags
+                    upstream:upstream
 
 (Make sure `master`, `upstream`, `debian` and `pristine-tar` were all pushed.)
 

@@ -4,7 +4,43 @@ set -e
 
 echo "Generating blocklist for all network devices"
 
-find /lib/modules/*/kernel/drivers/net \
-     -name "*.ko" -printf "blacklist %f\n" | \
-  sed 's/\.ko$//' | \
-  sort -u > /etc/modprobe.d/all-net-blacklist.conf
+is_net_module() {
+    # Here we assume that if any of the patterns below are matched, it
+    # is a network driver. This is not comprehensive, but should be
+    # enough for the staging directory (worst case we blacklist some
+    # shitty non-network driver by mistake).
+    /sbin/modinfo "${1}" | \
+        grep -q --extended-regexp \
+             -e "^depends:\s*(cfg|lib|mac)80211" \
+             -e "^parm:\s*ifname:"
+}
+
+net_module_filter() {
+    local path
+    while read path; do
+        if is_net_module "${path}"; then
+            echo "${path}"
+        fi
+    done
+}
+
+generate_blocking_line() {
+    local name
+    local path
+    while read path; do
+        name="$(basename "${path}" .ko)"
+        printf "install ${name} /bin/true\n"
+    done
+}
+
+BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
+
+(
+    find /lib/modules/*/kernel/drivers/net -name "*.ko" | \
+        generate_blocking_line && \
+
+    # Let's try to find the network drivers in the staging directory as well
+    find /lib/modules/*/kernel/drivers/staging/ -name "*.ko" | \
+        net_module_filter | \
+        generate_blocking_line
+) | sort -u > "${BLACKLIST}"

@@ -2,50 +2,22 @@
 
 set -e
 
-CUSTOM_INITSCRIPTS="
-"
-
-PATCHED_INITSCRIPTS="
-alsa-utils
-gdomap
-haveged
-hdparm
-hwclock.sh
-i2p
-kexec-load
-laptop-mode
-memlockd
-saned
-spice-vdagent
-tor
-ttdnsd
-"
-
-echo "Configuring boot sequence"
-
-# The patches to adjust the runlevels are applied to the chroot
-# after the packages have been installed. So we need to remove them first,
-# to re-install them with our settings.
-insserv -r $PATCHED_INITSCRIPTS
-
-# Re-install overriden initscripts and install our custom ones.
-insserv $PATCHED_INITSCRIPTS $CUSTOM_INITSCRIPTS
-
 ### Tweak systemd unit files
 
 # Workaround for https://bugs.debian.org/714957
 systemctl enable memlockd.service
 
 # Enable our own systemd unit files
+systemctl enable initramfs-shutdown.service
+systemctl enable onion-grater.service
 systemctl enable tails-autotest-remote-shell.service
-systemctl enable tails-reconfigure-kexec.service
-systemctl enable tails-reconfigure-memlockd.service
-systemctl enable tails-sdmem-on-media-removal.service
 systemctl enable tails-set-wireless-devices-state.service
+systemctl enable tails-shutdown-on-media-removal.service
 systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
-systemctl enable tor-controlport-filter.service
+systemctl enable update-ca-certificates.service
+systemctl enable var-tmp.mount
 
 # Enable our own systemd user unit files
 systemctl --global enable tails-add-GNOME-bookmarks.service
@@ -64,7 +36,7 @@ systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 systemctl disable cups.service
 systemctl enable  cups.socket
 
-# We're starting NetworkManager, Tor and ttdnsd ourselves.
+# We're starting NetworkManager and Tor ourselves.
 # We disable tor.service (as opposed to tor@default.service) because
 # it's an important goal to never start Tor before the user has had
 # a chance to choose to do so in an obfuscated way: if some other
@@ -73,17 +45,6 @@ systemctl enable  cups.socket
 systemctl disable tor.service
 systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
-systemctl disable ttdnsd.service
-
-# We don't run these services by default
-systemctl disable gdomap.service
-systemctl disable hdparm.service
-systemctl disable i2p.service
-
-# Don't hide tails-kexec's shutdown messages with an empty splash screen
-for suffix in halt kexec poweroff reboot shutdown ; do
-   systemctl mask "plymouth-${suffix}.service"
-done
 
 # systemd-networkd fallbacks to Google's nameservers when no other nameserver
 # is provided by the network configuration. In Jessie, this service is disabled
@@ -98,14 +59,8 @@ systemctl mask hwclock-save.service
 # Do not run timesyncd: we have our own time synchronization mechanism
 systemctl mask systemd-timesyncd.service
 
-# Unmute and sanitize mixer levels at boot time
-# (`systemctl unmask` does not support initscripts on Jessie,
-# hence the manual unmasking)
-dpkg-divert --add --rename --divert \
-	    /lib/systemd/system/alsa-utils.service.orig \
-	    /lib/systemd/system/alsa-utils.service
-# Disable the ALSA state store/restore systemd services (that lack mixer
-# levels unmuting/sanitizing), we use the legacy initscript instead
-systemctl mask alsa-restore.service
-systemctl mask alsa-state.service
-systemctl mask alsa-store.service
+# apt-daily.service can only cause problems in our context (#12390)
+systemctl mask apt-daily.timer
+
+# Do not let pppd-dns manage /etc/resolv.conf
+systemctl mask pppd-dns.service

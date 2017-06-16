@@ -14,6 +14,13 @@ Update POT and PO files
        ) && \
        git commit po -m 'Update POT and PO files.'
 
+
+Prepare a release
+=================
+
+Run `./scripts/release.sh` and follow the instructions.
+
+
 Update the Debian package
 =========================
 
@@ -29,19 +36,19 @@ Update `debian/changelog`:
 
 Commit the changelog:
 
-    git commit debian/changelog -m "$(head -n 1 debian/changelog | sed -e 's,).*,),')
+    git commit debian/changelog \
+        -m "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))
+    Git-Dch: Ignore
+    "
 
-Git-Dch: Ignore
-"
-
-Build a new Debian package (use a Jessie/i386 chroot):
+Build a new Debian package (use a Stretch/amd64 chroot):
 
     gbp buildpackage
 
 If everything is fine, tag the release and push the changes:
 
     gbp buildpackage --git-tag-only --git-sign-tags --git-keyid=$PGP_PUB_KEY && \
-    git push origin master:master && git push --tags
+    git push --follow-tags origin master:master
 
 Add the Debian package to Tails
 ===============================

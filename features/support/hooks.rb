@@ -14,20 +14,23 @@ AfterConfiguration do |config|
   prioritized_features = [
     # Features not using snapshots but using large amounts of scratch
     # space for other reasons:
-    'features/erase_memory.feature',
     'features/untrusted_partitions.feature',
     # Features using temporary snapshots:
     'features/apt.feature',
-    'features/i2p.feature',
     'features/root_access_control.feature',
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
+    # Features using large amounts of scratch space for other reasons:
+    'features/erase_memory.feature',
     # This feature needs the almost biggest snapshot (USB install,
     # excluding persistence) and will create yet another disk and
     # install Tails on it. This should be the peak of disk usage.
     'features/usb_install.feature',
     # This feature needs a copy of the ISO and creates a new disk.
     'features/usb_upgrade.feature',
+    # This feature needs a very big snapshot (USB install with persistence)
+    # and another, network-enabled snapshot.
+    'features/emergency_shutdown.feature',
   ]
   feature_files = config.feature_files
   # The &-intersection is specified to keep the element ordering of
@@ -130,7 +133,7 @@ def save_failure_artifact(type, path)
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
-# are Tor (or I2P) nodes or located on the LAN. However, when we try
+# are Tor nodes or located on the LAN. However, when we try
 # to verify that only such hosts are contacted we have a problem --
 # we run all Tor nodes (via Chutney) *and* LAN hosts (used on some
 # tests) on the same host, the one running the test suite. Hence we
@@ -186,6 +189,10 @@ AfterFeature('@product') do
         VM.remove_snapshot(name)
       end
     end
+  end
+  $vmstorage.list_volumes.each do |vol_name|
+    next if vol_name == '__internal'
+    $vmstorage.delete_volume(vol_name)
   end
 end
 
@@ -258,7 +265,12 @@ After('@product') do |scenario|
       info_log
       info_log_artifact_location(type, artifact_path)
     end
-    pause("Scenario failed") if $config["INTERACTIVE_DEBUGGING"]
+    if $config["INTERACTIVE_DEBUGGING"]
+      pause(
+        "Scenario failed: #{scenario.name}. " +
+        "The error was: #{scenario.exception.class.name}: #{scenario.exception}"
+      )
+    end
   else
     if @video_path && File.exist?(@video_path) && not($config['CAPTURE_ALL'])
       FileUtils.rm(@video_path)
