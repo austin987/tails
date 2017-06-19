@@ -50,9 +50,7 @@ released:
             --distribution "${DISTRIBUTION:?}" --force-distribution \
             "Rebuild Thunderbird with Tails' secure autoconfiguration patches." && \
         git commit debian/changelog \
-            -m "document changes and release ${TAILS_VERSION:?}" && \
-        gbp buildpackage --git-debian-branch=tails/stretch \
-            --git-sign-tags --git-tag-only
+            -m "document changes and release ${TAILS_VERSION:?}"
 
 1. Fetch the Debian sources to be used for the build:
 
@@ -72,6 +70,11 @@ released:
 1. Build packages:
 
         gbp buildpackage --git-debian-branch=tails/stretch
+
+1. Tag the new version:
+
+        gbp buildpackage --git-debian-branch=tails/stretch \
+            --git-sign-tags --git-tag-only
 
 1. Include all sources in the `.changes` file:
 
