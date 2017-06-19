@@ -41,8 +41,32 @@ released:
    Now you most likely will have to deal with a merge conflict in
    `debian/changelog` -- just reorder the conflicting entries by
    version number, `git add` modified files as needed, and ensure
-   a merge commit is created eventually. Then let's release a new
-   version:
+   a merge commit is created eventually.
+
+1. Let's ensure our patches still apply cleanly:
+
+   1. Check if they do:
+
+          quilt push -a
+
+   2. Regardless of whether our  they do, clean up:
+
+          quilt pop -a && rm -rf .pc
+
+   3. If our patches applied cleanly, move on. Otherwise:
+
+      XXX (undocumented as we prefer focusing our efforts on
+      upstreaming our patches than on documenting the current,
+      temporary state of things): after reverse-engineering the state
+      of our Git repository, it seems that one should create a new
+      `secure_account_creation-${VERSION:?}` branch forked of the
+      latest existing one, transplant our commits on top of `${TAG}`
+      with the appropriate `--onto` option, squash our commits into
+      a new `secure_account_creation-${VERSION:?}-squashed` branch,
+      extract updated patches from there into
+      `debian/patches/secure-account-creation/`.
+
+1. Then let's release a new version:
 
         TAILS_VERSION="1:${VERSION:?}+tails1" && \
         DISTRIBUTION="feature-thunderbird-${VERSION:?}" && \
