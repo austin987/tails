@@ -1,0 +1,103 @@
+[[!meta title="Verifying a Tails image for reproducibility"]]
+
+[[!toc levels=3]]
+
+What are reproducible builds?
+=============================
+
+Reproducible builds are a set of software development practices that
+create a verifiable path from human readable source code to the binary
+code used by computers.
+
+Most aspects of software verification are done on source code, as that
+is what humans can reasonably understand. But most of the time,
+computers require software to be first built into a long string of
+numbers to be used. With reproducible builds, multiple parties can redo
+this process independently and ensure they all get exactly the same
+result. We can thus gain confidence that a distributed binary code is
+indeed coming from a given source code. (Quoted from
+[[https://reproducible-builds.org]])
+
+Tails ISO images should be reproducible: everybody who
+builds the ISO should be able to obtain the exact same resulting ISO
+image from a given Git commit.
+
+How is it done?
+===============
+
+First, the build system needs to be made entirely deterministic:
+transforming a given source must always create the same result.
+Typically, the current date and time must not be recorded and output
+always has to be written in the same order.
+
+Second, the set of tools used to perform the build and more generally
+the build environment is pre-defined.
+
+Third, users are given a way to recreate a close enough build
+environment, perform the build process, and verify that the output
+matches the original build.
+
+<a id="verify"></a>
+How do I verify my build against an official build?
+===================================================
+
+Using OpenPGP
+-------------
+
+When you reproducibly build our ISO you should obtain a file that is
+exactly the same as the official Tails ISO image, thus, *our* signature
+should be able to verify *your* ISO for you.
+[[Download our OpenPGP signature|/install/download/openpgp]] and verify
+it against your own build.
+
+Using checksums
+---------------
+
+Furthermore, you can find the SHA-256 sum of the latest ISO in our
+[IDFs](https://tails.boum.org/install/v1/Tails/amd64/stable/latest.yml).
+This SHA sum can also be used to verify that you obtained the same ISO
+image by running `sha256sum yourimage.iso` on your ISO and comparing
+both sums to each other.
+
+Verifying IUKs
+--------------
+
+FIXME
+
+Why is it important?
+====================
+
+Reproducibility increases confidence in the value of our continuous
+quality assurance processes as well as the trust that users, and anyone
+interested can put into our released build products (such as ISO images)
+and our development and release process.
+
+Reproducible builds help [detect
+bugs](https://reproducible-builds.org/docs/buy-in/) and ensure that
+there is no bit flip that makes us waste precious hours during a release
+process.
+
+Most important, a reproducible build allows for independent verification
+that a build product matches what the source intended to produce. This
+helps to better resist [attacks against build machines and
+developers](https://reproducible-builds.org/docs/buy-in/), improves
+users' security, and allows developers to sleep better at night (as the
+incentive for an attacker to compromise developers' systems, or to
+compromise developers themselves, is lowered). In turn, this avoids the
+need to trust people (or software) who build the ISO we release, which
+in turn allows more people to get involved in release management work.
+
+Release managers do not have to upload the ISO image anymore when they
+do a release: they could instead build it both on our infrastructure
+(Jenkins) and locally and compare the outputs: if they match, one can
+publish the ISO built by Jenkins. Uploading an ISO can take many hours
+with some commonly found means of accessing the Internet, so removing
+the need to go through this step decreases our time to remediation for
+fixing security issues, and makes it easier for developers with poor
+access to the Internet to take care of a release.
+
+Related information
+===================
+
+More detailed information can be found on our blueprint about
+[[Reproducible Builds|blueprint/reproducible_builds/]].
