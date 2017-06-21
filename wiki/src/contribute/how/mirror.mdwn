@@ -95,6 +95,12 @@ Alongside our mirror pool redirecting to mirrors using their own domain, we main
 a DNS Round Robin pool for the `dl.amnesia.boum.org` host. This pool serves as a
 fallback, we add only a few fast and reliable mirrors to it.
 
+We only accept mirrors that provide a non self-signed SSL certificate for the exact
+domain used. We don't accept self-signed certificates because we want
+to spare our users the hassle of having to manually verify the
+authenticity of the server certificate. Instead, we recommend using
+Let'sEncrypt or commercial SSL certificates.
+
 Pick a hostname for your mirror
 -------------------------------
 
@@ -139,25 +145,6 @@ mainstream web browsers; you can get such a certificate free of charge,
 from [Let's Encrypt](https://letsencrypt.org/) for example.
 
 #### Apache configuration example using your own domain
-
-	<VirtualHost YOUR_WEBSERVER_IP:80>
-	   ServerName yourdomain.org
-	   ServerAlias dl.amnesia.boum.org
-	   ServerAlias *.dl.amnesia.boum.org
-	   ServerAdmin YOUR_EMAIL
-
-	   DocumentRoot /var/www/YOUR_PATH/
-	   <Directory /var/www/YOUR_PATH/>
-	      Options Indexes
-	      FileETag None
-	      AllowOverride None
-	      IndexIgnore README.html
-	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
-	      IndexOrderDefault Descending Date
-	   </Directory>
-	</VirtualHost>
-
-And if you want to enable HTTPS:
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName yourdomain.org
