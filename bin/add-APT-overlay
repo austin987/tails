@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e
+set -u
+set -x
+
+GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
+. "$GIT_TOPLEVEL_DIR"/auto/scripts/utils.sh
+
+OVERLAY=$(branch_name_to_suite $(git_current_branch))
+OVERLAY_FILE="${GIT_TOPLEVEL_DIR}/config/APT_overlays.d/${OVERLAY}"
+TICKET=$(git_current_branch | perl -p -E 's/.*?(\d{4,6}).*/$1/')
+
+touch "${OVERLAY_FILE}"
+git add "${OVERLAY_FILE}"
+git commit -m "Enable the ${OVERLAY} APT overlay (refs: #${TICKET})."
+git show

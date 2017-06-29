@@ -33,8 +33,8 @@ Compare the list of bundled packages and versions with the one shipped last
 time. `.packages` are usually attached to the email announcing the ISO is ready.
 
 	/usr/bin/diff -u \
-	    wiki/src/torrents/files/tails-i386-1.3.1.packages \
-	    tails-i386-1.3.2.packages \
+	    wiki/src/torrents/files/tails-amd64-3.1.packages \
+	    tails-amd64-3.2.packages \
 	    | wdiff --diff-input  --terminal
 
 Check the output for:
@@ -79,12 +79,12 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 ## Security and fingerprinting
 
-* Run the [tests the TBB folks
+* Run the [tests the Tor Browser folks
   use](https://trac.torproject.org/projects/tor/wiki/doc/build/BuildSignoff#TestPagestoUse).
   (automate: [[!tails_ticket 10260]])
-* Compare the fingerprint of Tails and the latest TBB using at least
+* Compare the fingerprint of Tails and the latest Tor Browser using at least
   <https://panopticlick.eff.org/> (automate: [[!tails_ticket 10262]])
-  - The exposed User-Agent should match the latest TBB's one.
+  - The exposed User-Agent should match the latest Tor Browser's one.
   - Update the [[fingerprint section|support/known_issues#fingerprint]] of the
     known issues page if needed.
 * WebRTC should be disabled: (automate: [[!tails_ticket 10264]])
@@ -98,7 +98,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Running `/usr/local/lib/getTorBrowserUserAgent` should produce the User-Agent set by the
   installed version of Torbutton, and used in the Tor Browser. (automate: [[!tails_ticket 10268]])
 
-# Icedove
+# Thunderbird
 
 * Check mail over IMAP using:
   - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
@@ -108,19 +108,19 @@ tracked by tickets prefixed with `todo/test_suite:`.
   - a hidden service SMTP server (see above).
 
 * Check that the profile works and is torified:
-  1. Send an email using Icedove and a non-anonymizing SMTP relay (a
+  1. Send an email using Thunderbird and a non-anonymizing SMTP relay (a
      SMTP relay that writes the IP address of the client it is
      relaying email for in the Received header).
   1. Then check that email's headers once received, especially the
      `Received:` one.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
   at the application level:
-  1. Start Icedove using the GNOME Applications menu.
-  2. Disable SSL/TLS for SMTP in Icedove (so take precautions for not
+  1. Start Thunderbird using the GNOME Applications menu.
+  2. Disable SSL/TLS for SMTP in Thunderbird (so take precautions for not
      leaking your password in plaintext by either changing it
      temporarily or using a disposable account). Or better, configure
      StartTLS, since it will send two EHLO/HELO: one before TLS is
-     initiated; one after. The assumption here is that Icedove will
+     initiated; one after. The assumption here is that Thunderbird will
      send the same both times.
   3. Run `sudo tcpdump -n -i lo -w dump` while sending an email to
      capture the packets before Tor encrypts it, then close
@@ -130,12 +130,12 @@ tracked by tickets prefixed with `todo/test_suite:`.
   4. Check the dump for the HELO/EHLO message and
      verify that it only contains `127.0.0.1`:
      `sudo tcpdump -A -r dump | grep EHLO`
-* Make sure Icedove Mail use its dedicated `SocksPort` (see "SocksPort
+* Make sure Thunderbird Mail use its dedicated `SocksPort` (see "SocksPort
   for the MUA" in `/etc/tor/torrc`) when connecting to IMAP / POP3 /
   SMTP servers (both clearnet and hidden services) by monitoring the
   output of this command:
 
-      sudo watch -n 0.1 'netstat -taupen | grep icedove'
+      sudo watch -n 0.1 'ss -taupen | grep thunderbird'
 
 # Tor
 
@@ -189,23 +189,23 @@ tracked by tickets prefixed with `todo/test_suite:`.
   If:
 
   * the update-description files have been published on the
-    *alpha* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
+    *test* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
   * and the IUK has been published already (see
     <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>
     and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
 
   then:
 
-        echo 'TAILS_CHANNEL="alpha"' | sudo tee --append /etc/os-release && \
+        echo 'TAILS_CHANNEL="test"' | sudo tee --append /etc/os-release && \
         tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
 
   * A web server on the LAN.
   * A copy of `wiki/src/upgrade` from the `stable` or `testing` branch,
-    for example in `/var/www/tails/upgrade/v1/Tails/0.14~rc2/i386/stable/updates.yml`
+    for example in `/var/www/tails/upgrade/v1/Tails/3.14~rc2/amd64/stable/updates.yml`
   * A copy of the `iuk` directory of our HTTP mirrors,
-    for example in `/var/www/tails/stable/iuk/Tails_i386_0.14-rc2_to_0.14.iuk`.
+    for example in `/var/www/tails/stable/iuk/Tails_amd64_3.14-rc2_to_3.14.iuk`.
 
     To synchronize your local copy:
 
@@ -234,8 +234,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 * Browsing (by IP) a FTP server on the LAN should be possible. (automate: [[!tails_ticket 10252]])
 
-* Google must be the default, pre-selected search plugin. (automate: [[!tails_ticket 10253]])
-
 # Real (non-VM) hardware
 
 `[can't-automate]`
@@ -258,8 +256,22 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Internationalization
 
-Boot and check basic functionality is working for every supported
-language. You *really* have to reboot between each language.
+Boot and check basic functionality is working for these (language,
+region) tuples:
+
+ - Arabic - Egypt
+ - Chinese - China
+ - Deutsch - Deutschland
+ - English - USA
+ - Español - España
+ - Français - France
+ - Italiano - Italia
+ - Persian - Iran
+ - Português - Brasil
+ - Russian - Russian Federation
+ - Tiếng Việt - Vietnam
+
+You *really* have to reboot between each language.
 
 * The chosen keyboard layout must be applied. (automate: [[!tails_ticket 10261]])
 * The virtual keyboard must work and be auto-configured to use the same keyboard
@@ -298,9 +310,8 @@ language. You *really* have to reboot between each language.
 * Visit <https://tails.boum.org/install/debian/usb> in a Firefox-based
   browser. Verify that you can install the Firefox Addon. Start
   downloading a Tails image and copy the used mirror URL.
-  - The URL should only start with dl.amnesia.boum.org if Javascript
-    is disabled in your browser (requires a restart!). Otherwise it should
-    contain a mirror URL from <https://tails.boum.org/mirrors.json>
+  - The URL should contain a mirror URL from
+    <https://tails.boum.org/mirrors.json>.
   - Verify that pausing and resuming the download from this URL works.
   - Verify that when you start the download, you can see it appear in
     the download list (Ctrl+Shift+Y).

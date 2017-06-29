@@ -135,6 +135,10 @@ def retry_action(max_retries, options = {}, &block)
     begin
       block.call
       return
+    rescue NameError => e
+      # NameError most likely means typos, and hiding that is rarely
+      # (never?) a good idea, so we rethrow them.
+      raise e
     rescue Exception => e
       if retries <= max_retries
         debug_log("#{options[:operation_name]} failed (Try #{retries} of " +
@@ -150,6 +154,8 @@ def retry_action(max_retries, options = {}, &block)
     end
   end
 end
+
+alias :retry_times :retry_action
 
 class TorBootstrapFailure < StandardError
 end
@@ -294,5 +300,45 @@ def pause(message = "Paused")
     when "d"
       binding.pry(quiet: true)
     end
+  end
+end
+
+def dbus_send(service, object_path, method, *args, **opts)
+  opts ||= {}
+  ruby_type_to_dbus_type = {
+    String => 'string',
+    Fixnum => 'int32',
+  }
+  typed_args = args.map do |arg|
+    type = ruby_type_to_dbus_type[arg.class]
+    assert_not_nil(type, "No DBus type conversion for Ruby type '#{arg.class}'")
+    "#{type}:#{arg}"
+  end
+  ret = $vm.execute_successfully(
+    "dbus-send --print-reply --dest=#{service} #{object_path} " +
+    "    #{method} #{typed_args.join(' ')}",
+    **opts
+  ).stdout.lines
+  # The first line written is about timings and other stuff we don't
+  # care about; we only care about the return values.
+  ret.shift
+  ret.map! do |s|
+    type, val = /^\s*(\S+)\s+(\S+)$/.match(s)[1,2]
+    case type
+    when 'string'
+      # Unquote
+      val[1, val.length - 2]
+    when 'int32'
+      val.to_i
+    else
+      raise "No Ruby type conversion for DBus type '#{type}'"
+    end
+  end
+  if ret.size == 0
+    return nil
+  elsif ret.size == 1
+    return ret.first
+  else
+    return ret
   end
 end

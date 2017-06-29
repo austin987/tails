@@ -77,8 +77,8 @@ pref("browser.newtabpage.directory.ping", "");
 pref("browser.newtabpage.introShown", true);
 
 // Don't use geographically specific search prefs, like
-// browser.search.*.US for US locales. Our generated amnesia branding
-// add-on localizes search-engines in an incompatible but equivalent
+// browser.search.*.US for US locales. Our generated localization
+// profiles localizes search-engines in an incompatible but equivalent
 // way.
 pref("browser.search.geoSpecificDefaults", false);
 
@@ -90,8 +90,3 @@ pref("browser.download.panel.shown", true);
 // open external applications, so let's not offer the option to the user,
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
-
-// uBlock Origin and the amnesia branding extensions are not signed and
-// therefore disabled by default for FF 45+ *unless* we set this
-// option. This is only a temporary stop gap. See #11419.
-pref("xpinstall.signatures.required", false);

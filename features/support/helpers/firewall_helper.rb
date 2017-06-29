@@ -1,8 +1,9 @@
 require 'packetfu'
 
-def looks_like_dhcp_packet?(protocol, sport, dport, ip_packet)
-  protocol == "udp" && sport == 68 && dport == 67 && ip_packet &&
-    ip_packet.ip_saddr == '0.0.0.0' && ip_packet.ip_daddr == "255.255.255.255"
+def looks_like_dhcp_packet?(eth_packet, protocol, sport, dport, ip_packet)
+  protocol == "udp" && sport == 68 && dport == 67 && 
+    eth_packet.eth_daddr == "ff:ff:ff:ff:ff:ff" &&
+    ip_packet && ip_packet.ip_daddr == "255.255.255.255"
 end
 
 # Returns the unique edges (based on protocol, source/destination
@@ -42,8 +43,9 @@ def pcap_connections_helper(pcap_file, opts = {})
       raise "Found something that cannot be parsed"
     end
 
-    next if looks_like_dhcp_packet?(protocol, sport, dport, ip_packet) &&
-            opts[:ignore_dhcp]
+    next if opts[:ignore_dhcp] &&
+            looks_like_dhcp_packet?(eth_packet, protocol,
+                                    sport, dport, ip_packet)
 
     packet_info = {
       mac_saddr: eth_packet.eth_saddr,
