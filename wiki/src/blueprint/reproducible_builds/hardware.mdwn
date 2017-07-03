@@ -1,0 +1,99 @@
+This is about [[!tails_ticket 12002]].
+
+[[!toc levels=2]]
+
+# Disk space
+
+## root
+
+Was: 4G
+
+Added 1G due to having more packages pulled with the Vagrant-libvirt
+move, the upgrade to Stretch, and to have some margin for system upgrades.
+Won't grow that much in the future. Only for Buster upgrade, which may
+be in quite a long time if we use Stretch LTS.
+
+-> 5G (+1G * 4)
+
+## /var/lib/jenkins
+
+Was: 6G
+
+Needs to host:
+
+ * 13 baseboxes 13 * 1.5G ~=> 20G
+ * 1 basebox build 25G
+
+-> 46G (+40G * 4)
+
+## /var/lib/libvirt/images
+
+Was: none
+
+1 basebox 2G
+1 snapshot  2.5G
+
+-> 5G (+5G * 4)
+
+## Artifacts
+
+Reproducible builds will add one ISO each time a build is not
+reproduced. It's difficult to guess how often it will happen. Let's
+consider 20% of the time worst case.
+
+We host (as of 2017-07-01) around 150G of build artifacts, which means
+we'll need (with the above ratio) 30G.
+
+-> +50G
+
+## time-based APT snapshots
+
+We settled on using the same than the one used for the stable branch. So
+that won't add more snapshots to keep around.
+
+But we'll still have from time to time to use a different snapshots e.g
+when working on the build system itself. We should probably aim at being
+able to host 3 more time-based snapshots during two Tails release cycle.
+
+Size of a time-based snapshot is not yet really determined though. This
+needs to be researched.
+
+## Total disk space cost
+
+For 4 isobuilders and artifacts: 234G (without the time-based snapshots).
+
+# Memory
+
+Current: 14.5G
+
+Historically, the vagrant VM memory has grown something like 1G each
+year. With the switch to Stretch, we've added 3.5G at once in 2017-05-12
+to 13.5G.
+
+Currently, the available memory can get as low as 250M free only at the
+squashfs build time, so we're close to the limit.
+
+We will probably have to add 1 or 2G (at least) in the coming time,
+specially since we may go Buster in not so much time.
+
+**XXX:** Let consider we'll bump the Vagrant VM memory to 16G, which
+means our isobuilders will need 17G of memory.
+
+-> 17G (+2.5G * 4)
+
+# CPUs
+
+We use 4 per isobuilder. This ratio will probably not change, but we
+will need more when we'll add more isobuilders to cope with the charge.
+
+# More isobuilders
+
+With the reproducibles builds we have a lower build output time,
+meaning we will want to add more isobuilders in the future. We have
+settled on doubling their numbers.
+
+4 more isobuilder requires:
+
+ * 16 CPUs
+ * 64G RAM
+ * 184G HDD
