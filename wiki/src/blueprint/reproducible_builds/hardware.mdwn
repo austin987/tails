@@ -70,22 +70,27 @@ For 4 isobuilders and artifacts: 235G (without the time-based snapshots).
 
 ## isobuilders
 
-Current: 14.5G
+In 2015-08 we had 9G, then before switching to vagrant-libvirt we had
+13.5G, and now we have 14.5G.
 
-Historically, the vagrant VM memory has grown something like 1G each
-year. With the switch to Stretch, we've added 3.5G at once in 2017-05-12
-to 13.5G.
+So the growth we've seen so far is:
 
-Currently, the available memory can get as low as 250M free only at the
-squashfs build time, so we're close to the limit.
+ * +4G (+1G * 4) for reproducible builds only
+ * +18G (+4.5G * 4) for upgrading the Tails ISO to Jessie and then Stretch
 
-We will probably have to add 1 or 2G (at least) in the coming time,
-specially since we may go Buster in not so much time.
+Currently, the available memory can get as low as 250M free when
+compressing the SquashFS, so we're close to the limit.
 
-**XXX:** Let consider we'll bump the Vagrant VM memory to 16G, which
-means our isobuilders will need 17G of memory.
+We will probably have to add more RAM soon, especially since we may
+start building ISO images based on Buster soon.
 
--> 17G (+2.5G * 4)
+Let's assume switching to Buster requires another +3G bump per
+isobuilder, and then the extra storage we need is:
+
+ * +4G (+1G * 4) for reproducible builds
+ * +12G (+3G * 4) for upgrading the Tails ISO to Buster
+
+-> 16G
 
 # CPUs
 
