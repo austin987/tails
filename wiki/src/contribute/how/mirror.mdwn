@@ -2,7 +2,7 @@
 
 <div id="intro">
 
-<p>Setting up a Tails BitTorrent or HTTP mirror helps Tails users
+<p>Setting up a Tails BitTorrent or HTTPS mirror helps Tails users
 downloading it faster and more reliably.</p>
 
 [[!toc levels=2]]
@@ -51,11 +51,12 @@ Else, new versions are announced on:
   BitTorrent files.
 
 <a id="http"></a>
+<a id="https"></a>
 
-HTTP
-====
+HTTPS
+=====
 
-To efficiently help Tails users downloading it over HTTP, one needs to
+To efficiently help Tails users downloading it over HTTPS, one needs to
 have sufficiently privileged access to a web server with decent
 bandwidth: a domestic DSL connection won't help; neither will a shared
 web hosting setup that provides FTP access only.
@@ -86,19 +87,22 @@ The big picture
 All downloads are currently served from a diverse pool of mirrors
 (see the [[design document|contribute/design/mirrors]] for details).
 
-Every HTTP mirror makes our files available under a fixed URL
-(e.g. `http://42.dl.amnesia.boum.org/tails/` or `https://yourdomain.org/pub/tails/`)
+Every HTTPS mirror makes our files available under a fixed URL
+(e.g. `https://42.dl.amnesia.boum.org/tails/` or `https://yourdomain.org/pub/tails/`)
 that contains per-version sub-directories (such as
-`http://42.dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
+`https://42.dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
 
 Alongside our mirror pool redirecting to mirrors using their own domain, we maintain
 a DNS Round Robin pool for the `dl.amnesia.boum.org` host. This pool serves as a
 fallback, we add only a few fast and reliable mirrors to it.
 
+We only accept mirrors that provide a SSL certificate deemed valid by
+Firefox for the exact hostname used.
+
 Pick a hostname for your mirror
 -------------------------------
 
-Your web server needs to answer HTTP requests sent to
+Your web server needs to answer HTTP and HTTPS requests sent to
 a _dedicated_ hostname that is unique, within our mirror pool.
 Furthermore, your web server should answer requests sent to `dl.amnesia.boum.org`
 (your mirror could be added to our fallback mirror pool at any moment).
@@ -133,31 +137,12 @@ Set up a virtual host for the hostname chosen at the
 previous step. The virtual host will need to
 have indexing enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
 
-Please consider serving files over HTTPS. To be helpful in our
+Files must be served over HTTP and HTTPS. To be helpful in our
 context, this requires a certificate that is considered valid by
 mainstream web browsers; you can get such a certificate free of charge,
 from [Let's Encrypt](https://letsencrypt.org/) for example.
 
-#### Apache configuration example using your own domain
-
-	<VirtualHost YOUR_WEBSERVER_IP:80>
-	   ServerName yourdomain.org
-	   ServerAlias dl.amnesia.boum.org
-	   ServerAlias *.dl.amnesia.boum.org
-	   ServerAdmin YOUR_EMAIL
-
-	   DocumentRoot /var/www/YOUR_PATH/
-	   <Directory /var/www/YOUR_PATH/>
-	      Options Indexes
-	      FileETag None
-	      AllowOverride None
-	      IndexIgnore README.html
-	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
-	      IndexOrderDefault Descending Date
-	   </Directory>
-	</VirtualHost>
-
-And if you want to enable HTTPS:
+#### Apache configuration example
 
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName yourdomain.org
@@ -191,24 +176,6 @@ You can harden this configuration using the
 <a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">
 Mozilla SSL Configuration Generator</a>.
 </div>
-
-#### Apache configuration example using a hostname under dl.amnesia.boum.org
-
-	<VirtualHost YOUR_WEBSERVER_IP:80>
-	   ServerName dl.amnesia.boum.org
-	   ServerAlias *.dl.amnesia.boum.org
-	   ServerAdmin YOUR_EMAIL
-
-	   DocumentRoot /var/www/YOUR_PATH/
-	   <Directory /var/www/YOUR_PATH/>
-	      Options Indexes
-	      FileETag None
-	      AllowOverride None
-	      IndexIgnore README.html
-	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
-	      IndexOrderDefault Descending Date
-	   </Directory>
-	</VirtualHost>
 
 #### Lighttpd configuration example
 

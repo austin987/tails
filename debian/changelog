@@ -8,7 +8,42 @@ tails (3.1) UNRELEASED; urgency=medium
 
   * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Tue, 13 Jun 2017 05:55:30 +0000
+ -- Tails developers <tails@boum.org>  Mon, 12 Jun 2017 18:39:31 +0000
+
+tails (3.0.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade tor to 0.3.0.9-1~d90.stretch+1 (Closes: #13253).
+    - Upgrade Linux to 4.9.30-2+deb9u2.
+    - Upgrade libc to 2.24-11+deb9u1.
+    - Upgrade libexpat1 to 2.2.0-2+deb9u1.
+    - Upgrade libgcrypt20 to 1.7.6-2+deb9u1.
+    - Upgrade libgnutls30 to 3.5.8-5+deb9u1.
+
+  * Minor improvements
+    - Use a higher resolution image in Tails persistence setup
+      (Closes: #12510).
+
+  * Bugfixes
+    - Forcibly set $SSH_eAUTH_SOCK before starting GNOME
+      Shell. Apparently, due to a race condition, GNOME keyring
+      sometimes fails to tell the session manager about the correct
+      SSH_AUTH_SOCK, and thus GNOME Terminal hasn't this variable set
+      and any ssh process started in there won't use the (perfectly
+      working) SSH agent (Closes: #12481).
+    - Fix issue that made Tails Installer rejects working USB drives,
+      pretending they're not "removable" (Closes: #12696).
+    - Make power button and lid close actions in the Greeter
+      consistent with the regular GNOME session (Closes: #13000).
+
+  * Build system
+    - Track the latest debian-security archive for the corresponding
+      APT sources, and not for the unrelated jessie-updates (Closes:
+      #12829).
+    - Print APT sources used in the build VM, to help debugging issues
+      such as #12829.
+
+ -- Tails developers <tails@boum.org>  Tue, 04 Jul 2017 15:59:18 +0200
 
 tails (3.0) unstable; urgency=medium
 
