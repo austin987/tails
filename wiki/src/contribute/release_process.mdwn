@@ -115,7 +115,9 @@ If we are at freeze time for a major release:
    during the freeze.
 
 6. Make it so the time-based APT repository snapshots are kept around
-   long enough, by bumping their `Valid-Until` to 6 months from now:
+   long enough, by bumping their `Valid-Until` to 10 days after the
+   next major release (the one _after_ the one you're preparing)'s
+   scheduled date:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
 
@@ -553,7 +555,7 @@ suite should be ready, so it is time to:
 
    Note: for Jenkins to build the release you must push the release
    branch with its tip tagged. I.e. if you deviate from the above
-   commands by e.g. committing a commit in between `gut tag` and the
+   commands by e.g. committing a commit in between `git tag` and the
    first `git push` then Jenkins won't build from the tag -- please
    avoid that!
 
@@ -817,43 +819,55 @@ Sanity check
 Verify once more that the Tor Browser we ship is still the most recent (see
 above).
 
-## Announce, seed and test the Torrents
-
-Announce and seed the Torrents.
-
-Test them with a BitTorrent client running in a different place.
-
-## Download and seed image from lizard
-
-    scp "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       bittorrent.lizard: && \
-       ssh bittorrent.lizard \
-         transmission-remote --add tails-amd64-${VERSION:?}.torrent \
-           --find /var/lib/transmission-daemon/downloads/
-
 <a id="publish-iuk"></a>
 
 Publish the ISO and IUK over HTTP
 ---------------------------------
 
-Upload the images to the primary rsync mirror. Best practice is to first
-let bittorrent.lizard download the image, and then copy it from there to
-rsync.lizard:
+Upload the IUKs to the primary rsync mirror:
 
-    ssh lizard.tails.boum.org \
-        scp -3 -r \
-            bittorrent.lizard:/var/lib/transmission-daemon/downloads/tails-amd64-${VERSION:?} \
-            rsync.lizard:
+    for source_version in ${IUK_SOURCE_VERSIONS}; do
+       rsync --partial --inplace --progress -v \
+          "${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk" \
+          rsync.lizard:
+    done
+
+Upload the ISO signature to the primary rsync mirror:
+
+    scp \
+       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+       rsync.lizard:
+
+Pick a build from `$RELEASE_BRANCH` that produced an ISO identical to
+the one you've built locally (`XXX` must be the job ID, i.e.
+an integer):
+
+    MATCHING_JENKINS_BUILD_ID=XXX
+
+Copy the ISO to the primary rsync mirror and verify the signature:
+
+    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
+       | ssh rsync.lizard gpg --import
     ssh rsync.lizard << EOF
-      sudo chown -R root:rsync_tails \
-         tails-amd64-${VERSION:?} \
-         Tails_amd64_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk && \
-      sudo chmod -R u=rwX,go=rX \
-         tails-amd64-${VERSION:?} \
-         Tails_amd64_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk && \
-      sudo mv tails-amd64-${VERSION:?} \
-              /srv/rsync/tails/tails/${DIST:?}/ && \
-      sudo mv Tails_amd64_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk \
+       wget \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
+       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,}
+    EOF
+
+Move files in place with proper ownership and permissions:
+
+    ssh rsync.lizard << EOF
+      sudo install -o root -g rsync_tails -m 0755 -d \
+         /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
+      sudo chown root:rsync_tails \
+         tails-amd64-${VERSION:?}.iso* \
+         Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo chmod u=rwX,go=rX \
+         tails-amd64-${VERSION:?}.iso* \
+         Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo mv tails-amd64-${VERSION:?}.iso* \
+              /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
+      sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
               /srv/rsync/tails/tails/${DIST:?}/iuk/
     EOF
 
@@ -870,6 +884,34 @@ and on the live wiki (even for a release candidate):
 	      -m "Updating trace file after uploading ${VERSION:?}." && \
 	   git push origin master
 	)
+
+
+## Announce, seed and test the Torrents
+
+    cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
+       | ssh bittorrent.lizard gpg --import
+    scp \
+       "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
+       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+       bittorrent.lizard: && \
+    ssh bittorrent.lizard << EOF
+       mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
+       mv "tails-amd64-${VERSION:?}.iso.sig" \
+          "tails-amd64-${VERSION:?}/" && \
+       cd "tails-amd64-${VERSION:?}" && \
+       wget \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
+       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
+       cd && \
+       chmod -R go+rX "tails-amd64-${VERSION:?}" && \
+       sudo mv \
+          "tails-amd64-${VERSION:?}" \
+          /var/lib/transmission-daemon/downloads/ && \
+       transmission-remote --add tails-amd64-${VERSION:?}.torrent \
+                           --find /var/lib/transmission-daemon/downloads/
+    EOF
+
+Test that you can start downloading the ISO with a BitTorrent client.
 
 ISO history
 -----------
@@ -1250,8 +1292,8 @@ this, and skip what does not make sense for a RC.
    files for any new versions that were added.
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
-   appropriately (they should expire in a few months). Look carefully at the
-   output of this command:
+   appropriately (they should expire after the major release _after_
+   the one you're preparing). Look carefully at the output of this command:
 
         git checkout "${RELEASE_BRANCH:?}" && \
         (
