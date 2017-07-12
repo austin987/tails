@@ -19,6 +19,8 @@ Feature: Emergency shutdown
     And I wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory
 
+  #13462
+  @fragile
   Scenario: Tails erases memory on DVD boot medium removal: vfat
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
@@ -30,6 +32,8 @@ Feature: Emergency shutdown
     And I wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory
 
+  #13462
+  @fragile
   Scenario: Tails erases memory on DVD boot medium removal: LUKS-encrypted ext4
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
