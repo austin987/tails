@@ -9,7 +9,7 @@ VIRTUAL_MACHINE_HOSTNAME = 'vagrant-jessie'
 BUILD_SPACE_REQUIREMENT = 12.5*1024
 
 # Virtual machine memory size for on-disk builds
-VM_MEMORY_FOR_DISK_BUILDS = 512
+VM_MEMORY_FOR_DISK_BUILDS = 768
 
 # Virtual machine memory size for in-memory builds
 VM_MEMORY_FOR_RAM_BUILDS = VM_MEMORY_FOR_DISK_BUILDS + BUILD_SPACE_REQUIREMENT
