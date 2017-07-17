@@ -163,6 +163,11 @@ end
 def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
 rescue Timeout::Error
+  # Save Tor logs before erroring out
+  File.open("#{$config["TMPDIR"]}/tor.log", 'w') { |file|
+    file.write("#{$vm.execute('journalctl --no-pager -u tor@default.service').stdout}")
+  }
+  save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/tor.log")
   raise TorBootstrapFailure.new('Tor failed to bootstrap')
 end
 

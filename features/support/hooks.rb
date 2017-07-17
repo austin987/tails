@@ -251,15 +251,28 @@ After('@product') do |scenario|
     info_log("Scenario failed at time #{elapsed}")
     screen_capture = @screen.capture
     save_failure_artifact("Screenshot", screen_capture.getFilename)
-    if scenario.exception.kind_of?(FirewallAssertionFailedError)
+    exception_name = scenario.exception.class.name
+    case exception_name
+    when 'FirewallAssertionFailedError'
       Dir.glob("#{$config["TMPDIR"]}/*.pcap").each do |pcap_file|
         save_failure_artifact("Network capture", pcap_file)
       end
+    when 'TorBootstrapFailure'
+      chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
+      FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
+      FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+      info_log
+      info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
-      artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
-      artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
+      if type == 'Tor logs' or type == 'Htpdate logs'
+        artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}_#{File.basename(file)}")
+        artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
+      else
+        artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
+        artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
+      end
       assert(File.exist?(file))
       FileUtils.mv(file, artifact_path)
       info_log
