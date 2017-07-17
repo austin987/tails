@@ -1,6 +1,8 @@
 @product
 Feature: GNOME is well-integrated into Tails
 
+  #13458
+  @fragile
   Scenario: A screenshot is taken when the PRINTSCREEN key is pressed
     Given I have started Tails from DVD without network and logged in
     And I wait 10 seconds
