@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+echo "Creating the Root Terminal .desktop file"
+
+TMP="$(mktemp -d)"
+cd "${TMP}"
+apt-get download gksu
+ar x gksu_*.deb
+tar xf data.tar.xz \
+    ./usr/share/applications/gksu.desktop \
+    ./usr/share/pixmaps/gksu-root-terminal.png
+mv ./usr/share/pixmaps/gksu-root-terminal.png /usr/share/pixmaps/
+sed 's@^Exec=.*$@Exec=/usr/local/bin/gnome-terminal-pkexec@' \
+    ./usr/share/applications/gksu.desktop \
+    > /usr/share/applications/root-terminal.desktop
+cd /
+rm -r "${TMP}"
