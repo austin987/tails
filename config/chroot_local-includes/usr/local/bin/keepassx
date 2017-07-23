@@ -39,11 +39,13 @@ elif mountpoint -q "$PERSISTENT_DATA_DIR" && \
     ! [ -e "${NEW_DB}" ] && \
     [ "$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ]; then
     user_db="$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
-    if prompt_for_database_renaming "${user_db}"; then
+    if ! [ -e "${PERSISTENT_DATA_DIR}/.no_keepassx_db_renaming" ] \
+    && prompt_for_database_renaming "${user_db}"; then
         mv "${user_db}" "${NEW_DB}"
         exec /usr/bin/keepassx "${NEW_DB}"
     else
-        exec /usr/bin/keepassx "${user_db}"
+        touch "${PERSISTENT_DATA_DIR}/.no_keepassx_db_renaming"
+        exec /usr/bin/keepassx
     fi
 
 # There's an old DB but no new one => import the old DB:
@@ -57,7 +59,7 @@ elif mountpoint -q "$PERSISTENT_DATA_DIR" \
 
     # Trigger the migration from the old KeePassX database to the new format
     # used in KeePassX 2.0.x.
-    exec /usr/bin/keepassx "$OLD_DB"
+    /usr/bin/keepassx "$OLD_DB"
 
     # Avoid the user being prompted to open the old DB on next run.
     mv "$OLD_DB" "${OLD_DB}.bak"

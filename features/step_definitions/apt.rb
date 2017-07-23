@@ -66,7 +66,7 @@ Then /^I install "(.+)" using apt$/ do |package_name|
 end
 
 When /^I start Synaptic$/ do
-  step 'I start "Synaptic Package Manager" via the GNOME "System Tools" applications menu'
+  step 'I start "Synaptic Package Manager" via GNOME Activities Overview'
   deal_with_polkit_prompt(@sudo_password)
   @synaptic = Dogtail::Application.new('synaptic')
   # The seemingly spurious space is needed because that is how this

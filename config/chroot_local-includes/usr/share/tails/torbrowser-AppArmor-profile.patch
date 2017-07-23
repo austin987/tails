@@ -1,5 +1,5 @@
---- a/apparmor/torbrowser.Browser.firefox
-+++ b/apparmor/torbrowser.Browser.firefox
+--- etc/apparmor.d/torbrowser.Browser.firefox.orig	2017-04-19 16:30:32.000000000 +0000
++++ etc/apparmor.d/torbrowser.Browser.firefox	2017-06-08 07:59:11.641571083 +0000
 @@ -1,13 +1,15 @@
  # Last modified
  #include <tunables/global>
@@ -102,9 +102,9 @@
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -83,6 +92,30 @@
-   /sys/devices/pci[0-9]*/**/uevent r,
-   owner /{dev,run}/shm/shmfd-* rw,
+@@ -87,6 +96,34 @@
+   # sourced by the gnome abstraction, that we include.
+   deny /dev/dri/** rwklx,
  
 +  /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
 +  owner @{HOME}/.gstreamer*/ rw,
@@ -114,6 +114,10 @@
 +  deny /usr/bin/pulseaudio x,
 +
 +  /usr/local/lib/tor-browser/firefox Pix,
++
++  # Required for e10s
++  /usr/local/lib/tor-browser/plugin-container Pix,
++  owner /dev/shm/org.chromium.* rw,
 +
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
@@ -133,7 +137,7 @@
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,
  
-@@ -90,5 +123,10 @@
+@@ -94,5 +131,11 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
@@ -145,3 +149,5 @@
 +  deny owner /tmp/**         rwklx,
 +  deny /tmp/                 rwklx,
  }
++
+
