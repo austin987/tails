@@ -30,32 +30,7 @@ For details how Vagrant is setup, see its
 
 ## Installing the dependencies in Debian
 
-If you run Debian Jessie, you must install a few dependencies from
-Debian Stretch, and one of Tails' repos until [[!debbug 823395]] is fixed:
-
-    sudo tee /etc/apt/sources.list.d/stretch.list <<EOF
-    deb http://ftp.us.debian.org/debian/ stretch main
-    deb-src http://ftp.us.debian.org/debian/ stretch main
-    EOF
-    sudo tee /etc/apt/preferences.d/vagrant-libvirt-from-stretch.pref <<EOF
-    Package: *
-    Pin: release o=Debian,n=stretch
-    Pin-Priority: 100
-    
-    Package: vagrant vagrant-libvirt ruby-excon ruby-fog-core ruby-fog-libvirt ruby-fog-xml
-    Pin: release o=Debian,n=stretch
-    Pin-Priority: 990
-    EOF
-
-    sudo apt-key add config/chroot_sources/tails.chroot.gpg
-    sudo tee /etc/apt/sources.list.d/builder-jessie.list <<EOF
-    deb http://deb.tails.boum.org/ builder-jessie main
-    deb-src http://deb.tails.boum.org/ builder-jessie main
-    EOF
-
-    sudo apt-get update
-
-Now we can install all the dependencies:
+You must run at least Debian 9 (Stretch), and follow these steps:
 
     sudo apt-get install \
         git \
