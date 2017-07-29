@@ -52,7 +52,7 @@ EOF
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Package: live-build
 	Pin: release o=Tails,n=builder-jessie
-	Pin-Priority: 500
+	Pin-Priority: 999
 EOF
 
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/stretch-backports << EOF
