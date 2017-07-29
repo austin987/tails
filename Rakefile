@@ -162,7 +162,7 @@ def enough_free_host_memory_for_ram_build?
   return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
   begin
-    usable_free_mem = `free`.split[16].to_i
+    usable_free_mem = `free`.split[12].to_i
     usable_free_mem > VM_MEMORY_FOR_RAM_BUILDS * 1024
   rescue
     false
