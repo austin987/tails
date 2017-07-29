@@ -69,10 +69,6 @@ apt-get -y install ca-certificates curl grub2 openssh-server wget
 echo "I: Configuring GRUB..."
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 
-echo "I: Upgrading to the backported kernel..."
-apt-get -y purge 'linux-image-*'
-apt-get -y install -t "${DISTRIBUTION}-backports" "linux-image-${ARCHITECTURE}"
-
 echo "I: Installing Tails build dependencies."
 apt-get -y install \
         debootstrap \
