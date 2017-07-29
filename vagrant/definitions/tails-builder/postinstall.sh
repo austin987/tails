@@ -36,15 +36,15 @@ apt-key add /tmp/tails.binary.gpg
 
 echo "I: Add standard APT suites."
 cat "/etc/apt/sources.list" | \
-	sed -e 's/jessie/jessie-updates/' \
-	> "/etc/apt/sources.list.d/jessie-updates.list"
+	sed -e 's/stretch/stretch-updates/' \
+	> "/etc/apt/sources.list.d/stretch-updates.list"
 
 cat "/etc/apt/sources.list" | \
-	sed -e 's/jessie/jessie-backports/' \
-	> "/etc/apt/sources.list.d/jessie-backports.list"
+	sed -e 's/stretch/stretch-backports/' \
+	> "/etc/apt/sources.list.d/stretch-backports.list"
 
-echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ jessie/updates main" \
-	> "/etc/apt/sources.list.d/jessie-security.list"
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ stretch/updates main" \
+	> "/etc/apt/sources.list.d/stretch-security.list"
 
 echo "I: Adding our builder-jessie suite with live-build, pin it low."
 echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
@@ -58,20 +58,11 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Pin: release o=Tails,n=builder-jessie
 	Pin-Priority: 500
 EOF
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/discount <<EOF
-	Package: discount libmarkdown2 libmarkdown2-dev
-	Pin: release o=Tails,n=builder-jessie
-	Pin-Priority: 500
-EOF
 
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/jessie-backports << EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/stretch-backports << EOF
 	Package: *
-	Pin: release n=jessie-backports
+	Pin: release n=stretch-backports
 	Pin-Priority: 100
-
-	Package: debootstrap
-	Pin: release n=jessie-backports
-	Pin-Priority: 991
 EOF
 
 apt-get update
@@ -88,7 +79,7 @@ apt-get -y install -t "${DISTRIBUTION}-backports" "linux-image-${ARCHITECTURE}"
 
 echo "I: Installing Tails build dependencies."
 apt-get -y install \
-        debootstrap/jessie-backports \
+        debootstrap \
         git \
         dpkg-dev \
         eatmydata \
