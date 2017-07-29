@@ -39,10 +39,6 @@ cat "/etc/apt/sources.list" | \
 	sed -e 's/stretch/stretch-updates/' \
 	> "/etc/apt/sources.list.d/stretch-updates.list"
 
-cat "/etc/apt/sources.list" | \
-	sed -e 's/stretch/stretch-backports/' \
-	> "/etc/apt/sources.list.d/stretch-backports.list"
-
 echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ stretch/updates main" \
 	> "/etc/apt/sources.list.d/stretch-security.list"
 
