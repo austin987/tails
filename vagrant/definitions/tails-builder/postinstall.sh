@@ -97,7 +97,6 @@ apt-get -y install \
         libyaml-perl \
         libyaml-syck-perl \
         perlmagick \
-        wdg-html-validator \
         psmisc
 
 # Ensure we can use timedatectl
