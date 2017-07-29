@@ -170,7 +170,7 @@ def enough_free_host_memory_for_ram_build?
 end
 
 def free_vm_memory
-  capture_vagrant_ssh('free').first.chomp.split[16].to_i
+  capture_vagrant_ssh('free').first.chomp.split[12].to_i
 end
 
 def enough_free_vm_memory_for_ram_build?
