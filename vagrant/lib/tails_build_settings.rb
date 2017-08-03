@@ -3,7 +3,7 @@
 # vi: set ft=ruby :
 
 # Hostname of the virtual machine (must be in /etc/hosts)
-VIRTUAL_MACHINE_HOSTNAME = 'vagrant-jessie'
+VIRTUAL_MACHINE_HOSTNAME = 'vagrant-stretch'
 
 # Approximate amount of extra space needed for builds
 BUILD_SPACE_REQUIREMENT = 12.25*1024
@@ -16,7 +16,7 @@ VM_MEMORY_FOR_RAM_BUILDS = VM_MEMORY_FOR_DISK_BUILDS + BUILD_SPACE_REQUIREMENT
 
 # The builder VM's platform
 ARCHITECTURE = "amd64"
-DISTRIBUTION = "jessie"
+DISTRIBUTION = "stretch"
 
 # The name of the Vagrant box
 def box_name
