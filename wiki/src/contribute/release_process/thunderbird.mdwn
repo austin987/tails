@@ -12,78 +12,125 @@ this will download almost 2 GiB of data):
 
 1. Add a remote for Debian:
 
-        git remote add debian-upstream git://anonscm.debian.org/pkg-mozilla/thunderbird.git
+        git remote add debian-upstream https://anonscm.debian.org/git/pkg-mozilla/icedove.git
 
 Let's pretend the scenario is that Thunderbird 45.3.0-1 has just been
 released:
 
     VERSION=45.8.0-3
-    TAG=debian/1%${VERSION}
+    TAG="debian/1%${VERSION:?}"
 
 1. `git fetch && git fetch debian-upstream`
 
-1. Verify the tag (expected to have been made with the key
-   8B94 819C 2555 70A3 74B6 2CCD 26E3 C875 A744 20EF):
+1. Verify the signed tag:
 
-        git tag -v "${TAG}"
+        git tag -v "${TAG:?}"
+
+   The tag should have been signed with one of the keys that follow;
+   investigate if it's not the case:
+
+    - `8B94 819C 2555 70A3 74B6  2CCD 26E3 C875 A744 20EF`
+    - `B70D FC6F 134F ECFC 011E  62AA 8301 6014 251D 1DB0`
+    - `D343 9DAA 19DC FACD AE87  9CF2 B999 CDB5 8C8D DBD2`
 
 1. Let's update our branch to the new version:
 
         git checkout tails/stretch && git merge origin/tails/stretch && \
-        git merge --no-edit "${TAG}"
+        git merge --no-edit "${TAG:?}"
 
    Now you most likely will have to deal with a merge conflict in
-   debian/changelog -- just reorder the entries chronologically. Then
-   let's release a new version:
+   `debian/changelog` -- just reorder the conflicting entries by
+   version number, `git add` modified files as needed, and ensure
+   a merge commit is created eventually.
 
-        TAILS_VERSION="1:${VERSION}+tails1" && \
-        DISTRIBUTION="feature-thunderbird-${VERSION}" && \
-        dch --newversion "${TAILS_VERSION}" --force-bad-version  \
-            --distribution "${DISTRIBUTION}" --force-distribution \
-            "Rebuild Thunderbird with Tails' secure autoconfiguration patches." && \
+1. Let's ensure our patches still apply cleanly:
+
+   1. Check if they do:
+
+          quilt push -a
+
+   2. Regardless of whether our  they do, clean up:
+
+          quilt pop -a && rm -rf .pc
+
+   3. If our patches applied cleanly, move on. Otherwise:
+
+      XXX (undocumented as we prefer focusing our efforts on
+      upstreaming our patches than on documenting the current,
+      temporary state of things): after reverse-engineering the state
+      of our Git repository, it seems that one should create a new
+      `secure_account_creation-${VERSION:?}` branch forked of the
+      latest existing one, transplant our commits on top of `${TAG}`
+      with the appropriate `--onto` option, squash our commits into
+      a new `secure_account_creation-${VERSION:?}-squashed` branch,
+      extract updated patches from there into
+      `debian/patches/secure-account-creation/`.
+
+1. Then let's release a new version:
+
+        TAILS_VERSION="1:${VERSION:?}+tails1" && \
+        DISTRIBUTION="feature-thunderbird-${VERSION:?}" && \
+        dch \
+           --newversion "${TAILS_VERSION:?}" \
+           --force-bad-version \
+           --distribution "${DISTRIBUTION:?}" \
+           --force-distribution \
+           "Rebuild Thunderbird with Tails' secure autoconfiguration patches." && \
         git commit debian/changelog \
-            -m "document changes and release ${TAILS_VERSION}" && \
-        gbp buildpackage --git-debian-branch=tails/stretch \
-            --git-sign-tags --git-tag-only
+            -m "document changes and release ${TAILS_VERSION:?}"
 
 1. Fetch the Debian sources to be used for the build:
 
         ICEDOVE_SOURCES="$(mktemp -d)" && \
         GIT_DIR="$(pwd)" && \
-        cd "${ICEDOVE_SOURCES}" && \
-        apt source thunderbird="1:${VERSION}" && \
-        cp thunderbird_*.orig*.tar.xz "${GIT_DIR}/.." && \
-        cd "${GIT_DIR}" && \
-        rm -r "${ICEDOVE_SOURCES}"
+        cd "${ICEDOVE_SOURCES:?}" && \
+        apt --download-only source thunderbird="1:${VERSION:?}" && \
+        mkdir -p "${GIT_DIR:?}/../tarballs/" && \
+        for tarball in icedove_*.orig*.tar.xz ; do
+           ln -s \
+              "${GIT_DIR:?}/../tarballs/$tarball" \
+              "${GIT_DIR:?}/../$tarball"
+        done
+        cp icedove_*.orig*.tar.xz "${GIT_DIR:?}/../tarballs/" && \
+        cd "${GIT_DIR:?}" && \
+        rm -rf "${ICEDOVE_SOURCES:?}"
 
    Note: we cannot use the `pristine-tar` branch since Jessie builds
    expect split .orig sources for l10n stuff, which is not the case in
    Sid, which `pristine-tar` is made for. Or something like
    this. Let's not waste time on investigating this.
 
-1. Build packages:
+1. Build packages in a Stretch amd64 chroot:
 
-        gbp buildpackage --git-debian-branch=tails/jessie
+        gbp buildpackage \
+            --git-debian-branch=tails/stretch \
+            --git-no-pristine-tar \
+            --git-export=WC
+
+1. Tag the new version:
+
+        gbp buildpackage --git-debian-branch=tails/stretch \
+            --git-sign-tags --git-tag-only
 
 1. Include all sources in the `.changes` file:
 
         CHANGES_FILE="../thunderbird_${VERSION}+tails1_amd64.changes" && \
-        changestool "${CHANGES_FILE}" includeallsources
+        changestool "${CHANGES_FILE:?}" includeallsources
 
 1. Due to [[!tails_ticket 11531]] we won't be able to push the tag
    generated by `gbp` so we have to replace it with a differently
    named tag:
 
-        NEW_TAG="$(echo ${TAG} | sed 's/1%//')" && \
-        git tag -s "${NEW_TAG}" -m "thunderbird Debian release 1:${VERSION}" "${TAG}" && \
-        TAG="${NEW_TAG}"
+        NEW_TAG="$(echo ${TAG:?} | sed 's/1%//')" && \
+        git tag -s "${NEW_TAG:?}" -m "thunderbird Debian release 1:${VERSION:?}" "${TAG:?}" && \
+        TAG="${NEW_TAG:?}"
 
 1. Git push and upload packages:
 
-        git push origin "${TAG}" tails/stretch && \
-        debsign "${CHANGES_FILE}" && \
-        dupload --to tails "${CHANGES_FILE}"
+        git push --follow-tags origin tails/stretch && \
+        debsign "${CHANGES_FILE:?}" && \
+        dupload --to tails "${CHANGES_FILE:?}"
 
-   At the moment pushing `TAG` may fail due to
+   At the moment pushing `$TAG` may fail due to
    [[!tails_ticket 11531]]. We'll just have to save these tags locally
    until when it's solved, and then push...
