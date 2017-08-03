@@ -1,6 +1,6 @@
 This is about [[!tails_ticket 11680]] and related tickets.
 
-[[!toc levels=2]]
+[[!toc levels=3]]
 
 # Rationale
 
@@ -13,6 +13,9 @@ It's working relatively well so far, but we may need to upgrade again
 soonish, and improvements are always welcome in the contributor UX
 area:
 
+ * We will likely want to build each ISO twice to ensure it's
+   [[reproducible|blueprint/reproducible_builds]], which will simply
+   double the number of ISO builds we do.
  * [[Building the ISO reproducibly|blueprint/reproducible_builds]]
    with Vagrant will be slower, due to nested virtualization, and will
    require more storage. This will make the feedback loop longer for
@@ -121,5 +124,48 @@ Cons:
 
  * We need to learn how to manage systems in the cloud, how to deal
    with billing, and how to control these systems from Jenkins.
- * On-going cost: XXX (unknown so far, would need to be researched)
+ * On-going cost: XXX (unknown so far, would need to be researched);
+   very rough estimate, assuming 1. we run all ISO builds and tests on
+   EC2 `m4.xlarge` instances; 2. they perform exactly like my local
+   Jenkins (i7-6770HQ, 2.60GHz); and 3. [[!tails_ticket 12576]] is
+   fixed:
+
+    - builds & tests as usual so far: (35 minutes per build + 105 minutes
+      per test suite run) / 60 * 700 builds+tests * $0.2 = $327/month
+    - second build for reproducibility ([[!tails_ticket 13436]]):
+      35 minutes / 60 * 200 builds * $0.2 = $23 / month
+    - total = $350 / month
+
+   Now, to be more accurate:
+
+    - we can keep running _some_ of our builds and tests on our own
+      infra instead of on EC2: the
+      [Jenkins EC2 plugin](https://plugins.jenkins.io/ec2) allows
+      starting EC2 instances on demand when the local cluster is
+      overloaded, and shuts them down after a configurable idle time;
+      so basically one option is that EC2 would only be used during
+      burst periods;
+    - this assumes we run nightly.t.b.o on EC2 too, which adds to the
+      cost (instance + storage + data transfer to the Internet);
+      otherwise uploading build artifacts to lizard adds to the costs;
+    - booting the VM from its persistent root volume and updating it
+      takes some additional billed time;
+    - storage (EBS) costs money on top of that; the more data we share
+      between instances (e.g. root volume, Vagrant baseboxes), the
+      less it costs; to give an idea, if we stored all the data of our
+      4 isobuilders + 6 isotesters + nightly.t.b.o there without
+      sharing anything at all, i.e. the worst case scenario that's
+      highly unlikely (at least the scratch space to build Vagrant
+      baseboxes should be easy to share, and the root volumes
+      shouldn't be much of a problem either):
+      (32.5 * 4 + 11 * 6 + 300) * $0.10/GB/month = $50/month
+    - likely these instances will be faster than my local Jenkins,
+      thanks to higher CPU clock rate, which should save some money;
+      only actual testing will give us more precise numbers.
+    - more powerful instance types might save money as well, and
+      improve developer experience BTW: e.g. `c4.2xlarge` for ISO
+      builds, if they are more than twice faster, given they cost
+      a bit less than twice more. Here again, only actual testing will
+      give us more precise numbers.
+
  * We need to trust a third-party somewhat.

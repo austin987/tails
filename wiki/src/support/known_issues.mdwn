@@ -70,8 +70,8 @@ This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working
 Acer Travelmate 8573T-254G50M
 -----------------------------
 
-Booting from DVD works fine, but does not start on USB sticks created
-using Tails Installer.
+Booting from DVD works fine, but does not start from USB sticks
+created using Tails Installer.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
@@ -177,11 +177,11 @@ Lenovo IdeaPad z585
 
 Goes back continuously to Boot Loader Menu on Tails installed on DVD.
 
-Clevo W258CU, ThinkPad X220, X121e, T420i, T410, T520, W520, T530, E325, and E530
----------------------------------------------------------------------------------
+Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, E325, and E530
+---------------------------------------------------------------------------
 
-These machines do not start on USB sticks created using Tails USB
-Installer, due to a firmware limitation.
+These machines do not start on USB sticks created using Tails
+Installer due to a firmware limitation.
 
 A workaround for some of these machines is to use the [[manual
 installation process|install/linux/usb]].
@@ -209,8 +209,8 @@ Mac
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
 * MacBook Pro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and
-  MacBook Pro 8,2 (late 2011) fail to boot from a USB stick created by
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008)
+  fails to boot from a USB stick created by
   Tails Installer.
 
 Graphics issues
@@ -249,6 +249,25 @@ with the following graphic adapters:
 Adding `radeon.dpm=0` to the
 [[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
 fixes the issue.
+
+<a id="nvidia-maxwell"></a>
+
+Tails Greeter fails to start on computers with NVIDIA Maxwell graphic cards
+---------------------------------------------------------------------------
+
+Some computers cannot start Tails Greeter. This may appear with the following
+graphic adapters:
+
+- GeForce GTX (745, 750, 750 Ti, 840M, 845M, 850M, 860M, 950M, 960M)
+- Quadro K620, K1200, K2200; GRID M30, M40
+- GeForce 830M, 840M, 930M, 940M[X]
+- GeForce GTX Titan X
+- GeForce GTX (970, 980)
+- GeForce GTX (950, 960)
+
+Adding `nouveau.noaccel=1` or `nouveau.modeset=0` to the
+[[startup options|doc/first_steps/startup_options#boot_loader_menu]] has been
+reported to fix the issue in some cases.
 
 <a id="switchable_graphics_black_screen"></a>
 
@@ -545,20 +564,3 @@ Until we update the search engine plugin, users that set their Tor Browser
 security slider to High and use the search box in Tor Browser will end up after
 a redirection from disconnect.me on a page on duckduckgo.com asking them to
 click on a link to see their result without JavaScript.
-
-<a id="vb-apic"></a>
-
-Tails does not boot on Virtualbox 32-bit VM
--------------------------------------------
-
-There is a [bug in Linux 4.7](https://patchwork.kernel.org/patch/9357253/)
-which prevents Tails from booting without I/O APIC enabled. To enable it:
-
-  1. Select the Tails virtual machine.
-  1. Choose <span class="menuchoice">
-     <span class="guimenu">Machine</span>&nbsp;▸
-     <span class="guimenuitem">Settings...</span></span>.
-  1. Select **System** in the left pane.
-  1. In the **Extended Features** section of the **Motherboard** tab, make
-     sure that **Enable I/O APIC** is enabled.
-  1. Click **OK**.
