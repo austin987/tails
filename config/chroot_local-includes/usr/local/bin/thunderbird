@@ -33,6 +33,11 @@ start_thunderbird() {
     mkdir --mode=0700 -p "$TMPDIR"
     export TMPDIR
 
+    # Clean the temporary directory: it's generally persistent, and then
+    # temporary files (including decrypted attachements) would otherwise
+    # be stored forever there (#13340).
+    rm -rf "${TMPDIR}"/*
+
     unset SESSION_MANAGER
 
     configure_default_incoming_protocol
