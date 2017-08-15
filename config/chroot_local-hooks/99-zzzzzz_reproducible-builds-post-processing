@@ -52,3 +52,7 @@ cut -d: -f1 /etc/shadow | \
     xargs -L1 \
         chage --lastday \
             "$(($(date --utc --date "@${SOURCE_DATE_EPOCH}" "+%s") / 86400))"
+
+# A user reported all executable bits of /etc/hostname being set when
+# trying to reproduce Tails 3.1. See #13623 for details.
+chmod u=rw,go=r /etc/hostname
