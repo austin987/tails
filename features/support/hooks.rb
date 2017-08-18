@@ -258,21 +258,19 @@ After('@product') do |scenario|
         save_failure_artifact("Network capture", pcap_file)
       end
     when 'TorBootstrapFailure'
+      save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
       chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
       FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
       FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
       info_log
       info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+    when 'TimeSyncingError'
+      save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
-      if type == 'Tor logs' or type == 'Htpdate logs'
-        artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}_#{File.basename(file)}")
-        artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
-      else
-        artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
-        artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
-      end
+      artifact_name = sanitize_filename("#{elapsed}_#{scenario.name}#{File.extname(file)}")
+      artifact_path = "#{ARTIFACTS_DIR}/#{artifact_name}"
       assert(File.exist?(file))
       FileUtils.mv(file, artifact_path)
       info_log
