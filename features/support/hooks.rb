@@ -132,6 +132,13 @@ def save_failure_artifact(type, path)
   $failure_artifacts << [type, path]
 end
 
+def save_journal(path)
+  File.open("#{$path}/systemd.journal", 'w') { |file|
+    file.write("#{$vm.execute('journalctl -a --no-pager').stdout}")
+  }
+  save_failure_artifact("Systemd journal", "#{$path}/systemd.journal")
+end
+
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
 # are Tor nodes or located on the LAN. However, when we try
 # to verify that only such hosts are contacted we have a problem --
@@ -251,6 +258,7 @@ After('@product') do |scenario|
     info_log("Scenario failed at time #{elapsed}")
     screen_capture = @screen.capture
     save_failure_artifact("Screenshot", screen_capture.getFilename)
+    save_journal($config['TMPDIR'])
     exception_name = scenario.exception.class.name
     case exception_name
     when 'FirewallAssertionFailedError'
