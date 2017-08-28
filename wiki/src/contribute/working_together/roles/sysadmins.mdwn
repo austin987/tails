@@ -110,6 +110,15 @@ We use Redmine tickets for public discussion and tasks management:
 
 # Services
 
+Below, importance level is evaluated based on:
+
+* users' needs: e.g. if the APT repository is down, then the
+  "Additional Software Packages" persistence feature is broken;
+* developers' needs: e.g. if the ISO build fails, then developers
+  cannot work;
+* the release process' needs: we want to be able to do an emergency
+  release at any time when critical security issues are published.
+
 ## APT repositories
 
 <a id="custom-apt-repository"></a>
@@ -123,6 +132,7 @@ We use Redmine tickets for public discussion and tasks management:
 * configuration:
   - `tails::reprepro::custom` class in [[!tails_gitweb_repo puppet-tails]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
+* importance: critical (needed by users, and to build & release a Tails ISO)
 
 ### Time-based snapshots of APT repositories
 
@@ -136,6 +146,7 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::reprepro::snapshots::time_based` class in
     [[!tails_gitweb_repo puppet-tails]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
+* importance: critical (needed to build a Tails ISO)
 
 ### Tagged snapshots of APT repositories
 
@@ -149,6 +160,7 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::reprepro::snapshots::tagged` class in
     [[!tails_gitweb_repo puppet-tails]]
   - signing keys are managed with the `tails_secrets_apt` Puppet module
+* importance: critical (needed by users and to release Tails)
 
 ## Bitcoind
 
@@ -156,6 +168,7 @@ We use Redmine tickets for public discussion and tasks management:
 * access: Tails core developers only
 * tools: [[!debpts bitcoind]]
 * configuration: `bitcoind` class in [[!tails_gitweb_repo puppet-bitcoind]]
+* importance: medium
 
 ## BitTorrent
 
@@ -164,6 +177,7 @@ We use Redmine tickets for public discussion and tasks management:
 * access: anyone can read, Tails core developers can write
 * tools: [[!debpts transmission-daemon]]
 * configuration: done by hand ([[!tails_ticket 6926]])
+* importance: low
 
 ## Gitolite
 
@@ -173,6 +187,7 @@ We use Redmine tickets for public discussion and tasks management:
 * tools: [[!debpts gitolite]]
 * configuration: `tails::gitolite` class in [[!tails_gitweb_repo
   puppet-tails]]
+* importance: high (needed to release Tails)
 
 ## git-annex
 
@@ -185,6 +200,7 @@ We use Redmine tickets for public discussion and tasks management:
     [[!tails_gitweb_repo puppet-tails]]
   - `tails::git_annex::mirror` defined resource in
     [[!tails_gitweb_repo puppet-tails]]
+* importance: high (needed to release Tails)
 
 <a id="icinga2"></a>
 
@@ -218,6 +234,7 @@ We use Redmine tickets for public discussion and tasks management:
   - private keys are managed with the `tails_secrets_monitoring` Puppet module
 * documentation:
   - [[How to add checks to our monitoring setup|roles/sysadmins/adding_icinga2_checks]]
+* importance: critical (needed to ensure that other, critical services are working)
 
 ## Jenkins
 
@@ -244,6 +261,7 @@ We use Redmine tickets for public discussion and tasks management:
     * signing keys are managed with the `tails_secrets_jenkins` Puppet module
   - web server:
     * some configuration in the manifest ([[!tails_ticket 7107]])
+* importance: critical (as a key component of our development process)
 
 ## Mumble
 
@@ -253,6 +271,7 @@ We use Redmine tickets for public discussion and tasks management:
 * configuration:
   - <https://github.com/voxpupuli/puppet-mumble>
   - `mumble::*` parameters in Hiera
+* importance: low
 
 <a id="rsync"></a>
 
@@ -267,6 +286,7 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::rsync` in [[!tails_gitweb_repo puppet-tails]]
   - users and credentials are managed with the `tails_secrets_rsync`
     Puppet module
+* importance: critical (needed to release Tails)
 
 ## Tor bridge
 
@@ -279,6 +299,7 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::apt::repository::torproject` in
     [[!tails_gitweb_repo puppet-tails]]
   - `tor::daemon::relay` in [[!tails_gitweb_repo puppet-tor]]
+* importance: low
 
 ## VPN
 
@@ -289,6 +310,7 @@ We use Redmine tickets for public discussion and tasks management:
 * configuration:
   - `tails::vpn::instance` class in the [[!tails_gitweb_repo puppet-tails]]
      repo.
+* importance: transitively critical (as a dependency of our monitoring system)
 
 ## Web server
 
@@ -299,6 +321,7 @@ We use Redmine tickets for public discussion and tasks management:
   - `nginx` class in [[!tails_gitweb_repo puppet-nginx]]
   - hard-coded manifest snippets and files on the puppetmaster
     ([[!tails_ticket 6938]])
+* importance: transitively critical (as a dependency of Jenkins)
 
 <a id="weblate"></a>
 
@@ -310,6 +333,7 @@ We use Redmine tickets for public discussion and tasks management:
 * tools: [Weblate](https://weblate.org/)
 * configuration:
   - `tails::weblate` class in [[!tails_gitweb_repo puppet-tails]]
+* importance: low (not in production yet)
 
 ## WhisperBack relay
 
@@ -320,3 +344,4 @@ We use Redmine tickets for public discussion and tasks management:
   - `tails::whisperback::relay` in [[!tails_gitweb_repo puppet-tails]]
   - private keys are managed with the `tails_secrets_whisperback`
     Puppet module
+* importance: high
