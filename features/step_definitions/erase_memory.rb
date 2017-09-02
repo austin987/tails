@@ -223,7 +223,7 @@ When /^I stop the boot at the bootloader menu$/ do
 end
 
 When /^I wait for Tails to finish wiping the memory$/ do
-  @screen.wait("MemoryWipeCompleted.png", 30)
+  @screen.wait("MemoryWipeCompleted.png", 90)
 end
 
 When(/^I fill a (\d+) MiB file with a known pattern on the (persistent|root) filesystem$/) do |size_MiB, fs|
