@@ -16,6 +16,14 @@ diff_without_pot_creation_date () {
      $(diff "$old" "$new" | grep -Ec '^[<>] "POT-Creation-Date:') -eq 2 ]
 }
 
+diff_pot_only_line_comment_change () {
+   old="$1"
+   new="$2"
+
+   [ $(diff "$old" "$new" | grep -E '^> #:') -a \
+     $(diff "$old" "$new" | grep -Ec ':[0-9]*$') -gt 0 -a ]
+}
+
 intltool_update_po () {
    (
         cd po
