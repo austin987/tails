@@ -6,18 +6,19 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
+* [[Tails 3.1 was released on August 8|news/version_3.1]] (minor release).
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 3.2 is [[scheduled for September 26|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 3.1:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+## Fixed problems
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+  - Make sure that *Thunderbird* erases its temporary directory,
+    containing for example attachments opened in the past. [[!tails_ticket 13340]]
+
+  - Fix translations of the time synchronization and "*Tor is ready*"
+    notifications. [[!tails_ticket 13437]]
 
 Code
 ====
@@ -25,32 +26,72 @@ Code
 XXX: List important code work that is not covered already by the Release
      section (for example, the changes being worked on for the next version).
 
+* intrigeri
+  [started a discussion](https://lists.debian.org/debian-devel/2017/08/msg00090.html)
+  about enabling AppArmor by default in Debian. So far the feedback
+  has been good.
+* We [[decided to evaluate|blueprint/Debian_testing]] this year
+  whether we can base Tails on quarterly snapshots of Debian testing.
+  If we end up answering this question favorably, then the first such
+  release would happen early in 2018 (January or April).
+* We worked on regressions introduced in Tails 3.0 that our Help Desk
+  and Foundations Team deems high-priority, such as
+  [[!tails_ticket 12733]] and [[!tails_ticket 13437]].
+* We [[!tails_ticket 12707 desc="worked on Tails Installer"]] to make
+  it create larger system partitions so that users can benefit more
+  often from automatic upgrades, instead of having to perform
+  a manual upgrade.
+* We are in the process of [[!tails_ticket 8281 desc="evaluating"]]
+  whether GNOME's on-screen keyboard could fully replace _Florence_.
+* We started [[!tails_ticket 12732 desc="porting"]] Tails to Linux 4.12.
+* We started organizing teams, work, timeline and workflow for our
+  upcoming OTF contract:
+  - [[!tails_ticket 14468 desc="VeraCrypt support in GNOME: make it easier to integrate Tails into workflows with other users and operating systems"]]
+  - Additional software: make it easier to tailor Tails to specific
+    needs for sensitive data manipulation ([[!tails_ticket 14568]],
+    [[!tails_ticket 5551]] and friends)
+
 Documentation and website
 =========================
 
-XXX: Explore the Git history:
-
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+- We renamed our "*Easy*" tasks for new contributors as "[[*Starter*
+  tasks|contribute/working_together/criteria_for_starter_tasks]]".
 
 User experience
 ===============
 
-XXX: Check the archives of tails-ux: https://mailman.boum.org/pipermail/tails-ux/
+- We helped Tor [redesign and rephrase Tor
+  Launcher](https://docs.google.com/document/d/19IApm-dzSE7JiN_lATML4FVwqGL1I_Kfy_HqpwC75z8/edit?usp=sharing),
+  the configuration screens of Tor Browser that are also used in Tails.
 
-Infrastructure
-==============
+- We held a collective workshop to identify personas with 12 core
+  contributors. We started with a brainstorming of Tails users and their
+  goals, followed by a collective grouping of all the identified use
+  cases into categories based on *type of users* and *user goals*.
 
-XXX: Count the number of tests in /features at the beginning of next month
+  After that, a smaller team started drafting persona skeletons based on
+  this output, including holistic security and threat modeling aspects
+  for each persona.
 
-         git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-         git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
+  The process and output are documented in our [[blueprint on
+  personas|blueprint/personas#2017-08]].
 
-XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
+Hot topics on our help desk
+===========================
 
-       - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
+XXX: Ask tails-bugs@boum.org to list hot topics for the last month.
+
+1.
+
+1.
+
+1.
 
 Funding
 =======
+
+- sajolida sent an [analysis of the donation campaign from last year](https://mailman.boum.org/pipermail/tails-project/2017-August/000932.html),
+  with insights and actionable items to make it even better this year.
 
 XXX: The fundraising team should look at the fundraising Git.
 
@@ -72,28 +113,35 @@ On-going discussions
 
 XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
 
-Press and testimonials
-======================
-
-XXX: Copy content from press/media_appearances_2017.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
-
 Translation
 ===========
 
-XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
-XXX: Add the output of (adjust month!):
+All website PO files
+====================
 
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 56% (2821) strings translated, 7% strings fuzzy, 49% words translated
+  - fa: 42% (2115) strings translated, 10% strings fuzzy, 44% words translated
+  - fr: 89% (4466) strings translated, 1% strings fuzzy, 87% words translated
+  - it: 41% (2050) strings translated, 5% strings fuzzy, 36% words translated
+  - pt: 25% (1295) strings translated, 9% strings fuzzy, 22% words translated
+
+Total original words: 53366
+
+[[Core PO files|contribute/l10n_tricks/core_po_files.txt]]
+==========================================================
+
+  - de: 77% (1471) strings translated, 12% strings fuzzy, 78% words translated
+  - fa: 34% (656) strings translated, 11% strings fuzzy, 35% words translated
+  - fr: 98% (1866) strings translated, 1% strings fuzzy, 99% words translated
+  - it: 77% (1459) strings translated, 13% strings fuzzy, 77% words translated
+  - pt: 45% (853) strings translated, 15% strings fuzzy, 45% words translated
+
+Total original words: 17252
+
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-* WHISPERBACK bug reports were received through WhisperBack.
-
-XXX: Ask tails@boum.org for these numbers.
+* Tails has been started more than 674.373 times this month. This makes 21.754 boots a day on average.
+* 13.545 downloads of the OpenPGP signature of Tails ISO from our website.
+* 105 bug reports were received through WhisperBack.
