@@ -53,10 +53,19 @@ refresh_pot () {
    mkdir -p "$(dirname $pot)"
 
    if [ -e "${progpath}" ]; then
+      cp -a "${progpath}/${pot}" "${progpath}/${pot}.orig"
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
       sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
+      if diff_only_line_comment_change "${progpath}/${pot}" "${progpath}/${pot}.orig" ; then
+        echo "Only header or comment changes in "${progpath}/${pot}", restoring the old one."
+        mv "${progpath}/${pot}.orig" "${progpath}/${pot}"
+      else
+        echo "Real changes in ${pot}: keeping the updated one."
+        rm "${progpath}/${pot}.orig"
+      fi
    fi
+
 }
 
 po_file () {
