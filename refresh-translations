@@ -92,8 +92,8 @@ intltool_update_pot () {
       cp -a tails.pot tails.pot.orig
       intltool-update --pot --gettext-package=tails
 
-      if diff_without_pot_creation_date tails.pot.orig tails.pot ; then
-         echo "Only header changes in tails.pot, restoring the old one."
+      if diff_without_pot_creation_date tails.pot.orig tails.pot && diff_only_line_comment_change tails.pot.orig tails.pot ; then
+         echo "Only header or comment changes in tails.pot, restoring the old one."
          mv tails.pot.orig tails.pot
       else
          echo "Real changes in tails.pot: keeping the updated one."
