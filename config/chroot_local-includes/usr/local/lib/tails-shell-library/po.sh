@@ -34,10 +34,10 @@ intltool_update_po () {
             [ -f ${locale}.po.new ] || continue
 
             if diff_without_pot_creation_date "${locale}.po" "${locale}.po.new"; then
-                    echo "${locale}: Only header changes in potfile, delete new PO file."
+                    echo "${locale}: Only header changes in PO file, delete new PO file."
                     rm ${locale}.po.new
             else
-                echo "${locale}: Real changes in potfile: substitute old PO file."
+                echo "${locale}: Real changes in PO file: substitute old PO file."
                 mv ${locale}.po.new ${locale}.po
             fi
         done
