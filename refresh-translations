@@ -28,6 +28,10 @@ LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 
 ### Functions
 
+normalize_pot () {
+    sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${@}"
+}
+
 prog_potfile () {
    prog=$1
 
@@ -57,7 +61,7 @@ refresh_pot () {
       cp "${pot}" "${orig}"
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
-      sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
+      normalize_pot "${pot}" "${orig}"
       if diff_pot_only_line_comment_change "${pot}" "${orig}" ; then
         echo "Only header or comment changes in '${orig}', restoring the old one."
         mv "${orig}" "${pot}"
@@ -100,6 +104,7 @@ intltool_update_pot () {
       cd po
       cp -a tails.pot tails.pot.orig
       intltool-update --pot --gettext-package=tails
+      normalize_pot tails.pot tails.pot.orig
 
       if diff_without_pot_creation_date tails.pot.orig tails.pot && diff_pot_only_line_comment_change tails.pot.orig tails.pot ; then
          echo "Only header or comment changes in tails.pot, restoring the old one."
