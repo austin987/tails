@@ -20,8 +20,8 @@ diff_pot_only_line_comment_change () {
    old="$1"
    new="$2"
 
-   [ $(diff "$old" "$new" | grep -E '^> #:') -a \
-     $(diff "$old" "$new" | grep -Ec ':[0-9]*$') -gt 0 -a ]
+   [ $(diff "$old" "$new" | grep -Ec '^> #:') -gt 0 -a \
+     $(diff "$old" "$new" | grep -Ec ':[0-9]*$') -gt 0 ]
 }
 
 intltool_update_po () {
