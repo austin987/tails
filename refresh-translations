@@ -53,19 +53,19 @@ refresh_pot () {
    mkdir -p "$(dirname $pot)"
 
    if [ -e "${progpath}" ]; then
-      cp -a "${progpath}/${pot}" "${progpath}/${pot}.orig"
+      orig="$(dirname ${progpath})/$(basename ${pot}).orig"
+      cp "${pot}" "${orig}"
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
       sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${pot}"
-      if diff_only_line_comment_change "${progpath}/${pot}" "${progpath}/${pot}.orig" ; then
-        echo "Only header or comment changes in "${progpath}/${pot}", restoring the old one."
-        mv "${progpath}/${pot}.orig" "${progpath}/${pot}"
+      if diff_pot_only_line_comment_change "${pot}" "${orig}" ; then
+        echo "Only header or comment changes in '${orig}', restoring the old one."
+        mv "${orig}" "${pot}"
       else
         echo "Real changes in ${pot}: keeping the updated one."
-        rm "${progpath}/${pot}.orig"
+        rm "${orig}"
       fi
    fi
-
 }
 
 po_file () {
@@ -101,7 +101,7 @@ intltool_update_pot () {
       cp -a tails.pot tails.pot.orig
       intltool-update --pot --gettext-package=tails
 
-      if diff_without_pot_creation_date tails.pot.orig tails.pot && diff_only_line_comment_change tails.pot.orig tails.pot ; then
+      if diff_without_pot_creation_date tails.pot.orig tails.pot && diff_pot_only_line_comment_change tails.pot.orig tails.pot ; then
          echo "Only header or comment changes in tails.pot, restoring the old one."
          mv tails.pot.orig tails.pot
       else
