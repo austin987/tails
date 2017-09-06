@@ -8,20 +8,12 @@ po_languages () {
 }
 
 diff_without_pot_creation_date () {
-   old="$1"
-   new="$2"
-
-   [ $(diff "$old" "$new" | grep -Ec '^>') -eq 1 -a \
-     $(diff "$old" "$new" | grep -Ec '^<') -eq 1 -a \
-     $(diff "$old" "$new" | grep -Ec '^[<>] "POT-Creation-Date:') -eq 2 ]
+    diff --ignore-matching-lines '^"POT-Creation-Date:' "${@}"
 }
 
-diff_pot_only_line_comment_change () {
-   old="$1"
-   new="$2"
-
-   [ $(diff "$old" "$new" | grep -Ec '^> #:') -gt 0 -a \
-     $(diff "$old" "$new" | grep -Ec ':[0-9]*$') -gt 0 ]
+diff_without_pot_creation_date_and_comments () {
+    diff --ignore-matching-lines '^"POT-Creation-Date:' \
+         --ignore-matching-lines '^#: .*:[0-9]\+$' "${@}"
 }
 
 intltool_update_po () {
@@ -33,7 +25,7 @@ intltool_update_po () {
             [ -f ${locale}.po ]     || continue
             [ -f ${locale}.po.new ] || continue
 
-            if diff_without_pot_creation_date "${locale}.po" "${locale}.po.new"; then
+            if diff_without_pot_creation_date "${locale}.po" "${locale}.po.new" >/dev/null; then
                     echo "${locale}: Only header changes in PO file, delete new PO file."
                     rm ${locale}.po.new
             else

@@ -62,7 +62,7 @@ refresh_pot () {
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
       normalize_pot "${pot}" "${orig}"
-      if diff_pot_only_line_comment_change "${pot}" "${orig}" ; then
+      if diff_without_pot_creation_date_and_comments "${pot}" "${orig}" >/dev/null; then
         echo "Only header or comment changes in '${orig}', restoring the old one."
         mv "${orig}" "${pot}"
       else
@@ -106,7 +106,7 @@ intltool_update_pot () {
       intltool-update --pot --gettext-package=tails
       normalize_pot tails.pot tails.pot.orig
 
-      if diff_without_pot_creation_date tails.pot.orig tails.pot && diff_pot_only_line_comment_change tails.pot.orig tails.pot ; then
+      if diff_without_pot_creation_date_and_comments tails.pot.orig tails.pot >/dev/null; then
          echo "Only header or comment changes in tails.pot, restoring the old one."
          mv tails.pot.orig tails.pot
       else
