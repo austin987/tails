@@ -652,6 +652,17 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
+  # Search disambiguations: below we assume that there is only one
+  # result, since multiple results introduces a race that leads to a
+  # non-deterministic choice (at least under load). To make the life
+  # easier for users of this step, let's collect workarounds here.
+  case app_name
+  when 'GNOME Terminal'
+    # "GNOME Terminal" and "Terminal" shows both the (non-Root)
+    # "Terminal" and "Root Terminal" search results, so let's use a
+    # keyword only found in the former's .desktop file.
+    app_name = 'commandline'
+  end
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
