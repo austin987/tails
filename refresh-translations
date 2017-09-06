@@ -62,7 +62,10 @@ refresh_pot () {
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
       normalize_pot "${pot}" "${orig}"
-      if diff_without_pot_creation_date_and_comments "${pot}" "${orig}" >/dev/null; then
+      if [ "${FORCE}" = yes ]; then
+        echo "Force-updating '${pot}'."
+        rm "${orig}"
+      elif diff_without_pot_creation_date_and_comments "${pot}" "${orig}" >/dev/null; then
         echo "Only header or comment changes in '${orig}', restoring the old one."
         mv "${orig}" "${pot}"
       else
@@ -106,7 +109,10 @@ intltool_update_pot () {
       intltool-update --pot --gettext-package=tails
       normalize_pot tails.pot tails.pot.orig
 
-      if diff_without_pot_creation_date_and_comments tails.pot.orig tails.pot >/dev/null; then
+      if [ "${FORCE}" = yes ]; then
+        echo "Force-updating 'tails.pot'."
+         rm tails.pot.orig
+      elif diff_without_pot_creation_date_and_comments tails.pot.orig tails.pot >/dev/null; then
          echo "Only header or comment changes in tails.pot, restoring the old one."
          mv tails.pot.orig tails.pot
       else
@@ -125,6 +131,20 @@ intltool_merge () {
 }
 
 ### Main
+
+FORCE=no
+while [ -n "${@:-}" ]; do
+    case "${1:-}" in
+        '--force')
+            FORCE=yes
+            ;;
+        *)
+            echo "Unknown option: ${1}"
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 # Update POT files
 mkdir -p tmp/pot
