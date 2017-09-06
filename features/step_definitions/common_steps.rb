@@ -310,8 +310,6 @@ end
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   @screen.wait(desktop_started_picture, 180)
-  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-  @screen.wait("GnomeSystrayFlorence.png", 30)
   @screen.wait("DesktopTailsDocumentation.png", 30)
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
