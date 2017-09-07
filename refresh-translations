@@ -47,31 +47,20 @@ prog_potfile () {
    echo "tmp/pot/${domain}.pot"
 }
 
-refresh_pot () {
+create_pot () {
    prog=$1
    proglang=$2
-
-   progpath="config/chroot_local-includes$prog"
-   pot=$(prog_potfile $prog)
-
-   mkdir -p "$(dirname $pot)"
-
+   progpath="config/chroot_local-includes${prog}"
    if [ -e "${progpath}" ]; then
-      orig="$(dirname ${progpath})/$(basename ${pot}).orig"
-      cp "${pot}" "${orig}"
+      pot="$(prog_potfile "${prog}")"
+      mkdir -p "$(dirname ${pot})"
       xgettext --language="${proglang}" --from-code=UTF-8 \
         -o "${pot}" "${progpath}"
-      normalize_pot "${pot}" "${orig}"
-      if [ "${FORCE}" = yes ]; then
-        echo "Force-updating '${pot}'."
-        rm "${orig}"
-      elif diff_without_pot_creation_date_and_comments "${pot}" "${orig}" >/dev/null; then
-        echo "Only header or comment changes in '${orig}', restoring the old one."
-        mv "${orig}" "${pot}"
-      else
-        echo "Real changes in ${pot}: keeping the updated one."
-        rm "${orig}"
-      fi
+      normalize_pot "${pot}"
+   else
+     echo "error: We are supposed to create a POT file for '${prog}'" \
+          "but '${progpath}' does not exist"
+     exit 1
    fi
 }
 
@@ -148,10 +137,10 @@ done
 
 # Update POT files
 mkdir -p tmp/pot
-for prog in $PERL_PROGS   ; do refresh_pot $prog Perl   ; done
-for prog in $PYTHON_PROGS ; do refresh_pot $prog Python ; done
-for prog in $SHELL_PROGS  ; do refresh_pot $prog Shell  ; done
-for prog in $JAVASCRIPT_PROGS  ; do refresh_pot $prog JavaScript ; done
+for prog in $PERL_PROGS   ; do create_pot $prog Perl   ; done
+for prog in $PYTHON_PROGS ; do create_pot $prog Python ; done
+for prog in $SHELL_PROGS  ; do create_pot $prog Shell  ; done
+for prog in $JAVASCRIPT_PROGS  ; do create_pot $prog JavaScript ; done
 intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes
