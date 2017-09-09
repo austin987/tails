@@ -312,7 +312,15 @@ Given /^the Tails desktop is ready$/ do
   @screen.wait(desktop_started_picture, 180)
   # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
   @screen.wait("GnomeSystrayFlorence.png", 30)
-  @screen.wait("DesktopTailsDocumentation.png", 30)
+  # Workaround #13461 by restarting nautilus-desktop
+  # if Desktop icons are not visible
+  begin
+    @screen.wait("DesktopTailsDocumentation.png", 30)
+  rescue FindFailed
+    step 'I kill the process "nautilus-desktop"'
+    $vm.spawn('nautilus-desktop', user: LIVE_USER)
+    @screen.wait("DesktopTailsDocumentation.png", 30)
+  end
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
