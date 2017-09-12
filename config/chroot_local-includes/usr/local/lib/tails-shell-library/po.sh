@@ -1,10 +1,10 @@
 # This shell library is meant to be used with `set -e` and `set -u`.
 
 po_languages () {
-   for po in po/*.po ; do
-      rel="${po%.po}"
-      echo "${rel#po/}"
-   done
+    for po in po/*.po ; do
+        rel="${po%.po}"
+        echo "${rel#po/}"
+    done
 }
 
 diff_without_pot_creation_date () {
@@ -17,7 +17,7 @@ diff_without_pot_creation_date_and_comments () {
 }
 
 intltool_update_po () {
-   (
+    (
         cd po
         for locale in "$@" ; do
             intltool-update --dist --gettext-package=tails $locale -o ${locale}.po.new
@@ -29,8 +29,8 @@ intltool_update_po () {
                 echo "Force-updating '${locale}.po'."
                 mv ${locale}.po.new ${locale}.po
             elif diff_without_pot_creation_date "${locale}.po" "${locale}.po.new" >/dev/null; then
-                    echo "${locale}: Only header changes in PO file: keeping the old one"
-                    rm ${locale}.po.new
+                echo "${locale}: Only header changes in PO file: keeping the old one"
+                rm ${locale}.po.new
             else
                 echo "${locale}: Real changes in PO file: switching to the updated one"
                 mv ${locale}.po.new ${locale}.po
