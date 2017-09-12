@@ -28,7 +28,7 @@ intltool_update_po () {
             if [ "${FORCE}" = yes ]; then
                 echo "Force-updating '${locale}.po'."
                 mv ${locale}.po.new ${locale}.po
-            elif diff_without_pot_creation_date "${locale}.po" "${locale}.po.new" >/dev/null; then
+            elif diff_without_pot_creation_date -q "${locale}.po" "${locale}.po.new"; then
                 echo "${locale}: Only header changes in PO file: keeping the old one"
                 rm ${locale}.po.new
             else
