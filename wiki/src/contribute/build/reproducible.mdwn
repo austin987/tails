@@ -62,7 +62,33 @@ both sums to each other.
 Verifying IUKs
 --------------
 
-FIXME
+You can get the SHA-256 of any IUK by setting the `SOURCE` and
+`TARGET` variables appropriately, for example:
+
+    # For Tails_amd64_3.0_to_3.1.iuk
+    SOURCE=3.0
+    TARGET=3.1
+
+and then run:
+
+    UDF="wiki/src/upgrade/v1/Tails/${SOURCE}/amd64/stable/upgrades.yml"
+    if gpg --verify ${UDF}.pgp ${UDF}; then
+      python3 <<EOF
+    import yaml
+    with open('${UDF}') as f:
+      data = yaml.load(f)
+    upgrade = next(x for x in data['upgrades']
+                   if x['version'] == '${TARGET}')
+    incremental = next(x for x in upgrade['upgrade-paths']
+                       if x['type'] == 'incremental')
+    iuk = next(x for x in incremental['target-files']
+               if x['url'].endswith('Tails_amd64_${SOURCE}_to_${TARGET}.iuk'))
+    print('SHA-256:', iuk['sha256'])
+    EOF
+    else
+      echo 'PGP verification of the UDF failed. Are you sure you have ' \
+           'Tails signing key imported into you keyring?' >&2
+    fi
 
 Why is it important?
 ====================
