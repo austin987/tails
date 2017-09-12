@@ -13,13 +13,13 @@ Feature: Installing Tails to a USB drive
     Then Tails Installer detects that a device is too small
     And no USB drive is selected
     When I unplug USB drive "too-small-device"
-    And I temporarily create a 8 GiB disk named "big-enough"
+    And I temporarily create a 7200 MiB disk named "big-enough"
     And I plug USB drive "big-enough"
     Then the "big-enough" USB drive is selected
 
   Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 8 GiB disk named "temp"
+    And I temporarily create a 7200 MiB disk named "temp"
     And I start Tails Installer in "Install by cloning" mode
     But a suitable USB device is not found
     When I plug USB drive "temp"
@@ -29,7 +29,7 @@ Feature: Installing Tails to a USB drive
 
   Scenario: Installing Tails to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 8 GiB disk named "install"
+    And I temporarily create a 7200 MiB disk named "install"
     And I plug USB drive "install"
     And I "Install by cloning" Tails to USB drive "install"
     Then the running Tails is installed on USB drive "install"
@@ -62,7 +62,7 @@ Feature: Installing Tails to a USB drive
 
   Scenario: Installing Tails to a USB drive with an MBR partition table but no partitions, and making sure that it boots
     Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 8 GiB disk named "mbr"
+    And I temporarily create a 7200 MiB disk named "mbr"
     And I create a msdos label on disk "mbr"
     And I plug USB drive "mbr"
     And I "Install by cloning" Tails to USB drive "mbr"
@@ -76,7 +76,7 @@ Feature: Installing Tails to a USB drive
 
   Scenario: Writing a Tails isohybrid to a USB drive and booting it, then trying to upgrading it but ending up having to do a fresh installation, which boots
     Given a computer
-    And I temporarily create a 8 GiB disk named "isohybrid"
+    And I temporarily create a 7200 MiB disk named "isohybrid"
     And I write the Tails ISO image to disk "isohybrid"
     And I start Tails from USB drive "isohybrid" with network unplugged and I login
     Then Tails is running from USB drive "isohybrid"

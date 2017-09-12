@@ -50,7 +50,7 @@ Feature: Upgrading an old Tails USB installation
     When the computer boots Tails
     And I log in to a new session
     And all notifications have disappeared
-    And I create a 8 GiB disk named "old"
+    And I create a 7200 MiB disk named "old"
     And I plug USB drive "old"
     When I "Install by cloning" Tails to USB drive "old"
     Then the running Tails is installed on USB drive "old"
