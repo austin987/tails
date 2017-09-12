@@ -1,0 +1,45 @@
+# Quick build instructions
+
+In order to [[verify reproducibility|contribute/build/reproducible#verify, you
+might want to have a quick way to build Tails ISO images instead of following
+the [[complete build instructions|contribute/build]].
+
+## Setup the build environment
+
+Building Tails requires the KVM virtual machine hypervisor to be
+available, a minimum of 1 GiB of free RAM and a maximum of 20 GB of
+free storage.
+
+1. Install dependencies
+
+    sudo apt-get install \
+        git \
+        rake \
+        libvirt-daemon-system \
+        dnsmasq-base \
+        ebtables \
+        qemu-system-x86 \
+        qemu-utils \
+        vagrant \
+        vagrant-libvirt \
+        vmdebootstrap && \
+    sudo systemctl restart libvirtd
+
+2. Ensure your user is in the relevant groups
+
+    for group in kvm libvirt libvirt-qemu ; do
+       sudo adduser "$(whoami)" "$group"
+    done
+
+3. Logout and log back in to apply the new group memberships.
+
+## Build Tails
+
+Adjust the version to the Tails ISO image you want to build.
+
+    VERSION="3.3"
+    git clone https://git-tails.immerda.ch/tails && \
+    cd tails && \
+    git checkout ${VERSION} && \
+    git submodule update --init && \
+    rake build
