@@ -44,6 +44,34 @@ To build Tails you need:
 
 3. Logout and log back in to apply the new group memberships.
 
+# Build Tails
+
+Once all dependencies are installed, get the Tails sources and
+checkout the [[development branch|contribute/git#main-repo]]:
+
+    git clone https://git-tails.immerda.ch/tails
+    cd tails
+    git checkout devel
+    git submodule update --init
+
+Build Tails using Vagrant:
+
+    rake build
+
+The first time, this can take a little while to download the base virtual
+machine from Tails mirror (around 300 MB). It will then boot the machine,
+set it up and start the build process. When done, several `tails-*` files
+should appear in the current directory.
+
+After you are done working on Tails, do not forget to shut the virtual
+machine down:
+
+    rake vm:halt
+
+One may also want to [[contribute/customize]] their image before building.
+
+To know all available Rake tasks, please run `rake -T`.
+
 <a id="vagrant-known-issues"></a>
 
 # Known issues and workarounds
@@ -82,34 +110,6 @@ To build Tails you need:
 * If Vagrant fails to start the Tails builder VM with an error similar
   to `Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0`,
   see [[!tails_ticket 11411]].
-
-# Build Tails
-
-Once all dependencies are installed, get the Tails sources and
-checkout the [[development branch|contribute/git#main-repo]]:
-
-    git clone https://git-tails.immerda.ch/tails
-    cd tails
-    git checkout devel
-    git submodule update --init
-
-Build Tails using Vagrant:
-
-    rake build
-
-The first time, this can take a little while to download the base virtual
-machine from Tails mirror (around 300 MB). It will then boot the machine,
-set it up and start the build process. When done, several `tails-*` files
-should appear in the current directory.
-
-After you are done working on Tails, do not forget to shut the virtual
-machine down:
-
-    rake vm:halt
-
-One may also want to [[contribute/customize]] their image before building.
-
-To know all available Rake tasks, please run `rake -T`.
 
 # Build settings
 
