@@ -216,21 +216,28 @@ affect reproducibility of the ISO image:
 
 ## HTTP proxy settings
 
-Building Tails requires downloading a little bit more than 1 GB of Debian
-packages. To preserve bandwidth and developer sanity, using a HTTP proxy is
-nearly a must. Tails virtual machine contains a fully configured local HTTP
-proxy that will be used if no other local proxy is defined.
+Building Tails requires downloading a little bit more than 2 GiB of
+data. By default, the build system will configure and use its own HTTP
+caching proxy in order to speed up the following builds.
 
-The following flags can be used to force a specific behaviour:
+We recommend against modifying this behavior, but you can do it with
+the following build options:
 
- * **extproxy**: use the proxy configured through the `http_proxy`
+ * **extproxy**: use the external proxy configured through the `http_proxy`
    environment variable. Fail if it is not set.
 
    <div class="bug">
 
-   At least one step of the build does not honor the external proxy
-   settings, so outgoing Internet connections from the build VM must be
-   allowed to go through anyway.
+   <ul>
+
+     <li>An external HTTP proxy does not save any download bandwidth unless
+     configured in a very special and undocumented way.</li>
+
+     <li>At least one step of the build does not honor the external proxy
+     settings, so outgoing Internet connections from the build VM must be
+     allowed to go through anyway.</li>
+
+   </ul>
 
    </div>
 
