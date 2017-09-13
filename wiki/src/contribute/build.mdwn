@@ -167,12 +167,20 @@ Forcing a specific behaviour can be done using:
 
 ## Git settings
 
-The build system can only work on files that have been *committed* to the Git
-repository. By default, it will refuse to start a build in presence of
-uncommitted changes. This behaviour can be controlled by:
+You can force the build system to handle the Git tree in a special
+way:
 
  * **ignorechanges**: allow to make a build that will ignore changes in the Git
    repository.
+
+   The build system can only work on files that have been *committed* to the Git
+   repository. By default, it will refuse to start a build in presence of
+   uncommitted changes.
+
+ * **mergebasebranch**: if building from a branch (not tag!) this
+   forces a merge of the base branch before the build process starts
+   for real. This is mostly meant for our Jenkins deployment, so use
+   at your own risk.
 
 ## Variations useful for testing build reproducibility
 
@@ -206,13 +214,6 @@ affect reproducibility of the ISO image:
 
  * **rescue**: implies **keeprunning** and will also not clean up the
    build directory, which is useful for investigating build failures.
-
-## Jenkins
-
-  * **mergebasebranch**: if building from a branch (not tag!) this
-    forces a merge of the base branch before the build process starts
-    for real. This is mostly meant for our Jenkins deployment, so use
-    at your own risk.
 
 ## HTTP proxy settings
 
