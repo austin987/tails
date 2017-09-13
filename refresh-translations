@@ -29,7 +29,7 @@ LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 ### Functions
 
 normalize_pot () {
-    sed -i "s@^\"Content-Type: text/plain\; charset=CHARSET\\\n\"@\"Content-Type: text/plain\; charset=UTF-8\\\n\"@" "${@}"
+    sed --regexp-extended -i 's@^"Content-Type: text/plain; charset=CHARSET\\n"@"Content-Type: text/plain; charset=UTF-8\\n"@' "${@}"
 }
 
 prog_potfile () {
