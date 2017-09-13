@@ -111,41 +111,24 @@ One may also want to [[contribute/customize]] their image before building.
 
 To know all available Rake tasks, please run `rake -T`.
 
-# Local HTTP proxy
+# Build settings
 
-If you have a local HTTP proxy, the build system will use it as long as
-you properly set the `http_proxy` environment variable. The easiest way to
-do so is to run:
+You can customize the build system using two environment variables:
 
-    http_proxy=http://proxy.lan:3142
+ * `ARTIFACTS` is the path where the ISO image is stored once the
+   build completes; for example:
 
-... and then, pass the `extproxy` build option (see below).
+        ARTIFACTS='/path/to/directory'
 
-This needs to be done before any other operations.
+ * To tweak other build settings, use `TAILS_BUILD_OPTIONS`,
+   a space-separated list of build options documented below.
 
-<div class="bug">
+   For example, you can speed up the build by setting:
 
-At least one step of the build does not honor the external proxy
-settings, so outgoing Internet connections from the build VM must be
-allowed to go through anyway.
+        export TAILS_BUILD_OPTIONS="ram gzipcomp"
 
-</div>
-
-# Resulting ISO handling
-
-To tell the build system in which directory the resulting ISO should be
-stored, use:
-
-    ARTIFACTS='/path/to/directory'
-
-
-# Build options
-
-Options regarding the build process can be set using the
-`TAILS_BUILD_OPTIONS` environment variable. Multiple options must be
-separated by whitespaces.
-
-The following options are available:
+   This will force the build to happen in RAM and SquashFS compression
+   will be done using *gzip*.
 
 ## Memory build settings
 
@@ -173,9 +156,20 @@ The following flags can be used to force a specific behaviour:
 
  * **extproxy**: use the proxy configured through the `http_proxy`
    environment variable. Fail if it is not set.
+
+   <div class="bug">
+
+   At least one step of the build does not honor the external proxy
+   settings, so outgoing Internet connections from the build VM must be
+   allowed to go through anyway.
+
+   </div>
+
  * **vmproxy**: use the local proxy configured in the virtual machine even
    if a local HTTP proxy is set.
+
  * **noproxy**: do not use any HTTP proxy.
+
 
 ## Network settings
 
@@ -250,16 +244,6 @@ through:
     forces a merge of the base branch before the build process starts
     for real. This is mostly meant for our Jenkins deployment, so use
     at your own risk.
-
-## Example
-
-The fastest build you could pretend to get can be done by setting:
-
-    export TAILS_BUILD_OPTIONS="ram extproxy gzipcomp"
-
-This will force the build to happen in RAM, and will use use an HTTP proxy
-external to the virtual machine, and SquashFS compression will be done
-using *gzip*.
 
 Verifying if the resulting ISO is reproducible
 ==============================================
