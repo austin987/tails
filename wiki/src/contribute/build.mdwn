@@ -145,32 +145,6 @@ To force a specific behaviour please set:
  * **noram**: start the virtual machine with 512 MB of memory if not already
    done, build Tails using the virtual machine hard disk.
 
-## HTTP proxy settings
-
-Building Tails requires downloading a little bit more than 1 GB of Debian
-packages. To preserve bandwidth and developer sanity, using a HTTP proxy is
-nearly a must. Tails virtual machine contains a fully configured local HTTP
-proxy that will be used if no other local proxy is defined.
-
-The following flags can be used to force a specific behaviour:
-
- * **extproxy**: use the proxy configured through the `http_proxy`
-   environment variable. Fail if it is not set.
-
-   <div class="bug">
-
-   At least one step of the build does not honor the external proxy
-   settings, so outgoing Internet connections from the build VM must be
-   allowed to go through anyway.
-
-   </div>
-
- * **vmproxy**: use the local proxy configured in the virtual machine even
-   if a local HTTP proxy is set.
-
- * **noproxy**: do not use any HTTP proxy.
-
-
 ## Network settings
 
  * **offline**: This option will make the build system do its best to
@@ -239,6 +213,31 @@ affect reproducibility of the ISO image:
     forces a merge of the base branch before the build process starts
     for real. This is mostly meant for our Jenkins deployment, so use
     at your own risk.
+
+## HTTP proxy settings
+
+Building Tails requires downloading a little bit more than 1 GB of Debian
+packages. To preserve bandwidth and developer sanity, using a HTTP proxy is
+nearly a must. Tails virtual machine contains a fully configured local HTTP
+proxy that will be used if no other local proxy is defined.
+
+The following flags can be used to force a specific behaviour:
+
+ * **extproxy**: use the proxy configured through the `http_proxy`
+   environment variable. Fail if it is not set.
+
+   <div class="bug">
+
+   At least one step of the build does not honor the external proxy
+   settings, so outgoing Internet connections from the build VM must be
+   allowed to go through anyway.
+
+   </div>
+
+ * **vmproxy**: use the local proxy configured in the virtual machine even
+   if a local HTTP proxy is set.
+
+ * **noproxy**: do not use any HTTP proxy.
 
 Verifying if the resulting ISO is reproducible
 ==============================================
