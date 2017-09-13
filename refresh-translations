@@ -24,6 +24,7 @@ LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 
 ### External libraries
 
+. config/chroot_local-includes/usr/local/lib/tails-shell-library/common.sh
 . config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh
 
 ### Functions
@@ -114,7 +115,8 @@ intltool_update_pot () {
 }
 
 intltool_merge_desktop () {
-    awk '/^# Files updated by intltool-update --desktop-style/{flag=1;next}/^$/{flag=0}flag' po/POTFILES.in \
+    extract_from_file_between_markers po/POTFILES.in \
+        '^# Files updated by intltool-update --desktop-style' '^$' \
         | while read infile ; do
               intltool-merge --quiet --desktop-style --utf8 \
                              po "$infile" "${infile%.in}"
@@ -122,7 +124,8 @@ intltool_merge_desktop () {
 }
 
 intltool_merge_xml () {
-    awk '/^# Files updated by intltool-update --xml-style/{flag=1;next}/^$/{flag=0}flag' po/POTFILES.in \
+    extract_from_file_between_markers po/POTFILES.in \
+        '^# Files updated by intltool-update --xml-style' '^$' \
         | while read infile ; do
               intltool-merge --quiet --xml-style --utf8 \
                              po "$infile" "${infile%.in}"
