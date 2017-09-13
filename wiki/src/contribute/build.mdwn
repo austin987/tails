@@ -191,10 +191,22 @@ Forcing a specific behaviour can be done using:
  * **gzipcomp**: always use *gzip* to create the SquashFS.
  * **defaultcomp**: always use the default compression algorithm.
 
-## Virtual CPUs settings
+## Git settings
 
-The number and type of virtual CPUs that are allocated in the virtual
-machine can be customized through:
+The build system can only work on files that have been *committed* to the Git
+repository. By default, it will refuse to start a build in presence of
+uncommitted changes. This behaviour can be controlled by:
+
+ * **ignorechanges**: allow to make a build that will ignore changes in the Git
+   repository.
+
+## Variations useful for testing build reproducibility
+
+These options allow one to vary the build environment in ways that may
+affect reproducibility of the ISO image:
+
+ * **dateoffset=_+n_**, **dateoffset=_-n_**: change the virtual
+   machine system time by _+n_ or _-n_ days.
 
  * **cpus=_n_**: allocate _n_ CPUs to the virtual machine.
    Obviously you should not allocate more virtual CPUs than the number
@@ -207,23 +219,6 @@ machine can be customized through:
 
  * **machinetype=_type_**: type of the QEMU machine; see the output of
    `qemu-system-x86_64 -machine help` for available options.
-
-## Git settings
-
-The build system can only work on files that have been *committed* to the Git
-repository. By default, it will refuse to start a build in presence of
-uncommitted changes. This behaviour can be controlled by:
-
- * **ignorechanges**: allow to make a build that will ignore changes in the Git
-   repository.
-
-## Other variations useful for testing build reproducibility
-
-An offset can be applied to the current date in the virtual machine
-through:
-
- * **dateoffset=_+n_**, **dateoffset=_-n_**: change the virtual
-   machine system time by _+n_ or _-n_ days.
 
 ## Developer convenience settings
 
