@@ -14,11 +14,11 @@ this will download almost 2 GiB of data):
 
         git remote add debian-upstream https://anonscm.debian.org/git/pkg-mozilla/icedove.git
 
-Let's pretend the scenario is that Thunderbird 45.3.0-1 has just been
+Let's pretend the scenario is that Thunderbird 52.3.0-4~deb9u1 has just been
 released:
 
-    VERSION=45.8.0-3
-    TAG="debian/1%${VERSION:?}"
+    VERSION="52.3.0-4~deb9u1"
+    TAG="debian/1%$(echo ${VERSION:?} | tr '~' '_')"
 
 1. `git fetch && git fetch debian-upstream`
 
@@ -68,7 +68,7 @@ released:
 
 1. Then let's release a new version:
 
-        TAILS_VERSION="1:${VERSION:?}+tails1" && \
+        TAILS_VERSION="1:${VERSION:?}.0tails1" && \
         DISTRIBUTION="feature-thunderbird-${VERSION:?}" && \
         dch \
            --newversion "${TAILS_VERSION:?}" \
