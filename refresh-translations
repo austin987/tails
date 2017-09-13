@@ -113,10 +113,18 @@ intltool_update_pot () {
     )
 }
 
-intltool_merge () {
-    awk '/^# Files updated by intltool-update/{flag=1;next}/^$/{flag=0}flag' po/POTFILES.in \
+intltool_merge_desktop () {
+    awk '/^# Files updated by intltool-update --desktop-style/{flag=1;next}/^$/{flag=0}flag' po/POTFILES.in \
         | while read infile ; do
               intltool-merge --quiet --desktop-style --utf8 \
+                             po "$infile" "${infile%.in}"
+          done
+}
+
+intltool_merge_xml () {
+    awk '/^# Files updated by intltool-update --xml-style/{flag=1;next}/^$/{flag=0}flag' po/POTFILES.in \
+        | while read infile ; do
+              intltool-merge --quiet --xml-style --utf8 \
                              po "$infile" "${infile%.in}"
           done
 }
@@ -157,5 +165,6 @@ intltool_update_po $(po_languages)
 
 # Update files that are actually used at runtime
 refresh_mo $(po_languages)
-intltool_merge
+intltool_merge_desktop
+intltool_merge_xml
 chmod +x config/chroot_local-includes/etc/skel/Desktop/*.desktop
