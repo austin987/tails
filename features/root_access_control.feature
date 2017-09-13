@@ -25,3 +25,9 @@ Feature: Root access control enforcement
     Given I have started Tails from DVD without network and logged in
     And running a command as root with pkexec requires PolicyKit administrator privileges
     Then I should not be able to run a command as root with pkexec and the standard passwords
+
+  Scenario: If an administrative password is set in Tails Greeter the live user should be able to start the Root Terminal and run commands as root in it
+    Given I have started Tails from DVD without network and logged in with an administration password
+    When I start GNOME Root Terminal
+    When I run "whoami" in GNOME Terminal
+    Then the last output from GNOME Terminal is "root"
