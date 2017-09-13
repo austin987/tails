@@ -1,1 +1,0 @@
-/etc/thunderbird/profile/preferences/0000tails.js
