@@ -18,30 +18,31 @@ To build Tails you need:
  * at least 1 GiB of free RAM
  * 20 GB of free storage
 
-# Installing the dependencies in Debian
+# Setup the build environment
 
-Follow these steps:
+1. To install everything the Tails build system needs, execute the
+   following command:
 
-    sudo apt install \
-        git \
-        rake \
-        libvirt-daemon-system \
-        dnsmasq-base \
-        ebtables \
-        qemu-system-x86 \
-        qemu-utils \
-        vagrant \
-        vagrant-libvirt \
-        vmdebootstrap
-    sudo systemctl restart libvirtd
+       sudo apt install \
+           git \
+           rake \
+           libvirt-daemon-system \
+           dnsmasq-base \
+           ebtables \
+           qemu-system-x86 \
+           qemu-utils \
+           vagrant \
+           vagrant-libvirt \
+           vmdebootstrap && \
+       sudo systemctl restart libvirtd
 
-Make sure that the user that is supposed to initiate the build command
-is part of the `kvm`, `libvirt` and `libvirt-qemu` groups:
+2. Ensure your user is in the relevant groups:
 
-    for group in kvm libvirt libvirt-qemu; do sudo adduser $USER $group; done
+       for group in kvm libvirt libvirt-qemu ; do
+          sudo adduser "$(whoami)" "$group"
+       done
 
-Then reboot the system (alternatively, if you know what you are doing,
-run `newgrp` and reload the `kvm` module(s)).
+3. Logout and log back in to apply the new group memberships.
 
 <a id="vagrant-known-issues"></a>
 
