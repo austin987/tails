@@ -1,1 +1,1 @@
-user_pref("extensions.enigmail.configuredVersion", "1.9.7");
+/etc/thunderbird/profile/preferences/0000tails.js
