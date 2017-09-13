@@ -130,6 +130,19 @@ You can customize the build system using two environment variables:
    This will force the build to happen in RAM and SquashFS compression
    will be done using *gzip*.
 
+## SquashFS compression settings
+
+One of the most expensive operations when building Tails is the creation
+of the final SquashFS. It also depends on the compression algorithm used.
+When working on the `stable` or `testing` branch, the image will be made
+using the slow but efficient default. Any other setup will switch to the
+faster *gzip*.
+
+Forcing a specific behaviour can be done using:
+
+ * **gzipcomp**: always use *gzip* to create the SquashFS.
+ * **defaultcomp**: always use the default compression algorithm.
+
 ## Memory build settings
 
 Tails builds way faster when everything is done in memory. If your computer
@@ -151,19 +164,6 @@ To force a specific behaviour please set:
    not depend on the network, e.g. if you use the VM's caching proxy
    if will *only* use cached APT lists and packages. Use this when you
    do not have an Internet connection.
-
-## SquashFS compression settings
-
-One of the most expensive operations when building Tails is the creation
-of the final SquashFS. It also depends on the compression algorithm used.
-When working on the `stable` or `testing` branch, the image will be made
-using the slow but efficient default. Any other setup will switch to the
-faster *gzip*.
-
-Forcing a specific behaviour can be done using:
-
- * **gzipcomp**: always use *gzip* to create the SquashFS.
- * **defaultcomp**: always use the default compression algorithm.
 
 ## Git settings
 
