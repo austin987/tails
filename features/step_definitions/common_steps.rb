@@ -706,14 +706,6 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
   end
 end
 
-When /^I click the blocked video icon$/ do
-  @screen.wait_and_click("TorBrowserBlockedVideo.png", 30)
-end
-
-When /^I accept to temporarily allow playing this video$/ do
-  @screen.wait_and_click("TorBrowserOkButton.png", 10)
-end
-
 When /^I click the HTML5 play button$/ do
   @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
 end
