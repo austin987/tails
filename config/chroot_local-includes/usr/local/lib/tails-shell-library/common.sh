@@ -64,3 +64,14 @@ is_package_installed() {
                       2>/dev/null)"
     [ "${package_status}" = "installed" ]
 }
+
+extract_from_file_between_markers () {
+    local file start stop
+    file="${1}"
+    start="${2}"
+    stop="${3}"
+    awk "/${start}/ { between=1; next; }
+         /${stop}/ { between=0; }
+         { if (between) { print; } }" \
+             "${file}"
+}
