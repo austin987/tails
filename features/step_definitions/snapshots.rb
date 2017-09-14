@@ -68,7 +68,7 @@ def checkpoints
       :steps => [
         'I create a 8 GiB disk named "__internal"',
         'I plug USB drive "__internal"',
-        'I "Install by cloning" Tails to USB drive "__internal"',
+        'I install Tails to USB drive "__internal" by cloning',
         'the running Tails is installed on USB drive "__internal"',
         'there is no persistence partition on USB drive "__internal"',
         'I shutdown Tails and wait for the computer to power off',
