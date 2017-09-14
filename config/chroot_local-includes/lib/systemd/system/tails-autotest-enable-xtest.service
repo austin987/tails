@@ -1,0 +1,20 @@
+# We disable the X11 testing extensions by default (#14623)
+# but at least xdotool used in our test suite needs them.
+
+[Unit]
+Description=Enable X11 XTEST extension for the Tails test suite
+Documentation=https://tails.boum.org/contribute/release_process/test/automated_tests/
+ConditionKernelCommandLine=autotest_never_use_this_option
+Before=gdm.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/rm -f /etc/X11/xorg.conf.d/10-disable-testing-extensions.conf
+RemainAfterExit=yes
+CapabilityBoundingSet=
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target
