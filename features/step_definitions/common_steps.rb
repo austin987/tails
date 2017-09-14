@@ -577,33 +577,18 @@ Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
   end
 end
 
-When /^I start GNOME (Root )?Terminal$/ do |root|
-  step "I start \"GNOME #{root}Terminal\" via GNOME Activities Overview"
-  step 'I enter the sudo password in the pkexec prompt' if root
-  step "the GNOME #{root}Terminal starts"
+When /^I start and focus GNOME Terminal$/ do
+  step 'I start "GNOME Terminal" via GNOME Activities Overview'
+  @screen.wait('GnomeTerminalWindow.png', 40)
 end
 
-Then /^the GNOME (?:Root )?Terminal starts$/ do
-  # When GNOME Terminal starts there is a delay for notifying the
-  # accessibility stack about its components, so we give it some time.
-  try_for(30) do
-    app = Dogtail::Application.new('gnome-terminal-server', retry: false)
-    @gnome_terminal = app.child(roleName: 'terminal')
+When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
+  if !$vm.has_process?("gnome-terminal-server")
+    step "I start and focus GNOME Terminal"
+  else
+    @screen.wait_and_click('GnomeTerminalWindow.png', 20)
   end
-end
-
-When /^I run "([^"]+)" in GNOME (Root )?Terminal$/ do |command, root|
-  step "I start GNOME #{root}Terminal" if not(@gnome_terminal)
-  @gnome_terminal.click
   @screen.type(command + Sikuli::Key.ENTER)
-end
-
-Then /^the last output from GNOME Terminal is "([^"]+)"$/ do |expected_output|
-  assert_not_nil(@gnome_terminal)
-  # After a command the last line will be the prompt, so to get the
-  # last output line we want the second last (i.e. -2) line.
-  last_output = @gnome_terminal.text.split("\n")[-2]
-  assert_equal(expected_output, last_output)
 end
 
 When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
@@ -650,17 +635,6 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
-  # Search disambiguations: below we assume that there is only one
-  # result, since multiple results introduces a race that leads to a
-  # non-deterministic choice (at least under load). To make the life
-  # easier for users of this step, let's collect workarounds here.
-  case app_name
-  when 'GNOME Terminal'
-    # "GNOME Terminal" and "Terminal" shows both the (non-Root)
-    # "Terminal" and "Root Terminal" search results, so let's use a
-    # keyword only found in the former's .desktop file.
-    app_name = 'commandline'
-  end
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
