@@ -35,7 +35,7 @@ def focus_pidgin_irc_conversation_window(account)
 end
 
 # This method should always fail (except with the option
-# `return_shellcommand: true`) since we block Pidgin's DBus interface
+# `return_shellcommand: true`) since we block Pidgin's D-Bus interface
 # (#14612) ...
 def pidgin_dbus_call(method, *args, **opts)
   opts ||= {}
@@ -512,7 +512,7 @@ When /^I click on the Tails roadmap URL$/ do
   try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
 end
 
-Then /^Piding's DBus interface is not available$/ do
+Then /^Pidgin's D-Bus interface is not available$/ do
   # Pidgin must be running to expose the interface
   assert($vm.has_process?('pidgin'))
   # Let's first ensure it would work if not explicitly blocked.

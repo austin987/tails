@@ -316,7 +316,7 @@ def dbus_send_ret_conv(ret)
     # Drop array start/stop markers ([])
     val.split("\n")[1...-1].map { |e| dbus_send_ret_conv(e) }
   else
-    raise "No Ruby type conversion for DBus type '#{type}'"
+    raise "No Ruby type conversion for D-Bus type '#{type}'"
   end
 end
 
@@ -328,7 +328,7 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   }
   typed_args = args.map do |arg|
     type = ruby_type_to_dbus_type[arg.class]
-    assert_not_nil(type, "No DBus type conversion for Ruby type '#{arg.class}'")
+    assert_not_nil(type, "No D-Bus type conversion for Ruby type '#{arg.class}'")
     "#{type}:#{arg}"
   end
   $vm.execute(
