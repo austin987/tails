@@ -23,7 +23,7 @@ Feature: Installing Tails to a USB drive
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
     When I start Tails Installer
-    Then I am told that the destination device cannot be upgraded
+    Then I am told that the destination device is too small
 
   Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
