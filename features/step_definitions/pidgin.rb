@@ -34,6 +34,8 @@ def focus_pidgin_irc_conversation_window(account)
   end
 end
 
+# This method should always fail since we block Pidgin's DBus
+# interface (#14612) ...
 def pidgin_dbus_call(method, *args)
   dbus_send(
     'im.pidgin.purple.PurpleService',
@@ -43,9 +45,20 @@ def pidgin_dbus_call(method, *args)
   )
 end
 
+# ... unless we re-enable it!
+def pidgin_force_allowed_dbus_call(*args)
+  policy_file = '/etc/dbus-1/session.d/im.pidgin.purple.PurpleService.conf'
+  $vm.execute_successfully("mv #{policy_file} #{policy_file}.disabled")
+  pidgin_dbus_call(*args)
+ensure
+  $vm.execute_successfully("mv #{policy_file}.disabled #{policy_file}")
+end
+
 def pidgin_account_connected?(account, prpl_protocol)
-  account_id = pidgin_dbus_call('PurpleAccountsFind', account, prpl_protocol)
-  pidgin_dbus_call('PurpleAccountIsConnected', account_id) == 1
+  account_id = pidgin_force_allowed_dbus_call(
+    'PurpleAccountsFind', account, prpl_protocol
+  )
+  pidgin_force_allowed_dbus_call('PurpleAccountIsConnected', account_id) == 1
 end
 
 When /^I create my XMPP account$/ do
