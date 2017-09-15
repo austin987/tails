@@ -34,8 +34,9 @@ def focus_pidgin_irc_conversation_window(account)
   end
 end
 
-# This method should always fail since we block Pidgin's DBus
-# interface (#14612) ...
+# This method should always fail (except with the option
+# `return_shellcommand: true`) since we block Pidgin's DBus interface
+# (#14612) ...
 def pidgin_dbus_call(method, *args, **opts)
   opts ||= {}
   opts[:user] = LIVE_USER
