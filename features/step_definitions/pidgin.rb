@@ -36,12 +36,14 @@ end
 
 # This method should always fail since we block Pidgin's DBus
 # interface (#14612) ...
-def pidgin_dbus_call(method, *args)
+def pidgin_dbus_call(method, *args, **opts)
+  opts ||= {}
+  opts[:user] = LIVE_USER
   dbus_send(
     'im.pidgin.purple.PurpleService',
     '/im/pidgin/purple/PurpleObject',
     "im.pidgin.purple.PurpleInterface.#{method}",
-    *args, user: LIVE_USER
+    *args, **opts
   )
 end
 
