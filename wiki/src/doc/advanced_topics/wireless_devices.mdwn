@@ -3,14 +3,7 @@
 When Tails starts, Wi-Fi, WWAN, and WiMAX devices are
 enabled.
 
-<div class="bug">
-
-<p>BlueTooth is enabled by default but Tails lacks the GNOME utilities
-to actually use it.</p>
-
-</div>
-
-But all other kinds of wireless devices such as GPS and FM devices are
+But all other kinds of wireless devices such as Bluetooth, GPS and FM devices are
 disabled by default. If you want to use such a device, you need to enable
 it first.
 
@@ -35,7 +28,7 @@ This technique uses the command line.
                Soft blocked: no
                Hard blocked: no
        1: hci0: Bluetooth
-               Soft blocked: no
+               Soft blocked: yes
                Hard blocked: no
        2: gps0: GPS
                Soft blocked: yes
@@ -72,7 +65,7 @@ This technique uses the command line.
                Soft blocked: no
                Hard blocked: no
        1: hci0: Bluetooth
-               Soft blocked: no
+               Soft blocked: yes
                Hard blocked: no
        2: gps0: GPS
                Soft blocked: no
@@ -85,6 +78,10 @@ Enable Bluetooth
 
 Bluetooth is not enabled by default in Tails because it is insecure
 when trying to protect from a local adversary.
+
+XXX: one also needs to remove `sudo rm
+/etc/modprobe.d/no-bluetooth.conf && sudo udevadm trigger && sudo
+rfkill unblock bluetooth`.
 
 To use Bluetooth in Tails nonetheless, you have to
 [[set up an administration password at boot time|doc/first_steps/startup_options/administration_password]]
