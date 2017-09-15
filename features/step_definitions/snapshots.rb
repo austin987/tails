@@ -66,7 +66,7 @@ def checkpoints
       :description => "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen",
       :parent_checkpoint => 'no-network-logged-in',
       :steps => [
-        'I create a 8 GiB disk named "__internal"',
+        'I create a 7200 MiB disk named "__internal"',
         'I plug USB drive "__internal"',
         'I install Tails to USB drive "__internal" by cloning',
         'the running Tails is installed on USB drive "__internal"',
