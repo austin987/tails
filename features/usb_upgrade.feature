@@ -10,14 +10,6 @@ Feature: Upgrading an old Tails USB installation
   # other. When editing this feature, make sure you understand these
   # dependencies (which are documented below).
 
-  Scenario: Try to "Upgrade by cloning" Tails to a USB drive with GPT and a FAT partition
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 4 GiB disk named "gptfat"
-    And I create a gpt partition with a vfat filesystem on disk "gptfat"
-    And I plug USB drive "gptfat"
-    When I start Tails Installer
-    Then I am told that the destination device cannot be upgraded
-
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
     And the computer is set to boot from the old Tails DVD
