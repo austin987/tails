@@ -1,8 +1,136 @@
-tails (3.2) UNRELEASED; urgency=medium
+tails (3.2~rc1) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Major changes
+    - Upgrade Linux packages to the Debian kernel 4.12.0-2, based on
+      mainline Linux 4.12.12 (Closes: #12732, #14673).
 
- -- Tails developers <tails@boum.org>  Mon, 12 Jun 2017 18:39:31 +0000
+  * Security fixes
+    - Upgrade to Thunderbird 52.3.0 (Closes: #12639).
+    - Deny access to Pidgin's D-Bus service (Closes: #14612). That D-Bus
+      interface is dangerous because it allows _any_ application running
+      as `amnesia' that has access to the session bus to extract
+      basically any information from Pidgin and to reconfigure it:
+      https://developer.pidgin.im/wiki/DbusHowto
+    - Disable X11 testing extension, aka. XTEST (Closes: #14623). This
+      extension allow interaction with X11 server, e.g. sending
+      keystrokes to other windows.
+    - Block loading of Bluetooth kernel modules (Closes: #14655) and
+      block Bluetooth devices with rfkill (Closes: #14655).
+    - Add localhost.localdomain to the hosts file to prevent loopback
+      leaks to Tor circuits (Closes: #13574). Thanks to tailshark for
+      the patch!
+
+  * Minor improvements
+    - Upgrade to Tails Installer 4.4.19 (Closes: #8859, #8860). This
+      version gets rid of the splash screen, detects when Tails is
+      installed to the target device (and then proposes to upgrade),
+      and generally improves the UX.
+    - Deprecate Thunderbird's preferences/0000tails.js (Closes: #12680).
+    - Install the BookletImposer PDF imposition toolkit (Closes: #12686).
+    - Tor Browser: fallback to ~/Tor Browser for uploads (Closes: #8917).
+    - Shell library: remove now unused functions (Closes: #12685).
+    - Add pppoe to the installed packages (Closes #13463). Thanks to geb
+      for the patch!
+    - Replace syslinux:i386 with syslinux:amd64 in the ISO9660
+      filesystem (Closes: #13513).
+    - htpdate: fix date header regexp (Closes: #10495). It seems that
+      some servers (sometimes) do not send their headers with first
+      letter uppercased, hence a lot of failures to find the date in it.
+    - Install aufs-dkms from Debian unstable (Closes: #12732).
+    - Install vim-tiny instead of vim-nox (Closes: #12687). On Stretch,
+      vim-nox started pulling ruby and rake in the ISO. I think vim-tiny
+      would be good enough, and would save a few MiB in the ISO. Those
+      who use vim more intensively and want another flavour of vim are
+      likely to need persistence anyway, and can thus install a more
+      featureful vim with the additional software packages feature.
+    - Remove gksu and its and gconf's dependencies (Closes: #12738). We
+      use pkexec instead of gksudo. gksu is unmaintained, buggy
+      (e.g. #12000), and it is the only reason we ship GConf, which we
+      want to remove. The other removals are:
+      * libgnomevfs2-extra, which was previously used for SSH/FTP support in
+        Nautilus, but isn't needed for that any more.
+      * libgnome2-bin which provides gnome-open, which isn't required by
+        any application in Tails (as far as we know).
+      * Configurations and scripts that become obsolete because of these
+        removals.
+    - Refresh torbrowser-AppArmor-profile.patch to apply cleanly on top
+      of torbrowser-launcher 0.2.8-1 (Closes: #14602).
+    - Switch from Florence to GNOME's on-screen keyboard (Closes: #8281)
+      and incidentally improve accessibility in GTK+ 2.0 and Qt
+      applications. This drops Florence and the corresponding GNOME
+      Shell extension.
+    - Make ./HACKING.mdwn a symlink again (Closes: #13600).
+    - Implement refresh-translations --force .
+    - Rework how we handle the individual POT files of our applications.
+      Comparing the new temporary POT files we generate with the
+      temporary POT files we generated last time (if ever, and if we
+      did, for which branch?) is not relevant; these POT files are only
+      used for merging into a new tails.pot and *that* one is relevant
+      to diff against the old tails.pot.
+    - Reproducibility:
+      * Ensure reproducible permissions for /etc/hostname (Closes:
+        #13623).
+      * Patch desktop-file-utils to make its mimeinfo.cache reproducible
+        (Closes: #13439).
+      * Patch glib2.0 to make its giomodule.cache reproducible (Closes:
+        #13441).
+      * Patch gdk-pixbuf to make its loaders.cache reproducible (Closes:
+        #13442).
+      * Patch gtk2.0 and gtk3.0 to make their immodules.cache
+        reproducible (Closes: #13440).
+      * Remove GCconf: it is a source of non-determinism in the
+        filesystem (element order in /var/lib/gconf/defaults/%gconf-tree-*.xml)
+        which made Tails unreproducible.
+      * Ignore comment updates in POT files, which was a source of
+        non-determinism and therefore prevented Tails from being
+        reproducible (Closes: #12641).
+    - Kernel hardening:
+      * Increase mmap randomization to the maximum supported value
+        (Closes: #11840). This improves ASLR effectiveness, and makes
+        address-space fragmentation a bit worse.
+      * Stop explicitly enabling kaslr: it's enabled by default in
+        Debian, and this kernel parameter is not supported anymore.
+      * Disable kexec, to make our attack surface a bit smaller.
+
+  * Bugfixes
+    - Start Nautilus silently in the background when run as root
+      (Closes: #12034). Otherwise, after closing Nautilus one gets the
+      prompt back only after 5-15 seconds, which confuses users and makes
+      our doc more complicated than it should.
+    - Ensure pinentry-gtk2 run by Seahorse has the correct $DISPLAY set
+      (Closes: #12733).
+
+  * Build system
+    - build-manifest-extra-packages.yml: remove squashfs-tools version
+      we don't use anymore (Closes: #12684). Apparently our
+      apt-get/debootstrap wrapper tricks are enough to detect the
+      version of squashfs-tools we actually install and use.
+    - Merge base branch earlier, i.e. in auto/config instead of
+      auto/build (Closes: #14459). Previously, a given build from a topic
+      branch would mix inconsistent versions of things.
+
+  * Test suite
+    - Test the GNOME Root Terminal.
+    - Take into account that Tails Installer 4.4.19 refuses to install
+      Tails to devices smaller than 8 GiB. It'll still allow *upgrading*
+      such sticks though.
+    - Use 7200 MiB virtual USB drives when we really mean 8 GiB. In the
+      real world, USB sticks labeled "8 GB" can be much smaller, so
+      Tails Installer will accept anything that's at least 7200 MiB.
+      This commit makes us exercise something closer to what happens in
+      the real world, and incidentally it'll save storage space on our
+      isotesters and improve test suite performance a bit. :)
+    - Have unclutter poll every 0.1s instead of continuously. On current
+      sid, virt-viewer eats a full CPU and doesn't do its job when
+      "unclutter -idle 0" is running.
+    - Re-enable the X11 testing extension aka. XTEST only in the
+      automated test suite. At least xdotool needs it.
+    - Adapt tests for Tails Installer 4.4.19.
+    - Workaround Pidgin's DBus interface being blocked since we actually
+      depend on it for some tests.
+    - Test that Pidgin's DBus interface is blocked.
+
+ -- Tails developers <tails@boum.org>  Fri, 15 Sep 2017 23:49:05 +0200
 
 tails (3.1.1) UNRELEASED; urgency=medium
 
