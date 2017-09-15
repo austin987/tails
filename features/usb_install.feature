@@ -3,7 +3,7 @@ Feature: Installing Tails to a USB drive
   As a Tails user
   I want to install Tails to a suitable USB drive
 
-  Scenario: Try installing Tails to a too small USB drive
+  Scenario: Try installing Tails to a too small USB drive without partition table
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4500 MiB disk named "too-small-device"
     And I start Tails Installer
