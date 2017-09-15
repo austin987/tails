@@ -10,13 +10,6 @@ Feature: Upgrading an old Tails USB installation
   # other. When editing this feature, make sure you understand these
   # dependencies (which are documented below).
 
-  Scenario: Try to "Upgrade by cloning" Tails to a pristine USB drive
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 4 GiB disk named "pristine"
-    And I plug USB drive "pristine"
-    When I start Tails Installer
-    Then I am told that the destination device is too small
-
   Scenario: Try to "Upgrade by cloning" Tails to a USB drive with GPT and a FAT partition
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4 GiB disk named "gptfat"
