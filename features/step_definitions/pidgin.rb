@@ -510,3 +510,19 @@ When /^I click on the Tails roadmap URL$/ do
   @screen.click('PidginTailsRoadmapUrl.png')
   try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
 end
+
+Then /^Piding's DBus interface is not available$/ do
+  # Pidgin must be running to expose the interface
+  assert($vm.has_process?('pidgin'))
+  # Let's first ensure it would work if not explicitly blocked.
+  # Note: that the method we pick here doesn't really matter
+  # (`PurpleAccountsGetAll` felt like a convenient choice since it
+  # doesn't require any arguments).
+  assert_equal(
+    Array, pidgin_force_allowed_dbus_call('PurpleAccountsGetAll').class
+  )
+  # Finally, let's make sure it is blocked
+  c = pidgin_dbus_call('PurpleAccountsGetAll', return_shellcommand: true)
+  assert(c.failure?)
+  assert_not_nil(c.stderr['Rejected send message'])
+end
