@@ -303,7 +303,24 @@ def pause(message = "Paused")
   end
 end
 
-def dbus_send(service, object_path, method, *args, **opts)
+# Converts dbus-send replies into a suitable Ruby value
+def dbus_send_ret_conv(ret)
+  type, val = /^\s*(\S+)\s+(.+)$/m.match(ret)[1,2]
+  case type
+  when 'string'
+    # Unquote
+    val[1...-1]
+  when 'int32'
+    val.to_i
+  when 'array'
+    # Drop array start/stop markers ([])
+    val.split("\n")[1...-1].map { |e| dbus_send_ret_conv(e) }
+  else
+    raise "No Ruby type conversion for D-Bus type '#{type}'"
+  end
+end
+
+def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   opts ||= {}
   ruby_type_to_dbus_type = {
     String => 'string',
@@ -311,34 +328,26 @@ def dbus_send(service, object_path, method, *args, **opts)
   }
   typed_args = args.map do |arg|
     type = ruby_type_to_dbus_type[arg.class]
-    assert_not_nil(type, "No DBus type conversion for Ruby type '#{arg.class}'")
+    assert_not_nil(type, "No D-Bus type conversion for Ruby type '#{arg.class}'")
     "#{type}:#{arg}"
   end
-  ret = $vm.execute_successfully(
+  $vm.execute(
     "dbus-send --print-reply --dest=#{service} #{object_path} " +
     "    #{method} #{typed_args.join(' ')}",
     **opts
-  ).stdout.lines
+  )
+end
+
+def dbus_send(*args, **opts)
+  opts ||= {}
+  opts[:return_shellcommand] ||= false
+  c = dbus_send_get_shellcommand(*args, **opts)
+  return c if opts[:return_shellcommand]
+  assert_vmcommand_success(c)
   # The first line written is about timings and other stuff we don't
   # care about; we only care about the return values.
-  ret.shift
-  ret.map! do |s|
-    type, val = /^\s*(\S+)\s+(\S+)$/.match(s)[1,2]
-    case type
-    when 'string'
-      # Unquote
-      val[1, val.length - 2]
-    when 'int32'
-      val.to_i
-    else
-      raise "No Ruby type conversion for DBus type '#{type}'"
-    end
-  end
-  if ret.size == 0
-    return nil
-  elsif ret.size == 1
-    return ret.first
-  else
-    return ret
-  end
+  ret_lines = c.stdout.split("\n")
+  ret_lines.shift
+  ret = ret_lines.join("\n")
+  dbus_send_ret_conv(ret)
 end

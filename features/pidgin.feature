@@ -7,6 +7,12 @@ Feature: Chatting anonymously using Pidgin
   And AppArmor should prevent Pidgin from doing dangerous things
   And all Internet traffic should flow only through Tor
 
+  Scenario: Make sure Pidgin's D-Bus interface is blocked
+    Given I have started Tails from DVD without network and logged in
+    When I start "Pidgin Internet Messenger" via GNOME Activities Overview
+    Then I see Pidgin's account manager window
+    And Pidgin's D-Bus interface is not available
+
   #11453
   @check_tor_leaks @fragile
   Scenario: Chatting with some friend over XMPP
