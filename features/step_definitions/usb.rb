@@ -92,7 +92,7 @@ end
 
 When /^I start Tails Installer$/ do
   step 'I run "export DEBUG=1 ; /usr/bin/tails-installer-launcher" in GNOME Terminal'
-  @installer = Dogtail::Application.new('tails-installer')
+  @installer = Dogtail::Application.new('tails-installer-launcher')
   @installer.child('Tails Installer', roleName: 'frame')
   # Sometimes Dogtail will find the Installer and click its window
   # before it is shown (searchShowingOnly is not perfect) which
