@@ -10,7 +10,6 @@ systemctl enable memlockd.service
 # Enable our own systemd unit files
 systemctl enable initramfs-shutdown.service
 systemctl enable onion-grater.service
-systemctl enable tails-autotest-enable-xtest.service
 systemctl enable tails-autotest-remote-shell.service
 systemctl enable tails-set-wireless-devices-state.service
 systemctl enable tails-shutdown-on-media-removal.service
