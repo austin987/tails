@@ -116,7 +116,7 @@ upgrade as soon as possible.
      not work.
 """]]
 
-- Update *Tor Browser* to 7.0 (based on Firefox 52 ESR) which is
+- Update *Tor Browser* to 7.0.1 (based on Firefox 52 ESR) which is
   [multiprocess](https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox)
   and paves the way to [content
   sandboxing](https://wiki.mozilla.org/Security/Sandbox). This should
@@ -127,7 +127,7 @@ upgrade as soon as possible.
 - Most included software has been upgraded in Debian 9, for example:
   - *KeePassX* from 0.4.3 to 2.0.3<br/>
     Your password database will be
-    [[migrated automatically|doc/encryption_and_privacy/manage_passwords#migrate]] to the new format of *KeePassX* 2.
+    [[migrated automatically|doc/encryption_and_privacy/manage_passwords#migration]] to the new format of *KeePassX* 2.
   - *LibreOffice* from 4.3.3 to 5.2.6
   - *Inkscape* from 0.48.5 to 0.92.1
   - *Audacity* from 2.0.6 to 2.1.2
@@ -164,7 +164,34 @@ upgrade as soon as possible.
 
 For more details, read our [[!tails_gitweb debian/changelog desc="changelog"]].
 
+<a id="known-issues"></a>
+
 # Known issues
+
+- *Tails Installer* erroneously rejects some USB sticks. When this
+  happens, a message that starts with "Skipping non-removable device"
+  is displayed ([[!tails_ticket 12696]]). To workaround this problem:
+
+  1. Start the operating system you want to use *Tails Installer* on.<br />
+     If you want to use *Tails Installer* in Tails 3.0,
+     [[set up an administration password|doc/first_steps/startup_options/administration_password]].
+
+  2. Choose
+     <span class="menuchoice">
+       <span class="guimenu">Applications</span>&nbsp;▸
+       <span class="guisubmenu">System Tools</span>&nbsp;▸
+       <span class="guimenuitem">Root Terminal</span>
+     </span>
+     to open a terminal with administration rights.
+
+  3. Execute the following command to fix the bug in *Tails Installer*:
+
+     <span class="code">
+     perl -pi -E 's,media_removable,removable,' /usr/lib/python2.7/dist-packages/tails_installer/creator.py
+     </span>
+
+  4. *Tails Installer* should not expose this problem again… until you
+     restart Tails, as these changes will be reverted upon restart.
 
 - Tails fails to start on some computers with [[Intel graphical
   hardware|support/known_issues#xorg-driver]].

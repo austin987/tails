@@ -1,3 +1,78 @@
+tails (3.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 7.0.4-build1 (Closes: #13577).
+    - Upgrade Linux to 4.9.30-2+deb9u3.
+    - Upgrade libtiff to 4.0.8-2+deb9u1.
+    - Upgrade bind9 to 1:9.10.3.dfsg.P4-12.3+deb9u2.
+    - Upgrate evince to 3.22.1-3+deb9u1.
+    - Upgrade imagemagick 8:6.9.7.4+dfsg-11+deb9u1.
+    - Ensure Thunderbird cleans its temporary directory. (Closes: #13340).
+
+  * Minor improvements
+    - Patch gconf to produce reproducible XML output (refs: #12738). This is
+      the temporary solution for #12738 in Tails 3.1 which will be reverted
+      (and fixed permanently by removing gconf) in Tails 3.2.
+    - Apply Debian bts patch to cracklib to produce reproducible dictionnaries
+      (Closes: #12909).
+    - Upgrade to Debian 9.1 (Closes: #13178).
+
+  * Bugfixes
+    - Replace faulty URL in htpdate neutral pool (Closes: #13472).
+    - Keep installing a version of Enigmail compatible with Thunderbird 45.x
+      (Closes: #13530).
+    - Fix the time syncing and Tor notifications translations (Closes: #13437).
+
+  * Build system
+    - Upgrade the Vagrant basebox for building ISO images to Stretch
+      (Closes: #11738).
+    - Fix on-disk build by bumping Vagrant build VM memory to 768M
+      (Closes: #13480).
+    - Fix rescue build option by exporting TAILS_BUILD_FAILURE_RESCUE
+      (Closes: #13476).
+
+  * Test suite
+    - mark gnome screenshot scenario as fragile (refs: #13458)
+    - mark UEFI scenario as fragile (refs: #13459).
+
+ -- Tails developers <tails@boum.org>  Sat, 05 Aug 2017 15:25:51 +0200
+
+tails (3.0.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade tor to 0.3.0.9-1~d90.stretch+1 (Closes: #13253).
+    - Upgrade Linux to 4.9.30-2+deb9u2.
+    - Upgrade libc to 2.24-11+deb9u1.
+    - Upgrade libexpat1 to 2.2.0-2+deb9u1.
+    - Upgrade libgcrypt20 to 1.7.6-2+deb9u1.
+    - Upgrade libgnutls30 to 3.5.8-5+deb9u1.
+    - Enable Debian security APT sources (Closes: #12309).
+
+  * Minor improvements
+    - Use a higher resolution image in Tails persistence setup
+      (Closes: #12510).
+
+  * Bugfixes
+    - Forcibly set $SSH_AUTH_SOCK before starting GNOME
+      Shell. Apparently, due to a race condition, GNOME keyring
+      sometimes fails to tell the session manager about the correct
+      SSH_AUTH_SOCK, and thus GNOME Terminal hasn't this variable set
+      and any ssh process started in there won't use the (perfectly
+      working) SSH agent (Closes: #12481).
+    - Fix issue that made Tails Installer rejects working USB drives,
+      pretending they're not "removable" (Closes: #12696).
+    - Make behavior of the power button and lid close actions in the Greeter
+      consistent with the regular GNOME session (Closes: #13000).
+
+  * Build system
+    - Track the latest debian-security archive for the corresponding
+      APT sources, and not for the unrelated jessie-updates (Closes:
+      #12829).
+    - Print APT sources used in the build VM, to help debugging issues
+      such as #12829.
+
+ -- Tails developers <tails@boum.org>  Tue, 04 Jul 2017 15:59:18 +0200
+
 tails (3.0) unstable; urgency=medium
 
   * Major changes

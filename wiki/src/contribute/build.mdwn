@@ -18,7 +18,7 @@ Using Vagrant
 Tails can be built easily in a virtual machine using [Rake], [Vagrant]
 and [vagrant-libvirt]. The process requires the
 [[!wikipedia Kernel-based_Virtual_Machine desc="KVM"]] virtual machine
-hypervisor to be available, a minimum of 512 MiB of free memory and a
+hypervisor to be available, a minimum of 768 MiB of free memory and a
 maximum of 20 GB of free storage.
 
 [Rake]: http://rake.rubyforge.org/
@@ -30,34 +30,9 @@ For details how Vagrant is setup, see its
 
 ## Installing the dependencies in Debian
 
-If you run Debian Jessie, you must install a few dependencies from
-Debian Stretch, and one of Tails' repos until [[!debbug 823395]] is fixed:
+You must run at least Debian 9 (Stretch), and follow these steps:
 
-    sudo tee /etc/apt/sources.list.d/stretch.list <<EOF
-    deb http://ftp.us.debian.org/debian/ stretch main
-    deb-src http://ftp.us.debian.org/debian/ stretch main
-    EOF
-    sudo tee /etc/apt/preferences.d/vagrant-libvirt-from-stretch.pref <<EOF
-    Package: *
-    Pin: release o=Debian,n=stretch
-    Pin-Priority: 100
-    
-    Package: vagrant vagrant-libvirt ruby-excon ruby-fog-core ruby-fog-libvirt ruby-fog-xml
-    Pin: release o=Debian,n=stretch
-    Pin-Priority: 990
-    EOF
-
-    sudo apt-key add config/chroot_sources/tails.chroot.gpg
-    sudo tee /etc/apt/sources.list.d/builder-jessie.list <<EOF
-    deb http://deb.tails.boum.org/ builder-jessie main
-    deb-src http://deb.tails.boum.org/ builder-jessie main
-    EOF
-
-    sudo apt-get update
-
-Now we can install all the dependencies:
-
-    sudo apt-get install \
+    sudo apt install \
         git \
         rake \
         libvirt-daemon-system \
@@ -77,6 +52,8 @@ is part of the `kvm`, `libvirt` and `libvirt-qemu` groups:
 
 Then reboot the system (alternatively, if you know what you are doing,
 run `newgrp` and reload the `kvm` module(s)).
+
+<a id="vagrant-known-issues"></a>
 
 ## Known issues and workarounds
 
@@ -300,6 +277,12 @@ using *gzip*.
 Building manually
 =================
 
+<div class="note">
+This section may not be in tested and working shape as all active
+developers use Vagrant.
+</div>
+
+
 In order to build Tails manually, you need a running Debian Jessie
 system and some [backports](http://backports.debian.org/). Anything
 else will fail.
@@ -343,7 +326,7 @@ The following Debian packages need to be installed:
 
   Then install these dependencies from Jessie:
 
-      apt-get install \
+      apt install \
         dpkg-dev \
         gettext \
         intltool \
@@ -362,7 +345,7 @@ The following Debian packages need to be installed:
   manually that the following command actually does install the
   expected versions):
 
-      apt-get install \
+      apt install \
         debootstrap/jessie-backports \
         ikiwiki/jessie-backports
 

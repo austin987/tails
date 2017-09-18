@@ -1,0 +1,122 @@
+[[!meta title="Basing Tails on quarterly snapshots of Debian Testing"]]
+
+Tracking ticket: [[!tails_ticket 12615]]
+
+[[!toc levels=2]]
+
+# The big picture
+
+We've been thinking for a while of being based on quarterly snapshots
+of Debian testing. We've used the "porting Tails to Debian Stretch"
+cycle to evaluate how it would feel like. See the
+[[initial plan & analysis|blueprint/Debian_Stretch/#rolling]].
+
+## Calendar
+
+A two-years Debian release cycle could look like from our perspective,
+if we were based on quarterly snapshots of Debian testing:
+
+1. a new Debian stable is released
+2. 6 months during which Tails is based on Debian stable that was just
+   released, and we can get ready for the next stage
+3. 12 months during which Tails is based on quarterly snapshots of
+   (non-frozen) Debian testing taken at the beginning of each major
+   Tails release cycle
+4. 6 months during which Tails is based on a frozen Debian testing
+5. go back to (1)
+
+We would be based on a moving target half of the time; the remaining
+half of the time we are based on something that doesn't change much.
+
+## Why?
+
+- We'll need to track 2 Debian versions at the same time (and
+  continuously forward-port development that was based on the oldest
+  one) during 6-7 months maximum, compared to 19 months (Jessie cycle)
+  and 10 months (Stretch cycle). We would save lots of time there,
+  that could be re-invested in aspects of this proposal that will
+  require additional work.
+- no need to produce and maintain backports of Debian packages anymore
+- support new hardware better
+- upstream bugfixes trickle down faster and for free to Tails users
+  ⇒ greater incentive for us to fix bugs upstream instead of
+  implementing Tails-specific workarounds
+- we help stabilizing Debian testing
+- the Foundations Team prefers doing the "porting to next Debian" work
+  continuously than as a huge disruptive project every two years
+- no huge change every 2 years confusing users and creating huge burts
+  in the Help Desk and Foundations Team post-release workload
+- new features / modern software
+
+This idea is about doing a different kind of work, and doing it in
+different places than in the past. It probably won't lower the total
+amount of effort we have to do, but it likely will make such efforts
+generate less frustration, more happiness, and a warm feeling of being
+part of a broader community.
+
+# Fears, concerns & problems we need to address or mitigate
+
+- Security
+  * How to keep track of security issues that affect us, and whether
+    their fix has been uploaded and has migrated to testing yet?
+    See e.g. how security support for Debian testing [used to be
+    (briefly) done](http://secure-testing-master.debian.net/), and in
+    particular the
+    [Vulnerable source packages in the testing suite](https://security-tracker.debian.org/tracker/status/release/testing)
+    and the
+    [Candidates for DTSAs](https://security-tracker.debian.org/tracker/status/dtsa-candidates).
+  * more freeze exceptions in order to address security issues
+
+- Transitions
+  * How to deal with
+    [[!debwiki OngoingTransitions desc="ongoing transitions"]] that
+    block migration of security updates from sid to testing?
+  * How to select the right snapshot we shall take, e.g.
+    during transitions?
+  * Sometimes we'll need to rebuild on testing some packages we want
+    to cherry-pick from sid.
+
+- Consequences for users
+  * too many software regressions and not well tested new features
+  * confused users due to constant incremental changes
+  * bigger upgrades on average
+  * our users debug Debian testing on top of debugging Tails
+
+- Drawbacks for contributors & the Tails community
+  * more frequent regressions in ISO reproducibility
+  * harder to extract info from help desk
+  * harder for help desk to deal with user requests: having to
+    re-learn constantly how things work / what's broken
+  * spend too much mental space dealing with always changing software
+  * lack of Debian skills internally at the moment ⇒ we'll need to
+    invest time learning
+  * need to better study the delta between N & N+1 (for help desk,
+    release notes, security audits, etc.)
+
+- Communication
+  * needs new version numbering scheme
+  * feeling of stalled/slower project for users because no big
+    all-at-a-time changes
+  * how do we deal with our (implicit) hardware support promise? i.e.
+    "The hardware you purchase for Tails N.0 will work with N.x"
+  * harder to get press write stuff as we'll lack releases with tons
+    of changes like 2.0 or 3.0
+
+- Additional Software Packages: will they be pulled from current
+  testing or from our snapshot?
+
+# The plan
+
+* From now to the end of 2017-11: the Foundations Team tries to port
+  the code & test suite during sprints. If the work doesn't fit into
+  these sprints then we'll need to draw conclusions.
+* At the end of 2017-11:
+  1. [[!tails_ticket 14578 desc="Decide"]] whether we want to release
+     Tails based on Debian testing
+     in 2018-01, 2018-04, or give up and rather release it mid-2019.
+     The following assumes "in 2018-01" and will need to be adjusted
+     if we decide something else.
+  2. The Foundations Team tells technical writers what needs to be
+     updated ([[!tails_ticket 14579]])
+* November-January: technical writers update the documentation
+* January 16: first Tails release based on Debian testing
