@@ -5,53 +5,73 @@
 What are reproducible builds?
 =============================
 
-Reproducible builds are a set of software development practices that
-create a verifiable path from human readable source code to the binary
-code used by computers.
+> Reproducible builds are a set of software development practices that
+> create a verifiable path from human readable source code to the binary
+> code used by computers.
+>
+> Most aspects of software verification are done on source code, as that
+> is what humans can reasonably understand. But most of the time,
+> computers require software to be first built into a long string of
+> numbers to be used. With reproducible builds, multiple parties can redo
+> this process independently and ensure they all get exactly the same
+> result. We can thus gain confidence that a distributed binary code is
+> indeed coming from a given source code.
 
-Most aspects of software verification are done on source code, as that
-is what humans can reasonably understand. But most of the time,
-computers require software to be first built into a long string of
-numbers to be used. With reproducible builds, multiple parties can redo
-this process independently and ensure they all get exactly the same
-result. We can thus gain confidence that a distributed binary code is
-indeed coming from a given source code. (Quoted from
-[[https://reproducible-builds.org]])
+(Quoted from <https://reproducible-builds.org>)
 
 Tails ISO images should be reproducible: everybody who
 builds the ISO should be able to obtain the exact same resulting ISO
-image from a given Git commit.
+image from a given Git tag.
 
-Building a Tails ISO image
-==========================
+Build and compare a Tails ISO image
+===================================
 
-Refer to our [[complete build instructions|contribute/build]] or to the
-[[quick guide|contribute/build/quick]].
+Build a Tails ISO image
+-----------------------
 
-<a id="verify"></a>
-How do I verify my build against an official build?
-===================================================
+See the [[build instructions|contribute/build]].
 
-Using OpenPGP
--------------
+<a id="verify-iso"></a>
+How do I verify the ISO I have built against the official one?
+--------------------------------------------------------------
+
+You can verify that the ISO image you have built is identical to the
+official one we published either with OpenPGP or with a checksum.
+
+### Verify with OpenPGP
 
 When you reproducibly build our ISO you should obtain a file that is
 exactly the same as the official Tails ISO image, thus, *our* signature
 should be able to verify *your* ISO for you.
-[[Download our OpenPGP signature|/install/download/openpgp]] and verify
-it against your own build.
 
-Using checksums
----------------
+[[Download and verify our OpenPGP signature|/install/download/openpgp]]
+against your own ISO image.
 
-Furthermore, you can find the SHA-256 sum of the latest ISO in our
-[IDFs](https://tails.boum.org/install/v1/Tails/amd64/stable/latest.yml).
-This SHA sum can also be used to verify that you obtained the same ISO
-image by running `sha256sum yourimage.iso` on your ISO and comparing
-both sums to each other.
+### Verify with a checksum
 
-Verifying IUKs
---------------
+To verify that the ISO image you have built is identical as the
+official one:
+
+1. Compute the checksum of your ISO image by executing the following
+   command on it:
+
+        sha256sum yourimage.iso
+
+2. Compare the SHA-256 checksum of your ISO image with the one found
+   in the official [ISO description file](https://tails.boum.org/install/v1/Tails/amd64/stable/latest.yml).
+
+Build and compare a Tails upgrade (IUK)
+=======================================
+
+Build a Tails IUK
+-----------------
+
+See
+[[Build the Incremental Upgrade Kits|contribute/release_process#prepare-iuk]]
+section in our Release process documentation.
+
+Verify IUKs
+-----------
 
 You can get the SHA-256 of any IUK by setting the `SOURCE` and
 `TARGET` variables appropriately, for example:
@@ -77,7 +97,7 @@ and then run:
     print('SHA-256:', iuk['sha256'])
     EOF
     else
-      echo 'PGP verification of the UDF failed. Are you sure you have ' \
+      echo 'OpenPGP verification of the UDF failed. Are you sure you have ' \
            'Tails signing key imported into you keyring?' >&2
     fi
 
@@ -116,5 +136,5 @@ access to the Internet to take care of a release.
 Related information
 ===================
 
-More detailed information can be found on our blueprint about
-[[Reproducible Builds|blueprint/reproducible_builds/]].
+More detailed information can be found on our [[blueprint about
+Reproducible Builds|blueprint/reproducible_builds/]].
