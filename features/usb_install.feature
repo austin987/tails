@@ -93,7 +93,7 @@ Feature: Installing Tails to a USB drive
     And I fail to upgrade Tails on USB drive "isohybrid" by cloning
     Then I am suggested to do a "Install by cloning"
     When I kill the process "tails-installer"
-    And I install Tails to USB drive "mbr" by cloning
+    And I install Tails to USB drive "isohybrid" by cloning
     Then the running Tails is installed on USB drive "isohybrid"
     But there is no persistence partition on USB drive "isohybrid"
     When I shutdown Tails and wait for the computer to power off
