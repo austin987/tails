@@ -82,7 +82,7 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "mbr"
 
-  Scenario: Writing a Tails isohybrid to a USB drive and booting it, then trying to upgrading it but ending up having to do a fresh installation, which boots
+  Scenario: Writing a Tails isohybrid to a USB drive and booting it, then installing Tails on top of it using Tails Installer, and it still boots
     Given a computer
     And I temporarily create a 7200 MiB disk named "isohybrid"
     And I write the Tails ISO image to disk "isohybrid"
