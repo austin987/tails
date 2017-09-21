@@ -35,11 +35,15 @@ else
   package_members << "org.sikuli.script.Settings"
 end
 
+# Note: we can't use anything that starts with "Java" on the right
+# side, otherwise the :Java constant is defined and then
+# test/unit/assertions will use JRuby-specific code that breaks our
+# own code.
 translations = Hash[
                     "org.sikuli.script", "Sikuli",
                     "org.sikuli.basics", "Sikuli",
-                    "java.lang", "Java::Lang",
-                    "java.io", "Java::Io",
+                    "java.lang", "RJava::Lang",
+                    "java.io", "RJava::Io",
                    ]
 
 for p in package_members
@@ -61,9 +65,9 @@ end
 # Bind Java's stdout to debug_log() via our magical pseudo fifo
 # logger.
 def bind_java_to_pseudo_fifo_logger
-  file_output_stream = Java::Io::FileOutputStream.new(DEBUG_LOG_PSEUDO_FIFO)
-  print_stream = Java::Io::PrintStream.new(file_output_stream)
-  Java::Lang::System.setOut(print_stream)
+  file_output_stream = RJava::Io::FileOutputStream.new(DEBUG_LOG_PSEUDO_FIFO)
+  print_stream = RJava::Io::PrintStream.new(file_output_stream)
+  RJava::Lang::System.setOut(print_stream)
 end
 
 def findfailed_hook(pic)
