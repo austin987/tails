@@ -16,6 +16,17 @@ if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
 fi
 
+if [ -n "${SOURCE_DATE_EPOCH}" ]; then
+    CURRENT_EPOCH="$(date --utc +%s)"
+    if [ "${SOURCE_DATE_EPOCH}" -gt "${CURRENT_EPOCH}" ]; then
+        echo "SOURCE_DATE_EPOCH is set before the current time. Exiting."
+        exit 1
+    fi
+else
+    echo "SOURCE_DATE_EPOCH is not set. Exiting."
+    exit 1
+fi
+
 # get git branch or tag so we can set the basename appropriately, i.e.:
 # * if we build from a tag: tails-$ARCH-$TAG.iso
 # * otherwise:              tails-$ARCH-$BRANCH-$VERSION-$TIME-$COMMIT.iso
