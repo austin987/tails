@@ -44,6 +44,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function toggleNextStep(state) {
+    hide(document.getElementById('skip-download-direct'));
+    hide(document.getElementById('skip-verification-direct'));
+    hide(document.getElementById('next-direct'));
+    show(document.getElementById(state));
+  }
+
+  function resetVerificationResult(result) {
+    hide(document.getElementById('verification-successful'));
+    hide(document.getElementById('verification-failed'));
+    hide(document.getElementById('verification-failed-again'));
+    toggleNextStep('skip-verification-direct');
+  }
+
+  function showVerificationResult(result) {
+    hide(document.getElementById('verify-download'));
+    resetVerificationResult();
+    if(result == 'successful') {
+      show(document.getElementById('verification-successful'));
+      toggleNextStep('next-direct');
+    }
+    if(result == 'failed') {
+      show(document.getElementById('verification-failed'));
+    }
+    if(result == 'failed-again') {
+      show(document.getElementById('verification-failed-again'));
+    }
+  }
+
   // Show initial screen for supported browser
   toggleDisplay(document.getElementsByClassName('no-js'), 'hide');
   toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
@@ -55,11 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('direct-download').onclick = function() {
     opaque(document.getElementById('step-verify-direct'));
     show(document.getElementById('verify-download'));
-    hide(document.getElementById('verification-result'));
-    hide(document.getElementById('verification-successful'));
-    hide(document.getElementById('skip-download-direct'));
-    hide(document.getElementById('next-direct'));
-    show(document.getElementById('skip-verification-direct'));
+    resetVerificationResult();
     transparent(document.getElementById('skip-download-bittorrent'));
     transparent(document.getElementById('step-continue-bittorrent'));
   }
@@ -77,11 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Display "Verification successful" when "Verify download" is clicked
   // XXX: This should be done by the extension instead
   document.getElementById('verify-download').onclick = function() {
-    hide(document.getElementById('verify-download'));
-    show(document.getElementById('verification-result'));
-    show(document.getElementById('verification-successful'));
-    hide(document.getElementById('skip-verification-direct'));
-    show(document.getElementById('next-direct'));
+    showVerificationResult('failed-again');
   }
 
 });
