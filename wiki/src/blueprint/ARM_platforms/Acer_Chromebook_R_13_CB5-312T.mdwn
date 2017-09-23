@@ -610,6 +610,14 @@ the partitioning and debootstrap steps have been done already.
  * Touchscreen: basically works, but I didn't try to exercise it much.
    It seems that some parts of the GNOME UI don't work with touch but
    _only_ when the display is rotated (e.g. flipped to tablet mode).
+ * GNOME Shell does not get any hardware acceleration (glamor, dri3,
+   EGL) so it's "falling back to sw". And then both with Wayland and
+   X.Org, full-screen video playback eats tons of CPU to the point it
+   is totally unusable with Totem and VLC, and pretty bad even with
+   mpv. That's probably due to the lack of a `mediatek_dri.so` DRI
+   module for Mesa or VA-API support (the latter because
+   [[!debpts gstreamer1.0-vaapi]] is not installable on sid today);
+   I'll retry when the latter is fixed, that might help.
 
 ## Kernel approach 5: custom Debian kernel
 
