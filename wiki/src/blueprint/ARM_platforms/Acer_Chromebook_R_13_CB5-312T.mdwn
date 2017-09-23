@@ -136,7 +136,8 @@ Complete the bootstrap:
 
 	chroot ${MNT} /debootstrap/debootstrap --second-stage
 
-Configure the system:
+Configure the system and install what you'll need to make Wi-Fi
+and hardware work once you reboot on Debian:
 
 	cat > ${MNT}/etc/fstab <<EOF
 	${ROOT_PART} / ext4 errors=remount-ro 0 1
@@ -144,8 +145,13 @@ Configure the system:
 	echo "chromian" > ${MNT}/etc/hostname
 	cp /etc/resolv.conf ${MNT}/etc/resolv.conf
 	chroot ${MNT} apt-get update
-	chroot ${MNT} apt-get install -y cgpt vboot-utils \
-	        vboot-kernel-utils
+	chroot ${MNT} apt-get install -y \
+	                 alsa-utils \
+	                 cgpt \
+	                 network-manager \
+	                 vboot-utils \
+	                 vboot-kernel-utils \
+	                 wireless-tools
 	chroot ${MNT} passwd -d root
 
 
