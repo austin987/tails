@@ -70,6 +70,7 @@ Set some variables:
 	MNT=/mnt/debian
 	DATA_PART_SIZE=15292383
 	sudo mkdir -p ${MNT}
+	DEBIAN_CODENAME=stretch
 
 If using a USB drive:
 
@@ -96,7 +97,9 @@ would be nice to be a bit more generous during the partitioning stage :)
 	sudo blockdev --rereadpt ${DEV}
 	sudo mkfs.ext4 ${ROOT_PART}
 	sudo mount ${ROOT_PART} ${MNT}
-	sudo debootstrap --arch=arm64 --foreign stretch ${MNT} http://ftp.de.debian.org/debian
+	sudo debootstrap --arch=arm64 --foreign "${DEBIAN_CODENAME:?}" \
+	        "${MNT:?}" \
+	        http://ftp.de.debian.org/debian
 
 Unmount the filesystems
 
