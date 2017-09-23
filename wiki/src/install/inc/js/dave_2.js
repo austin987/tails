@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
       elm.style.opacity = '1.0';
       var siblings = elm.querySelectorAll('a');
       for (let i = 0; i < siblings.length; i++) {
-        siblings[i].classList.remove('disabled');
+        siblings[i].style.pointerEvents = 'auto';
       }
   }
 
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
       elm.style.opacity = '0.3';
       var siblings = elm.querySelectorAll('a');
       for (let i = 0; i < siblings.length; i++) {
-        siblings[i].classList.add('disabled');
+        siblings[i].style.pointerEvents = 'none';
       }
   }
 
