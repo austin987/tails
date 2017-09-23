@@ -66,26 +66,28 @@ See "Kernel approach 5: custom Debian kernel" below for a try at it.
 
 Set some variables:
 
-	DEV=/dev/sdb
 	MNT=/mnt/debian
-	DATA_PART_SIZE=15292383
 	sudo mkdir -p ${MNT}
 	DEBIAN_CODENAME=stretch
 
-If using a USB drive:
+If using a 8 GiB USB drive:
 
+	DEV=$(readlink -f /dev/disk/by-id/usb-XXX)
+	KERNEL_PART=${DEV}1
 	ROOT_PART=${DEV}2
+	DATA_PART_SIZE=15292383
 
-Else, if using a micro-SD card:
+Else, if using a 64 GiB micro-SD card:
 
+	DEV=$(readlink -f /dev/disk/by-id/mmc-XXX)
+	KERNEL_PART=${DEV}p1
 	ROOT_PART=${DEV}p2
+	DATA_PART_SIZE=XXX
 
 Partitioning the device:
 
 	sudo parted --script ${DEV} mklabel gpt
 	sudo cgpt create ${DEV}
-
-Below is for a 8 GiB device, adjust if needed.
 
 XXX: the kernel partition is (still) too small for a Stretch kernel +
 the gzip-compressed initrd generated from a running Debian desktop
@@ -118,7 +120,7 @@ Enable booting a self-signed kernel from USB/micro-SD:
 
 	enable_dev_usb_boot
 
-Set some variables:
+Set some variables (adjust as above if using a micro-SD card):
 
 	DEV=/dev/sda
 	ROOT_PART=${DEV}2
