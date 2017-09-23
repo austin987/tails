@@ -558,6 +558,10 @@ we'd better start from the Arch Linux kernel config + included firmware
 
 ## Kernel approach 4: Arch Linux' ChromeOS-based kernel
 
+The results below are about `ArchLinuxARM-2017.09-oak-rootfs.tar.gz`,
+that's available at the time of writing in
+<http://os.archlinuxarm.org/os/mediatek/>.
+
 I've followed
 <https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
 to install Arch Linux on a USB stick, and it booted flawlessly.
@@ -582,7 +586,7 @@ the partitioning and debootstrap steps have been done already.
 	          -exec gunzip '{}' \;
 	sudo dd bs=1M if="${MNT:?}/boot/vmlinux.kpart" of="${KERNEL_PART:?}"
 	sync
-	sudo depmod --basedir "${MNT:?}" 3.18.0-6-ARCH
+	sudo depmod --basedir "${MNT:?}" 3.18.0-9-ARCH
 	sudo umount "${MNT:?}"
 
 ### Status
@@ -595,8 +599,9 @@ the partitioning and debootstrap steps have been done already.
  * Wi-Fi works.
  * Display backlight brightness can be adjusted with the GNOME Shell
    UI (in the top-right menu).
- * The GNOME sound preferences show no sound device, and I see error
-   messages in the Journal about `mtk-rt5650 sound`.
+ * Sound works after unmuting a bunch of channels with `alsamixer` as
+   documented on the *Wiki* tab of
+   <https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
  * The GNOME UI doesn't notice when AC power is disconnected.
  * Accelerometer and automatic screen rotation: mostly works, not as
    clever as I hoped.
