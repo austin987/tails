@@ -94,8 +94,8 @@ the gzip-compressed initrd generated from a running Debian desktop
 system. Compressing it with xz (as instructed below) fixes that, but it
 would be nice to be a bit more generous during the partitioning stage :)
 
-	sudo cgpt add -t kernel -l kernel -b 34 -s 65536 ${DEV}
-	sudo cgpt add -t data -l / -b 65570 -s ${DATA_PART_SIZE} ${DEV}
+	sudo cgpt add -i 1 -S 1 -T 5 -P 12 -t kernel -l kernel -b 8192 -s 262144 ${DEV}
+	sudo cgpt add -t data -l / -b 270336 -s ${DATA_PART_SIZE} ${DEV}
 	sudo blockdev --rereadpt ${DEV}
 	sudo mkfs.ext4 ${ROOT_PART}
 	sudo mount ${ROOT_PART} ${MNT}
@@ -212,11 +212,6 @@ Copy the non-free firmware for the wifi device:
 Umount the filesystems:
 
 	umount ${MNT}
-
-Mark the newly written kernel partition as good and set the
-priority:
-
-	cgpt add -i 1 -S 1 -T 5 -P 12 ${DEV}
 
 ### Debugging
 
