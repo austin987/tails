@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
   transparent(document.getElementById('step-continue-direct'), 'transparent');
   transparent(document.getElementById('step-verify-bittorrent'), 'transparent');
 
-  // Display "Verify with your browser" when "Direct download is clicked"
+  // Display "Verify with your browser" when "Direct download" is clicked
   document.getElementById('direct-download').onclick = function() {
     opaque(document.getElementById('step-verify-direct'));
     show(document.getElementById('verify-download'));
