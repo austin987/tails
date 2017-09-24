@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+  function showFloatingToggleableLinks() {
+    var links = document.getElementsByClassName('floating-toggleable-link');
+    for (let i = 0; i < links.length; i++) {
+      links[i].style.display = 'block';
+    }
+  }
+  showFloatingToggleableLinks();
+
   function opaque(elm) {
     elm.style.opacity = '1.0';
     var siblings = elm.querySelectorAll('a');
