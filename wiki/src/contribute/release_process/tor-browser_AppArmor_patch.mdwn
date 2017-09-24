@@ -23,18 +23,10 @@ Fetch:
     git fetch debian && \
     git fetch upstream
 
-Figure our which is the most recent Debian release:
-
-    git show debian/debian/sid:debian/changelog
-
-and set `VERSION` accordingly, e.g.:
-
-    VERSION=0.2.8-2
-
 Finally, make our repo up-to-date:
 
-    TAG="debian/${VERSION}"
-    git merge --no-ff "${TAG}"
+    LATEST_TAG="$(git tag --list 'debian/*' --sort=version:refname | tail -n1)"
+    git merge --no-ff "${LATEST_TAG}"
 
 # Prepare a branch for upstream
 
