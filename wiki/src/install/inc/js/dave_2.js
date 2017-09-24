@@ -1,19 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
 
   function opaque(elm) {
-      elm.style.opacity = '1.0';
-      var siblings = elm.querySelectorAll('a');
-      for (let i = 0; i < siblings.length; i++) {
-        siblings[i].style.pointerEvents = 'auto';
-      }
+    elm.style.opacity = '1.0';
+    var siblings = elm.querySelectorAll('a');
+    for (let i = 0; i < siblings.length; i++) {
+      siblings[i].style.pointerEvents = 'auto';
+    }
   }
 
   function transparent(elm) {
-      elm.style.opacity = '0.3';
-      var siblings = elm.querySelectorAll('a');
-      for (let i = 0; i < siblings.length; i++) {
-        siblings[i].style.pointerEvents = 'none';
-      }
+    elm.style.opacity = '0.3';
+    var siblings = elm.querySelectorAll('a');
+    for (let i = 0; i < siblings.length; i++) {
+      siblings[i].style.pointerEvents = 'none';
+    }
   }
 
   function toggleOpacity(elm, mode) {
@@ -27,11 +27,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function hide(elm) {
-      elm.style.display = 'none';
+    elm.style.display = 'none';
   }
 
   function show(elm) {
-      elm.style.display = 'inline-block';
+    elm.style.display = 'inline-block';
   }
 
   function toggleDisplay(elm, mode) {
