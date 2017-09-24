@@ -52,10 +52,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function resetVerificationResult(result) {
+    hide(document.getElementById('verifying-download'));
     hide(document.getElementById('verification-successful'));
     hide(document.getElementById('verification-failed'));
     hide(document.getElementById('verification-failed-again'));
     toggleNextStep('skip-verification-direct');
+  }
+
+  function showVerifyingDownload() {
+    hide(document.getElementById('verify-download'));
+    show(document.getElementById('verifying-download'));
   }
 
   function showVerificationResult(result) {
@@ -102,7 +108,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Display "Verification successful" when "Verify download" is clicked
   // XXX: This should be done by the extension instead
   document.getElementById('verify-download').onclick = function() {
-    showVerificationResult('failed-again');
+    showVerifyingDownload();
+    setTimeout(function(){showVerificationResult('failed-again')}, 1500);
   }
 
 });
