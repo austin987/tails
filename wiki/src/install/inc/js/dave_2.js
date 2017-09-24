@@ -76,16 +76,21 @@ document.addEventListener('DOMContentLoaded', function() {
   function showVersionForSupportedBrowser() {
     toggleDisplay(document.getElementsByClassName('no-js'), 'hide');
     toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
-    transparent(document.getElementById('step-verify-direct'), 'transparent');
-    transparent(document.getElementById('step-continue-direct'), 'transparent');
-    transparent(document.getElementById('step-verify-bittorrent'), 'transparent');
+    toggleDirectBitTorrent('direct');
   }
 
-  function toggleNextStep(state) {
-    hide(document.getElementById('skip-download-direct'));
-    hide(document.getElementById('skip-verification-direct'));
-    hide(document.getElementById('next-direct'));
-    show(document.getElementById(state));
+  function toggleContinueLink(method, state) {
+    if(method == 'direct') {
+      hide(document.getElementById('skip-download-direct'));
+      hide(document.getElementById('skip-verification-direct'));
+      hide(document.getElementById('next-direct'));
+      show(document.getElementById(state));
+    }
+    if(method == 'bittorrent') {
+      hide(document.getElementById('skip-download-bittorrent'));
+      hide(document.getElementById('next-bittorrent'));
+      show(document.getElementById(state));
+    }
   }
 
   function showUpdateExtension() {
@@ -100,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
     hide(document.getElementById('verification-successful'));
     hide(document.getElementById('verification-failed'));
     hide(document.getElementById('verification-failed-again'));
-    toggleNextStep('skip-verification-direct');
+    toggleContinueLink('direct', 'skip-verification-direct');
   }
 
   function showVerifyingDownload() {
@@ -113,7 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
     resetVerificationResult();
     if(result == 'successful') {
       show(document.getElementById('verification-successful'));
-      toggleNextStep('next-direct');
+      opaque(document.getElementById('step-continue-direct'));
+      toggleContinueLink('direct', 'next-direct');
     }
     if(result == 'failed') {
       show(document.getElementById('verification-failed'));
@@ -123,15 +129,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  detectBrowser();
-
-  // Display "Verify with your browser" when "Direct download" is clicked
-  document.getElementById('direct-download').onclick = function() {
-    opaque(document.getElementById('step-verify-direct'));
-    show(document.getElementById('verify-download'));
-    resetVerificationResult();
-    transparent(document.getElementById('skip-download-bittorrent'));
+  function toggleDirectBitTorrent(method) {
+    transparent(document.getElementById('step-verify-direct'));
+    transparent(document.getElementById('step-continue-direct'));
+    transparent(document.getElementById('continue-link-direct'));
+    transparent(document.getElementById('step-verify-bittorrent'));
     transparent(document.getElementById('step-continue-bittorrent'));
+    transparent(document.getElementById('continue-link-bittorrent'));
+    if(method == 'direct') {
+      opaque(document.getElementById('step-verify-direct'));
+      opaque(document.getElementById('continue-link-direct'));
+      show(document.getElementById('verify-download'));
+    }
+    if(method == 'bittorrent') {
+      opaque(document.getElementById('step-verify-bittorrent'));
+      opaque(document.getElementById('step-continue-bittorrent'));
+      opaque(document.getElementById('continue-link-bittorrent'));
+      toggleContinueLink('bittorrent', 'next-bittorrent');
+    }
+  }
+
+  detectBrowser();
+  toggleDirectBitTorrent('none');
+  toggleContinueLink('direct', 'skip-download-direct');
+  toggleContinueLink('bittorrent', 'skip-download-bittorrent');
+  opaque(document.getElementById('continue-link-direct'));
+  opaque(document.getElementById('continue-link-bittorrent'));
+
+  // Display "Verify with your browser" when ISO image is clicked
+  document.getElementById('download-iso').onclick = function() {
+    toggleDirectBitTorrent('direct');
+    resetVerificationResult();
+  }
+
+  // Display "Verify with BitTorrent" when Torrent file is clicked
+  document.getElementById('download-torrent').onclick = function() {
+    toggleDirectBitTorrent('bittorrent');
   }
 
   // Display "Update extension" instead of "Install extension"
@@ -153,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // XXX: This should be done by the extension instead
   document.getElementById('verify-download').onclick = function() {
     showVerifyingDownload();
-    setTimeout(function(){showVerificationResult('failed-again')}, 1500);
+    setTimeout(function(){showVerificationResult('successful')}, 1500);
   }
 
 });
