@@ -16,6 +16,13 @@ and add a remote for the final upstream:
 
 # Make our repo up-to-date
 
+Fetch:
+
+    git checkout master && \
+    git pull && \
+    git fetch debian && \
+    git fetch upstream
+
 Figure our which is the most recent Debian release:
 
     git show debian/debian/sid:debian/changelog
@@ -26,11 +33,7 @@ and set `VERSION` accordingly, e.g.:
 
 Finally, make our repo up-to-date:
 
-    git checkout master && \
-    git pull && \
-    git fetch debian && \
-    git fetch upstream && \
-    TAG="debian/${VERSION}" && \
+    TAG="debian/${VERSION}"
     git merge --no-ff "${TAG}"
 
 # Prepare a branch for upstream
