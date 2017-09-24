@@ -31,7 +31,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function show(elm) {
-    elm.style.display = 'inline-block';
+    elm.style.display = 'initial';
+    if(elm.classList.contains('block')) {
+      elm.style.display = 'block';
+    }
+    if(elm.classList.contains('inline-block')) {
+      elm.style.display = 'inline-block';
+    }
   }
 
   function toggleDisplay(elm, mode) {
@@ -44,11 +50,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function detectBrowser() {
+    // XXX: This should be set by the browser detection script
+    var vendor = 'firefox';
+    if(vendor == 'firefox') {
+      showVersionForSupportedBrowser();
+      toggleDisplay(document.getElementsByClassName('chrome'), 'hide');
+      toggleDisplay(document.getElementsByClassName('firefox'), 'show');
+    }
+    if(vendor == 'chrome') {
+      showVersionForSupportedBrowser();
+      toggleDisplay(document.getElementsByClassName('firefox'), 'hide');
+      toggleDisplay(document.getElementsByClassName('chrome'), 'show');
+    }
+  }
+
+  function showVersionForSupportedBrowser() {
+    toggleDisplay(document.getElementsByClassName('no-js'), 'hide');
+    toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
+    transparent(document.getElementById('step-verify-direct'), 'transparent');
+    transparent(document.getElementById('step-continue-direct'), 'transparent');
+    transparent(document.getElementById('step-verify-bittorrent'), 'transparent');
+  }
+
   function toggleNextStep(state) {
     hide(document.getElementById('skip-download-direct'));
     hide(document.getElementById('skip-verification-direct'));
     hide(document.getElementById('next-direct'));
     show(document.getElementById(state));
+  }
+
+  function showUpdateExtension() {
+    hide(document.getElementById('install-extension'));
+    hide(document.getElementById('extension-installed'));
+    show(document.getElementById('update-extension'));
+    show(document.getElementById('extension-updated'));
   }
 
   function resetVerificationResult(result) {
@@ -79,12 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Show initial screen for supported browser
-  toggleDisplay(document.getElementsByClassName('no-js'), 'hide');
-  toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
-  transparent(document.getElementById('step-verify-direct'), 'transparent');
-  transparent(document.getElementById('step-continue-direct'), 'transparent');
-  transparent(document.getElementById('step-verify-bittorrent'), 'transparent');
+  detectBrowser();
 
   // Display "Verify with your browser" when "Direct download" is clicked
   document.getElementById('direct-download').onclick = function() {
@@ -95,13 +126,18 @@ document.addEventListener('DOMContentLoaded', function() {
     transparent(document.getElementById('step-continue-bittorrent'));
   }
 
-  // Display "Verify download" when "Install extension" is clicked
+  // Display "Update extension" instead of "Install extension"
+  // XXX: This should be done by the extension instead
+  showUpdateExtension();
+
+  // Display "Verify download" when "Install extension" or "Update extension" is clicked
   // XXX: This should be done by the extension instead
   var buttons = document.getElementsByClassName('install-extension-btn');
   for (let i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener('click', function() {
       hide(document.getElementById('install-extension'));
-      show(document.getElementById('extension-installed'));
+      hide(document.getElementById('update-extension'));
+      show(document.getElementById('verification'));
     });
   }
 
