@@ -258,7 +258,6 @@ After('@product') do |scenario|
     info_log("Scenario failed at time #{elapsed}")
     screen_capture = @screen.capture
     save_failure_artifact("Screenshot", screen_capture.getFilename)
-    save_journal($config['TMPDIR'])
     exception_name = scenario.exception.class.name
     case exception_name
     when 'FirewallAssertionFailedError'
@@ -274,6 +273,14 @@ After('@product') do |scenario|
       info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
     when 'TimeSyncingError'
       save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
+    end
+    # Note that the remote shell isn't necessarily running at all
+    # times a scenario can fail (and a scenario failure could very
+    # well cause the remote shell to not respond any more, e.g. when
+    # we cause a system crash), so let's collect everything depending
+    # on the remote shell here:
+    if $vm.remote_shell_is_up?
+      save_journal($config['TMPDIR'])
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|
