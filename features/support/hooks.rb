@@ -133,10 +133,10 @@ def save_failure_artifact(type, path)
 end
 
 def save_journal(path)
-  File.open("#{$path}/systemd.journal", 'w') { |file|
+  File.open("#{path}/systemd.journal", 'w') { |file|
     file.write("#{$vm.execute('journalctl -a --no-pager').stdout}")
   }
-  save_failure_artifact("Systemd journal", "#{$path}/systemd.journal")
+  save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
