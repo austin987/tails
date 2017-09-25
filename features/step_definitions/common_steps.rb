@@ -363,14 +363,14 @@ end
 Given /^the time has synced$/ do
   begin
     ["/run/tordate/done", "/run/htpdate/success"].each do |file|
-       try_for(300) { $vm.execute("test -e #{file}").success? }
+      try_for(300) { $vm.execute("test -e #{file}").success? }
     end
-rescue
-  File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') { |file|
-    file.write($vm.execute('cat /var/log/htpdate.log').stdout)
-  }
-  raise TimeSyncingError.new("Time syncing failed")
-end
+  rescue
+    File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') { |file|
+      file.write($vm.execute('cat /var/log/htpdate.log').stdout)
+    }
+    raise TimeSyncingError.new("Time syncing failed")
+  end
 end
 
 Given /^available upgrades have been checked$/ do
