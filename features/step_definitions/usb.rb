@@ -87,12 +87,10 @@ def tails_installer_match_status(pattern)
   @installer.child('', roleName: 'text').text[pattern]
 end
 
-class UpgradeNotSupported < StandardError
-end
-
 When /^I start Tails Installer$/ do
-  step 'I run "export DEBUG=1 ; /usr/bin/tails-installer-launcher" in GNOME Terminal'
-  @installer = Dogtail::Application.new('tails-installer-launcher')
+  @installer_log_path = '/tmp/tails-installer.log'
+  step "I run \"/usr/bin/tails-installer --verbose > #{@installer_log_path} 2>&1\" in GNOME Terminal"
+  @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
   # Sometimes Dogtail will find the Installer and click its window
   # before it is shown (searchShowingOnly is not perfect) which
@@ -106,14 +104,6 @@ end
 When /^I am told that the destination device (.*)$/ do |status|
   try_for(10) do
     tails_installer_match_status(status)
-  end
-end
-
-When /^I am suggested to do a "Install by cloning"$/ do
-  try_for(10) do
-    tails_installer_match_status(
-      /You should instead use "Install by cloning" to upgrade Tails/
-    )
   end
 end
 
@@ -135,9 +125,6 @@ end
 
 When /^I (install|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from an ISO)$/ do |action, name, source|
   step "I start Tails Installer"
-  if tails_installer_match_status(/It is impossible to upgrade the device .+ #{$vm.disk_dev(name)}\d* /)
-    raise UpgradeNotSupported
-  end
   assert(tails_installer_is_device_selected?(name))
   if source == 'from an ISO'
     iso_radio = @installer.child('Use a downloaded Tails ISO image',
@@ -160,19 +147,9 @@ When /^I (install|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from 
       true
     end
   rescue Exception => e
-    path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
-    debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
+    debug_log("Tails Installer debug log:\n" +
+              $vm.file_content(@installer_log_path))
     raise e
-  end
-end
-
-When /^I fail to (.*)$/ do |step|
-  begin
-    step "I #{step}"
-  rescue UpgradeNotSupported
-    # this is what we expect
-  else
-    raise "The USB installer should not succeed"
   end
 end
 
