@@ -366,9 +366,9 @@ Given /^the time has synced$/ do
       try_for(300) { $vm.execute("test -e #{file}").success? }
     end
   rescue
-    File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') { |file|
+    File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') do |file|
       file.write($vm.execute('cat /var/log/htpdate.log').stdout)
-    }
+    end
     raise TimeSyncingError.new("Time syncing failed")
   end
 end
