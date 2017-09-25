@@ -25,7 +25,7 @@ intltool_update_po () {
             [ -f ${locale}.po ]     || continue
             [ -f ${locale}.po.new ] || continue
 
-            if [ "${FORCE}" = yes ]; then
+            if [ "${FORCE:-}" = yes ]; then
                 echo "Force-updating '${locale}.po'."
                 mv ${locale}.po.new ${locale}.po
             elif diff_without_pot_creation_date -q "${locale}.po" "${locale}.po.new"; then
