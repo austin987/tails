@@ -88,7 +88,8 @@ def tails_installer_match_status(pattern)
 end
 
 When /^I start Tails Installer$/ do
-  step 'I run "export DEBUG=1 ; /usr/bin/tails-installer > /tmp/tails-installer.log 2>&1" in GNOME Terminal'
+  @installer_log_path = '/tmp/tails-installer.log'
+  step "I run \"export DEBUG=1 ; /usr/bin/tails-installer > #{@installer_log_path} 2>&1\" in GNOME Terminal"
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
   # Sometimes Dogtail will find the Installer and click its window
@@ -146,8 +147,8 @@ When /^I (install|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from 
       true
     end
   rescue Exception => e
-    path = $vm.execute_successfully('ls -1 /tmp/tails-installer-*').stdout.chomp
-    debug_log("Tails Installer debug log:\n" + $vm.file_content(path))
+    debug_log("Tails Installer debug log:\n" +
+              $vm.file_content(@installer_log_path))
     raise e
   end
 end
