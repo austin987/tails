@@ -38,11 +38,16 @@ Prepare a branch, e.g.:
     UPSTREAM_FEATURE_BRANCH=silence-tor-browser-apparmor-logs
     git checkout -b "${UPSTREAM_FEATURE_BRANCH}" upstream-repo/master
 
-Edit `apparmor/torbrowser.Browser.firefox` accordingly, and commit. Then:
+Edit `apparmor/torbrowser.Browser.firefox`, adding changes that are
+supposed to go upstream , and commit. Then:
 
     TAILS_FEATURE_BRANCH=feature/14606-silence-tor-browser-apparmor-logs
     git checkout -b "${TAILS_FEATURE_BRANCH}" origin/master
     git merge "${UPSTREAM_FEATURE_BRANCH}"
+
+Again, edit `apparmor/torbrowser.Browser.firefox`, now adding changes
+that are Tails-specific, and commit. Then push:
+
     git push -u origin "${UPSTREAM_FEATURE_BRANCH}" "${TAILS_FEATURE_BRANCH}"
 
 Then submit `TAILS_FEATURE_BRANCH` for review on the Tails'
