@@ -367,7 +367,7 @@ Given /^the time has synced$/ do
     end
 rescue
   File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') { |file|
-    file.write("#{$vm.execute('cat /var/log/htpdate.log').stdout}")
+    file.write($vm.execute('cat /var/log/htpdate.log').stdout)
   }
   raise TimeSyncingError.new("Time syncing failed")
 end
