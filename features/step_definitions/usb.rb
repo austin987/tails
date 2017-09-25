@@ -89,7 +89,7 @@ end
 
 When /^I start Tails Installer$/ do
   @installer_log_path = '/tmp/tails-installer.log'
-  step "I run \"export DEBUG=1 ; /usr/bin/tails-installer > #{@installer_log_path} 2>&1\" in GNOME Terminal"
+  step "I run \"/usr/bin/tails-installer --verbose > #{@installer_log_path} 2>&1\" in GNOME Terminal"
   @installer = Dogtail::Application.new('tails-installer')
   @installer.child('Tails Installer', roleName: 'frame')
   # Sometimes Dogtail will find the Installer and click its window
