@@ -132,6 +132,13 @@ def save_failure_artifact(type, path)
   $failure_artifacts << [type, path]
 end
 
+def save_journal(path)
+  File.open("#{$path}/systemd.journal", 'w') { |file|
+    file.write("#{$vm.execute('journalctl -a --no-pager').stdout}")
+  }
+  save_failure_artifact("Systemd journal", "#{$path}/systemd.journal")
+end
+
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
 # are Tor nodes or located on the LAN. However, when we try
 # to verify that only such hosts are contacted we have a problem --
@@ -251,10 +258,22 @@ After('@product') do |scenario|
     info_log("Scenario failed at time #{elapsed}")
     screen_capture = @screen.capture
     save_failure_artifact("Screenshot", screen_capture.getFilename)
-    if scenario.exception.kind_of?(FirewallAssertionFailedError)
+    save_journal($config['TMPDIR'])
+    exception_name = scenario.exception.class.name
+    case exception_name
+    when 'FirewallAssertionFailedError'
       Dir.glob("#{$config["TMPDIR"]}/*.pcap").each do |pcap_file|
         save_failure_artifact("Network capture", pcap_file)
       end
+    when 'TorBootstrapFailure'
+      save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
+      chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
+      FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
+      FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+      info_log
+      info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+    when 'TimeSyncingError'
+      save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|

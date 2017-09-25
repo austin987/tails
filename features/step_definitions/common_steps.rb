@@ -357,10 +357,20 @@ Given /^Tor has built a circuit$/ do
   wait_until_tor_is_working
 end
 
+class TimeSyncingError < StandardError
+end
+
 Given /^the time has synced$/ do
-  ["/run/tordate/done", "/run/htpdate/success"].each do |file|
-    try_for(300) { $vm.execute("test -e #{file}").success? }
-  end
+  begin
+    ["/run/tordate/done", "/run/htpdate/success"].each do |file|
+       try_for(300) { $vm.execute("test -e #{file}").success? }
+    end
+rescue
+  File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') { |file|
+    file.write("#{$vm.execute('cat /var/log/htpdate.log').stdout}")
+  }
+  raise TimeSyncingError.new("Time syncing failed")
+end
 end
 
 Given /^available upgrades have been checked$/ do
