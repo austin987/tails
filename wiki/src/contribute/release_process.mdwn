@@ -686,7 +686,7 @@ Prepare upgrade-description files
             --next-version "${NEXT_PLANNED_VERSION:?}" \
             --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
             --next-version "${VERSION:?}.1" \
-            --iso "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso" \
+            --iso "${ISOS_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
             --previous-version "${VERSION:?}~rc1" \
             --iuks "${ISOS:?}" \
@@ -829,9 +829,7 @@ Upload the IUKs to the primary rsync mirror:
 
 Upload the ISO signature to the primary rsync mirror:
 
-    scp \
-       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
-       rsync.lizard:
+    scp "${ISO_PATH:?}.sig" rsync.lizard:
 
 Pick a build from `$RELEASE_BRANCH` that produced an ISO identical to
 the one you've built locally (`XXX` must be the job ID, i.e.
@@ -887,7 +885,7 @@ and on the live wiki (even for a release candidate):
        | ssh bittorrent.lizard gpg --import
     scp \
        "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+       "${ISOS_PATH:?}.sig" \
        bittorrent.lizard: && \
     ssh bittorrent.lizard << EOF
        mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
@@ -972,7 +970,7 @@ Rename the manifest of needed packages as well:
 Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
 `.torrent.sig` files into the website repository:
 
-	cp "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+	cp "${ISO_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
@@ -983,7 +981,7 @@ previous release (including any RC).
 
 Update the size of the ISO image in `inc/*`:
 
-        LC_NUMERIC=C ls -l -h ${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso | \
+        LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
           cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' \
           > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html"
 
