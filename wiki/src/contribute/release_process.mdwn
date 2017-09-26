@@ -922,6 +922,11 @@ Testing
    tentative ISO. E.g. <https://mirrors.kernel.org/tails/> or
    <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
    of bandwidth.
+
+        ./check-mirrors.rb --allow-multiple --channel ${DIST:?} \
+            --ip $(dig +short mirrors.kernel.org | tail -n1) \
+            tails-amd64-${VERSION:?}
+
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO, pointing them to the up-to-date mirror you've found previously.
 1. Email <tails@boum.org> and potential contributors (see
@@ -1066,10 +1071,10 @@ Wait for the HTTP mirrors to catch up
 
 Test downloading the ISO and IUK over HTTP.
 
-Make sure every active mirror in the pool has the new version (when
-releasing an RC, add `--channel alpha`):
+Make sure every active mirror in the pool has the new version:
 
-	./check-mirrors.rb --allow-multiple --fast tails-amd64-${VERSION:?}
+	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fasts \
+        tails-amd64-${VERSION:?}
 
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
 notify their administrators.
