@@ -686,7 +686,7 @@ Prepare upgrade-description files
             --next-version "${NEXT_PLANNED_VERSION:?}" \
             --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
             --next-version "${VERSION:?}.1" \
-            --iso "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso" \
+            --iso "${ISOS_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
             --previous-version "${VERSION:?}~rc1" \
             --iuks "${ISOS:?}" \
@@ -754,14 +754,10 @@ Prepare upgrade-description files
    release to the *test* channel in `$MASTER_CHECKOUT`, modify its content
    accordingly, sign it, commit and push:
 
-        # If more old versions are supported, add them (whitespace
-        # separated) to this variable
-        SUPPORTED_OLD_VERSIONS="${PREVIOUS_VERSION:?}"
-
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
-          for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
+          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
             stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
@@ -806,7 +802,7 @@ Update the ISO description file (IDF) used by the browser extension:
       url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
     EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v1/Tails/amd64/stable/latest.yml && \
+      git add wiki/src/install/v1/Tails/{i386,amd64}/stable/latest.yml && \
       git commit -m "Update IDF file for DAVE." )
 
 Upload images
@@ -833,9 +829,7 @@ Upload the IUKs to the primary rsync mirror:
 
 Upload the ISO signature to the primary rsync mirror:
 
-    scp \
-       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
-       rsync.lizard:
+    scp "${ISO_PATH:?}.sig" rsync.lizard:
 
 Pick a build from `$RELEASE_BRANCH` that produced an ISO identical to
 the one you've built locally (`XXX` must be the job ID, i.e.
@@ -891,7 +885,7 @@ and on the live wiki (even for a release candidate):
        | ssh bittorrent.lizard gpg --import
     scp \
        "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+       "${ISOS_PATH:?}.sig" \
        bittorrent.lizard: && \
     ssh bittorrent.lizard << EOF
        mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
@@ -926,6 +920,11 @@ Testing
    tentative ISO. E.g. <https://mirrors.kernel.org/tails/> or
    <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
    of bandwidth.
+
+        ./check-mirrors.rb --allow-multiple --channel ${DIST:?} \
+            --ip $(dig +short mirrors.kernel.org | tail -n1) \
+            tails-amd64-${VERSION:?}
+
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO, pointing them to the up-to-date mirror you've found previously.
 1. Email <tails@boum.org> and potential contributors (see
@@ -971,7 +970,7 @@ Rename the manifest of needed packages as well:
 Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
 `.torrent.sig` files into the website repository:
 
-	cp "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+	cp "${ISO_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
@@ -982,7 +981,7 @@ previous release (including any RC).
 
 Update the size of the ISO image in `inc/*`:
 
-        LC_NUMERIC=C ls -l -h ${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso | \
+        LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
           cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' \
           > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html"
 
@@ -1070,10 +1069,10 @@ Wait for the HTTP mirrors to catch up
 
 Test downloading the ISO and IUK over HTTP.
 
-Make sure every active mirror in the pool has the new version (when
-releasing an RC, add `--channel alpha`):
+Make sure every active mirror in the pool has the new version:
 
-	./check-mirrors.rb --allow-multiple --fast tails-amd64-${VERSION:?}
+	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fasts \
+        tails-amd64-${VERSION:?}
 
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
 notify their administrators.
