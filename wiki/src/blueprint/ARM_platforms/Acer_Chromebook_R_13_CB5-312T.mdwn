@@ -605,19 +605,33 @@ the partitioning and debootstrap steps have been done already.
    documented on the *Wiki* tab of
    <https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
  * The GNOME UI doesn't notice when AC power is disconnected.
- * Accelerometer and automatic screen rotation: mostly works, not as
-   clever as I hoped.
+ * Accelerometer and automatic screen rotation: kind of works, but not
+   in a smooth/reliable way enough to be useful.
+ * Keyboard is automatically disabled when the screen is flipped to
+   tablet mode.
  * Touchscreen: basically works, but I didn't try to exercise it much.
    It seems that some parts of the GNOME UI don't work with touch but
    _only_ when the display is rotated (e.g. flipped to tablet mode).
- * GNOME Shell does not get any hardware acceleration (glamor, dri3,
-   EGL) so it's "falling back to sw". And then both with Wayland and
-   X.Org, full-screen video playback eats tons of CPU to the point it
-   is totally unusable with Totem and VLC, and pretty bad even with
-   mpv. That's probably due to the lack of a `mediatek_dri.so` DRI
-   module for Mesa or VA-API support (the latter because
-   [[!debpts gstreamer1.0-vaapi]] is not installable on sid today);
-   I'll retry when the latter is fixed, that might help.
+   Some tweaks are needed to make it work really well, e.g.
+   `MOZ_USE_XINPUT2=1` for touch scrolling in Firefox 55.0.3-1
+    and setting `browser.gesture.pinch.in` to `cmd_fullZoomReduce` +
+    `browser.gesture.pinch.out` to `cmd_fullZoomEnlarge` for pinch
+    to zoom.
+ * Video playback:
+   - GNOME Shell does not get any hardware acceleration (glamor, dri3,
+     EGL) so it's "falling back to sw". And then both with Wayland and
+     X.Org, full-screen video playback eats tons of CPU to the point it
+     is totally unusable with Totem and VLC, and pretty bad even with
+     mpv. That's probably due to the lack of a `mediatek_dri.so` DRI
+     module for Mesa or VA-API support (the latter because
+     [[!debpts gstreamer1.0-vaapi]] is not installable on sid today);
+     I'll retry when the latter is fixed, that might help.
+   - GNOME Flashback (Metacity): even though the window manager does
+     not use tons of CPU, the end-result is only perceptibly better
+     with mpv (and even there it's not perfect). Touchscreen support
+     is far behind the GNOME Shell experience (no gesture to interact
+     with the desktop, poorly integrated screen keyboard, no automatic
+     rotation of the display).
 
 ## Kernel approach 5: custom Debian kernel
 
