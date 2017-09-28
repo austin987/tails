@@ -292,7 +292,9 @@ You *really* have to reboot between each language.
   - the search plugins must be localized for the expected locales
     (automate: [[!tails_ticket 10267]]).
     
-    StartPage should have localized *user interface* for:
+    StartPage should have localized *user interface* for (run this in
+    a Tails Git checkout of the commit the release under testing was built
+    from):
     
         grep --extended-regexp "[^:]*:[^:]*:[^:]*:[^:]*:[^:]+" \
             config/chroot_local-includes/usr/share/tails/browser-localization/descriptions | \
@@ -312,7 +314,17 @@ You *really* have to reboot between each language.
 
 ## Spellchecking
 
-* Check that every supported language is listed in the list of languages for
+To see which among the supported locales there should be no
+spellchecker, run this in a Tails Git checkout of the commit the
+release under testing was built from:
+
+    git grep NO_SPELLCHECKER_LOCALES= config/chroot_local-hooks/11-localize_browser
+
+Then do the follow in the same Tor Browser session running in the
+`en_US.UTF-8` locale (or whatever locale you are most comfortable
+identifying other language names in):
+
+* Check that the expected languages are listed in the list of languages for
   spell checking. (automate: [[!tails_ticket 10269]])
   - Visit <https://translate.google.com/>.
   - Right-click and choose "Check spelling".
