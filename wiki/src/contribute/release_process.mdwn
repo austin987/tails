@@ -1214,8 +1214,8 @@ this release.
                 echo "Failed to fetch ${url:?} so manually investigate #${ticket:?}" >&2
                 continue
             fi
-            ticket_status=$(echo "${url_content:?}" | \
-                sed -n 's,^.*<th class="status">Status:</th><td class="status">\([^<]\+\)</td>.*$,\1,p')
+            ticket_status="$(echo "${url_content:?}" | \
+                sed -n 's,^.*<div class="status attribute"><div class="label">Status:</div><div class="value">\([^<>]\+\)</div></div>.*$,\1,p')"
             if [ "${ticket_status:?}" != "New" ] && \
                [ "${ticket_status:?}" != "Confirmed" ] && \
                [ "${ticket_status:?}" != "In Progress" ]; then
