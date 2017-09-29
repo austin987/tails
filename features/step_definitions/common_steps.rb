@@ -310,9 +310,15 @@ end
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   @screen.wait(desktop_started_picture, 180)
-  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-  @screen.wait("GnomeSystrayFlorence.png", 30)
-  @screen.wait("DesktopTailsDocumentation.png", 30)
+  # Workaround #13461 by restarting nautilus-desktop
+  # if Desktop icons are not visible
+  begin
+    @screen.wait("DesktopTailsDocumentation.png", 30)
+  rescue FindFailed
+    step 'I kill the process "nautilus-desktop"'
+    $vm.spawn('nautilus-desktop', user: LIVE_USER)
+    @screen.wait("DesktopTailsDocumentation.png", 30)
+  end
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
@@ -351,9 +357,19 @@ Given /^Tor has built a circuit$/ do
   wait_until_tor_is_working
 end
 
+class TimeSyncingError < StandardError
+end
+
 Given /^the time has synced$/ do
-  ["/run/tordate/done", "/run/htpdate/success"].each do |file|
-    try_for(300) { $vm.execute("test -e #{file}").success? }
+  begin
+    ["/run/tordate/done", "/run/htpdate/success"].each do |file|
+      try_for(300) { $vm.execute("test -e #{file}").success? }
+    end
+  rescue
+    File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') do |file|
+      file.write($vm.execute('cat /var/log/htpdate.log').stdout)
+    end
+    raise TimeSyncingError.new("Time syncing failed")
   end
 end
 
@@ -637,6 +653,17 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
+  # Search disambiguations: below we assume that there is only one
+  # result, since multiple results introduces a race that leads to a
+  # non-deterministic choice (at least under load). To make the life
+  # easier for users of this step, let's collect workarounds here.
+  case app_name
+  when 'GNOME Terminal'
+    # "GNOME Terminal" and "Terminal" shows both the (non-Root)
+    # "Terminal" and "Root Terminal" search results, so let's use a
+    # keyword only found in the former's .desktop file.
+    app_name = 'commandline'
+  end
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
@@ -706,14 +733,6 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
     @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
     step 'the Tor Browser has started'
   end
-end
-
-When /^I click the blocked video icon$/ do
-  @screen.wait_and_click("TorBrowserBlockedVideo.png", 30)
-end
-
-When /^I accept to temporarily allow playing this video$/ do
-  @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
 
 When /^I click the HTML5 play button$/ do

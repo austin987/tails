@@ -20,7 +20,7 @@ with a CB5-312T K2L7.
 
 # Current status
 
-**Update**: see "Kernel approach 4: Arch Linux' ChromeOS-based kernel" for the most
+**Update**: see [[Kernel approach 4: Arch Linux' ChromeOS-based kernel|Acer_Chromebook_R_13_CB5-312T#arch-chromeos-based-kernel]] for the most
 promising status update so far.
 
 Both with the Chrome OS kernel and the Debian kernel approaches I end
@@ -66,39 +66,44 @@ See "Kernel approach 5: custom Debian kernel" below for a try at it.
 
 Set some variables:
 
-	DEV=/dev/sdb
 	MNT=/mnt/debian
-	DATA_PART_SIZE=15292383
 	sudo mkdir -p ${MNT}
+	DEBIAN_CODENAME=stretch
 
-If using a USB drive:
+If using a 8 GiB USB drive:
 
+	DEV=$(readlink -f /dev/disk/by-id/usb-XXX)
+	KERNEL_PART=${DEV}1
 	ROOT_PART=${DEV}2
+	DATA_PART_SIZE=15292383
 
-Else, if using a micro-SD card:
+Else, if using a 64 GiB micro-SD card:
 
+	DEV=$(readlink -f /dev/disk/by-id/mmc-XXX)
+	KERNEL_PART=${DEV}p1
 	ROOT_PART=${DEV}p2
+	DATA_PART_SIZE=XXX
 
 Partitioning the device:
 
 	sudo parted --script ${DEV} mklabel gpt
 	sudo cgpt create ${DEV}
 
-Below is for a 8 GiB device, adjust if needed.
-
 XXX: the kernel partition is (still) too small for a Stretch kernel +
 the gzip-compressed initrd generated from a running Debian desktop
 system. Compressing it with xz (as instructed below) fixes that, but it
 would be nice to be a bit more generous during the partitioning stage :)
 
-	sudo cgpt add -t kernel -l kernel -b 34 -s 65536 ${DEV}
-	sudo cgpt add -t data -l / -b 65570 -s ${DATA_PART_SIZE} ${DEV}
+	sudo cgpt add -i 1 -S 1 -T 5 -P 12 -t kernel -l kernel -b 8192 -s 262144 ${DEV}
+	sudo cgpt add -t data -l / -b 270336 -s ${DATA_PART_SIZE} ${DEV}
 	sudo blockdev --rereadpt ${DEV}
 	sudo mkfs.ext4 ${ROOT_PART}
 	sudo mount ${ROOT_PART} ${MNT}
-	sudo debootstrap --arch=arm64 --foreign stretch ${MNT} http://ftp.de.debian.org/debian
+	sudo debootstrap --arch=arm64 --foreign "${DEBIAN_CODENAME:?}" \
+	        "${MNT:?}" \
+	        http://ftp.de.debian.org/debian
 
-Unmount the filesystems
+Unmount the root filesystem:
 
 	sudo umount ${MNT}
 
@@ -115,7 +120,7 @@ Enable booting a self-signed kernel from USB/micro-SD:
 
 	enable_dev_usb_boot
 
-Set some variables:
+Set some variables (adjust as above if using a micro-SD card):
 
 	DEV=/dev/sda
 	ROOT_PART=${DEV}2
@@ -136,7 +141,8 @@ Complete the bootstrap:
 
 	chroot ${MNT} /debootstrap/debootstrap --second-stage
 
-Configure the system:
+Configure the system and install what you'll need to make Wi-Fi
+and hardware work once you reboot on Debian:
 
 	cat > ${MNT}/etc/fstab <<EOF
 	${ROOT_PART} / ext4 errors=remount-ro 0 1
@@ -144,8 +150,13 @@ Configure the system:
 	echo "chromian" > ${MNT}/etc/hostname
 	cp /etc/resolv.conf ${MNT}/etc/resolv.conf
 	chroot ${MNT} apt-get update
-	chroot ${MNT} apt-get install -y cgpt vboot-utils \
-	        vboot-kernel-utils
+	chroot ${MNT} apt-get install -y \
+	                 alsa-utils \
+	                 cgpt \
+	                 network-manager \
+	                 vboot-utils \
+	                 vboot-kernel-utils \
+	                 wireless-tools
 	chroot ${MNT} passwd -d root
 
 
@@ -202,11 +213,6 @@ Umount the filesystems:
 
 	umount ${MNT}
 
-Mark the newly written kernel partition as good and set the
-priority:
-
-	cgpt add -i 1 -S 1 -T 5 -P 12 ${DEV}
-
 ### Debugging
 
 I (intrigeri) have also tried:
@@ -248,6 +254,8 @@ Conclusion: the official ChromeOS kernel lacks too much stuff that
 a Debian userspace needs.
 
 ## Kernel approach 2 - Debian's kernel
+
+XXX: retry with a more recent Debian kernel.
 
 From inside ChromeOS:
 
@@ -548,7 +556,13 @@ Whatever: if we're ready to build a kernel based on the ChromeOS one,
 we'd better start from the Arch Linux kernel config + included firmware
 (see below).
 
+<a id="arch-chromeos-based-kernel"></a>
+
 ## Kernel approach 4: Arch Linux' ChromeOS-based kernel
+
+The results below are about `ArchLinuxARM-2017.09-oak-rootfs.tar.gz`,
+that's available at the time of writing in
+<http://os.archlinuxarm.org/os/mediatek/>.
 
 I've followed
 <https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
@@ -574,7 +588,7 @@ the partitioning and debootstrap steps have been done already.
 	          -exec gunzip '{}' \;
 	sudo dd bs=1M if="${MNT:?}/boot/vmlinux.kpart" of="${KERNEL_PART:?}"
 	sync
-	sudo depmod --basedir "${MNT:?}" 3.18.0-6-ARCH
+	sudo depmod --basedir "${MNT:?}" 3.18.0-9-ARCH
 	sudo umount "${MNT:?}"
 
 ### Status
@@ -587,14 +601,37 @@ the partitioning and debootstrap steps have been done already.
  * Wi-Fi works.
  * Display backlight brightness can be adjusted with the GNOME Shell
    UI (in the top-right menu).
- * The GNOME sound preferences show no sound device, and I see error
-   messages in the Journal about `mtk-rt5650 sound`.
+ * Sound works after unmuting a bunch of channels with `alsamixer` as
+   documented on the *Wiki* tab of
+   <https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
  * The GNOME UI doesn't notice when AC power is disconnected.
- * Accelerometer and automatic screen rotation: mostly works, not as
-   clever as I hoped.
+ * Accelerometer and automatic screen rotation: kind of works, but not
+   in a smooth/reliable way enough to be useful.
+ * Keyboard is automatically disabled when the screen is flipped to
+   tablet mode.
  * Touchscreen: basically works, but I didn't try to exercise it much.
    It seems that some parts of the GNOME UI don't work with touch but
    _only_ when the display is rotated (e.g. flipped to tablet mode).
+   Some tweaks are needed to make it work really well, e.g.
+   `MOZ_USE_XINPUT2=1` for touch scrolling in Firefox 55.0.3-1
+    and setting `browser.gesture.pinch.in` to `cmd_fullZoomReduce` +
+    `browser.gesture.pinch.out` to `cmd_fullZoomEnlarge` for pinch
+    to zoom.
+ * Video playback:
+   - GNOME Shell does not get any hardware acceleration (glamor, dri3,
+     EGL) so it's "falling back to sw". And then both with Wayland and
+     X.Org, full-screen video playback eats tons of CPU to the point it
+     is totally unusable with Totem and VLC, and pretty bad even with
+     mpv. That's probably due to the lack of a `mediatek_dri.so` DRI
+     module for Mesa or VA-API support (the latter because
+     [[!debpts gstreamer1.0-vaapi]] is not installable on sid today);
+     I'll retry when the latter is fixed, that might help.
+   - GNOME Flashback (Metacity): even though the window manager does
+     not use tons of CPU, the end-result is only perceptibly better
+     with mpv (and even there it's not perfect). Touchscreen support
+     is far behind the GNOME Shell experience (no gesture to interact
+     with the desktop, poorly integrated screen keyboard, no automatic
+     rotation of the display).
 
 ## Kernel approach 5: custom Debian kernel
 
@@ -1073,6 +1110,9 @@ steps have been done already.
 Same result as with the Debian kernels, which tends to confirm there's
 something wrong either in the vmlinuz/initrd format, or in the way we
 embed them in the FIT image.
+
+XXX: when running `mkimage`, try dropping `-p 2048`, adding `-A
+arm64`, using `-f auto` (with `-A`, `-O`, `-T` and `-C`).
 
 Another idea would be to have the Chromebook's bootloader
 [load our own GRUB](https://wiki.linaro.org/LEG/Engineering/Kernel/GRUBonUBOOT),

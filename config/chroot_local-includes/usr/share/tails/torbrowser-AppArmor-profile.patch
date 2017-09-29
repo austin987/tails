@@ -18,7 +18,7 @@
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -17,46 +19,53 @@
+@@ -17,48 +19,54 @@
    #dbus,
    network tcp,
  
@@ -43,9 +43,10 @@
 +  /var/lib/dbus/machine-id r,
  
 +  owner @{PROC}/@{pid}/environ r,
-   owner @{PROC}/[0-9]*/mountinfo r,
-   owner @{PROC}/[0-9]*/stat r,
-   owner @{PROC}/[0-9]*/task/*/stat r,
+   owner @{PROC}/@{pid}/mountinfo r,
+   owner @{PROC}/@{pid}/stat r,
+   owner @{PROC}/@{pid}/status r,
+   owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/ r,
@@ -61,6 +62,7 @@
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/components/*.so mr,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/browser/components/*.so mr,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox rix,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/plugin-container Pix,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/{,TorBrowser/UpdateInfo/}updates/[0-9]*/updater ix,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/{,TorBrowser/UpdateInfo/}updates/0/MozUpdater/bgupdate/updater ix,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profiles.ini r,
@@ -102,9 +104,20 @@
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -87,6 +96,34 @@
-   # sourced by the gnome abstraction, that we include.
-   deny /dev/dri/** rwklx,
+@@ -96,10 +104,44 @@
+ 
+   # Silence denial logs about permissions we don't need
+   deny /dev/dri/   rwklx,
++  deny @{HOME}/.cache/fontconfig/ rw,
++  deny @{HOME}/.cache/fontconfig/** rw,
++  deny @{HOME}/.config/gtk-2.0/ rw,
++  deny @{HOME}/.config/gtk-2.0/** rw,
++  deny @{HOME}/.mozilla/firefox/bookmarks/ r,
++  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
++  deny /usr/local/lib/tor-browser/update.test/ rw,
+   deny @{PROC}/@{pid}/net/route r,
+   deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
+   deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
  
 +  /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
 +  owner @{HOME}/.gstreamer*/ rw,
@@ -117,7 +130,6 @@
 +
 +  # Required for e10s
 +  /usr/local/lib/tor-browser/plugin-container Pix,
-+  owner /dev/shm/org.chromium.* rw,
 +
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
@@ -137,7 +149,7 @@
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,
  
-@@ -94,5 +131,11 @@
+@@ -107,5 +145,11 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
@@ -150,4 +162,3 @@
 +  deny /tmp/                 rwklx,
  }
 +
-
