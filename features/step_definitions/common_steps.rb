@@ -761,7 +761,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   @screen.type(output_file.sub(/[.]html$/, ''))
   @screen.type(Sikuli::Key.ENTER)
   if should_work
-    try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+    try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
       $vm.file_exist?("#{output_dir}/#{output_file}")
     }
   else
