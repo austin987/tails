@@ -76,12 +76,16 @@ no impact. Any hardware which regularly triggers a memory-based MCE is
 unlikely to even boot, and the default is 1 only for
 long-lived servers.
 
-### `kaslr`
+### kASLR
 
 Linux kASLR is known as not being particularly strong, but one has to
 start somewhere.
 See [self-protection.txt](https://github.com/torvalds/linux/blob/master/Documentation/security/self-protection.txt)
 for details.
+
+kASLR is enabled by default in the Debian kernel since 4.7~rc7-1~exp1
+(`CONFIG_RANDOMIZE_BASE` and `CONFIG_RANDOMIZE_MEMORY`) so there is no
+need to enable it with a specific kernel parameter.
 
 #### `kernel.kptr_restrict=2`
 
@@ -93,3 +97,14 @@ kernel address map from some external source. This is not hard, but
 certainly not all malware has such functionality.
 
 For this reason, we also make sure to purge `/boot/System.map`.
+
+#### `vm.mmap_rnd_bits`, `vm.mmap_rnd_compat_bits`
+
+These settings are
+[[!tails_gitweb config/chroot_local-includes/etc/sysctl.d/mmap_aslr.conf desc="set to the maximum supported value"]]
+in order to improve ASLR effectiveness for mmap, at the cost of
+increased address-space fragmentation.
+
+### `kernel.kexec_load_disabled = 1`
+
+kexec is dangerous: it enables replacement of the running kernel.
