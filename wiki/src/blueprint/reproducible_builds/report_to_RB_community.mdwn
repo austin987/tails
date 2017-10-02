@@ -216,6 +216,29 @@ reproducibility problem. But the aufs "Pseudo Link" feature
 was still causing problems, which were resolved by calling
 auplink to flush these pseudo-links.
 
+Future plans
+============
+
+As you can see in the Inputs section, the situation is still not
+ideal; we want the only input to be a specific state of the Tails
+source code, so the other two inputs would have to be eliminated
+some how:
+
+1. We need to ensure that the "snapshots of a few APT archives" indeed
+   are/were true snapshots of the Debian APT repos (at the specific
+   time) that they claim to be. This could probably be done during
+   each Tails build, before using the snapshot.
+
+1. The same goes for our "custom, overlay APT repository", when we
+   re-upload packages straight from Debian there (sometimes we need to
+   deviate from the snapshotted APT repo with just a few packages);
+   packages that we currently build ourselves and upload to this repo
+   should instead themselves be made to build reproducibly, and then
+   be built during the Tails build process.
+
+This work is on our roadmap for 2019:
+<https://labs.riseup.net/code/issues/14455>
+
 Conclusions
 ===========
 
