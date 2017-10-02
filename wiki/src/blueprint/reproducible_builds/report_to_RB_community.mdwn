@@ -97,16 +97,16 @@ machine that is created as part of the build process. The idea here is
 to create build VMs that are not identical, but similar enough to
 allow building identical ISO images, while avoiding the need to
 publish build VMs images: we don't need another large, trusted binary
-blob. Kudos to Ximin for suggesting this approach!
+blob. Kudos to Ximin Luo for suggesting this approach!
 
 The configuration of this virtual machine in encoded in Git along with
 all other relevant ISO build parameters:
 <https://git-tails.immerda.ch/tails/tree/vagrant>. Among other things,
 it includes the list of snapshots of APT archives that shall be used
-as APT souces inside the build VM:
+as APT sources inside the build VM:
 <https://git-tails.immerda.ch/tails/tree/vagrant/definitions/tails-builder/config/APT_snapshots.d>.
 
-This is documented in more details on
+This is documented more in detail on
 <https://tails.boum.org/blueprint/reproducible_builds/#how>.
 
 ISO filesystem
@@ -140,7 +140,7 @@ mksquashfs:
    <https://github.com/squashfskit/squashfskit/commit/32a07d4156a281084c90a4b78affc8b0b32a26fc>
 
 Another source of non-deterministic SquashFS generation was identified
-during the Reproducible Builds summit 2016; Alexander and Hanno Böck
+during the Reproducible Builds summit 2016; Alexander Couzens and Hanno Böck
 debugged and fixed it:
 <https://github.com/squashfskit/squashfskit/commit/afc0c76a170bd17cbd29bbec6ae6d2227e398570>
 
@@ -159,7 +159,7 @@ there so we did not bother generating them in a deterministic manner):
 We considered dropping even more stuff such as the fontconfig cache,
 but we've seen weird results and performance issues when doing so.
 
-Benefiting from previous work by Chris Lamb on live-build again, we
+Benefiting from previous work by Chris Lamb on live-build, we
 clamp mtimes to `$SOURCE_DATE_EPOCH`.
 
 We contributed a number of patches upstream to generate various files
@@ -187,7 +187,7 @@ and then use strip-nondeterminism to normalize them again, which
 required to first add a new feature to strip-nondeterminism:
 <https://bugs.debian.org/845203>.
 
-This project was the opportunity for us to finally remove GConf… after
+This project was the opportunity for us to finally remove GConf from Tails… after
 having contributed a patch upstream to generate
 `/var/lib/gconf/defaults/%gconf-tree-*.xml` reproducibly:
 <https://bugzilla.gnome.org/show_bug.cgi?id=784738>,
