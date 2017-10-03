@@ -75,7 +75,7 @@ We have tried to avoid big hammer approaches with side-effects that
 are hard to control, such as `faketime`.
 
 Whenever the cost/benefit ratio was reasonable, we have fixed
-reproducibility problems at the root, instead of doing so via
+reproducibility problems at the cause, instead of doing so via
 post-processing. We believe this approach to be safer (again, less
 hard to control side-effects) and to benefit everyone building
 operating systems that contain the pieces that are now generated in
@@ -83,9 +83,9 @@ a reproducible manner, instead of Tails only. Still, in some cases when
 post-processing was so much easier we went this way; we document this
 below so that others can reuse (and possibly generalize) our hacks.
 
-We had to optimize diffoscope quite a bit in order to make it cope
-with the large input files we wanted to feed it with; also, we added
-support for concatenated CPIO achives:
+We had to optimize diffoscope (<https://diffoscope.org/>) quite a bit
+in order to make it cope with the large input files we wanted to feed
+it with; also, we added support for concatenated CPIO achives:
 <https://bugs.debian.org/820631>
 
 Build environment
@@ -112,11 +112,12 @@ This is documented more in detail on
 ISO filesystem
 --------------
 
-This was easy thanks to Chris Lamb's previous work in xorriso and
-live-build:
+This was easy thanks to Chris Lamb's (<https://chris-lamb.co.uk/>)
+previous work in xorriso and live-build:
 
- - recent versions of xorriso honor `$SOURCE_DATE_EPOCH` for various
-   ISO image metadata
+ - recent versions of xorriso honor `$SOURCE_DATE_EPOCH`
+   (<https://reproducible-builds.org/specs/source-date-epoch/>) for
+   various ISO image metadata
  - `$SOURCE_DATE_EPOCH` is passed to xorriso's `--modification-date`
  - bootloader configuration templating uses `$SOURCE_DATE_EPOCH`
    anywhere it would write timestamps
