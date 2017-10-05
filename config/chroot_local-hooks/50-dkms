@@ -28,6 +28,19 @@ dkms install \
 # clean the build directory
 # rm -r /var/lib/dkms/virtualbox-guest/
 
+# Ensure the modules were actually built and installed: when
+# dkms.conf for a DKMS module includes a BUILD_EXCLUSIVE directive
+# which does not match our kernel version, the modules won't be built
+# and then we should abort the build.
+for module in aufs vboxguest vboxsf vboxvideo ; do
+   for modules_dir in /lib/modules/*/updates/dkms ; do
+      if [ ! -f "${modules_dir}/${module}.ko" ]; then
+	  echo "Can not find ${module} module in '${modules_dir}" >&2
+	  exit 1
+      fi
+   done
+done
+
 # virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before the package gets purged.
 rm /var/lib/dpkg/info/aufs-dkms.prerm
