@@ -1,0 +1,58 @@
+[[!meta title="Upstream our changes to Tor Browser's AppArmor policy"]]
+
+# Preparation (first time)
+
+If you don't have our `torbrowser-launcher` Git repo, clone it:
+
+    git clone tails@git.tails.boum.org:torbrowser-launcher
+
+and add a remote for Debian, which is our immediate upstream:
+
+    git remote add debian https://anonscm.debian.org/git/pkg-privacy/packages/torbrowser-launcher.git
+
+and add a remote for the final upstream:
+
+    git remote add upstream-repo https://github.com/micahflee/torbrowser-launcher
+
+# Make our repo up-to-date
+
+Fetch:
+
+    git checkout master && \
+    git pull && \
+    git fetch debian && \
+    git fetch upstream-repo
+
+Finally, make our repo up-to-date:
+
+    LATEST_TAG="$(git tag --list 'debian/*' --sort=version:refname | tail -n1)"
+    git merge --no-ff "${LATEST_TAG}"
+
+Just pay attentioin that you didn't merge some unwanted version from
+Debian experimental!
+
+# Prepare a branch for upstream
+
+Prepare a branch, e.g.:
+
+    UPSTREAM_FEATURE_BRANCH=silence-tor-browser-apparmor-logs
+    git checkout -b "${UPSTREAM_FEATURE_BRANCH}" upstream-repo/master
+
+Edit `apparmor/torbrowser.Browser.firefox`, adding changes that are
+supposed to go upstream , and commit. Then:
+
+    TAILS_FEATURE_BRANCH=feature/14606-silence-tor-browser-apparmor-logs
+    git checkout -b "${TAILS_FEATURE_BRANCH}" origin/master
+    git merge "${UPSTREAM_FEATURE_BRANCH}"
+
+Again, edit `apparmor/torbrowser.Browser.firefox`, now adding changes
+that are Tails-specific, and commit. Then push:
+
+    git push -u origin "${UPSTREAM_FEATURE_BRANCH}" "${TAILS_FEATURE_BRANCH}"
+
+Then submit `TAILS_FEATURE_BRANCH` for review on the Tails'
+side, and ask the reviewer to submit `UPSTREAM_FEATURE_BRANCH` as a
+pull request to
+[upstream](https://github.com/micahflee/torbrowser-launcher/) once s/he
+is happy with its state (alternatively, the reviewer reminds the patch
+submitter to send it).
