@@ -120,3 +120,111 @@ part of a broader community.
      updated ([[!tails_ticket 14579]])
 * November-January: technical writers update the documentation
 * January 16: first Tails release based on Debian testing
+
+# Zooming in on specific problems
+
+## How can the Foundations Team tell Technical Writers what part of our doc needs to be updated?
+
+The first time we'll have to deal with this problem is
+[[!tails_ticket 14579]], but it will come back every quarter.
+
+We want to automate this as much as we can, but let's be clear:
+automation will not fully solve this problem unless we switch to
+executable documentation (there is research and tools for that but
+we're not there yet). So some amount of manual documentation testing
+will be needed. Let's start with strategies that will limit the amount
+and frequency of the needed manual documentation testing, and further
+below we'll discuss manual testing.
+
+### Changes in our code, test suite, and list of included packages
+
+Whenever we have to adjust our code to keep working on Debian testing,
+it's plausible that the corresponding documentation needs an update as
+well. Developers could either proactively tell technical writers about
+it along the way, or look at `git diff` when requested to sum up what
+part of Tails is impacted by the changes.
+
+Similarly, whenever we have to update the test suite, it's plausible
+that the corresponding documentation needs an update as well.
+Test suite maintainers can then add the updated scenario to a list of
+things the technical writers should check (again: either incrementally
+or upon request).
+
+And finally, developers or technical writers could look at the diff
+between the old and new lists of included packages, to identify what
+part of Tails is impacted by the changes.
+
+All this is fine but it requires someone to keep a mental index of
+what kind of change impacts what part of our documentation. Not only
+this is boring work, but nobody is in a good position to do it, as it
+requires a good knowledge of our code base _and_ of our documentation.
+So I think we should build and maintain this index incrementally, in
+Git instead of in our minds, and use it automatically. Read on :)
+
+### Metadata that encodes the relationship between {source code, test suite, packages} and documentation pages
+
+Whenever we notice that changes in a given file in our source code,
+automated test suite scenario, or package, have an effect on a given
+documentation page, we could encode this information somewhere, in
+a machine-readable format. Then, we could write a program whose input
+would be:
+
+ * this metadata
+ * 2 Git commitish
+ * 2 package lists
+
+This program would output the list of documentation pages that are
+affected by the changes.
+
+This set of metadata shall be built and garbage-collected incrementally.
+
+### Automated testing
+
+As said above, _changes in_ our automated test suite can already help
+identify the bits of documentation that need an update. To boost this
+capability we could:
+
+ - Add steps to our existing tests to validate the screenshots we have
+   in our documentation.
+ - Add automated tests that specifically check things we document.
+ - Try to make our Gherkin scenarios closer to end-user documentation.
+
+### Manual testing of the documentation
+
+Which part of the documentation shall be tested, when, and by whom?
+
+The sources of information listed above should help focus this effort
+on the relevant parts of our documentation. 
+
+In many cases, a quick look will be enough, and following the entire
+doc page to the letter won't be needed. But likely stricter testing
+will be needed from time to time.
+
+Random ideas:
+
+ - Aim for automation: feed the aforementioned metadata store with
+   information gathered during manual testing, so that we need less
+   and less manual testing as time goes.
+
+ - Prioritize: focus on core pages.
+
+ - Spread the load between different release, i.e. test some pages for
+   some release and some others for another release.
+
+### Dismissed options
+
+#### Manual testing of Tails releases
+
+In theory our manual test suite could also help: some of the manual
+tests could be performed by following our end-user documentation to
+the letter. But I've not been able to find any single candidate test
+case for this, so let's forget it.
+
+#### Users and Help Desk
+
+Users and Help Desk are also in a good position to notice outdated
+bits and report them back, but they can only do so after the fact,
+while ideally we'd rather update the documentation _before_ the
+corresponding changes are released to our users. So if we receive such
+notifications, e.g. at RC time, fine, but let's not count on it
+too much.
