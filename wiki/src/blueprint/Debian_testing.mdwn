@@ -217,6 +217,98 @@ Remaining questions:
 
    XXX: sajolida?
 
+ - Defining sets of sources?
+
+   Tails user-facing features are built from a not-that-small number
+   of source files. It could be useful to express the fact that
+   changes to any of these source files (e.g. the ones that define the
+   "Tor Browser" feature) may affect a given doc page, without having
+   to list them all for every affected page.
+
+ - Defining sets of doc pages?
+
+   Similarly, it might be that some doc sections share most of their
+   dependencies. It could be useful to define named groups of pages.
+
+ - Who shall we optimize the data format for?
+
+   In practice, developers are the ones who know where a given
+   user-visible change comes from, so whenever a needed doc update was
+   missed, most likely the tech writers will ask the Foundations Team
+   either to add the missing metadata, or what exactly caused that
+   user-visible change so they can add it themselves.
+
+   I (intrigeri) am really not sure which of these two situations will
+   be the most common one, so I'm wary of optimizing too much for one
+   of these two groups at this point.
+
+ - Mapping source → doc, or doc → source?
+
+   Update: a format where we define a list of dependencies between
+   X doc pages and Y source files, without explicitly mapping one to
+   the other, would avoid having to choose too early, which would be
+   nice. I'll simply do that.
+
+   Internally, the code that uses this metadata will care about
+   "source → doc", but there's no reason why the data format itself
+   should be optimized for this program. Let's instead optimize it for
+   the humans who will maintain the metadata :)
+
+   "doc → source" expresses a "depends on" / "is affected by"
+   relationship, which is well suited when fixing the metadata after
+   a postmortem analysis of "why was that doc page not updated before
+   the release?". OTOH "source → doc" expresses an "impacts"
+   relationship, which is well suited to proactive adjustments of the
+   metadata, e.g. when a developer realizes their proposed branch will
+   impact the doc. I (intrigeri) am pretty sure that the first
+   situation will be the most common one for a while until we get used
+   to this metadata and the second one slowly takes over.
+
+
+Example (YAML):
+
+	# doc → source oriented
+	- page: doc/first_steps/accessibility
+	  files:
+	    - config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults
+	  packages:
+	    - caribou
+	    - dasher
+	    - orca
+	- page: doc/first_steps/startup_options
+	  package: tails-greeter
+	  files:
+	    - config/binary_local-hooks/*grub*
+	    - config/binary_local-hooks/*syslinux*
+	    - config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults
+	- page: doc/first_steps/startup_options/administration_password
+	  package: tails-greeter
+	- page: doc/first_steps/startup_options/bridge_mode
+	  packages:
+	    - obfs4proxy
+	    - tor
+	  file: config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
+
+	# "source → doc" oriented
+	- package: gnome-disk-utility
+	  pages:
+	    - doc/first_steps/persistence/change_passphrase
+	    - doc/first_steps/persistence/check_file_system
+	- package: tails-persistence-setup
+	  tests: persistence.feature
+	  pages:
+	    - doc/first_steps/persistence/configure
+	    - doc/first_steps/persistence/delete
+	- package: tails-greeter
+      files:
+	    - features/images/TailsGreeter*
+	  pages:
+	    - doc/first_steps/persistence/use
+	    - doc/first_steps/startup_options
+	    - doc/first_steps/startup_options/*
+
+
+
 ### Automated testing
 
 As said above, _changes in_ our automated test suite can already help
