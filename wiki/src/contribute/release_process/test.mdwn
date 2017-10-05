@@ -197,7 +197,16 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
   then:
 
-        echo 'TAILS_CHANNEL="test"' | sudo tee --append /etc/os-release && \
+        # Set TAILS_CHANNEL accordingly:
+        
+        # For actual releases:
+        TAILS_CHANNEL=test
+        
+        # For other (~rc, ~alpha...) releases:
+        TAILS_CHANNEL=alpha
+        
+        # Run:
+        echo "TAILS_CHANNEL=\"${TAILS_CHANNEL}\"" | sudo tee --append /etc/os-release && \
         tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
@@ -240,11 +249,12 @@ tracked by tickets prefixed with `todo/test_suite:`.
 `[can't-automate]`
 
 * Boot on bare-metal from USB.
-* Boot on bare-metal from DVD.
-* Again, boot on bare-metal from DVD, and measure the boot time (from
-  syslinux menu until the GNOME desktop is ready -- quickly press ENTER in the
-  Greeter) and compare with the boot time of the previous Tails
-  version. The new one should not be significantly slower to start.
+* Boot on bare-metal from DVD. Measure the boot time (from the
+  syslinux menu until the GNOME desktop is ready -- quickly press
+  ENTER in the Greeter) and compare with the boot time of the previous
+  Tails version. The new one should not be significantly slower to
+  start (for release candidates we do not always update the squashfs
+  sort file, so then it might be ok if somewhat slower).
 
 # Documentation
 
@@ -279,15 +289,42 @@ You *really* have to reboot between each language.
   layout as the X session. (automate: [[!tails_ticket 10263]])
 * In the Tor Browser:
   - Disconnect.me must be the default, pre-selected search plugin. (automate: [[!tails_ticket 10265]])
-  - the Disconnect.me, Startpage and Wikipedia search plugins must be
-    localized for the supported locales (automate: [[!tails_ticket 10267]]):
-
-        . /usr/local/lib/tails-shell-library/tor-browser.sh
-        supported_tor_browser_locales
+  - the search plugins must be localized for the expected locales
+    (automate: [[!tails_ticket 10267]]).
+    
+    StartPage should have localized *user interface* for (run this in
+    a Tails Git checkout of the commit the release under testing was built
+    from):
+    
+        grep --extended-regexp "[^:]*:[^:]*:[^:]*:[^:]*:[^:]+" \
+            config/chroot_local-includes/usr/share/tails/browser-localization/descriptions | \
+            sed -n --regexp-extended 's/^([^:]+):.*$/\1/p'
+    
+    StartPage should have localized *search results* for:
+    
+        grep --extended-regexp "[^:]*:[^:]*:[^:]*:[^:]+:[^:]*" \
+            config/chroot_local-includes/usr/share/tails/browser-localization/descriptions | \
+            sed -n --regexp-extended 's/^([^:]+):.*$/\1/p'
+    
+    DDG should have localized user interface *and* search results, and
+    Wikipedia should have a localized plugin, for:
+    
+        sed -n --regexp-extended 's/^([^:]+):.*$/\1/p' \
+            config/chroot_local-includes/usr/share/tails/browser-localization/descriptions
 
 ## Spellchecking
 
-* Check that every supported language is listed in the list of languages for
+To see which among the supported locales there should be no
+spellchecker, run this in a Tails Git checkout of the commit the
+release under testing was built from:
+
+    git grep NO_SPELLCHECKER_LOCALES= config/chroot_local-hooks/11-localize_browser
+
+Then do the follow in the same Tor Browser session running in the
+`en_US.UTF-8` locale (or whatever locale you are most comfortable
+identifying other language names in):
+
+* Check that the expected languages are listed in the list of languages for
   spell checking. (automate: [[!tails_ticket 10269]])
   - Visit <https://translate.google.com/>.
   - Right-click and choose "Check spelling".
