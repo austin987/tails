@@ -187,7 +187,17 @@ identify the bits of documentation that need an update. To boost this
 capability we could:
 
  - Add steps to our existing tests to validate the screenshots we have
-   in our documentation.
+   in our documentation. This seems doable but not trivial:
+    - Screenshots embed context, e.g. window placement and elements
+      that change all the time; so we would have to extract the
+      relevant part of each screenshots (for example based on
+      coordinates encoded somewhere).
+    - Credentials used when taking screenshots (e.g. Pidgin) must be
+      the ones used by the isotesters.
+    - Screenshots in our documentation are resized to 66% so we need
+      to resize them back. This is quite easy, but the information
+      lost in the double-resizing process may prevent Sikuli from
+      finding it on the screen.
  - Add automated tests that specifically check things we document.
  - Try to make our Gherkin scenarios closer to end-user documentation.
 
