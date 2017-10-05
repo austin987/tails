@@ -180,6 +180,39 @@ affected by the changes.
 
 This set of metadata shall be built and garbage-collected incrementally.
 
+Remaining questions:
+
+ - Where to store this metadata?
+
+   At least the information about included packages lives nowhere in
+   our Git tree, so encoding it close to the source is impossible
+   (besides, I'd rather not have to extract metadata from comments in
+   source code written in N different programming languages). So we
+   have main options:
+
+   1. Store it in the affected documentation pages themselves,
+      (HTML comments? ikiwiki directives? any other idea?)
+      Advantages:
+      - No work required when renaming pages.
+      - Easier to maintain by tech writers as they can see this info
+        while working on the doc, which increases the chances they keep
+        it up-to-date.
+      - Lightweight: no need to explicitly write the doc page name.
+
+   2. Store it externally, in dedicated files. Advantages:
+      - Probably nicer format to read and edit, both for humans and
+        computers, than whatever we would embed in doc pages.
+      - Does not affect translators: anything we would put in doc pages
+        will be extracted to PO files; so storing this metadata there
+        would waste translators' time (either because they uselessly
+        translate it, or because they paste the English string to reach
+        100% translation status and keep their dashboard of pages
+        needing attention usable).
+
+   I (intrigeri) am torn. The advantages of the first option are very
+   compelling, but the drawback it has wrt. translators may be
+   a deal-breaker.
+
 ### Automated testing
 
 As said above, _changes in_ our automated test suite can already help
