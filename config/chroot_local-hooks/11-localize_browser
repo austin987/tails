@@ -36,6 +36,9 @@ if [ -n "${BROKEN_LOCALES}" ]; then
     exit 1
 fi
 
+# Install temporary dependency
+apt-get install --yes imagemagick
+
 # This very long while-loop is fed the DESCRIPTIONS_FILE (IO
 # redirection at the bottom), which describes how we will localize
 # each supported Tor Browser locale. The format is:
@@ -151,6 +154,9 @@ done < "${DESCRIPTIONS_FILE}"
 
 # This directory is not needed after build time.
 rm -r "${BROWSER_LOCALIZATION_DIR}"
+
+# ... and neither is this package
+apt-get purge --yes imagemagick
 
 # Remove unwanted browser search plugins bundled in the Tor Browser.
 # Note for posterity: the searchplugins/list.txt file must not be
