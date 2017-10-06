@@ -7,11 +7,14 @@ echo "Building dkms modules"
 
 . /usr/share/amnesia/build/variables
 
+# Import build_hook_dependency()
+. /usr/local/lib/tails-shell-library/build.sh
+
 # the -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes build-essential dkms
+build_hook_dependency build-essential dkms
 
 # Installing the headers triggers the building of the modules for that kernel
-apt-get install --yes \
+build_hook_dependency \
     "linux-headers-${KERNEL_VERSION}-amd64" \
     aufs-dkms \
     virtualbox-guest-dkms

@@ -6,12 +6,13 @@ set -e
 
 echo "Compiling and installing a custom udev-watchdog program"
 
-apt-get install --yes build-essential binutils libudev-dev
+# Import build_hook_dependency()
+. /usr/local/lib/tails-shell-library/build.sh
+
+build_hook_dependency build-essential binutils libudev-dev
 
 SRC="/usr/src/udev-watchdog.c"
 DST="/usr/local/sbin/udev-watchdog"
 
 gcc -o "$DST" "$SRC" -Wall -ludev -lrt
 strip --strip-all "$DST"
-
-apt-get --yes purge libudev-dev
