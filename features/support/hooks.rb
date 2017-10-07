@@ -138,6 +138,9 @@ def save_journal(path)
     file.write($vm.file_content('/tmp/systemd.journal'))
   }
   save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
+rescue Exception => e
+  info_log("Exception thrown while trying to save the journal: " +
+           "#{e.class.name}: #{e}")
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
