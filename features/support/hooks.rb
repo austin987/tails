@@ -134,7 +134,8 @@ end
 
 def save_journal(path)
   File.open("#{path}/systemd.journal", 'w') { |file|
-    file.write($vm.execute('journalctl -a --no-pager').stdout)
+    $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
+    file.write($vm.file_content('/tmp/systemd.journal'))
   }
   save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
 end
