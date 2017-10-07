@@ -283,7 +283,7 @@ After('@product') do |scenario|
     # well cause the remote shell to not respond any more, e.g. when
     # we cause a system crash), so let's collect everything depending
     # on the remote shell here:
-    if $vm.remote_shell_is_up?
+    if $vm && $vm.remote_shell_is_up?
       save_journal($config['TMPDIR'])
     end
     $failure_artifacts.sort!
