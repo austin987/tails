@@ -65,7 +65,28 @@ part of a broader community.
     [Vulnerable source packages in the testing suite](https://security-tracker.debian.org/tracker/status/release/testing)
     and the
     [Candidates for DTSAs](https://security-tracker.debian.org/tracker/status/dtsa-candidates).
+    At first glance it seems totally doable for Foundations Team
+    members to run (e.g. locally) a lightweight fork of Debian's
+    security tracker:
+     - Problem to solve: list security issues that affect Tails (last
+       release, current stable and testing branches) but are fixed in
+       current Debian testing/sid
+     - Point it to our relevant APT snapshots (and perhaps current
+       Debian testing or sid instead of Tails devel, to avoid having
+       to resolve the "latest" unfrozen snapshot)
+     - Add our own annotations about issues we decide to
+       ignore/postpone.
+     - Filter packages based on some relevant build manifest so we
+       don't ever see packages we don't ship in Tails.
+     - Automatically merge from Debian's repo and report to us in case
+       of merge conflicts.
   * more freeze exceptions in order to address security issues
+  * need to keep our stable branch in an always releasable state
+    ⇒ the tracking & cherry-picking of security issues must be done
+    continuously, and not only right before a planned freeze or release
+  * when the updated package from Debian testing/sid is not
+    installable on current Tails stable/testing, we'll have to
+    backport security fixes
 
 - Transitions
   * How to deal with
@@ -79,7 +100,12 @@ part of a broader community.
 - Consequences for users
   * too many software regressions and not well tested new features
   * confused users due to constant incremental changes
-  * bigger upgrades on average
+  * bigger upgrades on average: according to research done on
+    [[!tails_ticket 14622]], we should assume ~600MB large IUKs;
+    there will be consequences in terms of:
+     - RAM requirements: XXX
+     - download time: XXX
+     - download reliability ⇒ add a retry/continue mechanism to Tails Upgrader?
   * our users debug Debian testing on top of debugging Tails
 
 - Drawbacks for contributors & the Tails community
@@ -103,7 +129,10 @@ part of a broader community.
     of changes like 2.0 or 3.0
 
 - Additional Software Packages: will they be pulled from current
-  testing or from our snapshot?
+  Debian testing or from our snapshot? Can we tell APT to install by
+  default from Debian testing, unless it's impossible or problematic
+  (e.g. would remove tons of packages) and then fall back to
+  installing from our snapshot?
 
 # The plan
 
