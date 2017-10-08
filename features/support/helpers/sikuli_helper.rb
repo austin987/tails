@@ -215,11 +215,10 @@ end
 
 # Configure sikuli
 if using_sikulix?
-  Sikuli::ImagePath.add("#{Dir.pwd}/features/images/")
+  Sikuli::ImagePath.add(SIKULI_IMAGE_PATH)
 else
-  java.lang.System.setProperty("SIKULI_IMAGE_PATH",
-                               "#{Dir.pwd}/features/images/")
-  ENV["SIKULI_IMAGE_PATH"] = "#{Dir.pwd}/features/images/"
+  java.lang.System.setProperty("SIKULI_IMAGE_PATH", SIKULI_IMAGE_PATH)
+  ENV["SIKULI_IMAGE_PATH"] = SIKULI_IMAGE_PATH
 end
 
 # ruby and rjb doesn't play well together when it comes to static
