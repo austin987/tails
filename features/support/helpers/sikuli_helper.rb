@@ -1,18 +1,8 @@
 require 'rjb'
 require 'rjbextension'
 $LOAD_PATH << ENV['SIKULI_HOME']
-begin
-  require 'sikulixapi.jar'
-  USING_SIKULIX = true
-rescue LoadError
-  require 'sikuli-script.jar'
-  USING_SIKULIX = false
-end
+require 'sikulixapi.jar'
 Rjb::load
-
-def using_sikulix?
-  USING_SIKULIX
-end
 
 package_members = [
                    "java.io.FileOutputStream",
@@ -26,14 +16,9 @@ package_members = [
                    "org.sikuli.script.Pattern",
                    "org.sikuli.script.Region",
                    "org.sikuli.script.Screen",
+                   "org.sikuli.basics.Settings",
+                   "org.sikuli.script.ImagePath",
                   ]
-
-if using_sikulix?
-  package_members << "org.sikuli.basics.Settings"
-  package_members << "org.sikuli.script.ImagePath"
-else
-  package_members << "org.sikuli.script.Settings"
-end
 
 # Note: we can't use anything that starts with "Java" on the right
 # side, otherwise the :Java constant is defined and then
@@ -214,13 +199,7 @@ def sikuli_script_proxy.new(*args)
 end
 
 # Configure sikuli
-if using_sikulix?
-  Sikuli::ImagePath.add(SIKULI_IMAGE_PATH)
-else
-  java.lang.System.setProperty("SIKULI_IMAGE_PATH", SIKULI_IMAGE_PATH)
-  ENV["SIKULI_IMAGE_PATH"] = SIKULI_IMAGE_PATH
-end
-
+Sikuli::ImagePath.add(SIKULI_IMAGE_PATH)
 # ruby and rjb doesn't play well together when it comes to static
 # fields (and possibly methods) so we instantiate and access the field
 # via objects instead. It actually works inside this file, but when
