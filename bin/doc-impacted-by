@@ -1,0 +1,212 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+require 'deep_merge'
+require 'git'
+require 'optparse'
+require 'yaml'
+
+require 'test/unit'
+Test::Unit.run = true
+include Test::Unit::Assertions
+
+# The Ruby Git module we use needs the Git root directory, and this
+# prevents it from being able to run the command below.
+GIT_DIR = `git rev-parse --show-toplevel`.chomp
+assert_equal(0, $?.exitstatus)
+DEFAULT_RELATIONSHIP_FILE = "#{GIT_DIR}/doc-source-relationships.yml"
+
+class Object
+  def arrayify
+    self.instance_of?(Array) ? self : [self]
+  end
+end
+
+def parse_argv!
+  options = Hash.new
+  opt_parser = OptionParser.new do |opts|
+    opts.banner = "Usage: [OPTION]... COMMIT1 COMMIT2 MANIFEST1 MANIFEST2"
+    opts.separator ""
+    opts.separator "Produces a list of documentation pages that might need " \
+                   "attention due to the changes from COMMIT1 to COMMIT2. " \
+                   "The corresponding .build-manifest files must be passed " \
+                   "as MANIFEST1 and MANIFEST2."
+
+    opts.on("-h", "--help", "Show this message") do
+      puts opts
+      exit
+    end
+
+    opts.on("-f PATH", "--relationship-file=PATH",
+            "Use a custom PATH for the doc-source relationship description " +
+            "file (default: #{File.basename(DEFAULT_RELATIONSHIP_FILE)} in " +
+            "the Git root)") do |path|
+      options['relationship-file'] = path
+    end
+  end
+  parameters = opt_parser.parse(ARGV)
+  assert_equal(4, parameters.size, "You must pass exactly 4 parameters")
+  return [options, parameters]
+end
+
+# From a .build-manifest, generate a Hash mapping `package` to a Hash
+# containing the remaining package fields.
+def package_manifest_to_hash(path)
+  yaml_struct = YAML.load(File.read(path))
+  yaml_struct['packages']['binary'].map do |entry|
+    [
+      entry['package'],
+      entry.clone.delete_if { |k, _| k == 'package' }
+    ]
+  end
+    .to_h
+end
+
+def canonicalize_relationship(entry)
+  field_abbreviations = {
+    'file'    => 'files',
+    'package' => 'packages',
+    'page'    => 'pages',
+    'test'    => 'tests',
+  }
+  fields = field_abbreviations.values
+  field_abbreviations.each do |short, long|
+    next unless entry.has_key?(short)
+    v = entry[short]
+    entry.delete(short)
+    entry[long] = v
+  end
+  assert(entry.has_key?('pages'))
+  # Note: `(a - b).empty?` <==> "a is a subset of b?"
+  assert((entry.keys - fields).empty?)
+  fields.each do |field|
+    next unless entry.has_key?(field)
+    entry[field] = entry[field].arrayify
+  end
+  return entry
+end
+
+# Reads the `relationship_file` and returns a "documentation impact
+# map", a Hash which maps all documentation pages to the sources it is
+# impacted by.
+def read_relationship_file_as_impact_map(relationship_file)
+  impact_map = Hash.new
+  yaml_struct = YAML.load(File.read(relationship_file))
+  yaml_struct.map { |e| canonicalize_relationship(e) } .each do |entry|
+    entry['pages'].each do |page|
+      source_files = entry.clone.delete_if { |k, _| k == 'pages' }
+      impact_map.deep_merge({page => source_files})
+    end
+  end
+  return impact_map
+end
+
+# Given the "documentation impact map" and the "old" and "new" state,
+# look at the changes between "old" and "new" and find which
+# documentation pages are impatected. The return calue is a mapping
+# from each affected documentation page to the list of "reasons",
+# explanations how the sources impact the page.
+def find_impacted_docs(impact_map,
+                       old_commit,   new_commit,
+                       old_manifest, new_manifest)
+  # The Git module we use does not work very well unless the current
+  # working directory is the Git root.
+  old_pwd = Dir.pwd
+  Dir.chdir(GIT_DIR)
+  git = Git.open(GIT_DIR)
+  git_diff = git.diff(old_commit, new_commit)
+
+  old_packages = old_manifest.keys
+  new_packages = new_manifest.keys
+  removed_packages = old_packages - new_packages
+  introduced_packages = new_packages - old_packages
+  updated_packages = (new_packages & old_packages).select do |package|
+    old_manifest[package] != new_manifest[package]
+  end
+
+  impacted_docs = Hash.new
+  impact_map.each do |page, sources|
+    file_paths = []
+    packages = []
+    test_paths = []
+    sources.each do |type, source|
+      case type
+      when 'packages'
+        packages = source
+      when 'tests'
+        test_paths = source.map { |path| "features/#{path}" }
+      when 'files'
+        file_paths = source
+      else
+        raise
+      end
+    end
+    all_source_file_paths = file_paths + test_paths
+    Dir.glob("wiki/src/#{page}.{html,mdwn}") do |page_path|
+      all_source_file_paths.each do |source_path|
+        # Git::Diff#path() alters the object so it cannot be used for a
+        # successive call for another path.
+        _git_diff = git_diff.clone
+        source_path_diff = _git_diff.path(source_path)
+        if source_path_diff.size > 0
+          changed_files = source_path_diff.map { |file| file.path }
+          reasons = changed_files.map { |path| "Changes in file: #{path}" }
+          impacted_docs.deep_merge({page_path => reasons})
+        end
+      end
+      packages.each do |package|
+        reason = nil
+        if removed_packages.member?(package)
+          reason = "Removed package: #{package}"
+        elsif introduced_packages.member?(package)
+          reason = "Introduced package: #{package}"
+        elsif updated_packages.member?(package)
+          old = old_manifest[package]
+          new = new_manifest[package]
+          assert_not_equal(old, new)
+          reason = "Updated package: #{package}: " +
+                   old_manifest[package].keys.sort.map do |key|
+            old_val = old[key]
+            new_val = new[key]
+            old_val != new_val ? "#{old_val} → #{new_val}" : nil
+          end .compact.join(', ')
+        end
+        impacted_docs.deep_merge({page_path => [reason]}) if reason
+      end
+    end
+  end
+  return impacted_docs
+ensure
+  Dir.chdir(old_pwd)
+end
+
+# Main
+
+options, parameters = parse_argv!
+relationship_file = options['relationship-file'] || DEFAULT_RELATIONSHIP_FILE
+old_commit, new_commit, old_manifest_path, new_manifest_path = parameters
+
+impact_map = read_relationship_file_as_impact_map(relationship_file)
+old_manifest = package_manifest_to_hash(old_manifest_path)
+new_manifest = package_manifest_to_hash(new_manifest_path)
+
+impacted_docs = find_impacted_docs(
+  impact_map,
+  old_commit,   new_commit,
+  old_manifest, new_manifest
+)
+
+if impacted_docs.size > 0
+  result =
+    impacted_docs.sort.map do |page, reasons|
+      "#{page}\n" +
+        reasons.sort.map do |reason|
+          "- #{reason}"
+        end
+          .join("\n")
+    end
+      .join("\n\n")
+
+  puts "The following documentation pages need investigation:"
+  puts
+  puts result
+end
