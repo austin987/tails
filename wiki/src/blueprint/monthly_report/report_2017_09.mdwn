@@ -1,5 +1,5 @@
-[[!meta  title="Tails report for September, 2017"]]
-[[!meta  date="DATE"]]
+[[!meta title="Tails report for September, 2017"]]
+[[!meta date="DATE"]]
 
 [[!toc ]]
 
@@ -25,19 +25,68 @@ Code
 XXX: List important code work that is not covered already by the Release
      section (for example, the changes being worked on for the next version).
 
+We've continued to work on making Tails ISO images reproducible.
+
+- We fixed all of the issues that were identified by our first build testers.
+- So far, everyone who tried reproducing the Tails 3.2~rc1 and 3.2 ISO
+  images succeeded. So here's a challenge for you: can you manage to
+  get a different ISO by following our [[build|contribute/build]] and
+  [[verification|contribute/build/reproducible#verify-iso]] instructions?
+- We published a [[blueprint|blueprint/reproducible_builds/report_to_RB_community/]] which explains how we did it.
+
+- We are improving integration of the _Orca screen reader_ and the
+  _GNOME screen keyboard_ into Tails ([[!tails_ticket 14752]],
+  [[!tails_ticket 8260]]). A discussion about the screen reader's user
+  experience has been [[!tails_ticket 14713 desc="initiated"]] by
+  Pablo Natalino, and intrigeri [[!gnomebug 788369 desc="started"]]
+  a discussion upstream about the long-press delay for typing special
+  chars with it.
+
+- We have formalized how the AppArmor profile for _Thunderbird_ is
+  maintained in Debian and upstream. This clarifies where and how our
+  contributions should be submitted and At the end of the day this
+  should avoid the need to maintain a Tails-specific delta.
+
+- We are working on fixing _Seahorse_ buggy interfacing with
+  _pinentry-gtk2_ upstream ([[!gnomebug 787543]], [[!debbug 869416]]).
+  A workaround was applied in Tails 3.2 already but we try hard to
+  stick to our [[contribute/relationship_with_upstream]] statement.
+
 Documentation and website
 =========================
 
-XXX: Explore the Git history:
+- We updated our [[roadmap|contribute/roadmap]] with our priorities for
+  the next years.
 
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+- We greatly improved our [[instructions for building the Tails ISO
+  image|contribute/build/]] and created a new section about how to
+  [[verify that the Tails ISO image is
+  reproducible|contribute/build/reproducible/]].
 
- * We greatly improved our [[instructions for building the Tails ISO image|contribute/build/]] and created a new section about how to [[verify that the Tails ISO image is reproducible|contribute/build/reproducible/]].
+- We are documenting the process for Tails contributors to request
+  sponsorship when attending events on behalf of Tails, in order to
+  improve fairness and to streamline how the simplest cases are handled.
+  This documentation should land on our website by the end of the year.
+
+- We documented hardware limitations for Tails on [[Intel Atom Cherry
+  Trail tablets|support/known_issues#cherry-trail]].
 
 User experience
 ===============
 
-XXX: Check the archives of tails-ux: https://mailman.boum.org/pipermail/tails-ux/
+- We designed a [[new download page|install/download_2]], to prepare for
+  the migration of our verification extension to *Web Extensions*. We
+  started [drawing sketchy
+  wireframes](https://mailman.boum.org/pipermail/tails-ux/2017-September/003450.html),
+  then improved them incrementally after testing them on paper with
+  users, and finally [implemented the resulting prototype in
+  HTML](https://mailman.boum.org/pipermail/tails-dev/2017-September/011694.html).
+
+- We benchmarked [[open source web applications to survey our user
+  base|blueprint/survey_platform]]. [The best candidate is
+  *LimeSurvey*](https://mailman.boum.org/pipermail/tails-ux/2017-September/003472.html)
+  and we will do a test deployment in October as part of a user research
+  on the use of *VeraCrypt*.
 
 Hot topics on our help desk
 ===========================
@@ -62,14 +111,24 @@ XXX: Report only if more scenarios have been written and add the diff from the p
 
        - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
 
+- We finished upgrading all our systems to Debian Stretch
+  ([[!tails_ticket 12160]]).
+- We upgraded our Redmine instance ([[!tails_ticket 11808]]).
+
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
+- We sent a thank you email to everybody who donated in 2016.
 
-       git log --patch --since='1 December' --until='1 January' origin/master
+- We signed a new contract with OTF that will run from September 1,
+  2017 to August 31, 2018 and that covers mainly:
+  - [[!tails_ticket 14468 desc="VeraCrypt support in GNOME: make it easier to integrate Tails into workflows with other users and operating systems"]]
+  - Additional software: make it easier to tailor Tails to specific
+    needs for sensitive data manipulation ([[!tails_ticket 14568]],
+    [[!tails_ticket 5551]] and friends)
 
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
+- We worked on making our [[Partners]] page easier to translate
+  ([[!tails_ticket 12646]]).
 
 Outreach
 ========
@@ -77,10 +136,18 @@ Outreach
 Past events
 -----------
 
+
+
 Upcoming events
 ---------------
 
-* Some of us will attend the Reproducible Builds summit, Berlin
+* Some of us will attend the
+  [Reproducible Builds summit](https://reproducible-builds.org/events/berlin2017/)
+  in Berlin (October 31 to November 2).
+
+* Many Tails people will be at the
+  [34th Chaos Communication Congress, aka. 34C3](https://www.ccc.de/en/updates/2017/34C3-in-leipzig)
+  in Leipzig (December 27 to December 30).
 
 On-going discussions
 ====================
@@ -93,6 +160,8 @@ Press and testimonials
 XXX: Copy content from press/media_appearances_2017.mdwn
      This page is continuously updated by tails-press@boum.org, so if
      it's empty there might be nothing special to report.
+
+* The 5th version of the [Guide d'autodéfense numérique](https://guide.boum.org) was released. This book proposes ways to understand how the digital world functions, what solutions can we organise against certain types of attacks, and which tools can help do that.
 
 Translation
 ===========
@@ -109,6 +178,6 @@ Metrics
 
 * Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
 * SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-* WHISPERBACK bug reports were received through WhisperBack.
+* 92 bug reports were received through WhisperBack.
 
 XXX: Ask tails@boum.org for these numbers.

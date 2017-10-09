@@ -34,18 +34,34 @@ def focus_pidgin_irc_conversation_window(account)
   end
 end
 
-def pidgin_dbus_call(method, *args)
+# This method should always fail (except with the option
+# `return_shellcommand: true`) since we block Pidgin's D-Bus interface
+# (#14612) ...
+def pidgin_dbus_call(method, *args, **opts)
+  opts ||= {}
+  opts[:user] = LIVE_USER
   dbus_send(
     'im.pidgin.purple.PurpleService',
     '/im/pidgin/purple/PurpleObject',
     "im.pidgin.purple.PurpleInterface.#{method}",
-    *args, user: LIVE_USER
+    *args, **opts
   )
 end
 
+# ... unless we re-enable it!
+def pidgin_force_allowed_dbus_call(*args)
+  policy_file = '/etc/dbus-1/session.d/im.pidgin.purple.PurpleService.conf'
+  $vm.execute_successfully("mv #{policy_file} #{policy_file}.disabled")
+  pidgin_dbus_call(*args)
+ensure
+  $vm.execute_successfully("mv #{policy_file}.disabled #{policy_file}")
+end
+
 def pidgin_account_connected?(account, prpl_protocol)
-  account_id = pidgin_dbus_call('PurpleAccountsFind', account, prpl_protocol)
-  pidgin_dbus_call('PurpleAccountIsConnected', account_id) == 1
+  account_id = pidgin_force_allowed_dbus_call(
+    'PurpleAccountsFind', account, prpl_protocol
+  )
+  pidgin_force_allowed_dbus_call('PurpleAccountIsConnected', account_id) == 1
 end
 
 When /^I create my XMPP account$/ do
@@ -494,4 +510,20 @@ end
 When /^I click on the Tails roadmap URL$/ do
   @screen.click('PidginTailsRoadmapUrl.png')
   try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
+end
+
+Then /^Pidgin's D-Bus interface is not available$/ do
+  # Pidgin must be running to expose the interface
+  assert($vm.has_process?('pidgin'))
+  # Let's first ensure it would work if not explicitly blocked.
+  # Note: that the method we pick here doesn't really matter
+  # (`PurpleAccountsGetAll` felt like a convenient choice since it
+  # doesn't require any arguments).
+  assert_equal(
+    Array, pidgin_force_allowed_dbus_call('PurpleAccountsGetAll').class
+  )
+  # Finally, let's make sure it is blocked
+  c = pidgin_dbus_call('PurpleAccountsGetAll', return_shellcommand: true)
+  assert(c.failure?)
+  assert_not_nil(c.stderr['Rejected send message'])
 end

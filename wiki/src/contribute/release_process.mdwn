@@ -9,12 +9,14 @@ Requirements
 
 To release Tails you'll need some packages installed:
 
-* mktorrent and transmission-cli
+* `tidy mktorrent transmission-cli`
 * Aufs DKMS module for your running kernel.
 * [[!debpts squashfs-tools]] that honors `$SOURCE_DATE_EPOCH`.
   Install it from our custom `devel` APT suite.
-* tails-iuk dependencies, including suggested packages (see debian/control in the `debian` branch of its repo)
-* tails-perl5lib dependencies (same trick than tails-iuk to get the list)
+* `tails-iuk` dependencies, including suggested packages (see
+  `debian/control` in the `debian` branch of its repo)
+* `tails-perl5lib` dependencies (same trick as `tails-iuk` to get the
+  list)
 
 Environment
 ===========
@@ -62,12 +64,6 @@ Pre-freeze
 
 The [[contribute/working_together/roles/release_manager]] role
 documentation has more tasks that should be done early enough.
-
-Update Thunderbird preferences
-------------------------------
-
-* update `extensions.enigmail.configuredVersion` in
-  `config/chroot_local-includes/etc/skel/.thunderbird/profile.default/preferences/0000tails.js`
 
 Coordinate with Debian security updates
 ---------------------------------------
@@ -238,6 +234,11 @@ Upgrade Tor Browser
 
 See the dedicated page: [[tor-browser]]
 
+Upgrade Tor Browser AppArmor profile
+------------------------------------
+
+See the dedicated page: [[browser-apparmor-patch]]
+
 Upgrade Thunderbird
 ---------------
 
@@ -403,7 +404,7 @@ translators|contribute/how/translate]].
 To get a list of changes on the website:
 
     git diff --stat ${PREVIOUS_VERSION:?}.. -- \
-        *.{mdwn,html} \
+        wiki/src/'*'.{mdwn,html} \
         ':!wiki/src/blueprint*' \
         ':!wiki/src/contribute*' \
         ':!wiki/src/inc' \
@@ -561,6 +562,10 @@ suite should be ready, so it is time to:
 
 * build the final image!
 
+* make sure at least two `tails@` members will build the ISO
+  image. Example: if you, the RM, is a `tails@` member, you only have
+  to ask one more member.
+
 * compare the new build manifest with the one from the previous,
   almost final build; they should be identical, except that the
   `debian-security` serial might be higher. To ensure we publish
@@ -659,6 +664,9 @@ Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
 Jessie too.
 
+Make sure at least two `tails@` members reproduce the same IUKs.
+Provide them with the value of `IUK_SOURCE_VERSIONS` that you used!
+
 <a id="prepare-upgrade-description-files"></a>
 
 Prepare upgrade-description files
@@ -687,7 +695,7 @@ Prepare upgrade-description files
             --next-version "${NEXT_PLANNED_VERSION:?}" \
             --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
             --next-version "${VERSION:?}.1" \
-            --iso "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso" \
+            --iso "${ISOS_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
             --previous-version "${VERSION:?}~rc1" \
             --iuks "${ISOS:?}" \
@@ -755,14 +763,10 @@ Prepare upgrade-description files
    release to the *test* channel in `$MASTER_CHECKOUT`, modify its content
    accordingly, sign it, commit and push:
 
-        # If more old versions are supported, add them (whitespace
-        # separated) to this variable
-        SUPPORTED_OLD_VERSIONS="${PREVIOUS_VERSION:?}"
-
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
-          for old_version in ${SUPPORTED_OLD_VERSIONS:?}; do
+          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
             stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
@@ -807,7 +811,7 @@ Update the ISO description file (IDF) used by the browser extension:
       url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
     EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v1/Tails/amd64/stable/latest.yml && \
+      git add wiki/src/install/v1/Tails/{i386,amd64}/stable/latest.yml && \
       git commit -m "Update IDF file for DAVE." )
 
 Upload images
@@ -818,6 +822,70 @@ Sanity check
 
 Verify once more that the Tor Browser we ship is still the most recent (see
 above).
+
+Reproducibility
+---------------
+
+Previously you have asked `tails@` members to reproduce the Tails ISO
+image and all IUKs; now tell all participants to send you the
+`SHA-512` hashes of their ISO and IUKs over signed email.
+
+* If all hashes match: yay, we're good to go!
+
+* If the reproduction attempts haven't been completed yet: continue at
+  your own risk! If you get a negative answer later you might have to
+  undo everything done from this point on. It's still a good idea to
+  optimistically assume success in order to not be blocked at this
+  point. However, be mentally prepared that it might have to be done
+  once more, and make sure to return to this section once everyone is
+  done with their reproduction attempts, and certainly before making
+  the release public.
+
+* If there is a hash mismatch for the ISO: ouch!  Now we are in a
+  tricky situation: on the one hand it seems like a poor idea to block
+  users from benefiting from this release's security updates, but on
+  the other hand the failure might imply that something nefarious is
+  going on. At this stage, no matter what, immediately compare the
+  ISOs (using `diffoscope`) and try to rule out build system
+  compromise.
+
+  - If something seemingly malicious is found, then let's take a step
+    back: we might be compromised, so we are in no position to
+    release. Halt the release, involve the rest of `tails@`, and then
+    try to re-establish trust in all build machines and infra
+    involved, etc. Have fun!
+
+  - Otherwise:
+
+    * If the source of non-determinism is identified quickly and is
+      easy and fast to fix, *and* the QA of the current ISO has not
+      gone very far (so at least that time is not wasted), then you
+      should consider abandoning the current version, and immediately
+      start preparing an emergency release with:
+
+      - the reproducibility fix
+
+      - a new changelog entry,
+
+      - adjustments to the release notes so they are re-purposed for
+        this emergency release (the abandoned release gets none, since
+        it effectively never will be released publicly).
+
+    * Otherwise, let's release any way. But let's add a known issue
+      about "This Tails release has reproducibility issues" to the
+      release notes, linking to the ticket(s) (or similar) where the
+      nature of the reproducibility failure is clearly described.
+
+* If there is a hash mismatch for an IUK (or several): proceed with
+  the release, except for the problematic IUK(s); remove them from the
+  mirrors, and remove the affected incremental upgrade paths from the
+  UDFs! In parallel with the rest of the release process, try to
+  figure out what the problem with the IUK is and fix the cause, so a
+  good IUK can be released as soon as possible. If a seemingly
+  malicious difference is found, then immediately halt the release and
+  go to the "If something seemingly malicious is found" case for the
+  ISO above. Because of this it is advisable to not publicly release
+  until malicious differences have been ruled out.
 
 <a id="publish-iuk"></a>
 
@@ -834,9 +902,7 @@ Upload the IUKs to the primary rsync mirror:
 
 Upload the ISO signature to the primary rsync mirror:
 
-    scp \
-       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
-       rsync.lizard:
+    scp "${ISO_PATH:?}.sig" rsync.lizard:
 
 Pick a build from `$RELEASE_BRANCH` that produced an ISO identical to
 the one you've built locally (`XXX` must be the job ID, i.e.
@@ -892,7 +958,7 @@ and on the live wiki (even for a release candidate):
        | ssh bittorrent.lizard gpg --import
     scp \
        "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+       "${ISOS_PATH:?}.sig" \
        bittorrent.lizard: && \
     ssh bittorrent.lizard << EOF
        mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
@@ -904,7 +970,7 @@ and on the live wiki (even for a release candidate):
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
        cd && \
        chmod -R go+rX "tails-amd64-${VERSION:?}" && \
-       sudo mv \
+       mv \
           "tails-amd64-${VERSION:?}" \
           /var/lib/transmission-daemon/downloads/ && \
        transmission-remote --add tails-amd64-${VERSION:?}.torrent \
@@ -927,6 +993,11 @@ Testing
    tentative ISO. E.g. <https://mirrors.kernel.org/tails/> or
    <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
    of bandwidth.
+
+        ./check-mirrors.rb --allow-multiple --channel ${DIST:?} \
+            --ip $(dig +short mirrors.kernel.org | tail -n1) \
+            tails-amd64-${VERSION:?}
+
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO, pointing them to the up-to-date mirror you've found previously.
 1. Email <tails@boum.org> and potential contributors (see
@@ -972,7 +1043,7 @@ Rename the manifest of needed packages as well:
 Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
 `.torrent.sig` files into the website repository:
 
-	cp "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.sig" \
+	cp "${ISO_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
@@ -983,7 +1054,7 @@ previous release (including any RC).
 
 Update the size of the ISO image in `inc/*`:
 
-        LC_NUMERIC=C ls -l -h ${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso | \
+        LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
           cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' \
           > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html"
 
@@ -1071,10 +1142,10 @@ Wait for the HTTP mirrors to catch up
 
 Test downloading the ISO and IUK over HTTP.
 
-Make sure every active mirror in the pool has the new version (when
-releasing an RC, add `--channel alpha`):
+Make sure every active mirror in the pool has the new version:
 
-	./check-mirrors.rb --allow-multiple --fast tails-amd64-${VERSION:?}
+	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fasts \
+        tails-amd64-${VERSION:?}
 
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
 notify their administrators.
@@ -1139,12 +1210,16 @@ this release.
         while read ticket; do
             url="https://labs.riseup.net/code/issues/${ticket:?}"
             url_content=$(curl --fail --silent ${url:?})
-            if [ "${?}" -ne 0 ]; then
+            if [ "${?}" -ne 0 ] || [ -z "${url_content:-}" ]; then
                 echo "Failed to fetch ${url:?} so manually investigate #${ticket:?}" >&2
                 continue
             fi
-            ticket_status=$(echo "${url_content:?}" | \
-                sed -n 's,^.*<th class="status">Status:</th><td class="status">\([^<]\+\)</td>.*$,\1,p')
+            ticket_status="$(echo "${url_content:?}" | \
+                sed -n 's,^.*<div class="status attribute"><div class="label">Status:</div><div class="value">\([^<>]\+\)</div></div>.*$,\1,p')"
+            if [ -z "${ticket_status:-}" ]; then
+                echo "Failed to find the status of #${ticket:?}" >&2
+                continue
+            fi
             if [ "${ticket_status:?}" != "New" ] && \
                [ "${ticket_status:?}" != "Confirmed" ] && \
                [ "${ticket_status:?}" != "In Progress" ]; then
@@ -1178,19 +1253,27 @@ in painful ways.
 
 We announce *major* releases on the Tor blog:
 
-- copy the HTML generated by ikiwiki from the announce in `news/`
-  into your preferred `$EDITOR`
-- append:
+* Generate a Tor Blog-friendly post; please go through it manually,
+  and look at the previews, to make sure it looks sane!
 
-        <h1>Support and feedback</h1>
+      ikiwiki --setup ikiwiki.setup \
+              --render wiki/src/news/version_${VERSION:?}.mdwn | \
+          tidy --wrap 99999 | \
+          sed '0,/^<div id="content" role="main">$/d' | \
+          sed '/^<div id="footer" class="pagefooter" role="contentinfo">$/,$d' | \
+          sed '/^<div class="toc">$/,+7d' | \
+          sed '/^<p><img [^<>]*\/><\/p>$/d' | \
+          sed '/^<\/div>$/d' | \
+          sed 's@<a name[^<>]*></a>@@g' | \
+          sed 's@href="\.\./@href="https://tails.boum.org/@g' | \
+          sed 's@src="\./@src="https://tails.boum.org/news/@g' | \
+          sed 's@\(\.en\)\?.html@/@g' \
+          > /tmp/tor-blog-post.html
+          cat >> /tmp/tor-blog-post.html <<EOF
+      <h1>Support and feedback</h1>
+      <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
+      EOF
 
-        For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.
-
-- change the internal links into external links:
-  * replace all occurrences of `href="../` with `href="https://tails.boum.org/`
-  * replace all occurrences of `src="./` with `src="https://tails.boum.org/news/`
-  * replace most `.en.html` and `.html` with `/`, but beware of links
-    that don't point to our own website
 - [login to the Tor blog](https://blog.torproject.org/user)
 - click *Content* → *Add content* → *Blog Post*
 - add these tags:
