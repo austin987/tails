@@ -78,7 +78,8 @@ def read_package_manifest_file_as_package_map(path)
     .to_h
 end
 
-def canonicalize_relationship(entry)
+def canonicalize_relationship(orig_entry)
+  entry = orig_entry.clone
   field_abbreviations = {
     'file'    => 'files',
     'package' => 'packages',
@@ -102,6 +103,11 @@ def canonicalize_relationship(entry)
     entry[field] = entry[field].arrayify
   end
   return entry
+rescue Exception => e
+  STDERR.puts 'Problematic entry:'
+  STDERR.puts YAML.dump([orig_entry])
+  STDERR.puts
+  raise e
 end
 
 # Reads the `relationship_file` and returns a "documentation impact
