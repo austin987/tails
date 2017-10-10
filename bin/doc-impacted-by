@@ -57,7 +57,7 @@ end
 
 # From a .build-manifest, generate a Hash mapping `package` to a Hash
 # containing the remaining package fields.
-def package_manifest_to_hash(path)
+def read_package_manifest_file_as_package_map(path)
   yaml_struct = YAML.load(File.read(path))
   yaml_struct['packages']['binary'].map do |entry|
     [
@@ -194,8 +194,8 @@ relationship_file = options['relationship-file'] || DEFAULT_RELATIONSHIP_FILE
 old_commit, new_commit, old_manifest_path, new_manifest_path = parameters
 
 impact_map = read_relationship_file_as_impact_map(relationship_file)
-old_manifest = package_manifest_to_hash(old_manifest_path)
-new_manifest = package_manifest_to_hash(new_manifest_path)
+old_manifest = read_package_manifest_file_as_package_map(old_manifest_path)
+new_manifest = read_package_manifest_file_as_package_map(new_manifest_path)
 
 impacted_docs = find_impacted_docs(
   impact_map,
