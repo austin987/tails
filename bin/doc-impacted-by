@@ -88,11 +88,13 @@ def canonicalize_relationship(entry)
   fields = field_abbreviations.values
   field_abbreviations.each do |short, long|
     next unless entry.has_key?(short)
+    assert(not(entry.has_key?(long)))
     v = entry[short]
     entry.delete(short)
     entry[long] = v
   end
   assert(entry.has_key?('pages'))
+  assert(entry.keys.size > 1)
   # Note: `(a - b).empty?` <==> "a is a subset of b?"
   assert((entry.keys - fields).empty?)
   fields.each do |field|
