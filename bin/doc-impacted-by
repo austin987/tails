@@ -49,9 +49,16 @@ def parse_argv!
             "the Git root)") do |path|
       options['relationship-file'] = path
     end
+
+    opts.on("-s", "--skip-packages", "Skip looking at packages, " +
+                                     "only look at Git") do
+      options['skip-packages'] = true
+    end
   end
   parameters = opt_parser.parse(ARGV)
-  assert_equal(4, parameters.size, "You must pass exactly 4 parameters")
+  req_nr_parameters = options['skip-packages'] ? 2 : 4
+  assert_equal(req_nr_parameters, parameters.size,
+               "You must pass exactly #{req_nr_parameters} parameters")
   return [options, parameters]
 end
 
@@ -194,9 +201,13 @@ relationship_file = options['relationship-file'] || DEFAULT_RELATIONSHIP_FILE
 old_commit, new_commit, old_manifest_path, new_manifest_path = parameters
 
 impact_map = read_relationship_file_as_impact_map(relationship_file)
-old_manifest = read_package_manifest_file_as_package_map(old_manifest_path)
-new_manifest = read_package_manifest_file_as_package_map(new_manifest_path)
-
+if options['skip-packages']
+  old_manifest = Hash.new
+  new_manifest = Hash.new
+else
+  old_manifest = read_package_manifest_file_as_package_map(old_manifest_path)
+  new_manifest = read_package_manifest_file_as_package_map(new_manifest_path)
+end
 impacted_docs = find_impacted_docs(
   impact_map,
   old_commit,   new_commit,
@@ -217,4 +228,8 @@ if impacted_docs.size > 0
   puts "The following documentation pages need investigation:"
   puts
   puts result
+end
+if options['skip-packages']
+  STDERR.puts "Warning! The --skip-packages option makes this " +
+              "report incomplete!"
 end
