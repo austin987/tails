@@ -66,9 +66,9 @@ end
 # Hash mapping `package` to a Hash containing the remaining package
 # fields from the .build-manifest (e.g. `arch`, `version`).
 def read_package_manifest_file_as_package_map(path)
-  yaml_struct = YAML.load(File.read(path))
-  packages = yaml_struct['packages']['binary'] +
-             yaml_struct['packages']['source']
+  package_manifest = YAML.load(File.read(path))
+  packages = package_manifest['packages']['binary'] +
+             package_manifest['packages']['source']
   packages.map do |entry|
     [
       entry['package'],
@@ -119,8 +119,8 @@ end
 # impacted by.
 def read_relationship_file_as_impact_map(relationship_file)
   impact_map = Hash.new
-  yaml_struct = YAML.load(File.read(relationship_file))
-  yaml_struct.map { |e| canonicalize_relationship(e) } .each do |entry|
+  relationships = YAML.load(File.read(relationship_file))
+  relationships.map { |e| canonicalize_relationship(e) } .each do |entry|
     entry['pages'].each do |page|
       source_files = entry.clone.delete_if { |k, _| k == 'pages' }
       impact_map.deep_merge({page => source_files})
