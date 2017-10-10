@@ -21,6 +21,14 @@ class Object
   end
 end
 
+class Array
+  def glob(glob)
+    self.select do |e|
+      e.instance_of?(String) && File.fnmatch(glob, e, File::FNM_EXTGLOB)
+    end
+  end
+end
+
 def parse_argv!
   options = Hash.new
   opt_parser = OptionParser.new do |opts|
@@ -155,12 +163,12 @@ def find_impacted_docs(impact_map,
   impacted_docs = Hash.new
   impact_map.each do |page, sources|
     file_paths = []
-    packages = []
+    package_globs = []
     test_paths = []
     sources.each do |type, source|
       case type
       when 'packages'
-        packages = source
+        package_globs = source
       when 'tests'
         test_paths = source.map { |path| "features/#{path}" }
       when 'files'
@@ -186,13 +194,18 @@ def find_impacted_docs(impact_map,
           impacted_docs.deep_merge({page_path => reasons})
         end
       end
-      packages.each do |package|
-        reason = nil
-        if removed_packages.member?(package)
-          reason = "Removed package: #{package}"
-        elsif introduced_packages.member?(package)
-          reason = "Introduced package: #{package}"
-        elsif updated_packages.member?(package)
+      package_globs.each do |package_glob|
+        reasons = []
+        removed_impacted_packages = removed_packages.glob(package_glob)
+        introduced_impacted_packages = introduced_packages.glob(package_glob)
+        updated_impacted_packages = updated_packages.glob(package_glob)
+        reasons += removed_impacted_packages.map do |package|
+          "Removed package: #{package}"
+        end
+        reasons += introduced_impacted_packages.map do |package|
+          "Introduced package: #{package}"
+        end
+        reasons += updated_impacted_packages.map do |package|
           old = old_manifest[package]
           new = new_manifest[package]
           assert_not_equal(
@@ -200,7 +213,7 @@ def find_impacted_docs(impact_map,
             "'#{package}' has identical data in both manifests so it is " +
             "a bug that we ended up here"
           )
-          reason = "Updated package: #{package}: " +
+          "Updated package: #{package}: " +
             old_manifest[package].keys.sort.map do |key|
               old_val = old[key]
               new_val = new[key]
@@ -208,7 +221,7 @@ def find_impacted_docs(impact_map,
             end
               .compact.join(', ')
         end
-        impacted_docs.deep_merge({page_path => [reason]}) if reason
+        impacted_docs.deep_merge({page_path => reasons}) unless reasons.empty?
       end
     end
   end
