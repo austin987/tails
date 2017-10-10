@@ -213,13 +213,13 @@ def find_impacted_docs(impact_map,
             "'#{package}' has identical data in both manifests so it is " +
             "a bug that we ended up here"
           )
-          "Updated package: #{package}: " +
-            old_manifest[package].keys.sort.map do |key|
-              old_val = old[key]
-              new_val = new[key]
-              old_val != new_val ? "#{old_val} → #{new_val}" : nil
-            end
-              .compact.join(', ')
+          package_changes = old_manifest[package].keys.sort.map do |key|
+            old_val = old[key]
+            new_val = new[key]
+            old_val != new_val ? "#{old_val} → #{new_val}" : nil
+          end
+            .compact.join(', ')
+          "Updated package: #{package} (#{package_changes})"
         end
         impacted_docs.deep_merge({page_path => reasons}) unless reasons.empty?
       end
