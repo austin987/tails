@@ -180,7 +180,9 @@ def find_impacted_docs(impact_map,
         source_path_diff = _git_diff.path(source_path)
         if source_path_diff.size > 0
           changed_files = source_path_diff.map { |file| file.path }
-          reasons = changed_files.map { |path| "Changes in file: #{path}" }
+          reasons = changed_files.map do |path|
+            "Changes in source file: #{path}"
+          end
           impacted_docs.deep_merge({page_path => reasons})
         end
       end
