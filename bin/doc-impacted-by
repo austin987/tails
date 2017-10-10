@@ -145,12 +145,18 @@ end
 def find_impacted_docs(impact_map,
                        old_commit,   new_commit,
                        old_manifest, new_manifest)
-  # The Git module we use does not work very well unless the current
-  # working directory is the Git root.
-  old_pwd = Dir.pwd
-  Dir.chdir(GIT_DIR)
   git = Git.open(GIT_DIR)
   git_diff = git.diff(old_commit, new_commit)
+  # Create the list of all wiki files, and use it as an approximation
+  # of all documentation pages. It's a super set, so it only impacts
+  # performance when we search in it later. Ideally we'd like to do
+  # something like `git.object(new_commit).path('wiki/src')` but the
+  # Git module we use seem to not support listing files at a certain
+  # commit.
+  git_cmd_wiki_files = "git ls-tree -r --full-tree " +
+                       "--name-only #{new_commit} -- wiki/src"
+  doc_pages = `#{git_cmd_wiki_files}`.chomp.split("\n")
+  assert_equal(0, $?.exitstatus, "Error: `git ls-tree` failed")
 
   old_packages = old_manifest.keys
   new_packages = new_manifest.keys
@@ -180,7 +186,7 @@ def find_impacted_docs(impact_map,
       end
     end
     all_source_file_paths = file_paths + test_paths
-    Dir.glob("wiki/src/#{page}.{html,mdwn}") do |page_path|
+    doc_pages.glob("wiki/src/#{page}.{html,mdwn}").each do |page_path|
       all_source_file_paths.each do |source_path|
         # Git::Diff#path() alters the object so it cannot be used for a
         # successive call for another path.
@@ -226,8 +232,6 @@ def find_impacted_docs(impact_map,
     end
   end
   return impacted_docs
-ensure
-  Dir.chdir(old_pwd)
 end
 
 # Main
