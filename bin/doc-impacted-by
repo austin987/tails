@@ -89,15 +89,19 @@ def canonicalize_relationship(orig_entry)
   fields = field_abbreviations.values
   field_abbreviations.each do |short, long|
     next unless entry.has_key?(short)
-    assert(not(entry.has_key?(long)))
+    assert(not(entry.has_key?(long)),
+          "contains both '#{long}' and its abbreviation '#{short}'")
     v = entry[short]
     entry.delete(short)
     entry[long] = v
   end
-  assert(entry.has_key?('pages'))
-  assert(entry.keys.size > 1)
+  assert(entry.has_key?('pages'),
+         "lacks the obligatory 'pages' field")
+  assert(entry.keys.size > 1,
+         "entries with only a 'pages' field are meaningless")
   # Note: `(a - b).empty?` <==> "a is a subset of b?"
-  assert((entry.keys - fields).empty?)
+  assert((entry.keys - fields).empty?,
+         "contains invalid fields: #{entry.keys - fields}")
   fields.each do |field|
     next unless entry.has_key?(field)
     entry[field] = entry[field].arrayify
@@ -162,7 +166,9 @@ def find_impacted_docs(impact_map,
       when 'files'
         file_paths = source
       else
-        raise
+        raise "Unknown field '#{type}' in impact map; this should not " +
+              "happen, and probably means canonicalize_relationship() " +
+              "is buggy"
       end
     end
     all_source_file_paths = file_paths + test_paths
@@ -187,7 +193,11 @@ def find_impacted_docs(impact_map,
         elsif updated_packages.member?(package)
           old = old_manifest[package]
           new = new_manifest[package]
-          assert_not_equal(old, new)
+          assert_not_equal(
+            old, new,
+            "'#{package}' has identical data in both manifests so it is " +
+            "a bug that we ended up here"
+          )
           reason = "Updated package: #{package}: " +
             old_manifest[package].keys.sort.map do |key|
               old_val = old[key]
