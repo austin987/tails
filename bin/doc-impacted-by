@@ -62,12 +62,14 @@ def parse_argv!
   return [options, parameters]
 end
 
-# From a .build-manifest, from its list of binary packages, generate a
+# From a .build-manifest, from its list of packages, generate a
 # Hash mapping `package` to a Hash containing the remaining package
 # fields from the .build-manifest (e.g. `arch`, `version`).
 def read_package_manifest_file_as_package_map(path)
   yaml_struct = YAML.load(File.read(path))
-  yaml_struct['packages']['binary'].map do |entry|
+  packages = yaml_struct['packages']['binary'] +
+             yaml_struct['packages']['source']
+  packages.map do |entry|
     [
       entry['package'],
       entry.clone.delete_if { |k, _| k == 'package' }
