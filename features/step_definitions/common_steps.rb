@@ -347,7 +347,9 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  if $vm.execute('systemctl is-system-running').failure?
+  begin
+    try_for(30) { $vm.execute('systemctl is-system-running').success? }
+  rescue Timeout::Error
     jobs = $vm.execute('systemctl list-jobs').stdout
     units_status = $vm.execute('systemctl').stdout
     raise "The system is not fully running yet:\n#{jobs}\n#{units_status}"
