@@ -55,7 +55,7 @@ def bind_java_to_pseudo_fifo_logger
   RJava::Lang::System.setOut(print_stream)
 end
 
-def findfailed_hook(proxy, exception, override_method, signature, args)
+def findfailed_hook(proxy, exception, orig_method, args)
   picture = args.first
   candidate_path = "#{SIKULI_CANDIDATES_DIR}/#{picture}"
   if ! File.exist?(candidate_path)
@@ -85,12 +85,12 @@ def findfailed_hook(proxy, exception, override_method, signature, args)
   if $config['SIKULI_FUZZY_IMAGE_MATCHING'] && File.exist?(candidate_path)
     debug_log("Using fuzzy candidate picture for #{picture}")
     args_with_candidate = [candidate_path] + args.drop(1)
-    return proxy._invoke(override_method, signature, *args_with_candidate)
+    return orig_method.call(*args_with_candidate)
   end
 
   if $config["SIKULI_RETRY_FINDFAILED"]
     pause("FindFailed for: '#{picture}'")
-    return proxy._invoke(override_method, signature, *args)
+    return orig_method.call(*args)
   else
     # Re-raising FindFailed doesn't work due to rjb's limited
     # integration of Java exceptions. If we tried `raise exception`
@@ -145,15 +145,21 @@ def sikuli_screen_proxy.new(*args)
   # which can be obtained by creating the intended Java object using
   # RJB, and then calling its `java_methods` method.
   findfail_overrides.each do |method_name, signature|
-    s.define_singleton_method(method_name) do |*args|
+    s.define_singleton_method("#{method_name}_no_override") do |*args|
       begin
         self._invoke(method_name, signature, *args)
+      end
+    end
+    s.define_singleton_method(method_name) do |*args|
+      begin
+        orig_method = s.method("#{method_name}_no_override")
+        orig_method.call(*args)
       rescue Exception => exception
         # We really would like to only capture the FindFailed
         # exceptions imported by rjb here, but that hasn't happened
         # at the time this code is run. Yeah, meta-programming! :)
         raise exception unless exception.class.name == "FindFailed"
-        findfailed_hook(self, exception, method_name, signature, args)
+        findfailed_hook(self, exception, orig_method, args)
       end
     end
   end
@@ -201,7 +207,7 @@ def sikuli_screen_proxy.new(*args)
   def s.findAny(images)
     images.each do |image|
       begin
-        return [image, self.find(image)]
+        return [image, self.find_no_override(image)]
       rescue FindFailed
         # Ignore. We deal we'll throw an appropriate exception after
         # having looped through all images and found none of them.
