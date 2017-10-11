@@ -92,7 +92,17 @@ def findfailed_hook(proxy, exception, override_method, signature, args)
     pause("FindFailed for: '#{picture}'")
     return proxy._invoke(override_method, signature, *args)
   else
-    raise exception
+    # Re-raising FindFailed doesn't work due to rjb's limited
+    # integration of Java exceptions. If we tried `raise exception`
+    # here, then `raise` would see that `exception` is not a (Ruby)
+    # Exception (but an rjb proxy object) so it would convert it to a
+    # string and use that as the message for the default exception
+    # class (RuntimeError) that it then would raise.  The only way
+    # Java exceptions can be thrown are if thrown inside Java code, or
+    # with Rjb::throw... or you can do the following, which looks more
+    # Ruby-like, but will only work *after* Java has thrown its first
+    # FindFailed (which must be the case in this hook).
+    raise(FindFailed, exception.message)
   end
 end
 
