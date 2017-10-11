@@ -152,7 +152,7 @@ def sikuli_screen_proxy.new(*args)
         # We really would like to only capture the FindFailed
         # exceptions imported by rjb here, but that hasn't happened
         # at the time this code is run. Yeah, meta-programming! :)
-        raise e unless exception.class.name == "FindFailed"
+        raise exception unless exception.class.name == "FindFailed"
         findfailed_hook(self, exception, method_name, signature, args)
       end
     end
