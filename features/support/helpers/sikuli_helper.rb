@@ -110,7 +110,7 @@ end
 # Also, due to limitations in Ruby's syntax we can't do:
 #     def Sikuli::Screen.new
 # so we work around it with the following vairable.
-sikuli_script_proxy = Sikuli::Screen
+sikuli_screen_proxy = Sikuli::Screen
 $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 
 # For waitAny()/findAny() we are forced to throw this exception since
@@ -119,7 +119,7 @@ $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 class FindAnyFailed < StandardError
 end
 
-def sikuli_script_proxy.new(*args)
+def sikuli_screen_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
   findfail_overrides = [
