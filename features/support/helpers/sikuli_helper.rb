@@ -123,10 +123,10 @@ def sikuli_screen_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
   findfail_overrides = [
-    ['wait', 'Ljava.lang.Object;D'],
-    ['find', 'Ljava.lang.Object;'],
-    ['waitVanish', 'Ljava.lang.Object;D'],
     ['click', 'Ljava.lang.Object;'],
+    ['find', 'Ljava.lang.Object;'],
+    ['wait', 'Ljava.lang.Object;D'],
+    ['waitVanish', 'Ljava.lang.Object;D'],
   ]
 
   # The usage of `_invoke()` below exemplifies how one can wrap
