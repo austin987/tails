@@ -50,6 +50,32 @@ before sharing them with us.
 
 # Tools
 
+## Find documentation pages impacted by changes in Tails
+
+The `bin/doc-impacted-by` tool takes two "states" (see its `--help`)
+of Tails, and checks the changes between these states against a
+database of relationship between documentation pages and the source
+files and packages impacting them.
+
+The relationships between documentation and source files are stored in
+`doc-source-relationships.yml` in the Git root. It's YAML, and the
+format is something like this:
+
+- The `pages` field is mandatory (after all, we want to find the
+  documentation *pages* that might need to be updated). The remaining
+  fields list source files and packages impacting these pages.
+
+- All fields are interchangeable between the single and plural forms
+  (e.g. `page` is the same as `pages`). Similarly, the values can be
+  either strings, or a lists of strings.
+
+- All string values can use globs and pathspec magic features like
+  `{foo,bar}`.
+
+To use this tools, please first install the dependencies:
+
+    apt install ruby ruby-deep-merge ruby-git ruby-test-unit
+
 <a id="compress-image"></a>
 
 ## Image compression
