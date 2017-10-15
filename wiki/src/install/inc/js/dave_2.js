@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Display "Update extension" instead of "Install extension"
   // XXX: This should be done by the extension instead
-  showUpdateExtension();
+  // showUpdateExtension();
 
   // Display "Verify download" when "Install extension" or "Update extension" is clicked
   // XXX: This should be done by the extension instead
