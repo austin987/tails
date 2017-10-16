@@ -1,5 +1,21 @@
 document.addEventListener('DOMContentLoaded', function() {
-
+  window.addEventListener("message", (event) => {
+      if (event.source !== window || !event.data){
+          return;
+      }
+      if(event.data.action === 'verifying'){
+		  showVerifyingDownload();
+      }
+      else if(event.data.action === 'verification-failed'){
+		  showVerificationResult('failed');
+      }
+      else if(event.data.action === 'verification-failed-again'){
+		  showVerificationResult('failed-again');
+      }
+      else if(event.data.action === 'verification-success'){
+		  showVerificationResult('successful');
+      }
+  });
   function showFloatingToggleableLinks() {
     var links = document.getElementsByClassName('floating-toggleable-link');
     for (let i = 0; i < links.length; i++) {
@@ -109,22 +125,22 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function showVerifyingDownload() {
-    hide(document.getElementById('verify-download'));
+    hide(document.getElementById('verify-download-wrapper'));
     show(document.getElementById('verifying-download'));
   }
 
   function showVerificationResult(result) {
-    hide(document.getElementById('verify-download'));
+    hide(document.getElementById('verify-download-wrapper'));
     resetVerificationResult();
-    if(result == 'successful') {
+    if(result === 'successful') {
       show(document.getElementById('verification-successful'));
       opaque(document.getElementById('step-continue-direct'));
       toggleContinueLink('direct', 'next-direct');
     }
-    if(result == 'failed') {
+    else if(result === 'failed') {
       show(document.getElementById('verification-failed'));
     }
-    if(result == 'failed-again') {
+    else if(result === 'failed-again') {
       show(document.getElementById('verification-failed-again'));
     }
   }
@@ -139,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if(method == 'direct') {
       opaque(document.getElementById('step-verify-direct'));
       opaque(document.getElementById('continue-link-direct'));
-      show(document.getElementById('verify-download'));
+      show(document.getElementById('verify-download-wrapper'));
     }
     if(method == 'bittorrent') {
       opaque(document.getElementById('step-verify-bittorrent'));
@@ -169,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Display "Update extension" instead of "Install extension"
   // XXX: This should be done by the extension instead
-  showUpdateExtension();
+  // showUpdateExtension();
 
   // Display "Verify download" when "Install extension" or "Update extension" is clicked
   // XXX: This should be done by the extension instead
@@ -181,12 +197,4 @@ document.addEventListener('DOMContentLoaded', function() {
       show(document.getElementById('verification'));
     });
   }
-
-  // Display "Verification successful" when "Verify download" is clicked
-  // XXX: This should be done by the extension instead
-  document.getElementById('verify-download').onclick = function() {
-    showVerifyingDownload();
-    setTimeout(function(){showVerificationResult('successful')}, 1500);
-  }
-
 });
