@@ -302,18 +302,6 @@ builds reproducible, and even more so for Debian-based projects.
 
 We will adapt our server infrastructure to support this project.
 
-We will re-use the Vagrant-based build system we have created for
-developers: that build system will need to support reproducible builds
-anyway.
-
-There are two aspects to it.
-
-First of all, we will need to host a number of baseboxes that the
-isobuilders will generate before each build (if locally unavailable).
-This way they can re-use them rather than rebuild them each time. This
-means having enough disk space for the `vagrant.d` directory in the
-Jenkins user's home directory, as well as in the libvirt storage partition.
-
 Secondly, we will enable our existing QA processes to build ISO
 images:
 
@@ -322,36 +310,6 @@ images:
  * in the general case: in a way that minimizes the non-determinism of
    the output (we may want to use an up-to-date build environment
    instead of a frozen one).
-
-Still, the integration into our Jenkins setup will require us to go
-through a few additional steps, such as:
-
- * The virtual machines used as Jenkins "slaves" to build ISO images
-   will need to store a number of different baseboxes.
-
- * We will use a rake task (`rake basebox:clean_old`) to clean
-   obsolete baseboxes older than some time. Given we update the baseboxes at
-   every Tails release, we've set this period to 4 months.
-
- * The Jenkins isobuilders will use the `forcecleanup` build option to ensure
-   that the only copy of the baseboxes remaining on disk are the one in the
-   `vagrant.d` directory, and every VM image in the libvirt storage pool is
-   deleted, to avoid duplication of the basebox images.
-
- * For simplicity and security reasons, we will be using nested
-   virtualization, i.e. Vagrant will start the desired ISO build
-   environment in a virtual machine, all this inside a Jenkins "slave"
-   virtual machine. We are already using nested virtualization a lot,
-   so we are confident it can work out well, but still it brings two
-   other problems. First, we have experienced reliability issues with
-   nested virtualization in the past; these issues have been solved in
-   the Linux kernel recently, but there may be more that our current
-   use cases have not uncovered. And secondly, nested virtualization
-   does not come for free: it has a cost in terms of performance and
-   hardware resources, so in order for our continuous integration
-   processes to keep up with our development cadence with a satisfying
-   throughput, we might have to purchase and allocate more hardware
-   to them.
 
 For estimates on hardware cost for Lizard ([[!tails_ticket 12002]]), see [[the
 dedicated page|blueprint/reproducible_builds/hardware]].
@@ -423,32 +381,6 @@ Trust" level when it comes to the "trust anchor", and close to reach
 reproducability nirvana. I guess the next step would be to rely less
 on a "static build environment" to support something like "Diverse
 Double-Compiling" to counter the "Trusting Trust" problem. :)
-
-## Jenkins
-
-XXX: see "Adjust our infrastructure accordingly" above, that has some
-more details (and some less, too).
-
-To get all the benefits from the reproducible builds mentionned above,
-it makes sense to adapt our current Jenkins build system so that
-ISO images produced by Jenkins can be built in a reproducible manner,
-e.g. when building a release tag.
-
-A first implementation would be to nest the vagrant-libvirt VM into each
-of our current isobuilder VMs. It means adapting our Puppet manifests,
-to install Libvirt and Vagrant in all our isobuilder VMs, and the
-vagrant box image being deployed in every of this systems so that the
-isobuilder VMs don't need to download it at every builds. We'll have to
-think about how to do this last requirement, given at the moment this
-vagrant box image is hosted on a different remote sytem than our
-isobuilders (NFS share?).
-
-It also raises technical questions:
-
-* How much would that impact our automatic ISO build throughput? Will it
-  then still cope with our development cadence?
-* Will we have enough hardware resources to use this build system. E.g.
-  will it require to assign more RAM or CPUs to our isobuilders?
 
 # Miscellaneous resources
 
