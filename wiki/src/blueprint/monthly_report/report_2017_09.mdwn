@@ -6,33 +6,47 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
+* [[Tails 3.2 was released on Tuesday 26|news/version_3.2]] ([major] release).
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 3.3 is [[scheduled for November 16|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 3.2:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+- We added support for PPPoE and dial-up Internet connections.
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+- We installed [*BookletImposer*](http://kjo.herbesfolles.org/bookletimposer/)
+  to convert linear PDF documents into booklets, and vice-versa.
+
+- We added *GNOME Screen Keyboard* to replace *Florence*, the previous virtual
+  keyboard, which had [many issues](https://labs.riseup.net/code/projects/tails/issues?utf8=%E2%9C%93&set_filter=1&f%5B%5D=cf_18&op%5Bcf_18%5D=%3D&v%5Bcf_18%5D%5B%5D=On-screen+keyboard&f%5B%5D=subject&op%5Bsubject%5D=%7E&v%5Bsubject%5D%5B%5D=Florence&f%5B%5D=fixed_version_id&op%5Bfixed_version_id%5D=%3D&v%5Bfixed_version_id%5D%5B%5D=294&f%5B%5D=&c%5B%5D=status&c%5B%5D=priority&c%5B%5D=fixed_version&c%5B%5D=subject&c%5B%5D=category&c%5B%5D=cf_15&c%5B%5D=assigned_to&c%5B%5D=cf_9&group_by=&t%5B%5D=).
+
+- We now require an 8 GB USB stick to install Tails. 4 GB USB sticks that are
+  already installed can still be upgraded.
+
+- *Tails Installer* now detects when the target USB stick has Tails
+  installed already and automatically proposes to upgrade.
+  This made possible to remove the initial splash screen.
+
+- Disabled *Bluetooth* to protect against the [*BlueBorne*
+  attack](https://www.armis.com/blueborne/). [[!tails_ticket 14655]].
+
+- Now deny access to the D-Bus service of *Pidgin* to prevent other applications to
+  access and modify its configuration. [[!tails_ticket 14612]].
+
+- Fixed the import of secret OpenPGP keys in *Password and Keys*
+  [[!tails_ticket 12733]].
 
 Code
 ====
 
-XXX: List important code work that is not covered already by the Release
-     section (for example, the changes being worked on for the next version).
-
-We've continued to work on making Tails ISO images reproducible.
-
-- We fixed all of the issues that were identified by our first build testers.
-- So far, everyone who tried reproducing the Tails 3.2~rc1 and 3.2 ISO
-  images succeeded. So here's a challenge for you: can you manage to
-  get a different ISO by following our [[build|contribute/build]] and
-  [[verification|contribute/build/reproducible#verify-iso]] instructions?
-- We published a [[blueprint|blueprint/reproducible_builds/report_to_RB_community/]] which explains how we did it.
+- We've continued to work on making Tails ISO images reproducible:
+  - We fixed all of the issues that were identified by our first build testers.
+  - So far, everyone who tried reproducing the Tails 3.2~rc1 ISO
+    image succeeded. We've received a couple non-reproducibility reports about
+    3.2, and they are all explained by a single, one-byte mistake in a
+    translation of the wiki we ship inside Tails (we'll add sanity checks
+    so we never release something with that type of mistake again).
+  - We published a [[blueprint|blueprint/reproducible_builds/report_to_RB_community/]] which explains how we did it.
 
 - We are improving integration of the _Orca screen reader_ and the
   _GNOME screen keyboard_ into Tails ([[!tails_ticket 14752]],
@@ -44,7 +58,7 @@ We've continued to work on making Tails ISO images reproducible.
 
 - We have formalized how the AppArmor profile for _Thunderbird_ is
   maintained in Debian and upstream. This clarifies where and how our
-  contributions should be submitted and At the end of the day this
+  contributions should be submitted and at the end of the day this
   should avoid the need to maintain a Tails-specific delta.
 
 - We are working on fixing _Seahorse_ buggy interfacing with
@@ -91,13 +105,13 @@ User experience
 Hot topics on our help desk
 ===========================
 
-XXX: Ask tails-bugs@boum.org to list hot topics for the last month.
+1. [[!tails_ticket 14755 desc="Tails Installer treats drives differently depending on when they are plugged"]].
 
-1.
+1. [[!tails_ticket 14250 desc="Applications menu stops working some times"]].
 
-1.
+1. [[!tails_ticket 14754 desc="Keyboard and mouse do not work after upgrading to tails 3.2"]].
 
-1.
+1. Many people had problems to use their Persistent Volume and had to reconfigure to access it.
 
 Infrastructure
 ==============
@@ -133,11 +147,6 @@ Funding
 Outreach
 ========
 
-Past events
------------
-
-
-
 Upcoming events
 ---------------
 
@@ -152,7 +161,11 @@ Upcoming events
 On-going discussions
 ====================
 
-XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
+- Tails reproducibility keeps being an important topic on our mailing list:
+  <https://mailman.boum.org/pipermail/tails-dev/2017-September/011648.html>
+- We have been busy with a new download page:
+  <https://mailman.boum.org/pipermail/tails-dev/2017-September/011694.html>
+
 
 Press and testimonials
 ======================

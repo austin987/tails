@@ -1,29 +1,25 @@
-[[!meta title="Running the automated test suite on lizard"]]
+[[!meta title="Automated test suite particularities on lizard"]]
 
-The isotester1 VM on lizard is configured to run our automated test
-suite. Core Tails developers can run it there, e.g. on ISO images
-built by Jenkins.
+# Old ISO used in the test suite in Jenkins
 
-[[!toc levels=2]]
+Some tests like upgrading Tails are done against a Tails installation made from
+the previously released ISO.
 
-# Entering the system
+In some cases (e.g when the Tails installer interface changed), we need to
+deactivate this feature so that the test can pass. There is an environment
+variable to control which old ISO will be used in Jenkins.
 
-As a core developer, you have SSH access to `isotester1.lizard`.
-The connection details you need live in our internal Git repository.
+Set `USE_LAST_RELEASE_AS_OLD_ISO=no` in the environment to deactivate this
+feature. In this case, the same ISO that is being tested is going to be used
+as the previously installed Tails system.
 
-# Getting an ISO image
+In Tails' Jenkins, this variable can be set in the `macros/test_Tails_ISO.yaml`
+and `macros/manual_test_Tails_ISO.yaml` files in the [jenkins-jobs
+repo](gitolite@git.puppet.tails.boum.org:jenkins-jobs). **Beware** that the
+main repo used to generate our jenkins jobs is the one hosted in the
+`puppet-git.lizard` gitolite instance, so that's the one where to push your
+changes. The immerda one is just a mirror.
 
-You can quickly retrieve ISO images built by Jenkins from
-<http://nightly.tails.boum.org/>, e.g. using `wget` or `curl`.
-
-# Running the test suite
-
-Use `sudo su -` to enter a root session.
-
-A clone of the Tails Git repository can be found in `/srv/git/`.
-
-When using the `--capture` option, please pass it a filename within
-`/tmp/TailsToaster`, for storage management reasons.
-
-You can access the VNC display of the system under testing using
-a SSH tunnel.
+See commit
+[371be73](https://git-tails.immerda.ch/jenkins-jobs/commit/?id=371be73)
+in the above repo for an example.
