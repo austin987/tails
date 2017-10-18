@@ -36,30 +36,6 @@ try_for() {
     wait_until "${@}"
 }
 
-# Sets the `value` of a `key` in a simple configuration `file`. With
-# "simple" you should think something like a the shell environment as
-# output by the `env` command. Hence this is only useful for
-# configuration files that have no structure (e.g. sections with
-# semantic meaning, like the namespace secions in .gitconfig), allow
-# only one assignment per line, and a fixed/static assignment operator
-# (`op`, which defaults to '=', but other examples would be " = " or
-# torrc's " "). If the key already exists its value is updated in
-# place, otherwise it's added at the end.
-set_simple_config_key() {
-    local file="${1}"
-    local key="${2}"
-    local value="${3}"
-    local op="${4:-=}"
-    if grep -q "^${key}${op}" "${file}"; then
-        # Escape / in input so it can be used as the sed separator
-        key="$(echo "${key}" | sed 's,/,\\/,g')"
-        value="$(echo "${value}" | sed 's,/,\\/,g')"
-        sed -i "s/^${key}${op}.*$/${key}${op}${value}/" "${file}"
-    else
-        echo "${key}${op}${value}" >> "${file}"
-    fi
-}
-
 # Runs the wrapped command while temporarily disabling `set -e`, if
 # enabled. It will always return 0 to not make scripts with `set -e`
 # enabled abort but will instead store the wrapped command's return
@@ -87,4 +63,15 @@ is_package_installed() {
                       --showformat='${db:Status-Status}' "${package_name}" \
                       2>/dev/null)"
     [ "${package_status}" = "installed" ]
+}
+
+extract_from_file_between_markers () {
+    local file start stop
+    file="${1}"
+    start="${2}"
+    stop="${3}"
+    awk "/${start}/ { between=1; next; }
+         /${stop}/ { between=0; }
+         { if (between) { print; } }" \
+             "${file}"
 }
