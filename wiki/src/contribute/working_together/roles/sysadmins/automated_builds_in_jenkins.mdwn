@@ -7,14 +7,18 @@ We thus have to host a number of baseboxes that the isobuilders generate
 before each build (if locally unavailable) if we want to be able to re-use
 them rather than do a basebox rebuild each time.
 
-We use a rake task (`rake basebox:clean_old`) to delete obsolete
-baseboxes older than some time. Given we update the baseboxes at every
-Tails release, we've set this period to 4 months.
+We use some of the Tails [[!tails_gitweb Rakefile]] mechanism to configure how
+the builds are made in Jenkins. You can see them in the builders of our
+[jenkins-jobs
+repo](https://git-tails.immerda.ch/jenkins-jobs/tree/macros/builders.yaml).
 
-We also use another rake task (`rake clean_up_libvirt_volumes`) to
-remove baseboxes from the libvirt volumes partition. This way we ensure
-we only host one copy of a given basebox in the `.vagrant.d` directory of the
-Jenkins user $HOME.
+We specifically use the `rake basebox:clean_old` task to delete obsolete
+baseboxes older than some time. Given we update the baseboxes at every Tails
+release, we've set this period to 4 months.
+
+We also use the `rake clean_up_libvirt_volumes` task to remove baseboxes from
+the libvirt volumes partition. This way we ensure we only host one copy of a
+given basebox in the `.vagrant.d` directory of the Jenkins user $HOME.
 
 We have a specific script,
 [cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers),
