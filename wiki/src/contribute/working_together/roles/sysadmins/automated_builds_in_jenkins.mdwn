@@ -19,10 +19,10 @@ of the garbage collection mechanisms provided by the Tails
   the libvirt volumes partition. This way we ensure we only host one copy of a
   given basebox in the `.vagrant.d` directory of the Jenkins user `$HOME`.
 
-We have a specific script,
-[cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers),
-responsible to ensure no previously failed basebox building leftovers
-such as vmdebootstrap mounted filesystems break the build.
+The [cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers)
+script ensures a failed basebox generation process
+does not break the following builds due to leftovers
+such as filesystems temporarily mounted by `vmdebootstrap`.
 
 For security reasons, we are using nested virtualization,
 i.e. Vagrant will start the desired ISO build environment in a virtual
