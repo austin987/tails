@@ -3,22 +3,21 @@
 We re-use the [[Vagrant-based build system|contribute/build/vagrant-setup]] we
 have created for developers.
 
-We have to host a number of baseboxes that the isobuilders generate
-before each build (if locally unavailable). This way they can re-use
-them rather than rebuild them each time.
+This system generates the needed Vagrant basebox before each build
+unless it is already available locally. By default such generated
+baseboxes are cached on each ISO builder forever, which is a waste of
+disk space: in practice only the most recent baseboxes are used. So we
+[take advantage](https://git-tails.immerda.ch/jenkins-jobs/tree/macros/builders.yaml)
+of the garbage collection mechanisms provided by the Tails
+[[!tails_gitweb Rakefile]]:
 
-We use some of the Tails [[!tails_gitweb Rakefile]] mechanisms to configure how
-the builds are made in Jenkins. You can see them in the builders of our
-[jenkins-jobs
-repo](https://git-tails.immerda.ch/jenkins-jobs/tree/macros/builders.yaml).
+- We use the `rake basebox:clean_old` task to delete obsolete
+  baseboxes older than some time. Given we switch to a new basebox at
+  least for every major Tails release, we've set this expiration time to 4 months.
 
-We specifically use the `rake basebox:clean_old` task to delete obsolete
-baseboxes older than some time. Given we switch to a new basebox at
-least for every major Tails release, we've set this expiration time to 4 months.
-
-We also use the `rake clean_up_libvirt_volumes` task to remove baseboxes from
-the libvirt volumes partition. This way we ensure we only host one copy of a
-given basebox in the `.vagrant.d` directory of the Jenkins user $HOME.
+- We also use the `rake clean_up_libvirt_volumes` task to remove baseboxes from
+  the libvirt volumes partition. This way we ensure we only host one copy of a
+  given basebox in the `.vagrant.d` directory of the Jenkins user `$HOME`.
 
 We have a specific script,
 [cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers),
