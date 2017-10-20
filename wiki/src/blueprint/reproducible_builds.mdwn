@@ -225,6 +225,51 @@ that's close to a given frozen one. It is out of the scope of this
 first iteration, but we are confident that we can implement the above
 in a way that makes it easy enough to add this property later.
 
+## Implementation details
+
+After lots of research, discussion and experiments, we settled on the
+following implementation for our first iteration:
+
+* To freeze the build environment, we use APT snapshots in the same way
+  we do in the Tails build system, by storing the serials for the various
+  APT repositories in
+  [[!tails_gitweb_dir vagrant/definitions/tails-builder/config/APT_snapshots.d/]].
+* Only the debian-security APT source uses Debian's APT repository, so
+  that we get security fixes. This will probably not influence the
+  reproducibility of the ISO. This is done in the
+  [[!tails_gitweb vagrant/provision/setup-tails-builder desc="Vagrant provisioning
+  script"]].
+* To ensure that changes in the Vagrant build system are still taken into account when
+  using a basebox, we dynamically set the name of the basebox by
+  including the short ID of the last commit in the `vagrant` directory in
+  the related branch, as well as its date, in the name of the basebox.
+* We update the basebox APT snapshots serials [[at every Tails
+  release|contribute/APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]].
+* A new VM is created from the basebox for each build. After the build,
+  the VM is destroyed ([[!tails_ticket 11980]] and [[!tails_ticket 11981]]).
+* The `keeprunning` build option can be used so that the VM is kept running
+  and reused for subsequent builds of the same branch.
+* The VM encodes (in `/var/lib/vagrant_box_build_from`) the branch for
+  which it has been started for. The ISO build aborts if the branch being
+  built is not the same as the one that is encoded in this file. This
+  prevents the reuse of a running VM to build another branch than the
+  one it has been started for initially.
+* To ensure that the `apt-cacher-ng` cache is not lost when the VM is destroyed,
+  it is stored in a dedicated virtual disk, and plugged into every new
+  build VM.
+  In our Jenkins setup we instead use an existing, external
+  `apt-cacher-ng` in order to share the APT cache between build VMs
+  and save disk space ([[!tails_ticket 11979]]).
+
+So we don't publish Vagrant baseboxes anymore: everyone building
+a Tails ISO image will instead build their own. Their resulting
+basebox doesn't have to be identical to anybody else's, but it is
+similar enough to produce ISO images that are identical to the ones
+published by the Tails project.
+
+**Edit:** It has now been released and is documented in the page about Tails
+[[Vagrant setup|contribute/build/vagrant-setup]].
+
 ## Make Tails ISO build in a reproducible manner
 
 We will modify the Tails ISO build process itself, to make it
@@ -302,6 +347,18 @@ builds reproducible, and even more so for Debian-based projects.
 
 We will adapt our server infrastructure to support this project.
 
+We will re-use the Vagrant-based build system we have created for
+developers: that build system will need to support reproducible builds
+anyway.
+
+There are two aspects to it.
+
+First of all, we will need to host a number of baseboxes that the
+isobuilders will generate before each build (if locally unavailable).
+This way they can re-use them rather than rebuild them each time. This
+means having enough disk space for the `vagrant.d` directory in the
+Jenkins user's home directory, as well as in the libvirt storage partition.
+
 Secondly, we will enable our existing QA processes to build ISO
 images:
 
@@ -311,8 +368,44 @@ images:
    the output (we may want to use an up-to-date build environment
    instead of a frozen one).
 
+Still, the integration into our Jenkins setup will require us to go
+through a few additional steps, such as:
+
+ * The virtual machines used as Jenkins "slaves" to build ISO images
+   will need to store a number of different baseboxes.
+
+ * We will use a rake task (`rake basebox:clean_old`) to clean
+   obsolete baseboxes older than some time. Given we update the baseboxes at
+   every Tails release, we've set this period to 4 months.
+
+ * The Jenkins isobuilders will use the `forcecleanup` build option to ensure
+   that the only copy of the baseboxes remaining on disk are the one in the
+   `vagrant.d` directory, and every VM image in the libvirt storage pool is
+   deleted, to avoid duplication of the basebox images.
+
+ * For simplicity and security reasons, we will be using nested
+   virtualization, i.e. Vagrant will start the desired ISO build
+   environment in a virtual machine, all this inside a Jenkins "slave"
+   virtual machine. We are already using nested virtualization a lot,
+   so we are confident it can work out well, but still it brings two
+   other problems. First, we have experienced reliability issues with
+   nested virtualization in the past; these issues have been solved in
+   the Linux kernel recently, but there may be more that our current
+   use cases have not uncovered. And secondly, nested virtualization
+   does not come for free: it has a cost in terms of performance and
+   hardware resources, so in order for our continuous integration
+   processes to keep up with our development cadence with a satisfying
+   throughput, we might have to purchase and allocate more hardware
+   to them.
+
 For estimates on hardware cost for Lizard ([[!tails_ticket 12002]]), see [[the
 dedicated page|blueprint/reproducible_builds/hardware]].
+
+**Edit:** We already adapted our server infrastructure to support this project,
+integrating it in our [[Vagrant setup|contribute/build/vagrant-setup]]
+mentioned above. Specifics about how we deployed that in our Jenkins infra are
+[[documented
+here|contribute/working_together/roles/sysadmins/automated_builds_in_Jenkins]].
 
 # Various ideas
 
@@ -381,6 +474,11 @@ Trust" level when it comes to the "trust anchor", and close to reach
 reproducability nirvana. I guess the next step would be to rely less
 on a "static build environment" to support something like "Diverse
 Double-Compiling" to counter the "Trusting Trust" problem. :)
+
+# Jenkins
+
+See "Adjust our infrastructure accordingly" above.
+
 
 # Miscellaneous resources
 
