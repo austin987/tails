@@ -1,31 +1,32 @@
 [[!meta title="Automated build setup in Jenkins"]]
 
-We re-use the [[Vagrant-based build system|contribute/build/vagrant]] we have
-created for developers.
+We re-use the [[Vagrant-based build system|contribute/build/vagrant-setup]] we
+have created for developers.
 
-We have to host a number of baseboxes that the isobuilders generate
-before each build (if locally unavailable). This way they can re-use
-them rather than rebuild them each time.
+This system generates the needed Vagrant basebox before each build
+unless it is already available locally. By default such generated
+baseboxes are cached on each ISO builder forever, which is a waste of
+disk space: in practice only the most recent baseboxes are used. So we
+[take advantage](https://git-tails.immerda.ch/jenkins-jobs/tree/macros/builders.yaml)
+of the garbage collection mechanisms provided by the Tails
+[[!tails_gitweb Rakefile]]:
 
-We use a rake task (`rake basebox:clean_old`) to clean obsolete
-baseboxes older than some time. Given we update the baseboxes at every
-Tails release, we've set this period to 4 months.
+- We use the `rake basebox:clean_old` task to delete obsolete
+  baseboxes older than some time. Given we switch to a new basebox at
+  least for every major Tails release, we've set this expiration time to 4 months.
 
-We also use another rake task (`rake clean_up_libvirt_volumes`) to
-remove baseboxes from the libvirt volumes partition. This way we ensure
-we only host one copy of a basebox in the `.vagrant.d` directory of the
-Jenkins user $HOME.
+- We also use the `rake clean_up_libvirt_volumes` task to remove baseboxes from
+  the libvirt volumes partition. This way we ensure we only host one copy of a
+  given basebox in the `.vagrant.d` directory of the Jenkins user `$HOME`.
 
-We have a specific script,
-[cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers),
-that is responsible to ensure that any failed attempts to build a
-basebox does not leave leftovers such as vmdebootstrap mountpoints and
-would result in failures of subsequent builds.
+The [cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers)
+script ensures a failed basebox generation process
+does not break the following builds due to leftovers
+such as filesystems temporarily mounted by `vmdebootstrap`.
 
-For simplicity and security reasons, we are using nested virtualization,
-i.e. Vagrant will start the desired ISO build environment in a virtual
+For security reasons we use nested virtualization:
+Vagrant starts the desired ISO build environment in a virtual
 machine, all this inside a Jenkins "slave" virtual machine.
 
-In our Jenkins setup we instead use an existing, external
-`apt-cacher-ng` in order to share the APT cache between build VMs and
-save disk space ([[!tails_ticket 11979]]).
+On lizard we set the Tails [[extproxy|contribute/build]] build option
+and point `http_proxy` to our existing shared `apt-cacher-ng`.
