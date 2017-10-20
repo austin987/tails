@@ -73,7 +73,12 @@ end
 
 success = true
 
-Dir.glob('wiki/src/{news,security}/*.{mdwn,html}').each do |post_path|
+meta_date_sorted_pages =
+  Dir.glob('wiki/src/{news,security,security/audits}/*.{mdwn,html}') - [
+  'wiki/src/security/audits.mdwn',
+  ]
+
+meta_date_sorted_pages.each do |post_path|
   success = false unless page_meta_date_is_ok?(post_path)
   Dir.glob(post_path.sub(/.(html|mdwn)$/, '') + '.*.po').each do |po_path|
     success = false unless po_file_meta_date_is_ok?(po_path)
