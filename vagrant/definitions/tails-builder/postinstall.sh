@@ -95,6 +95,7 @@ apt-get -y install \
         perlmagick \
         psmisc \
         rsync \
+        ruby \
         syslinux-utils \
         time \
         whois
