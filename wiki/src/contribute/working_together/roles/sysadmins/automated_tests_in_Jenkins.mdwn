@@ -1,0 +1,35 @@
+[[!meta title="Automated ISO tests on Jenkins"]]
+
+# Old ISO used in the test suite in Jenkins
+
+Some tests like upgrading Tails are done against a Tails installation made from
+the previously released ISO.
+
+In some cases (e.g when the _Tails Installer_ interface has changed), we need to
+temporarily change this behaviour to make tests work. To have Jenkins
+use the ISO being tested instead of the last released one:
+
+1. Set `USE_LAST_RELEASE_AS_OLD_ISO=no` in the
+   `macros/test_Tails_ISO.yaml` and
+   `macros/manual_test_Tails_ISO.yaml` files in the
+   `jenkins-jobs` Git repository
+   (`gitolite@git.puppet.tails.boum.org:jenkins-jobs`).
+
+   Documentation and policy to access this repository is the same as
+   for our [[Puppet modules|contribute/git#puppet]].
+
+   See for example
+   [commit 371be73](https://git-tails.immerda.ch/jenkins-jobs/commit/?id=371be73).
+
+   <div class="note">
+   Treat the repository at immerda as a read-only mirror: any change
+   pushed there does not affect our infrastructure and will
+   be overwritten.
+   </div>
+
+   Under the hood, once this change is applied Jenkins will pass the
+   ISO being tested (instead of the last released one) to
+   `run_test_suite`'s `--old-iso` argument.
+
+2. File a ticket to ensure this temporarily change gets reverted
+   in due time.
