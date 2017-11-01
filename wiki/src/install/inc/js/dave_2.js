@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if(event.data.action === 'verifying'){
 		  showVerifyingDownload();
+          var element = document.getElementById("verifying-download");
+          element.innerHTML = "Verifying: "+event.data.fileName;
       }
       else if(event.data.action === 'verification-failed'){
 		  showVerificationResult('failed');
