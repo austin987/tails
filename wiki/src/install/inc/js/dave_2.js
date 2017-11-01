@@ -78,24 +78,63 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function detectBrowser() {
-    // XXX: This should be set by the browser detection script
-    var vendor = 'firefox';
-    if(vendor == 'firefox') {
-      showVersionForSupportedBrowser();
-      toggleDisplay(document.getElementsByClassName('chrome'), 'hide');
-      toggleDisplay(document.getElementsByClassName('firefox'), 'show');
-    }
-    if(vendor == 'chrome') {
-      showVersionForSupportedBrowser();
-      toggleDisplay(document.getElementsByClassName('firefox'), 'hide');
-      toggleDisplay(document.getElementsByClassName('chrome'), 'show');
-    }
-  }
+    // XXX: Fix these minimum versions
+    minVersion = {
+      'firefox': 38,
+      'chrome': 44,
+      'torbrowser': 5
+    };
+    document.getElementById('min-version-firefox').textContent = minVersion.firefox.toString();
+    document.getElementById('min-version-chrome').textContent = minVersion.chrome.toString();
+    document.getElementById('min-version-tor-browser').textContent = minVersion.torbrowser.toString();
 
-  function showVersionForSupportedBrowser() {
+    version = navigator.userAgent.match(/\b(Chrome|Firefox)\/(\d+)/);
+    version = version && parseInt(version[2]) || 0;
+    overrideVersion = location.search.match(/\bversion=(\w+)/);
+    if (overrideVersion) {
+      version = overrideVersion[1];
+    }
+
+    overrideBrowser = location.search.match(/\bbrowser=(\w+)/);
+    if (overrideBrowser) {
+      browser = overrideBrowser[1];
+    } else if (window.InstallTrigger) {
+      browser = 'Firefox';
+    } else if (/\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.vendor)) {
+      browser = 'Chrome';
+    }
+
+    if (browser === 'Firefox' || browser === 'Chrome') {
+      document.getElementById('detected-browser').textContent = browser + ' ' + version.toString();
+    } else {
+      // Don't bother display version number for unsupported browsers as it's probably more error prone.
+      document.getElementById('detected-browser').textContent = browser;
+    }
+
     toggleDisplay(document.getElementsByClassName('no-js'), 'hide');
-    toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
-    toggleDirectBitTorrent('direct');
+    if (browser === 'Firefox') {
+      if (version >= minVersion.firefox) {
+        // Supported Firefox
+        toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
+        toggleDisplay(document.getElementsByClassName('chrome'), 'hide');
+        toggleDisplay(document.getElementsByClassName('firefox'), 'show');
+      } else {
+        // Outdated Firefox
+        toggleDisplay(document.getElementsByClassName('outdated-browser'), 'show');
+      }
+    } else if (browser === 'Chrome') {
+      if (version >= minVersion.chrome) {
+        // Supported Chrome
+        toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
+        toggleDisplay(document.getElementsByClassName('firefox'), 'hide');
+        toggleDisplay(document.getElementsByClassName('chrome'), 'show');
+      } else {
+        // Outdated Chrome
+        toggleDisplay(document.getElementsByClassName('outdated-browser'), 'show');
+      }
+    } else {
+      toggleDisplay(document.getElementsByClassName('unsupported-browser'), 'show');
+    }
   }
 
   function toggleContinueLink(method, state) {
