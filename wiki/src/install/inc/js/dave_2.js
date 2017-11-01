@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
       else if(event.data.action === 'verification-success'){
 		  showVerificationResult('successful');
       }
+      else if (event.data.action === 'progress'){
+        var percentage  = event.data.percentage;
+        console.log(percentage)
+      }
   });
   function showFloatingToggleableLinks() {
     var links = document.getElementsByClassName('floating-toggleable-link');
