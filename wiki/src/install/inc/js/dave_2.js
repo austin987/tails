@@ -80,11 +80,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function detectBrowser() {
-    // XXX: Fix these minimum versions
+    /* To list the APIs that our extension is using, execute: git grep 'chrome.'
+       Browser compatibility:
+
+         - https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs
+         - https://developer.chrome.com/extensions/api_index
+    */
     minVersion = {
-      'firefox': 38,
-      'chrome': 44,
-      'torbrowser': 5
+      'firefox': 45,  // First release with chrome.runtime.getManifest
+      'chrome': 22,   // First release with chrome.runtime.getManifest
+      'torbrowser': 6 // First release based on Firefox 45
     };
     document.getElementById('min-version-firefox').textContent = minVersion.firefox.toString();
     document.getElementById('min-version-chrome').textContent = minVersion.chrome.toString();
