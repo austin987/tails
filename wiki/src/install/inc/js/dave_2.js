@@ -1,24 +1,26 @@
 document.addEventListener('DOMContentLoaded', function() {
+
   window.addEventListener("message", (event) => {
-      if (event.source !== window || !event.data){
-          return;
-      }
-      if(event.data.action === 'verifying'){
-		  showVerifyingDownload(event.data.fileName);
-      }
-      else if(event.data.action === 'verification-failed'){
-		  showVerificationResult('failed');
-      }
-      else if(event.data.action === 'verification-failed-again'){
-		  showVerificationResult('failed-again');
-      }
-      else if(event.data.action === 'verification-success'){
-		  showVerificationResult('successful');
-      }
-      else if (event.data.action === 'progress'){
-        showVerificationProgress(event.data.percentage);
-      }
+    if (event.source !== window || !event.data) {
+      return;
+    }
+    if (event.data.action === 'verifying') {
+      showVerifyingDownload(event.data.fileName);
+    }
+    else if (event.data.action === 'verification-failed') {
+      showVerificationResult('failed');
+    }
+    else if (event.data.action === 'verification-failed-again') {
+      showVerificationResult('failed-again');
+    }
+    else if (event.data.action === 'verification-success') {
+      showVerificationResult('successful');
+    }
+    else if (event.data.action === 'progress') {
+      showVerificationProgress(event.data.percentage);
+    }
   });
+
   function showFloatingToggleableLinks() {
     var links = document.getElementsByClassName('floating-toggleable-link');
     for (let i = 0; i < links.length; i++) {
@@ -44,8 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function toggleOpacity(elm, mode) {
-    for(var i = 0; i < elm.length; i++) {
-      if(mode == 'opaque') {
+    for (var i = 0; i < elm.length; i++) {
+      if (mode == 'opaque') {
         opaque(elm[i]);
       } else {
         transparent(elm[i]);
@@ -59,17 +61,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function show(elm) {
     elm.style.display = 'initial';
-    if(elm.classList.contains('block')) {
+    if (elm.classList.contains('block')) {
       elm.style.display = 'block';
     }
-    if(elm.classList.contains('inline-block')) {
+    if (elm.classList.contains('inline-block')) {
       elm.style.display = 'inline-block';
     }
   }
 
   function toggleDisplay(elm, mode) {
-    for(var i = 0; i < elm.length; i++) {
-      if(mode == 'hide') {
+    for (var i = 0; i < elm.length; i++) {
+      if (mode == 'hide') {
         hide(elm[i]);
       } else {
         show(elm[i]);
@@ -138,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function toggleContinueLink(method, state) {
-    if(method == 'direct') {
+    if (method == 'direct') {
       hide(document.getElementById('skip-download-direct'));
       hide(document.getElementById('skip-verification-direct'));
       hide(document.getElementById('next-direct'));
@@ -179,15 +181,15 @@ document.addEventListener('DOMContentLoaded', function() {
   function showVerificationResult(result) {
     hide(document.getElementById('verify-download-wrapper'));
     resetVerificationResult();
-    if(result === 'successful') {
+    if (result === 'successful') {
       show(document.getElementById('verification-successful'));
       opaque(document.getElementById('step-continue-direct'));
       toggleContinueLink('direct', 'next-direct');
     }
-    else if(result === 'failed') {
+    else if (result === 'failed') {
       show(document.getElementById('verification-failed'));
     }
-    else if(result === 'failed-again') {
+    else if (result === 'failed-again') {
       show(document.getElementById('verification-failed-again'));
     }
   }
@@ -199,12 +201,12 @@ document.addEventListener('DOMContentLoaded', function() {
     transparent(document.getElementById('step-verify-bittorrent'));
     transparent(document.getElementById('step-continue-bittorrent'));
     transparent(document.getElementById('continue-link-bittorrent'));
-    if(method == 'direct') {
+    if (method == 'direct') {
       opaque(document.getElementById('step-verify-direct'));
       opaque(document.getElementById('continue-link-direct'));
       show(document.getElementById('verify-download-wrapper'));
     }
-    if(method == 'bittorrent') {
+    if (method == 'bittorrent') {
       opaque(document.getElementById('step-verify-bittorrent'));
       opaque(document.getElementById('step-continue-bittorrent'));
       opaque(document.getElementById('continue-link-bittorrent'));
