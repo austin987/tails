@@ -3,22 +3,6 @@
 
 [[!toc ]]
 
-Releases
-========
-
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
-
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
-
-The following changes were introduced in Tails VERSION:
-
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
-
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
-
 Code
 ====
 
@@ -28,14 +12,28 @@ XXX: List important code work that is not covered already by the Release
 Documentation and website
 =========================
 
-XXX: Explore the Git history:
-
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+- We improved our donation page in preparation of the donation campaign
+  to mention CCT instead of Zwiebelfreunde and be better structured.
 
 User experience
 ===============
 
-XXX: Check the archives of tails-ux: https://mailman.boum.org/pipermail/tails-ux/
+- We installed [*LimeSurvey* on our infrastructure](https://survey.tails.boum.org)
+  and advertised a first survey on file storage encryption from the homepage of
+  *Tor Browser* in Tails. Our users have been [very responsive to our
+  call](https://mailman.boum.org/pipermail/tails-ux/2017-October/003505.html)
+  and since then we have gathered 30 complete answers to the survey each
+  day on average, reaching 375 in total on October 30.
+
+- We extensively tested older and newer versions of UUI to understand why
+  [[!tails_ticket 13206 desc="cloning from a USB stick installed using UUI
+  sometimes fails"]]. Everything is fine as long as "*Format in FAT32*" is
+  checked which is documented but not always applied by users, so we should
+  either improve UUI, our documentation, or *Tails Greeter* to prevent that.
+
+- We continued to port our verification extension for Firefox to Web
+  Extensions and [we now have a working prototype](https://mailman.boum.org/pipermail/tails-dev/2017-October/011817.html)!
+  that computes the checksum in a reasonable time (45 seconds).
 
 Hot topics on our help desk
 ===========================
@@ -51,23 +49,21 @@ XXX: Ask tails-bugs@boum.org to list hot topics for the last month.
 Infrastructure
 ==============
 
-XXX: Count the number of tests in /features at the beginning of next month
-
-         git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-         git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
-
-XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
-
-       - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
+- For our installation of *LimeSurvey*, we implemented an automatic monitoring
+  of new upstream versions to notify system administrators when a security
+  update is available ([Git repository](https://git-tails.immerda.ch/monitor-limesurvey-releases)).
 
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
+- The proposal that we submitted to the [Lush Digital Fund](https://uk.lush.com/article/introducing-digital-fund)
+  in May was accepted. It will fund the integration of a web-based translation
+  platform in the build of our website and documentation.
 
-       git log --patch --since='1 December' --until='1 January' origin/master
+- We published our [[finances for 2016|doc/about/finances#2016]].
 
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
+- We launched our 2017 donation campaign and blogged about [[Many hands make
+  Tails|news/many_hands_make_tails]].
 
 Outreach
 ========
@@ -77,7 +73,9 @@ Past events
 
 Upcoming events
 ---------------
+
 * XXX: Maybe Secure OS Summit 2017 in December
+
 * Many Tails people will be at the
   [34th Chaos Communication Congress, aka. 34C3](https://www.ccc.de/en/updates/2017/34C3-in-leipzig)
   in Leipzig (December 27 to December 30).
@@ -90,27 +88,38 @@ XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
 Press and testimonials
 ======================
 
-* Tails is briefly mentioned in the Arte televions' series on philosophy. In French [[«Incognito, donc libre ?»|https://sites.arte.tv/philosophie/fr/incognito-donc-libre-yann-perreau-philosophie]], in German: [["Inkognito, also frei?"|https://sites.arte.tv/philosophie/de/inkognito-also-frei-yann-perreau-philosophie]]
-
-XXX: Copy content from press/media_appearances_2017.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
+* Tails is briefly mentioned in the Arte televions' series on philosophy. In
+  French [[«Incognito, donc libre?»|https://sites.arte.tv/philosophie/fr/incognito-donc-libre-yann-perreau-philosophie]],
+  in German: [["Inkognito, also frei?"|https://sites.arte.tv/philosophie/de/inkognito-also-frei-yann-perreau-philosophie]]
 
 Translation
 ===========
 
-XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
-XXX: Add the output of (adjust month!):
+## All the website
 
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 54% (2825) strings translated, 7% strings fuzzy, 48% words translated
+  - fa: 40% (2107) strings translated, 9% strings fuzzy, 43% words translated
+  - fr: 89% (4631) strings translated, 1% strings fuzzy, 87% words translated
+  - it: 39% (2025) strings translated, 5% strings fuzzy, 34% words translated
+  - pt: 24% (1290) strings translated, 9% strings fuzzy, 21% words translated
+
+Total original words: 54735
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 76% (1454) strings translated, 13% strings fuzzy, 77% words translated
+  - fa: 34% (651) strings translated, 11% strings fuzzy, 35% words translated
+  - fr: 98% (1870) strings translated, 0% strings fuzzy, 99% words translated
+  - it: 76% (1447) strings translated, 13% strings fuzzy, 77% words translated
+  - pt: 44% (850) strings translated, 15% strings fuzzy, 45% words translated
+
+Total original words: 17292
 
 Metrics
 =======
 
 * Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
 * SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-* WHISPERBACK bug reports were received through WhisperBack.
+* 137 bug reports were received through WhisperBack.
 
 XXX: Ask tails@boum.org for these numbers.
