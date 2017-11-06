@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       if(event.data.action === 'verifying'){
 		  showVerifyingDownload();
+          var element = document.getElementById("verifying-download");
+          element.innerHTML = "Verifying: "+event.data.fileName;
       }
       else if(event.data.action === 'verification-failed'){
 		  showVerificationResult('failed');
@@ -14,6 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       else if(event.data.action === 'verification-success'){
 		  showVerificationResult('successful');
+      }
+      else if (event.data.action === 'progress'){
+        var percentage  = event.data.percentage;
+        console.log(percentage)
       }
   });
   function showFloatingToggleableLinks() {
