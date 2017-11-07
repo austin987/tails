@@ -4,9 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
       }
       if(event.data.action === 'verifying'){
-		  showVerifyingDownload();
-          var element = document.getElementById("verifying-download");
-          element.innerHTML = "Verifying: "+event.data.fileName;
+		  showVerifyingDownload(event.data.fileName);
       }
       else if(event.data.action === 'verification-failed'){
 		  showVerificationResult('failed');
@@ -18,8 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		  showVerificationResult('successful');
       }
       else if (event.data.action === 'progress'){
-        var percentage  = event.data.percentage;
-        console.log(percentage)
+        showVerificationProgress(event.data.percentage);
       }
   });
   function showFloatingToggleableLinks() {
@@ -130,9 +127,21 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleContinueLink('direct', 'skip-verification-direct');
   }
 
-  function showVerifyingDownload() {
+  function showVerifyDownload() {
+    hide(document.getElementById('install-extension'));
+    hide(document.getElementById('update-extension'));
+    show(document.getElementById('verification'));
+  }
+
+  function showVerifyingDownload(filename) {
     hide(document.getElementById('verify-download-wrapper'));
+    document.getElementById("filename").innerHTML = filename;
     show(document.getElementById('verifying-download'));
+  }
+
+  function showVerificationProgress(percentage) {
+    document.getElementById('progress-bar').style.width = percentage + '%';
+    document.getElementById('progress-bar').setAttribute('aria-valuenow', percentage.toString());
   }
 
   function showVerificationResult(result) {
@@ -189,18 +198,13 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleDirectBitTorrent('bittorrent');
   }
 
-  // Display "Update extension" instead of "Install extension"
-  // XXX: This should be done by the extension instead
-  // showUpdateExtension();
+  // Display "Update extension" instead of "Install extension" if extension is installed but outdated
+  if(document.documentElement.dataset.extension === 'old') {
+    showUpdateExtension();
+  }
 
-  // Display "Verify download" when "Install extension" or "Update extension" is clicked
-  // XXX: This should be done by the extension instead
-  var buttons = document.getElementsByClassName('install-extension-btn');
-  for (let i = 0; i < buttons.length; i++) {
-    buttons[i].addEventListener('click', function() {
-      hide(document.getElementById('install-extension'));
-      hide(document.getElementById('update-extension'));
-      show(document.getElementById('verification'));
-    });
+  // Display "Verify download" once extension is installed
+  if(document.documentElement.dataset.extension === 'ok') {
+    showVerifyDownload();
   }
 });
