@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		  showVerificationResult('successful');
       }
       else if (event.data.action === 'progress'){
-        showVerificationProgress(percentage);
+        showVerificationProgress(event.data.percentage);
       }
   });
   function showFloatingToggleableLinks() {
