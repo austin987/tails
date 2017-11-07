@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function showVerificationProgress(percentage) {
     document.getElementById('progress-bar').style.width = percentage + '%';
-    document.getElementById('progress-bar').aria-valuenow = percentage;
+    document.getElementById('progress-bar').setAttribute('aria-valuenow', percentage.toString());
   }
 
   function showVerificationResult(result) {
