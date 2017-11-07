@@ -112,13 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function showUpdateExtension() {
-    hide(document.getElementById('install-extension'));
-    hide(document.getElementById('extension-installed'));
-    show(document.getElementById('update-extension'));
-    show(document.getElementById('extension-updated'));
-  }
-
   function resetVerificationResult(result) {
     hide(document.getElementById('verifying-download'));
     hide(document.getElementById('verification-successful'));
@@ -198,13 +191,4 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleDirectBitTorrent('bittorrent');
   }
 
-  // Display "Update extension" instead of "Install extension" if extension is installed but outdated
-  if(document.documentElement.dataset.extension === 'old') {
-    showUpdateExtension();
-  }
-
-  // Display "Verify download" once extension is installed
-  if(document.documentElement.dataset.extension === 'ok') {
-    showVerifyDownload();
-  }
 });

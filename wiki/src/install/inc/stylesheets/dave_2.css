@@ -1,4 +1,5 @@
 /* Display No JS version by default */
+
 .supported-browser,
 .outdated-browser,
 .unsupported-browser {
@@ -12,7 +13,10 @@
 #skip-verification-direct,
 #verification,
 #update-extension,
-#extension-updated,
+#verifying-download,
+#verification-successful,
+#verification-failed,
+#verification-failed-again,
 #skip-download-direct,
 #skip-download-bittorrent,
 #extension-version {
@@ -22,6 +26,20 @@
 #verify-download-wrapper input {
   display: none;
 }
+
+/* Display logic in case the extension is installed or outdated */
+
+html[data-extension="ok"] #install-extension,
+html[data-extension="old"] #install-extension {
+  display: none;
+}
+
+html[data-extension="old"] #update-extension,
+html[data-extension="ok"] #verification {
+  display: block;
+}
+
+/* Layout */
 
 #content {
   padding-left: 0 !important;
