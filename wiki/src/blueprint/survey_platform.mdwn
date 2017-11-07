@@ -1,8 +1,12 @@
+[[!meta title="Survey platform"]]
+
+<a id="platform-requirements"></a>
+
 Requirements
 ============
 
 - MUST
-  - Be non-commercial, open source, and privacy respectful
+  - Be open source and privacy respectful
 
 - SHOULD
   - Be possible to integrate in ikiwiki (to avoid people having to go elsewhere to answer questions)
@@ -17,6 +21,8 @@ Requirements
 
 [[!toc levels="2"]]
 
+<a id="limesurvey"></a>
+
 LimeSurvey
 ==========
 
@@ -30,6 +36,55 @@ LimeSurvey
   couldn't find how to add a captcha right before submitting.
 - Versions and packaging: Daily "stable" releases in ZIP files. LTS and
   "one-click" auto-upgrade for pay.
+
+<a id="limesurvey-requirements"></a>
+
+### Requirements
+
+- Hardware
+  - CPU
+    - My prototype machine uses very little of its Core 2 Duo CPU P8700 @ 2.53GHz.
+      So I guess that 1 core of whatever you have will do.
+  - RAM
+    - My prototype machine uses 256MB when LimeSurvey is hit on various tabs.
+      So I guess it should still work with 512MB.
+  - Storage
+    - The install directory takes 300MB (.git included).
+    - I don't know how much the database will take but it shouldn't be crazy, let's say 100MB.
+    - So I should do with 2-5GB on top of what you need for the base system and the backups.
+- Software infrastructure
+  - OS
+    - Debian Stretch
+  - Web server
+    - Apache with mod_php
+    - PHP 5.1.2 or later
+      - Packages: php php-mysql php-mbstring php-xml
+    - HTTPS
+      - I'd like https://survey.tails.boum.org/ and some HTTPS on top of it.
+    - I didn't have to edit the VHost on my prototype machine.
+    - Being able to restart the web server might be useful.
+  - Database
+    - 1 empty MySQL or MariaDB database 4.1.0 or later.
+    - 1 user with full access to this database on the command line (mysql and mysqldump). I used:
+      - `GRANT ALL PRIVILEGES ON limesurvey.* TO 'limesurvey'@'localhost' IDENTIFIED BY 'superfatpassword';`
+    - 1 password to access the database.
+  - Backups
+    - Backups of /var/www/ and the database.
+    - Be able to trigger a backup before the update and be able to restore it
+      if it fails. I can also do that myself using rsync and mysqldump.
+  - Monitoring
+    - HTTP success on https://survey.tails.boum.org/index.php/372383?lang=en.
+  - Email
+    - Be able to send emails to the outside world; though I might not send any as a start.
+- Credentials
+  - You have my SSH key already.
+  - Usual stuff
+    - bash, cat, cd, chown, cp, diff, file, find, grep, head, less, ls, man, mkdir, mv, ps, rm, rmdir, tail, top
+  - Stuff I like
+    - ncdu, screen, vi
+  - Stuff I might need to do the manual upgrade, download plugins, etc.
+    - git, gunzip, tar, unzip, wget, mysql, mysqldump, rsync
+  - Otherwise in which forms do you need to know the credentials?
 
 Basic form builders
 ===================
