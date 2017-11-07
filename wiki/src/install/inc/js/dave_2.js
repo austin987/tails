@@ -18,8 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		  showVerificationResult('successful');
       }
       else if (event.data.action === 'progress'){
-        var percentage  = event.data.percentage;
-        console.log(percentage)
+        showVerificationProgress(percentage);
       }
   });
   function showFloatingToggleableLinks() {
@@ -133,6 +132,11 @@ document.addEventListener('DOMContentLoaded', function() {
   function showVerifyingDownload() {
     hide(document.getElementById('verify-download-wrapper'));
     show(document.getElementById('verifying-download'));
+  }
+
+  function showVerificationProgress(percentage) {
+    document.getElementById('progress-bar').style.width = percentage + '%';
+    document.getElementById('progress-bar').style.width = percentage;
   }
 
   function showVerificationResult(result) {
