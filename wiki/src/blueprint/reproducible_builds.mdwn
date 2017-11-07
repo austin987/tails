@@ -225,7 +225,7 @@ that's close to a given frozen one. It is out of the scope of this
 first iteration, but we are confident that we can implement the above
 in a way that makes it easy enough to add this property later.
 
-### Implementation details
+## Implementation details
 
 After lots of research, discussion and experiments, we settled on the
 following implementation for our first iteration:
@@ -266,6 +266,9 @@ a Tails ISO image will instead build their own. Their resulting
 basebox doesn't have to be identical to anybody else's, but it is
 similar enough to produce ISO images that are identical to the ones
 published by the Tails project.
+
+**Edit:** It has now been released and is documented in the page about Tails
+[[Vagrant setup|contribute/build/vagrant-setup]].
 
 ## Make Tails ISO build in a reproducible manner
 
@@ -398,6 +401,12 @@ through a few additional steps, such as:
 For estimates on hardware cost for Lizard ([[!tails_ticket 12002]]), see [[the
 dedicated page|blueprint/reproducible_builds/hardware]].
 
+**Edit:** We already adapted our server infrastructure to support this project,
+integrating it in our [[Vagrant setup|contribute/build/vagrant-setup]]
+mentioned above. Specifics about how we deployed that in our Jenkins infra are
+[[documented
+here|contribute/working_together/roles/sysadmins/automated_builds_in_Jenkins]].
+
 # Various ideas
 
 ## Debian (or nothing!) as trust anchor when building Tails
@@ -466,31 +475,10 @@ reproducability nirvana. I guess the next step would be to rely less
 on a "static build environment" to support something like "Diverse
 Double-Compiling" to counter the "Trusting Trust" problem. :)
 
-## Jenkins
+# Jenkins
 
-XXX: see "Adjust our infrastructure accordingly" above, that has some
-more details (and some less, too).
+See "Adjust our infrastructure accordingly" above.
 
-To get all the benefits from the reproducible builds mentionned above,
-it makes sense to adapt our current Jenkins build system so that
-ISO images produced by Jenkins can be built in a reproducible manner,
-e.g. when building a release tag.
-
-A first implementation would be to nest the vagrant-libvirt VM into each
-of our current isobuilder VMs. It means adapting our Puppet manifests,
-to install Libvirt and Vagrant in all our isobuilder VMs, and the
-vagrant box image being deployed in every of this systems so that the
-isobuilder VMs don't need to download it at every builds. We'll have to
-think about how to do this last requirement, given at the moment this
-vagrant box image is hosted on a different remote sytem than our
-isobuilders (NFS share?).
-
-It also raises technical questions:
-
-* How much would that impact our automatic ISO build throughput? Will it
-  then still cope with our development cadence?
-* Will we have enough hardware resources to use this build system. E.g.
-  will it require to assign more RAM or CPUs to our isobuilders?
 
 # Miscellaneous resources
 
@@ -527,6 +515,10 @@ See [[our May report|news/report_2017_05]].
 <a id="custom-Debian-packages"></a>
 
 ## Integrate custom Debian package builds in the automated ISO builds
+
+<div class="note">
+See discussion on [[!tails_ticket 6220]].
+</div>
 
 In our first iteration of reproducible ISO builds, we treat the
 content of the Debian package repositories used during the build

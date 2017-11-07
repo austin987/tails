@@ -72,23 +72,17 @@ sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 echo "I: Installing Tails build dependencies."
 apt-get -y install \
         debootstrap \
-        git \
         dpkg-dev \
         eatmydata \
         gettext \
+        git \
         ikiwiki \
         intltool \
-        libfile-slurp-perl \
-        liblist-moreutils-perl \
-        live-build \
-        lsof \
-        rsync \
-        syslinux-utils \
-        time \
-        whois \
         libfile-chdir-perl \
+        libfile-slurp-perl \
         libhtml-scrubber-perl \
         libhtml-template-perl \
+        liblist-moreutils-perl \
         libtext-multimarkdown-perl \
         libtimedate-perl \
         liburi-perl libhtml-parser-perl \
@@ -96,8 +90,15 @@ apt-get -y install \
         libyaml-libyaml-perl po4a \
         libyaml-perl \
         libyaml-syck-perl \
+        live-build \
+        lsof \
         perlmagick \
-        psmisc
+        psmisc \
+        rsync \
+        ruby \
+        syslinux-utils \
+        time \
+        whois
 
 # Ensure we can use timedatectl
 apt-get -y install dbus

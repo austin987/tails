@@ -1,6 +1,8 @@
 #! /bin/sh
 # automatically run by "lb config"
 
+set -e
+set -u
 set -x
 
 . "$(dirname $0)/scripts/utils.sh"
@@ -49,7 +51,7 @@ fi
 GIT_BASE_BRANCH=$(base_branch) \
     || fatal "GIT_BASE_BRANCH could not be guessed."
 
-if [ "${TAILS_MERGE_BASE_BRANCH}" = 1 ] && \
+if [ "${TAILS_MERGE_BASE_BRANCH:-}" = 1 ] && \
        ! git_on_a_tag && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
     GIT_BASE_BRANCH_COMMIT=$(git_base_branch_head)
     [ -n "${GIT_BASE_BRANCH_COMMIT}" ] \
