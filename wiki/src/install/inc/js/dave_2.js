@@ -4,9 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
       }
       if(event.data.action === 'verifying'){
-		  showVerifyingDownload();
-          var element = document.getElementById("verifying-download");
-          element.innerHTML = "Verifying: "+event.data.fileName;
+		  showVerifyingDownload(event.data.fileName);
       }
       else if(event.data.action === 'verification-failed'){
 		  showVerificationResult('failed');
@@ -129,8 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleContinueLink('direct', 'skip-verification-direct');
   }
 
-  function showVerifyingDownload() {
+  function showVerifyingDownload(filename) {
     hide(document.getElementById('verify-download-wrapper'));
+    document.getElementById("filename").innerHTML = filename;
     show(document.getElementById('verifying-download'));
   }
 
