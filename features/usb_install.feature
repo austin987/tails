@@ -35,6 +35,15 @@ Feature: Installing Tails to a USB drive
     When I unplug USB drive "temp"
     Then a suitable USB device is not found
 
+  Scenario: Installing Tails to a used USB drive
+    Given I have started Tails from DVD without network and logged in
+    And I temporarily create a 7200 MiB disk named "install"
+    And I create a gpt partition with a vfat filesystem on disk "install"
+    And I plug USB drive "install"
+    And I install Tails to USB drive "install" by cloning
+    Then the running Tails is installed on USB drive "install"
+    But there is no persistence partition on USB drive "install"
+
   Scenario: Installing Tails to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 7200 MiB disk named "install"
