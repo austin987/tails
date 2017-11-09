@@ -1,4 +1,5 @@
 /* Display No JS version by default */
+
 .supported-browser,
 .outdated-browser,
 .unsupported-browser {
@@ -12,11 +13,33 @@
 #skip-verification-direct,
 #verification,
 #update-extension,
-#extension-updated,
+#verifying-download,
+#verification-successful,
+#verification-failed,
+#verification-failed-again,
 #skip-download-direct,
-#skip-download-bittorrent {
+#skip-download-bittorrent,
+#extension-version {
   display: none;
 }
+
+#verify-download-wrapper input {
+  display: none;
+}
+
+/* Display logic in case the extension is installed or outdated */
+
+html[data-extension="ok"] #install-extension,
+html[data-extension="old"] #install-extension {
+  display: none;
+}
+
+html[data-extension="old"] #update-extension,
+html[data-extension="ok"] #verification {
+  display: block;
+}
+
+/* Layout */
 
 #content {
   padding-left: 0 !important;
@@ -24,7 +47,7 @@
 
 .btn {
   color: white !important;
-  background: #0a0;
+  background: #53b351;
   border: none;
 }
 
@@ -47,9 +70,9 @@ span.step-number {
 .floating-toggleable div.toggleable {
   display: none;
   background: white !important;
-  border: 1px solid #0A0 !important;
-  -webkit-box-shadow: 5px 5px #0A0;
-  box-shadow: 5px 5px #0A0;
+  border: 1px solid #53b351 !important;
+  -webkit-box-shadow: 5px 5px #53b351;
+  box-shadow: 5px 5px #53b351;
   padding: 15px 30px !important;
   margin-left: auto;
   margin-right: auto;

@@ -1,5 +1,24 @@
 document.addEventListener('DOMContentLoaded', function() {
-
+  window.addEventListener("message", (event) => {
+      if (event.source !== window || !event.data){
+          return;
+      }
+      if(event.data.action === 'verifying'){
+		  showVerifyingDownload(event.data.fileName);
+      }
+      else if(event.data.action === 'verification-failed'){
+		  showVerificationResult('failed');
+      }
+      else if(event.data.action === 'verification-failed-again'){
+		  showVerificationResult('failed-again');
+      }
+      else if(event.data.action === 'verification-success'){
+		  showVerificationResult('successful');
+      }
+      else if (event.data.action === 'progress'){
+        showVerificationProgress(event.data.percentage);
+      }
+  });
   function showFloatingToggleableLinks() {
     var links = document.getElementsByClassName('floating-toggleable-link');
     for (let i = 0; i < links.length; i++) {
@@ -59,24 +78,63 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function detectBrowser() {
-    // XXX: This should be set by the browser detection script
-    var vendor = 'firefox';
-    if(vendor == 'firefox') {
-      showVersionForSupportedBrowser();
-      toggleDisplay(document.getElementsByClassName('chrome'), 'hide');
-      toggleDisplay(document.getElementsByClassName('firefox'), 'show');
-    }
-    if(vendor == 'chrome') {
-      showVersionForSupportedBrowser();
-      toggleDisplay(document.getElementsByClassName('firefox'), 'hide');
-      toggleDisplay(document.getElementsByClassName('chrome'), 'show');
-    }
-  }
+    // XXX: Fix these minimum versions
+    minVersion = {
+      'firefox': 38,
+      'chrome': 44,
+      'torbrowser': 5
+    };
+    document.getElementById('min-version-firefox').textContent = minVersion.firefox.toString();
+    document.getElementById('min-version-chrome').textContent = minVersion.chrome.toString();
+    document.getElementById('min-version-tor-browser').textContent = minVersion.torbrowser.toString();
 
-  function showVersionForSupportedBrowser() {
+    version = navigator.userAgent.match(/\b(Chrome|Firefox)\/(\d+)/);
+    version = version && parseInt(version[2]) || 0;
+    overrideVersion = location.search.match(/\bversion=(\w+)/);
+    if (overrideVersion) {
+      version = overrideVersion[1];
+    }
+
+    overrideBrowser = location.search.match(/\bbrowser=(\w+)/);
+    if (overrideBrowser) {
+      browser = overrideBrowser[1];
+    } else if (window.InstallTrigger) {
+      browser = 'Firefox';
+    } else if (/\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.vendor)) {
+      browser = 'Chrome';
+    }
+
+    if (browser === 'Firefox' || browser === 'Chrome') {
+      document.getElementById('detected-browser').textContent = browser + ' ' + version.toString();
+    } else {
+      // Don't bother display version number for unsupported browsers as it's probably more error prone.
+      document.getElementById('detected-browser').textContent = browser;
+    }
+
     toggleDisplay(document.getElementsByClassName('no-js'), 'hide');
-    toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
-    toggleDirectBitTorrent('direct');
+    if (browser === 'Firefox') {
+      if (version >= minVersion.firefox) {
+        // Supported Firefox
+        toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
+        toggleDisplay(document.getElementsByClassName('chrome'), 'hide');
+        toggleDisplay(document.getElementsByClassName('firefox'), 'show');
+      } else {
+        // Outdated Firefox
+        toggleDisplay(document.getElementsByClassName('outdated-browser'), 'show');
+      }
+    } else if (browser === 'Chrome') {
+      if (version >= minVersion.chrome) {
+        // Supported Chrome
+        toggleDisplay(document.getElementsByClassName('supported-browser'), 'show');
+        toggleDisplay(document.getElementsByClassName('firefox'), 'hide');
+        toggleDisplay(document.getElementsByClassName('chrome'), 'show');
+      } else {
+        // Outdated Chrome
+        toggleDisplay(document.getElementsByClassName('outdated-browser'), 'show');
+      }
+    } else {
+      toggleDisplay(document.getElementsByClassName('unsupported-browser'), 'show');
+    }
   }
 
   function toggleContinueLink(method, state) {
@@ -93,13 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function showUpdateExtension() {
-    hide(document.getElementById('install-extension'));
-    hide(document.getElementById('extension-installed'));
-    show(document.getElementById('update-extension'));
-    show(document.getElementById('extension-updated'));
-  }
-
   function resetVerificationResult(result) {
     hide(document.getElementById('verifying-download'));
     hide(document.getElementById('verification-successful'));
@@ -108,23 +159,35 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleContinueLink('direct', 'skip-verification-direct');
   }
 
-  function showVerifyingDownload() {
-    hide(document.getElementById('verify-download'));
+  function showVerifyDownload() {
+    hide(document.getElementById('install-extension'));
+    hide(document.getElementById('update-extension'));
+    show(document.getElementById('verification'));
+  }
+
+  function showVerifyingDownload(filename) {
+    hide(document.getElementById('verify-download-wrapper'));
+    document.getElementById("filename").innerHTML = filename;
     show(document.getElementById('verifying-download'));
   }
 
+  function showVerificationProgress(percentage) {
+    document.getElementById('progress-bar').style.width = percentage + '%';
+    document.getElementById('progress-bar').setAttribute('aria-valuenow', percentage.toString());
+  }
+
   function showVerificationResult(result) {
-    hide(document.getElementById('verify-download'));
+    hide(document.getElementById('verify-download-wrapper'));
     resetVerificationResult();
-    if(result == 'successful') {
+    if(result === 'successful') {
       show(document.getElementById('verification-successful'));
       opaque(document.getElementById('step-continue-direct'));
       toggleContinueLink('direct', 'next-direct');
     }
-    if(result == 'failed') {
+    else if(result === 'failed') {
       show(document.getElementById('verification-failed'));
     }
-    if(result == 'failed-again') {
+    else if(result === 'failed-again') {
       show(document.getElementById('verification-failed-again'));
     }
   }
@@ -139,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if(method == 'direct') {
       opaque(document.getElementById('step-verify-direct'));
       opaque(document.getElementById('continue-link-direct'));
-      show(document.getElementById('verify-download'));
+      show(document.getElementById('verify-download-wrapper'));
     }
     if(method == 'bittorrent') {
       opaque(document.getElementById('step-verify-bittorrent'));
@@ -165,28 +228,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Display "Verify with BitTorrent" when Torrent file is clicked
   document.getElementById('download-torrent').onclick = function() {
     toggleDirectBitTorrent('bittorrent');
-  }
-
-  // Display "Update extension" instead of "Install extension"
-  // XXX: This should be done by the extension instead
-  showUpdateExtension();
-
-  // Display "Verify download" when "Install extension" or "Update extension" is clicked
-  // XXX: This should be done by the extension instead
-  var buttons = document.getElementsByClassName('install-extension-btn');
-  for (let i = 0; i < buttons.length; i++) {
-    buttons[i].addEventListener('click', function() {
-      hide(document.getElementById('install-extension'));
-      hide(document.getElementById('update-extension'));
-      show(document.getElementById('verification'));
-    });
-  }
-
-  // Display "Verification successful" when "Verify download" is clicked
-  // XXX: This should be done by the extension instead
-  document.getElementById('verify-download').onclick = function() {
-    showVerifyingDownload();
-    setTimeout(function(){showVerificationResult('successful')}, 1500);
   }
 
 });

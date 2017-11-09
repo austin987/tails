@@ -1,38 +1,52 @@
 [[!meta title="Tails report for September, 2017"]]
-[[!meta date="DATE"]]
+[[!meta date="Wed, 18 Oct 2017 12:34:56 +0000"]]
 
 [[!toc ]]
 
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
+* [[Tails 3.2 was released on Tuesday 26|news/version_3.2]] (major release).
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 3.3 is [[scheduled for November 16|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 3.2:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+- We added support for PPPoE and dial-up Internet connections.
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+- We installed [*BookletImposer*](http://kjo.herbesfolles.org/bookletimposer/)
+  to convert linear PDF documents into booklets, and vice-versa.
+
+- We added *GNOME Screen Keyboard* to replace *Florence*, the previous virtual
+  keyboard, which had [many issues](https://labs.riseup.net/code/projects/tails/issues?utf8=%E2%9C%93&set_filter=1&f%5B%5D=cf_18&op%5Bcf_18%5D=%3D&v%5Bcf_18%5D%5B%5D=On-screen+keyboard&f%5B%5D=subject&op%5Bsubject%5D=%7E&v%5Bsubject%5D%5B%5D=Florence&f%5B%5D=fixed_version_id&op%5Bfixed_version_id%5D=%3D&v%5Bfixed_version_id%5D%5B%5D=294&f%5B%5D=&c%5B%5D=status&c%5B%5D=priority&c%5B%5D=fixed_version&c%5B%5D=subject&c%5B%5D=category&c%5B%5D=cf_15&c%5B%5D=assigned_to&c%5B%5D=cf_9&group_by=&t%5B%5D=).
+
+- We now require an 8 GB USB stick to install Tails. 4 GB USB sticks that are
+  already installed can still be upgraded.
+
+- *Tails Installer* now detects when the target USB stick has Tails
+  installed already and automatically proposes to upgrade.
+  This made possible to remove the initial splash screen.
+
+- Disabled *Bluetooth* to protect against the [*BlueBorne*
+  attack](https://www.armis.com/blueborne/). [[!tails_ticket 14655]].
+
+- Now deny access to the D-Bus service of *Pidgin* to prevent other applications to
+  access and modify its configuration. [[!tails_ticket 14612]].
+
+- Fixed the import of secret OpenPGP keys in *Password and Keys*
+  [[!tails_ticket 12733]].
 
 Code
 ====
 
-XXX: List important code work that is not covered already by the Release
-     section (for example, the changes being worked on for the next version).
-
-We've continued to work on making Tails ISO images reproducible.
-
-- We fixed all of the issues that were identified by our first build testers.
-- So far, everyone who tried reproducing the Tails 3.2~rc1 and 3.2 ISO
-  images succeeded. So here's a challenge for you: can you manage to
-  get a different ISO by following our [[build|contribute/build]] and
-  [[verification|contribute/build/reproducible#verify-iso]] instructions?
-- We published a [[blueprint|blueprint/reproducible_builds/report_to_RB_community/]] which explains how we did it.
+- We've continued to work on making Tails ISO images reproducible:
+  - We fixed all of the issues that were identified by our first build testers.
+  - So far, everyone who tried reproducing the Tails 3.2~rc1 ISO
+    image succeeded. We've received a couple non-reproducibility reports about
+    3.2, and they are all explained by a single, one-byte mistake in a
+    translation of the wiki we ship inside Tails (we'll add sanity checks
+    so we never release something with that type of mistake again).
+  - We published a [[blueprint|blueprint/reproducible_builds/report_to_RB_community/]] which explains how we did it.
 
 - We are improving integration of the _Orca screen reader_ and the
   _GNOME screen keyboard_ into Tails ([[!tails_ticket 14752]],
@@ -44,7 +58,7 @@ We've continued to work on making Tails ISO images reproducible.
 
 - We have formalized how the AppArmor profile for _Thunderbird_ is
   maintained in Debian and upstream. This clarifies where and how our
-  contributions should be submitted and At the end of the day this
+  contributions should be submitted and at the end of the day this
   should avoid the need to maintain a Tails-specific delta.
 
 - We are working on fixing _Seahorse_ buggy interfacing with
@@ -91,25 +105,16 @@ User experience
 Hot topics on our help desk
 ===========================
 
-XXX: Ask tails-bugs@boum.org to list hot topics for the last month.
+1. [[!tails_ticket 14755 desc="Tails Installer treats drives differently depending on when they are plugged"]].
 
-1.
+1. [[!tails_ticket 14250 desc="Applications menu stops working some times"]].
 
-1.
+1. [[!tails_ticket 14754 desc="Keyboard and mouse do not work after upgrading to Tails 3.2"]].
 
-1.
+1. Many people had problems to use their Persistent Volume and had to reconfigure to access it.
 
 Infrastructure
 ==============
-
-XXX: Count the number of tests in /features at the beginning of next month
-
-         git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-         git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
-
-XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
-
-       - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
 
 - We finished upgrading all our systems to Debian Stretch
   ([[!tails_ticket 12160]]).
@@ -133,11 +138,6 @@ Funding
 Outreach
 ========
 
-Past events
------------
-
-
-
 Upcoming events
 ---------------
 
@@ -152,32 +152,43 @@ Upcoming events
 On-going discussions
 ====================
 
-XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
+- Tails reproducibility keeps being an important topic on our mailing list:
+  <https://mailman.boum.org/pipermail/tails-dev/2017-September/011648.html>
+- We have been busy with a new download page:
+  <https://mailman.boum.org/pipermail/tails-dev/2017-September/011694.html>
+
 
 Press and testimonials
 ======================
-
-XXX: Copy content from press/media_appearances_2017.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
 
 * The 5th version of the [Guide d'autodéfense numérique](https://guide.boum.org) was released. This book proposes ways to understand how the digital world functions, what solutions can we organise against certain types of attacks, and which tools can help do that.
 
 Translation
 ===========
 
-XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
-XXX: Add the output of (adjust month!):
+## All the website
 
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 57% (2866) strings translated, 6% strings fuzzy, 51% words tanslated
+  - fa: 43% (2160) strings translated, 9% strings fuzzy, 46% words translated
+  - fr: 89% (4450) strings translated, 0% strings fuzzy, 87% words translated
+  - it: 31% (1548) strings translated, 4% strings fuzzy, 27% words translated
+  - pt: 26% (1330) strings translated, 8% strings fuzzy, 23% words translated
+
+Total original words: 53021
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 78% (1493) strings translated, 10% strings fuzzy, 79% words translated
+  - fa: 36% (693) strings translated, 9% strings fuzzy, 38% words translated
+  - fr: 99% (1875) strings translated, 0% strings fuzzy, 99% words translated
+  - it: 75% (1434) strings translated, 11% strings fuzzy, 76% words translated
+  - pt: 46% (888) strings translated, 14% strings fuzzy, 48% words translated
+
+Total original words: 17298
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of Tails ISO from our website.
+* Tails has been started more than 652000 times this month. This makes 21700 boots a day on average.
+* 10292 downloads of the OpenPGP signature of Tails ISO from our website.
 * 92 bug reports were received through WhisperBack.
-
-XXX: Ask tails@boum.org for these numbers.

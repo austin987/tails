@@ -1,3 +1,6 @@
+<div id="download-and-verify"></div> <!-- Needed to trigger the verification extension -->
+<div id="extension-version">1.0</div> <!-- Minimum version of the extension -->
+
 <div class="row">
 
   <div class="col-md-6"> <!-- Direct download -->
@@ -30,21 +33,29 @@
 
         </div>
         <div id="install-extension" class="indent">
-          <a class="install-extension-btn supported-browser firefox btn btn-primary">Install <u>Tails verification</u> extension (no restart)</a>
-          <a class="install-extension-btn supported-browser chrome btn btn-primary">Install <u>Tails verification</u> extension (no restart)</a>
-          <a class="install-extension-btn no-js btn btn-primary">Install extension for <u>Firefox and Tor Browser</u> (no restart)</a>
-          <a class="install-extension-btn no-js btn btn-primary">Install extension for <u>Chrome and Chromium</u> (no restart)</a>
+          <a href="https://addons.mozilla.org/firefox/downloads/file/764332/tails_verification-0.91-an+fx.xpi" class="install-extension-btn supported-browser firefox btn btn-primary">Install <u>Tails verification</u> extension (no restart)</a>
+          <a href="https://chrome.google.com/webstore/detail/tails-verification/gaghffbplpialpoeclgjkkbknblfajdl/" target="_blank" class="install-extension-btn supported-browser chrome btn btn-primary">Install <u>Tails verification</u> extension (no restart)</a>
+          <a href="https://addons.mozilla.org/firefox/downloads/file/764332/tails_verification-0.91-an+fx.xpi" class="install-extension-btn no-js btn btn-primary">Install extension for <u>Firefox and Tor Browser</u> (no restart)</a>
+          <a href="https://chrome.google.com/webstore/detail/tails-verification/gaghffbplpialpoeclgjkkbknblfajdl/" target="_blank" class="install-extension-btn no-js btn btn-primary">Install extension for <u>Chrome and Chromium</u> (no restart)</a>
         </div>
         <div id="update-extension" class="indent block">
           <p>Your extension is an older version.</p>
-          <a class="install-extension-btn firefox btn btn-primary">Update extension (no restart)</a>
-          <a class="install-extension-btn chrome btn btn-primary">Update extension (no restart)</a>
+          <a href="https://addons.mozilla.org/firefox/downloads/file/764332/tails_verification-0.91-an+fx.xpi" class="install-extension-btn firefox btn btn-primary">Update extension (no restart)</a>
+          <a href="https://chrome.google.com/webstore/detail/tails-verification/gaghffbplpialpoeclgjkkbknblfajdl/" target="_blank" class="install-extension-btn chrome btn btn-primary">Update extension (no restart)</a>
         </div>
         <div id="verification" class="indent block">
-          <p id="extension-installed" class="block">Installed!</p>
-          <p id="extension-updated" class="block">Updated!</p>
-          <a id="verify-download" class="btn btn-primary">Verify download&hellip;</a>
-          <p id="verifying-download" class="block">Verifying $FILENAME&hellip;</p>
+          <p id="extension-installed" class="block"><u>Tails verification</u> extension Installed!</p>
+          <!--<a id="verify-download" class="btn btn-primary">Verify download&hellip;</a>-->
+          <label id="verify-download-wrapper" class="btn btn-primary btn-verify">
+            Verify download&hellip;
+            <input id="verify-download" type="file"/>
+          </label>
+          <div id="verifying-download">
+            <p>Verifying <span id="filename">$FILENAME</span>&hellip;</p>
+            <div class="progress">
+              <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
           <p id="verification-successful" class="block">Verification successful!</p>
           <div id="verification-failed">
             <p><b>Verification failed!</b></p>
@@ -73,9 +84,9 @@
       <p>You are using <u><b><span id="detected-browser">$DETECTED-BROWSER</span></b></u>.</p>
       <p>Direct download is only available for:</p>
       <ul>
-        <li>Firefox <span class="minver-firefox">$MINVER-FIREFOX</span> and later (<a>Download</a>)</li>
-        <li>Chrome and Chromium <span class="minver-chrome">$MINVER-CHROME</span> and later (<a>Download</a>)</li>
-        <li>Tor Browser <span class="minver-tor-browser">$MINVER-TOR-BROWSER</span> and later (<a>Download</a>)</li>
+        <li>Firefox <span id="min-version-firefox">$MINVER-FIREFOX</span> and later (<a>Download</a>)</li>
+        <li>Chrome and Chromium <span id="min-version-chrome">$MINVER-CHROME</span> and later (<a>Download</a>)</li>
+        <li>Tor Browser <span id="min-version-tor-browser">$MINVER-TOR-BROWSER</span> and later (<a>Download</a>)</li>
       </ul>
     </div>
     <div class="outdated-browser">
