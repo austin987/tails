@@ -125,7 +125,9 @@ end
 
 When /^I (install|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from an ISO)$/ do |action, name, source|
   step "I start Tails Installer"
-  assert(tails_installer_is_device_selected?(name))
+  # If the device was plugged *just* before this step, it might not be
+  # completely ready (so it's shown) at this stage.
+  try_for(10) { tails_installer_is_device_selected?(name) }
   if source == 'from an ISO'
     iso_radio = @installer.child('Use a downloaded Tails ISO image',
                                  roleName: 'radio button')
