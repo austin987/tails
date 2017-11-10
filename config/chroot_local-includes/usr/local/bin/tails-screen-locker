@@ -2,6 +2,7 @@
 
 import subprocess
 import time
+import dbus
 
 from tails_screen_locker import set_password_dialog
 
@@ -36,7 +37,10 @@ def set_password():
 
 
 def lock_screen():
-    subprocess.check_call(["gnome-screensaver-command", "-l"])
+    bus = dbus.SessionBus()
+    proxy = bus.get_object("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver")
+    iface = dbus.Interface(proxy, "org.gnome.ScreenSaver")
+    iface.Lock()
 
 
 if __name__ == "__main__":
