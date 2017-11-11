@@ -234,9 +234,20 @@ document.addEventListener('DOMContentLoaded', function() {
     resetVerificationResult();
   }
 
+  // Reset verification when downloading again after failure
+  document.getElementById('download-iso-again').onclick = function() {
+    toggleDirectBitTorrent('direct');
+    resetVerificationResult();
+  }
+
   // Display "Verify with BitTorrent" when Torrent file is clicked
   document.getElementById('download-torrent').onclick = function() {
     toggleDirectBitTorrent('bittorrent');
   }
+
+  // To debug the display of the different results:
+  // showVerificationResult('success');
+  // showVerificationResult('failed');
+  // showVerificationResult('failed-again');
 
 });
