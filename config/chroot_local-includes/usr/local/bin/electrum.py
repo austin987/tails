@@ -33,8 +33,7 @@ def main():
         if not verify_start():
             sys.exit(0)
 
-    run = sh.Command('/usr/bin/electrum')
-    run()
+    os.execv('/usr/bin/electrum', ['/usr/bin/electrum'])
 
 def electrum_config_is_persistent():
     """
