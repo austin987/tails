@@ -3,6 +3,9 @@
     Tails upgrade frontend wrapper.
 
     Test with "python3 electrum.py doctest".
+    The tests will start the tor-browser so you probably
+    want to use a tester that handles user interaction or
+    run the tests from the command line and answer prompts as needed.
 
     goodcrypto.com converted from bash to python and added basic tests.
 '''
