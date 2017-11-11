@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 '''
-    Tails upgrade frontend wrapper.
+    Tails electrum wrapper
 
     Test with "python3 electrum.py doctest".
     The tests will start the tor-browser so you probably
