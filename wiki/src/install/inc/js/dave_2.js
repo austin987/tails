@@ -184,6 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function showVerificationResult(result) {
+    toggleDirectBitTorrent('direct');
+    showVerifyDownload();
     hide(document.getElementById('verify-download-wrapper'));
     resetVerificationResult();
     if (result === 'successful') {
