@@ -195,9 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     else if (result === 'failed') {
       show(document.getElementById('verification-failed'));
+      replaceUrlPrefixWithRandomMirror(document.querySelectorAll('.use-mirror-pool')); // Try again with different mirrors
     }
     else if (result === 'failed-again') {
       show(document.getElementById('verification-failed-again'));
+      replaceUrlPrefixWithRandomMirror(document.querySelectorAll('.use-mirror-pool')); // Change mirrors in case people try again anyway
     }
   }
 
