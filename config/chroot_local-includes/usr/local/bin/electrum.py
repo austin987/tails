@@ -20,7 +20,7 @@ os.environ['TEXTDOMAIN'] = 'tails'
 HOME_DIR = os.environ['HOME']
 CONF_DIR = os.path.join(HOME_DIR, '.electrum')
 
-def main():
+def main(args):
     """
         >>> # In case you answer Exit
         >>> try:
@@ -33,7 +33,7 @@ def main():
         if not verify_start():
             sys.exit(0)
 
-    os.execv('/usr/bin/electrum', ['/usr/bin/electrum'])
+    os.execv('/usr/bin/electrum', ['/usr/bin/electrum'] + args)
 
 def electrum_config_is_persistent():
     """
@@ -86,9 +86,9 @@ if __name__ == '__main__':
             from doctest import testmod
             testmod()
         else:
-            main()
+            main(sys.argv[1:])
     else:
-        main()
+        main([])
 
     sys.exit(0)
 
