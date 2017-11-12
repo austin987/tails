@@ -48,18 +48,13 @@ def main(*args):
 
     sh.xhost('+SI:localuser:{}'.format(RUN_AS_USER))
 
-    # try forever
-    done = False
-    while not done:
-        try:
-            if len(args) > 0:
-                result = sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend', sh.glob(args))
-            else:
-                result = sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend')
-        except sh.ErrorReturnCode:
-            pass
+    try:
+        if len(args) > 0:
+            result = sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend', sh.glob(args))
         else:
-            done = True
+            result = sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend')
+    except sh.ErrorReturnCode:
+        pass
 
     sh.xhost('-SI:localuser:{}'.format(RUN_AS_USER))
     sys.exit(result.exit_code)
