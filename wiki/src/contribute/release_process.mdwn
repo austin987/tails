@@ -823,47 +823,77 @@ Sanity check
 Verify once more that the Tor Browser we ship is still the most recent (see
 above).
 
+<a id="reproducibility"></a>
+
 Reproducibility
 ---------------
 
-Previously you have asked `tails@` members to reproduce the Tails ISO
-image and all IUKs; now tell all participants to send you the
-`SHA-512` hashes of their ISO and IUKs over signed email.
+The following instructions are now meant to be followed by _both_ the
+RM responsible for this release, and the the _Trusted Reproducer_
+(TR), i.e. the `tails@` member that was asked earlier to reproduce the
+Tails ISO image and all IUKs. Some instructions are meant for only one
+of these roles, e.g. if we write "**TR**: `$INSTRUCTION`", we mean
+that only the TR should follow this instruction.
+
+### Reproduce the ISO and IUKs
+
+Now the RM sends a signed email to the TR, containing the `SHA-512` of
+the Tails ISO image and IUKs; the TR _responds_ to this email with
+their `SHA-512` of the same files. Note that this could take some
+time, potentially blocking the RM from continuing the release
+process. However:
+
+**RM**: continue the release process at your own risk! If you get a
+negative answer from the TR later you might have to undo everything
+done from this point on. It's still a good idea to optimistically
+assume success in order to not be blocked at this point. However, be
+mentally prepared that it might have to be done once more, and make
+sure to return to this section once everyone is done with their
+reproduction attempts, and certainly before making the release public.
+
+Once the `SHA-512`:s have been exchanged by the RM and TR, follow this
+decision tree:
 
 * If all hashes match: yay, we're good to go!
-
-* If the reproduction attempts haven't been completed yet: continue at
-  your own risk! If you get a negative answer later you might have to
-  undo everything done from this point on. It's still a good idea to
-  optimistically assume success in order to not be blocked at this
-  point. However, be mentally prepared that it might have to be done
-  once more, and make sure to return to this section once everyone is
-  done with their reproduction attempts, and certainly before making
-  the release public.
 
 * If there is a hash mismatch for the ISO: ouch!  Now we are in a
   tricky situation: on the one hand it seems like a poor idea to block
   users from benefiting from this release's security updates, but on
   the other hand the failure might imply that something nefarious is
-  going on. At this stage, no matter what, immediately compare the
-  ISOs (using `diffoscope`) and try to rule out build system
-  compromise.
+  going on. At this stage, no matter what, immediately exchange ISO
+  images, compare them, and try to rule out build system compromise:
 
-  - If something seemingly malicious is found, then let's take a step
-    back: we might be compromised, so we are in no position to
+        diffoscope \
+            --text diffoscope.txt \
+            --html diffoscope.html \
+            --max-report-size 262144000 \
+            --max-diff-block-lines 10000 \
+            --max-diff-input-lines 10000000 \
+                path/to/your/tails-amd64-${VERSION:?}.iso \
+                path/to/other/tails-amd64-${VERSION:?}.iso
+
+  **RM**: if you understand the problem, try to explain it in an
+    easily verifiable way to the TR.
+
+  **TR**: if you are not confident analyzing this result, or don't
+  *fully* understand any explanation the RM presents, involve another
+  RM.
+
+  - If you cannot rule out that the difference is harmful: let's take
+    a step back; we might be compromised, so we are in no position to
     release. Halt the release, involve the rest of `tails@`, and then
     try to re-establish trust in all build machines and infra
     involved, etc. Have fun!
 
-  - Otherwise:
+  - Otherwise, if the change is definitely harmless, **RM**:
 
-    * If the source of non-determinism is identified quickly and is
-      easy and fast to fix, *and* the QA of the current ISO has not
-      gone very far (so at least that time is not wasted), then you
-      should consider abandoning the current version, and immediately
-      start preparing an emergency release with:
+    * If the source of non-determinism is identified quickly
+      and is easy and fast to fix, *and* the QA of the current ISO has
+      not gone very far (so at least that time is not wasted), then
+      you should consider abandoning the current version, and
+      immediately start preparing an emergency release with:
 
-      - the reproducibility fix
+      - the reproducibility fix,
 
       - a new changelog entry,
 
@@ -876,16 +906,54 @@ image and all IUKs; now tell all participants to send you the
       release notes, linking to the ticket(s) (or similar) where the
       nature of the reproducibility failure is clearly described.
 
-* If there is a hash mismatch for an IUK (or several): proceed with
-  the release, except for the problematic IUK(s); remove them from the
-  mirrors, and remove the affected incremental upgrade paths from the
-  UDFs! In parallel with the rest of the release process, try to
-  figure out what the problem with the IUK is and fix the cause, so a
-  good IUK can be released as soon as possible. If a seemingly
-  malicious difference is found, then immediately halt the release and
-  go to the "If something seemingly malicious is found" case for the
-  ISO above. Because of this it is advisable to not publicly release
-  until malicious differences have been ruled out.
+* If there is a hash mismatch for an IUK (or several):
+
+  **RM**: proceed with the release, except for the problematic IUK(s);
+  remove them from the mirrors, and remove the affected incremental
+  upgrade paths from the UDFs! In parallel with the rest of the
+  release process, try to figure out what the problem with the IUK is
+  and fix the cause, so a good IUK can be released as soon as
+  possible. If a seemingly malicious difference is found, then
+  immediately halt the release and go to the "If something seemingly
+  malicious is found" case for the ISO above. Because of this it is
+  advisable to not publicly release until malicious differences have
+  been ruled out.
+
+  **TR**: if you don't *fully* understand any solution or explanation
+  the RM presents, involve another RM before attempting anything else
+
+At this point you have either decided to abort the release, or proceed
+with an ISO image and zero or more IUKs.
+
+### Verify that the reproduced ISO and IUKs were uploaded
+
+**RM**: as soon as the mirrors are synced, let the TR know that they
+should proceed with this section. This could block you from releasing
+later, so it's really best to make sure this is done ASAP.
+
+**TR**: the rest of this section is for you.
+
+Unless the above decision led you to abort the release, you and the RM
+should have agreed upon an ISO image and zero or more IUKs to be
+released. Now you download each of these from some random mirror. For
+the ISO:
+
+    wget http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}.iso
+
+For each agreed upon IUK, something like:
+
+    wget http://dl.amnesia.boum.org/tails/stable/iuk/Tails_amd64_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk
+
+Also, for each "problematic" IUK, i.e. those that should *not* be
+released, make sure that the fetch fails because the file doesn't
+exist on the mirrors.
+
+Lastly calculate the `SHA-512` for each file and make sure they are as
+expected, based on the files you and the RM agreed on earlier.
+
+Note that you are note done yet:
+[[later|release_process#reproducibiliy-followup]] you will verify that
+our website "points" to the correct ISO image and IUKs.
 
 <a id="publish-iuk"></a>
 
@@ -1150,6 +1218,10 @@ Make sure every active mirror in the pool has the new version:
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
 notify their administrators.
 
+If you haven't done it already, notify the _Trusted Reproducer_ that
+the mirrors are synced so they can proceed verifying the upload in the
+[[reproducibility section|release_process#reproducibiliy]].
+
 Sanity checks
 -------------
 
@@ -1158,6 +1230,71 @@ Sanity checks
   [to be published](https://www.mozilla.org/en-US/security/advisories/).
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
+
+<a id="reproducibiliy-followup"></a>
+
+Verify the meta data pointing to the uploaded ISO and IUKs
+----------------------------------------------------------
+
+This is a follow-up on the
+[[reproducibility section|release_process#reproducibiliy]].
+
+**RM**: notify the TR that you are ready to release, and that they
+should follow this section.
+
+**TR**: the rest of this section is for you (unless there is a problem
+or unexpected result, when the RM is involved again).
+
+Below you'll need the `SHA-256` for the ISOs and IUKs, so please
+compute them for all the files you have reproduced. Also, when we talk
+about the "expected ISO image URL" below, we mean exactly:
+`http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION}/tails-amd64-${VERSION}.iso`.
+
+Checkout the release branch that is about to be merged into `master`:
+
+    git fetch
+    git checkout ${RELEASE_BRANCH:?}
+
+* In `wiki/src/install/v1/Tails/{i386,amd64}/stable/latest.yml`, the
+  so-called "IDF", under `target-files`, make sure that:
+  - the `url` value is the expected ISO image URL.
+  - the `sha256` value is the `SHA-256` you computed from your
+    reproduced ISO image.
+  - the `size` value is the number of bytes of your reproduced ISO
+    image.
+
+* For each IUK `Tails_amd64_${OLD_VERSION}_to_${VERSION}.iuk`, make
+  sure that
+  `wiki/src/upgrade/v1/Tails/${OLD_VERSION}/amd64/stable/upgrades.yml`
+  is properly signed by Tails signing key via the accompanying `.pgp`
+  file. Next, inside the file, look at one or two `target-files`
+  entries, where `type: full` means a full upgrade, so it refers to
+  the ISO image, and `type: incremental` means an incremental upgrade,
+  so it refers to a IUK. Verify the `url`, `sha256` and `size` values
+  just like you did for the IDF in the previous step.
+
+* Build the website, which will be saved to
+  `config/chroot_local-includes/usr/share/doc/tails/website`. Verify
+  that the expected ISO image URL is used in the places we directly
+  use it to fetch the ISO image:
+  - `inc/stable_amd64_iso_url.html`: should contain exactly the expected
+    ISO image URL.
+  - `install/download/openpgp`: the `Tails ${VERSION} ISO image`
+    link.
+  - `install/expert/usb`: in the `wget` command.
+
+If everything checks out ok, let the RM know so they can proceed with
+the release. If not, either mistakes were made by the RM that easily
+can be fixed, or something is extremely wrong. One could imagine a
+sophisticated attacks against the RM's build machine, where the
+correct ISO was built and uploaded, but that the URLs point to
+something else (e.g. an old release, or even something
+attacker-controlled outside of the Tails mirrors). You and the RM
+should carefully consider how to proceed now, possibly involving other
+`tails@` members if you are unsure.
+
+Finally, once the RM says the release is out, verify that they merged
+what you just reviewed.
 
 Push
 ----

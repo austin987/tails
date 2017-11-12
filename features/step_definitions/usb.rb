@@ -56,8 +56,11 @@ def recover_from_upgrader_failure
     $vm.spawn('tails-upgrade-frontend-wrapper', user: LIVE_USER)
 end
 
-Given /^I clone USB drive "([^"]+)" to a new USB drive "([^"]+)"$/ do |from, to|
+Given /^I clone USB drive "([^"]+)" to a (new|temporary) USB drive "([^"]+)"$/ do |from, mode, to|
   $vm.storage.clone_to_new_disk(from, to)
+  if mode == 'temporary'
+    add_after_scenario_hook { $vm.storage.delete_volume(to) }
+  end
 end
 
 Given /^I unplug USB drive "([^"]+)"$/ do |name|
@@ -123,9 +126,11 @@ Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
   end
 end
 
-When /^I (install|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from an ISO)$/ do |action, name, source|
+When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from an ISO)$/ do |action, name, source|
   step "I start Tails Installer"
-  assert(tails_installer_is_device_selected?(name))
+  # If the device was plugged *just* before this step, it might not be
+  # completely ready (so it's shown) at this stage.
+  try_for(10) { tails_installer_is_device_selected?(name) }
   if source == 'from an ISO'
     iso_radio = @installer.child('Use a downloaded Tails ISO image',
                                  roleName: 'radio button')
@@ -138,7 +143,12 @@ When /^I (install|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from 
     file_chooser.button('Open').click
   end
   begin
-    @installer.button(action.capitalize).click
+    if action == 'reinstall'
+      label = 'Reinstall (delete all data)'
+    else
+      label = action.capitalize
+    end
+    @installer.button(label).click
     @installer.child('Question', roleName: 'alert').button('Yes').click
     try_for(30*60) do
       @installer
