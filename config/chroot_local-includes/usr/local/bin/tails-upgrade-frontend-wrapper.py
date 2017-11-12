@@ -20,7 +20,7 @@ os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
 os.environ['TEXTDOMAIN'] = 'tails'
 
 CMD = os.path.basename(sys.argv[0])
-TORDATE_DIR = '/var/run/tordate'
+TORDATE_DIR = '/run/tordate'
 TORDATE_DONE_FILE = '{}/done'.format(TORDATE_DIR)
 INOTIFY_TIMEOUT = 60
 MIN_REAL_MEMFREE = (300 * 1024)
