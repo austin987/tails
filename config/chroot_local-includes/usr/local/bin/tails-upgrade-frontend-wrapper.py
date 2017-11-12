@@ -3,6 +3,9 @@
     Tails upgrade frontend wrapper.
 
     Test with "python3 tails-upgrade-frontend-wrapper.py doctest".
+    The tests will start the upgrade process which could pop up a dialog box
+    so you probably want to use a tester that handles user interaction or
+    run the tests from the command line and answer prompts as needed.
 
     goodcrypto.com converted from bash to python and added basic tests.
 '''
@@ -14,11 +17,9 @@ from gettext import gettext
 import sh
 
 os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
-
-CMD = os.path.basename(sys.argv[0])
-
 os.environ['TEXTDOMAIN'] = 'tails'
 
+CMD = os.path.basename(sys.argv[0])
 TORDATE_DIR = '/var/run/tordate'
 TORDATE_DONE_FILE = '{}/done'.format(TORDATE_DIR)
 INOTIFY_TIMEOUT = 60
@@ -29,7 +30,11 @@ def main(*args):
     """
         Tails upgrade frontend wrapper.
 
-        >>> main([])
+        >>> try:
+        ...     main()
+        ...     fail()
+        ... except SystemExit:
+        ...     pass
     """
 
     time.sleep(30)
@@ -47,7 +52,10 @@ def main(*args):
     done = False
     while not done:
         try:
-            result = sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend', *args)
+            if len(args) > 0:
+                result = sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend', sh.glob(args))
+            else:
+                result = sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend')
         except sh.ErrorReturnCode:
             pass
         else:
@@ -60,7 +68,11 @@ def error(msg):
     """
         Show error and exit.
 
-        >>> error('oops ... testing')
+        >>> try:
+        ...     error('testing')
+        ...     fail()
+        ... except SystemExit:
+        ...     pass
     """
 
     cli_text = '{}: {} {}'.format(CMD, gettext('error:'), msg)
@@ -77,13 +89,17 @@ def check_free_memory(min_real_memfree):
         >>> check_free_memory(MIN_REAL_MEMFREE)
     """
 
-    memfree = sh.awk('/^MemFree:/{print $2}', '/proc/meminfo')
-    buffers = sh.awk('/^Buffers:/{print $2}', '/proc/meminfo')
-    cached = sh.awk('/^Cached:/{print $2}', '/proc/meminfo')
+    for line in open('/proc/meminfo'):
+        if line.startswith('MemFree:'):
+            fields = line.split()
+            memfree = int(fields[1])
+        elif line.startswith('Buffers:'):
+            fields = line.split()
+            buffers = int(fields[1])
+        elif line.startswith('Cached:'):
+            fields = line.split()
+            cached = int(fields[1])
     df_text = sh.df('--type=tmpfs', '--local', '--output=used', '--total').stdout.decode()
-    df_text = df_text.strip() # DEBUG
-    df_text = df_text.split('\n') # DEBUG
-    df_text = df_text[-1] # DEBUG
     tmpfs = int(df_text.strip().split('\n')[-1])
     real_memfree = (memfree + buffers + cached) - tmpfs
 
@@ -117,7 +133,7 @@ if __name__ == '__main__':
         else:
             main(sys.argv[1:])
     else:
-        main([])
+        main()
 
     sys.exit(0)
 
