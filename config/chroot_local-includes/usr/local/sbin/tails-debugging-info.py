@@ -47,13 +47,13 @@ def main():
     debug_file('root', '/proc/cmdline')
 
     # General hardware and filesystems information
-    debug_command(['/usr/sbin/dmidecode', '-s', 'system-manufacturer'])
-    debug_command(['/usr/sbin/dmidecode', '-s', 'system-product-name'])
-    debug_command(['/usr/sbin/dmidecode', '-s', 'system-version'])
-    debug_command(['/usr/bin/lspci'])
-    debug_command(['/bin/df', '--human-readable', '--print-type'])
-    debug_command(['/bin/mount'])
-    debug_command(['/bin/lsmod'])
+    debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer')
+    debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name')
+    debug_command('/usr/sbin/dmidecode', '-s', 'system-version')
+    debug_command('/usr/bin/lspci')
+    debug_command('/bin/df', '--human-readable', '--print-type')
+    debug_command('/bin/mount')
+    debug_command('/bin/lsmod')
     debug_file('root', '/proc/asound/cards')
     debug_file('root', '/proc/asound/devices')
     debug_file('root', '/proc/asound/modules')
@@ -73,9 +73,9 @@ def main():
     debug_file('root', '/var/log/live-persist')
 
     # The Journal
-    debug_command(['/bin/journalctl', '--catalog', '--no-pager'])
+    debug_command('/bin/journalctl', '--catalog', '--no-pager')
 
-def debug_command(args):
+def debug_command(command, *args):
     """
         Print the command and then run it.
 
@@ -84,31 +84,34 @@ def debug_command(args):
         ...
     """
     print()
-    print('===== output of command {} ====='.format(' '.join(args)))
+    print('===== output of command {} {} ====='.format(command, ' '.join(args)))
 
-    command = args[0]
     run = sh.Command(command)
-    if len(args[1:]) > 0:
-        response = run(args[1:]).stdout.decode().strip()
-    else:
-        response = run().stdout.decode().strip()
-
-    print(response)
+    output = run(*args).stdout.decode().strip()
+    print(output)
 
 def debug_file(user, filename):
     """
-        Debug if file exists or not.
+        Print file content.
 
         >>> debug_file('amnesia', '/etc/hosts')
         ...
     """
-    if os.path.exists(filename):
-        print()
-        print('===== content of {} ====='.format(filename))
-        with open(filename) as f:
-            print(f.read())
+    if not os.path.isfile(filename):
+        return
+
+    print()
+    print('===== content of {} ====='.format(filename))
+    with open(filename) as f:
+        print(f.read())
 
 def debug_directory(user, dir_name):
+    """
+        List directory and print content of all contained files (non-recursively).
+
+        >>> debug_directory('amnesia', '/tmp')
+        ...
+    """
     if not os.path.isdir(dir_name):
         return
 
