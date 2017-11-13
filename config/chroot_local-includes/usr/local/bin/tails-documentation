@@ -1,25 +1,63 @@
-#! /bin/sh
+#!/usr/bin/env python3
 
-if [ $# -ge 1 ]; then
-   PAGE="$1"
-else
-   PAGE='index'
-fi
+import gettext
+import gi
+import locale
+import os
+import os.path
+import sys
+import tailsgreeter.gui
 
-WIKI_ROOT='/usr/share/doc/tails/website'
-LANG_CODE="`echo ${LANG} | head -c 2`"
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk                                   # NOQA: E402
+gi.require_version('WebKit2', '4.0')
+from gi.repository import WebKit2                               # NOQA: E402
 
-if [ -r "${WIKI_ROOT}/${PAGE}.${LANG_CODE}.html" ]; then
-   FILE="${PAGE}.${LANG_CODE}.html"
-elif  [ -r "${WIKI_ROOT}/${PAGE}.en.html" ]; then
-   FILE="${PAGE}.en.html"
-else
-   FILE="${PAGE}.html"
-fi
+# We'll only use a single translation, "Tails documentation", which
+# already is translated for the launcher. For this reason, this script
+# is not managed by `refresh-translations`.
+gettext.textdomain('tails')
 
-if [ -n "${2}" ]; then
-   FILE="${FILE}#${2}"
-fi
+# The browser from the Greeter is good as-is, but a button for
+# navigating backwards in the history would be nice.
+class DocumentationWindow(tailsgreeter.gui.GreeterHelpWindow):
+    def _build_ui(self):
+        super(DocumentationWindow, self)._build_ui()
+        # The super class' headerbar is not exposed as an instance
+        # variable, but we need it!
+        headerbar = next(child for child in self.get_children() \
+                         if isinstance(child, Gtk.HeaderBar))
+        back_button = Gtk.Button('←')
+        back_button.connect("clicked", lambda x: self.webview.go_back())
+        headerbar.pack_start(back_button)
+        back_button.show()
+        self.webview.connect(
+            "load-changed",
+            lambda webview, e: back_button.set_visible(webview.can_go_back())
+        )
 
-export TOR_BROWSER_SKIP_OFFLINE_WARNING=yes
-exec /usr/local/bin/tor-browser "file://${WIKI_ROOT}/${FILE}"
+
+# Main
+
+try:
+    page = sys.argv[1]
+except IndexError:
+    page = 'getting_started'
+wiki_path = '/usr/share/doc/tails/website'
+lang_code = os.getenv('LANG', 'en')[0:2]
+trials = [
+    os.path.join(wiki_path, page + code + ".html")
+    for code in ['.' + lang_code, '.en', '']
+]
+try:
+    uri = 'file://' + next(trial for trial in trials if os.path.isfile(trial))
+except StopIteration:
+    sys.exit('error: could not find the requested documentation page')
+if '..' in uri.split(os.sep):
+    sys.exit('error: cannot escape from {}'.format(wiki_path))
+
+helpwindow = DocumentationWindow(uri)
+helpwindow.connect("delete-event", Gtk.main_quit)
+helpwindow.window.set_title(gettext.gettext('Tails documentation'))
+helpwindow.show()
+Gtk.main()
