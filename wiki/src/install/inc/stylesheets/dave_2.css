@@ -1,4 +1,5 @@
 /* Display No JS version by default */
+
 .supported-browser,
 .outdated-browser,
 .unsupported-browser {
@@ -12,7 +13,10 @@
 #skip-verification-direct,
 #verification,
 #update-extension,
-#extension-updated,
+#verifying-download,
+#verification-successful,
+#verification-failed,
+#verification-failed-again,
 #skip-download-direct,
 #skip-download-bittorrent,
 #extension-version {
@@ -23,14 +27,29 @@
   display: none;
 }
 
+/* Display logic in case the extension is installed or outdated */
+
+html[data-extension="up-to-date"] #install-extension,
+html[data-extension="outdated"] #install-extension {
+  display: none;
+}
+
+html[data-extension="outdated"] #update-extension,
+html[data-extension="up-to-date"] #verification {
+  display: block;
+}
+
+/* Layout */
+
 #content {
   padding-left: 0 !important;
 }
 
 .btn {
   color: white !important;
-  background: #53b351;
+  background: #53b351 !important;
   border: none;
+  padding: 6px 12px !important;
 }
 
 span.step-number {
@@ -56,13 +75,12 @@ span.step-number {
   -webkit-box-shadow: 5px 5px #53b351;
   box-shadow: 5px 5px #53b351;
   padding: 15px 30px !important;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: -5px;
+  margin: -1em auto !important;
   position: absolute !important;
   text-align: left;
   font-size: 13px;
   z-index: 1;
+  width: 35em;
 }
 
 /* X for closing the toggle */
@@ -72,10 +90,4 @@ span.step-number {
   position: absolute;
   right: 7px;
   top: 5px;
-}
-
-/* Custom positioning for specific toggles */
-
-#why-verify div.toggleable {
-  width: 40em;
 }
