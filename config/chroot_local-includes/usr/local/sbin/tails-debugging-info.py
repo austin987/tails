@@ -83,8 +83,8 @@ def debug_command(args):
         >>> debug_command(args)
         ...
     """
-    print(file=sys.stderr)
-    print('===== output of command {} ====='.format(' '.join(args)), file=sys.stderr)
+    print()
+    print('===== output of command {} ====='.format(' '.join(args)))
 
     command = args[0]
     run = sh.Command(command)
@@ -93,7 +93,7 @@ def debug_command(args):
     else:
         response = run().stdout.decode().strip()
 
-    print(response, file=sys.stderr)
+    print(response)
 
 def debug_file(user, filename):
     """
@@ -103,10 +103,10 @@ def debug_file(user, filename):
         ...
     """
     if os.path.exists(filename):
-        print(file=sys.stderr)
-        print('===== content of {} ====='.format(filename), file=sys.stderr)
+        print()
+        print('===== content of {} ====='.format(filename))
         content = sh.sudo('-u', user, 'cat', filename).stdout.decode()
-        print(content, file=sys.stderr)
+        print(content)
 
 def debug_directory(user, dir_name):
     if not os.path.isdir(dir_name):
@@ -114,9 +114,9 @@ def debug_directory(user, dir_name):
 
     files = os.listdir(dir_name)
 
-    print('===== listing of {} ====='.format(dir_name), file=sys.stderr)
+    print('===== listing of {} ====='.format(dir_name))
     for f in files:
-        print(f, file=sys.stderr)
+        print(f)
 
     for f in files:
         debug_file(user, f)
@@ -134,7 +134,7 @@ if __name__ == '__main__':
             from doctest import testmod
             testmod()
         else:
-            main(sys.argv[1:])
+            main()
     else:
         main()
 
