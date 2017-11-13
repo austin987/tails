@@ -31,6 +31,7 @@
 '''
 import os
 import sys
+from pwd import getpwuid
 
 import sh
 
@@ -100,6 +101,13 @@ def debug_file(user, filename):
     if not os.path.isfile(filename):
         return
 
+    owner = getpwuid(os.stat(filename).st_uid)
+    if owner != user:
+        print()
+        print('WARNING: not opening file {}, '.format(filename), end='')
+        print('because it is owned by {} instead of {}'.format(owner, user))
+        return
+
     print()
     print('===== content of {} ====='.format(filename))
     with open(filename) as f:
@@ -113,6 +121,13 @@ def debug_directory(user, dir_name):
         ...
     """
     if not os.path.isdir(dir_name):
+        return
+
+    owner = getpwuid(os.stat(dir_name).st_uid)
+    if owner != user:
+        print()
+        print('WARNING: not opening directory {}, '.format(dir_name), end='')
+        print('because it is owned by {} instead of {}'.format(owner, user))
         return
 
     files = os.listdir(dir_name)
