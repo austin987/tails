@@ -1,24 +1,26 @@
 document.addEventListener('DOMContentLoaded', function() {
+
   window.addEventListener("message", (event) => {
-      if (event.source !== window || !event.data){
-          return;
-      }
-      if(event.data.action === 'verifying'){
-		  showVerifyingDownload(event.data.fileName);
-      }
-      else if(event.data.action === 'verification-failed'){
-		  showVerificationResult('failed');
-      }
-      else if(event.data.action === 'verification-failed-again'){
-		  showVerificationResult('failed-again');
-      }
-      else if(event.data.action === 'verification-success'){
-		  showVerificationResult('successful');
-      }
-      else if (event.data.action === 'progress'){
-        showVerificationProgress(event.data.percentage);
-      }
+    if (event.source !== window || !event.data) {
+      return;
+    }
+    if (event.data.action === 'verifying') {
+      showVerifyingDownload(event.data.fileName);
+    }
+    else if (event.data.action === 'verification-failed') {
+      showVerificationResult('failed');
+    }
+    else if (event.data.action === 'verification-failed-again') {
+      showVerificationResult('failed-again');
+    }
+    else if (event.data.action === 'verification-success') {
+      showVerificationResult('successful');
+    }
+    else if (event.data.action === 'progress') {
+      showVerificationProgress(event.data.percentage);
+    }
   });
+
   function showFloatingToggleableLinks() {
     var links = document.getElementsByClassName('floating-toggleable-link');
     for (let i = 0; i < links.length; i++) {
@@ -44,8 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function toggleOpacity(elm, mode) {
-    for(var i = 0; i < elm.length; i++) {
-      if(mode == 'opaque') {
+    for (var i = 0; i < elm.length; i++) {
+      if (mode == 'opaque') {
         opaque(elm[i]);
       } else {
         transparent(elm[i]);
@@ -59,17 +61,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function show(elm) {
     elm.style.display = 'initial';
-    if(elm.classList.contains('block')) {
+    if (elm.classList.contains('block')) {
       elm.style.display = 'block';
     }
-    if(elm.classList.contains('inline-block')) {
+    if (elm.classList.contains('inline-block')) {
       elm.style.display = 'inline-block';
     }
   }
 
   function toggleDisplay(elm, mode) {
-    for(var i = 0; i < elm.length; i++) {
-      if(mode == 'hide') {
+    for (var i = 0; i < elm.length; i++) {
+      if (mode == 'hide') {
         hide(elm[i]);
       } else {
         show(elm[i]);
@@ -78,11 +80,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function detectBrowser() {
-    // XXX: Fix these minimum versions
+    /* To list the APIs that our extension is using, execute: git grep 'chrome.'
+       Browser compatibility:
+
+         - https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs
+         - https://developer.chrome.com/extensions/api_index
+    */
     minVersion = {
-      'firefox': 38,
-      'chrome': 44,
-      'torbrowser': 5
+      'firefox': 45,  // First release with chrome.runtime.getManifest
+      'chrome': 22,   // First release with chrome.runtime.getManifest
+      'torbrowser': 6 // First release based on Firefox 45
     };
     document.getElementById('min-version-firefox').textContent = minVersion.firefox.toString();
     document.getElementById('min-version-chrome').textContent = minVersion.chrome.toString();
@@ -138,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function toggleContinueLink(method, state) {
-    if(method == 'direct') {
+    if (method == 'direct') {
       hide(document.getElementById('skip-download-direct'));
       hide(document.getElementById('skip-verification-direct'));
       hide(document.getElementById('next-direct'));
@@ -177,18 +184,22 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function showVerificationResult(result) {
+    toggleDirectBitTorrent('direct');
+    showVerifyDownload();
     hide(document.getElementById('verify-download-wrapper'));
     resetVerificationResult();
-    if(result === 'successful') {
+    if (result === 'successful') {
       show(document.getElementById('verification-successful'));
       opaque(document.getElementById('step-continue-direct'));
       toggleContinueLink('direct', 'next-direct');
     }
-    else if(result === 'failed') {
+    else if (result === 'failed') {
       show(document.getElementById('verification-failed'));
+      replaceUrlPrefixWithRandomMirror(document.querySelectorAll('.use-mirror-pool')); // Try again with different mirrors
     }
-    else if(result === 'failed-again') {
+    else if (result === 'failed-again') {
       show(document.getElementById('verification-failed-again'));
+      replaceUrlPrefixWithRandomMirror(document.querySelectorAll('.use-mirror-pool')); // Change mirrors in case people try again anyway
     }
   }
 
@@ -199,12 +210,12 @@ document.addEventListener('DOMContentLoaded', function() {
     transparent(document.getElementById('step-verify-bittorrent'));
     transparent(document.getElementById('step-continue-bittorrent'));
     transparent(document.getElementById('continue-link-bittorrent'));
-    if(method == 'direct') {
+    if (method == 'direct') {
       opaque(document.getElementById('step-verify-direct'));
       opaque(document.getElementById('continue-link-direct'));
       show(document.getElementById('verify-download-wrapper'));
     }
-    if(method == 'bittorrent') {
+    if (method == 'bittorrent') {
       opaque(document.getElementById('step-verify-bittorrent'));
       opaque(document.getElementById('step-continue-bittorrent'));
       opaque(document.getElementById('continue-link-bittorrent'));
@@ -225,9 +236,29 @@ document.addEventListener('DOMContentLoaded', function() {
     resetVerificationResult();
   }
 
+  // Reset verification when downloading again after failure
+  document.getElementById('download-iso-again').onclick = function() {
+    toggleDirectBitTorrent('direct');
+    resetVerificationResult();
+  }
+
   // Display "Verify with BitTorrent" when Torrent file is clicked
   document.getElementById('download-torrent').onclick = function() {
     toggleDirectBitTorrent('bittorrent');
   }
+
+  // Install Chrome extension when clicking 'chrome' links
+  // See https://developer.chrome.com/webstore/inline_installation
+  var chromeInstallationLinks = document.getElementsByClassName('chrome');
+  for (let i = 0; i < chromeInstallationLinks.length; i++) {
+    chromeInstallationLinks[i].onclick = function() {
+      chrome.webstore.install();
+    }
+  }
+
+  // To debug the display of the different results:
+  // showVerificationResult('success');
+  // showVerificationResult('failed');
+  // showVerificationResult('failed-again');
 
 });
