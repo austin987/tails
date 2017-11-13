@@ -105,8 +105,8 @@ def debug_file(user, filename):
     if os.path.exists(filename):
         print()
         print('===== content of {} ====='.format(filename))
-        content = sh.sudo('-u', user, 'cat', filename).stdout.decode()
-        print(content)
+        with open(filename) as f:
+            print(f.read())
 
 def debug_directory(user, dir_name):
     if not os.path.isdir(dir_name):
