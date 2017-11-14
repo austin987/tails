@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (browser === "Firefox" || browser === "Chrome") {
       document.getElementById("detected-browser").textContent = browser + " " + version.toString();
     } else {
-      // Don't bother display version number for unsupported browsers as it's probably more error prone.
+      // Don't bother displaying version number for unsupported browsers as it's probably more error prone.
       document.getElementById("detected-browser").textContent = browser;
     }
 
