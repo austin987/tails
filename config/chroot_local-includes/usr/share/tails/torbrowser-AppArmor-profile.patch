@@ -18,9 +18,9 @@
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -17,48 +19,54 @@
-   #dbus,
-   network tcp,
+@@ -20,52 +22,58 @@
+ 
+   ptrace (trace) peer=@{profile_name},
  
 +  /etc/asound.conf r,
    deny /etc/host.conf r,
@@ -42,6 +42,10 @@
 +  /etc/machine-id r,
 +  /var/lib/dbus/machine-id r,
  
+   /dev/ r,
+   /dev/shm/ r,
+ 
+   owner @{PROC}/@{pid}/fd/ r,
 +  owner @{PROC}/@{pid}/environ r,
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
@@ -104,7 +108,7 @@
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -96,10 +104,44 @@
+@@ -103,9 +111,43 @@
  
    # Silence denial logs about permissions we don't need
    deny /dev/dri/   rwklx,
@@ -113,12 +117,12 @@
 +  deny @{HOME}/.config/gtk-2.0/ rw,
 +  deny @{HOME}/.config/gtk-2.0/** rw,
 +  deny @{HOME}/.mozilla/firefox/bookmarks/ r,
-+  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
-+  deny /usr/local/lib/tor-browser/update.test/ rw,
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
- 
++  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
++  deny /usr/local/lib/tor-browser/update.test/ rw,
++
 +  /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
 +  owner @{HOME}/.gstreamer*/ rw,
 +  owner @{HOME}/.gstreamer*/** rw,
@@ -145,11 +149,10 @@
 +  # Deny access to the list of recently used files. This overrides the
 +  # access to it that's granted by the freedesktop.org abstraction.
 +  deny @{HOME}/.local/share/recently-used.xbel* rw,
-+
+ 
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,
- 
-@@ -107,5 +145,11 @@
+@@ -114,5 +156,11 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
