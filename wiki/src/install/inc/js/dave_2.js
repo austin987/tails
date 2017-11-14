@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function() {
   showFloatingToggleableLinks();
 
   function opaque(elm) {
-    elm.style.opacity = "1.0";
+    elm.classList.remove('transparent');
     var siblings = elm.querySelectorAll("a");
     for (let i = 0; i < siblings.length; i++) {
       siblings[i].style.pointerEvents = "auto";
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function transparent(elm) {
-    elm.style.opacity = "0.3";
+    elm.classList.add('transparent');
     var siblings = elm.querySelectorAll("a");
     for (let i = 0; i < siblings.length; i++) {
       siblings[i].style.pointerEvents = "none";
