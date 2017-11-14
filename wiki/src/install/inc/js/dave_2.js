@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-  window.addEventListener("message", receiveMessage());
+  window.addEventListener("message", receiveMessage);
 
   function receiveMessage(event) {
     if (event.source !== window || !event.data) {
