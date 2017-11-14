@@ -225,8 +225,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
+  // Reset the page to its initial state:
+  // - Detect the browser version and display the relevant variant
   detectBrowser();
+  // - Show the download steps of both direct and BitTorrent downloads
   toggleDirectBitTorrent("none");
+  // - Display 'Skip download' as continue link
   toggleContinueLink("direct", "skip-download-direct");
   toggleContinueLink("bittorrent", "skip-download-bittorrent");
   opaque(document.getElementById("continue-link-direct"));
