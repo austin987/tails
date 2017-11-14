@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function showFloatingToggleableLinks() {
     var links = document.getElementsByClassName("floating-toggleable-link");
     for (let i = 0; i < links.length; i++) {
-      links[i].style.display = "block";
+      show(links[i]);
     }
   }
   showFloatingToggleableLinks();
