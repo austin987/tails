@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-  window.addEventListener("message", (event) => {
+  window.addEventListener("message", receiveMessage());
+
+  function receiveMessage(event) {
     if (event.source !== window || !event.data) {
       return;
     }
@@ -19,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (event.data.action === "progress") {
       showVerificationProgress(event.data.percentage);
     }
-  });
+  }
 
   // Display floating-toggleable-links to prevent people without JS to
   // either always see the toggles or have broken toggle links.
