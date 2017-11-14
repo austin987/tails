@@ -21,6 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
+  // Display floating-toggleable-links to prevent people without JS to
+  // either always see the toggles or have broken toggle links.
   function showFloatingToggleableLinks() {
     var links = document.getElementsByClassName("floating-toggleable-link");
     for (let i = 0; i < links.length; i++) {
