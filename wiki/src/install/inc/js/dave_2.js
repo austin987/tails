@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
       browser = overrideBrowser[1];
     } else if (window.InstallTrigger) {
       browser = "Firefox";
-    } else if (/\bChrom/.test(navigator.userAgent) && /\bGoogle Inc\./.test(navigator.vendor)) {
+    } else if ((/\bChrom/).test(navigator.userAgent) && (/\bGoogle Inc\./).test(navigator.vendor)) {
       browser = "Chrome";
     }
 
