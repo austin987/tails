@@ -36,6 +36,14 @@ class DocumentationWindow(tailsgreeter.gui.GreeterHelpWindow):
             lambda webview, e: back_button.set_visible(webview.can_go_back())
         )
 
+    def cb_load_started(self, webview, ressource, request):
+        super().cb_load_started(webview, ressource, request)
+        if not request.get_uri().startswith("file://"):
+            # An external link was clicked, let's abort following it
+            # in our WebKit browser; any configured external protocol
+            # handler will still open the link's uri.
+            webview.stop_loading()
+
 
 # Main
 
