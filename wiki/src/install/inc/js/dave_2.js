@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function toggleOpacity(elm, mode) {
-    for (var i = 0; i < elm.length; i++) {
+    for (let i = 0; i < elm.length; i++) {
       if (mode == "opaque") {
         opaque(elm[i]);
       } else {
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function toggleDisplay(elm, mode) {
-    for (var i = 0; i < elm.length; i++) {
+    for (let i = 0; i < elm.length; i++) {
       if (mode == "hide") {
         hide(elm[i]);
       } else {
