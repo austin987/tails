@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+set -u
 set -x
 
 . "$(dirname $0)/scripts/utils.sh"
@@ -64,7 +66,6 @@ chown    0:0   config/chroot_local-includes/etc/resolv.conf
 chmod -R go+rX config/binary_local-includes/
 chmod -R go+rX config/chroot_local-includes/etc
 chmod    0440  config/chroot_local-includes/etc/sudoers.d/*
-chmod    go+rX config/chroot_local-includes/home
 chmod    go+rX config/chroot_local-includes/lib
 chmod    go+rX config/chroot_local-includes/lib/live
 chmod -R go+rx config/chroot_local-includes/lib/live/config
@@ -74,22 +75,25 @@ chmod    go+rX config/chroot_local-includes/live
 chmod -R go+rX config/chroot_local-includes/usr
 chmod -R go+rx config/chroot_local-includes/usr/local/bin
 chmod -R go+rx config/chroot_local-includes/usr/local/sbin
-chmod -R go+rX config/chroot_local-includes/usr/share/doc/tails
+chmod -R go+rX config/chroot_local-includes/usr/share/doc
 chmod -R go+rX config/chroot_local-includes/var
 chmod -R go+rX config/chroot_apt
 chmod -R go+rX config/chroot_sources
 
 # normalize file timestamps
-find config/binary_local-includes config/chroot_local-includes \
-     -exec touch --date="@$SOURCE_DATE_EPOCH" '{}' \;
+find \
+   config/binary_local-includes \
+   config/chroot_local-includes \
+   wiki/src \
+   -exec touch --date="@$SOURCE_DATE_EPOCH" '{}' \;
 
 # build the image
 
 # we need /debootstrap/deburis to build a manifest of used packages:
-DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keep-debootstrap-dir"
+DEBOOTSTRAP_OPTIONS="${DEBOOTSTRAP_OPTIONS:-} --keep-debootstrap-dir"
 
 # we're not ready for merged-/usr yet: Debian#843461, Tails#11903
-DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --no-merged-usr"
+DEBOOTSTRAP_OPTIONS="${DEBOOTSTRAP_OPTIONS:-} --no-merged-usr"
 
 # use our own APT repository's key:
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
