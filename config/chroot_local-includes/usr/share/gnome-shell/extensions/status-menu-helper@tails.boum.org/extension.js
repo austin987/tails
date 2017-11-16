@@ -23,11 +23,13 @@
 const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 
+const St = imports.gi.St;
 const LoginManager = imports.misc.loginManager;
 const Main = imports.ui.main;
 const StatusSystem = imports.ui.status.system;
 const PopupMenu = imports.ui.popupMenu;
 const ExtensionSystem = imports.ui.extensionSystem;
+const BoxPointer = imports.ui.boxpointer;
 
 const Gettext = imports.gettext.domain('tails');
 const _ = Gettext.gettext;
@@ -91,7 +93,7 @@ const Extension = new Lang.Class({
     _addSeparateButtons: function() {
         this.statusMenu._actionsItem.actor.add(this._restartButton, { expand: true, x_fill: false });
         this.statusMenu._actionsItem.actor.add(this._poweroffButton, { expand: true, x_fill: false });
-	this.statusMenu._actionsItem.actor.add(this._lockScreenButton, { expand: true, x_fill: false, x_align: St.Align.Start });
+	this.statusMenu._actionsItem.actor.add(this._lockScreenButton, { expand: true, x_fill: false, x_align: St.Align.START });
     },
 
     _destroyActions: function() {
@@ -132,7 +134,7 @@ const Extension = new Lang.Class({
 
     _onRestartClicked: function() {
         Util.spawn(['sudo', '-n', 'reboot'])
-    }
+    },
 
     _onLockClicked: function() {
 	this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
@@ -141,13 +143,13 @@ const Extension = new Lang.Class({
     },
 
     _sessionUpdated: function() {
-        this._lockScreenButton.setSensitive(!Main.sessionMode.isLocked && !Main.sessionMode.isGreeter);
+        this._lockScreenButton.setSensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
     },
 
 });
 
 function init(metadata) {
     Lib.initTranslations(Me);
-    return (extension = new Extension());
+    return new Extension();
 }
 
