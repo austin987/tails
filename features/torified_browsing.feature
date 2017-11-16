@@ -99,13 +99,6 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///tmp/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
 
-  @doc
-  Scenario: The Tails documentation launcher on the desktop works
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I double-click on the Tails documentation launcher on the desktop
-    Then the Tor Browser has started
-    And "Tails - Getting started..." has loaded in the Tor Browser
-
   Scenario: The Tor Browser uses TBB's shared libraries
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser

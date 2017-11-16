@@ -74,6 +74,7 @@ apt-get -y install \
         debootstrap \
         dpkg-dev \
         eatmydata \
+        faketime \
         gettext \
         git \
         ikiwiki \
