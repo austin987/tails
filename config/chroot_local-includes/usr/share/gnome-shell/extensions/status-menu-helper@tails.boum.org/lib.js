@@ -27,11 +27,11 @@ function initTranslations(extension) {
 
     // Extension installed in .local
     if (GLib.file_test(localeDir, GLib.FileTest.EXISTS)) {
-        Gettext.bindtextdomain('gnome-shell-extension-shutdown-helper', localeDir);
+        Gettext.bindtextdomain('gnome-shell-extension-status-menu-helper', localeDir);
     }
     // Extension installed system-wide
     else {
-        Gettext.bindtextdomain('gnome-shell-extension-shutdown-helper',
+        Gettext.bindtextdomain('gnome-shell-extension-status-menu-helper',
             Config.LOCALEDIR);
     }
 }

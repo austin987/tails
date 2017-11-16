@@ -38,7 +38,7 @@ const Lib = Me.imports.lib;
 const Util = imports.misc.util;
 
 const Extension = new Lang.Class({
-    Name: 'ShutdownHelper.Extension',
+    Name: 'StatusMenuHelper.Extension',
 
     enable: function() {
         this.statusMenu = Main.panel.statusArea['aggregateMenu']._system;
