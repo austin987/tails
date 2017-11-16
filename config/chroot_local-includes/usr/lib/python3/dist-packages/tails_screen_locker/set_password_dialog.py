@@ -4,8 +4,12 @@ import os
 
 UI_FILE = os.path.join(os.path.dirname(__file__), "set_password_dialog.ui")
 
+import gi
+gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
+gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
+
 
 def get_password():
     password_dialog = PasswordDialog()
