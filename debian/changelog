@@ -4,11 +4,90 @@ tails (3.4) UNRELEASED; urgency=medium
 
  -- Tails developers <tails@boum.org>  Tue, 26 Sep 2017 06:03:57 +0000
 
-tails (3.2.1) UNRELEASED; urgency=medium
+tails (3.3.1) UNRELEASED; urgency=medium
 
-  * Dummy entry.
+  * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Tue, 26 Sep 2017 13:21:53 +0200
+ -- Tails developers <tails@boum.org>  Wed, 15 Nov 2017 13:22:29 +0100
+
+tails (3.3) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade the base system to the Debian Stretch 9.2 point-release
+      which gives us tons of bugfixes (Closes: #14714).
+    - Install Linux 4.13.0-1 (Closes: #14789).
+
+  * Security fixes
+    - Upgrade Thunderbird to 52.4.0 (Closes: #14963).
+    - Upgrade Tor Browser to 7.0.10 (Closes: #14940).
+    - Upgrade gdk-pixbuf to 2.36.5-2+deb9u1.0tails1 (Closes: #14729).
+
+  * Minor improvements
+    - Upgrade to Tor 0.3.1.8-2~d90.stretch+1, a new stable Tor series.
+    - tails-documentation: rewrite in Python + use WebKit for display
+      instead of the Tor Browser. Since Tor Browser 7.0.8 rendering of
+      local pages (like our docs) fail (#14962) so this is probably a
+      temporary workaround of that.
+    - Replace the Unsafe Browser's warning pages with static,
+      pure-HTML versions. This is truly a *temporary* workaround for
+      #14962.
+    - Update deb.tails.boum.org APT repo key (Closes: #14927)
+    - Refresh Tor Browser AppArmor profile patch to apply on top of
+      torbrowser-launcher 0.2.8-4's (Closes: #14923).
+    - Drop obsolete manual enabling of AppArmor on the kernel
+      command-line: it's now enabled by default, so the (Tails -
+      Debian) delta gets smaller. :)
+
+  * Bugfixes
+    - Install Tails Installer 5.0.2. Fixes:
+      * Most notably, fix an issue preventing Tails Installer from
+        installing to drives containing a non-Tails partition that
+        (obviously) has affected a lot of users. (Closes: #14755).
+      * Fix an issue that made the resulting installations unbootable
+        if Tails Installer was using a too recent udisks2, e.g. the
+        one currently in Debian Sid (Closes: #14809).
+      * Code clean-ups (Closes: #14721, #14722, #14723).
+    - Fix UEFI boot for USB sticks installed with Universal USB
+      Installer (Closes: #8992).
+    - Force Tor Browser and Thunderbird to enable accessibility
+      support even if no a11y feature is enabled in GNOME yet (Closes:
+      #14752, #9260).
+    - Mark our custom Desktop launchers as trusted (Closes: #14793,
+      Refs: 14584).
+    - Add a systemd --user target for bits of GNOME
+      EarlyInitialization managed by systemd, and make the keyboard
+      layout configuration as part of it. This fixes an issue where
+      the layout chosen in the Greeter sometimes wasn't applied in the
+      GNOME session (Closes: #12543).
+
+  * Build system
+    - auto/{build,clean,config}: run with `set -eu`.
+    - Add script to sanity check the website. Currently it ensures all
+      blog posts and security advisories have valid Ikiwiki 'meta
+      date' directives, since we depend on it for reproducibility.
+      Also make passing this sanity check a pre-condition for building
+      the website (Closes: #12726, #14767).
+    - Abort the ISO build when DKMS modules were not built.
+    - Take into account where DKMS modules get installed nowadays.
+    - auto/build: normalize file timestamps in wiki/src before
+      building. The copy of the website included in the ISO image has
+      "Posted" timestamps that apparently match when we cloned the Git
+      repository, which affects reproducibility. (Closes: #14933).
+    - Fix reproducibility of builds of topic branches that lag behind
+      their base branch with the mergebasebranch build option enabled.
+      Two otherwise identical merge commits done at different times
+      get different IDs, and we happen to embed in the ISO the ID of
+      the commit we're building from. (Closes: #14946)
+
+  * Test suite
+    - Bump timeout for "I can save the current page as", otherwise the
+      "The Tor Browser directory is usable" scenario fails randomly
+      when the system is under load.
+    - New scenario: installing Tails to an eligible drive with an
+      existing filesystem. This is a regression test for #14755.
+    - New scenario: re-installing over an existing Tails installation.
+
+ -- Tails developers <tails@boum.org>  Tue, 14 Nov 2017 04:53:27 +0100
 
 tails (3.2) unstable; urgency=medium
 
