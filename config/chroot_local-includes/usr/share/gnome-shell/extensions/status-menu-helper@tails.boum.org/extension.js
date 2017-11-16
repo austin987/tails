@@ -44,16 +44,19 @@ const Extension = new Lang.Class({
         this.statusMenu = Main.panel.statusArea['aggregateMenu']._system;
 
         this._createActions();
-        this._removealtSwitcher();
+        this._removeAltSwitcher();
         this._addSeparateButtons();
 
         this._menuOpenStateChangedId = this.statusMenu.menu.connect('open-state-changed', Lang.bind(this,
             function(menu, open) {
                 if (!open)
                     return;
-                this._altrestartAction.visible = true;
-                this._altpowerOffAction.visible = true;
+                this._restartButton.visible = true;
+                this._poweroffButton.visible = true;
             }));
+
+        Main.sessionMode.connect('updated', Lang.bind(this, this._sessionUpdated));
+        this._sessionUpdated();
     },
 
     disable: function() {
@@ -63,71 +66,63 @@ const Extension = new Lang.Class({
         }
 
         this._destroyActions();
-        this._addDefaultButton();
+        this._restoreAltSwitcher();
     },
 
     _createActions: function() {
-        this._altrestartAction = this.statusMenu._createActionButton('view-refresh-symbolic', _("Restart"));
-        this._altrestartActionId = this._altrestartAction.connect('clicked', Lang.bind(this, this._onRestartClicked));
+        this._restartButton = this.statusMenu._createActionButton('view-refresh-symbolic', _("Restart"));
+        this._restartButtonId = this._restartButton.connect('clicked', Lang.bind(this, this._onRestartClicked));
  
-        this._lockScreenAction = this.statusMenu._createActionButton('changes-prevent-symbolic', _("Lock"));
-        this._lockScreenActionId = this._lockScreenAction.connect('clicked', Lang.bind(this, this._onLockClicked));
+        this._lockScreenButton = this.statusMenu._createActionButton('changes-prevent-symbolic', _("Lock"));
+        this._lockScreenButtonId = this._lockScreenButton.connect('clicked', Lang.bind(this, this._onLockClicked));
 
-        this._altpowerOffAction = this.statusMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
-        this._altpowerOffActionId = this._altpowerOffAction.connect('clicked', Lang.bind(this, this._onPowerOffClicked));
+        this._poweroffButton = this.statusMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
+        this._poweroffButtonId = this._poweroffButton.connect('clicked', Lang.bind(this, this._onPowerOffClicked));
     },
 
-    _removealtSwitcher: function() {
+    _removeAltSwitcher: function() {
         this.statusMenu._actionsItem.actor.remove_child(this.statusMenu._altSwitcher.actor);
     },
 
-    _addSeparateButtons: function() {
-        this.statusMenu._actionsItem.actor.add(this._altrestartAction, { expand: true, x_fill: false });
-        this.statusMenu._actionsItem.actor.add(this._altpowerOffAction, { expand: true, x_fill: false });
-	this.statusMenu._actionsItem.actor.add(this._lockScreenAction, { expand: true, x_fill: false, x_align: St.Align.Start });
-    },
-
-    _destroyActions: function() {
-        if (this._altrestartActionId) {
-            this._altrestartAction.disconnect(this._altrestartActionId);
-            this._altrestartActionId = 0;
-        }
-
-        if (this._altpowerOffActionId) {
-            this._altpowerOffAction.disconnect(this._altpowerOffActionId);
-            this._altpowerOffActionId = 0;
-        }
-
-        if (this._lockScreenActionId) {
-            this._lockScreenAction.disconnect(this._lockScreenActionId);
-            this._lockScreenActionId = 0;
-        }
-
-        if (this._altrestartAction) {
-            this._altrestartAction.destroy();
-            this._altrestartAction = 0;
-        }
-
-        if (this._altpowerOffAction) {
-            this._altpowerOffAction.destroy();
-            this._altpowerOffAction = 0;
-        }
-
-        if (this._lockScreenAction) {
-            this._lockScreenAction.destroy();
-            this._lockScreenAction = 0;
-        }
-    },
-
-    _addDefaultButton: function() {
+    _restoreAltSwitcher: function() {
         this.statusMenu._actionsItem.actor.add(this.statusMenu._altSwitcher.actor, { expand: true, x_fill: false });
     },
 
-    _removealtStatusSwitcher: function() {
-        if (this._altStatusSwitcher) {
-            this.statusMenu._actionsItem.actor.remove_child(this._altStatusSwitcher.actor);
-            this._altStatusSwitcher.actor.destroy();
-            this._altStatusSwitcher = 0;
+    _addSeparateButtons: function() {
+        this.statusMenu._actionsItem.actor.add(this._restartButton, { expand: true, x_fill: false });
+        this.statusMenu._actionsItem.actor.add(this._poweroffButton, { expand: true, x_fill: false });
+	this.statusMenu._actionsItem.actor.add(this._lockScreenButton, { expand: true, x_fill: false, x_align: St.Align.Start });
+    },
+
+    _destroyActions: function() {
+        if (this._restartButtonId) {
+            this._restartButton.disconnect(this._restartButtonId);
+            this._restartButtonId = 0;
+        }
+
+        if (this._poweroffButtonId) {
+            this._poweroffButton.disconnect(this._poweroffButtonId);
+            this._poweroffButtonId = 0;
+        }
+
+        if (this._lockScreenButtonId) {
+            this._lockScreenButton.disconnect(this._lockScreenButtonId);
+            this._lockScreenButtonId = 0;
+        }
+
+        if (this._restartButton) {
+            this._restartButton.destroy();
+            this._restartButton = 0;
+        }
+
+        if (this._poweroffButton) {
+            this._poweroffButton.destroy();
+            this._poweroffButton = 0;
+        }
+
+        if (this._lockScreenButton) {
+            this._lockScreenButton.destroy();
+            this._lockScreenButton = 0;
         }
     },
 
@@ -144,6 +139,11 @@ const Extension = new Lang.Class({
         Main.overview.hide();
 	Util.spawn(['tails-screen-locker']);
     },
+
+    _sessionUpdated: function() {
+        this._lockScreenButton.setSensitive(!Main.sessionMode.isLocked && !Main.sessionMode.isGreeter);
+    },
+
 });
 
 function init(metadata) {
