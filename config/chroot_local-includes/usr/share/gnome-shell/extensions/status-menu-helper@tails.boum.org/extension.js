@@ -1,7 +1,7 @@
 /**
    Copyright (C) 2014 Raphael Freudiger <laser_b@gmx.ch>
    Copyright (C) 2014 Jonatan Zeidler <jonatan_zeidler@gmx.de>
-   Copyright (C) 2014 Tails Developers <tails@boum.org>
+   Copyright (C) 2014-2017 Tails Developers <tails@boum.org>
 
    This program is free software: you can redistribute it and/or
    modify it under the terms of the GNU General Public License as
@@ -16,7 +16,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-   shutdown-helper is based on gnome-shell-extension-suspend-button
+   status-menu-helper is based on gnome-shell-extension-suspend-button
    (https://github.com/laserb/gnome-shell-extension-suspend-button) by
    Raphael Freudiger <laser_b@gmx.ch>.
 **/
@@ -41,14 +41,13 @@ const Extension = new Lang.Class({
     Name: 'ShutdownHelper.Extension',
 
     enable: function() {
-        this._loginManager = LoginManager.getLoginManager();
-        this.systemMenu = Main.panel.statusArea['aggregateMenu']._system;
+        this.statusMenu = Main.panel.statusArea['aggregateMenu']._system;
 
         this._createActions();
         this._removealtSwitcher();
         this._addSeparateButtons();
 
-        this._menuOpenStateChangedId = this.systemMenu.menu.connect('open-state-changed', Lang.bind(this,
+        this._menuOpenStateChangedId = this.statusMenu.menu.connect('open-state-changed', Lang.bind(this,
             function(menu, open) {
                 if (!open)
                     return;
@@ -59,7 +58,7 @@ const Extension = new Lang.Class({
 
     disable: function() {
         if (this._menuOpenStateChangedId) {
-            this.systemMenu.menu.disconnect(this._menuOpenStateChangedId);
+            this.statusMenu.menu.disconnect(this._menuOpenStateChangedId);
             this._menuOpenStateChangedId = 0;
         }
 
@@ -68,11 +67,24 @@ const Extension = new Lang.Class({
     },
 
     _createActions: function() {
-        this._altrestartAction = this.systemMenu._createActionButton('view-refresh-symbolic', _("Restart"));
+        this._altrestartAction = this.statusMenu._createActionButton('view-refresh-symbolic', _("Restart"));
         this._altrestartActionId = this._altrestartAction.connect('clicked', Lang.bind(this, this._onRestartClicked));
+ 
+        this._lockScreenAction = this.statusMenu._createActionButton('changes-prevent-symbolic', _("Lock"));
+        this._lockScreenActionId = this._lockScreenAction.connect('clicked', Lang.bind(this, this._onLockClicked));
 
-        this._altpowerOffAction = this.systemMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
+        this._altpowerOffAction = this.statusMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
         this._altpowerOffActionId = this._altpowerOffAction.connect('clicked', Lang.bind(this, this._onPowerOffClicked));
+    },
+
+    _removealtSwitcher: function() {
+        this.statusMenu._actionsItem.actor.remove_child(this.statusMenu._altSwitcher.actor);
+    },
+
+    _addSeparateButtons: function() {
+        this.statusMenu._actionsItem.actor.add(this._altrestartAction, { expand: true, x_fill: false });
+        this.statusMenu._actionsItem.actor.add(this._altpowerOffAction, { expand: true, x_fill: false });
+	this.statusMenu._actionsItem.actor.add(this._lockScreenAction, { expand: true, x_fill: false, x_align: St.Align.Start });
     },
 
     _destroyActions: function() {
@@ -86,6 +98,11 @@ const Extension = new Lang.Class({
             this._altpowerOffActionId = 0;
         }
 
+        if (this._lockScreenActionId) {
+            this._lockScreenAction.disconnect(this._lockScreenActionId);
+            this._lockScreenActionId = 0;
+        }
+
         if (this._altrestartAction) {
             this._altrestartAction.destroy();
             this._altrestartAction = 0;
@@ -95,29 +112,20 @@ const Extension = new Lang.Class({
             this._altpowerOffAction.destroy();
             this._altpowerOffAction = 0;
         }
+
+        if (this._lockScreenAction) {
+            this._lockScreenAction.destroy();
+            this._lockScreenAction = 0;
+        }
     },
 
     _addDefaultButton: function() {
-        this.systemMenu._actionsItem.actor.add(this.systemMenu._altSwitcher.actor, { expand: true, x_fill: false });
-    },
-
-    _addSeparateButtons: function() {
-        this.systemMenu._actionsItem.actor.add(this._altrestartAction, { expand: true, x_fill: false });
-        this.systemMenu._actionsItem.actor.add(this._altpowerOffAction, { expand: true, x_fill: false });
-    },
-
-    _removealtSwitcher: function() {
-        this.systemMenu._actionsItem.actor.remove_child(this.systemMenu._altSwitcher.actor);
-    },
-
-    _createaltStatusSwitcher: function() {
-        this._altStatusSwitcher = new StatusSystem.AltSwitcher(this._altrestartAction,this._altpowerOffAction);
-        this.systemMenu._actionsItem.actor.add(this._altStatusSwitcher.actor, { expand: true, x_fill: false });
+        this.statusMenu._actionsItem.actor.add(this.statusMenu._altSwitcher.actor, { expand: true, x_fill: false });
     },
 
     _removealtStatusSwitcher: function() {
         if (this._altStatusSwitcher) {
-            this.systemMenu._actionsItem.actor.remove_child(this._altStatusSwitcher.actor);
+            this.statusMenu._actionsItem.actor.remove_child(this._altStatusSwitcher.actor);
             this._altStatusSwitcher.actor.destroy();
             this._altStatusSwitcher = 0;
         }
@@ -130,6 +138,12 @@ const Extension = new Lang.Class({
     _onRestartClicked: function() {
         Util.spawn(['sudo', '-n', 'reboot'])
     }
+
+    _onLockClicked: function() {
+	this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        Main.overview.hide();
+	Util.spawn(['tails-screen-locker']);
+    },
 });
 
 function init(metadata) {
