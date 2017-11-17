@@ -247,6 +247,12 @@ document.addEventListener("DOMContentLoaded", function() {
     resetVerificationResult();
   }
 
+  // Display "Verify with your browser" when "I already" is clicked
+  document.getElementById("already-downloaded").onclick = function() {
+    toggleDirectBitTorrent("direct");
+    resetVerificationResult();
+  }
+
   // Reset verification when downloading again after failure
   document.getElementById("download-iso-again").onclick = function() {
     toggleDirectBitTorrent("direct");
