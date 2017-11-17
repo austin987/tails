@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (event.data.action === "progress") {
       showVerificationProgress(event.data.percentage);
     }
+    else if (event.data.action === "extension-installed") {
+      showVerifyDownload();
+    }
   }
 
   // Display floating-toggleable-links to prevent people without JS to
@@ -240,6 +243,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Display "Verify with your browser" when ISO image is clicked
   document.getElementById("download-iso").onclick = function() {
+    toggleDirectBitTorrent("direct");
+    resetVerificationResult();
+  }
+
+  // Display "Verify with your browser" when "I already" is clicked
+  document.getElementById("already-downloaded").onclick = function() {
     toggleDirectBitTorrent("direct");
     resetVerificationResult();
   }
