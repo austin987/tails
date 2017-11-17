@@ -21,6 +21,14 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (event.data.action === "progress") {
       showVerificationProgress(event.data.percentage);
     }
+    else if (event.data.action === "extension-installed") {
+      if (document.documentElement.dataset.extension === "up-to-date") {
+        showVerifyDownload();
+      }
+      else if (document.documentElement.dataset.extension === "outdated") {
+        showUpdateExtension();
+      }
+    }
   }
 
   // Display floating-toggleable-links to prevent people without JS to
@@ -170,6 +178,12 @@ document.addEventListener("DOMContentLoaded", function() {
     toggleContinueLink("direct", "skip-verification-direct");
   }
 
+  function showUpdateExtension() {
+    hide(document.getElementById("verification"));
+    hide(document.getElementById("install-extension"));
+    show(document.getElementById("update-extension"));
+  }
+
   function showVerifyDownload() {
     hide(document.getElementById("install-extension"));
     hide(document.getElementById("update-extension"));
@@ -240,6 +254,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Display "Verify with your browser" when ISO image is clicked
   document.getElementById("download-iso").onclick = function() {
+    toggleDirectBitTorrent("direct");
+    resetVerificationResult();
+  }
+
+  // Display "Verify with your browser" when "I already" is clicked
+  document.getElementById("already-downloaded").onclick = function() {
     toggleDirectBitTorrent("direct");
     resetVerificationResult();
   }
