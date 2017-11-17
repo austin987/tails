@@ -21,8 +21,13 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (event.data.action === "progress") {
       showVerificationProgress(event.data.percentage);
     }
-    else if (event.data.action === "extension-installed" && document.documentElement.dataset.extension === "up-to-date") {
-      showVerifyDownload();
+    else if (event.data.action === "extension-installed") {
+      if (document.documentElement.dataset.extension === "up-to-date") {
+        showVerifyDownload();
+      }
+      else if (document.documentElement.dataset.extension === "outdated") {
+        showUpdateExtension();
+      }
     }
   }
 
@@ -171,6 +176,12 @@ document.addEventListener("DOMContentLoaded", function() {
     hide(document.getElementById("verification-failed"));
     hide(document.getElementById("verification-failed-again"));
     toggleContinueLink("direct", "skip-verification-direct");
+  }
+
+  function showUpdateExtension() {
+    hide(document.getElementById("verification"));
+    hide(document.getElementById("install-extension"));
+    show(document.getElementById("update-extension"));
   }
 
   function showVerifyDownload() {
