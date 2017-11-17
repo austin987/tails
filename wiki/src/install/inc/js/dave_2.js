@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
     else if (event.data.action === "progress") {
       showVerificationProgress(event.data.percentage);
     }
-    else if (event.data.action === "extension-installed") {
+    else if (event.data.action === "extension-installed" && document.documentElement.dataset.extension === "up-to-date") {
       showVerifyDownload();
     }
   }
