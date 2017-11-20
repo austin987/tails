@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function showVerifyingDownload(filename) {
     hide(document.getElementById("verify-download-wrapper"));
-    document.getElementById("filename").innerHTML = filename;
+    document.getElementById("filename").textContent = filename;
     show(document.getElementById("verifying-download"));
   }
 
