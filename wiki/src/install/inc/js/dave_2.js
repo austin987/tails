@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // To debug the display of the different results:
-  // showVerificationResult("success");
+  // showVerificationResult("successful");
   // showVerificationResult("failed");
   // showVerificationResult("failed-again");
 
