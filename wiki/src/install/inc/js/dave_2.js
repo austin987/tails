@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window.addEventListener("message", receiveMessage);
 
   function receiveMessage(event) {
-    if (event.source !== window || !event.data) {
+    if (event.source !== window || event.origin !== "https://tails.boum.org" || !event.data) {
       return;
     }
     if (event.data.action === "verifying") {
@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function showVerifyingDownload(filename) {
     hide(document.getElementById("verify-download-wrapper"));
-    document.getElementById("filename").innerHTML = filename;
+    document.getElementById("filename").textContent = filename;
     show(document.getElementById("verifying-download"));
   }
 
