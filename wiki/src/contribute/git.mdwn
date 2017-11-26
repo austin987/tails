@@ -198,51 +198,55 @@ available for the promotion material repository.
 
 <a id="puppet"></a>
 
-Puppet modules
---------------
+Puppet code
+-----------
 
-Those who have SSH access to these repositories must configure their
-SSH client a bit, e.g.:
+### Puppet manifests
 
-	Host git.puppet.tails.boum.org
-		HostName d53ykjpeekuikgoq.onion
-		ProxyCommand torsocks monkeysphere ssh-proxycommand %h %p
+Only Tails
+[[system administrators|contribute/working_together/roles/sysadmins]]
+have access to our Puppet manifests. If you are not a member of that
+team, please skip to the _Puppet modules_ section below.
 
-### tails
+1. Configure your SSH client:
 
-This is the main *public* Puppet module to manage Tails infrastructure,
-including classes such as `tails::reprepro` and `tails::whisperback::relay`.
+        Host git.puppet.tails.boum.org
+		    HostName d53ykjpeekuikgoq.onion
+		    ProxyCommand torsocks monkeysphere ssh-proxycommand %h %p
 
-Anyone can check it out like this:
+2. Clone our private Puppet manifests repository:
 
-	git clone git://git.puppet.tails.boum.org/puppet-tails
+        git clone gitolite@git.puppet.tails.boum.org:puppet-lizard-manifests && \
+        git submodule update --init
 
-Developers with write access to the repositories should instead:
+All the Puppet modules we use are tracked as Git submodules in
+this repository.
 
-	git clone gitolite@git.puppet.tails.boum.org:puppet-tails
+<a id="puppet-modules"></a>
 
-### Other Puppet modules
+### Puppet modules
 
-We use and publish a lot of other Puppet modules. See the section
-about our [[other repositories|git#other-repositories]].
+We use and publish a lot of other Puppet modules. Each of them is
+stored in a Git repository called `puppet-$module`. For example,
+`puppet-tails` is the main public Puppet module we use to manage Tails
+infrastructure, including classes such as `tails::reprepro` and
+`tails::whisperback::relay`.
 
-### tails_lizard_manifests
+If you are on the Tails system administration team, use the
+authoritative repositories for these modules at
+`git.puppet.tails.boum.org`:
 
-Developers with access to the APT secrets can check it out like this:
+ - They are referenced as Git submodules in our private Puppet
+   manifests repository so you should have a local clone of
+   them already.
+ - Anything you push to these repositories (except `tails_secrets_*`)
+   is automatically synchronized to public mirrors at
+   <https://git-tails.immerda.ch/>.
+ - Do not push to the public mirrors: your changes would be
+   overwritten by the next automatic synchronization.
 
-	git clone gitolite@git.puppet.tails.boum.org:puppet-lizard-manifests
-
-### tails_secrets_apt
-
-Developers with access to the APT secrets can check it out like this:
-
-	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_apt
-
-### tails_secrets_whisperback
-
-Developers with access to the WhisperBack secrets can check it out like this:
-
-	git clone gitolite@git.puppet.tails.boum.org:puppet-tails_secrets_whisperback
+Otherwise, you can list, browse and fork these repositories using
+their [[public mirrors|git#other-repositories]].
 
 <a id="other-repositories"></a>
 
