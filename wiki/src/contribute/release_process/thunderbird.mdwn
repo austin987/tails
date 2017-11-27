@@ -81,19 +81,20 @@ released:
 
 1. Fetch the Debian sources to be used for the build:
 
-        ICEDOVE_SOURCES="$(mktemp -d)" && \
+        THUNDERBIRD_SOURCES="$(mktemp -d)" && \
         GIT_DIR="$(pwd)" && \
-        cd "${ICEDOVE_SOURCES:?}" && \
+        ( \
+        cd "${THUNDERBIRD_SOURCES:?}" && \
         apt --download-only source thunderbird="1:${VERSION:?}" && \
         mkdir -p "${GIT_DIR:?}/../tarballs/" && \
-        for tarball in icedove_*.orig*.tar.xz ; do
+        for tarball in thunderbird_*.orig*.tar.xz ; do
            ln -s \
               "${GIT_DIR:?}/../tarballs/$tarball" \
               "${GIT_DIR:?}/../$tarball"
         done
-        cp icedove_*.orig*.tar.xz "${GIT_DIR:?}/../tarballs/" && \
-        cd "${GIT_DIR:?}" && \
-        rm -rf "${ICEDOVE_SOURCES:?}"
+        cp thunderbird_*.orig*.tar.xz "${GIT_DIR:?}/../tarballs/" && \
+        ) && \
+        rm -rf "${THUNDERBIRD_SOURCES:?}"
 
    Note: we cannot use the `pristine-tar` branch since Jessie builds
    expect split .orig sources for l10n stuff, which is not the case in
@@ -114,7 +115,7 @@ released:
 
 1. Include all sources in the `.changes` file:
 
-        CHANGES_FILE="../icedove_$(echo "${TAILS_VERSION?}" | sed 's/^1://')_amd64.changes" && \
+        CHANGES_FILE="../thunderbird_$(echo "${TAILS_VERSION?}" | sed 's/^1://')_amd64.changes" && \
         changestool "${CHANGES_FILE:?}" includeallsources
 
 1. Due to [[!tails_ticket 11531]] we won't be able to push the tag
