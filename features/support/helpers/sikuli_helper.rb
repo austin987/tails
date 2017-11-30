@@ -77,6 +77,8 @@ def findfailed_hook(proxy, orig_method, args)
           FileUtils.mkdir_p(SIKULI_CANDIDATES_DIR)
           FileUtils.mv(capture_path, candidate_path)
           break
+        else
+          FileUtils.rm(capture_path)
         end
       end
     end
