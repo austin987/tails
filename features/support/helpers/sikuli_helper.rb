@@ -67,13 +67,13 @@ def findfailed_hook(proxy, orig_method, args)
       pattern.similar(similarity)
       match = proxy._invoke('exists', 'Ljava.lang.Object;', pattern)
       if match
-        debug_log("Found fuzzy candidate picture for #{picture} with " +
-                  "similarity #{similarity}")
         capture = proxy._invoke('capture', 'Lorg.sikuli.script.Region;', match)
         capture_path = capture.getFilename
         # Let's verify that our screen capture actually matches
         # with the default similarity
         if proxy._invoke('exists', 'Ljava.lang.Object;', capture_path)
+          debug_log("Found fuzzy candidate picture for #{picture} with " +
+                    "similarity #{similarity}")
           FileUtils.mkdir_p(SIKULI_CANDIDATES_DIR)
           FileUtils.mv(capture_path, candidate_path)
           break
