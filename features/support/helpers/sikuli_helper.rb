@@ -55,7 +55,10 @@ def bind_java_to_pseudo_fifo_logger
   RJava::Lang::System.setOut(print_stream)
 end
 
-def findfailed_hook(proxy, exception, orig_method, args)
+class FindFailedHookFailure < StandardError
+end
+
+def findfailed_hook(proxy, orig_method, args)
   picture = args.first
   candidate_path = "#{SIKULI_CANDIDATES_DIR}/#{picture}"
   if ! File.exist?(candidate_path)
@@ -92,17 +95,7 @@ def findfailed_hook(proxy, exception, orig_method, args)
     pause("FindFailed for: '#{picture}'")
     return orig_method.call(*args)
   else
-    # Re-raising FindFailed doesn't work due to rjb's limited
-    # integration of Java exceptions. If we tried `raise exception`
-    # here, then `raise` would see that `exception` is not a (Ruby)
-    # Exception (but an rjb proxy object) so it would convert it to a
-    # string and use that as the message for the default exception
-    # class (RuntimeError) that it then would raise.  The only way
-    # Java exceptions can be thrown are if thrown inside Java code, or
-    # with Rjb::throw... or you can do the following, which looks more
-    # Ruby-like, but will only work *after* Java has thrown its first
-    # FindFailed (which must be the case in this hook).
-    raise(FindFailed, exception.message)
+    raise FindFailedHookFailure
   end
 end
 
@@ -158,8 +151,32 @@ def sikuli_screen_proxy.new(*args)
         # We really would like to only capture the FindFailed
         # exceptions imported by rjb here, but that hasn't happened
         # at the time this code is run. Yeah, meta-programming! :)
-        raise exception unless exception.class.name == "FindFailed"
-        findfailed_hook(self, exception, orig_method, args)
+        should_rethrow = false
+        if exception.class.name == "FindFailed"
+          begin
+            return findfailed_hook(self, orig_method, args)
+          rescue FindFailedHookFailure
+            # Due to bugs in rjb we cannot re-throw Java exceptions,
+            # which is what we want now. Instead we have to resort to
+            # a hack: let's re-run the failing Sikuli method to
+            # (hopefully) reproduce the exception.
+            # Upstream bug details:
+            # * https://github.com/arton/rjb/issues/59
+            # * https://github.com/arton/rjb/issues/60
+            new_args = args
+            if new_args.size > 1 && new_args[-1].is_a?(Numeric)
+              # Optimize the timeout
+              new_args[-1] = 0.01
+            end
+            # There are situations where we actually could succeed
+            # now, e.g. if we timed out looking for an image *just*
+            # before it appeared, so it is first visible exactly when
+            # we arrive here. If so, well, let's enjoy!
+            return orig_method.call(*new_args)
+          end
+        else
+          raise exception
+        end
       end
     end
   end
