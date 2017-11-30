@@ -146,7 +146,7 @@ def sikuli_screen_proxy.new(*args)
     s.define_singleton_method(method_name) do |*args|
       begin
         orig_method = s.method("#{method_name}_no_override")
-        orig_method.call(*args)
+        return orig_method.call(*args)
       rescue Exception => exception
         # We really would like to only capture the FindFailed
         # exceptions imported by rjb here, but that hasn't happened
