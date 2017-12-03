@@ -192,11 +192,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function showVerifyingDownload(filename) {
     hide(document.getElementById("verify-download-wrapper"));
-    document.getElementById("filename").textContent = filename;
+    if (filename) {
+      document.getElementById("filename").textContent = filename;
+    }
     show(document.getElementById("verifying-download"));
   }
 
   function showVerificationProgress(percentage) {
+    showVerifyingDownload();
     document.getElementById("progress-bar").style.width = percentage + "%";
     document.getElementById("progress-bar").setAttribute("aria-valuenow", percentage.toString());
   }
@@ -284,9 +287,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // To debug the display of the different results:
-  // showVerificationResult("success");
+  // To debug the display of the different states:
+  // showVerificationResult("successful");
   // showVerificationResult("failed");
   // showVerificationResult("failed-again");
+  // showVerificationProgress('50');
 
 });
