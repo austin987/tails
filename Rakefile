@@ -369,8 +369,9 @@ task :setup_environment => ['validate_git_state'] do
   ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
-      raise "Variable '#{var}' is empty, which should not be possible" +
-            "(validate_git_state must be buggy)"
+      raise "Variable '#{var}' is empty, which should not be possible: " +
+            "either validate_git_state is buggy or the 'origin' remote " +
+            "does not point to the official Tails Git repository."
     end
   end
 end
