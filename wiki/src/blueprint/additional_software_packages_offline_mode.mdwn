@@ -2,9 +2,9 @@ This is about [[!tails_ticket 14570]] which we plan to implement for Tails 3.5.
 
 # Current status
 
-Additional Software Packages works offline for a dew days after being connected, but then fails.
+According to [[!tails_ticket 6260]] Additional Software Packages works offline for a dew days after being connected, but then fails.
 
-[[!tails_ticket 6260]] suggests that the issue comes when the Release file corresponding to the packages to be installed is expired. This is controlled by the `Valid-Until` field of the Release file (<https://wiki.debian.org/DebianRepository/Format#Date.2C_Valid-Until>). This supposition should be verified.
+The ticket suggests that the issue comes when the Release file corresponding to the packages to be installed is expired. This is controlled by the `Valid-Until` field of the Release file (<https://wiki.debian.org/DebianRepository/Format#Date.2C_Valid-Until>). 
 
 Looking at Valid-Until fields on Tails, it seems to be :
 
@@ -15,6 +15,18 @@ Looking at Valid-Until fields on Tails, it seems to be :
 # Goal
 
 Have Additional software packages to work offline forever, but to upgrade when connecting to the Internet
+
+# Reproduction procedure
+
+- start Tails online with persistence of apt packages and apt lists
+- install curl (from stretch/updates) and wdiff (from stretch) and add them to additional software list
+- reboot offline
+- see if install works
+- set the date 6 months in the future
+- reboot offline
+- see if install offline works
+
+This procedure should now be tested
 
 # Possible solutions
 
