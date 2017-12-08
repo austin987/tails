@@ -38,7 +38,6 @@ end
 # `return_shellcommand: true`) since we block Pidgin's D-Bus interface
 # (#14612) ...
 def pidgin_dbus_call(method, *args, **opts)
-  opts ||= {}
   opts[:user] = LIVE_USER
   dbus_send(
     'im.pidgin.purple.PurpleService',
