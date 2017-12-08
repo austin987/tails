@@ -125,7 +125,6 @@ def sikuli_script_proxy.new(*args)
   findfail_overrides = [
     ['wait', 'Ljava.lang.Object;D'],
     ['find', 'Ljava.lang.Object;'],
-    ['waitVanish', 'Ljava.lang.Object;D'],
     ['click', 'Ljava.lang.Object;'],
   ]
 
