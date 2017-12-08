@@ -454,11 +454,10 @@ Given /^all notifications have disappeared$/ do
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
-  begin
+  if negation
+    @screen.waitVanish(image, time.to_i)
+  else
     @screen.wait(image, time.to_i)
-    raise "found '#{image}' while expecting not to" if negation
-  rescue FindFailed => e
-    raise e if not(negation)
   end
 end
 

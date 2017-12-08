@@ -131,7 +131,6 @@ def sikuli_screen_proxy.new(*args)
     ['click', 'Ljava.lang.Object;'],
     ['find', 'Ljava.lang.Object;'],
     ['wait', 'Ljava.lang.Object;D'],
-    ['waitVanish', 'Ljava.lang.Object;D'],
   ]
 
   # The usage of `_invoke()` below exemplifies how one can wrap
