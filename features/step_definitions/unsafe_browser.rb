@@ -105,6 +105,10 @@ Then /^the Unsafe Browser shows a warning as its start page$/ do
   @screen.wait("UnsafeBrowserStartPage.png", 10)
 end
 
+Then /^the Unsafe Browser has started$/ do
+  step 'the Unsafe Browser shows a warning as its start page'
+end
+
 Then /^I see a warning about another instance already running$/ do
   @screen.wait('UnsafeBrowserWarnAlreadyRunning.png', 10)
 end
