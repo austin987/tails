@@ -106,7 +106,7 @@ When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wai
       <alias name='net1'/>
       <mac address='52:54:00:11:22:33'/>
       <source network='TailsToasterNet'/>
-      <model type='virtio'/>
+      <model type='pcnet'/>
       <link state='up'/>
     </interface>
   EOF
