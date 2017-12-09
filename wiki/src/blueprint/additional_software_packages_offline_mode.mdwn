@@ -1,1 +1,43 @@
-This is about [[!tails_ticket 9059 desc="#14570"]] which we plan to implement for Tails 3.5.
+This is about [[!tails_ticket 14570]] which we plan to implement for Tails 3.5.
+
+# Current status
+
+According to [[!tails_ticket 6260]] Additional Software Packages works offline for a dew days after being connected, but then fails.
+
+The ticket suggests that the issue comes when the Release file corresponding to the packages to be installed is expired. This is controlled by the `Valid-Until` field of the Release file (<https://wiki.debian.org/DebianRepository/Format#Date.2C_Valid-Until>). 
+
+Looking at Valid-Until fields on Tails, it seems to be :
+
+- ~1 week for unstable and stable/update
+- ~1 month for torproject.org
+- unlimited for stable
+
+# Goal
+
+Have Additional software packages to work offline forever, but to upgrade when connecting to the Internet
+
+# Reproduction procedure
+
+I cannot reproduce the issue from tails 3.3
+
+- start Tails online with persistence of apt packages and apt lists
+- install curl (from stretch/updates) and wdiff (from stretch) and add them to additional software list
+- reboot offline
+- the install works
+- set the date 1 year in the future in the BIOS
+- reboot offline
+- the install works
+
+# Possible solutions
+
+## Don't check Valid-Until on installation
+
+Disable release file validity test on installation (Acquire::Check-Valid-Until=false). We could test if we are offline before doing that. We would still do the validity check on upgrade.
+
+## Apt-offline
+
+<https://labs.riseup.net/code/issues/7208>
+
+## Local repository
+
+Use a local repository to store the packages (e.g. https://help.ubuntu.com/community/Repositories/Personal). We control our Release file, but importing and upgrading the repository looks annoying.

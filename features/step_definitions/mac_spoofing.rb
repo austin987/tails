@@ -106,13 +106,19 @@ When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wai
       <alias name='net1'/>
       <mac address='52:54:00:11:22:33'/>
       <source network='TailsToasterNet'/>
-      <model type='virtio'/>
+      <model type='pcnet'/>
       <link state='up'/>
     </interface>
   EOF
+  # XXX:Buster: when we stop supporting the test suite on Stretch
+  # hosts, let's remove this workaround related to #14819 and just
+  # settle on a device that works on all supported platforms.
+  if cmd_helper('lsb_release --short --codename') == 'stretch'
+    xml.sub('pcnet', 'virtio')
+  end
   $vm.plug_device(xml)
   if wait
-    try_for(20) do
+    try_for(30) do
       all_ethernet_nics.size >= initial_nr_nics + 1
     end
   end

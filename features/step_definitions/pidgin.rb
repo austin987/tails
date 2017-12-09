@@ -38,7 +38,6 @@ end
 # `return_shellcommand: true`) since we block Pidgin's D-Bus interface
 # (#14612) ...
 def pidgin_dbus_call(method, *args, **opts)
-  opts ||= {}
   opts[:user] = LIVE_USER
   dbus_send(
     'im.pidgin.purple.PurpleService',
@@ -49,12 +48,16 @@ def pidgin_dbus_call(method, *args, **opts)
 end
 
 # ... unless we re-enable it!
-def pidgin_force_allowed_dbus_call(*args)
+def pidgin_force_allowed_dbus_call(method, *args, **opts)
+  opts[:user] = LIVE_USER
   policy_file = '/etc/dbus-1/session.d/im.pidgin.purple.PurpleService.conf'
   $vm.execute_successfully("mv #{policy_file} #{policy_file}.disabled")
-  pidgin_dbus_call(*args)
+  # From dbus-daemon(1): "Policy changes should take effect with SIGHUP"
+  $vm.execute_successfully("pkill -HUP -u #{opts[:user]} 'dbus-daemon'")
+  pidgin_dbus_call(method, *args, **opts)
 ensure
   $vm.execute_successfully("mv #{policy_file}.disabled #{policy_file}")
+  $vm.execute_successfully("pkill -HUP -u #{opts[:user]} 'dbus-daemon'")
 end
 
 def pidgin_account_connected?(account, prpl_protocol)
