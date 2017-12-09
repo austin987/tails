@@ -118,7 +118,7 @@ When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wai
   end
   $vm.plug_device(xml)
   if wait
-    try_for(20) do
+    try_for(30) do
       all_ethernet_nics.size >= initial_nr_nics + 1
     end
   end
