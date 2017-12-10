@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# No "set -e" because we need to capture the exit status of gdm-x-session.real
+set -u
+
+FAILURES_COUNT_FILE=/var/lib/gdm3/gdm-x-session_failures
+MAX_FAILURES=5
+
+get_failures () {
+    local failures=0
+    if [ -f "$FAILURES_COUNT_FILE" ] ; then
+        failures=$(cat "$FAILURES_COUNT_FILE")
+    fi
+    echo -n "$failures"
+}
+
+increment_failures () {
+    failures=$(($(get_failures) + 1))
+    echo -n "$failures" > "$FAILURES_COUNT_FILE"
+}
+
+/usr/lib/gdm3/gdm-x-session.real "$@"
+
+RET=$?
+
+if [ $RET -ne 0 ] ; then
+    increment_failures
+    if [ $(get_failures) -ge "$MAX_FAILURES" ] ; then
+        # Trigger OnFailure=tails-gdm-failed-to-start.service
+        echo "gdm-x-session failed too many times, stopping GDM"
+        sudo -n /bin/systemctl kill --signal=9 gdm
+    fi
+fi
+
+exit $RET
