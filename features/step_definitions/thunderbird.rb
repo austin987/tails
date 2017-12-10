@@ -11,7 +11,7 @@ def thunderbird_wizard
 end
 
 def thunderbird_inbox
-  folder_view = thunderbird_main.child($config['Icedove']['address'],
+  folder_view = thunderbird_main.child($config['Thunderbird']['address'],
                                        roleName: 'table row').parent
   folder_view.children(roleName: 'table row', recursive: false).find do |e|
     e.name.match(/^Inbox( .*)?$/)
@@ -92,9 +92,9 @@ Then /^I see that only the (.+) add-on(?:s are| is) enabled in Thunderbird$/ do 
 end
 
 When /^I enter my email credentials into the autoconfiguration wizard$/ do
-  address = $config['Icedove']['address']
+  address = $config['Thunderbird']['address']
   name = address.split('@').first
-  password = $config['Icedove']['password']
+  password = $config['Thunderbird']['password']
   thunderbird_wizard.child('Your name:', roleName: 'entry').typeText(name)
   thunderbird_wizard.child('Email address:',
                            roleName: 'entry').typeText(address)
@@ -128,11 +128,11 @@ def wait_for_thunderbird_progress_bar_to_vanish(thunderbird_frame)
 end
 
 When /^I fetch my email$/ do
-  account = thunderbird_main.child($config['Icedove']['address'],
+  account = thunderbird_main.child($config['Thunderbird']['address'],
                                    roleName: 'table row')
   account.click
   thunderbird_frame = thunderbird_app.child(
-    "#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame'
+    "#{$config['Thunderbird']['address']} - Mozilla Thunderbird", roleName: 'frame'
   )
 
   thunderbird_frame.child('Mail Toolbar', roleName: 'tool bar')
@@ -159,7 +159,7 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
   # Workaround #17272
   if @protocol == 'POP3'
     thunderbird_app
-      .child("Error with account #{$config['Icedove']['address']}")
+      .child("Error with account #{$config['Thunderbird']['address']}")
       .button('OK').click
   end
 
@@ -193,7 +193,7 @@ When /^I send an email to myself$/ do
                          roleName: 'tool bar').button('Write').click
   compose_window = thunderbird_app.child('Write: (no subject) - Thunderbird')
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
-                .typeText($config['Icedove']['address'])
+                .typeText($config['Thunderbird']['address'])
   # The randomness of the subject will make it easier for us to later
   # find *exactly* this email. This makes it safe to run several tests
   # in parallel.
