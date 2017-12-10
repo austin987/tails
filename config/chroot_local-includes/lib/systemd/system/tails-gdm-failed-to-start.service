@@ -1,0 +1,20 @@
+[Unit]
+Description=Guide the user when GDM fails to start
+# GDM's OnFailure will also start plymouth-quit.service. Let it do its job
+# and then we'll start plymouthd again, to avoid race conditions. Ideally
+# we would simply remove plymouth-quit.service from that OnFailure but
+# GDM itself will run "plymouth --quit" when it fails to start the X server
+# (see on_display_status_changed that calls plymouth_quit_without_transition).
+After=plymouth-quit.service
+
+[Service]
+Type=oneshot
+# Use VT5 that is clean of boot messages and does not get a getty started
+# when we switch there, thanks to our custom NAutoVTs=4 logind.conf setting
+ExecStart=/sbin/plymouthd --mode=shutdown --tty=tty5
+ExecStart=/bin/chvt 5
+ExecStart=/bin/plymouth show-splash
+ExecStart=/bin/sh -c \
+    "/bin/plymouth display-message \
+         --text=\"Report a bug (https://deb.li/TailsNoX): GDM fails to start with $(lspci -d::0300 -nn)\" \
+    "
