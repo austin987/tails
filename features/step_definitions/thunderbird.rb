@@ -18,6 +18,45 @@ def thunderbird_inbox
   end
 end
 
+def thunderbird_install_host_snakeoil_ssl_cert
+  # Inspiration:
+  # * https://wiki.mozilla.org/CA:AddRootToFirefox
+  # * https://mike.kaply.com/2015/02/10/installing-certificates-into-firefox/
+  $vm.file_overwrite(
+    '/usr/share/thunderbird/defaults/pref/autoconfig.js',
+    <<-EOF
+// This file must start with a comment or something
+pref("general.config.filename", "mozilla.cfg");
+pref("general.config.obscure_value", 0);
+    EOF
+  )
+  cert = File.read('/etc/ssl/certs/ssl-cert-snakeoil.pem')
+         .split("\n")
+         .reject { |line| /^-----(BEGIN|END) CERTIFICATE-----$/.match(line) }
+         .join
+  $vm.file_overwrite(
+    '/usr/lib/thunderbird/mozilla.cfg',
+    <<-EOF
+// This file must start with a comment or something
+var observer = {
+  observe: function observe(aSubject, aTopic, aData) {
+    var certdb = Components.classes["@mozilla.org/security/x509certdb;1"].getService(Components.interfaces.nsIX509CertDB);
+    var certdb2 = certdb;
+    try {
+      certdb2 = Components.classes["@mozilla.org/security/x509certdb;1"].getService(Components.interfaces.nsIX509CertDB2);
+    } catch (e) {}
+
+    cert = "#{cert}";
+
+    certdb2.addCertFromBase64(cert, "C,C,C", "");
+  }
+}
+Components.utils.import("resource://gre/modules/Services.jsm");
+Services.obs.addObserver(observer, "profile-after-change", false);
+    EOF
+  )
+end
+
 When /^I start Thunderbird$/ do
   workaround_pref_lines = [
     # When we generate a random subject line it may contain one of the
@@ -27,6 +66,11 @@ When /^I start Thunderbird$/ do
   ]
   workaround_pref_lines.each do |line|
     $vm.file_append('/etc/thunderbird/pref/thunderbird.js', line)
+  end
+  # On Jenkins each isotester runs its own email server, using their
+  # respecitve snakeoil SSL cert, so we have to import it.
+  if ENV['JENKINS_URL']
+    thunderbird_install_host_snakeoil_ssl_cert
   end
   step 'I start "Thunderbird" via GNOME Activities Overview'
   try_for(60) { thunderbird_main }
