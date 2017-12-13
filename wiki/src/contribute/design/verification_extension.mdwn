@@ -167,13 +167,25 @@ defeat attacks B, C, D, F, and G.
 
 <a id="html">
 
-HTML and CSS code
-=================
+Manipulation of the download page
+=================================
 
-The extension manipulates the HTML code of the [[!tails_gitweb
-wiki/src/install/download desc="download page"]] (also embedded in the
-different installation scenarios. Here
-are some important parts of this code.
+The extension modifies what is displayed the page using two different
+mechanisms:
+
+- Mostly through message communication (`postMessage`) sent to a
+  JavaScript on the page (`download.js`).
+- If an extension is already installed when the page is loaded, through
+  an HTML attribute (`documentElement.dataset.extension`) corresponding
+  to some CSS declarations, to indicate whether the extension is
+  up-to-date or outdated.
+
+This decouples the code of the extension from the implementation of the
+display on the HTML page (ids, classes, etc.).
+
+When JavaScript is disabled, the page instructs the user to temporarily
+allow JavaScript on the (through NoSript, the most likely scenario).
+They can otherwise still download using BitTorrent.
 
 ### Extension version
 
@@ -189,12 +201,6 @@ extension checks the value of this tag and asks for an upgrade if its
 version is lower than the request version number.
 
 <a id="data_source">
-
-### CSS
-
-The code of the extension does not include any user-visible string or
-graphics but instead manipulates what's displayed on the page through
-[[!tails_gitweb wiki/src/install/inc/stylesheets/dave.css desc="a CSS with a set of states"]].
 
 Data source
 ===========
