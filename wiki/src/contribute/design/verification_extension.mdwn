@@ -17,12 +17,12 @@ elsewhere through HTTPS (and possibly with stronger authentication
 mechanisms such as public key pinning from browser vendors).
 
 We use for that a browser extension, called
-[*DAVE* (for Download And Verify Extension)](https://addons.mozilla.org/en-US/firefox/addon/tails-download-and-verify/?src=search),
-that is currently available for Firefox only. Doing this work in a browser
-makes sense because it can be integrated in the installation instruction on our
-website and also because browsers are cross-platform.
+*Tails Verification* which is available for:
 
-The code of DAVE is available in <https://git-tails.immerda.ch/ma1/download-and-verify-extension>.
+* Firefox 45+ (and Tor Browser 6+)
+* Chrome 22+
+
+The code of *Tails Verification* is available in <https://git-tails.immerda.ch/verification-extension>.
 
 [[!toc levels=2]]
 
@@ -32,12 +32,8 @@ Scope
 Goals
 -----
 
-  - Provide a simple, automated, and cross-platform technique to verify
-    the ISO image as it is downloaded.
-  - Ensure that ISO images are downloaded entirely before trying to
-    verify them.
-  - In case of an interrupted download, help the user resume it.
-  - Allow users to install the extension without restarting the browser.
+Provide a simple, automated, and cross-platform technique to verify the ISO
+image of the current version.
 
 Non goals
 ---------
@@ -50,20 +46,6 @@ Non goals
     BitTorrent file. Then we rely on the BitTorrent client to verify the integrity of
     the download ([[!tails_ticket 9043]]).
 
-Why Firefox?
-------------
-
-Firefox makes sense as a first target because it is the base for Tor
-Browser and is installed by default in Debian and Ubuntu. But
-[[!wikipedia desc="Chrome is much more popular"]] and we would be
-interested in porting the extension to Chrome.
-
-<a id="wireframe"></a>
-
-Wireframe
-=========
-
-[Wireframe of the different steps of using the extension.](https://labs.riseup.net/code/attachments/download/921/extension-20150828.fodg)
 
 <a id="verification"></a>
 
@@ -80,7 +62,7 @@ We are considering here an attacker who can:
 
   - (H) Operate a website that is loaded in a different tab in the same
     browser as the extension. See the section on [[security inside the
-    browser|dave#inside_the_browser]].
+    browser|verification_extension#inside_the_browser]].
 
 We are not considering an attacker who can:
 
@@ -168,17 +150,10 @@ an ISO image.
 Checksum verification
 ---------------------
 
-The code of the extension includes:
-
-  - The root certificate of the authority expected to sign the
-    certificate of https://tails.boum.org/ (until we get [[!tails_ticket 9027]]).
-
 When verifying an ISO image, the extension:
 
-  - Connects to https://tails.boum.org/ and verifies its certificate
-    against its expected authority.
-  - If the certificate is trusted, then it downloads an ISO description
-    document (size, checksum).
+  - Connects to https://tails.boum.org/.
+  - Downloads an ISO description document (size, checksum).
   - Verifies the ISO image against the document (first its size, then
     its checksum).
 
@@ -186,14 +161,9 @@ Security properties:
 
   - This technique would defeat attack A (malicious ISO).
 
-Other considerations:
-
-  - We would have to upgrade the extension if the certificate authority
-    of https://tails.boum.org/ changes but we should know this in
-    advance.
-  - More complex verification mechanisms should be gradually [[built into
-    Tails Installer|blueprint/bootstrapping/installer]] where we can
-    defeat attacks B, C, D, F, and G.
+More complex verification mechanisms could be gradually [[built into
+Tails Installer|blueprint/bootstrapping/installer]] where we can
+defeat attacks B, C, D, F, and G.
 
 <a id="html">
 
@@ -201,8 +171,8 @@ HTML and CSS code
 =================
 
 The extension manipulates the HTML code of the [[!tails_gitweb
-wiki/src/install/inc/steps/download.inline.html desc="download section of the
-different installation scenarios"]]. Here
+wiki/src/install/download desc="download page"]] (also embedded in the
+different installation scenarios. Here
 are some important parts of this code.
 
 ### Extension version
