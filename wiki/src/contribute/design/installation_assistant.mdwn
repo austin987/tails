@@ -1,7 +1,8 @@
 [[!meta title="Installation Assistant"]]
 
 In 2015, we worked on a complete rewrite on our installation
-instructions. The archive of our design process as well as pending
+instructions. This work was extended in 2017 with the design of a new
+download page. The archive of our design process as well as pending
 issues can be found in the [[corresponding
 blueprint|blueprint/bootstrapping/assistant]].
 
@@ -38,11 +39,12 @@ scenarios|upgrade]]:
   - [[Upgrade from another Tails|upgrade/clone/overview]]
   - [[Upgrade inside Tails|upgrade/tails/overview]]
 
-The assistant is divided into three sections:
+The assistant is divided into four sections:
 
   - The [[*router*|ia#router]] which selects the scenario to follow.
   - The [[*overview*|ia#overview]] which summarizes graphically the scenario.
-  - The [[*steps*|ia#steps]] which gives step-by-step instructions for the scenario.
+  - The [[*download*|ia#overview]] page for download and verifying the ISO image.
+  - The [[*steps*|ia#steps]] which gives step-by-step instructions for the scenario after downloading.
 
 Implementation tricks
 ---------------------
@@ -172,32 +174,12 @@ class to adapt to the scenario.
     - `upgrade-clone` for [[/upgrade/clone|/upgrade/clone]]
     - `upgrade-tails` for [[/upgrade/tails|/upgrade/tails]]
 
-<a id="steps"></a>
-
-Steps
------
-
-The *steps* for a given scenario is a very long page with step-by-step
-instructions of the whole process. 
-
-- It is a single page so that people can get a feeling of what is left
-  to be done. During the tests, many people were scrolling up and down
-  the page, for example while waiting for an operation to complete or
-  when feeling that they missed something earlier.
-
-- The [[download of the ISO image|ia#download]] is integrated as one of these steps.
-
-- The content of each step is written in an inline stored in
-  `install/inc/steps/*.inline.mdwn` which is inlined from the scenarios
-  themselves (for example `install/debian/usb.mdwn`) and adapted to each
-  scenario using CSS classes.
-
 <a id="download"></a>
 
-Downloading techniques
-----------------------
+Download
+--------
 
-The download of the ISO image is integrated as one of the steps in the scenario
+The download of the ISO image comes between the overview and steps in the scenario
 (but the download step only is also available as a [[standalone
 page|install/download]]).
 
@@ -241,3 +223,21 @@ ISO image than to not verify it, as it:
   - Provides more secure downloads.
   - Detects uncompleted downloads that can lead to much trouble down the
     roadmap, and the corresponding load on our help desk.
+
+<a id="steps"></a>
+
+Steps
+-----
+
+The *steps* for a given scenario is a very long page with step-by-step
+instructions of the whole process.
+
+- It is a single page so that people can get a feeling of what is left
+  to be done. During the tests, many people were scrolling up and down
+  the page, for example while waiting for an operation to complete or
+  when feeling that they missed something earlier.
+
+- The content of each step is written in an inline stored in
+  `install/inc/steps/*.inline.mdwn` which is inlined from the scenarios
+  themselves (for example `install/debian/usb.mdwn`) and adapted to each
+  scenario using CSS classes.
