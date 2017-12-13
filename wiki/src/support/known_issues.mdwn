@@ -70,8 +70,8 @@ This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working
 Acer Travelmate 8573T-254G50M
 -----------------------------
 
-Booting from DVD works fine, but does not start on USB sticks created
-using Tails Installer.
+Booting from DVD works fine, but does not start from USB sticks
+created using Tails Installer.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
@@ -177,11 +177,11 @@ Lenovo IdeaPad z585
 
 Goes back continuously to Boot Loader Menu on Tails installed on DVD.
 
-Clevo W258CU, ThinkPad X220, X121e, T420i, T410, T520, W520, T530, E325, and E530
----------------------------------------------------------------------------------
+Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, E325, and E530
+---------------------------------------------------------------------------
 
-These machines do not start on USB sticks created using Tails USB
-Installer, due to a firmware limitation.
+These machines do not start on USB sticks created using Tails
+Installer due to a firmware limitation.
 
 A workaround for some of these machines is to use the [[manual
 installation process|install/linux/usb]].
@@ -202,6 +202,8 @@ Mac
   created by Tails Installer. You can check if a given Mac is 32-bit
   or 64-bit EFI on that list:
   <http://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
+* MacBook Pro 2016 and 2017: the keyboard, trackpad and Touch Bar do
+  not work.
 * MacBook Pro 5,5 does not boot with Tails in UEFI mode.
 * MacBook Pro 5,1 17" (Nvidia GeForce 9400M): one must add the
   `nouveau.noaccel=1` boot parameter so that the display
@@ -209,34 +211,12 @@ Mac
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
 * MacBook Pro (early 2011) fails to boot from DVD since Tails 1.1.
-* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008) and
-  MacBook Pro 8,2 (late 2011) fail to boot from a USB stick created by
+* Mac Pro Tower and MacBook Pro 4,1 (both from early 2008)
+  fails to boot from a USB stick created by
   Tails Installer.
 
 Graphics issues
 ===============
-
-GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
-----------------------------------------------------------------------
-
-Some computers [[!tails_ticket 11095 desc="cannot start the GNOME
-desktop"]].
-
-After the <span class="application">Tails Greeter</span> they freeze, or
-sometimes fail with the message <span class="error">"Oh no! Something has gone
-wrong. A problem has occurred and the system can't recover. Please contact a
-system administrator"</span>.
-
-This issue has appeared with the following graphic adapters:
-
-- Mars XTX [Radeon HD 8790M]
-- Mars XTX [Radeon HD 8790M] (rev ff)
-- Cedar [Radeon HD 5000/6000 7350/8350 Series]
-- Broadway PRO [Mobility Radeon HD 5850]
-- RV730/M96 [Mobility Radeon HD 4650/5165]
-
-For some models, adding `radeon.modeset=0` to the
-[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
 
 Tails Greeter fails to start with some AMD/ATI Radeon graphic adapters
 ----------------------------------------------------------------------
@@ -249,6 +229,29 @@ with the following graphic adapters:
 Adding `radeon.dpm=0` to the
 [[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
 fixes the issue.
+
+<a id="nvidia-maxwell"></a>
+
+Tails Greeter fails to start on computers with NVIDIA Maxwell graphic cards
+---------------------------------------------------------------------------
+
+Some computers cannot start Tails Greeter. This may appear with the following
+graphic adapters:
+
+- GeForce GTX (660 Ti, 745, 750, 750 Ti, 840M, 845M, 850M, 860M, 950M, 960M)
+- Quadro K620, K1200, K2200; GRID M30, M40
+- GeForce 830M, 840M, 930M, 940M[X]
+- GeForce GTX Titan X
+- GeForce GTX (970, 980)
+- GeForce GTX (950, 960)
+
+We think this problem has been fixed in Tails 3.2. If Tails Greeter
+still does not start for you:
+
+1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
+   [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
+2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
+   address so we can contact you to debug the problem.
 
 <a id="switchable_graphics_black_screen"></a>
 
@@ -289,7 +292,7 @@ There are two possible workarounds for this issue:
 
          sudo passwd
 
-For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken on dual-graphics-card apple hardware"]].
+For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken with switchable graphics"]].
 
 <a id=switchable_graphics_segfault></a>
 
@@ -368,6 +371,14 @@ To find out if your Wi-Fi interface requires the `wl` driver:
 package on the corresponding [Debian wiki page](https://wiki.debian.org/wl).
 If you find your device in the list of supported devices, then it is
 impossible to use your Wi-Fi card in Tails.
+
+<a id="cherry-trail"></a>
+
+Intel Atom Cherry Trail tablets
+-------------------------------
+
+Tails can be started on tablets with an Intel Atom Cherry Trail system
+on chip (SoC) but the Wi-Fi interface and sound card doesn't work.
 
 Security issues
 ===============
@@ -483,9 +494,7 @@ Touchpad configurations
 Bluetooth devices don't work
 ----------------------------
 
-Bluetooth is not enabled in Tails for security reasons. To enable it
-anyway, see the documentation about
-[[wireless devices|doc/advanced_topics/wireless_devices]].
+Bluetooth is not enabled in Tails for security reasons.
 
 <a id="browser_languages"></a>
 
@@ -534,31 +543,16 @@ Shell, which often solves this problem.
 
 See [[!tails_ticket 10576]] for more details.
 
-Tor Browser search engine with security slider set to High requires a click
----------------------------------------------------------------------------
+Some languages do not have the correct keyboard layout set by default
+---------------------------------------------------------------------
 
-The custom search engine plugin shipped in Tails to localize the search engine
-in Tor Browser is still using disconnect.me, while upstream Tor Browser has
-switched to duckduckgo.com by default.
+When selecting some languages in the Tails Greeter, the default associated
+keyboard layout fallbacks to US.
 
-Until we update the search engine plugin, users that set their Tor Browser
-security slider to High and use the search box in Tor Browser will end up after
-a redirection from disconnect.me on a page on duckduckgo.com asking them to
-click on a link to see their result without JavaScript.
+To use the right keyboard layout during a session, set it in the Tails
+Greeter after having set the language. When the desktop has started, apply
+the keyboard layout by clicking on the `en` systray icon.
 
-<a id="vb-apic"></a>
-
-Tails does not boot on Virtualbox 32-bit VM
--------------------------------------------
-
-There is a [bug in Linux 4.7](https://patchwork.kernel.org/patch/9357253/)
-which prevents Tails from booting without I/O APIC enabled. To enable it:
-
-  1. Select the Tails virtual machine.
-  1. Choose <span class="menuchoice">
-     <span class="guimenu">Machine</span>&nbsp;▸
-     <span class="guimenuitem">Settings...</span></span>.
-  1. Select **System** in the left pane.
-  1. In the **Extended Features** section of the **Motherboard** tab, make
-     sure that **Enable I/O APIC** is enabled.
-  1. Click **OK**.
+Affected language codes are `AYC`, `BHB`, `BRX`, `CMN`, `HAK`, `HNE`, `LIJ`,
+`LZH`, `MHR`, `NAN`, `NHN`, `QUZ`, `SGS`, `SHS`, `TCY`, `THE`, `UNM`, `WAE` and
+`YUE`.

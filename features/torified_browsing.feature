@@ -57,9 +57,6 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And I open the address "https://tails.boum.org/lib/test_suite/test.webm" in the Tor Browser
-    And I click the blocked video icon
-    And I see "TorBrowserNoScriptTemporarilyAllowDialog.png" after at most 30 seconds
-    And I accept to temporarily allow playing this video
     Then I see "TorBrowserSampleRemoteWebMVideoFrame.png" after at most 180 seconds
 
   #11592
@@ -101,13 +98,6 @@ Feature: Browsing the web using the Tor Browser
     # notifications for AppArmor denials (#9337).
     When I open the address "file:///tmp/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
-
-  @doc
-  Scenario: The Tails documentation launcher on the desktop works
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I double-click on the Tails documentation launcher on the desktop
-    Then the Tor Browser has started
-    And "Tails - Getting started..." has loaded in the Tor Browser
 
   Scenario: The Tor Browser uses TBB's shared libraries
     Given I have started Tails from DVD and logged in and the network is connected

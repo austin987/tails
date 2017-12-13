@@ -310,9 +310,15 @@ end
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   @screen.wait(desktop_started_picture, 180)
-  # We wait for the Florence icon to be displayed to ensure reliable systray icon clicking.
-  @screen.wait("GnomeSystrayFlorence.png", 30)
-  @screen.wait("DesktopTailsDocumentation.png", 30)
+  # Workaround #13461 by restarting nautilus-desktop
+  # if Desktop icons are not visible
+  begin
+    @screen.wait("DesktopTailsDocumentation.png", 30)
+  rescue FindFailed
+    step 'I kill the process "nautilus-desktop"'
+    $vm.spawn('nautilus-desktop', user: LIVE_USER)
+    @screen.wait("DesktopTailsDocumentation.png", 30)
+  end
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
@@ -351,9 +357,19 @@ Given /^Tor has built a circuit$/ do
   wait_until_tor_is_working
 end
 
+class TimeSyncingError < StandardError
+end
+
 Given /^the time has synced$/ do
-  ["/run/tordate/done", "/run/htpdate/success"].each do |file|
-    try_for(300) { $vm.execute("test -e #{file}").success? }
+  begin
+    ["/run/tordate/done", "/run/htpdate/success"].each do |file|
+      try_for(300) { $vm.execute("test -e #{file}").success? }
+    end
+  rescue
+    File.open("#{$config["TMPDIR"]}/log.htpdate", 'w') do |file|
+      file.write($vm.execute('cat /var/log/htpdate.log').stdout)
+    end
+    raise TimeSyncingError.new("Time syncing failed")
   end
 end
 
@@ -637,6 +653,17 @@ Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
 end
 
 Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
+  # Search disambiguations: below we assume that there is only one
+  # result, since multiple results introduces a race that leads to a
+  # non-deterministic choice (at least under load). To make the life
+  # easier for users of this step, let's collect workarounds here.
+  case app_name
+  when 'GNOME Terminal'
+    # "GNOME Terminal" and "Terminal" shows both the (non-Root)
+    # "Terminal" and "Root Terminal" search results, so let's use a
+    # keyword only found in the former's .desktop file.
+    app_name = 'commandline'
+  end
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
@@ -700,20 +727,10 @@ end
 
 When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
   image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
-  info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
-    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
-    step 'the Tor Browser has started'
+    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{LIVE_USER} --full --full tails-documentation").failure?
   end
-end
-
-When /^I click the blocked video icon$/ do
-  @screen.wait_and_click("TorBrowserBlockedVideo.png", 30)
-end
-
-When /^I accept to temporarily allow playing this video$/ do
-  @screen.wait_and_click("TorBrowserOkButton.png", 10)
 end
 
 When /^I click the HTML5 play button$/ do
@@ -742,7 +759,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   @screen.type(output_file.sub(/[.]html$/, ''))
   @screen.type(Sikuli::Key.ENTER)
   if should_work
-    try_for(10, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+    try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
       $vm.file_exist?("#{output_dir}/#{output_file}")
     }
   else
@@ -987,4 +1004,37 @@ end
 
 When /^Tails system time is magically synchronized$/ do
   $vm.host_to_guest_time_sync
+end
+
+# Useful for debugging scenarios: e.g. inject this step in a scenario
+# at some point when you want to investigate the state.
+When /^I pause$/ do
+  pause
+end
+
+# Useful for debugging Tails features: let's say you want to fix a bug
+# exposed by $SCENARIO, and is working on a fix in $FILE locally. To
+# immediately test your fix, simply inject this step into $SCENARIO,
+# so that $FILE is put in place (obviously this depends on that no
+# extra steps are needed to make $FILE's changes go "live").
+When /^I upload "([^"]*)" to "([^"]*)"$/ do |source, destination|
+  [source, destination].each { |s| s.sub!(/\/*$/, '') }
+  Dir.glob(source).each do |path|
+    if File.directory?(path)
+      new_destination = "#{destination}/#{File.basename(path)}"
+      $vm.execute_successfully("mkdir -p '#{new_destination}'")
+      Dir.new(path).each do |child|
+        next if child == '.' or child == '..'
+        step "I upload \"#{path}/#{child}\" to \"#{new_destination}\""
+      end
+    else
+      File.open(path) do |f|
+        final_destination = destination
+        if $vm.directory_exist?(final_destination)
+          final_destination += "/#{File.basename(path)}"
+        end
+        $vm.file_overwrite(final_destination, f.read)
+      end
+    end
+  end
 end

@@ -6,18 +6,11 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
+* [[Tails 3.3 was released on November 14th|news/version_3.3]] (minor release).
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* We will not make an emergency release for the latest Tor Browser update, because Tails is [[!tails_ticket 15018 desc="not affected"]].
 
-The following changes were introduced in Tails VERSION:
-
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
-
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+* Tails 3.5 is [[scheduled for January 16th|contribute/calendar]].
 
 Code
 ====
@@ -25,38 +18,62 @@ Code
 XXX: List important code work that is not covered already by the Release
      section (for example, the changes being worked on for the next version).
 
+* We fixed issues regarding reproducible builds
+  ([[!tails_ticket 14924]], [[!tails_ticket 14946]],
+  [[!tails_ticket 14933]]) and later realized that one of them fixes
+  did not work in some corner cases… that include the ISO images we
+  build for the Tails official releases. Sadly, due to an internal
+  communication mishap we've announced that Tails 3.3 was reproducible
+  before we had learned about this remaining problem.
+
+* We uploaded a new version of tails-installer (5.0.2) to Debian and Ubuntu.
+  This version has a simpler interface than previous versions.
+
 Documentation and website
 =========================
 
-XXX: Explore the Git history:
-
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+* We have documented internally how active Tails contributors can be
+  sponsored to attend events on behalf of Tails and are now working
+  towards publishing this documentation so that all contributors are
+  aware of this option ([[!tails_ticket 14727]]).
 
 User experience
 ===============
 
-XXX: Check the archives of tails-ux: https://mailman.boum.org/pipermail/tails-ux/
+- We almost finished the work on the new download page and verification
+  extension for Firefox and Chrome. We're stuck blocked by security
+  reviews and improvements on the JavaScript code.
+
+- Our survey on file storage encryption was answered 1012 times between
+  October 17 and December 1. It was a huge success and we'll not move on
+  to analyzing the results.
+
+Hot topics on our help desk
+===========================
+ 
+1. [[!tails_ticket 14993 desc="#14993: Ublock is not working in Tails 3.3"]]
+ 
+1. [[!tails_ticket 12328 desc="#12328: Tails Firefox Add-on is not working in last
+   Firefox"]]
 
 Infrastructure
 ==============
 
-XXX: Count the number of tests in /features at the beginning of next month
-
-         git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-         git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
-
-XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
-
-       - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
+- Our test suite covers 209 scenarios, 2 more that in October.
+- Cyril Brulebois (kibi) published a [blog post about his early work on reproducible builds](https://debamax.com/blog/2017/11/20/tails-early-work-on-reproducibility/).
 
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
+* We submitted a funding request for the Secure Operating Systems
+  Summit that we are organizing with Qubes OS, Subgraph OS and Whonix.
 
-       git log --patch --since='1 December' --until='1 January' origin/master
+* We applied to the "Good of the Internet" call for proposals by RIPE
+  NCC. Our proposal is titled "Interoperability and communication
+  continuity between mobile, laptop and desktop computers, in privacy
+  and security-sensitive environments".
 
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
+* We continue to run our donation campaign.
 
 Outreach
 ========
@@ -64,36 +81,63 @@ Outreach
 Past events
 -----------
 
+* Some of us attended the Reproducible Builds World summit in Berlin, Germany
+  ([report](https://mailman.boum.org/pipermail/tails-dev/2017-November/011849.html)).
+
+* intrigeri attended the OTF summit in Valencia, then followed-up with
+  people he has met there.
+
+* ignifugo gave a [talk about Tails at a greek hackerspace](https://www.hackerspace.gr/wiki/Introduction_to_TAILS).
+
 Upcoming events
 ---------------
+
+* Many Tails people will be at the
+  [34th Chaos Communication Congress, aka. 34C3](https://www.ccc.de/en/updates/2017/34C3-in-leipzig)
+  in Leipzig (December 27 to December 30).
+
+* 2018-01-11: Tor & Tails meetup in Mexico City. More details later...
 
 On-going discussions
 ====================
 
 XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
 
+* We started a discussion about [basing Tails on quarterly snapshots of Debian Testing](https://mailman.boum.org/pipermail/tails-dev/2017-November/011835.html)
+
+* segfault started discussion the implementation of [VeraCrypt/TrueCrypt support in GNOME Disks](https://mailman.boum.org/pipermail/tails-dev/2017-November/011855.html) with upstream
+
 Press and testimonials
 ======================
 
-XXX: Copy content from press/media_appearances_2016.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
-
+* Tails was mentioned in a [conference about journalism and surveillance](https://www.youtube.com/watch?v=NM4vflyaC58) organised by the Grenoble Alpes Data Institute. [Direct link](https://www.youtube.com/watch?v=NM4vflyaC58&t=3772) to the precise moment (tails was presented as something "extremely useful").
+ 
 Translation
 ===========
 
-XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
-XXX: Add the output of (adjust month!):
+## All the website
 
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 54% (2902) strings translated, 7% strings fuzzy, 47% words translated
+  - fa: 39% (2103) strings translated, 9% strings fuzzy, 41% words translated
+  - fr: 89% (4742) strings translated, 0% strings fuzzy, 84% words translated
+  - it: 38% (2022) strings translated, 5% strings fuzzy, 33% words translated
+  - pt: 24% (1292) strings translated, 9% strings fuzzy, 20% words translated
+
+Total original words: 57402
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 80% (1506) strings translated, 12% strings fuzzy, 79% words translated
+  - fa: 34% (647) strings translated, 11% strings fuzzy, 34% words translated
+  - fr: 99% (1864) strings translated, 0% strings fuzzy, 99% words translated
+  - it: 76% (1444) strings translated, 13% strings fuzzy, 77% words translated
+  - pt: 45% (851) strings translated, 16% strings fuzzy, 46% words translated
+
+Total original words: 17062
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-* WHISPERBACK bug reports were received through WhisperBack.
-
-XXX: Ask tails@boum.org for these numbers.
+* Tails has been started more than 655.776 times this month. This makes 21.859 boots a day on average.
+* 12.371 downloads of the OpenPGP signature of Tails ISO from our website.
+* 99 bug reports were received through WhisperBack.

@@ -15,25 +15,21 @@ own version. Thus, from version 4.x on, our fork has been renamed to
 tails-installer.
 
 The `master` branch must always be the one that targets current Tails.
-That's what we have always done, and right
-now `master` is indeed targeting Jessie.
 
 But that's not enough, since we also need to put releases out with code
-that works on current Debian testing/sid. Thus, we maintain several upstream
+that works on current Debian Testing/Unstable. Thus, we maintain several upstream
 release branches in parallel, each with their own major version number:
 
- * for releases that target Wheezy:
-   * version = `3.*`
-   * tag = `tails-installer_3.*`
- * for work and releases that target Jessie and Stretch (and, as long as compatible,
-   that target testing/sid as well):
-   * branch = feature/jessie (that's what we've been doing so far)
-   * version = `4.*`
-   * tag = `tails-installer_4.*`
+ * for work and releases that target Stretch (and, as long as compatible,
+   that target Debian Testing/Unstable as well):
+   * branch = `master`
+   * version = `5.*`
+   * tag = `tails-installer_5.*`
 
-Once we can't support both Jessie, Stretch and testing/sid with the same
-codebase anymore, we'll fork a new upstream release branch that targets Stretch,
-it'll be called feature/stretch, use version `5.*`, etc.
+Once we can't support both the Debian release Tails is based on, and
+Debian Testing/Unstable with the same codebase anymore, we'll fork a
+new upstream release branch that targets Testing, it'll be called
+`feature/$codename`, use version `6.*`, etc.
 
 Packaging
 ---------
@@ -49,19 +45,21 @@ targeted at current Tails, as said above. More specifically:
   Debian unstable. The tags on this branch are called `debian/$package_version`,
   which is the default when creating them with
   `gbp buildpackage --git-sign-tags --git-tag-only`;
-  in practice this is something like `debian/4.0+dfsg-1`.
+  in practice this is something like `debian/5.3+dfsg-1`.
 * The `debian/$codename-backports` branch is used to prepare packages
   that we upload to the official backports repository for Debian `$codename`.
   E.g. here we want to have `debian/jessie-backports` soon after the initially
   uploaded package reaches Debian testing. The tags on this branch are
   also called `debian/$package_version`. In practice this is something
-  like `debian/4.0+dfsg-1~bpo8+1`.
+  like `debian/5.3+dfsg-1~bpo8+1`.
+* The `tails/master` branch is used to prepare packages that we upload
+  to the Tails APT repo for stable releases, but not to Debian.
 * The `tails/$codename` branch is used to prepare packages that we upload
-  to the Tails APT repo, but not to Debian -- e.g. `4.*` as currently used on
-  Tails/Jessie will never be uploaded to Debian.
+  to the Tails APT repo but for Tails based on Debian `$codename`. Again,
+  these packages will not be uploaded to Debian.
 * Additionally, we use `tails/$feature` branches for other
   Tails-specific packaging branches.
-* The `upstream/3.x+dfsg`, `upstream/4.x+dfsg`, etc. branches are what
+* The `upstream/4.x+dfsg`, `upstream/5.x+dfsg`, etc. branches are what
   we tell `gbp` to use as its "upstream" branch. Make sure to check
   them out when setting up the repository for the first time.
 * For Ubuntu, we want to support the current Ubuntu version (currently
@@ -74,10 +72,9 @@ Topic branches
 --------------
 
 In practice, it's expected that Tails contributors submit bugfix and
-feature branches forked off master, because they want them part of next
-Tails release. Hence, it will happen that code lands into master first,
-and in turn into a new `4.*` upstream release, before it lands into
-`feature/stretch` and in turn into a new `5.*` upstream release.
+feature branches forked off `master`, because they want them part of next
+Tails release. Hence, it will happen that code lands into `master` first,
+and in turn into a new upstream release.
 
 For how to package topic branches (`bugfix/*` and `feature/*`), see
 [[the dedicated page|topic_branch]].
@@ -92,11 +89,11 @@ Release a new upstream version
 
 ### Prepare the environment
 
-The new upstream version should be something like `4.14`, based on the
+The new upstream version should be something like `5.3`, based on the
 upstream branch you are building the Debian package for. Adjust and
 export:
 
-    export NEW_UPSTREAM_VERSION=4.replace_me
+    export NEW_UPSTREAM_VERSION=5.replace_me
     export UPSTREAM_DEV_BRANCH=master
     export PKG_NAME=tails-installer
 
@@ -134,7 +131,7 @@ Update the Debian package for Tails
 Checkout the packaging branch:
 
 	export PKG_NAME=tails-installer
-	export PACKAGING_BRANCH=tails/jessie
+	export PACKAGING_BRANCH=tails/master
 	git checkout "$PACKAGING_BRANCH"
 
 Merge Debian packaging changes:
@@ -146,8 +143,9 @@ Verify that `debian/gbp.conf` references the correct upstream and Debian (packag
 and that `pristine-tar` usage is enabled, e.g.:
 
 	[DEFAULT]
-	upstream-branch = upstream/4.x+dfsg
-	debian-branch = tails/jessie
+	upstream-branch = upstream/5.x+dfsg
+	debian-branch = tails/master
+	debian-tag = tails/%(version)s
 	pristine-tar = True
 
 Extract the upstream and packaging branch from gbp.conf:
@@ -176,7 +174,7 @@ Update `debian/changelog`:
 
 In there, set the appropriate:
 
-* version number, such as `4.3+dfsg-0tails1`; in particular, note that
+* version number, such as `5.3+dfsg-0tails1`; in particular, note that
   the Debian revision starts with `-0` for any package meant for the
   Tails APT repository, while the first package that will be uploaded
   to Debian will have `-1`;
@@ -237,25 +235,25 @@ Update the Debian package
 -------------------------
 
 This assumes that the latest upstream release has been imported into
-a Tails packaging branch (e.g. `tails/jessie`) already.
+a `tails/master` already.
 
 And then, a maintainer of `tails-installer` in Debian updates the
 package in sid accordingly, for example:
 
 * check out the `debian/sid` branch
-* merge the `tails/jessie` branch
-* bump version to `4.3+dfsg-1`
+* merge the `tails/master` branch
+* bump version to `5.3+dfsg-1`
 * build, test and upload to sid
-* have gbp create a `debian/4.3+dfsg-1` tag
+* have gbp create a `debian/5.3+dfsg-1` tag
 * push the Debian packaging branch (`debian/sid`) and the new tag
 
 Example for a backport to Jessie:
 
 * check out the `debian/jessie-backports` branch
 * merge the `debian/sid` branch
-* `dch --bpo` to bump version to `4.3+dfsg-1~bpo8+1`
+* `dch --bpo` to bump version to `5.3+dfsg-1~bpo8+1`
 * build, test and upload to jessie-backports
-* have gbp create a `debian/4.3+dfsg-1_bpo8+1` tag
+* have gbp create a `debian/5.3+dfsg-1_bpo8+1` tag
 * push the Debian packaging branch (`debian/jessie-backports`) and the new tag
 
 Upload a package to our Ubuntu PPA
@@ -278,11 +276,11 @@ You'll need to configure the dput tool to upload to the PPA and put into
   to build a package for the next Ubuntu release or checkout the
   `debian/jessie-backports` branch to build a package for the
   current Ubuntu version or current LTS.
-* bump version to `4.3+dfsg-0ubuntu1~$codename` using `dch -i`
+* bump version to `5.3+dfsg-0ubuntu1~$codename` using `dch -i`
   where `$codename` is the name of the target Ubuntu distribution.
 * if it does not exist, rebuild the .orig.tar.gz of the latest version
   from pristine-tar (use the latest git log entry to find the version):
-  `pristine-tar checkout ../tails-installer_4.4.6+dfsg.orig.tar.gz`
+  `pristine-tar checkout ../tails-installer_5.3+dfsg.orig.tar.gz`
 * build a source only package using `debuild -i -uc -us -sa -S`
   Once the package has been built, a `.changes` file will be created in
   pbuilder's configured destination directory.

@@ -1,3 +1,318 @@
+tails (3.3) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade the base system to the Debian Stretch 9.2 point-release
+      which gives us tons of bugfixes (Closes: #14714).
+    - Install Linux 4.13.0-1 (Closes: #14789).
+
+  * Security fixes
+    - Upgrade Thunderbird to 52.4.0 (Closes: #14963).
+    - Upgrade Tor Browser to 7.0.10 (Closes: #14940).
+    - Upgrade gdk-pixbuf to 2.36.5-2+deb9u1.0tails1 (Closes: #14729).
+
+  * Minor improvements
+    - Upgrade to Tor 0.3.1.8-2~d90.stretch+1, a new stable Tor series.
+    - tails-documentation: rewrite in Python + use WebKit for display
+      instead of the Tor Browser. Since Tor Browser 7.0.8 rendering of
+      local pages (like our docs) fail (#14962) so this is probably a
+      temporary workaround of that.
+    - Replace the Unsafe Browser's warning pages with static,
+      pure-HTML versions. This is truly a *temporary* workaround for
+      #14962.
+    - Update deb.tails.boum.org APT repo key (Closes: #14927)
+    - Refresh Tor Browser AppArmor profile patch to apply on top of
+      torbrowser-launcher 0.2.8-4's (Closes: #14923).
+    - Drop obsolete manual enabling of AppArmor on the kernel
+      command-line: it's now enabled by default, so the (Tails -
+      Debian) delta gets smaller. :)
+
+  * Bugfixes
+    - Install Tails Installer 5.0.2. Fixes:
+      * Most notably, fix an issue preventing Tails Installer from
+        installing to drives containing a non-Tails partition that
+        (obviously) has affected a lot of users. (Closes: #14755).
+      * Fix an issue that made the resulting installations unbootable
+        if Tails Installer was using a too recent udisks2, e.g. the
+        one currently in Debian Sid (Closes: #14809).
+      * Code clean-ups (Closes: #14721, #14722, #14723).
+    - Fix UEFI boot for USB sticks installed with Universal USB
+      Installer (Closes: #8992).
+    - Force Tor Browser and Thunderbird to enable accessibility
+      support even if no a11y feature is enabled in GNOME yet (Closes:
+      #14752, #9260).
+    - Mark our custom Desktop launchers as trusted (Closes: #14793,
+      Refs: 14584).
+    - Add a systemd --user target for bits of GNOME
+      EarlyInitialization managed by systemd, and make the keyboard
+      layout configuration as part of it. This fixes an issue where
+      the layout chosen in the Greeter sometimes wasn't applied in the
+      GNOME session (Closes: #12543).
+
+  * Build system
+    - auto/{build,clean,config}: run with `set -eu`.
+    - Add script to sanity check the website. Currently it ensures all
+      blog posts and security advisories have valid Ikiwiki 'meta
+      date' directives, since we depend on it for reproducibility.
+      Also make passing this sanity check a pre-condition for building
+      the website (Closes: #12726, #14767).
+    - Abort the ISO build when DKMS modules were not built.
+    - Take into account where DKMS modules get installed nowadays.
+    - auto/build: normalize file timestamps in wiki/src before
+      building. The copy of the website included in the ISO image has
+      "Posted" timestamps that apparently match when we cloned the Git
+      repository, which affects reproducibility. (Closes: #14933).
+    - Fix reproducibility of builds of topic branches that lag behind
+      their base branch with the mergebasebranch build option enabled.
+      Two otherwise identical merge commits done at different times
+      get different IDs, and we happen to embed in the ISO the ID of
+      the commit we're building from. (Closes: #14946)
+
+  * Test suite
+    - Bump timeout for "I can save the current page as", otherwise the
+      "The Tor Browser directory is usable" scenario fails randomly
+      when the system is under load.
+    - New scenario: installing Tails to an eligible drive with an
+      existing filesystem. This is a regression test for #14755.
+    - New scenario: re-installing over an existing Tails installation.
+
+ -- Tails developers <tails@boum.org>  Tue, 14 Nov 2017 04:53:27 +0100
+
+tails (3.2) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Linux packages to the Debian kernel 4.12.0-2, based on
+      mainline Linux 4.12.12 (Closes: #11831, #12732, #14673).
+
+  * Security fixes
+    - Upgrade Tor Browser to 7.0.6-build3 (Closes: #14696).
+    - Upgrade to Thunderbird 52.3.0 (Closes: #12639).
+    - Deny access to Pidgin's D-Bus service (Closes: #14612). That D-Bus
+      interface is dangerous because it allows _any_ application running
+      as `amnesia' that has access to the session bus to extract
+      basically any information from Pidgin and to reconfigure it:
+      https://developer.pidgin.im/wiki/DbusHowto
+    - Block loading of Bluetooth kernel modules (Closes: #14655) and
+      block Bluetooth devices with rfkill (Closes: #14655).
+    - Add localhost.localdomain to the hosts file to prevent loopback
+      leaks to Tor circuits (Closes: #13574). Thanks to tailshark for
+      the patch!
+
+  * Minor improvements
+    - Upgrade to Tails Installer 5.0.1 (Closes: #8859, #8860, #12707). This
+      version gets rid of the splash screen, detects when Tails is already
+      installed on the target device (and then proposes to upgrade),
+      and generally improves the UX. It also increases the Tails partition
+      size and refuses to install to devices smaller than 8 GB.
+    - Deprecate Thunderbird's preferences/0000tails.js (Closes: #12680).
+    - Install the BookletImposer PDF imposition toolkit (Closes: #12686).
+    - Tor Browser:
+      * Fallback to ~/Tor Browser for uploads (Closes: #8917).
+      * Silence some common operations that always are denied and
+        otherwise would spam the journal (Closes: #14606)
+    - Shell library: remove now unused functions (Closes: #12685).
+    - Add pppoe to the installed packages (Closes #13463). Thanks to geb
+      for the patch!
+    - Replace syslinux:i386 with syslinux:amd64 in the ISO9660
+      filesystem (Closes: #13513).
+    - htpdate: fix date header regexp (Closes: #10495). It seems that
+      some servers (sometimes) do not send their headers with first
+      letter uppercased, hence a lot of failures to find the date in it.
+    - Install aufs-dkms from Debian unstable (Closes: #12732).
+    - Install vim-tiny instead of vim-nox (Closes: #12687). On Stretch,
+      vim-nox started pulling ruby and rake in the ISO. I think vim-tiny
+      would be good enough, and would save a few MiB in the ISO. Those
+      who use vim more intensively and want another flavour of vim are
+      likely to need persistence anyway, and can thus install a more
+      featureful vim with the additional software packages feature.
+    - Remove gksu and its and gconf's dependencies (Closes: #12738). We
+      use pkexec instead of gksudo. gksu is unmaintained, buggy
+      (e.g. #12000), and it is the only reason we ship GConf, which we
+      want to remove. The other removals are:
+      * libgnomevfs2-extra, which was previously used for SSH/FTP support in
+        Nautilus, but isn't needed for that any more.
+      * libgnome2-bin which provides gnome-open, which isn't required by
+        any application in Tails (as far as we know).
+      * Configurations and scripts that become obsolete because of these
+        removals.
+    - Refresh torbrowser-AppArmor-profile.patch to apply cleanly on top
+      of torbrowser-launcher 0.2.8-1 (Closes: #14602).
+    - Switch from Florence to GNOME's on-screen keyboard (Closes: #8281)
+      and incidentally improve accessibility in GTK+ 2.0 and Qt
+      applications. This drops Florence and the corresponding GNOME
+      Shell extension.
+    - Make ./HACKING.mdwn a symlink again (Closes: #13600).
+    - Implement refresh-translations --force .
+    - Rework how we handle the individual POT files of our applications.
+      Comparing the new temporary POT files we generate with the
+      temporary POT files we generated last time (if ever, and if we
+      did, for which branch?) is not relevant; these POT files are only
+      used for merging into a new tails.pot and *that* one is relevant
+      to diff against the old tails.pot.
+    - Update the Tails signing key. (Closes: #11747)
+    - Reproducibility:
+      * Ensure reproducible permissions for /etc/hostname (Closes:
+        #13623).
+      * Patch desktop-file-utils to make its mimeinfo.cache reproducible
+        (Closes: #13439).
+      * Patch glib2.0 to make its giomodule.cache reproducible (Closes:
+        #13441).
+      * Patch gdk-pixbuf to make its loaders.cache reproducible (Closes:
+        #13442).
+      * Patch gtk2.0 and gtk3.0 to make their immodules.cache
+        reproducible (Closes: #13440).
+      * Remove GCconf: it is a source of non-determinism in the
+        filesystem (element order in /var/lib/gconf/defaults/%gconf-tree-*.xml)
+        which made Tails unreproducible.
+      * Ignore comment updates in POT files, which was a source of
+        non-determinism and therefore prevented Tails from being
+        reproducible (Closes: #12641).
+    - Kernel hardening:
+      * Increase mmap randomization to the maximum supported value
+        (Closes: #11840). This improves ASLR effectiveness, and makes
+        address-space fragmentation a bit worse.
+      * Stop explicitly enabling kaslr: it's enabled by default in
+        Debian, and this kernel parameter is not supported anymore.
+      * Disable kexec, to make our attack surface a bit smaller.
+
+  * Bugfixes
+    - Start Nautilus silently in the background when run as root
+      (Closes: #12034). Otherwise, after closing Nautilus one gets the
+      prompt back only after 5-15 seconds, which confuses users and makes
+      our doc more complicated than it should.
+    - Ensure pinentry-gtk2 run by Seahorse has the correct $DISPLAY set
+      (Closes: #12733).
+
+  * Build system
+    - build-manifest-extra-packages.yml: remove squashfs-tools version
+      we don't use anymore (Closes: #12684). Apparently our
+      apt-get/debootstrap wrapper tricks are enough to detect the
+      version of squashfs-tools we actually install and use.
+    - Merge base branch earlier, i.e. in auto/config instead of
+      auto/build (Closes: #14459). Previously, a given build from a topic
+      branch would mix inconsistent versions of things.
+    - Fail builds started before SOURCE_DATE_EPOCH (Closes:
+      #12352). Such builds would not be reproducible, and this is an
+      assumption (a reasonable one!) that we do all over the place, so
+      let's fail early. While we're at it, let's fail if
+      SOURCE_DATE_EPOCH is not set as well. Actually we would fail any
+      way if that was the case when reaching our
+      99-zzzzzz_reproducible-builds-post-processing build hook, but
+      let's fail early.
+
+  * Test suite
+    - Test the GNOME Root Terminal.
+    - Take into account that Tails Installer 5.0.1 refuses to install
+      Tails to devices smaller than 8 GiB. It'll still allow *upgrading*
+      such sticks though.
+    - Use 7200 MiB virtual USB drives when we really mean 8 GiB. In the
+      real world, USB sticks labeled "8 GB" can be much smaller, so
+      Tails Installer will accept anything that's at least 7200 MiB.
+      This commit makes us exercise something closer to what happens in
+      the real world, and incidentally it'll save storage space on our
+      isotesters and improve test suite performance a bit. :)
+    - Have unclutter poll every 0.1s instead of continuously. On current
+      sid, virt-viewer eats a full CPU and doesn't do its job when
+      "unclutter -idle 0" is running.
+    - Adapt tests for Tails Installer 5.0.1.
+    - Workaround Pidgin's DBus interface being blocked since we actually
+      depend on it for some tests.
+    - Test that Pidgin's DBus interface is blocked.
+    - Save more data on test suite failures (Refs: #13541):
+      * When Tor fails to bootstrap, save Tor logs and chutney nodes
+        data.
+      * When Htpdate fails to synchronize the clock, save its logs.
+      * Always save the systemd journal on failure.
+    - When testing emergency shutdown, wait longer for Tails to tell
+      us it has finished wiping the memory. The goal here is to help
+      us understand whether (Refs: #13462) is a bug in the emergency
+      shutdown feature or in our test suite.
+    - Restart nautilus-desktop if Desktop icons are not visible
+      (Closes: #13461).
+    - Test suite: fix assert_raise() when using ruby-test-unit >=
+      3.2.5 (Closes: #14654). ruby-test-unit 3.2.5 added native Java
+      exception support for JRuby. The fact we defined the :Java
+      constant was enough to trigger that JRuby-specific code, which
+      failed.
+    - Test suite: take into account that click-to-play is not required
+      anymore for WebM videos in Tor Browser (Closes: #14586).
+
+ -- Tails developers <tails@boum.org>  Mon, 25 Sep 2017 22:23:01 +0200
+
+tails (3.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 7.0.4-build1 (Closes: #13577).
+    - Upgrade Linux to 4.9.30-2+deb9u3.
+    - Upgrade libtiff to 4.0.8-2+deb9u1.
+    - Upgrade bind9 to 1:9.10.3.dfsg.P4-12.3+deb9u2.
+    - Upgrate evince to 3.22.1-3+deb9u1.
+    - Upgrade imagemagick 8:6.9.7.4+dfsg-11+deb9u1.
+    - Ensure Thunderbird cleans its temporary directory. (Closes: #13340).
+
+  * Minor improvements
+    - Patch gconf to produce reproducible XML output (refs: #12738). This is
+      the temporary solution for #12738 in Tails 3.1 which will be reverted
+      (and fixed permanently by removing gconf) in Tails 3.2.
+    - Apply Debian bts patch to cracklib to produce reproducible dictionnaries
+      (Closes: #12909).
+    - Upgrade to Debian 9.1 (Closes: #13178).
+
+  * Bugfixes
+    - Replace faulty URL in htpdate neutral pool (Closes: #13472).
+    - Keep installing a version of Enigmail compatible with Thunderbird 45.x
+      (Closes: #13530).
+    - Fix the time syncing and Tor notifications translations (Closes: #13437).
+
+  * Build system
+    - Upgrade the Vagrant basebox for building ISO images to Stretch
+      (Closes: #11738).
+    - Fix on-disk build by bumping Vagrant build VM memory to 768M
+      (Closes: #13480).
+    - Fix rescue build option by exporting TAILS_BUILD_FAILURE_RESCUE
+      (Closes: #13476).
+
+  * Test suite
+    - mark gnome screenshot scenario as fragile (refs: #13458)
+    - mark UEFI scenario as fragile (refs: #13459).
+
+ -- Tails developers <tails@boum.org>  Sat, 05 Aug 2017 15:25:51 +0200
+
+tails (3.0.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade tor to 0.3.0.9-1~d90.stretch+1 (Closes: #13253).
+    - Upgrade Linux to 4.9.30-2+deb9u2.
+    - Upgrade libc to 2.24-11+deb9u1.
+    - Upgrade libexpat1 to 2.2.0-2+deb9u1.
+    - Upgrade libgcrypt20 to 1.7.6-2+deb9u1.
+    - Upgrade libgnutls30 to 3.5.8-5+deb9u1.
+    - Enable Debian security APT sources (Closes: #12309).
+
+  * Minor improvements
+    - Use a higher resolution image in Tails persistence setup
+      (Closes: #12510).
+
+  * Bugfixes
+    - Forcibly set $SSH_AUTH_SOCK before starting GNOME
+      Shell. Apparently, due to a race condition, GNOME keyring
+      sometimes fails to tell the session manager about the correct
+      SSH_AUTH_SOCK, and thus GNOME Terminal hasn't this variable set
+      and any ssh process started in there won't use the (perfectly
+      working) SSH agent (Closes: #12481).
+    - Fix issue that made Tails Installer rejects working USB drives,
+      pretending they're not "removable" (Closes: #12696).
+    - Make behavior of the power button and lid close actions in the Greeter
+      consistent with the regular GNOME session (Closes: #13000).
+
+  * Build system
+    - Track the latest debian-security archive for the corresponding
+      APT sources, and not for the unrelated jessie-updates (Closes:
+      #12829).
+    - Print APT sources used in the build VM, to help debugging issues
+      such as #12829.
+
+ -- Tails developers <tails@boum.org>  Tue, 04 Jul 2017 15:59:18 +0200
+
 tails (3.0) unstable; urgency=medium
 
   * Major changes
