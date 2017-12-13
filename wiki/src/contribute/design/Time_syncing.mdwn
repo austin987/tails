@@ -70,11 +70,11 @@ tordate's approach essentially removes the time skew check, which is
 used to prevent replay of consensus data. Let's discuss this class of
 attacks.
 
-First, replaying a consensus older than one week or so results in
+First, replaying a consensus older than four weeks or so results in
 preventing access to the Tor network, and that's all, because onion
 keys will be wrong. An attacker who is in a position to replay a
 consensus to you could anyway do this, unrelated to time, so the issue
-at hand boils down to *replaying a consensus not older than one week
+at hand boils down to *replaying a consensus not older than four weeks
 or so*.
 
 Second, the same type of attacker as above could also try to forge a
@@ -96,12 +96,12 @@ consensus requires the attacker either to break SSL, or to control the
 fallback directory mirror your Tor client connects to. Not good, but
 probably a compromise we can make.
 
-If using a bridge: your bridge can replay an old (one week old max.)
+If using a bridge: your bridge can replay an old (four weeks old max.)
 consensus, which is used until HTP has fixed the time; not good, but
 probably a compromise we can make. If your bridge also can set up a SSL
 MitM attack against the HTP connections (e.g. the attacker also
 controls a SSL CA shipped by Debian), it can trick you into using this
-old consensus for max. one week, which is much worse.
+old consensus for max. four weeks, which is much worse.
 
 # HTP
 

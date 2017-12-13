@@ -26,7 +26,8 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     Then I can save the current page as "index.html" to the default downloads directory
-    And I can print the current page as "output.pdf" to the default downloads directory
+    # XXX: re-enable once #15024 is fixed
+    # And I can print the current page as "output.pdf" to the default downloads directory
 
   #11592
   @check_tor_leaks @fragile
@@ -99,13 +100,6 @@ Feature: Browsing the web using the Tor Browser
     When I open the address "file:///tmp/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
 
-  @doc
-  Scenario: The Tails documentation launcher on the desktop works
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I double-click on the Tails documentation launcher on the desktop
-    Then the Tor Browser has started
-    And "Tails - Getting started..." has loaded in the Tor Browser
-
   Scenario: The Tor Browser uses TBB's shared libraries
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
@@ -146,7 +140,8 @@ Feature: Browsing the web using the Tor Browser
     And I can save the current page as "index.html" to the persistent Tor Browser directory
     When I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
     Then I see "TorBrowserSavedStartupPage.png" after at most 10 seconds
-    And I can print the current page as "output.pdf" to the persistent Tor Browser directory
+    # XXX: re-enable once #15024 is fixed
+    # And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
   #11585
   @fragile

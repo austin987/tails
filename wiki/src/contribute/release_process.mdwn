@@ -695,7 +695,7 @@ Prepare upgrade-description files
             --next-version "${NEXT_PLANNED_VERSION:?}" \
             --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
             --next-version "${VERSION:?}.1" \
-            --iso "${ISOS_PATH:?}" \
+            --iso "${ISO_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
             --previous-version "${VERSION:?}~rc1" \
             --iuks "${ISOS:?}" \
@@ -1516,8 +1516,10 @@ this, and skip what does not make sense for a RC.
    the one you're preparing). Look carefully at the output of this command:
 
         git checkout "${RELEASE_BRANCH:?}" && \
+        for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
         (
-            cd config/APT_snapshots.d && \
+            echo "${dir:?}:"
+            cd "${dir:?}" && \
             for ARCHIVE in * ; do
                 SERIAL="$(cat ${ARCHIVE:?}/serial)"
                 if [ "${SERIAL:?}" = 'latest' ]; then
@@ -1526,11 +1528,18 @@ this, and skip what does not make sense for a RC.
                         echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
                     fi
                 else
-                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/stable/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
-               fi
-               echo "Origin '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
-           done
+                    if [ "${ARCHIVE:?}" = 'debian-security' ]; then
+                        DIST='stretch/updates'
+                    else
+                        DIST='stable'
+                   fi
+                   EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/${DIST:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+                fi
+                echo "* Archive '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
+            done
+            echo ---
         )
+        done
 
 1. Push the resulting branches.
 1. Make sure Jenkins manages to build all updated major branches:
