@@ -179,50 +179,40 @@ class to adapt to the scenario.
 Download
 --------
 
-The download of the ISO image comes between the overview and steps in the scenario
-(but the download step only is also available as a [[standalone
-page|install/download]]).
+The download of the ISO image comes as a dedicated page between the
+overview and steps (except `clone`, `upgrade-clone`, and `expert`). It
+is also available as a [[standalone page|install/download]]).
 
-We propose three download techniques, each of them corresponding to a technique
-to verify the ISO image, to a level of authenticity at least as good as HTTPS:
+The download is split as a dedicated page (while still labeled as "Step
+1") to make it harder for people to skip the verification. It is still
+possible to skip the download or even the verification but the link to
+do so is labeled as a warning.
 
-1. A browser extension, called *Tails Verification*. See the [[dedicated design
+We propose in equal weight two download techniques, combined with two
+verification techniques that have a level of verification at least as
+good as HTTPS:
+
+a. Direct download combined with a browser extension, called *Tails Verification*. See the [[dedicated design
    document|verification_extension]] for a security analysis of this technique.
 
-1. A BitTorrent download. The Torrent file is downloaded through HTTPS
+b. BitTorrent download. The Torrent file is downloaded through HTTPS
    and BitTorrent clients automatically verifies the download once
    completed.
    - In Firefox, this technique is presented as a minor option.
    - In other browser, this technique is presented with equal weight as the
      Firefox extension.
 
-1. A direct download together with instructions to verify it using
-   OpenPGP, the signing key being downloaded over HTTPS. We assume that
-   this technique is only relevant for people who are already knowledgeable
-   about OpenPGP. As a consequence:
+We advertise OpenPGP verification as an optional verification technique,
+possibly done on top of the other two techniques and ideally through the
+OpenPGP Web-of-Trust. We assume that this technique is only relevant for
+people who are already knowledgeable about OpenPGP. As a consequence:
 
-   - For people in Debian and who feel confident with OpenPGP and the command
-     line, we advertise it as a dedicated scenario that leads them through a
-     verification of the signing key through the Debian keyring.
-
-   - For all the others, we offer it as a minor option, for example with equal
-     weight as BitTorrent for people who are running Firefox and then:
-     - We only provide simplified instructions on how to perform the
-       verification, insisting on aspects that might still be relevant for
-       this public: verification of the date, command line options,
-       warning when the signing key is not trusted, etc.
-     - We take more time to develop the verification of the signing key
-       through the OpenPGP Web of Trust.
-
-As a consequence, we don't provide a preeminent direct download link for
-everybody and are somehow *forcing* people to verify the ISO image. Some
-criticized this as a [dark pattern](http://darkpatterns.org/) but we genuinely
-believe that it is in the interest of the user to make it easier to verify the
-ISO image than to not verify it, as it:
-
-  - Provides more secure downloads.
-  - Detects uncompleted downloads that can lead to much trouble down the
-    roadmap, and the corresponding load on our help desk.
+- We only provide simplified instructions on how to perform the
+  verification, insisting on aspects that might still be relevant for
+  this public: verification of the date, command line options, warning
+  when the signing key is not trusted, etc.
+- We take more time to develop the verification of the signing key
+  through the OpenPGP Web of Trust.
 
 <a id="steps"></a>
 
