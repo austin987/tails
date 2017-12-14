@@ -51,11 +51,10 @@ Non goals
     BitTorrent file. Then we rely on the BitTorrent client to verify the integrity of
     the download ([[!tails_ticket 9043]]).
 
-
 <a id="verification"></a>
 
-ISO verification mechanism
-==========================
+Security considerations
+=======================
 
 Threat model
 ------------
@@ -152,74 +151,10 @@ mechanism would need to be of the "remote code execution vulnerability"
 and would represent a threat in many more use cases than when verifying
 an ISO image.
 
-Checksum verification
----------------------
-
-When verifying an ISO image, the extension:
-
-  - Connects to https://tails.boum.org/.
-  - Downloads an ISO description document (size, checksum).
-  - Verifies the ISO image against the document (first its size, then
-    its checksum).
-
-Security properties:
-
-  - This technique would defeat attack A (malicious ISO).
-
-More complex verification mechanisms could be gradually [[built into
-Tails Installer|blueprint/bootstrapping/installer]] where we can
-defeat attacks B, C, D, F, and G.
-
-<a id="html">
-
-Manipulation of the download page
-=================================
-
-The extension modifies what is displayed the page using two different
-mechanisms:
-
-- Mostly through message communication (`postMessage`) sent to a
-  JavaScript on the page (`download.js`).
-- If an extension is already installed when the page is loaded, through
-  an HTML attribute (`documentElement.dataset.extension`) corresponding
-  to some CSS declarations, to indicate whether the extension is
-  up-to-date or outdated.
-
-This decouples the code of the extension from the implementation of the
-display on the HTML page (ids, classes, etc.).
-
-When JavaScript is disabled, the page instructs the user to temporarily
-allow JavaScript on the (through NoSript, the most likely scenario).
-They can otherwise still download using BitTorrent.
-
-<a id="data_source">
-
-Data source
-===========
-
-Building up on the format specified for [[upgrade description
-files|contribute/design/incremental_upgrades#upgrade-description-files]],
-the verification extension fetches an [[!tails_gitweb wiki/src/install/v1/Tails/i386/stable/latest.yml desc="ISO description file"]] from our
-server to retrieve all the information it needs about the ISO image
-(URL, size, checksum, etc.). As a beginning, this ISO description file
-is not signed using OpenPGP.
-
-### Example of an ISO description file
-
-    ---
-    build-target: i386
-    channel: stable
-    product-name: Tails
-    version: '0.23'
-    target-files:
-    - sha256: 359d104737f1a448375d2030f938dea3d529468b8218485998ab893c1f7509eb
-      size: 939571200
-      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.23/tails-i386-0.23.iso
-
 <a id="update"></a>
 
 Updates mechanism
-=================
+-----------------
 
 ### Automatic update from browsers
 
@@ -246,8 +181,74 @@ granularity that the automatic updates from browser.
 
 <a id="technology"></a>
 
+Functioning
+===========
+
 Extension technology
-====================
+--------------------
 
 The extension is written as a *Web Extension* and the same exact code
 works on both Firefox and Chrome.
+<a id="data_source">
+
+Data source
+-----------
+
+Building up on the format specified for [[upgrade description
+files|contribute/design/incremental_upgrades#upgrade-description-files]],
+the verification extension fetches an [[!tails_gitweb wiki/src/install/v1/Tails/i386/stable/latest.yml desc="ISO description file"]] from our
+server to retrieve all the information it needs about the ISO image
+(URL, size, checksum, etc.). As a beginning, this ISO description file
+is not signed using OpenPGP.
+
+### Example of an ISO description file
+
+    ---
+    build-target: i386
+    channel: stable
+    product-name: Tails
+    version: '0.23'
+    target-files:
+    - sha256: 359d104737f1a448375d2030f938dea3d529468b8218485998ab893c1f7509eb
+      size: 939571200
+      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.23/tails-i386-0.23.iso
+
+Checksum verification
+---------------------
+
+When verifying an ISO image, the extension:
+
+  - Connects to https://tails.boum.org/.
+  - Downloads an ISO description document (size, checksum).
+  - Verifies the ISO image against the document (first its size, then
+    its checksum).
+
+Security properties:
+
+  - This technique would defeat attack A (malicious ISO).
+
+More complex verification mechanisms could be gradually [[built into
+Tails Installer|blueprint/bootstrapping/installer]] where we can
+defeat attacks B, C, D, F, and G.
+
+<a id="html">
+
+Manipulation of the download page
+---------------------------------
+
+The extension modifies what is displayed the page using two different
+mechanisms:
+
+- Mostly through message communication (`postMessage`) sent to a
+  JavaScript on the page (`download.js`).
+- If an extension is already installed when the page is loaded, through
+  an HTML attribute (`documentElement.dataset.extension`) corresponding
+  to some CSS declarations, to indicate whether the extension is
+  up-to-date or outdated.
+
+This decouples the code of the extension from the implementation of the
+display on the HTML page (ids, classes, etc.).
+
+When JavaScript is disabled, the page instructs the user to temporarily
+allow JavaScript on the (through NoSript, the most likely scenario).
+They can otherwise still download using BitTorrent.
