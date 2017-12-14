@@ -82,3 +82,11 @@ Else, the backup could be stored to a specific location, e.g. `/live/persistence
 ### Testing procedure
 
 We should find a testing procedure, which doesn't look trivial, as the problem only occurs when there is an upgrade of an additional software package.
+
+- setup **offline** tails with persistence including *APT lists* and *APT cache*
+- setup an *Additional Software Package* that has been upgraded in the last point release 
+- copy lists before the last Debian point release to `/var/lib/apt/lists`
+- copy the old version of the package in `/val/lib/apt/archives`
+- reboot online. The installation should work.
+- reboot online and cut the network after APT update, but before the upgrade. The lists should be uptodate, but the packages not updated.
+- reboot offline. The installation should currently fail.
