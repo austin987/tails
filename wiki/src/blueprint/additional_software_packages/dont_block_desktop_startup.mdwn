@@ -1,0 +1,23 @@
+[[!meta title="Better manage installation and update of additional software packages"]]
+
+Speed up installation
+=====================
+
+To solve [[!tails_ticket 9059 desc="#9059"]], which can currently block
+the opening of the desktop for several minutes, we should investigate:
+
+  - Starting reading packages lists and building cache on GDM PostLogin.
+    For that we need an APT mechanism to do all this without installing
+    or removing anything.
+
+  - Installing packages once the session has started.
+
+  - Using `nice` to not slow down the desktop too much in competition with
+    `tails-upgrade-frontend`.
+
+  - What kind of packages would suffer from being installed after the
+    session started.
+
+  - A notification mechanism for APT to be started after the session is
+    ready.
+
