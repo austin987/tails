@@ -113,7 +113,7 @@ When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wai
   # XXX:Buster: when we stop supporting the test suite on Stretch
   # hosts, let's remove this workaround related to #14819 and just
   # settle on a device that works on all supported platforms.
-  if cmd_helper('lsb_release --short --codename') == 'stretch'
+  if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
     xml.sub('pcnet', 'virtio')
   end
   $vm.plug_device(xml)
