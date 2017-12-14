@@ -1,3 +1,5 @@
+[[!meta title="Offline mode for additional software packages"]]
+
 This is about [[!tails_ticket 14570]] which we plan to implement for Tails 3.5.
 
 [[!toc levels=2]]
@@ -68,7 +70,19 @@ be installed.
 
 This is the only remaining problem we should consider fixing.
 
-A solution for this problem would be:
+### Proposed solution
 
-- in the *upgrade* operation : save a backup of @/var/lib/apt/lists/@ before running the @apt-get update@. On successful @apt-get upgrade@, remove the backup.
-- in the *install* operation : if there is a backup present, restore it before running @apt-get install@
+- in the *upgrade* operation : save the content `/var/lib/apt/lists/` before running the `apt-get update`. It could be stored to a specific location, e.g. `/live/persistence/TailsData_unlocked/tails-additional-software/working_apt_lists/`. After a successful `apt-get upgrade`, remove the *working_apt_lists*.
+- in the *install* operation : if there is a backup present, restore it before running `apt-get install`
+
+### Testing procedure
+
+We should find a testing procedure, which doesn't look trivial, as the problem only occurs when there is an upgrade of an additional software package.
+
+- setup **offline** tails with persistence including *APT lists* and *APT cache*
+- setup an *Additional Software Package* that has been upgraded in the last point release 
+- copy lists before the last Debian point release to `/var/lib/apt/lists`
+- copy the old version of the package in `/val/lib/apt/archives`
+- reboot online. The installation should work.
+- reboot online and cut the network after APT update, but before the upgrade. The lists should be uptodate, but the packages not updated.
+- reboot offline. The installation should currently fail.
