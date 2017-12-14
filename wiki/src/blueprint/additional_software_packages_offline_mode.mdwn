@@ -4,13 +4,39 @@ This is about [[!tails_ticket 14570]] which we plan to implement for Tails 3.5.
 
 According to [[!tails_ticket 6260]] Additional Software Packages works offline for a dew days after being connected, but then fails.
 
-The ticket suggests that the issue comes when the Release file corresponding to the packages to be installed is expired. This is controlled by the `Valid-Until` field of the Release file (<https://wiki.debian.org/DebianRepository/Format#Date.2C_Valid-Until>). 
+We researched the possible root causes of this class of issues and
+identified three:
+
+## APT indices have expired
+
+This was the hypothesis on [[!tails_ticket 6260]].
+
+Release file corresponding to the packages to be installed is expired.
+This is controlled by the `Valid-Until` field of the Release file
+(<https://wiki.debian.org/DebianRepository/Format#Date.2C_Valid-Until>).
 
 Looking at Valid-Until fields on Tails, it seems to be :
 
 - ~1 week for unstable and stable/update
 - ~1 month for torproject.org
 - unlimited for stable
+
+Testing and study of the APT source code show that this problem does
+not exist anymore on Tails 3.3: APT checks the indices expiration date
+only when it downloads them, not when it reads them to
+install packages.
+
+## One of the packages was not cached in the first place
+
+   ([[!tails_ticket 10958]])
+
+## Incomplete online upgrade process
+
+Assume that during an online Tails session, the APT indices are
+successfully updated, but then Tails is shut down before the upgraded
+Debian packages were downloaded. Then, if Tails is started offline the
+next time, the packages that needed to be upgraded cannot
+be installed.
 
 # Goal
 
