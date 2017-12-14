@@ -192,19 +192,6 @@ When JavaScript is disabled, the page instructs the user to temporarily
 allow JavaScript on the (through NoSript, the most likely scenario).
 They can otherwise still download using BitTorrent.
 
-### Extension version
-
-The HTML code includes a tag to force a version of the extension.
-For example:
-
-<pre>
-&lt;div id="extension-version"&gt;1.0&lt;/div&gt;
-</pre>
-
-We provide only one version of the download page at a time. So the
-extension checks the value of this tag and asks for an upgrade if its
-version is lower than the request version number.
-
 <a id="data_source">
 
 Data source
@@ -234,10 +221,28 @@ is not signed using OpenPGP.
 Updates mechanism
 =================
 
-Firefox checks for updates of the extension once per day on a secure
-channel (the update pings are also used to generate add-ons usage
-stats). Tor Browser doesn't prevent those updates [except for Torbutton
-and Tor Launcher](https://lists.torproject.org/pipermail/tbb-dev/2015-April/000258.html).
+### Automatic update from browsers
+
+- Chrome checks for updates "[every few
+  hours](https://developer.chrome.com/extensions/autoupdate)".
+- Firefox checks for updates once per day.
+- Tor Browser doesn't prevent those updates [except for Torbutton and
+  Tor Launcher](https://lists.torproject.org/pipermail/tbb-dev/2015-April/000258.html).
+
+### Enforce version check on our download page
+
+On top of this, the HTML code of our download page includes a tag to
+force a version of the extension. For example:
+
+<pre>
+&lt;div id="extension-version"&gt;1.0&lt;/div&gt;
+</pre>
+
+*Tails Verification* checks the value of this tag and asks for an
+upgrade if its version is lower than the request version number.
+
+This mechanism might be useful to force updated extensions with a finer
+granularity that the automatic updates from browser.
 
 <a id="technology"></a>
 
