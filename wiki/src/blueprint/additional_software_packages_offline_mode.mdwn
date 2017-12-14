@@ -30,19 +30,7 @@ not exist anymore on Tails 3.3: APT checks the indices expiration date
 only when it downloads them, not when it reads them to
 install packages.
 
-## One of the packages was not cached in the first place
-
-   ([[!tails_ticket 10958]])
-
-## Incomplete online upgrade process
-
-Assume that during an online Tails session, the APT indices are
-successfully updated, but then Tails is shut down before the upgraded
-Debian packages were downloaded. Then, if Tails is started offline the
-next time, the packages that needed to be upgraded cannot
-be installed.
-
-# Reproduction procedure
+### Testing procedure
 
 I tried installing packages offline in Tails 3.3 using the following procedure on 14 Dec 2017:
 
@@ -54,18 +42,19 @@ I tried installing packages offline in Tails 3.3 using the following procedure o
 * reboot offline
 * the install works and optipng version is the one from stretch/updates
 
-I went through the entire procedure 3 times and got the same results. Basic offline operation is thus already working, and [[!tails_ticket 6260]] seems to be already resolved : recent APT doesn't check Valid-Until on package installation.
+I went through the entire procedure 3 times and got the same results.
+Basic offline operation is thus already working, and
+[[!tails_ticket 6260]] seems to be have been resolved: recent APT
+doesn't check Valid-Until on package installation.
 
-# Possible solutions
+## One of the packages was not cached in the first place
 
-## Don't check Valid-Until on installation
+   ([[!tails_ticket 10958]])
 
-Disable release file validity test on installation (Acquire::Check-Valid-Until=false). We could test if we are offline before doing that. We would still do the validity check on upgrade.
+## Incomplete online upgrade process
 
-## Apt-offline
-
-<https://labs.riseup.net/code/issues/7208>
-
-## Local repository
-
-Use a local repository to store the packages (e.g. https://help.ubuntu.com/community/Repositories/Personal). We control our Release file, but importing and upgrading the repository looks annoying.
+Assume that during an online Tails session, the APT indices are
+successfully updated, but then Tails is shut down before the upgraded
+Debian packages were downloaded. Then, if Tails is started offline the
+next time, the packages that needed to be upgraded cannot
+be installed.
