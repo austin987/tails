@@ -1,0 +1,18 @@
+# This user unit triggers installation of additional software packages after
+# the desktop has started by starting the indentically named system unit.
+
+[Unit]
+Description=Trigger installation of Additional Software Packages
+Documentation=https://tails.boum.org/contribute/design/
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/sudo /bin/systemctl start tails-additional-software-install.service
+# FIXME: when policykit-1 >= 0.106 will be available in Tails, we should
+# use the following, and remove sudoers.d configuration:
+#ExecStart=/bin/systemctl start tails-additional-software-install.service
+TimeoutStartSec=0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=desktop.target

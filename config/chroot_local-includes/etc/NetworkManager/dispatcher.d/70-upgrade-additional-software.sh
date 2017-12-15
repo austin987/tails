@@ -12,4 +12,4 @@ if [ "$2" != "up" ]; then
    exit 0
 fi
 
-/usr/local/sbin/tails-additional-software upgrade
+/bin/systemctl start tails-additional-software-upgrade.service --no-block

@@ -1,0 +1,14 @@
+// Allow amnesia to manage tails-additional-softwate-install.service;
+// fall back to implicit authorization otherwise.
+//
+// FIXME: this rule cannot be used in Tails 3.3 because it needs policykit >=
+// 0.106, so we currently use sudo instead.
+
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("unit") == "tails-additional-software-install.service" &&
+        action.lookup("verb") == "start" &&
+        subject.user == "unix-user:amnesia") {
+        return polkit.Result.YES;
+    }
+});
