@@ -5,6 +5,7 @@ import glob
 import os
 import os.path
 import pwd
+import shutil
 import subprocess
 import sys
 import syslog
@@ -15,6 +16,7 @@ PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = os.path.join(
     PERSISTENCE_DIR, "live-additional-software.conf"
 )
+OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 ACTIVATION_FILE = "/run/live-additional-software/activated"
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
@@ -93,7 +95,46 @@ def get_additional_packages():
     return packages
 
 
-def install_additional_packages():
+def delete_old_apt_lists(old_apt_lists_dir=OLD_APT_LISTS_DIR):
+    """Delete the copy of the old APT lists, if any.
+    """
+    shutil.rmtree(old_apt_lists_dir)
+
+
+def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
+    """Save a copy of the APT lists
+    """
+    if os.path.exists(destdir):
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Warning: a copy of the APT lists already exists,"
+                      "which should never happen. Removing it.")
+        delete_old_apt_lists(destdir)
+    shutil.copytree(srcdir, destdir, symlinks=True)
+
+
+# Note: we can't do nicer delete + move operations because the directory
+# we want to replace is bind-mounted. So we have to delete the content
+# we want to replace, and then copy the content we want to restore.
+def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
+    """Restore the copy of the old APT lists
+    """
+    # Empty dstdir
+    for f_basename in os.listdir(dstdir):
+        f_path = os.path.join(dstdir, f_basename)
+        if os.path.isfile(f_path):
+            os.remove(f_path)
+        elif os.path.isdir(f_path):
+            shutil.rmtree(f_path)
+    # Copy the content of srcdir to dstdir
+    for f_basename in os.listdir(srcdir):
+        f_path = os.path.join(srcdir, f_basename)
+        if os.path.isfile(f_path):
+            shutil.copy2(f_path, dstdir)
+        elif os.path.isdir(f_path):
+            shutil.copytree(f_path, os.path.join(dstdir, f_basename))
+
+
+def install_additional_packages(ignore_old_apt_lists=False):
     """The subcommand which activates and installs all additional packages
     """
     syslog.syslog("Starting to install additional software...")
@@ -110,6 +151,30 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: persistence is not mounted, exiting")
         return True
+
+    # If a copy of old APT lists is found, then the previous upgrade
+    # attempt has not completed successfully (it may have failed e.g.
+    # due to network problems, or it may have been interrupted).
+    # In many of these cases, the APT package cache lacks some
+    # packages the new APT lists reference, so the (offline)
+    # installation step below in this function will fail. To avoid
+    # that, we restore the old APT lists: there are greater chances
+    # that the APT packages cache still has the corresponding packages.
+    if os.path.isdir(OLD_APT_LISTS_DIR) and not ignore_old_apt_lists:
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Found a copy of old APT lists, restoring it.")
+        try:
+            restore_old_apt_lists()
+        except:
+            syslog.syslog(syslog.LOG_WARNING,
+                          "Failed to restore the old APT lists,"
+                          "deleting them and proceeding anyway.")
+        # In all cases, delete the old APT lists: if they could be
+        # restored we don't need them anymore (and we don't want to
+        # restore them again next time); if they could not be
+        # restored, chances are restoration will fail next time
+        # as well.
+        delete_old_apt_lists()
 
     try:
         clear_obsolete_cache(OBSOLETE_APT_LIST_SUFFIX)
@@ -146,6 +211,13 @@ def upgrade_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: additional packages not activated, exiting")
         return True
+
+    # Save a copy of APT lists that we'll delete only once the upgrade
+    # has succeeded, to ensure that the APT packages cache is up-to-date
+    # wrt. the APT lists.
+    syslog.syslog("Saving old APT lists...")
+    save_old_apt_lists()
+
     syslog.syslog("Starting to upgrade additional software...")
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
@@ -156,18 +228,9 @@ def upgrade_additional_packages():
                   "restart Tails, or read the system log to understand better "
                   "the problem."))
         return False
-    # Remove outdated packages from the local package cache. This is needed as
-    # we disable apt-daily.timer, which would else take care of this cleanup.
-    # Note: this does not remove packages from other architectures, hence
-    # the need for the clear_obsolete_cache() function.
-    apt_get_returncode = _launch_apt_get(["autoclean"])
-    if apt_get_returncode:
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: autoclean failed, proceeding anyway.")
-    if install_additional_packages():
+    if install_additional_packages(ignore_old_apt_lists=True):
         _notify(_("Your additional software"),
                 _("The upgrade was successful."))
-        return True
     else:
         _notify(_("Your additional software"),
                 _("The upgrade failed. This might be due to a network "
@@ -176,6 +239,25 @@ def upgrade_additional_packages():
                   "the problem."))
         return False
 
+    # We now know that the APT packages cache is up-to-date wrt. the APT lists,
+    # so we can delete the copy of the old lists
+    delete_old_apt_lists()
+
+    # Remove outdated packages from the local package cache. This is needed as
+    # we disable apt-daily.timer, which would else take care of this cleanup.
+    # Note: this does not remove packages from other architectures, hence
+    # the need for the clear_obsolete_cache() function.
+    # We do this after the upgrade has succeeded so that the old packages
+    # remain available in the cache in case we have to restore the old lists.
+    # In the past we did this before upgrading in order to remove the
+    # i386 packages from the cache before downloading amd64 ones, but
+    # this does not matter anymore now that all persistent volumes
+    # must have been upgraded already.
+    apt_get_returncode = _launch_apt_get(["autoclean"])
+    if apt_get_returncode:
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Warning: autoclean failed.")
+    return True
 
 def create_additional_packages_list():
     """Creates the additional packages list
