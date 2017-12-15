@@ -49,10 +49,11 @@ A PolicyKit rule allows the `amnesia` user to start this secific service
 `tails-additional-softwate-install.service` includes :
 
 * ExecStart=tails-additional-software install
-* ExecStart=touch /var/run/tails-additional-software-install-started
 * ConditionFileNotEmpty=live-additional-software.conf
 * RemainAfterExit
 * OneShot
+
+The user should then be notified that Additional Software Packages are installed.
 
 ### Upgrade
 
@@ -67,4 +68,4 @@ A network-manager dispatcher hook starts `systemctl start tails-additional-softw
 * RemainAfterExit
 * OneShot
 
-ExecStart should wait for `/var/run/tails-additional-software-install-started`. This could be done with `inotifywait`.
+ExecStart should wait for `/run/live-additional-software/activated` (created by `tails-additional-software install`. This could be done with `inotifywait`.
