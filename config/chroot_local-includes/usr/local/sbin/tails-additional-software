@@ -118,19 +118,19 @@ def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
     """Restore the copy of the old APT lists
     """
     # Empty dstdir
-    for f_basename in os.listdir(dstdir):
-        f_path = os.path.join(dstdir, f_basename)
-        if os.path.isfile(f_path):
-            os.remove(f_path)
-        elif os.path.isdir(f_path):
-            shutil.rmtree(f_path)
+    for basename in os.listdir(dstdir):
+        path = os.path.join(dstdir, basename)
+        if os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
     # Copy the content of srcdir to dstdir
-    for f_basename in os.listdir(srcdir):
-        f_path = os.path.join(srcdir, f_basename)
-        if os.path.isfile(f_path):
-            shutil.copy2(f_path, dstdir)
-        elif os.path.isdir(f_path):
-            shutil.copytree(f_path, os.path.join(dstdir, f_basename))
+    for basename in os.listdir(srcdir):
+        path = os.path.join(srcdir, basename)
+        if os.path.isfile(path):
+            shutil.copy2(path, dstdir)
+        elif os.path.isdir(path):
+            shutil.copytree(path, os.path.join(dstdir, basename))
 
 
 def install_additional_packages(ignore_old_apt_lists=False):
