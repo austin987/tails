@@ -72,8 +72,13 @@ This is the only remaining problem we should consider fixing.
 
 ### Proposed solution
 
-- in the *upgrade* operation : save the content `/var/lib/apt/lists/` before running the `apt-get update`. It could be stored to a specific location, e.g. `/live/persistence/TailsData_unlocked/tails-additional-software/working_apt_lists/`. After a successful `apt-get upgrade`, remove the *working_apt_lists*.
-- in the *install* operation : if there is a backup present, restore it before running `apt-get install`
+- in the *upgrade* operation : save a copy of `/var/lib/apt/lists/`
+  before running the `apt-get update`. It could be stored to
+  a specific location, e.g.
+  `/live/persistence/TailsData_unlocked/tails-additional-software/apt/lists.old/`.
+  After a successful `apt-get upgrade`, remove this copy of the old
+  APT lists.
+- in the *install* operation : if there is a copy of the old APT lists, restore it before running `apt-get install`
 
 ### Testing procedure
 
