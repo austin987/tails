@@ -7,11 +7,11 @@ ConditionFileNotEmpty=/live/persistence/TailsData_unlocked/live-additional-softw
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStartPre=/bin/sh -c 'while ! [ -e /run/live-additional-software/activated ] ; do \
                            /bin/sleep 1                                         ; \
                          done'
 ExecStart=/usr/local/sbin/tails-additional-software upgrade
-RemainAfterExit=yes
 TimeoutStartSec=0
 # XXX: add hardening
 #CapabilityBoundingSet=
