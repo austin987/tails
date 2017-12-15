@@ -85,9 +85,16 @@ This is the only remaining problem we should consider fixing.
 We should find a testing procedure, which doesn't look trivial, as the problem only occurs when there is an upgrade of an additional software package.
 
 - setup **offline** Tails with persistence including *APT lists* and *APT cache*
-- setup an *Additional Software Package* that has been upgraded in the last point release 
-- copy APT lists from before the last Debian point release to `/var/lib/apt/lists`
+- setup an *Additional Software Package* that has been upgraded in the
+  last point release, e.g. [[!debpts abiword]] was updated from
+  3.0.2-2 to 3.0.2-2+deb9u1 in Stretch 9.3.
+- copy APT lists from before the last Debian point release to
+  `/var/lib/apt/lists`, e.g.:
+
+          deb [check-valid-until=no] tor+http://snapshot.debian.org/archive/debian/20171207T033657Z/ stretch main contrib
+
 - copy the old version of the package in `/var/lib/apt/archives`
+- shut down Tails
 - backup the persistent volume
 - reboot online. The installation should work.
 - restore the persistent volume from the backup, reboot online and shut down the network after APT update, but before the upgrade. The lists should be up-to-date, but the packages not upgraded.
