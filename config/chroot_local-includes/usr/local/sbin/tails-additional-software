@@ -105,7 +105,7 @@ def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
     """
     if os.path.exists(destdir):
         syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: a copy of the APT lists already exists,"
+                      "Warning: a copy of the APT lists already exists, "
                       "which should never happen. Removing it.")
         delete_old_apt_lists(destdir)
     shutil.copytree(srcdir, destdir, symlinks=True)
@@ -166,7 +166,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
             restore_old_apt_lists()
         except:
             syslog.syslog(syslog.LOG_WARNING,
-                          "Failed to restore the old APT lists,"
+                          "Failed to restore the old APT lists, "
                           "deleting them and proceeding anyway.")
         # In all cases, delete the old APT lists: if they could be
         # restored we don't need them anymore (and we don't want to
