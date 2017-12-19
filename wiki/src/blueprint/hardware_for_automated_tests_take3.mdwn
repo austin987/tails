@@ -17,7 +17,9 @@ area:
    a branch that is _Ready for QA_, since October 2017 we rebuild in
    in a slightly different build environment to ensure it can be
    [[rebuilt reproducibly|blueprint/reproducible_builds]].
-   This increased substantially the number of ISO image we build.
+   This increased substantially the number of ISO image we build
+   which sometimes creates congestion in our CI pipeline (see below
+   for details).
  * On our current setup, large numbers of automated test cases are
    brittle and had to be disabled on Jenkins (`@fragile`), which quite
    a few problematic consequences such as: it decreases the value our
@@ -47,13 +49,13 @@ area:
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods: between
    2017-06-17 and 2017-12-17, 4% of the test jobs have to wait for
-   more than 1 hour, and 1% more than 2 hours; 2% of the ISO build
-   jobs had to wait more than 1 hour. That's not many jobs of course,
-   but this congestion happens precisely when we need results from our
-   CI infra ASAP, be it because there's intense ongoing development or
-   because we're reviewing and merging lots of branches close to
-   a code freeze, so these delays hurt our development and
-   release process.
+   more than 1 hour, and 1% more than 2 hours; similarly, 2% of the
+   ISO build jobs had to wait more than 1 hour. That's not many jobs
+   of course, but this congestion happens precisely when we need
+   results from our CI infra ASAP, be it because there's intense
+   ongoing development or because we're reviewing and merging lots of
+   branches close to a code freeze, so these delays hurt our
+   development and release process.
  * Our current server was purchased at the end of 2014. The hardware
    can last quite a few more years, but we should plan (at least
    budget-wise) for replacing it when it is 5 years old, at the end of
