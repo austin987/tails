@@ -38,12 +38,15 @@ area:
    CPU cores would fix that: the same test suite only takes 105
    minutes on a replica of our Jenkins setup, also using nested
    virtualization, with a poor Internet connection but a faster CPU.
- * Building our website takes a long while, which makes ISO builds
-   slower (about 50 minutes on our Jenkins currently). This will get
-   worse as new languages are added to our website. Faster CPU cores
-   would fix that: the ISO build only takes 30 minutes on a replica of
-   our Jenkins setup, also using nested virtualization, with a poor
-   Internet connection but faster CPU cores.
+ * Building our website takes a long while (8 minutes on our ISO
+   builders i.e. 17% of the entire ISO build time), which makes ISO
+   builds take longer than they could. This will get worse as new
+   languages are added to our website. This is a single-threaded task,
+   so adding more CPU cores or RAM would not help: only faster CPU
+   cores would fix that. For example, the ISO build only takes 30
+   minutes (including 4.5 minutes for building the website) on
+   a replica of our Jenkins setup, also using nested virtualization,
+   with a poor Internet connection but faster CPU cores.
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods: between
    2017-06-17 and 2017-12-17, 4% of the test jobs have to wait for
