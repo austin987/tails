@@ -48,7 +48,7 @@ var observer = {
 
     cert = "#{cert}";
 
-    certdb2.addCertFromBase64(cert, "C,C,C", "");
+    certdb2.addCertFromBase64(cert, "TCu,TCu,TCu", "");
   }
 }
 Components.utils.import("resource://gre/modules/Services.jsm");
