@@ -75,45 +75,33 @@ area:
 
 # Options
 
-## Replace lizard
+## Bare metal server dedicated to CI
+
+Hard to tell whether this would fix our test suite fragility problems,
+hard to specify what hardware we need. If we get it wrong, likely we
+have to wait another 5 years before we try again ⇒ we need to rent
+essentially the exact hardware we're looking at so we can benchmark it
+before buying.
 
 Pros:
 
  * No initial development nor skills to learn: we can run our test
    suite in exactly the same way as we currently do.
- * On-going cost increases only slightly (we probably won't get
-   low-voltage CPUs this time).
- * We can sell the current hardware while it's still current, and get
-   some of our bucks back.
-
-Cons:
-
- * High initial money investment.
- * Hard to tell whether this would fix our test suite fragility
-   problems, and we'll only know after we've spent lots of money.
- * Hard to specify what hardware we need. If we get it wrong, likely
-   we have to wait another 5 years before we try again.
-
-## Dedicated ISO testing machine, no nested virtualization
-
-Pros:
-
- * Fast.
+ * Can provide hardware redundancy in case lizard suddenly dies.
+ * We control the hardware and have a good relationship with
+   a friendly collocation.
 
 Cons:
 
  * High initial money investment (10-12 cores at 3+GHz, e.g.
    HPE ProLiant DL360).
- * On-going cost for hosting 2 servers.
- * Hard to tell whether this would fix our test suite fragility
-   problems, and we'll only know after we've spent lots of money.
- * If we run only tests there, then we don't improve ISO build
-   performance. But if we do, then we might remain affected by test
-   suite fragility problems.
- * Hard to specify what hardware we need. If we get it wrong, likely
-   we have to wait another 5 years before we try again.
- * Non-negligible development costs and hard sysadmin problems to
-   solve ([[!tails_ticket 9486]]):
+ * On-going cost for hosting a second server.
+
+Extra options:
+
+ * If we want to drop nested virtualization to get more performance,
+   then we have non-negligible development costs and hard sysadmin
+   problems to solve ([[!tails_ticket 9486]]):
    - We currently _reboot_ isotesters between test suite runs ⇒ if we
      go this way we need to learn how to clean up after various kinds
      of test suite failure.
@@ -121,29 +109,32 @@ Cons:
      a given system ⇒ if we go this way we have to remove
      this limitation.
 
-## Dedicated ISO testing machine, with nested virtualization
+## Custom-built cluster of consumer-grade hardware dedicated to CI, aka. the hacker option
+
+For example, we could stuff 4-6 × Intel NUC NUC6i7KYK or similar
+together in a custom case, with whatever cooling, PoE and network boot
+system this high-density cluster would need. Each of these nodes
+should be able to run 2 Jenkins workers.
 
 Pros:
 
- * No initial development nor skills to learn: we can run our test
-   suite in exactly the same way as we currently do.
- * Dropping nested virtualization remains an option, using the same
-   hardware, if we ever want to tackle [[!tails_ticket 9486]]. We can
-   actually measure how much performance boost this would give us on
-   the same hardware.
+ * Potentially scalable: if there's room left we can add more nodes in
+   the future.
+ * Probably as fast as server-grade hardware.
 
 Cons:
 
- * High initial money investment (10-12 cores at 3+GHz, e.g.
-   HPE ProLiant DL360).
- * On-going cost for hosting 2 servers.
- * Hard to tell whether this would fix our test suite fragility
-   problems, and we'll only know after we've spent lots of money.
- * If we run only tests there, then we don't improve ISO build
-   performance. But if we do, then we might remain affected by test
-   suite fragility problems.
- * Hard to specify what hardware we need. If we get it wrong, likely
-   we have to wait another 5 years before we try again.
+ * Lots of initial research and development: casing, cooling, hosting,
+   power over Ethernet, network boot, remote administration
+ * High initial money investment (given the research and development
+   costs we can't really try this option, either we go for it or we
+   don't).
+ * Hosting this is a hard sell for collocations.
+ * We need to buy a node in order to measure how it would perform
+   (as opposed to server-grade hardware that can be rented).
+   OTOH we already have data about the Intel NUC NUC6i7KYK so if we
+   pick a similar enough CPU we can reuse that.
+ * On-going cost for hosting this cluster.
 
 ## Run builds and/or tests in the cloud
 
@@ -153,6 +144,7 @@ cloud is run on KVM (e.g.
 [OVH Public Cloud](https://www.openstack.org/marketplace/public-clouds/ovh-group/ovh-public-cloud/),
 and maybe later
 [OSU Open Source Lab](https://osuosl.org/services/hosting/details/)).
+ProfitBricks would likely work too as their cloud is based on KVM.
 
 There's a Jenkins plugin for every major cloud provider that allows
 starting instances on demand when needed, up to pre-defined limits,
@@ -308,16 +300,60 @@ this approach.
 See
 [Arturo's report about how OONI took advantage of the AWS grant program](https://lists.torproject.org/pipermail/tor-project/2017-August/001391.html).
 
-# Next steps
+## Dismissed options
 
-1. Check how the sysadmins team feels about the cloud option:  are
+### Replace lizard
+
+Dismissed: our CI workload has too specific needs that are better
+served by dedicated hardware; trying to host everything on a single
+box leads to crazy hardware specs that are hard to match.
+
+Pros:
+
+ * No initial development nor skills to learn: we can run our test
+   suite in exactly the same way as we currently do.
+ * On-going cost increases only slightly (we probably won't get
+   low-voltage CPUs this time).
+ * We can sell the current hardware while it's still current, and get
+   some of our bucks back.
+
+Cons:
+
+ * High initial money investment.
+ * Hard to tell whether this would fix our test suite fragility
+   problems, and we'll only know after we've spent lots of money.
+ * Hard to specify what hardware we need. If we get it wrong, likely
+   we have to wait another 5 years before we try again.
+
+# The plan
+
+1. <strike>Check how the sysadmins team feels about the cloud option: are
    there any blockers, for example wrt. ethics, security, privacy,
-   anything else?
+   anything else?</strike> → we're no big fans of using other people's
+   computers but if that's the best option we can do it
 
-2. If the cloud option is still on the table at this point, evaluate
-   it quickly: rent some VMs for a few days and benchmark how our CI
-   jobs perform there.
+2. Keep gathering data about our needs while going through the next steps:
+   - upcoming services
+   - what if we allowed more people to use our CI infrastructure?
 
-3. If the cloud option is not acceptable, try to find another, not too
-   risky option, i.e. a way that could allow us to try out a non-cloud
-   option without investing tons of money and work time.
+3. Describe our needs for each option:
+   - 2nd bare metal server-grade machine:
+     * hardware specs
+     * hosting needs (high power consumption)
+   - cloud (nested KVM, management tools in Debian)
+   - the hacker option: hosting
+
+5. Ask potential hardware/VMs donors (e.g. HPE, ProfitBricks) if they
+   would happily satisfy our needs for free or with a big discount.
+   If they can do that, then let's do it. Otherwise, keep reading.
+
+6. Benchmark how our workload would be handled by the options we have
+   no data about yet: rent a bare metal server and cloud VMs for
+   a short time, run CI jobs in a realistic way, measure.
+
+7. Decide what we do and look into the details e.g.:
+   - bare metal options: where to host it?
+   - cloud: refresh list of suitable providers, e.g. check if more
+     providers offer nested KVM, if the OSU Open Source Lab offering
+     is ready, and ask friendly potential cloud providers such as
+     universities, HPC cluster admins, etc.
