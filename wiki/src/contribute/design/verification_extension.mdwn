@@ -131,24 +131,26 @@ Security inside the browser
 ---------------------------
 
 The threat described as [H] is taken care of by the internals of the
-browser (and the proper coding of the extension). Web pages from a
-different origin cannot interfere in any way with the result of the
-verification performed by the extension. Only tabs from the same origin,
-or if the content of the other tab opts-in for some form of cross-domain
-communication, or it's been opened with `window.open()` by a script in
-this tab or vice-versa. In the latter cases it has a handle to the
-window of the other tab, either as the return value of `window.open()` or
-as the `window.opener` property, but it cannot actually touch the content
-unless it's same domain.
+browser (and the proper coding of the extension):
+
+- Only tabs with the same origin can interfere with the tab running the
+  verification.
+- Tabs which would have been opened with `window.open()` by a script in
+  the verification tab would have a handle to the window of the
+  verification tab but couldn't touch the content unless they are in the
+  same domain.
+- DAVE doesn't use cross-origin communication.
+- Web pages from a different origin cannot interfere in any way with the
+  result of the verification.
 
 Of course, any tab can open an alert box saying "Verification
 Successful", but it cannot overlay a different tab and, most important,
 it cannot detect any hint that the verification is happening. Note that the
-proposed wireframe for the extension does not open alert boxes but
+extension does not open alert boxes but
 instead modifies the content of the page.
 
 Bugs in the browser itself that could temper with the verification
-mechanism would need to be of the "remote code execution vulnerability"
+mechanism would need to be of the "remote code execution vulnerability" kind
 and would represent a threat in many more use cases than when verifying
 an ISO image.
 
