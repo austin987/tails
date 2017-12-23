@@ -3,16 +3,27 @@
 import subprocess
 import time
 import dbus
+import socket
 
 from tails_screen_locker import set_password_dialog
 
 
 def main():
+    get_lock()
     if not is_password_set():
         set_password()
         # TODO: Remove this once this is fixed: https://bugzilla.gnome.org/show_bug.cgi?id=761969
         time.sleep(2)
     lock_screen()
+
+
+def get_lock():
+    # Source: https://stackoverflow.com/a/7758075
+    # Original author: https://stackoverflow.com/users/639295/aychedee
+    # Without holding a reference to our socket somewhere it gets garbage
+    # collected when the function exits
+    get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    get_lock._lock_socket.bind('\0' + 'tails-screen-locker')
 
 
 def is_password_set():
