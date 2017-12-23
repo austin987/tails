@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import gettext
 
 UI_FILE = os.path.join(os.path.dirname(__file__), "set_password_dialog.ui")
 
@@ -10,6 +11,7 @@ from gi.repository import Gtk
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 
+_ = gettext.gettext
 
 def get_password():
     password_dialog = PasswordDialog()
@@ -67,9 +69,10 @@ class PasswordDialog(object):
         self.entry2.set_icon_from_icon_name(1, None)
         self.ok_button.set_sensitive(False)
         self.dialog = self.builder.get_object("dialog1")
-        self.dialog.set_title("Screen Locker")
+        self.dialog.set_title(_("Set a screen lock password"))
         self.dialog.run()
 
 
 if __name__ == "__main__":
+    gettext.install("Tails")
     print(get_password())
