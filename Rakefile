@@ -34,6 +34,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
+  'APT_SNAPSHOT_SERIAL',
   'TAILS_BUILD_FAILURE_RESCUE',
   'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
@@ -53,6 +54,8 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
 ENV['ARTIFACTS'] ||= '.'
+
+ENV['APT_SNAPSHOT_SERIAL'] ||= ''
 
 class CommandError < StandardError
   attr_reader :status, :stderr
