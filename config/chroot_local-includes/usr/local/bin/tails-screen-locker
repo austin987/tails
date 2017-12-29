@@ -7,6 +7,9 @@ import gettext
 import subprocess
 from pydbus import SessionBus, SystemBus
 import os
+from pam import pam
+import time
+import pwd
 
 UI_FILE = "/usr/share/tails/screenlocker.ui"
 
@@ -64,7 +67,7 @@ class PasswordDialog(object):
         object_path = bus.get("org.freedesktop.Accounts").FindUserById(os.getuid())
         user_object = bus.get("org.freedesktop.Accounts", object_path)
         # lock the screen once the 'Changed' signal was received
-        user_object.Changed.connect(lock_screen)
+        user_object.Changed.connect(self.wait_until_password_set_and_lock_screen)
 
         p = subprocess.Popen("passwd", stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.stdin.write(self.pw + b"\n")
@@ -86,6 +89,17 @@ class PasswordDialog(object):
 
         if self.ok_button.get_sensitive() and Gdk.keyval_name(event.keyval) == "Return":
             self.ok_button.clicked()
+
+    def wait_until_password_set_and_lock_screen(self):
+        # TODO: Remove this once this is fixed: https://bugzilla.gnome.org/show_bug.cgi?id=761969
+        p = pam()
+        while not p.authenticate(pwd.getpwuid(os.getuid()).pw_name, self.pw):
+            logging.debug("PAM not updated yet...")
+            time.sleep(0.01)
+        # We close the window here for the case that lock_screen does not return immediately,
+        # otherwise it would look like the app is unresponsive
+        self.window.close()
+        GLib.idle_add(lock_screen)
 
     def run(self):
         self.window.show()
