@@ -642,7 +642,7 @@ def is_persistent?(app)
   conf = get_persistence_presets(true)["#{app}"]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
   # This check assumes that we haven't enabled read-only persistence.
-  c.success? and c.stdout.chomp != "aufs"
+  c.success? and c.stdout.chomp != "overlay"
 end
 
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
