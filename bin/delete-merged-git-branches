@@ -7,7 +7,8 @@ import sys
 from distutils.util import strtobool
 from tailslib.git import Git
 
-### Functions
+# Functions
+
 
 def yes_no_input(prompt, default=True):
     if default:
@@ -25,7 +26,8 @@ def yes_no_input(prompt, default=True):
             except ValueError:
                 print("Please respond with 'y' or 'n'.")
 
-### Parse command-line arguments
+
+# Parse command-line arguments
 
 parser = argparse.ArgumentParser(description='Delete merged Git branches.')
 parser.add_argument('--repo', type=str, dest='repo',
@@ -37,7 +39,8 @@ parser.add_argument('--batch', type=bool, dest='batch',
                     help='Assume "yes" as answer to all prompts.')
 args = parser.parse_args()
 
-### Main
+
+# Main
 
 pp = pprint.PrettyPrinter()
 tailsgit = Git(args.repo)
@@ -48,8 +51,9 @@ if not branches_to_delete:
     sys.exit(0)
 
 print("The following branches will be deleted:")
-pp.pprint(branches_to_delete)
-if not args.batch and not yes_no_input("Remove these branches?", default=False):
+pp.pprint(sorted(branches_to_delete))
+if not args.batch \
+   and not yes_no_input("Remove these branches?", default=False):
     sys.exit(0)
 
 tailsgit.push(args.remote, [':%s' % branch for branch in branches_to_delete])

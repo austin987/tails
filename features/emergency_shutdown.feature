@@ -1,24 +1,16 @@
 @product
 Feature: Emergency shutdown
 
-  Scenario: The emergency shutdown applet can shutdown Tails
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I request a shutdown using the emergency shutdown applet
-    Then Tails eventually shuts down
-
-  Scenario: The emergency shutdown applet can reboot Tails
-    Given I have started Tails from DVD and logged in and the network is connected
-    When I request a reboot using the emergency shutdown applet
-    Then Tails eventually restarts
-
   # Test something close to real-world usage, without interfering,
-  # i.e. without the "I prepare Tails for memory erasure tests" step
+  # i.e. without the "I prepare Tails for memory erasure tests" step;
+  # and test that Tails eventually shuts down, which we don't do in
+  # the following scenarios for test suite performance reasons.
   Scenario: Tails shuts down on DVD boot medium removal
     Given I have started Tails from DVD and logged in and the network is connected
     When I eject the boot medium
     Then Tails eventually shuts down
 
-  Scenario: Tails erases memory and shuts down on DVD boot medium removal: aufs read-write branch
+  Scenario: Tails erases memory on DVD boot medium removal: aufs read-write branch
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
     And I fill a 128 MiB file with a known pattern on the root filesystem
@@ -26,9 +18,8 @@ Feature: Emergency shutdown
     When I eject the boot medium
     And I wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory
-    And Tails eventually shuts down
 
-  Scenario: Tails erases memory and shuts down on DVD boot medium removal: vfat
+  Scenario: Tails erases memory on DVD boot medium removal: vfat
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
     And I plug and mount a 128 MiB USB drive with a vfat filesystem
@@ -38,9 +29,8 @@ Feature: Emergency shutdown
     When I eject the boot medium
     And I wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory
-    And Tails eventually shuts down
 
-  Scenario: Tails erases memory and shuts down on DVD boot medium removal: LUKS-encrypted ext4
+  Scenario: Tails erases memory on DVD boot medium removal: LUKS-encrypted ext4
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
     And I plug and mount a 128 MiB USB drive with an ext4 filesystem encrypted with password "asdf"
@@ -50,7 +40,6 @@ Feature: Emergency shutdown
     When I eject the boot medium
     And I wait for Tails to finish wiping the memory
     Then I find very few patterns in the guest's memory
-    And Tails eventually shuts down
 
   Scenario: Tails erases memory and shuts down on USB boot medium removal: persistent data
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in

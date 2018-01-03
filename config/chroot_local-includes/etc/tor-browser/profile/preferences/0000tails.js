@@ -60,6 +60,7 @@ pref("noscript.untrusted", "google-analytics.com");
 
 // Other non-Torbutton, Tails-specific prefs
 pref("browser.download.dir", "/home/amnesia/Tor Browser");
+pref("dom.input.fallbackUploadDir", "/home/amnesia/Tor Browser");
 pref("browser.download.folderList", 2);
 pref("browser.download.manager.closeWhenDone", true);
 pref("extensions.update.enabled", false);
@@ -77,8 +78,8 @@ pref("browser.newtabpage.directory.ping", "");
 pref("browser.newtabpage.introShown", true);
 
 // Don't use geographically specific search prefs, like
-// browser.search.*.US for US locales. Our generated amnesia branding
-// add-on localizes search-engines in an incompatible but equivalent
+// browser.search.*.US for US locales. Our generated localization
+// profiles localizes search-engines in an incompatible but equivalent
 // way.
 pref("browser.search.geoSpecificDefaults", false);
 
@@ -90,7 +91,3 @@ pref("browser.download.panel.shown", true);
 // open external applications, so let's not offer the option to the user,
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
-
-// Web pages does not render when e10s is enabled, so we have to
-// disable it. Note that the "user_"-prefix is required.
-user_pref("browser.tabs.remote.autostart.2", false);

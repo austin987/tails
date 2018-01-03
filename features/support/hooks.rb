@@ -132,6 +132,17 @@ def save_failure_artifact(type, path)
   $failure_artifacts << [type, path]
 end
 
+def save_journal(path)
+  File.open("#{path}/systemd.journal", 'w') { |file|
+    $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
+    file.write($vm.file_content('/tmp/systemd.journal'))
+  }
+  save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
+rescue Exception => e
+  info_log("Exception thrown while trying to save the journal: " +
+           "#{e.class.name}: #{e}")
+end
+
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
 # are Tor nodes or located on the LAN. However, when we try
 # to verify that only such hosts are contacted we have a problem --
@@ -251,10 +262,29 @@ After('@product') do |scenario|
     info_log("Scenario failed at time #{elapsed}")
     screen_capture = @screen.capture
     save_failure_artifact("Screenshot", screen_capture.getFilename)
-    if scenario.exception.kind_of?(FirewallAssertionFailedError)
+    exception_name = scenario.exception.class.name
+    case exception_name
+    when 'FirewallAssertionFailedError'
       Dir.glob("#{$config["TMPDIR"]}/*.pcap").each do |pcap_file|
         save_failure_artifact("Network capture", pcap_file)
       end
+    when 'TorBootstrapFailure'
+      save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
+      chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
+      FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
+      FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+      info_log
+      info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+    when 'TimeSyncingError'
+      save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
+    end
+    # Note that the remote shell isn't necessarily running at all
+    # times a scenario can fail (and a scenario failure could very
+    # well cause the remote shell to not respond any more, e.g. when
+    # we cause a system crash), so let's collect everything depending
+    # on the remote shell here:
+    if $vm && $vm.remote_shell_is_up?
+      save_journal($config['TMPDIR'])
     end
     $failure_artifacts.sort!
     $failure_artifacts.each do |type, file|

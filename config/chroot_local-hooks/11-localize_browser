@@ -8,9 +8,6 @@ echo "Localize each supported browser locale"
 # supported_tor_browser_locales()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
-# Import set_simple_config_key()
-. /usr/local/lib/tails-shell-library/common.sh
-
 # Import language_code_from_locale()
 . /usr/local/lib/tails-shell-library/localization.sh
 
@@ -23,8 +20,7 @@ echo "Localize each supported browser locale"
 TBB_LOCALIZED_SEARCHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
-BRANDING_TEMPLATE_FILE="${BROWSER_LOCALIZATION_DIR}/amnesia.properties-template"
-BRANDING_DIR="/usr/local/share/tor-browser-extensions/branding@amnesia.boum.org/"
+LOCALE_PROFILES_DIR="/etc/tor-browser/locale-profiles/"
 NO_SPELLCHECKER_LOCALES="ja ko nl pl tr zh"
 
 # Sanity check that each supported Tor Browser locale has a
@@ -114,13 +110,10 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     rm "${LOCALIZED_WIKIPEDIA_ICON_PATH}" \
        "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
 
-    # We use the branding@amnesia.org extension to set some per-locale
-    # default prefs that set the appropriate localization options.
-    TARGET_BRANDING_DIR="${BRANDING_DIR}/chrome/locale/${MOZILLA_LOCALE}"
-    echo "locale amnesiabranding ${MOZILLA_LOCALE} chrome/locale/${MOZILLA_LOCALE}/" >> "${BRANDING_DIR}/chrome.manifest"
-    mkdir -p "${TARGET_BRANDING_DIR}"
-    TARGET_BRANDING_FILE="${TARGET_BRANDING_DIR}/amnesia.properties"
-    cp "${BRANDING_TEMPLATE_FILE}" "${TARGET_BRANDING_FILE}"
+    # Our Tor Browser wrapper script will make use of the following
+    # per-locale profiles to set localized defaults for various prefs.
+    mkdir -p "${LOCALE_PROFILES_DIR}"
+    LOCALE_PROFILE_FILE="${LOCALE_PROFILES_DIR}/${MOZILLA_LOCALE}.js"
     for KEY in browser.search.defaultenginename \
                browser.search.selectedEngine; do
         PLUGIN="DuckDuckGo - ${LOCALIZED_LANG}"
@@ -128,7 +121,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
             echo "Trying to make search plugin '${PLUGIN}' the default for ${MOZILLA_LOCALE} but it unexpectedly wasn't the one we generated earlier" >&2
             exit 1
         fi
-        set_simple_config_key "${TARGET_BRANDING_FILE}" "${KEY}" "${PLUGIN}"
+        set_mozilla_pref "${LOCALE_PROFILE_FILE}" "${KEY}" "\"${PLUGIN}\""
     done
     TBB_DICTIONARIES_DIR="${TBB_INSTALL}/dictionaries"
     unset SPELLCHECKER_LOCALE
@@ -145,15 +138,15 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
             exit 1
         fi
     fi
-    set_simple_config_key "${TARGET_BRANDING_FILE}" \
+    set_mozilla_pref "${LOCALE_PROFILE_FILE}" \
                           "spellchecker.dictionary" \
-                          "${SPELLCHECKER_LOCALE}"
+                          "\"${SPELLCHECKER_LOCALE}\""
     HOMEPAGE="https://tails.boum.org/home/"
     if echo "${TAILS_WIKI_SUPPORTED_LANGUAGES}" | grep -qw "${LANG_CODE}"; then
         HOMEPAGE="${HOMEPAGE}index.${LANG_CODE}.html"
     fi
-    set_simple_config_key "${TARGET_BRANDING_FILE}" \
-                          "browser.startup.homepage" "${HOMEPAGE}"
+    set_mozilla_pref "${LOCALE_PROFILE_FILE}" \
+                          "browser.startup.homepage" "\"${HOMEPAGE}\"" "user_pref"
 done < "${DESCRIPTIONS_FILE}"
 
 # This directory is not needed after build time.
@@ -201,5 +194,5 @@ done
 
 # All generated and modified files must remain world-readable.
 chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
-              "${BRANDING_DIR}" \
+              "${LOCALE_PROFILES_DIR}" \
               "${TBB_EXT}"

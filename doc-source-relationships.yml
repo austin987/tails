@@ -1,0 +1,45 @@
+# doc → source oriented
+- page: doc/first_steps/accessibility
+  files:
+    - config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults
+  packages:
+    - caribou
+    - dasher
+    - orca
+- page: doc/first_steps/startup_options
+  package: tails-greeter
+  files:
+    - config/binary_local-hooks/*grub*
+    - config/binary_local-hooks/*syslinux*
+    - config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults
+- page: doc/first_steps/startup_options/administration_password
+  package: tails-greeter
+- page: doc/first_steps/startup_options/bridge_mode
+  packages:
+    - obfs4proxy
+    - tor
+  file: config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
+  tests: tor_bridges.feature
+- page: doc/advanced_topics/virtualization/virtualbox
+  tests: virtualization.feature
+  packages: virtualbox-guest-*
+
+# "source → doc" oriented
+- package: gnome-disk-utility
+  pages:
+    - doc/first_steps/persistence/change_passphrase
+    - doc/first_steps/persistence/check_file_system
+- package: tails-persistence-setup
+  tests: persistence.feature
+  pages:
+    - doc/first_steps/persistence/configure
+    - doc/first_steps/persistence/delete
+- package: openpgp-applet
+  tests: encryption.feature
+  pages: doc/encryption_and_privacy/gpgapplet
+- package: tails-greeter
+  files:
+    - features/images/TailsGreeter*
+  pages:
+    - doc/first_steps/persistence/use
+    - doc/first_steps/startup_options**

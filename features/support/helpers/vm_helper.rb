@@ -127,6 +127,11 @@ class VM
     update(domain_rexml.to_s)
   end
 
+  def network_link_state
+    REXML::Document.new(@domain.xml_desc)
+      .elements['domain/devices/interface/link'].attributes['state']
+  end
+
   def set_network_link_state(state)
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements['domain/devices/interface/link'].attributes['state'] = state
@@ -443,12 +448,18 @@ class VM
     return execute(cmd, options)
   end
 
-  def wait_until_remote_shell_is_up(timeout = 90)
+  def remote_shell_is_up?
     msg = 'hello?'
+    Timeout::timeout(3) do
+      execute_successfully("echo '#{msg}'").stdout.chomp == msg
+    end
+  rescue
+    false
+  end
+
+  def wait_until_remote_shell_is_up(timeout = 90)
     try_for(timeout, :msg => "Remote shell seems to be down") do
-      Timeout::timeout(3) do
-        execute_successfully("echo '#{msg}'").stdout.chomp == msg
-      end
+      remote_shell_is_up?
     end
   end
 
@@ -458,7 +469,9 @@ class VM
   end
 
   def has_network?
-    return execute("/sbin/ifconfig eth0 | grep -q 'inet addr'").success?
+    nmcli_info = execute('nmcli device show eth0').stdout
+    has_ipv4_addr = /^IP4.ADDRESS(\[\d+\])?:\s*([0-9.\/]+)$/.match(nmcli_info)
+    network_link_state == 'up' && has_ipv4_addr
   end
 
   def has_process?(process)
