@@ -137,11 +137,11 @@ def upgrade_additional_packages():
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
-        _notify(_("Your additional software"),
-                _("The upgrade failed. This might be due to a network "
-                  "problem. Please check your network connection, try to "
-                  "restart Tails, or read the system log to understand better "
-                  "the problem."))
+        _notify(_("Your additional software upgrade failed"),
+                _("The check for upgrades failed. This might be due to a "
+                  "network problem. Please check your network connection, try "
+                  "to restart Tails, or read the system log to understand "
+                  "better the problem."))
         return False
     # Remove outdated packages from the local package cache. This is needed as
     # we disable apt-daily.timer, which would else take care of this cleanup.
@@ -152,11 +152,11 @@ def upgrade_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: autoclean failed, proceeding anyway.")
     if install_additional_packages():
-        _notify(_("Your additional software"),
+        _notify(_("Your additional software are up to date"),
                 _("The upgrade was successful."))
         return True
     else:
-        _notify(_("Your additional software"),
+        _notify(_("Your additional software upgrade failed"),
                 _("The upgrade failed. This might be due to a network "
                   "problem. Please check your network connection, try to "
                   "restart Tails, or read the system log to understand better "
