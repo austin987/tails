@@ -118,9 +118,15 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: installation of %s failed"
                       % " ".join(packages))
+        _notify(_("Your additional software installation failed"),
+                _("The installation failed. Please check your additional "
+                  "software configuration, or read the system log to "
+                  "understand better the problem."))
         return False
     else:
         syslog.syslog("Installation completed successfully.")
+        _notify(_("Your additional software are installed"),
+                _("Your additional software are ready to use."))
         return True
 
 
