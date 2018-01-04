@@ -1,5 +1,5 @@
 [Unit]
-Description=Update Additional Software Packages
+Description=Upgrade Additional Software Packages
 Documentation=https://tails.boum.org/contribute/design/persistence/
 After=tails-additional-software-install.service
 After=tor-has-bootstrapped.service
@@ -8,9 +8,6 @@ ConditionFileNotEmpty=/live/persistence/TailsData_unlocked/live-additional-softw
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStartPre=/bin/sh -c 'while ! [ -e /run/live-additional-software/activated ] ; do \
-                           /bin/sleep 1                                         ; \
-                         done'
 ExecStart=/usr/local/sbin/tails-additional-software upgrade
 TimeoutStartSec=0
 # XXX: add hardening
