@@ -12,7 +12,6 @@ _ = gettext.gettext
 
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = PERSISTENCE_DIR + "/live-additional-software.conf"
-ACTIVATION_FILE = "/run/live-additional-software/activated"
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
 OBSOLETE_APT_LIST_SUFFIX = "_binary-i386_Packages"
@@ -117,7 +116,6 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: no packages to install, exiting")
         return True
-    set_activated()
     syslog.syslog("Will install the following packages: %s"
                   % " ".join(packages))
     apt_get_returncode = _launch_apt_get(
@@ -135,12 +133,8 @@ def install_additional_packages():
 
 
 def upgrade_additional_packages():
-    """The subcommand which upgrades all additional packages if they are activated
+    """The subcommand which upgrades all additional packages
     """
-    if not is_activated():
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: additional packages not activated, exiting")
-        return True
     syslog.syslog("Starting to upgrade additional software...")
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
@@ -200,33 +194,13 @@ def clear_obsolete_cache(obsolete_apt_list_suffix):
             os.remove(deb)
 
 
-def is_activated():
-    """Check if additional software has been activated
-    """
-    return os.path.isfile(ACTIVATION_FILE)
-
-
-def set_activated():
-    """Save that additional software has been activated
-    """
-    syslog.syslog("Activating persistent software packages")
-    activation_file_dir = os.path.dirname(ACTIVATION_FILE)
-    if not os.path.exists(activation_file_dir):
-        os.makedirs(activation_file_dir)
-    try:
-        f = open(ACTIVATION_FILE, 'w')
-    finally:
-        if f:
-            f.close()
-
-
 def print_help():
     """The subcommand which displays help
     """
     sys.stderr.write("Usage: %s <subcommand>\n" % program_name)
     sys.stderr.write("""Subcommands:
-    install: activate and install additional software
-    upgrade: upgrade additional software if activated\n""")
+    install: install additional software
+    upgrade: upgrade additional software\n""")
 
 
 if __name__ == "__main__":
