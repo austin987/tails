@@ -3,7 +3,6 @@
 import gettext
 import glob
 import os.path
-import pwd
 import subprocess
 import sys
 import syslog
@@ -96,15 +95,8 @@ def install_additional_packages():
     syslog.syslog("Starting to install additional software...")
     if has_additional_packages_list():
         syslog.syslog("Found additional packages list")
-    elif os.path.isdir(PERSISTENCE_DIR):
         syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: no configuration file found, creating an "
-                      "empty one.")
-        create_additional_packages_list()
-        return True
-    else:
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: persistence is not mounted, exiting")
+                      "Warning: no configuration file found, exiting")
         return True
     try:
         clear_obsolete_cache(OBSOLETE_APT_LIST_SUFFIX)
@@ -164,23 +156,6 @@ def upgrade_additional_packages():
                   "restart Tails, or read the system log to understand better "
                   "the problem."))
         return False
-
-
-def create_additional_packages_list():
-    """Creates the additional packages list
-
-    Creates the additional packages list file with the right permissions.
-    The caller must ensure the file doesn't already exist.
-    """
-    assert not has_additional_packages_list(), "%s already exists" \
-        % PACKAGES_LIST_FILE
-    syslog.syslog("Creating additional software configuration file")
-    f = open(PACKAGES_LIST_FILE, 'w')
-    f.closed
-    os.chmod(PACKAGES_LIST_FILE, 0o600)
-    os.chown(PACKAGES_LIST_FILE,
-             pwd.getpwnam('tails-persistence-setup').pw_uid,
-             pwd.getpwnam('tails-persistence-setup').pw_gid)
 
 
 def clear_obsolete_cache(obsolete_apt_list_suffix):
