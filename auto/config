@@ -101,8 +101,9 @@ RUN_LB_CONFIG="lb config noauto"
 $RUN_LB_CONFIG --distribution stretch ${@}
 
 # set up everything for time-based snapshots:
-[ "${APT_SNAPSHOT_SERIAL:-}" ] && \
-	echo "Using latest APT snapshots serial: ${APT_SNAPSHOT_SERIAL}."
+if [ -n "${APT_SNAPSHOT_SERIAL:-}" ]; then
+    echo "Using latest APT snapshots serial: ${APT_SNAPSHOT_SERIAL}."
+fi
 apt-snapshots-serials prepare-build "${APT_SNAPSHOT_SERIAL:-}"
 
 DEBIAN_MIRROR="$(apt-mirror debian)"
