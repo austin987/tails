@@ -103,11 +103,10 @@ $RUN_LB_CONFIG --distribution stretch ${@}
 # set up everything for time-based snapshots:
 if [ -n "${APT_SNAPSHOT_SERIALS:-}" ]; then
     echo "Fixing 'latest' APT snapshots serials to: ${APT_SNAPSHOT_SERIALS}."
-    APT_SNAPSHOT_SERIALS_PB_ARGS="${APT_SNAPSHOT_SERIALS}"
+    apt-snapshots-serials prepare-build "${APT_SNAPSHOT_SERIALS}"
 else
-    APT_SNAPSHOT_SERIALS_PB_ARGS=
+    apt-snapshots-serials prepare-build
 fi
-apt-snapshots-serials prepare-build $APT_SNAPSHOT_SERIALS_PB_ARGS
 
 DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
