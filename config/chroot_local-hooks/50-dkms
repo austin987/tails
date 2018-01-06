@@ -27,19 +27,7 @@ apt-get install --yes \
     libelf-dev
 
 apt-get install --yes \
-    "linux-headers-${KERNEL_VERSION}-amd64"
-
-# Workaround https://bugs.debian.org/886366
-# XXX:Buster: remove this
-apt-get install --yes linux-kbuild-4.15
-for suffix in amd64 common ; do
-   if [ ! -L "/usr/src/linux-headers-${KERNEL_VERSION}-${suffix}/tools" ]; then
-      ln -s /usr/lib/linux-kbuild-4.15/tools \
-            "/usr/src/linux-headers-${KERNEL_VERSION}-${suffix}/tools"
-   fi
-done
-
-apt-get install --yes \
+    "linux-headers-${KERNEL_VERSION}-amd64" \
     aufs-dkms \
     virtualbox-guest-dkms
 
