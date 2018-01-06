@@ -233,13 +233,14 @@ graphic adapters:
 - GeForce GTX (970, 980)
 - GeForce GTX (950, 960)
 
-We think this problem has been fixed in Tails 3.2. If Tails Greeter
-still does not start for you:
+We think this problem has been fixed in Tails 3.2 for some of these
+graphic cards. If Tails Greeter still does not start for you:
 
 1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
    [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
 2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
    address so we can contact you to debug the problem.
+   Please reference [[!tails_ticket 15116]] in your bug report.
 
 <a id="switchable_graphics_black_screen"></a>
 
@@ -337,6 +338,14 @@ adapters. If this happens to you:
    [[report a bug|doc/first_steps/bug_reporting]]. Include the exact
    model of your Intel graphics adapter.
 
+Virtual machines with *virt-manager*, *libvirt* and *QEMU*
+----------------------------------------------------------
+
+See the
+[[dedicated troubleshooting documentation|doc/advanced_topics/virtualization/virt-manager#graphics-issues]]
+about graphics issues in Tails running inside a virtual machine
+with *virt-manager*.
+
 <a id="wi-fi"></a>
 
 Wi-Fi issues
@@ -371,6 +380,28 @@ Intel Atom Cherry Trail tablets
 
 Tails can be started on tablets with an Intel Atom Cherry Trail system
 on chip (SoC) but the Wi-Fi interface and sound card doesn't work.
+
+Systems with RTL8723be Wi-Fi adapter
+------------------------------------
+
+On some computers with a RTL8723be Wi-Fi adapter, Tails may fail to discover
+Wi-Fi networks, may provide unreliable Wi-Fi connections, or may provide poor
+Wi-Fi performance.
+
+Most such problems can be solved by adding
+[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]].
+
+The exact combination of options that will work depends on the
+computer, so try the following instructions until you find
+a combination that works for you:
+
+1. Add `rtl8723be.fwlps=0 rtl8723be.ips=0` to the startup options.
+2. Add `rtl8723be.ant_sel=1` to the startup options.
+3. Add `rtl8723be.ant_sel=2` to the startup options.
+4. Add `rtl8723be.ant_sel=1 rtl8723be.fwlps=0 rtl8723be.ips=0`
+   to the startup options.
+5. Add `rtl8723be.ant_sel=2 rtl8723be.fwlps=0 rtl8723be.ips=0`
+   to the startup options.
 
 Security issues
 ===============
