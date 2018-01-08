@@ -2,31 +2,39 @@
 
 set -e
 set -u
+set -x
 
 echo "Building dkms modules"
 
 . /usr/share/amnesia/build/variables
 
-# the -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes build-essential dkms
+# Import install_fake_package
+. /usr/local/lib/tails-shell-library/build.sh
 
-# Installing the headers triggers the building of the modules for that kernel
+# Install gcc-6 and fake linux-compiler-gcc-7-x86
+# (linux-headers-4.14+ depends on it, but Stretch hasn't GCC 7)
+# XXX:Buster: remove this hack.
+apt-get install --yes gcc-6
+install_fake_package \
+    linux-compiler-gcc-7-x86 \
+    "$(apt-cache policy linux-compiler-gcc-7-x86 | awk '/ +Candidate:/ {print $2}')~0tails1"
+ln -s /usr/bin/gcc-6 /usr/bin/gcc-7
+
+# Any -dkms package must be installed *after* dkms to be properly registered
+apt-get install --yes \
+    build-essential \
+    dkms \
+    libelf-dev
+
 apt-get install --yes \
     "linux-headers-${KERNEL_VERSION}-amd64" \
     aufs-dkms \
     virtualbox-guest-dkms
 
-MODULES_VERSION="$(dpkg-query -W -f='${Version}\n' virtualbox-guest-dkms \
-		       | sed -E 's,-.*,,')"
-dkms build \
-    -a amd64 -k "${KERNEL_VERSION}-amd64" \
-    -m virtualbox-guest -v "$MODULES_VERSION"
-dkms install \
-    -a amd64 -k "${KERNEL_VERSION}-amd64" \
-    -m virtualbox-guest -v "$MODULES_VERSION"
-
-# clean the build directory
-# rm -r /var/lib/dkms/virtualbox-guest/
+for log in $(ls /var/lib/dkms/*/*/build/make.log); do
+   echo "---- $log"
+   cat "$log"
+done
 
 # Ensure the modules were actually built and installed: when
 # dkms.conf for a DKMS module includes a BUILD_EXCLUSIVE directive
