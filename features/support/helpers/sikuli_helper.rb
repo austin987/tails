@@ -1,18 +1,8 @@
 require 'rjb'
 require 'rjbextension'
 $LOAD_PATH << ENV['SIKULI_HOME']
-begin
-  require 'sikulixapi.jar'
-  USING_SIKULIX = true
-rescue LoadError
-  require 'sikuli-script.jar'
-  USING_SIKULIX = false
-end
+require 'sikulixapi.jar'
 Rjb::load
-
-def using_sikulix?
-  USING_SIKULIX
-end
 
 package_members = [
                    "java.io.FileOutputStream",
@@ -26,14 +16,9 @@ package_members = [
                    "org.sikuli.script.Pattern",
                    "org.sikuli.script.Region",
                    "org.sikuli.script.Screen",
+                   "org.sikuli.basics.Settings",
+                   "org.sikuli.script.ImagePath",
                   ]
-
-if using_sikulix?
-  package_members << "org.sikuli.basics.Settings"
-  package_members << "org.sikuli.script.ImagePath"
-else
-  package_members << "org.sikuli.script.Settings"
-end
 
 # Note: we can't use anything that starts with "Java" on the right
 # side, otherwise the :Java constant is defined and then
@@ -70,8 +55,50 @@ def bind_java_to_pseudo_fifo_logger
   RJava::Lang::System.setOut(print_stream)
 end
 
-def findfailed_hook(pic)
-  pause("FindFailed for: '#{pic}'")
+class FindFailedHookFailure < StandardError
+end
+
+def findfailed_hook(proxy, orig_method, args)
+  picture = args.first
+  candidate_path = "#{SIKULI_CANDIDATES_DIR}/#{picture}"
+  if ! File.exist?(candidate_path)
+    [0.80, 0.70, 0.60, 0.50, 0.40].each do |similarity|
+      pattern = Sikuli::Pattern.new(picture)
+      pattern.similar(similarity)
+      match = proxy._invoke('exists', 'Ljava.lang.Object;', pattern)
+      if match
+        capture = proxy._invoke('capture', 'Lorg.sikuli.script.Region;', match)
+        capture_path = capture.getFilename
+        # Let's verify that our screen capture actually matches
+        # with the default similarity
+        if proxy._invoke('exists', 'Ljava.lang.Object;', capture_path)
+          debug_log("Found fuzzy candidate picture for #{picture} with " +
+                    "similarity #{similarity}")
+          FileUtils.mkdir_p(SIKULI_CANDIDATES_DIR)
+          FileUtils.mv(capture_path, candidate_path)
+          break
+        else
+          FileUtils.rm(capture_path)
+        end
+      end
+    end
+    if ! File.exist?(candidate_path)
+      debug_log("Failed to find fuzzy candidate picture for #{picture}")
+    end
+  end
+
+  if $config['SIKULI_FUZZY_IMAGE_MATCHING'] && File.exist?(candidate_path)
+    debug_log("Using fuzzy candidate picture for #{picture}")
+    args_with_candidate = [candidate_path] + args.drop(1)
+    return orig_method.call(*args_with_candidate)
+  end
+
+  if $config["SIKULI_RETRY_FINDFAILED"]
+    pause("FindFailed for: '#{picture}'")
+    return orig_method.call(*args)
+  else
+    raise FindFailedHookFailure
+  end
 end
 
 # Since rjb imports Java classes without creating a corresponding
@@ -88,7 +115,7 @@ end
 # Also, due to limitations in Ruby's syntax we can't do:
 #     def Sikuli::Screen.new
 # so we work around it with the following vairable.
-sikuli_script_proxy = Sikuli::Screen
+sikuli_screen_proxy = Sikuli::Screen
 $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 
 # For waitAny()/findAny() we are forced to throw this exception since
@@ -97,42 +124,60 @@ $_original_sikuli_screen_new ||= Sikuli::Screen.method :new
 class FindAnyFailed < StandardError
 end
 
-def sikuli_script_proxy.new(*args)
+def sikuli_screen_proxy.new(*args)
   s = $_original_sikuli_screen_new.call(*args)
 
-  if $config["SIKULI_RETRY_FINDFAILED"]
-    # The usage of `_invoke()` below exemplifies how one can wrap
-    # around Java objects' methods when they're imported using RJB. It
-    # isn't pretty. The seconds argument is the parameter signature,
-    # which can be obtained by creating the intended Java object using
-    # RJB, and then calling its `java_methods` method.
+  findfail_overrides = [
+    ['click', 'Ljava.lang.Object;'],
+    ['find', 'Ljava.lang.Object;'],
+    ['wait', 'Ljava.lang.Object;D'],
+  ]
 
-    def s.wait(pic, time)
-      self._invoke('wait', 'Ljava.lang.Object;D', pic, time)
-    rescue FindFailed => e
-      findfailed_hook(pic)
-      self._invoke('wait', 'Ljava.lang.Object;D', pic, time)
+  # The usage of `_invoke()` below exemplifies how one can wrap
+  # around Java objects' methods when they're imported using RJB. It
+  # isn't pretty. The seconds argument is the parameter signature,
+  # which can be obtained by creating the intended Java object using
+  # RJB, and then calling its `java_methods` method.
+  findfail_overrides.each do |method_name, signature|
+    s.define_singleton_method("#{method_name}_no_override") do |*args|
+      begin
+        self._invoke(method_name, signature, *args)
+      end
     end
-
-    def s.find(pic)
-      self._invoke('find', 'Ljava.lang.Object;', pic)
-    rescue FindFailed => e
-      findfailed_hook(pic)
-      self._invoke('find', 'Ljava.lang.Object;', pic)
-    end
-
-    def s.waitVanish(pic, time)
-      self._invoke('waitVanish', 'Ljava.lang.Object;D', pic, time)
-    rescue FindFailed => e
-      findfailed_hook(pic)
-      self._invoke('waitVanish', 'Ljava.lang.Object;D', pic, time)
-    end
-
-    def s.click(pic)
-      self._invoke('click', 'Ljava.lang.Object;', pic)
-    rescue FindFailed => e
-      findfailed_hook(pic)
-      self._invoke('click', 'Ljava.lang.Object;', pic)
+    s.define_singleton_method(method_name) do |*args|
+      begin
+        orig_method = s.method("#{method_name}_no_override")
+        return orig_method.call(*args)
+      rescue Exception => exception
+        # We really would like to only capture the FindFailed
+        # exceptions imported by rjb here, but that hasn't happened
+        # at the time this code is run. Yeah, meta-programming! :)
+        if exception.class.name == "FindFailed"
+          begin
+            return findfailed_hook(self, orig_method, args)
+          rescue FindFailedHookFailure
+            # Due to bugs in rjb we cannot re-throw Java exceptions,
+            # which is what we want now. Instead we have to resort to
+            # a hack: let's re-run the failing Sikuli method to
+            # (hopefully) reproduce the exception.
+            # Upstream bug details:
+            # * https://github.com/arton/rjb/issues/59
+            # * https://github.com/arton/rjb/issues/60
+            new_args = args
+            if new_args.size > 1 && new_args[-1].is_a?(Numeric)
+              # Optimize the timeout
+              new_args[-1] = 0.01
+            end
+            # There are situations where we actually could succeed
+            # now, e.g. if we timed out looking for an image *just*
+            # before it appeared, so it is first visible exactly when
+            # we arrive here. If so, well, let's enjoy!
+            return orig_method.call(*new_args)
+          end
+        else
+          raise exception
+        end
+      end
     end
   end
 
@@ -179,7 +224,7 @@ def sikuli_script_proxy.new(*args)
   def s.findAny(images)
     images.each do |image|
       begin
-        return [image, self.find(image)]
+        return [image, self.find_no_override(image)]
       rescue FindFailed
         # Ignore. We deal we'll throw an appropriate exception after
         # having looped through all images and found none of them.
@@ -214,14 +259,7 @@ def sikuli_script_proxy.new(*args)
 end
 
 # Configure sikuli
-if using_sikulix?
-  Sikuli::ImagePath.add("#{Dir.pwd}/features/images/")
-else
-  java.lang.System.setProperty("SIKULI_IMAGE_PATH",
-                               "#{Dir.pwd}/features/images/")
-  ENV["SIKULI_IMAGE_PATH"] = "#{Dir.pwd}/features/images/"
-end
-
+Sikuli::ImagePath.add(SIKULI_IMAGE_PATH)
 # ruby and rjb doesn't play well together when it comes to static
 # fields (and possibly methods) so we instantiate and access the field
 # via objects instead. It actually works inside this file, but when
