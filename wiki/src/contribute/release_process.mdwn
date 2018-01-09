@@ -649,6 +649,10 @@ Include each such version in a white-space separated list called
 and run the following:
 
     for source_version in ${IUK_SOURCE_VERSIONS}; do
+        if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
+            echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
+            break
+        fi
         sudo su -c "cd ${IUK_CHECKOUT:?} && \
           SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
