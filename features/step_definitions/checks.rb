@@ -100,7 +100,7 @@ Then /^the documentation viewer opens the "(Support|Getting started)" page$/ do 
     if page == 'Support'
       expected_heading = 'Die Dokumentation durchsuchen'
     else
-      page = 'Einen Fehler gefunden?'
+      expected_heading = 'Einen Fehler gefunden?'
     end
   else
     expected_title = 'Tails documentation'

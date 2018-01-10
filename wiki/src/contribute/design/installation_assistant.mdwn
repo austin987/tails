@@ -1,0 +1,242 @@
+[[!meta title="Installation assistant"]]
+
+In 2015, we worked on a complete rewrite on our installation
+instructions. This work was extended in 2017 with the design of a new
+download page. The archive of our design process as well as pending
+issues can be found in the [[corresponding
+blueprint|blueprint/bootstrapping/assistant]].
+
+Our previous instructions forced people to jump through many different
+documentation pages and often to figure out by themselves what to do next. See
+this [[flowchart of the installation process as of
+2014|blueprint/bootstrapping/2014.fodg]].
+
+The objective was to make this a linear process, to be follow step-by-step, and
+that would take the user from our homepage up to starting on a Tails USB stick
+with a persistent volume. But this process has to be adapted to the base
+operating system of the user or their technical expertise.
+
+We decided to optimize it for first time and less technical users, while still
+being usable by expert users.
+
+The following scenarios are proposed:
+
+  - [[Install from another Tails (for PC)|install/win/clone-overview]]
+  - [[Install from another Tails (for Mac)|install/mac/clone-overview]]
+  - [[Install from Windows|install/win/usb-overview]]
+  - [[Install from Debian, Ubuntu, or Mint|install/debian/usb-overview]]
+  - [[Install from Debian, Ubuntu, or Mint using the command line and GnuPG|install/expert/usb-overview]]
+  - [[Install from other Linux distributions|install/linux/usb-overview]]
+  - [[Install from macOS by burning a DVD first|install/mac/dvd-overview]]
+  - [[Install from macOS and the command line|install/mac/usb-overview]]
+  - [[Burn a DVD|install/dvd]]
+  - [[Download without installing|install/download]]
+
+The installation assistant is also adapted to cover two [[manual upgrade
+scenarios|upgrade]]:
+
+  - [[Upgrade from another Tails|upgrade/clone-overview]]
+  - [[Upgrade inside Tails|upgrade/tails-overview]]
+
+The assistant is divided into four sections:
+
+  - The [[*router*|installation_assistant#router]] which selects the scenario to follow.
+  - The [[*overview*|installation_assistant#overview]] which summarizes graphically the scenario.
+  - The [[*download*|installation_assistant#download]] page for downloading and verifying the ISO image.
+  - The [[*steps*|installation_assistant#steps]] which gives step-by-step instructions for the scenario after downloading.
+
+[[!toc levels=2]]
+
+Related documents
+=================
+
+- [[Design document of *Tails Installer*|verification_extension]]
+- [[Design document of *Tails Verification*|verification_extension]]
+- [[Blueprint with archives of the past design processes and notes on future work|blueprint/bootstrapping/assistant]]
+
+Implementation tricks
+=====================
+
+The installation assistant is basically presenting very similar content in many
+different scenarios with small variations (slightly different steps, slightly
+different terminology, etc.).
+
+To reuse as much content as possible and reduce the quantity of text and
+translations, our implementation relies heavily on two tricks. Both are
+quite hackish but were the only solution we found to avoid duplicating
+massive amount of content in ikiwiki.
+
+### Ikiwiki inlines
+
+The [inline directive](https://ikiwiki.info/ikiwiki/directive/inline/) of
+ikiwiki allows embedding a file into another file to avoid duplicating content.
+It is quite limited and brittle, especially when used together with the PO
+plugin. See [[!tails_ticket 6907]]. Many inlines also slow down the build
+process quite a lot.
+
+### Conditional CSS content
+
+To adapt a piece of content reused using ikiwiki inlines to the context
+where it appears we are using CSS classes. For example, to introduce the
+program used to install an intermediary Tails on Windows and Linux we
+wrote:
+
+<pre>
+&lt;span class="windows"&gt;a program called Universal USB Installer.&lt;/span&gt;
+&lt;span class="linux"&gt;a program called GNOME Disks.&lt;/span&gt;
+</pre>
+
+Elements with the `windows` class being only displayed in the Windows
+scenario and elements with the
+`linux` class being only displayed in the Linux scenario.
+
+- Classes for elements potentially displayed on different pages:
+  - `clone` for content involving cloning
+  - `usb` for content with a USB stick as destination device
+  - `windows` for content for Windows
+  - `mac` for content for macOS
+  - `debian` for content for Debian, Ubuntu, or Mint
+  - `expert` for content for Debian, Ubuntu, or Mint on the command line
+  - `linux` for content for other Linux
+  - `upgrade` for content for manual upgrade
+- Classes for elements displayed only on one scenario:
+  - `dvd` for [[/install/dvd-download|/install/dvd-download]]
+  - `vm` for [[/doc/advanced_topics/virtualization|/doc/advanced_topics/virtualization]]
+  - `download-only` for [[/install/download|/install/download]]
+  - `install-clone` for [[/install/clone|/install/clone]]
+  - `windows-usb` for [[/install/win/usb|/install/win/usb]]
+  - `mac-usb` for [[/install/mac/usb|/install/mac/usb]]
+  - `mac-dvd` for [[/install/mac/dvd|/install/mac/dvd]]
+  - `mac-clone` for [[/install/mac/clone|/install/mac/clone]]
+  - `debian-usb` for [[/install/debian/usb|/install/debian/usb]]
+  - `expert-usb` for [[/install/expert/usb|/install/expert/usb]]
+  - `linux-usb` for [[/install/linux/usb|/install/linux/usb]]
+  - `upgrade-clone` for [[/upgrade/clone|/upgrade/clone]]
+  - `upgrade-tails` for [[/upgrade/tails|/upgrade/tails]]
+
+<a id="#router"></a>
+
+Router
+======
+
+The *router* is a sequence of multiple choices that determines which
+installation scenario to follow. It is divided by operating systems:
+
+  - Windows
+  - macOS
+  - Linux with `APT` and `tails-installer`: Debian, Ubuntu, or Mint
+  - Other Linux distributions
+
+Notes:
+
+- Cloning is proposed as an alternative for all operating systems as it is
+  easier and faster.
+
+- *Download only* is proposed as a minor option on the first page of the
+  router. This is an example of us optimizing for first time users: installing
+  Tails is very complex and we really want them to follow the full installation
+  instructions and not only download and try to figure out the rest by
+  themselves. This is especially true for those who think they are power users
+  which is a good share of our audience.
+
+  *Download only* is not offered as an option from the
+  sidebar of the website for the same reason and to keep the sidebar as
+  simple as possible.
+
+- Burning a DVD is also proposed as a minor option because:
+  - DVD are not very popular (13% of the WhisperBack reports received in
+    2015).
+  - DVD do not benefit from automatic upgrades, so people might be more
+    quickly out-of-date.
+  - DVD does not allow creating a persistent volume, so people cannot
+    rely on long lasting cryptographic keys to secure their
+    communication and might use weaker techniques.
+  - For these same reasons we only provide a download and links to Ubuntu
+    instructions in the scenario.
+
+- Running in a virtual machine is proposed as a minor option because:
+  - VMs are not very popular (5% of the WhisperBack reports received in
+    2015).
+  - VMs are less secure because the host operating system can monitor
+    them.
+  - VMs make it harder to create a persistent volume, so people might
+    not rely on long lasting cryptographic keys to secure their
+    communication and might use weaker techniques.
+  - For these same reasons we only provide a download and then point to the
+    documentation on virtualization.
+
+<a id="overview"></a>
+
+Overview
+========
+
+The *overview* is a single page summarizing graphically:
+
+  - The requirements of the installation scenario in terms of hardware
+    and time. This is important so that people get ready and make sure
+    beforehand that they have everything needed to complete the
+    scenario.
+  - The different steps. This give a rough idea of what will happen
+    next and how complex it is. This is particularly important as the
+    *steps* are a single and very long page.
+
+For example, the content of the overview for installing from Debian is
+stored in [[!tails_gitweb wiki/src/install/debian/usb-overview.html]] which includes a common block of
+HTML stored in [[!tails_gitweb wiki/src/install/inc/overview.html]] and uses the `debian` CSS
+class to adapt to the scenario.
+
+<a id="download"></a>
+
+Download
+========
+
+The download of the ISO image comes as a dedicated page between the
+overview and steps (except for `clone`, `upgrade-clone`, and `expert`). It
+is also available as a [[standalone page|install/download]].
+
+The download is split as a dedicated page (while still labeled as "Step
+1") to make it harder for people to skip the verification. It is still
+possible to skip the download or even the verification but the link to
+do so is labeled as a warning.
+
+We propose two download techniques displayed in equal weight and combined
+with two verification techniques that have a level of verification at least as
+good as HTTPS:
+
+a. Direct download combined with a browser extension, called *Tails Verification*. See the [[dedicated design
+   document|verification_extension]] for a security analysis of this technique.
+
+b. BitTorrent download. The Torrent file is downloaded through HTTPS
+   from our website and BitTorrent clients automatically verifies the download once
+   completed.
+
+We advertise OpenPGP verification as an optional verification technique,
+possibly done on top of the other two techniques and ideally through the
+OpenPGP Web-of-Trust. We assume that this technique is only relevant for
+people who are already knowledgeable about OpenPGP. As a consequence:
+
+- We only provide simplified instructions on how to perform the
+  verification, insisting on aspects that might still be relevant for
+  this public: verification of the date, command line options, warning
+  when the signing key is not trusted, etc.
+- We take more time to develop the verification of the signing key
+  through the OpenPGP Web of Trust because it is the only technique that is
+  really stronger than HTTPS.
+
+<a id="steps"></a>
+
+Steps
+=====
+
+The *steps* for a given scenario is a very long page with step-by-step
+instructions of the whole process.
+
+- It is a single page so that people can get a feeling of what is left
+  to be done. During the tests, many people were scrolling up and down
+  the page, for example while waiting for an operation to complete or
+  when feeling that they missed something earlier.
+
+- The content of each step is written in an inline stored in
+  `install/inc/steps/*.inline.mdwn` which is inlined from the scenarios
+  themselves (for example `install/debian/usb.mdwn`) and adapted to each
+  scenario using CSS classes.
