@@ -72,6 +72,9 @@ Options for '@product' features:
   --retry-find       Print a warning whenever Sikuli fails to find an image
                      and allow *one* retry after pressing ENTER. This is useful
                      for updating outdated images.
+  --fuzzy-image-matching
+                     When Sikuli fails to find an image, let it retry with more
+                     fuzziness (or \"lower similarity factor\" in Sikuli terms).
   --tmpdir           Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
@@ -188,10 +191,11 @@ VNC_SERVER=
 INTERACTIVE_DEBUGGING=
 KEEP_SNAPSHOTS=
 SIKULI_RETRY_FINDFAILED=
+SIKULI_FUZZY_IMAGE_MATCHING=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,iso:,old-iso:,interactive-debugging"
+LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,fuzzy-image-matching,iso:,old-iso:,interactive-debugging"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -225,6 +229,9 @@ while [ $# -gt 0 ]; do
             ;;
         --retry-find)
             export SIKULI_RETRY_FINDFAILED="yes"
+            ;;
+        --fuzzy-image-matching)
+            export SIKULI_FUZZY_IMAGE_MATCHING="yes"
             ;;
         --tmpdir)
             shift
