@@ -1,8 +1,8 @@
-[[!meta title="Tails $MONTH $YEAR report"]]
+[[!meta title="Tails December 2017 report"]]
 
 [[!toc levels=2]]
 
-This report covers the activity of Tails in $MONTH $YEAR.
+This report covers the activity of Tails in December 2017.
 
 Everything in this report is public.
 
@@ -11,7 +11,7 @@ Everything in this report is public.
 ## A.1 Research user needs and implementation costs
 
 We analyzed the results of our online survey. We got 1011 complete answers for
-a participation rate of 1.97%. We think it was a great success!
+a participation rate of 1.97%. It was a great success!
 
 The detailed results are in our [[blueprint|blueprint/veracrypt#survey]].
 
@@ -19,7 +19,8 @@ The detailed results are in our [[blueprint|blueprint/veracrypt#survey]].
 
 Justification of our work:
 
-  - 40% of Tails users are also VeraCrypt users, both inside and outside
+  - 40% of Tails users are also VeraCrypt users (*Tails+VeraCrypt
+    users*), both inside and outside
     Tails.
 
   - 60% of Tails+VeraCrypt users only use VeraCrypt outside of Tails.
@@ -51,7 +52,7 @@ Definition of the scope of our work:
 ## A.2 UX & UI design sprint
 
 The main developer and the UX designer working on this project gathered for
-three days of sprint in Berlin, at the Onion Space, a coworking space of
+three days of sprint in Berlin, at the Onion Space, a coworking space for
 Internet freedom technologists, on December 8, 9, and 10.
 
 ### Definition of the scope of our work
@@ -61,18 +62,17 @@ preliminary research work that we did, both in terms of user needs
 (through the survey) and technical feasibility (through the
 backend code written until now).
 
-The details is in our [[blueprint|blueprint/veracrypt#scope]] and here is a
-visual summary:
+We structure the scope of our work in four iterations. We will implement
+and upstream each iteration one after the other and go as far as the
+budget allows:
 
-<img src="https://labs.riseup.net/code/attachments/download/1837/scope.png">
+1. Unlocking partitions
+2. Unlocking file containers
+3. Creating and modifying partitions and containers
+4. *VeraCrypt Mounter*
 
-XXX: Fix this to mention iterations instead because the current
-structure is misleading:
-
-1. Partitions
-2. File containers
-3. Modification and creation
-4. Integration improvements
+The details of each iteration is in our
+[[blueprint|blueprint/veracrypt#scope]].
 
 ### Paper prototyping
 
@@ -82,11 +82,11 @@ user scenarios:
   - Scenario A: Unlocking a file container.
   - Scenario B: Creating a new partition.
 
-Paper prototypes allowed us to
+Paper prototypes allowed us to:
 
-  - make our ideas come to life without having to write a single line of code,
-  - create a shared understanding between designer and developer,
-  - and identify issues what we overlooked so far.
+  - Make our ideas come to life without having to write a single line of code.
+  - Create a shared understanding between designer and developer.
+  - Identify issues what we overlooked so far.
 
 Example of a paper prototype showing steps of scenario A, locating the file
 container and opening it using *VeraCrypt Mounter*:
@@ -170,14 +170,14 @@ not need to wait for the UX & GUI design sprint.
 
 We worked on a limitation of the backend ([[!tails_ticket 9059]])
 which currently locks the opening of the desktop during more than
-a minute without any feedback, when the Additional software feature
-is enabled.
+a minute without any feedback, when the Additional Software feature
+is activated.
 We
 [[designed a solution|blueprint/additional_software_packages/dont_block_desktop_startup]]
 to this problem and started implementing it ([[!tails_ticket 9059]]). The implementation is working, and should be reviewed and polished within the next month.
 
 We also fixed a problem that could theoretically happen in corner
-cases, when the user has added to their list of Additional software
+cases, when the user has added to their list of additional software
 a package that prompts upon installation ([[!tails_ticket 6038]]).
 The fix will be released in Tails 3.5 (January, 2018).
 
@@ -191,9 +191,7 @@ potential problems:
  - APT indices have expired: it turns out that changes in APT made
    this a non-issue on Debian Stretch.
  - One of the packages was not cached in the first place: the root
-   cause of this problem was identified and a fix has been committed
-   and will be released in Tails 3.5 ([[!tails_ticket 10958]]).
+   cause of this problem was identified and a fix has been
+   released in Tails 3.4 ([[!tails_ticket 10958]]).
  - Incomplete online upgrade process: a solution has been designed and
    implemented; it passed a 1st review, and will be polishing and released in 2018Q1.
-
-# C. Deliver new features

@@ -649,6 +649,10 @@ Include each such version in a white-space separated list called
 and run the following:
 
     for source_version in ${IUK_SOURCE_VERSIONS}; do
+        if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
+            echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
+            break
+        fi
         sudo su -c "cd ${IUK_CHECKOUT:?} && \
           SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
@@ -692,10 +696,11 @@ Prepare upgrade-description files
         ./bin/tails-iuk-generate-upgrade-description-files \
             --build-target amd64 \
             --version "${VERSION:?}" \
-            --next-version "${NEXT_PLANNED_VERSION:?}" \
-            --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
+            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
+            --next-version "${NEXT_PLANNED_MINOR_VERSION:?}" \
             --next-version "${VERSION:?}.1" \
-            --iso "${ISOS_PATH:?}" \
+            --iso "${ISO_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
             --previous-version "${VERSION:?}~rc1" \
             --iuks "${ISOS:?}" \
@@ -1212,7 +1217,7 @@ Test downloading the ISO and IUK over HTTP.
 
 Make sure every active mirror in the pool has the new version:
 
-	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fasts \
+	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
