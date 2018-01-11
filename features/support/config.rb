@@ -59,6 +59,8 @@ loop do
     break
   end
 end
+SIKULI_CANDIDATES_DIR = "#{ARTIFACTS_DIR}/sikuli_candidates"
+SIKULI_IMAGE_PATH = "#{Dir.pwd}/features/images/"
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'jirk5u4osbsr34t5.onion'
