@@ -112,7 +112,7 @@ def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
 
 # Note: we can't do nicer delete + move operations because the directory
 # we want to replace is bind-mounted. So we have to delete the content
-# we want to replace, and then copy the content we want to restore.
+# we want to replace, and then move the content we want to restore.
 def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
     """Restore the copy of the old APT lists
     """
@@ -126,10 +126,7 @@ def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
     # Copy the content of srcdir to dstdir
     for basename in os.listdir(srcdir):
         path = os.path.join(srcdir, basename)
-        if os.path.isfile(path):
-            shutil.copy2(path, dstdir)
-        elif os.path.isdir(path):
-            shutil.copytree(path, os.path.join(dstdir, basename))
+        shutil.move(path, dstdir)
 
 
 def install_additional_packages(ignore_old_apt_lists=False):
