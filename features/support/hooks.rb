@@ -134,9 +134,13 @@ end
 
 def save_journal(path)
   File.open("#{path}/systemd.journal", 'w') { |file|
-    file.write($vm.execute('journalctl -a --no-pager').stdout)
+    $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
+    file.write($vm.file_content('/tmp/systemd.journal'))
   }
   save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
+rescue Exception => e
+  info_log("Exception thrown while trying to save the journal: " +
+           "#{e.class.name}: #{e}")
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
@@ -279,7 +283,7 @@ After('@product') do |scenario|
     # well cause the remote shell to not respond any more, e.g. when
     # we cause a system crash), so let's collect everything depending
     # on the remote shell here:
-    if $vm.remote_shell_is_up?
+    if $vm && $vm.remote_shell_is_up?
       save_journal($config['TMPDIR'])
     end
     $failure_artifacts.sort!
