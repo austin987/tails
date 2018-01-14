@@ -160,10 +160,10 @@ def install_additional_packages(ignore_old_apt_lists=False):
                       "Found a copy of old APT lists, restoring it.")
         try:
             restore_old_apt_lists()
-        except:
+        except Exception as e:
             syslog.syslog(syslog.LOG_WARNING,
-                          "Failed to restore the old APT lists, "
-                          "deleting them and proceeding anyway.")
+                          "Restoring old APT lists failed with %r, "
+                          "deleting them and proceeding anyway." % e)
         # In all cases, delete the old APT lists: if they could be
         # restored we don't need them anymore (and we don't want to
         # restore them again next time); if they could not be
