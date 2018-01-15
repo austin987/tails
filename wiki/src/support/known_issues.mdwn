@@ -609,3 +609,26 @@ a
 [[terminal|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#terminal]]:
 
 	echo "no-grab" >> ~/.gnupg/gpg-agent.conf
+
+## The _Applications_ menu sometimes stops working
+
+When connecting to Tor, Tails sets the system time to the current time
+in the [[!wikipedia Coordinated Universal Time]] (UTC) timezone.
+Many operating systems, such as Linux and macOS, write time expressed
+in UTC to the hardware clock of the computer. But Windows instead
+writes time expressed in the local timezone to the hardware clock of
+the computer. So, if you are East from the United Kingdom on
+a computer that also runs Windows, Tails will make the system clock go
+backwards during startup. Unfortunately, this may trigger software
+errors in Tails.
+
+For example, when this happens the <span
+class="guimenu">Applications</span> menu sometimes stops working.
+
+Press <span class="keycap">Alt+F2</span> and type `r` to restart GNOME
+Shell, which solves this problem temporarily.
+
+To solve this problem permanently on a Windows computer,
+[set the hardware clock of the computer to UTC](https://wiki.archlinux.org/index.php/Time#UTC_in_Windows).
+
+See [[!tails_ticket 14250]] and [[!tails_ticket 15168]] for more details.
