@@ -52,7 +52,7 @@ def _notify(title, body):
     """
     cmd = "/usr/local/sbin/tails-notify-user"
     try:
-        subprocess.check_output([cmd, title, body], stderr=subprocess.STDOUT)
+        subprocess.check_call([cmd, title, body], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: unable to notify the user. %s returned "
