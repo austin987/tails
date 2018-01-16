@@ -59,7 +59,7 @@ Then /^I install "(.+)" using apt$/ do |package_name|
   retry_tor(recovery_proc) do
     Timeout::timeout(2*60) do
       $vm.execute_successfully("echo #{@sudo_password} | " +
-                               "sudo -S apt install #{package_name}",
+                               "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package_name}",
                                :user => LIVE_USER)
     end
   end
