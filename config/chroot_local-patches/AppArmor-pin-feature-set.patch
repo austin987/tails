@@ -1,18 +1,9 @@
-Description: pin the AppArmor feature set to the Stretch's kernel one
- .
- Let's smooth UX on kernel upgrades and allow ourselves to update the AppArmor
- policy in a relaxed manner.
-Bug-Debian: https://bugs.debian.org/879585
-Forwarded: not-needed
-Author: intrigeri <intrigeri@debian.org>
-
---- a/etc/apparmor/parser.conf
-+++ b/etc/apparmor/parser.conf
-@@ -60,3 +60,7 @@
- ## Adjust compression
- #Optimize=compress-small
- #Optimize=compress-fast
-+
-+## Pin feature set (avoid regressions when policy is lagging behind
-+## the kernel)
+--- a/etc/apparmor/parser.conf	2017-12-07 07:32:02.000000000 +0000
++++ b/etc/apparmor/parser.conf	2018-01-17 12:19:47.376300644 +0000
+@@ -62,4 +62,4 @@
+ 
+ ## Pin feature set (avoid regressions when policy is lagging behind
+ ## the kernel)
+-features-file=/usr/share/apparmor-features/features
 +features-file=/usr/share/apparmor-features/features.Tails
+
