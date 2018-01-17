@@ -6,7 +6,8 @@ set -x
 
 echo "Checking if we should stop shipping our own AppArmor feature set"
 
-if [ -f /usr/share/apparmor-features/features ]; then
+if [ -f /usr/share/apparmor-features/features ] \
+       && [ -f /usr/share/apparmor-features/Tails.features ]; then
     if cmp --quiet /usr/share/apparmor-features/features.Tails \
               /usr/share/apparmor-features/features; then
         echo "Debian ships the same AppArmor feature set as ours. " \
