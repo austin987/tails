@@ -94,6 +94,11 @@ if [ $(dpkg --print-architecture) != amd64 ] ; then
     exit 1
 fi
 
+
+# space-separated list of additional packages debootstrap installs
+#  - gnupg: needed by apt-key, not installed by default anymore on Buster
+export LB_BOOTSTRAP_INCLUDE="gnupg"
+
 # init variables
 RUN_LB_CONFIG="lb config noauto"
 
