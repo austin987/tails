@@ -173,6 +173,11 @@ Does not start on USB sticks created using Tails Installer.
 
 Does not start Tails 1.2.3 created using Tails Installer.
 
+### HP Pavilion 15-ab277ca
+
+Tails 3.3 restarts during startup and never starts successfully
+([[!tails_ticket 15152]]).
+
 ### HP Pavilion dv7
 
 Since Tails 1.3, gets stuck at the Boot Loader Menu, whether Tails is installed manually or using
@@ -211,6 +216,28 @@ your test results back to us.
 
 Graphics issues
 ===============
+
+GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
+----------------------------------------------------------------------
+
+Some computers [[!tails_ticket 11095 desc="cannot start the GNOME
+desktop"]].
+
+After the <span class="application">Tails Greeter</span> they freeze, or
+sometimes fail with the message <span class="error">"Oh no! Something has gone
+wrong. A problem has occurred and the system can't recover. Please contact a
+system administrator"</span>.
+
+This issue has appeared with the following graphic adapters:
+
+- Mars XTX [Radeon HD 8790M]
+- Mars XTX [Radeon HD 8790M] (rev ff)
+- Cedar [Radeon HD 5000/6000 7350/8350 Series]
+- Broadway PRO [Mobility Radeon HD 5850]
+- RV730/M96 [Mobility Radeon HD 4650/5165]
+
+For some models, adding `radeon.modeset=0` to the
+[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
 
 Tails Greeter fails to start with some AMD/ATI Radeon graphic adapters
 ----------------------------------------------------------------------
@@ -595,3 +622,35 @@ the keyboard layout by clicking on the `en` systray icon.
 Affected language codes are `AYC`, `BHB`, `BRX`, `CMN`, `HAK`, `HNE`, `LIJ`,
 `LZH`, `MHR`, `NAN`, `NHN`, `QUZ`, `SGS`, `SHS`, `TCY`, `THE`, `UNM`, `WAE` and
 `YUE`.
+
+## The OpenPGP passphrase prompt steals the keyboard and mouse focus
+
+This happens when one has enabled the GnuPG persistence feature before
+Tails 2.3. To fix this problem, execute the following command in
+a
+[[terminal|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#terminal]]:
+
+	echo "no-grab" >> ~/.gnupg/gpg-agent.conf
+
+## The _Applications_ menu sometimes stops working
+
+When connecting to Tor, Tails sets the system time to the current time
+in the [[!wikipedia Coordinated_Universal_Time]] (UTC) timezone.
+Many operating systems, such as Linux and macOS, write time expressed
+in UTC to the hardware clock of the computer. But, Windows instead
+writes time expressed in the local timezone to the hardware clock of
+the computer. So, if you are east of the United Kingdom (which is in the UTC timezone) on
+a computer that also runs Windows, Tails will make the system clock go
+backwards during startup. Unfortunately, this may trigger software
+errors in Tails.
+
+For example, when this happens the <span
+class="guimenu">Applications</span> menu sometimes stops working.
+
+Press <span class="keycap">Alt+F2</span> and type `r` to restart GNOME
+Shell, which solves this problem temporarily.
+
+To solve this problem permanently on a Windows computer,
+[set the hardware clock of the computer to UTC](https://wiki.archlinux.org/index.php/Time#UTC_in_Windows).
+
+See [[!tails_ticket 14250]] and [[!tails_ticket 15168]] for more details.
