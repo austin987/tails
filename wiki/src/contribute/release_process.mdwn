@@ -548,7 +548,7 @@ suite should be ready, so it is time to:
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
 
 * tag the release *again*, with all included files in:
-  
+
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
         git push --tags --force && \
@@ -649,6 +649,10 @@ Include each such version in a white-space separated list called
 and run the following:
 
     for source_version in ${IUK_SOURCE_VERSIONS}; do
+        if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
+            echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
+            break
+        fi
         sudo su -c "cd ${IUK_CHECKOUT:?} && \
           SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
@@ -692,10 +696,11 @@ Prepare upgrade-description files
         ./bin/tails-iuk-generate-upgrade-description-files \
             --build-target amd64 \
             --version "${VERSION:?}" \
-            --next-version "${NEXT_PLANNED_VERSION:?}" \
-            --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
+            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
+            --next-version "${NEXT_PLANNED_MINOR_VERSION:?}" \
             --next-version "${VERSION:?}.1" \
-            --iso "${ISOS_PATH:?}" \
+            --iso "${ISO_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
             --previous-version "${VERSION:?}~rc1" \
             --iuks "${ISOS:?}" \
@@ -781,8 +786,8 @@ Prepare upgrade-description files
         )
 
 
-Prepare the ISO description file for DAVE
------------------------------------------
+Prepare the ISO description file for *Tails Verification*
+---------------------------------------------------------
 
 If preparing a RC, skip this part.
 
@@ -812,7 +817,7 @@ Update the ISO description file (IDF) used by the browser extension:
     EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git add wiki/src/install/v1/Tails/{i386,amd64}/stable/latest.yml && \
-      git commit -m "Update IDF file for DAVE." )
+      git commit -m "Update IDF file for Tails Verification." )
 
 Upload images
 =============
@@ -1123,7 +1128,7 @@ previous release (including any RC).
 Update the size of the ISO image in `inc/*`:
 
         LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
-          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2iB/' \
+          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
           > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html"
 
 Generate the expected signature verification output:
@@ -1212,7 +1217,7 @@ Test downloading the ISO and IUK over HTTP.
 
 Make sure every active mirror in the pool has the new version:
 
-	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fasts \
+	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
@@ -1279,8 +1284,7 @@ Checkout the release branch that is about to be merged into `master`:
   use it to fetch the ISO image:
   - `inc/stable_amd64_iso_url.html`: should contain exactly the expected
     ISO image URL.
-  - `install/download/openpgp`: the `Tails ${VERSION} ISO image`
-    link.
+  - `install/download`: "Direct download" button.
   - `install/expert/usb`: in the `wget` command.
 
 If everything checks out ok, let the RM know so they can proceed with
@@ -1456,16 +1460,16 @@ this, and skip what does not make sense for a RC.
 1. Remove IUKs that are more than 6 months old from
    `/{stable,alpha}/iuk` on the rsync server:
    - first check that it's not going to remove anything we want to keep:
-     
+
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+183' \
                     -not -name '*~test_*~test.iuk' -ls \
              \"
-   
+
    - then actually delete the files:
-     
+
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
