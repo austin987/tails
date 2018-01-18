@@ -54,7 +54,21 @@ fi
 # * https://tails.boum.org/bugs/tor_vs_networkmanager/
 # To work around this we restart Tor, in various ways, no matter the
 # case below.
+TOR_SYSTEMD_OVERRIDE_DIR="/lib/systemd/system/tor@default.service.d"
+TOR_RESOLV_CONF_OVERRIDE="${TOR_SYSTEMD_OVERRIDE_DIR}/50-resolv-conf-override.conf"
 if [ "$(tails_netconf)" = "obstacle" ]; then
+    # Override /etc/resolv.conf for tor only, so it can use a clearnet
+    # DNS server to resolve hostnames used for pluggable transport and
+    # proxies.
+    if [ ! -e "${TOR_RESOLV_CONF_OVERRIDE}" ]; then
+        mkdir -p "${TOR_SYSTEMD_OVERRIDE_DIR}"
+        cat > "${TOR_RESOLV_CONF_OVERRIDE}" <<EOF
+[Service]
+BindReadOnlyPaths=/etc/resolv-over-clearnet.conf:/etc/resolv.conf
+EOF
+        systemctl daemon-reload
+    fi
+
     # We do not use restart-tor since it validates that bootstraping
     # succeeds. That cannot happen until Tor Launcher has started
     # (below) and the user is done configuring it.
@@ -79,5 +93,9 @@ if [ "$(tails_netconf)" = "obstacle" ]; then
         sleep 1
     done
 else
+    if [ -e "${TOR_RESOLV_CONF_OVERRIDE}" ]; then
+        rm "${TOR_RESOLV_CONF_OVERRIDE}"
+        systemctl daemon-reload
+    fi
     ( restart-tor ) &
 fi
