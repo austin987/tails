@@ -30,7 +30,7 @@ done
 TOR_LAUNCHER_PROCESS_REGEX="firefox-unconfined -?-app.*tor-launcher-standalone"
 if pgrep -f "${TOR_LAUNCHER_PROCESS_REGEX}"; then
    pkill -f "${TOR_LAUNCHER_PROCESS_REGEX}"
-   pref=/user/Data/Browser/profile.default/prefs.js
+   pref=/home/tor-launcher/.tor-launcher/profile.default/prefs.js
    sed -i '/^user_pref("extensions\.torlauncher\.prompt_at_startup"/d' "${pref}"
    echo 'user_pref("extensions.torlauncher.prompt_at_startup", false);' >> "${pref}"
 fi
