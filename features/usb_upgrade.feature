@@ -1,7 +1,7 @@
 @product
 Feature: Upgrading an old Tails USB installation
   As a Tails user
-  If I have an old versoin of Tails installed on a USB device
+  If I have an old version of Tails installed on a USB device
   and the USB device has a persistent partition
   I want to upgrade Tails on it
   and keep my persistent partition in the process
