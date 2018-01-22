@@ -40,11 +40,6 @@ rm -r /var/lib/monkeysphere/authentication/
 # Remove logs.
 rm -r /var/lib/dkms/*/*/*/*/log
 
-# Set various timestamps according to SOURCE_DATE_EPOCH.
-find / -name '%gconf-tree.xml' -print0 | \
-    xargs -0r \
-        sed -i -e 's@\bmtime="[0-9][0-9]*"@mtime="'${SOURCE_DATE_EPOCH}'"@g'
-
 # Post-process /etc/shadow by setting the sp_lstchg field to the number of days
 # since SOURCE_DATE_EPOCH instead of 1st Jan 1970. (#12339)
 # XXX:Buster: drop this if https://bugs.debian.org/857803 is fixed.
@@ -52,3 +47,7 @@ cut -d: -f1 /etc/shadow | \
     xargs -L1 \
         chage --lastday \
             "$(($(date --utc --date "@${SOURCE_DATE_EPOCH}" "+%s") / 86400))"
+
+# A user reported all executable bits of /etc/hostname being set when
+# trying to reproduce Tails 3.1. See #13623 for details.
+chmod u=rw,go=r /etc/hostname

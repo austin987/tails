@@ -448,12 +448,18 @@ class VM
     return execute(cmd, options)
   end
 
-  def wait_until_remote_shell_is_up(timeout = 90)
+  def remote_shell_is_up?
     msg = 'hello?'
+    Timeout::timeout(3) do
+      execute_successfully("echo '#{msg}'").stdout.chomp == msg
+    end
+  rescue
+    false
+  end
+
+  def wait_until_remote_shell_is_up(timeout = 90)
     try_for(timeout, :msg => "Remote shell seems to be down") do
-      Timeout::timeout(3) do
-        execute_successfully("echo '#{msg}'").stdout.chomp == msg
-      end
+      remote_shell_is_up?
     end
   end
 

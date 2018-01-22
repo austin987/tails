@@ -155,19 +155,39 @@ days from now:
 Stop tracking a distribution
 ----------------------------
 
-After we stop tracking a distribution, e.g. after we release Tails
-based on a new Debian, we need to manually remove all corresponding
-time-based snapshots, and the packages that are not referenced
-anymore.
+After we don't need snapshots for a given Debian distribution anymore,
+e.g. after we release Tails based on a new Debian, we need to stop
+including it in new snapshots, and to remove all corresponding
+time-based snapshots and the packages that are not referenced anymore.
 
-For example, when we stopped tracking Wheezy, we did:
+1. In puppet-tails, remove the bits about the distribution you want to
+   stop tracking from the reprepro configuration templates:
+   `templates/reprepro/snapshots/time_based/*/*`.
 
-	reprepro dumpreferences \
-       | grep -E '^s=wheezy' \
-       | awk '{print $1}' \
-       | sort -u \
-       | xargs -n 1 reprepro _removereferences \
-    && reprepro deleteunreferenced
+2. In puppet-tails, remove references to the distribution you want to
+   stop tracking from the `tails::reprepro::params` class.
+
+3. Commit, push and deploy on the system that hosts our time-based
+   APT snapshots.
+
+4. In the directory for each repository (e.g. `debian`, `torproject`),
+   adjust `s=jessie` to match the codename of the distribution you
+   want to remove in the following command and run it:
+
+        reprepro --delete clearvanished && \
+        reprepro export && \
+        reprepro dumpreferences \
+          | grep -E '^s=jessie' \
+          | awk '{print $1}' \
+          | sort -u \
+          | xargs -n 1 reprepro _removereferences && \
+        reprepro deleteunreferenced
+
+5. Delete `dists/$codename/` in the directory of each repository.
+
+6. In the directory for each repository, delete files in the `logs`
+   sub-directory that were about the distribution we just
+   stopped tracking.
 
 <a id="freeze-exception"></a>
 

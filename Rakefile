@@ -34,6 +34,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
+  'TAILS_BUILD_FAILURE_RESCUE',
   'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
   'TAILS_OFFLINE_MODE',
@@ -161,7 +162,7 @@ def enough_free_host_memory_for_ram_build?
   return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
   begin
-    usable_free_mem = `free`.split[16].to_i
+    usable_free_mem = `free`.split[12].to_i
     usable_free_mem > VM_MEMORY_FOR_RAM_BUILDS * 1024
   rescue
     false
@@ -169,7 +170,7 @@ def enough_free_host_memory_for_ram_build?
 end
 
 def free_vm_memory
-  capture_vagrant_ssh('free').first.chomp.split[16].to_i
+  capture_vagrant_ssh('free').first.chomp.split[12].to_i
 end
 
 def enough_free_vm_memory_for_ram_build?
@@ -368,8 +369,9 @@ task :setup_environment => ['validate_git_state'] do
   ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
-      raise "Variable '#{var}' is empty, which should not be possible" +
-            "(validate_git_state must be buggy)"
+      raise "Variable '#{var}' is empty, which should not be possible: " +
+            "either validate_git_state is buggy or the 'origin' remote " +
+            "does not point to the official Tails Git repository."
     end
   end
 end

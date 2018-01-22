@@ -18,9 +18,9 @@
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -17,46 +19,53 @@
-   #dbus,
-   network tcp,
+@@ -20,52 +22,58 @@
+ 
+   ptrace (trace) peer=@{profile_name},
  
 +  /etc/asound.conf r,
    deny /etc/host.conf r,
@@ -42,10 +42,15 @@
 +  /etc/machine-id r,
 +  /var/lib/dbus/machine-id r,
  
+   /dev/ r,
+   /dev/shm/ r,
+ 
+   owner @{PROC}/@{pid}/fd/ r,
 +  owner @{PROC}/@{pid}/environ r,
-   owner @{PROC}/[0-9]*/mountinfo r,
-   owner @{PROC}/[0-9]*/stat r,
-   owner @{PROC}/[0-9]*/task/*/stat r,
+   owner @{PROC}/@{pid}/mountinfo r,
+   owner @{PROC}/@{pid}/stat r,
+   owner @{PROC}/@{pid}/status r,
+   owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/ r,
@@ -61,6 +66,7 @@
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/components/*.so mr,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/browser/components/*.so mr,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox rix,
+-  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/plugin-container Pix,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/{,TorBrowser/UpdateInfo/}updates/[0-9]*/updater ix,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/{,TorBrowser/UpdateInfo/}updates/0/MozUpdater/bgupdate/updater ix,
 -  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profiles.ini r,
@@ -102,10 +108,21 @@
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -87,6 +96,34 @@
-   # sourced by the gnome abstraction, that we include.
-   deny /dev/dri/** rwklx,
+@@ -103,9 +111,43 @@
  
+   # Silence denial logs about permissions we don't need
+   deny /dev/dri/   rwklx,
++  deny @{HOME}/.cache/fontconfig/ rw,
++  deny @{HOME}/.cache/fontconfig/** rw,
++  deny @{HOME}/.config/gtk-2.0/ rw,
++  deny @{HOME}/.config/gtk-2.0/** rw,
++  deny @{HOME}/.mozilla/firefox/bookmarks/ r,
+   deny @{PROC}/@{pid}/net/route r,
+   deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
+   deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
++  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
++  deny /usr/local/lib/tor-browser/update.test/ rw,
++
 +  /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
 +  owner @{HOME}/.gstreamer*/ rw,
 +  owner @{HOME}/.gstreamer*/** rw,
@@ -117,7 +134,6 @@
 +
 +  # Required for e10s
 +  /usr/local/lib/tor-browser/plugin-container Pix,
-+  owner /dev/shm/org.chromium.* rw,
 +
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
@@ -133,11 +149,10 @@
 +  # Deny access to the list of recently used files. This overrides the
 +  # access to it that's granted by the freedesktop.org abstraction.
 +  deny @{HOME}/.local/share/recently-used.xbel* rw,
-+
+ 
    # KDE 4
    owner @{HOME}/.kde/share/config/* r,
- 
-@@ -94,5 +131,11 @@
+@@ -114,5 +156,11 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
@@ -150,4 +165,3 @@
 +  deny /tmp/                 rwklx,
  }
 +
-

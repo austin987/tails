@@ -10,38 +10,6 @@ Feature: Upgrading an old Tails USB installation
   # other. When editing this feature, make sure you understand these
   # dependencies (which are documented below).
 
-  Scenario: Try to "Upgrade from ISO" Tails to a pristine USB drive
-    Given I have started Tails from DVD without network and logged in
-    And I plug and mount a USB drive containing the Tails ISO
-    And I temporarily create a 4 GiB disk named "pristine"
-    And I plug USB drive "pristine"
-    When I start Tails Installer in "Upgrade from ISO" mode
-    Then I am told that the destination device cannot be upgraded
-
-  Scenario: Try to "Upgrade by cloning" Tails to a pristine USB drive
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 4 GiB disk named "pristine"
-    And I plug USB drive "pristine"
-    When I start Tails Installer in "Upgrade by cloning" mode
-    Then I am told that the destination device cannot be upgraded
-
-  Scenario: Try to "Upgrade from ISO" Tails to a USB drive with GPT and a FAT partition
-    Given I have started Tails from DVD without network and logged in
-    And I plug and mount a USB drive containing the Tails ISO
-    And I temporarily create a 4 GiB disk named "gptfat"
-    And I create a gpt partition with a vfat filesystem on disk "gptfat"
-    And I plug USB drive "gptfat"
-    When I start Tails Installer in "Upgrade from ISO" mode
-    Then I am told that the destination device cannot be upgraded
-
-  Scenario: Try to "Upgrade by cloning" Tails to a USB drive with GPT and a FAT partition
-    Given I have started Tails from DVD without network and logged in
-    And I temporarily create a 4 GiB disk named "gptfat"
-    And I create a gpt partition with a vfat filesystem on disk "gptfat"
-    And I plug USB drive "gptfat"
-    When I start Tails Installer in "Upgrade by cloning" mode
-    Then I am told that the destination device cannot be upgraded
-
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
     And the computer is set to boot from the old Tails DVD
@@ -50,9 +18,9 @@ Feature: Upgrading an old Tails USB installation
     When the computer boots Tails
     And I log in to a new session
     And all notifications have disappeared
-    And I create a 4 GiB disk named "old"
+    And I create a 7200 MiB disk named "old"
     And I plug USB drive "old"
-    When I "Install by cloning" Tails to USB drive "old"
+    When I install Tails to USB drive "old" by cloning
     Then the running Tails is installed on USB drive "old"
     But there is no persistence partition on USB drive "old"
     And I unplug USB drive "old"
@@ -87,7 +55,7 @@ Feature: Upgrading an old Tails USB installation
     Given I have started Tails from DVD without network and logged in
     And I clone USB drive "old" to a new USB drive "to_upgrade"
     And I plug USB drive "to_upgrade"
-    When I "Upgrade by cloning" Tails to USB drive "to_upgrade"
+    When I upgrade Tails to USB drive "to_upgrade" by cloning
     Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
@@ -107,7 +75,7 @@ Feature: Upgrading an old Tails USB installation
     And I log in to a new session
     And I clone USB drive "old" to a new USB drive "to_upgrade"
     And I plug USB drive "to_upgrade"
-    When I "Upgrade by cloning" Tails to USB drive "to_upgrade"
+    When I upgrade Tails to USB drive "to_upgrade" by cloning
     Then the running Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
     And I unplug USB drive "__internal"
@@ -129,7 +97,7 @@ Feature: Upgrading an old Tails USB installation
     When I start Tails from USB drive "old" with network unplugged and I login
     And I plug and mount a USB drive containing the Tails ISO
     And I plug USB drive "to_upgrade"
-    And I do a "Upgrade from ISO" on USB drive "to_upgrade"
+    And I upgrade Tails on USB drive "to_upgrade" from an ISO
     Then the ISO's Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
@@ -139,7 +107,7 @@ Feature: Upgrading an old Tails USB installation
     And I plug and mount a USB drive containing the Tails ISO
     And I clone USB drive "old" to a new USB drive "to_upgrade"
     And I plug USB drive "to_upgrade"
-    And I do a "Upgrade from ISO" on USB drive "to_upgrade"
+    And I upgrade Tails on USB drive "to_upgrade" from an ISO
     Then the ISO's Tails is installed on USB drive "to_upgrade"
     And I unplug USB drive "to_upgrade"
 
