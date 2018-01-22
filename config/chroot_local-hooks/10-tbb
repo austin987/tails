@@ -195,14 +195,6 @@ EOF
         7z a -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" *
     )
     rm -r "${tmp}"
-    # These binaries are generated from the above modified files
-    # so we have to remove them. This will have a performance
-    # impact that probably is unnoticeable for humans, but TBB 7.5
-    # won't ship any of these binaries any way, so we'll converge.
-    7z d -mtc=off -tzip "${TBB_INSTALL}/omni.ja" \
-       jsloader/resource/gre/modules/addons/XPIProvider.jsm
-    7z d -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
-       jsloader/resource/app/components/nsBrowserGlue.js
     for archive in "${TBB_INSTALL}/omni.ja" "${TBB_INSTALL}/browser/omni.ja"; do
         strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
                                      "${archive}" 2>/dev/null
