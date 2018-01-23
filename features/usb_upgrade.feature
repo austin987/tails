@@ -1,7 +1,7 @@
 @product
 Feature: Upgrading an old Tails USB installation
   As a Tails user
-  If I have an old versoin of Tails installed on a USB device
+  If I have an old version of Tails installed on a USB device
   and the USB device has a persistent partition
   I want to upgrade Tails on it
   and keep my persistent partition in the process
@@ -9,6 +9,14 @@ Feature: Upgrading an old Tails USB installation
   # An issue with this feature is that scenarios depend on each
   # other. When editing this feature, make sure you understand these
   # dependencies (which are documented below).
+
+  Scenario: Try cloning Tails to a too small partition
+    Given I have started Tails from DVD without network and logged in
+    And I temporarily create a 7200 MiB disk named "too-small-partition"
+    And I create a 500 MiB gpt partition labeled "Tails" with a vfat filesystem on disk "too-small-partition"
+    And I plug USB drive "too-small-partition"
+    When I start Tails Installer
+    Then I am told by Tails Installer that I "need to use a downloaded Tails ISO image"
 
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
