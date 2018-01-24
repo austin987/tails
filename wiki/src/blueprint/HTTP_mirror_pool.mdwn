@@ -159,11 +159,10 @@ See [[HTTP_mirror_pool/archive]].
 # HTTPS mirrors
 
 We've already switched all our mirrors in the Javascript mirror-pool, handled
-by mirror-pool-dispatcher to HTTPS, but not all of our fallback mirrors.
-(#12833)
+by mirror-pool-dispatcher to HTTPS, but not all of our fallback mirrors
+([!tails_ticket #12833]).
 
-Current problem space
-=====================
+## Current problem space
 
 Round-Robin pool
 
@@ -179,8 +178,7 @@ Round-Robin pool
 * Hardcoded URLs on the website need to be accessible & HTTPSified without
   Javascript
 
-Possible solutions
-==================
+## Possible solutions
 
 ### Server based solution
 
@@ -197,8 +195,7 @@ and the expert/wget installion method.
 * → We ditch the round-robin
 * → We monitor this server more often so that we can change it if ever it becomes inaccessible.
 
-Todo now
-=========
+## Todo now
 
 * deploy in lockstep on our live website:
   - change fallback_download_url_prefix in mirror-pool-dispatcher [u]
@@ -210,29 +207,25 @@ Todo now
 * prepare a branch against mirrors.git to document the new setup and drop the obsolete crap
 * prepare a branch against tails.git to update the design doc
 
-Whenever we want
-=================
+## Whenever we want
 
 * tell wikimedia.org admins about our plans (before or after the change, whatever) [u]
 * update the documentation for mirror operators in a dedicated Git branch: delete the part about dl.a.b.o [u]
 * prepare a branch against mirror-pool.git that drops support for the DNS fallback pool [i]
 * prepare a branch against puppet-tails.git that drops support for the DNS fallback pool [i]
 
-When releasing Tails 3.7 [bertagaz]
-======================================
+## When releasing Tails 3.7 [bertagaz]
 
 * all UDFs for upgrades must still have dl.a.b.o because Tails 3.6 and older
 only support that (nothing special to do for that, just follow the release
 process doc)
 
-When releasing Tails 3.8 [i]
-===============================
+## When releasing Tails 3.8 [i]
 
 * all UDFs for upgrades from 3.6 must have dl.a.b.o
 * all UDFs for upgrades from 3.7 must have mirrors.wikimedia
 
-A few weeks after Tails 3.8 is released
-============================================
+## A few weeks after Tails 3.8 is released
 
 * drop the dl.a.b.o fallback pool
 * merge the branch into iuk.git
