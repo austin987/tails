@@ -106,7 +106,7 @@ configure_chroot_browser "${CHROOT}" "${BROWSER_USER}" "${BROWSER_NAME}" \
 # If /etc/resolv-over-clearnet.conf file is empty or doesn't exist, we
 # have no clearnet DNS server.
 if [ "$(stat --format=%s /etc/resolv-over-clearnet.conf || echo 0)" -gt 0 ]; then
-    cp /etc/resolv-over-clearnet.conf "${CHROOT}"/etc/resolv.conf
+    mount --bind /etc/resolv-over-clearnet.conf "${CHROOT}"/etc/resolv.conf
 else
     error "`gettext \"No DNS server was obtained through DHCP or manually configured in NetworkManager.\"`"
 fi
