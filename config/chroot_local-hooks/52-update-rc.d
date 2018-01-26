@@ -21,6 +21,7 @@ systemctl enable var-tmp.mount
 
 # Enable our own systemd user unit files
 systemctl --global enable tails-add-GNOME-bookmarks.service
+systemctl --global enable tails-additional-software-install.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
 systemctl --global enable tails-security-check.service
