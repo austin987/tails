@@ -34,13 +34,18 @@ non-default option called "My Internet Connection is
 censored...". When activated, the following deviations from normal
 Tails behaviour occur, in order:
 
-1. Tails Greeter adds `DisableNetwork 1` to torrc so Tor will not
+0. Tails Greeter adds `DisableNetwork 1` to torrc so Tor will not
    connect to the network without user intervention.
 
-2. When we connect to the network, a NetworkManager hook starts Tor
+0. The `tor` process is configured to not use the system resolver
+   (which is `tor` itself ⇒ catch-22) but the DNS server obtained by
+   NetworkManager instead. This enables the use of hostnames for
+   proxies and pluggable transports (which is required for e.g. Meek).
+
+0. When we connect to the network, a NetworkManager hook starts Tor
    Launcher in the background, i.e. non-blocking.
 
-3. [[Time_syncing]] waits until the user has committed their
+0. [[Time_syncing]] waits until the user has committed their
    configuration via Tor Launcher and then does its usual magic to
    ensure that Tor bootstraps even if the clock was incorrect. That is
    the reason why we have to take the more complex approach of
