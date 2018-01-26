@@ -21,7 +21,13 @@ try_cleanup_browser_chroot () {
     local user="${3}"
     try_for 10 "pkill -u ${user} 1>/dev/null 2>&1" 0.1 || \
         pkill -9 -u "${user}" || :
-    for mnt in "${chroot}/dev" "${chroot}/proc" "${chroot}" "${cow}"; do
+    # findmnt sorts submounts so we just have to revert the list to
+    # have the proper umount order. We use `tail` to suppress the
+    # "TARGET" column header.
+    local chroot_mounts="$(
+        findmnt --output TARGET --list --submounts "${chroot}" | tail -n+2 | tac
+    )"
+    for mnt in ${chroot_mounts} "${cow}"; do
         try_for 10 "umount ${mnt} 2>/dev/null" 0.1
     done
     rmdir "${cow}" "${chroot}"
