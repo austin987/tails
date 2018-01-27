@@ -12,7 +12,7 @@ When /^I add non-onion APT sources to persistence$/ do
 end
 
 Then /^the additional software package installation service is run$/ do
-  try_for(300) {
+  try_for(300) do
     $vm.execute("test -e '/run/live-additional-software/installed'").success?
-  }
+  end
 end
