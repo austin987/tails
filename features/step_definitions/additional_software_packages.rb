@@ -22,6 +22,6 @@ end
 
 Then /^the additional software package installation service is run$/ do
   try_for(300) do
-    $vm.execute("test -e '/run/live-additional-software/installed'").success?
+    $vm.file_exist?('/run/live-additional-software/installed')
   end
 end
