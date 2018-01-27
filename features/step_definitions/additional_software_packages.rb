@@ -16,7 +16,7 @@ When /^I add non-onion APT sources to persistence$/ do
   )
   $vm.file_overwrite(
     '/live/persistence/TailsData_unlocked/apt-sources.list.d/non-onion.list',
-    $vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/*").stdout
+    $vm.file_content($vm.file_glob('/etc/apt/**/*.list'))
   )
 end
 
