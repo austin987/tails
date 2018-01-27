@@ -1,6 +1,5 @@
 When /^I configure additional software packages to install "(.+?)"$/ do |package|
     $vm.execute("echo #{package} > /live/persistence/TailsData_unlocked/live-additional-software.conf")
-
 end
 
 # We have to save the non-onion APT sources in persistence, so that on
