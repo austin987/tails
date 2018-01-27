@@ -1,5 +1,8 @@
 When /^I configure additional software packages to install "(.+?)"$/ do |package|
-  $vm.execute("echo #{package} > /live/persistence/TailsData_unlocked/live-additional-software.conf")
+  $vm.file_overwrite(
+    '/live/persistence/TailsData_unlocked/live-additional-software.conf',
+    package + "\n"
+  )
 end
 
 # We have to save the non-onion APT sources in persistence, so that on
@@ -7,8 +10,14 @@ end
 # indexes to install the package we want.
 When /^I add non-onion APT sources to persistence$/ do
   $vm.execute("install -d -m 755 /live/persistence/TailsData_unlocked/apt-sources.list.d")
-  $vm.execute("echo '/etc/apt/sources.list.d  source=apt-sources.list.d,link' >> /live/persistence/TailsData_unlocked/persistence.conf")
-  $vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/* > /live/persistence/TailsData_unlocked/apt-sources.list.d/non-onion.list")
+  $vm.file_append(
+    '/live/persistence/TailsData_unlocked/persistence.conf',
+    "/etc/apt/sources.list.d  source=apt-sources.list.d,link\n"
+  )
+  $vm.file_overwrite(
+    '/live/persistence/TailsData_unlocked/apt-sources.list.d/non-onion.list',
+    $vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/*").stdout
+  )
 end
 
 Then /^the additional software package installation service is run$/ do
