@@ -128,9 +128,7 @@ apply_extension_code_signing_hacks () {
     tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z x -tzip "${TBB_INSTALL}/omni.ja" \
-           modules/addons/XPIProvider.jsm \
-           chrome/toolkit/content/mozapps/extensions/extensions.js
+        7z x -tzip "${TBB_INSTALL}/omni.ja"
         patch -p1 <<EOF
 diff -Naur a/chrome/toolkit/content/mozapps/extensions/extensions.js b/chrome/toolkit/content/mozapps/extensions/extensions.js
 --- a/chrome/toolkit/content/mozapps/extensions/extensions.js 2000-01-01 00:00:00.000000000 +0000
@@ -157,20 +155,31 @@ diff -Naur a/modules/addons/XPIProvider.jsm b/modules/addons/XPIProvider.jsm
 +      aAddon.id == "uBlock0@raymondhill.net") {
      return true;
    }
+ 
+@@ -3465,6 +3466,7 @@
+             addon.id != "tor-launcher@torproject.org" &&
+             addon.id != "https-everywhere-eff@eff.org" &&
+             addon.id != "meek-http-helper@bamsoftware.com" &&
++            addon.id != "uBlock0@raymondhill.net" &&
+             addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+           logger.warn("Refusing to install staged add-on " + id + " with signed state " + addon.signedState);
+           seenFiles.push(stageDirEntry.leafName);
 EOF
         touch --date="@${tbb_timestamp}" modules/addons/XPIProvider.jsm \
               chrome/toolkit/content/mozapps/extensions/extensions.js
-        7z u -mtc=off -tzip "${TBB_INSTALL}/omni.ja" \
-           modules/addons/XPIProvider.jsm \
-           chrome/toolkit/content/mozapps/extensions/extensions.js
-
-        7z x -tzip "${TBB_INSTALL}/browser/omni.ja" \
-           components/nsBrowserGlue.js
+        rm "${TBB_INSTALL}/omni.ja"
+        7z a -mtc=off -tzip "${TBB_INSTALL}/omni.ja" *
+    )
+    rm -r "${tmp}"
+    tmp="$(mktemp -d)"
+    (
+        cd "${tmp}"
+        7z x -tzip "${TBB_INSTALL}/browser/omni.ja"
         patch -p1 <<EOF
 diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
 --- a/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
 +++ b/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
-@@ -1122,7 +1122,8 @@
+@@ -1137,7 +1137,8 @@
            if ((addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) &&
                !(addon.id == "torbutton@torproject.org" ||
                  addon.id == "tor-launcher@torproject.org" ||
@@ -182,22 +191,14 @@ diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
            }
 EOF
         touch --date="@${tbb_timestamp}" components/nsBrowserGlue.js
-        7z u -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
-           components/nsBrowserGlue.js
-        # These binaries are generated from the above modified files
-        # so we have to remove them. This will have a performance
-        # impact that probably is unnoticeable for humans, but TBB 7.5
-        # won't ship any of these binaries any way, so we'll converge.
-        7z d -mtc=off -tzip "${TBB_INSTALL}/omni.ja" \
-           jsloader/resource/gre/modules/addons/XPIProvider.jsm
-        7z d -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
-           jsloader/resource/app/components/nsBrowserGlue.js
-        for archive in "${TBB_INSTALL}/omni.ja" "${TBB_INSTALL}/browser/omni.ja"; do
-            strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
-                                         "${archive}" 2>/dev/null
-        done
+        rm "${TBB_INSTALL}/browser/omni.ja"
+        7z a -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" *
     )
     rm -r "${tmp}"
+    for archive in "${TBB_INSTALL}/omni.ja" "${TBB_INSTALL}/browser/omni.ja"; do
+        strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
+                                     "${archive}" 2>/dev/null
+    done
 }
 
 # Modern Firefox doesn't apply browser.search.defaultenginename on

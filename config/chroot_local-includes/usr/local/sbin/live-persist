@@ -276,7 +276,7 @@ disable_and_create_empty_persistence_conf_file ()
 
 	mv "$conf" "${conf}.insecure_disabled" \
 		|| error "Failed to disable '$conf': $?"
-    create_empty_persistence_conf_file "$conf"
+	create_empty_persistence_conf_file "$conf"
 }
 
 create_empty_persistence_conf_file ()
@@ -351,7 +351,7 @@ activate_volumes ()
 		fi
 	done
 
-    # Create live-additional-software.conf if there is none
+	# Create live-additional-software.conf if there is none
 	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
 	do
 		if test ! -f "$mountpoint/live-additional-software.conf"
@@ -387,10 +387,6 @@ activate_volumes ()
 	# Migrate persistence settings
 	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
-		# Migrate Claws-mail persistence setting to Icedove
-		migrate_persistence_preset '/home/amnesia/.claws-mail' 'claws-mail' \
-			'/home/amnesia/.icedove' 'icedove' "$conf"
-
 		migrate_icedove_to_thunderbird "${conf}"
 
 		# Let's make sure to get rid of any Enigmail configuredVersion
