@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import gettext
+import json
 import os
 import os.path
 import shutil
@@ -8,11 +9,14 @@ import subprocess
 import sys
 import syslog
 
+import apt.cache
+
 _ = gettext.gettext
 
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = os.path.join(
     PERSISTENCE_DIR, "live-additional-software.conf")
+ASP_STATE_FILE = "/var/run/live-additional-software.state"
 OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
@@ -115,6 +119,93 @@ def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
     for basename in os.listdir(srcdir):
         path = os.path.join(srcdir, basename)
         shutil.move(path, dstdir)
+
+
+def handle_installed_packages(packages):
+    """Configure packages as additional software packages if the user wants to.
+
+    Ask the user if packages should be added to additional software, and
+    actually add them if requested.
+    """
+    pass
+
+
+def handle_removed_packages(packages):
+    """Removes packages from additional software packages if the user wants to.
+
+    Ask the user if packages should be removed from additional software, and
+    actuallt remove them if requested.
+    """
+    pass
+
+
+def apt_hook_pre():
+    """Subcommand to handle Dpkg::Pre-Install-Pkgs."""
+    installed_packages = []
+    removed_packages = []
+
+    line = sys.stdin.readline()
+    assert line.startswith("VERSION 3")
+    line = sys.stdin.readline()
+    # Ignore configuration space, which ends with an empty line
+    while line != "\n":
+        line = sys.stdin.readline()
+    # Package action lines
+    for line in sys.stdin:
+        # Package action lines consist of five fields in Version 2: package
+        # name (without architecture qualification even if foreign), old
+        # version, direction of version change (< for upgrades, > for
+        # downgrades, = for no change), new version, action. The version
+        # fields are "-" for no version at all (for example when installing
+        # a package for the first time; no version is treated as earlier
+        # than any real version, so that is an upgrade, indicated as - <
+        # 1.23.4). The action field is "**CONFIGURE**" if the package is
+        # being configured, "**REMOVE**" if it is being removed, or the
+        # filename of a .deb file if it is being unpacked.
+        #
+        # In Version 3 after each version field follows the architecture of
+        # this version, which is "-" if there is no version, and a field
+        # showing the MultiArch type "same", "foreign", "allowed" or "none".
+        # Note that "none" is an incorrect typename which is just kept to
+        # remain compatible, it should be read as "no" and users are
+        # encouraged to support both.
+        #
+        # Example:
+        #
+        # colordif - - none < 1.0.16-1 all none **CONFIGURE**
+        package_name, old_version, old_arch, old_multiarch, direction, \
+                new_version, new_arch, new_multiarch, action = line.split()
+        if action.endswith(".deb"):
+            installed_packages.append(package_name)
+        elif action.endswith("**REMOVE**"):
+            removed_packages.append(package_name)
+
+    result = {"installed": installed_packages, "removed": removed_packages}
+    with open(ASP_STATE_FILE, 'w') as f:
+        json.dump(result, f)
+
+
+def apt_hook_post():
+    """Subcommand to handle Dpkg::Post-Invoke.
+
+    Retrieve the list of packages saved by apt_hook_pre, filter packages not
+    interesting and pass the resulting list to the appropriate method.
+    """
+    with open(ASP_STATE_FILE) as f:
+        packages = json.load(f)
+    os.remove(ASP_STATE_FILE)
+
+    apt_cache = apt.cache.Cache()
+    # Filter automatically installed packages
+    manually_installed_packages = filter(
+        lambda pkg: not apt_cache[pkg].is_auto_installed,
+        set(packages["installed"]))
+    handle_installed_packages(manually_installed_packages)
+
+    # Filter non-additional software packages
+    additional_packages_removed = set(packages["removed"]).intersection(
+        get_additional_packages())
+    handle_removed_packages(additional_packages_removed)
 
 
 def install_additional_packages(ignore_old_apt_lists=False):
@@ -251,6 +342,14 @@ if __name__ == "__main__":
     elif sys.argv[1] == "upgrade":
         if not upgrade_additional_packages():
             sys.exit(151)
+    elif sys.argv[1] == "apt-pre":
+        syslog.syslog(syslog.LOG_INFO,
+                      "APT pre hook")
+        apt_hook_pre()
+    elif sys.argv[1] == "apt-post":
+        syslog.syslog(syslog.LOG_INFO,
+                      "APT post hook")
+        apt_hook_post()
     else:
         print_help()
         sys.exit(2)
