@@ -541,8 +541,11 @@ class VM
     return f
   end
 
-  def file_content(path)
-    file_open(path) { |f| return f.read() }
+  def file_content(paths)
+    paths = [paths] unless paths.class == Array
+    paths.reduce('') do |acc, path|
+      acc + file_open(path).read
+    end
   end
 
   def file_overwrite(path, lines)
