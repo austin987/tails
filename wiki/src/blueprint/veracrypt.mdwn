@@ -422,78 +422,97 @@ techniques that they mentioned or if they only heard of them.
 Scope of our work
 =================
 
-We defined the scope of our work based the preliminary research work
-that we did, both in terms of user needs and technical feasibility.
+We structure the scope of our work in four iterations, based on our
+preliminary research work on user needs and technical feasibility.
 
-<img src="https://labs.riseup.net/code/attachments/download/1837/scope.png">
+We will implement and upstream each iteration one after the other and go
+as far as the budget allows.
 
-Goals
------
+1. Unlocking partitions
+-----------------------
 
-- The **opening of file containers** is a must as 76% of Tails+VeraCrypt
-  users use file containers.
+This iteration is the bare minimum for this project but also the
+foundation work which makes all subsequent iterations possible. It
+covers:
 
-  It's also interesting because using a single file to store a file
-  system is a possibility that is not offered by the other encryption
-  techniques in Tails.
-
-  This goal is the most challenging in terms of interactions, because:
-
-  - It's a new concept ("*mounting a file*").
-  - We cannot rely on file containers having a .TC or .HC extension.
-  - GNOME Files cannot automatically identify and flag file containers
-    as such.
-
-- The **opening of partitions** will be much easier to implement and
-  integrate than file containers and relevant for 65% of Tails+VeraCrypt
+- The unlocking of partitions, which is relevant to 65% of Tails+VeraCrypt
   users.
 
-- The **opening of hidden volumes** has a very good cost/benefit ratio
+- The opening of hidden volumes, which has a very good cost/benefit ratio
   and will please the users of this very popular feature.
 
-- The **opening of legacy TrueCrypt volumes** will come with almost no
+- The opening of legacy TrueCrypt volumes, which will come with almost no
   UX or backend cost.
 
-- The **opening with keyfiles** and **opening of system partitions**
+- The opening with keyfiles and opening of system partitions, which
   will also be very cheap to add to the custom dialogs that we will
   already have to implement for the opening of hidden volumes.
 
-- The **integration in the sidebar of GNOME Files** of opened file
-  containers will require to patch the GTK library which was not
-  expected initially. But we will have to patch GTK anyway to customize
-  the unlocking dialog of partition with hidden volumes anyway. The UX
-  cost of not integrating unlocked file containers in the sidebar would
-  also be quite high.
+2. Unlocking file containers
+----------------------------
 
-Optional goals
---------------
+This iteration extends the work done on the unlocking of partitions to
+also unlock file containers.
 
-- We have a solid UX design for the **creation of new partitions**. The
-  **creation of new file containers** will be harder to discover for the
-  user but will almost come for free once we support creating new
+File containers are very important to support as 76% of Tails+VeraCrypt
+users use file containers. They are also interesting because using a
+single file to store a whole file system is a possibility which is not offered
+by the other encryption techniques in Tails.
+
+But they are more challenging in terms of user interactions and
+integration code:
+
+- It's a new concept for users ("*mounting a file*").
+
+- We cannot rely on file containers having a .TC or .HC extension as
+  discovered during the survey.
+
+- GNOME Files cannot automatically identify and flag file containers as
+  such.
+
+- Displaying the file name of the containers when unlocking it through
+  GVfs will require an additional patch upstream.
+
+3. Creating and modifying partitions and containers
+---------------------------------------------------
+
+Since our main objective for integrating better VeraCrypt in Tails is to
+allow for cross-platform sharing of encrypted files, we consider making
+it possible to create VeraCrypt volumes in Tails as optional since users
+can continue creating volumes from their other operating systems.
+This iteration covers:
+
+- The creation of new partitions, for which we already have a solid UX
+  design.
+
+- The creation of new file containers, which will be harder to discover
+  for users but will almost come for free once we support creating new
   partitions.
 
-- The **modification of existing volumes** will be very similar to the
-  creation of new volumes.
+- The modification of existing volumes, which will be very similar to
+  the creation of new volumes.
 
-- **VeraCrypt Mounter** is a very simple application wrapper that we
-  designed and tested. It makes it easier for users to learn how to use
-  VeraCrypt in Tails and makes it faster to open file containers.
-  *VeraCrypt Mounter* would only be available in Tails.
+4. *VeraCrypt Mounter*
+----------------------
 
-  If we cannot create *VeraCrypt Mounter* in time we will replace it
-  with a link to our documentation which should lead to similar success
-  rates but a bit less comfort for first time users.
+*VeraCrypt Mounter* is a very simple application wrapper that we
+designed and tested. It makes it easier for users to learn how to use
+VeraCrypt in Tails and makes it faster to open file containers.
+*VeraCrypt Mounter* would only be available in Tails.
+
+If we cannot create *VeraCrypt Mounter* in time, we will replace it with
+a link to our documentation which should lead to similar success rates
+but a bit less comfort for first time users.
 
 Non goals
 ---------
 
-- **Opening of loop-AES and dm-crypt volumes**: Loop-AES and dm-crypt
-  volumes are other encryption formats that are indistinguishable from
-  VeraCrypt volumes while they are locked (both look like random data).
-  Even if some of our work could be make it easier to support Loop-AES
-  and dm-crypt, we won't do that because these formats are not popular
-  enough.
+Opening of loop-AES and dm-crypt volumes. Loop-AES and dm-crypt
+volumes are other encryption formats that are indistinguishable from
+VeraCrypt volumes while they are locked (both look like random data).
+Even if some of our work could be make it easier to support Loop-AES
+and dm-crypt, we won't do that because these formats are not popular
+enough.
 
 <a id="ui"></a>
 
@@ -506,7 +525,7 @@ User interface
 
 <img src="https://labs.riseup.net/code/attachments/download/1834/disks-format-partition-password.png">
 
-### Unlock dialog in gvfs
+### Unlock dialog in GVfs
 
 <img src="https://labs.riseup.net/code/attachments/download/1843/gvfs-monitor-unlock-veracrypt-volume.png">
 

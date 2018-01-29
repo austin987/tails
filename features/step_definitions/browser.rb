@@ -1,7 +1,3 @@
-Then /^the Unsafe Browser has started$/ do
-  @screen.wait("UnsafeBrowserHomepage.png", 360)
-end
-
 When /^I start the Unsafe Browser(?: through the GNOME menu)?$/ do
   step "I start \"Unsafe Browser\" via GNOME Activities Overview"
 end

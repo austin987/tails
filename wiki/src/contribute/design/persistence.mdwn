@@ -346,16 +346,22 @@ have correct access rights: owned by
 `tails-persistence-setup:tails-persistence-setup`, and not be writable
 by anyone else than the `tails-persistence-setup` user.
 
-First, those additional software packages are installed offline from tails-greeter
-`PostLogin` script.
+First, those additional software packages are installed offline by a systemd
+user unit triggered by desktop.target. It starts a system unit of the same
+name, which itself calls Additional Software Packages installation.
 
-Then, once connected to the network, a NetworkManager dispatcher hook looks for
-upgrades if additional software were activated (`apt update`, then `apt
-install` the additional software packages). For some packages (e.g.  already
-running software) the change will only be effective at next boot but hopefully a outdated
-version won't be used too long in the meantime.
+Then, once connected to the network, a NetworkManager dispatcher hook triggers
+a systemd system unit which looks for upgrades if additional software were
+activated (`apt update`, then `apt install` the additional software packages).
+For some packages (e.g.  already running software) the change will only be
+effective at next boot but hopefully a outdated version won't be used too long
+in the meantime. To ensure that the upgrade started by a NetworkManager hook is
+not racy with the installation, systemd unit is ordered after the installation,
+and waits for its state file to appear.
 
-- [PostLogin](https://git-tails.immerda.ch/greeter/plain/PostLogin.default)
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-additional-software-install.service]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-additional-software-install.service]]
+- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-additional-software-upgrade.service]]
 - [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/70-upgrade-additional-software.sh]]
 - [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]
 

@@ -101,18 +101,27 @@ end
 
 When /^I hotplug a network device( and wait for it to be initialized)?$/ do |wait|
   initial_nr_nics = wait ? all_ethernet_nics.size : nil
+  # XXX:Buster: when we stop supporting the test suite on Stretch
+  # hosts, let's remove this workaround related to #14819 and just
+  # settle on a device that works on all supported platforms.
+  if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
+    device = 'virtio'
+  else
+    device = 'pcnet'
+  end
+  debug_log("Hotplugging a '#{device}' network device")
   xml = <<-EOF
     <interface type='network'>
       <alias name='net1'/>
       <mac address='52:54:00:11:22:33'/>
       <source network='TailsToasterNet'/>
-      <model type='virtio'/>
+      <model type='#{device}'/>
       <link state='up'/>
     </interface>
   EOF
   $vm.plug_device(xml)
   if wait
-    try_for(20) do
+    try_for(30) do
       all_ethernet_nics.size >= initial_nr_nics + 1
     end
   end
