@@ -4,44 +4,81 @@
 Proposed user experience
 ========================
 
-0. Have a way to enable the feature (and its dependencies) in
+1. Have a way to enable the feature (and its dependencies) in
 *tails-persistence-setup*. This besically means cheking both
 *APT Lists* and *APT Packages Cache* (much welcome)
 
-1. When installing a new package, either through the command line or
+2. When installing a new package, either through the command line or
 through Synaptic, the user is asked whether she wants to make it
 persistent. We might want to consider using gnome-packagekit (easier) of event gnome-software (which currently don't display all available packages)
 
-2. When removing a persistent package, the user is asked whether she
+3. When removing a persistent package, the user is asked whether she
 wants to remove it from the list of persistent packages.
 
-3. Have a list of the persistent packages visible in the persistence
-wizard. As the user need to be able to check the state of this feature
-outside of APT operations.
+4. As the user need to be able to check the state of this feature
+outside of APT operations, have a list of the persistent packages visible somwhere (required), perferably in the persistence
+wizard (much welcome). 
 
-4. Allow removing packages from the list in 3 (welcome).
+5. Allow removing packages from the list in 4 (welcome).
 
-5. Allow adding packages to the list in 3 (we don't really want that, do we?).
+6. Adding package in the list will not be supported from this interface, but the UI would give hints on how to do it.
+
+## Flow chart
+
+<img src="https://labs.riseup.net/code/attachments/download/1880/asp-flowchart.svg" width="150%" height="auto" />
+
+Wireframes
+==========
+
+To be added.
 
 Implementation
---------------
+==============
 
-  - 1 and 2 might be possible to implement using APT hooks or PackageKit 
-    DBus interface. We need to
-    investigate how these hooks would communicate with the desktop
+  - 1 might require modifying the concept of the persistence
+    wizard to merge both the **APT Packages** and **APT Lists**
+    persistence features.
 
-  - 3 might require modifying the general concept of the persistence
-    wizard which is currently only a list of features that are activated
-    or not, without feedback on the information managed by each of them.
-
-  - 4 should be easy to implement once we have 3 as removing packages
-    from the list doesn't need any validity check. Note that we would
+  - 2 and 3 will be implemented using APT hooks, so that they are
+    triggered by apt and apt-get invocation from the terminal. UX tests
+    showed that this is what a lot of advanced users do. Note that we would
     always answer Yes to debconf questions.
 
-  - 5 would require validating the packages added to the list to make
+  - Integrating 4 to the persistence wieard might require modifying its general concept. The persistence wizard which is currently only a list of features that are activated or not, without feedback on the information managed by each of them.
+
+  - 5 should be easy to implement once we have 4 as removing packages
+    from the list doesn't need any validity check. 
+
+  - 6 (discarded) would require validating the packages added to the list to make
     sure that they can be installed. Installing packages on the fly as
     they are added to the list might help solving this.
 
-  - We could merge both the **APT Packages** and **APT Lists**
-    persistence features
+## Components interaction
+
+<img src="https://labs.riseup.net/code/attachments/download/1877/asp-chart.svg" width="150%" height="auto" />
+
+<img src="https://labs.riseup.net/code/attachments/download/1878/asp-persistence-setup.svg" width="150%" height="auto" />
+
+[source](https://labs.riseup.net/code/attachments/download/1881/asp-chart.odg)
+
+### IPC
+
+IPC between `tails-additional-software` (root backend) and `tails-additional-software-notify` (user session notification frontend, think about `notify-send` with actions support cf. https://developer.gnome.org/notification-spec/#basic-design) is really basic: display this notification and tell me the answer. I think the easiest way to do that is just to fork as amnesia with sudo, then check the returncode.
+
+IPC between `tails-additional-software` and `tails-persistence-setup` carries "Persistence-setup, please setup persistence with ASP" and "ASP, you can go on". It could be done the same way, but it may be worth having a persistence-setup DBus service on the system bus (which we already though when considering integrating it in the greeter).
+
+IPC between `tails-additional-software-configuration` (user session configuration interface) and `tails-additional-software` carries the list entries to remove from ASP. It may be done via `sudo` or via DBus system service, but I don't think it's worth it.
+
+### Modifications required in the persistence wizard
+
+  - Merge of APT Lists and APT Packages features into an ASP feaure (much welcome)
+
+  - Allow querying for the activation of features (ASP) programmaticaly (required), e.g. through the command line or a DBus method call.
+
+  - Allow triggering persistence creation then activate a feature (ASP) programatically (required).
+
+  - Allow a feature to have a "Settings" menu (much welcome).
+
+  - Additionnaly, allow ASP to setup the feature between persistence creation and persistence feature selection (bonus).
+
 
