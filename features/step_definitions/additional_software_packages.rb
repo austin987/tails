@@ -8,14 +8,14 @@ end
 # We have to save the non-onion APT sources in persistence, so that on
 # next boot the additional software packages service has the right APT
 # indexes to install the package we want.
-When /^I add non-onion APT sources to persistence$/ do
+When /^I make my current APT sources persistence$/ do
   $vm.execute("install -d -m 755 /live/persistence/TailsData_unlocked/apt-sources.list.d")
   $vm.file_append(
     '/live/persistence/TailsData_unlocked/persistence.conf',
     "/etc/apt/sources.list.d  source=apt-sources.list.d,link\n"
   )
   $vm.file_overwrite(
-    '/live/persistence/TailsData_unlocked/apt-sources.list.d/non-onion.list',
+    '/live/persistence/TailsData_unlocked/apt-sources.list.d/persistent.list',
     $vm.file_content($vm.file_glob('/etc/apt/**/*.list'))
   )
 end
