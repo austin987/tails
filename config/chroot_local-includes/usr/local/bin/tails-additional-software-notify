@@ -17,7 +17,8 @@ _ = gettext.gettext
 class ASPNotifier(object):
     """Display a notification and exit with a meaningful code."""
 
-    def __init__(self, title, body, accept_label=None, deny_label=None):
+    def __init__(self, title, body, accept_label=None, deny_label=None,
+                 urgent=False):
         """Shows a notification with two optional action buttons."""
         Notify.init("org.boum.tails.additional-software-packages")
 
@@ -25,6 +26,8 @@ class ASPNotifier(object):
         # are called. That's why we use an instance variable.
         self.notification = Notify.Notification.new(
                 title, body, icon="package-x-generic")
+        if urgent:
+            self.notification.set_urgency(Notify.Urgency.CRITICAL)
         if deny_label:
             self.notification.add_action("deny", deny_label,
                                          self.cb_notification_clicked, None)
@@ -51,8 +54,8 @@ def print_help():
     """
     program_name = os.path.basename(sys.argv[0])
     sys.stderr.write(
-        "Usage: %s <summary> <body> [<accept_label> [<deny_label>]]\n"
-        % program_name)
+        "Usage: %s <summary> <body> [<accept_label> [<deny_label> "
+        "[<urgent>]]]\n" % program_name)
     sys.stderr.write(
         "Shows a notification with <summary>, <body> and two optional "
         "buttons.\n"
@@ -67,7 +70,7 @@ if __name__ == "__main__":
 
     gettext.install("tails")
 
-    if not 3 <= len(sys.argv) <= 5:
+    if not 3 <= len(sys.argv) <= 6:
         print_help()
         sys.exit(2)
 
