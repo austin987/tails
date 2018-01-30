@@ -13,6 +13,7 @@ import apt.cache
 
 _ = gettext.gettext
 
+LIVE_USERNAME = "amnesia"
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = os.path.join(
     PERSISTENCE_DIR, "live-additional-software.conf")
@@ -52,22 +53,33 @@ def _launch_apt_get(specific_args):
     return apt_get.returncode
 
 
-def _notify(title, body):
+def _notify(title, body, accept_label="", deny_label="", urgent=False):
     """Display a notification to the user of the live system."""
-    cmd = "/usr/local/sbin/tails-notify-user"
+
+    cmd = "/usr/local/bin/tails-additional-software-notify"
+    if urgent:
+        urgent = "urgent"
+    else:
+        urgent = ""
+
     try:
-        subprocess.check_call([cmd, title, body], stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: unable to notify the user. %s returned "
-                      "with exit code %s" % (cmd, e.returncode))
-        syslog.syslog(syslog.LOG_WARNING,
-                      "The notification was: %s %s" % (title, body))
+        returncode = subprocess.call(["sudo", "-u", LIVE_USERNAME, cmd, title,
+                                      body, accept_label, deny_label, urgent])
     except OSError as e:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: unable to notify the user. %s" % e)
         syslog.syslog(syslog.LOG_WARNING,
                       "The notification was: %s %s" % (title, body))
+        raise
+
+    if returncode == 0:
+        return True
+    elif returncode == 1:
+        return False
+    elif returncode == 3:
+        return None
+    else:
+        raise OSError()
 
 
 def has_additional_packages_list():
