@@ -5,9 +5,6 @@ When /^I configure additional software packages to install "(.+?)"$/ do |package
   )
 end
 
-# We have to save the non-onion APT sources in persistence, so that on
-# next boot the additional software packages service has the right APT
-# indexes to install the package we want.
 When /^I make my current APT sources persistence$/ do
   $vm.execute("install -d -m 755 /live/persistence/TailsData_unlocked/apt-sources.list.d")
   $vm.file_append(

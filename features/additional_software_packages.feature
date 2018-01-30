@@ -15,6 +15,9 @@ Feature: Additional software packages
     When I update APT using apt
     And I configure additional software packages to install "sslh"
     And I install "sslh" using apt
+    # We have to save the non-onion APT sources in persistence, so
+    # that on next boot the additional software packages service has
+    # the right APT indexes to install the package we want.
     And I make my current APT sources persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
