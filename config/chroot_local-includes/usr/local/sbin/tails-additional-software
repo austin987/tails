@@ -14,6 +14,7 @@ import apt.cache
 _ = gettext.gettext
 
 LIVE_USERNAME = "amnesia"
+PERSISTENCE_PARTITION = "/dev/disk/by-partlabel/TailsData"
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = os.path.join(
     PERSISTENCE_DIR, "live-additional-software.conf")
@@ -80,6 +81,16 @@ def _notify(title, body, accept_label="", deny_label="", urgent=False):
         return None
     else:
         raise OSError()
+
+
+def has_persistence():
+    """Return true iff PERSISTENCE_PARTITION exists."""
+    return os.path.exists(PERSISTENCE_PARTITION)
+
+
+def has_unlocked_persistence():
+    """Return true iff PERSISTENCE_DIR exists."""
+    return os.path.exists(PERSISTENCE_DIR)
 
 
 def has_additional_packages_list():
