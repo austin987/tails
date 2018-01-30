@@ -38,7 +38,7 @@ EOF
   )
 end
 
-When /^I make my current APT sources persistence$/ do
+When /^I make my current APT sources persistent$/ do
   $vm.execute("install -d -m 755 /live/persistence/TailsData_unlocked/apt-sources.list.d")
   $vm.file_append(
     '/live/persistence/TailsData_unlocked/persistence.conf',
