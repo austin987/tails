@@ -528,10 +528,16 @@ class VM
 
   def file_glob(expr)
     execute(
-      'python3 -c "' +
-        'import glob; ' +
-        "print('\\0'.join(glob.glob('#{expr}', recursive=True)))" +
-      '"'
+      <<-EOF
+        bash -c '
+          shopt -s globstar dotglob nullglob
+          set -- #{expr}
+          while [ -n "${1}" ]; do
+            echo -n "${1}"
+            echo -ne "\\0"
+            shift
+          done'
+      EOF
     ).stdout.chomp.split("\0")
   end
 
