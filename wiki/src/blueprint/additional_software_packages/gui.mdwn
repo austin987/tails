@@ -1,8 +1,9 @@
 [[!meta title="User interface for additional software packages"]]
 
+[[!toc levels=2]]
 
-Proposed user experience
-========================
+Goals and non-goals
+===================
 
 1. Have a way to enable the feature (and its dependencies) in
 *tails-persistence-setup*. This besically means cheking both
@@ -23,9 +24,110 @@ wizard (much welcome).
 
 6. Adding package in the list will not be supported from this interface, but the UI would give hints on how to do it.
 
-## Flow chart
+
+Flow chart
+==========
 
 <img src="https://labs.riseup.net/code/attachments/download/1880/asp-flowchart.svg" width="150%" height="auto" />
+
+XXX: add corner cases identified below
+
+User interface
+==============
+
+Notifications for addition and removal
+--------------------------------------
+
+When the user installs a package either through the APT command line or a
+graphical interface like Synaptic, a notification is displayed to let her add
+or remove it from her list of additional software.
+
+### When a package is installed with a persistent storage unlocked
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - add.png"/>
+
+### When a package is uninstalled
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - remove.png"/>
+
+### When a package is installed with no persistent storage
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - add without persistent storage.png"/>
+
+### When a package is installed with a persistent storage locked
+
+XXX
+
+### When a package is installed but it's impossible to have a persistent storage
+
+For example, when running from a DVD or virtual machine.
+
+XXX
+
+Notifications when starting Tails with additional software
+----------------------------------------------------------
+
+If any additional software has been configured through the notifications from
+the previous sections, these packages are installed automatically from the
+persistent storage every time the user starts Tails.
+
+### When the installation succeeds
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installed.png"/>
+
+### When the installation starts
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installing.png"/>
+
+Notifications of failures
+-------------------------
+
+### When the installation fails
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installation failed.png"/>
+
+### When the upgrade fails
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - upgrade failed.png"/>
+
+Additional Software
+-------------------
+
+The list of additional software can be open from:
+
+- **Applications**&nbsp;▸**System Tools**&nbsp;▸**Additional Software**
+- **Applications**&nbsp;▸**Tails**&nbsp;▸**Additional Software**
+
+Why both? See [[!tails_ticket 5521]].
+
+### If there is no persistent storage
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software - without persistent storage.png"/>
+
+### Before any package is added
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software - empty.png"/>
+
+### When some packages are already added
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software.png"/>
+
+### When removing a package
+
+By clicking on the delete cross.
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software - remove.png"/>
+
+### If the persistent storage is locked
+
+XXX
+
+### It it is impossible to have a persistent storage
+
+For example, when running from a DVD or virtual machine.
+
+XXX
+
 
 Wireframes
 ==========
@@ -81,4 +183,6 @@ IPC between `tails-additional-software-configuration` (user session configuratio
 
   - Additionnaly, allow ASP to setup the feature between persistence creation and persistence feature selection (bonus).
 
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/persistent storage - configuration changed.png"/>
 
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/persistent storage - confirm restart.png"/>
