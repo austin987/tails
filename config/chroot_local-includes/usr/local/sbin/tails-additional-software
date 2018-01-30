@@ -150,16 +150,68 @@ def handle_installed_packages(packages):
     Ask the user if packages should be added to additional software, and
     actually add them if requested.
     """
-    pass
+    if has_unlocked_persistence():
+        if _notify(_("Add {packages} to your additional software?").format(
+                    packages=" ".join(packages)),
+                   _("To install it automatically from your persistent "
+                     "storage every time you start Tails"),
+                   _("Add to Persistent Storage"),
+                   _("Install only once"),
+                   urgent=True):
+            if has_additional_packages_list():
+                add_additional_packages(packages)
+            else:
+                setup_additional_packages()
+                add_additional_packages(packages)
+    elif has_persistence():
+        # XXX: persistence present but locked
+        raise NotImplementedError()
+    else:  # XXX: test if media is RW
+        # RW media without persistence
+        if _notify(_("Add {packages} to your additional software?").format(
+                    packages=" ".join(packages)),
+                   _("To install it automatically every time you start Tails, "
+                     "you can create a persistent storage and activate the "
+                     "<b>Additional Software</b> feature"),
+                   _("Create Persistent Storage"),
+                   _("Install only once"),
+                   urgent=True):
+            create_persistence_and_setup_additional_packages(packages)
 
 
 def handle_removed_packages(packages):
     """Removes packages from additional software packages if the user wants to.
 
     Ask the user if packages should be removed from additional software, and
-    actuallt remove them if requested.
+    actually remove them if requested.
     """
-    pass
+    raise NotImplementedError
+
+
+def add_additional_packages(packages):
+    """Add packages to additional packages configuration.
+
+    Add the packages to additional packages configuration.
+
+    packages should be a list of packages names.
+    """
+    raise NotImplementedError
+
+
+def setup_additional_packages():
+    """Enable additional software in persistence."""
+    raise NotImplementedError
+
+
+def create_persistence_and_setup_additional_packages(packages):
+    """Create persistence and add packages to its configuration.
+
+    Create a new persistence with additional packages enabled.
+    Then add the packages to additional packages configuration.
+
+    packages should be a list of packages names.
+    """
+    raise NotImplementedError
 
 
 def apt_hook_pre():
@@ -223,12 +275,14 @@ def apt_hook_post():
     manually_installed_packages = filter(
         lambda pkg: not apt_cache[pkg].is_auto_installed,
         set(packages["installed"]))
-    handle_installed_packages(manually_installed_packages)
+    if manually_installed_packages:
+        handle_installed_packages(manually_installed_packages)
 
     # Filter non-additional software packages
     additional_packages_removed = set(packages["removed"]).intersection(
         get_additional_packages())
-    handle_removed_packages(additional_packages_removed)
+    if additional_packages_removed:
+        handle_removed_packages(additional_packages_removed)
 
 
 def install_additional_packages(ignore_old_apt_lists=False):
