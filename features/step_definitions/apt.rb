@@ -46,7 +46,7 @@ When /^I make my current APT sources persistent$/ do
   )
   $vm.file_overwrite(
     '/live/persistence/TailsData_unlocked/apt-sources.list.d/persistent.list',
-    $vm.file_content($vm.file_glob('/etc/apt/**/*.list'))
+    $vm.file_content($vm.file_glob('/etc/apt/{,*/}*.list'))
   )
 end
 
