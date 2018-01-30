@@ -188,14 +188,24 @@ def handle_removed_packages(packages):
     raise NotImplementedError
 
 
-def add_additional_packages(packages):
+def add_additional_packages(new_packages):
     """Add packages to additional packages configuration.
 
     Add the packages to additional packages configuration.
 
-    packages should be a list of packages names.
+    new_packages should be a list of packages names.
     """
-    raise NotImplementedError
+    packages = get_additional_packages()
+    # The list of packages was initially provided by apt after installing them,
+    # so we don't check the names.
+    if packages:
+        packages += new_packages
+    else:
+        packages = new_packages
+    packages.sort()
+    with open(PACKAGES_LIST_FILE, 'w') as f:
+        for package in packages:
+            f.write(package)
 
 
 def setup_additional_packages():
