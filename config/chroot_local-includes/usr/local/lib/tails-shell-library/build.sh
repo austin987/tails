@@ -9,10 +9,11 @@ strip_nondeterminism_wrapper() {
     apt-get --yes purge strip-nondeterminism '^libfile-stripnondeterminism-perl'
 }
 
-# Ensure that the packages passed as arguments are installed. If they
-# are installed now, they will be marked as "automatically installed"
-# so the next `apt-get autoremove` action *unless* they are later
-# explicitly installed (or other packages depends on them).
+# Ensure that the packages whose names are passed as arguments are
+# installed. If they are installed now, they will be marked as
+# "automatically installed" so the next `apt-get autoremove` action
+# *unless* they are later explicitly installed (or other packages
+# depends on them).
 ensure_hook_dependency_is_installed() {
     # Filter out already installed packages from $@.
     for p in "${@}"; do
