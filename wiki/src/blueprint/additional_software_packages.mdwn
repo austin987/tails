@@ -1,92 +1,12 @@
-[[!meta title="User interface for additional software packages"]]
+[[!meta title="Additional software packages"]]
+
 
 <div class="note">
 [[blueprint/remember_installed_packages]] overlaps with
 this blueprint.
 </div>
 
-The persistence feature for additional software packages is a great tool
-to make Tails more flexible for diverse scenarios without having to
-bloat the ISO image.
-
-The current limitations include:
-
-  - No user interface. Currently you have to edit a file as root. ([[!tails_ticket 5996 desc="#5996"]])
-
-  - Their Installation locks the opening of the desktop. ([[!tails_ticket 9059 desc="#9059"]])
-
-  - They are checked for updates every time Tor is restarted. ([[!tails_ticket 9819 desc="#9819"]])
-
-Proposed user experience
-========================
-
-0. Have a way to enable the feature (and its dependencies) in
-*tails-persistence-setup*. This besically means cheking both
-*APT Lists* and *APT Packages Cache* (much welcome)
-
-1. When installing a new package, either through the command line or
-through Synaptic, the user is asked whether she wants to make it
-persistent. XXX: long-term wise, we should probably focus on _GNOME
-Software_ instead of _Synaptic_; if something works for both, fine,
-but the PackageKit D-Bus interface might be easier to support than
-hooking APT/dpkg, so one option would be to only support installation
-& removal done via PackageKit (i.e. either with _GNOME Software_ or
-using `pkcon` on the command line) and not operations done directly
-with `apt` or _Synaptic_.
-
-2. When removing a persistent package, the user is asked whether she
-wants to remove it from the list of persistent packages.
-
-3. Have a list of the persistent packages visible in the persistence
-wizard. As the user need to be able to check the state of this feature
-outside of APT operations.
-
-4. Allow removing packages from the list in 3 (welcome).
-
-5. Allow adding packages to the list in 3 (we don't really want that, do we?).
-
-Implementation
---------------
-
-  - 1 and 2 might be possible to implement using APT hooks. We need to
-    investigate how these APT hooks would communicate with the desktop
-    notifications.
-
-  - 3 might require modifying the general concept of the persistence
-    wizard which is currently only a list of features that are activated
-    or not, without feedback on the information managed by each of them.
-
-  - 4 should be easy to implement once we have 3 as removing packages
-    from the list doesn't need any validity check. Note that we would
-    always answer Yes to debconf questions.
-
-  - 5 would require validating the packages added to the list to make
-    sure that they can be installed. Installing packages on the fly as
-    they are added to the list might help solving this.
-
-  - We could merge both the **APT Packages** and **APT Lists**
-    persistence features
-
-Speed up installation
-=====================
-
-To solve [[!tails_ticket 9059 desc="#9059"]], which can currently block
-the opening of the desktop for several minutes, we should investigate:
-
-  - Starting reading packages lists and building cache on GDM PostLogin.
-    For that we need an APT mechanism to do all this without installing
-    or removing anything.
-
-  - Installing packages once the session has started.
-
-  - Using `nice` to not slow down the desktop too much in competition with
-    `tails-upgrade-frontend`.
-
-  - What kind of packages would suffer from being installed after the
-    session started.
-
-  - A notification mechanism for APT to be started after the session is
-    ready.
+[[!map pages="blueprint/additional_software_packages/*" show=title]]
 
 Notes
 =====

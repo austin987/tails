@@ -88,8 +88,9 @@ The main tools used to manage the Tails infrastructure are:
   cases, we run the current stable release
 * [Puppet](http://projects.puppetlabs.com/projects/puppet),
   a configuration management system
+  - our [[Puppet code|contribute/git#puppet]]
 * [Git](http://git-scm.com/) to host and deploy configuration,
-  including our [[Puppet modules|contribute/git#puppet]]
+  including our Puppet code
 
 <a id="communication"></a>
 
@@ -236,6 +237,16 @@ Below, importance level is evaluated based on:
   - [[How to add checks to our monitoring setup|roles/sysadmins/adding_icinga2_checks]]
 * importance: critical (needed to ensure that other, critical services are working)
 
+## Internal XMPP service
+
+* purpose: an internal XMPP service that can be used by Tails developers and some contributors.
+* access: at the moment everyone that is on the tails-summit mailinglist has and/or can
+  request an account.
+* tools: prosody
+* configuration:
+  - `tails::prosody` in [[!tails_gitweb_repo puppet-tails]]
+* importance: low
+
 ## Jenkins
 
 * purpose: continuous integration, e.g. build Tails ISO images from
@@ -261,13 +272,18 @@ Below, importance level is evaluated based on:
     * signing keys are managed with the `tails_secrets_jenkins` Puppet module
   - web server:
     * some configuration in the manifest ([[!tails_ticket 7107]])
+* design documentation:
+  - [[sysadmins/automated_builds_in_Jenkins]]
+  - [[sysadmins/automated_tests_in_Jenkins]]
 * importance: critical (as a key component of our development process)
+
+<a id="mumble"></a>
 
 ## Mumble
 
-* purpose: internal communication for the Fundraising team
-* access: Fundraising team members
-* tools: [[!debpts mumble-erver]]
+* purpose: internal communication for some internal teams
+* access: members of some internal teams
+* tools: [[!debpts mumble-server]]
 * configuration:
   - <https://github.com/voxpupuli/puppet-mumble>
   - `mumble::*` parameters in Hiera
@@ -345,3 +361,7 @@ Below, importance level is evaluated based on:
   - private keys are managed with the `tails_secrets_whisperback`
     Puppet module
 * importance: high
+
+# Other pages
+
+[[!map pages="contribute/working_together/roles/sysadmins/*"]]

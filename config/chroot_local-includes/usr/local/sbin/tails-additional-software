@@ -3,7 +3,6 @@
 import gettext
 import glob
 import os.path
-import pwd
 import subprocess
 import sys
 import syslog
@@ -12,7 +11,6 @@ _ = gettext.gettext
 
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = PERSISTENCE_DIR + "/live-additional-software.conf"
-ACTIVATION_FILE = "/run/live-additional-software/activated"
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
 OBSOLETE_APT_LIST_SUFFIX = "_binary-i386_Packages"
@@ -31,6 +29,7 @@ def _launch_apt_get(specific_args):
     # We will log the output and want it in English when included in bug
     # reports
     apt_get_env['LANG'] = "C"
+    apt_get_env['DEBIAN_PRIORITY'] = "critical"
     args = ["apt-get", "--quiet", "--yes"]
     args.extend(specific_args)
     apt_get = subprocess.Popen(
@@ -53,14 +52,11 @@ def _notify(title, body):
     """
     cmd = "/usr/local/sbin/tails-notify-user"
     try:
-        notify_user_output = subprocess.check_output([cmd, title, body],
-                                                     stderr=subprocess.STDOUT)
+        subprocess.check_call([cmd, title, body], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: unable to notify the user. %s returned "
                       "with exit code %s" % (cmd, e.returncode))
-        syslog.syslog(syslog.LOG_WARNING,
-                      "%s output follows: %s." % (cmd, notify_user_output))
         syslog.syslog(syslog.LOG_WARNING,
                       "The notification was: %s %s" % (title, body))
     except OSError as e:
@@ -96,15 +92,9 @@ def install_additional_packages():
     syslog.syslog("Starting to install additional software...")
     if has_additional_packages_list():
         syslog.syslog("Found additional packages list")
-    elif os.path.isdir(PERSISTENCE_DIR):
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: no configuration file found, creating an "
-                      "empty one.")
-        create_additional_packages_list()
-        return True
     else:
         syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: persistence is not mounted, exiting")
+                      "Warning: no configuration file found, exiting")
         return True
     try:
         clear_obsolete_cache(OBSOLETE_APT_LIST_SUFFIX)
@@ -116,7 +106,6 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: no packages to install, exiting")
         return True
-    set_activated()
     syslog.syslog("Will install the following packages: %s"
                   % " ".join(packages))
     apt_get_returncode = _launch_apt_get(
@@ -127,28 +116,30 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: installation of %s failed"
                       % " ".join(packages))
+        _notify(_("Your additional software installation failed"),
+                _("The installation failed. Please check your additional "
+                  "software configuration, or read the system log to "
+                  "understand better the problem."))
         return False
     else:
         syslog.syslog("Installation completed successfully.")
+        _notify(_("Your additional software are installed"),
+                _("Your additional software are ready to use."))
         return True
 
 
 def upgrade_additional_packages():
-    """The subcommand which upgrades all additional packages if they are activated
+    """The subcommand which upgrades all additional packages
     """
-    if not is_activated():
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: additional packages not activated, exiting")
-        return True
     syslog.syslog("Starting to upgrade additional software...")
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
-        _notify(_("Your additional software"),
-                _("The upgrade failed. This might be due to a network "
-                  "problem. Please check your network connection, try to "
-                  "restart Tails, or read the system log to understand better "
-                  "the problem."))
+        _notify(_("Your additional software upgrade failed"),
+                _("The check for upgrades failed. This might be due to a "
+                  "network problem. Please check your network connection, try "
+                  "to restart Tails, or read the system log to understand "
+                  "better the problem."))
         return False
     # Remove outdated packages from the local package cache. This is needed as
     # we disable apt-daily.timer, which would else take care of this cleanup.
@@ -159,33 +150,16 @@ def upgrade_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: autoclean failed, proceeding anyway.")
     if install_additional_packages():
-        _notify(_("Your additional software"),
+        _notify(_("Your additional software are up to date"),
                 _("The upgrade was successful."))
         return True
     else:
-        _notify(_("Your additional software"),
+        _notify(_("Your additional software upgrade failed"),
                 _("The upgrade failed. This might be due to a network "
                   "problem. Please check your network connection, try to "
                   "restart Tails, or read the system log to understand better "
                   "the problem."))
         return False
-
-
-def create_additional_packages_list():
-    """Creates the additional packages list
-
-    Creates the additional packages list file with the right permissions.
-    The caller must ensure the file doesn't already exist.
-    """
-    assert not has_additional_packages_list(), "%s already exists" \
-        % PACKAGES_LIST_FILE
-    syslog.syslog("Creating additional software configuration file")
-    f = open(PACKAGES_LIST_FILE, 'w')
-    f.closed
-    os.chmod(PACKAGES_LIST_FILE, 0o600)
-    os.chown(PACKAGES_LIST_FILE,
-             pwd.getpwnam('tails-persistence-setup').pw_uid,
-             pwd.getpwnam('tails-persistence-setup').pw_gid)
 
 
 def clear_obsolete_cache(obsolete_apt_list_suffix):
@@ -199,33 +173,13 @@ def clear_obsolete_cache(obsolete_apt_list_suffix):
             os.remove(deb)
 
 
-def is_activated():
-    """Check if additional software has been activated
-    """
-    return os.path.isfile(ACTIVATION_FILE)
-
-
-def set_activated():
-    """Save that additional software has been activated
-    """
-    syslog.syslog("Activating persistent software packages")
-    activation_file_dir = os.path.dirname(ACTIVATION_FILE)
-    if not os.path.exists(activation_file_dir):
-        os.makedirs(activation_file_dir)
-    try:
-        f = open(ACTIVATION_FILE, 'w')
-    finally:
-        if f:
-            f.close()
-
-
 def print_help():
     """The subcommand which displays help
     """
     sys.stderr.write("Usage: %s <subcommand>\n" % program_name)
     sys.stderr.write("""Subcommands:
-    install: activate and install additional software
-    upgrade: upgrade additional software if activated\n""")
+    install: install additional software
+    upgrade: upgrade additional software\n""")
 
 
 if __name__ == "__main__":
@@ -236,14 +190,14 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print_help()
-        sys.exit(4)
+        sys.exit(2)
 
     if sys.argv[1] == "install":
         if not install_additional_packages():
-            sys.exit(1)
+            sys.exit(150)
     elif sys.argv[1] == "upgrade":
         if not upgrade_additional_packages():
-            sys.exit(2)
+            sys.exit(151)
     else:
         print_help()
-        sys.exit(4)
+        sys.exit(2)
