@@ -1305,12 +1305,8 @@ Push
 
 ### Git
 
-If preparing a release candidate, just push the `master` branch:
-
-    git push origin master:master
-
 If preparing an actual release, push the last commits to our Git
-repository like this:
+repository and put `master` in the following state:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1319,10 +1315,22 @@ repository like this:
     ) && \
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
-      git push origin master:master \
+      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
     )
 
+Then (or if you preparing a release candidate) ensure that `master`
+has `stable` as its base branch:
+
+    echo "stable" > config/base_branch && \
+    git commit config/base_branch \
+        -m "Restore master's base branch."
+
+Finally, push the `master` branch to make the changes go live on our
+website:
+
+    git push origin master:master
+
+The release is now public! Woo!
 
 Bug tracker
 -----------
