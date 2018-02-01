@@ -13,7 +13,7 @@ strip_nondeterminism_wrapper() {
 # are installed now, they will be marked as "automatically installed"
 # so the next `apt-get autoremove` action *unless* they are later
 # explicitly installed (or other packages depends on them).
-build_hook_dependency() {
+ensure_hook_dependency_is_installed() {
     # Filter out already installed packages from $@.
     for p in "${@}"; do
         shift
@@ -30,7 +30,7 @@ install_fake_package() {
     name="${1}"
     version="${2}"
     section="${3:-misc}"
-    build_hook_dependency equivs
+    ensure_hook_dependency_is_installed equivs
     tmp="$(mktemp -d)"
     control_file="${tmp}/${name}_${version}.control"
     cat > "${control_file}" << EOF
