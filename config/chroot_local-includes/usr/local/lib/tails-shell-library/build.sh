@@ -18,6 +18,11 @@ ensure_hook_dependency_is_installed() {
     # Filter out already installed packages from $@.
     for p in "${@}"; do
         shift
+        if ! echo "${p}" | grep -q --extended-regexp '^[a-z0-9.+-]+$'; then
+            echo "ensure_hook_dependency_is_installed():" \
+                 "doesn't look like a package name: ${p}" >&2
+            exit 1
+        fi
         is_package_installed "${p}" && continue
         set -- "${@}" "${p}"
     done
