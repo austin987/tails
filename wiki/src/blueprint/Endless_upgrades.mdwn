@@ -211,3 +211,91 @@ The ISOBoot case would still require a manifest of files we extract
 from the ISO (bootloader code and configuration), but indeed that
 manifest could be in the ISO itself, and thus its authenticity and
 integrity would be signed/verified at the same time as the ISO.
+
+# Temporary stop gap: IUKs on steroids
+
+(This idea was originally conceived in the comments of [[!tails_ticket
+11131]].)
+
+Without any major redesign of our current incremental upgrade system
+(i.e. comparatively cheap) we can allow users upgrade only through
+IUKs for much longer, probably throughout a whole Tails series,
+e.g. all of Tails 2.x, which we'll use for our examples below since we
+moved to 3.x already so we have all data we need to test this idea.
+
+## Basic idea
+
+When we release version X:
+
+* we provide IUKs Y_to_X, where Y is all previous versions until (and
+  including) the last synchronization point (see next section).
+* we remove any previous IUK when version X boots successfully.
+
+The "synchronization point" could simply be "the first release of the
+series", e.g. 2.0 (=> users only have to do a manual install for each
+new Tails series), but if this has some unwanted consequences we could
+e.g. add another one half way through to 3.0, or make every tenth
+release a synchronization point, or we could do it when when the IUK
+grows too big.
+
+Example: let's say I install Tails 2.2 on a USB stick, and later when
+Tails 2.3 is release I upgrade it with the 2.2_to_2.3 IUK. When Tails
+2.4 is released then we will install the 2.2_to_2.4 IUK (*not* stack
+2.3_to_2.4 on top of 2.2_to_2.3) and remove the 2.2_to_2.3 IUK once
+2.4 has booted fine.
+
+## Problems due to IUK size
+
+We'll be dealing with larger IUKs (because generally more and more
+changes accumulate between different Tails versions) and only have one
+present at a time, with the exception being while we are installing a
+new IUK, when two will be present. Let's look at the IUK sizes towards
+the end of the 2.x series, where we expect the largest (worst case)
+IUKs:
+
+    569M Tails_i386_2.0_to_2.9.iuk
+    678M Tails_i386_2.0_to_2.10.iuk
+    682M Tails_i386_2.0_to_2.11.iuk
+    634M Tails_i386_2.0_to_2.12.iuk
+
+The IUK size is involved in at least three concerns:
+
+* Disk space needs on mirrors: for 2.x there were 14 non-rc/beta/alpha
+  Tails releases, so there would be 13 IUKs for the last release
+  (2.12). So 14*682 ~= 10 GB would have been needed.
+* Disk space needs on the Tails system partition: we need to be able
+  to store two large IUKs. Apparently the worst case for 2.x is the
+  2.10 to 2.11 upgrade if 2.0 was the version originally installed:
+  - The 2.0 installation itself uses 1082 MB, so upgraded to 2.10 the
+    total usage is 1082 MB + 678 MB = 1760 MB.
+  - Due to the Upgrader requiring 3x the size of the IUK on the Tails
+    system partition, the actual requirement is 1760 MB + 3*682 MB =
+    3806 MB of free disk space. That wouldn't have worked during the
+    2.x times, when the system partition was 2.5 GB, and it barely
+    would work with our current 4.0 GB partition.
+  - When both IUKs are present at the same time (i.e. before rebooting
+    after having applied the upgrade) the disk usage is 1760 MB + 682
+    MB = 2442 MB.
+  - After the old IUK is purged the disk usage is down to 2442 MB -
+    678 MB = 1764 MB.
+* Bandwidth needs of the RM. Uploading 10 GB of IUKs can be a pain for
+  some of us, but that can easily be solved by making it possible to
+  generate IUKs on lizard (and then compare them with the ones you
+  generated locally. Thanks reproducibility!).
+
+## Support upgrading very old Tails
+
+We probably do not want to support upgrading very old (e.g. from six
+months ago) Tails installations because our signing key might have
+been updated in the meantime, and/or some critical update to Tails
+Upgrader (e.g. UDF version). For instance, in the example in above,
+our Tails 2.2 install has a too old key ([[!tails_gitweb_commit
+098f578586f1e49b6cc63431f661b9c20151916c]]) so it would not be able to
+verify the UDF letting us know about the existence of Tails 2.7.1 and
+its IUK. So while we provide a 2.2_to_2.7.1 IUK, it can actually only
+be used by those that update regularly, e.g. someone that installed
+Tails 2.2, and installed each automatic upgrade.
+
+So, unless we want to spend a lot of time supporting occassional Tails
+users, let's stick with our current "you can at most skip one planned
+release".
