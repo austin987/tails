@@ -225,33 +225,49 @@ moved to 3.x already so we have all data we need to test this idea.
 
 ## Basic idea
 
-When we release version X:
+### Inside Tails
 
-* we provide IUKs Y_to_X, where Y is all previous versions until (and
-  including) the last synchronization point (see next section).
-* we remove any previous IUK when version X boots successfully.
+* Tails Upgrader fetches the UDF for the version of Tails that was
+  originally installed (instead of the version of the running Tails),
+* We remove any previous IUK when a new IUK is installed.
 
-The "synchronization point" could simply be "the first release of the
-series", e.g. 2.0 (=> users only have to do a manual install for each
-new Tails series), but if this has some unwanted consequences we could
-e.g. add another one half way through to 3.0, or make every tenth
-release a synchronization point, or we could do it when when the IUK
-grows too big.
+### Release management
 
-Example: let's say I install Tails 2.2 on a USB stick, and later when
-Tails 2.3 is release I upgrade it with the 2.2_to_2.3 IUK. When Tails
-2.4 is released then we will install the 2.2_to_2.4 IUK (*not* stack
-2.3_to_2.4 on top of 2.2_to_2.3) and remove the 2.2_to_2.3 IUK once
-2.4 has booted fine.
+When we release version M.N, then, for all previous versions M.X since
+M.0, we generate a M.X_to_M.N IUK.
+
+(Actually, it is not necessary to choose the first release of a series
+(like M.0) as the "synchronization point". We could add another one
+half way through the series, or make every tenth release a
+synchronization point, or we could do it when when the IUK simply
+grows too big. We have lot's of options to balance this according to
+our needs, but the first release of a series seems like a technically
+reasonable choice according to the data we have for the 2.x series
+(see below), but also nice from the user's PoV if the only time a
+manual upgrade is needed is when upgrading between series.)
+
+### Example
+
+1. I install Tails 2.2 on a USB stick.
+2. Later when Tails 2.3 is released I upgrade to it via the 2.2_to_2.3
+   IUK (i.e. identical to our original scheme).
+3. When Tails 2.4 is released I upgrade to it via the 2.2_to_2.4 IUK
+   (in our original scheme we would stack 2.3_to_2.4 on top of
+   2.2_to_2.3) and remove the 2.2_to_2.3 IUK (in our original scheme
+   we never remove IUKs).
+
+Notice how step 3 can be repeated for each new release, so that we in
+the end reach the final release of the series, Tails 2.12. And notice
+how we in step 1 could have installed any 2.x release.
 
 ## Problems due to IUK size
 
 We'll be dealing with larger IUKs (because generally more and more
 changes accumulate between different Tails versions) and only have one
 present at a time, with the exception being while we are installing a
-new IUK, when two will be present. Let's look at the IUK sizes towards
-the end of the 2.x series, where we expect the largest (worst case)
-IUKs:
+new IUK (then two will be present). Let's look at the IUK sizes
+towards the end of the 2.x series as if the last manual install was
+for Tails 2.0, which is the excepted worst case:
 
     569M Tails_i386_2.0_to_2.9.iuk
     678M Tails_i386_2.0_to_2.10.iuk
@@ -262,7 +278,7 @@ The IUK size is involved in at least three concerns:
 
 * Disk space needs on mirrors: for 2.x there were 14 non-rc/beta/alpha
   Tails releases, so there would be 13 IUKs for the last release
-  (2.12). So 14*682 ~= 10 GB would have been needed.
+  (2.12). So 14*682 MB ~= 10 GB would have been needed.
 * Disk space needs on the Tails system partition: we need to be able
   to store two large IUKs. Apparently the worst case for 2.x is the
   2.10 to 2.11 upgrade if 2.0 was the version originally installed:
@@ -288,14 +304,7 @@ The IUK size is involved in at least three concerns:
 We probably do not want to support upgrading very old (e.g. from six
 months ago) Tails installations because our signing key might have
 been updated in the meantime, and/or some critical update to Tails
-Upgrader (e.g. UDF version). For instance, in the example in above,
-our Tails 2.2 install has a too old key ([[!tails_gitweb_commit
-098f578586f1e49b6cc63431f661b9c20151916c]]) so it would not be able to
-verify the UDF letting us know about the existence of Tails 2.7.1 and
-its IUK. So while we provide a 2.2_to_2.7.1 IUK, it can actually only
-be used by those that update regularly, e.g. someone that installed
-Tails 2.2, and installed each automatic upgrade.
-
-So, unless we want to spend a lot of time supporting occassional Tails
-users, let's stick with our current "you can at most skip one planned
-release".
+Upgrader (e.g. UDF version). So unless we want to spend a lot of
+resources on solving these problems, which roughly translates to "you
+can take 4+ month breaks from Tails", let's stick with our current
+"you can at most skip one *planned* release" promise.
