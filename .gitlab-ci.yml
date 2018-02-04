@@ -1,18 +1,32 @@
 stages:
   - test
+  - refresh
   - build
 
-test:
+test-PO-files:
     stage: test
     script:
+    - apt-get install -qq -y i18nspector
     - git config --global http.sslVerify false
     - git submodule sync --recursive
     - git submodule update --init --recursive
     - wiki/src/contribute/l10n_tricks/check_po.sh
-build:
+refresh-wiki:
+    stage: refresh
+    script:
+        - apt-get install -qq -y ikiwiki libyaml-perl libyaml-libyaml-perl
+        - apt-get install -qq -y libyaml-syck-perl perlmagick po4a ruby
+        - ikiwiki --setup ikiwiki.setup --refresh
+        - git status
+
+build-wiki:
     stage: build
     script:
-        - ikiwiki --setup ikiwiki.setup --refresh
+        - apt-get install -qq -y ikiwiki libyaml-perl libyaml-libyaml-perl
+        - apt-get install -qq -y libyaml-syck-perl perlmagick po4a ruby
+        - ikiwiki --setup ikiwiki.setup --rebuild
+        - git status
+
 
 cache:
     key: "$CI_PROJECT_PATH_SLUG-$CI_JOB_NAME"
@@ -31,4 +45,4 @@ before_script:
       mkdir -p {${APT_CACHE_ARCHIVES},${APT_STATE_LISTS}}/partial &&
       apt-get update -qq;
       fi
-    - apt-get install -qq -y ikiwiki libyaml-perl libyaml-libyaml-perl libyaml-syck-perl perlmagick po4a ruby i18nspector
+    - apt-get install -qq -y ca-certificates
