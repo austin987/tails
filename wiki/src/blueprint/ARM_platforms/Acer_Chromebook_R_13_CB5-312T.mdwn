@@ -235,11 +235,15 @@ turned on:
 	console=tty1 printk.time=1 nosplash rootwait root=/dev/mmcblk0p2 ro rootfstype=ext4 lsm.module_locking=0 debug
 	console=tty0 printk.time=1 nosplash rootwait root=/dev/mmcblk0p2 ro rootfstype=ext4 lsm.module_locking=0 debug
 
+> anonym speaking: FWIW, I cannot reproduce (backlight remains off).
+
 Now, `/dev/mmcblk0` is really the internal flash storage, and not my
 micro-SD, as pointing `root=` to the ChromeOS root partition like this
 does start ChromeOS:
 
 	console=tty1 printk.time=1 nosplash rootwait root=/dev/mmcblk0p5 ro rootfstype=ext4 lsm.module_locking=0 debug
+
+> anonym speaking: FWIW, I cannot reproduce this (nothing boots).
 
 So to sum up, FWIW the "backlight turns on" behavior happens when…
 `root=` is pointed to a ChromeOS kernel partition (that's definitely
@@ -252,6 +256,14 @@ backlight doesn't turn on.
 
 Conclusion: the official ChromeOS kernel lacks too much stuff that
 a Debian userspace needs.
+
+> anonym speaking: I'm less sure about this conclusion; the Arch linux
+> one that works for us *is* a ChromeOS Kernel, with 13 patches
+> applied, none which looks relevant for boot issues (except
+> `0008-Downgrade-mmc1-speed.patch`, but it targets the .dtb file and
+> I tried rebuilding it with the patch => no joy).
+>
+> TODO: retry with all the patches applied?
 
 ## Kernel approach 2 - Debian's kernel
 
@@ -497,6 +509,9 @@ and the backlight remains off.
 
 ## Kernel approach 3 - custom Chrome OS kernel
 
+> anonym speaking: I tried these steps from the `chromeos-4.14` branch
+> with no success.
+
 I've also tried building a custom ChromeOS kernel with added drivers
 we might need. Instructions below are based on
 <http://wiki.baserock.org/guides/baserock-native-cb5-311/>
@@ -563,6 +578,9 @@ we'd better start from the Arch Linux kernel config + included firmware
 The results below are about `ArchLinuxARM-2017.09-oak-rootfs.tar.gz`,
 that's available at the time of writing in
 <http://os.archlinuxarm.org/os/mediatek/>.
+
+> anonym speaking: I have reproduced this with:
+> `ArchLinuxARM-2017.11-oak-rootfs.tar.gz` yay!
 
 I've followed
 <https://archlinuxarm.org/platforms/armv8/mediatek/acer-chromebook-r13>
@@ -634,6 +652,8 @@ the partitioning and debootstrap steps have been done already.
      rotation of the display).
 
 ## Kernel approach 5: custom Debian kernel
+
+> anonym speaking: I last tried linux-image-4.13.0-1-arm64
 
 Here we
 [rebuild](https://kernel-handbook.alioth.debian.org/ch-common-tasks.html#s-common-building)

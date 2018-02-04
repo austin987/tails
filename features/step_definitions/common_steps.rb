@@ -347,9 +347,12 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  if $vm.execute('systemctl is-system-running').failure?
+  begin
+    try_for(30) { $vm.execute('systemctl is-system-running').success? }
+  rescue Timeout::Error
+    jobs = $vm.execute('systemctl list-jobs').stdout
     units_status = $vm.execute('systemctl').stdout
-    raise "At least one system service failed to start:\n#{units_status}"
+    raise "The system is not fully running yet:\n#{jobs}\n#{units_status}"
   end
 end
 
@@ -451,11 +454,10 @@ Given /^all notifications have disappeared$/ do
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
-  begin
+  if negation
+    @screen.waitVanish(image, time.to_i)
+  else
     @screen.wait(image, time.to_i)
-    raise "found '#{image}' while expecting not to" if negation
-  rescue FindFailed => e
-    raise e if not(negation)
   end
 end
 

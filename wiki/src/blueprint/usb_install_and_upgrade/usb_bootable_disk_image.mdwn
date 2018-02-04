@@ -1,0 +1,111 @@
+[[!meta title="Bootable USB disk image"]]
+
+[[!toc levels=2]]
+
+# Motivation
+
+This is about generating, distributing and installing Tails as a disk
+image that, once copied bit-by-bit to a USB stick, produces a _final
+Tails_ (GPT, UEFI-bootable, ready to get a persistent volume).
+
+This would:
+
+ - avoid the need for a second USB stick and an intermediary Tails
+   during the initial installation and full manual upgrade; as
+   a consequence:
+   - big UX win
+   - avoid the
+     [[!tails_ticket 12146 desc="intermediary Tails not being bootable on many UEFI systems"]]
+     problem
+   - removes a blocker for
+     [[!tails_ticket 6560 desc="Secure Boot support"]] (a non-GPT
+     intermediary Tails would never work with Secure Boot enabled)
+ - allow us to use simpler, more reliable installers at least on
+   Windows and macOS and then:
+   - avoids user confusion that results in creating a non-bootable
+     device e.g. [[!tails_ticket 13206]]
+   - relying on third-party tools becomes less painful
+ - pave the way to a self-extracting file offered for download,
+   that would bundle the disk image, the program used to copy it to
+   the target device, and some wrapper that would run that program
+   with the right arguments
+
+# Generating
+
+`live-build` can generate `hdd` images. Alternatively, we can
+post-process our ISO image to create a USB-bootable disk image.
+
+Open questions:
+
+ - What size should the system partition be? Do we grow the system
+   partition on first boot (from the initramfs) e.g.
+   with [[!debpts cloud-init]] or the Rasbian tools
+   (<https://www.raspberrypi.org/downloads/noobs/>,
+   <https://www.raspberrypi.org/downloads/raspbian/>)?
+ - What about DVD support? Can we stop distributing an ISO image
+   some day?
+
+# Distributing
+
+XXX: impact on mirrors' storage space?
+
+# Installing
+
+## from Windows
+
+### Etcher
+
+See below "from macOS".
+
+### Rufus
+
+- [homepage](https://rufus.akeo.ie)
+- CLI mode: [in progress](https://github.com/pbatard/rufus/issues/111) but not on priority list of the developer
+- Complicated UX
+  - too many options
+  - need to download supplementary files for syslinux version
+  - not clear which partition scheme to use even though it selects one
+    automatically
+  - user has to manually choose to install our ISOhybrided image either using
+    ISO or DD mode.
+- License: GnuGPL
+- [[!tails_ticket 10984]]: Boots (tested in legacy mode)
+  - When burnt in "DD" mode, the checksums match!
+- [Recommended by Ubuntu for Windows](https://tutorials.ubuntu.com/tutorial/tutorial-create-a-usb-stick-on-windows#1)
+
+### Win32 Disk Imager
+
+[[!tails_ticket 14447]]
+
+- https://sourceforge.net/projects/win32diskimager/
+
+## from macOS
+
+### Etcher
+
+(February 2018)
+
+ - [homepage](https://etcher.io)
+ - Windows, macOS, Linux (deb & rpm)
+ - no official Debian images
+ - CLI mode: [Etcher CLI](https://etcher.io/cli/) is experimental, it's a
+   different executable than the GUI one, so we can suppose that it can't be run
+   to launch the GUI with the right options.
+ - License: Apache
+ - [[!tails_ticket 11348]]: images created with Etcher boot (in legacy mode at least) and checksums match
+ - [It is recommended by Ubuntu for macOS](https://tutorials.ubuntu.com/tutorial/tutorial-create-a-usb-stick-on-macos#3)
+
+### macOS Disk Utility
+
+- included in OS
+
+## from Linux
+
+_GNOME Disks_ has a _Restore Disk Image_ feature that basically does
+`dd` with a nice progress bar.
+
+# Upgrading
+
+This approach does not make full, manual upgrades any simpler. For the
+ideas we have to fix that other problem, see [[!tails_ticket 11131]]
+and [[blueprint/Endless_upgrades]].
