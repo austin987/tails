@@ -229,7 +229,8 @@ moved to 3.x already so we have all data we need to test this idea.
 
 * Tails Upgrader fetches the UDF for the version of Tails that was
   originally installed (instead of the version of the running Tails),
-* We remove any previous IUK when a new IUK is installed.
+* We remove any previous IUK (and reference to it in `Tails.module`)
+  when a new IUK is installed.
 
 ### Release management
 
@@ -240,7 +241,7 @@ M.0, we generate a M.X_to_M.N IUK.
 (like M.0) as the "synchronization point". We could add another one
 half way through the series, or make every tenth release a
 synchronization point, or we could do it when when the IUK simply
-grows too big. We have lot's of options to balance this according to
+grows too big. We have lots of options to balance this according to
 our needs, but the first release of a series seems like a technically
 reasonable choice according to the data we have for the 2.x series
 (see below), but also nice from the user's PoV if the only time a
@@ -252,8 +253,8 @@ manual upgrade is needed is when upgrading between series.)
 2. Later when Tails 2.3 is released I upgrade to it via the 2.2_to_2.3
    IUK (i.e. identical to our original scheme).
 3. When Tails 2.4 is released I upgrade to it via the 2.2_to_2.4 IUK
-   (in our original scheme we would stack 2.3_to_2.4 on top of
-   2.2_to_2.3) and remove the 2.2_to_2.3 IUK (in our original scheme
+   (whereas in our original scheme we would stack 2.3_to_2.4 on top of
+   2.2_to_2.3) and remove the 2.2_to_2.3 IUK (whereas in our original scheme
    we never remove IUKs).
 
 Notice how step 3 can be repeated for each new release, so that we in
@@ -284,9 +285,10 @@ The IUK size is involved in at least three concerns:
   2.10 to 2.11 upgrade if 2.0 was the version originally installed:
   - The 2.0 installation itself uses 1082 MB, so upgraded to 2.10 the
     total usage is 1082 MB + 678 MB = 1760 MB.
-  - Due to the Upgrader requiring 3x the size of the IUK on the Tails
-    system partition, the actual requirement is 1760 MB + 3*682 MB =
-    3806 MB of free disk space. That wouldn't have worked during the
+  - Due to the Upgrader requiring 3x the size of the IUK to be
+    installed on the Tails
+    system partition, the actual requirement is 1760 MB + 4*682 MB =
+    4488 MB of free disk space. That wouldn't have worked during the
     2.x times, when the system partition was 2.5 GB, and it barely
     would work with our current 4.0 GB partition.
   - When both IUKs are present at the same time (i.e. before rebooting
@@ -294,6 +296,7 @@ The IUK size is involved in at least three concerns:
     MB = 2442 MB.
   - After the old IUK is purged the disk usage is down to 2442 MB -
     678 MB = 1764 MB.
+* Memory needs: XXX
 * Bandwidth needs of the RM. Uploading 10 GB of IUKs can be a pain for
   some of us, but that can easily be solved by making it possible to
   generate IUKs on lizard (and then compare them with the ones you
