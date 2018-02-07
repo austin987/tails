@@ -1,0 +1,105 @@
+#!/bin/sh -e
+
+PREREQS=""
+
+prereqs() { echo "$PREREQS"; }
+
+case "$1" in
+	prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+# Print executed commands for debugging
+[ -n "$debug" ] && set -x
+
+. /scripts/functions
+
+# Wait for system partition
+log_begin_msg "Waiting for system partition to become available"
+success=
+i=0
+while [ "$i" -lt 300 ]; do
+	if [ -b "/dev/disk/by-uuid/${FSUUID}" ]; then
+	  success=1
+	  break
+	fi
+	sleep 0.2
+	i="$(($i + 1))"
+done
+
+if [ -n "$success" ]; then
+  log_end_msg
+else
+  log_failure_msg "Reached timeout waiting for system partition. Skipping partitioning."
+  exit 1
+fi
+
+
+
+# Get parent device
+# XXX: We assume here that the parent device is also ready if the
+#      system partition is.
+SYSTEM_PARTITION=$(readlink -f /dev/disk/by-uuid/${FSUUID})
+PARENT_PATH=$(udevadm info --query=property --name=${SYSTEM_PARTITION} \
+	| grep ID_PATH= | sed s/ID_PATH=//)
+PARENT_DEVICE=$(readlink -f /dev/disk/by-path/${PARENT_PATH})
+DEVICE_NAME=$(basename "${PARENT_DEVICE}")
+
+
+# Check if this is first boot
+GUID=$(sgdisk --print ${PARENT_DEVICE} \
+	| grep "Disk identifier" \
+	| sed 's/Disk identifier (GUID): \(.*\)/\1/')
+
+if [ ${GUID} != "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3" ]; then
+	log_msg "Skipping partitioning because this is not the first boot"
+	exit 0
+fi
+
+
+# Get new system partition size
+TOTAL_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
+TOTAL_SIZE_IN_MiB=$(expr ${TOTAL_SIZE} / 2 / 1024)
+if [ ${TOTAL_SIZE_IN_MiB} -lt 7200 ]; then
+	log_warning_msg "Not growing system partition because device is too small (< 7200 MiB)"
+	# Perform the other operations (fix GPT backup header and set random GUID)
+	sgdisk --move-second-header --disk-guid=R ${PARENT_DEVICE}
+	exit 0
+elif [ ${TOTAL_SIZE_IN_MiB} -lt 14500 ]; then
+    SIZE=4096M
+else
+    SIZE=8192M
+fi
+
+
+# Update partition table. This in includes the following operations:
+# * Move GPT backup header to the end of the device
+# * Set a random disk GUID
+# * Delete the old system partition
+# * Create a new system partition of size ${SIZE}
+# * Set the partition label to "Tails"
+# * Set the following attributes on the system partition:
+#   0: system partition
+#   2: legacy BIOS bootable
+#   60: read-only
+#   62: hidden
+#   63: do not automount
+log_begin_msg "Updating partition table"
+sgdisk \
+	--move-second-header \
+	--disk-guid=R \
+	--delete=1 \
+	--new=1:0:+${SIZE} \
+	--change-name=1:Tails \
+	--attributes=1:set:0  \
+	--attributes=1:set:2  \
+	--attributes=1:set:60 \
+	--attributes=1:set:62 \
+	--attributes=1:set:63 \
+	${PARENT_DEVICE}
+log_end_msg
+
+# Tell the kernel to reload the partition table
+partprobe
