@@ -612,7 +612,7 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
 end
 
 Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|
-  assert_equal('1.1~test', version)
+  assert_equal('2.3~test', version)
   upgrade_applied = not_present.nil?
   chroot_browser = "#{chroot_browser.downcase}-browser" if chroot_browser
   changes = [
@@ -716,4 +716,71 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
     match, _ = @screen.waitAny([success_pic, failure_pic], 2*60)
     assert_equal(success_pic, match)
   end
+end
+
+def default_squash
+  'filesystem.squashfs'
+end
+
+def installed_squashes
+  live = '/lib/live/mount/medium/live'
+  listed_squashes = $vm.file_content("#{live}/Tails.module").chomp.split("\n")
+  assert_equal(
+    default_squash,
+    listed_squashes.first,
+    "Tails.module does not list #{default_squash} on the first line"
+  )
+  # XXX: make pretty with $vm.file_glob() from #14572's branch
+  present_squashes = $vm.execute(
+    "find #{live} -maxdepth 1 -name '*.squashfs' -printf '%f\\0'"
+  ).stdout.chomp.split("\0")
+  # Sanity check
+  assert_equal(
+    listed_squashes,
+    present_squashes,
+    'Tails.module does not match the present .squashfs files'
+  )
+  return listed_squashes
+end
+
+Given /^Tails is fooled to think a (.+) squashfs delta is installed$/ do |version|
+  old_squashes = installed_squashes
+  medium = '/lib/live/mount/medium'
+  live = "#{medium}/live"
+  new_squash = "#{version}.squashfs"
+  $vm.execute_successfully("mount -o remount,rw #{medium}")
+  $vm.execute_successfully("touch #{live}/#{new_squash}")
+  $vm.file_append("#{live}/Tails.module", new_squash + "\n")
+  $vm.execute_successfully("mount -o remount,ro #{medium}")
+  assert_equal(
+    old_squashes + [new_squash],
+    installed_squashes,
+    'Implementation error, alert the test suite maintainer!'
+  )
+  last_version = installed_squashes.last.sub(/\.squashfs$/, '')
+  $vm.execute_successfully(
+    "sed --regexp-extended -i '1s/^\S+ /#{version}/' /etc/amnesia/version"
+  )
+  $vm.execute_successfully(
+    "sed -i 's/^TAILS_VERSION_ID=.*/TAILS_VERSION_ID=#{version}/' " +
+    "/etc/amnesia/version"
+  )
+end
+
+Then /^(?:no|only the (.+)) squashfs delta is installed$/ do |version|
+  expected_squashes = [default_squash]
+  expected_squashes << "#{version}.squashfs" if version
+  assert_equal(
+    expected_squashes,
+    installed_squashes,
+    'Unexpected .squashfs files encountered'
+  )
+end
+
+Given /^Tails is fooled to think it is running version (.+)$/ do |version|
+  $vm.execute_successfully(
+    "sed -i " +
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
+    "/etc/os-release"
+  )
 end
