@@ -131,8 +131,8 @@ Feature: Upgrading an old Tails USB installation
 
   Scenario: Upgrading a pristine Tails via an IUK
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    And no IUKs are installed
-    And Tails is fooled to think that version 2.2~test was initially installed
+    And no squashfs delta is installed
+    And Tails is fooled to think that version 2.0~test was initially installed
     And the file system changes introduced in version 2.3~test are not present
     When the network is plugged
     And Tor is ready
@@ -146,32 +146,34 @@ Feature: Upgrading an old Tails USB installation
     And the file system changes introduced in version 2.3~test are present
     # Our IUK sets a release date that can make Tor bootstrapping impossible
     Given Tails system time is magically synchronized
+    And Tails is fooled to think that version 2.0~test was initially installed
     When the network is plugged
     And Tor is ready
     And all notifications have disappeared
     # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
     And I successfully start the Unsafe Browser
     Then the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
+    And only the 2.3~test squashfs delta is installed
 
   Scenario: Upgrading a Tails with 1 IUK present via a new IUK
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    And Tails is fooled to think that version 2.1~test was initially installed
-    And Tails is fooled to think a 2.1~test_to_2.2~test IUK is installed
+    And Tails is fooled to think that version 2.0~test was initially installed
+    And Tails is fooled to think a 2.1~test squashfs delta is installed
     When the network is plugged
     And Tor is ready
     And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 2.3~test
     And I can successfully install the incremental upgrade to version 2.3~test
-    Then only the 2.1~test_to_2.3~test IUK is installed
+    Then only the 2.3~test squashfs delta is installed
 
   Scenario: Upgrading a Tails with several IUKs present via a new IUK
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed
-    And Tails is fooled to think a 2.0~test_to_2.1~test IUK is installed
-    And Tails is fooled to think a 2.1~test_to_2.2~test IUK is installed
+    And Tails is fooled to think a 2.1~test squashfs delta is installed
+    And Tails is fooled to think a 2.2~test squashfs delta is installed
     When the network is plugged
     And Tor is ready
     And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 2.3~test
     And I can successfully install the incremental upgrade to version 2.3~test
-    Then only the 2.0~test_to_2.3~test IUK is installed
+    Then only the 2.3~test squashfs delta is installed
