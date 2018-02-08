@@ -25,6 +25,7 @@ exec_firefox_helper() {
     export LD_LIBRARY_PATH="${TBB_INSTALL}"
     export FONTCONFIG_PATH="${TBB_INSTALL}/TorBrowser/Data/fontconfig"
     export FONTCONFIG_FILE="fonts.conf"
+    export GNOME_ACCESSIBILITY=1
 
     # The Tor Browser often assumes that the current directory is
     # where the browser lives, e.g. for the fixed set of fonts set by
@@ -33,6 +34,7 @@ exec_firefox_helper() {
 
     # From start-tor-browser:
     unset SESSION_MANAGER
+    export SELFRANDO_write_layout_file=
 
     exec "${TBB_INSTALL}"/"${binary}" "${@}"
 }

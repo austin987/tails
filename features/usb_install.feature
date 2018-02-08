@@ -10,7 +10,7 @@ Feature: Installing Tails to a USB drive
     But a suitable USB device is not found
     And no USB drive is selected
     When I plug USB drive "too-small-device"
-    Then I am told that the destination device is too small
+    Then I am told by Tails Installer that the destination device "is too small"
     And no USB drive is selected
     When I unplug USB drive "too-small-device"
     And I temporarily create a 7200 MiB disk named "big-enough"
@@ -23,7 +23,7 @@ Feature: Installing Tails to a USB drive
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
     When I start Tails Installer
-    Then I am told that the destination device is too small
+    Then I am told by Tails Installer that the destination device "is too small"
 
   Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
@@ -35,6 +35,15 @@ Feature: Installing Tails to a USB drive
     When I unplug USB drive "temp"
     Then a suitable USB device is not found
 
+  Scenario: Installing Tails to a used USB drive
+    Given I have started Tails from DVD without network and logged in
+    And I temporarily create a 7200 MiB disk named "install"
+    And I create a gpt partition with a vfat filesystem on disk "install"
+    And I plug USB drive "install"
+    And I install Tails to USB drive "install" by cloning
+    Then the running Tails is installed on USB drive "install"
+    But there is no persistence partition on USB drive "install"
+
   Scenario: Installing Tails to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 7200 MiB disk named "install"
@@ -42,6 +51,16 @@ Feature: Installing Tails to a USB drive
     And I install Tails to USB drive "install" by cloning
     Then the running Tails is installed on USB drive "install"
     But there is no persistence partition on USB drive "install"
+
+  Scenario: Re-installing Tails over an existing USB installation with a persistent partition
+    # We reach this first checkpoint only to ensure that the ' __internal' disk has reached the state (Tails installed + persistent partition set up) we need before we clone it below.
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    Given I have started Tails from DVD without network and logged in
+    And I clone USB drive "__internal" to a temporary USB drive "install"
+    And I plug USB drive "install"
+    When I reinstall Tails to USB drive "install" by cloning
+    Then the running Tails is installed on USB drive "install"
+    And there is no persistence partition on USB drive "install"
 
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen

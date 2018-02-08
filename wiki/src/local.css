@@ -38,15 +38,16 @@ Table of Content:
 /* Load RTL stylesheet */
 @import url("local.rtl.css");
 
-/* Load stylesheet for donation campaign */
-@import url("donate-banner.css");
-
 /* Fonts */
 
 @font-face { font-family: "Source Sans Pro Regular"; src: url("lib/SourceSansPro-Regular.ttf"); }
 @font-face { font-family: "Source Code Pro Regular"; src: url("lib/SourceCodePro-Regular.ttf"); }
 
 /* Base */
+
+html {
+    font-size: 16px !important;
+}
 
 body {
     font-family: "DejaVu Sans", "Verdana", sans-serif;
@@ -255,11 +256,11 @@ ol, ul {
 }
 
 span.title {
-    font-size: 2.5em; /* 14×2.5=35px */
-    line-height: 1.2; /* 35×1.2=42px=2λ */
+    font-size: 2em;
+    line-height: 1;
     font-weight: normal;
     display: block;
-    margin: 1.2em 0 0.6em 0; /* 35x0.6=21px=λ */
+    margin: 1em 0;
     color: #56347c;
     border-left: 10px solid #444444;
     padding-left: 35px;
@@ -515,11 +516,17 @@ form {
     max-width: 45em;
 }
 
+.searchform {
+    margin: 0 auto;
+    max-width: 930px;
+    position: relative;
+}
+
 form#searchform {
     overflow: visible;
     position: absolute;
-    top:-3.5em;
-    right: 4em;
+    top: 1em;
+    right: 1em;
 }
 
 @media all and (max-width: 639px) {
@@ -528,9 +535,8 @@ form#searchform {
         height: 3em;
     }
     form#searchform {
-        position: relative;
         top: 0.5em !important;
-        right: auto !important;
+        float: right;
     }
 }
 
@@ -1102,7 +1108,7 @@ div.bug {
   background-image: url(lib/admon-bug.png);
 }
 div.caution {
-  background-image: url(lib/admon-caution.png);
+  background-image: url(lib/dialog-warning.png);
 }
 div.next {
   background-image: url(lib/go-next.png);
@@ -1272,6 +1278,7 @@ div#highlight p {
 /* Donation button */
 
 #donate-button a {
+  border-bottom: none;
   width: 100%;
   display: block;
   -moz-box-shadow: 1px 1px 5px #ccc;
@@ -1300,6 +1307,25 @@ div#highlight p {
 
 /* Partners page */
 
+#pagebody .amount-range {
+    clear: both;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #bbb;
+    overflow: hidden;
+    width: 100px;
+    text-align: left;
+    clear: left;
+    line-height: 1.4em;
+    margin-right: 2em;
+    margin-top: 1em;
+    float: left;
+}
+
+#pagebody .pastpartner {
+    overflow: hidden;
+}
+
 #pagebody .partner {
     display: inline-block;
     margin: 1em 2.5em 2em 0;
@@ -1314,69 +1340,7 @@ div#highlight p {
     border: none;
 }
 
-#pagebody .partner.first-partner-in-range:before {
-    float: left;
-    font-size: 1.4em;
-    font-weight: bold;
-    color: #bbb;
-    display: inline-block;
-    width: 100px;
-    text-align: left;
-    clear: left;
-    line-height: 1.4em;
-    margin-right: 2em;
-    margin-top: 1em;
-}
-
-#pagebody .pastpartner.first-partner-in-range:before {
-    font-size: 0.9em;
-}
-
-#pagebody .first-partner-in-range.partner-size-1:before {
-    content: "> $100.000";
-}
-
-#pagebody .first-partner-in-range.partner-size-2:before {
-    content: "$50.000 – $99.999";
-}
-
-#pagebody .first-partner-in-range.partner-size-3:before {
-    content: "$10.000 – $49.999";
-}
-
-#pagebody .first-partner-in-range.partner-size-4:before {
-    content: "$1.000 – $9.999";
-}
-
-#pagebody .first-partner-in-range.partner-in-kind:before {
-    content: "in-kind";
-}
-
-html[lang="de"] #pagebody .first-partner-in-range.partner-in-kind:before {
-    content: "Sachspende";
-}
-
-html[lang="es"] #pagebody .first-partner-in-range.partner-in-kind:before {
-    content: "en especie";
-}
-
-html[lang="fa"] #pagebody .first-partner-in-range.partner-in-kind:before {
-    content: "اهداء";
-}
-
-html[lang="fr"] #pagebody .first-partner-in-range.partner-in-kind:before {
-    content: "en nature";
-}
-
-html[lang="it"] #pagebody .first-partner-in-range.partner-in-kind:before {
-    content: "in natura";
-}
-
-html[lang="pt"] #pagebody .first-partner-in-range.partner-in-kind:before {
-    content: "o troco";
-}
-
-#pagebody .partner.pastpartner {
+#pagebody .pastpartner .partner {
     margin-right: 1em;
     margin-bottom: 1em;
 }
@@ -1404,7 +1368,7 @@ html[lang="pt"] #pagebody .first-partner-in-range.partner-in-kind:before {
     width: auto;
 }
 
-#pagebody .pastpartner:hover img {
+#pagebody .pastpartner .partner:hover img {
     -webkit-filter: none;
     filter: none;
     opacity: 1;

@@ -59,8 +59,9 @@ if [ "${TAILS_MERGE_BASE_BRANCH:-}" = 1 ] && \
 
     echo "Merging base branch origin/${GIT_BASE_BRANCH}"
     echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
-    git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
-	|| fatal "Failed to merge base branch."
+    faketime -f "${SOURCE_DATE_FAKETIME}" \
+        git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
+	    || fatal "Failed to merge base branch."
     git submodule update --init
 
     # Adjust BUILD_BASENAME to embed the base branch name and its top commit
@@ -184,8 +185,10 @@ cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
 # create readahead-list from squashfs.sort
 if [ -e config/binary_rootfs/squashfs.sort ]; then
     mkdir -p config/chroot_local-includes/usr/share/amnesia
-    sort -k2 -n -r config/binary_rootfs/squashfs.sort |
-        cut -d' ' -f1 > config/chroot_local-includes/usr/share/amnesia/readahead-list
+    sort -k2 -n -r config/binary_rootfs/squashfs.sort | \
+        cut -d' ' -f1 | \
+        grep --invert-match --extended-regexp "$READAHEAD_EXCLUDE_PATTERN" \
+        > config/chroot_local-includes/usr/share/amnesia/readahead-list
 fi
 
 # custom APT sources

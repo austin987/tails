@@ -157,7 +157,7 @@ module RemoteShell
     end
 
     def read()
-      Base64.decode64(self.class.open(@vm, 'read', @path))
+      Base64.decode64(self.class.open(@vm, 'read', @path)).force_encoding('utf-8')
     end
 
     def write(data)
