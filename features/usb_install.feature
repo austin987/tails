@@ -10,7 +10,7 @@ Feature: Installing Tails to a USB drive
     But a suitable USB device is not found
     And no USB drive is selected
     When I plug USB drive "too-small-device"
-    Then I am told that the destination device is too small
+    Then I am told by Tails Installer that the destination device "is too small"
     And no USB drive is selected
     When I unplug USB drive "too-small-device"
     And I temporarily create a 7200 MiB disk named "big-enough"
@@ -23,7 +23,7 @@ Feature: Installing Tails to a USB drive
     And I create a gpt partition with a vfat filesystem on disk "gptfat"
     And I plug USB drive "gptfat"
     When I start Tails Installer
-    Then I am told that the destination device is too small
+    Then I am told by Tails Installer that the destination device "is too small"
 
   Scenario: Detecting when a target USB drive is inserted or removed
     Given I have started Tails from DVD without network and logged in
