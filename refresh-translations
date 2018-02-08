@@ -134,14 +134,15 @@ intltool_merge_xml () {
 
 ### Main
 
-# Schedule clean up
-trap "rm -fr tmp/pot po/*.new po/*.orig" EXIT
-
 FORCE=no
+KEEP_TMP_POT=no
 while [ -n "${@:-}" ]; do
     case "${1:-}" in
         '--force')
             FORCE=yes
+            ;;
+        '--keep-tmp-pot')
+            KEEP_TMP_POT=yes
             ;;
         *)
             echo "Unknown option: ${1}"
@@ -150,6 +151,9 @@ while [ -n "${@:-}" ]; do
     esac
     shift
 done
+
+# Schedule clean up
+trap "rm -fr po/*.new po/*.orig ; [ "$KEEP_TMP_POT" = yes ] || rm -fr tmp/pot" EXIT
 
 # Update POT files
 mkdir -p tmp/pot

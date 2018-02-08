@@ -20,10 +20,12 @@ Then /^Tails has no disk swap enabled$/ do
              mem_info)
 end
 
-Given /^I create an? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |parttype, has_label, label, fstype, is_encrypted, luks_password, name|
+Given /^I create an?( (\d+) ([[:alpha:]]+))? ([[:alnum:]]+) partition( labeled "([^"]+)")? with an? ([[:alnum:]]+) filesystem( encrypted with password "([^"]+)")? on disk "([^"]+)"$/ do |with_size, size, unit, parttype, has_label, label, fstype, is_encrypted, luks_password, name|
   opts = {}
   opts.merge!(:label => label) if has_label
   opts.merge!(:luks_password => luks_password) if is_encrypted
+  opts.merge!(:size => size) if with_size
+  opts.merge!(:unit => unit) if with_size
   $vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
 end
 
