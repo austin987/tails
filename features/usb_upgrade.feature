@@ -129,7 +129,7 @@ Feature: Upgrading an old Tails USB installation
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
 
-  Scenario: Upgrading a pristine Tails via an IUK
+  Scenario: Upgrading an initial Tails installation with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And no squashfs delta is installed
     And Tails is fooled to think that version 2.0~test was initially installed
@@ -155,7 +155,7 @@ Feature: Upgrading an old Tails USB installation
     Then the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
     And only the 2.3~test squashfs delta is installed
 
-  Scenario: Upgrading a Tails with 1 IUK present via a new IUK
+  Scenario: Upgrading a Tails that has one SquashFS delta present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed
     And Tails is fooled to think a 2.1~test squashfs delta is installed
@@ -166,7 +166,7 @@ Feature: Upgrading an old Tails USB installation
     And I can successfully install the incremental upgrade to version 2.3~test
     Then only the 2.3~test squashfs delta is installed
 
-  Scenario: Upgrading a Tails with several IUKs present via a new IUK
+  Scenario: Upgrading a Tails that has several SquashFS deltas present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed
     And Tails is fooled to think a 2.1~test squashfs delta is installed
