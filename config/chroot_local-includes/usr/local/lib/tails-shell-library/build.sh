@@ -26,7 +26,7 @@ ensure_hook_dependency_is_installed() {
         is_package_installed "${p}" && continue
         set -- "${@}" "${p}"
     done
-    [ -z "${@}" ] && return
+    [ -z "${*}" ] && return
     apt-get install --yes "${@}"
     apt-mark auto "${@}"
 }
