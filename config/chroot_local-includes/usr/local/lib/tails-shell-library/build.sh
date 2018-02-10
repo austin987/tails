@@ -23,10 +23,14 @@ ensure_hook_dependency_is_installed() {
                  "doesn't look like a package name: ${p}" >&2
             exit 1
         fi
-        is_package_installed "${p}" && continue
+        if is_package_installed "${p}"; then
+            continue
+        fi
         set -- "${@}" "${p}"
     done
-    [ -z "${*}" ] && return
+    if [ -z "${*}" ]; then
+        return
+    fi
     apt-get install --yes "${@}"
     apt-mark auto "${@}"
 }
