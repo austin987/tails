@@ -1,36 +1,27 @@
-[[!meta title="Bootable USB disk image"]]
+[[!meta title="USB image"]]
+
+Corresponding ticket: [[!tails_ticket 15292]]
 
 [[!toc levels=2]]
 
 # Motivation
 
-This is about generating, distributing and installing Tails as a disk
-image that, once copied bit-by-bit to a USB stick, produces a _final
-Tails_ (GPT, UEFI-bootable, ready to get a persistent volume).
+A number of the
+[[problems we've identified with the installation process|blueprint/usb_install_and_upgrade#problems]]
+will be fixed by generating, distributing and installing Tails as
+a disk image that, once copied bit-by-bit to a USB stick, produces
+a _final Tails_ (GPT, UEFI-bootable, ready to get a persistent
+volume).
 
-This would:
+# The plan
 
- - avoid the need for a second USB stick and an intermediary Tails
-   during the initial installation and full manual upgrade; as
-   a consequence:
-   - big UX win
-   - avoid the
-     [[!tails_ticket 12146 desc="intermediary Tails not being bootable on many UEFI systems"]]
-     problem
-   - removes a blocker for
-     [[!tails_ticket 6560 desc="Secure Boot support"]] (a non-GPT
-     intermediary Tails would never work with Secure Boot enabled)
- - allow us to use simpler, more reliable installers at least on
-   Windows and macOS and then:
-   - avoids user confusion that results in creating a non-bootable
-     device e.g. [[!tails_ticket 13206]]
-   - relying on third-party tools becomes less painful
- - pave the way to a self-extracting file offered for download,
-   that would bundle the disk image, the program used to copy it to
-   the target device, and some wrapper that would run that program
-   with the right arguments
+The list of tasks is being worked on in `fundraising.git`.
+It should be converted into subtasks of [[!tails_ticket 15292]] at
+some point.
 
-# Generating
+# Specific problems
+
+## Generating
 
 `live-build` can generate `hdd` images. Alternatively, we can
 post-process our ISO image to create a USB-bootable disk image.
@@ -45,21 +36,28 @@ Open questions:
  - What about DVD support? Can we stop distributing an ISO image
    some day?
 
-# Distributing
+## Distributing
 
 XXX: impact on mirrors' storage space?
 
-# Installing
+## Installing
 
-## from Windows
+### Common bits
 
-### Etcher
+* Self-installable executable download:
+  - We need to investigate if we can Cross-compile a 3rd party dd GUI
+    tool such as Etcher and distribute it from our website.
+  - Ask Etcher about self installable bundle.
+
+### from Windows
+
+#### Etcher
 
 See below "from macOS".
 
 <a id="rufus"></a>
 
-### Rufus
+#### Rufus
 
 - [homepage](https://rufus.akeo.ie)
 - CLI mode: [in progress](https://github.com/pbatard/rufus/issues/111) but not on priority list of the developer
@@ -79,7 +77,7 @@ See below "from macOS".
 
 <a id="win32-disk-imager"></a>
 
-### Win32 Disk Imager
+#### Win32 Disk Imager
 
 [[!tails_ticket 14447]]
 
@@ -97,11 +95,11 @@ See below "from macOS".
 
 <img src="https://labs.riseup.net/code/attachments/download/1885/Win32%20Disk%20Imager.png"/>
 
-## from macOS
+### from macOS
 
 <a id="etcher"></a>
 
-### Etcher
+#### Etcher
 
  - Tested version: 1.3.1 from 2018-01-23
  - [homepage](https://etcher.io)
@@ -122,7 +120,7 @@ See below "from macOS".
 
 <a id="macos-disk-utility"></a>
 
-### macOS Disk Utility
+#### macOS Disk Utility
 
 - Tested version: Mac OS X Lion
 - I get an error ("invalid source") when I try to either:
@@ -130,13 +128,14 @@ See below "from macOS".
   - Restore the disk image of a full USB stick installed using @dd@.
   - Restart the disk image of the system partition of a USB stick installed using @dd@.
 
-## from Linux
+### from Linux
 
-_GNOME Disks_ has a _Restore Disk Image_ feature that basically does
-`dd` with a nice progress bar.
+* _GNOME Disks_ has a _Restore Disk Image_ feature that basically does
+  `dd` with a nice progress bar.
+* Investigate if we can get Etcher into Debian, which would allow all
+  users to follow the same process.
 
-# Upgrading
+## Upgrading
 
 This approach does not make full, manual upgrades any simpler. For the
-ideas we have to fix that other problem, see [[!tails_ticket 11131]]
-and [[blueprint/Endless_upgrades]].
+ideas we have to fix that other problem, see [[!tails_ticket 15281]].
