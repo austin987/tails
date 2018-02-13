@@ -5,35 +5,14 @@ stages:
 test-PO-files:
     stage: test
     script:
-    - apt-get install -qq -y i18nspector
-    - git config --global http.sslVerify false
     - git submodule sync --recursive
     - git submodule update --init --recursive
-    - git config --global http.sslVerify true
     - wiki/src/contribute/l10n_tricks/check_po.sh
 refresh-wiki:
     stage: refresh
     script:
-        - apt-get install -qq -y ikiwiki libyaml-perl libyaml-libyaml-perl
-        - apt-get install -qq -y libyaml-syck-perl perlmagick po4a ruby
         - ikiwiki --setup ikiwiki.setup --refresh
         - git status
 
 cache:
     key: "$CI_PROJECT_PATH_SLUG-master"
-
-before_script:
-    # Configure APT: Only install necessary packages, set cache location
-    - printf
-      "apt::install-recommends 0;\n
-      apt::install-suggests 0;\n
-      dir::cache::archives ${APT_CACHE_ARCHIVES};\n
-      dir::state::lists ${APT_STATE_LISTS};\n"
-      >> /etc/apt/apt.conf.d/99custom
-    # If the APT cache dir doesn't exist, create the necessary dirs and update the package lists
-    # Don't do this on subsequent runs, if the cache was already populated, to save ressources and therefore time
-    - if [ ! -d ${APT_DIR} ]; then
-      mkdir -p {${APT_CACHE_ARCHIVES},${APT_STATE_LISTS}}/partial &&
-      apt-get update -qq;
-      fi
-    - apt-get install -qq -y ca-certificates apt-utils
