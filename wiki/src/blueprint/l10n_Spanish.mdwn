@@ -40,15 +40,35 @@ Estamos testeando una plataforma de traducción del website con weblate, una apl
 Traducir con git
 ----------------
 
-Ahora mismo tenemos un repo especial, en el que hemos generado los archivos de traducción en algunos idiomas que se ha dicho de comenzar a traducir pero que todavía no son parte de Tails.
-
-Se puede clonar con:
+Recuerda que el repositorio de la plataforma de traducción está en
 
     git clone https://translate.tails.boum.org/git/tails/index/
 
-
 Se pueden seguir las instrucciones de 
 <https://tails.boum.org/contribute/how/translate/with_Git/>
+
+Para hacer review de las actualizaciones de la plataforma de traducción puedes hacer esto:
+
+- Bajarte el repo de Tails:
+   git clone https://git-tails.immerda.ch/tails
+
+- Añadirle el repo de la plataforma de traducción
+    cd tails
+# to configure the remote
+git remote add translations https://translate.tails.boum.org/git/tails/index/
+git fetch translations master
+
+
+git checkout tails/master
+find . -name '*.es.po' -exec git checkout translations/master --  {} \;
+
+# like that they get added to a commit, but you can take them away with
+git reset *
+
+and they are only be modifications on your tails master branch.
+then you can review the changes one by one with `git add -p`
+
+
 
 Traducir la interfaz como aparece
 ---------------------------------
