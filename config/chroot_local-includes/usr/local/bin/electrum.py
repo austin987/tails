@@ -1,14 +1,19 @@
-#! /usr/bin/python3
-'''
-    Tails electrum wrapper
+#! /usr/bin/env python3
+"""
+Tails electrum wrapper
 
-    Test with "python3 electrum.py doctest".
-    The tests will start the tor-browser so you probably
-    want to use a tester that handles user interaction or
-    run the tests from the command line and answer prompts as needed.
+Test with "python3 electrum.py doctest".
+The tests will start the tor-browser so you probably
+want to use a tester that handles user interaction or
+run the tests from the command line and answer prompts as needed.
 
-    goodcrypto.com converted from bash to python and added basic tests.
-'''
+goodcrypto.com converted from bash to python and added basic tests.
+
+>>> # run script
+>>> sh.Command(sys.argv[0])()
+<BLANKLINE>
+"""
+
 import os
 import sys
 from gettext import gettext
@@ -20,41 +25,33 @@ os.environ['TEXTDOMAIN'] = 'tails'
 HOME_DIR = os.environ['HOME']
 CONF_DIR = os.path.join(HOME_DIR, '.electrum')
 
-def main(args):
-    """
-        >>> # In case you answer Exit
-        >>> try:
-        ...     main()
-        ... except SystemExit:
-        ...     pass
-    """
 
+def main(*args):
     if not electrum_config_is_persistent():
         if not verify_start():
-            sys.exit(0)
+            return
 
-    os.execv('/usr/bin/electrum', ['/usr/bin/electrum'] + args)
+    os.execv('/usr/bin/electrum', ['/usr/bin/electrum'] + list(args))
+
 
 def electrum_config_is_persistent():
-    """
-        Return True iff electrum config is persistent.
+    """Return True iff electrum config is persistent.
 
-        >>> electrum_config_is_persistent()
-        False
+    >>> electrum_config_is_persistent()
+    False
     """
 
     filesystem = sh.findmnt('--noheadings',
-                                '--output', 'SOURCE',
-                                '--target', CONF_DIR).stdout.decode().strip()
+                            '--output', 'SOURCE',
+                            '--target', CONF_DIR).stdout.decode().strip()
     return filesystem in sh.glob('/dev/mapper/TailsData_unlocked[/electrum]')
 
-def verify_start():
-    """
-        Ask user whether to start Electrum.
 
-        >>> # Assumes you answer Exit
-        >>> verify_start()
-        False
+def verify_start():
+    """Ask user whether to start Electrum.
+
+    >>> verify_start() in (True, False)
+    True
     """
 
     disabled_text = gettext('Persistence is disabled for Electrum')
@@ -67,28 +64,19 @@ def verify_start():
     exit_text = gettext('_Exit')
 
     # results 0 == True; 1 == False; 5 == Timeout
-    results = sh.zenity('--question', '--title', "", '--default-cancel',
-        '--ok-label', '{}'.format(launch_text), '--cancel-label', '{}'.format(exit_text),
-        '--text', '{}'.format(dialog_msg), _ok_code=[0,1,5])
+    results = sh.zenity('--question', '--title', '', '--default-cancel',
+                        '--ok-label', '{}'.format(launch_text),
+                        '--cancel-label', '{}'.format(exit_text),
+                        '--text', '{}'.format(dialog_msg),
+                        _ok_code=[0,1,5])
     start = results.exit_code == 0
 
     return start
 
-'''
-    >>> # run script
-    >>> this_command = sh.Command(sys.argv[0])
-    >>> this_command()
-    ...
-'''
+
 if __name__ == '__main__':
-    if sys.argv and len(sys.argv) > 1:
-        if sys.argv[1] == 'doctest':
-            from doctest import testmod
-            testmod()
-        else:
-            main(sys.argv[1:])
+    if len(sys.argv) > 1 and sys.argv[1] == 'doctest':
+        import doctest
+        doctest.testmod()
     else:
-        main([])
-
-    sys.exit(0)
-
+        main(*sys.argv[1:])
