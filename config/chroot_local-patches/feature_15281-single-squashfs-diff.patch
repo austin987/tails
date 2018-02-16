@@ -1,5 +1,5 @@
-diff --git a/usr/share/perl5/Tails/IUK/Frontend.pm b/usr/share/perl5/Tails/IUK/Frontend.pm
-index 2f31944..e1302c2 100644
+diff --git a/lib/Tails/IUK/Frontend.pm b/usr/share/perl5/Tails/IUK/Frontend.pm
+index 2f31944..f1121c4 100644
 --- a/usr/share/perl5/Tails/IUK/Frontend.pm
 +++ b/usr/share/perl5/Tails/IUK/Frontend.pm
 @@ -56,7 +56,9 @@ class_type 'Tails::RunningSystem';
@@ -41,19 +41,40 @@ index 2f31944..e1302c2 100644
          my $attribute = "override_$_";
          my $predicate = "has_$attribute";
          if ($self->$predicate) {
+@@ -601,6 +604,19 @@ method do_incremental_upgrade ($upgrade_path) {
+         $upgrade_path, $url_transform, $target_files_tempdir
+     );
+ 
++    $self->dialog(
++        $self->encoding->decode(gettext(
++            "<b>The upgrade was successfully downloaded.</b>\n\n".
++            "The network connection will now be shut down ".
++            "and your Tails device will be upgraded.\n\n".
++            "Please save your work and close all other applications."
++        )),
++        type  => 'info',
++        title => $self->encoding->decode(gettext(
++            q{Upgrade successfully downloaded}
++        )),
++    );
++
+     $self->install_iuk($upgrade_path, $target_files_tempdir);
+ 
+     $self->dialog(
 diff --git a/usr/share/perl5/Tails/IUK/Install.pm b/usr/share/perl5/Tails/IUK/Install.pm
-index d1f5b3f..3dbccf6 100644
+index d1f5b3f..a258019 100644
 --- a/usr/share/perl5/Tails/IUK/Install.pm
 +++ b/usr/share/perl5/Tails/IUK/Install.pm
-@@ -157,21 +157,26 @@ method space_available {
+@@ -157,21 +157,27 @@ method space_available {
      space_available($self->liveos_mountpoint->stringify);
  }
  
 +method delete_obsolete_squashfs_diffs {
 +    my @keep = (
-+        file($self->liveos_mountpoint->subdir('live'), 'filesystem.squashfs'),
-+        file($self->liveos_mountpoint->subdir('live'), 'Tails.module'),
-+        map {file($self->liveos_mountpoint, $_)} $self->all_installed_squashfs,
++        (map {file($self->liveos_mountpoint->subdir('live'), $_)}
++             ('filesystem.squashfs', 'Tails.module', 'vmlinuz', 'initrd.img')),
++        (map {file($self->liveos_mountpoint, $_)}
++             $self->all_installed_squashfs),
 +    );
 +
 +    for my $candidate ($self->liveos_mountpoint->subdir('live')->children) {
@@ -83,7 +104,7 @@ index d1f5b3f..3dbccf6 100644
          close $temp_fh;
          system('sync');
  
-@@ -222,6 +227,8 @@ method run {
+@@ -222,6 +228,8 @@ method run {
  
      $self->upgrade_modules_file;
  
