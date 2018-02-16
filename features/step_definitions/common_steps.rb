@@ -917,6 +917,7 @@ TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="#{version}"
   EOF
   $vm.file_overwrite(fake_os_release_file, fake_os_release_content)
+  $vm.execute_successfully("chmod a+r #{fake_os_release_file}")
   $vm.execute_successfully(
     "mount --bind '#{fake_os_release_file}' '#{initial_os_release_file}'"
   )
