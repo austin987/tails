@@ -34,6 +34,7 @@ exec_firefox_helper() {
 
     # From start-tor-browser:
     unset SESSION_MANAGER
+    export SELFRANDO_write_layout_file=
 
     exec "${TBB_INSTALL}"/"${binary}" "${@}"
 }

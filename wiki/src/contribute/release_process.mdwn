@@ -696,8 +696,9 @@ Prepare upgrade-description files
         ./bin/tails-iuk-generate-upgrade-description-files \
             --build-target amd64 \
             --version "${VERSION:?}" \
-            --next-version "${NEXT_PLANNED_VERSION:?}" \
-            --next-version "${NEXT_PLANNED_VERSION:?}~rc1" \
+            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
+            --next-version "${NEXT_PLANNED_MINOR_VERSION:?}" \
             --next-version "${VERSION:?}.1" \
             --iso "${ISO_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
@@ -792,17 +793,6 @@ If preparing a RC, skip this part.
 
 Update the ISO description file (IDF) used by the browser extension:
 
-    cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
-    ---
-    build-target: amd64
-    channel: stable
-    product-name: Tails
-    version: '${VERSION:?}'
-    target-files:
-    - sha256: ${ISO_SHA256SUM}
-      size: ${ISO_SIZE_IN_BYTES:?}
-      url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
-    EOF
     cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/amd64/stable/latest.yml <<EOF
     ---
     build-target: amd64
@@ -815,7 +805,7 @@ Update the ISO description file (IDF) used by the browser extension:
       url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
     EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v1/Tails/{i386,amd64}/stable/latest.yml && \
+      git add wiki/src/install/v1/Tails/amd64/stable/latest.yml && \
       git commit -m "Update IDF file for Tails Verification." )
 
 Upload images
@@ -1216,7 +1206,7 @@ Test downloading the ISO and IUK over HTTP.
 
 Make sure every active mirror in the pool has the new version:
 
-	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fasts \
+	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
@@ -1304,12 +1294,8 @@ Push
 
 ### Git
 
-If preparing a release candidate, just push the `master` branch:
-
-    git push origin master:master
-
 If preparing an actual release, push the last commits to our Git
-repository like this:
+repository and put `master` in the following state:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1318,10 +1304,26 @@ repository like this:
     ) && \
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
+      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
+    )
+
+Then (or if you preparing a release candidate) ensure that `master`
+has `stable` as its base branch:
+
+    ( cd "${MASTER_CHECKOUT:?}" && \
+      echo "stable" > config/base_branch && \
+      git commit config/base_branch \
+          -m "Restore master's base branch." \
+    )
+
+Finally, push the `master` branch to make the changes go live on our
+website:
+
+    ( cd "${MASTER_CHECKOUT:?}" && \
       git push origin master:master \
     )
 
+The release is now public! Woo!
 
 Bug tracker
 -----------

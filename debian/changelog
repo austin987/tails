@@ -4,17 +4,61 @@ tails (3.6) UNRELEASED; urgency=medium
 
  -- Tails developers <tails@boum.org>  Tue, 09 Jan 2018 21:30:54 +0100
 
-tails (3.5) UNRELEASED; urgency=medium
+tails (3.5.1) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Dummy entry for potential emergency release.
 
- -- Tails developers <tails@boum.org>  Tue, 09 Jan 2018 21:27:49 +0100
+ -- Tails developers <tails@boum.org>  Tue, 23 Jan 2018 01:33:25 +0100
+
+tails (3.5) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade amd64-microcode to 3.20171205.1, for the mitigation
+      against Spectre (CVE-2017-5715) (Closes: #15148).
+    - Upgrade Tor Browser to 7.5-build3 (Closes:  #15197).
+    - Upgrade Thunderbird to 1:52.5.2-2~deb9u1.0tails1 (Closes: #15033)
+    - Upgrade gdk-pixbuf to 2.36.5-2+deb9u2.0tails1 (Closes: #15177).
+    - Upgrade bind9 to 1:9.10.3.dfsg.P4-12.3+deb9u4.
+    - Upgrade libxml2 to 2.9.4+dfsg1-2.2+deb9u2.
+
+  * Minor improvements
+    - Upgrade Linux to 4.14.13, which is the first kernel that has the
+      "[x86] microcode/AMD: Add support for fam17h microcode loading"
+      commit, that's needed to load the AMD fam17h microcode for
+      mitigating the Spectre vulnerability (CVE-2017-5715).
+
+  * Bugfixes
+    - Drop Claws Mail persistence setting migration. Whenever
+      persistent Claws Mail setting is enabled, this creates an empty
+      ~/.icedove/ directory, that prevents Thunderbird from starting
+      (Closes: #12734).
+    - Don't prevent the GNOME Applications button from opening its menu if
+      time syncing resulted in a shift back in time (Closes: #14250).
+    - Tails Installer: when cloning Tails to another USB drive, check
+      if the target device has enough space *before* any destructive
+      actions are made (Closes: #14622).
+    - Tor Browser: make "Print to file" work again, for all locales
+      (Closes: #13403, #15024).
+
+  * Build system
+    - Fix option passed to cmp: -q is not supported but --quiet is.
+      Spotted on feature/buster that's the first branch that exercises
+      this code, but there's no reason to fix it only there.
+
+  * Test suite
+    - Adapt tests for Tor Launcher 0.2.14.3, i.e. the one shipped with
+      Tor Browser 7.5 in Tails 3.5 (Closes: #15064).
+    - Add support for creating arbitrarily sized partitions.
+    - Add a "Try cloning Tails to a too small partition" scenario
+      (regression test for #14622).
+
+ -- Tails developers <tails@boum.org>  Tue, 23 Jan 2018 00:57:58 +0100
 
 tails (3.4) unstable; urgency=medium
 
   * Security fixes
-    - Install Linux 4.14.0-2 from sid (Closes: #14976). This enables
-      the kernel-side mitigations for Meltdown and Spectre.
+    - Install Linux 4.14.0-3 from sid (Closes: #14976). This enables
+      the kernel-side mitigations for Meltdown.
     - Upgrade curl to 7.52.1-5+deb9u3.
     - Upgrade enigmail to 2:1.9.9-1~deb9u1.
     - Upgrade gimp to 2.8.18-1+deb9u1.

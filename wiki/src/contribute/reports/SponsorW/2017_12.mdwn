@@ -1,0 +1,201 @@
+[[!meta title="Tails December 2017 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in December 2017.
+
+Everything in this report is public.
+
+<a id="veracrypt"></a>
+
+# A. VeraCrypt support in GNOME
+
+## A.1 Research user needs and implementation costs
+
+We analyzed the results of our online survey. We got 1011 complete answers for
+a participation rate of 1.97%. It was a great success!
+
+The detailed results are in our [[blueprint|blueprint/veracrypt#survey]].
+
+### Summary of our findings on VeraCrypt usage
+
+Justification of our work:
+
+  - 40% of Tails users are also VeraCrypt users (*Tails+VeraCrypt
+    users*), both inside and outside Tails.
+
+  - 60% of Tails+VeraCrypt users only use VeraCrypt outside of Tails.
+
+  - Most of Tails+VeraCrypt users are regular users of VeraCrypt.
+
+  - VeraCrypt is of more interest to people who are not using Linux as
+    their primary operating system.
+
+  - VeraCrypt is still a reference when people think about encrypting
+    files.
+
+  - Integrating VeraCrypt in Tails will prevent dangerous behaviors:
+
+    *« I need to be able to open TrueCrypt file containers in Tails in
+    order to move files securely between Tails and Windows. Right now, I
+    have to copy my files unencrypted between Tails and Windows and this
+    is quite dangerous. »*
+
+Definition of the scope of our work:
+
+  - 85% of Tails+VeraCrypt users mostly don't use the .TC or .HC file extension.
+  - 76% of Tails+VeraCrypt users use file containers.
+  - 65% of Tails+VeraCrypt users use partitions.
+  - 65% of Tails+VeraCrypt users use hidden volumes.
+  - 55% of Tails+VeraCrypt users have legacy TrueCrypt volumes.
+  - 42% of Tails+VeraCrypt users use keyfiles.
+
+<a id="sprint"></a>
+
+## A.2 UX & UI design sprint
+
+The main developer and the UX designer working on this project gathered for
+three days of sprint in Berlin, at the Onion Space, a coworking space for
+Internet freedom technologists, on December 8, 9, and 10.
+
+### Definition of the scope of our work
+
+We started by better defining the scope of our work based on the
+preliminary research work that we did, both in terms of user needs
+(through the survey) and technical feasibility (through the
+backend code written until now).
+
+We structure the scope of our work in four iterations. We will implement
+and upstream each iteration one after the other and go as far as the
+budget allows:
+
+1. Unlocking partitions
+2. Unlocking file containers
+3. Creating and modifying partitions and containers
+4. *VeraCrypt Mounter*
+
+The details of each iteration is in our
+[[blueprint|blueprint/veracrypt#scope]].
+
+### Paper prototyping
+
+We created paper prototypes of the interactions that we designed for two key
+user scenarios:
+
+  - Scenario A: Unlocking a file container.
+  - Scenario B: Creating a new partition.
+
+Paper prototypes allowed us to:
+
+  - Make our ideas come to life without having to write a single line of code.
+  - Create a shared understanding between designer and developer.
+  - Identify issues what we overlooked so far.
+
+Example of a paper prototype showing steps of scenario A, locating the file
+container and opening it using *VeraCrypt Mounter*:
+
+<img src="https://labs.riseup.net/code/attachments/download/1845/prototyping.jpg">
+
+We created our prototypes using
+[WireframeSketcher](https://wireframesketcher.com/). WireframeSketcher is
+proprietary software but can be installed in Tails easily. It includes sketchy
+templates of all common user interface elements so you can create and modify
+sketches very rapidly.
+
+Paper prototyping was especially useful as our work modifies many bits and
+pieces of existing GNOME utilities. It wouldn't have been possible to create
+even a rough code prototype.
+
+### Formative testing with users
+
+At the end of the first day, we started testing our prototypes with users.
+During the sprint, we had seven people come over for sessions of one hour each.
+After each test we debriefed our findings and improved our design.
+
+We recruited the participants through a [blog post on our
+website](news/veracrypt_ux_design) and contacts we had in Berlin. We selected
+people who were users of both Tails and VeraCrypt and gave priority to people
+who were not using GNOME as their primary desktop environment.
+
+### Output
+
+Since our work is meant to integrate VeraCrypt volumes in the native GNOME
+utilities, we actually didn't design a lot of new interfaces. We modified two
+existing dialogs of GNOME Disks for the creating of a new partition. Our
+changes are circled in blue:
+
+<img src="https://labs.riseup.net/code/attachments/download/1833/disks-format-partition.png">
+
+<img src="https://labs.riseup.net/code/attachments/download/1834/disks-format-partition-password.png">
+
+We designed a variant of the [GVfs](https://wiki.gnome.org/Projects/gvfs)
+dialog for the opening of encrypted volumes to include the additional options
+required by VeraCrypt volumes:
+
+<img src="https://labs.riseup.net/code/attachments/download/1843/gvfs-monitor-unlock-veracrypt-volume.png">
+
+We designed *VeraCrypt Mounter*, a very simple application wrapper that makes
+it easier for users to learn how to use VeraCrypt in Tails and makes it faster
+to open file containers:
+
+<img src="https://labs.riseup.net/code/attachments/download/1842/veracrypt-mounter.png">
+
+The need for *VeraCrypt Mounter* arose as people *all* looked for *something
+called VeraCrypt* in the menus because this it how they use VeraCrypt in other
+operating systems. A paradox of our integration work is that it made using
+VeraCrypt volumes *too transparent* for people to learn about it easily.
+
+*VeraCrypt Mounter* would only be available in Tails. It's also optional in the
+scope of our work as it could be replaced with a launcher pointing to our
+documentation on VeraCrypt in Tails. Pointing to the documentation would lead
+to similar success rates and would teach people better how to use VeraCrypt in
+GNOME outside of Tails but it would be more time-consuming for first-time users
+and a bit more frustrating than having *VeraCrypt Mounter*.
+
+The most encouraging feedback that we got during the tests came from a digital
+security trainer. She came to the tests because she frequently teaches
+VeraCrypt but is very negative about the complexity and poor design of the
+native VeraCrypt interface. She ended up being extremely positive about our
+work as it finally looked like something she could teach people without too
+much pain.
+
+Having a better user experience than native VeraCrypt was not part of our
+objectives initially but we are know convinced that it will be a key outcome:
+our work will actually be much more usable than VeraCrypt itself.
+
+# B. Additional software
+
+Our developers had a first successful sprint during which they could
+dive into the problem space and start tackling the few issues that do
+not need to wait for the UX & GUI design sprint.
+
+## B.4 Implement backend and GUI
+
+We worked on a limitation of the backend ([[!tails_ticket 9059]]) which
+currently locks the opening of the desktop during more than a minute
+without any feedback, when the Additional Software feature is activated.
+We [[designed a
+solution|blueprint/additional_software_packages/dont_block_desktop_startup]]
+to this problem and started implementing it ([[!tails_ticket 9059]]).
+The implementation is working, and should be reviewed and polished
+within the next month.
+
+We also fixed a problem that could theoretically happen in corner
+cases, when the user has added to their list of additional software
+a package that prompts upon installation ([[!tails_ticket 6038]]).
+The fix will be released in Tails 3.5 (January, 2018).
+
+## B.5 Implement offline mode ([[!tails_ticket 14570]])
+
+We [[researched|blueprint/additional_software_packages/offline_mode]]
+the possible causes of issues with the Additional Software feature
+without any Internet connection and identified three
+potential problems:
+
+ - APT indices have expired: it turns out that changes in APT made
+   this a non-issue on Debian Stretch.
+ - One of the packages was not cached in the first place: the root
+   cause of this problem was identified and a fix has been
+   released in Tails 3.4 ([[!tails_ticket 10958]]).
+ - Incomplete online upgrade process: a solution has been designed and
+   implemented; it passed a 1st review, and will be polishing and released in 2018Q1.

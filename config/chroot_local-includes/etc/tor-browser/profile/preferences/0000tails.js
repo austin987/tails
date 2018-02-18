@@ -1,6 +1,6 @@
 // As suggested in TBB's start-tor-browser script for system-wide Tor
 // instances
-pref("extensions.torbutton.banned_ports", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9061,9062,9150,9051");
+pref("extensions.torbutton.banned_ports", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9062,9150,9051");
 pref("extensions.torbutton.custom.socks_host", "127.0.0.1");
 pref("extensions.torbutton.custom.socks_port", 9150);
 pref("extensions.torbutton.launch_warning",  false);
@@ -61,6 +61,7 @@ pref("noscript.untrusted", "google-analytics.com");
 // Other non-Torbutton, Tails-specific prefs
 pref("browser.download.dir", "/home/amnesia/Tor Browser");
 pref("dom.input.fallbackUploadDir", "/home/amnesia/Tor Browser");
+pref("print.print_to_filename", "/home/amnesia/Tor Browser/output.pdf");
 pref("browser.download.folderList", 2);
 pref("browser.download.manager.closeWhenDone", true);
 pref("extensions.update.enabled", false);

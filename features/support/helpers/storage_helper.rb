@@ -156,8 +156,22 @@ class VMStorage
   def disk_mkpartfs(name, parttype, fstype, opts = {})
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
+    opts[:size] ||= nil
+    opts[:unit] ||= nil
     guestfs_disk_helper(name) do |g, disk_handle|
-      g.part_disk(disk_handle, parttype)
+      if ! opts[:size].nil? and ! opts[:unit].nil?
+        g.part_init(disk_handle, parttype)
+        size_in_bytes = convert_to_bytes(opts[:size].to_f, opts[:unit])
+        sector_size = g.blockdev_getss(disk_handle)
+        size_in_sectors = (size_in_bytes / sector_size).floor
+        # leave some room for the partition table
+        offset_in_sectors = (convert_to_bytes(4, 'MiB') / sector_size).floor
+        g.part_add(disk_handle, 'primary',
+                   offset_in_sectors,
+                   offset_in_sectors + size_in_sectors - 1)
+      else
+        g.part_disk(disk_handle, parttype)
+      end
       g.part_set_name(disk_handle, 1, opts[:label]) if opts[:label]
       primary_partition = g.list_partitions()[0]
       if opts[:luks_password]

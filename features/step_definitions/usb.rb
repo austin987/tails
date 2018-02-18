@@ -104,7 +104,7 @@ When /^I start Tails Installer$/ do
   $vm.focus_window('Tails Installer')
 end
 
-When /^I am told that the destination device (.*)$/ do |status|
+When /^I am told by Tails Installer that.*"([^"]+)".*$/ do |status|
   try_for(10) do
     tails_installer_match_status(status)
   end
