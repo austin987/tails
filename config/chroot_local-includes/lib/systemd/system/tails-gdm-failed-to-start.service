@@ -29,7 +29,10 @@ ExecStart=/bin/sh -c \
 ExecStart=/bin/chvt 5
 ExecStart=/bin/plymouth show-splash
 ExecStart=/bin/sh -c \
-    'VIDEO_CARD=$(lspci -d::0300 -nn | sed -E "s,.* VGA compatible controller \[0300\]:\s*,,") ; \
-     /bin/plymouth display-message \
-         --text="Error starting GDM with your graphics card: $VIDEO_CARD. Please take note of this error and visit https://tails.boum.org/gdm for troubleshooting." \
+    'MAX_LENGTH=254 ; \
+     PREFIX="Error starting GDM with your graphics card: " ; \
+     SUFFIX=". Please take note of this error and visit https://tails.boum.org/gdm for troubleshooting." ; \
+     MAX_VIDEO_CARD_LENGTH=$(($MAX_LENGTH - $(echo -n "${PREFIX}${SUFFIX}" | wc -c))) ; \
+     VIDEO_CARD=$(lspci -d::0300 -nn | sed -E "s,.* VGA compatible controller \[0300\]:\s*,," | cut -c "1-${MAX_VIDEO_CARD_LENGTH}") ; \
+     /bin/plymouth display-message --text="${PREFIX}${VIDEO_CARD}${SUFFIX}" \
     '
