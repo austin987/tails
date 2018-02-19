@@ -53,10 +53,7 @@ def main(*args):
     # its job.
     os.chdir('/')
 
-    if args:
-        sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend', *args)
-    else:
-        sh.sudo('-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend')
+    os.execv('/usr/bin/sudo', ('/usr/bin/sudo', '-u', RUN_AS_USER, '/usr/bin/tails-upgrade-frontend', *args))
 
 
 @contextmanager
@@ -109,9 +106,9 @@ def check_free_memory(min_real_memfree):
     real_memfree = (memfree + buffers + cached) - tmpfs
 
     if real_memfree < min_real_memfree:
-        print('Only {} MemFree + '.format(real_memfree), end='')
-        print('Buffers + Cached - usage of tmpfs, ', end='')
-        print('while {} is needed.'.format(MIN_REAL_MEMFREE), file=sys.stderr)
+        print('Only {} MemFree + Buffers + Cached - usage of tmpfs, while {} is needed'.format(
+            real_memfree, MIN_REAL_MEMFREE, file=sys.stderr
+        ))
         error(ERROR_MESSAGE)
 
 
