@@ -1,7 +1,6 @@
 stages:
   - test
   - rebuild
-  - post
 
 test-PO-files:
     stage: test
@@ -10,19 +9,16 @@ test-PO-files:
     - git submodule update --init --recursive
     - echo 'checking po files for errors.\nyu can do this before pushing too!'
     - wiki/src/contribute/l10n_tricks/check_po.sh
+    - echo 'last changes in docs'
+    - wiki/src/contribute/l10n_tricks/doc-whatchanged '2 days ago'
+    - echo 'language statistics'
+    - wiki/src/contribute/l10n_tricks/language_statistics.sh
 rebuild-wiki:
     stage: rebuild
     script:
         - ikiwiki --setup ikiwiki.setup --rebuild
         - echo 'changes from weblate to update:'
         - git status
-post-rebuild:
-    stage: post
-    script:
-        - echo 'last changes in docs'
-        - wiki/src/contribute/l10n_tricks/doc-whatchanged '2 days ago'
-        - echo 'language statistics'
-        - wiki/src/contribute/l10n_tricks/language_statistics.sh
 
 cache:
     key: "$CI_PROJECT_PATH_SLUG-master"
