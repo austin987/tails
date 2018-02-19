@@ -35,13 +35,14 @@ def main(*args):
 
     if not kernel or not initrd:
         print('Failed to parse /proc/cmdline', file=sys.stderr)
+        sys.exit(1)
 
     if 'kernel' in args:
         print(LIVE_IMAGE_MOUNTPOINT + kernel, end="")
     elif 'initrd' in args:
         print(LIVE_IMAGE_MOUNTPOINT + initrd, end="")
     else:
-        print('Usage: tails-get-bootinfo kernel|initrd PATH', file=sys.stderr)
+        print('Usage: tails-get-bootinfo kernel|initrd', file=sys.stderr)
         sys.exit(1)
 
 
@@ -52,5 +53,5 @@ if __name__ == "__main__":
     elif len(sys.argv) == 2:
         main(*sys.argv[1:])
     else:
-        print('Usage: tails-get-bootinfo kernel|initrd')
+        print('Usage: tails-get-bootinfo kernel|initrd', file=sys.stderr)
         sys.exit(1)
