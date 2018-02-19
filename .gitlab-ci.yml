@@ -14,11 +14,11 @@ rebuild-wiki:
     stage: rebuild
     script:
         - ikiwiki --setup ikiwiki.setup --rebuild
+        - echo 'changes from weblate to update:'
+        - git status
 post-rebuild:
     stage: post
     script:
-        - echo 'changes from weblate to update:'
-        - git status
         - echo 'last changes in docs'
         - wiki/src/contribute/l10n_tricks/doc-whatchanged '2 days ago'
         - echo 'language statistics'
