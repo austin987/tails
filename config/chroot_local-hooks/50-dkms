@@ -8,16 +8,17 @@ echo "Building dkms modules"
 
 . /usr/share/amnesia/build/variables
 
-# Import install_fake_package
+# Import ensure_hook_dependency_is_installed() and
+# install_fake_package()
 . /usr/local/lib/tails-shell-library/build.sh
 
 # Any -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes \
+ensure_hook_dependency_is_installed \
     build-essential \
     dkms \
     libelf-dev
 
-apt-get install --yes \
+ensure_hook_dependency_is_installed \
     "linux-headers-${KERNEL_VERSION}-amd64" \
     aufs-dkms \
     virtualbox-guest-dkms
