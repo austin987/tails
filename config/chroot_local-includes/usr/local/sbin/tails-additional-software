@@ -36,6 +36,7 @@ def _launch_apt_get(specific_args):
     args.extend(specific_args)
     apt_get = subprocess.Popen(args,
                                env=apt_get_env,
+                               universal_newlines=True,
                                stderr=subprocess.STDOUT,
                                stdout=subprocess.PIPE)
     for line in iter(apt_get.stdout.readline, ''):
