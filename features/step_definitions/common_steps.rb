@@ -776,14 +776,12 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
   @screen.type("p", Sikuli::KeyModifier.CTRL)
-  @screen.wait("TorBrowserPrintDialog.png", 20)
-  @screen.wait_and_click("BrowserPrintToFile.png", 10)
-  @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
-  @screen.hide_cursor
-  @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
-  # Only the file's basename is selected by double-clicking,
-  # so we type only the desired file's basename to replace it
-  @screen.type(output_dir + '/' + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
+  print_dialog = @torbrowser.child('Print', roleName: 'dialog')
+  print_dialog.child('Print to File', 'table cell').click
+  entry = print_dialog.child(roleName: 'text')
+  assert_equal('output.pdf', entry.text, "Failed to find the text entry")
+  entry.text = output_dir + '/' + output_file
+  print_dialog.button('Print').click
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }
