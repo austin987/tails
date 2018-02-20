@@ -7,7 +7,10 @@ echo "Building the aufs module"
 
 . /usr/share/amnesia/build/variables
 
-apt-get install --yes \
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+ensure_hook_dependency_is_installed \
     "linux-source-${KERNEL_SOURCE_VERSION}"
 
 # aufs build needs fs/mount.h, which is in linux-source-* but not

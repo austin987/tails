@@ -1310,14 +1310,18 @@ repository and put `master` in the following state:
 Then (or if you preparing a release candidate) ensure that `master`
 has `stable` as its base branch:
 
-    echo "stable" > config/base_branch && \
-    git commit config/base_branch \
-        -m "Restore master's base branch."
+    ( cd "${MASTER_CHECKOUT:?}" && \
+      echo "stable" > config/base_branch && \
+      git commit config/base_branch \
+          -m "Restore master's base branch." \
+    )
 
 Finally, push the `master` branch to make the changes go live on our
 website:
 
-    git push origin master:master
+    ( cd "${MASTER_CHECKOUT:?}" && \
+      git push origin master:master \
+    )
 
 The release is now public! Woo!
 

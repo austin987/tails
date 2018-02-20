@@ -8,10 +8,13 @@ echo "Building VirtualBox guest modules"
 
 . /usr/share/amnesia/build/variables
 
-# Any -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes dkms
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
 
-apt-get install --yes \
+# Any -dkms package must be installed *after* dkms to be properly registered
+ensure_hook_dependency_is_installed dkms
+
+ensure_hook_dependency_is_installed \
    virtualbox-guest-dkms
 
 for log in $(ls /var/lib/dkms/*/*/build/make.log); do
