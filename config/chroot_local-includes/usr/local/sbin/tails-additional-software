@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import gettext
 import os
@@ -12,18 +12,17 @@ _ = gettext.gettext
 
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = os.path.join(
-    PERSISTENCE_DIR, "live-additional-software.conf"
-)
+    PERSISTENCE_DIR, "live-additional-software.conf")
 OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
 
 
 def _launch_apt_get(specific_args):
-    """Launch apt-get with given args
+    """Launch apt-get with given arguments.
 
     Launch apt-get with given arguments list, log its standard and error output
-    and return its returncode"""
+    and return its returncode."""
     apt_get_env = os.environ.copy()
     # The environnment provided in GDM PostLogin hooks doesn't contain /sbin/
     # which is required by dpkg. Let's use the default path for root in Tails.
@@ -35,11 +34,11 @@ def _launch_apt_get(specific_args):
     apt_get_env['DEBIAN_PRIORITY'] = "critical"
     args = ["apt-get", "--quiet", "--yes"]
     args.extend(specific_args)
-    apt_get = subprocess.Popen(
-        args,
-        env=apt_get_env,
-        stderr=subprocess.STDOUT,
-        stdout=subprocess.PIPE)
+    apt_get = subprocess.Popen(args,
+                               env=apt_get_env,
+                               universal_newlines=True,
+                               stderr=subprocess.STDOUT,
+                               stdout=subprocess.PIPE)
     for line in iter(apt_get.stdout.readline, ''):
         if not line.startswith('('):
             syslog.syslog(line.rstrip())
@@ -51,8 +50,7 @@ def _launch_apt_get(specific_args):
 
 
 def _notify(title, body):
-    """Display a notification to the user of the live system
-    """
+    """Display a notification to the user of the live system."""
     cmd = "/usr/local/sbin/tails-notify-user"
     try:
         subprocess.check_call([cmd, title, body], stderr=subprocess.STDOUT)
@@ -70,14 +68,12 @@ def _notify(title, body):
 
 
 def has_additional_packages_list():
-    """Return true iff PACKAGES_LIST_FILE exists
-    """
+    """Return true iff PACKAGES_LIST_FILE exists."""
     return os.path.isfile(PACKAGES_LIST_FILE)
 
 
 def get_additional_packages():
-    """Returns the list of all the additional packages
-    """
+    """Return the list of all additional packages configured."""
     packages = []
     if has_additional_packages_list():
         with open(PACKAGES_LIST_FILE) as f:
@@ -85,19 +81,16 @@ def get_additional_packages():
                 line = line.strip()
                 if line:
                     packages.append(line)
-        f.closed
     return packages
 
 
 def delete_old_apt_lists(old_apt_lists_dir=OLD_APT_LISTS_DIR):
-    """Delete the copy of the old APT lists, if any.
-    """
+    """Delete the copy of the old APT lists, if any."""
     shutil.rmtree(old_apt_lists_dir)
 
 
 def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
-    """Save a copy of the APT lists
-    """
+    """Save a copy of the APT lists"""
     if os.path.exists(destdir):
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: a copy of the APT lists already exists, "
@@ -110,8 +103,7 @@ def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
 # we want to replace is bind-mounted. So we have to delete the content
 # we want to replace, and then move the content we want to restore.
 def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
-    """Restore the copy of the old APT lists
-    """
+    """Restore the copy of the old APT lists."""
     # Empty dstdir
     for basename in os.listdir(dstdir):
         path = os.path.join(dstdir, basename)
@@ -126,8 +118,7 @@ def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
 
 
 def install_additional_packages(ignore_old_apt_lists=False):
-    """The subcommand which activates and installs all additional packages
-    """
+    """Subcommand which activates and installs all additional packages."""
     syslog.syslog("Starting to install additional software...")
 
     if has_additional_packages_list():
@@ -189,8 +180,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
 
 
 def upgrade_additional_packages():
-    """The subcommand which upgrades all additional packages
-    """
+    """Subcommand which upgrades all additional packages."""
     # Save a copy of APT lists that we'll delete only once the upgrade
     # has succeeded, to ensure that the APT packages cache is up-to-date
     # wrt. the APT lists.
@@ -238,8 +228,7 @@ def upgrade_additional_packages():
 
 
 def print_help():
-    """The subcommand which displays help
-    """
+    """Subcommand which displays help."""
     sys.stderr.write("Usage: %s <subcommand>\n" % program_name)
     sys.stderr.write("""Subcommands:
     install: install additional software
