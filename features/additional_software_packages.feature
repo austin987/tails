@@ -11,6 +11,8 @@ Feature: Additional software packages
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
+    # This is required to use APT in the test suite as explained in
+    # commit e2510fae79870ff724d190677ff3b228b2bf7eac
     And I configure APT to use non-onion sources
     When I update APT using apt
     And I configure additional software packages to install "sslh"
