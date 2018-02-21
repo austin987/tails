@@ -38,7 +38,7 @@ statistics () {
 
 intltool_report () {
     rm -rf tmp/pot
-    ./refresh-translations
+    ./refresh-translations --keep-tmp-pot
     rm -rf po.orig
     cp -a po po.orig
     (

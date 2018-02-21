@@ -4,6 +4,11 @@ set -e
 
 echo "Configuring compression of the initramfs"
 
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+ensure_hook_dependency_is_installed initramfs-tools xz-utils
+
 # Compress the initramfs using a more size-wise efficient algorithm.
 
 OPTS_FILE='/etc/initramfs-tools/initramfs.conf'
