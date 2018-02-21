@@ -9,9 +9,8 @@ run the tests from the command line and answer prompts as needed.
 
 goodcrypto.com converted from bash to python and added basic tests.
 
->>> # run script
->>> this_command = sh.Command(sys.argv[0])
->>> this_command()
+>>> # run this script (without waiting 30 seconds)
+>>> sh.Command(sys.argv[0])("--no-wait")
 <BLANKLINE>
 """
 
@@ -45,7 +44,11 @@ See https://tails.boum.org/doc/first_steps/upgrade#manual\"''')
 
 
 def main(*args):
-    time.sleep(30)
+    if "--no-wait" not in args:
+        time.sleep(30)
+    else:
+        args = (arg for arg in args if arg != "--no-wait")
+
     check_free_memory(MIN_AVAILABLE_MEMORY)
 
     # Go to a place where everyone, especially Archive::Tar::Wrapper called by
@@ -65,14 +68,7 @@ def main(*args):
 
 
 def error(msg):
-    """Show error and exit.
-
-    >>> try:
-    ...     error('testing')
-    ...     fail()
-    ... except SystemExit:
-    ...     pass
-    """
+    """Show error and exit."""
     cli_text = '{}: {} {}'.format(CMD, gettext('error:'), msg)
     dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(gettext('Error'), msg)
     print(cli_text, file=sys.stderr)
@@ -84,7 +80,14 @@ def error(msg):
 def check_free_memory(min_available_memory):
     """Check for enough free memory.
 
-    >>> check_free_memory(MIN_AVAILABLE_MEMORY)
+    # 1 KiB should be available when running the doctest
+    >>> check_free_memory(1024)
+    # 1 TiB should not be available, an error prompt should be displayed
+    >>> try:
+    ...     check_free_memory(1024*1024*1024*1024)
+    ...     fail()
+    ... except SystemExit:
+    ...     pass
     """
 
     available_memory = psutil.virtual_memory().available
