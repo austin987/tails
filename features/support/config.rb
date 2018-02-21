@@ -72,7 +72,7 @@ MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
    ["cupsd",    "*", "631"],
-   ["dhclient", "*", "68"]
+   ["dhclient", "0.0.0.0", "68"]
   ]
 # OpenDNS
 SOME_DNS_SERVER = "208.67.222.222"
