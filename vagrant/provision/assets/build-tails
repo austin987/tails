@@ -102,8 +102,29 @@ fi
 as_root_do rsync -a "${TAILS_GIT_DIR}"/ "${BUILD_DIR}"/
 
 cd "${BUILD_DIR}"
-as_root_do lb config --cache false
 
+if [ "${TAILS_WIKI_CACHE}" = 1 ]; then
+    WIKI_CACHE_SRC_DIR="/var/cache/apt-cacher-ng/wiki-cache"
+    WIKI_CACHE_TARGETS="
+        wiki
+        config/chroot_local-includes/usr/share/doc/tails/website
+    "
+    for target in ${WIKI_CACHE_TARGETS}; do
+        source="${WIKI_CACHE_SRC_DIR}"/"$(basename "${target}")"
+        if [ -d "${source}" ]; then
+            mkdir -p "${target}"
+            rm -rf "${target}"
+            as_root_do mv "${source}" "${target}"
+            as_root_do chown -R vagrant:vagrant "${target}"
+        fi
+    done
+    ./build-website
+    as_root_do rm -rf "${WIKI_CACHE_SRC_DIR}"
+    as_root_do mkdir -p "${WIKI_CACHE_SRC_DIR}"
+    as_root_do cp -a ${WIKI_CACHE_TARGETS} "${WIKI_CACHE_SRC_DIR}"
+fi
+
+as_root_do lb config --cache false
 as_root_do lb build
 
 mv -f tails-* "${TAILS_GIT_DIR}/"
