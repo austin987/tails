@@ -21,7 +21,9 @@ rebuild-wiki:
         - ikiwiki --setup ikiwiki.setup --rebuild
          # we check there are no new files, and fail if there are,
          # as that will mean weblate needs update
+        - git status
         - git status  | grep -q 'nothing to commit, working tree clean'
 
 cache:
     key: "$CI_PROJECT_PATH_SLUG-master"
+    untracked: true
