@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+set -u
+set -x
+
+echo "Setting up a build environment for kernel modules"
+
+. /usr/share/amnesia/build/variables
+
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+ensure_hook_dependency_is_installed \
+    build-essential \
+    libelf-dev \
+    "linux-headers-${KERNEL_VERSION}-amd64"
