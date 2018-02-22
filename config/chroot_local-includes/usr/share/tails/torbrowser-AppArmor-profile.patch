@@ -159,7 +159,7 @@
  
    deny /etc/host.conf r,
    deny /etc/hosts r,
-@@ -21,8 +21,8 @@ profile torbrowser_plugin_container {
+@@ -21,8 +21,10 @@ profile torbrowser_plugin_container {
    deny /etc/group r,
    deny /etc/mailcap r,
  
@@ -167,10 +167,12 @@
 -  deny /var/lib/dbus/machine-id r,
 +  /etc/machine-id r,
 +  /var/lib/dbus/machine-id r,
++
++  /usr/share/applications/gnome-mimeapps.list r,
  
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
-@@ -30,28 +30,26 @@ profile torbrowser_plugin_container {
+@@ -30,28 +32,26 @@ profile torbrowser_plugin_container {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -219,9 +221,11 @@
  
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/present r,
-@@ -78,5 +76,10 @@ profile torbrowser_plugin_container {
+@@ -77,6 +77,12 @@ profile torbrowser_plugin_container {
+   deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
++  deny @{HOME}/.cache/fontconfig/ w,
  
 -  #include <local/torbrowser.Browser.plugin-container>
 +  # Deny access to global tmp directories, that's granted by the user-tmp

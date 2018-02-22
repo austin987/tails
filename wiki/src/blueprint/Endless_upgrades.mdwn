@@ -93,7 +93,64 @@ read-write outside of initramfs, it can be made read-only in a
 slightly stronger sense on the block dev level. This is not really a
 security feature, but more a foolproof things, but why not?
 
-# Auxilliary ideas
+<a id="non-nih"></a>
+
+## How others do i.e. non-NIH solutions
+
+This survey will be updated in a while with [[!tails_ticket 15277]].
+
+* yocto project's
+  [comparison of system update mechanisms](https://wiki.yoctoproject.org/wiki/System_Update)
+* [RAUC](https://rauc.readthedocs.io/en/latest/)
+  - manages
+    [boot loader](https://rauc.readthedocs.io/en/latest/integration.html#interfacing-with-the-bootloader)
+    and A/B partition setups, e.g.
+    [GRUB](https://rauc.readthedocs.io/en/latest/integration.html#grub)
+    ([example config file](https://github.com/rauc/rauc/blob/master/contrib/grub.conf))
+    and
+    [EFI](https://rauc.readthedocs.io/en/latest/integration.html#efi)
+  - systemd integration and D-Bus API
+  - super flexible
+  - no support for binary delta updates yet, but there's
+    a [RFC for casync support](https://github.com/rauc/rauc/pull/217)
+    which downloads only missing bits and downloads/applies with
+    streaming (no intermediate download of images)
+* [Qt's Over-The-Air Update](https://doc.qt.io/QtOTA/) aka. QtOTA,
+  that uses OSTree
+* XXX: other OSTree based designs/implementations?
+* XXX: other [casync](http://0pointer.net/blog/casync-a-tool-for-distributing-file-system-images.html) ([website](https://github.com/systemd/casync))
+  based designs/implementations?
+* XXX: how efficient is casync with SquashFS? in other words, do we
+  need to unpack the rootfs on the target system partition?
+* Chrome OS keeps the running system partition read-only, has _two_
+  system partitions, and the update is applied to the non-running one.
+  This has nice additional properties like allowing one to rollback if
+  the upgraded system doesn't start properly. More information about
+  their design and implementation:
+  - [disk format](https://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format)
+  - [file system and autoupdate system](https://www.chromium.org/chromium-os/chromiumos-design-docs/filesystem-autoupdate)
+  - [Android's A/B System Updates](https://source.android.com/devices/tech/ota/ab_updates.html)
+
+### Not suitable
+
+(but could be good sources of inspiration!)
+
+* EndlessOS'
+  [OSTree based upgrader](https://github.com/endlessm/eos-updater)
+  - supports separate poll/fetch/apply operations (so presumably we
+    could make the relevant partition read-write only after fetching,
+    as long a we can fetch to a tmpfs)
+  - daemon + D-Bus API
+  - systemd integration
+  - supports Flatpak
+  - likely too many EndlessOS-specific assumptions… and written in
+    C so difficult to adapt to our needs
+* [mender](https://mender.io/): downloads full update
+* [swabic's swupdate](https://sbabic.github.io/swupdate/): downloads
+  full update; binary delta updates are
+  [on the roadmap](https://sbabic.github.io/swupdate/roadmap.html#binary-delta-updates)
+
+# Auxiliary ideas
 
 ## Read-write system partition while the network is enabled
 
@@ -118,18 +175,9 @@ compromised while downloading the upgrade, it will still be
 compromised when the download is finished and the system partition is
 remounted read-write, and it can infect that part then.
 
-Chrome OS keeps the running system partition read-only, has _two_
-system partitions, and the update is applied to the non-running one.
-This has nice additional properties like allowing one to rollback if
-the upgraded system doesn't start properly. More information about
-their design and implementation:
-
-* [disk format](https://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format)
-* [file system and autoupdate system](https://www.chromium.org/chromium-os/chromiumos-design-docs/filesystem-autoupdate)
-* [Android's A/B System Updates](https://source.android.com/devices/tech/ota/ab_updates.html)
-
-[rauc](https://github.com/jluebbe/rauc) is a set of tools to implement
-a similar system.
+Note that with A/B system updates this discussion is moot: the
+bootloader configuration update is the only part of the process that
+requires read-write access.
 
 ## What about IUKs?
 
@@ -163,3 +211,183 @@ The ISOBoot case would still require a manifest of files we extract
 from the ISO (bootloader code and configuration), but indeed that
 manifest could be in the ISO itself, and thus its authenticity and
 integrity would be signed/verified at the same time as the ISO.
+
+<a id="iuks-on-steroids"</a>
+
+<a id="single-squashfs-diff"></a>
+
+# Temporary stop gap: stack one single SquashFS diff when upgrading
+
+(This idea was originally conceived in the comments of [[!tails_ticket
+11131]].)
+
+Without any major redesign of our current incremental upgrade system
+(i.e. comparatively cheap) we can allow users upgrade only through
+IUKs for much longer, probably throughout a whole Tails series,
+e.g. all of Tails 2.x, which we'll use for our examples below since we
+moved to 3.x already so we have all data we need to test this idea.
+
+## Basic idea
+
+### Inside Tails
+
+* Tails Upgrader fetches the UDF for the version of Tails that was
+  originally installed (instead of the version of the running Tails),
+* We remove any previous IUK (and reference to it in `Tails.module`)
+  when a new IUK is installed.
+
+### Release management
+
+When we release version M.N, then, for all previous versions M.X since
+M.0, we generate a M.X_to_M.N IUK.
+
+(Actually, it is not necessary to choose the first release of a series
+(like M.0) as the "synchronization point". We could add another one
+half way through the series, or make every tenth release a
+synchronization point, or we could do it when when the IUK simply
+grows too big. We have lots of options to balance this according to
+our needs, but the first release of a series seems like a technically
+reasonable choice according to the data we have for the 2.x series
+(see below), but also nice from the user's PoV if the only time a
+manual upgrade is needed is when upgrading between series.)
+
+### Example
+
+1. I install Tails 2.2 on a USB stick.
+2. Later when Tails 2.3 is released I upgrade to it via the 2.2_to_2.3
+   IUK (i.e. identical to our original scheme).
+3. When Tails 2.4 is released I upgrade to it via the 2.2_to_2.4 IUK
+   (whereas in our original scheme we would stack 2.3_to_2.4 on top of
+   2.2_to_2.3) and remove the 2.2_to_2.3 IUK (whereas in our original scheme
+   we never remove IUKs).
+
+Notice how step 3 can be repeated for each new release, so that we in
+the end reach the final release of the series, Tails 2.12. And notice
+how we in step 1 could have installed any 2.x release.
+
+## Problems due to IUK size
+
+We'll be dealing with larger IUKs (because generally more and more
+changes accumulate between different Tails versions) and only have one
+present at a time, with the exception being while we are installing a
+new IUK (then two will be present). Let's look at the IUK sizes
+towards the end of the 2.x series as if the last manual install was
+for Tails 2.0, which is the excepted worst case:
+
+    569M Tails_i386_2.0_to_2.9.iuk
+    678M Tails_i386_2.0_to_2.10.iuk
+    682M Tails_i386_2.0_to_2.11.iuk
+    634M Tails_i386_2.0_to_2.12.iuk
+
+The IUK size is involved in at least four concerns:
+
+* Disk space needs on mirrors: for 2.x there were 14 non-rc/beta/alpha
+  Tails releases, so there would be 13 IUKs for the last release
+  (2.12). So using the worst-case as the average case we get the upper
+  bound of the space needs on each mirror: 14*682 MB ~= 10 GB.
+* Disk space needs on the Tails system partition: we need to be able
+  to store two large IUKs. Apparently the worst case for 2.x is the
+  2.10 to 2.11 upgrade if 2.0 was the version originally installed:
+  - The 2.0 installation itself uses 1082 MB, so upgraded to 2.10 the
+    total usage is 1082 MB + 678 MB = 1760 MB.
+  - Due to the Upgrader requiring 3x the size of the IUK on the Tails
+    system partition, the actual requirement is 1760 MB + 3*682 MB =
+    3806 MB of free disk space. That wouldn't have worked during the
+    2.x times, when the system partition was 2.5 GB, and it barely
+    would work with our current 4.0 GB partition. OTOH, during the 2.x
+    series we shipped two kernels, while we don't in 3.x, so we have
+    that in our favor.
+  - When both IUKs are present at the same time (i.e. before rebooting
+    after having applied the upgrade) the disk usage is 1760 MB + 682
+    MB = 2442 MB.
+  - After the old IUK is purged the disk usage is down to 2442 MB -
+    678 MB = 1764 MB.
+* Memory needs: while performing the upgrade, 2x the size of the IUK
+  of memory is needed, so 2*682 MB = 1364 MB. On a system with 2 GB of
+  memory, a fresh boot of Tails 3.5 (without networking to limit the
+  amount of processes autostarting) has 1255 MB of free memory
+  (according to `check_free_memory()`'s calculation in
+  `config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper`)
+  so the upgrade would fail. This is a regression for users with 2 GB
+  memory: for all of 2.x and 3.x, all IUKs have been under 400 MB,
+  which would work fine with 2 GB of memory.
+* Bandwidth needs of the RM. Uploading 10 GB of IUKs can be a pain for
+  some of us, but that can easily be solved by making it possible to
+  generate IUKs on lizard (and then compare them with the ones you
+  generated locally. Thanks reproducibility!).
+
+## Support upgrading very old Tails
+
+We probably do not want to support upgrading very old (e.g. from six
+months ago) Tails installations because our signing key might have
+been updated in the meantime, and/or some critical update to Tails
+Upgrader (e.g. UDF version). So unless we want to spend a lot of
+resources on solving these problems, which roughly translates to "you
+can take long breaks from Tails", let's guarantee our current
+"you can at most skip one *planned* release" promise, and
+optimistically support older versions whose key and Tails Upgrader are
+still ok.
+
+## Download requirements
+
+tl;dr: for 2.x the new scheme would have required downloading 50% more
+data than the original scheme.
+
+### 2.x stats for original IUK scheme
+
+Assumptions:
+
+ * a 4 GB Tails system partition.
+
+It would look like this:
+
+    1082M   tails-i386-2.0.iso
+    153M    Tails_i386_2.0_to_2.0.1.iuk
+    315M    Tails_i386_2.0.1_to_2.2.iuk
+    104M    Tails_i386_2.2_to_2.2.1.iuk
+    258M    Tails_i386_2.2.1_to_2.3.iuk
+    207M    Tails_i386_2.3_to_2.4.iuk
+    324M    Tails_i386_2.4_to_2.5.iuk
+    363M    Tails_i386_2.5_to_2.6.iuk
+    328M    Tails_i386_2.6_to_2.7.iuk
+    197M    Tails_i386_2.7_to_2.7.1.iuk
+    176M    Tails_i386_2.7.1_to_2.9.1.iuk
+    1153M   tails-i386-2.10.iso
+    300M    Tails_i386_2.10_to_2.11.iuk
+    296M    Tails_i386_2.11_to_2.12.iuk
+
+Total: 5256 MB
+
+### 2.x stats for 1BigIUK scheme
+
+Assumptions:
+
+ * a 4 GB Tails system partition.
+ * original installing 2.0 creates the largest IUKs.
+
+It would look like this:
+
+    1082M   tails-i386-2.0.iso
+    153M    Tails_i386_2.0_to_2.0.1.iuk
+    388M    Tails_i386_2.0_to_2.2.iuk
+    395M    Tails_i386_2.0_to_2.2.1.iuk
+    434M    Tails_i386_2.0_to_2.3.iuk
+    462M    Tails_i386_2.0_to_2.4.iuk
+    515M    Tails_i386_2.0_to_2.5.iuk
+    590M    Tails_i386_2.0_to_2.6.iuk
+    597M    Tails_i386_2.0_to_2.7.iuk
+    621M    Tails_i386_2.0_to_2.7.1.iuk
+    622M    Tails_i386_2.0_to_2.9.1.iuk
+    678M    Tails_i386_2.0_to_2.10.iuk
+    682M    Tails_i386_2.0_to_2.11.iuk
+    634M    Tails_i386_2.0_to_2.12.iuk
+
+Total: 7853 MB
+
+### FWIW, IUK sizes for 3.x
+
+    200M    Tails_amd64_3.0_to_3.1.iuk
+    278M    Tails_amd64_3.1_to_3.2.iuk
+    260M    Tails_amd64_3.2_to_3.3.iuk
+    177M    Tails_amd64_3.3_to_3.4.iuk
+    213M    Tails_amd64_3.4_to_3.5.iuk
