@@ -1,4 +1,4 @@
-diff --git a/lib/Tails/IUK/Frontend.pm b/usr/share/perl5/Tails/IUK/Frontend.pm
+diff --git a/usr/share/perl5/Tails/IUK/Frontend.pm b/usr/share/perl5/Tails/IUK/Frontend.pm
 index 2f31944..f1121c4 100644
 --- a/usr/share/perl5/Tails/IUK/Frontend.pm
 +++ b/usr/share/perl5/Tails/IUK/Frontend.pm
@@ -32,7 +32,19 @@ index 2f31944..f1121c4 100644
           qw{proc_dir run_dir}) {
          my $attribute = "override_$_";
          my $predicate = "has_$attribute";
-@@ -198,7 +201,7 @@ method checked_upgrades_file () {
+@@ -164,8 +167,10 @@ method fatal_run_cmd (Str :$error_msg!, ArrayRef :$cmd!, Str :$as?, Str :$error_
+ method dialog (Str $question,
+                Str :$type = 'question', Str :$ok_label, Str :$cancel_label,
+                Str :$title) {
+-    if ($type ne 'question') {
++    if ($type ne 'question' && $type ne 'info') {
+         assert_undefined($ok_label);
++    }
++    if ($type ne 'question') {
+         assert_undefined($cancel_label);
+     }
+     my @cmd  = ('zenity', "--$type", '--text', $question);
+@@ -198,7 +203,7 @@ method checked_upgrades_file () {
  
  method get_upgrade_description () {
      my @args;
@@ -41,21 +53,31 @@ index 2f31944..f1121c4 100644
          my $attribute = "override_$_";
          my $predicate = "has_$attribute";
          if ($self->$predicate) {
-@@ -601,6 +604,19 @@ method do_incremental_upgrade ($upgrade_path) {
+@@ -371,8 +376,7 @@ method run () {
+                     "<b>You should upgrade to %{name}s %{version}s.</b>\n\n".
+                     "For more information about this new version, go to %{details_url}s\n\n".
+                     "It is recommended to close all the open applications during the upgrade.\n".
+-                    "Downloading the upgrade might take a long time, from several minutes to a few hours.\n".
+-                    "The networking will be disabled after downloading the upgrade.\n\n".
++                    "Downloading the upgrade might take a long time, from several minutes to a few hours.\n\n".
+                     "Download size: %{size}s\n\n".
+                     "Do you want to upgrade now?"
+                 )),
+@@ -601,6 +605,19 @@ method do_incremental_upgrade ($upgrade_path) {
          $upgrade_path, $url_transform, $target_files_tempdir
      );
  
 +    $self->dialog(
 +        $self->encoding->decode(gettext(
 +            "<b>The upgrade was successfully downloaded.</b>\n\n".
-+            "The network connection will now be shut down ".
-+            "and your Tails device will be upgraded.\n\n".
++            "The network connection will now be disabled.\n\n".
 +            "Please save your work and close all other applications."
 +        )),
-+        type  => 'info',
-+        title => $self->encoding->decode(gettext(
++        type     => 'info',
++        title    => $self->encoding->decode(gettext(
 +            q{Upgrade successfully downloaded}
 +        )),
++        ok_label => $self->encoding->decode(gettext(q{Apply upgrade})),
 +    );
 +
      $self->install_iuk($upgrade_path, $target_files_tempdir);
