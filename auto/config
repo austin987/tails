@@ -192,7 +192,8 @@ if [ -e config/binary_rootfs/squashfs.sort ]; then
 fi
 
 # custom APT sources
-tails-custom-apt-sources > config/chroot_sources/tails.chroot
+tails-custom-apt-sources > config/chroot_sources/tails.chroot \
+   || fatal "tails-custom-apt-sources failed with exit code $?"
 
 # tails-transform-mirror-url and its dependencies
 install -m 0755 \
@@ -202,6 +203,10 @@ install -m 0755 -d config/chroot_local-includes/usr/local/lib/nodejs
 install -m 0755 \
    submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
    config/chroot_local-includes/usr/local/lib/nodejs/
+
+# aufs4-standalone
+rm -rf config/chroot_local-includes/usr/src/aufs4-standalone
+cp -a submodules/aufs4-standalone config/chroot_local-includes/usr/src/
 
 # custom debootstrap script, setting some APT magic to log downloads:
 patch \
