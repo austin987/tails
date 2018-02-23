@@ -1,0 +1,65 @@
+--- a/etc/apparmor.d/usr.bin.thunderbird.orig	2018-01-09 20:30:54.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.thunderbird	2018-02-23 14:48:02.180000000 +0000
+@@ -16,7 +16,6 @@
+   # TODO: finetune this for required accesses
+   #include <abstractions/dbus>
+   #include <abstractions/dbus-accessibility>
+-  #include <abstractions/dbus-session>
+   #include <abstractions/gnome>
+   #include <abstractions/ibus>
+   #include <abstractions/nameservice>
+@@ -24,29 +23,19 @@
+   #include <abstractions/p11-kit>
+   #include <abstractions/private-files>
+   #include <abstractions/ssl_certs>
+-  #include <abstractions/ubuntu-browsers>
+   #include <abstractions/ubuntu-browsers.d/java>
+   #include <abstractions/ubuntu-helpers>
+ 
+   # Allow opening attachments
+   # TODO: create and use abstractions for opening various file formats
+-  /{usr/local/,usr/,}bin/* Cx -> sanitized_helper,
++  /{usr/local/,usr/,}bin/{[^g],g[^p],gp[^g]}* Cx -> sanitized_helper,
+   /usr/lib/libreoffice/program/soffice Cxr -> sanitized_helper,
+ 
+-  # For Xubuntu to launch the browser
+-  /usr/bin/exo-open ixr,
+-  /usr/lib/@{multiarch}/xfce4/exo-1/exo-helper-1 ixr,
+-  /etc/xdg/xdg-xubuntu/xfce4/helpers.rc r,
+-  /etc/xdg/xfce4/helpers.rc r,
+-
+   # for crash reports?
+   ptrace (read,trace) peer=@{profile_name},
+ 
+   @{thunderbird_executable} ixr,
+ 
+-  # Pulseaudio
+-  /usr/bin/pulseaudio Pixr,
+-
+   owner @{HOME}/.{cache,config}/dconf/user rw,
+   owner /run/user/[0-9]*/dconf/user rw,
+   owner @{HOME}/.config/gtk-3.0/bookmarks r,
+@@ -138,7 +127,6 @@
+   /etc/lsb-release r,
+   /etc/ssl/openssl.cnf r,
+   /usr/lib/thunderbird/crashreporter ix,
+-  /usr/bin/expr ix,
+   /sys/devices/system/cpu/ r,
+   /sys/devices/system/cpu/** r,
+ 
+@@ -190,15 +178,6 @@
+   deny /usr/share/mozilla/extensions/**/ w,
+   deny /usr/share/mozilla/ w,
+ 
+-  # Miscellaneous (to be abstracted)
+-  # Ideally these would use a child profile. They are all ELF executables
+-  # so running with 'Ux', while not ideal, is ok because we will at least
+-  # benefit from glibc's secure execute.
+-  /usr/bin/mkfifo Uxr,  # investigate
+-  /{usr/,}bin/ps Uxr,
+-  /{usr/,}bin/uname Uxr,
+-  /usr/bin/locale Uxr,
+-
+   /usr/bin/gpg               Cx -> gpg,
+   /usr/bin/gpg2              Cx -> gpg,
+   /usr/bin/gpgconf           Cx -> gpg,
