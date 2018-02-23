@@ -4,7 +4,10 @@ set -e
 
 echo "Converting uBlock database dump into sqlite blob"
 
-apt-get install --yes sqlite3
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+ensure_hook_dependency_is_installed sqlite3
 
 DUMP="/usr/share/tails/ublock-origin/ublock0.dump"
 DATABASE="/etc/tor-browser/profile/extension-data/ublock0.sqlite"
@@ -18,5 +21,3 @@ mkdir -p "$(dirname "${DATABASE}")"
 sed ':a;N;$!ba;s_\r\n__g' "${DUMP}" | sqlite3 "${DATABASE}"
 
 echo "Created uBlock sqlite blob successfully"
-
-apt-get purge --yes sqlite3
