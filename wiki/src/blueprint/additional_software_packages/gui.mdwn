@@ -5,32 +5,29 @@
 Goals and non-goals
 ===================
 
-1. Have a way to enable the feature (and its dependencies) in
-*tails-persistence-setup*. This besically means cheking both
-*APT Lists* and *APT Packages Cache* (much welcome)
+- Allow people to choose to:
+  - Reinstall a package every time they start Tails.
+  - Stop reinstalling a package every time.
 
-2. When installing a new package, either through the command line or
-through GNOME Packages (`gnome-packagekit`), the user is asked whether she wants to make it
-persistent. (We discarded synaptic due to its cluttered interface. We might want to consider gnome-software, but it currently don't display all available packages).
+- Integrate this in:
+  - The usual installation and removal process of a package (through
+    Synaptic, another graphical tool, or APT on the command line).
+  - The persistent storage configuration.
 
-3. When removing a persistent package, the user is asked whether she
-wants to remove it from the list of persistent packages.
+- Provide GNOME Packages as a better replacement for *Synaptic*.
+  [[!tails_ticket 15262]]
 
-4. As the user need to be able to check the state of this feature
-outside of APT operations, have a list of the persistent packages visible somwhere (required), perferably in the persistence
-wizard (much welcome). 
-
-5. Allow removing packages from the list in 4 (welcome).
-
-6. Adding package in the list will not be supported from this interface, but the UI would give hints on how to do it.
-
+- We won't provide a way for people to specify which packages to install
+  outside of the usual installation process of a package. We only ask
+  people if they want to reinstall a package every time *after it has
+  been successfully installed a first time*.
 
 Flow chart
 ==========
 
-<img src="https://labs.riseup.net/code/attachments/download/1880/asp-flowchart.svg" width="150%" height="auto" />
+<img src="https://labs.riseup.net/code/attachments/download/1886/asp-chart-installed.svg" height="auto" />
 
-XXX: add corner cases identified below
+<img src="https://labs.riseup.net/code/attachments/download/1887/asp-chart-removed.svg" height="auto" />
 
 User interface
 ==============
@@ -39,16 +36,15 @@ Notifications for addition and removal
 --------------------------------------
 
 When the user installs a package either through the APT command line or a
-graphical interface like Synaptic, a notification is displayed to let her add
-or remove it from her list of additional software.
+graphical interface like Synaptic, a notification is displayed to let them add
+or remove it from their list of additional software.
+
+These notifications are triggered by APT hooks. In the backend, we would
+answer <em>Yes</em> to all debconf questions.
 
 ### When a package is installed with a persistent storage unlocked
 
 <img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - add.png"/>
-
-### When a package is uninstalled
-
-<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - remove.png"/>
 
 ### When a package is installed with no persistent storage
 
@@ -56,13 +52,32 @@ or remove it from her list of additional software.
 
 ### When a package is installed with a persistent storage locked
 
-XXX
+No notification.
+
+This notification could have education purposes: to tell people about
+this feature. But:
+
+- People who have a persistent storage but don't unlock it, probably do
+  this only sometimes and for a reason. They probably otherwise unlock
+  their persistent storage most of the time.
+
+- If they install packages with their persistent storage locked, they
+  probably do it with their persistent storage unlock as well and would
+  learn about this feature when it's most relevant for them.
+
+So let's not bother them when it's not worth it.
 
 ### When a package is installed but it's impossible to have a persistent storage
 
-For example, when running from a DVD or virtual machine.
+When running from a DVD, virtual machine, or intermediary Tails.
 
-XXX
+To be displayed only once per session, not to bother people too much.
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - impossible persistent storage.png"/>
+
+### When a package is uninstalled
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - remove.png"/>
 
 Notifications when starting Tails with additional software
 ----------------------------------------------------------
@@ -71,13 +86,22 @@ If any additional software has been configured through the notifications from
 the previous sections, these packages are installed automatically from the
 persistent storage every time the user starts Tails.
 
-### When the installation succeeds
-
-<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installed.png"/>
-
 ### When the installation starts
 
 <img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installing.png"/>
+
+If the summary is too long (here 62 characters), use instead only:
+
+*Installing your additional software...*
+
+We added "*from persistent storage*" to inform better the mental model
+of users and clarify that these are not downloaded every time from the
+Internet. But we also made this clearer in the notification when
+installing.
+
+### When the installation succeeds
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installed.png"/>
 
 Notifications of failures
 -------------------------
@@ -95,10 +119,13 @@ Additional Software
 
 The list of additional software can be open from:
 
-- **Applications**&nbsp;▸**System Tools**&nbsp;▸**Additional Software**
-- **Applications**&nbsp;▸**Tails**&nbsp;▸**Additional Software**
+- **Applications**&nbsp;▸ **System Tools**&nbsp;▸ **Additional Software**
+- **Applications**&nbsp;▸ **Tails**&nbsp;▸ **Additional Software**
 
 Why both? See [[!tails_ticket 5521]].
+
+But also when click on the gear button next to the **Additional
+Software** feature in the persistent storage settings.
 
 ### If there is no persistent storage
 
@@ -116,44 +143,50 @@ Why both? See [[!tails_ticket 5521]].
 
 By clicking on the delete cross.
 
+Removing packages from the list doesn't require any validity check.
+
 <img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software - remove.png"/>
 
 ### If the persistent storage is locked
 
-XXX
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software - locked persistent storage.png"/>
 
-### It it is impossible to have a persistent storage
+### It is impossible to have a persistent storage
 
 For example, when running from a DVD or virtual machine.
 
-XXX
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software - impossible persistent storage.png"/>
 
+Persistent storage configuration
+--------------------------------
 
-Wireframes
-==========
+- MUST allow a feature to have a "Settings" button.
 
-To be added.
+- SHOULD modify the persistent storage configuration to replace the
+  **APT Packages** and **APT Lists** features by a single **Additional
+  Software** feature.
 
-Implementation
-==============
+- MAY replace the custom widgets of the persistent storage configuration
+  by the following GTK3 pattern:
 
-  - 1 might require modifying the concept of the persistence
-    wizard to merge both the **APT Packages** and **APT Lists**
-    persistence features.
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/persistent storage - configuration changed.png"/>
 
-  - 2 and 3 will be implemented using APT hooks, so that they are
-    triggered by apt and apt-get invocation from the terminal. UX tests
-    showed that this is what a lot of advanced users do. Note that we would
-    always answer Yes to debconf questions.
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/persistent storage - confirm restart.png"/>
 
-  - Integrating 4 to the persistence wieard might require modifying its general concept. The persistence wizard which is currently only a list of features that are activated or not, without feedback on the information managed by each of them.
+### Backend
 
-  - 5 should be easy to implement once we have 4 as removing packages
-    from the list doesn't need any validity check. 
+- MUST allow querying for the activation of features (ASP)
+  programmatically. For example, through the command line or a DBus
+  method call.
 
-  - 6 (discarded) would require validating the packages added to the list to make
-    sure that they can be installed. Installing packages on the fly as
-    they are added to the list might help solving this.
+- MUST allow triggering persistence creation and then activate a feature
+  (ASP) programmatically.
+
+- SHOULD allow ASP to setup the feature between persistence creation and
+  persistence feature selection.
+
+Implementation notes
+====================
 
 ## Components interaction
 
@@ -170,19 +203,3 @@ IPC between `tails-additional-software` (root backend) and `tails-additional-sof
 IPC between `tails-additional-software` and `tails-persistence-setup` carries "Persistence-setup, please setup persistence with ASP" and "ASP, you can go on". It could be done the same way, but it may be worth having a persistence-setup DBus service on the system bus (which we already though when considering integrating it in the greeter).
 
 IPC between `tails-additional-software-configuration` (user session configuration interface) and `tails-additional-software` carries the list entries to remove from ASP. It may be done via `sudo` or via DBus system service, but I don't think it's worth it.
-
-## Modifications required in the persistence wizard
-
-  - Merge of APT Lists and APT Packages features into an ASP feaure (much welcome)
-
-  - Allow querying for the activation of features (ASP) programmaticaly (required), e.g. through the command line or a DBus method call.
-
-  - Allow triggering persistence creation then activate a feature (ASP) programatically (required).
-
-  - Allow a feature to have a "Settings" menu (much welcome).
-
-  - Additionnaly, allow ASP to setup the feature between persistence creation and persistence feature selection (bonus).
-
-<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/persistent storage - configuration changed.png"/>
-
-<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/persistent storage - confirm restart.png"/>

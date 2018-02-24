@@ -6,7 +6,7 @@ set -e
 set -u
 set -o pipefail
 
-LANGUAGES=${@:-de fa fr it pt}
+LANGUAGES=${@:-de es fa fr it pt}
 
 count_msgids () {
     cat | grep -E '^msgid\s+' | wc -l
@@ -38,7 +38,7 @@ statistics () {
 
 intltool_report () {
     rm -rf tmp/pot
-    ./refresh-translations
+    ./refresh-translations --keep-tmp-pot
     rm -rf po.orig
     cp -a po po.orig
     (
