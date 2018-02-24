@@ -122,6 +122,8 @@ def debug_file(user, filename):
     if not os.path.isfile(filename):
         return
 
+    # This check is not sufficient, see the comment at the top of the file
+    # for the complete requirements required for security
     owner = getpwuid(os.stat(filename).st_uid).pw_name
     if owner != user:
         print()
