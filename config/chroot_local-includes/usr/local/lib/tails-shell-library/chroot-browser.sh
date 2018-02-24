@@ -21,7 +21,13 @@ try_cleanup_browser_chroot () {
     local user="${3}"
     try_for 10 "pkill -u ${user} 1>/dev/null 2>&1" 0.1 || \
         pkill -9 -u "${user}" || :
-    for mnt in "${chroot}/dev" "${chroot}/proc" "${chroot}" "${cow}"; do
+    # findmnt sorts submounts so we just have to revert the list to
+    # have the proper umount order. We use `tail` to suppress the
+    # "TARGET" column header.
+    local chroot_mounts="$(
+        findmnt --output TARGET --list --submounts "${chroot}" | tail -n+2 | tac
+    )"
+    for mnt in ${chroot_mounts} "${cow}"; do
         try_for 10 "umount ${mnt} 2>/dev/null" 0.1
     done
     rmdir "${cow}" "${chroot}"
@@ -85,18 +91,6 @@ chroot_browser_conf_dir () {
 chroot_browser_profile_dir () {
     local conf_dir="$(chroot_browser_conf_dir "${@}")"
     echo "${conf_dir}/profile.default"
-}
-
-# Set the chroot's DNS servers (IPv4 only)
-configure_chroot_dns_servers () {
-    local chroot="${1}" ; shift
-    local ip4_nameservers="${@}"
-
-    rm -f "${chroot}/etc/resolv.conf"
-    for ns in ${ip4_nameservers}; do
-        echo "nameserver ${ns}" >> "${chroot}/etc/resolv.conf"
-    done
-    chmod a+r "${chroot}/etc/resolv.conf"
 }
 
 set_chroot_browser_permissions () {
@@ -219,12 +213,10 @@ configure_chroot_browser () {
     local browser_name="${1}" ; shift
     local human_readable_name="${1}" ; shift
     local home_page="${1}" ; shift
-    local dns_servers="${1}" ; shift
     # Now $@ is a list of paths (that must be valid after chrooting)
     # to extensions to enable.
     local best_locale="$(guess_best_tor_browser_locale)"
 
-    configure_chroot_dns_servers "${chroot}" "${dns_servers}"
     configure_chroot_browser_profile "${chroot}" "${browser_name}" \
         "${browser_user}" "${home_page}" "${@}"
     set_chroot_browser_locale "${chroot}" "${browser_name}" "${browser_user}" \
