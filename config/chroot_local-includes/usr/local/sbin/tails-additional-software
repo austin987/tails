@@ -42,6 +42,7 @@ def _launch_apt_get(specific_args):
     args.extend(specific_args)
     apt_get = subprocess.Popen(args,
                                env=apt_get_env,
+                               universal_newlines=True,
                                stderr=subprocess.STDOUT,
                                stdout=subprocess.PIPE)
     for line in iter(apt_get.stdout.readline, ''):
@@ -107,7 +108,6 @@ def get_additional_packages():
                 line = line.strip()
                 if line:
                     packages.append(line)
-        f.closed
     return packages
 
 
@@ -138,7 +138,7 @@ def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
             os.remove(path)
         elif os.path.isdir(path):
             shutil.rmtree(path)
-    # Copy the content of srcdir to dstdir
+    # Move the content of srcdir to dstdir
     for basename in os.listdir(srcdir):
         path = os.path.join(srcdir, basename)
         shutil.move(path, dstdir)

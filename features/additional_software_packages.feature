@@ -11,11 +11,16 @@ Feature: Additional software packages
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
+    # This is required to use APT in the test suite as explained in
+    # commit e2510fae79870ff724d190677ff3b228b2bf7eac
     And I configure APT to use non-onion sources
     When I update APT using apt
     And I configure additional software packages to install "sslh"
     And I install "sslh" using apt
-    And I add non-onion APT sources to persistence
+    # We have to save the non-onion APT sources in persistence, so
+    # that on next boot the additional software packages service has
+    # the right APT indexes to install the package we want.
+    And I make my current APT sources persistent
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service is run

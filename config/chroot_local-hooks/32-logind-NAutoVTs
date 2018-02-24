@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+set -u
+
+# Make room for tails-gdm-failed-to-start.service
+echo "Lower logind's NAutoVTs"
+
+sed --in-place --regexp-extended \
+    's/^#NAutoVTs=.*$/NAutoVTs=4/' \
+    /etc/systemd/logind.conf
