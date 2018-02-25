@@ -58,7 +58,8 @@ def _launch_apt_get(specific_args):
     return apt_get.returncode
 
 
-def _notify(title, body, accept_label="", deny_label="", urgent=False):
+def _notify(title, body, accept_label="", deny_label="", urgent=False,
+            return_id=False):
     """Display a notification to the user of the live system."""
 
     cmd = "/usr/local/bin/tails-additional-software-notify"
@@ -68,8 +69,11 @@ def _notify(title, body, accept_label="", deny_label="", urgent=False):
         urgent = ""
 
     try:
-        returncode = subprocess.call(["sudo", "-u", LIVE_USERNAME, cmd, title,
-                                      body, accept_label, deny_label, urgent])
+        completed_process = subprocess.run(["sudo", "-u", LIVE_USERNAME, cmd,
+                                            title, body, accept_label,
+                                            deny_label, urgent],
+                                           stdout=subprocess.PIPE)
+
     except OSError as e:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: unable to notify the user. %s" % e)
@@ -77,14 +81,19 @@ def _notify(title, body, accept_label="", deny_label="", urgent=False):
                       "The notification was: %s %s" % (title, body))
         raise
 
-    if returncode == 0:
-        return True
-    elif returncode == 1:
-        return False
-    elif returncode == 3:
-        return None
+    if return_id:
+        for line in completed_process.stdout.decode().splitlines():
+            if line.startswith("id="):
+                return line[3:]
     else:
-        raise OSError()
+        if completed_process.returncode == 0:
+            return True
+        elif completed_process.returncode == 1:
+            return False
+        elif completed_process.returncode == 3:
+            return None
+        else:
+            raise OSError()
 
 
 def _notify_failure(summary, details):
@@ -97,6 +106,22 @@ def _notify_failure(summary, details):
         show_configuration_window()
     else:
         show_system_log()
+
+
+def _close_notification(notification_id):
+    """Close a notification shown to the user of the live system."""
+
+    # XXX: hardcoded uid of amnesia user
+    subprocess.run(
+            ["sudo", "-u", LIVE_USERNAME,
+             "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+             "gdbus", "call",
+             "--session",
+             "--dest", "org.freedesktop.Notifications",
+             "--object-path", "/org/freedesktop/Notifications",
+             "--method", "org.freedesktop.Notifications.CloseNotification",
+             str(notification_id)],
+            stdout=subprocess.DEVNULL)
 
 
 def _has_permissions(directory, mode, uid, gid):
@@ -438,8 +463,10 @@ def install_additional_packages(ignore_old_apt_lists=False):
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: no packages to install, exiting")
         return True
-    _notify(_("Installing your additional software from persistent storage…"),
-            _("This can take several minutes…"))
+    installing_notification_id = _notify(
+            _("Installing your additional software from persistent storage…"),
+            _("This can take several minutes…"),
+            return_id=True)
     syslog.syslog("Will install the following packages: %s"
                   % " ".join(packages))
     apt_get_returncode = _launch_apt_get(
@@ -458,6 +485,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
         return False
     else:
         syslog.syslog("Installation completed successfully.")
+        _close_notification(installing_notification_id)
         if _notify(_("Additional software installed successfully"),
                    "",
                    _("Configure")):
