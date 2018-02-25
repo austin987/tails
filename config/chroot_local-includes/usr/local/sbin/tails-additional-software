@@ -281,12 +281,14 @@ def apt_hook_post():
     os.remove(ASP_STATE_FILE)
 
     apt_cache = apt.cache.Cache()
-    # Filter automatically installed packages
-    manually_installed_packages = set(filter(
-        lambda pkg: not apt_cache[pkg].is_auto_installed,
+    # Filter automatically installed packages and packages already configured
+    # as additional software
+    new_manually_installed_packages = set(filter(
+        lambda pkg: not apt_cache[pkg].is_auto_installed
+                    and pkg not in get_additional_packages(),   # NOQA: E131
         set(packages["installed"])))
-    if manually_installed_packages:
-        handle_installed_packages(manually_installed_packages)
+    if new_manually_installed_packages:
+        handle_installed_packages(new_manually_installed_packages)
 
     # Filter non-additional software packages
     additional_packages_removed = set(packages["removed"]).intersection(
