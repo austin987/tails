@@ -87,6 +87,18 @@ def _notify(title, body, accept_label="", deny_label="", urgent=False):
         raise OSError()
 
 
+def _notify_failure(summary, details):
+    """Display a failure notification to the user of the live system.
+
+    The user has the option to edit the configuration of to view the system
+    log.
+    """
+    if _notify(summary, details, _("Show log"), _("Configure"), urgent=True):
+        show_configuration_window()
+    else:
+        show_system_log()
+
+
 def _has_permissions(directory, mode, uid, gid):
     """Return true iff file has mode and belongs to uid and gid."""
     stat_result = os.stat(directory)
@@ -292,6 +304,16 @@ def remove_additional_packages(packages):
     raise NotImplementedError
 
 
+def show_configuration_window():
+    """Show additional packages configuration window."""
+    raise NotImplementedError
+
+
+def show_system_log():
+    """Show additional packages configuration window."""
+    raise NotImplementedError
+
+
 def apt_hook_pre():
     """Subcommand to handle Dpkg::Pre-Install-Pkgs."""
     syslog.syslog("Saving package changes")
@@ -416,6 +438,8 @@ def install_additional_packages(ignore_old_apt_lists=False):
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: no packages to install, exiting")
         return True
+    _notify(_("Installing your additional software from persistent storage…"),
+            _("This can take several minutes…"))
     syslog.syslog("Will install the following packages: %s"
                   % " ".join(packages))
     apt_get_returncode = _launch_apt_get(
@@ -426,15 +450,18 @@ def install_additional_packages(ignore_old_apt_lists=False):
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: installation of %s failed"
                       % " ".join(packages))
-        _notify(_("Your additional software installation failed"),
-                _("The installation failed. Please check your additional "
-                  "software configuration, or read the system log to "
-                  "understand better the problem."))
+        _notify_failure(_("The installation of your additional software "
+                          "failed"),
+                        _("Please check your list of additional software "
+                          "packages or read the system log to understand "
+                          "the problem."))
         return False
     else:
         syslog.syslog("Installation completed successfully.")
-        _notify(_("Your additional software are installed"),
-                _("Your additional software are ready to use."))
+        if _notify(_("Additional software installed successfully"),
+                   "",
+                   _("Configure")):
+            show_configuration_window()
         return True
 
 
@@ -450,21 +477,18 @@ def upgrade_additional_packages():
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
-        _notify(_("Your additional software upgrade failed"),
-                _("The check for upgrades failed. This might be due to a "
-                  "network problem. Please check your network connection, try "
-                  "to restart Tails, or read the system log to understand "
-                  "better the problem."))
+        _notify_failure(_("The upgrade of your additional software failed"),
+                        _("The check for upgrades failed. Please check your "
+                          "network connection, restart Tails, or read the "
+                          "system log to understand the problem."))
         return False
     if install_additional_packages(ignore_old_apt_lists=True):
-        _notify(_("Your additional software are up to date"),
-                _("The upgrade was successful."))
+        syslog.syslog("The upgrade was successful.")
     else:
-        _notify(_("Your additional software upgrade failed"),
-                _("The upgrade failed. This might be due to a network "
-                  "problem. Please check your network connection, try to "
-                  "restart Tails, or read the system log to understand better "
-                  "the problem."))
+        _notify_failure(_("The upgrade of your additional software failed"),
+                        _("The upgrade failed. Please check your network "
+                          "connection, restart Tails, or read the system "
+                          "log to understand the problem."))
         return False
 
     # We now know that the APT packages cache is up-to-date wrt. the APT lists,
