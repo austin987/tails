@@ -176,6 +176,7 @@ def handle_installed_packages(packages):
     Ask the user if packages should be added to additional software, and
     actually add them if requested.
     """
+    syslog.syslog("New packages manually installed: %s" % packages)
     if has_unlocked_persistence():
         if _notify(_("Add {packages} to your additional software?").format(
                     packages=" ".join(packages)),
@@ -230,6 +231,7 @@ def handle_removed_packages(packages):
     Ask the user if packages should be removed from additional software, and
     actually remove them if requested.
     """
+    syslog.syslog("Additional packages removed: %s" % packages)
     if _notify(_("Remove {packages} from your additional software?").format(
                  packages=" ".join(packages)),
                "",
@@ -246,6 +248,7 @@ def add_additional_packages(new_packages):
 
     new_packages should be a list of packages names.
     """
+    syslog.syslog("Adding to additional packages list: %s" % new_packages)
     packages = get_additional_packages()
     # The list of packages was initially provided by apt after installing them,
     # so we don't check the names.
@@ -287,6 +290,8 @@ def remove_additional_packages(packages):
 
 def apt_hook_pre():
     """Subcommand to handle Dpkg::Pre-Install-Pkgs."""
+    syslog.syslog("Saving package changes")
+
     installed_packages = []
     removed_packages = []
 
@@ -338,6 +343,8 @@ def apt_hook_post():
     Retrieve the list of packages saved by apt_hook_pre, filter packages not
     interesting and pass the resulting list to the appropriate method.
     """
+    syslog.syslog("Examining package changes")
+
     # XXX: TOCTOU?
     if not _has_permissions(ASP_STATE_DIR, 0o750, 0, 0):
         syslog.syslog(syslog.LOG_ERR,
