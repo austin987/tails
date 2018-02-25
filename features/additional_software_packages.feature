@@ -84,7 +84,7 @@ Feature: Additional software packages
     And the additional software package upgrade service is run
     And the package "cowsay" installed version is newer than ""
 
-  Scenario: I am warn I can not use ASP when booting Tails from DVD and installing a package
+  Scenario: I am warned I can not use ASP when booting Tails from DVD and installing a package
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
     # This is required to use APT in the test suite as explained in
     # commit e2510fae79870ff724d190677ff3b228b2bf7eac
