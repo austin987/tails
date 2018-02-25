@@ -90,10 +90,22 @@ Feature: Additional software packages
     When I install "sslh" using apt
     Then I am said I can not use ASP
 
-  # Tests package removal from ASP configuration using ASP GUI
-  #Scenario: Editing ASP configuration through the GUI and remove a package from the list
+  Scenario: I am notified when ASP fails to install a package
+    When I install "sslh" using apt
+    And I confirm when I am asked if I want to add "sslh" to ASP configuration
+    And I remove the "sslh" deb file from the APT cache
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then the ASP installation service is run
+    And I am notified the "ASP installation service" failed
+    And the package "sslh" is not installed
 
-  # Tests manual package removal from ASP using APT
-  #Scenario: Editing ASP configuration through the GUI and remove a package from the list
+  Scenario: Removing a package from ASP through APT
+    When I uninstall "sl" using apt
+    And I confirm when I am asked if that I don't want "sl" to be installed by ASP
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then the additional software package installation service is run
+    And the package "sl" is not installed
 
-  #Scenario: I am notified when ASP failed to install a package
+  #Scenario: Removing a package from ASP through its GUI
