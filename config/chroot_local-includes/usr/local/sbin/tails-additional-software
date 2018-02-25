@@ -5,6 +5,7 @@ import json
 import os
 import os.path
 import shutil
+import stat
 import subprocess
 import sys
 import syslog
@@ -18,7 +19,8 @@ PERSISTENCE_PARTITION = "/dev/disk/by-partlabel/TailsData"
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = os.path.join(
     PERSISTENCE_DIR, "live-additional-software.conf")
-ASP_STATE_FILE = "/var/run/live-additional-software.state"
+ASP_STATE_DIR = "/var/run/live-additional-software"
+ASP_STATE_FILE = os.path.join(ASP_STATE_DIR, "state")
 OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
@@ -82,6 +84,24 @@ def _notify(title, body, accept_label="", deny_label="", urgent=False):
         return None
     else:
         raise OSError()
+
+
+def _has_permissions(directory, mode, uid, gid):
+    """Return true iff file has mode and belongs to uid and gid."""
+    stat_result = os.stat(directory)
+    return (stat.S_IMODE(stat_result.st_mode) == mode
+            and stat_result.st_uid == uid
+            and stat_result.st_gid == gid)
+
+
+def _create_or_fix_dir(directory, mode, uid, gid):
+    """Create directory if needed or fixes its mode, uid and gid."""
+    try:
+        os.mkdir(directory, mode=mode)
+    except FileExistsError:
+        pass
+    os.chown(directory, uid, gid)
+    os.chmod(directory, mode)
 
 
 def has_persistence():
@@ -307,6 +327,7 @@ def apt_hook_pre():
             removed_packages.append(package_name)
 
     result = {"installed": installed_packages, "removed": removed_packages}
+    _create_or_fix_dir(ASP_STATE_DIR, 0o750, 0, 0)
     with open(ASP_STATE_FILE, 'w') as f:
         json.dump(result, f)
 
@@ -317,6 +338,12 @@ def apt_hook_post():
     Retrieve the list of packages saved by apt_hook_pre, filter packages not
     interesting and pass the resulting list to the appropriate method.
     """
+    # XXX: TOCTOU?
+    if not _has_permissions(ASP_STATE_DIR, 0o750, 0, 0):
+        syslog.syslog(syslog.LOG_ERR,
+                      "Wrong permissions for {}, ignoring "
+                      "it.".format(ASP_STATE_DIR))
+        sys.exit(1)
     with open(ASP_STATE_FILE) as f:
         packages = json.load(f)
     os.remove(ASP_STATE_FILE)
