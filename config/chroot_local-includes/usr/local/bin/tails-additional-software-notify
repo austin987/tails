@@ -20,7 +20,10 @@ class ASPNotifier(object):
 
     def __init__(self, title, body, accept_label=None, deny_label=None,
                  urgent=False):
-        """Shows a notification with two optional action buttons."""
+        """Shows a notification with two optional action buttons.
+
+        If there are no buttons, exit straight away with a meaningful code.
+        """
         Notify.init("org.boum.tails.additional-software-packages")
 
         # We need to hold a reference to the notification until the callbacks
@@ -37,6 +40,8 @@ class ASPNotifier(object):
                                          self.cb_notification_clicked, None)
         self.notification.connect("closed", self.cb_notification_closed)
         self.notification.show()
+        if not accept_label:
+            sys.exit(3)
 
     def cb_notification_clicked(self, notification, action, user_data=None):
         """Exit the program with a meaningful code on action triggering."""
