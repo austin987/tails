@@ -20,7 +20,7 @@ PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE = os.path.join(
     PERSISTENCE_DIR, "live-additional-software.conf")
 ASP_STATE_DIR = "/var/run/live-additional-software"
-ASP_STATE_FILE = os.path.join(ASP_STATE_DIR, "state")
+ASP_STATE_PACKAGES = os.path.join(ASP_STATE_DIR, "packages")
 OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
@@ -333,7 +333,7 @@ def apt_hook_pre():
 
     result = {"installed": installed_packages, "removed": removed_packages}
     _create_or_fix_dir(ASP_STATE_DIR, 0o750, 0, 0)
-    with open(ASP_STATE_FILE, 'w') as f:
+    with open(ASP_STATE_PACKAGES, 'w') as f:
         json.dump(result, f)
 
 
@@ -351,9 +351,9 @@ def apt_hook_post():
                       "Wrong permissions for {}, ignoring "
                       "it.".format(ASP_STATE_DIR))
         sys.exit(1)
-    with open(ASP_STATE_FILE) as f:
+    with open(ASP_STATE_PACKAGES) as f:
         packages = json.load(f)
-    os.remove(ASP_STATE_FILE)
+    os.remove(ASP_STATE_PACKAGES)
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
