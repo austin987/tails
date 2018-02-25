@@ -21,6 +21,7 @@ PACKAGES_LIST_FILE = os.path.join(
     PERSISTENCE_DIR, "live-additional-software.conf")
 ASP_STATE_DIR = "/var/run/live-additional-software"
 ASP_STATE_PACKAGES = os.path.join(ASP_STATE_DIR, "packages")
+ASP_STATE_INSTALLER_ASKED = os.path.join(ASP_STATE_DIR, "installer-asked")
 OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
@@ -215,14 +216,17 @@ def handle_installed_packages(packages):
                    urgent=True):
             create_persistence_and_setup_additional_packages(packages)
     else:   # It's impossible to have a persistent storage
-        if _notify(_("You could install {packages} automatically when "
-                     "starting Tails").format(packages=" ".join(packages)),
-                   _("To do so, you need to run Tails from a USB stick "
-                     "installed using <i>Tails Installer</i>"),
-                   _("Documentation"),
-                   urgent=True):
-            # XXX: open the right documentation
-            raise NotImplementedError
+        if not os.path.isfile(ASP_STATE_INSTALLER_ASKED):
+            _create_or_fix_dir(ASP_STATE_DIR, 0o750, 0, 0)
+            open(ASP_STATE_INSTALLER_ASKED, 'a').close()
+            if _notify(_("You could install {packages} automatically when "
+                         "starting Tails").format(packages=" ".join(packages)),
+                       _("To do so, you need to run Tails from a USB stick "
+                         "installed using <i>Tails Installer</i>"),
+                       _("Documentation"),
+                       urgent=True):
+                # XXX: open the right documentation
+                raise NotImplementedError
 
 
 def handle_removed_packages(packages):
