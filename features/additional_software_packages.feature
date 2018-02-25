@@ -62,8 +62,7 @@ Feature: Additional software packages
     And the additional software package upgrade service is run
     And the package "cowsay" installed version is newer than ""
 
-  # Tests the ASP upgrade process as well as when a previous upgrade failed.
-  Scenario: Recovering in offline mode after a previous failed ASP packages upgrade
+  Scenario: Recovering in offline mode after a previous failed ASP upgrade
     When I install an old version "" if the "cowsay" package using apt
     And I confirm when I am asked if I want to add "cowsay" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
@@ -75,14 +74,12 @@ Feature: Additional software packages
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
-    And the additional software package upgrade service is run and fails
-    And the package "cowsay" installed version is ""
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" and I login with persistence enabled
-    Then the additional software package installation service is run
-    And the package "cowsay" installed version is ""
     And the additional software package upgrade service is run
-    And the package "cowsay" installed version is newer than ""
+    And I am notified the "ASP upgrade service" failed
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then the additional software package installation service is run
+    And the package "cowsay" is installed
 
   Scenario: I am warned I can not use ASP when booting Tails from DVD and installing a package
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
