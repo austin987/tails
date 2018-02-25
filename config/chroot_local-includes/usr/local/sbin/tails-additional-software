@@ -94,6 +94,12 @@ def has_unlocked_persistence():
     return os.path.exists(PERSISTENCE_DIR)
 
 
+def tails_media_is_writable():
+    """Return true iff tails is started from a writable media."""
+    # XXX: test if media is RW
+    raise NotImplementedError
+
+
 def has_additional_packages_list():
     """Return true iff PACKAGES_LIST_FILE exists."""
     return os.path.isfile(PACKAGES_LIST_FILE)
@@ -164,19 +170,38 @@ def handle_installed_packages(packages):
                 setup_additional_packages()
                 add_additional_packages(packages)
     elif has_persistence():
-        # XXX: persistence present but locked
-        raise NotImplementedError()
-    else:  # XXX: test if media is RW
-        # RW media without persistence
+        # When a package is installed with a persistent storage locked, don't
+        # show any notification.
+        #
+        # People who have a persistent storage but don't unlock it, probably do
+        # this only sometimes and for a reason. They probably otherwise unlock
+        # their persistent storage most of the time.
+        #
+        # If they install packages with their persistent storage locked, they
+        # probably do it with their persistent storage unlock as well and would
+        # learn about this feature when it's most relevant for them.
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Warning: persistence storage is locked, can't add "
+                      "additional software.")
+    elif tails_media_is_writable():
         if _notify(_("Add {packages} to your additional software?").format(
                     packages=" ".join(packages)),
-                   _("To install it automatically every time you start Tails, "
-                     "you can create a persistent storage and activate the "
+                   _("To install it automatically when starting Tails, you "
+                     "can create a persistent storage and activate the "
                      "<b>Additional Software</b> feature"),
                    _("Create Persistent Storage"),
                    _("Install only once"),
                    urgent=True):
             create_persistence_and_setup_additional_packages(packages)
+    else:   # It's impossible to have a persistent storage
+        if _notify(_("You could install {packages} automatically when "
+                     "starting Tails").format(packages=" ".join(packages)),
+                   _("To do so, you need to run Tails from a USB stick "
+                     "installed using <i>Tails Installer</i>"),
+                   _("Documentation"),
+                   urgent=True):
+            # XXX: open the right documentation
+            raise NotImplementedError
 
 
 def handle_removed_packages(packages):
