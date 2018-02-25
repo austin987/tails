@@ -210,7 +210,13 @@ def handle_removed_packages(packages):
     Ask the user if packages should be removed from additional software, and
     actually remove them if requested.
     """
-    raise NotImplementedError
+    if _notify(_("Remove {packages} from your additional software?").format(
+                 packages=" ".join(packages)),
+               "",
+               _("Remove"),
+               _("Cancel"),
+               urgent=True):
+        remove_additional_packages(packages)
 
 
 def add_additional_packages(new_packages):
@@ -243,6 +249,16 @@ def create_persistence_and_setup_additional_packages(packages):
 
     Create a new persistence with additional packages enabled.
     Then add the packages to additional packages configuration.
+
+    packages should be a list of packages names.
+    """
+    raise NotImplementedError
+
+
+def remove_additional_packages(packages):
+    """Remove packages from additional packages configuration.
+
+    Removes the packages from additional packages configuration.
 
     packages should be a list of packages names.
     """
