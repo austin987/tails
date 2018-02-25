@@ -282,7 +282,7 @@ def apt_hook_post():
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages
-    manually_installed_packages = list(filter(
+    manually_installed_packages = set(filter(
         lambda pkg: not apt_cache[pkg].is_auto_installed,
         set(packages["installed"])))
     if manually_installed_packages:
