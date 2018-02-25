@@ -1,4 +1,4 @@
-@product
+@product @fragile
 
 Feature: Additional software packages
   As a Tails user
