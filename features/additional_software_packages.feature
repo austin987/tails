@@ -18,6 +18,7 @@ Feature: Additional software packages
     # We have to save the non-onion APT sources in persistence, so
     # that on next boot the additional software packages service has
     # the right APT indexes to install the package we want.
+    And I make my current APT sources persistent
     And I install "sl" using APT
     Then I am proposed to create an ASP persistence
     And I create the persistence
