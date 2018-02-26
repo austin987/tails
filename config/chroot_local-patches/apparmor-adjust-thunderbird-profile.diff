@@ -39,6 +39,15 @@
    owner @{HOME}/.{cache,config}/dconf/user rw,
    owner /run/user/[0-9]*/dconf/user rw,
    owner @{HOME}/.config/gtk-3.0/bookmarks r,
+@@ -96,6 +96,8 @@
+   /etc/gre.d/* r,
+ 
+   # noisy
++  deny /etc/dconf/profile/user r,
++  deny /etc/machine-id r,
+   deny @{MOZ_LIBDIR}/** w,
+   deny /usr/lib/thunderbird-addons/** w,
+   deny /usr/lib/xulrunner-addons/** w,
 @@ -138,7 +127,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
@@ -63,6 +72,24 @@
    /usr/bin/gpg               Cx -> gpg,
    /usr/bin/gpg2              Cx -> gpg,
    /usr/bin/gpgconf           Cx -> gpg,
+@@ -203,7 +204,9 @@
+     deny owner @{HOME}/.cache/thunderbird/**/_CACHE_* w,
+ 
+     # noise from inherited files
++    deny @{HOME}/.thunderbird/*.default/ImapMail/*/INBOX w,
+     deny /usr/{lib,share}/thunderbird/omni.ja r,
++    deny /usr/share/thunderbird/extensions/** r,
+ 
+     # For smartcards?
+     /dev/bus/usb/ r,
+@@ -255,6 +255,7 @@
+     owner @{HOME}/.gnupg/.#*[0-9]x rwl,
+     owner @{HOME}/.gnupg/.#lk0x[0-9a-f]* rwl,
+     owner @{HOME}/.gnupg/.gpg-v[0-9]*-migrated rw,
++    owner @{HOME}/.gnupg/openpgp-revocs.d/{,[A-F0-9]*.rev} rw,
+     owner @{HOME}/** r,
+     owner @{PROC}/@{pids}/mountinfo r,
+ 
 @@ -272,6 +251,9 @@
      /usr/bin/dirmngr ix,
      owner @{PROC}/@{pids}/task/@{tid}/comm rw,
