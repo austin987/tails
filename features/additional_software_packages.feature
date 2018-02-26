@@ -109,4 +109,17 @@ Feature: Additional software packages
     Then the additional software package installation service is run
     And the package "sl" is not installed
 
-  #Scenario: Removing a package from ASP through its GUI
+  Scenario: Removing a package from ASP through its GUI
+    When I install "sl" using apt
+    And I confirm when I am asked if I want to add "sl" to ASP configuration
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    And the additional software package installation service is run
+    And I am notified that the package "sslh" is installed
+    And the package "sl" is installed
+    And is start the ASP GUI
+    And I remove "sl" from the list of ASP packages
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then the additional software package installation service is run
+    And the package "sl" is not installed
