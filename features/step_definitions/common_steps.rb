@@ -395,7 +395,7 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   end
 end
 
-Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
+Given /^the Tor Browser (?:has started|starts)( in offline mode)?$/ do |offline|
   try_for(60) do
     @torbrowser = Dogtail::Application.new('Firefox')
     @torbrowser.child?(roleName: 'frame', recursive: false)
