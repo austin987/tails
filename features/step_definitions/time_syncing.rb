@@ -3,7 +3,7 @@
 # command over the remote shell and get the answer back, parsing and
 # post-processing of the result, etc.
 def max_time_drift
-  10
+  15
 end
 
 When /^I set the system time to "([^"]+)"$/ do |time|
