@@ -54,6 +54,145 @@ In a directory with many Tails ISO images:
 
     find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 5
 
+<a id="reproducibility-final-check"></a>
+
+# Reproducibility
+
+This section is done by the RM.
+
+When you sent the release schedule you asked for someone to reproduce
+this Tails release. Adjust the "variables" (prefixed with `$$`), and
+XXXX... placeholders etc. below, and send this as a signed email to
+this person.
+
+<div class="note">
+
+It is important that you do not plug your OpenPGP smart card after
+sending this email! If you have to, notify the person that s/he has to
+start from the beginning if s/he has already started with the steps in
+the email.
+
+</div>
+
+    Hi, Trusted Reproducer!
+    
+    You signed up for reproducing Tails $$VERSION. The deadline for doing so
+    is $$72_HOURS_FROM_NOW.
+    
+    First, some requirements:
+    
+    * You need this in your environment:
+    
+          VERSION=$$SAME_AS_THE_RM_USED
+          TAG=$$SAME_AS_THE_RM_USED
+          DIST=$$SAME_AS_THE_RM_USED
+          IUK_SOURCE_VERSIONS=$$SAME_AS_THE_RM_USED
+    
+    * And these, that you have to figure out yourself what to set to:
+    
+          ISOS=<the directory where you store Tails images and IUKs>
+          IUK_CHECKOUT=<path to your `tails-iuk` Git repository>
+          ARTIFACTS=<path to your Tails Git repo, or wherever your built images end up>
+    
+    * Download the published products of this Tails release to some new
+      directory (*not* where you will store the image and IUKs you will
+      soon build!):
+    
+          mkdir tails-amd64-${VERSION:?}
+          cd tails-amd64-${VERSION:?}
+          wget --recursive http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
+          cd ..
+          for old_version in ${IUK_SOURCE_VERSIONS}; do
+              wget http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/Tails_amd64_${old_version}_to_${VERSION:?}.iuk
+          done
+    
+    * In your ISOS directory you need to have present each Tails release
+      listed in IUK_SOURCE_VERSIONS.
+      
+    * Your `tails-iuk` (IUK_CHECKOUT) must be checked out at
+      $$TAG_OF_VERSION_INCLUDED_IN_TAILS_THIS_VERSION.
+    
+    Please `cd` to your Tails Git repo, and run:
+    
+        git fetch && \
+        git checkout $TAG
+    
+    Make sure the current commit is:
+    
+        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    
+    If not, immediately contact me! Proceeding with the rest of the steps
+    are pointless in this case, so await my instruction.
+    
+    If the commit id checks out, let's build Tails!
+    
+        export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
+        rake build && \
+        mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
+	    mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso" \
+           "${ISOS:?}/tails-amd64-${VERSION:?}/"
+    
+    Then follow the "Build the Incremental Upgrade Kits" instructions in
+    `wiki/src/contribute/release_process.mdwn`.
+    
+    Now well start verifying stuff. If there is *any* type of mismatch at some
+    point, let me and tails@ know *immediately*!
+    
+    Compute the SHA-512 hashes of your products with:
+        
+        cd "${ISOS:?}" && \
+        sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso Tails_amd64_*_to_${VERSION:?}.iuk
+    
+    and compare the results with what I got:
+    
+        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  tails-amd64-$$VERSION/tails-amd64-$$VERSION.iso
+        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Tails_amd64_$$VERSION~rc1_to_$$VERSION.iuk
+        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Tails_amd64_X.Y_to_$$VERSION.iuk
+        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Tails_amd64_X.Z_to_$$VERSION.iuk
+    
+    and with what you get from running the same command from the directory you
+    downloded the "published products" (that you should have downloaded by now,
+    per the "requirements" section above).
+    
+    Next, examine the IDF by running:
+    
+        curl https://tails.boum.org/install/v1/Tails/amd64/${DIST:?}/latest.yml
+    
+    and checking that:
+    
+    * the `url` value is the expected ISO image URL, i.e.:
+    
+          http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-$VERSION/tails-amd64-$VERSION.iso
+    
+    * the `sha256` value is the `SHA-256` you get from your image (with
+      e.g. `sha256sum`).
+    
+    * the `size` value is the number of bytes of your image.
+    
+    Next, examine each UDF by running:
+    
+        for old_version in ${IUK_SOURCE_VERSIONS}; do
+            url=https://tails.boum.org/upgrade/v1/Tails/${old_version}/amd64/${DIST:?}/upgrades.yml
+            (
+                echo "Looking at '${url}':"
+                echo
+                curl --silent --show-error ${url}
+            ) | less
+        done
+    
+    and checking that there are either one or two `target-files`
+    entries, where `type: full` means a full upgrade (so it refers to
+    the ISO image) and `type: incremental` means an incremental upgrade
+    (so it refers to a IUK). Verify
+    
+    * that the `url` is
+    
+        http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/Tails_amd64_${old_version}_to_$$VERSION.iuk
+    
+    * the `sha256` and `size` values just like you did for the IDF previously.
+    
+    Good luck and have fun!
+
 # Automated test suite
 
 Our long term goal is to eliminate the manual test suite (except the
