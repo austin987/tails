@@ -15,7 +15,9 @@ Then /^I start Electrum through the GNOME menu$/ do
 end
 
 Then /^Electrum (?:has started|starts)$/ do
-  electrum_app
+  try_for(30) do
+    electrum_app
+  end
 end
 
 When /^a bitcoin wallet is (|not )present$/ do |existing|
