@@ -4,19 +4,21 @@ set -e
 
 echo "Checking for .orig files"
 
-DOT_ORIG_WHITELIST=$(cat <<EOF
+DOT_ORIG_WHITELIST_DELETE=$(cat <<EOF
 /bin/hostname.orig
 /etc/resolv.conf.orig
 /lib/systemd/system/alsa-utils.service.orig
-/sbin/start-stop-daemon.orig
 EOF
 )
 
-rm -f ${DOT_ORIG_WHITELIST}
+# live-build creates this backup copy and restores it later in the build process
+DOT_ORIG_WHITELIST_KEEP="/sbin/start-stop-daemon.orig"
+
+rm -f ${DOT_ORIG_WHITELIST_DELETE}
 
 DOT_ORIG_FILES=$(find / -type f -name *.orig || :)
 
-if [ -n "$DOT_ORIG_FILES" ]; then
+if [ "$DOT_ORIG_FILES" != "$DOT_ORIG_WHITELIST_KEEP" ]; then
     echo "Some patches are fuzzy and leave .orig files around:" >&2
     echo "$DOT_ORIG_FILES" >&2
     exit 1
