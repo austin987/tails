@@ -11,11 +11,7 @@ from pam import pam
 import time
 import pwd
 
-try:
-    from systemd.journal import JournaldLogHandler
-except ImportError:
-    # JournaldLogHandler is called JournalHandler in Python 3.5 and earlier
-    from systemd.journal import JournalHandler as JournaldLogHandler
+UI_FILE = "/usr/share/tails/screenlocker.ui"
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -23,48 +19,23 @@ from gi.repository import Gtk, GLib
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 
-UI_FILE = "/usr/share/tails/screenlocker.ui"
 
 _ = gettext.gettext
 gettext.install("Tails")
 
+logging.basicConfig(level=logging.DEBUG)
+
 mainloop = GLib.MainLoop()
-
-# Set up logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter("%(name)s:%(levelname)s: %(message)s"))
-logger.addHandler(console_handler)
-
-journal_handler = JournaldLogHandler()
-journal_handler.setLevel(logging.WARNING)
-logger.addHandler(journal_handler)
-
-# Set up exception handler
-# Source: https://stackoverflow.com/a/16993115/2804197
-def handle_exception(exc_type, exc_value, exc_traceback):
-    if issubclass(exc_type, KeyboardInterrupt):
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-
-    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-
-sys.excepthook = handle_exception
 
 
 def lock_screen():
     # org.gnome.ScreenSaver.Lock() sometimes does not return, so we set a timeout of 5 seconds
     try:
         SessionBus().get("org.gnome.ScreenSaver").Lock(timeout=5)
-    except GLib.Error as e:
-        if e.message == "Timeout was reached":
-            logger.warning("Timeout was reached during call to org.gnome.ScreenSaver.Lock()")
-        else:
-            raise
-
-    sys.exit()
+    except Exception as e:
+        logging.exception(e)
+    finally:
+        sys.exit()
 
 
 class PasswordDialog(object):
@@ -104,9 +75,9 @@ class PasswordDialog(object):
         p.stdin.flush()
         out, err = p.communicate()
         if p.returncode != 0:
-            logger.info("passwd stdout: %s", out)
-            logger.info("passwd stderr: %s", err)
-            raise RuntimeError("passwd exited with return code %s. stderr: %s " % (p.returncode, err))
+            print("passwd stdout: %s" % out)
+            print("passwd stderr: %s" % err)
+            raise RuntimeError("passwd returned %r" % p.returncode)
 
         # We close the window here for the case that lock_screen does not return immediately,
         # otherwise it would look like the app is unresponsive
@@ -123,7 +94,7 @@ class PasswordDialog(object):
         # TODO: Remove this once this is fixed: https://bugzilla.gnome.org/show_bug.cgi?id=761969
         p = pam()
         while not p.authenticate(pwd.getpwuid(os.getuid()).pw_name, self.pw):
-            logger.debug("PAM not updated yet...")
+            logging.debug("PAM not updated yet...")
             time.sleep(0.01)
         # We close the window here for the case that lock_screen does not return immediately,
         # otherwise it would look like the app is unresponsive
