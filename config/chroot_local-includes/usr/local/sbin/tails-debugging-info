@@ -30,6 +30,7 @@ safely and something is probably quite wrong and should be
 investigated carefully.
 
 >>> # run script
+>>> import sh
 >>> this_command = sh.Command(sys.argv[0])
 >>> this_command()
 <BLANKLINE>
@@ -39,8 +40,8 @@ investigated carefully.
 import os
 import sys
 from pwd import getpwuid
+import subprocess
 
-import sh
 
 # AppArmor Ux rules don't sanitize PATH, which can lead to an
 # exploited application (that's allowed to run this script unconfined)
@@ -100,10 +101,7 @@ def debug_command(command, *args):
     """
     print()
     print('===== output of command {} ====='.format(' '.join((command,) + args)))
-
-    run = sh.Command(command)
-    output = run(*args).stdout.decode().strip()
-    print(output)
+    print(subprocess.check_output([command, *args]).decode().strip())
 
 
 def debug_file(user, filename):
