@@ -538,16 +538,16 @@ Build the final image
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
 
-* Mark the version as "released" in the changelog:
+1. Mark the version as "released" in the changelog:
 
         dch --release --no-force-save-on-release --maintmaint
         git commit -m "Mark Tails ${VERSION:?} as released." debian/changelog
 
-* Export `SOURCE_DATE_EPOCH`:
+1. Export `SOURCE_DATE_EPOCH`:
 
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
 
-* tag the release *again*, with all included files in:
+1. tag the release *again*, with all included files in:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
@@ -560,40 +560,38 @@ suite should be ready, so it is time to:
    first `git push` then Jenkins won't build from the tag -- please
    avoid that!
 
-* build the final image!
+1. build the final image!
 
-* compare the new build manifest with the one from the previous,
+1. compare the new build manifest with the one from the previous,
   almost final build; they should be identical, except that the
   `debian-security` serial might be higher. To ensure we publish
   the final build's `.build-manifest`, please run:
 
         export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
-<a id="reproducibility-sanity-check-iso"></a>
 
-* Let's sanity check that Jenkins reproduced your image: find the job at:
+1. <a id="reproducibility-sanity-check-iso"></a>
+   Let's sanity check that Jenkins reproduced your image.
 
-      https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/
+   Find the job at
+   `https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/`
+   and make sure the image built by Jenkins:
 
-  and make sure the Jenkins' image:
+   - was built from the correct Git commit
+   - has the same file size as the image you built
+   - has the same hash (in the `.shasum` file) as the image you built
 
-  - was built from the correct Git commit,
+   Then:
 
-  - has the same file size and
+   - If all hashes match: yay, we're good to go!
 
-  - hash (in the `.shasum` file) as the image you built.
-
-  Then:
-
-  - If all hashes match: yay, we're good to go!
-
-  - If there is a hash mismatch for the image: ouch! Now we are in a
-    tricky situation: on the one hand it seems like a poor idea to
-    block users from benefiting from this release's security updates,
-    but on the other hand the failure might imply that something
-    nefarious is going on. At this stage, no matter what, immediately
-    fetch Jenkins' image, compare it with your, and try to rule out
-    build system compromise:
+   - If there is a hash mismatch for the image: ouch! Now we are in a
+     tricky situation: on the one hand it seems like a poor idea to
+     block users from benefiting from this release's security updates,
+     but on the other hand the failure might imply that something
+     nefarious is going on. At this stage, no matter what, immediately
+     fetch Jenkins' image, compare it with your, and try to rule out
+     build system compromise:
 
         sudo diffoscope \
             --text diffoscope.txt \
@@ -604,38 +602,36 @@ suite should be ready, so it is time to:
                 path/to/your/tails-amd64-${VERSION:?}.iso \
                 path/to/jenkins/tails-amd64-${VERSION:?}.iso
 
-    Then carefully investigate the `diffoscope` report:
+     Then carefully investigate the `diffoscope` report:
 
-      - If you cannot rule out that the difference is harmful: let's take
-        a step back; we might be compromised, so we are in no position to
-        release. Halt the release, involve the rest of `tails@`, and then
-        try to re-establish trust in all build machines and infra
-        involved, etc. Have fun!
+       - If you cannot rule out that the difference is harmful: let's take
+         a step back; we might be compromised, so we are in no position to
+         release. Halt the release, involve the rest of `tails@`, and then
+         try to re-establish trust in all build machines and infra
+         involved, etc. Have fun!
 
-      - Otherwise, if the change is definitely harmless:
+       - Otherwise, if the change is definitely harmless:
 
-        * If the source of non-determinism is identified quickly and
-          is easy and fast to fix, *and* the QA of the current image
-          has not gone very far (so at least that time is not wasted),
-          then you should consider abandoning the current version, and
-          immediately start preparing an emergency release with:
+         * If the source of non-determinism is identified quickly and
+           is easy and fast to fix, *and* the QA of the current image
+           has not gone very far (so at least that time is not wasted),
+           then you should consider abandoning the current version, and
+           immediately start preparing an emergency release with:
 
-          - the reproducibility fix,
+           - the reproducibility fix,
+           - a new changelog entry,
+           - adjustments to the release notes so they are re-purposed for
+             this emergency release (the abandoned release gets none, since
+             it effectively never will be released publicly).
 
-          - a new changelog entry,
+         * Otherwise, if the fix looks time-consuming or difficult,
+           let's release anyway. But let's add a known issue about
+           "This Tails release does not build reproducibility" to the
+           release notes, linking to the ticket where
+           the nature of the reproducibility failure is clearly
+           described.
 
-          - adjustments to the release notes so they are re-purposed for
-            this emergency release (the abandoned release gets none, since
-            it effectively never will be released publicly).
-
-        * Otherwise, if the fix looks time-consuming or difficult,
-          let's release any way. But let's add a known issue about
-          "This Tails release has reproducibility issues" to the
-          release notes, linking to the ticket(s) (or similar) where
-          the nature of the reproducibility failure is clearly
-          described.
-
-* check out a new branch:
+1. check out a new branch:
 
         git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" "${TAG:?}" && \
         git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
