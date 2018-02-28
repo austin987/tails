@@ -58,21 +58,27 @@ In a directory with many Tails ISO images:
 
 # Reproducibility
 
-This section is done by the RM.
+## For the RM
 
-When you sent the release schedule you asked for someone to reproduce
-this Tails release. Adjust the "variables" (prefixed with `$$`) and
-`XXX...` placeholders below, and send this as a signed email to
-this person.
+Substitute the "variables" (prefixed with `$$`, e.g. your would
+replace `$$TAG` with `3.0-rc1` if we are testing 3.0~rc1) and
+`XXX...` placeholders in the next section.
 
 <div class="note">
 
-It is important that you do not plug your OpenPGP smart card after
-sending this email! If you have to, notify the person that s/he has to
-start from the beginning if s/he has already started with the steps in
-the email.
+Beware! If your have to plug your OpenPGP smart card again after
+having done the above substitution, it invalidates *everything* that
+has been done for this test so far, so it has to be started completely
+from the beginning.
 
 </div>
+
+## For anyone _but_ the RM
+
+Find the "Trusted Reproducer" for this Tails release in the
+[[contribute/calendar]]. and send this as
+a signed email to this person.
+
 
     Hi, Trusted Reproducer!
     
@@ -83,10 +89,11 @@ the email.
     
     * You need this in your environment:
     
-          VERSION=$$SAME_AS_THE_RM_USED
-          TAG=$$SAME_AS_THE_RM_USED
-          DIST=$$SAME_AS_THE_RM_USED
-          IUK_SOURCE_VERSIONS=$$SAME_AS_THE_RM_USED
+          VERSION=$$VERSION
+          TAG=$$TAG
+          TAG_COMMIT=$$TAG_COMMIT
+          DIST=$$DIST
+          IUK_SOURCE_VERSIONS=$$IUK_SOURCE_VERSIONS
     
     * And these, that you have to figure out yourself what to set to:
     
@@ -115,16 +122,21 @@ the email.
     Please `cd` to your Tails Git repo, and run:
     
         git fetch && \
-        git checkout $TAG
+        git checkout "${TAG_COMMIT:?}" && \
+        if [ "$(git describe --tags --exact-match)" = "${TAG:?}" ]; then
+            git tag -v "${TAG}"
+        else
+            echo 'TAG_COMMIT and TAG does not match!'
+        fi
     
-    Make sure the current commit is:
+    * If the last output is a "Good signature" for the expected tag, made by
+      Tails signing key, then we are good.
     
-        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    * Otherwise, if you see _anything_ else, we're _not_ good; immediately
+      contact the RM and tails@! Proceeding with the rest of the steps
+      are pointless in this case, so await instruction.
     
-    If not, immediately contact me! Proceeding with the rest of the steps
-    are pointless in this case, so await my instruction.
-    
-    If the commit id checks out, let's build Tails!
+    Next, let's build Tails!
     
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
         rake build && \
@@ -136,7 +148,7 @@ the email.
     `wiki/src/contribute/release_process.mdwn`.
     
     Now we'll start verifying stuff. If there is *any* type of mismatch at some
-    point, let me and tails@ know *immediately*!
+    point, let the RM and tails@ know *immediately*!
     
     Compute the SHA-512 hashes of your products with:
         
