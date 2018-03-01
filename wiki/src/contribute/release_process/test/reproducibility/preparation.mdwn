@@ -1,0 +1,36 @@
+[[!meta title="Preparing the email for the Trusted Verifier"]]
+
+Make sure you still have your variables set from following the release
+process (incl. `IUK_SOURCE_VERSIONS`), then run:
+
+    DEADLINE="$(date -d 'now + 72 hours')" && \
+    IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' {${ARTIFACTS:?},${RELEASE_CHECKOUT:?}/wiki/src/torrents/files}/tails-amd64-${VERSION:?}.{,iso.}packages 2>/dev/null | head -n1)" && \
+    if [ -z "${IUK_VERSION}" ]; then
+        echo 'Failed to determine IUK_VERSION, aborting' && \
+        false
+    fi && \
+    IUK_CHECKOUT_TAG="debian/${IUK_VERSION}"
+    TAG_COMMIT="$(git rev-parse --verify ${TAG:?})"
+    INPUTS="DEADLINE DIST IUK_CHECKOUT_TAG IUK_SOURCE_VERSIONS TAG TAG_COMMIT VERSION"
+    sh <<EOF
+    sed --regexp-extended \
+        $(for var in ${INPUTS:?}; do
+              val="$(eval "echo \${${var}:?}")" && \
+              echo -n "-e 's@\\\$\\{${var}\\}@${val}@' "
+          done) \
+            wiki/src/contribute/release_process/test/reproducibility/verification-email.template
+    EOF
+
+and carefully make sure there were no errors, and that each variable
+was replaced (i.e. you should see no `$` in the output). If the output
+looks good, replace `EMAIL_PLACEHOLDER` on the testing pad with
+it. Then run:
+
+    ( \
+        cd "${ISOS:?}" && \
+        sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso \
+                  Tails_amd64_*_to_${VERSION:?}.iuk \
+    )
+
+and replace `SHA512SUMS_PLACEHOLDER` in the testing pad with the
+output.
