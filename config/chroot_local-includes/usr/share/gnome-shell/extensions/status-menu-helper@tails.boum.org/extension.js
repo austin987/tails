@@ -75,7 +75,7 @@ const Extension = new Lang.Class({
         this._restartButton = this.statusMenu._createActionButton('view-refresh-symbolic', _("Restart"));
         this._restartButtonId = this._restartButton.connect('clicked', Lang.bind(this, this._onRestartClicked));
  
-        this._lockScreenButton = this.statusMenu._createActionButton('changes-prevent-symbolic', _("Lock"));
+        this._lockScreenButton = this.statusMenu._createActionButton('changes-prevent-symbolic', _("Lock screen"));
         this._lockScreenButtonId = this._lockScreenButton.connect('clicked', Lang.bind(this, this._onLockClicked));
 
         this._poweroffButton = this.statusMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
