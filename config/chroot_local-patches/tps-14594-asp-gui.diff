@@ -1,0 +1,571 @@
+diff --git a/lib/Tails/Persistence/Configuration.pm b/lib/Tails/Persistence/Configuration.pm
+index 9719481..da71c02 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration.pm
+@@ -36,6 +36,9 @@ has 'file' =>
+     lazy_build rw 'Tails::Persistence::Configuration::File';
+ has 'presets' =>
+     lazy_build rw 'Tails::Persistence::Configuration::Presets';
++has 'force_enable_presets' =>
++    ro 'ArrayRef[Str]',
++    default => sub { [] };
+ has 'atoms' =>
+     lazy_build rw 'ArrayRef[Tails::Persistence::Configuration::Atom]',
+     traits  => [ 'Array' ],
+@@ -77,6 +80,7 @@ method lines_not_in_presets {
+ method merge_file_with_presets {
+     # Modifying and returning clones of the presets atoms would be a bit cleaner.
+     $self->presets->set_state_from_lines($self->file->all_lines);
++    $self->presets->set_state_from_overrides($self->force_enable_presets);
+ 
+     [
+         $self->presets->all,
+diff --git a/lib/Tails/Persistence/Configuration/Atom.pm b/lib/Tails/Persistence/Configuration/Atom.pm
+index 768b2c5..d8e3283 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
+@@ -31,6 +31,7 @@ textdomain("tails-persistence-setup");
+ =cut
+ 
+ has 'enabled'     => required rw Bool;
++has 'id'          => lazy_build rw Str;
+ has 'name'        => lazy_build rw Str;
+ has 'description' => lazy_build rw Str;
+ has 'icon_name'     => lazy_build rw Str;
+@@ -52,6 +53,8 @@ sub new_from_line {
+     );
+ }
+ 
++method _build_id { 'Custom'; }
++
+ method _build_name { $self->encoding->decode(gettext('Custom')); }
+ 
+ method _build_description {
+diff --git a/lib/Tails/Persistence/Configuration/Presets.pm b/lib/Tails/Persistence/Configuration/Presets.pm
+index 1a01326..f296808 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
+@@ -45,6 +45,7 @@ has '_presets' =>
+ method _build__presets {
+     my @presets = (
+         {
++            id          => 'Personal Data',
+             name        => $self->encoding->decode(gettext(q{Personal Data})),
+             description => $self->encoding->decode(gettext(
+                 q{Keep files stored in the `Persistent' directory}
+@@ -55,86 +56,84 @@ method _build__presets {
+             icon_name   => 'stock_folder',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{GnuPG})),
+-            description => $self->encoding->decode(gettext(
+-                q{GnuPG keyrings and configuration}
+-            )),
+-            destination => '/home/amnesia/.gnupg',
+-            options     => [ 'source=gnupg' ],
+-            enabled     => 0,
+-            icon_name   => 'seahorse-key',
+-        },
+-        {
+-            name        => $self->encoding->decode(gettext(q{SSH Client})),
++            id          => 'Browser bookmarks',
++            name        => $self->encoding->decode(gettext(q{Browser bookmarks})),
+             description => $self->encoding->decode(gettext(
+-                q{SSH keys, configuration and known hosts}
++                q{Bookmarks saved in the Tor Browser}
+             )),
+-            destination => '/home/amnesia/.ssh',
+-            options     => [ 'source=openssh-client'],
++            destination => '/home/amnesia/.mozilla/firefox/bookmarks',
++            options     => [ 'source=bookmarks' ],
+             enabled     => 0,
+-            icon_name   => 'seahorse-key-ssh',
++            icon_name   => 'user-bookmarks',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{Pidgin})),
++            id          => 'Network Connections',
++            name        => $self->encoding->decode(gettext(q{Network Connections})),
+             description => $self->encoding->decode(gettext(
+-                q{Pidgin profiles and OTR keyring}
++                q{Configuration of network devices and connections}
+             )),
+-            destination => '/home/amnesia/.purple',
+-            options     => [ 'source=pidgin' ],
++            destination => '/etc/NetworkManager/system-connections',
++            options     => [ 'source=nm-system-connections' ],
+             enabled     => 0,
+-            icon_name   => 'pidgin',
++            icon_name   => 'network-wired',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{Thunderbird})),
++            id          => 'APT Packages',
++            name        => $self->encoding->decode(gettext(q{APT Packages})),
+             description => $self->encoding->decode(gettext(
+-                q{Thunderbird profiles and locally stored email}
++                q{Packages downloaded by APT}
+             )),
+-            destination => '/home/amnesia/.thunderbird',
+-            options     => [ 'source=thunderbird' ],
++            destination => '/var/cache/apt/archives',
++            options     => [ 'source=apt/cache' ],
+             enabled     => 0,
+-            icon_name   => 'thunderbird',
++            icon_name   => 'package-x-generic',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{GNOME Keyring})),
++            id          => 'APT Lists',
++            name        => $self->encoding->decode(gettext(q{APT Lists})),
+             description => $self->encoding->decode(gettext(
+-                q{Secrets stored by GNOME Keyring}
++                q{Lists downloaded by APT}
+             )),
+-            destination => '/home/amnesia/.gnome2/keyrings',
+-            options     => [ 'source=gnome-keyrings' ],
++            destination => '/var/lib/apt/lists',
++            options     => [ 'source=apt/lists' ],
+             enabled     => 0,
+-            icon_name   => 'seahorse-key-personal',
++            icon_name   => 'package-x-generic',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{Network Connections})),
++            id          => 'Printers',
++            name        => $self->encoding->decode(gettext(q{Printers})),
+             description => $self->encoding->decode(gettext(
+-                q{Configuration of network devices and connections}
++                q{Printers configuration}
+             )),
+-            destination => '/etc/NetworkManager/system-connections',
+-            options     => [ 'source=nm-system-connections' ],
++            destination => '/etc/cups',
++            options     => [ 'source=cups-configuration' ],
+             enabled     => 0,
+-            icon_name   => 'network-wired',
++            icon_name   => 'printer',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{Browser bookmarks})),
++            id          => 'Thunderbird',
++            name        => $self->encoding->decode(gettext(q{Thunderbird})),
+             description => $self->encoding->decode(gettext(
+-                q{Bookmarks saved in the Tor Browser}
++                q{Thunderbird profiles and locally stored email}
+             )),
+-            destination => '/home/amnesia/.mozilla/firefox/bookmarks',
+-            options     => [ 'source=bookmarks' ],
++            destination => '/home/amnesia/.thunderbird',
++            options     => [ 'source=thunderbird' ],
+             enabled     => 0,
+-            icon_name   => 'user-bookmarks',
++            icon_name   => 'thunderbird',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{Printers})),
++            id          => 'GnuPG',
++            name        => $self->encoding->decode(gettext(q{GnuPG})),
+             description => $self->encoding->decode(gettext(
+-                q{Printers configuration}
++                q{GnuPG keyrings and configuration}
+             )),
+-            destination => '/etc/cups',
+-            options     => [ 'source=cups-configuration' ],
++            destination => '/home/amnesia/.gnupg',
++            options     => [ 'source=gnupg' ],
+             enabled     => 0,
+-            icon_name   => 'printer',
++            icon_name   => 'seahorse-key',
+         },
+         {
++            id          => 'Bitcoin client',
+             name        => $self->encoding->decode(gettext(q{Bitcoin client})),
+             description => $self->encoding->decode(gettext(
+                 q{Electrum's bitcoin wallet and configuration}
+@@ -145,26 +144,29 @@ method _build__presets {
+             icon_name   => 'electrum',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{APT Packages})),
++            id          => 'Pidgin',
++            name        => $self->encoding->decode(gettext(q{Pidgin})),
+             description => $self->encoding->decode(gettext(
+-                q{Packages downloaded by APT}
++                q{Pidgin profiles and OTR keyring}
+             )),
+-            destination => '/var/cache/apt/archives',
+-            options     => [ 'source=apt/cache' ],
++            destination => '/home/amnesia/.purple',
++            options     => [ 'source=pidgin' ],
+             enabled     => 0,
+-            icon_name   => 'package-x-generic',
++            icon_name   => 'pidgin',
+         },
+         {
+-            name        => $self->encoding->decode(gettext(q{APT Lists})),
++            id          => 'SSH Client',
++            name        => $self->encoding->decode(gettext(q{SSH Client})),
+             description => $self->encoding->decode(gettext(
+-                q{Lists downloaded by APT}
++                q{SSH keys, configuration and known hosts}
+             )),
+-            destination => '/var/lib/apt/lists',
+-            options     => [ 'source=apt/lists' ],
++            destination => '/home/amnesia/.ssh',
++            options     => [ 'source=openssh-client'],
+             enabled     => 0,
+-            icon_name   => 'package-x-generic',
++            icon_name   => 'seahorse-key-ssh',
+         },
+         {
++            id          => 'Dotfiles',
+             name        => $self->encoding->decode(gettext(q{Dotfiles})),
+             description => $self->encoding->decode(gettext(
+                 q{Symlink into $HOME every file or directory found in the `dotfiles' directory}
+@@ -195,5 +197,14 @@ sub set_state_from_lines {
+     }
+ }
+ 
++sub set_state_from_overrides {
++    my $self = shift;
++    my $overrides = shift;
++
++    foreach my $atom ($self->all) {
++        $atom->enabled(1) if grep { $atom->id eq $_ } @$overrides;
++    }
++}
++
+ no Moose;
+ 1;
+diff --git a/lib/Tails/Persistence/Setup.pm b/lib/Tails/Persistence/Setup.pm
+index d6c0ba2..d7b0414 100644
+--- a/usr/share/perl5/Tails/Persistence/Setup.pm
++++ b/usr/share/perl5/Tails/Persistence/Setup.pm
+@@ -23,7 +23,6 @@ use namespace::autoclean;
+ 
+ use autodie qw(:all);
+ use Carp::Assert::More;
+-use Data::Dumper;
+ use English qw{-no_match_vars};
+ use Glib qw{TRUE FALSE};
+ use Gtk3 qw{-init};
+@@ -107,7 +106,6 @@ has "$_" => lazy_build ro Str
+ has 'persistence_partition_device_file'=> lazy_build ro Str, metaclass => 'NoGetopt';
+ has 'persistence_partition_size'     => lazy_build ro Int,  metaclass => 'NoGetopt';
+ has 'persistence_is_enabled'         => lazy_build ro Bool, metaclass => 'NoGetopt';
+-has 'persistence_is_read_write'      => lazy_build ro Bool, metaclass => 'NoGetopt';
+ 
+ has 'persistence_partition_mountpoint' => (
+     isa        => 'Path::Class::Dir',
+@@ -130,22 +128,12 @@ has 'steps' =>
+     lazy_build required ro 'ArrayRef[Str]',
+     traits  => ['Array'],
+     handles => {
+-        all_steps       => 'elements',
+         number_of_steps => 'count',
+-        append_to_steps => 'push',
+         shift_steps     => 'shift',
+         next_step       => 'first',
+-        grep_steps      => 'grep',
+     },
+     documentation => q{Specify once per wizard step to run. Supported steps are: bootstrap, configure, delete.};
+ 
+-has 'orig_steps' =>
+-    rw 'ArrayRef[Str]',
+-    traits  => ['Array'],
+-    handles => {
+-        grep_orig_steps => 'grep',
+-    };
+-
+ has 'passphrase' => rw Str, documentation => q{Unsupported. Developers only.};
+ 
+ has 'configuration' =>
+@@ -153,6 +141,22 @@ has 'configuration' =>
+     handles    => { save_configuration => 'save' },
+     metaclass  => 'NoGetopt';
+ 
++has 'force_enable_presets' =>
++    ro 'ArrayRef[Str]',
++    traits => ['Array'],
++    documentation => q{Specify once per additional preset to forcibly enable.},
++    default       => sub { [] };
++
++has 'display_finished_message' =>
++    ro Bool,
++    documentation => q{Display an explanatory message once done.},
++    default       => sub { 1 };
++
++has 'gui' =>
++    ro Bool,
++    documentation => q{Display the GUI. Only a few operations are available under --no-gui.},
++    default       => sub { 1 };
++
+ has '+codeset'  => ( metaclass => 'NoGetopt' );
+ has '+encoding' => ( metaclass => 'NoGetopt' );
+ 
+@@ -162,8 +166,12 @@ has '+encoding' => ( metaclass => 'NoGetopt' );
+ =cut
+ 
+ method BUILD {
+-    my @orig_steps = $self->all_steps;
+-    $self->orig_steps(\@orig_steps);
++    if (! $self->gui) {
++        assert_is($self->number_of_steps, 1,
++                  "Exactly one step is enabled under --no-gui");
++        assert_is($self->steps->[0], 'configure',
++                  "The requested step is 'configure' under --no-gui");
++    }
+ }
+ 
+ sub _build_force {
+@@ -201,18 +209,6 @@ sub _build_persistence_is_enabled {
+     defined($value) && $value eq 'true';
+ }
+ 
+-sub _build_persistence_is_read_write {
+-    my $self = shift;
+-
+-    -e $self->persistence_state_file || return 0;
+-    -r $self->persistence_state_file || return 0;
+-
+-    my $value = $self->get_variable_from_persistence_state_file(
+-        'TAILS_PERSISTENCE_READONLY'
+-    );
+-    ! (defined($value) && $value eq 'true');
+-}
+-
+ sub _build_steps {
+     my $self = shift;
+ 
+@@ -248,7 +244,7 @@ sub _build_persistence_partition_mountpoint {
+ 
+     first {
+            $_ eq '/live/persistence/TailsData_unlocked'
+-        or $_ eq '/media/tails-persistence-setup/TailsData'
++        or $_ eq '/media/'.getpwuid($UID).'/TailsData'
+     } $self->mountpoints($self->persistence_partition);
+ }
+ 
+@@ -293,8 +289,16 @@ sub _build_configuration {
+ 
+     my $config_file_path = file($self->persistence_partition_mountpoint, 'persistence.conf');
+     if (-e $config_file_path) {
+-        my $expected_uid = getpwnam('tails-persistence-setup');
+-        my $expected_gid = getgrnam('tails-persistence-setup');
++        # In Tails, tails-persistence-setup runs as the tails-persistence-setup
++        # user and the configuration file must be owned by
++        # tails-persistence-setup:tails-persistence-setup.
++        # When developing outside of Tails, the configuration file is also owned
++        # by the user:group that runs tails-persistence-setup.
++        # So in all cases, we effectively want the configuration file
++        # to be owned by the user:group that runs tails-persistence-setup.
++        my $expected_uid = getuid();
++        my $expected_gid = getgid();
++        $self->debug("Expected ownership: ${expected_uid}:${expected_gid}");
+         try {
+             check_config_file_permissions(
+                 $config_file_path,
+@@ -313,11 +317,13 @@ sub _build_configuration {
+                 $self->encoding->decode(gettext(
+                     $_,
+                 )));
++            exit 4;
+         };
+     }
+ 
+     Tails::Persistence::Configuration->new(
+-        config_file_path => $config_file_path
++        config_file_path     => $config_file_path,
++        force_enable_presets => $self->force_enable_presets,
+     );
+ }
+ 
+@@ -374,11 +380,6 @@ sub check_sanity {
+                     "Device %s has no persistent volume.")),
+                 needs_device_arg => 1,
+             },
+-        ],
+-    );
+-
+-    if (! $self->grep_orig_steps(sub { $_ eq 'bootstrap' })) {
+-        push @{$step_checks{configure}}, (
+             {
+                 method  => 'persistence_partition_is_unlocked',
+                 message => $self->encoding->decode(gettext(
+@@ -399,8 +400,8 @@ sub check_sanity {
+                 message => $self->encoding->decode(gettext(
+                     "Persistence volume is not writable. Maybe it was mounted read-only?")),
+             },
+-        );
+-    }
++        ],
++    );
+ 
+     my @checks = (
+         {
+@@ -629,19 +630,25 @@ sub run_current_step {
+ 
+     $self->debug("Running step " . $self->current_step->name);
+ 
+-    $self->current_step->working(0);
+-    $self->empty_main_window;
+-    $self->main_window->add($self->current_step->main_box);
+-    $self->main_window->set_default($self->current_step->go_button);
+-    $self->main_window->show_all;
+-    $self->current_step->working(0);
+-    $self->main_window->set_visible(TRUE);
+-
+-    if($self->current_step->name eq 'configure') {
+-        $self->main_window->resize($width, $self->main_window->get_screen()->get_height());
+-    }
+-    else {
+-        $self->main_window->resize($width, $height);
++    if ($self->gui) {
++        $self->current_step->working(0);
++        $self->empty_main_window;
++        $self->main_window->add($self->current_step->main_box);
++        $self->main_window->set_default($self->current_step->go_button);
++        $self->main_window->show_all;
++        $self->current_step->working(0);
++        $self->main_window->set_visible(TRUE);
++
++        if($self->current_step->name eq 'configure') {
++            $self->main_window->resize($width, $self->main_window->get_screen()->get_height());
++        }
++        else {
++            $self->main_window->resize($width, $height);
++        }
++    } else {
++        $self->debug("run_current_step: starting go_button_pressed...");
++        $self->current_step->go_button_pressed;
++        $self->debug("run_current_step: go_button_pressed exited.");
+     }
+ }
+ 
+@@ -664,6 +671,10 @@ sub goto_next_step {
+     }
+     else {
+         $self->debug("No more steps.");
++        if (! $self->display_finished_message) {
++            Gtk3->main_quit;
++            exit 0;
++        }
+         $self->current_step->title->set_text($self->encoding->decode(gettext(
+             q{Persistence wizard - Finished}
+         )));
+@@ -692,11 +703,18 @@ sub step_object_from_name {
+                 $self->create_persistence_partition({ @_ })
+             },
+             size_of_free_space          => $self->size_of_free_space,
+-            should_mount_persistence_partition =>
+-                0 < $self->grep_steps(sub { $_ eq 'configure' }),
+             mount_persistence_partition_cb => sub {
+                 $self->mount_persistence_partition({ @_ })
+             },
++            create_configuration_cb        => sub {
++                $self->save_configuration({ @_ });
++                my $asp_config_file = file(
++                    $self->persistence_partition_mountpoint,
++                    'live-additional-software.conf'
++                );
++                $asp_config_file->touch;
++                chmod 0600, $asp_config_file;
++            },
+         );
+     }
+     elsif ($name eq 'delete') {
+diff --git a/lib/Tails/Persistence/Step/Bootstrap.pm b/lib/Tails/Persistence/Step/Bootstrap.pm
+index 7a456ee..e35c986 100644
+--- a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
++++ b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
+@@ -40,7 +40,7 @@ has 'warning_area'    => lazy_build rw 'Gtk3::HBox';
+ has 'warning_image'   => lazy_build rw 'Gtk3::Image';
+ has 'size_of_free_space'      => required ro Int;
+ has 'mount_persistence_partition_cb' => required ro CodeRef;
+-has 'should_mount_persistence_partition' => required ro Bool;
++has 'create_configuration_cb' => required ro CodeRef;
+ 
+ 
+ =head1 CONSTRUCTORS
+@@ -278,34 +278,39 @@ sub operation_finished {
+         say STDERR "created ${created_device}.";
+         $self->working(0);
+ 
+-        if ($self->should_mount_persistence_partition) {
+-            $self->subtitle->set_text($self->encoding->decode(gettext(
+-                q{Mounting Tails persistence partition.}
+-            )));
+-            $self->description->set_text($self->encoding->decode(gettext(
+-                q{The Tails persistence partition will be mounted.}
+-            )));
+-            $self->working(1);
+-            systemx(qw{/sbin/udevadm settle});
+-            my $mountpoint = $self->mount_persistence_partition_cb->();
+-            $self->working(0);
+-            say STDERR "mounted persistence partition on $mountpoint";
+-
+-            $self->subtitle->set_text($self->encoding->decode(gettext(
+-                q{Correcting permissions of the persistent volume.}
+-            )));
+-            $self->description->set_text($self->encoding->decode(gettext(
+-                q{The permissions of the persistent volume will be corrected.}
+-            )));
+-            $self->working(1);
+-            systemx(qw{sudo -n /usr/bin/tails-fix-persistent-volume-permissions});
+-            $self->working(0);
+-            say STDERR "fixed permissions.";
+-
+-        }
+-        else {
+-            say STDERR "Should lock Luks device.";
+-        }
++        $self->subtitle->set_text($self->encoding->decode(gettext(
++            q{Mounting Tails persistence partition.}
++        )));
++        $self->description->set_text($self->encoding->decode(gettext(
++            q{The Tails persistence partition will be mounted.}
++        )));
++        $self->working(1);
++        systemx(qw{/sbin/udevadm settle});
++        my $mountpoint = $self->mount_persistence_partition_cb->();
++        $self->working(0);
++        say STDERR "mounted persistence partition on $mountpoint";
++
++        $self->subtitle->set_text($self->encoding->decode(gettext(
++            q{Correcting permissions of the persistent volume.}
++        )));
++        $self->description->set_text($self->encoding->decode(gettext(
++            q{The permissions of the persistent volume will be corrected.}
++        )));
++        $self->working(1);
++        systemx(qw{sudo -n /usr/bin/tails-fix-persistent-volume-permissions});
++        $self->working(0);
++        say STDERR "fixed permissions.";
++
++        $self->subtitle->set_text($self->encoding->decode(gettext(
++            q{Creating default persistence configuration.}
++        )));
++        $self->description->set_text($self->encoding->decode(gettext(
++            q{The default persistence configuration will be created.}
++        )));
++        $self->working(1);
++        $self->create_configuration_cb->();
++        $self->working(0);
++        say STDERR "created default persistence configuration.";
+ 
+         $self->success_callback->();
+     }
+diff --git a/lib/Tails/Persistence/Utils.pm b/lib/Tails/Persistence/Utils.pm
+index a58b02e..9b48304 100644
+--- a/usr/share/perl5/Tails/Persistence/Utils.pm
++++ b/usr/share/perl5/Tails/Persistence/Utils.pm
+@@ -94,6 +94,8 @@ sub check_config_file_permissions {
+     # ownership
+     foreach my $field (qw{uid gid}) {
+         my $actual_value = $st->$field;
++        croak("Expected value for '$field' is not defined")
++            unless defined $expected->{$field};
+         $actual_value eq $expected->{$field}
+             or croak("persistence.conf has unsafe $field: '$actual_value'");
+     }
