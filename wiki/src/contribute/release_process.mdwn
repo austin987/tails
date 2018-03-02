@@ -310,7 +310,11 @@ Update other base branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
-4. Push the modified branches to Git:
+4. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+   branch, the time-based APT repository snapshots that were used
+   during the freeze.
+
+5. Push the modified branches to Git:
 
         git push origin                          \
            "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
@@ -573,8 +577,11 @@ suite should be ready, so it is time to:
 1. <a id="reproducibility-sanity-check-iso"></a>
    Let's sanity check that Jenkins reproduced your image.
 
-   Find the job at
-   `https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/`
+   Visit the URL printed by this command:
+
+       echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
+
+   Find the job (probably the last one)
    and make sure the image built by Jenkins:
 
    - was built from the correct Git commit
@@ -1370,7 +1377,8 @@ this, and skip what does not make sense for a RC.
    `devel`
 1. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
    branch, the time-based APT repository snapshots that were used
-   during the freeze.
+   during the freeze. This should generally be a no-op but if there
+   was some hiccup earlier it could be needed.
 1. Follow the
    [[post-release|APT_repository/custom#workflow-post-release]]
    custom APT repository documentation. Make sure there are upgrade-description
