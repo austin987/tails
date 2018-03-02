@@ -415,14 +415,21 @@ To get a list of changes on the website:
         ':!wiki/src/news*' \
         ':!wiki/src/security*'
 
-Import the signing key
+Enable OpenPGP signing
 ======================
 
-Skip this part if you have a Tails signing subkey on an OpenPGPG
-smartcard, i.e. if you are one of the usual release managers. This is
-only relevant when the master key has been reassembled, e.g. for
-signing a Tails emergency release where none of the usual release
-managers are available.
+### If you have an OpenPGP smart card
+
+If you have an OpenPGP smart card (i.e. if you are one of the usual
+release managers) go fetch it. Remember to only plug it when needed! A
+pro tip is to never plug it unless prompted which `gpg` will do for
+you. Then just unplug it as soon as the `.sig` is done.
+
+### Otherwise: importing the signing key
+
+This is only relevant when the master key has been reassembled,
+e.g. for signing a Tails emergency release where none of the usual
+release managers are available.
 
 You should never import the Tails signing key into your own keyring,
 and a good practice is to import it to a tmpfs to limit the risks that
@@ -875,6 +882,28 @@ Update the ISO description file (IDF) used by the browser extension:
       git add wiki/src/install/v1/Tails/amd64/stable/latest.yml && \
       git commit -m "Update IDF file for Tails Verification." )
 
+Done with OpenPGP signing
+=========================
+
+By now you are done with Tails signing key, so please make sure it is
+not usable by your system any more.
+
+<div class="note">
+
+Beware! If your have to plug your OpenPGP smart card or reassemble the
+key again after this point it invalidates <i>everything</i> done for
+the [[reproduction of this release|test#reproducibility-final-check]]
+so it has to be started from the beginning:
+
+* the original text is restored on the pad, and
+* some tester follows it from scratch, and
+* the Trusted Reproducer follows awaits the new input from said tester
+  and then starts from scratch.
+
+So please try to avoid this!
+
+</div>
+
 Upload images
 =============
 
@@ -1000,6 +1029,7 @@ Testing
 1. Email <tails@boum.org> and potential contributors (see
    `manual_testers.mdwn` in the internal Git repository) that tests
    may start:
+   - make sure the Trusted Verifier is in the list of recipients
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
