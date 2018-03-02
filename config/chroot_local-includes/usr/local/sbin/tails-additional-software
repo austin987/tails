@@ -11,6 +11,7 @@ import sys
 import syslog
 
 import apt.cache
+import atomicwrites
 
 _ = gettext.gettext
 
@@ -313,7 +314,8 @@ def add_additional_packages(new_packages):
     # The list of packages was initially provided by apt after installing them,
     # so we don't check the names.
     packages += new_packages
-    with open(PACKAGES_LIST_FILE, 'w') as f:
+
+    with atomicwrites.atomic_write(PACKAGES_LIST_FILE, overwrite=True) as f:
         for package in sorted(packages):
             f.write(package + '\n')
 
