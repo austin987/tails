@@ -293,10 +293,8 @@ def add_additional_packages(new_packages):
     packages = get_additional_packages()
     # The list of packages was initially provided by apt after installing them,
     # so we don't check the names.
-    if packages:
-        packages += new_packages
-    else:
-        packages = list(new_packages)
+    # XXX make unique
+    packages += new_packages
     packages.sort()
     with open(PACKAGES_LIST_FILE, 'w') as f:
         for package in packages:
