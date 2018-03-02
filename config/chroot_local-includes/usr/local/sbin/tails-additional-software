@@ -65,6 +65,16 @@ def _launch_apt_get(specific_args):
     return apt_get.returncode
 
 
+def _launch_persistence_setup(*args):
+    """Launch tails-persistence-setup and wait for its completion."""
+    display = os.environ["DISPLAY"]
+    args = ["sudo", "-u",
+            "DISPLAY=" + display,
+            "tails-persistence-setup"
+            ] + args
+    subprocess.run(args, check=True)
+
+
 def _notify(title, body="", accept_label="", deny_label="",
             documentation_target="", urgent=False, return_id=False):
     """Display a notification to the user of the live system.
@@ -249,11 +259,8 @@ def handle_installed_packages(packages):
                    _("Add to Persistent Storage"),
                    _("Install only once"),
                    urgent=True):
-            if has_additional_packages_list():
-                add_additional_packages(packages)
-            else:
-                setup_additional_packages()
-                add_additional_packages(packages)
+            setup_additional_packages()
+            add_additional_packages(packages)
     elif has_persistence():
         # When a package is installed with a persistent storage locked, don't
         # show any notification.
@@ -344,7 +351,10 @@ def remove_additional_packages(packages):
 
 def setup_additional_packages():
     """Enable additional software in persistence."""
-    raise NotImplementedError
+    _launch_persistence_setup("--no-gui",
+                              "--no-display-finished-message",
+                              "--force-enable-preset", "APT Packages",
+                              "--force-enable-preset", "APT Lists")
 
 
 def create_persistence_and_setup_additional_packages(packages):
@@ -355,7 +365,14 @@ def create_persistence_and_setup_additional_packages(packages):
 
     packages should be a list of packages names.
     """
-    raise NotImplementedError
+    # create persistence
+    _launch_persistence_setup("--no-gui",
+                              "--no-display-finished-message",
+                              "--force-enable-preset", "APT Packages",
+                              "--force-enable-preset", "APT Lists")
+    add_additional_packages(packages)
+    # show persistence configuration
+    _launch_persistence_setup()
 
 
 def show_configuration_window():
