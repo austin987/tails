@@ -1,3 +1,4 @@
+# coding: utf-8
 When /^I start the Unsafe Browser(?: through the GNOME menu)?$/ do
   step "I start \"Unsafe Browser\" via GNOME Activities Overview"
 end
@@ -212,4 +213,17 @@ Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   headers = page.children(roleName: "heading")
   found = headers.any? { |heading| heading.text == error }
   raise "Could not find the '#{error}' error in the Tor Browser" unless found
+end
+
+# This step shouldn't be needed (the '"$title}" has loaded in the Tor
+# Browser' step should be enough), but since we run Dogtail with
+# python2 (#12185) we have terrible unicode support; for instance
+# `.child('Tails - Getting started…')` will fail since Dogtail expects
+# ascii and cannot decode "…".
+Then /^the Tor Browser opens the Getting started page$/ do
+  try_for(60) do
+    @torbrowser
+      .children(roleName: "document frame")
+      .any? { |f| f.name == 'Tails - Getting started…' }
+  end
 end
