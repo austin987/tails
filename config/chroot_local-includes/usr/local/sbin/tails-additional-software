@@ -184,13 +184,13 @@ def has_additional_packages_list():
 
 def get_additional_packages():
     """Return the list of all additional packages configured."""
-    packages = []
+    packages = set()
     if has_additional_packages_list():
         with open(PACKAGES_LIST_FILE) as f:
             for line in f:
                 line = line.strip()
                 if line:
-                    packages.append(line)
+                    packages.add(line)
     return packages
 
 
@@ -312,11 +312,9 @@ def add_additional_packages(new_packages):
     packages = get_additional_packages()
     # The list of packages was initially provided by apt after installing them,
     # so we don't check the names.
-    # XXX make unique
     packages += new_packages
-    packages.sort()
     with open(PACKAGES_LIST_FILE, 'w') as f:
-        for package in packages:
+        for package in sorted(packages):
             f.write(package + '\n')
 
 
