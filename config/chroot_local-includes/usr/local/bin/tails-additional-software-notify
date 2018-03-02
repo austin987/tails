@@ -3,6 +3,7 @@
 import gettext
 import os
 import os.path
+import subprocess
 import sys
 
 import gi
@@ -19,7 +20,7 @@ class ASPNotifier(object):
     """Display a notification and exit with a meaningful code."""
 
     def __init__(self, title, body, accept_label=None, deny_label=None,
-                 urgent=False):
+                 documentation_target=None, urgent=False):
         """Shows a notification with two optional action buttons.
 
         If there are no buttons, exit straight away with a meaningful code.
@@ -32,6 +33,10 @@ class ASPNotifier(object):
                 title, body, icon="package-x-generic")
         if urgent:
             self.notification.set_urgency(Notify.Urgency.CRITICAL)
+        if documentation_target:
+            self.notification.add_action("documentation", deny_label,
+                                         self.cb_notification_clicked,
+                                         documentation_target)
         if deny_label:
             self.notification.add_action("deny", deny_label,
                                          self.cb_notification_clicked, None)
@@ -50,6 +55,8 @@ class ASPNotifier(object):
             sys.exit(0)
         elif action == "deny":
             sys.exit(3)
+        elif action == "documentation":
+            subprocess.run("tails-documentation", user_data)
 
     def cb_notification_closed(self, notification):
         """Exit the program with a meaningful code on notification close."""
@@ -62,7 +69,7 @@ def print_help():
     program_name = os.path.basename(sys.argv[0])
     sys.stderr.write(
         "Usage: %s <summary> <body> [<accept_label> [<deny_label> "
-        "[<urgent>]]]\n" % program_name)
+        "[documentation_target [<urgent>]]]]\n" % program_name)
     sys.stderr.write(
         "Shows a notification with <summary>, <body> and two optional "
         "buttons.\n"
