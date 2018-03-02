@@ -202,4 +202,20 @@ IPC between `tails-additional-software` (root backend) and `tails-additional-sof
 
 IPC between `tails-additional-software` and `tails-persistence-setup` carries "Persistence-setup, please setup persistence with ASP" and "ASP, you can go on". It could be done the same way, but it may be worth having a persistence-setup DBus service on the system bus (which we already though when considering integrating it in the greeter).
 
+ - allow programmatically activating the ASP persistence
+   feature when a persistent volume is unlocked:
+
+           /usr/bin/tails-persistence-setup --no-gui \
+              --no-display-finished-message \
+              --force-enable-preset 'APT Packages' \
+              --force-enable-preset 'APT Lists'
+
+ - allow triggering persistence creation and then activate a feature
+   (ASP) programmatically:
+
+           /usr/bin/tails-persistence-setup --step bootstrap \
+              --no-display-finished-message \
+              --force-enable-preset 'APT Packages' \
+              --force-enable-preset 'APT Lists'`
+
 IPC between `tails-additional-software-configuration` (user session configuration interface) and `tails-additional-software` carries the list entries to remove from ASP. It may be done via `sudo` or via DBus system service, but I don't think it's worth it.
