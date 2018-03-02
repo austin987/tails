@@ -66,7 +66,18 @@ def _launch_apt_get(specific_args):
 
 def _notify(title, body="", accept_label="", deny_label="", urgent=False,
             return_id=False):
-    """Display a notification to the user of the live system."""
+    """Display a notification to the user of the live system.
+
+    The notification will show title and body. If accept_label or deny_label
+    are set, they will be shown on action buttons and the method will wait for
+    user input and return True if the button with accept_label was clicked or
+    False if the button with deny_label was clicked.
+
+    If return_id is true, returns the notification ID, which may be used to
+    close the notification.
+
+    Else, return None.
+    """
 
     cmd = "/usr/local/bin/tails-additional-software-notify"
     if urgent:
@@ -78,28 +89,30 @@ def _notify(title, body="", accept_label="", deny_label="", urgent=False,
         completed_process = subprocess.run(["sudo", "-u", LIVE_USERNAME, cmd,
                                             title, body, accept_label,
                                             deny_label, urgent],
-                                           stdout=subprocess.PIPE)
-
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE,
+                                           encoding="utf-8")
+        if completed_process.returncode == 1:
+            # sudo failed to execute the command
+            raise OSError(completed_process.stderr)
     except OSError as e:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: unable to notify the user. %s" % e)
         syslog.syslog(syslog.LOG_WARNING,
                       "The notification was: %s %s" % (title, body))
-        raise
+        return None
 
     if return_id:
-        for line in completed_process.stdout.decode().splitlines():
+        for line in completed_process.stdout.splitlines():
             if line.startswith("id="):
                 return line[3:]
     else:
         if completed_process.returncode == 0:
             return True
-        elif completed_process.returncode == 1:
-            return False
         elif completed_process.returncode == 3:
-            return None
+            return False
         else:
-            raise OSError()
+            return None
 
 
 def _notify_failure(summary, details):
