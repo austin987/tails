@@ -1,59 +1,731 @@
-diff --git a/lib/Tails/Persistence/Configuration.pm b/lib/Tails/Persistence/Configuration.pm
-index 9719481..da71c02 100644
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration.pm b/usr/share/perl5/Tails/Persistence/Configuration.pm
+index 9719481..959306d 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration.pm
-@@ -36,6 +36,9 @@ has 'file' =>
-     lazy_build rw 'Tails::Persistence::Configuration::File';
- has 'presets' =>
-     lazy_build rw 'Tails::Persistence::Configuration::Presets';
-+has 'force_enable_presets' =>
-+    ro 'ArrayRef[Str]',
-+    default => sub { [] };
- has 'atoms' =>
-     lazy_build rw 'ArrayRef[Tails::Persistence::Configuration::Atom]',
-     traits  => [ 'Array' ],
-@@ -77,6 +80,7 @@ method lines_not_in_presets {
- method merge_file_with_presets {
+@@ -5,61 +5,83 @@ Tails::Persistence::Configuration - manage live-persistence.conf and presets
+ =cut
+ 
+ package Tails::Persistence::Configuration;
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Types::Path::Class;
+-use MooseX::Has::Sugar::Saccharin;
+-
+-
++use Moo;
++use MooX::late;
++use MooX::HandlesVia;
+ 
+ use autodie qw(:all);
+ use warnings FATAL => 'all';
+ use Carp;
+ 
+ use Tails::Persistence::Configuration::Atom;
+-use Tails::Persistence::Configuration::File;
++use Tails::Persistence::Configuration::ConfigFile;
+ use Tails::Persistence::Configuration::Presets;
++use Types::Path::Tiny qw{AbsPath};
+ 
+ use Locale::gettext;
+ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'config_file_path' => lazy_build rw 'Path::Class::File';
+-has 'file' =>
+-    lazy_build rw 'Tails::Persistence::Configuration::File';
+-has 'presets' =>
+-    lazy_build rw 'Tails::Persistence::Configuration::Presets';
+-has 'atoms' =>
+-    lazy_build rw 'ArrayRef[Tails::Persistence::Configuration::Atom]',
+-    traits  => [ 'Array' ],
+-    handles => {
++has 'config_file_path' => (
++    isa      => AbsPath,
++    is       => 'rw',
++    coerce   => AbsPath->coercion,
++);
++
++has 'file' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Tails::Persistence::Configuration::ConfigFile',
++);
++has 'presets' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Tails::Persistence::Configuration::Presets',
++);
++has 'force_enable_presets' => (
++    is      => 'ro',
++    isa     => 'ArrayRef[Str]',
++    default => sub { [] },
++);
++has 'atoms' => (
++    lazy_build => 1,
++    is            => 'rw',
++    isa           => 'ArrayRef[Tails::Persistence::Configuration::Atom]',
++    handles_via   => 'Array',
++    handles       => {
+         all_atoms => 'elements',
+-        push_atom  => 'push',
+-    };
++        push_atom => 'push',
++    },
++);
+ 
+ 
+ =head1 CONSTRUCTORS
+ 
+ =cut
+ 
+-method _build_file {
+-    Tails::Persistence::Configuration::File->new(
+-        path => $self->config_file_path
++sub _build_file {
++    my $self = shift;
++    my $file = Tails::Persistence::Configuration::ConfigFile->new(
++        config_file_path => $self->config_file_path
+     );
++    return $file;
+ }
+ 
+-method _build_presets {
++sub _build_presets {
++    my $self = shift;
+     Tails::Persistence::Configuration::Presets->new();
+ }
+ 
+-method _build_atoms {
++sub _build_atoms {
++    my $self = shift;
+     return $self->merge_file_with_presets($self->file, $self->presets);
+ }
+ 
+@@ -67,16 +89,19 @@ method _build_atoms {
+ 
+ =cut
+ 
+-method lines_not_in_presets {
++sub lines_not_in_presets {
++    my $self = shift;
+     grep {
+         my $line = $_;
+         ! grep { $_->equals_line($line) } $self->presets->all
+     } $self->file->all_lines;
+ }
+ 
+-method merge_file_with_presets {
++sub merge_file_with_presets {
++    my $self = shift;
      # Modifying and returning clones of the presets atoms would be a bit cleaner.
      $self->presets->set_state_from_lines($self->file->all_lines);
 +    $self->presets->set_state_from_overrides($self->force_enable_presets);
  
      [
          $self->presets->all,
-diff --git a/lib/Tails/Persistence/Configuration/Atom.pm b/lib/Tails/Persistence/Configuration/Atom.pm
-index 768b2c5..d8e3283 100644
+@@ -89,11 +114,13 @@ method merge_file_with_presets {
+     ];
+ }
+ 
+-method all_enabled_atoms {
++sub all_enabled_atoms {
++    my $self = shift;
+     grep { $_->enabled } $self->all_atoms;
+ }
+ 
+-method all_enabled_lines {
++sub all_enabled_lines {
++    my $self = shift;
+     map {
+         Tails::Persistence::Configuration::Line->new(
+             destination => $_->destination,
+@@ -102,10 +129,11 @@ method all_enabled_lines {
+     } $self->all_enabled_atoms;
+ }
+ 
+-method save {
++sub save {
++    my $self = shift;
+     $self->file->lines([ $self->all_enabled_lines ]);
+     $self->file->save;
+ }
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm b/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
+index 768b2c5..a70a89c 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
-@@ -31,6 +31,7 @@ textdomain("tails-persistence-setup");
+@@ -5,12 +5,8 @@ Tails::Persistence::Configuration::Atom - a GUI-friendly configuration line
  =cut
  
- has 'enabled'     => required rw Bool;
-+has 'id'          => lazy_build rw Str;
- has 'name'        => lazy_build rw Str;
- has 'description' => lazy_build rw Str;
- has 'icon_name'     => lazy_build rw Str;
-@@ -52,6 +53,8 @@ sub new_from_line {
+ package Tails::Persistence::Configuration::Atom;
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+-
++use Moo;
++use MooX::late;
+ 
+ with 'Tails::Persistence::Role::ConfigurationLine';
+ with 'Tails::Role::HasEncoding';
+@@ -25,15 +21,26 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'enabled'     => required rw Bool;
+-has 'name'        => lazy_build rw Str;
+-has 'description' => lazy_build rw Str;
+-has 'icon_name'     => lazy_build rw Str;
++has 'enabled' => (
++    required => 1,
++    is       => 'rw',
++    isa      => 'Bool',
++);
++
++for my $attr (qw{id name description icon_name}) {
++    has $attr => (
++        lazy_build => 1,
++        is         => 'rw',
++        isa        => 'Str',
++    );
++}
+ 
+ 
+ =head1 CONSTRUCTORS
+@@ -52,13 +59,25 @@ sub new_from_line {
      );
  }
  
-+method _build_id { 'Custom'; }
+-method _build_name { $self->encoding->decode(gettext('Custom')); }
++sub _build_id {
++    my $self = shift;
++    'Custom';
++}
 +
- method _build_name { $self->encoding->decode(gettext('Custom')); }
++sub _build_name {
++    my $self = shift;
++    $self->encoding->decode(gettext('Custom'));
++}
  
- method _build_description {
-diff --git a/lib/Tails/Persistence/Configuration/Presets.pm b/lib/Tails/Persistence/Configuration/Presets.pm
-index 1a01326..f296808 100644
+-method _build_description {
++sub _build_description {
++    my $self = shift;
+     $self->encoding->decode($self->destination);
+ }
+ 
+-method _build_icon_name { 'dialog-question' }
++sub _build_icon_name {
++    my $self = shift;
++    'dialog-question'
++}
+ 
+ 
+ =head1 METHODS
+@@ -66,7 +85,9 @@ method _build_icon_name { 'dialog-question' }
+ =cut
+ 
+ 
+-method equals_line ($line) {
++sub equals_line {
++    my $self = shift;
++    my $line = shift;
+     $self->destination eq $line->destination
+         and
+     $self->options_are($line->all_options);
+@@ -85,5 +106,5 @@ sub options_are {
+     } @expected, @options;
+ }
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Button.pm b/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
+index 3540544..ee7f903 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
+@@ -5,56 +5,85 @@ Tails::Persistence::Configuration::Button - a configuration button in the GUI
+ =cut
+ 
+ package Tails::Persistence::Configuration::Button;
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+-
+ 
+ use autodie qw(:all);
+ use warnings FATAL => 'all';
+ use Glib qw{TRUE FALSE};
+ use Pango;
+ 
++use Moo;
++use MooX::late;
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'atom'         => lazy_build ro 'Tails::Persistence::Configuration::Atom',
+-    handles => [
++has 'atom' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Tails::Persistence::Configuration::Atom',
++    handles    => [
+         qw{source destination all_options enabled name description icon_name}
+-    ];
+-has 'icon'         => lazy_build ro 'Gtk3::Image';
+-has 'checked_img'  => lazy_build ro 'Gtk3::Image';
+-has 'main_widget'  => lazy_build ro 'Gtk3::ToggleButton',
+-    handles => {
++    ],
++);
++has 'icon' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Image',
++);
++has 'checked_img'  => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Image',
++);
++has 'main_widget' => (
++    lazy_build     => 1,
++    is             => 'ro',
++    isa            => 'Gtk3::ToggleButton',
++    handles        => {
+         is_active  => 'get_active',
+         set_active => 'set_active',
+-    };
+-has 'icon_theme' => ro 'Gtk3::IconTheme', builder '_build_icon_theme';
+-has 'title_label'  => lazy_build ro 'Gtk3::Label';
+-has 'description_label' => lazy_build ro 'Gtk3::Label';
++    },
++);
++has 'icon_theme' => (
++    is      => 'ro',
++    isa     => 'Gtk3::IconTheme',
++    builder => '_build_icon_theme',
++);
++has 'title_label' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Label',
++);
++has 'description_label' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Label',
++);
+ 
+ 
+ =head1 CONSTRUCTORS
+ 
+ =cut
+ 
+-method _build_icon {
++sub _build_icon {
++    my $self = shift;
+     Gtk3::Image->new_from_pixbuf($self->icon_theme->load_icon(
+         $self->icon_name, 48, 'use-builtin'
+     ));
+ }
+ 
+-method _build_checked_img {
++sub _build_checked_img {
++    my $self = shift;
+     # FIXME: we want the GTK_ICON_SIZE_SMALL_TOOLBAR
+     # member of the GtkIconSize enum, not a magic "16" number here.
+     Gtk3::Image->new_from_stock('gtk-apply', 16);
+ }
+ 
+-method _build_main_widget {
++sub _build_main_widget {
++    my $self = shift;
+     my $line = shift;
+ 
+     my $vbox = Gtk3::VBox->new();
+@@ -77,7 +106,8 @@ method _build_main_widget {
+     return $button;
+ }
+ 
+-method _build_icon_theme {
++sub _build_icon_theme {
++    my $self = shift;
+     my $theme = Gtk3::IconTheme::get_default();
+ 
+     $theme->append_search_path('/usr/share/pixmaps/cryptui/48x48');
+@@ -88,7 +118,8 @@ method _build_icon_theme {
+     return $theme;
+  }
+ 
+-method _build_title_label {
++sub _build_title_label {
++    my $self = shift;
+     my $title = Gtk3::Label->new($self->name);
+     $title->set_alignment(0.0, 0.5);
+     my $title_attrlist  = Pango::AttrList->new;
+@@ -99,7 +130,8 @@ method _build_title_label {
+     return $title;
+ }
+ 
+-method _build_description_label {
++sub _build_description_label {
++    my $self = shift;
+     my $description = Gtk3::Label->new($self->description);
+     $description->set_alignment(0.0, 0.5);
+     my $description_attrlist = Pango::AttrList->new;
+@@ -119,17 +151,20 @@ method _build_description_label {
+ 
+ =cut
+ 
+-method toggled_cb {
++sub toggled_cb {
++    my $self = shift;
+     $self->atom->enabled($self->is_active);
+     $self->refresh_display;
+ }
+ 
+-method refresh_display {
++sub refresh_display {
++    my $self = shift;
+     $self->refresh_checked_img;
+     $self->refresh_text_color;
+ }
+ 
+-method refresh_checked_img {
++sub refresh_checked_img {
++    my $self = shift;
+     if ($self->enabled) {
+         $self->checked_img->show;
+     }
+@@ -138,7 +173,8 @@ method refresh_checked_img {
+     }
+ }
+ 
+-method refresh_text_color {
++sub refresh_text_color {
++    my $self = shift;
+     my %color = $self->enabled ?
+         (
+             title       => 0,
+@@ -159,5 +195,5 @@ method refresh_text_color {
+     $self->description_label->set_attributes($attrlist);
+ }
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
+new file mode 100644
+index 0000000..de744e9
+--- /dev/null
++++ b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
+@@ -0,0 +1,98 @@
++=head1 NAME
++
++Tails::Persistence::Configuration::ConfigFile - read, parse and write live-persistence.conf
++
++=cut
++
++package Tails::Persistence::Configuration::ConfigFile;
++use Moo;
++use MooX::late;
++use MooX::HandlesVia;
++
++use autodie qw(:all);
++use warnings FATAL => 'all';
++use Carp;
++use Tails::Persistence::Configuration::Line;
++use Types::Path::Tiny qw{AbsPath};
++
++use namespace::clean;
++
++
++=head1 ATTRIBUTES
++
++=cut
++
++has 'config_file_path' => (
++    isa      => AbsPath,
++    is       => 'ro',
++    coerce   => AbsPath->coercion,
++    required => 1,
++);
++
++has 'lines' => (
++    lazy_build    => 1,
++    is            => 'rw',
++    isa           => 'ArrayRef[Tails::Persistence::Configuration::Line]',
++    handles_via   => [ 'Array' ],
++    handles       => {
++        all_lines => 'elements',
++    },
++);
++
++
++=head1 CONSTRUCTORS
++
++=cut
++
++sub BUILD {
++    my $self = shift;
++
++    $self->config_file_path->touch;
++}
++
++sub _build_lines {
++    my $self = shift;
++    return [
++        grep { defined $_ } map {
++            Tails::Persistence::Configuration::Line->new_from_string($_)
++        } $self->config_file_path->lines({chomp => 1})
++    ];
++}
++
++
++=head1 METHODS
++
++=cut
++
++=head2 output
++
++Returns the in-memory configuration, as a string in the live-persistence.conf format.
++
++=cut
++sub output {
++    my $self = shift;
++    my $out = "";
++    foreach ($self->all_lines) {
++        $out .= $_->stringify . "\n";
++    }
++    return $out;
++}
++
++=head2 save
++
++Save the in-memory configuration to disk.
++Throw exception on error.
++
++=cut
++sub save {
++    my $self = shift;
++    my $output = $self->output;
++    my $fh = $self->config_file_path->openw();
++    print $fh $output;
++    $fh->sync;
++    close $fh;
++    $self->config_file_path->chmod(0600);
++}
++
++no Moo;
++1;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/File.pm b/usr/share/perl5/Tails/Persistence/Configuration/File.pm
+deleted file mode 100644
+index aa76c16..0000000
+--- a/usr/share/perl5/Tails/Persistence/Configuration/File.pm
++++ /dev/null
+@@ -1,94 +0,0 @@
+-=head1 NAME
+-
+-Tails::Persistence::Configuration::File - read, parse and write live-persistence.conf
+-
+-=cut
+-
+-package Tails::Persistence::Configuration::File;
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Types::Path::Class;
+-use MooseX::Has::Sugar::Saccharin;
+-
+-
+-
+-use autodie qw(:all);
+-use warnings FATAL => 'all';
+-use Carp;
+-use Path::Class;
+-use Tails::Persistence::Configuration::Line;
+-
+-
+-=head1 ATTRIBUTES
+-
+-=cut
+-
+-has 'path' => (
+-    isa        => 'Path::Class::File',
+-    is         => 'ro',
+-    coerce     => 1,
+-    required   => 1,
+-);
+-
+-has 'lines' =>
+-    lazy_build rw 'ArrayRef[Tails::Persistence::Configuration::Line]',
+-    traits  => [ 'Array' ],
+-    handles => {
+-        all_lines => 'elements',
+-    };
+-
+-
+-=head1 CONSTRUCTORS
+-
+-=cut
+-
+-sub BUILD {
+-    my $self = shift;
+-
+-    $self->path->touch;
+-}
+-
+-method _build_lines {
+-    return [
+-        grep { defined $_ } map {
+-            Tails::Persistence::Configuration::Line->new_from_string($_)
+-        } $self->path->slurp(chomp => 1)
+-    ];
+-}
+-
+-
+-=head1 METHODS
+-
+-=cut
+-
+-=head2 output
+-
+-Returns the in-memory configuration, as a string in the live-persistence.conf format.
+-
+-=cut
+-method output {
+-    my $out = "";
+-    foreach ($self->all_lines) {
+-        $out .= $_->stringify . "\n";
+-    }
+-    return $out;
+-}
+-
+-=head2 save
+-
+-Save the in-memory configuration to disk.
+-Throw exception on error.
+-
+-=cut
+-method save {
+-    my $output = $self->output;
+-    my $fh = $self->path->openw();
+-    print $fh $output;
+-    $fh->sync;
+-    close $fh;
+-    chmod 0600, $self->path;
+-}
+-
+-no Moose;
+-1;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Line.pm b/usr/share/perl5/Tails/Persistence/Configuration/Line.pm
+index f3fd304..7b4da43 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/Line.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Line.pm
+@@ -6,10 +6,10 @@ Tails::Persistence::Configuration::Line - read, parse and write live-persistence
+ 
+ package Tails::Persistence::Configuration::Line;
+ 
+-use Moose;
++use Moo;
+ with 'Tails::Persistence::Role::ConfigurationLine';
+ 
++use namespace::clean;
+ 
+-
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
+index 1a01326..f6ef7e4 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
-@@ -45,6 +45,7 @@ has '_presets' =>
- method _build__presets {
+@@ -5,12 +5,10 @@ Tails::Persistence::Configuration::Presets - available configuration snippets
+ =cut
+ 
+ package Tails::Persistence::Configuration::Presets;
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+ 
++use Moo;
++use MooX::HandlesVia;
++use MooX::late;
+ 
+ with 'Tails::Role::HasEncoding';
+ 
+@@ -24,27 +22,34 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has '_presets' =>
+-    lazy_build ro 'ArrayRef[Tails::Persistence::Configuration::Atom]',
+-    traits  => [ 'Array' ],
+-    handles => {
+-        count => 'count',
+-        all   => 'elements',
+-    };
++has '_presets' => (
++    is          => 'rw',
++    isa         => 'ArrayRef[Tails::Persistence::Configuration::Atom]',
++    handles_via => 'Array',
++    handles     => {
++        count   => 'count',
++        all     => 'elements',
++    },
++    default => sub { my $self = shift; $self->_build__presets },
++);
+ 
+ 
+ =head1 CONSTRUCTORS
+ 
+ =cut
+ 
+-method _build__presets {
++sub _build__presets {
++    my $self = shift;
      my @presets = (
          {
 +            id          => 'Personal Data',
              name        => $self->encoding->decode(gettext(q{Personal Data})),
              description => $self->encoding->decode(gettext(
                  q{Keep files stored in the `Persistent' directory}
-@@ -55,86 +56,84 @@ method _build__presets {
+@@ -55,86 +60,84 @@ method _build__presets {
              icon_name   => 'stock_folder',
          },
          {
@@ -183,7 +855,7 @@ index 1a01326..f296808 100644
              name        => $self->encoding->decode(gettext(q{Bitcoin client})),
              description => $self->encoding->decode(gettext(
                  q{Electrum's bitcoin wallet and configuration}
-@@ -145,26 +144,29 @@ method _build__presets {
+@@ -145,26 +148,29 @@ method _build__presets {
              icon_name   => 'electrum',
          },
          {
@@ -223,10 +895,11 @@ index 1a01326..f296808 100644
              name        => $self->encoding->decode(gettext(q{Dotfiles})),
              description => $self->encoding->decode(gettext(
                  q{Symlink into $HOME every file or directory found in the `dotfiles' directory}
-@@ -195,5 +197,14 @@ sub set_state_from_lines {
+@@ -195,5 +201,14 @@ sub set_state_from_lines {
      }
  }
  
+-no Moose;
 +sub set_state_from_overrides {
 +    my $self = shift;
 +    my $overrides = shift;
@@ -236,13 +909,401 @@ index 1a01326..f296808 100644
 +    }
 +}
 +
- no Moose;
++no Moo;
  1;
-diff --git a/lib/Tails/Persistence/Setup.pm b/lib/Tails/Persistence/Setup.pm
-index d6c0ba2..d7b0414 100644
+diff --git a/usr/share/perl5/Tails/Persistence/Constants.pm b/usr/share/perl5/Tails/Persistence/Constants.pm
+index 8bdb541..9e61aff 100644
+--- a/usr/share/perl5/Tails/Persistence/Constants.pm
++++ b/usr/share/perl5/Tails/Persistence/Constants.pm
+@@ -1,52 +1,82 @@
+ package Tails::Persistence::Constants;
+-use Moose;
+-use MooseX::Has::Sugar::Saccharin;
+-use MooseX::Types::Moose qw{:all};
+-use MooseX::Types::Path::Class;
++use Moo;
++use MooX::late;
++use Types::Path::Tiny qw{Dir AbsPath};
+ 
+ use autodie qw(:all);
+ use English qw{-no_match_vars};
+-use Method::Signatures::Simple;
++
++use namespace::clean;
+ 
+ 
+ =head1 Attributes
+ 
+ =cut
+ for (qw{partition_label partition_guid filesystem_type filesystem_label}) {
+-    has "persistence_$_" => lazy_build ro Str;
++    has "persistence_$_" => (
++        lazy_build => 1,
++        is         => 'ro',
++        isa        => 'Str',
++    );
+ }
+ 
+-has "persistence_minimum_size"       => lazy_build ro Int;
++has "persistence_minimum_size"       => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Int',
++);
+ 
+-has 'persistence_filesystem_options' => lazy_build ro 'HashRef[Str]';
++has 'persistence_filesystem_options' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'HashRef[Str]',
++);
+ 
+-has 'persistence_state_file'         =>
+-    isa        => 'Path::Class::File',
++has 'persistence_state_file'         => (
++    isa        => AbsPath,
+     is         => 'ro',
+     lazy_build => 1,
+-    coerce     => 1,
+-    documentation => q{File where tails-greeter writes persistence state.};
++    coerce     => AbsPath->coercion,
++    documentation => q{File where tails-greeter writes persistence state.},
++);
+ 
+ 
+ =head1 Constructors
+ 
+ =cut
+-method _build_persistence_partition_label  { 'TailsData'  }
+-method _build_persistence_minimum_size     { 64 * 2 ** 20 }
+-method _build_persistence_filesystem_type  { 'ext4'       }
+-method _build_persistence_filesystem_label { 'TailsData'  }
++sub _build_persistence_partition_label {
++    my $self = shift;
++    'TailsData'
++}
++sub _build_persistence_minimum_size {
++    my $self = shift;
++    64 * 2 ** 20
++}
++sub _build_persistence_filesystem_type {
++    my $self = shift;
++    'ext4'
++}
++sub _build_persistence_filesystem_label {
++    my $self = shift;
++    'TailsData'
++}
+ 
+-method _build_persistence_filesystem_options {
++sub _build_persistence_filesystem_options {
++    my $self = shift;
+     {
+         label => $self->persistence_filesystem_label,
+     };
+ }
+ 
+-method _build_persistence_partition_guid  {
++sub _build_persistence_partition_guid  {
++    my $self = shift;
+     '8DA63339-0007-60C0-C436-083AC8230908' # Linux reserved
+ }
+ 
+-method _build_persistence_state_file { '/var/lib/live/config/tails.persistence' }
++sub _build_persistence_state_file {
++    my $self = shift;
++    '/var/lib/live/config/tails.persistence'
++}
+ 
+-no Moose;
++no Moo;
+ 1; # End of Tails::Persistence::Constants
+diff --git a/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm b/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm
+index 4222c8a..7b43b62 100644
+--- a/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm
++++ b/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm
+@@ -5,40 +5,50 @@ Tails::Persistence::Role::ConfigurationLine - live-persistence.conf data structu
+ =cut
+ 
+ package Tails::Persistence::Role::ConfigurationLine;
+-use Moose::Role;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Types::Path::Class;
+-use MooseX::Has::Sugar::Saccharin;
+-
+-
+ 
+ use autodie qw(:all);
+ use warnings FATAL => 'all';
+ use Carp;
+ 
++use Moo::Role; # Moo::Role exports all methods declared after it's "use"'d
++use MooX::late;
++use MooX::HandlesVia;
++
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'destination' => lazy_build ro Str;
+-has 'options' =>
+-    lazy_build ro 'ArrayRef[Str]',
+-    traits    => [ 'Array' ],
+-    handles   => {
++has 'destination' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Str',
++);
++
++has 'options' => (
++    lazy_build        => 1,
++    is                => 'ro',
++    isa               => 'ArrayRef[Str]',
++    handles_via       => 'Array',
++    handles           => {
+         count_options => 'count',
+         all_options   => 'elements',
+         join_options  => 'join',
+         grep_options  => 'grep',
+-    };
++    }
++);
+ 
+ 
+ =head1 CONSTRUCTORS
+ 
+ =cut
+ 
+-method _build_options     { return [] }
++sub _build_options {
++    my $self = shift;
++    return []
++}
+ 
+ 
+ =head2 new_from_string
+@@ -84,7 +94,8 @@ as a string in the live-persistence.conf format,
+ with no trailing newline.
+ 
+ =cut
+-method stringify {
++sub stringify {
++    my $self = shift;
+     my $out = $self->destination;
+     if ($self->count_options) {
+         $out .= "\t" . $self->join_options(',');
+@@ -92,5 +103,5 @@ method stringify {
+     return $out;
+ }
+ 
+-no Moose;
++no Moo::Role;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm b/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm
+index ff42a6f..d8500b5 100644
+--- a/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm
++++ b/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm
+@@ -5,12 +5,12 @@ Tails::Persistence::Role::HasStatusArea - status area interface
+ =cut
+ 
+ package Tails::Persistence::Role::HasStatusArea;
+-use Moose::Role;
+-
+-
++use Moo::Role;
+ 
+ requires 'status_area';
+ requires 'working';
+ 
+-no Moose 'Role';
++use namespace::clean;
++
++no Moo::Role;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm b/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
+index adca738..d1d4980 100644
+--- a/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
++++ b/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
+@@ -5,17 +5,9 @@ Tails::Persistence::Role::SetupStep - role for persistence setup steps
+ =cut
+ 
+ package Tails::Persistence::Role::SetupStep;
+-use Moose::Role;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+-
+-
+-with 'Tails::Role::HasEncoding';
+-with 'Tails::Persistence::Role::HasStatusArea';
+ 
+ use 5.10.0;
+-use namespace::autoclean;
++use strict;
+ use autodie qw(:all);
+ 
+ use Glib qw{TRUE FALSE};
+@@ -26,6 +18,13 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++use Moo::Role;
++use MooX::late;
++use namespace::clean;
++
++with 'Tails::Role::HasEncoding';
++with 'Tails::Persistence::Role::HasStatusArea';
++
+ requires '_build_main_box';
+ requires 'go_button_pressed';
+ 
+@@ -34,21 +33,45 @@ requires 'go_button_pressed';
+ 
+ =cut
+ 
+-has 'name' => required ro Str;
++has 'name' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'Str',
++);
+ 
+-has 'main_box' => lazy_build rw 'Gtk3::VBox';
++has 'main_box' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::VBox',
++);
+ 
+ foreach (qw{title subtitle description}) {
+-    has $_ => lazy_build rw 'Gtk3::Label';
++    has $_ => (
++        lazy_build => 1,
++        is         => 'rw',
++        isa        => 'Gtk3::Label',
++    );
+ }
+ 
+-has 'go_button'   => lazy_build rw 'Gtk3::Button';
++has 'go_button'   => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::Button',
++);
+ foreach (qw{go_callback success_callback}) {
+-    has $_ => required ro CodeRef;
++    has $_ => (
++        required => 1,
++        is       => 'ro',
++        isa      => 'CodeRef',
++    );
+ }
+ 
+ foreach (qw{drive_vendor drive_model}) {
+-    has $_ => required ro Str;
++    has $_ => (
++        required => 1,
++        is       => 'ro',
++        isa      => 'Str',
++    );
+ }
+ 
+ 
+@@ -111,5 +134,5 @@ sub _build_go_button {
+     return $button;
+ }
+ 
+-no Moose::Role;
++no Moo::Role;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm b/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm
+index e0ad103..f543bd7 100644
+--- a/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm
++++ b/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm
+@@ -5,26 +5,37 @@ Tails::Persistence::Role::StatusArea - role to manage a status area
+ =cut
+ 
+ package Tails::Persistence::Role::StatusArea;
+-use Moose::Role;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+-
+ 
+ use 5.10.0;
+-use namespace::autoclean;
+ use autodie qw(:all);
+ use Glib qw{TRUE FALSE};
+ use Gtk3;
+ 
++use Moo::Role;
++use MooX::late;
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'status_area' => lazy_build rw 'Gtk3::HBox';
+-has 'spinner'     => lazy_build rw 'Gtk3::Spinner';
+-has 'working'     => lazy_build rw Bool;
++has 'status_area' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::HBox',
++);
++has 'spinner'     => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::Spinner',
++);
++has 'working'     => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Bool',
++
++);
+ 
+ 
+ =head1 CONSTRUCTORS
+@@ -71,5 +82,5 @@ after 'working' => sub {
+     }
+ };
+ 
+-no Moose 'Role';
++no Moo::Role;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Setup.pm b/usr/share/perl5/Tails/Persistence/Setup.pm
+index d6c0ba2..3226460 100644
 --- a/usr/share/perl5/Tails/Persistence/Setup.pm
 +++ b/usr/share/perl5/Tails/Persistence/Setup.pm
-@@ -23,7 +23,6 @@ use namespace::autoclean;
+@@ -5,25 +5,12 @@ Tails::Persistence::Setup - main application class
+ =cut
+ 
+ package Tails::Persistence::Setup;
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Types::Path::Class;
+-use MooseX::Has::Sugar::Saccharin;
+ 
+-
+-
+-with 'Tails::Role::DisplayError::Gtk3';
+-with 'Tails::Role::HasEncoding';
+-with 'Tails::Role::HasDBus::System';
+-with 'MooseX::Getopt::Dashes';
+-
+-use 5.10.0;
+-use namespace::autoclean;
++use 5.10.1;
++use strict;
  
  use autodie qw(:all);
  use Carp::Assert::More;
@@ -250,26 +1311,211 @@ index d6c0ba2..d7b0414 100644
  use English qw{-no_match_vars};
  use Glib qw{TRUE FALSE};
  use Gtk3 qw{-init};
-@@ -107,7 +106,6 @@ has "$_" => lazy_build ro Str
- has 'persistence_partition_device_file'=> lazy_build ro Str, metaclass => 'NoGetopt';
- has 'persistence_partition_size'     => lazy_build ro Int,  metaclass => 'NoGetopt';
- has 'persistence_is_enabled'         => lazy_build ro Bool, metaclass => 'NoGetopt';
+@@ -31,15 +18,14 @@ use Net::DBus qw(:typing);
+ use Net::DBus::Annotation qw(:call);
+ use List::Util qw{first max};
+ use Number::Format qw(:subs);
+-use Path::Class;
++use Path::Tiny;
+ use Try::Tiny;
++use Types::Path::Tiny qw{Dir};
+ 
+ use Tails::RunningSystem;
+ use Tails::UDisks;
+-
+ use Tails::Persistence::Configuration;
+ use Tails::Persistence::Constants;
+-
+ use Tails::Persistence::Step::Bootstrap;
+ use Tails::Persistence::Step::Configure;
+ use Tails::Persistence::Step::Delete;
+@@ -50,120 +36,189 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++no Moo::sification;
++use Moo;
++use MooX::late;
++use MooX::HandlesVia;
++
++with 'Tails::Role::DisplayError::Gtk3';
++with 'Tails::Role::HasDBus::System';
++with 'Tails::Role::HasEncoding';
++
++use namespace::clean;
++
++use MooX::Options;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'verbose' =>
+-    ro Bool,
++option 'verbose' => (
++    is            => 'ro',
++    isa           => 'Bool',
+     documentation => q{Get more output.},
+     default       => sub {
+         exists $ENV{DEBUG} && defined $ENV{DEBUG} && $ENV{DEBUG}
+-    };
++    },
++);
+ 
+-has 'force' =>
+-    lazy_build ro Bool,
+-    documentation => q{Make some sanity checks non-fatal.};
++option 'force' => (
++    lazy_build    => 1,
++    is            => 'ro',
++    isa           => 'Bool',
++    documentation => q{Make some sanity checks non-fatal.},
++);
+ 
+-has 'udisks' =>
+-    lazy_build ro 'Tails::UDisks',
+-    metaclass => 'NoGetopt',
+-    handles   => [
++has 'udisks' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Tails::UDisks',
++    handles    => [
+         qw{bytes_array_to_string device_has_partition_with_label
+            drive_is_optical drive_is_connected_via_a_supported_interface
+            device_partition_with_label get_block_device_property
+            get_filesystem_property get_partition_property luks_holder
+            mountpoints partitions udisks_service}
+-    ];
++    ],
++);
+ 
+-has 'running_system' =>
+-    lazy_build ro 'Tails::RunningSystem',
+-    metaclass => 'NoGetopt',
+-    handles   => [
++has 'running_system' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Tails::RunningSystem',
++    handles    => [
+         qw{boot_drive boot_block_device boot_device_file boot_drive_model boot_drive_vendor
+            boot_drive_size
+            started_from_device_installed_with_tails_installer}
+-    ];
++    ],
++);
+ 
+-has 'persistence_constants' =>
+-    lazy_build ro 'Tails::Persistence::Constants',
+-    metaclass => 'NoGetopt',
+-    handles   => [
++has 'persistence_constants' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Tails::Persistence::Constants',
++    handles    => [
+         map {
+             "persistence_$_"
+         } qw{partition_label partition_guid filesystem_type filesystem_label
+              minimum_size filesystem_options state_file}
+-    ];
++    ],
++);
+ 
+-has 'main_window' =>
+-    lazy_build ro 'Gtk3::Window',
+-    metaclass  => 'NoGetopt';
++has 'main_window' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Window',
++);
+ 
+-has "$_" => lazy_build ro Str
+-    for (qw{override_liveos_mountpoint override_boot_drive
+-            override_system_partition});
++option "$_" => (
++    is         => 'ro',
++    format     => 's',
++    isa        => 'Str',
++    predicate  => 1,
++) for (qw{override_liveos_mountpoint override_boot_drive
++          override_system_partition});
+ 
+-has 'persistence_partition_device_file'=> lazy_build ro Str, metaclass => 'NoGetopt';
+-has 'persistence_partition_size'     => lazy_build ro Int,  metaclass => 'NoGetopt';
+-has 'persistence_is_enabled'         => lazy_build ro Bool, metaclass => 'NoGetopt';
 -has 'persistence_is_read_write'      => lazy_build ro Bool, metaclass => 'NoGetopt';
++has 'persistence_partition_device_file' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Str',
++);
++has 'persistence_partition_size' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Int',
++);
++has 'persistence_is_enabled' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Bool',
++);
  
  has 'persistence_partition_mountpoint' => (
-     isa        => 'Path::Class::Dir',
-@@ -130,22 +128,12 @@ has 'steps' =>
-     lazy_build required ro 'ArrayRef[Str]',
-     traits  => ['Array'],
-     handles => {
+-    isa        => 'Path::Class::Dir',
++    isa        => Dir,
+     is         => 'rw',
+     lazy_build => 1,
+-    coerce     => 1,
+-    metaclass  => 'NoGetopt',
++    coerce     => Dir->coercion,
+ );
+ 
+ foreach (qw{beginning_of_free_space size_of_free_space}) {
+-    has $_ => lazy_build ro Int, metaclass  => 'NoGetopt';
++    has $_ => (
++        lazy_build => 1,
++        is         => 'ro',
++        isa        => 'Int',
++    );
+ }
+ 
+-has 'current_step' =>
+-    rw Object,
+-    predicate 'has_current_step',
+-    metaclass  => 'NoGetopt';
++has 'current_step' => (
++    is        => 'rw',
++    isa       => 'Object',
++    predicate => 'has_current_step',
++);
+ 
+-has 'steps' =>
+-    lazy_build required ro 'ArrayRef[Str]',
+-    traits  => ['Array'],
+-    handles => {
 -        all_steps       => 'elements',
++option 'steps' => (
++    lazy_build    => 1,
++    required      => 1,
++    repeatable    => 1,
++    format        => 's@',
++    is            => 'rw',
++    isa           => 'ArrayRef[Str]',
++    handles_via   => ['Array'],
++    handles       => {
          number_of_steps => 'count',
 -        append_to_steps => 'push',
          shift_steps     => 'shift',
          next_step       => 'first',
 -        grep_steps      => 'grep',
      },
-     documentation => q{Specify once per wizard step to run. Supported steps are: bootstrap, configure, delete.};
+-    documentation => q{Specify once per wizard step to run. Supported steps are: bootstrap, configure, delete.};
++    documentation => q{Specify once per wizard step to run. Supported steps are: bootstrap, configure, delete.},
++);
  
 -has 'orig_steps' =>
 -    rw 'ArrayRef[Str]',
@@ -277,39 +1523,56 @@ index d6c0ba2..d7b0414 100644
 -    handles => {
 -        grep_orig_steps => 'grep',
 -    };
--
- has 'passphrase' => rw Str, documentation => q{Unsupported. Developers only.};
++has 'configuration' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Tails::Persistence::Configuration',
++    handles    => { save_configuration => 'save' },
++);
  
- has 'configuration' =>
-@@ -153,6 +141,22 @@ has 'configuration' =>
-     handles    => { save_configuration => 'save' },
-     metaclass  => 'NoGetopt';
- 
-+has 'force_enable_presets' =>
-+    ro 'ArrayRef[Str]',
-+    traits => ['Array'],
+-has 'passphrase' => rw Str, documentation => q{Unsupported. Developers only.};
++option 'force_enable_presets' => (
++    is            => 'ro',
++    repeatable    => 1,
++    format        => 's@',
++    isa           => 'ArrayRef[Str]',
++    handles_via   => ['Array'],
 +    documentation => q{Specify once per additional preset to forcibly enable.},
-+    default       => sub { [] };
-+
-+has 'display_finished_message' =>
-+    ro Bool,
-+    documentation => q{Display an explanatory message once done.},
-+    default       => sub { 1 };
-+
-+has 'gui' =>
-+    ro Bool,
-+    documentation => q{Display the GUI. Only a few operations are available under --no-gui.},
-+    default       => sub { 1 };
-+
- has '+codeset'  => ( metaclass => 'NoGetopt' );
- has '+encoding' => ( metaclass => 'NoGetopt' );
++    default       => sub { [] },
++);
  
-@@ -162,8 +166,12 @@ has '+encoding' => ( metaclass => 'NoGetopt' );
+-has 'configuration' =>
+-    lazy_build rw 'Tails::Persistence::Configuration',
+-    handles    => { save_configuration => 'save' },
+-    metaclass  => 'NoGetopt';
++option 'display_finished_message' => (
++    is            => 'ro',
++    isa           => 'Bool',
++    documentation => q{Display an explanatory message once done.},
++    default       => sub { 1 },
++    negativable   => 1,
++);
+ 
+-has '+codeset'  => ( metaclass => 'NoGetopt' );
+-has '+encoding' => ( metaclass => 'NoGetopt' );
++option 'gui' => (
++    is            => 'ro',
++    isa           => 'Bool',
++    documentation => q{Display the GUI. Only a few operations are available under --no-gui.},
++    default       => sub { 1 },
++    negativable   => 1,
++);
+ 
+ 
+ =head1 CONSTRUCTORS AND BUILDERS
+ 
  =cut
  
- method BUILD {
+-method BUILD {
 -    my @orig_steps = $self->all_steps;
 -    $self->orig_steps(\@orig_steps);
++sub BUILD {
++    my $self = shift;
 +    if (! $self->gui) {
 +        assert_is($self->number_of_steps, 1,
 +                  "Exactly one step is enabled under --no-gui");
@@ -319,7 +1582,7 @@ index d6c0ba2..d7b0414 100644
  }
  
  sub _build_force {
-@@ -201,18 +209,6 @@ sub _build_persistence_is_enabled {
+@@ -201,18 +256,6 @@ sub _build_persistence_is_enabled {
      defined($value) && $value eq 'true';
  }
  
@@ -338,7 +1601,7 @@ index d6c0ba2..d7b0414 100644
  sub _build_steps {
      my $self = shift;
  
-@@ -248,7 +244,7 @@ sub _build_persistence_partition_mountpoint {
+@@ -248,7 +291,7 @@ sub _build_persistence_partition_mountpoint {
  
      first {
             $_ eq '/live/persistence/TailsData_unlocked'
@@ -347,9 +1610,12 @@ index d6c0ba2..d7b0414 100644
      } $self->mountpoints($self->persistence_partition);
  }
  
-@@ -293,8 +289,16 @@ sub _build_configuration {
+@@ -291,10 +334,18 @@ sub _build_persistence_partition_size {
+ sub _build_configuration {
+     my $self = shift;
  
-     my $config_file_path = file($self->persistence_partition_mountpoint, 'persistence.conf');
+-    my $config_file_path = file($self->persistence_partition_mountpoint, 'persistence.conf');
++    my $config_file_path = path($self->persistence_partition_mountpoint, 'persistence.conf');
      if (-e $config_file_path) {
 -        my $expected_uid = getpwnam('tails-persistence-setup');
 -        my $expected_gid = getgrnam('tails-persistence-setup');
@@ -366,7 +1632,7 @@ index d6c0ba2..d7b0414 100644
          try {
              check_config_file_permissions(
                  $config_file_path,
-@@ -313,11 +317,13 @@ sub _build_configuration {
+@@ -313,11 +364,13 @@ sub _build_configuration {
                  $self->encoding->decode(gettext(
                      $_,
                  )));
@@ -381,7 +1647,7 @@ index d6c0ba2..d7b0414 100644
      );
  }
  
-@@ -374,11 +380,6 @@ sub check_sanity {
+@@ -374,11 +427,6 @@ sub check_sanity {
                      "Device %s has no persistent volume.")),
                  needs_device_arg => 1,
              },
@@ -393,7 +1659,7 @@ index d6c0ba2..d7b0414 100644
              {
                  method  => 'persistence_partition_is_unlocked',
                  message => $self->encoding->decode(gettext(
-@@ -399,8 +400,8 @@ sub check_sanity {
+@@ -399,8 +447,8 @@ sub check_sanity {
                  message => $self->encoding->decode(gettext(
                      "Persistence volume is not writable. Maybe it was mounted read-only?")),
              },
@@ -404,7 +1670,38 @@ index d6c0ba2..d7b0414 100644
  
      my @checks = (
          {
-@@ -629,19 +630,25 @@ sub run_current_step {
+@@ -431,7 +479,7 @@ sub check_sanity {
+     }
+ 
+     foreach my $check (@checks) {
+-        my $check_method = $self->meta->get_method($check->{method});
++        my $check_method = $self->can($check->{method});
+         assert_defined($check_method);
+         my $res;
+         my @args = ($self);
+@@ -441,7 +489,7 @@ sub check_sanity {
+         elsif (exists($check->{needs_drive_arg}) && $check->{needs_drive_arg}) {
+             push @args, $self->boot_drive;
+         }
+-        $res = $check_method->execute(@args);
++        $res = $check_method->(@args);
+         if (exists($check->{must_be_false}) && $check->{must_be_false}) {
+             $res = ! $res;
+         }
+@@ -475,8 +523,10 @@ sub run {
+ 
+     $self->main_window->set_visible(FALSE);
+     $self->goto_next_step;
+-    $self->debug("Entering main Gtk3 loop.");
+-    Gtk3->main;
++    if ($self->gui) {
++        $self->debug("Entering main Gtk3 loop.");
++        Gtk3->main;
++    }
+ }
+ 
+ sub device_has_persistent_volume {
+@@ -629,19 +679,25 @@ sub run_current_step {
  
      $self->debug("Running step " . $self->current_step->name);
  
@@ -443,18 +1740,21 @@ index d6c0ba2..d7b0414 100644
      }
  }
  
-@@ -664,6 +671,10 @@ sub goto_next_step {
+@@ -664,6 +720,13 @@ sub goto_next_step {
      }
      else {
          $self->debug("No more steps.");
 +        if (! $self->display_finished_message) {
-+            Gtk3->main_quit;
-+            exit 0;
++            if ($self->gui) {
++                Gtk3->main_quit;
++            } else {
++                return;
++            }
 +        }
          $self->current_step->title->set_text($self->encoding->decode(gettext(
              q{Persistence wizard - Finished}
          )));
-@@ -692,11 +703,18 @@ sub step_object_from_name {
+@@ -692,11 +755,18 @@ sub step_object_from_name {
                  $self->create_persistence_partition({ @_ })
              },
              size_of_free_space          => $self->size_of_free_space,
@@ -465,7 +1765,7 @@ index d6c0ba2..d7b0414 100644
              },
 +            create_configuration_cb        => sub {
 +                $self->save_configuration({ @_ });
-+                my $asp_config_file = file(
++                my $asp_config_file = path(
 +                    $self->persistence_partition_mountpoint,
 +                    'live-additional-software.conf'
 +                );
@@ -475,20 +1775,147 @@ index d6c0ba2..d7b0414 100644
          );
      }
      elsif ($name eq 'delete') {
-diff --git a/lib/Tails/Persistence/Step/Bootstrap.pm b/lib/Tails/Persistence/Step/Bootstrap.pm
-index 7a456ee..e35c986 100644
+@@ -732,21 +802,26 @@ sub step_object_from_name {
+ 
+ }
+ 
+-method get_variable_from_persistence_state_file (Str $variable) {
++sub get_variable_from_persistence_state_file {
++    my $self = shift;
++    my $variable = shift;
+     get_variable_from_file($self->persistence_state_file, $variable);
+ }
+ 
+-method persistence_filesystem_is_mounted () {
++sub persistence_filesystem_is_mounted {
++    my $self = shift;
+     return scalar($self->mountpoints($self->persistence_partition));
+ }
+ 
+-method persistence_partition_is_unlocked () {
++sub persistence_partition_is_unlocked {
++    my $self = shift;
+     my $luks_holder = $self->luks_holder($self->persistence_partition) || return;
+ 
+     return 1;
+ }
+ 
+-method persistence_filesystem_is_readable () {
++sub persistence_filesystem_is_readable {
++    my $self = shift;
+     return unless my $mountpoint = $self->persistence_partition_mountpoint;
+     my $ret;
+     {
+@@ -756,7 +831,8 @@ method persistence_filesystem_is_readable () {
+     return $ret;
+ }
+ 
+-method persistence_filesystem_is_writable () {
++sub persistence_filesystem_is_writable {
++    my $self = shift;
+     return unless my $mountpoint = $self->persistence_partition_mountpoint;
+     my $ret;
+     {
+@@ -766,5 +842,5 @@ method persistence_filesystem_is_writable () {
+     return $ret;
+ }
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
+index 7a456ee..af32f00 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
-@@ -40,7 +40,7 @@ has 'warning_area'    => lazy_build rw 'Gtk3::HBox';
- has 'warning_image'   => lazy_build rw 'Gtk3::Image';
- has 'size_of_free_space'      => required ro Int;
- has 'mount_persistence_partition_cb' => required ro CodeRef;
+@@ -5,11 +5,9 @@ Tails::Persistence::Step::Bootstrap - bootstrap persistent storage
+ =cut
+ 
+ package Tails::Persistence::Step::Bootstrap;
+-use Moose;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+ 
++use 5.10.1;
++use strict;
+ 
+ use Glib qw{TRUE FALSE};
+ 
+@@ -21,26 +19,64 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++use Moo;
++use MooX::late;
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+ foreach (qw{intro label verify_label warning_label}) {
+-    has $_ => lazy_build rw 'Gtk3::Label';
++    has $_ => (
++        lazy_build => 1,
++        is         => 'rw',
++        isa        => 'Gtk3::Label',
++    );
+ }
+ 
+ foreach (qw{passphrase_entry verify_passphrase_entry}) {
+-    has $_ => lazy_build rw 'Gtk3::Entry', builder '_build_passphrase_entry';
++    has $_ => (
++        lazy_build => 1,
++        is         => 'rw',
++        isa        => 'Gtk3::Entry',
++        builder    => '_build_passphrase_entry',
++    );
+ }
+ 
+-has 'table_alignment' => lazy_build rw 'Gtk3::Alignment';
+-has 'table'           => lazy_build rw 'Gtk3::Table';
+-has 'warning_area'    => lazy_build rw 'Gtk3::HBox';
+-has 'warning_image'   => lazy_build rw 'Gtk3::Image';
+-has 'size_of_free_space'      => required ro Int;
+-has 'mount_persistence_partition_cb' => required ro CodeRef;
 -has 'should_mount_persistence_partition' => required ro Bool;
-+has 'create_configuration_cb' => required ro CodeRef;
++has 'table_alignment' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::Alignment',
++);
++has 'table' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::Table',
++);
++has 'warning_area' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::HBox',
++);
++has 'warning_image' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::Image',
++);
++has 'size_of_free_space' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'Int',
++);
++foreach (qw{mount_persistence_partition_cb create_configuration_cb}) {
++    has $_ => (
++        required => 1,
++        is       => 'ro',
++        isa      => 'CodeRef',
++    );
++}
  
  
  =head1 CONSTRUCTORS
-@@ -278,34 +278,39 @@ sub operation_finished {
+@@ -278,34 +314,39 @@ sub operation_finished {
          say STDERR "created ${created_device}.";
          $self->working(0);
  
@@ -556,10 +1983,256 @@ index 7a456ee..e35c986 100644
  
          $self->success_callback->();
      }
-diff --git a/lib/Tails/Persistence/Utils.pm b/lib/Tails/Persistence/Utils.pm
-index a58b02e..9b48304 100644
+@@ -332,5 +373,5 @@ sub go_button_pressed {
+ with 'Tails::Persistence::Role::StatusArea';
+ with 'Tails::Persistence::Role::SetupStep';
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Step/Configure.pm b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
+index 751d8e3..f08d3c6 100644
+--- a/usr/share/perl5/Tails/Persistence/Step/Configure.pm
++++ b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
+@@ -5,12 +5,9 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
+ =cut
+ 
+ package Tails::Persistence::Step::Configure;
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+ 
++use 5.10.1;
++use strict;
+ 
+ use Glib qw{TRUE FALSE};
+ 
+@@ -24,25 +21,49 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++use Moo;
++use MooX::late;
++use MooX::HandlesVia;
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'configuration' => required ro 'Tails::Persistence::Configuration';
+-
+-has 'persistence_partition_device_file' => required ro Str;
+-has 'persistence_partition_size' => required ro Int;
+-
+-has 'list_box' => lazy_build ro 'Gtk3::VBox';
+-
+-has 'buttons'  =>
+-    lazy_build ro 'ArrayRef[Tails::Persistence::Configuration::Button]',
+-    traits  => [ 'Array' ],
+-    handles => {
++has 'configuration' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'Tails::Persistence::Configuration',
++);
++
++has 'persistence_partition_device_file' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'Str',
++);
++has 'persistence_partition_size' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'Int',
++);
++
++has 'list_box' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::VBox',
++);
++
++has 'buttons'  => (
++    lazy_build  => 1,
++    is          => 'ro',
++    isa         => 'ArrayRef[Tails::Persistence::Configuration::Button]',
++    handles_via => [ 'Array' ],
++    handles     => {
+         all_buttons => 'elements',
+         push_button => 'push',
+-    };
++    },
++);
+ 
+ 
+ =head1 CONSTRUCTORS
+@@ -75,7 +96,8 @@ sub BUILD {
+     $self->go_button->set_sensitive(TRUE);
+ }
+ 
+-method _build_main_box {
++sub _build_main_box {
++    my $self = shift;
+     my $box = Gtk3::VBox->new();
+     $box->set_spacing(6);
+     $box->pack_start($self->title, FALSE, FALSE, 0);
+@@ -100,7 +122,8 @@ method _build_main_box {
+     return $box;
+ }
+ 
+-method _build_buttons {
++sub _build_buttons {
++    my $self = shift;
+     [
+         map {
+             Tails::Persistence::Configuration::Button->new(atom => $_)
+@@ -108,7 +131,8 @@ method _build_buttons {
+     ]
+ }
+ 
+-method _build_list_box {
++sub _build_list_box {
++    my $self = shift;
+     my $box = Gtk3::VBox->new();
+     $box->set_spacing(6);
+     $box->pack_start($_->main_widget, FALSE, FALSE, 0) foreach $self->all_buttons;
+@@ -122,7 +146,9 @@ method _build_list_box {
+ 
+ =cut
+ 
+-method operation_finished ($error) {
++sub operation_finished {
++    my $self = shift;
++    my $error = shift;
+     if ($error) {
+         $self->working(0);
+         say STDERR "$error";
+@@ -136,7 +162,8 @@ method operation_finished ($error) {
+     }
+ }
+ 
+-method go_button_pressed {
++sub go_button_pressed {
++    my $self = shift;
+     $self->list_box->hide;
+     $self->working(1);
+     $self->subtitle->set_text(
+@@ -155,12 +182,13 @@ method go_button_pressed {
+     $self->operation_finished($error);
+ }
+ 
+-method refresh_buttons {
++sub refresh_buttons {
++    my $self = shift;
+     $_->refresh_display foreach $self->all_buttons;
+ }
+ 
+ with 'Tails::Persistence::Role::StatusArea';
+ with 'Tails::Persistence::Role::SetupStep';
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Step/Delete.pm b/usr/share/perl5/Tails/Persistence/Step/Delete.pm
+index 88916ff..f5fa087 100644
+--- a/usr/share/perl5/Tails/Persistence/Step/Delete.pm
++++ b/usr/share/perl5/Tails/Persistence/Step/Delete.pm
+@@ -5,11 +5,9 @@ Tails::Persistence::Step::Delete - delete persistent storage
+ =cut
+ 
+ package Tails::Persistence::Step::Delete;
+-use Moose;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
+-
+ 
++use 5.10.1;
++use strict;
+ 
+ use Glib qw{TRUE FALSE};
+ 
+@@ -20,14 +18,30 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-persistence-setup");
+ 
++use Moo;
++use MooX::late;
++use namespace::clean;
++
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'persistence_partition_device_file' => required ro Str;
+-has 'persistence_partition_size' => required ro Int;
+-has 'warning_icon'               => lazy_build rw 'Gtk3::Image';
++has 'persistence_partition_device_file' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'Str',
++);
++has 'persistence_partition_size' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'Int',
++);
++has 'warning_icon' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Gtk3::Image',
++);
+ 
+ 
+ =head1 CONSTRUCTORS
+@@ -122,5 +136,5 @@ sub go_button_pressed {
+ with 'Tails::Persistence::Role::StatusArea';
+ with 'Tails::Persistence::Role::SetupStep';
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Persistence/Utils.pm b/usr/share/perl5/Tails/Persistence/Utils.pm
+index a58b02e..2364ff7 100644
 --- a/usr/share/perl5/Tails/Persistence/Utils.pm
 +++ b/usr/share/perl5/Tails/Persistence/Utils.pm
+@@ -10,17 +10,17 @@ use strict;
+ use warnings FATAL => 'all';
+ use 5.10.1;
+ 
++use Carp;
++use IPC::System::Simple qw{capturex};
++use List::MoreUtils qw{last_value};
++use Path::Tiny;
+ 
++use namespace::clean;
+ 
+ use Exporter;
+ our @ISA = qw{Exporter};
+ our @EXPORT = qw{align_up_at_2MiB align_down_at_2MiB step_name_to_class_name get_variable_from_file check_config_file_permissions};
+ 
+-use Carp;
+-use IPC::System::Simple qw{capturex};
+-use List::MoreUtils qw{last_value};
+-use Path::Class;
+-
+ 
+ =head1 FUNCTIONS
+ 
+@@ -64,7 +64,7 @@ sub get_variable_from_file {
+     my $file     = shift;
+     my $variable = shift;
+ 
+-    foreach my $line (file($file)->slurp(chomp => 1)) {
++    foreach my $line (path($file)->lines({chomp => 1})) {
+         if (my ($name, $value) =
+                 ($line =~ m{\A [[:space:]]* ($variable)=(.*) \z}xms)) {
+             return $value;
 @@ -94,6 +94,8 @@ sub check_config_file_permissions {
      # ownership
      foreach my $field (qw{uid gid}) {
