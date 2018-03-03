@@ -50,3 +50,8 @@ pref("mailnews.auto_config.oauth2.enabled", false);
 // resolver, but over HTTPS to some DNS web service, but that web
 // service could still be targeted.
 pref("mailnews.auto_config.dns_mx_lookup.enabled", false);
+
+// We disable Memory Hole for encrypted email until support is more
+// mature and widely spread (#15201).
+pref("extensions.enigmail.protectHeaders", false);
+pref("extensions.torbirdy.custom.extensions.enigmail.protectHeaders", false);
