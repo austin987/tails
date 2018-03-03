@@ -138,9 +138,11 @@ def _notify_failure(summary, details):
     The user has the option to edit the configuration of to view the system
     log.
     """
-    if _notify(summary, details, _("Show log"), _("Configure"), urgent=True):
+    action_clicked = _notify(summary, details, _("Show log"), _("Configure"),
+                             urgent=True)
+    if action_clicked == 1:
         show_configuration_window()
-    else:
+    elif action_clicked == 0:
         show_system_log()
 
 
