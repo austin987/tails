@@ -4,6 +4,7 @@ import gettext
 import json
 import os
 import os.path
+import pwd
 import shutil
 import subprocess
 import sys
@@ -165,11 +166,10 @@ def _notify_failure(summary, details):
 
 def _close_notification(notification_id):
     """Close a notification shown to the user of the live system."""
-
-    # XXX: hardcoded uid of amnesia user
     subprocess.run(
             ["sudo", "-u", LIVE_USERNAME,
-             "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+             "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus".format(
+                  uid=pwd.getpwnam(LIVE_USERNAME).pw_uid),
              "gdbus", "call",
              "--session",
              "--dest", "org.freedesktop.Notifications",
