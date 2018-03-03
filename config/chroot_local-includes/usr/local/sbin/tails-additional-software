@@ -66,14 +66,29 @@ def _launch_apt_get(specific_args):
 
 def _launch_persistence_setup(*args):
     """Launch tails-persistence-setup and wait for its completion."""
-    display = os.environ["DISPLAY"]
-    commandline = ["sudo",
-                   "-u", "tails-persistence-setup",
-                   "DISPLAY=" + display,
-                   "tails-persistence-setup"
-                   ]
-    commandline.extend(args)
-    subprocess.run(commandline, check=True)
+    TPS_USERNAME = "tails-persistence-setup"
+
+    subprocess.run(
+        ["sudo", "-u", LIVE_USERNAME,
+         "xhost", "+SI:localuser:" + TPS_USERNAME],
+        check=True)
+
+    cmdline = ["sudo", "-u", TPS_USERNAME, "/usr/bin/tails-persistence-setup"]
+    cmdline.extend(args)
+    try:
+        subprocess.run(cmdline, stderr=subprocess.PIPE, check=True,
+                       universal_newlines=True)
+    except subprocess.CalledProcessError as e:
+        syslog.syslog(syslog.LOG_ERR,
+                      "tails-persistence-setup returned with "
+                      "{returncode}".format({"returncode": e.returncode}))
+        for line in e.stderr.splitlines():
+            syslog.syslog(syslog.LOG_ERR, line)
+    finally:
+        subprocess.run(
+            ["sudo", "-u", LIVE_USERNAME,
+             "xhost", "-SI:localuser:" + TPS_USERNAME],
+            check=True)
 
 
 def _notify(title, body="", accept_label="", deny_label="",
