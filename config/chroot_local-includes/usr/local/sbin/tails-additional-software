@@ -308,7 +308,7 @@ def add_additional_packages(new_packages):
     packages = get_additional_packages()
     # The list of packages was initially provided by apt after installing them,
     # so we don't check the names.
-    packages += new_packages
+    packages |= new_packages
 
     with atomicwrites.atomic_write(PACKAGES_LIST_FILE, overwrite=True) as f:
         for package in sorted(packages):
