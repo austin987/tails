@@ -67,11 +67,12 @@ def _launch_apt_get(specific_args):
 def _launch_persistence_setup(*args):
     """Launch tails-persistence-setup and wait for its completion."""
     display = os.environ["DISPLAY"]
-    args = ["sudo", "-u",
-            "DISPLAY=" + display,
-            "tails-persistence-setup"
-            ] + args
-    subprocess.run(args, check=True)
+    commandline = ["sudo", "-u",
+                   "DISPLAY=" + display,
+                   "tails-persistence-setup"
+                   ]
+    commandline.extend(args)
+    subprocess.run(commandline, check=True)
 
 
 def _notify(title, body="", accept_label="", deny_label="",
