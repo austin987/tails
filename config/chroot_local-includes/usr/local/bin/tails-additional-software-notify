@@ -34,7 +34,7 @@ class ASPNotifier(object):
         if urgent:
             self.notification.set_urgency(Notify.Urgency.CRITICAL)
         if documentation_target:
-            self.notification.add_action("documentation", deny_label,
+            self.notification.add_action("documentation", _("Documentation"),
                                          self.cb_notification_clicked,
                                          documentation_target)
         if deny_label:
@@ -46,7 +46,7 @@ class ASPNotifier(object):
         self.notification.connect("closed", self.cb_notification_closed)
         self.notification.show()
         sys.stdout.write("id=%i" % self.notification.props.id)
-        if not accept_label:
+        if not (accept_label or deny_label or documentation_target):
             sys.exit(3)
 
     def cb_notification_clicked(self, notification, action, user_data=None):
@@ -56,7 +56,8 @@ class ASPNotifier(object):
         elif action == "deny":
             sys.exit(3)
         elif action == "documentation":
-            subprocess.run("tails-documentation", user_data)
+            subprocess.Popen(["tails-documentation", user_data])
+            sys.exit(5)
 
     def cb_notification_closed(self, notification):
         """Exit the program with a meaningful code on notification close."""
@@ -71,13 +72,15 @@ def print_help():
         "Usage: %s <summary> <body> [<accept_label> [<deny_label> "
         "[documentation_target [<urgent>]]]]\n" % program_name)
     sys.stderr.write(
-        "Shows a notification with <summary>, <body> and two optional "
+        "Shows a notification with <summary>, <body> and optional "
         "buttons.\n"
         "\n"
-        "Returns: 0 if <accept_label> is selected\n"
+        "Returns: 0 if the button with <accept_label> is selected\n"
         "         2 if the number of arguments is wrong\n"
-        "         3 if <deny_label> is selected\n"
-        "         4 if the notification is closed another way\n")
+        "         3 if the button with <deny_label> is selected\n"
+        "         4 if the notification is closed another way\n",
+        "         5 if the documentation button is selected and the"
+        "           documentation helper is launched.\n")
 
 
 if __name__ == "__main__":
