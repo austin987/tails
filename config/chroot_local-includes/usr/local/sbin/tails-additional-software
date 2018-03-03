@@ -287,6 +287,7 @@ def handle_installed_packages(packages):
                    urgent=True):
             create_persistence_and_setup_additional_packages(packages)
     else:   # It's impossible to have a persistent storage
+        syslog.syslog("Cannot create persistent storage on this media.")
         if not os.path.isfile(ASP_STATE_INSTALLER_ASKED):
             open(ASP_STATE_INSTALLER_ASKED, 'a').close()
             _notify(_("You could install {packages} automatically when "
@@ -364,7 +365,7 @@ def create_persistence_and_setup_additional_packages(packages):
 
     packages should be a list of packages names.
     """
-    # create persistence
+    syslog.syslog("Creating new persistent volume")
     _launch_persistence_setup("--step", "bootstrap",
                               "--no-display-finished-message",
                               "--force-enable-preset", "AdditionalSoftware")
