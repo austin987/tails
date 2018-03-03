@@ -1,8 +1,24 @@
+diff --git a/lib/Tails/Persistence.pm b/usr/share/perl5/Tails/Persistence.pm
+index 8d1e412..c79ac9b 100644
+--- a/usr/share/perl5/Tails/Persistence.pm
++++ b/usr/share/perl5/Tails/Persistence.pm
+@@ -4,10 +4,7 @@ Tails::Persistence - main placeholder module
+ 
+ =cut
+ 
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use 5.10.0;
+ 
+-
+-
+ 1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration.pm b/usr/share/perl5/Tails/Persistence/Configuration.pm
-index 9719481..959306d 100644
+index 9719481..d7f8a3e 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration.pm
-@@ -5,61 +5,83 @@ Tails::Persistence::Configuration - manage live-persistence.conf and presets
+@@ -5,81 +5,116 @@ Tails::Persistence::Configuration - manage live-persistence.conf and presets
  =cut
  
  package Tails::Persistence::Configuration;
@@ -17,9 +33,11 @@ index 9719481..959306d 100644
 +use MooX::late;
 +use MooX::HandlesVia;
  
++use strictures 2;
  use autodie qw(:all);
- use warnings FATAL => 'all';
+-use warnings FATAL => 'all';
  use Carp;
++use Carp::Assert::More;
  
  use Tails::Persistence::Configuration::Atom;
 -use Tails::Persistence::Configuration::File;
@@ -27,6 +45,7 @@ index 9719481..959306d 100644
  use Tails::Persistence::Configuration::Presets;
 +use Types::Path::Tiny qw{AbsPath};
  
++use List::MoreUtils qw{none};
  use Locale::gettext;
  use POSIX;
  setlocale(LC_MESSAGES, "");
@@ -49,9 +68,10 @@ index 9719481..959306d 100644
 -    traits  => [ 'Array' ],
 -    handles => {
 +has 'config_file_path' => (
-+    isa      => AbsPath,
-+    is       => 'rw',
-+    coerce   => AbsPath->coercion,
++    required  => 1,
++    isa       => AbsPath,
++    is        => 'rw',
++    coerce    => AbsPath->coercion,
 +);
 +
 +has 'file' => (
@@ -105,12 +125,13 @@ index 9719481..959306d 100644
  }
  
 -method _build_atoms {
+-    return $self->merge_file_with_presets($self->file, $self->presets);
 +sub _build_atoms {
 +    my $self = shift;
-     return $self->merge_file_with_presets($self->file, $self->presets);
++    return $self->merge_file_with_presets();
  }
  
-@@ -67,16 +89,19 @@ method _build_atoms {
+ =head1 METHODS
  
  =cut
  
@@ -119,20 +140,33 @@ index 9719481..959306d 100644
 +    my $self = shift;
      grep {
          my $line = $_;
-         ! grep { $_->equals_line($line) } $self->presets->all
+-        ! grep { $_->equals_line($line) } $self->presets->all
++        ! grep { $_->equals_line($line) } $self->presets->atoms
      } $self->file->all_lines;
  }
  
 -method merge_file_with_presets {
+-    # Modifying and returning clones of the presets atoms would be a bit cleaner.
++sub atoms_not_in_presets {
++    my $self = shift;
++    grep {
++        my $atom = $_;
++        none { $atom->equals_atom($_) } $self->presets->atoms
++    } $self->all_atoms;
++}
++
 +sub merge_file_with_presets {
 +    my $self = shift;
-     # Modifying and returning clones of the presets atoms would be a bit cleaner.
      $self->presets->set_state_from_lines($self->file->all_lines);
 +    $self->presets->set_state_from_overrides($self->force_enable_presets);
  
      [
-         $self->presets->all,
-@@ -89,11 +114,13 @@ method merge_file_with_presets {
+-        $self->presets->all,
++        $self->presets->atoms,
+         map {
+             Tails::Persistence::Configuration::Atom->new_from_line(
+                 $_,
+@@ -89,11 +124,13 @@ method merge_file_with_presets {
      ];
  }
  
@@ -148,7 +182,7 @@ index 9719481..959306d 100644
      map {
          Tails::Persistence::Configuration::Line->new(
              destination => $_->destination,
-@@ -102,10 +129,11 @@ method all_enabled_lines {
+@@ -102,10 +139,11 @@ method all_enabled_lines {
      } $self->all_enabled_atoms;
  }
  
@@ -163,10 +197,10 @@ index 9719481..959306d 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm b/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
-index 768b2c5..a70a89c 100644
+index 768b2c5..6f9b273 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
-@@ -5,12 +5,8 @@ Tails::Persistence::Configuration::Atom - a GUI-friendly configuration line
+@@ -5,35 +5,35 @@ Tails::Persistence::Configuration::Atom - a GUI-friendly configuration line
  =cut
  
  package Tails::Persistence::Configuration::Atom;
@@ -176,17 +210,24 @@ index 768b2c5..a70a89c 100644
 -use MooseX::Has::Sugar::Saccharin;
 -
 -
++use strictures 2;
 +use Moo;
 +use MooX::late;
  
  with 'Tails::Persistence::Role::ConfigurationLine';
- with 'Tails::Role::HasEncoding';
-@@ -25,15 +21,26 @@ use POSIX;
- setlocale(LC_MESSAGES, "");
- textdomain("tails-persistence-setup");
+-with 'Tails::Role::HasEncoding';
  
+ use autodie qw(:all);
+ use warnings FATAL => 'all';
+ 
+ use List::MoreUtils qw{all pairwise};
+ 
+-use Locale::gettext;
+-use POSIX;
+-setlocale(LC_MESSAGES, "");
+-textdomain("tails-persistence-setup");
 +use namespace::clean;
-+
+ 
  
  =head1 ATTRIBUTES
  
@@ -202,48 +243,41 @@ index 768b2c5..a70a89c 100644
 +    isa      => 'Bool',
 +);
 +
-+for my $attr (qw{id name description icon_name}) {
-+    has $attr => (
-+        lazy_build => 1,
-+        is         => 'rw',
-+        isa        => 'Str',
-+    );
-+}
++has 'id' => (
++    lazy_build => 1,
++    is         => 'rw',
++    isa        => 'Str',
++);
  
  
  =head1 CONSTRUCTORS
-@@ -52,13 +59,25 @@ sub new_from_line {
+@@ -52,21 +52,27 @@ sub new_from_line {
      );
  }
  
 -method _build_name { $self->encoding->decode(gettext('Custom')); }
+-
+-method _build_description {
+-    $self->encoding->decode($self->destination);
 +sub _build_id {
 +    my $self = shift;
 +    'Custom';
-+}
-+
-+sub _build_name {
-+    my $self = shift;
-+    $self->encoding->decode(gettext('Custom'));
-+}
- 
--method _build_description {
-+sub _build_description {
-+    my $self = shift;
-     $self->encoding->decode($self->destination);
  }
  
 -method _build_icon_name { 'dialog-question' }
-+sub _build_icon_name {
-+    my $self = shift;
-+    'dialog-question'
-+}
- 
+-
  
  =head1 METHODS
-@@ -66,7 +85,9 @@ method _build_icon_name { 'dialog-question' }
+ 
  =cut
  
++sub equals_atom {
++    my $self       = shift;
++    my $other_atom = shift;
++    $self->destination eq $other_atom->destination
++        and
++    $self->options_are(@{$other_atom->options});
++}
  
 -method equals_line ($line) {
 +sub equals_line {
@@ -252,7 +286,7 @@ index 768b2c5..a70a89c 100644
      $self->destination eq $line->destination
          and
      $self->options_are($line->all_options);
-@@ -85,5 +106,5 @@ sub options_are {
+@@ -85,5 +91,5 @@ sub options_are {
      } @expected, @options;
  }
  
@@ -260,10 +294,10 @@ index 768b2c5..a70a89c 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Button.pm b/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
-index 3540544..ee7f903 100644
+index 3540544..d240719 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
-@@ -5,56 +5,85 @@ Tails::Persistence::Configuration::Button - a configuration button in the GUI
+@@ -5,56 +5,118 @@ Tails::Persistence::Configuration::Button - a configuration button in the GUI
  =cut
  
  package Tails::Persistence::Configuration::Button;
@@ -274,15 +308,25 @@ index 3540544..ee7f903 100644
 -
 -
  
++use strictures 2;
  use autodie qw(:all);
- use warnings FATAL => 'all';
+-use warnings FATAL => 'all';
  use Glib qw{TRUE FALSE};
++use List::MoreUtils qw{all};
  use Pango;
- 
++use UUID::Tiny ':std';
++
++use Locale::gettext;
++use POSIX;
++setlocale(LC_MESSAGES, "");
++textdomain("tails-persistence-setup");
++
 +use Moo;
 +use MooX::late;
++use MooX::HandlesVia;
++with 'Tails::Role::HasEncoding';
 +use namespace::clean;
-+
+ 
  
  =head1 ATTRIBUTES
  
@@ -290,19 +334,24 @@ index 3540544..ee7f903 100644
  
 -has 'atom'         => lazy_build ro 'Tails::Persistence::Configuration::Atom',
 -    handles => [
-+has 'atom' => (
-+    lazy_build => 1,
-+    is         => 'ro',
-+    isa        => 'Tails::Persistence::Configuration::Atom',
-+    handles    => [
-         qw{source destination all_options enabled name description icon_name}
+-        qw{source destination all_options enabled name description icon_name}
 -    ];
 -has 'icon'         => lazy_build ro 'Gtk3::Image';
 -has 'checked_img'  => lazy_build ro 'Gtk3::Image';
 -has 'main_widget'  => lazy_build ro 'Gtk3::ToggleButton',
 -    handles => {
-+    ],
++has 'atoms' => (
++    required    => 1,
++    is          => 'ro',
++    isa         => 'ArrayRef[Tails::Persistence::Configuration::Atom]',
 +);
++foreach (qw{id name description icon_name}) {
++    has $_ => (
++        lazy_build => 1,
++        is         => 'rw',
++        isa        => 'Str',
++    );
++}
 +has 'icon' => (
 +    lazy_build => 1,
 +    is         => 'ro',
@@ -348,6 +397,26 @@ index 3540544..ee7f903 100644
  =cut
  
 -method _build_icon {
++sub _build_name {
++    my $self = shift;
++    $self->encoding->decode(gettext('Custom'));
++}
++
++sub _build_id {
++    my $self = shift;
++    create_uuid();
++}
++
++sub _build_description {
++    my $self = shift;
++    join(', ', map { $self->encoding->decode($_->destination) } @{$self->atoms});
++}
++
++sub _build_icon_name {
++    my $self = shift;
++    'dialog-question'
++}
++
 +sub _build_icon {
 +    my $self = shift;
      Gtk3::Image->new_from_pixbuf($self->icon_theme->load_icon(
@@ -369,7 +438,7 @@ index 3540544..ee7f903 100644
      my $line = shift;
  
      my $vbox = Gtk3::VBox->new();
-@@ -77,7 +106,8 @@ method _build_main_widget {
+@@ -77,7 +139,8 @@ method _build_main_widget {
      return $button;
  }
  
@@ -379,7 +448,7 @@ index 3540544..ee7f903 100644
      my $theme = Gtk3::IconTheme::get_default();
  
      $theme->append_search_path('/usr/share/pixmaps/cryptui/48x48');
-@@ -88,7 +118,8 @@ method _build_icon_theme {
+@@ -88,7 +151,8 @@ method _build_icon_theme {
      return $theme;
   }
  
@@ -389,7 +458,7 @@ index 3540544..ee7f903 100644
      my $title = Gtk3::Label->new($self->name);
      $title->set_alignment(0.0, 0.5);
      my $title_attrlist  = Pango::AttrList->new;
-@@ -99,7 +130,8 @@ method _build_title_label {
+@@ -99,7 +163,8 @@ method _build_title_label {
      return $title;
  }
  
@@ -399,14 +468,22 @@ index 3540544..ee7f903 100644
      my $description = Gtk3::Label->new($self->description);
      $description->set_alignment(0.0, 0.5);
      my $description_attrlist = Pango::AttrList->new;
-@@ -119,17 +151,20 @@ method _build_description_label {
+@@ -119,17 +184,27 @@ method _build_description_label {
  
  =cut
  
 -method toggled_cb {
+-    $self->atom->enabled($self->is_active);
++sub enabled {
++    my $self = shift;
++    all { $_->enabled } @{$self->atoms};
++}
++
 +sub toggled_cb {
 +    my $self = shift;
-     $self->atom->enabled($self->is_active);
++    foreach my $atom (@{$self->atoms}) {
++        $atom->enabled($self->is_active)
++    }
      $self->refresh_display;
  }
  
@@ -423,7 +500,7 @@ index 3540544..ee7f903 100644
      if ($self->enabled) {
          $self->checked_img->show;
      }
-@@ -138,7 +173,8 @@ method refresh_checked_img {
+@@ -138,7 +213,8 @@ method refresh_checked_img {
      }
  }
  
@@ -433,7 +510,7 @@ index 3540544..ee7f903 100644
      my %color = $self->enabled ?
          (
              title       => 0,
-@@ -159,5 +195,5 @@ method refresh_text_color {
+@@ -159,5 +235,5 @@ method refresh_text_color {
      $self->description_label->set_attributes($attrlist);
  }
  
@@ -442,10 +519,10 @@ index 3540544..ee7f903 100644
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
 new file mode 100644
-index 0000000..de744e9
+index 0000000..16e5dbd
 --- /dev/null
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,99 @@
 +=head1 NAME
 +
 +Tails::Persistence::Configuration::ConfigFile - read, parse and write live-persistence.conf
@@ -453,6 +530,7 @@ index 0000000..de744e9
 +=cut
 +
 +package Tails::Persistence::Configuration::ConfigFile;
++use strictures 2;
 +use Moo;
 +use MooX::late;
 +use MooX::HandlesVia;
@@ -645,14 +723,16 @@ index aa76c16..0000000
 -no Moose;
 -1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Line.pm b/usr/share/perl5/Tails/Persistence/Configuration/Line.pm
-index f3fd304..7b4da43 100644
+index f3fd304..e6bc85a 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Line.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Line.pm
-@@ -6,10 +6,10 @@ Tails::Persistence::Configuration::Line - read, parse and write live-persistence
+@@ -5,11 +5,11 @@ Tails::Persistence::Configuration::Line - read, parse and write live-persistence
+ =cut
  
  package Tails::Persistence::Configuration::Line;
- 
+-
 -use Moose;
++use strictures 2;
 +use Moo;
  with 'Tails::Persistence::Role::ConfigurationLine';
  
@@ -663,10 +743,10 @@ index f3fd304..7b4da43 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
-index 1a01326..f6ef7e4 100644
+index 1a01326..69d31bd 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
-@@ -5,12 +5,10 @@ Tails::Persistence::Configuration::Presets - available configuration snippets
+@@ -5,18 +5,17 @@ Tails::Persistence::Configuration::Presets - available configuration snippets
  =cut
  
  package Tails::Persistence::Configuration::Presets;
@@ -675,14 +755,22 @@ index 1a01326..f6ef7e4 100644
 -use MooseX::Types::Moose qw( :all );
 -use MooseX::Has::Sugar::Saccharin;
 -
- 
+-
++use strictures 2;
 +use Moo;
 +use MooX::HandlesVia;
 +use MooX::late;
  
  with 'Tails::Role::HasEncoding';
  
-@@ -24,27 +22,34 @@ use POSIX;
+ use autodie qw(:all);
+ use warnings FATAL => 'all';
+ use Carp;
++use List::MoreUtils qw{all};
+ use Tails::Persistence::Configuration::Atom;
+ 
+ use Locale::gettext;
+@@ -24,161 +23,228 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -701,14 +789,14 @@ index 1a01326..f6ef7e4 100644
 -        all   => 'elements',
 -    };
 +has '_presets' => (
++    lazy_build  => 1,
 +    is          => 'rw',
-+    isa         => 'ArrayRef[Tails::Persistence::Configuration::Atom]',
++    isa         => 'ArrayRef',
 +    handles_via => 'Array',
 +    handles     => {
 +        count   => 'count',
 +        all     => 'elements',
 +    },
-+    default => sub { my $self = shift; $self->_build__presets },
 +);
  
  
@@ -725,8 +813,18 @@ index 1a01326..f6ef7e4 100644
              name        => $self->encoding->decode(gettext(q{Personal Data})),
              description => $self->encoding->decode(gettext(
                  q{Keep files stored in the `Persistent' directory}
-@@ -55,86 +60,84 @@ method _build__presets {
+             )),
+-            destination => '/home/amnesia/Persistent',
+-            enabled     => 1,
+-            options     => [ 'source=Persistent' ],
              icon_name   => 'stock_folder',
++            enabled     => 1,
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia/Persistent',
++                    options     => [ 'source=Persistent' ],
++                },
++            ]
          },
          {
 -            name        => $self->encoding->decode(gettext(q{GnuPG})),
@@ -740,67 +838,77 @@ index 1a01326..f6ef7e4 100644
 -        },
 -        {
 -            name        => $self->encoding->decode(gettext(q{SSH Client})),
+-            description => $self->encoding->decode(gettext(
+-                q{SSH keys, configuration and known hosts}
+-            )),
+-            destination => '/home/amnesia/.ssh',
+-            options     => [ 'source=openssh-client'],
+-            enabled     => 0,
+-            icon_name   => 'seahorse-key-ssh',
+-        },
+-        {
+-            name        => $self->encoding->decode(gettext(q{Pidgin})),
 +            id          => 'Browser bookmarks',
 +            name        => $self->encoding->decode(gettext(q{Browser bookmarks})),
              description => $self->encoding->decode(gettext(
--                q{SSH keys, configuration and known hosts}
-+                q{Bookmarks saved in the Tor Browser}
-             )),
--            destination => '/home/amnesia/.ssh',
--            options     => [ 'source=openssh-client'],
-+            destination => '/home/amnesia/.mozilla/firefox/bookmarks',
-+            options     => [ 'source=bookmarks' ],
-             enabled     => 0,
--            icon_name   => 'seahorse-key-ssh',
-+            icon_name   => 'user-bookmarks',
-         },
-         {
--            name        => $self->encoding->decode(gettext(q{Pidgin})),
-+            id          => 'Network Connections',
-+            name        => $self->encoding->decode(gettext(q{Network Connections})),
-             description => $self->encoding->decode(gettext(
 -                q{Pidgin profiles and OTR keyring}
-+                q{Configuration of network devices and connections}
++                q{Bookmarks saved in the Tor Browser}
              )),
 -            destination => '/home/amnesia/.purple',
 -            options     => [ 'source=pidgin' ],
-+            destination => '/etc/NetworkManager/system-connections',
-+            options     => [ 'source=nm-system-connections' ],
++            icon_name   => 'user-bookmarks',
              enabled     => 0,
 -            icon_name   => 'pidgin',
-+            icon_name   => 'network-wired',
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia/.mozilla/firefox/bookmarks',
++                    options     => [ 'source=bookmarks' ],
++                },
++            ],
          },
          {
 -            name        => $self->encoding->decode(gettext(q{Thunderbird})),
-+            id          => 'APT Packages',
-+            name        => $self->encoding->decode(gettext(q{APT Packages})),
++            id          => 'Network Connections',
++            name        => $self->encoding->decode(gettext(q{Network Connections})),
              description => $self->encoding->decode(gettext(
 -                q{Thunderbird profiles and locally stored email}
-+                q{Packages downloaded by APT}
++                q{Configuration of network devices and connections}
              )),
 -            destination => '/home/amnesia/.thunderbird',
 -            options     => [ 'source=thunderbird' ],
-+            destination => '/var/cache/apt/archives',
-+            options     => [ 'source=apt/cache' ],
++            icon_name   => 'network-wired',
              enabled     => 0,
 -            icon_name   => 'thunderbird',
-+            icon_name   => 'package-x-generic',
++            atoms_args  => [
++                {
++                    destination => '/etc/NetworkManager/system-connections',
++                    options     => [ 'source=nm-system-connections' ],
++                },
++            ],
          },
          {
 -            name        => $self->encoding->decode(gettext(q{GNOME Keyring})),
-+            id          => 'APT Lists',
-+            name        => $self->encoding->decode(gettext(q{APT Lists})),
++            id          => 'Additional Software',
++            name        => $self->encoding->decode(gettext(q{Additional Software})),
              description => $self->encoding->decode(gettext(
 -                q{Secrets stored by GNOME Keyring}
-+                q{Lists downloaded by APT}
++                q{Software installed every time you start Tails}
              )),
 -            destination => '/home/amnesia/.gnome2/keyrings',
 -            options     => [ 'source=gnome-keyrings' ],
-+            destination => '/var/lib/apt/lists',
-+            options     => [ 'source=apt/lists' ],
++            icon_name   => 'package-x-generic',
              enabled     => 0,
 -            icon_name   => 'seahorse-key-personal',
-+            icon_name   => 'package-x-generic',
++            atoms_args  => [
++                {
++                    destination => '/var/cache/apt/archives',
++                    options     => [ 'source=apt/cache' ],
++                },
++                {
++                    destination => '/var/lib/apt/lists',
++                    options     => [ 'source=apt/lists' ],
++                },
++            ],
          },
          {
 -            name        => $self->encoding->decode(gettext(q{Network Connections})),
@@ -812,11 +920,15 @@ index 1a01326..f6ef7e4 100644
              )),
 -            destination => '/etc/NetworkManager/system-connections',
 -            options     => [ 'source=nm-system-connections' ],
-+            destination => '/etc/cups',
-+            options     => [ 'source=cups-configuration' ],
++            icon_name   => 'printer',
              enabled     => 0,
 -            icon_name   => 'network-wired',
-+            icon_name   => 'printer',
++            atoms_args  => [
++                {
++                    destination => '/etc/cups',
++                    options     => [ 'source=cups-configuration' ],
++                },
++            ],
          },
          {
 -            name        => $self->encoding->decode(gettext(q{Browser bookmarks})),
@@ -828,11 +940,15 @@ index 1a01326..f6ef7e4 100644
              )),
 -            destination => '/home/amnesia/.mozilla/firefox/bookmarks',
 -            options     => [ 'source=bookmarks' ],
-+            destination => '/home/amnesia/.thunderbird',
-+            options     => [ 'source=thunderbird' ],
++            icon_name   => 'thunderbird',
              enabled     => 0,
 -            icon_name   => 'user-bookmarks',
-+            icon_name   => 'thunderbird',
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia/.thunderbird',
++                    options     => [ 'source=thunderbird' ],
++                },
++            ],
          },
          {
 -            name        => $self->encoding->decode(gettext(q{Printers})),
@@ -844,19 +960,33 @@ index 1a01326..f6ef7e4 100644
              )),
 -            destination => '/etc/cups',
 -            options     => [ 'source=cups-configuration' ],
-+            destination => '/home/amnesia/.gnupg',
-+            options     => [ 'source=gnupg' ],
++            icon_name   => 'seahorse-key',
              enabled     => 0,
 -            icon_name   => 'printer',
-+            icon_name   => 'seahorse-key',
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia/.gnupg',
++                    options     => [ 'source=gnupg' ],
++                },
++            ],
          },
          {
 +            id          => 'Bitcoin client',
              name        => $self->encoding->decode(gettext(q{Bitcoin client})),
              description => $self->encoding->decode(gettext(
                  q{Electrum's bitcoin wallet and configuration}
-@@ -145,26 +148,29 @@ method _build__presets {
+             )),
+-            destination => '/home/amnesia/.electrum',
+-            options     => [ 'source=electrum' ],
+-            enabled     => 0,
              icon_name   => 'electrum',
++            enabled     => 0,
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia/.electrum',
++                    options     => [ 'source=electrum' ],
++                },
++            ],
          },
          {
 -            name        => $self->encoding->decode(gettext(q{APT Packages})),
@@ -868,11 +998,15 @@ index 1a01326..f6ef7e4 100644
              )),
 -            destination => '/var/cache/apt/archives',
 -            options     => [ 'source=apt/cache' ],
-+            destination => '/home/amnesia/.purple',
-+            options     => [ 'source=pidgin' ],
++            icon_name   => 'pidgin',
              enabled     => 0,
 -            icon_name   => 'package-x-generic',
-+            icon_name   => 'pidgin',
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia/.purple',
++                    options     => [ 'source=pidgin' ],
++                },
++            ],
          },
          {
 -            name        => $self->encoding->decode(gettext(q{APT Lists})),
@@ -884,35 +1018,94 @@ index 1a01326..f6ef7e4 100644
              )),
 -            destination => '/var/lib/apt/lists',
 -            options     => [ 'source=apt/lists' ],
-+            destination => '/home/amnesia/.ssh',
-+            options     => [ 'source=openssh-client'],
++            icon_name   => 'seahorse-key-ssh',
              enabled     => 0,
 -            icon_name   => 'package-x-generic',
-+            icon_name   => 'seahorse-key-ssh',
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia/.ssh',
++                    options     => [ 'source=openssh-client'],
++                },
++            ],
          },
          {
 +            id          => 'Dotfiles',
              name        => $self->encoding->decode(gettext(q{Dotfiles})),
              description => $self->encoding->decode(gettext(
                  q{Symlink into $HOME every file or directory found in the `dotfiles' directory}
-@@ -195,5 +201,14 @@ sub set_state_from_lines {
-     }
+             )),
+-            destination => '/home/amnesia',
+-            options     => [ 'source=dotfiles', 'link' ],
+-            enabled     => 0,
+             icon_name   => 'preferences-desktop',
++            enabled     => 0,
++            atoms_args  => [
++                {
++                    destination => '/home/amnesia',
++                    options     => [ 'source=dotfiles', 'link' ],
++                },
++            ],
+         },
+     );
+ 
+-    return [
+-        map { Tails::Persistence::Configuration::Atom->new(%{$_}) } @presets
+-    ];
++    foreach my $preset (@presets) {
++        my @atoms;
++        foreach my $atom_init_args (@{$preset->{atoms_args}}) {
++            push @atoms, Tails::Persistence::Configuration::Atom->new(
++                id          => $preset->{id},
++                name        => $preset->{name},
++                description => $preset->{description},
++                enabled     => $preset->{enabled},
++                %{$atom_init_args}
++            );
++        }
++        $preset->{atoms} = \@atoms;
++        delete $preset->{atom_args};
++    }
++
++    return \@presets;
++}
++
++sub atoms {
++    my $self = shift;
++    my @atoms;
++    foreach my $preset ($self->all) {
++        push @atoms, @{$preset->{atoms}};
++    }
++    return @atoms;
  }
  
--no Moose;
+ 
+@@ -190,10 +256,22 @@ sub set_state_from_lines {
+     my $self = shift;
+     my @lines = @_;
+ 
+-    foreach my $atom ($self->all) {
++    foreach my $atom ($self->atoms) {
+         $atom->enabled(1) if grep { $atom->equals_line($_) } @lines;
+     }
++    foreach my $preset ($self->all) {
++        $self->{enabled} = all { $_->enabled } @{$preset->{atoms}};
++    }
++}
++
 +sub set_state_from_overrides {
 +    my $self = shift;
 +    my $overrides = shift;
 +
-+    foreach my $atom ($self->all) {
++    foreach my $atom ($self->atoms) {
 +        $atom->enabled(1) if grep { $atom->id eq $_ } @$overrides;
 +    }
-+}
-+
+ }
+ 
+-no Moose;
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Constants.pm b/usr/share/perl5/Tails/Persistence/Constants.pm
-index 8bdb541..9e61aff 100644
+index 8bdb541..90dad98 100644
 --- a/usr/share/perl5/Tails/Persistence/Constants.pm
 +++ b/usr/share/perl5/Tails/Persistence/Constants.pm
 @@ -1,52 +1,82 @@
@@ -921,12 +1114,13 @@ index 8bdb541..9e61aff 100644
 -use MooseX::Has::Sugar::Saccharin;
 -use MooseX::Types::Moose qw{:all};
 -use MooseX::Types::Path::Class;
++use strictures 2;
 +use Moo;
 +use MooX::late;
-+use Types::Path::Tiny qw{Dir AbsPath};
++use Types::Path::Tiny qw{AbsPath};
  
  use autodie qw(:all);
- use English qw{-no_match_vars};
+-use English qw{-no_match_vars};
 -use Method::Signatures::Simple;
 +
 +use namespace::clean;
@@ -1019,10 +1213,10 @@ index 8bdb541..9e61aff 100644
 +no Moo;
  1; # End of Tails::Persistence::Constants
 diff --git a/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm b/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm
-index 4222c8a..7b43b62 100644
+index 4222c8a..6148d9c 100644
 --- a/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm
 +++ b/usr/share/perl5/Tails/Persistence/Role/ConfigurationLine.pm
-@@ -5,40 +5,50 @@ Tails::Persistence::Role::ConfigurationLine - live-persistence.conf data structu
+@@ -5,40 +5,49 @@ Tails::Persistence::Role::ConfigurationLine - live-persistence.conf data structu
  =cut
  
  package Tails::Persistence::Role::ConfigurationLine;
@@ -1033,9 +1227,10 @@ index 4222c8a..7b43b62 100644
 -use MooseX::Has::Sugar::Saccharin;
 -
 -
- 
+-
++use strictures 2;
  use autodie qw(:all);
- use warnings FATAL => 'all';
+-use warnings FATAL => 'all';
  use Carp;
  
 +use Moo::Role; # Moo::Role exports all methods declared after it's "use"'d
@@ -1087,7 +1282,7 @@ index 4222c8a..7b43b62 100644
  
  
  =head2 new_from_string
-@@ -84,7 +94,8 @@ as a string in the live-persistence.conf format,
+@@ -84,7 +93,8 @@ as a string in the live-persistence.conf format,
  with no trailing newline.
  
  =cut
@@ -1097,7 +1292,7 @@ index 4222c8a..7b43b62 100644
      my $out = $self->destination;
      if ($self->count_options) {
          $out .= "\t" . $self->join_options(',');
-@@ -92,5 +103,5 @@ method stringify {
+@@ -92,5 +102,5 @@ method stringify {
      return $out;
  }
  
@@ -1105,16 +1300,17 @@ index 4222c8a..7b43b62 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm b/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm
-index ff42a6f..d8500b5 100644
+index ff42a6f..24d92df 100644
 --- a/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm
 +++ b/usr/share/perl5/Tails/Persistence/Role/HasStatusArea.pm
-@@ -5,12 +5,12 @@ Tails::Persistence::Role::HasStatusArea - status area interface
+@@ -5,12 +5,13 @@ Tails::Persistence::Role::HasStatusArea - status area interface
  =cut
  
  package Tails::Persistence::Role::HasStatusArea;
 -use Moose::Role;
 -
 -
++use strictures 2;
 +use Moo::Role;
  
  requires 'status_area';
@@ -1126,7 +1322,7 @@ index ff42a6f..d8500b5 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm b/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
-index adca738..d1d4980 100644
+index adca738..06ef78d 100644
 --- a/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
 +++ b/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
 @@ -5,17 +5,9 @@ Tails::Persistence::Role::SetupStep - role for persistence setup steps
@@ -1144,7 +1340,7 @@ index adca738..d1d4980 100644
  
  use 5.10.0;
 -use namespace::autoclean;
-+use strict;
++use strictures 2;
  use autodie qw(:all);
  
  use Glib qw{TRUE FALSE};
@@ -1222,7 +1418,7 @@ index adca738..d1d4980 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm b/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm
-index e0ad103..f543bd7 100644
+index e0ad103..bd8fdb5 100644
 --- a/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm
 +++ b/usr/share/perl5/Tails/Persistence/Role/StatusArea.pm
 @@ -5,26 +5,37 @@ Tails::Persistence::Role::StatusArea - role to manage a status area
@@ -1234,7 +1430,8 @@ index e0ad103..f543bd7 100644
 -use MooseX::Has::Sugar::Saccharin;
 -
 -
- 
+-
++use strictures 2;
  use 5.10.0;
 -use namespace::autoclean;
  use autodie qw(:all);
@@ -1280,7 +1477,7 @@ index e0ad103..f543bd7 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Setup.pm b/usr/share/perl5/Tails/Persistence/Setup.pm
-index d6c0ba2..3226460 100644
+index d6c0ba2..badf105 100644
 --- a/usr/share/perl5/Tails/Persistence/Setup.pm
 +++ b/usr/share/perl5/Tails/Persistence/Setup.pm
 @@ -5,25 +5,12 @@ Tails::Persistence::Setup - main application class
@@ -1303,7 +1500,7 @@ index d6c0ba2..3226460 100644
 -use 5.10.0;
 -use namespace::autoclean;
 +use 5.10.1;
-+use strict;
++use strictures 2;
  
  use autodie qw(:all);
  use Carp::Assert::More;
@@ -1688,6 +1885,15 @@ index d6c0ba2..3226460 100644
          if (exists($check->{must_be_false}) && $check->{must_be_false}) {
              $res = ! $res;
          }
+@@ -450,7 +498,7 @@ sub check_sanity {
+                 gettext($check->{message}),
+                 $self->boot_device_file));
+             if ($self->force && exists($check->{can_be_forced}) && $check->{can_be_forced}) {
+-                warn "$message",
++                say STDERR "$message",
+                      "... but --force is enabled, ignoring results of this sanity check.";
+             }
+             else {
 @@ -475,8 +523,10 @@ sub run {
  
      $self->main_window->set_visible(FALSE);
@@ -1824,7 +2030,7 @@ index d6c0ba2..3226460 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
-index 7a456ee..af32f00 100644
+index 7a456ee..bdd9a14 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
 @@ -5,11 +5,9 @@ Tails::Persistence::Step::Bootstrap - bootstrap persistent storage
@@ -1837,7 +2043,7 @@ index 7a456ee..af32f00 100644
 -
  
 +use 5.10.1;
-+use strict;
++use strictures 2;
  
  use Glib qw{TRUE FALSE};
  
@@ -1991,10 +2197,10 @@ index 7a456ee..af32f00 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Configure.pm b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-index 751d8e3..f08d3c6 100644
+index 751d8e3..62e6e0e 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-@@ -5,12 +5,9 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
+@@ -5,17 +5,15 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
  =cut
  
  package Tails::Persistence::Step::Configure;
@@ -2005,11 +2211,17 @@ index 751d8e3..f08d3c6 100644
 -
  
 +use 5.10.1;
-+use strict;
++use strictures 2;
  
  use Glib qw{TRUE FALSE};
  
-@@ -24,25 +21,49 @@ use POSIX;
+ use Carp::Assert::More;
+ use Number::Format qw(:subs);
++use Tails::Persistence::Configuration;
+ use Tails::Persistence::Configuration::Button;
+ use Try::Tiny;
+ 
+@@ -24,25 +22,49 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -2071,7 +2283,7 @@ index 751d8e3..f08d3c6 100644
  
  
  =head1 CONSTRUCTORS
-@@ -75,7 +96,8 @@ sub BUILD {
+@@ -75,7 +97,8 @@ sub BUILD {
      $self->go_button->set_sensitive(TRUE);
  }
  
@@ -2081,18 +2293,35 @@ index 751d8e3..f08d3c6 100644
      my $box = Gtk3::VBox->new();
      $box->set_spacing(6);
      $box->pack_start($self->title, FALSE, FALSE, 0);
-@@ -100,7 +122,8 @@ method _build_main_box {
+@@ -100,15 +123,29 @@ method _build_main_box {
      return $box;
  }
  
 -method _build_buttons {
+-    [
+-        map {
+-            Tails::Persistence::Configuration::Button->new(atom => $_)
+-        } $self->configuration->all_atoms
+-    ]
 +sub _build_buttons {
 +    my $self = shift;
-     [
-         map {
-             Tails::Persistence::Configuration::Button->new(atom => $_)
-@@ -108,7 +131,8 @@ method _build_buttons {
-     ]
++    my @buttons;
++    foreach my $preset ($self->configuration->presets->all) {
++        push @buttons,
++            Tails::Persistence::Configuration::Button->new(
++                id          => $preset->{id},
++                atoms       => $preset->{atoms},
++                name        => $preset->{name},
++                description => $preset->{description},
++                icon_name   => $preset->{icon_name},
++                enabled     => $preset->{enabled},
++            );
++    }
++    foreach my $atom ($self->configuration->atoms_not_in_presets) {
++        push @buttons,
++            Tails::Persistence::Configuration::Button->new(atoms => [$atom]);
++    }
++    return \@buttons;
  }
  
 -method _build_list_box {
@@ -2101,7 +2330,7 @@ index 751d8e3..f08d3c6 100644
      my $box = Gtk3::VBox->new();
      $box->set_spacing(6);
      $box->pack_start($_->main_widget, FALSE, FALSE, 0) foreach $self->all_buttons;
-@@ -122,7 +146,9 @@ method _build_list_box {
+@@ -122,7 +159,9 @@ method _build_list_box {
  
  =cut
  
@@ -2112,7 +2341,7 @@ index 751d8e3..f08d3c6 100644
      if ($error) {
          $self->working(0);
          say STDERR "$error";
-@@ -136,7 +162,8 @@ method operation_finished ($error) {
+@@ -136,7 +175,8 @@ method operation_finished ($error) {
      }
  }
  
@@ -2122,7 +2351,7 @@ index 751d8e3..f08d3c6 100644
      $self->list_box->hide;
      $self->working(1);
      $self->subtitle->set_text(
-@@ -155,12 +182,13 @@ method go_button_pressed {
+@@ -155,12 +195,13 @@ method go_button_pressed {
      $self->operation_finished($error);
  }
  
@@ -2139,7 +2368,7 @@ index 751d8e3..f08d3c6 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Delete.pm b/usr/share/perl5/Tails/Persistence/Step/Delete.pm
-index 88916ff..f5fa087 100644
+index 88916ff..52a4ce0 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Delete.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Delete.pm
 @@ -5,11 +5,9 @@ Tails::Persistence::Step::Delete - delete persistent storage
@@ -2152,7 +2381,7 @@ index 88916ff..f5fa087 100644
 -
  
 +use 5.10.1;
-+use strict;
++use strictures 2;
  
  use Glib qw{TRUE FALSE};
  
@@ -2198,11 +2427,16 @@ index 88916ff..f5fa087 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Utils.pm b/usr/share/perl5/Tails/Persistence/Utils.pm
-index a58b02e..2364ff7 100644
+index a58b02e..ac44cbe 100644
 --- a/usr/share/perl5/Tails/Persistence/Utils.pm
 +++ b/usr/share/perl5/Tails/Persistence/Utils.pm
-@@ -10,17 +10,17 @@ use strict;
- use warnings FATAL => 'all';
+@@ -6,21 +6,20 @@ Tails::Persistence::Utils - utilities for Tails persistent storage
+ 
+ package Tails::Persistence::Utils;
+ 
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
  use 5.10.1;
  
 +use Carp;
@@ -2224,7 +2458,7 @@ index a58b02e..2364ff7 100644
  
  =head1 FUNCTIONS
  
-@@ -64,7 +64,7 @@ sub get_variable_from_file {
+@@ -64,7 +63,7 @@ sub get_variable_from_file {
      my $file     = shift;
      my $variable = shift;
  
@@ -2233,7 +2467,7 @@ index a58b02e..2364ff7 100644
          if (my ($name, $value) =
                  ($line =~ m{\A [[:space:]]* ($variable)=(.*) \z}xms)) {
              return $value;
-@@ -94,6 +94,8 @@ sub check_config_file_permissions {
+@@ -94,6 +93,8 @@ sub check_config_file_permissions {
      # ownership
      foreach my $field (qw{uid gid}) {
          my $actual_value = $st->$field;
