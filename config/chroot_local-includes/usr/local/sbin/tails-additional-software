@@ -192,10 +192,10 @@ def has_unlocked_persistence(search_new_persistence=False):
     return os.path.exists(get_persistence_path(search_new_persistence))
 
 
-def tails_media_is_writable():
+def is_tails_media_writable():
     """Return true iff tails is started from a writable media."""
-    # XXX: test if media is RW
-    return True
+    return not subprocess.run(
+        "/usr/local/lib/tails-boot-device-can-have-persistence").returncode
 
 
 def has_additional_packages_list(search_new_persistence=False):
@@ -317,7 +317,7 @@ def handle_installed_packages(packages):
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: persistence storage is locked, can't add "
                       "additional software.")
-    elif tails_media_is_writable():
+    elif is_tails_media_writable():
         if _notify(_("Add {packages} to your additional software?").format(
                     packages=" ".join(packages)),
                    _("To install it automatically when starting Tails, you "
