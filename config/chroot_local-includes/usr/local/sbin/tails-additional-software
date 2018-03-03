@@ -82,8 +82,8 @@ def _notify(title, body="", accept_label="", deny_label="",
     The notification will show title and body.
 
     If accept_label or deny_label are set, they will be shown on action buttons
-    and the method will wait for user input and return True if the button with
-    accept_label was clicked or False if the button with deny_label was
+    and the method will wait for user input and return 1 if the button with
+    accept_label was clicked or 0 if the button with deny_label was
     clicked.
 
     If documentation_target is set, a "Documentation" action button will open
@@ -108,7 +108,7 @@ def _notify(title, body="", accept_label="", deny_label="",
                                             urgent],
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.PIPE,
-                                           encoding="utf-8")
+                                           universal_newlines=True)
         if completed_process.returncode == 1:
             # sudo failed to execute the command
             raise OSError(completed_process.stderr)
@@ -125,9 +125,9 @@ def _notify(title, body="", accept_label="", deny_label="",
                 return line[3:]
     else:
         if completed_process.returncode == 0:
-            return True
+            return 1
         elif completed_process.returncode == 3:
-            return False
+            return 0
         else:
             return None
 
@@ -138,9 +138,11 @@ def _notify_failure(summary, details):
     The user has the option to edit the configuration of to view the system
     log.
     """
-    if _notify(summary, details, _("Show log"), _("Configure"), urgent=True):
+    action_clicked = _notify(summary, details, _("Show log"), _("Configure"),
+                             urgent=True)
+    if action_clicked == 1:
         show_configuration_window()
-    else:
+    elif action_clicked == 0:
         show_system_log()
 
 
@@ -522,7 +524,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
     apt_get_returncode = _launch_apt_get(
         ["--no-remove",
          "--option", "DPkg::Options::=--force-confold",
-         "install"] + packages)
+         "install"] + list(packages))
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: installation of %s failed"
