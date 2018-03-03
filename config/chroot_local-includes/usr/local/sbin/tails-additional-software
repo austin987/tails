@@ -84,6 +84,7 @@ def _launch_persistence_setup(*args):
                       "{returncode}".format(returncode=e.returncode))
         for line in e.stderr.splitlines():
             syslog.syslog(syslog.LOG_ERR, line)
+        raise
     finally:
         subprocess.run(
             ["sudo", "-u", LIVE_USERNAME,
