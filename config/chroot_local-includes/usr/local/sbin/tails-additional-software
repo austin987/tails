@@ -313,18 +313,18 @@ def add_additional_packages(new_packages):
             f.write(package + '\n')
 
 
-def remove_additional_packages(packages):
+def remove_additional_packages(old_packages):
     """Remove packages from additional packages configuration.
 
     Removes the packages from additional packages configuration.
 
     packages should be a list of packages names.
     """
-    syslog.syslog("Removing from additional packages list: %s" % packages)
+    syslog.syslog("Removing from additional packages list: %s" % old_packages)
     packages = get_additional_packages()
     # The list of packages was initially provided by apt after removing them,
     # so we don't check the names.
-    packages -= packages
+    packages -= old_packages
 
     with atomicwrites.atomic_write(PACKAGES_LIST_FILE, overwrite=True) as f:
         for package in sorted(packages):
