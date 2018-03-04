@@ -17,7 +17,7 @@ Feature: Additional software packages
   Scenario: I can set up and use ASP when I install a package in a Tails that has no persistent partition
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I set an administration password
-    And I login to a new session
+    And I log in to a new session
     And the network is plugged
     And Tor is ready
     And all notifications have disappeared
@@ -26,7 +26,7 @@ Feature: Additional software packages
     # commit e2510fae79870ff724d190677ff3b228b2bf7eac
     And I configure APT to use non-onion sources
     And I update APT using apt
-    And I install "sl" using APT
+    And I install "sl" using apt
     Then I am proposed to create an ASP persistence
     And I create the persistence
     # We have to save the non-onion APT sources in persistence, so
@@ -42,7 +42,7 @@ Feature: Additional software packages
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I install "sslh" using synaptic
+    When I install "sslh" using Synaptic
     And I confirm when I am asked if I want to add "sslh" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
