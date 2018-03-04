@@ -96,7 +96,7 @@ Feature: Additional software packages
     And the additional software package installation service is run
     And I am notified that the package "cowsay" is installed
     And the package "cowsay" is installed
-    And is start the ASP GUI
+    And I start the ASP GUI
     And I remove "cowsay" from the list of ASP packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
