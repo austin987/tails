@@ -1,5 +1,30 @@
 Corresponding ticket: [[!tails_ticket 14567]]
 
+## Characteristics of mobile messengers
+
+- the EFF provides a [Secure Messaging Scorecard](https://www.eff.org/secure-messaging-scorecard) (which is updated atm, the old
+version is available [here](https://www.eff.org/node/82654)).
+
+I'll provide some additional characteristics which we should consider and from which we can choose down below.
+
+### Additional characteristics
+
+- availability of desktop clients (more or less crucial in the context of Tails, as I don't think that a web client is a feasible option)
+- mass adoption / platform interoperability
+- metadata security (network-wise, e.g.: what data is the provider saving in terms of me contacting whom and when from where, etc.)
+- address book security / contact discovery mechanisms (e.g. some messengers will upload the whole address book to a central server to find out if your friends use the same app, too)
+- security mechanisms if a device gets lost (I think this is a bit out of scope wrt. Tails, as we already provide encrypted persistence. But it can be a thing with mobile devices.)
+- group chat security (some protocols can't handle this, AFAIR signal does)
+- self destructing messages (e.g. Telegram is offering this feature, after a pre-set time the message will be destroyed on the recipients device)
+- support of sending files and media such videos, audio, voice messages,…
+- online status / status message / profile picture security (metadata security. e.g. can I restrict that people that I don't know won't see my picture or my status, etc.)
+- asynchronous messaging
+- user enumeration security (is it possible to easily "harvest" accounts via bulk telephone number checking, id-numbers, etc. This is esp. relevant when it comes to nation-wide adversaries who can easily control big phone number ranges)
+- requirement of a phone number
+- price (as in $$$)
+- usability (esp. a GUI which directs the user to a desired level of security or at leasts helps to prevent the user to make fatal mistakes)
+- security in adding new devices or clients (maybe two-factor auth or similar?, worst case:  an attacker adds a device easily and is able to restore all past messages because the provider stores them all)
+
 ## General requirements
 
 **MUST**
@@ -14,7 +39,7 @@ Corresponding ticket: [[!tails_ticket 14567]]
 - allow for instant messaging
 - allow for video calls
 - allow for audio calls
-
+- allow saving data to a persistent folder
 ## Possible candidates:
 
 ### Briar
@@ -45,11 +70,8 @@ Corresponding ticket: [[!tails_ticket 14567]]
 - [[!tails_ticket 15200]]
 - centralized server
 - mass adopted
-- Chromium-based desktop application is deprecated, it's going to be
-  replaced by an [Electron framework based](https://electron.atom.io/)
-  standalone application, i.e. it's supposed to work in all major OS'es
-  but we don't know if such applications will actually be officially
-  available in Debian
+- the Chromium-based app actually moved to the Electron application framework in early 11/2017
+- is installable via apt (with installed apt-transport-https) and the repo's from the Signal project. it's 198MByte big after installation
 - double ratchet
 - instant messaging
 - Tor?
@@ -77,3 +99,19 @@ Corresponding ticket: [[!tails_ticket 14567]]
 
 * [[VoIP_support]]
 * [[replace_Pidgin]]
+
+## Free and random thoughts
+- modern (mobile) messengers replaced SMS/MMS and a bit of e-mail, too, as mobile internet became widespread available in the beginning of this century
+- are nearly exclusively used on mobile devices (smartphones/tablets) with operating systems such as Android OS by Google and Apple's iOS
+- some use (or even require and are based on) mobile phone numbers as identifiers for their users
+- started as (cost-effective, due to availability of mobile data/WiFi) replacement for SMS, but more features were added during time (group chats, media/file sharing, profile pictures, voice messages, "broadcasts", own status texts, voice calls, etc.)
+- mostly aimed at mobile platforms as Android, Apple iOS, Windows Phone. sometimes desktop clients are available for Windows, macOS and also Linux. For some products web clients are available which run in any modern web browser (but may require a running phone in parallel)
+- single platform/protocol. Mobile messengers are incompatible with other platforms/messengers
+- mostly client/server (or client/federation) software
+- mostly run by commercial companies which provide the client software, updates, servers
+- client and server applications are mostly closed source, some providers allow free software based clients. sometimes parts of the client/libraries
+are open sourced for review. some messengers implement free software protocols or libraries (e.g. Axolotl Ratchet, NaCl)
+- all modern messengers don't require the recipient(s) to be online at the same time when sending a message (in other words: they support asynchronous messaging)
+- nearly every mobile messenger is (money-wise) free-to-use
+- in the end, even if a product is presented and promoted as open source aka. free software, it may be, but won't be totally. The providers claim that the client software is free software. And it indeed is in nearly every case, even if it's doing some weird stuff (looking at Telegram here). But no one will effectively show us what's running on the other side. Maybe some source code is opened, but in the end no one will know, what is executed on the shiny silicon of WhatsApp, Telegram, Signal, etc. We even won't know what metadata will be kept there, for how long, for which purpose, and which whom this data is going to be shared.
+Let's assume that the math in the modern crypto works. The provider/state will only see encrypted garbage. Fine. But what about the layers around? From, at which time the message is leaving, to which data center? (etc. etc. you get the picture)
