@@ -103,7 +103,7 @@ Feature: Additional software packages
     Then the additional software package installation service is run
     And the package "cowsay" is not installed
 
-  Scenario: Recovering in offline mode after a previous failed ASP upgrade
+  Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install an old version "" if the "cowsay" package using apt
