@@ -1,4 +1,4 @@
-diff --git a/lib/Tails/Persistence.pm b/usr/share/perl5/Tails/Persistence.pm
+diff --git a/usr/share/perl5/Tails/Persistence.pm b/usr/share/perl5/Tails/Persistence.pm
 index 8d1e412..c79ac9b 100644
 --- a/usr/share/perl5/Tails/Persistence.pm
 +++ b/usr/share/perl5/Tails/Persistence.pm
@@ -294,44 +294,35 @@ index 768b2c5..6f9b273 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Button.pm b/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
-index 3540544..d240719 100644
+deleted file mode 100644
+index 3540544..0000000
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
-+++ b/usr/share/perl5/Tails/Persistence/Configuration/Button.pm
-@@ -5,56 +5,118 @@ Tails::Persistence::Configuration::Button - a configuration button in the GUI
- =cut
- 
- package Tails::Persistence::Configuration::Button;
++++ /dev/null
+@@ -1,163 +0,0 @@
+-=head1 NAME
+-
+-Tails::Persistence::Configuration::Button - a configuration button in the GUI
+-
+-=cut
+-
+-package Tails::Persistence::Configuration::Button;
 -use Moose;
 -use MooseX::Method::Signatures;
 -use MooseX::Types::Moose qw( :all );
 -use MooseX::Has::Sugar::Saccharin;
 -
 -
- 
-+use strictures 2;
- use autodie qw(:all);
+-
+-use autodie qw(:all);
 -use warnings FATAL => 'all';
- use Glib qw{TRUE FALSE};
-+use List::MoreUtils qw{all};
- use Pango;
-+use UUID::Tiny ':std';
-+
-+use Locale::gettext;
-+use POSIX;
-+setlocale(LC_MESSAGES, "");
-+textdomain("tails-persistence-setup");
-+
-+use Moo;
-+use MooX::late;
-+use MooX::HandlesVia;
-+with 'Tails::Role::HasEncoding';
-+use namespace::clean;
- 
- 
- =head1 ATTRIBUTES
- 
- =cut
- 
+-use Glib qw{TRUE FALSE};
+-use Pango;
+-
+-
+-=head1 ATTRIBUTES
+-
+-=cut
+-
 -has 'atom'         => lazy_build ro 'Tails::Persistence::Configuration::Atom',
 -    handles => [
 -        qw{source destination all_options enabled name description icon_name}
@@ -340,183 +331,137 @@ index 3540544..d240719 100644
 -has 'checked_img'  => lazy_build ro 'Gtk3::Image';
 -has 'main_widget'  => lazy_build ro 'Gtk3::ToggleButton',
 -    handles => {
-+has 'atoms' => (
-+    required    => 1,
-+    is          => 'ro',
-+    isa         => 'ArrayRef[Tails::Persistence::Configuration::Atom]',
-+);
-+foreach (qw{id name description icon_name}) {
-+    has $_ => (
-+        lazy_build => 1,
-+        is         => 'rw',
-+        isa        => 'Str',
-+    );
-+}
-+has 'icon' => (
-+    lazy_build => 1,
-+    is         => 'ro',
-+    isa        => 'Gtk3::Image',
-+);
-+has 'checked_img'  => (
-+    lazy_build => 1,
-+    is         => 'ro',
-+    isa        => 'Gtk3::Image',
-+);
-+has 'main_widget' => (
-+    lazy_build     => 1,
-+    is             => 'ro',
-+    isa            => 'Gtk3::ToggleButton',
-+    handles        => {
-         is_active  => 'get_active',
-         set_active => 'set_active',
+-        is_active  => 'get_active',
+-        set_active => 'set_active',
 -    };
 -has 'icon_theme' => ro 'Gtk3::IconTheme', builder '_build_icon_theme';
 -has 'title_label'  => lazy_build ro 'Gtk3::Label';
 -has 'description_label' => lazy_build ro 'Gtk3::Label';
-+    },
-+);
-+has 'icon_theme' => (
-+    is      => 'ro',
-+    isa     => 'Gtk3::IconTheme',
-+    builder => '_build_icon_theme',
-+);
-+has 'title_label' => (
-+    lazy_build => 1,
-+    is         => 'ro',
-+    isa        => 'Gtk3::Label',
-+);
-+has 'description_label' => (
-+    lazy_build => 1,
-+    is         => 'ro',
-+    isa        => 'Gtk3::Label',
-+);
- 
- 
- =head1 CONSTRUCTORS
- 
- =cut
- 
+-
+-
+-=head1 CONSTRUCTORS
+-
+-=cut
+-
 -method _build_icon {
-+sub _build_name {
-+    my $self = shift;
-+    $self->encoding->decode(gettext('Custom'));
-+}
-+
-+sub _build_id {
-+    my $self = shift;
-+    create_uuid();
-+}
-+
-+sub _build_description {
-+    my $self = shift;
-+    join(', ', map { $self->encoding->decode($_->destination) } @{$self->atoms});
-+}
-+
-+sub _build_icon_name {
-+    my $self = shift;
-+    'dialog-question'
-+}
-+
-+sub _build_icon {
-+    my $self = shift;
-     Gtk3::Image->new_from_pixbuf($self->icon_theme->load_icon(
-         $self->icon_name, 48, 'use-builtin'
-     ));
- }
- 
+-    Gtk3::Image->new_from_pixbuf($self->icon_theme->load_icon(
+-        $self->icon_name, 48, 'use-builtin'
+-    ));
+-}
+-
 -method _build_checked_img {
-+sub _build_checked_img {
-+    my $self = shift;
-     # FIXME: we want the GTK_ICON_SIZE_SMALL_TOOLBAR
-     # member of the GtkIconSize enum, not a magic "16" number here.
-     Gtk3::Image->new_from_stock('gtk-apply', 16);
- }
- 
+-    # FIXME: we want the GTK_ICON_SIZE_SMALL_TOOLBAR
+-    # member of the GtkIconSize enum, not a magic "16" number here.
+-    Gtk3::Image->new_from_stock('gtk-apply', 16);
+-}
+-
 -method _build_main_widget {
-+sub _build_main_widget {
-+    my $self = shift;
-     my $line = shift;
- 
-     my $vbox = Gtk3::VBox->new();
-@@ -77,7 +139,8 @@ method _build_main_widget {
-     return $button;
- }
- 
+-    my $line = shift;
+-
+-    my $vbox = Gtk3::VBox->new();
+-    $vbox->set_border_width(5);
+-    $vbox->pack_start($self->title_label, FALSE, FALSE, 0);
+-    $vbox->pack_start($self->description_label, FALSE, FALSE, 0);
+-
+-    my $hbox = Gtk3::HBox->new();
+-    $hbox->pack_start($self->icon, FALSE, FALSE, 0);
+-    $hbox->pack_start($vbox, TRUE, TRUE, 0);
+-    $hbox->pack_start($self->checked_img, FALSE, FALSE, 0);
+-
+-    my $button = Gtk3::ToggleButton->new();
+-    $button->add($hbox);
+-    $button->set_active($self->enabled);
+-    $button->signal_connect('toggled' => sub { $self->toggled_cb });
+-
+-    $button->signal_connect('show' => sub { $self->refresh_display });
+-
+-    return $button;
+-}
+-
 -method _build_icon_theme {
-+sub _build_icon_theme {
-+    my $self = shift;
-     my $theme = Gtk3::IconTheme::get_default();
- 
-     $theme->append_search_path('/usr/share/pixmaps/cryptui/48x48');
-@@ -88,7 +151,8 @@ method _build_icon_theme {
-     return $theme;
-  }
- 
+-    my $theme = Gtk3::IconTheme::get_default();
+-
+-    $theme->append_search_path('/usr/share/pixmaps/cryptui/48x48');
+-    $theme->append_search_path('/usr/share/pixmaps/seahorse/48x48');
+-    $theme->append_search_path('/usr/share/icons/gnome-colors-common/32x32/apps/');
+-    $theme->append_search_path('/usr/share/app-install/icons/');
+-
+-    return $theme;
+- }
+-
 -method _build_title_label {
-+sub _build_title_label {
-+    my $self = shift;
-     my $title = Gtk3::Label->new($self->name);
-     $title->set_alignment(0.0, 0.5);
-     my $title_attrlist  = Pango::AttrList->new;
-@@ -99,7 +163,8 @@ method _build_title_label {
-     return $title;
- }
- 
+-    my $title = Gtk3::Label->new($self->name);
+-    $title->set_alignment(0.0, 0.5);
+-    my $title_attrlist  = Pango::AttrList->new;
+-    $title_attrlist->insert($_)
+-        foreach ( Pango::AttrScale->new(1.1),Pango::AttrWeight->new('bold') );
+-    $title->set_attributes($title_attrlist);
+-
+-    return $title;
+-}
+-
 -method _build_description_label {
-+sub _build_description_label {
-+    my $self = shift;
-     my $description = Gtk3::Label->new($self->description);
-     $description->set_alignment(0.0, 0.5);
-     my $description_attrlist = Pango::AttrList->new;
-@@ -119,17 +184,27 @@ method _build_description_label {
- 
- =cut
- 
+-    my $description = Gtk3::Label->new($self->description);
+-    $description->set_alignment(0.0, 0.5);
+-    my $description_attrlist = Pango::AttrList->new;
+-    $description_attrlist->insert(
+-        Pango::AttrForeground->new(30000, 30000, 30000)
+-      );
+-    $description->set_attributes($description_attrlist);
+-    $description->set_line_wrap(TRUE);
+-    $description->set_line_wrap_mode('word');
+-    $description->set_single_line_mode(FALSE);
+-
+-    return $description;
+-}
+-
+-
+-=head1 METHODS
+-
+-=cut
+-
 -method toggled_cb {
 -    $self->atom->enabled($self->is_active);
-+sub enabled {
-+    my $self = shift;
-+    all { $_->enabled } @{$self->atoms};
-+}
-+
-+sub toggled_cb {
-+    my $self = shift;
-+    foreach my $atom (@{$self->atoms}) {
-+        $atom->enabled($self->is_active)
-+    }
-     $self->refresh_display;
- }
- 
+-    $self->refresh_display;
+-}
+-
 -method refresh_display {
-+sub refresh_display {
-+    my $self = shift;
-     $self->refresh_checked_img;
-     $self->refresh_text_color;
- }
- 
+-    $self->refresh_checked_img;
+-    $self->refresh_text_color;
+-}
+-
 -method refresh_checked_img {
-+sub refresh_checked_img {
-+    my $self = shift;
-     if ($self->enabled) {
-         $self->checked_img->show;
-     }
-@@ -138,7 +213,8 @@ method refresh_checked_img {
-     }
- }
- 
+-    if ($self->enabled) {
+-        $self->checked_img->show;
+-    }
+-    else {
+-        $self->checked_img->hide;
+-    }
+-}
+-
 -method refresh_text_color {
-+sub refresh_text_color {
-+    my $self = shift;
-     my %color = $self->enabled ?
-         (
-             title       => 0,
-@@ -159,5 +235,5 @@ method refresh_text_color {
-     $self->description_label->set_attributes($attrlist);
- }
- 
+-    my %color = $self->enabled ?
+-        (
+-            title       => 0,
+-            description => 30000,
+-    ) : (
+-            title       => 30000,
+-            description => 40000,
+-    );
+-    my $attrlist = $self->title_label->get_attributes;
+-    $attrlist->change(
+-        Pango::AttrForeground->new($color{title}, $color{title}, $color{title})
+-    );
+-    $self->title_label->set_attributes($attrlist);
+-    $attrlist = $self->description_label->get_attributes;
+-    $attrlist->change(
+-        Pango::AttrForeground->new($color{description}, $color{description}, $color{description})
+-    );
+-    $self->description_label->set_attributes($attrlist);
+-}
+-
 -no Moose;
-+no Moo;
- 1;
+-1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
 new file mode 100644
 index 0000000..16e5dbd
@@ -743,7 +688,7 @@ index f3fd304..e6bc85a 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
-index 1a01326..69d31bd 100644
+index 1a01326..5f1966f 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 @@ -5,18 +5,17 @@ Tails::Persistence::Configuration::Presets - available configuration snippets
@@ -770,7 +715,7 @@ index 1a01326..69d31bd 100644
  use Tails::Persistence::Configuration::Atom;
  
  use Locale::gettext;
-@@ -24,161 +23,228 @@ use POSIX;
+@@ -24,161 +23,232 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -888,18 +833,24 @@ index 1a01326..69d31bd 100644
          },
          {
 -            name        => $self->encoding->decode(gettext(q{GNOME Keyring})),
-+            id          => 'AdditionalSoftware',
-+            name        => $self->encoding->decode(gettext(q{Additional Software})),
-             description => $self->encoding->decode(gettext(
+-            description => $self->encoding->decode(gettext(
 -                q{Secrets stored by GNOME Keyring}
++            id               => 'AdditionalSoftware',
++            name             => $self->encoding->decode(gettext(q{Additional Software})),
++            description      => $self->encoding->decode(gettext(
 +                q{Software installed every time you start Tails}
              )),
 -            destination => '/home/amnesia/.gnome2/keyrings',
 -            options     => [ 'source=gnome-keyrings' ],
-+            icon_name   => 'package-x-generic',
-             enabled     => 0,
+-            enabled     => 0,
 -            icon_name   => 'seahorse-key-personal',
-+            atoms_args  => [
++            icon_name        => 'package-x-generic',
++            enabled          => 0,
++            configuration_cb => sub {
++                # XXX
++                warn("Entering AdditionalSoftware's config_cb");
++            },
++            atoms_args       => [
 +                {
 +                    destination => '/var/cache/apt/archives',
 +                    options     => [ 'source=apt/cache' ],
@@ -1079,7 +1030,7 @@ index 1a01326..69d31bd 100644
  }
  
  
-@@ -190,10 +256,22 @@ sub set_state_from_lines {
+@@ -190,10 +260,22 @@ sub set_state_from_lines {
      my $self = shift;
      my @lines = @_;
  
@@ -1104,6 +1055,252 @@ index 1a01326..69d31bd 100644
 -no Moose;
 +no Moo;
  1;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
+new file mode 100644
+index 0000000..032ffff
+--- /dev/null
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
+@@ -0,0 +1,240 @@
++=head1 NAME
++
++Tails::Persistence::Configuration::Setting - a persistence feature displayed in the GUI
++
++=cut
++
++package Tails::Persistence::Configuration::Setting;
++
++use strictures 2;
++use autodie qw(:all);
++use Glib qw{TRUE FALSE};
++use List::MoreUtils qw{all};
++use Pango;
++use UUID::Tiny ':std';
++
++use Locale::gettext;
++use POSIX;
++setlocale(LC_MESSAGES, "");
++textdomain("tails-persistence-setup");
++
++use Moo;
++use MooX::late;
++with 'Tails::Role::HasEncoding';
++use namespace::clean;
++
++
++=head1 ATTRIBUTES
++
++=cut
++
++has 'atoms' => (
++    required    => 1,
++    is          => 'ro',
++    isa         => 'ArrayRef[Tails::Persistence::Configuration::Atom]',
++);
++
++foreach (qw{id name description icon_name}) {
++    has $_ => (
++        lazy_build => 1,
++        is         => 'rw',
++        isa        => 'Str',
++    );
++}
++
++has 'icon' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Image',
++);
++
++has 'main_widget' => (
++    lazy_build     => 1,
++    is             => 'ro',
++    isa            => 'Gtk3::HBox',
++);
++
++has 'switch' => (
++    lazy_build     => 1,
++    is             => 'ro',
++    isa            => 'Gtk3::Switch',
++    handles        => {
++        is_active  => 'get_active',
++        set_active => 'set_active',
++    },
++);
++
++has 'icon_theme' => (
++    is      => 'ro',
++    isa     => 'Gtk3::IconTheme',
++    builder => '_build_icon_theme',
++);
++
++has 'title_label' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Label',
++);
++
++has 'description_label' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Label',
++);
++
++has 'configuration_button' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::Button',
++);
++
++has 'configuration_cb' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'CodeRef',
++    predicate  => 1,
++);
++
++
++=head1 CONSTRUCTORS
++
++=cut
++
++sub _build_name {
++    my $self = shift;
++    $self->encoding->decode(gettext('Custom'));
++}
++
++sub _build_id {
++    my $self = shift;
++    create_uuid();
++}
++
++sub _build_description {
++    my $self = shift;
++    join(', ', map { $self->encoding->decode($_->destination) } @{$self->atoms});
++}
++
++sub _build_icon_name {
++    my $self = shift;
++    'dialog-question'
++}
++
++sub _build_icon {
++    my $self = shift;
++    Gtk3::Image->new_from_pixbuf($self->icon_theme->load_icon(
++        $self->icon_name, 48, 'use-builtin'
++    ));
++}
++
++sub _build_switch {
++    my $self = shift;
++    my $switch = Gtk3::Switch->new();
++    $switch->set_active($self->enabled);
++    $switch->set_valign('GTK_ALIGN_CENTER');
++    $switch->set_vexpand(FALSE);
++    for (qw{start end top bottom}) {
++        my $method = "set_margin_${_}";
++        $switch->$method(12);
++    }
++    $switch->signal_connect('notify::active' => sub { $self->toggled_cb });
++    return $switch;
++}
++
++sub _build_configuration_button {
++    my $self = shift;
++
++    my $button = Gtk3::Button->new_from_icon_name(
++        'emblem-system-symbolic', 1,
++    );
++    $button->set_valign('GTK_ALIGN_CENTER');
++    $button->signal_connect('clicked' => sub { $self->configuration_cb->() } );
++
++    return $button;
++}
++
++sub _build_main_widget {
++    my $self = shift;
++    my $line = shift;
++
++    my $main_box = Gtk3::HBox->new();
++    $main_box->set_border_width(5);
++
++    my $text_box = Gtk3::VBox->new();
++    $text_box->set_border_width(5);
++    $text_box->pack_start($self->title_label, FALSE, FALSE, 0);
++    $text_box->pack_start($self->description_label, FALSE, FALSE, 0);
++    $text_box->set_margin_start(12);
++    $text_box->set_margin_end(12);
++    $text_box->set_margin_top(6);
++    $text_box->set_margin_bottom(6);
++
++    $main_box->pack_start($self->icon, FALSE, FALSE, 0);
++    $main_box->pack_start($text_box, TRUE, TRUE, 0);
++    if ($self->has_configuration_cb) {
++        $main_box->pack_start($self->configuration_button, FALSE, FALSE, 0);
++    }
++    $main_box->pack_start($self->switch, FALSE, FALSE, 0);
++
++    return $main_box;
++}
++
++sub _build_icon_theme {
++    my $self = shift;
++    my $theme = Gtk3::IconTheme::get_default();
++
++    $theme->append_search_path('/usr/share/pixmaps/cryptui/48x48');
++    $theme->append_search_path('/usr/share/pixmaps/seahorse/48x48');
++    $theme->append_search_path('/usr/share/icons/gnome-colors-common/32x32/apps/');
++    $theme->append_search_path('/usr/share/app-install/icons/');
++
++    return $theme;
++ }
++
++sub _build_title_label {
++    my $self = shift;
++    my $title = Gtk3::Label->new($self->name);
++    $title->set_alignment(0.0, 0.5);
++    my $title_attrlist = Pango::AttrList->new;
++    $title_attrlist->insert($_)
++        foreach ( Pango::AttrScale->new(1.1),Pango::AttrWeight->new('bold') );
++    $title->set_attributes($title_attrlist);
++
++    return $title;
++}
++
++sub _build_description_label {
++    my $self = shift;
++    my $description = Gtk3::Label->new($self->description);
++    $description->set_alignment(0.0, 0.5);
++    my $description_attrlist = Pango::AttrList->new;
++    $description_attrlist->insert(
++        Pango::AttrForeground->new(30000, 30000, 30000)
++      );
++    $description->set_attributes($description_attrlist);
++    $description->set_line_wrap(TRUE);
++    $description->set_line_wrap_mode('word');
++    $description->set_single_line_mode(FALSE);
++
++    return $description;
++}
++
++
++=head1 METHODS
++
++=cut
++
++sub enabled {
++    my $self = shift;
++    all { $_->enabled } @{$self->atoms};
++}
++
++sub toggled_cb {
++    my $self = shift;
++    foreach my $atom (@{$self->atoms}) {
++        $atom->enabled($self->is_active)
++    }
++}
++
++no Moo;
++1;
 diff --git a/usr/share/perl5/Tails/Persistence/Constants.pm b/usr/share/perl5/Tails/Persistence/Constants.pm
 index 8bdb541..90dad98 100644
 --- a/usr/share/perl5/Tails/Persistence/Constants.pm
@@ -1322,7 +1519,7 @@ index ff42a6f..24d92df 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm b/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
-index adca738..06ef78d 100644
+index adca738..de27a82 100644
 --- a/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
 +++ b/usr/share/perl5/Tails/Persistence/Role/SetupStep.pm
 @@ -5,17 +5,9 @@ Tails::Persistence::Role::SetupStep - role for persistence setup steps
@@ -1344,10 +1541,11 @@ index adca738..06ef78d 100644
  use autodie qw(:all);
  
  use Glib qw{TRUE FALSE};
-@@ -26,6 +18,13 @@ use POSIX;
+@@ -26,7 +18,14 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
+-requires '_build_main_box';
 +use Moo::Role;
 +use MooX::late;
 +use namespace::clean;
@@ -1355,8 +1553,9 @@ index adca738..06ef78d 100644
 +with 'Tails::Role::HasEncoding';
 +with 'Tails::Persistence::Role::HasStatusArea';
 +
- requires '_build_main_box';
++requires '_build_main_widget';
  requires 'go_button_pressed';
+ 
  
 @@ -34,21 +33,45 @@ requires 'go_button_pressed';
  
@@ -1370,7 +1569,7 @@ index adca738..06ef78d 100644
 +);
  
 -has 'main_box' => lazy_build rw 'Gtk3::VBox';
-+has 'main_box' => (
++has 'main_widget' => (
 +    lazy_build => 1,
 +    is         => 'rw',
 +    isa        => 'Gtk3::VBox',
@@ -1477,10 +1676,10 @@ index e0ad103..bd8fdb5 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Setup.pm b/usr/share/perl5/Tails/Persistence/Setup.pm
-index d6c0ba2..badf105 100644
+index d6c0ba2..7519904 100644
 --- a/usr/share/perl5/Tails/Persistence/Setup.pm
 +++ b/usr/share/perl5/Tails/Persistence/Setup.pm
-@@ -5,25 +5,12 @@ Tails::Persistence::Setup - main application class
+@@ -5,41 +5,27 @@ Tails::Persistence::Setup - main application class
  =cut
  
  package Tails::Persistence::Setup;
@@ -1508,9 +1707,10 @@ index d6c0ba2..badf105 100644
  use English qw{-no_match_vars};
  use Glib qw{TRUE FALSE};
  use Gtk3 qw{-init};
-@@ -31,15 +18,14 @@ use Net::DBus qw(:typing);
+ use Net::DBus qw(:typing);
  use Net::DBus::Annotation qw(:call);
- use List::Util qw{first max};
+-use List::Util qw{first max};
++use List::Util qw{first min max};
  use Number::Format qw(:subs);
 -use Path::Class;
 +use Path::Tiny;
@@ -1798,6 +1998,15 @@ index d6c0ba2..badf105 100644
  sub _build_steps {
      my $self = shift;
  
+@@ -231,7 +274,7 @@ sub _build_main_window {
+ 
+     $win->set_border_width(10);
+ 
+-    $win->add($self->current_step->main_box) if $self->has_current_step;
++    $win->add($self->current_step->main_widget) if $self->has_current_step;
+     $win->signal_connect('destroy' => sub { Gtk3->main_quit; });
+     $win->signal_connect('key-press-event' => sub {
+         my $twin = shift;
 @@ -248,7 +291,7 @@ sub _build_persistence_partition_mountpoint {
  
      first {
@@ -1844,7 +2053,16 @@ index d6c0ba2..badf105 100644
      );
  }
  
-@@ -374,11 +427,6 @@ sub check_sanity {
+@@ -363,7 +416,7 @@ sub check_sanity {
+             {
+                 method  => 'persistence_is_enabled',
+                 message => $self->encoding->decode(gettext(
+-                    "Cannot delete the persistent volume while in use. You should restart Tails without persistence.")),
++                    "Cannot delete the persistent volume on %s while in use. You should restart Tails without persistence.")),
+                 must_be_false => 1,
+             },
+         ],
+@@ -374,33 +427,28 @@ sub check_sanity {
                      "Device %s has no persistent volume.")),
                  needs_device_arg => 1,
              },
@@ -1856,9 +2074,26 @@ index d6c0ba2..badf105 100644
              {
                  method  => 'persistence_partition_is_unlocked',
                  message => $self->encoding->decode(gettext(
-@@ -399,8 +447,8 @@ sub check_sanity {
+-                    "Persistence volume is not unlocked.")),
++                    "Persistence volume on %s is not unlocked.")),
+             },
+             {
+                 method  => 'persistence_filesystem_is_mounted',
                  message => $self->encoding->decode(gettext(
-                     "Persistence volume is not writable. Maybe it was mounted read-only?")),
+-                    "Persistence volume is not mounted.")),
++                    "Persistence volume on %s is not mounted.")),
+             },
+             {
+                 method  => 'persistence_filesystem_is_readable',
+                 message => $self->encoding->decode(gettext(
+-                    "Persistence volume is not readable. Permissions or ownership problems?")),
++                    "Persistence volume on %s is not readable. Permissions or ownership problems?")),
+             },
+             {
+                 method  => 'persistence_filesystem_is_writable',
+                 message => $self->encoding->decode(gettext(
+-                    "Persistence volume is not writable. Maybe it was mounted read-only?")),
++                    "Persistence volume on %s is not writable.")),
              },
 -        );
 -    }
@@ -1907,7 +2142,7 @@ index d6c0ba2..badf105 100644
  }
  
  sub device_has_persistent_volume {
-@@ -629,19 +679,25 @@ sub run_current_step {
+@@ -629,19 +679,31 @@ sub run_current_step {
  
      $self->debug("Running step " . $self->current_step->name);
  
@@ -1927,14 +2162,20 @@ index d6c0ba2..badf105 100644
 +    if ($self->gui) {
 +        $self->current_step->working(0);
 +        $self->empty_main_window;
-+        $self->main_window->add($self->current_step->main_box);
++        $self->main_window->add($self->current_step->main_widget);
 +        $self->main_window->set_default($self->current_step->go_button);
 +        $self->main_window->show_all;
 +        $self->current_step->working(0);
 +        $self->main_window->set_visible(TRUE);
 +
 +        if($self->current_step->name eq 'configure') {
-+            $self->main_window->resize($width, $self->main_window->get_screen()->get_height());
++            $self->main_window->resize(
++                $width,
++                max(
++                    900,
++                    min(450, $self->main_window->get_screen()->get_height()),
++                )
++            );
 +        }
 +        else {
 +            $self->main_window->resize($width, $height);
@@ -1946,7 +2187,7 @@ index d6c0ba2..badf105 100644
      }
  }
  
-@@ -664,6 +720,13 @@ sub goto_next_step {
+@@ -664,6 +726,13 @@ sub goto_next_step {
      }
      else {
          $self->debug("No more steps.");
@@ -1960,7 +2201,7 @@ index d6c0ba2..badf105 100644
          $self->current_step->title->set_text($self->encoding->decode(gettext(
              q{Persistence wizard - Finished}
          )));
-@@ -692,11 +755,18 @@ sub step_object_from_name {
+@@ -692,11 +761,18 @@ sub step_object_from_name {
                  $self->create_persistence_partition({ @_ })
              },
              size_of_free_space          => $self->size_of_free_space,
@@ -1981,7 +2222,7 @@ index d6c0ba2..badf105 100644
          );
      }
      elsif ($name eq 'delete') {
-@@ -732,21 +802,26 @@ sub step_object_from_name {
+@@ -732,21 +808,26 @@ sub step_object_from_name {
  
  }
  
@@ -2012,7 +2253,7 @@ index d6c0ba2..badf105 100644
      return unless my $mountpoint = $self->persistence_partition_mountpoint;
      my $ret;
      {
-@@ -756,7 +831,8 @@ method persistence_filesystem_is_readable () {
+@@ -756,7 +837,8 @@ method persistence_filesystem_is_readable () {
      return $ret;
  }
  
@@ -2022,7 +2263,7 @@ index d6c0ba2..badf105 100644
      return unless my $mountpoint = $self->persistence_partition_mountpoint;
      my $ret;
      {
-@@ -766,5 +842,5 @@ method persistence_filesystem_is_writable () {
+@@ -766,5 +848,5 @@ method persistence_filesystem_is_writable () {
      return $ret;
  }
  
@@ -2030,7 +2271,7 @@ index d6c0ba2..badf105 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
-index 7a456ee..bdd9a14 100644
+index 7a456ee..cab8f37 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
 @@ -5,11 +5,9 @@ Tails::Persistence::Step::Bootstrap - bootstrap persistent storage
@@ -2121,7 +2362,19 @@ index 7a456ee..bdd9a14 100644
  
  
  =head1 CONSTRUCTORS
-@@ -278,34 +314,39 @@ sub operation_finished {
+@@ -66,10 +102,9 @@ sub BUILD {
+     $self->go_button->set_label($self->encoding->decode(gettext(q{Create})));
+ }
+ 
+-sub _build_main_box {
++sub _build_main_widget {
+     my $self = shift;
+ 
+-
+     my $box = Gtk3::VBox->new();
+     $box->set_spacing(6);
+     $box->pack_start($self->title, FALSE, FALSE, 0);
+@@ -278,34 +313,39 @@ sub operation_finished {
          say STDERR "created ${created_device}.";
          $self->working(0);
  
@@ -2189,7 +2442,7 @@ index 7a456ee..bdd9a14 100644
  
          $self->success_callback->();
      }
-@@ -332,5 +373,5 @@ sub go_button_pressed {
+@@ -332,5 +372,5 @@ sub go_button_pressed {
  with 'Tails::Persistence::Role::StatusArea';
  with 'Tails::Persistence::Role::SetupStep';
  
@@ -2197,10 +2450,10 @@ index 7a456ee..bdd9a14 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Configure.pm b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-index 751d8e3..62e6e0e 100644
+index 751d8e3..5aa19b7 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-@@ -5,17 +5,15 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
+@@ -5,18 +5,16 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
  =cut
  
  package Tails::Persistence::Step::Configure;
@@ -2217,10 +2470,12 @@ index 751d8e3..62e6e0e 100644
  
  use Carp::Assert::More;
  use Number::Format qw(:subs);
+-use Tails::Persistence::Configuration::Button;
 +use Tails::Persistence::Configuration;
- use Tails::Persistence::Configuration::Button;
++use Tails::Persistence::Configuration::Setting;
  use Try::Tiny;
  
+ use Locale::gettext;
 @@ -24,25 +22,49 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
@@ -2246,6 +2501,9 @@ index 751d8e3..62e6e0e 100644
 -    lazy_build ro 'ArrayRef[Tails::Persistence::Configuration::Button]',
 -    traits  => [ 'Array' ],
 -    handles => {
+-        all_buttons => 'elements',
+-        push_button => 'push',
+-    };
 +has 'configuration' => (
 +    required => 1,
 +    is       => 'ro',
@@ -2266,34 +2524,63 @@ index 751d8e3..62e6e0e 100644
 +has 'list_box' => (
 +    lazy_build => 1,
 +    is         => 'ro',
-+    isa        => 'Gtk3::VBox',
++    isa        => 'Gtk3::ListBox',
 +);
 +
-+has 'buttons'  => (
++has 'settings' => (
 +    lazy_build  => 1,
 +    is          => 'ro',
-+    isa         => 'ArrayRef[Tails::Persistence::Configuration::Button]',
++    isa         => 'ArrayRef[Tails::Persistence::Configuration::Setting]',
 +    handles_via => [ 'Array' ],
 +    handles     => {
-         all_buttons => 'elements',
-         push_button => 'push',
--    };
++        all_settings  => 'elements',
++        push_settings => 'push',
 +    },
 +);
  
  
  =head1 CONSTRUCTORS
-@@ -75,7 +97,8 @@ sub BUILD {
+@@ -54,7 +76,7 @@ sub BUILD {
+ 
+     # Force initialization in the right order
+     assert_defined($self->configuration);
+-    assert_defined($self->buttons);
++    assert_defined($self->settings);
+     assert_defined($self->list_box);
+ 
+     $self->title->set_text($self->encoding->decode(gettext(
+@@ -75,21 +97,23 @@ sub BUILD {
      $self->go_button->set_sensitive(TRUE);
  }
  
 -method _build_main_box {
-+sub _build_main_box {
+-    my $box = Gtk3::VBox->new();
+-    $box->set_spacing(6);
+-    $box->pack_start($self->title, FALSE, FALSE, 0);
+-    $box->pack_start($self->subtitle, FALSE, FALSE, 0);
+-    $box->pack_start($self->description, FALSE, FALSE, 0);
++sub _build_main_widget {
 +    my $self = shift;
-     my $box = Gtk3::VBox->new();
-     $box->set_spacing(6);
-     $box->pack_start($self->title, FALSE, FALSE, 0);
-@@ -100,15 +123,29 @@ method _build_main_box {
+ 
+     my $viewport = Gtk3::Viewport->new;
+     $viewport->set_shadow_type('GTK_SHADOW_NONE');
+     $viewport->add($self->list_box);
++
+     my $scrolled_win = Gtk3::ScrolledWindow->new;
+     $scrolled_win->set_policy('automatic', 'automatic');
+     $scrolled_win->add($viewport);
+-    $box->pack_start($scrolled_win, TRUE, TRUE, 0);
+ 
++    my $box = Gtk3::VBox->new();
++    $box->set_spacing(6);
++    $box->pack_start($self->title, FALSE, FALSE, 0);
++    $box->pack_start($self->subtitle, FALSE, FALSE, 0);
++    $box->pack_start($self->description, FALSE, FALSE, 0);
++    $box->pack_start($scrolled_win, TRUE, TRUE, 0);
+     $box->pack_start($self->status_area, FALSE, FALSE, 0);
+ 
+     my $button_alignment = Gtk3::Alignment->new(1.0, 0, 0.2, 1.0);
+@@ -100,21 +124,43 @@ method _build_main_box {
      return $box;
  }
  
@@ -2303,34 +2590,53 @@ index 751d8e3..62e6e0e 100644
 -            Tails::Persistence::Configuration::Button->new(atom => $_)
 -        } $self->configuration->all_atoms
 -    ]
-+sub _build_buttons {
++sub _build_settings {
 +    my $self = shift;
-+    my @buttons;
++    my @settings;
 +    foreach my $preset ($self->configuration->presets->all) {
-+        push @buttons,
-+            Tails::Persistence::Configuration::Button->new(
++        my %init_args;
++        if (exists($preset->{configuration_cb}) && defined($preset->{configuration_cb})) {
++            $init_args{configuration_cb} = $preset->{configuration_cb};
++        }
++        push @settings,
++            Tails::Persistence::Configuration::Setting->new(
 +                id          => $preset->{id},
 +                atoms       => $preset->{atoms},
 +                name        => $preset->{name},
 +                description => $preset->{description},
 +                icon_name   => $preset->{icon_name},
 +                enabled     => $preset->{enabled},
++                %init_args,
 +            );
 +    }
 +    foreach my $atom ($self->configuration->atoms_not_in_presets) {
-+        push @buttons,
-+            Tails::Persistence::Configuration::Button->new(atoms => [$atom]);
++        push @settings,
++            Tails::Persistence::Configuration::Setting->new(atoms => [$atom]);
 +    }
-+    return \@buttons;
++    return \@settings;
  }
  
 -method _build_list_box {
+-    my $box = Gtk3::VBox->new();
+-    $box->set_spacing(6);
+-    $box->pack_start($_->main_widget, FALSE, FALSE, 0) foreach $self->all_buttons;
+-    $self->refresh_buttons;
 +sub _build_list_box {
 +    my $self = shift;
-     my $box = Gtk3::VBox->new();
-     $box->set_spacing(6);
-     $box->pack_start($_->main_widget, FALSE, FALSE, 0) foreach $self->all_buttons;
-@@ -122,7 +159,9 @@ method _build_list_box {
+ 
+-    return $box;
++    my $list_box = Gtk3::ListBox->new();
++    $list_box->set_selection_mode('GTK_SELECTION_NONE');
++    foreach my $setting ($self->all_settings) {
++        $list_box->insert($setting->main_widget, -1);
++        $list_box->insert(Gtk3::Separator->new('GTK_ORIENTATION_HORIZONTAL'), -1);
++    }
++
++    return $list_box;
+ }
+ 
+ 
+@@ -122,7 +168,9 @@ method _build_list_box {
  
  =cut
  
@@ -2341,7 +2647,7 @@ index 751d8e3..62e6e0e 100644
      if ($error) {
          $self->working(0);
          say STDERR "$error";
-@@ -136,7 +175,8 @@ method operation_finished ($error) {
+@@ -136,7 +184,8 @@ method operation_finished ($error) {
      }
  }
  
@@ -2351,16 +2657,14 @@ index 751d8e3..62e6e0e 100644
      $self->list_box->hide;
      $self->working(1);
      $self->subtitle->set_text(
-@@ -155,12 +195,13 @@ method go_button_pressed {
+@@ -155,12 +204,8 @@ method go_button_pressed {
      $self->operation_finished($error);
  }
  
 -method refresh_buttons {
-+sub refresh_buttons {
-+    my $self = shift;
-     $_->refresh_display foreach $self->all_buttons;
- }
- 
+-    $_->refresh_display foreach $self->all_buttons;
+-}
+-
  with 'Tails::Persistence::Role::StatusArea';
  with 'Tails::Persistence::Role::SetupStep';
  
@@ -2368,7 +2672,7 @@ index 751d8e3..62e6e0e 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Delete.pm b/usr/share/perl5/Tails/Persistence/Step/Delete.pm
-index 88916ff..52a4ce0 100644
+index 88916ff..253d68b 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Delete.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Delete.pm
 @@ -5,11 +5,9 @@ Tails::Persistence::Step::Delete - delete persistent storage
@@ -2419,6 +2723,15 @@ index 88916ff..52a4ce0 100644
  
  
  =head1 CONSTRUCTORS
+@@ -59,7 +73,7 @@ sub _build_warning_icon {
+     Gtk3::Image->new_from_stock("gtk-dialog-warning", "GTK_ICON_SIZE_DIALOG");
+ }
+ 
+-sub _build_main_box {
++sub _build_main_widget {
+     my $self = shift;
+ 
+     my $box = Gtk3::VBox->new();
 @@ -122,5 +136,5 @@ sub go_button_pressed {
  with 'Tails::Persistence::Role::StatusArea';
  with 'Tails::Persistence::Role::SetupStep';
