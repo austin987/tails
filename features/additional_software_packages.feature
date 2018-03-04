@@ -87,7 +87,7 @@ Feature: Additional software packages
     And all notifications have disappeared
     And available upgrades have been checked
     Then the additional software package upgrade service is run
-    And I am notified that the package "sslh" is been upgraded
+    And I am notified that the package "sslh" has been upgraded
     And the package "cowsay" installed version is newer than ""
 
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
@@ -106,7 +106,7 @@ Feature: Additional software packages
   Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I install an old version "" if the "cowsay" package using apt
+    When I install an old version "" of the "cowsay" package using apt
     And I confirm when I am asked if I want to add "cowsay" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
