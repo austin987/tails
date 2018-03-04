@@ -201,12 +201,22 @@ def is_tails_media_writable():
 def has_additional_packages_list(search_new_persistence=False):
     """Return true iff a packages list file is found in a persistence.
 
+    Log warnings in syslog.
     The search_new_persistence argument is passed to get_persistence_path.
     """
     try:
-        return os.path.isfile(get_packages_list_path(search_new_persistence))
-    except FileNotFoundError:
-        return None
+        packages_list_path = get_packages_list_path(search_new_persistence)
+    except FileNotFoundError as e:
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Warning: {}".format(e))
+        return False
+    if os.path.isfile(packages_list_path):
+        syslog.syslog("Found additional packages list.")
+        return True
+    else:
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Warning: no configuration file found.")
+        return False
 
 
 def get_packages_list_path(search_new_persistence=False):
@@ -519,11 +529,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
     """Subcommand which activates and installs all additional packages."""
     syslog.syslog("Starting to install additional software...")
 
-    if has_additional_packages_list():
-        syslog.syslog("Found additional packages list")
-    else:
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: no configuration file found, exiting")
+    if not has_additional_packages_list():
         return True
 
     # If a copy of old APT lists is found, then the previous upgrade
@@ -591,13 +597,17 @@ def install_additional_packages(ignore_old_apt_lists=False):
 
 def upgrade_additional_packages():
     """Subcommand which upgrades all additional packages."""
+    syslog.syslog("Starting to upgrade additional software...")
+
+    if not has_additional_packages_list():
+        return True
+
     # Save a copy of APT lists that we'll delete only once the upgrade
     # has succeeded, to ensure that the APT packages cache is up-to-date
     # wrt. the APT lists.
     syslog.syslog("Saving old APT lists...")
     save_old_apt_lists()
 
-    syslog.syslog("Starting to upgrade additional software...")
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
