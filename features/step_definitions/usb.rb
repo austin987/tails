@@ -7,8 +7,8 @@ def get_persistence_presets(skip_links = false)
   use strict;
   use warnings FATAL => "all";
   use Tails::Persistence::Configuration::Presets;
-  foreach my $preset (Tails::Persistence::Configuration::Presets->new()->all) {
-    say $preset->destination, ":", join(",", @{$preset->options});
+  foreach my $atom (Tails::Persistence::Configuration::Presets->new()->atoms) {
+    say $atom->destination, ":", join(",", @{$atom->options});
   }
 EOF
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
