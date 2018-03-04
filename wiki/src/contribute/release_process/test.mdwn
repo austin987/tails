@@ -58,31 +58,19 @@ In a directory with many Tails ISO images:
 
 # Reproducibility
 
-## For the RM
+This section can only be done by the RM.
 
-<div class="note">
+Clear-sign the hashes of all products using *your personal* OpenPGP
+key:
 
-Beware! If your have to plug your OpenPGP smart card again after
-having done the above substitution, it invalidates *everything* that
-has been done for this test so far, so it has to be started completely
-from the beginning.
+    ( \
+        cd "${ISOS:?}" && \
+        sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso \
+                  Tails_amd64_*_to_${VERSION:?}.iuk \
+            | gpg --clear-sign \
+    )
 
-</div>
-
-Generate the output needed for the next section by following [[these
-instructions|test/reproducibility/preparation]]!
-
-## For anyone _but_ the RM
-
-Find the "Trusted Reproducer" for this Tails release in the
-[[contribute/calendar]] and send this as a signed email to this
-person:
-
-    EMAIL_PLACEHOLDER
-
-and attach a file named `SHA512SUMS.txt` with these contents:
-
-    SHA512SUMS_PLACEHOLDER
+and leave the output in this section.
 
 # Automated test suite
 

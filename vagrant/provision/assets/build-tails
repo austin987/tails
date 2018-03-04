@@ -95,6 +95,19 @@ if [ -n "$TAILS_DATE_OFFSET" ]; then
 	as_root_do timedatectl set-time "$DESIRED_DATE"
 fi
 
+if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
+    # The apt-cacher-ng cache disk is 15G, so let's ensure at most 10G
+    # of it is used there is 5G before each build, which should be
+    # enough for any build, even if we have to download a complete set
+    # of new packages for a new Debian release.
+    /usr/lib/apt-cacher-ng/acngtool shrink 10G -f || \
+        echo "The clean-up of apt-cacher-ng's cache failed: this is" \
+             "not fatal and most likely just means that some disk" \
+             "space could not be reclaimed -- in order to fix that" \
+             "situation you need to manually investigate " \
+             "/var/cache/apt-cacher-ng/apt-cacher-ng-log/main_*.html" >&2
+fi
+
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "${TAILS_RAM_BUILD}" ]; then
 	as_root_do mount -t tmpfs -o "noatime,size=100%,mode=0770,uid=root,gid=${USER}" tmpfs "${BUILD_DIR}"

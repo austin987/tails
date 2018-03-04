@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+set -u
+set -x
+
+echo "Setting up a build environment for kernel modules"
+
+. /usr/share/amnesia/build/variables
+
+# Import ensure_hook_dependency_is_installed() and
+# install_fake_package()
+. /usr/local/lib/tails-shell-library/build.sh
+
+# Install gcc-6 and fake linux-compiler-gcc-7-x86
+# (linux-headers-4.14+ depends on it, but Stretch hasn't GCC 7)
+# XXX:Buster: remove this hack.
+ensure_hook_dependency_is_installed gcc-6
+NEWEST_INSTALLED_KERNEL_VERSION="$(
+    dpkg-query --showformat '${Version}\n' --show 'linux-image-*-amd64' \
+    | sort --version-sort | tail -n1
+)"
+install_fake_package \
+    linux-compiler-gcc-7-x86 \
+    "${NEWEST_INSTALLED_KERNEL_VERSION}~0tails1"
+ln -s /usr/bin/gcc-6 /usr/bin/gcc-7
+
+ensure_hook_dependency_is_installed \
+    build-essential \
+    libelf-dev \
+    "linux-headers-${KERNEL_VERSION}-amd64"
