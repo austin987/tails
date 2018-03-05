@@ -142,10 +142,11 @@ class ASPConfigApplication(Gtk.Application):
                 apt_package = apt_cache[package]
             except KeyError:
                 summary = _("[package not available]")
-            if apt_package.installed:
-                summary = apt_package.installed.summary
             else:
-                summary = apt_package.candidate.summary
+                if apt_package.installed:
+                    summary = apt_package.installed.summary
+                else:
+                    summary = apt_package.candidate.summary
             packages_with_description.append((package, summary))
 
         return packages_with_description
