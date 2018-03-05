@@ -195,7 +195,7 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by clo
     end
     @installer.button(label).click
     @installer.child('Question', roleName: 'alert').button('Yes').click
-    try_for(30*60) do
+    try_for(15*60, { :delay => 10 }) do
       @installer
         .child('Information', roleName: 'alert')
         .child('Installation complete!', roleName: 'label')
