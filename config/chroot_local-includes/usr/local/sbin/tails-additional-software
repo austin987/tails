@@ -11,15 +11,19 @@ import sys
 import syslog
 
 import apt.cache
-import atomicwrites
+
+from tailslib.additionalsoftware.config import (
+    add_additional_packages,
+    get_additional_packages,
+    get_packages_list_path,
+    get_persistence_path,
+    remove_additional_packages,
+    PERSISTENCE_DIR)
 
 _ = gettext.gettext
 
 LIVE_USERNAME = "amnesia"
 PERSISTENCE_PARTITION = "/dev/disk/by-partlabel/TailsData"
-PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
-NEWLY_CREATED_PERSISTENCE_DIR = "/media/tails-persistence-setup/TailsData"
-PACKAGES_LIST_FILE = "live-additional-software.conf"
 ASP_STATE_DIR = "/run/live-additional-software"
 ASP_STATE_PACKAGES = os.path.join(ASP_STATE_DIR, "packages")
 ASP_STATE_INSTALLER_ASKED = os.path.join(ASP_STATE_DIR, "installer-asked")
@@ -189,7 +193,12 @@ def has_unlocked_persistence(search_new_persistence=False):
 
     The search_new_persistence argument is passed to get_persistence_path.
     """
-    return os.path.exists(get_persistence_path(search_new_persistence))
+    try:
+        get_persistence_path(search_new_persistence)
+    except FileNotFoundError:
+        return False
+    else:
+        return True
 
 
 def is_tails_media_writable():
@@ -217,53 +226,6 @@ def has_additional_packages_list(search_new_persistence=False):
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: no configuration file found.")
         return False
-
-
-def get_packages_list_path(search_new_persistence=False):
-    """Return the package list file path in current or new persistence.
-
-    The search_new_persistence argument is passed to get_persistence_path.
-    """
-    persistence_dir = get_persistence_path(search_new_persistence)
-    return os.path.join(persistence_dir, PACKAGES_LIST_FILE)
-
-
-def get_persistence_path(search_new_persistence=False):
-    """Return the path of the (newly created) persistence.
-
-    Return PERSISTENCE_DIR if it exists.  If search_new_persistence is True,
-    also try NEWLY_CREATED_PERSISTENCE_DIR.
-
-    If no persistence directory exists, raise FileNotFoundError.
-    """
-    if os.path.isdir(PERSISTENCE_DIR):
-        return PERSISTENCE_DIR
-    elif (search_new_persistence
-          and os.path.isdir(NEWLY_CREATED_PERSISTENCE_DIR)):
-        return NEWLY_CREATED_PERSISTENCE_DIR
-    else:
-        raise FileNotFoundError(
-            "No persistence directory found. Neither {dir} not {alt_dir} "
-            "exist.".format(dir=PERSISTENCE_DIR,
-                            alt_dir=NEWLY_CREATED_PERSISTENCE_DIR))
-
-
-def get_additional_packages(search_new_persistence=False):
-    """Return the list of all additional packages configured.
-
-    The search_new_persistence argument is passed to get_persistence_path.
-    """
-    packages = set()
-    try:
-        with open(get_packages_list_path(search_new_persistence)) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    packages.add(line)
-    except FileNotFoundError:
-        # Just return an empty set.
-        pass
-    return packages
 
 
 def delete_old_apt_lists(old_apt_lists_dir=OLD_APT_LISTS_DIR):
@@ -366,46 +328,6 @@ def handle_removed_packages(packages):
                _("Cancel"),
                urgent=True):
         remove_additional_packages(packages, search_new_persistence=True)
-
-
-def add_additional_packages(new_packages, search_new_persistence=False):
-    """Add packages to additional packages configuration.
-
-    Add the packages to additional packages configuration.
-
-    The new_packages argument should be a list of packages names.
-    The search_new_persistence argument is passed to get_persistence_path.
-    """
-    syslog.syslog("Adding to additional packages list: %s" % new_packages)
-    packages = get_additional_packages(search_new_persistence)
-    # The list of packages was initially provided by apt after installing them,
-    # so we don't check the names.
-    packages |= new_packages
-
-    packages_list_path = get_packages_list_path(search_new_persistence)
-    with atomicwrites.atomic_write(packages_list_path, overwrite=True) as f:
-        for package in sorted(packages):
-            f.write(package + '\n')
-
-
-def remove_additional_packages(old_packages, search_new_persistence=False):
-    """Remove packages from additional packages configuration.
-
-    Removes the packages from additional packages configuration.
-
-    The old_packages argument should be a list of packages names.
-    The search_new_persistence argument is passed to get_persistence_path.
-    """
-    syslog.syslog("Removing from additional packages list: %s" % old_packages)
-    packages = get_additional_packages(search_new_persistence)
-    # The list of packages was initially provided by apt after removing them,
-    # so we don't check the names.
-    packages -= old_packages
-
-    packages_list_path = get_packages_list_path(search_new_persistence)
-    with atomicwrites.atomic_write(packages_list_path, overwrite=True) as f:
-        for package in sorted(packages):
-            f.write(package + '\n')
 
 
 def setup_additional_packages():
