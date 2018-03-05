@@ -193,7 +193,12 @@ def has_unlocked_persistence(search_new_persistence=False):
 
     The search_new_persistence argument is passed to get_persistence_path.
     """
-    return os.path.exists(get_persistence_path(search_new_persistence))
+    try:
+        get_persistence_path(search_new_persistence)
+    except FileNotFoundError:
+        return False
+    else:
+        return True
 
 
 def is_tails_media_writable():
