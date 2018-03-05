@@ -38,10 +38,24 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
         self.package_list_page = builder.get_object("package_list_page")
         self.stack = builder.get_object("stack")
 
+        self.listbox.set_header_func(self._listbox_update_header_func, None)
+
         self.set_default_size(width=500, height=-1)
         self.set_icon_name("package-x-generic")
         self.set_titlebar(builder.get_object("headerbar"))
         self.add(builder.get_object("main_box"))
+
+    @staticmethod
+    def _listbox_update_header_func(row, before, user_data):
+        if not before:
+            row.set_header(None)
+            return
+
+        current = row.get_header()
+        if not current:
+            current = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
+            current.show()
+            row.set_header(current)
 
     def cb_activate_link(self, label, uri):
         if uri == "synaptic.desktop":
@@ -85,8 +99,6 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
 
                 listboxrow.add(hbox)
                 self.listbox.add(listboxrow)
-                # XXX: use Gtk.ListBox.set_header_func
-                self.listbox.add(Gtk.Separator.new(Gtk.Orientation.HORIZONTAL))
             self.listbox.show_all()
             self.stack.set_visible_child(self.package_list_page)
         else:
