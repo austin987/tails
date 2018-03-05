@@ -1712,7 +1712,7 @@ index e0ad103..bd8fdb5 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Setup.pm b/usr/share/perl5/Tails/Persistence/Setup.pm
-index d6c0ba2..37b54fd 100644
+index d6c0ba2..ae667c2 100644
 --- a/usr/share/perl5/Tails/Persistence/Setup.pm
 +++ b/usr/share/perl5/Tails/Persistence/Setup.pm
 @@ -5,41 +5,27 @@ Tails::Persistence::Setup - main application class
@@ -2262,7 +2262,7 @@ index d6c0ba2..37b54fd 100644
              persistence_partition      => $self->persistence_partition,
              persistence_partition_device_file => $self->persistence_partition_device_file,
              persistence_partition_size => $self->persistence_partition_size,
-+            set_ui_active_cb           => sub { $self->set_ui_active(@_) },
++            set_sensitive_cb           => sub { $self->set_sensitive(@_) },
          );
      }
  
@@ -2307,15 +2307,18 @@ index d6c0ba2..37b54fd 100644
      return unless my $mountpoint = $self->persistence_partition_mountpoint;
      my $ret;
      {
-@@ -766,5 +849,11 @@ method persistence_filesystem_is_writable () {
+@@ -766,5 +849,14 @@ method persistence_filesystem_is_writable () {
      return $ret;
  }
  
 -no Moose;
-+sub set_ui_active {
-+    my $self   = shift;
-+    my $active = shift;
++sub set_sensitive {
++    my $self      = shift;
++    my $sensitive = shift;
 +
++    $self->main_window->set_sensitive($sensitive);
++    $self->main_window->set_accept_focus($sensitive);
++    $self->main_window->set_focus_on_map($sensitive);
 +}
 +
 +no Moo;
@@ -2500,7 +2503,7 @@ index 7a456ee..cab8f37 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Configure.pm b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-index 751d8e3..f0ef87a 100644
+index 751d8e3..bf4901a 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 @@ -5,18 +5,16 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
@@ -2594,7 +2597,7 @@ index 751d8e3..f0ef87a 100644
 +    },
 +);
 +
-+has 'set_ui_active_cb' => (
++has 'set_sensitive_cb' => (
 +    required => 1,
 +    is       => 'ro',
 +    isa      => 'CodeRef',
@@ -2735,7 +2738,7 @@ index 751d8e3..f0ef87a 100644
      $self->working(1);
      $self->subtitle->set_text(
          $self->encoding->decode(gettext(q{Saving...})),
-@@ -155,12 +229,46 @@ method go_button_pressed {
+@@ -155,12 +229,64 @@ method go_button_pressed {
      $self->operation_finished($error);
  }
  
@@ -2749,7 +2752,7 @@ index 751d8e3..f0ef87a 100644
 +        join(', ', @_)
 +    );
 +
-+    $self->set_ui_active(FALSE);
++    $self->set_sensitive(FALSE);
 +}
 +
 +sub configuration_closed_cb {
@@ -2763,7 +2766,7 @@ index 751d8e3..f0ef87a 100644
 +
 +    if ($args{'exit_code'} == 0) {
 +        say STDERR "Configuration succeeded.";
-+        $self->set_ui_active(TRUE);
++        $self->set_sensitive(TRUE);
 +    } else {
 +        # XXX: what to do here?
 +        say STDERR
@@ -2772,11 +2775,29 @@ index 751d8e3..f0ef87a 100644
 +    }
 +}
 +
-+sub set_ui_active {
-+    my $self   = shift;
-+    my $active = shift;
++sub recursively_set_sensitive {
++    my $self      = shift;
++    my $widget    = shift;
++    my $sensitive = shift;
 +
-+    $self->set_ui_active_cb->($active);
++    $widget->set_sensitive($sensitive);
++    say STDERR ref($widget), ": ", $widget->get_sensitive;
++
++    return unless $widget->can('foreach');
++    $widget->foreach(
++        sub {
++            my $child = $_[0];
++            $self->recursively_set_sensitive($child, $sensitive);
++        }
++    );
++}
++
++sub set_sensitive {
++    my $self   = shift;
++    my $sensitive = shift;
++
++    $self->recursively_set_sensitive($self->main_widget, $sensitive);
++    $self->set_sensitive_cb->($sensitive);
  }
  
  with 'Tails::Persistence::Role::StatusArea';
