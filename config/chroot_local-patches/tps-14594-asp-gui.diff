@@ -689,7 +689,7 @@ index f3fd304..e6bc85a 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
-index 1a01326..5f1966f 100644
+index 1a01326..105d501 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 @@ -5,18 +5,17 @@ Tails::Persistence::Configuration::Presets - available configuration snippets
@@ -716,7 +716,7 @@ index 1a01326..5f1966f 100644
  use Tails::Persistence::Configuration::Atom;
  
  use Locale::gettext;
-@@ -24,161 +23,232 @@ use POSIX;
+@@ -24,161 +23,238 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -836,22 +836,28 @@ index 1a01326..5f1966f 100644
 -            name        => $self->encoding->decode(gettext(q{GNOME Keyring})),
 -            description => $self->encoding->decode(gettext(
 -                q{Secrets stored by GNOME Keyring}
-+            id               => 'AdditionalSoftware',
-+            name             => $self->encoding->decode(gettext(q{Additional Software})),
-+            description      => $self->encoding->decode(gettext(
++            id                  => 'AdditionalSoftware',
++            name                => $self->encoding->decode(gettext(q{Additional Software})),
++            description         => $self->encoding->decode(gettext(
 +                q{Software installed every time you start Tails}
              )),
 -            destination => '/home/amnesia/.gnome2/keyrings',
 -            options     => [ 'source=gnome-keyrings' ],
 -            enabled     => 0,
 -            icon_name   => 'seahorse-key-personal',
-+            icon_name        => 'package-x-generic',
-+            enabled          => 0,
-+            configuration_cb => sub {
-+                # XXX
-+                warn("Entering AdditionalSoftware's config_cb");
-+            },
-+            atoms_args       => [
++            icon_name           => 'package-x-generic',
++            enabled             => 0,
++            configuration_cmd   => (
++                $ENV{DEV_MODE}
++                    ? [
++                        'zenity',
++                        '--question',
++                        '--title=ASP',
++                        '--text=ASP',
++                      ]
++                    : [ 'tails-additional-software-config' ],
++            ),
++            atoms_args          => [
 +                {
 +                    destination => '/var/cache/apt/archives',
 +                    options     => [ 'source=apt/cache' ],
@@ -1031,7 +1037,7 @@ index 1a01326..5f1966f 100644
  }
  
  
-@@ -190,10 +260,22 @@ sub set_state_from_lines {
+@@ -190,10 +266,22 @@ sub set_state_from_lines {
      my $self = shift;
      my @lines = @_;
  
@@ -1058,10 +1064,10 @@ index 1a01326..5f1966f 100644
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
 new file mode 100644
-index 0000000..d02a61a
+index 0000000..605b967
 --- /dev/null
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
-@@ -0,0 +1,240 @@
+@@ -0,0 +1,269 @@
 +=head1 NAME
 +
 +Tails::Persistence::Configuration::Setting - a persistence feature displayed in the GUI
@@ -1073,6 +1079,7 @@ index 0000000..d02a61a
 +use strictures 2;
 +use autodie qw(:all);
 +use Glib qw{TRUE FALSE};
++use IPC::Run qw{run};
 +use List::MoreUtils qw{all};
 +use Pango;
 +use UUID::Tiny ':std';
@@ -1152,11 +1159,23 @@ index 0000000..d02a61a
 +    isa        => 'Gtk3::Button',
 +);
 +
-+has 'configuration_cb' => (
++has 'configuration_cmd' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'ArrayRef[Str]',
++    predicate  => 1,
++);
++
++has 'configuration_opened_cb' => (
 +    lazy_build => 1,
 +    is         => 'ro',
 +    isa        => 'CodeRef',
-+    predicate  => 1,
++);
++
++has 'configuration_closed_cb' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'CodeRef',
 +);
 +
 +
@@ -1212,7 +1231,7 @@ index 0000000..d02a61a
 +        'emblem-system-symbolic', 1,
 +    );
 +    $button->set_valign('GTK_ALIGN_CENTER');
-+    $button->signal_connect('clicked' => sub { $self->configuration_cb->() });
++    $button->signal_connect('clicked' => sub { $self->configuration_cb() });
 +
 +    return $button;
 +}
@@ -1235,7 +1254,7 @@ index 0000000..d02a61a
 +
 +    $main_box->pack_start($self->icon, FALSE, FALSE, 0);
 +    $main_box->pack_start($text_box, TRUE, TRUE, 0);
-+    if ($self->has_configuration_cb) {
++    if ($self->has_configuration_cmd) {
 +        $main_box->pack_start($self->configuration_button, FALSE, FALSE, 0);
 +    }
 +    $main_box->pack_start($self->switch, FALSE, FALSE, 0);
@@ -1298,6 +1317,22 @@ index 0000000..d02a61a
 +    foreach my $atom (@{$self->atoms}) {
 +        $atom->enabled($self->is_active)
 +    }
++}
++
++sub configuration_cb {
++    my $self = shift;
++
++    say STDERR "Entering T::P::C::Setting::configuration_cb";
++
++    $self->configuration_opened_cb->();
++
++    my $configuration_cmd_output;
++    run $self->configuration_cmd, '>&', \$configuration_cmd_output;
++    my $configuration_cmd_exit_code = $?;
++    $self->configuration_closed_cb->(
++        exit_code => $configuration_cmd_exit_code,
++        output    => $configuration_cmd_output,
++    );
 +}
 +
 +no Moo;
@@ -1677,7 +1712,7 @@ index e0ad103..bd8fdb5 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Setup.pm b/usr/share/perl5/Tails/Persistence/Setup.pm
-index d6c0ba2..fe59b9e 100644
+index d6c0ba2..37b54fd 100644
 --- a/usr/share/perl5/Tails/Persistence/Setup.pm
 +++ b/usr/share/perl5/Tails/Persistence/Setup.pm
 @@ -5,41 +5,27 @@ Tails::Persistence::Setup - main application class
@@ -2017,7 +2052,7 @@ index d6c0ba2..fe59b9e 100644
      } $self->mountpoints($self->persistence_partition);
  }
  
-@@ -291,17 +334,25 @@ sub _build_persistence_partition_size {
+@@ -291,10 +334,18 @@ sub _build_persistence_partition_size {
  sub _build_configuration {
      my $self = shift;
  
@@ -2039,14 +2074,6 @@ index d6c0ba2..fe59b9e 100644
          try {
              check_config_file_permissions(
                  $config_file_path,
-                 {
-                     uid  => $expected_uid,
-                     gid  => $expected_gid,
--                    mode => oct(600),
-+                    mode => oct(644),
-                     acl  => '',
-                 }
-             );
 @@ -313,11 +364,13 @@ sub _build_configuration {
                  $self->encoding->decode(gettext(
                      $_,
@@ -2226,12 +2253,20 @@ index d6c0ba2..fe59b9e 100644
 +                    'live-additional-software.conf'
 +                );
 +                $asp_config_file->touch;
-+                chmod 0600, $asp_config_file;
++                chmod 0644, $asp_config_file;
 +            },
          );
      }
      elsif ($name eq 'delete') {
-@@ -732,21 +808,26 @@ sub step_object_from_name {
+@@ -718,6 +794,7 @@ sub step_object_from_name {
+             persistence_partition      => $self->persistence_partition,
+             persistence_partition_device_file => $self->persistence_partition_device_file,
+             persistence_partition_size => $self->persistence_partition_size,
++            set_ui_active_cb           => sub { $self->set_ui_active(@_) },
+         );
+     }
+ 
+@@ -732,21 +809,26 @@ sub step_object_from_name {
  
  }
  
@@ -2262,7 +2297,7 @@ index d6c0ba2..fe59b9e 100644
      return unless my $mountpoint = $self->persistence_partition_mountpoint;
      my $ret;
      {
-@@ -756,7 +837,8 @@ method persistence_filesystem_is_readable () {
+@@ -756,7 +838,8 @@ method persistence_filesystem_is_readable () {
      return $ret;
  }
  
@@ -2272,11 +2307,17 @@ index d6c0ba2..fe59b9e 100644
      return unless my $mountpoint = $self->persistence_partition_mountpoint;
      my $ret;
      {
-@@ -766,5 +848,5 @@ method persistence_filesystem_is_writable () {
+@@ -766,5 +849,11 @@ method persistence_filesystem_is_writable () {
      return $ret;
  }
  
 -no Moose;
++sub set_ui_active {
++    my $self   = shift;
++    my $active = shift;
++
++}
++
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
@@ -2459,7 +2500,7 @@ index 7a456ee..cab8f37 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Configure.pm b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-index 751d8e3..c9cd0ff 100644
+index 751d8e3..f0ef87a 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 @@ -5,18 +5,16 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
@@ -2485,7 +2526,7 @@ index 751d8e3..c9cd0ff 100644
  use Try::Tiny;
  
  use Locale::gettext;
-@@ -24,25 +22,55 @@ use POSIX;
+@@ -24,25 +22,61 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -2552,10 +2593,16 @@ index 751d8e3..c9cd0ff 100644
 +        push_settings => 'push',
 +    },
 +);
++
++has 'set_ui_active_cb' => (
++    required => 1,
++    is       => 'ro',
++    isa      => 'CodeRef',
++);
  
  
  =head1 CONSTRUCTORS
-@@ -54,8 +82,9 @@ sub BUILD {
+@@ -54,8 +88,9 @@ sub BUILD {
  
      # Force initialization in the right order
      assert_defined($self->configuration);
@@ -2566,7 +2613,7 @@ index 751d8e3..c9cd0ff 100644
  
      $self->title->set_text($self->encoding->decode(gettext(
          q{Persistence wizard - Persistent volume configuration}
-@@ -75,21 +104,29 @@ sub BUILD {
+@@ -75,21 +110,29 @@ sub BUILD {
      $self->go_button->set_sensitive(TRUE);
  }
  
@@ -2603,7 +2650,7 @@ index 751d8e3..c9cd0ff 100644
      $box->pack_start($self->status_area, FALSE, FALSE, 0);
  
      my $button_alignment = Gtk3::Alignment->new(1.0, 0, 0.2, 1.0);
-@@ -100,21 +137,43 @@ method _build_main_box {
+@@ -100,21 +143,49 @@ method _build_main_box {
      return $box;
  }
  
@@ -2618,8 +2665,14 @@ index 751d8e3..c9cd0ff 100644
 +    my @settings;
 +    foreach my $preset ($self->configuration->presets->all) {
 +        my %init_args;
-+        if (exists($preset->{configuration_cb}) && defined($preset->{configuration_cb})) {
-+            $init_args{configuration_cb} = $preset->{configuration_cb};
++        if (exists($preset->{configuration_cmd}) && defined($preset->{configuration_cmd})) {
++            $init_args{configuration_cmd} = $preset->{configuration_cmd};
++            $init_args{configuration_opened_cb} = sub {
++                $self->configuration_opened_cb(@_);
++            },
++            $init_args{configuration_closed_cb} = sub {
++                $self->configuration_closed_cb(@_);
++            },
 +        }
 +        push @settings,
 +            Tails::Persistence::Configuration::Setting->new(
@@ -2659,7 +2712,7 @@ index 751d8e3..c9cd0ff 100644
  }
  
  
-@@ -122,7 +181,9 @@ method _build_list_box {
+@@ -122,7 +193,9 @@ method _build_list_box {
  
  =cut
  
@@ -2670,7 +2723,7 @@ index 751d8e3..c9cd0ff 100644
      if ($error) {
          $self->working(0);
          say STDERR "$error";
-@@ -136,8 +197,9 @@ method operation_finished ($error) {
+@@ -136,8 +209,9 @@ method operation_finished ($error) {
      }
  }
  
@@ -2682,14 +2735,50 @@ index 751d8e3..c9cd0ff 100644
      $self->working(1);
      $self->subtitle->set_text(
          $self->encoding->decode(gettext(q{Saving...})),
-@@ -155,12 +217,8 @@ method go_button_pressed {
+@@ -155,12 +229,46 @@ method go_button_pressed {
      $self->operation_finished($error);
  }
  
 -method refresh_buttons {
 -    $_->refresh_display foreach $self->all_buttons;
--}
--
++sub configuration_opened_cb {
++    my $self = shift;
++
++    say STDERR sprintf(
++        "in T::P::Step::Configure::configuration_opened_cb (%s)",
++        join(', ', @_)
++    );
++
++    $self->set_ui_active(FALSE);
++}
++
++sub configuration_closed_cb {
++    my $self = shift;
++    my %args = @_;
++
++    say STDERR sprintf(
++        "in T::P::Step::Configure::configuration_closed_cb (%s)",
++        join(', ', @_)
++    );
++
++    if ($args{'exit_code'} == 0) {
++        say STDERR "Configuration succeeded.";
++        $self->set_ui_active(TRUE);
++    } else {
++        # XXX: what to do here?
++        say STDERR
++            "Configuration failed with exit code ", $args{'exit_code'} == 0,
++            " and output: ", $args{output};
++    }
++}
++
++sub set_ui_active {
++    my $self   = shift;
++    my $active = shift;
++
++    $self->set_ui_active_cb->($active);
+ }
+ 
  with 'Tails::Persistence::Role::StatusArea';
  with 'Tails::Persistence::Role::SetupStep';
  
