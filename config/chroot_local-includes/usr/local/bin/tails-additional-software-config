@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+
+"""User interface to configure Tails Additional Software."""
+
+import gettext
+import sys
+
+import apt.cache
+import gi
+
+from gi.repository import Gio                               # NOQA: E402
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk                               # NOQA: E402
+
+from tailslib.additionalsoftware.config import (            # NOQA: E402
+    get_additional_packages)
+
+_ = gettext.gettext
+
+UI_FILE = "/usr/share/tails/additional-software/configuration-window.ui"
+
+
+class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
+    def __init__(self, application, get_config_func, remove_asp_func):
+        Gtk.ApplicationWindow.__init__(self, application=application)
+
+        self.get_config_func = get_config_func
+        self.remove_asp_func = remove_asp_func
+
+        self.connect("show", self.cb_window_show)
+
+        builder = Gtk.Builder.new_from_file(UI_FILE)
+        builder.set_translation_domain("tails")
+        builder.connect_signals(self)
+
+        self.listbox = builder.get_object("listbox")
+        self.no_package_page = builder.get_object("no_package_page")
+        self.package_list_page = builder.get_object("package_list_page")
+        self.stack = builder.get_object("stack")
+
+        self.set_default_size(width=500, height=-1)
+        self.set_icon_name("package-x-generic")
+        self.set_titlebar(builder.get_object("headerbar"))
+        self.add(builder.get_object("main_box"))
+
+    def cb_activate_link(self, label, uri):
+        if uri == "synaptic.desktop":
+            appinfo = Gio.DesktopAppInfo.new(uri)
+            appinfo.launch()
+            return True
+
+    def cb_listboxrow_remove_button_clicked(self, button, package_name):
+        # XXX
+        pass
+
+    def cb_window_show(self, window):
+        packages = self.get_config_func()
+        if packages:
+            for package_name, package_description in packages:
+                listboxrow = Gtk.ListBoxRow.new()
+
+                hbox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+                hbox.set_border_width(3)
+
+                vbox = Gtk.Box.new(Gtk.Orientation.VERTICAL, 0)
+                name_label = Gtk.Label.new("<b>{}</b>".format(package_name))
+                name_label.set_use_markup(True)
+                name_label.set_xalign(0)
+                vbox.pack_start(name_label, expand=True, fill=True, padding=0)
+                description_label = Gtk.Label.new(package_description)
+                description_label.set_xalign(0)
+                vbox.pack_start(
+                    description_label, expand=True, fill=True, padding=0)
+                hbox.pack_start(vbox, expand=True, fill=True, padding=12)
+
+                remove_button = Gtk.Button.new_from_icon_name(
+                    "window-close-symbolic",
+                    Gtk.IconSize.SMALL_TOOLBAR)
+                remove_button.set_relief(Gtk.ReliefStyle.NONE)
+                remove_button.connect(
+                    "clicked", self.cb_listboxrow_remove_button_clicked,
+                    package_name)
+                hbox.pack_end(
+                    remove_button, expand=False, fill=False, padding=0)
+
+                listboxrow.add(hbox)
+                self.listbox.add(listboxrow)
+                # XXX: use Gtk.ListBox.set_header_func
+                self.listbox.add(Gtk.Separator.new(Gtk.Orientation.HORIZONTAL))
+            self.listbox.show_all()
+            self.stack.set_visible_child(self.package_list_page)
+        else:
+            self.stack.set_visible_child(self.no_package_page)
+
+
+class ASPConfigApplication(Gtk.Application):
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args,
+            application_id="org.boum.tails.additional-software-config",
+            **kwargs)
+
+    def do_activate(self):
+        self.window.present()
+
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+        gettext.install("tails")
+        self.window = ASPConfigApplicationWindow(
+            application=self,
+            get_config_func=self.get_asp_configuration,
+            remove_asp_func=self.remove_additional_software)
+
+    def get_asp_configuration(self):
+        try:
+            additional_packages = get_additional_packages()
+        except OSError:
+            # XXX: notify
+            pass
+        apt_cache = apt.cache.Cache()
+
+        packages_with_description = []
+        for package in sorted(additional_packages):
+            try:
+                apt_package = apt_cache[package]
+            except KeyError:
+                summary = _("[package not available]")
+            if apt_package.installed:
+                summary = apt_package.installed.summary
+            else:
+                summary = apt_package.candidate.summary
+            packages_with_description.append((package, summary))
+
+        return packages_with_description
+
+    def remove_additional_software(self, package_name):
+        # XXX
+        pass
+
+
+asp_application = ASPConfigApplication()
+exit_status = asp_application.run(sys.argv)
+sys.exit(exit_status)
