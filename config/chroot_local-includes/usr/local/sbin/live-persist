@@ -241,9 +241,9 @@ other::r-x"
 persistence_conf_file_has_correct_access_rights ()
 {
 	local conf="$1"
+	local expected_perms="$2"
 	local expected_user=tails-persistence-setup
 	local expected_group=tails-persistence-setup
-	local expected_perms=600
 	local expected_acl=""
 
 	if [ $(stat -c %U "$conf") != "$expected_user" ]
@@ -374,10 +374,17 @@ activate_volumes ()
 
 	# Regardless of the mountpoint access rights, disable persistence
 	# configuration files with wrong access rights.
-	for f in $(ls /live/persistence/*_unlocked/persistence.conf \
-	              /live/persistence/*_unlocked/live-additional-software.conf || true)
+	for f in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
-		if ! persistence_conf_file_has_correct_access_rights "$f"
+		if ! persistence_conf_file_has_correct_access_rights "$f" "600"
+		then
+			warning "Disabling '$f', that has unsafe access rights"
+			disable_and_create_empty_persistence_conf_file "$f"
+		fi
+	done
+	for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
+	do
+		if ! persistence_conf_file_has_correct_access_rights "$f" "644"
 		then
 			warning "Disabling '$f', that has unsafe access rights"
 			disable_and_create_empty_persistence_conf_file "$f"
