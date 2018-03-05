@@ -1,3 +1,4 @@
+[0m[01;34mTails[0m/
 diff --git a/usr/share/perl5/Tails/Persistence.pm b/usr/share/perl5/Tails/Persistence.pm
 index 8d1e412..c79ac9b 100644
 --- a/usr/share/perl5/Tails/Persistence.pm
@@ -1057,7 +1058,7 @@ index 1a01326..5f1966f 100644
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
 new file mode 100644
-index 0000000..032ffff
+index 0000000..d02a61a
 --- /dev/null
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
 @@ -0,0 +1,240 @@
@@ -1211,7 +1212,7 @@ index 0000000..032ffff
 +        'emblem-system-symbolic', 1,
 +    );
 +    $button->set_valign('GTK_ALIGN_CENTER');
-+    $button->signal_connect('clicked' => sub { $self->configuration_cb->() } );
++    $button->signal_connect('clicked' => sub { $self->configuration_cb->() });
 +
 +    return $button;
 +}
@@ -1676,7 +1677,7 @@ index e0ad103..bd8fdb5 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Setup.pm b/usr/share/perl5/Tails/Persistence/Setup.pm
-index d6c0ba2..7519904 100644
+index d6c0ba2..fe59b9e 100644
 --- a/usr/share/perl5/Tails/Persistence/Setup.pm
 +++ b/usr/share/perl5/Tails/Persistence/Setup.pm
 @@ -5,41 +5,27 @@ Tails::Persistence::Setup - main application class
@@ -2016,7 +2017,7 @@ index d6c0ba2..7519904 100644
      } $self->mountpoints($self->persistence_partition);
  }
  
-@@ -291,10 +334,18 @@ sub _build_persistence_partition_size {
+@@ -291,17 +334,25 @@ sub _build_persistence_partition_size {
  sub _build_configuration {
      my $self = shift;
  
@@ -2038,6 +2039,14 @@ index d6c0ba2..7519904 100644
          try {
              check_config_file_permissions(
                  $config_file_path,
+                 {
+                     uid  => $expected_uid,
+                     gid  => $expected_gid,
+-                    mode => oct(600),
++                    mode => oct(644),
+                     acl  => '',
+                 }
+             );
 @@ -313,11 +364,13 @@ sub _build_configuration {
                  $self->encoding->decode(gettext(
                      $_,
@@ -2450,7 +2459,7 @@ index 7a456ee..cab8f37 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Configure.pm b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-index 751d8e3..5aa19b7 100644
+index 751d8e3..c9cd0ff 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 @@ -5,18 +5,16 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
@@ -2476,7 +2485,7 @@ index 751d8e3..5aa19b7 100644
  use Try::Tiny;
  
  use Locale::gettext;
-@@ -24,25 +22,49 @@ use POSIX;
+@@ -24,25 +22,55 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -2527,6 +2536,12 @@ index 751d8e3..5aa19b7 100644
 +    isa        => 'Gtk3::ListBox',
 +);
 +
++has 'settings_container' => (
++    lazy_build => 1,
++    is         => 'ro',
++    isa        => 'Gtk3::ScrolledWindow',
++);
++
 +has 'settings' => (
 +    lazy_build  => 1,
 +    is          => 'ro',
@@ -2540,16 +2555,18 @@ index 751d8e3..5aa19b7 100644
  
  
  =head1 CONSTRUCTORS
-@@ -54,7 +76,7 @@ sub BUILD {
+@@ -54,8 +82,9 @@ sub BUILD {
  
      # Force initialization in the right order
      assert_defined($self->configuration);
 -    assert_defined($self->buttons);
 +    assert_defined($self->settings);
      assert_defined($self->list_box);
++    assert_defined($self->settings_container);
  
      $self->title->set_text($self->encoding->decode(gettext(
-@@ -75,21 +97,23 @@ sub BUILD {
+         q{Persistence wizard - Persistent volume configuration}
+@@ -75,21 +104,29 @@ sub BUILD {
      $self->go_button->set_sensitive(TRUE);
  }
  
@@ -2559,7 +2576,7 @@ index 751d8e3..5aa19b7 100644
 -    $box->pack_start($self->title, FALSE, FALSE, 0);
 -    $box->pack_start($self->subtitle, FALSE, FALSE, 0);
 -    $box->pack_start($self->description, FALSE, FALSE, 0);
-+sub _build_main_widget {
++sub _build_settings_container {
 +    my $self = shift;
  
      my $viewport = Gtk3::Viewport->new;
@@ -2571,16 +2588,22 @@ index 751d8e3..5aa19b7 100644
      $scrolled_win->add($viewport);
 -    $box->pack_start($scrolled_win, TRUE, TRUE, 0);
  
++    return $scrolled_win;
++}
++
++sub _build_main_widget {
++    my $self = shift;
++
 +    my $box = Gtk3::VBox->new();
 +    $box->set_spacing(6);
 +    $box->pack_start($self->title, FALSE, FALSE, 0);
 +    $box->pack_start($self->subtitle, FALSE, FALSE, 0);
 +    $box->pack_start($self->description, FALSE, FALSE, 0);
-+    $box->pack_start($scrolled_win, TRUE, TRUE, 0);
++    $box->pack_start($self->settings_container, TRUE, TRUE, 0);
      $box->pack_start($self->status_area, FALSE, FALSE, 0);
  
      my $button_alignment = Gtk3::Alignment->new(1.0, 0, 0.2, 1.0);
-@@ -100,21 +124,43 @@ method _build_main_box {
+@@ -100,21 +137,43 @@ method _build_main_box {
      return $box;
  }
  
@@ -2636,7 +2659,7 @@ index 751d8e3..5aa19b7 100644
  }
  
  
-@@ -122,7 +168,9 @@ method _build_list_box {
+@@ -122,7 +181,9 @@ method _build_list_box {
  
  =cut
  
@@ -2647,17 +2670,19 @@ index 751d8e3..5aa19b7 100644
      if ($error) {
          $self->working(0);
          say STDERR "$error";
-@@ -136,7 +184,8 @@ method operation_finished ($error) {
+@@ -136,8 +197,9 @@ method operation_finished ($error) {
      }
  }
  
 -method go_button_pressed {
+-    $self->list_box->hide;
 +sub go_button_pressed {
 +    my $self = shift;
-     $self->list_box->hide;
++    $self->settings_container->hide;
      $self->working(1);
      $self->subtitle->set_text(
-@@ -155,12 +204,8 @@ method go_button_pressed {
+         $self->encoding->decode(gettext(q{Saving...})),
+@@ -155,12 +217,8 @@ method go_button_pressed {
      $self->operation_finished($error);
  }
  
