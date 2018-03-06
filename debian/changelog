@@ -9,19 +9,16 @@ tails (3.6~rc1) unstable; urgency=medium
   * Major changes
     - Upgrade Tor to 0.3.2.9. (Closes: #15158)
     - Add ability to lock the screen. (Closes: #5684)
-    - Add support for meek_lite bridges. (Closes: #8243)
+    - Add initial support for Meek bridges. (Closes: #8243)
     - Upgrade to Thunderbird 52.6.0. (Closes: #15298)
     - Enable Thunderbird AppArmor profile. (Closes: 11973)
     - Upgrade Linux to 4.15.0-1. (Closes: #15309).
     - Upgrade systemd to 237.
     - Upgrade Electrum to 3.0.6. (Closes: #15022)
-    - Port most of Tails shell scripts to Python thanks to
-      GoodCrypto. (Closes: #11198)
+    - Port a few shell scripts to Python thanks to GoodCrypto. (Closes: #11198)
 
   * Security fixes
     - Upgrade Intel processor microcode firmware. (Closes: #15173).
-    - Create tails-upgrade-frontend's trusted GnuPG homedir with stricter
-      permissions, then make it looser. (Closes: #7037)
     - Upgrade poppler to 0.48.0-2+deb9u1. (CVE-2017-14929, CVE-2017-1000456)
     - Upgrade tiff to 4.0.8-2+deb9u2 ( CVE-2017-9935, CVE-2017-11335,
       CVE-2017-12944, CVE-2017-13726, CVE-2017-13727, CVE-2017-18013)
@@ -32,6 +29,9 @@ tails (3.6~rc1) unstable; urgency=medium
     - Upgrade gcc to 6.3.0-18+deb9u1.
 
   * Minor improvements
+    - Avoid noisy warning at boot time by creating tails-upgrade-frontend's
+      trusted GnuPG homedir with stricter permissions, then making it looser.
+      (Closes: #7037)
     - Drop (broken) Thunderbird dedicated SocksPort. (Closes: #12460)
     - Drop customized update-ca-certificates.service. (Closes: #14756)
     - Update AppArmor cupsd profile. (Closes: #15029)
@@ -63,7 +63,7 @@ tails (3.6~rc1) unstable; urgency=medium
   * Build system
     - Abort if tails-custom-apt-sources failed.
     - Abort the ISO build when DKMS modules are not built. (Closes: #14789).
-    - Improve how we use dependency hooks. (Closes: #14818)
+    - Improve how we track dependencies in build hooks. (Closes: #14818)
     - Fix (potential) rare race condition during build.
     - Ensure the SquashFS has /etc/hostname properly configured.
       (Closes: #15322)
