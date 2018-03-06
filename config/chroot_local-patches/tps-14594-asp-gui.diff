@@ -689,7 +689,7 @@ index f3fd304..e6bc85a 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
-index 1a01326..105d501 100644
+index 1a01326..d9a6045 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
 @@ -5,18 +5,17 @@ Tails::Persistence::Configuration::Presets - available configuration snippets
@@ -716,7 +716,7 @@ index 1a01326..105d501 100644
  use Tails::Persistence::Configuration::Atom;
  
  use Locale::gettext;
-@@ -24,161 +23,238 @@ use POSIX;
+@@ -24,161 +23,229 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -847,16 +847,7 @@ index 1a01326..105d501 100644
 -            icon_name   => 'seahorse-key-personal',
 +            icon_name           => 'package-x-generic',
 +            enabled             => 0,
-+            configuration_cmd   => (
-+                $ENV{DEV_MODE}
-+                    ? [
-+                        'zenity',
-+                        '--question',
-+                        '--title=ASP',
-+                        '--text=ASP',
-+                      ]
-+                    : [ 'tails-additional-software-config' ],
-+            ),
++            configuration_app_desktop_id => 'org.boum.tails.additional-software-config.desktop',
 +            atoms_args          => [
 +                {
 +                    destination => '/var/cache/apt/archives',
@@ -1037,7 +1028,7 @@ index 1a01326..105d501 100644
  }
  
  
-@@ -190,10 +266,22 @@ sub set_state_from_lines {
+@@ -190,10 +257,22 @@ sub set_state_from_lines {
      my $self = shift;
      my @lines = @_;
  
@@ -1064,10 +1055,10 @@ index 1a01326..105d501 100644
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
 new file mode 100644
-index 0000000..605b967
+index 0000000..eec2234
 --- /dev/null
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/Setting.pm
-@@ -0,0 +1,269 @@
+@@ -0,0 +1,259 @@
 +=head1 NAME
 +
 +Tails::Persistence::Configuration::Setting - a persistence feature displayed in the GUI
@@ -1076,13 +1067,20 @@ index 0000000..605b967
 +
 +package Tails::Persistence::Configuration::Setting;
 +
++use 5.10.1;
 +use strictures 2;
 +use autodie qw(:all);
 +use Glib qw{TRUE FALSE};
-+use IPC::Run qw{run};
 +use List::MoreUtils qw{all};
 +use Pango;
 +use UUID::Tiny ':std';
++
++use Glib::Object::Introspection;
++Glib::Object::Introspection->setup(
++    basename => 'Gio',
++    version  => '2.0',
++    package  => 'Gio'
++);
 +
 +use Locale::gettext;
 +use POSIX;
@@ -1159,23 +1157,11 @@ index 0000000..605b967
 +    isa        => 'Gtk3::Button',
 +);
 +
-+has 'configuration_cmd' => (
++has 'configuration_app_desktop_id' => (
 +    lazy_build => 1,
 +    is         => 'ro',
-+    isa        => 'ArrayRef[Str]',
++    isa        => 'Str',
 +    predicate  => 1,
-+);
-+
-+has 'configuration_opened_cb' => (
-+    lazy_build => 1,
-+    is         => 'ro',
-+    isa        => 'CodeRef',
-+);
-+
-+has 'configuration_closed_cb' => (
-+    lazy_build => 1,
-+    is         => 'ro',
-+    isa        => 'CodeRef',
 +);
 +
 +
@@ -1254,7 +1240,7 @@ index 0000000..605b967
 +
 +    $main_box->pack_start($self->icon, FALSE, FALSE, 0);
 +    $main_box->pack_start($text_box, TRUE, TRUE, 0);
-+    if ($self->has_configuration_cmd) {
++    if ($self->has_configuration_app_desktop_id) {
 +        $main_box->pack_start($self->configuration_button, FALSE, FALSE, 0);
 +    }
 +    $main_box->pack_start($self->switch, FALSE, FALSE, 0);
@@ -1322,17 +1308,12 @@ index 0000000..605b967
 +sub configuration_cb {
 +    my $self = shift;
 +
-+    say STDERR "Entering T::P::C::Setting::configuration_cb";
-+
-+    $self->configuration_opened_cb->();
-+
-+    my $configuration_cmd_output;
-+    run $self->configuration_cmd, '>&', \$configuration_cmd_output;
-+    my $configuration_cmd_exit_code = $?;
-+    $self->configuration_closed_cb->(
-+        exit_code => $configuration_cmd_exit_code,
-+        output    => $configuration_cmd_output,
++    my $configuration_desktop_app_info = Gio::DesktopAppInfo->new(
++        $ENV{DEV_MODE}
++            ? 'yelp.desktop'
++            : $self->configuration_app_desktop_id,
 +    );
++    $configuration_desktop_app_info->launch();
 +}
 +
 +no Moo;
@@ -1712,7 +1693,7 @@ index e0ad103..bd8fdb5 100644
 +no Moo::Role;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Setup.pm b/usr/share/perl5/Tails/Persistence/Setup.pm
-index d6c0ba2..ae667c2 100644
+index d6c0ba2..5196dd3 100644
 --- a/usr/share/perl5/Tails/Persistence/Setup.pm
 +++ b/usr/share/perl5/Tails/Persistence/Setup.pm
 @@ -5,41 +5,27 @@ Tails::Persistence::Setup - main application class
@@ -2258,15 +2239,7 @@ index d6c0ba2..ae667c2 100644
          );
      }
      elsif ($name eq 'delete') {
-@@ -718,6 +794,7 @@ sub step_object_from_name {
-             persistence_partition      => $self->persistence_partition,
-             persistence_partition_device_file => $self->persistence_partition_device_file,
-             persistence_partition_size => $self->persistence_partition_size,
-+            set_sensitive_cb           => sub { $self->set_sensitive(@_) },
-         );
-     }
- 
-@@ -732,21 +809,26 @@ sub step_object_from_name {
+@@ -732,21 +808,26 @@ sub step_object_from_name {
  
  }
  
@@ -2297,7 +2270,7 @@ index d6c0ba2..ae667c2 100644
      return unless my $mountpoint = $self->persistence_partition_mountpoint;
      my $ret;
      {
-@@ -756,7 +838,8 @@ method persistence_filesystem_is_readable () {
+@@ -756,7 +837,8 @@ method persistence_filesystem_is_readable () {
      return $ret;
  }
  
@@ -2307,20 +2280,11 @@ index d6c0ba2..ae667c2 100644
      return unless my $mountpoint = $self->persistence_partition_mountpoint;
      my $ret;
      {
-@@ -766,5 +849,14 @@ method persistence_filesystem_is_writable () {
+@@ -766,5 +848,5 @@ method persistence_filesystem_is_writable () {
      return $ret;
  }
  
 -no Moose;
-+sub set_sensitive {
-+    my $self      = shift;
-+    my $sensitive = shift;
-+
-+    $self->main_window->set_sensitive($sensitive);
-+    $self->main_window->set_accept_focus($sensitive);
-+    $self->main_window->set_focus_on_map($sensitive);
-+}
-+
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm b/usr/share/perl5/Tails/Persistence/Step/Bootstrap.pm
@@ -2503,7 +2467,7 @@ index 7a456ee..cab8f37 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/Persistence/Step/Configure.pm b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
-index 751d8e3..bf4901a 100644
+index 751d8e3..651e637 100644
 --- a/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 +++ b/usr/share/perl5/Tails/Persistence/Step/Configure.pm
 @@ -5,18 +5,16 @@ Tails::Persistence::Step::Configure - configure which bits are persistent
@@ -2529,7 +2493,7 @@ index 751d8e3..bf4901a 100644
  use Try::Tiny;
  
  use Locale::gettext;
-@@ -24,25 +22,61 @@ use POSIX;
+@@ -24,25 +22,55 @@ use POSIX;
  setlocale(LC_MESSAGES, "");
  textdomain("tails-persistence-setup");
  
@@ -2596,16 +2560,10 @@ index 751d8e3..bf4901a 100644
 +        push_settings => 'push',
 +    },
 +);
-+
-+has 'set_sensitive_cb' => (
-+    required => 1,
-+    is       => 'ro',
-+    isa      => 'CodeRef',
-+);
  
  
  =head1 CONSTRUCTORS
-@@ -54,8 +88,9 @@ sub BUILD {
+@@ -54,8 +82,9 @@ sub BUILD {
  
      # Force initialization in the right order
      assert_defined($self->configuration);
@@ -2616,7 +2574,7 @@ index 751d8e3..bf4901a 100644
  
      $self->title->set_text($self->encoding->decode(gettext(
          q{Persistence wizard - Persistent volume configuration}
-@@ -75,21 +110,29 @@ sub BUILD {
+@@ -75,21 +104,29 @@ sub BUILD {
      $self->go_button->set_sensitive(TRUE);
  }
  
@@ -2653,7 +2611,7 @@ index 751d8e3..bf4901a 100644
      $box->pack_start($self->status_area, FALSE, FALSE, 0);
  
      my $button_alignment = Gtk3::Alignment->new(1.0, 0, 0.2, 1.0);
-@@ -100,21 +143,49 @@ method _build_main_box {
+@@ -100,21 +137,44 @@ method _build_main_box {
      return $box;
  }
  
@@ -2668,14 +2626,9 @@ index 751d8e3..bf4901a 100644
 +    my @settings;
 +    foreach my $preset ($self->configuration->presets->all) {
 +        my %init_args;
-+        if (exists($preset->{configuration_cmd}) && defined($preset->{configuration_cmd})) {
-+            $init_args{configuration_cmd} = $preset->{configuration_cmd};
-+            $init_args{configuration_opened_cb} = sub {
-+                $self->configuration_opened_cb(@_);
-+            },
-+            $init_args{configuration_closed_cb} = sub {
-+                $self->configuration_closed_cb(@_);
-+            },
++        if (exists($preset->{configuration_app_desktop_id})
++                && defined($preset->{configuration_app_desktop_id})) {
++            $init_args{configuration_app_desktop_id} = $preset->{configuration_app_desktop_id};
 +        }
 +        push @settings,
 +            Tails::Persistence::Configuration::Setting->new(
@@ -2715,7 +2668,7 @@ index 751d8e3..bf4901a 100644
  }
  
  
-@@ -122,7 +193,9 @@ method _build_list_box {
+@@ -122,7 +182,9 @@ method _build_list_box {
  
  =cut
  
@@ -2726,7 +2679,7 @@ index 751d8e3..bf4901a 100644
      if ($error) {
          $self->working(0);
          say STDERR "$error";
-@@ -136,8 +209,9 @@ method operation_finished ($error) {
+@@ -136,8 +198,9 @@ method operation_finished ($error) {
      }
  }
  
@@ -2738,68 +2691,14 @@ index 751d8e3..bf4901a 100644
      $self->working(1);
      $self->subtitle->set_text(
          $self->encoding->decode(gettext(q{Saving...})),
-@@ -155,12 +229,64 @@ method go_button_pressed {
+@@ -155,12 +218,8 @@ method go_button_pressed {
      $self->operation_finished($error);
  }
  
 -method refresh_buttons {
 -    $_->refresh_display foreach $self->all_buttons;
-+sub configuration_opened_cb {
-+    my $self = shift;
-+
-+    say STDERR sprintf(
-+        "in T::P::Step::Configure::configuration_opened_cb (%s)",
-+        join(', ', @_)
-+    );
-+
-+    $self->set_sensitive(FALSE);
-+}
-+
-+sub configuration_closed_cb {
-+    my $self = shift;
-+    my %args = @_;
-+
-+    say STDERR sprintf(
-+        "in T::P::Step::Configure::configuration_closed_cb (%s)",
-+        join(', ', @_)
-+    );
-+
-+    if ($args{'exit_code'} == 0) {
-+        say STDERR "Configuration succeeded.";
-+        $self->set_sensitive(TRUE);
-+    } else {
-+        # XXX: what to do here?
-+        say STDERR
-+            "Configuration failed with exit code ", $args{'exit_code'} == 0,
-+            " and output: ", $args{output};
-+    }
-+}
-+
-+sub recursively_set_sensitive {
-+    my $self      = shift;
-+    my $widget    = shift;
-+    my $sensitive = shift;
-+
-+    $widget->set_sensitive($sensitive);
-+    say STDERR ref($widget), ": ", $widget->get_sensitive;
-+
-+    return unless $widget->can('foreach');
-+    $widget->foreach(
-+        sub {
-+            my $child = $_[0];
-+            $self->recursively_set_sensitive($child, $sensitive);
-+        }
-+    );
-+}
-+
-+sub set_sensitive {
-+    my $self   = shift;
-+    my $sensitive = shift;
-+
-+    $self->recursively_set_sensitive($self->main_widget, $sensitive);
-+    $self->set_sensitive_cb->($sensitive);
- }
- 
+-}
+-
  with 'Tails::Persistence::Role::StatusArea';
  with 'Tails::Persistence::Role::SetupStep';
  
