@@ -564,19 +564,7 @@ Given /^the package "([^"]+)" is installed$/ do |package|
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
-  if version and version == '2.x'
-    con_content = <<EOF
-[connection]
-id=#{con_name}
-uuid=b04afa94-c3a1-41bf-aa12-1a743d964162
-interface-name=eth0
-type=ethernet
-EOF
-    con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-    $vm.file_overwrite(con_file, con_content)
-    $vm.execute_successfully("chmod 600 '#{con_file}'")
-    $vm.execute_successfully("nmcli connection load '#{con_file}'")
-  elsif version and version == '3.x'
+  if version
     raise "Unsupported version '#{version}'"
   else
     $vm.execute_successfully(
