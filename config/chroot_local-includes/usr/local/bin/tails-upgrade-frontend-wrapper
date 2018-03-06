@@ -1,48 +1,38 @@
-#!/bin/sh
+#! /usr/bin/env python3
+"""
+Tails upgrade frontend wrapper.
 
-set -e
-set -u
+Test with "python3 tails-upgrade-frontend-wrapper.py doctest".
+The tests will start the upgrade process which could pop up a dialog box
+so you probably want to use a tester that handles user interaction or
+run the tests from the command line and answer prompts as needed.
 
-CMD=$(basename ${0})
+goodcrypto.com converted from bash to python and added basic tests.
 
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
+>>> # run this script (without waiting 30 seconds)
+>>> sh.Command(sys.argv[0])("--no-wait")
+<BLANKLINE>
+"""
 
-# Import no_abort()
-. /usr/local/lib/tails-shell-library/common.sh
+import os
+import sys
+import time
+from gettext import gettext
 
-TORDATE_DIR=/run/tordate
-TORDATE_DONE_FILE="${TORDATE_DIR}/done"
-INOTIFY_TIMEOUT=60
-MIN_REAL_MEMFREE=$((300 * 1024))
-RUN_AS_USER=tails-upgrade-frontend
+import sh
+import psutil
 
-### Functions
+os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
+os.environ['TEXTDOMAIN'] = 'tails'
 
-error () {
-    local cli_text="${CMD}: `gettext \"error:\"` ${@}"
-    local dialog_text="<b><big>`gettext \"Error\"`</big></b>
+CMD = os.path.basename(sys.argv[0])
+TORDATE_DIR = '/run/tordate'
+TORDATE_DONE_FILE = '{}/done'.format(TORDATE_DIR)
+INOTIFY_TIMEOUT = 60
+MIN_AVAILABLE_MEMORY = (300 * 1024 * 1024)  # In Bytes
+RUN_AS_USER = 'tails-upgrade-frontend'
 
-${@}"
-    echo "${cli_text}" >&2
-    zenity --error --title "" --text "${dialog_text}"
-    exit 1
-}
-
-check_free_memory () {
-   local min_real_memfree memfree buffers cached real_memfree
-   local errormsg
-
-   min_real_memfree="$1"
-
-   memfree=$(awk '/^MemFree:/{print $2}' /proc/meminfo)
-   buffers=$(awk '/^Buffers:/{print $2}' /proc/meminfo)
-   cached=$(awk '/^Cached:/{print $2}' /proc/meminfo)
-   tmpfs=$(df --type=tmpfs --local --output=used --total | tail -n1)
-   real_memfree=$(($memfree + $buffers + $cached - $tmpfs))
-
-   errormsg="`gettext \"<b>Not enough memory available to check for upgrades.</b>
+ERROR_MESSAGE = gettext('''\"<b>Not enough memory available to check for upgrades.</b>
 
 Make sure this system satisfies the requirements for running Tails.
 See file:///usr/share/doc/tails/website/doc/about/requirements.en.html
@@ -50,26 +40,67 @@ See file:///usr/share/doc/tails/website/doc/about/requirements.en.html
 Try to restart Tails to check for upgrades again.
 
 Or do a manual upgrade.
-See https://tails.boum.org/doc/first_steps/upgrade#manual\"`"
+See https://tails.boum.org/doc/first_steps/upgrade#manual\"''')
 
-   if [ "$real_memfree" -lt "$MIN_REAL_MEMFREE" ] ; then
-      echo "Only $real_memfree MemFree + Buffers + Cached - usage of tmpfs, while $MIN_REAL_MEMFREE is needed." >&2
-      error "$errormsg"
-   fi
-}
 
-### Main
+def main(*args):
+    if "--no-wait" not in args:
+        time.sleep(30)
+    else:
+        args = (arg for arg in args if arg != "--no-wait")
 
-sleep 30
+    check_free_memory(MIN_AVAILABLE_MEMORY)
 
-check_free_memory "$MIN_REAL_MEMFREE"
+    # Go to a place where everyone, especially Archive::Tar::Wrapper called by
+    # tails-install-iuk, can chdir back after it has chdir'd elsewhere to do
+    # its job.
+    os.chdir('/')
 
-# Go to a place where everyone, especially Archive::Tar::Wrapper called by
-# tails-install-iuk, can chdir back after it has chdir'd elsewhere to do
-# its job.
-cd /
+    os.execv(
+        "/bin/sh",
+        (
+            "/bin/sh", "-c",
+            "xhost +SI:localuser:{user};"
+            "sudo -u {user} /usr/bin/tails-upgrade-frontend {args};"
+            "xhost -SI:localuser:{user}".format(user=RUN_AS_USER, args=" ".join(args))
+        )
+    )
 
-xhost +SI:localuser:"$RUN_AS_USER"
-no_abort sudo -u "$RUN_AS_USER" /usr/bin/tails-upgrade-frontend "${@}"
-xhost -SI:localuser:"$RUN_AS_USER"
-exit ${_NO_ABORT_RET}
+
+def error(msg):
+    """Show error and exit."""
+    cli_text = '{}: {} {}'.format(CMD, gettext('error:'), msg)
+    dialog_text = '''<b><big>{}</big></b>\n\n{}'''.format(gettext('Error'), msg)
+    print(cli_text, file=sys.stderr)
+
+    sh.zenity('--error', '--title', "", '--text', dialog_text, _ok_code=[0,1,5])
+    sys.exit(1)
+
+
+def check_free_memory(min_available_memory):
+    """Check for enough free memory.
+
+    # 1 KiB should be available when running the doctest
+    >>> check_free_memory(1024)
+    # 1 TiB should not be available, an error prompt should be displayed
+    >>> try:
+    ...     check_free_memory(1024*1024*1024*1024)
+    ...     fail()
+    ... except SystemExit:
+    ...     pass
+    """
+
+    available_memory = psutil.virtual_memory().available
+
+    if available_memory < min_available_memory:
+        print('Only {} Bytes memory available, while {} is needed'.format(
+            available_memory, min_available_memory), file=sys.stderr)
+        error(ERROR_MESSAGE)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == 'doctest':
+        import doctest
+        doctest.testmod()
+    else:
+        main(*sys.argv[1:])
