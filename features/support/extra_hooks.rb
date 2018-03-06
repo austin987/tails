@@ -90,26 +90,6 @@ def debug_log(message, options = {})
 end
 
 require 'cucumber/formatter/pretty'
-# Backport part of commit af940a8 from the cucumber-ruby repo. This
-# fixes the "out hook output" for the Pretty formatter so stuff
-# written via `puts` after a Scenario has run its last step will be
-# written, instead of delayed to the next Feature/Scenario (if any) or
-# dropped completely (if not).
-# XXX: This can be removed once we stop supporting Debian Jessie
-# around when Debian Stretch is released.
-if Gem::Version.new(Cucumber::VERSION) < Gem::Version.new('2.0.0.beta.4')
-  module Cucumber
-    module Formatter
-      class Pretty
-        def after_feature_element(feature_element)
-          print_messages
-          @io.puts
-          @io.flush
-        end
-      end
-    end
-  end
-end
 
 module ExtraFormatters
   # This is a null formatter in the sense that it doesn't ever output
