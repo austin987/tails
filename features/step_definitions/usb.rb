@@ -65,7 +65,7 @@ def persistent_presets_ui_settings
       "%s:%s:%s",
       $preset->{id},
       ($preset->{enabled} ? 1 : 0),
-      (exists($preset->{configuration_cb}) && defined($preset->{configuration_cb})
+      (exists($preset->{configuration_app_desktop_id}) && defined($preset->{configuration_app_desktop_id})
          ? 1
          : 0
       ),
