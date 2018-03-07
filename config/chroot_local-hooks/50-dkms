@@ -4,36 +4,18 @@ set -e
 set -u
 set -x
 
-echo "Building dkms modules"
+echo "Building VirtualBox guest modules"
 
 . /usr/share/amnesia/build/variables
 
-# Import install_fake_package
+# Import ensure_hook_dependency_is_installed()
 . /usr/local/lib/tails-shell-library/build.sh
 
-# Install gcc-6 and fake linux-compiler-gcc-7-x86
-# (linux-headers-4.14+ depends on it, but Stretch hasn't GCC 7)
-# XXX:Buster: remove this hack.
-apt-get install --yes gcc-6
-NEWEST_INSTALLED_KERNEL_VERSION="$(
-    dpkg-query --showformat '${Version}\n' --show 'linux-image-*-amd64' \
-    | sort --version-sort | tail -n1
-)"
-install_fake_package \
-    linux-compiler-gcc-7-x86 \
-    "${NEWEST_INSTALLED_KERNEL_VERSION}~0tails1"
-ln -s /usr/bin/gcc-6 /usr/bin/gcc-7
-
 # Any -dkms package must be installed *after* dkms to be properly registered
-apt-get install --yes \
-    build-essential \
-    dkms \
-    libelf-dev
+ensure_hook_dependency_is_installed dkms
 
-apt-get install --yes \
-    "linux-headers-${KERNEL_VERSION}-amd64" \
-    aufs-dkms \
-    virtualbox-guest-dkms
+ensure_hook_dependency_is_installed \
+   virtualbox-guest-dkms
 
 for log in $(ls /var/lib/dkms/*/*/build/make.log); do
    echo "---- $log"
@@ -44,12 +26,6 @@ done
 # dkms.conf for a DKMS module includes a BUILD_EXCLUSIVE directive
 # which does not match our kernel version, the modules won't be built
 # and then we should abort the build.
-for modules_dir in /lib/modules/*/kernel/fs/aufs ; do
-   if [ ! -f "${modules_dir}/aufs.ko" ]; then
-       echo "Can not find aufs.ko module in '${modules_dir}" >&2
-       exit 1
-   fi
-done
 for module in vboxguest vboxsf vboxvideo ; do
    for modules_dir in /lib/modules/*/updates ; do
       if [ ! -f "${modules_dir}/${module}.ko" ]; then
@@ -61,7 +37,6 @@ done
 
 # virtualbox-guest-dkms's postrm script deletes any previously
 # built binary module; let's delete it before the package gets purged.
-rm /var/lib/dpkg/info/aufs-dkms.prerm
 rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
 
 # Also copy the udev rules installed by virtualbox-guest-dkms to enable guest

@@ -1,47 +1,49 @@
 [[!meta title="Tails report for February, 2018"]]
-[[!meta date="DATE (eg. Tue Aug 8 12:34:56 2018)"]]
+[[!meta date="Tue Mar 6 12:34:56 2018)"]]
 
 [[!toc]]
 
 Releases
 ========
 
-
-* [[Tails 3.6rc~1 is scheduled for March XXX|news/XXX]] (only a release candidate). 
-
 * Tails 3.6 is [[scheduled for March 13|contribute/calendar]].
 
 The following changes will be introduced in Tails 3.6:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+* Upgrade Tor to 3.2.9.
 
-* Finally a safe [[!tails_ticket 5684 desc="Screen Locker"]] for Tails users.
+* Upgrade Linux kernel to 4.15.0.
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+* Upgrade Thunderbird to 52.6.0 and enable its apparmor profile.
+
+* Upgrade Electrum to 3.0.6.
+
+* Add support for screen locking, even without administration password.
+
+* Upgrade tails-additional-softwares, which does not block anymore the
+  opening of the Desktop while installing the packages, and is more robust
+  when booting in offline mode.
+
+* Upgrade Tails installer to fix bugs when using it in languages
+  different than english.
+
+* Upgrade OpenPGP Applet, it does not hang anymore when decrypting large
+  text from the clipboard.
 
 Code
 ====
 
-- Most of the changes for Tails 3.6 [have been merged](https://labs.riseup.net/code/projects/tails/issues?utf8=%E2%9C%93&set_filter=1&f%5B%5D=fixed_version_id&op%5Bfixed_version_id%5D=%3D&v%5Bfixed_version_id%5D%5B%5D=307&f%5B%5D=status_id&op%5Bstatus_id%5D=%3D&v%5Bstatus_id%5D%5B%5D=11&v%5Bstatus_id%5D%5B%5D=3&f%5B%5D=&c%5B%5D=priority&c%5B%5D=subject&c%5B%5D=cf_15&c%5B%5D=cf_18&group_by=category&t%5B%5D=) on Tails 3.6rc~1, and [[wide testing will be needed|https://tails.boum.org/contribute/how/testing/]]. (hint: check out the [[!tails_ticket 5684 desc="Screen Locker"]]).
+- We've continued our work on the [[!tails_ticket 14568 desc="Additional
+  Software feature"]].
 
-
-XXX: If you feel like it and developers don't do it themselves,
-     list important code work that is not covered already by the
-     Release section (for example, the changes being worked on for
-     the next version).
+- We started [[!tails_ticket 11198 desc="replacing some of our shell scripts
+  with Python ports]]". Thanks to GoodCrypto & segfault!
 
 Documentation and website
 =========================
 
-Our website can be read in Spanish again, after some years in which the translation was discontinued. We thank all translators for their efforts!
-
-XXX: If you feel like it and technical writers don't do it
-     themselves, explore the Git history:
-
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+- We've improved the contributor's documentation for [[verifying reproducible ISO
+  builds|contribute/release_process/test/reproducibility/verification]].
 
 - We improved our [[installation instructions for Windows|install/win/usb]] to
   prevent people from skipping the *Fat32 Format* option of *Universal USB
@@ -59,6 +61,15 @@ User experience
   Doing so will drastically simplify the installation for Windows and macOS
   and improve support for UEFI computers.
 
+- We made plans to improve the upgrade user experience:
+  - on the short term, we will make automatic upgrades more powerful
+    to remove the need for any manual upgrade (except when releasing
+    a version of Tails based on a new Debian release):
+    [[!tails_ticket 15281]], [[Endless_upgrades#single-squashfs-diff]]
+  - on the long term, we want to
+    [[!tails_ticket desc="research" 15277]]
+    existing system upgrade technologies
+
 - We simplified the [[manual upgrade instructions from Tails|upgrade/tails]] to
   remove a whole step. Doing a manual upgrade should now be less confusing and
   take half the time!
@@ -70,10 +81,11 @@ User experience
 Hot topics on our help desk
 ===========================
 
+1. Users are still complaining about
+   [[!tails_ticket desc="Electrum being outdated" 15022]]
 
-1. Users are still complaining about [[Electrum being outdated|https://labs.riseup.net/code/issues/15022]]
-
-2. A lot of reports are about the [[Tails Installer Unicode issue|https://labs.riseup.net/code/issues/15254]]
+2. A lot of reports are about the
+   [[!tails_ticket desc="Tails Installer Unicode issue" 15254]]
 
 
 Infrastructure
@@ -91,12 +103,6 @@ XXX: Report only if more scenarios have been written and add the diff from the p
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
-
-       git log --patch --since='1 December' --until='1 January' origin/master
-
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
-
 - We submitted a proposal for our work on [[distributing USB
   images|blueprint/usb_install_and_upgrade]] to the [ISC Project's 2018 Round
   of Small Technology Grants](https://iscproject.org/the-isc-projects-2018-round-of-small-technology-grants/).
@@ -110,40 +116,56 @@ Outreach
 Past events
 -----------
 
+* Tails was presented by syl at [Festival des Libertés
+  Numériques](https://fdln.insa-rennes.fr/agir/protegez-votre-vie-privee-et-passez-au-libre-ateliers/)
+  in Rennes, France.
+
 Upcoming events
 ---------------
+
+In March some Tails contributors will attend
+
+* the [Internet Freedom Festival](https://internetfreedomfestival.org/) in Valencia, Spain.
+* the Tor developer meeting in Rome, Italy.
 
 On-going discussions
 ====================
 
 XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
 
-Press and testimonials
-======================
-
-XXX: Copy content from press/media_appearances_2016.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
-
 Translation
 ===========
 
-We added the Spanish language to our website. Thanks to all the volunteers that translate our website to different languages!
+Our website can be read in Spanish again, after some years in which the
+translation was discontinued. We thank all translators for their efforts!
 
-XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
-XXX: Add the output of (adjust month!):
+## All the website
 
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 51% (2808) strings translated, 7% strings fuzzy, 45% words translated
+  - es: 44% (2419) strings translated, 1% strings fuzzy, 34% words translated
+  - fa: 38% (2070) strings translated, 10% strings fuzzy, 40% words translated
+  - fr: 90% (4916) strings translated, 1% strings fuzzy, 88% words translated
+  - it: 34% (1889) strings translated, 6% strings fuzzy, 30% words translated
+  - pt: 22% (1244) strings translated, 9% strings fuzzy, 19% words translated
+
+Total original words: 57937
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 75% (1422) strings translated, 14% strings fuzzy, 74% words translated
+  - es: 93% (1768) strings translated, 2% strings fuzzy, 89% words translated
+  - fa: 33% (636) strings translated, 11% strings fuzzy, 33% words translated
+  - fr: 97% (1845) strings translated, 2% strings fuzzy, 95% words translated
+  - it: 69% (1312) strings translated, 14% strings fuzzy, 68% words translated
+  - pt: 41% (780) strings translated, 15% strings fuzzy, 41% words translated
+
+Total original words: 17280
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of Tails ISO from our website.
+* Tails has been started more than 570.813 times this month. This makes 20.386 boots a day on average.
+* 7.587 downloads of the OpenPGP signature of Tails ISO from our website.
 * 75 bug reports were received through WhisperBack.
 
 [[How do we know this?|support/faq#boot_statistics]]
-
-XXX: Ask <tails@boum.org> for these numbers.
