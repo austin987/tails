@@ -54,6 +54,24 @@ In a directory with many Tails ISO images:
 
     find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 5
 
+<a id="reproducibility-final-check"></a>
+
+# Reproducibility
+
+This section can only be done by the RM.
+
+Clear-sign the hashes of all products using *your personal* OpenPGP
+key:
+
+    ( \
+        cd "${ISOS:?}" && \
+        sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso \
+                  Tails_amd64_*_to_${VERSION:?}.iuk \
+            | gpg --clear-sign \
+    )
+
+and leave the output in this section.
+
 # Automated test suite
 
 Our long term goal is to eliminate the manual test suite (except the

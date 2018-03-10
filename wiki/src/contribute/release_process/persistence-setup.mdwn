@@ -2,9 +2,19 @@
 
 [[!toc levels=1]]
 
+Pre-requisites
+=============
+
+* a Debian Stretch (or newer) system
+* Tails' `devel` APT suite enabled
+* the right version of the `tails-perl5lib` package installed
+
 Install build and test dependencies
 ===================================
 
+    git checkout debian && \
+    sudo apt install devscripts && \
+    mk-build-deps -i -r --root-cmd sudo && \
     sudo apt install \
        libdist-zilla-perl \
        libdist-zilla-plugins-cjm-perl \
@@ -34,6 +44,16 @@ Update version number in `bin/tails-persistence-setup`:
 Commit all files that need to be:
 
     git commit bin/tails-persistence-setup -m "tails-persistent-setup $VERSION"
+
+Optionally, run the upstream test suite (it is run as part of the
+Debian package build later, but running it early may avoid publishing
+a broken upstream release; however, beware if you are running Debian
+testing/sid: it has happened in the past that this code base required
+adjustments to work with newer versions of the libraries it depends
+on, so if tests fail on testing/sid, retry on Debian stable before
+going amok):
+
+    RELEASE_TESTING=1 LC_ALL=C fakeroot dzil test
 
 Build an upstream tarball, tag the release, move the tarball out of
 the build repository and cleanup:
