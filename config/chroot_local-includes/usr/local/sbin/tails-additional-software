@@ -399,6 +399,8 @@ def apt_hook_pre():
 
     syslog.syslog("Saving package changes")
 
+    apt_cache = apt.cache.Cache()
+
     installed_packages = []
     removed_packages = []
 
@@ -434,7 +436,9 @@ def apt_hook_pre():
         package_name, old_version, old_arch, old_multiarch, direction, \
                 new_version, new_arch, new_multiarch, action = line.split()
         if action.endswith(".deb"):
-            installed_packages.append(package_name)
+            # Filter packages that will only be upgraded
+            if not apt_cache[package_name].is_installed:
+                installed_packages.append(package_name)
         elif action.endswith("**REMOVE**"):
             removed_packages.append(package_name)
 
