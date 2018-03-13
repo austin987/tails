@@ -523,6 +523,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
          "--option", "DPkg::Options::=--force-confold",
          "install"] + list(packages))
     if apt_get_returncode:
+        _close_notification(installing_notification_id)
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: installation of %s failed"
                       % " ".join(packages))
