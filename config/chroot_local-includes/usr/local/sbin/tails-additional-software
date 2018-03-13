@@ -154,12 +154,22 @@ def _notify(title, body="", accept_label="", deny_label="",
             return None
 
 
-def _notify_failure(summary, details):
+def _notify_failure(summary, details=None):
     """Display a failure notification to the user of the live system.
 
     The user has the option to edit the configuration of to view the system
     log.
     """
+    if details:
+        details = _("{details} Please check your list of additional "
+                    "software packages or read the system log to "
+                    "understand the problem.").format(details=details)
+
+    else:
+        details = _("Please check your list of additional "
+                    "software packages or read the system log to "
+                    "understand the problem.").format(details=details)
+
     action_clicked = _notify(summary, details, _("Show log"), _("Configure"),
                              urgent=True)
     if action_clicked == 1:
@@ -276,8 +286,13 @@ def handle_installed_packages(packages):
                    _("Add to Persistent Storage"),
                    _("Install only once"),
                    urgent=True):
-            setup_additional_packages()
-            add_additional_packages(packages, search_new_persistence=True)
+            try:
+                setup_additional_packages()
+                add_additional_packages(packages, search_new_persistence=True)
+            except Exception as e:
+                _notify_failure(_("The configuration of your additional "
+                                  "software failed."))
+                raise e
     elif has_persistence():
         # When a package is installed with a persistent storage locked, don't
         # show any notification.
@@ -301,7 +316,14 @@ def handle_installed_packages(packages):
                    _("Create Persistent Storage"),
                    _("Install only once"),
                    urgent=True):
-            create_persistence_and_setup_additional_packages(packages)
+            try:
+                create_persistence_and_setup_additional_packages(packages)
+            except Exception as e:
+                _notify_failure(_("The configuration of your additional "
+                                  "software failed."),
+                                _("Creating your persistent storage "
+                                  "failed."))
+                raise e
     else:   # It's impossible to have a persistent storage
         syslog.syslog("Cannot create persistent storage on this media.")
         if not os.path.isfile(ASP_STATE_INSTALLER_ASKED):
@@ -327,7 +349,12 @@ def handle_removed_packages(packages):
                _("Remove"),
                _("Cancel"),
                urgent=True):
-        remove_additional_packages(packages, search_new_persistence=True)
+        try:
+            remove_additional_packages(packages, search_new_persistence=True)
+        except Exception as e:
+            _notify_failure(_("The configuration of your additional "
+                              "software failed."))
+            raise e
 
 
 def setup_additional_packages():
@@ -500,10 +527,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
                       "Warning: installation of %s failed"
                       % " ".join(packages))
         _notify_failure(_("The installation of your additional software "
-                          "failed"),
-                        _("Please check your list of additional software "
-                          "packages or read the system log to understand "
-                          "the problem."))
+                          "failed"))
         return False
     else:
         syslog.syslog("Installation completed successfully.")
@@ -536,17 +560,13 @@ def upgrade_additional_packages():
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
         _notify_failure(_("The upgrade of your additional software failed"),
-                        _("The check for upgrades failed. Please check your "
-                          "network connection, restart Tails, or read the "
-                          "system log to understand the problem."))
+                        _("The check for upgrades failed."))
         return False
     if install_additional_packages(ignore_old_apt_lists=True):
         syslog.syslog("The upgrade was successful.")
     else:
         _notify_failure(_("The upgrade of your additional software failed"),
-                        _("The upgrade failed. Please check your network "
-                          "connection, restart Tails, or read the system "
-                          "log to understand the problem."))
+                        _("The upgrade failed."))
         return False
 
     # We now know that the APT packages cache is up-to-date wrt. the APT lists,
