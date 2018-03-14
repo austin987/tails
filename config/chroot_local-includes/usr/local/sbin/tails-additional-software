@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import gettext
-import glob
+import os
 import os.path
-import pwd
+import shutil
 import subprocess
 import sys
 import syslog
@@ -11,18 +11,18 @@ import syslog
 _ = gettext.gettext
 
 PERSISTENCE_DIR = "/live/persistence/TailsData_unlocked"
-PACKAGES_LIST_FILE = PERSISTENCE_DIR + "/live-additional-software.conf"
-ACTIVATION_FILE = "/run/live-additional-software/activated"
+PACKAGES_LIST_FILE = os.path.join(
+    PERSISTENCE_DIR, "live-additional-software.conf")
+OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
-OBSOLETE_APT_LIST_SUFFIX = "_binary-i386_Packages"
 
 
 def _launch_apt_get(specific_args):
-    """Launch apt-get with given args
+    """Launch apt-get with given arguments.
 
     Launch apt-get with given arguments list, log its standard and error output
-    and return its returncode"""
+    and return its returncode."""
     apt_get_env = os.environ.copy()
     # The environnment provided in GDM PostLogin hooks doesn't contain /sbin/
     # which is required by dpkg. Let's use the default path for root in Tails.
@@ -34,11 +34,11 @@ def _launch_apt_get(specific_args):
     apt_get_env['DEBIAN_PRIORITY'] = "critical"
     args = ["apt-get", "--quiet", "--yes"]
     args.extend(specific_args)
-    apt_get = subprocess.Popen(
-        args,
-        env=apt_get_env,
-        stderr=subprocess.STDOUT,
-        stdout=subprocess.PIPE)
+    apt_get = subprocess.Popen(args,
+                               env=apt_get_env,
+                               universal_newlines=True,
+                               stderr=subprocess.STDOUT,
+                               stdout=subprocess.PIPE)
     for line in iter(apt_get.stdout.readline, ''):
         if not line.startswith('('):
             syslog.syslog(line.rstrip())
@@ -50,18 +50,14 @@ def _launch_apt_get(specific_args):
 
 
 def _notify(title, body):
-    """Display a notification to the user of the live system
-    """
+    """Display a notification to the user of the live system."""
     cmd = "/usr/local/sbin/tails-notify-user"
     try:
-        notify_user_output = subprocess.check_output([cmd, title, body],
-                                                     stderr=subprocess.STDOUT)
+        subprocess.check_call([cmd, title, body], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: unable to notify the user. %s returned "
                       "with exit code %s" % (cmd, e.returncode))
-        syslog.syslog(syslog.LOG_WARNING,
-                      "%s output follows: %s." % (cmd, notify_user_output))
         syslog.syslog(syslog.LOG_WARNING,
                       "The notification was: %s %s" % (title, body))
     except OSError as e:
@@ -72,14 +68,12 @@ def _notify(title, body):
 
 
 def has_additional_packages_list():
-    """Return true iff PACKAGES_LIST_FILE exists
-    """
+    """Return true iff PACKAGES_LIST_FILE exists."""
     return os.path.isfile(PACKAGES_LIST_FILE)
 
 
 def get_additional_packages():
-    """Returns the list of all the additional packages
-    """
+    """Return the list of all additional packages configured."""
     packages = []
     if has_additional_packages_list():
         with open(PACKAGES_LIST_FILE) as f:
@@ -87,37 +81,82 @@ def get_additional_packages():
                 line = line.strip()
                 if line:
                     packages.append(line)
-        f.closed
     return packages
 
 
-def install_additional_packages():
-    """The subcommand which activates and installs all additional packages
-    """
+def delete_old_apt_lists(old_apt_lists_dir=OLD_APT_LISTS_DIR):
+    """Delete the copy of the old APT lists, if any."""
+    shutil.rmtree(old_apt_lists_dir)
+
+
+def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
+    """Save a copy of the APT lists"""
+    if os.path.exists(destdir):
+        syslog.syslog(syslog.LOG_WARNING,
+                      "Warning: a copy of the APT lists already exists, "
+                      "which should never happen. Removing it.")
+        delete_old_apt_lists(destdir)
+    shutil.copytree(srcdir, destdir, symlinks=True)
+
+
+# Note: we can't do nicer delete + move operations because the directory
+# we want to replace is bind-mounted. So we have to delete the content
+# we want to replace, and then move the content we want to restore.
+def restore_old_apt_lists(srcdir=OLD_APT_LISTS_DIR, dstdir=APT_LISTS_DIR):
+    """Restore the copy of the old APT lists."""
+    # Empty dstdir
+    for basename in os.listdir(dstdir):
+        path = os.path.join(dstdir, basename)
+        if os.path.isfile(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+    # Move the content of srcdir to dstdir
+    for basename in os.listdir(srcdir):
+        path = os.path.join(srcdir, basename)
+        shutil.move(path, dstdir)
+
+
+def install_additional_packages(ignore_old_apt_lists=False):
+    """Subcommand which activates and installs all additional packages."""
     syslog.syslog("Starting to install additional software...")
+
     if has_additional_packages_list():
         syslog.syslog("Found additional packages list")
-    elif os.path.isdir(PERSISTENCE_DIR):
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: no configuration file found, creating an "
-                      "empty one.")
-        create_additional_packages_list()
-        return True
     else:
         syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: persistence is not mounted, exiting")
+                      "Warning: no configuration file found, exiting")
         return True
-    try:
-        clear_obsolete_cache(OBSOLETE_APT_LIST_SUFFIX)
-    except:
+
+    # If a copy of old APT lists is found, then the previous upgrade
+    # attempt has not completed successfully (it may have failed e.g.
+    # due to network problems, or it may have been interrupted).
+    # In many of these cases, the APT package cache lacks some
+    # packages the new APT lists reference, so the (offline)
+    # installation step below in this function will fail. To avoid
+    # that, we restore the old APT lists: there are greater chances
+    # that the APT packages cache still has the corresponding packages.
+    if os.path.isdir(OLD_APT_LISTS_DIR) and not ignore_old_apt_lists:
         syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: failed to clear obsolete cached packages")
+                      "Found a copy of old APT lists, restoring it.")
+        try:
+            restore_old_apt_lists()
+        except Exception as e:
+            syslog.syslog(syslog.LOG_WARNING,
+                          "Restoring old APT lists failed with %r, "
+                          "deleting them and proceeding anyway." % e)
+        # In all cases, delete the old APT lists: if they could be
+        # restored we don't need them anymore (and we don't want to
+        # restore them again next time); if they could not be
+        # restored, chances are restoration will fail next time
+        # as well.
+        delete_old_apt_lists()
+
     packages = get_additional_packages()
     if not packages:
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: no packages to install, exiting")
         return True
-    set_activated()
     syslog.syslog("Will install the following packages: %s"
                   % " ".join(packages))
     apt_get_returncode = _launch_apt_get(
@@ -128,105 +167,72 @@ def install_additional_packages():
         syslog.syslog(syslog.LOG_WARNING,
                       "Warning: installation of %s failed"
                       % " ".join(packages))
+        _notify(_("Your additional software installation failed"),
+                _("The installation failed. Please check your additional "
+                  "software configuration, or read the system log to "
+                  "understand better the problem."))
         return False
     else:
         syslog.syslog("Installation completed successfully.")
+        _notify(_("Your additional software are installed"),
+                _("Your additional software are ready to use."))
         return True
 
 
 def upgrade_additional_packages():
-    """The subcommand which upgrades all additional packages if they are activated
-    """
-    if not is_activated():
-        syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: additional packages not activated, exiting")
-        return True
+    """Subcommand which upgrades all additional packages."""
+    # Save a copy of APT lists that we'll delete only once the upgrade
+    # has succeeded, to ensure that the APT packages cache is up-to-date
+    # wrt. the APT lists.
+    syslog.syslog("Saving old APT lists...")
+    save_old_apt_lists()
+
     syslog.syslog("Starting to upgrade additional software...")
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING, "Warning: the update failed.")
-        _notify(_("Your additional software"),
+        _notify(_("Your additional software upgrade failed"),
+                _("The check for upgrades failed. This might be due to a "
+                  "network problem. Please check your network connection, try "
+                  "to restart Tails, or read the system log to understand "
+                  "better the problem."))
+        return False
+    if install_additional_packages(ignore_old_apt_lists=True):
+        _notify(_("Your additional software are up to date"),
+                _("The upgrade was successful."))
+    else:
+        _notify(_("Your additional software upgrade failed"),
                 _("The upgrade failed. This might be due to a network "
                   "problem. Please check your network connection, try to "
                   "restart Tails, or read the system log to understand better "
                   "the problem."))
         return False
+
+    # We now know that the APT packages cache is up-to-date wrt. the APT lists,
+    # so we can delete the copy of the old lists
+    delete_old_apt_lists()
+
     # Remove outdated packages from the local package cache. This is needed as
     # we disable apt-daily.timer, which would else take care of this cleanup.
-    # Note: this does not remove packages from other architectures, hence
-    # the need for the clear_obsolete_cache() function.
+    # We do this after the upgrade has succeeded so that the old packages
+    # remain available in the cache in case we have to restore the old lists.
+    # In the past we did this before upgrading in order to remove the
+    # i386 packages from the cache before downloading amd64 ones, but
+    # this does not matter anymore now that all persistent volumes
+    # must have been upgraded already.
     apt_get_returncode = _launch_apt_get(["autoclean"])
     if apt_get_returncode:
         syslog.syslog(syslog.LOG_WARNING,
-                      "Warning: autoclean failed, proceeding anyway.")
-    if install_additional_packages():
-        _notify(_("Your additional software"),
-                _("The upgrade was successful."))
-        return True
-    else:
-        _notify(_("Your additional software"),
-                _("The upgrade failed. This might be due to a network "
-                  "problem. Please check your network connection, try to "
-                  "restart Tails, or read the system log to understand better "
-                  "the problem."))
-        return False
-
-
-def create_additional_packages_list():
-    """Creates the additional packages list
-
-    Creates the additional packages list file with the right permissions.
-    The caller must ensure the file doesn't already exist.
-    """
-    assert not has_additional_packages_list(), "%s already exists" \
-        % PACKAGES_LIST_FILE
-    syslog.syslog("Creating additional software configuration file")
-    f = open(PACKAGES_LIST_FILE, 'w')
-    f.closed
-    os.chmod(PACKAGES_LIST_FILE, 0o600)
-    os.chown(PACKAGES_LIST_FILE,
-             pwd.getpwnam('tails-persistence-setup').pw_uid,
-             pwd.getpwnam('tails-persistence-setup').pw_gid)
-
-
-def clear_obsolete_cache(obsolete_apt_list_suffix):
-    """Delete cached packages when a package list's filename
-    ends with obsolete_apt_list_suffix
-    """
-    if glob.glob(APT_LISTS_DIR + "/*" + obsolete_apt_list_suffix):
-        syslog.syslog("Clearing cache because at least one package list "
-                      "has suffix '%s'." % obsolete_apt_list_suffix)
-        for deb in glob.glob(APT_ARCHIVES_DIR + "/*.deb"):
-            os.remove(deb)
-
-
-def is_activated():
-    """Check if additional software has been activated
-    """
-    return os.path.isfile(ACTIVATION_FILE)
-
-
-def set_activated():
-    """Save that additional software has been activated
-    """
-    syslog.syslog("Activating persistent software packages")
-    activation_file_dir = os.path.dirname(ACTIVATION_FILE)
-    if not os.path.exists(activation_file_dir):
-        os.makedirs(activation_file_dir)
-    try:
-        f = open(ACTIVATION_FILE, 'w')
-    finally:
-        if f:
-            f.close()
+                      "Warning: autoclean failed.")
+    return True
 
 
 def print_help():
-    """The subcommand which displays help
-    """
+    """Subcommand which displays help."""
     sys.stderr.write("Usage: %s <subcommand>\n" % program_name)
     sys.stderr.write("""Subcommands:
-    install: activate and install additional software
-    upgrade: upgrade additional software if activated\n""")
+    install: install additional software
+    upgrade: upgrade additional software\n""")
 
 
 if __name__ == "__main__":
@@ -237,14 +243,14 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print_help()
-        sys.exit(4)
+        sys.exit(2)
 
     if sys.argv[1] == "install":
         if not install_additional_packages():
-            sys.exit(1)
+            sys.exit(150)
     elif sys.argv[1] == "upgrade":
         if not upgrade_additional_packages():
-            sys.exit(2)
+            sys.exit(151)
     else:
         print_help()
-        sys.exit(4)
+        sys.exit(2)

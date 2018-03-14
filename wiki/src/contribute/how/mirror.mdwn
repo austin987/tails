@@ -135,7 +135,7 @@ module|mirror#http-puppet]].
 
 Set up a virtual host for the hostname chosen at the
 previous step. The virtual host will need to
-have indexing enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
+have indexing enabled.
 
 Files must be served over HTTP and HTTPS. To be helpful in our
 context, this requires a certificate that is considered valid by
@@ -163,7 +163,6 @@ from [Let's Encrypt](https://letsencrypt.org/) for example.
 	   DocumentRoot /var/www/YOUR_PATH/
 	   <Directory /var/www/YOUR_PATH/>
 	      Options Indexes
-	      FileETag None
 	      AllowOverride None
 	      IndexIgnore README.html
 	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
@@ -179,7 +178,6 @@ Mozilla SSL Configuration Generator</a>.
 
 #### Lighttpd configuration example
 
-	static-file.etags = "disable"
 	$HTTP["host"] =~ "^(\d+\.)?dl\.amnesia\.boum\.org$" {
 		server.document-root = "/var/www/YOUR_PATH/"
 		server.dir-listing = "enable"
@@ -189,7 +187,6 @@ Mozilla SSL Configuration Generator</a>.
 
 	server {
 		server_name dl.amnesia.boum.org *.dl.amnesia.boum.org;
-		etag off;
 		root /var/www/YOUR_PATH;
 		location / {
 			autoindex on;

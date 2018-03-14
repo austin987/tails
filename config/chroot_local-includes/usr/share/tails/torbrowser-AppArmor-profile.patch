@@ -1,89 +1,62 @@
---- etc/apparmor.d/torbrowser.Browser.firefox.orig	2017-04-19 16:30:32.000000000 +0000
-+++ etc/apparmor.d/torbrowser.Browser.firefox	2017-06-08 07:59:11.641571083 +0000
-@@ -1,13 +1,15 @@
- # Last modified
+--- a/etc/apparmor.d/torbrowser.Browser.firefox
++++ b/etc/apparmor.d/torbrowser.Browser.firefox
+@@ -1,8 +1,9 @@
  #include <tunables/global>
+ #include <tunables/torbrowser>
  
 -/home/*/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox {
 +/usr/local/lib/tor-browser/firefox {
    #include <abstractions/gnome>
-+  #include <abstractions/gstreamer>
 +  #include <abstractions/ibus>
- 
-   # Uncomment the following line if you don't want the Tor Browser
-   # to have direct access to your sound hardware. Note that this is not
-   # enough to have working sound support in Tor Browser.
--  # #include <abstractions/audio>
-+  #include <abstractions/audio>
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -20,52 +22,58 @@
- 
-   ptrace (trace) peer=@{profile_name},
- 
-+  /etc/asound.conf r,
-   deny /etc/host.conf r,
--  deny /etc/hosts r,
--  deny /etc/nsswitch.conf r,
-+  /etc/hosts r,
-+  /etc/nsswitch.conf r,
-   deny /etc/resolv.conf r,
--  deny /etc/passwd r,
--  deny /etc/group r,
-+  /etc/passwd r,
-+  /etc/group r,
+@@ -22,6 +23,8 @@
+   deny /etc/passwd r,
+   deny /etc/group r,
    deny /etc/mailcap r,
 +  deny @{HOME}/.local/share/gvfs-metadata/home r,
 +  deny /run/resolvconf/resolv.conf r,
  
--  deny /etc/machine-id r,
--  deny /var/lib/dbus/machine-id r,
-+  /etc/machine-id r,
-+  /var/lib/dbus/machine-id r,
- 
+   deny /etc/machine-id r,
+   deny /var/lib/dbus/machine-id r,
+@@ -29,6 +32,7 @@
    /dev/ r,
    /dev/shm/ r,
  
-   owner @{PROC}/@{pid}/fd/ r,
 +  owner @{PROC}/@{pid}/environ r,
+   owner @{PROC}/@{pid}/fd/ r,
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
-   owner @{PROC}/@{pid}/status r,
+@@ -36,28 +40,32 @@
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/ r,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/* r,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/.** rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/update.test/ rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/.** rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/ rw,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/** rw,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser.bak/ rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser.bak/** rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/*.so mr,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/components/*.so mr,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/browser/components/*.so mr,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox rix,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/plugin-container Pix,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/{,TorBrowser/UpdateInfo/}updates/[0-9]*/updater ix,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/{,TorBrowser/UpdateInfo/}updates/0/MozUpdater/bgupdate/updater ix,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profiles.ini r,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profile.default/ r,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Data/Browser/profile.default/** rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Tor/tor px,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/TorBrowser/Tor/libstdc++.so.6 m,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/Desktop/ rw,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/Desktop/** rwk,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/Downloads/ rw,
--  owner @{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/Downloads/** rwk,
-+  /usr/local/lib/tor-browser/ r,
-+  /usr/local/lib/tor-browser/** r,
-+  /usr/local/lib/tor-browser/*.so{,.6} mr,
-+  /usr/local/lib/tor-browser/**/*.so mr,
-+  /usr/local/lib/tor-browser/browser/* r,
-+  /usr/local/lib/tor-browser/TorBrowser/Data/Browser/profiles.ini r,
+-  owner @{torbrowser_installation_dir}/ r,
+-  owner @{torbrowser_installation_dir}/* r,
+-  owner @{torbrowser_installation_dir}/.** rwk,
+-  owner @{torbrowser_installation_dir}/update.test/ rwk,
+-  owner @{torbrowser_home_dir}/.** rwk,
+-  owner @{torbrowser_home_dir}/ rw,
+-  owner @{torbrowser_home_dir}/** rwk,
+-  owner @{torbrowser_home_dir}.bak/ rwk,
+-  owner @{torbrowser_home_dir}.bak/** rwk,
+-  owner @{torbrowser_home_dir}/*.so mr,
+-  owner @{torbrowser_home_dir}/components/*.so mr,
+-  owner @{torbrowser_home_dir}/browser/components/*.so mr,
+-  owner @{torbrowser_home_dir}/firefox rix,
+-  owner @{torbrowser_home_dir}/plugin-container px -> torbrowser_plugin_container,
+-  owner @{torbrowser_home_dir}/{,TorBrowser/UpdateInfo/}updates/[0-9]*/updater ix,
+-  owner @{torbrowser_home_dir}/{,TorBrowser/UpdateInfo/}updates/0/MozUpdater/bgupdate/updater ix,
+-  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profiles.ini r,
+-  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/ r,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/tor px,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/ r,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so mr,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so.* mr,
++  @{torbrowser_home_dir}/ r,
++  @{torbrowser_home_dir}/** mr,
++  @{torbrowser_home_dir}/plugin-container px -> torbrowser_plugin_container,
 +
 +  owner "@{HOME}/Tor Browser/" rw,
 +  owner "@{HOME}/Tor Browser/**" rwk,
@@ -91,7 +64,9 @@
 +  owner "@{HOME}/Persistent/Tor Browser/**" rwk,
 +  owner "/live/persistence/TailsData_unlocked/Persistent/Tor Browser/" rw,
 +  owner "/live/persistence/TailsData_unlocked/Persistent/Tor Browser/**" rwk,
++  owner @{HOME}/.mozilla/firefox/bookmarks/ rwk,
 +  owner @{HOME}/.mozilla/firefox/bookmarks/** rwk,
++  owner /live/persistence/TailsData_unlocked/bookmarks/ rwk,
 +  owner /live/persistence/TailsData_unlocked/bookmarks/** rwk,
 +  owner @{HOME}/.tor-browser/profile.default/ r,
 +  owner @{HOME}/.tor-browser/profile.default/** rwk,
@@ -108,32 +83,31 @@
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -103,9 +111,43 @@
+@@ -80,12 +88,6 @@
+   /sys/devices/system/node/node[0-9]*/meminfo r,
+   deny /sys/devices/virtual/block/*/uevent r,
  
-   # Silence denial logs about permissions we don't need
-   deny /dev/dri/   rwklx,
-+  deny @{HOME}/.cache/fontconfig/ rw,
-+  deny @{HOME}/.cache/fontconfig/** rw,
-+  deny @{HOME}/.config/gtk-2.0/ rw,
-+  deny @{HOME}/.config/gtk-2.0/** rw,
+-  # Should use abstractions/gstreamer instead once merged upstream
+-  /etc/udev/udev.conf r,
+-  /run/udev/data/+pci:* r,
+-  /sys/devices/pci[0-9]*/**/uevent r,
+-  owner /{dev,run}/shm/shmfd-* rw,
+-
+   # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
+   owner /{dev,run}/shm/org.chromium.* rw,
+ 
+@@ -99,6 +101,32 @@
+   deny @{HOME}/.cache/fontconfig/** rw,
+   deny @{HOME}/.config/gtk-2.0/ rw,
+   deny @{HOME}/.config/gtk-2.0/** rw,
 +  deny @{HOME}/.mozilla/firefox/bookmarks/ r,
-   deny @{PROC}/@{pid}/net/route r,
-   deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
-   deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
++  deny @{PROC}/@{pid}/net/route r,
++  deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
++  deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
 +  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
 +  deny /usr/local/lib/tor-browser/update.test/ rw,
 +
-+  /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
-+  owner @{HOME}/.gstreamer*/ rw,
-+  owner @{HOME}/.gstreamer*/** rw,
-+  owner @{PROC}/[0-9]*/fd/ r,
-+
-+  deny /usr/bin/pulseaudio x,
-+
 +  /usr/local/lib/tor-browser/firefox Pix,
-+
-+  # Required for e10s
-+  /usr/local/lib/tor-browser/plugin-container Pix,
 +
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
@@ -149,10 +123,13 @@
 +  # Deny access to the list of recently used files. This overrides the
 +  # access to it that's granted by the freedesktop.org abstraction.
 +  deny @{HOME}/.local/share/recently-used.xbel* rw,
- 
-   # KDE 4
-   owner @{HOME}/.kde/share/config/* r,
-@@ -114,5 +156,11 @@
++
++  # Silence denial logs about permissions we don't need
++  deny /dev/dri/   rwklx,
+   deny @{PROC}/@{pid}/net/route r,
+   deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
+   deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
+@@ -110,5 +138,11 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
@@ -165,3 +142,102 @@
 +  deny /tmp/                 rwklx,
  }
 +
+--- a/etc/apparmor.d/torbrowser.Browser.plugin-container
++++ b/etc/apparmor.d/torbrowser.Browser.plugin-container
+@@ -8,10 +8,10 @@ profile torbrowser_plugin_container {
+   # to have direct access to your sound hardware. You will also
+   # need to remove the "deny" word in the machine-id lines further
+   # bellow.
+-  # #include <abstractions/audio>
+-  # /etc/asound.conf r,
+-  # owner @{PROC}/@{pid}/fd/ r,
+-  # owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/tmp/mozilla-temp-* rw,
++  #include <abstractions/audio>
++  /etc/asound.conf r,
++  owner @{PROC}/@{pid}/fd/ r,
++  owner @{HOME}/.tor-browser/profile.default/tmp/mozilla-temp-* rw,
+ 
+   deny /etc/host.conf r,
+   deny /etc/hosts r,
+@@ -21,8 +21,10 @@ profile torbrowser_plugin_container {
+   deny /etc/group r,
+   deny /etc/mailcap r,
+ 
+-  deny /etc/machine-id r,
+-  deny /var/lib/dbus/machine-id r,
++  /etc/machine-id r,
++  /var/lib/dbus/machine-id r,
++
++  /usr/share/applications/gnome-mimeapps.list r,
+ 
+   owner @{PROC}/@{pid}/mountinfo r,
+   owner @{PROC}/@{pid}/stat r,
+@@ -30,28 +32,26 @@ profile torbrowser_plugin_container {
+   owner @{PROC}/@{pid}/task/*/stat r,
+   @{PROC}/sys/kernel/random/uuid r,
+ 
+-  owner @{torbrowser_home_dir}/*.dat r,
+-  owner @{torbrowser_home_dir}/*.manifest r,
+-  owner @{torbrowser_home_dir}/*.so mr,
+-  owner @{torbrowser_home_dir}/.cache/fontconfig/   rw,
+-  owner @{torbrowser_home_dir}/.cache/fontconfig/** rw,
+-  owner @{torbrowser_home_dir}/browser/** r,
+-  owner @{torbrowser_home_dir}/components/*.so mr,
+-  owner @{torbrowser_home_dir}/browser/components/*.so mr,
+-  owner @{torbrowser_home_dir}/defaults/pref/     r,
+-  owner @{torbrowser_home_dir}/defaults/pref/*.js r,
+-  owner @{torbrowser_home_dir}/fonts/   r,
+-  owner @{torbrowser_home_dir}/fonts/** r,
+-  owner @{torbrowser_home_dir}/omni.ja r,
+-  owner @{torbrowser_home_dir}/plugin-container ixmr,
+-  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/extensions/*.xpi r,
+-  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/tmp/* rw,
+-  owner @{torbrowser_home_dir}/TorBrowser/Data/fontconfig/fonts.conf r,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/ r,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so mr,
+-  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so.* mr,
+-  owner @{torbrowser_home_dir}/Downloads/ rwk,
+-  owner @{torbrowser_home_dir}/Downloads/** rwk,
++  @{torbrowser_home_dir}/ r,
++  @{torbrowser_home_dir}/** mr,
++  @{torbrowser_home_dir}/plugin-container ixmr,
++
++  owner @{HOME}/.tor-browser/profile.default/tmp/* rw,
++
++  owner "@{HOME}/Tor Browser/" rw,
++  owner "@{HOME}/Tor Browser/**" rwk,
++  owner "@{HOME}/Persistent/Tor Browser/" rw,
++  owner "@{HOME}/Persistent/Tor Browser/**" rwk,
++
++  /etc/xul-ext/ r,
++  /etc/xul-ext/** r,
++  /usr/local/share/tor-browser-extensions/ r,
++  /usr/local/share/tor-browser-extensions/** rk,
++  /usr/share/xul-ext/ r,
++  /usr/share/xul-ext/** r,
++
++  /usr/share/doc/tails/website/ r,
++  /usr/share/doc/tails/website/** r,
+ 
+   /sys/devices/system/cpu/ r,
+   /sys/devices/system/cpu/present r,
+@@ -77,6 +77,12 @@ profile torbrowser_plugin_container {
+   deny @{PROC}/@{pid}/net/route r,
+   deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
+   deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
++  deny @{HOME}/.cache/fontconfig/ w,
+ 
+-  #include <local/torbrowser.Browser.plugin-container>
++  # Deny access to global tmp directories, that's granted by the user-tmp
++  # abstraction, which is sourced by the gnome abstraction, that we include.
++  deny owner /var/tmp/**     rwklx,
++  deny /var/tmp/             rwklx,
++  deny owner /tmp/**         rwklx,
++  deny /tmp/                 rwklx,
+ }
+--- a/etc/apparmor.d/tunables/torbrowser
++++ b/etc/apparmor.d/tunables/torbrowser
+@@ -1,2 +1 @@
+-@{torbrowser_installation_dir}=@{HOME}/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*
+-@{torbrowser_home_dir}=@{torbrowser_installation_dir}/Browser
++@{torbrowser_home_dir}=/usr/local/lib/tor-browser
