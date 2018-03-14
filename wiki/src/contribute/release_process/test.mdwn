@@ -54,6 +54,24 @@ In a directory with many Tails ISO images:
 
     find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 5
 
+<a id="reproducibility-final-check"></a>
+
+# Reproducibility
+
+This section can only be done by the RM.
+
+Clear-sign the hashes of all products using *your personal* OpenPGP
+key:
+
+    ( \
+        cd "${ISOS:?}" && \
+        sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso \
+                  Tails_amd64_*_to_${VERSION:?}.iuk \
+            | gpg --clear-sign \
+    )
+
+and leave the output in this section.
+
 # Automated test suite
 
 Our long term goal is to eliminate the manual test suite (except the
@@ -94,8 +112,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Compare the fingerprint of Tails and the latest Tor Browser using at least
   <https://panopticlick.eff.org/> (automate: [[!tails_ticket 10262]])
   - The exposed User-Agent should match the latest Tor Browser's one.
-  - Update the [[fingerprint section|support/known_issues#fingerprint]] of the
-    known issues page if needed.
+  - Update the *Browser fingerprint* section of the
+    [[known issues|support/known_issues]] if needed.
 * WebRTC should be disabled: (automate: [[!tails_ticket 10264]])
   - In `about:config` check that `media.peerconnection.enabled` is set to
     `false`.

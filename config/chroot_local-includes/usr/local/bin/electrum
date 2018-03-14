@@ -1,34 +1,82 @@
-#!/bin/sh
+#! /usr/bin/env python3
+"""
+Tails electrum wrapper
 
-set -e
-set -u
+Test with "python3 electrum.py doctest".
+The tests will start the tor-browser so you probably
+want to use a tester that handles user interaction or
+run the tests from the command line and answer prompts as needed.
 
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
+goodcrypto.com converted from bash to python and added basic tests.
 
-CONF_DIR="${HOME}"/.electrum
+>>> # run script
+>>> sh.Command(sys.argv[0])()
+<BLANKLINE>
+"""
 
-electrum_config_is_persistent() {
-    [ "$(findmnt --noheadings --output SOURCE --target "${CONF_DIR}")" = "/dev/mapper/TailsData_unlocked[/electrum]" ]
-}
+import os
+import sys
+from gettext import gettext
 
-verify_start () {
-    local dialog_msg="<b><big>`gettext \"Persistence is disabled for Electrum\"`</big></b>
+import sh
 
-`gettext \"When you reboot Tails, all of Electrum's data will be lost, including your Bitcoin wallet. It is strongly recommended to only run Electrum when its persistence feature is activated.\"`
+os.environ['TEXTDOMAIN'] = 'tails'
 
-`gettext \"Do you want to start Electrum anyway?\"`
-"
-    local launch="`gettext \"_Launch\"`"
-    local exit="`gettext \"_Exit\"`"
-    zenity --question --title "" --text "${dialog_msg}" --default-cancel \
-           --ok-label "${launch}" --cancel-label "${exit}"
-}
+HOME_DIR = os.environ['HOME']
+CONF_DIR = os.path.join(HOME_DIR, '.electrum')
 
-if ! electrum_config_is_persistent; then
-    verify_start || exit 0
-fi
 
-exec /usr/bin/electrum "${@}"
+def main(*args):
+    if not electrum_config_is_persistent():
+        if not verify_start():
+            return
 
+    os.execv('/usr/bin/electrum', ['/usr/bin/electrum'] + list(args))
+
+
+def electrum_config_is_persistent():
+    """Return True iff electrum config is persistent.
+
+    >>> electrum_config_is_persistent()
+    False
+    """
+
+    filesystem = sh.findmnt('--noheadings',
+                            '--output', 'SOURCE',
+                            '--target', CONF_DIR).stdout.decode().strip()
+    return filesystem in sh.glob('/dev/mapper/TailsData_unlocked[/electrum]')
+
+
+def verify_start():
+    """Ask user whether to start Electrum.
+
+    >>> verify_start() in (True, False)
+    True
+    """
+
+    disabled_text = gettext('Persistence is disabled for Electrum')
+    warning_text = gettext(
+        "When you reboot Tails, all of Electrum's data will be lost, including your Bitcoin wallet. It is strongly recommended to only run Electrum when its persistence feature is activated.")
+    question_text = gettext('Do you want to start Electrum anyway?')
+    dialog_msg = ('<b><big>{}</big></b>\n\n{}\n\n{}\n'.
+                  format(disabled_text, warning_text, question_text))
+    launch_text = gettext('_Launch')
+    exit_text = gettext('_Exit')
+
+    # results 0 == True; 1 == False; 5 == Timeout
+    results = sh.zenity('--question', '--title', '', '--default-cancel',
+                        '--ok-label', launch_text,
+                        '--cancel-label', exit_text,
+                        '--text', dialog_msg,
+                        _ok_code=[0,1,5])
+    start = results.exit_code == 0
+
+    return start
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == 'doctest':
+        import doctest
+        doctest.testmod()
+    else:
+        main(*sys.argv[1:])
