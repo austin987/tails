@@ -92,28 +92,6 @@ if ! flock -x -n 9; then
     error "`gettext \"Another Unsafe Browser is currently running, or being cleaned up. Please retry in a while.\"`"
 fi
 
-# Get the DNS servers that was obtained from NetworkManager, if any...
-if [ -r "${NM_ENV_FILE}" ]; then
-    # We also check that the file we are gonna *source* doesn't
-    # contain any unexpected data, like (potentially malicious) shell
-    # script. Note that while the regex used for deciding IP addresses
-    # is far from perfect, it serves our purpose here.
-    IP4_REGEX='[0-9]{1,3}(\.[0-9]{1,3}){3}'
-    NAMESERVERS_REGEX="^IP4_NAMESERVERS=\"(${IP4_REGEX}( ${IP4_REGEX})*)?\"$"
-    if grep --extended-regexp -qv "${NAMESERVERS_REGEX}" "${NM_ENV_FILE}"; then
-        error "`gettext \"NetworkManager passed us garbage data when trying to deduce the clearnet DNS server.\"`"
-    fi
-    # Import the IP4_NAMESERVERS variable.
-    eval "$(grep --extended-regexp "${NAMESERVERS_REGEX}" "${NM_ENV_FILE}")"
-fi
-# ... otherwise fail.
-# FIXME: Or would it make sense to fallback to Google's DNS or OpenDNS?
-# Some stupid captive portals may allow DNS to any host, but chances are
-# that only the portal's DNS would forward to the login page.
-if [ -z "${IP4_NAMESERVERS:-}" ]; then
-    error "`gettext \"No DNS server was obtained through DHCP or manually configured in NetworkManager.\"`"
-fi
-
 verify_start
 show_start_notification
 
@@ -123,9 +101,15 @@ setup_chroot_for_browser "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
 
 echo "* Configuring chroot"
 configure_chroot_browser "${CHROOT}" "${BROWSER_USER}" "${BROWSER_NAME}" \
-    "${HUMAN_READABLE_NAME}" "${HOME_PAGE}" "${IP4_NAMESERVERS}" \
-    "${TBB_EXT}"/langpack-*.xpi || \
+    "${HUMAN_READABLE_NAME}" "${HOME_PAGE}" "${TBB_EXT}"/langpack-*.xpi || \
         error "`gettext \"Failed to configure browser.\"`"
+# If /etc/resolv-over-clearnet.conf file is empty or doesn't exist, we
+# have no clearnet DNS server.
+if [ "$(stat --format=%s /etc/resolv-over-clearnet.conf || echo 0)" -gt 0 ]; then
+    mount --bind /etc/resolv-over-clearnet.conf "${CHROOT}"/etc/resolv.conf
+else
+    error "`gettext \"No DNS server was obtained through DHCP or manually configured in NetworkManager.\"`"
+fi
 
 echo "* Starting Unsafe Browser"
 run_browser_in_chroot "${CHROOT}" "${BROWSER_NAME}" "${BROWSER_USER}" \
