@@ -310,7 +310,11 @@ Update other base branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
-4. Push the modified branches to Git:
+4. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+   branch, the time-based APT repository snapshots that were used
+   during the freeze.
+
+5. Push the modified branches to Git:
 
         git push origin                          \
            "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
@@ -340,7 +344,11 @@ Then, gather other useful information from:
 * every custom bundled package's own Changelog (Greeter, Persistent
   Volume Assistant, etc.);
 * the diff between the previous version's `.packages` file and the one
-  from the to-be-released ISO;
+  from the to-be-released ISO; look for:
+  - security fixes
+  - new upstream releases of applications mentioned in [[doc/about/features]]
+  - new upstream releases of other important components such as the
+    Linux kernel
 * the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
   in Redmine.
 
@@ -411,14 +419,21 @@ To get a list of changes on the website:
         ':!wiki/src/news*' \
         ':!wiki/src/security*'
 
-Import the signing key
+Enable OpenPGP signing
 ======================
 
-Skip this part if you have a Tails signing subkey on an OpenPGPG
-smartcard, i.e. if you are one of the usual release managers. This is
-only relevant when the master key has been reassembled, e.g. for
-signing a Tails emergency release where none of the usual release
-managers are available.
+### If you have an OpenPGP smart card
+
+If you have an OpenPGP smart card (i.e. if you are one of the usual
+release managers) go fetch it. Remember to only plug it when needed! A
+pro tip is to never plug it unless prompted which `gpg` will do for
+you. Then just unplug it as soon as the `.sig` is done.
+
+### Otherwise: importing the signing key
+
+This is only relevant when the master key has been reassembled,
+e.g. for signing a Tails emergency release where none of the usual
+release managers are available.
 
 You should never import the Tails signing key into your own keyring,
 and a good practice is to import it to a tmpfs to limit the risks that
@@ -538,16 +553,16 @@ Build the final image
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
 
-* Mark the version as "released" in the changelog:
+1. Mark the version as "released" in the changelog:
 
         dch --release --no-force-save-on-release --maintmaint
         git commit -m "Mark Tails ${VERSION:?} as released." debian/changelog
 
-* Export `SOURCE_DATE_EPOCH`:
+1. Export `SOURCE_DATE_EPOCH`:
 
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s')
 
-* tag the release *again*, with all included files in:
+1. tag the release *again*, with all included files in:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
@@ -560,28 +575,97 @@ suite should be ready, so it is time to:
    first `git push` then Jenkins won't build from the tag -- please
    avoid that!
 
-* build the final image!
+1. build the final image!
 
-* make sure at least two `tails@` members will build the ISO
-  image. Example: if you, the RM, is a `tails@` member, you only have
-  to ask one more member.
-
-* compare the new build manifest with the one from the previous,
-  almost final build; they should be identical, except that the
-  `debian-security` serial might be higher. To ensure we publish
-  the final build's `.build-manifest`, please run:
+1. compare the new build manifest with the one from the previous,
+   almost final build; they should be identical, except that the
+   `debian-security` serial might be higher. To ensure we publish
+   the final build's `.build-manifest`, please run:
 
         export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
-* check out a new branch:
+
+1. <a id="reproducibility-sanity-check-iso"></a>
+   Let's sanity check that Jenkins reproduced your image.
+
+   Visit the URL printed by this command:
+
+       echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
+
+   Find the job (probably the last one)
+   and make sure the image built by Jenkins:
+
+   - was built from the correct Git commit
+   - has the same file size as the image you built
+   - has the same hash (in the `.shasum` file) as the image you built
+
+   Then:
+
+   - If all hashes match: yay, we're good to go!
+
+   - If there is a hash mismatch for the image: ouch! Now we are in a
+     tricky situation: on the one hand it seems like a poor idea to
+     block users from benefiting from this release's security updates,
+     but on the other hand the failure might imply that something
+     nefarious is going on. At this stage, no matter what, immediately
+     fetch Jenkins' image, compare it with your, and try to rule out
+     build system compromise:
+
+          sudo diffoscope \
+              --text diffoscope.txt \
+              --html diffoscope.html \
+              --max-report-size 262144000 \
+              --max-diff-block-lines 10000 \
+              --max-diff-input-lines 10000000 \
+                  path/to/your/tails-amd64-${VERSION:?}.iso \
+                  path/to/jenkins/tails-amd64-${VERSION:?}.iso
+
+     Then carefully investigate the `diffoscope` report:
+
+       - If you cannot rule out that the difference is harmful: let's take
+         a step back; we might be compromised, so we are in no position to
+         release. Halt the release, involve the rest of `tails@`, and then
+         try to re-establish trust in all build machines and infra
+         involved, etc. Have fun!
+
+       - Otherwise, if the change is definitely harmless:
+
+         * If the source of non-determinism is identified quickly and
+           is easy and fast to fix, *and* the QA of the current image
+           has not gone very far (so at least that time is not wasted),
+           then you should consider abandoning the current version, and
+           immediately start preparing an emergency release with:
+
+           - the reproducibility fix,
+           - a new changelog entry,
+           - adjustments to the release notes so they are re-purposed for
+             this emergency release (the abandoned release gets none, since
+             it effectively never will be released publicly).
+
+         * Otherwise, if the fix looks time-consuming or difficult,
+           let's release anyway. But let's add a known issue about
+           "This Tails release does not build reproducibility" to the
+           release notes, linking to the ticket where
+           the nature of the reproducibility failure is clearly
+           described.
+
+1. check out a new branch:
+
+   If preparing anything but a final release (e.g. an alpha, beta
+   or RC):
+
+        git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" origin/master && \
+        git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
+
+   Else, if preparing a final release:
 
         git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" "${TAG:?}" && \
         git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
 
-  (as soon as a new commit is created on `$RELEASE_BRANCH`, its ISO
-  build will start failing until a new changelog entry is created,
-  which we don't want to do on `$RELEASE_BRANCH` before it's merged
-  into `master` at release time)
+   (as soon as a new commit is created on `$RELEASE_BRANCH`, its ISO
+   build will start failing until a new changelog entry is created,
+   which we don't want to do on `$RELEASE_BRANCH` before it's merged
+   into `master` at release time)
 
 Generate the OpenPGP signatures and Torrents
 ============================================
@@ -668,8 +752,10 @@ Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
 Jessie too.
 
-Make sure at least two `tails@` members reproduce the same IUKs.
-Provide them with the value of `IUK_SOURCE_VERSIONS` that you used!
+<a id="reproducibility-sanity-check-iuk"></a>
+
+Note that we do not yet build IUKs on Jenkins, otherwise here would be
+a great point to compare its IUKs with yours.
 
 <a id="prepare-upgrade-description-files"></a>
 
@@ -793,17 +879,6 @@ If preparing a RC, skip this part.
 
 Update the ISO description file (IDF) used by the browser extension:
 
-    cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/i386/stable/latest.yml <<EOF
-    ---
-    build-target: amd64
-    channel: stable
-    product-name: Tails
-    version: '${VERSION:?}'
-    target-files:
-    - sha256: ${ISO_SHA256SUM}
-      size: ${ISO_SIZE_IN_BYTES:?}
-      url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
-    EOF
     cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/amd64/stable/latest.yml <<EOF
     ---
     build-target: amd64
@@ -816,8 +891,30 @@ Update the ISO description file (IDF) used by the browser extension:
       url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
     EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v1/Tails/{i386,amd64}/stable/latest.yml && \
+      git add wiki/src/install/v1/Tails/amd64/stable/latest.yml && \
       git commit -m "Update IDF file for Tails Verification." )
+
+Done with OpenPGP signing
+=========================
+
+By now you are done with Tails signing key, so please make sure it is
+not usable by your system any more.
+
+<div class="note">
+
+Beware! If your have to plug your OpenPGP smart card or reassemble the
+key again after this point it invalidates <i>everything</i> done for
+the [[reproduction of this release|test#reproducibility-final-check]]
+so it has to be started from the beginning:
+
+* the original text is restored on the pad, and
+* some tester follows it from scratch, and
+* the Trusted Reproducer follows awaits the new input from said tester
+  and then starts from scratch.
+
+So please try to avoid this!
+
+</div>
 
 Upload images
 =============
@@ -827,138 +924,6 @@ Sanity check
 
 Verify once more that the Tor Browser we ship is still the most recent (see
 above).
-
-<a id="reproducibility"></a>
-
-Reproducibility
----------------
-
-The following instructions are now meant to be followed by _both_ the
-RM responsible for this release, and the the _Trusted Reproducer_
-(TR), i.e. the `tails@` member that was asked earlier to reproduce the
-Tails ISO image and all IUKs. Some instructions are meant for only one
-of these roles, e.g. if we write "**TR**: `$INSTRUCTION`", we mean
-that only the TR should follow this instruction.
-
-### Reproduce the ISO and IUKs
-
-Now the RM sends a signed email to the TR, containing the `SHA-512` of
-the Tails ISO image and IUKs; the TR _responds_ to this email with
-their `SHA-512` of the same files. Note that this could take some
-time, potentially blocking the RM from continuing the release
-process. However:
-
-**RM**: continue the release process at your own risk! If you get a
-negative answer from the TR later you might have to undo everything
-done from this point on. It's still a good idea to optimistically
-assume success in order to not be blocked at this point. However, be
-mentally prepared that it might have to be done once more, and make
-sure to return to this section once everyone is done with their
-reproduction attempts, and certainly before making the release public.
-
-Once the `SHA-512`:s have been exchanged by the RM and TR, follow this
-decision tree:
-
-* If all hashes match: yay, we're good to go!
-
-* If there is a hash mismatch for the ISO: ouch!  Now we are in a
-  tricky situation: on the one hand it seems like a poor idea to block
-  users from benefiting from this release's security updates, but on
-  the other hand the failure might imply that something nefarious is
-  going on. At this stage, no matter what, immediately exchange ISO
-  images, compare them, and try to rule out build system compromise:
-
-        diffoscope \
-            --text diffoscope.txt \
-            --html diffoscope.html \
-            --max-report-size 262144000 \
-            --max-diff-block-lines 10000 \
-            --max-diff-input-lines 10000000 \
-                path/to/your/tails-amd64-${VERSION:?}.iso \
-                path/to/other/tails-amd64-${VERSION:?}.iso
-
-  **RM**: if you understand the problem, try to explain it in an
-    easily verifiable way to the TR.
-
-  **TR**: if you are not confident analyzing this result, or don't
-  *fully* understand any explanation the RM presents, involve another
-  RM.
-
-  - If you cannot rule out that the difference is harmful: let's take
-    a step back; we might be compromised, so we are in no position to
-    release. Halt the release, involve the rest of `tails@`, and then
-    try to re-establish trust in all build machines and infra
-    involved, etc. Have fun!
-
-  - Otherwise, if the change is definitely harmless, **RM**:
-
-    * If the source of non-determinism is identified quickly
-      and is easy and fast to fix, *and* the QA of the current ISO has
-      not gone very far (so at least that time is not wasted), then
-      you should consider abandoning the current version, and
-      immediately start preparing an emergency release with:
-
-      - the reproducibility fix,
-
-      - a new changelog entry,
-
-      - adjustments to the release notes so they are re-purposed for
-        this emergency release (the abandoned release gets none, since
-        it effectively never will be released publicly).
-
-    * Otherwise, let's release any way. But let's add a known issue
-      about "This Tails release has reproducibility issues" to the
-      release notes, linking to the ticket(s) (or similar) where the
-      nature of the reproducibility failure is clearly described.
-
-* If there is a hash mismatch for an IUK (or several):
-
-  **RM**: proceed with the release, except for the problematic IUK(s);
-  remove them from the mirrors, and remove the affected incremental
-  upgrade paths from the UDFs! In parallel with the rest of the
-  release process, try to figure out what the problem with the IUK is
-  and fix the cause, so a good IUK can be released as soon as
-  possible. If a seemingly malicious difference is found, then
-  immediately halt the release and go to the "If something seemingly
-  malicious is found" case for the ISO above. Because of this it is
-  advisable to not publicly release until malicious differences have
-  been ruled out.
-
-  **TR**: if you don't *fully* understand any solution or explanation
-  the RM presents, involve another RM before attempting anything else
-
-At this point you have either decided to abort the release, or proceed
-with an ISO image and zero or more IUKs.
-
-### Verify that the reproduced ISO and IUKs were uploaded
-
-**RM**: as soon as the mirrors are synced, let the TR know that they
-should proceed with this section. This could block you from releasing
-later, so it's really best to make sure this is done ASAP.
-
-**TR**: the rest of this section is for you.
-
-Unless the above decision led you to abort the release, you and the RM
-should have agreed upon an ISO image and zero or more IUKs to be
-released. Now you download each of these from some random mirror. For
-the ISO:
-
-    wget http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}.iso
-
-For each agreed upon IUK, something like:
-
-    wget http://dl.amnesia.boum.org/tails/stable/iuk/Tails_amd64_${PREVIOUS_VERSION:?}_to_${VERSION:?}.iuk
-
-Also, for each "problematic" IUK, i.e. those that should *not* be
-released, make sure that the fetch fails because the file doesn't
-exist on the mirrors.
-
-Lastly calculate the `SHA-512` for each file and make sure they are as
-expected, based on the files you and the RM agreed on earlier.
-
-Note that you are note done yet:
-[[later|release_process#reproducibiliy-followup]] you will verify that
-our website "points" to the correct ISO image and IUKs.
 
 <a id="publish-iuk"></a>
 
@@ -1076,6 +1041,7 @@ Testing
 1. Email <tails@boum.org> and potential contributors (see
    `manual_testers.mdwn` in the internal Git repository) that tests
    may start:
+   - make sure the Trusted Verifier is in the list of recipients
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
@@ -1133,7 +1099,7 @@ Update the size of the ISO image in `inc/*`:
 
 Generate the expected signature verification output:
 
-      gpg --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+      LANG=C TZ=UTC gpg --no-options --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
       sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
       "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
 
@@ -1223,10 +1189,6 @@ Make sure every active mirror in the pool has the new version:
 Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
 notify their administrators.
 
-If you haven't done it already, notify the _Trusted Reproducer_ that
-the mirrors are synced so they can proceed verifying the upload in the
-[[reproducibility section|release_process#reproducibiliy]].
-
 Sanity checks
 -------------
 
@@ -1236,81 +1198,13 @@ Sanity checks
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
 
-<a id="reproducibiliy-followup"></a>
-
-Verify the meta data pointing to the uploaded ISO and IUKs
-----------------------------------------------------------
-
-This is a follow-up on the
-[[reproducibility section|release_process#reproducibiliy]].
-
-**RM**: notify the TR that you are ready to release, and that they
-should follow this section.
-
-**TR**: the rest of this section is for you (unless there is a problem
-or unexpected result, when the RM is involved again).
-
-Below you'll need the `SHA-256` for the ISOs and IUKs, so please
-compute them for all the files you have reproduced. Also, when we talk
-about the "expected ISO image URL" below, we mean exactly:
-`http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION}/tails-amd64-${VERSION}.iso`.
-
-Checkout the release branch that is about to be merged into `master`:
-
-    git fetch
-    git checkout ${RELEASE_BRANCH:?}
-
-* In `wiki/src/install/v1/Tails/{i386,amd64}/stable/latest.yml`, the
-  so-called "IDF", under `target-files`, make sure that:
-  - the `url` value is the expected ISO image URL.
-  - the `sha256` value is the `SHA-256` you computed from your
-    reproduced ISO image.
-  - the `size` value is the number of bytes of your reproduced ISO
-    image.
-
-* For each IUK `Tails_amd64_${OLD_VERSION}_to_${VERSION}.iuk`, make
-  sure that
-  `wiki/src/upgrade/v1/Tails/${OLD_VERSION}/amd64/stable/upgrades.yml`
-  is properly signed by Tails signing key via the accompanying `.pgp`
-  file. Next, inside the file, look at one or two `target-files`
-  entries, where `type: full` means a full upgrade, so it refers to
-  the ISO image, and `type: incremental` means an incremental upgrade,
-  so it refers to a IUK. Verify the `url`, `sha256` and `size` values
-  just like you did for the IDF in the previous step.
-
-* Build the website, which will be saved to
-  `config/chroot_local-includes/usr/share/doc/tails/website`. Verify
-  that the expected ISO image URL is used in the places we directly
-  use it to fetch the ISO image:
-  - `inc/stable_amd64_iso_url.html`: should contain exactly the expected
-    ISO image URL.
-  - `install/download`: "Direct download" button.
-  - `install/expert/usb`: in the `wget` command.
-
-If everything checks out ok, let the RM know so they can proceed with
-the release. If not, either mistakes were made by the RM that easily
-can be fixed, or something is extremely wrong. One could imagine a
-sophisticated attacks against the RM's build machine, where the
-correct ISO was built and uploaded, but that the URLs point to
-something else (e.g. an old release, or even something
-attacker-controlled outside of the Tails mirrors). You and the RM
-should carefully consider how to proceed now, possibly involving other
-`tails@` members if you are unsure.
-
-Finally, once the RM says the release is out, verify that they merged
-what you just reviewed.
-
 Push
 ----
 
 ### Git
 
-If preparing a release candidate, just push the `master` branch:
-
-    git push origin master:master
-
 If preparing an actual release, push the last commits to our Git
-repository like this:
+repository and put `master` in the following state:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1319,10 +1213,26 @@ repository like this:
     ) && \
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
+      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
+    )
+
+Then (or if you preparing a release candidate) ensure that `master`
+has `stable` as its base branch:
+
+    ( cd "${MASTER_CHECKOUT:?}" && \
+      echo "stable" > config/base_branch && \
+      git commit config/base_branch \
+          -m "Restore master's base branch." \
+    )
+
+Finally, push the `master` branch to make the changes go live on our
+website:
+
+    ( cd "${MASTER_CHECKOUT:?}" && \
       git push origin master:master \
     )
 
+The release is now public! Woo!
 
 Bug tracker
 -----------
@@ -1509,7 +1419,8 @@ this, and skip what does not make sense for a RC.
    `devel`
 1. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
    branch, the time-based APT repository snapshots that were used
-   during the freeze.
+   during the freeze. This should generally be a no-op but if there
+   was some hiccup earlier it could be needed.
 1. Follow the
    [[post-release|APT_repository/custom#workflow-post-release]]
    custom APT repository documentation. Make sure there are upgrade-description

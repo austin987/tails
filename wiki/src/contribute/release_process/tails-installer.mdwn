@@ -14,21 +14,23 @@ have not forked liveusb-creator, and admit we are now upstream for our
 own version. Thus, from version 4.x on, our fork has been renamed to
 tails-installer.
 
-The `master` branch must always be the one that targets current Tails.
+The `master` branch must always be the one that targets current Tails
+and possibly *also* earlier Debian releases. At the moment it supports
+Debian Jessie, Stretch, Buster and Sid.
 
 But that's not enough, since we also need to put releases out with code
-that works on current Debian Testing/Unstable. Thus, we maintain several upstream
+that works on current Debian testing/unstable. Thus, we maintain several upstream
 release branches in parallel, each with their own major version number:
 
- * for work and releases that target Stretch (and, as long as compatible,
-   that target Debian Testing/Unstable as well):
+ * for work and releases that target Jessie and Stretch (and, as long
+   as compatible, that target Debian testing/unstable as well):
    * branch = `master`
    * version = `5.*`
    * tag = `tails-installer_5.*`
 
-Once we can't support both the Debian release Tails is based on, and
-Debian Testing/Unstable with the same codebase anymore, we'll fork a
-new upstream release branch that targets Testing, it'll be called
+Once we can't support both Jessie, Stretch and Debian testing/unstable
+with the same codebase anymore, we'll fork a new upstream release
+branch that targets Debian testing, it'll be called
 `feature/$codename`, use version `6.*`, etc.
 
 Packaging
@@ -53,10 +55,10 @@ targeted at current Tails, as said above. More specifically:
   also called `debian/$package_version`. In practice this is something
   like `debian/5.3+dfsg-1~bpo8+1`.
 * The `tails/master` branch is used to prepare packages that we upload
-  to the Tails APT repo for stable releases, but not to Debian.
+  to the Tails APT repo for Tails stable releases, but not to Debian.
 * The `tails/$codename` branch is used to prepare packages that we upload
-  to the Tails APT repo but for Tails based on Debian `$codename`. Again,
-  these packages will not be uploaded to Debian.
+  to the Tails APT repo but for (non-stable) Tails based on Debian
+  `$codename`. Again, these packages will not be uploaded to Debian.
 * Additionally, we use `tails/$feature` branches for other
   Tails-specific packaging branches.
 * The `upstream/4.x+dfsg`, `upstream/5.x+dfsg`, etc. branches are what
@@ -74,7 +76,8 @@ Topic branches
 In practice, it's expected that Tails contributors submit bugfix and
 feature branches forked off `master`, because they want them part of next
 Tails release. Hence, it will happen that code lands into `master` first,
-and in turn into a new upstream release.
+and in turn into a new `5.*` upstream release, before it lands into e.g.
+`feature/buster` and in turn into a new `6.*` upstream release.
 
 For how to package topic branches (`bugfix/*` and `feature/*`), see
 [[the dedicated page|topic_branch]].
@@ -128,23 +131,30 @@ export:
 Update the Debian package for Tails
 -----------------------------------
 
-Checkout the packaging branch:
+Checkout the packaging branch, e.g.:
 
 	export PKG_NAME=tails-installer
 	export PACKAGING_BRANCH=tails/master
 	git checkout "$PACKAGING_BRANCH"
 
+Here we assumed that `tails/master` still supports Debian Sid,
+otherwise `PACKAGING_BRANCH` should be `tails/${codename}`.
+
 Merge Debian packaging changes:
 
     git fetch debian && \
-    git merge debian/sid
+    codename="${PACKAGING_BRANCH/*\//}" && \
+    if [ "${codename}" = "master" ]; then
+        codename=sid
+    fi && \
+    git merge "debian/${codename}"
 
 Verify that `debian/gbp.conf` references the correct upstream and Debian (packaging) branches,
 and that `pristine-tar` usage is enabled, e.g.:
 
 	[DEFAULT]
 	upstream-branch = upstream/5.x+dfsg
-	debian-branch = tails/master
+	debian-branch = tails/${codename}
 	debian-tag = tails/%(version)s
 	pristine-tar = True
 
@@ -172,13 +182,22 @@ Update `debian/changelog`:
 
     gbp dch && dch -e
 
-In there, set the appropriate:
+The raw data compiled by `gbp dch` must be edited to convey
+information that's relevant and self-contained for a Debian audience
+(clearly our upstream commit messages are not written with this
+audience in mind). For example, the 5.0.4+dfsg-0tails1 changelog entry
+is pretty good, but things like "Apply awful hack to fix Tails#14755"
+are meaningless for a Debian audience.
 
-* version number, such as `5.3+dfsg-0tails1`; in particular, note that
-  the Debian revision starts with `-0` for any package meant for the
-  Tails APT repository, while the first package that will be uploaded
-  to Debian will have `-1`;
-* target release name.
+Also:
+
+* Set the appropriate version number, such as `5.3+dfsg-0tails1`; in
+  particular, note that the Debian revision starts with `-0` for any
+  package meant for the Tails APT repository, while the first package
+  that will be uploaded to Debian will have `-1`;
+* Set the appropriate target release name.
+* Make sure every Tails ticket ID is of the form `Tails#NNNNN`, not
+  `#NNNNN` and definitely not `Closes: #NNNNN`.
 
 Commit the changelog:
 

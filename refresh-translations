@@ -7,16 +7,18 @@ PERL_PROGS="/usr/local/bin/tails-security-check \
     /usr/local/lib/tails-htp-notify-user \
     /usr/local/lib/tails-virt-notify-user"
 PYTHON_PROGS="/etc/whisperback/config.py \
-    /usr/local/bin/tails-about /usr/local/sbin/tails-additional-software"
-SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
     /usr/local/bin/electrum \
-    /usr/local/bin/keepassx \
+    /usr/local/bin/tails-about \
+    /usr/local/bin/tails-screen-locker \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
+    /usr/local/sbin/tails-additional-software"
+SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
+    /usr/local/bin/keepassx \
     /usr/local/lib/tails-spoof-mac \
     /usr/local/bin/tor-browser \
     /usr/local/sbin/unsafe-browser"
 JAVASCRIPT_PROGS=" \
-    /usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org/extension.js \
+    /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js \
     /usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js \
 "
 
@@ -40,8 +42,8 @@ prog_potfile () {
 
     progpath="config/chroot_local-includes$prog"
     case $prog in
-        /usr/share/gnome-shell/extensions/shutdown-helper@tails.boum.org/extension.js)
-            domain=shutdown-helper-extension.js
+        /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js)
+            domain=status-menu-helper-extension.js
             ;;
         *)
             domain=$(basename $prog)
@@ -134,14 +136,15 @@ intltool_merge_xml () {
 
 ### Main
 
-# Schedule clean up
-trap "rm -fr tmp/pot po/*.new po/*.orig" EXIT
-
 FORCE=no
+KEEP_TMP_POT=no
 while [ -n "${@:-}" ]; do
     case "${1:-}" in
         '--force')
             FORCE=yes
+            ;;
+        '--keep-tmp-pot')
+            KEEP_TMP_POT=yes
             ;;
         *)
             echo "Unknown option: ${1}"
@@ -150,6 +153,9 @@ while [ -n "${@:-}" ]; do
     esac
     shift
 done
+
+# Schedule clean up
+trap "rm -fr po/*.new po/*.orig ; [ "$KEEP_TMP_POT" = yes ] || rm -fr tmp/pot" EXIT
 
 # Update POT files
 mkdir -p tmp/pot

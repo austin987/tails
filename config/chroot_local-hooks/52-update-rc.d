@@ -10,17 +10,18 @@ systemctl enable memlockd.service
 # Enable our own systemd unit files
 systemctl enable initramfs-shutdown.service
 systemctl enable onion-grater.service
+systemctl enable tails-autotest-broken-Xorg.service
 systemctl enable tails-autotest-remote-shell.service
 systemctl enable tails-set-wireless-devices-state.service
 systemctl enable tails-shutdown-on-media-removal.service
 systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
-systemctl enable update-ca-certificates.service
 systemctl enable var-tmp.mount
 
 # Enable our own systemd user unit files
 systemctl --global enable tails-add-GNOME-bookmarks.service
+systemctl --global enable tails-additional-software-install.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
 systemctl --global enable tails-security-check.service

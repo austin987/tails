@@ -5,7 +5,7 @@
 Pre-requisites
 =============
 
-* a Stretch system
+* a Debian Stretch (or newer) system
 * Tails' `devel` APT suite enabled
 * the right version of the `tails-perl5lib` package installed
 * a user that has sudo credentials
@@ -77,7 +77,11 @@ Run the upstream test suite:
     umask 077
     
     # Run the test suite
-    RELEASE_TESTING=1 LC_ALL=C dzil test
+    NODE_PATH="/path/to/tails.git/submodules/mirror-pool-dispatcher/lib/js" \
+    PATH="/path/to/tails.git/submodules/mirror-pool-dispatcher/bin:$PATH" \
+       RELEASE_TESTING=1 \
+       LC_ALL=C \
+       dzil test
 
 Build an upstream tarball, tag the release, move the tarball out of
 the build repository and cleanup:

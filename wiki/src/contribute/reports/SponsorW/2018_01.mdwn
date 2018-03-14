@@ -1,0 +1,110 @@
+[[!meta title="Tails January 2018 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in January 2018.
+
+Everything in this report is public.
+
+# A. VeraCrypt support in GNOME
+
+## A.4 Add VeraCrypt support to udisks
+
+We added support  for unlocking hidden volumes and using keyfiles to libblockdev ([[!tails_ticket 15216]]) and udisks ([[!tails_ticket 15215]]). We also fixed some bugs and improved the code style of our udisks patches ([[!tails_ticket 15215]]).
+
+## A.6 Add VeraCrypt support to GNOME Files
+
+We added preliminary support to unlock normal (i.e. non-hidden, non-system-volume, without keyfiles) VeraCrypt volumes via GVfs monitor ([[!tails_ticket 15218]]). We found difficulties regarding modifications of the unlock dialog used by GVfs, and [reached out to the GTK developers to ask for advise](https://mail.gnome.org/archives/gtk-devel-list/2018-January/msg00037.html).
+
+<a id="additional_software"></a>
+
+# B. Additional software
+
+## B.1 UX & UI design sprint
+
+The main developer and the UX designer working on this project gathered for
+three days of sprint in Berlin, at the Onion Space, a coworking space for
+Internet freedom technologists, on January 27, 28, and 29.
+
+We followed a very similar methodology as the one we described in more
+details when we reported on the [[UX design sprint for VeraCrypt support
+in GNOME|contribute/reports/SponsorW/2017_12#sprint]].
+
+### Design studio
+
+We started with a [design
+studio](https://articles.uie.com/design_studio_methodology/) to ideate
+and come up with a first design candidate.
+
+### Paper prototyping and formative testing with users
+
+We prepared paper prototypes of this first candidate. Over the week-end,
+we had 7 people come over for testing sessions of one hour each. After
+each test we debriefed our findings and improved our design.
+
+We selected people with diverse prior knowledge about how to install
+packages in Tails (and Linux in general). All were familiar with Tails
+(though to various degrees) but some were otherwise Windows or macOS
+users while some were Debian experts or used to Linux distributions with
+a different packaging system.
+
+### Output
+
+The full list of interfaces that we designed can be seen on our
+[[blueprint|blueprint/additional_software_packages/gui]].
+
+The complete XML wireframes are on
+[GitHub](https://github.com/sajolida/tails-wireframes/tree/master/additional%20software)
+and here are the most relevant parts.
+
+When installing a Debian package:
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - add.png"/>
+
+When starting Tails with some additional packages configured:
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installing.png"/>
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installed.png"/>
+
+Additional Software feature in the persistent storage configuration:
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/persistent storage - configuration changed.png"/>
+
+Example list of additional software:
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software.png"/>
+
+When no software has been added yet:
+
+<img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software - empty.png"/>
+
+## B.2. Write technical design documentation
+
+We drafted
+[[an initial technical design|blueprint/additional_software_packages/gui/]] of
+the components that will implement the user experience described above.
+
+## B.3. Write automated tests
+
+We wrote the [[!tails_ticket 14572 desc="automated tests"]] for the Offline
+Mode feature (activity B.5). Once we complete our review process they
+will be included in the upcoming Tails release (3.6).
+
+## B.4. Implement backend and GUI
+
+We started to implement the [[!tails_ticket 14594 desc="backend code"]].
+
+## B.5. Implement offline mode
+
+The
+[[!tails_ticket 14570 desc="Offline Mode for Additional Software Packages"]]
+will be merged once we complete our review process for the
+corresponding automated tests (activity B.3) and then
+included in the next Tails release (3.6).
+
+## B.8. Fix bugs and UX issues
+
+The bugfix for
+[[!tails_ticket 9059 desc="Additional software locking the opening of the desktop"]]
+has been merged and will be released in the next Tails release.
