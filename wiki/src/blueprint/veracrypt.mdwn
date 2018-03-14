@@ -283,6 +283,8 @@ were rewritten to prevent stylometry.
 
 - **85% of Tails+VeraCrypt users mostly don't use the .TC or .HC file extension.**
 
+<a id="technical"></a>
+
 ### How technical are Tails users? Tails+VeraCrypt users?
 
 *Q: Which operating system other than Tails do you use the most?*
@@ -428,7 +430,7 @@ preliminary research work on user needs and technical feasibility.
 We will implement and upstream each iteration one after the other and go
 as far as the budget allows.
 
-1. Unlocking partitions
+1. Unlocking partitions ([[!tails_ticket 15214]])
 -----------------------
 
 This iteration is the bare minimum for this project but also the
@@ -448,7 +450,7 @@ covers:
   will also be very cheap to add to the custom dialogs that we will
   already have to implement for the opening of hidden volumes.
 
-2. Unlocking file containers
+2. Unlocking file containers ([[!tails_ticket 15223]])
 ----------------------------
 
 This iteration extends the work done on the unlocking of partitions to
@@ -470,10 +472,14 @@ integration code:
 - GNOME Files cannot automatically identify and flag file containers as
   such.
 
+- The integration in the sidebar of GNOME Files of opened file
+  containers will require to patch the GTK library which was not
+  expected initially.
+
 - Displaying the file name of the containers when unlocking it through
   GVfs will require an additional patch upstream.
 
-3. Creating and modifying partitions and containers
+3. Creating and modifying partitions and containers ([[!tails_ticket 15227]])
 ---------------------------------------------------
 
 Since our main objective for integrating better VeraCrypt in Tails is to
@@ -492,7 +498,7 @@ This iteration covers:
 - The modification of existing volumes, which will be very similar to
   the creation of new volumes.
 
-4. *VeraCrypt Mounter*
+4. *VeraCrypt Mounter* ([[!tails_ticket 15043]])
 ----------------------
 
 *VeraCrypt Mounter* is a very simple application wrapper that we
@@ -532,3 +538,43 @@ User interface
 ### *VeraCrypt Mounter* (optional)
 
 <img src="https://labs.riseup.net/code/attachments/download/1842/veracrypt-mounter.png">
+
+
+<a id="detection"></a>
+
+Detecting VeraCrypt volumes
+===========================
+
+In contrast to LUKS, VeraCrypt and TrueCrypt volumes do not have a cleartext header, but are completely encrypted (see the [VeraCrypt Volume Format Specification][]). As a result, VeraCrypt/TrueCrypt volumes cannot be distinguished from random data. This means that the best we can do is to indicate to the user that a partition / file seems to be encrypted or random data, and therefore is a candidate for being a VeraCrypt/TrueCrypt volume.
+
+To determine whether data seems to be encrypted or random, we use [Pearson's chi-squared test][]. This test is often used to test for randomness.
+
+When trying to determine whether a *partition* (or whole device) is a VeraCrypt/TrueCrypt volume, we don't want to read more than necessary, to avoid slowing things down too much. Because non-encrypted filesystems usually start with a header, which is very non-random, we only perform the chi-squared test on these first 512 Bytes.
+
+The chi-squared test requires a p-value, for which to reject the hypothesis that the data is random. We choose 1/10.000.000.000 as the p-value, which means that in one of 10 billion cases, the test will issue a false negative, i.e. the test says the data is non-random/non-encrypted, even though it actually is random/encrypted. From this p-value, we derive the following lower and upper limits for the chi-squared value (using the [scipy chi2 module](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html)):
+
+    >>> from scipy.stats import chi2
+    >>> chi2.ppf([0.1**10, 1-0.1**10], 255)
+    array([ 136.49878495,  425.92327131])
+
+We round these values to the closest integer. So for chi-squared values between 136 and 426, we accept the hypothesis that the data is random/encrypted. 
+
+We will not be able to prevent false positives as effectively as false negatives. Since we treat all random-looking partitions as TrueCrypt/VeraCrypt candidates, we will definitely have false positives, because there are other use cases for random looking partitions, for example plain dm-crypt, headerless LUKS, or LoopAES partitions. This cannot be avoided, therefore we have to clearly indicate to the user that a partition is not definitely a TrueCrypt/VeraCrypt partition, but only a candidate.
+
+We don't expect false positives for unencrypted filesystems, because the chi-squared value clearly indicates that they are not encrypted. Some examples for chi-squared values of (more or less) common filesystems, calculated with the above method:
+
+| Filesystem | Chi-squared | 
+|------------|-------------|
+| bfs | 113013 |
+| exfat | 115672 |
+| ext2 | 130560 |
+| ext3 | 130560 |
+| ext4 | 130560 |
+| fat | 56629 |
+| minix | 130560 |
+| ntfs | 61937 |
+| vfat | 56651 |
+
+  [VeraCrypt Volume Format Specification]: https://veracrypt.codeplex.com/wikipage?title=VeraCrypt%20Volume%20Format%20Specification
+  [Pearson's chi-squared test]: https://en.wikipedia.org/wiki/Chi-squared_test
+  [scipy chi2 module]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html

@@ -1,14 +1,33 @@
-[[!toc levels=6]]
+Esta página documenta os processos de tradução do Tails para o português.
 
----
+[[!toc levels=1]]
 
 # Lista de e-mails
 
-A tradução do Tails para português é organizada em uma lista de e-mails. O formulário de inscrição está lá embaixo no título "** Inscrevendo-se na lista tails-l10n-pt-br@boum.org **": <https://mailman.boum.org/listinfo/tails-l10n-pt-br>
+A tradução do Tails para português do Brasil é organizada em uma lista de e-mails. Para inscrever-se, acesse [[a página da lista|https://mailman.boum.org/listinfo/tails-l10n-pt-br]].
 
----
+# Tradução online usando Weblate (experimental!)
 
-# Fluxo de trabalho para tradução para o português
+Estamos testando uma plataforma de tradução do website do Tails usando [[Weblate|https://weblate.org/pt-br/]], uma ferramenta online de tradução.
+
+A plataforma de tradução pode ser acessada em:
+ <https://translate.tails.boum.org/>
+
+**Atenção: Esta plataforma é experimental e traduções feitas através do Weblate por enquanto não têm garantia de serem incluídas no site principal.**
+
+Algumas informações:
+
+- O nome e endereço de email que você usar para se cadastrar no site será usado para identificar a tradução e ficará registrado no repositório do Tails.
+- Ao criar uma conta, edite o seu perfil para:
+  - Configurar o idioma para o qual quer traduzir.
+  - Inscrever-se no projeto "Tails" para que apareça em sua página principal.
+- Existe uma lista de [[páginas principais|https://translate.tails.boum.org/#list-core]] que devem ser priorizadas para tradução.
+- É possível ver o [[estado atual das traduções para o português|https://translate.tails.boum.org/languages/pt/tails/]]
+- Qualquer pessoa pode se inscrever, sugerir traduções, e votar em traduções sugeridas. 
+- Uma tradução é aceita quando consegue 2 votos.
+- Por enquanto, as traduções ainda não são copiadas automaticamente para o site principal do Tails, mas isso está cada vez mais perto de acontecer. :)
+
+# Tradução usando Git e Poedit
 
 ## Preparação
 
@@ -19,13 +38,9 @@ Antes de seguir o fluxo de trabalho, você precisa fazer o seguinte:
 * Veja a [[documentação no site do tails sobre como traduzir usando repositórios git|/contribute/how/translate/with_Git/]] *(em inglês - ajude a traduzir!)*. As instruções dadas aqui são um pouco diferentes, principalmente no que se refere é submissão das modificações. Ao invés de utilizar um repositório remoto, nós utilizamos um arquivo com as diferenças e a lista de tradução para essa parte do trabalho.  
 * Se tiver qualquer dúvida, escreva para a lista!  
 
-## Fluxo
+### Clone o repositório
 
-O fluxo de trabalho para tradução e submissão das alterações é o seguinte:
-
-### Copiar repositório
-
-Copie ou atualize o reposiório do Tails. Nos comandos, substitua diretorio-base/ pelo caminho para o diretório base escolhido. 
+Copie ou atualize o reposiório do Tails. Nos comandos, substitua `diretorio-base/` pelo caminho para o diretório base escolhido. 
 
 Copie o repositório, caso ainda não possua uma cópia local:  
 
@@ -38,7 +53,12 @@ Configure os meta-dados do git para anonimizacao da traducao
     git config user.name "Tails developers"
     git config user.email "tails@boum.org"
 
-Atualize o repositório, caso já possua uma cópia local:  
+## Propondo uma tradução
+
+O fluxo de trabalho para tradução e submissão das alterações usando Git é o seguinte:
+
+
+### Atualize o repositório, caso já possua uma cópia local:  
 
     cd diretorio-base/tails
     git checkout master
@@ -75,7 +95,7 @@ O resultado desse comando é o nome de um arquivo que é gerado com as diferenç
 
 ### Envie para a lista
 
-Envie o arquivo gerado para a lista aguarde que as diferenças sejam revisadas e inseridas no ramo principal.  
+Envie o arquivo gerado para a lista `tails-l10n-pt-br@boum.org` aguarde que as diferenças sejam revisadas e inseridas no ramo principal.  
 
 ### Atualize
 
@@ -90,14 +110,13 @@ Apague o ramo de trabalho. O comando a seguir apaga o ramo de trabalho, só faç
 
     git branch -D nome-do-ramo-de-trabalho
 
-## Continue
+# Enviando traduções para a lista principal de traduções
 
-Comece de novo, a partir do passo número 1. :)
+Uma vez que traduções tenham sido propostas e revisadas (seja via Weblate ou via Git), elas devem ser enviadas para a lista principal de traduções: `tails-l10n@boum.org`.
 
-*Texto adaptado da [descrição da lista de e-mails](https://mailman.boum.org/listinfo/tails-l10n-pt-br)*
+Antes de enviar, tenha certeza de que:
 
----
-
-# Transifex
-
-`TODO`: Adicionar informação sobre tradução utilizando Transifex
+- As traduções tenham sido revisadas por uma pessoa diferente da que fez a tradução.
+- A wiki possa ser construída com sucesso com as modificações propostas.
+- As modificações tenham como base o commit mais novo do repositório principal e não produzam conflitos.
+- A mensagem enviada para a lista principal tenha sido assinada com OpenPGP.

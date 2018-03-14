@@ -155,3 +155,84 @@ let's not include them in the fallback DNS pool:
 # Initial research
 
 See [[HTTP_mirror_pool/archive]].
+
+<a id="HTTPS"></a>
+
+# HTTPS mirrors
+
+We've already switched all our mirrors in the Javascript mirror-pool, handled
+by mirror-pool-dispatcher to HTTPS, but not all of our fallback mirrors
+([[!tails_ticket 12833]]).
+
+## Current problem space
+
+Round-Robin pool
+
+* we point to different IPs
+* round robin incompatible with different CNAMES
+* round robin uses IPs → incompatible with SSL certs
+* Asking mirror OPs to create SSL certs themselves and keep them updated is not
+  practicable.
+* Links to dl.a.b.o on website & UDFs point to the round robin. (used for
+  example on https://tails.boum.org/install/expert/usb/index.en.html)
+
+* Website, DAVE2 and IUKs use Javascript based mirror-pool-dispatcher.
+* Hardcoded URLs on the website need to be accessible & HTTPSified without
+  Javascript
+
+## Possible solutions
+
+### Server based solution
+
+We ruled this solution out when we first based the mirror-pool-dispatcher on
+Javascript. Likely, we'd want to avoir recreating such a complicated solution
+even if we will have to host our website ourselves and have this technical
+possibility.
+
+### One-mirror-only solution
+
+A very stable and big mirror should become the only fallback for non-JS users
+and the expert/wget installion method.
+
+* → We ditch the round-robin
+* → We monitor this server more often so that we can change it if ever it becomes inaccessible.
+
+## Todo now
+
+* deploy in lockstep on our live website:
+  - change fallback_download_url_prefix in mirror-pool-dispatcher [u]
+  - change all instances of http://dl.a.b.o → https://mirrors.wikimedia on our website [u]
+     - except in UDFs
+* ensure Tails 3.7 gets the updated mirror-pool-dispatcher submodule [i]
+* prepare a branch in iuk.git that updates UDF generation code (replace dl.a.b.o with mirrors.wikimedia) [i]
+* keep the fallback DNS pool running: it's still used by Tails Upgrader and we "support" skipping an upgrade (from 3.6 to 3.7) so it must remain working until 3.6 users can upgrade directly to 3.8
+* prepare a branch against mirrors.git to document the new setup and drop the obsolete crap
+* prepare a branch against tails.git to update the design doc
+
+## Whenever we want
+
+* tell wikimedia.org admins about our plans (before or after the change, whatever) [u]
+* update the documentation for mirror operators in a dedicated Git branch: delete the part about dl.a.b.o [u]
+* prepare a branch against mirror-pool.git that drops support for the DNS fallback pool [i]
+* prepare a branch against puppet-tails.git that drops support for the DNS fallback pool [i]
+
+## When releasing Tails 3.7 [bertagaz]
+
+* all UDFs for upgrades must still have dl.a.b.o because Tails 3.6 and older
+only support that (nothing special to do for that, just follow the release
+process doc)
+
+## When releasing Tails 3.8 [i]
+
+* all UDFs for upgrades from 3.6 must have dl.a.b.o
+* all UDFs for upgrades from 3.7 must have mirrors.wikimedia
+
+## A few weeks after Tails 3.8 is released
+
+* drop the dl.a.b.o fallback pool
+* merge the branch into iuk.git
+* merge the branch into mirror-pool.git
+* merge the doc branch into mirrors.git
+* merge the doc branch for mirror operators into tails.git
+* merge the updated design doc branch into tails.git
+* merge the branch into puppet-tails.git

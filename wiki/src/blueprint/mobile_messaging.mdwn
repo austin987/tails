@@ -1,57 +1,56 @@
 Corresponding ticket: [[!tails_ticket 14567]]
 
+## Characteristics of mobile messengers
+
+- the EFF provides a [Secure Messaging
+  Scorecard](https://www.eff.org/secure-messaging-scorecard) (which is
+  currently being updated, the old version is still available
+  [here](https://www.eff.org/node/82654)).
+
 ## General requirements
 
 **MUST**
 
 - work over Tor / SOCKS
 - provide end-to-end-encryption (OTR, some kind of ratcheting)
+- provide high usability and good user experience (i.e. a GUI which
+  directs the user to a desired level of security or at leasts helps to
+  prevent the user to make fatal mistakes)
+- be free software
 
 **SHOULD**
 
 - provide a desktop client
-- be mass-adopted already
+- be mass-adopted
+- provide platform interoperability
 - allow for instant messaging
+- asynchronous messaging
 - allow for video calls
 - allow for audio calls
+- allow sending files and media (video, audio, voice recording, pictures)
+- allow saving data to a persistent folder
+- provide metadata security (network-wise, e.g.: what data is the
+  provider saving in terms of me contacting whom and when from where,
+  etc.)
+- secure group chat
+- provide address book security / contact discovery mechanisms (e.g. some
+  messengers will upload the whole address book to a central server to
+  find out if your friends use the same app, too)
+- provide security mechanisms if a device gets lost
+  does)
+- provide self destructing messages
+- provide online status / status message / profile picture security
+  (e.g. can I restrict that people that I don't know won't see my
+  picture or my status, etc.)
+- not have requirement of providing a phone number
+- security in adding new devices or clients (e.g. two-factor
+  authentication)
+- provide user enumeration security (is it possible to easily "harvest" accounts
+  via bulk telephone number checking, id-numbers, etc. This is esp.
+  relevant when it comes to nation-wide adversaries who can easily
+  control big phone number ranges)
 
 ## Possible candidates:
-
-### Telegram
-
-- works over Tor (You can configure Tor as a SOCKS5 proxy in the configuration. The traffic seems to go through HTTP.)
-- is in Debian https://tracker.debian.org/pkg/telegram-desktop
-- When first starting the app, you have to enter your phone number and validate it through an SMS. Then you get all your messages and conversations back, even your stickers!
-- So it's not anonymous in the sense that it's linked with your phone number but it's super easy :)
-- instant messaging
-
-### Signal
-
-- centralized server
-- mass adopted
-- currently Chromium extension, will they port to FF? 
-- Tor?
-- double ratchet
-- have to enter a phone number
-- instant messaging
-
-### Matrix
-
-- decentralized
-- TLS by default
-- Tor?
-
-### Wire
-
-- desktop client
-- but no proxy/Tor support?
-- video & audio calls
-- instant messaging
-
-### Ring.cx
-
-- end-to-end encrypted
-- video calls
 
 ### Briar
 
@@ -59,7 +58,70 @@ Corresponding ticket: [[!tails_ticket 14567]]
 - works over Tor
 - no Linux client yet
 
+### Matrix/Riot
+
+- [Riot website](https://matrix.org/docs/projects/client/riot.html)
+- [[!tails_ticket 15209]]
+- decentralized
+- Riot supports: IM, VoIP, Videocall & - conferencing, File Transfer (of course) and SMS
+- bridges to Slack, Gitter, IRC, Telegram, Twitter etc.
+- works over Tor
+- TLS by default
+- Debian packages, but no official ones
+
+### Ring.cx
+
+- end-to-end encrypted
+- video calls
+
+### Signal
+
+- [Signal website](https://signal.org)
+- [[!tails_ticket 15200]]
+- centralized server
+- mass adopted
+- the Chromium-based app actually moved to the Electron application framework in early 11/2017
+- is installable via apt (with installed apt-transport-https) and the repo's from the Signal project. it's 198MByte big after installation
+- double ratchet
+- instant messaging
+- Tor?
+- have to enter a phone number
+
+### Telegram
+
+- works over Tor (You can configure Tor as a SOCKS5 proxy in the configuration. The traffic seems to go through HTTP.)
+- [is in Debian](https://tracker.debian.org/pkg/telegram-desktop)
+- When first starting the app, you have to enter your phone number and validate it through an SMS. Then you get all your messages and conversations back, even your stickers!
+- So it's not anonymous in the sense that it's linked with your phone number but it's super easy :)
+- instant messaging
+
+### Wire
+
+- [Wire website](https://wire.com)
+- [[!tails_ticket 15196]]
+- desktop client
+- works over Tor
+- video & audio calls
+- instant messaging works in Tails
+- problematic: [Stores contacts in cleartext on server](https://motherboard.vice.com/en_us/article/gvzw5x/secure-messaging-app-wire-stores-everyone-youve-ever-contacted-in-plain-text)
+
 ## Related
 
 * [[VoIP_support]]
 * [[replace_Pidgin]]
+
+## Free and random thoughts
+- modern (mobile) messengers replaced SMS/MMS and a bit of e-mail, too, as mobile internet became widespread available in the beginning of this century
+- are nearly exclusively used on mobile devices (smartphones/tablets) with operating systems such as Android OS by Google and Apple's iOS
+- some use (or even require and are based on) mobile phone numbers as identifiers for their users
+- started as (cost-effective, due to availability of mobile data/WiFi) replacement for SMS, but more features were added during time (group chats, media/file sharing, profile pictures, voice messages, "broadcasts", own status texts, voice calls, etc.)
+- mostly aimed at mobile platforms as Android, Apple iOS, Windows Phone. sometimes desktop clients are available for Windows, macOS and also Linux. For some products web clients are available which run in any modern web browser (but may require a running phone in parallel)
+- single platform/protocol. Mobile messengers are incompatible with other platforms/messengers
+- mostly client/server (or client/federation) software
+- mostly run by commercial companies which provide the client software, updates, servers
+- client and server applications are mostly closed source, some providers allow free software based clients. sometimes parts of the client/libraries
+are open sourced for review. some messengers implement free software protocols or libraries (e.g. Axolotl Ratchet, NaCl)
+- all modern messengers don't require the recipient(s) to be online at the same time when sending a message (in other words: they support asynchronous messaging)
+- nearly every mobile messenger is (money-wise) free-to-use
+- in the end, even if a product is presented and promoted as open source aka. free software, it may be, but won't be totally. The providers claim that the client software is free software. And it indeed is in nearly every case, even if it's doing some weird stuff (looking at Telegram here). But no one will effectively show us what's running on the other side. Maybe some source code is opened, but in the end no one will know, what is executed on the shiny silicon of WhatsApp, Telegram, Signal, etc. We even won't know what metadata will be kept there, for how long, for which purpose, and witch which and with whom this data is going to be shared.
+Let's assume that the math in the modern crypto works. The provider/state will only see encrypted garbage. Fine. But what about the layers around? From, at which time the message is leaving, to which data center? (etc. etc. you get the picture) This is definitely not in our hands anymore (in most places).
