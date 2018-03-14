@@ -526,14 +526,32 @@ class VM
     execute("test -d '#{directory}'").success?
   end
 
+  def file_glob(expr)
+    execute(
+      <<-EOF
+        bash -c '
+          shopt -s globstar dotglob nullglob
+          set -- #{expr}
+          while [ -n "${1}" ]; do
+            echo -n "${1}"
+            echo -ne "\\0"
+            shift
+          done'
+      EOF
+    ).stdout.chomp.split("\0")
+  end
+
   def file_open(path)
     f = RemoteShell::File.new(self, path)
     yield f if block_given?
     return f
   end
 
-  def file_content(path)
-    file_open(path) { |f| return f.read() }
+  def file_content(paths)
+    paths = [paths] unless paths.class == Array
+    paths.reduce('') do |acc, path|
+      acc + file_open(path).read
+    end
   end
 
   def file_overwrite(path, lines)

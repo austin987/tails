@@ -1,0 +1,113 @@
+--- a/etc/apparmor.d/usr.bin.thunderbird.orig	2018-01-09 20:30:54.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.thunderbird	2018-02-23 14:48:02.180000000 +0000
+@@ -16,7 +16,6 @@
+   # TODO: finetune this for required accesses
+   #include <abstractions/dbus>
+   #include <abstractions/dbus-accessibility>
+-  #include <abstractions/dbus-session>
+   #include <abstractions/gnome>
+   #include <abstractions/ibus>
+   #include <abstractions/nameservice>
+@@ -24,29 +23,19 @@
+   #include <abstractions/p11-kit>
+   #include <abstractions/private-files>
+   #include <abstractions/ssl_certs>
+-  #include <abstractions/ubuntu-browsers>
+   #include <abstractions/ubuntu-browsers.d/java>
+   #include <abstractions/ubuntu-helpers>
+ 
+   # Allow opening attachments
+   # TODO: create and use abstractions for opening various file formats
+-  /{usr/local/,usr/,}bin/* Cx -> sanitized_helper,
++  /{usr/local/,usr/,}bin/{[^g],g[^p],gp[^g]}* Cx -> sanitized_helper,
+   /usr/lib/libreoffice/program/soffice Cxr -> sanitized_helper,
+ 
+-  # For Xubuntu to launch the browser
+-  /usr/bin/exo-open ixr,
+-  /usr/lib/@{multiarch}/xfce4/exo-1/exo-helper-1 ixr,
+-  /etc/xdg/xdg-xubuntu/xfce4/helpers.rc r,
+-  /etc/xdg/xfce4/helpers.rc r,
+-
+   # for crash reports?
+   ptrace (read,trace) peer=@{profile_name},
+ 
+   @{thunderbird_executable} ixr,
+ 
+-  # Pulseaudio
+-  /usr/bin/pulseaudio Pixr,
+-
+   owner @{HOME}/.{cache,config}/dconf/user rw,
+   owner /run/user/[0-9]*/dconf/user rw,
+   owner @{HOME}/.config/gtk-3.0/bookmarks r,
+@@ -107,6 +96,8 @@
+   /etc/gre.d/* r,
+ 
+   # noisy
++  deny /etc/dconf/profile/user r,
++  deny /etc/machine-id r,
+   deny @{MOZ_LIBDIR}/** w,
+   deny /usr/lib/thunderbird-addons/** w,
+   deny /usr/lib/xulrunner-addons/** w,
+@@ -138,7 +129,6 @@
+   /etc/lsb-release r,
+   /etc/ssl/openssl.cnf r,
+   /usr/lib/thunderbird/crashreporter ix,
+-  /usr/bin/expr ix,
+   /sys/devices/system/cpu/ r,
+   /sys/devices/system/cpu/** r,
+ 
+@@ -190,15 +180,6 @@
+   deny /usr/share/mozilla/extensions/**/ w,
+   deny /usr/share/mozilla/ w,
+ 
+-  # Miscellaneous (to be abstracted)
+-  # Ideally these would use a child profile. They are all ELF executables
+-  # so running with 'Ux', while not ideal, is ok because we will at least
+-  # benefit from glibc's secure execute.
+-  /usr/bin/mkfifo Uxr,  # investigate
+-  /{usr/,}bin/ps Uxr,
+-  /{usr/,}bin/uname Uxr,
+-  /usr/bin/locale Uxr,
+-
+   /usr/bin/gpg               Cx -> gpg,
+   /usr/bin/gpg2              Cx -> gpg,
+   /usr/bin/gpgconf           Cx -> gpg,
+@@ -224,7 +205,9 @@
+     deny owner @{HOME}/.cache/thunderbird/**/_CACHE_* w,
+ 
+     # noise from inherited files
++    deny @{HOME}/.thunderbird/*.default/ImapMail/*/INBOX w,
+     deny /usr/{lib,share}/thunderbird/omni.ja r,
++    deny /usr/share/thunderbird/extensions/** r,
+ 
+     # For smartcards?
+     /dev/bus/usb/ r,
+@@ -255,6 +255,7 @@
+     owner @{HOME}/.gnupg/.#*[0-9]x rwl,
+     owner @{HOME}/.gnupg/.#lk0x[0-9a-f]* rwl,
+     owner @{HOME}/.gnupg/.gpg-v[0-9]*-migrated rw,
++    owner @{HOME}/.gnupg/openpgp-revocs.d/{,[A-F0-9]*.rev} rw,
+     owner @{HOME}/** r,
+     owner @{PROC}/@{pids}/mountinfo r,
+ 
+@@ -272,13 +255,16 @@
+     /usr/bin/dirmngr ix,
+     owner @{PROC}/@{pids}/task/@{tid}/comm rw,
+ 
++    # for revocation certificate generation
++    owner @{HOME}/.{icedove,thunderbird}/*.default/0x[A-F0-9]*_rev.asc rw,
++
+     # for signature generation
+-    owner /tmp/nsemail.eml w,
+-    owner /tmp/nsemail-[0-9]*.eml w,
++    owner @{HOME}/.{icedove,thunderbird}/*.default/tmp/nsemail.eml w,
++    owner @{HOME}/.{icedove,thunderbird}/*.default/tmp/nsemail-[0-9]*.eml w,
+ 
+     # for signature verifications
+-    owner /tmp/data.sig r,
+-    owner /tmp/data-[0-9]*.sig r,
++    owner @{HOME}/.{icedove,thunderbird}/*.default/tmp/data.sig r,
++    owner @{HOME}/.{icedove,thunderbird}/*.default/tmp/data-[0-9]*.sig r,
+ 
+     owner /tmp/gpg-[a-zA-Z0-9]*/S.gpg-agent rw,
+ 
