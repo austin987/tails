@@ -38,6 +38,18 @@ EOF
   )
 end
 
+When /^I make my current APT sources persistent$/ do
+  $vm.execute("install -d -m 755 /live/persistence/TailsData_unlocked/apt-sources.list.d")
+  $vm.file_append(
+    '/live/persistence/TailsData_unlocked/persistence.conf',
+    "/etc/apt/sources.list.d  source=apt-sources.list.d,link\n"
+  )
+  $vm.file_overwrite(
+    '/live/persistence/TailsData_unlocked/apt-sources.list.d/persistent.list',
+    $vm.file_content($vm.file_glob('/etc/apt/{,*/}*.list'))
+  )
+end
+
 When /^I update APT using apt$/ do
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
@@ -59,7 +71,7 @@ Then /^I install "(.+)" using apt$/ do |package_name|
   retry_tor(recovery_proc) do
     Timeout::timeout(2*60) do
       $vm.execute_successfully("echo #{@sudo_password} | " +
-                               "sudo -S apt install #{package_name}",
+                               "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package_name}",
                                :user => LIVE_USER)
     end
   end

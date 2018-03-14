@@ -276,6 +276,13 @@ disable_and_create_empty_persistence_conf_file ()
 
 	mv "$conf" "${conf}.insecure_disabled" \
 		|| error "Failed to disable '$conf': $?"
+	create_empty_persistence_conf_file "$conf"
+}
+
+create_empty_persistence_conf_file ()
+{
+	local conf="$1"
+
 	install --owner tails-persistence-setup \
 		--group tails-persistence-setup --mode 0600 \
 		/dev/null "$conf" \
@@ -341,6 +348,15 @@ activate_volumes ()
 		then
 			ACCESS_RIGHTS_ARE_CORRECT=false
 			break
+		fi
+	done
+
+	# Create live-additional-software.conf if there is none
+	for mountpoint in $(ls -d /live/persistence/*_unlocked || true)
+	do
+		if test ! -f "$mountpoint/live-additional-software.conf"
+		then
+			create_empty_persistence_conf_file "$mountpoint/live-additional-software.conf"
 		fi
 	done
 
