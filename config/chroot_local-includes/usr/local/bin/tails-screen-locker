@@ -105,35 +105,55 @@ class PasswordDialog(object):
     def __init__(self):
         self.pw = None
 
-        self.window = Gtk.Window(
-            title=_("Set up a password to unlock the screen"),
-            type_hint=Gdk.WindowTypeHint.DIALOG
+        self.ok_button = Gtk.Button(
+            label=_("Lock Screen"),
+            receives_default=True,
+            sensitive=False,
+            width_request=86
         )
-        self.window.connect("key-press-event", self.on_key_pressed)
+        self.ok_button.connect("clicked", self.on_ok_clicked)
+        self.ok_button.get_style_context().add_class('suggested-action')
+
+        cancel_button = Gtk.Button(
+            label=_("Cancel"),
+            width_request=86
+        )
+        cancel_button.connect("clicked", self.on_cancel_clicked)
+
+        headerbar = Gtk.HeaderBar(
+            title=_("Screen Locker"),
+        )
+        headerbar.pack_start(cancel_button)
+        headerbar.pack_end(self.ok_button)
+
+        label_subtitle = Gtk.Label(
+            label=_("Set up a password to unlock the screen."),
+        )
+        label_subtitle.get_style_context().add_class("dim-label")
 
         label1 = Gtk.Label(
             label=_("Password"),
-            justify=Gtk.Justification.RIGHT,
             xalign=1
         )
         label1.get_style_context().add_class("dim-label")
 
         label2 = Gtk.Label(
             label=_("Confirm"),
-            justify=Gtk.Justification.RIGHT,
             xalign=1
         )
         label2.get_style_context().add_class("dim-label")
 
         self.entry1 = Gtk.Entry(
             can_focus=True,
-            visibility=False
+            visibility=False,
+            width_request=200
         )
         self.entry1.connect("changed", self.on_entry_changed)
 
         self.entry2 = Gtk.Entry(
             can_focus=True,
-            visibility=False
+            visibility=False,
+            width_request=200
         )
         self.entry2.connect("changed", self.on_entry_changed)
 
@@ -143,37 +163,27 @@ class PasswordDialog(object):
         grid.attach(self.entry1, 1, 0, 1, 1)
         grid.attach(self.entry2, 1, 1, 1, 1)
 
-        self.ok_button = Gtk.Button(
-            label=_("Lock screen"),
-            width_request=86,
-            receives_default=True,
-            sensitive=False
-        )
-        self.ok_button.connect("clicked", self.on_ok_clicked)
-
-        cancel_button = Gtk.Button(
-            label=_("Cancel"),
-            width_request=86
-        )
-        cancel_button.connect("clicked", self.on_cancel_clicked)
-
-        button_box = Gtk.ButtonBox(
-            margin_top=15,
-            spacing=5,
-            layout_style=Gtk.ButtonBoxStyle.END)
-        button_box.add(self.ok_button)
-        button_box.add(cancel_button)
+        content_box = Gtk.Box(Gtk.Orientation.HORIZONTAL)
+        content_box.pack_start(Gtk.Box(hexpand=True), False, False, 0)
+        content_box.pack_end(Gtk.Box(hexpand=True), False, False, 0)
+        content_box.add(grid)
 
         box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            margin_top=12,
-            margin_bottom=12,
-            margin_left=12,
-            margin_right=12,
-            spacing=2
+            margin_top=18,
+            margin_bottom=18,
+            margin_left=18,
+            margin_right=18,
+            spacing=18
         )
-        box.add(grid)
-        box.add(button_box)
+        box.add(label_subtitle)
+        box.add(content_box)
+
+        self.window = Gtk.Window(
+            type_hint=Gdk.WindowTypeHint.DIALOG,
+        )
+        self.window.connect("key-press-event", self.on_key_pressed)
+        self.window.set_titlebar(headerbar)
         self.window.add(box)
         self.window.show_all()
 
