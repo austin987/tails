@@ -15,7 +15,7 @@ Then /^I start Electrum through the GNOME menu$/ do
 end
 
 Then /^Electrum (?:has started|starts)$/ do
-  try_for(30) do
+  try_for(60) do
     electrum_app
   end
 end
