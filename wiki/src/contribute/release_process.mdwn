@@ -10,7 +10,7 @@ Requirements
 To release Tails you'll need some packages installed:
 
 * `tidy mktorrent transmission-cli`
-* Aufs DKMS module for your running kernel.
+* aufs DKMS module for your running kernel.
 * [[!debpts squashfs-tools]] that honors `$SOURCE_DATE_EPOCH`.
   Install it from our custom `devel` APT suite.
 * `tails-iuk` dependencies, including suggested packages (see
@@ -80,6 +80,12 @@ be `testing` for major releases, and `stable` for point-releases.
 Read the remainder of this document from the branch used to prepare the release!
 </div>
 
+Sanity check
+============
+
+Visit the [Jenkins RM view](https://jenkins.tails.boum.org/view/RM/)
+and check that the jobs for the release branch have good enough results.
+
 Freeze
 ======
 
@@ -124,7 +130,7 @@ If we are at freeze time for a point-release:
 
 1. Merge the `master` Git branch into `stable`:
 
-        git checkout stable && git merge --no-ff origin/master
+        git checkout stable && git fetch && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
@@ -996,7 +1002,7 @@ and on the live wiki (even for a release candidate):
        | ssh bittorrent.lizard gpg --import
     scp \
        "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISOS_PATH:?}.sig" \
+       "${ISO_PATH:?}.sig" \
        bittorrent.lizard: && \
     ssh bittorrent.lizard << EOF
        mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
@@ -1234,6 +1240,13 @@ website:
 
 The release is now public! Woo!
 
+Check translation are correct
+-----------------------------
+
+Once the push is over and the live website is build, check that each
+`news/version_${VERSION}` HTML and RSS pages looks OK in all supported
+languages.
+
 Bug tracker
 -----------
 
@@ -1459,6 +1472,8 @@ this, and skip what does not make sense for a RC.
 1. Push the resulting branches.
 1. Make sure Jenkins manages to build all updated major branches:
    <https://jenkins.tails.boum.org/>.
+1. Make sure you pushed all changes in every of our Git repo (including our
+   Debian packages ones).
 1. Delete the _Release Manager View for ${VERSION_:?}_ Redmine custom query.
 1. Ensure the next two releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
