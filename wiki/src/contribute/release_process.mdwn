@@ -130,7 +130,7 @@ If we are at freeze time for a point-release:
 
 1. Merge the `master` Git branch into `stable`:
 
-        git checkout stable && git merge --no-ff origin/master
+        git checkout stable && git fetch && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
@@ -1002,7 +1002,7 @@ and on the live wiki (even for a release candidate):
        | ssh bittorrent.lizard gpg --import
     scp \
        "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISOS_PATH:?}.sig" \
+       "${ISO_PATH:?}.sig" \
        bittorrent.lizard: && \
     ssh bittorrent.lizard << EOF
        mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
