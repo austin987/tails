@@ -5,9 +5,16 @@ When /^I configure additional software packages to install "(.+?)"$/ do |package
   )
 end
 
-Then /^the additional software package installation service is run$/ do
-  try_for(300) do
-    $vm.file_exist?('/run/live-additional-software/installed')
+Then /^the additional software package (upgrade|installation) service is run$/ do |service|
+  case service
+  when "installation"
+    try_for(300) do
+      $vm.file_exist?('/run/live-additional-software/installed')
+    end
+  when "upgrade"
+    try_for(300) do
+      $vm.file_exist?('/run/live-additional-software/installed')
+    end
   end
 end
 
