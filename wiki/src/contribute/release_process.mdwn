@@ -10,7 +10,7 @@ Requirements
 To release Tails you'll need some packages installed:
 
 * `tidy mktorrent transmission-cli`
-* Aufs DKMS module for your running kernel.
+* aufs DKMS module for your running kernel.
 * [[!debpts squashfs-tools]] that honors `$SOURCE_DATE_EPOCH`.
   Install it from our custom `devel` APT suite.
 * `tails-iuk` dependencies, including suggested packages (see
@@ -80,6 +80,12 @@ be `testing` for major releases, and `stable` for point-releases.
 Read the remainder of this document from the branch used to prepare the release!
 </div>
 
+Sanity check
+============
+
+Visit the [Jenkins RM view](https://jenkins.tails.boum.org/view/RM/)
+and check that the jobs for the release branch have good enough results.
+
 Freeze
 ======
 
@@ -124,7 +130,7 @@ If we are at freeze time for a point-release:
 
 1. Merge the `master` Git branch into `stable`:
 
-        git checkout stable && git merge --no-ff origin/master
+        git checkout stable && git fetch && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
@@ -996,7 +1002,7 @@ and on the live wiki (even for a release candidate):
        | ssh bittorrent.lizard gpg --import
     scp \
        "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISOS_PATH:?}.sig" \
+       "${ISO_PATH:?}.sig" \
        bittorrent.lizard: && \
     ssh bittorrent.lizard << EOF
        mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
