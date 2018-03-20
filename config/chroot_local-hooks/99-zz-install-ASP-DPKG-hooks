@@ -1,3 +1,10 @@
+#!/bin/sh
+
+set -e
+set -u
+
+cat > /etc/apt/apt.conf.d/80tails-additional-software << EOF
 DPkg::Pre-Install-Pkgs { "/usr/local/sbin/tails-additional-software apt-pre"; };
 DPkg::Post-Invoke { "/usr/local/sbin/tails-additional-software apt-post &"; };
 DPkg::Tools::Options::/usr/local/sbin/tails-additional-software::Version "3";
+EOF
