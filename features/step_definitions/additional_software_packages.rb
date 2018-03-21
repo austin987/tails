@@ -18,9 +18,8 @@ Then /^the additional software package (upgrade|installation) service is run$/ d
   end
 end
 
-Then /^I am notified I can not use ASP$/  do
-  # XXX: Would be better to fetch the title from the po or source code files.
-  title = "You could install sslh automatically when starting Tails"
+Then /^I am notified I can not use ASP for "([^"]*)"$/  do |package|
+  title = "You could install #{package} automatically when starting Tails"
   step "the \"#{title}\" notification is shown to the user"
 end
 

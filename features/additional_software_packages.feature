@@ -12,7 +12,7 @@ Feature: Additional software packages
     And I configure APT to use non-onion sources
     And I update APT using apt
     When I install "sslh" using apt
-    Then I am notified I can not use ASP
+    Then I am notified I can not use ASP for "sslh"
     And I can open the documentation from the notification link
 
   Scenario: I can set up and use ASP when I install a package in a Tails that has no persistent partition
