@@ -28,14 +28,16 @@ Feature: Additional software packages
     And I configure APT to use non-onion sources
     And I update APT using apt
     And I install "sl" using apt
-    Then I am proposed to create an ASP persistence
-    And I create the persistence
+    Then I am proposed to create an ASP persistence for the "sl" package
+    And I create the ASP persistence
     # We have to save the non-onion APT sources in persistence, so
     # that on next boot the additional software packages service has
     # the right APT indexes to install the package we want.
     And I make my current APT sources persistent
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    # Test if tails-synchronize-data-to-new-persistent-volume.service did its job
+    And the ASP persistence is correctly configured for package "sl"
     And the additional software package installation service is run
     And I am notified that the installation succeeded
     And the package "sl" is installed

@@ -32,12 +32,32 @@ Then /^I am notified the "([^"]*)" failed$/  do |service|
   pending # Write code here that turns the phrase above into concrete actions
 end
 
-Then /^I am proposed to create an ASP persistence$/  do
-  pending # Write code here that turns the phrase above into concrete actions
+Then /^I am proposed to create an ASP persistence for the "([^"]*)" package$/  do |package|
+  title = "Add #{package} to your additional software?"
+  step "the \"#{title}\" notification is shown to the user"
 end
 
-Then /^I create the persistence$/  do
-  pending # Write code here that turns the phrase above into concrete actions
+Then /^I create the ASP persistence$/  do
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  gnome_shell.child('Create Persistent Storage', roleName: 'push button').click
+  step 'I create a persistent partition for ASP'
+  step 'The ASP persistence option is enabled'
+  step 'I save and exit from the Persistence Wizard'
+  # Temporary fix for #15340
+  $vm.execute('chmod 644 /media/tails-persistence-setup/TailsData/live-additional-software.conf')
+  # Workaround #15431
+  $vm.execute('mkdir -p /media/tails-persistence-setup/TailsData/apt && rsync -a /var/cache/apt/archives/ /media/tails-persistence-setup/TailsData/apt/cache/ && cp -a /var/lib/apt/lists /media/tails-persistence-setup/TailsData/apt/')
+end
+
+Then /^The ASP persistence option is enabled$/  do
+  @screen.wait('ASPPersistenceSetupOptionEnabled', 60)
+end
+
+Then /^the ASP persistence is correctly configured for package "([^"]*)"$/ do |package|
+  assert($vm.file_exist?('/live/persistence/TailsData_unlocked/live-additional-software.conf'))
+  assert_equal($vm.file_content('/live/persistence/TailsData_unlocked/live-additional-software.conf').chomp, package)
+  assert($vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/ | grep -qs \'^#{package}.*\.deb$\'").success?)
+  assert($vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs \'^.*_Packages$\'").success?)
 end
 
 # should be moved into the APT steps definition and factorized with the check for installation

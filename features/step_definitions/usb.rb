@@ -237,6 +237,10 @@ Given /^I enable all persistence presets$/ do
       debug_log("setting already enabled, skipping")
     end
   end
+  step "I save and exit from the Persistence Wizard"
+end
+
+When /^I save and exit from the Persistence Wizard$/ do
   @screen.type(Sikuli::Key.ENTER) # Press the Save button
   @screen.wait('PersistenceWizardDone.png', 60)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
@@ -252,12 +256,13 @@ When /^I disable the first persistence preset$/ do
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
-Given /^I create a persistent partition$/ do
-  step 'I start "Configure persistent volume" via GNOME Activities Overview'
+Given /^I create a persistent partition( for ASP)?$/ do |asp|
   @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
-  step "I enable all persistence presets"
+  if not asp
+    step "I enable all persistence presets"
+  end
 end
 
 def check_disk_integrity(name, dev, scheme)
