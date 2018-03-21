@@ -39,13 +39,19 @@ EOF
 end
 
 When /^I make my current APT sources persistent$/ do
-  $vm.execute("install -d -m 755 /live/persistence/TailsData_unlocked/apt-sources.list.d")
+  if $vm.file_exist?('/media/tails-persistence-setup/TailsData/')
+    persistence_mountpoint = '/media/tails-persistence-setup/TailsData'
+  else
+    persistence_mountpoint = '/live/persistence/TailsData_unlocked'
+  end
+
+  $vm.execute("install -d -m 755 #{persistence_mountpoint}/apt-sources.list.d")
   $vm.file_append(
-    '/live/persistence/TailsData_unlocked/persistence.conf',
+    "#{persistence_mountpoint}/persistence.conf",
     "/etc/apt/sources.list.d  source=apt-sources.list.d,link\n"
   )
   $vm.file_overwrite(
-    '/live/persistence/TailsData_unlocked/apt-sources.list.d/persistent.list',
+    "#{persistence_mountpoint}/apt-sources.list.d/persistent.list",
     $vm.file_content($vm.file_glob('/etc/apt/{,*/}*.list'))
   )
 end
