@@ -37,7 +37,7 @@ Feature: Additional software packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     And the additional software package installation service is run
-    And I am notified that the package "sl" is installed
+    And I am notified that the installation succeeded
     And the package "sl" is installed
 
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
@@ -48,7 +48,7 @@ Feature: Additional software packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service is run
-    And I am notified that the package "sslh" is installed
+    And I am notified that the installation succeeded
     And the package "sslh" is installed
 
   Scenario: Packages I uninstall and accept to remove from ASP are not installed anymore
@@ -88,14 +88,14 @@ Feature: Additional software packages
     And all notifications have disappeared
     And available upgrades have been checked
     Then the additional software package upgrade service is run
-    And I am notified that the package "sslh" has been upgraded
+    And I am notified that the installation succeeded
     And the package "cowsay" installed version is newer than ""
 
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     And the additional software package installation service is run
-    And I am notified that the package "cowsay" is installed
+    And I am notified that the installation succeeded
     And the package "cowsay" is installed
     And I start the ASP GUI
     And I remove "cowsay" from the list of ASP packages

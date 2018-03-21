@@ -23,8 +23,9 @@ Then /^I am notified I can not use ASP for "([^"]*)"$/  do |package|
   step "the \"#{title}\" notification is shown to the user"
 end
 
-Then /^I am notified that the package "([^"]*)" (is installed|has been upgraded)$/  do |package, status|
-  pending # Write code here that turns the phrase above into concrete actions
+Then /^I am notified that the installation succeeded$/  do
+    title = "Additional software installed successfully"
+    step "the \"#{title}\" notification is shown to the user"
 end
 
 Then /^I am notified the "([^"]*)" failed$/  do |service|
