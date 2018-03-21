@@ -246,7 +246,7 @@ index fdc7ba7..25150e1 100644
 +no Moo::Role;
  1; # End of Tails::Role::HasEncoding
 diff --git a/usr/share/perl5/Tails/RunningSystem.pm b/usr/share/perl5/Tails/RunningSystem.pm
-index 5a6ca52..dfc676c 100644
+index 5a6ca52..0685d78 100644
 --- a/usr/share/perl5/Tails/RunningSystem.pm
 +++ b/usr/share/perl5/Tails/RunningSystem.pm
 @@ -6,123 +6,157 @@ Tails::RunningSystem - class that represents the running Tails system
@@ -467,7 +467,7 @@ index 5a6ca52..dfc676c 100644
      sprintf(
          "%s/upgrade/v%d/%s/%s/%s/%s/upgrades.yml",
          $self->baseurl,
-@@ -134,24 +168,23 @@ method _build_upgrade_description_file_url {
+@@ -134,22 +168,19 @@ method _build_upgrade_description_file_url {
      );
  }
  
@@ -494,12 +494,8 @@ index 5a6ca52..dfc676c 100644
 +method _build_boot_block_device () {
      my $device;
      try {
-+        say STDERR $self->liveos_mountpoint;
-+        say STDERR ref($self->liveos_mountpoint);
          $device = $self->underlying_block_device($self->liveos_mountpoint);
-     } catch {
-         $self->display_error(
-@@ -160,7 +193,6 @@ sub _build_boot_block_device {
+@@ -160,7 +191,6 @@ sub _build_boot_block_device {
              $self->encoding->decode(gettext(
                  q{The device Tails is running from cannot be found. Maybe you used the `toram' option?},
              )),
@@ -507,7 +503,7 @@ index 5a6ca52..dfc676c 100644
          );
      };
  
-@@ -179,9 +211,7 @@ sub _build_boot_block_device {
+@@ -179,9 +209,7 @@ sub _build_boot_block_device {
      return $boot_block_device;
  }
  
@@ -518,7 +514,7 @@ index 5a6ca52..dfc676c 100644
      my $drive;
      try {
          $drive = $self->underlying_drive($self->liveos_mountpoint);
-@@ -200,40 +230,30 @@ sub _build_boot_drive {
+@@ -200,40 +228,30 @@ sub _build_boot_drive {
      return $drive;
  }
  
@@ -564,7 +560,7 @@ index 5a6ca52..dfc676c 100644
      $self->get_drive_property($self->boot_drive, 'Model');
  }
  
-@@ -251,11 +271,11 @@ http://www.freedesktop.org/software/systemd/man/os-release.html
+@@ -251,11 +269,11 @@ http://www.freedesktop.org/software/systemd/man/os-release.html
  Throws an exception if not found.
  
  =cut
@@ -578,7 +574,7 @@ index 5a6ca52..dfc676c 100644
  
      while (<$fh>) {
          chomp;
-@@ -279,7 +299,7 @@ method started_from_device_installed_with_tails_installer () {
+@@ -279,7 +297,7 @@ method started_from_device_installed_with_tails_installer () {
  method started_from_writable_device () {
      assert(-d $self->dev_dir);
  
@@ -587,7 +583,7 @@ index 5a6ca52..dfc676c 100644
  }
  
  =head2 free_memory
-@@ -289,12 +309,12 @@ Returns MemFree + Buffers + Cached, in bytes.
+@@ -289,12 +307,12 @@ Returns MemFree + Buffers + Cached, in bytes.
  =cut
  method free_memory () {
      assert(-d $self->proc_dir);
