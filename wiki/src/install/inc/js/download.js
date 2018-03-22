@@ -132,6 +132,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     toggleDisplay(document.getElementsByClassName("no-js"), "hide");
     if (browser === "Firefox") {
+      if (version === 52) {
+        show(document.getElementById("broken-in-3-6"));
+      }
       if (version >= minVersion.firefox) {
         // Supported Firefox
         toggleDisplay(document.getElementsByClassName("supported-browser"), "show");
