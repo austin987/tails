@@ -172,7 +172,7 @@
  
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
-@@ -30,28 +32,26 @@ profile torbrowser_plugin_container {
+@@ -30,28 +32,27 @@ profile torbrowser_plugin_container {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -209,6 +209,7 @@
 +  owner "@{HOME}/Persistent/Tor Browser/" rw,
 +  owner "@{HOME}/Persistent/Tor Browser/**" rwk,
 +
++  owner @{HOME}/.tor-browser/profile.default/extensions/*.xpi r,
 +  /etc/xul-ext/ r,
 +  /etc/xul-ext/** r,
 +  /usr/local/share/tor-browser-extensions/ r,
@@ -221,7 +222,7 @@
  
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/present r,
-@@ -77,6 +77,12 @@ profile torbrowser_plugin_container {
+@@ -77,6 +78,12 @@ profile torbrowser_plugin_container {
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
