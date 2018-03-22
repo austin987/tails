@@ -38,7 +38,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     # Test if tails-synchronize-data-to-new-persistent-volume.service did its job
     And the ASP persistence is correctly configured for package "sl"
-    And the additional software package installation service is run
+    And the additional software package installation service has started
     And I am notified that the installation succeeded
     And the package "sl" is installed
 
@@ -49,7 +49,7 @@ Feature: Additional software packages
     And I confirm when I am asked if I want to add "sslh" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service is run
+    Then the additional software package installation service has started
     And I am notified that the installation succeeded
     And the package "sslh" is installed
 
@@ -60,7 +60,7 @@ Feature: Additional software packages
     And I confirm when I am asked if I want to remove "sslh" from ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service is run
+    Then the additional software package installation service has started
     And the package "sslh" is not installed
 
   Scenario: Packages I install but not do not add to ASP are not automatically installed
@@ -70,7 +70,7 @@ Feature: Additional software packages
     And I deny when I am asked if I want to add "sslh" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service is run
+    Then the additional software package installation service has started
     And the package "sslh" is not installed
 
   Scenario: Packages I have installed and added to ASP are upgraded when a network is available
@@ -83,27 +83,28 @@ Feature: Additional software packages
     And I remove the APT source for the old cowsay version
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    And the additional software package installation service is run
+    And the additional software package installation service has started
     And the package "cowsay" installed version is ""
     And the network is plugged
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
-    Then the additional software package upgrade service is run
-    And I am notified that the installation succeeded
+    # XXX: AFAIK there's no user notification for the upgrade service
+    #Then I am notified that the installation succeeded
+    Then the additional software package upgrade service has started
     And the package "cowsay" installed version is newer than ""
 
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    And the additional software package installation service is run
+    And the additional software package installation service has started
     And I am notified that the installation succeeded
     And the package "cowsay" is installed
     And I start the ASP GUI
     And I remove "cowsay" from the list of ASP packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service is run
+    Then the additional software package installation service has started
     And the package "cowsay" is not installed
 
   Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
@@ -113,18 +114,18 @@ Feature: Additional software packages
     And I confirm when I am asked if I want to add "cowsay" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    And the additional software package installation service is run
+    And the additional software package installation service has started
     And the package "cowsay" installed version is ""
     And I prepare the ASP upgrade process to fail
     And the network is plugged
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
-    And the additional software package upgrade service is run
+    And the additional software package upgrade service has started
     And I am notified the "ASP upgrade service" failed
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service is run
+    Then the additional software package installation service has started
     And the package "cowsay" is installed
 
   Scenario: I am notified when ASP fails to install a package
@@ -135,6 +136,5 @@ Feature: Additional software packages
     And I remove the "vrms" deb file from the APT cache
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service is run
-    And I am notified the "ASP installation service" failed
+    Then I am notified the "ASP installation service" failed
     And the package "vrms" is not installed

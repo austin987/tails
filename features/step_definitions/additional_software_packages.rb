@@ -5,15 +5,21 @@ When /^I configure additional software packages to install "(.+?)"$/ do |package
   )
 end
 
-Then /^the additional software package (upgrade|installation) service is run$/ do |service|
+Then /^I am notified the ASP installation service is starting$/  do
+  title = "Installing your additional software from persistent storage…"
+  step "the \"#{title}\" notification is shown to the user"
+end
+
+Then /^the additional software package (upgrade|installation) service has started$/ do |service|
   case service
   when "installation"
+    step "I am notified the ASP installation service is starting"
     try_for(300) do
       $vm.file_exist?('/run/live-additional-software/installed')
     end
   when "upgrade"
     try_for(300) do
-      $vm.file_exist?('/run/live-additional-software/installed')
+      $vm.file_exist?('/run/live-additional-software/upgraded')
     end
   end
 end
