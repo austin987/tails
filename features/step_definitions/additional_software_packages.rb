@@ -82,12 +82,37 @@ Then /^"([^"]*)" is not part of ASP persistence configuration$/ do |package|
   $vm.execute("grep \"#{package}\" #{asp_conf}").stdout.empty?
 end
 
-When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|from) ASP configuration$/  do |decision, action, package|
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-When /^the package "([^"]*)" installed version is(| newer than) "([^"]*)"$/  do |package, comparison, version|
-  pending # Write code here that turns the phrase above into concrete actions
+When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|from) ASP configuration$/  do |decision, action, package, destination|
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  case action
+  when "add"
+    title = "Add #{package} to your additional software?"
+    step "the \"#{title}\" notification is shown to the user"
+    case decision
+    when "confirm"
+      gnome_shell.child('Add to Persistent Storage', roleName: 'push button').click
+      try_for(30) do
+        step "the ASP persistence is correctly configured for package \"#{package}\""
+      end
+    when "deny"
+      gnome_shell.child('Install only once', roleName: 'push button').click
+      step "\"#{package}\" is not part of ASP persistence configuration"
+    end
+  when "remove"
+    title = "Remove #{package} from your additional software?"
+    step "the \"#{title}\" notification is shown to the user"
+    step "the ASP persistence is correctly configured for package \"#{package}\""
+    case decision
+    when "confirm"
+      gnome_shell.child('Remove', roleName: 'push button').click
+      try_for(30) do
+        step "\"#{package}\" is not part of ASP persistence configuration"
+      end
+    when "deny"
+      gnome_shell.child('Cancel', roleName: 'push button').click
+      step "the ASP persistence is correctly configured for package \"#{package}\""
+    end
+  end
 end
 
 When /^I remove the APT source for the old cowsay version$/  do
