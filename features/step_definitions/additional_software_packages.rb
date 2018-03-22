@@ -35,7 +35,14 @@ Then /^I am notified that the installation succeeded$/  do
 end
 
 Then /^I am notified the "([^"]*)" failed$/  do |service|
-  pending # Write code here that turns the phrase above into concrete actions
+  case service
+  when "ASP installation service"
+    title = "The installation of your additional software failed"
+    step "the \"#{title}\" notification is shown to the user"
+  when "ASP upgrade service"
+    title = "The upgrade of your additional software failed"
+    step "the \"#{title}\" notification is shown to the user"
+  end
 end
 
 Then /^I am proposed to create an ASP persistence for the "([^"]*)" package$/  do |package|
