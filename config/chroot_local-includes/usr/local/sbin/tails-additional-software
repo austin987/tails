@@ -64,35 +64,43 @@ def _launch_apt_get(specific_args):
     return apt_get.returncode
 
 
-def _launch_persistence_setup(*args):
-    """Launch tails-persistence-setup and wait for its completion."""
-    TPS_USERNAME = "tails-persistence-setup"
+def _launch_x_application(username, command, *args):
+    """Launch an X application and wait for its completion."""
 
     subprocess.run(
         ["sudo", "-u", LIVE_USERNAME,
-         "xhost", "+SI:localuser:" + TPS_USERNAME],
+         "xhost", "+SI:localuser:" + username],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         check=True)
 
-    cmdline = ["sudo", "-u", TPS_USERNAME, "/usr/bin/tails-persistence-setup"]
+    cmdline = ["sudo", "-u", username, command]
     cmdline.extend(args)
     try:
         subprocess.run(cmdline, stderr=subprocess.PIPE, check=True,
                        universal_newlines=True)
     except subprocess.CalledProcessError as e:
-        logging.error("tails-persistence-setup returned with "
-                      "{returncode}".format(returncode=e.returncode))
+        logging.error("{command} returned with {returncode}".format(
+            command=command, returncode=e.returncode))
         for line in e.stderr.splitlines():
             logging.error(line)
         raise
     finally:
         subprocess.run(
             ["sudo", "-u", LIVE_USERNAME,
-             "xhost", "-SI:localuser:" + TPS_USERNAME],
+             "xhost", "-SI:localuser:" + username],
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             check=True)
+
+
+def _launch_persistence_setup(*args):
+    """Launch tails-persistence-setup and wait for its completion."""
+    TPS_USERNAME = "tails-persistence-setup"
+
+    _launch_x_application(TPS_USERNAME,
+                          "/usr/bin/tails-persistence-setup",
+                          *args)
 
 
 def _notify(title, body="", accept_label="", deny_label="",
