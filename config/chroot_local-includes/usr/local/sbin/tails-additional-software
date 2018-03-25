@@ -34,12 +34,6 @@ APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
 
 
-def _exit_if_in_live_build():
-    """Exits with success if running inside live-build."""
-    if "SOURCE_DATE_EPOCH" in os.environ:
-        sys.exit(0)
-
-
 def _launch_apt_get(specific_args):
     """Launch apt-get with given arguments.
 
@@ -438,8 +432,6 @@ def show_system_log():
 
 def apt_hook_pre():
     """Subcommand to handle Dpkg::Pre-Install-Pkgs."""
-    _exit_if_in_live_build()
-
     logging.info("Saving package changes")
 
     apt_cache = apt.cache.Cache()
@@ -496,8 +488,6 @@ def apt_hook_post():
     Retrieve the list of packages saved by apt_hook_pre, filter packages not
     interesting and pass the resulting list to the appropriate method.
     """
-    _exit_if_in_live_build()
-
     logging.info("Examining package changes")
 
     with open(ASP_STATE_PACKAGES) as f:
@@ -641,7 +631,11 @@ def print_help():
 if __name__ == "__main__":
     program_name = os.path.basename(sys.argv[0])
 
-    # Set loglevel if debug is found in kernel command line
+    # Exits with success if running inside live-build.
+    if "SOURCE_DATE_EPOCH" in os.environ:
+        sys.exit(0)
+
+    # Set loglevel if debug is found in kernel command line.
     with open('/proc/cmdline') as cmdline_fd:
         cmdline = cmdline_fd.read()
     if "DEBUG" in os.environ or "debug" in cmdline.split():
