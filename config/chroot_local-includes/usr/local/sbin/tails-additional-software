@@ -28,6 +28,7 @@ PERSISTENCE_PARTITION = "/dev/disk/by-partlabel/TailsData"
 ASP_STATE_DIR = "/run/live-additional-software"
 ASP_STATE_PACKAGES = os.path.join(ASP_STATE_DIR, "packages")
 ASP_STATE_INSTALLER_ASKED = os.path.join(ASP_STATE_DIR, "installer-asked")
+ASP_LOG_FILE = os.path.join(ASP_STATE_DIR, "log")
 OLD_APT_LISTS_DIR = os.path.join(PERSISTENCE_DIR, 'apt', 'lists.old')
 APT_ARCHIVES_DIR = "/var/cache/apt/archives"
 APT_LISTS_DIR = "/var/lib/apt/lists"
@@ -620,7 +621,9 @@ if __name__ == "__main__":
     else:
         default_level = logging.INFO
     syslog_handler = logging.handlers.SysLogHandler(address="/dev/log")
-    logging.basicConfig(handlers=[syslog_handler], level=default_level)
+    file_handler = logging.FileHandler(ASP_LOG_FILE)
+    logging.basicConfig(handlers=[syslog_handler, file_handler],
+                        level=default_level)
 
     gettext.install("tails")
 
