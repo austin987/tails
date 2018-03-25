@@ -14,7 +14,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk                               # NOQA: E402
 
 from tailslib.additionalsoftware.config import (            # NOQA: E402
-    get_additional_packages)
+    get_additional_packages,
+    get_packages_list_path)
 
 _ = gettext.gettext
 
@@ -143,6 +144,16 @@ class ASPConfigApplication(Gtk.Application):
             application=self,
             get_config_func=self.get_asp_configuration,
             remove_asp_func=self.remove_additional_software)
+
+        packages_list_file = Gio.File.new_for_path(get_packages_list_path())
+        self.packages_list_monitor = packages_list_file.monitor(
+            Gio.FileMonitorFlags.NONE, None)
+        self.packages_list_monitor.connect(
+            "changed", self.cb_packages_list_changed)
+
+    def cb_packages_list_changed(self, file_monitor, file, other_file,
+                                 event_type):
+        self.window.update_packages_list()
 
     def get_asp_configuration(self):
         try:
