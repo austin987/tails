@@ -187,6 +187,40 @@ def _close_notification(notification_id):
             stdout=subprocess.DEVNULL)
 
 
+def _spawn_daemon(func):
+    """Spawn func after double-forking.
+
+    Do the UNIX double-fork magic, see Stevens' "Advanced
+    Programming in the UNIX Environment" for details (ISBN 0201563177).
+
+    From https://stackoverflow.com/questions/6011235/run-a-program-from-
+    python-and-have-it-continue-to-run-after-the-script-is-kille
+    """
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # parent process, return and keep running
+            return
+    except OSError as e:
+        syslog.syslog("fork #1 failed: %d (%s)" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    os.setsid()
+
+    # do second fork
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # exit from second parent
+            sys.exit(0)
+    except OSError as e:
+        syslog.syslog("fork #2 failed: %d (%s)" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    # do stuff
+    func()
+
+
 def has_persistence():
     """Return true iff PERSISTENCE_PARTITION exists."""
     return os.path.exists(PERSISTENCE_PARTITION)
@@ -610,7 +644,7 @@ if __name__ == "__main__":
     elif sys.argv[1] == "apt-pre":
         apt_hook_pre()
     elif sys.argv[1] == "apt-post":
-        apt_hook_post()
+        _spawn_daemon(apt_hook_post)
     else:
         print_help()
         sys.exit(2)
