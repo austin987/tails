@@ -3,6 +3,7 @@
 """User interface to configure Tails Additional Software."""
 
 import gettext
+import subprocess
 import sys
 
 import apt.cache
@@ -76,10 +77,15 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
         if dialog.run() == Gtk.ResponseType.ACCEPT:
             self.remove_asp_func(package_name)
         dialog.destroy()
+        self.update_packages_list()
 
     def cb_window_show(self, window):
+        self.update_packages_list()
+
+    def update_packages_list(self):
         packages = self.get_config_func()
         if packages:
+            self.listbox.foreach(lambda widget, data: widget.destroy(), None)
             for package_name, package_description in packages:
                 listboxrow = Gtk.ListBoxRow.new()
 
@@ -162,8 +168,10 @@ class ASPConfigApplication(Gtk.Application):
         return packages_with_description
 
     def remove_additional_software(self, package_name):
-        # XXX
-        pass
+        subprocess.run(["pkexec",
+                        "/usr/local/sbin/tails-additional-software-remove",
+                        package_name],
+                       check=True)
 
 
 asp_application = ASPConfigApplication()
