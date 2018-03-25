@@ -616,14 +616,21 @@ def print_help():
 if __name__ == "__main__":
     program_name = os.path.basename(sys.argv[0])
 
-    if "DEBUG" in os.environ:
-        default_level = logging.DEBUG
+    # Set loglevel if debug is found in kernel command line
+    with open('/proc/cmdline') as cmdline_fd:
+        cmdline = cmdline_fd.read()
+    if "DEBUG" in os.environ or "debug" in cmdline.split():
+        log_level = logging.DEBUG
+        log_format = "[%(levelname)s] %(filename)s:%(lineno)d " \
+                     "%(funcName)s: %(message)s"
     else:
-        default_level = logging.INFO
+        log_level = logging.INFO
+        log_format = "[%(levelname)s] %(message)s"
     syslog_handler = logging.handlers.SysLogHandler(address="/dev/log")
     file_handler = logging.FileHandler(ASP_LOG_FILE)
-    logging.basicConfig(handlers=[syslog_handler, file_handler],
-                        level=default_level)
+    logging.basicConfig(format=log_format,
+                        handlers=[syslog_handler, file_handler],
+                        level=log_level)
 
     gettext.install("tails")
 
