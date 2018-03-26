@@ -223,7 +223,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (result === "failed-again") {
       show(document.getElementById("verification-failed-again"));
-      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool")); // Change mirrors in case people try again anyway
     }
   }
 
