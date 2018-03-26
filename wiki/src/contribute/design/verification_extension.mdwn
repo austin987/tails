@@ -144,9 +144,13 @@ page.
   [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
   See commit c87ce92.
 
-- The download page verifies that the message is coming from
-  `https://tails.boum.org` (no trailing slash needed) before processing
-  it. See [[!tails_gitweb wiki/src/install/inc/js/download.js
+- Before processing the message, the download page verifies that it is
+  coming from:
+
+  - The same tab (`event.source` is `window`)
+  - Our website (`event.origin` is `https://tails.boum.org`, no trailing slash needed)
+
+  See [[!tails_gitweb wiki/src/install/inc/js/download.js
   desc="`receiveMessage()` in *download.js*"]].
 
 - The code of the extension is only injected in tabs on
