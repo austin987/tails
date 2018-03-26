@@ -3,6 +3,7 @@
 """User interface to configure Tails Additional Software."""
 
 import gettext
+import os
 import subprocess
 import sys
 
@@ -153,7 +154,8 @@ class ASPConfigApplication(Gtk.Application):
 
     def cb_packages_list_changed(self, file_monitor, file, other_file,
                                  event_type):
-        self.window.update_packages_list()
+        if os.access(file.get_path(), os.R_OK):
+            self.window.update_packages_list()
 
     def get_asp_configuration(self):
         additional_packages = get_additional_packages()
