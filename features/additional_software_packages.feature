@@ -7,9 +7,6 @@ Feature: Additional software packages
 
   Scenario: I am warned I can not use ASP when I boot Tails from a DVD and install a package
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
-    # This is required to use APT in the test suite as explained in
-    # commit e2510fae79870ff724d190677ff3b228b2bf7eac
-    And I configure APT to use non-onion sources
     And I update APT using apt
     When I install "sslh" using apt
     Then I am notified I can not use ASP for "sslh"
@@ -23,17 +20,10 @@ Feature: Additional software packages
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
-    # This is required to use APT in the test suite as explained in
-    # commit e2510fae79870ff724d190677ff3b228b2bf7eac
-    And I configure APT to use non-onion sources
     And I update APT using apt
     And I install "sl" using apt
     Then I am proposed to create an ASP persistence for the "sl" package
     And I create the ASP persistence
-    # We have to save the non-onion APT sources in persistence, so
-    # that on next boot the additional software packages service has
-    # the right APT indexes to install the package we want.
-    And I make my current APT sources persistent
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     # Test if tails-synchronize-data-to-new-persistent-volume.service did its job

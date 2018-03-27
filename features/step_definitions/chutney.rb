@@ -135,6 +135,9 @@ When /^I configure Tails to use a simulated Tor network$/ do
   end
   client_torrc_lines.concat(dir_auth_lines)
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)
+  # This is required to use APT in the test suite as explained in
+  # commit e2510fae79870ff724d190677ff3b228b2bf7eac
+  step "I configure APT to use non-onion sources"
 end
 
 When /^Tails is using the real Tor network$/ do
