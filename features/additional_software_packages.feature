@@ -1,4 +1,4 @@
-@product @fragile
+@product
 
 Feature: Additional software packages
   As a Tails user
@@ -72,6 +72,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "sslh" is not installed
 
+ @fragile
   Scenario: Packages I have installed and added to ASP are upgraded when a network is available
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -93,6 +94,7 @@ Feature: Additional software packages
     Then the additional software package upgrade service has started
     And the package "cowsay" installed version is newer than ""
 
+  @fragile
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -106,6 +108,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" is not installed
 
+  @fragile
   Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
