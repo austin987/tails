@@ -563,9 +563,14 @@ When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
-Given /^the package "([^"]+)" is installed$/ do |package|
-  assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
-         "Package '#{package}' is not installed")
+Given /^the package "([^"]+)" is( not)? installed$/ do |package, uninstalled|
+  if uninstalled
+    assert(!$vm.execute("dpkg -s '#{package}' 2>/dev/null").success?,
+           "Package '#{package}' is present in dpkg database")
+  else
+    assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
+           "Package '#{package}' is not installed")
+  end
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|

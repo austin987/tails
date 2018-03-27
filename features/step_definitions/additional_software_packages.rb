@@ -75,19 +75,11 @@ Then /^the ASP persistence is correctly configured for package "([^"]*)"$/ do |p
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs '^.*_Packages$'").success?
 end
 
-# should be moved into the APT steps definition and factorized with the check for installation
-When /^I uninstall "([^"]*)" using apt$/  do |package|
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-# should be moved into the APT steps definition and factorized with the check for installation
-When /^I install an old version "([^"]*)" of the "([^"]*)" package using apt$/  do |version, package|
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-# should be moved into the APT steps definition and factorized with the check for installation
-Then /^the package "([^"]*)" is not installed$/  do |package|
-  pending # Write code here that turns the phrase above into concrete actions
+Then /^"([^"]*)" is not part of ASP persistence configuration$/ do |package|
+  asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
+  assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
+  step 'all persistence configuration files have safe access rights'
+  $vm.execute("grep \"#{package}\" #{asp_conf}").stdout.empty?
 end
 
 When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|from) ASP configuration$/  do |decision, action, package|

@@ -69,22 +69,40 @@ When /^I update APT using apt$/ do
   end
 end
 
-Then /^I install "(.+)" using apt$/ do |package_name|
-  recovery_proc = Proc.new do
-    step 'I kill the process "apt"'
-    $vm.execute("apt purge #{package_name}")
-  end
-  retry_tor(recovery_proc) do
-    Timeout::timeout(2*60) do
-      $vm.execute("echo #{@sudo_password} | " +
-                               "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package_name}",
-                               :user => LIVE_USER,
-                               :spawn => true)
-      try_for(60) do
-        $vm.execute_successfully("dpkg -s '#{package_name}' 2>/dev/null | grep -qs '^Status:.*installed$'")
+Then /^I (un)?install "(.+)" using apt$/ do |removal, package|
+  if removal
+    $vm.execute("echo #{@sudo_password} | " +
+                                 "sudo -S DEBIAN_PRIORITY=critical apt -y remove #{package}",
+                                 :user => LIVE_USER,
+                                 :spawn => true)
+    try_for(60) do
+      $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*deinstall.*$'")
+    end
+  else
+    recovery_proc = Proc.new do
+      step 'I kill the process "apt"'
+      $vm.execute("apt purge #{package}")
+    end
+    retry_tor(recovery_proc) do
+      Timeout::timeout(2*60) do
+        $vm.execute("echo #{@sudo_password} | " +
+                                 "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
+                                 :user => LIVE_USER,
+                                 :spawn => true)
+        try_for(60) do
+          $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
+        end
       end
     end
   end
+end
+
+When /^I install an old version "([^"]*)" of the "([^"]*)" package using apt$/  do |version, package|
+  pending # Write code here that turns the phrase above into concrete actions
+end
+
+When /^the package "([^"]*)" installed version is(| newer than) "([^"]*)"$/  do |package, comparison, version|
+  pending # Write code here that turns the phrase above into concrete actions
 end
 
 When /^I start Synaptic$/ do
