@@ -147,6 +147,7 @@ Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I 
     step "I enable persistence" if persistence_on
     step "I set an administration password" if admin_password
     step "I log in to a new session"
+    step "the additional software package installation service has started"
     if network_unplugged
       step "all notifications have disappeared"
     else
@@ -348,6 +349,7 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
+  step "the additional software package upgrade service has started"
   begin
     try_for(30) { $vm.execute('systemctl is-system-running').success? }
   rescue Timeout::Error
