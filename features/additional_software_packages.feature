@@ -26,7 +26,6 @@ Feature: Additional software packages
     And I create the ASP persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    # Test if tails-synchronize-data-to-new-persistent-volume.service did its job
     And the ASP persistence is correctly configured for package "sl"
     And the additional software package installation service has started
     And the package "sl" is installed
