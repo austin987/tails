@@ -517,8 +517,6 @@ Then /^all persistent filesystems have safe access rights$/ do
 end
 
 Then /^all persistence configuration files have safe access rights$/ do
-  # XXX: #14596
-  next
   persistent_volumes_mountpoints.each do |mountpoint|
     assert($vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
@@ -532,7 +530,12 @@ Then /^all persistence configuration files have safe access rights$/ do
       file_perms = $vm.execute("stat -c %a '#{f}'").stdout.chomp
       assert_equal("tails-persistence-setup", file_owner)
       assert_equal("tails-persistence-setup", file_group)
-      assert_equal("600", file_perms)
+      case f
+      when /.*live-additional-software.conf$/
+        assert_equal("644", file_perms)
+      else
+        assert_equal("600", file_perms)
+      end
     end
   end
 end
