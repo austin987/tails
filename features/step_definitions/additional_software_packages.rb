@@ -1,10 +1,3 @@
-When /^I configure additional software packages to install "(.+?)"$/ do |package|
-  $vm.file_overwrite(
-    '/live/persistence/TailsData_unlocked/live-additional-software.conf',
-    package + "\n"
-  )
-end
-
 Then /^I am notified the ASP installation service is starting$/  do
   #title = "Installing your additional software from persistent storage"
   #step "I see the \"#{title}\" notification after at most 120 seconds"
