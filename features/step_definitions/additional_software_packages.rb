@@ -54,10 +54,12 @@ Then /^The ASP persistence option is enabled$/  do
 end
 
 Then /^the ASP persistence is correctly configured for package "([^"]*)"$/ do |package|
-  assert($vm.file_exist?('/live/persistence/TailsData_unlocked/live-additional-software.conf'))
-  assert_equal($vm.file_content('/live/persistence/TailsData_unlocked/live-additional-software.conf').chomp, package)
-  assert($vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/ | grep -qs \'^#{package}.*\.deb$\'").success?)
-  assert($vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs \'^.*_Packages$\'").success?)
+  asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
+  assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
+  step 'all persistence configuration files have safe access rights'
+  assert($vm.execute("grep #{package} #{asp_conf}").success?)
+  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/ | grep -qs '^#{package}.*\.deb$'").success?
+  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs '^.*_Packages$'").success?
 end
 
 # should be moved into the APT steps definition and factorized with the check for installation
