@@ -33,22 +33,34 @@ Feature: Additional software packages
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I install "sslh" using Synaptic
-    And I confirm when I am asked if I want to add "sslh" to ASP configuration
+    And I start Synaptic
+    And I update APT using Synaptic
+    When I install "cowsay" using Synaptic
+    And I confirm when I am asked if I want to add "cowsay" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
-    And the package "sslh" is installed
+    And the package "cowsay" is installed
 
   Scenario: Packages I uninstall and accept to remove from ASP are not installed anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I uninstall "sslh" using apt
-    And I confirm when I am asked if I want to remove "sslh" from ASP configuration
+    When I uninstall "cowsay" using apt
+    And I confirm when I am asked if I want to remove "cowsay" from ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
-    And the package "sslh" is not installed
+    And the package "cowsay" is not installed
+
+  Scenario: Packages I uninstall but don't want to remove from ASP are automatically installed
+    Given a computer
+    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
+    When I uninstall "sl" using apt
+    And I deny when I am asked if I want to remove "sl" from ASP configuration
+    And I shutdown Tails and wait for the computer to power off
+    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then the additional software package installation service has started
+    And the package "sl" is installed
 
   Scenario: Packages I install but not do not add to ASP are not automatically installed
     Given a computer
