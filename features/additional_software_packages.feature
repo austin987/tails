@@ -29,7 +29,6 @@ Feature: Additional software packages
     # Test if tails-synchronize-data-to-new-persistent-volume.service did its job
     And the ASP persistence is correctly configured for package "sl"
     And the additional software package installation service has started
-    And I am notified that the installation succeeded
     And the package "sl" is installed
 
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
@@ -40,7 +39,6 @@ Feature: Additional software packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
-    And I am notified that the installation succeeded
     And the package "sslh" is installed
 
   Scenario: Packages I uninstall and accept to remove from ASP are not installed anymore

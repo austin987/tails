@@ -522,6 +522,13 @@ class VM
     execute("test -e '#{file}'").success?
   end
 
+  def file_empty?(file)
+    if file_exist?(file)
+      return file_content(file).empty?
+    end
+    return true
+  end
+
   def directory_exist?(directory)
     execute("test -d '#{directory}'").success?
   end
