@@ -219,11 +219,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (result === "failed") {
       show(document.getElementById("verification-failed"));
-      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool")); // Try again with different mirrors
+      // Try again with different mirrors
+      toggleDisplay(document.getElementsByClassName("use-mirror-pool"), "hide");
+      toggleDisplay(document.getElementsByClassName("use-mirror-pool-on-retry"), "show");
+      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool-on-retry"));
     }
     else if (result === "failed-again") {
       show(document.getElementById("verification-failed-again"));
-      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool")); // Change mirrors in case people try again anyway
     }
   }
 
