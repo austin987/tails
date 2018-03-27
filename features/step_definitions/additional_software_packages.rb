@@ -66,10 +66,6 @@ Then /^I create the ASP persistence$/  do
   step 'I create a persistent partition for ASP'
   step 'The ASP persistence option is enabled'
   step 'I save and exit from the Persistence Wizard'
-  # Temporary fix for #15340
-  $vm.execute('chmod 644 /media/tails-persistence-setup/TailsData/live-additional-software.conf')
-  # Workaround #15431
-  $vm.execute('mkdir -p /media/tails-persistence-setup/TailsData/apt && rsync -a /var/cache/apt/archives/ /media/tails-persistence-setup/TailsData/apt/cache/ && cp -a /var/lib/apt/lists /media/tails-persistence-setup/TailsData/apt/')
 end
 
 Then /^The ASP persistence option is enabled$/  do
