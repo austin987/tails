@@ -138,5 +138,5 @@ When /^I prepare the ASP upgrade process to fail$/  do
 end
 
 When /^I remove the "([^"]*)" deb file from the APT cache$/  do |package|
-  pending # Write code here that turns the phrase above into concrete actions
+  $vm.execute("rm -f /live/persistence/TailsData_unlocked/apt/cache/#{package}*.deb")
 end
