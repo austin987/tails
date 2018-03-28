@@ -21,14 +21,14 @@ Feature: Additional software packages
     And all notifications have disappeared
     And available upgrades have been checked
     And I update APT using apt
-    And I install "sl" using apt
-    Then I am proposed to create an ASP persistence for the "sl" package
+    And I install "sslh" using apt
+    Then I am proposed to create an ASP persistence for the "sslh" package
     And I create the ASP persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    And the ASP persistence is correctly configured for package "sl"
+    And the ASP persistence is correctly configured for package "sslh"
     And the additional software package installation service has started
-    And the package "sl" is installed
+    And the package "sslh" is installed
 
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
     Given a computer
@@ -55,22 +55,22 @@ Feature: Additional software packages
   Scenario: Packages I uninstall but don't want to remove from ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I uninstall "sl" using apt
-    And I deny when I am asked if I want to remove "sl" from ASP configuration
+    When I uninstall "sslh" using apt
+    And I deny when I am asked if I want to remove "sslh" from ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
-    And the package "sl" is installed
+    And the package "sslh" is installed
 
   Scenario: Packages I install but not do not add to ASP are not automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I install "sslh" using apt
-    And I deny when I am asked if I want to add "sslh" to ASP configuration
+    When I install "sl" using apt
+    And I deny when I am asked if I want to add "sl" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
-    And the package "sslh" is not installed
+    And the package "sl" is not installed
 
  @fragile
   Scenario: Packages I have installed and added to ASP are upgraded when a network is available
