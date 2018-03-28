@@ -87,15 +87,21 @@ try:
 except IndexError:
     page = 'getting_started'
 
+wiki_path = '/usr/share/doc/tails/website'
+lang_code = os.getenv('LANG', 'en')[0:2]
+
 # If possible, let's hand-off to our website, which should be the most
 # up-to-date option.
 if os.system('/usr/local/sbin/tor-has-bootstrapped') == 0:
+    if os.path.isfile(os.path.join(
+            wiki_path, page + '.' + lang_code + ".html")):
+        uri = 'https://tails.boum.org/' + page + '/index.' + lang_code + '.html'
+    else:
+        uri = 'https://tails.boum.org/' + page
     os.execv('/usr/local/bin/tor-browser',
              ['/usr/local/bin/tor-browser', '--new-tab',
-              'https://tails.boum.org/' + page])
+              uri])
 
-wiki_path = '/usr/share/doc/tails/website'
-lang_code = os.getenv('LANG', 'en')[0:2]
 trials = [
     os.path.join(wiki_path, page + code + ".html")
     for code in ['.' + lang_code, '.en', '']
