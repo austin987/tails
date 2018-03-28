@@ -64,16 +64,16 @@ Threat model
 
 We are considering here an attacker who can:
 
-  - (A) Provide a malicious ISO image to the user for example by
+  - [A] Provide a malicious ISO image to the user for example by
     operating a rogue Tails mirror.
 
-  - (H) Operate a website that is loaded in a different tab in the same
+  - [H] Operate a website that is loaded in a different tab in the same
     browser as the extension. See the section on [[security inside the
     browser|verification_extension#inside_the_browser]].
 
 We are not considering an attacker who can:
 
-  - (B) Do a man-in-the-middle attack by providing a rogue HTTPS certificate
+  - [B] Do a man-in-the-middle attack by providing a rogue HTTPS certificate
     for https://tails.boum.org/ signed by a certificate authority
     trusted by the
     browser but under the control of the attacker.
@@ -86,7 +86,7 @@ We are not considering an attacker who can:
     and Chrome which forces HTTPS connections to our website, even for
     first time visitors.
 
-  - (C) Insert malicious content on https://tails.boum.org/ through an
+  - [C] Insert malicious content on https://tails.boum.org/ through an
     exploit on our website as this could trick new users to skip the ISO
     verification all the way. To prevent this kind of attack we should
     instead:
@@ -96,19 +96,19 @@ We are not considering an attacker who can:
       number of times people have to rely on our website to upgrade. See
       [[!tails_ticket 7499]].
 
-  - (D) Insert malicious information in our main Git repository as such
-    an attacker could do attack (C) as well.
+  - [D] Insert malicious information in our main Git repository as such
+    an attacker could do attack [C] as well.
 
-  - (E) Insert targeted malware on the user's computer as this could
+  - [E] Insert targeted malware on the user's computer as this could
     defeat any possible verification mechanism that such an extension
     could do.
 
-  - (F) Provide a rogue extension to the user as this could defeat any
+  - [F] Provide a rogue extension to the user as this could defeat any
     possible verification mechanism that such an extension could do.
 
-  - (G) Insert malicious content on https://tails.boum.org/ after taking
+  - [G] Insert malicious content on https://tails.boum.org/ after taking
     control of the web server, or entire system, behind it. Such an
-    attacker could do attack (C) as well but in such a way that could be
+    attacker could do attack [C] as well but in such a way that could be
     much harder to detect (for example by serving malicious content only to
     some users).
 
@@ -130,36 +130,40 @@ We are not considering an attacker who can:
 Security inside the browser
 ---------------------------
 
-<div class="bug">
-
-  This section is outdated.<br />
-  This will be fixed by [[!tails_ticket 15061]].
-
-</div>
-
 The threat described as [H] is taken care of by the internals of the
-browser (and the proper coding of the extension):
+browser (and the proper coding of the extension).
 
-- Only tabs with the same origin can interfere with the tab running the
-  verification.
-- Tabs which would have been opened with `window.open()` by a script in
-  the verification tab would have a handle to the window of the
-  verification tab but couldn't touch the content unless they are in the
-  same domain.
-- DAVE doesn't use cross-origin communication.
-- Web pages from a different origin cannot interfere in any way with the
-  result of the verification.
+### Cross-origin communication
 
-Of course, any tab can open an alert box saying "Verification
-Successful", but it cannot overlay a different tab and, most important,
-it cannot detect any hint that the verification is happening. Note that the
-extension does not open alert boxes but
-instead modifies the content of the page.
+The extension uses cross-origin communication to modify the download
+page.
 
-Bugs in the browser itself that could tamper with the verification
-mechanism would need to be of the "remote code execution vulnerability" kind
-and would represent a threat in many more use cases than when verifying
-an ISO image.
+- To ensure that messages from the extension are only sent to pages on
+  our website, the extension
+  sets `targetOrigin` to `https://tails.boum.org` (no trailing slash needed) in
+  [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+  See commit c87ce92.
+
+- Before processing the message, the download page verifies that it is
+  coming from:
+
+  - The same tab (`event.source` is `window`)
+  - Our website (`event.origin` is `https://tails.boum.org`, no trailing slash needed)
+
+  See [[!tails_gitweb wiki/src/install/inc/js/download.js
+  desc="`receiveMessage()` in *download.js*"]].
+
+- The code of the extension is only injected in tabs on
+  `https://tails.boum.org/` (with a trailing slash). See `permissions`
+  in *manifest.js* and `matches` in *scripts/background/background.js*.
+
+- The communication is unidirectional: only the extension sends messages
+  and the extension does not listen to messages.
+
+### Content Security Policy
+
+Instead of the default Content Security Policy, the extension uses the
+strictest policy: `default-src 'none'`.
 
 <a id="update"></a>
 
@@ -237,11 +241,11 @@ When verifying an ISO image, the extension:
 
 Security properties:
 
-  - This technique would defeat attack A (malicious ISO).
+  - This technique would defeat attack [A] (malicious ISO).
 
 More complex verification mechanisms could be gradually [[built into
 Tails Installer|blueprint/bootstrapping/installer]] where we can
-defeat attacks B, C, D, F, and G.
+defeat attacks [B], [C], [D], [F], and [G].
 
 Embedded *Forge* library
 ------------------------
@@ -268,10 +272,15 @@ mechanisms:
 
 - Mostly through message communication (`postMessage`) sent to a
   script on the page ([[!tails_gitweb wiki/src/install/inc/js/download.js]]).
+
 - If an extension is already installed when the page is loaded, through
   an HTML attribute (`documentElement.dataset.extension`) corresponding
   to some CSS declarations, to indicate whether the extension is
   up-to-date or outdated.
+
+- If the extension gets installed on a page, through a background script
+  that injects the JavaScript of the extension on the page. See commit
+  d80b322.
 
 This decouples the code of the extension from the implementation of the
 display on the HTML page (ids, classes, etc.).
