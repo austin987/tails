@@ -87,6 +87,11 @@ try:
 except IndexError:
     page = 'getting_started'
 
+try:
+    anchor = sys.argv[2]
+except IndexError:
+    anchor = None
+
 wiki_path = '/usr/share/doc/tails/website'
 lang_code = os.getenv('LANG', 'en')[0:2]
 
@@ -98,6 +103,8 @@ if os.system('/usr/local/sbin/tor-has-bootstrapped') == 0:
         uri = 'https://tails.boum.org/' + page + '/index.' + lang_code + '.html'
     else:
         uri = 'https://tails.boum.org/' + page
+    if anchor is not None:
+        uri = uri + '#' + anchor
     os.execv('/usr/local/bin/tor-browser',
              ['/usr/local/bin/tor-browser', '--new-tab',
               uri])
