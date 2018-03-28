@@ -137,6 +137,8 @@ Feature: Additional software packages
     And I confirm when I am asked if I want to add "vrms" to ASP configuration
     And I remove the "vrms" deb file from the APT cache
     And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    And I start Tails from USB drive "__internal" with network unplugged
+    And I enable persistence
+    And I log in to a new session
     Then I am notified the "ASP installation service" failed
     And the package "vrms" is not installed
