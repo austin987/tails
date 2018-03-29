@@ -60,14 +60,8 @@ having Pidgin use a (not necessarily dedicated) `SocksPort` that has
 
 For the same reason, we actually want to enable `IsolateDestAddr` and
 `IsolateDestPort` for the `SocksPort` used by most applications,
-unless we tell them otherwise.
-
-The email client we ship is a special case: for the same
-multiple-accounts reason as the IM client, we want `IsolateDestAddr`
-for the MUA we ship. Adding `IsolateDestPort` to the mix would avoid
-correlating unrelated email and IM accounts, *but* it breaks
-POP-before-SMTP. Then, the MUA should use a `SocksPort` that has
-`IsolateDestAddr` enabled, but `IsolateDestPort` disabled.
+unless we tell them otherwise. It may break POP-before-SMTP
+in Thunderbird.
 
 Implementation
 ==============
@@ -77,8 +71,6 @@ in [[!tails_gitweb config/chroot_local-includes/etc/tor/torrc]]:
 
 * default system-wide `SocksPort` (9050): `IsolateDestAddr` and
   `IsolateDestPort` enabled
-* dedicated `SocksPort` for the email client (9061): `IsolateDestAddr`
-  enabled
 * dedicated `SocksPort` for Tails-specific applications (9062):
   `IsolateDestAddr` and `IsolateDestPort` enabled
 * dedicated `SocksPort` for web browser (9150): no stream

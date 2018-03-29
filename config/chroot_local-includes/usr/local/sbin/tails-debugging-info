@@ -1,84 +1,180 @@
-#!/bin/sh
+#! /usr/bin/env python3
+"""
+Debug Tails.
 
-# *** WARNING about debug_file and debug_directory *********************
-#
-# Great attention must be given to the ownership situation of these
-# files and their parent directories in order to avoid a symlink-based
-# attack that could read the contents of any file and make it
-# accessible to the user running this script (typicall the live
-# user). Therefore, when adding a new file, give as the first argument
-# 'root' only if the complete path to it (including the file itself)
-# is owned by root and already exists before the system is connected to
-# the network (that is, before GDM's PostLogin script is run).
-# If not, the following rules must be followed strictly:
-#
-# * only one non-root user is involved in the ownership situation (the
-#   file, its dir and the parent dirs). From now on let's assume it is
-#   the case and call it $USER.
-#
-# * if any non-root group has write access, it must not have any
-#   members.
-#
-# If any of these rules does not apply, the file cannot be added here
-# safely and something is probably quite wrong and should be
-# investigated carefully.
+Test with "python3 tails-debugging-info.py doctest" as root.
 
-debug_command() {
-    echo
-    echo "===== output of command $@ ====="
-    "$@"
-}
+goodcrypto.com converted from bash to python and added basic tests.
 
-debug_file() {
-    local user="${1}"
-    shift
-    file="${1}"
-    [ ! -e "${file}" ] && return
-    echo
-    echo "===== content of ${file} ====="
-    sudo -u "${user}" -- cat "${file}"
-}
+*** WARNING about debug_file and debug_directory *********************
 
-debug_directory() {
-    local user="${1}"
-    shift
-    dir="${1}"
-    [ ! -d "${dir}" ] && return
-    echo
-    echo "===== listing of ${dir} ====="
-    sudo -u "${user}" -- /bin/ls -lA "${dir}"
-    for file in "${dir}"/* ; do
-        debug_file "${user}" "${file}"
-    done
-}
+Great attention must be given to the ownership situation of these
+files and their parent directories in order to avoid a symlink-based
+attack that could read the contents of any file and make it
+accessible to the user running this script (typically the live
+user). Therefore, when adding a new file, give as the first argument
+'root' only if the complete path to it (including the file itself)
+is owned by root and already exists before the system is connected to
+the network (that is, before GDM's PostLogin script is run).
+If not, the following rules must be followed strictly:
 
-debug_file root "/proc/cmdline"
+* only one non-root user is involved in the ownership situation (the
+  file, its dir and the parent dirs). From now on let's assume it is
+  the case and call it $USER.
 
-# General hardware and filesystems information
-debug_command /usr/sbin/dmidecode -s system-manufacturer
-debug_command /usr/sbin/dmidecode -s system-product-name
-debug_command /usr/sbin/dmidecode -s system-version
-debug_command "/usr/bin/lspci"
-debug_command /bin/df --human-readable --print-type
-debug_command "/bin/mount"
-debug_command "/bin/lsmod"
-debug_file root "/proc/asound/cards"
-debug_file root "/proc/asound/devices"
-debug_file root "/proc/asound/modules"
+* if any non-root group has write access, it must not have any
+  members.
 
-# Miscellaneous configuration and log files
-debug_file root "/etc/X11/xorg.conf"
-debug_file Debian-gdm "/var/log/gdm3/tails-greeter.errors"
-debug_file root "/var/log/live/boot.log"
-debug_file root "/var/log/live/config.log"
-debug_file root "/var/lib/live/config/tails.physical_security"
+If any of these rules does not apply, the file cannot be added here
+safely and something is probably quite wrong and should be
+investigated carefully.
 
-# Persistence
-debug_file root "/var/lib/gdm3/tails.persistence"
-debug_file root "/live/persistence/TailsData_unlocked/persistence.conf"
-debug_file root "/live/persistence/TailsData_unlocked/live-additional-software.conf"
-debug_directory root "/live/persistence/TailsData_unlocked/apt-sources.list.d"
-debug_file root "/var/log/live-persist"
+>>> # run script
+>>> import sh
+>>> this_command = sh.Command(sys.argv[0])
+>>> this_command()
+<BLANKLINE>
+...
+"""
 
-# The Journal
-debug_command /bin/journalctl --catalog --no-pager
+import os
+import sys
+from pwd import getpwuid
+import subprocess
+
+
+# AppArmor Ux rules don't sanitize PATH, which can lead to an
+# exploited application (that's allowed to run this script unconfined)
+# having this script run arbitrary code, violating that application's
+# confinement. Let's prevent that by setting PATH to a list of
+# directories where only root can write.
+os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
+
+
+def main():
+    """Print debug information.
+
+    >>> main()
+    <BLANKLINE>
+    ...
+    """
+
+    debug_file('root', '/proc/cmdline')
+
+    # General hardware and filesystems information
+    debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer')
+    debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name')
+    debug_command('/usr/sbin/dmidecode', '-s', 'system-version')
+    debug_command('/usr/bin/lspci')
+    debug_command('/bin/df', '--human-readable', '--print-type')
+    debug_command('/bin/mount', '--show-labels')
+    debug_command('/bin/lsmod')
+    debug_file('root', '/proc/asound/cards')
+    debug_file('root', '/proc/asound/devices')
+    debug_file('root', '/proc/asound/modules')
+
+    # Miscellaneous configuration and log files
+    debug_file('root', '/etc/X11/xorg.conf')
+    debug_file('Debian-gdm', '/var/log/gdm3/tails-greeter.errors')
+    debug_file('root', '/var/log/live/boot.log')
+    debug_file('root', '/var/log/live/config.log')
+    debug_file('root', '/var/lib/live/config/tails.physical_security')
+
+    # Persistence
+    debug_file('root', '/var/lib/gdm3/tails.persistence')
+    debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/persistence.conf')
+    debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/live-additional-software.conf')
+    debug_directory('root', '/live/persistence/TailsData_unlocked/apt-sources.list.d')
+    debug_file('root', '/var/log/live-persist')
+
+    # The Journal
+    debug_command('/bin/journalctl', '--catalog', '--no-pager')
+
+
+def debug_command(command, *args):
+    """Print the command and then run it.
+
+    >>> debug_command('echo', 'foo')
+    <BLANKLINE>
+    ===== output of command echo foo =====
+    foo
+    """
+    print()
+    print('===== output of command {} ====='.format(' '.join((command,) + args)))
+    print(subprocess.check_output([command, *args]).decode().strip())
+
+
+def debug_file(user, filename):
+    """Print file content.
+
+    >>> import tempfile, getpass
+    >>> with tempfile.NamedTemporaryFile('w') as f:
+    ...     _ = f.write("foo\\nbar")
+    ...     _ = f.seek(0)
+    ...     debug_file(getpass.getuser(), f.name)
+    <BLANKLINE>
+    ===== content of ... =====
+    foo
+    bar
+    """
+    if not os.path.isfile(filename):
+        return
+
+    # This check is not sufficient, see the comment at the top of the file
+    # for the complete requirements required for security
+    owner = getpwuid(os.stat(filename).st_uid).pw_name
+    if owner != user:
+        print()
+        print('WARNING: not opening file {}, '.format(filename), end='')
+        print('because it is owned by {} instead of {}'.format(owner, user))
+        return
+
+    print()
+    print('===== content of {} ====='.format(filename))
+    with open(filename) as f:
+        print(f.read(), end='')
+
+
+def debug_directory(user, dir_name):
+    """List directory and print content of all contained files (non-recursively).
+
+    >>> import tempfile, getpass
+    >>> with tempfile.TemporaryDirectory() as tmpdir:
+    ...     open(os.path.join(tmpdir, 'foo'), 'w').close()
+    ...     debug_directory(getpass.getuser(), tmpdir)
+    <BLANKLINE>
+    ===== listing of ... =====
+    foo
+    """
+    if not os.path.isdir(dir_name):
+        return
+
+    print()
+
+    # This check is not sufficient, see the comment at the top of the file
+    # for the complete requirements required for security
+    owner = getpwuid(os.stat(dir_name).st_uid).pw_name
+    if owner != user:
+        print('WARNING: not opening directory {}, '.format(dir_name), end='')
+        print('because it is owned by {} instead of {}'.format(owner, user))
+        return
+
+    files = os.listdir(dir_name)
+
+    print('===== listing of {} ====='.format(dir_name))
+    for f in files:
+        print(f)
+
+    for f in files:
+        debug_file(user, f)
+
+
+if __name__ == '__main__':
+    if sys.argv and len(sys.argv) > 1:
+        if sys.argv[1] == 'doctest':
+            import doctest
+            doctest.testmod(optionflags=doctest.ELLIPSIS)
+        else:
+            main()
+    else:
+        main()
