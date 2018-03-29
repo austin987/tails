@@ -172,7 +172,7 @@ def exe_path_of_pid(pid):
     # using one of its profiles. However, we fallback to /proc/pid/exe
     # in case there is no AppArmor profile, so the only unsupported
     # mode here is unconfined scripts.
-    enabled_aa_profile_re = r'^(/.+) \((?:complain|enforce)\)$'
+    enabled_aa_profile_re = r'^(.+) \((?:complain|enforce)\)$'
     with open('/proc/{}/attr/current'.format(str(pid)), "rb") as fh:
         aa_profile_status = str(fh.read().strip(), 'UTF-8')
         exe_path_match = re.match(enabled_aa_profile_re, aa_profile_status)
