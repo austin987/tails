@@ -91,7 +91,7 @@ const Extension = new Lang.Class({
     },
 
     _addSeparateButtons: function() {
-	this.statusMenu._actionsItem.actor.add(this._lockScreenButton, { expand: true, x_fill: false, x_align: St.Align.START });
+        this.statusMenu._actionsItem.actor.add(this._lockScreenButton, { expand: true, x_fill: false });
         this.statusMenu._actionsItem.actor.add(this._restartButton, { expand: true, x_fill: false });
         this.statusMenu._actionsItem.actor.add(this._poweroffButton, { expand: true, x_fill: false });
     },
