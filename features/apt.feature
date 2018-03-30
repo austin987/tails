@@ -5,6 +5,8 @@ Feature: Installing packages through APT
   I should be able to install packages using APT and Synaptic
   and all Internet traffic should flow only through Tor.
 
+  #14596
+  @fragile
   Scenario: APT sources are configured correctly
     Given a computer
     And I start Tails from DVD with network unplugged and I login
