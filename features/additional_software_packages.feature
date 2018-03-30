@@ -32,7 +32,7 @@ Feature: Additional software packages
     And the package "sslh" is installed
 
   #12586
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
