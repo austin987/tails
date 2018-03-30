@@ -12,6 +12,7 @@ Feature: Additional software packages
     Then I am notified I can not use ASP for "sslh"
     #And I can open the documentation from the notification link
 
+  @check_tor_leaks
   Scenario: I can set up and use ASP when I install a package in a Tails that has no persistent partition
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I set an administration password
@@ -30,6 +31,8 @@ Feature: Additional software packages
     And the additional software package installation service has started
     And the package "sslh" is installed
 
+  #12586
+  @check_tor_leaks @fragile
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -62,6 +65,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "sslh" is installed
 
+  @check_tor_leaks
   Scenario: Packages I install but not do not add to ASP are not automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -72,7 +76,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "sl" is not installed
 
- @fragile
+ @check_tor_leaks @fragile
   Scenario: Packages I have installed and added to ASP are upgraded when a network is available
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -108,7 +112,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" is not installed
 
-  @fragile
+  @check_tor_leaks @fragile
   Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -130,6 +134,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" is installed
 
+  @check_tor_leaks
   Scenario: I am notified when ASP fails to install a package
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
