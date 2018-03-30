@@ -36,28 +36,28 @@ end
 
 Then /^I am notified I can not use ASP for "([^"]*)"$/  do |package|
   title = "You could install #{package} automatically when starting Tails"
-  step "the \"#{title}\" notification is shown to the user"
+  step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
 Then /^I am notified that the installation succeeded$/  do
-    title = "Additional software installed successfully"
-    step "the \"#{title}\" notification is shown to the user"
+  title = "Additional software installed successfully"
+  step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
 Then /^I am notified the "([^"]*)" failed$/  do |service|
   case service
   when "ASP installation service"
     title = "The installation of your additional software failed"
-    step "the \"#{title}\" notification is shown to the user"
+    step "I see the \"#{title}\" notification after at most 300 seconds"
   when "ASP upgrade service"
     title = "The upgrade of your additional software failed"
-    step "the \"#{title}\" notification is shown to the user"
+    step "I see the \"#{title}\" notification after at most 300 seconds"
   end
 end
 
 Then /^I am proposed to create an ASP persistence for the "([^"]*)" package$/  do |package|
   title = "Add #{package} to your additional software?"
-  step "the \"#{title}\" notification is shown to the user"
+  step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
 Then /^I create the ASP persistence$/  do
@@ -93,7 +93,7 @@ When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|
   case action
   when "add"
     title = "Add #{package} to your additional software?"
-    step "the \"#{title}\" notification is shown to the user"
+    step "I see the \"#{title}\" notification after at most 300 seconds"
     case decision
     when "confirm"
       gnome_shell.child('Add to Persistent Storage', roleName: 'push button').click
@@ -106,7 +106,7 @@ When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|
     end
   when "remove"
     title = "Remove #{package} from your additional software?"
-    step "the \"#{title}\" notification is shown to the user"
+    step "I see the \"#{title}\" notification after at most 300 seconds"
     step "the ASP persistence is correctly configured for package \"#{package}\""
     case decision
     when "confirm"
