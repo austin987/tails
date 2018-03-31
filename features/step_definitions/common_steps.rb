@@ -247,13 +247,16 @@ Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   end
 end
 
-Given /^the computer (re)?boots Tails$/ do |reboot|
+Given /^the computer (re)?boots Tails( with genuine APT sources)?$/ do |reboot, keep_apt_sources|
   step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
   step 'I configure Tails to use a simulated Tor network'
+  # This is required to use APT in the test suite as explained in
+  # commit e2510fae79870ff724d190677ff3b228b2bf7eac
+  step 'I configure APT to use non-onion sources' if not keep_apt_sources
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
