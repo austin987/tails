@@ -475,7 +475,7 @@ Tag the release in Git
 
 	git tag -u "${TAILS_SIGNATURE_KEY:?}" \
 	  -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-	git push --tags origin "${RELEASE_BRANCH:?}"
+	git push origin "${TAG:?}" "${RELEASE_BRANCH:?}"
 
 (Pushing the tag is needed so that the APT repository is updated, and
 the Tails APT configuration works at build and boot time. It might be
@@ -572,8 +572,8 @@ suite should be ready, so it is time to:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-        git push --tags --force && \
-        git push origin "${RELEASE_BRANCH:?}"
+        git push origin "${RELEASE_BRANCH:?}" && \
+        git push --force origin "${TAG:?}"
 
    Note: for Jenkins to build the release you must push the release
    branch with its tip tagged. I.e. if you deviate from the above
