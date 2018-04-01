@@ -79,12 +79,33 @@ Then /^I (un)?install "(.+)" using apt$/ do |removal, package|
   end
 end
 
-When /^I install an old version "([^"]*)" of the "([^"]*)" package using apt$/  do |version, package|
-  pending # Write code here that turns the phrase above into concrete actions
+When /^I configure APT with a custom source for the old version of cowsay$/ do
+  apt_source = 'deb tor+http://deb.tails.boum.org/ asp-test-upgrade-cowsay main'
+  apt_pref = 'Package: cowsay
+Pin: release o=Tails,a=asp-test-upgrade-cowsay
+Pin-Priority: 999'
+  $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list', apt_source)
+  $vm.file_overwrite('/etc/apt/preferences.d/asp-test-upgrade-cowsay', apt_pref)
 end
 
-When /^the package "([^"]*)" installed version is(| newer than) "([^"]*)"$/  do |package, comparison, version|
-  pending # Write code here that turns the phrase above into concrete actions
+When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |version|
+  step 'I configure APT with a custom source for the old version of cowsay'
+  step 'I update APT using apt'
+  step 'I install "cowsay" using apt'
+  step "the package \"cowsay\" installed version is \"#{version}\""
+end
+
+When /^I remove the custom APT source for the old cowsay version$/ do
+  $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
+end
+
+When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"$/ do |package, newer_than, version|
+  current_version = $vm.execute("dpkg-query -W -f='${Version}' #{package}").stdout
+  if newer_than
+    $vm.execute_successfully("dpkg --compare-versions #{version} lt #{current_version}")
+  else
+    assert_equal(current_version, version)
+  end
 end
 
 When /^I start Synaptic$/ do

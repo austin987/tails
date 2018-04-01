@@ -121,10 +121,6 @@ When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|
   end
 end
 
-When /^I remove the APT source for the old cowsay version$/  do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
 Given /^I start the ASP GUI$/  do
   pending # Write code here that turns the phrase above into concrete actions
 end

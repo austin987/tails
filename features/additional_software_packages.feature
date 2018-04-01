@@ -81,22 +81,23 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     # This step installs an old cowsay from a custom APT source
-    When I install an old version "" of the "cowsay" package using apt
+    When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
     And I confirm when I am asked if I want to add "cowsay" to ASP configuration
-    # We have to remove the custom APT source so that cowsay gets updated at next boot
-    And I remove the APT source for the old cowsay version
     And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    And I start Tails from USB drive "__internal" with network unplugged
+    And I enable persistence
+    # We need to add back the custom APT source for the ASP install step, as it
+    # was not saved in persistence
+    And I configure APT with a custom source for the old version of cowsay
+    And I log in to a new session
     And the additional software package installation service has started
-    And the package "cowsay" installed version is ""
+    And the package "cowsay" installed version is "3.03+dfsg2-1"
+    # And then to remove it so that cowsay gets updated
+    And I remove the custom APT source for the old cowsay version
     And the network is plugged
     And Tor is ready
-    And all notifications have disappeared
-    And available upgrades have been checked
-    # XXX: AFAIK there's no user notification for the upgrade service
-    #Then I am notified that the installation succeeded
     Then the additional software package upgrade service has started
-    And the package "cowsay" installed version is newer than ""
+    And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
 
   @fragile
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
