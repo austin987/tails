@@ -1017,7 +1017,8 @@ and on the live wiki (even for a release candidate):
           "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
        cd && \
-       chmod -R go+rX "tails-amd64-${VERSION:?}" && \
+       chgrp -R debian-transmission "tails-amd64-${VERSION:?}" && \
+       chmod -R go+rX,g+w "tails-amd64-${VERSION:?}" && \
        mv \
           "tails-amd64-${VERSION:?}" \
           /var/lib/transmission-daemon/downloads/ && \
