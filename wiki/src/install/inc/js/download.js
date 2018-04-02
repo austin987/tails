@@ -132,6 +132,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     toggleDisplay(document.getElementsByClassName("no-js"), "hide");
     if (browser === "Firefox") {
+      if (version === 52) {
+        show(document.getElementById("broken-in-3-6"));
+      }
       if (version >= minVersion.firefox) {
         // Supported Firefox
         toggleDisplay(document.getElementsByClassName("supported-browser"), "show");
@@ -216,11 +219,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (result === "failed") {
       show(document.getElementById("verification-failed"));
-      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool")); // Try again with different mirrors
+      // Try again with different mirrors
+      toggleDisplay(document.getElementsByClassName("use-mirror-pool"), "hide");
+      toggleDisplay(document.getElementsByClassName("use-mirror-pool-on-retry"), "show");
+      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool-on-retry"));
     }
     else if (result === "failed-again") {
       show(document.getElementById("verification-failed-again"));
-      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool")); // Change mirrors in case people try again anyway
     }
   }
 

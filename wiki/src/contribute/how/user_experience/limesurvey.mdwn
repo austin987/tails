@@ -1,0 +1,63 @@
+[[!meta title="Survey platform"]]
+
+We have an installation of [LimeSurvey](https://limesurvey.org/) to
+create surveys:
+
+<https://survey.tails.boum.org/>
+
+Infrastructure
+==============
+
+Puppet configuration files:
+
+- <https://git-tails.immerda.ch/puppet-tails/tree/manifests/limesurvey.pp>
+- <https://git-tails.immerda.ch/puppet-tails/tree/files/limesurvey/sudo/limesurvey-admin>
+
+Git repositories:
+
+- *Upstream repo* in <https://github.com/LimeSurvey/LimeSurvey.git>.
+
+- *Updates repo* in */var/lib/limesurvey/* which is synced automatically
+  to the *upstream repo*.
+
+- *Production repo* in */var/www/limesurvey* which has the *update repo*
+  as origin.
+
+Updating LimeSurvey
+===================
+
+1. Read the release notes:
+
+   <https://github.com/LimeSurvey/LimeSurvey/blob/master/docs/release_notes.txt>.
+
+1. Connect to the platform:
+
+       ssh 7vz7psas6zqqdszg.onion
+
+1. Login as `www-data`:
+
+       sudo -u www-data bash
+
+1. Update the backup of the database in case things go wrong:
+
+       /usr/sbin/backupninja --now --debug --run /etc/backup.d/10.mysql  
+
+1. Fetch the changes from the *updates repo*:
+ 
+       git fetch origin
+
+1. Check the version number in the *production repo* and the *updates repo*:
+
+       git log master
+       git log origin/master
+
+1. Merge the *updates repo* (or the *upstream* repo) into the
+   *production repo*:
+
+       git merge $TAG
+
+1. Check the version in the footer of:
+
+   <https://survey.tails.boum.org/index.php/admin/index>
+
+   While doing so you might be prompted to apply database updates.
