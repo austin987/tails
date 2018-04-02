@@ -76,7 +76,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "sl" is not installed
 
- @check_tor_leaks @fragile
+ @check_tor_leaks
   Scenario: Packages I have installed and added to ASP are upgraded when a network is available
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
