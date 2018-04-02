@@ -475,7 +475,7 @@ Tag the release in Git
 
 	git tag -u "${TAILS_SIGNATURE_KEY:?}" \
 	  -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-	git push --tags origin "${RELEASE_BRANCH:?}"
+	git push origin "${TAG:?}" "${RELEASE_BRANCH:?}"
 
 (Pushing the tag is needed so that the APT repository is updated, and
 the Tails APT configuration works at build and boot time. It might be
@@ -572,8 +572,8 @@ suite should be ready, so it is time to:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-        git push --tags --force && \
-        git push origin "${RELEASE_BRANCH:?}"
+        git push origin "${RELEASE_BRANCH:?}" && \
+        git push --force origin "${TAG:?}"
 
    Note: for Jenkins to build the release you must push the release
    branch with its tip tagged. I.e. if you deviate from the above
@@ -832,7 +832,11 @@ Prepare upgrade-description files
            -type f -name upgrades.yml | \
            while read udf; do
                if [ -n "$(git status --porcelain "${udf:?}")" ]; then
-                   gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign "${udf:?}"
+                   for x in 1 2 3; do
+                       gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor \
+                           --detach-sign "${udf:?}" \
+                       && break
+                   done
                    mv --force "${udf:?}.asc" "${udf:?}.pgp"
                    ( \
                      cd ${IUK_CHECKOUT:?} && \
@@ -1013,7 +1017,8 @@ and on the live wiki (even for a release candidate):
           "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
        cd && \
-       chmod -R go+rX "tails-amd64-${VERSION:?}" && \
+       chgrp -R debian-transmission "tails-amd64-${VERSION:?}" && \
+       chmod -R go+rX,g+w "tails-amd64-${VERSION:?}" && \
        mv \
           "tails-amd64-${VERSION:?}" \
           /var/lib/transmission-daemon/downloads/ && \
@@ -1105,7 +1110,7 @@ Update the size of the ISO image in `inc/*`:
 
 Generate the expected signature verification output:
 
-      LANG=C TZ=UTC gpg --no-options --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+      LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
       sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
       "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
 

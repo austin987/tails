@@ -15,5 +15,5 @@ fi
 TPS_USER_STEALER=$(getent passwd 115 | awk -F ':' '{print $1}')
 if [ -n "$TPS_USER_STEALER" ]; then
    usermod --uid 150 "$TPS_USER_STEALER"
-   find / -wholename /proc -prune -o \( \! -type l -a -gid 115 -exec chgrp 150 '{}' \; \)
+   find / -wholename /proc -prune -o \( \! -type l -a -uid 115 -exec chown 150 '{}' \; \)
 fi
