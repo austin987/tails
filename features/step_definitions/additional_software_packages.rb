@@ -121,12 +121,15 @@ When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|
   end
 end
 
-Given /^I start the ASP GUI$/  do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
 Given /^I remove "([^"]*)" from the list of ASP packages$/  do |package|
-  pending # Write code here that turns the phrase above into concrete actions
+  @asp_gui = Dogtail::Application.new('tails-additional-software-config')
+  installed_package = @asp_gui.child(package, roleName: 'label')
+  installed_package.parent.parent.child('Close', roleName: 'push button').click
+  @asp_gui.child('Question', roleName: 'alert').button('Remove').click
+  deal_with_polkit_prompt(@sudo_password)
+  try_for(120) do
+    step "\"#{package}\" is not part of ASP persistence configuration"
+  end
 end
 
 When /^I prepare the ASP upgrade process to fail$/  do

@@ -99,14 +99,12 @@ Feature: Additional software packages
     Then the additional software package upgrade service has started
     And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
 
-  @fragile
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     And the additional software package installation service has started
-    And I am notified that the installation succeeded
     And the package "cowsay" is installed
-    And I start the ASP GUI
+    And I start "Additional Software" via GNOME Activities Overview
     And I remove "cowsay" from the list of ASP packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
