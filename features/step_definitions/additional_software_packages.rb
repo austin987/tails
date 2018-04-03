@@ -139,3 +139,14 @@ end
 When /^I remove the "([^"]*)" deb file from the APT cache$/  do |package|
   $vm.execute("rm -f /live/persistence/TailsData_unlocked/apt/cache/#{package}*.deb")
 end
+
+Then /^I can open the documentation from the notification link$/  do
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  gnome_shell.child('Documentation', roleName: 'push button').click
+  # For some reason the below two steps fail. Dogtail can not find the Firefox
+  # application.
+  #try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
+  #step '"Install from another Tails" has loaded in the Tor Browser'
+  # So instead let's try to find the title of the page with Sikuli.
+  @screen.wait('ASPDocumentationInstallCloning', 120)
+end
