@@ -31,6 +31,15 @@ Feature: Additional software packages
     And the additional software package installation service has started
     And the package "sslh" is installed
 
+  @check_tor_leaks
+  Scenario: I can install packages in a Tails session with locked down persistence without being annoyed by ASP
+    Given a computer
+    And I start Tails from USB drive "__internal" and I login with an administration password
+    And I update APT using apt
+    When I install "cowsay" using apt
+    Then ASP has been started for "cowsay" and shuts up because the persistence is locked
+    And the package "cowsay" is installed
+
   #12586
   @check_tor_leaks
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed

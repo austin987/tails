@@ -150,3 +150,10 @@ Then /^I can open the documentation from the notification link$/  do
   # So instead let's try to find the title of the page with Sikuli.
   @screen.wait('ASPDocumentationInstallCloning', 120)
 end
+
+Then /^ASP has been started for "([^"]*)" and shuts up because the persistence is locked$/ do |package|
+  asp_logs = '/run/live-additional-software/log'
+  assert(!$vm.file_empty?(asp_logs))
+  try_for(60) { $vm.execute("grep #{package} #{asp_logs}").success? }
+  try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
+end
