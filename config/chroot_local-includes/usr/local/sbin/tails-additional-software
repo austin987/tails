@@ -17,14 +17,17 @@ from tailslib.additionalsoftware.config import (
     add_additional_packages,
     get_additional_packages,
     get_packages_list_path,
-    get_persistence_path,
     remove_additional_packages,
     PERSISTENCE_DIR)
+
+from tailslib.persistence import (
+    has_unlocked_persistence,
+    has_persistence,
+    is_tails_media_writable)
 
 _ = gettext.gettext
 
 LIVE_USERNAME = "amnesia"
-PERSISTENCE_PARTITION = "/dev/disk/by-partlabel/TailsData"
 ASP_STATE_DIR = "/run/live-additional-software"
 ASP_STATE_PACKAGES = os.path.join(ASP_STATE_DIR, "packages")
 ASP_STATE_INSTALLER_ASKED = os.path.join(ASP_STATE_DIR, "installer-asked")
@@ -229,30 +232,6 @@ def _spawn_daemon(func):
 
     # do stuff
     func()
-
-
-def has_persistence():
-    """Return true iff PERSISTENCE_PARTITION exists."""
-    return os.path.exists(PERSISTENCE_PARTITION)
-
-
-def has_unlocked_persistence(search_new_persistence=False):
-    """Return true iff a persistence directory exists.
-
-    The search_new_persistence argument is passed to get_persistence_path.
-    """
-    try:
-        get_persistence_path(search_new_persistence)
-    except FileNotFoundError:
-        return False
-    else:
-        return True
-
-
-def is_tails_media_writable():
-    """Return true iff tails is started from a writable media."""
-    return not subprocess.run(
-        "/usr/local/lib/tails-boot-device-can-have-persistence").returncode
 
 
 def has_additional_packages_list(search_new_persistence=False):
