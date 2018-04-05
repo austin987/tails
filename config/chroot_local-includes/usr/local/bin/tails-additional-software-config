@@ -14,6 +14,11 @@ from gi.repository import Gio                               # NOQA: E402
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk                               # NOQA: E402
 
+from tailslib.persistence import (                          # NOQA: E402
+    has_unlocked_persistence,
+    has_persistence,
+    is_tails_media_writable)
+
 from tailslib.additionalsoftware.config import (            # NOQA: E402
     get_additional_packages,
     get_packages_list_path)
@@ -40,6 +45,7 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
         self.no_package_page = builder.get_object("no_package_page")
         self.package_list_page = builder.get_object("package_list_page")
         self.stack = builder.get_object("stack")
+        self.install_label = builder.get_object("install_label")
 
         self.listbox.set_header_func(self._listbox_update_header_func, None)
 
@@ -125,6 +131,29 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
             self.stack.set_visible_child(self.package_list_page)
         else:
             self.stack.set_visible_child(self.no_package_page)
+            if has_unlocked_persistence(search_new_persistence=True):
+                # The label from the UI file is good unmodified
+                pass
+            elif has_persistence():
+                self.install_label.set_markup(
+                    'To install new additional software, restart Tails with '
+                    'your persistent storage unlocked and use '
+                    '<a href="synaptic.desktop">Synaptic Package Manager</a> '
+                    'or <a href="org.gnome.Terminal.desktop">APT on the '
+                    'command line</a>')
+            elif is_tails_media_writable():
+                self.install_label.set_markup(
+                    'To install new additional software, '
+                    '<a href="tails-persistence-setup.desktop">create a '
+                    'persistent storage</a> and use '
+                    '<a href="synaptic.desktop">Synaptic Package Manager</a> '
+                    'or <a href="org.gnome.Terminal.desktop">APT on the '
+                    'command line</a>')
+            else:   # It's impossible to have a persistent storage
+                self.install_label.set_markup(
+                    'To do so, you need to start Tails from a USB stick '
+                    'installed using <a href="tails-installer.desktop">'
+                    'Tails installer </a>')
 
 
 class ASPConfigApplication(Gtk.Application):
