@@ -1,0 +1,44 @@
+#! /bin/sh
+
+set -e
+set -u
+
+echo "Building the aufs module"
+
+. /usr/share/amnesia/build/variables
+
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+ensure_hook_dependency_is_installed \
+    "linux-source-${KERNEL_SOURCE_VERSION}"
+
+# aufs build needs fs/mount.h, which is in linux-source-* but not
+# in linux-headers-*, so we'll symlink it.
+tar --directory=/usr/src \
+    -xf "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}.tar."*
+
+arch=amd64
+ln -s \
+   "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}/fs" \
+   "/usr/src/linux-headers-${KERNEL_VERSION}-${arch}/fs"
+(
+   cd /usr/src/aufs4-standalone
+   perl -pi -E \
+        's{\A CONFIG_AUFS_DEBUG \s* = \s* y $}{CONFIG_AUFS_DEBUG =}xms' \
+        config.mk
+   KDIR="/usr/src/linux-headers-${KERNEL_VERSION}-${arch}"
+   make clean   KDIR="$KDIR"
+   make install KDIR="$KDIR"
+)
+
+for modules_dir in /lib/modules/*/extra ; do
+   if [ ! -f "${modules_dir}/aufs.ko" ]; then
+       echo "Can not find aufs.ko module in '${modules_dir}" >&2
+       exit 1
+   fi
+done
+
+depmod "${KERNEL_VERSION}-${arch}"
+rm -r /usr/src/aufs4-standalone
+rm -r "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}"

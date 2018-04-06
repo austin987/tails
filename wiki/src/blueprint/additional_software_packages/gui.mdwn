@@ -14,7 +14,7 @@ Goals and non-goals
     Synaptic, another graphical tool, or APT on the command line).
   - The persistent storage configuration.
 
-- Provide GNOME Packages as a better replacement for *Synaptic*.
+- Provide a better replacement for *Synaptic*.
   [[!tails_ticket 15262]]
 
 - We won't provide a way for people to specify which packages to install
@@ -25,9 +25,9 @@ Goals and non-goals
 Flow chart
 ==========
 
-<img src="https://labs.riseup.net/code/attachments/download/1886/asp-chart-installed.svg" height="auto" />
+<img src="https://labs.riseup.net/code/attachments/download/1925/asp-flow-installed.svg" height="auto" />
 
-<img src="https://labs.riseup.net/code/attachments/download/1887/asp-chart-removed.svg" height="auto" />
+<img src="https://labs.riseup.net/code/attachments/download/1926/asp-flow-removed.svg" height="auto" />
 
 User interface
 ==============
@@ -103,6 +103,14 @@ installing.
 
 <img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - installed.png"/>
 
+XXX: the configure button here is tricky to implement. Can we live without it?
+
+> People who see this notification already configured additional
+> software. It's here as a reminder of where the configuration that
+> triggers this notification is stored (and also as a shortcut).
+>
+> So yes, we can live without it.
+
 Notifications of failures
 -------------------------
 
@@ -114,6 +122,34 @@ Notifications of failures
 
 <img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/notification - upgrade failed.png"/>
 
+### When the configuration fails (addition to/removal from the package list)
+
+XXX: please define
+
+> I would need to understand better how and why it could fail... Is it
+> something that people can fix by themselves or merely revealing a bug
+> that we will have to fix in Tails?
+>
+> If it's about helping people to report bugs that we will have to fix
+> in Tails, then we could display:
+
+<pre>
+**Adding Mumble to your additional software failed**
+
+Please [[report an error to our help desk|doc/first_steps/bug_reporting]].
+</pre>
+
+<pre>
+**Removing Mumble from your additional software failed**
+
+Please [[report an error to our help desk|doc/first_steps/bug_reporting]].
+</pre>
+
+### When the *Additional Software* configuration GUI fails to do its work
+
+* started standalone (from the Applications menu or Overview)
+* started from the persistence wizard
+
 Additional Software
 -------------------
 
@@ -123,6 +159,9 @@ The list of additional software can be open from:
 - **Applications**&nbsp;▸ **Tails**&nbsp;▸ **Additional Software**
 
 Why both? See [[!tails_ticket 5521]].
+
+But also when click on the gear button next to the **Additional
+Software** feature in the persistent storage settings.
 
 ### If there is no persistent storage
 
@@ -135,6 +174,11 @@ Why both? See [[!tails_ticket 5521]].
 ### When some packages are already added
 
 <img src="https://raw.githubusercontent.com/sajolida/tails-wireframes/master/additional software/png/additional software.png"/>
+
+XXX: please define what happens when clicking on the links "Synaptic Package Manager" or "APT on the command line".
+
+> Clicking "Synaptic Package Manager" opens Synaptic.
+> Clicking "APT on the command line" opens Terminal.
 
 ### When removing a package
 
@@ -172,9 +216,9 @@ Persistent storage configuration
 
 ### Backend
 
-- MUST allow querying for the activation of features (ASP)
-  programmatically. For example, through the command line or a DBus
-  method call.
+- MUST allow programmatically activating the ASP persistence
+  feature when a persistent volume is unlocked. For example,
+  through the command line or a DBus method call.
 
 - MUST allow triggering persistence creation and then activate a feature
   (ASP) programmatically.
@@ -187,16 +231,30 @@ Implementation notes
 
 ## Components interaction
 
-<img src="https://labs.riseup.net/code/attachments/download/1877/asp-chart.svg" width="150%" height="auto" />
+<img src="https://labs.riseup.net/code/attachments/download/1924/asp-chart.svg" width="150%" height="auto" />
 
-<img src="https://labs.riseup.net/code/attachments/download/1878/asp-persistence-setup.svg" width="150%" height="auto" />
+<img src="https://labs.riseup.net/code/attachments/download/1927/asp-persistence-setup.svg" width="150%" height="auto" />
 
-[source](https://labs.riseup.net/code/attachments/download/1881/asp-chart.odg)
+[source](https://labs.riseup.net/code/attachments/download/1923/asp-chart.odg)
 
 ### IPC
 
 IPC between `tails-additional-software` (root backend) and `tails-additional-software-notify` (user session notification frontend, think about `notify-send` with actions support cf. https://developer.gnome.org/notification-spec/#basic-design) is really basic: display this notification and tell me the answer. I think the easiest way to do that is just to fork as amnesia with sudo, then check the returncode.
 
 IPC between `tails-additional-software` and `tails-persistence-setup` carries "Persistence-setup, please setup persistence with ASP" and "ASP, you can go on". It could be done the same way, but it may be worth having a persistence-setup DBus service on the system bus (which we already though when considering integrating it in the greeter).
+
+ - allow programmatically activating the ASP persistence
+   feature when a persistent volume is unlocked:
+
+           /usr/bin/tails-persistence-setup --no-gui \
+              --no-display-finished-message \
+              --force-enable-preset AdditionalSoftware
+
+ - allow triggering persistence creation and then activate a feature
+   (ASP) programmatically:
+
+           /usr/bin/tails-persistence-setup --step bootstrap \
+              --no-display-finished-message \
+              --force-enable-preset AdditionalSoftware
 
 IPC between `tails-additional-software-configuration` (user session configuration interface) and `tails-additional-software` carries the list entries to remove from ASP. It may be done via `sudo` or via DBus system service, but I don't think it's worth it.

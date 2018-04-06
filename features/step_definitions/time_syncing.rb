@@ -3,7 +3,7 @@
 # command over the remote shell and get the answer back, parsing and
 # post-processing of the result, etc.
 def max_time_drift
-  10
+  15
 end
 
 When /^I set the system time to "([^"]+)"$/ do |time|
@@ -61,9 +61,20 @@ Then /^the system clock is just past Tails' source date$/ do
   assert(diff > 0,
          "The system time (#{system_time}) is before the Tails " +
          "source date (#{source_time})")
-  assert(diff <= max_diff,
-         "The system time (#{system_time}) is more than #{max_diff} seconds " +
-         "past the source date (#{source_time})")
+
+  if diff <= max_diff
+    # In this case the only acceptable explanation is that systemd
+    # adjusted the time.
+    systemd_has_adjusted_time = $vm.execute(
+      "journalctl | grep 'System time before build time, advancing clock'"
+    ).success?
+    if ! systemd_has_adjusted_time
+      raise(
+        "The system time (#{system_time}) is more than #{max_diff} seconds " +
+        "past the source date (#{source_time}) and systemd was not involved"
+      )
+    end
+  end
 end
 
 Then /^Tails' hardware clock is close to the host system's time$/ do

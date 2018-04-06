@@ -141,7 +141,8 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     When I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
     Then "Tails - About" has loaded in the Tor Browser
-    And I can print the current page as "output.pdf" to the persistent Tor Browser directory
+    # XXX: re-enable once #15336 is fixed
+    # And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
   #11585
   @fragile

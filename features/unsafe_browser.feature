@@ -73,4 +73,5 @@ Feature: Browsing the web using the Unsafe Browser
   Scenario: Starting the Unsafe Browser without a network connection results in a complaint about no DNS server being configured
     Given I have started Tails from DVD without network and logged in
     When I start the Unsafe Browser
+    And I see and accept the Unsafe Browser start verification
     Then the Unsafe Browser complains that no DNS server is configured
