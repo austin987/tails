@@ -1,6 +1,8 @@
 @product @doc
 Feature: Tails documentation
 
+  #15514
+  @fragile
   Scenario: The Tails documentation launcher on the desktop works when offline
     Given I have started Tails from DVD without network and logged in
     When I double-click on the Tails documentation launcher on the desktop
