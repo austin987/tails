@@ -8,6 +8,8 @@ Feature: Tails documentation
     When I double-click on the Tails documentation launcher on the desktop
     Then the documentation viewer opens the "Getting started" page
 
+  #15514
+  @fragile
   Scenario: The Tails documentation launcher on the desktop works when online
     Given I have started Tails from DVD and logged in and the network is connected
     When I double-click on the Tails documentation launcher on the desktop
