@@ -6,6 +6,8 @@ The document can also list candidate clients together with some indication where
 
 TODO: Would a pair of two separate client (XMPP and IRC) also be okay, or are we only looking for a single client that can do both? In fact, it is not even clear if Tails needs to contain an IRC client at all, after #tails and #tails-dev have been moved to XMPP.
 
+[[!toc levels=3]]
+
 # Requirements
 
 **Note**: the key words "MUST", "MUST NOT", "REQUIRED", "SHALL", 
@@ -73,34 +75,6 @@ The client must support SASL authentication.
 
 # Candidate alternatives 
 
-## Tor Messenger ([[!tails_ticket 8577]])
-
-* Documentation, downloads and tickets in Tor's [Trac](https://trac.torproject.org/projects/tor/wiki/doc/TorMessenger)
-* Satisfies all our requirements (listed above, as of commit
-  `8e3157d5f4cd7894bca21adf6b95a6b49d9beb01`) except the TODO about
-  StartTLS (I bet it has the code for it though, since Thunderbird
-  supports it, but I in the GUI there is only "Enable SSL" as options
-  for IRC and XMPP).
-* The GUI is very similar to Pidgin's, which might be a bonus point
-  since we are looking for a "Pidgin replacement".
-* It has support for "temporary XMPP accounts" that require no
-  registration (no user input!) which would be useful for our support
-  channel (see [[!tails_ticket 11307]]).
-* Tor Messenger provides Linux packages but is not in Debian :(
-* FWIW: Tor Messenger got 30K USD funding in 2017!
-* FWIW: anonym has been happy using it exclusively for chatting since
-  September, 2016.
-* _Instantbird_ (on which _Tor Messenger_ is based) is dead upstream
-  and is meant to be
-  [replaced by future improvements in _Thunderbird_'s chat features](http://blog.queze.net/post/2017/10/18/Thunderbird-is-the-next-version-of-Instantbird)
-  (although _Thunderbird_'s future is unclear as well). To follow
-  along, subscribe to the [[!mozbug 1409891 desc="meta tracking bug"]]
-  and the ones it depends on. The _Tor Messenger_ developers
-  intend to
-  [follow suit](https://lists.torproject.org/pipermail/tor-project/2017-October/001521.html)
-  and create a _Tor Communicator_ bundle based on _Thunderbird_, that
-  would handle both email and chat.
-
 ## CoyIM (based on xmpp-client) ([[!tails_ticket 8574]])
 
 * [Homepage](https://coy.im/)
@@ -132,3 +106,35 @@ People from Security-in-a-Box have used it successfully in Tails.
 
 Gajim ships with a plugin called "plugin installer" which allows a user to download new plugins. This sounds suspicious for security, because plugins are pieces of code running with full privilege. The implementation in Debian use unverified TLS connection, which is very very open to MITM. The development version has switched to verified HTTPS connection and is trying to make it more robust.
 However, I think that Tails should not ship this plugin at all: it allows a user to download code without needing sudo. We could work debian-side to separate gajim-plugininstaller in a separate package so that Tails can choose not to install it?
+
+## No longer viable
+
+### Tor Messenger ([[!tails_ticket 8577]])
+
+Tor Messenger is no more: https://blog.torproject.org/sunsetting-tor-messenger
+
+* Documentation, downloads and tickets in Tor's [Trac](https://trac.torproject.org/projects/tor/wiki/doc/TorMessenger)
+* Satisfies all our requirements (listed above, as of commit
+  `8e3157d5f4cd7894bca21adf6b95a6b49d9beb01`) except the TODO about
+  StartTLS (I bet it has the code for it though, since Thunderbird
+  supports it, but I in the GUI there is only "Enable SSL" as options
+  for IRC and XMPP).
+* The GUI is very similar to Pidgin's, which might be a bonus point
+  since we are looking for a "Pidgin replacement".
+* It has support for "temporary XMPP accounts" that require no
+  registration (no user input!) which would be useful for our support
+  channel (see [[!tails_ticket 11307]]).
+* Tor Messenger provides Linux packages but is not in Debian :(
+* FWIW: Tor Messenger got 30K USD funding in 2017!
+* FWIW: anonym has been happy using it exclusively for chatting since
+  September, 2016.
+* _Instantbird_ (on which _Tor Messenger_ is based) is dead upstream
+  and is meant to be
+  [replaced by future improvements in _Thunderbird_'s chat features](http://blog.queze.net/post/2017/10/18/Thunderbird-is-the-next-version-of-Instantbird)
+  (although _Thunderbird_'s future is unclear as well). To follow
+  along, subscribe to the [[!mozbug 1409891 desc="meta tracking bug"]]
+  and the ones it depends on. The _Tor Messenger_ developers
+  intend to
+  [follow suit](https://lists.torproject.org/pipermail/tor-project/2017-October/001521.html)
+  and create a _Tor Communicator_ bundle based on _Thunderbird_, that
+  would handle both email and chat.
