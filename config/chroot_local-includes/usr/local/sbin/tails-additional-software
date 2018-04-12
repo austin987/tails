@@ -169,12 +169,12 @@ def _notify_failure(summary, details=None):
     """
     if details:
         details = _("{details} Please check your list of additional "
-                    "software packages or read the system log to "
+                    "software or read the system log to "
                     "understand the problem.").format(details=details)
 
     else:
         details = _("Please check your list of additional "
-                    "software packages or read the system log to "
+                    "software or read the system log to "
                     "understand the problem.").format(details=details)
 
     action_clicked = _notify(summary, details, _("Show log"), _("Configure"),
@@ -296,7 +296,7 @@ def handle_installed_packages(packages):
         if _notify(_("Add {packages} to your additional software?").format(
                     packages=" ".join(packages)),
                    _("To install it automatically from your persistent "
-                     "storage every time you start Tails"),
+                     "storage when starting Tails"),
                    _("Add to Persistent Storage"),
                    _("Install only once"),
                    urgent=True):
@@ -528,7 +528,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
     installing_notification_id = _notify(
             _("Installing your additional software from persistent "
               "storage..."),
-            _("This can take several minutes..."),
+            _("This can take several minutes."),
             return_id=True)
     logging.info("Will install the following packages: %s"
                  % " ".join(packages))
@@ -573,13 +573,17 @@ def upgrade_additional_packages():
     if apt_get_returncode:
         logging.warn("Warning: the update failed.")
         _notify_failure(_("The upgrade of your additional software failed"),
-                        _("The check for upgrades failed."))
+                        _("Please check your network connection, "
+                          "restart Tails, or read the system log to "
+                          "understand the problem."))
         return False
     if install_additional_packages(ignore_old_apt_lists=True):
         logging.info("The upgrade was successful.")
     else:
         _notify_failure(_("The upgrade of your additional software failed"),
-                        _("The upgrade failed."))
+                        _("Please check your network connection, "
+                          "restart Tails, or read the system log to "
+                          "understand the problem."))
         return False
 
     # We now know that the APT packages cache is up-to-date wrt. the APT lists,
