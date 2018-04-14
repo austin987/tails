@@ -49,7 +49,8 @@ def persistent_volumes_mountpoints
 end
 
 def recover_from_upgrader_failure
-    $vm.execute('killall tails-upgrade-frontend tails-upgrade-frontend-wrapper zenity')
+    $vm.execute('pkill --full tails-upgrade-frontend-wrapper')
+    $vm.execute('killall tails-upgrade-frontend zenity')
     # Do not sleep when retrying
     $vm.execute_successfully('/usr/local/bin/tails-upgrade-frontend-wrapper --no-wait')
     $vm.spawn('tails-upgrade-frontend-wrapper', user: LIVE_USER)
