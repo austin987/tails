@@ -136,6 +136,7 @@ Feature: Browsing the web using the Tor Browser
     And there is a GNOME bookmark for the persistent Tor Browser directory
     When I start the Tor Browser
     And I open the address "https://tails.boum.org/about" in the Tor Browser
+    And "Tails - About" has loaded in the Tor Browser
     And I can save the current page as "index.html" to the persistent Tor Browser directory
     And I close the Tor Browser
     When I start the Tor Browser
