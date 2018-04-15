@@ -124,7 +124,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser loads the startup page
     Then the Tor Browser has no plugins installed
 
-  #11592
+  #11592, #15336
   @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
