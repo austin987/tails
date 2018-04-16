@@ -99,9 +99,9 @@ document.addEventListener("DOMContentLoaded", function() {
          - https://developer.chrome.com/extensions/api_index
     */
     minVersion = {
-      "firefox": 45,  // First release with chrome.runtime.getManifest
+      "firefox": 52,  // Tor Browser when releasing Tails Verification 1.0
       "chrome": 22,   // First release with chrome.runtime.getManifest
-      "torbrowser": 6 // First release based on Firefox 45
+      "torbrowser": 7 // First release based on Firefox 52
     };
     document.getElementById("min-version-firefox").textContent = minVersion.firefox.toString();
     document.getElementById("min-version-chrome").textContent = minVersion.chrome.toString();
