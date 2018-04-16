@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function() {
     */
     minVersion = {
       "firefox": 52,  // Tor Browser when releasing Tails Verification 1.0
-      "chrome": 22,   // First release with chrome.runtime.getManifest
+      "chrome": 57,   // Version from Debian Jessie, the oldest I could test
       "torbrowser": 7 // First release based on Firefox 52
     };
     document.getElementById("min-version-firefox").textContent = minVersion.firefox.toString();
