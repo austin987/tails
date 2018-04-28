@@ -46,6 +46,7 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
         self.package_list_page = builder.get_object("package_list_page")
         self.stack = builder.get_object("stack")
         self.install_label = builder.get_object("install_label")
+        self.persistence_button = builder.get_object("persistence_button")
 
         self.listbox.set_header_func(self._listbox_update_header_func, None)
 
@@ -86,6 +87,11 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
             self.remove_asp_func(package_name)
         dialog.destroy()
 
+    def cb_persistence_button_clicked(self, button, data=None):
+        appinfo = Gio.DesktopAppInfo.new("tails-persistence-setup.desktop")
+        appinfo.launch()
+        return True
+
     def cb_window_show(self, window):
         self.update_packages_list()
 
@@ -103,6 +109,7 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
             dialog.run()
             dialog.destroy()
             self.hide()
+        self.persistence_button.set_visible(False)
         if packages:
             self.listbox.foreach(lambda widget, data: widget.destroy(), None)
             for package_name, package_description in packages:
@@ -148,24 +155,24 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
                 pass
             elif has_persistence():
                 self.install_label.set_markup(
-                    'To install new additional software, restart Tails with '
-                    'your persistent storage unlocked and use '
+                    'To do so, unlock your persistent storage and '
+                    'install some software using '
                     '<a href="synaptic.desktop">Synaptic Package Manager</a> '
                     'or <a href="org.gnome.Terminal.desktop">APT on the '
-                    'command line</a>')
+                    'command line</a>.')
             elif is_tails_media_writable():
+                self.persistence_button.set_visible(True)
                 self.install_label.set_markup(
-                    'To install new additional software, '
-                    '<a href="tails-persistence-setup.desktop">create a '
-                    'persistent storage</a> and use '
+                    'To do so, create a persistent storage and install some '
+                    'software using'
                     '<a href="synaptic.desktop">Synaptic Package Manager</a> '
                     'or <a href="org.gnome.Terminal.desktop">APT on the '
-                    'command line</a>')
+                    'command line</a>.')
             else:   # It's impossible to have a persistent storage
                 self.install_label.set_markup(
-                    'To do so, you need to start Tails from a USB stick '
-                    'installed using <a href="tails-installer.desktop">'
-                    'Tails installer </a>')
+                    'To do so, install Tails on a USB stick using '
+                    '<a href="tails-installer.desktop">Tails Installer</a> '
+                    'and create a persistent storage.')
 
 
 class ASPConfigApplication(Gtk.Application):
