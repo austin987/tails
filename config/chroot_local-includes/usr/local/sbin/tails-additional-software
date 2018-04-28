@@ -25,7 +25,10 @@ from tailslib.persistence import (
     has_unlocked_persistence,
     has_persistence,
     is_tails_media_writable,
+    launch_persistence_setup,
     PERSISTENCE_DIR)
+
+from tailslib.utils import launch_x_application
 
 _ = gettext.gettext
 
@@ -66,45 +69,6 @@ def _launch_apt_get(specific_args):
     if apt_get.returncode:
         logging.warn("apt-get exited with returncode %i" % apt_get.returncode)
     return apt_get.returncode
-
-
-def _launch_x_application(username, command, *args):
-    """Launch an X application and wait for its completion."""
-
-    subprocess.run(
-        ["sudo", "-u", LIVE_USERNAME,
-         "xhost", "+SI:localuser:" + username],
-        stderr=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        check=True)
-
-    cmdline = ["sudo", "-u", username, command]
-    cmdline.extend(args)
-    try:
-        subprocess.run(cmdline, stderr=subprocess.PIPE, check=True,
-                       universal_newlines=True)
-    except subprocess.CalledProcessError as e:
-        logging.error("{command} returned with {returncode}".format(
-            command=command, returncode=e.returncode))
-        for line in e.stderr.splitlines():
-            logging.error(line)
-        raise
-    finally:
-        subprocess.run(
-            ["sudo", "-u", LIVE_USERNAME,
-             "xhost", "-SI:localuser:" + username],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            check=True)
-
-
-def _launch_persistence_setup(*args):
-    """Launch tails-persistence-setup and wait for its completion."""
-    TPS_USERNAME = "tails-persistence-setup"
-
-    _launch_x_application(TPS_USERNAME,
-                          "/usr/bin/tails-persistence-setup",
-                          *args)
 
 
 def _notify(title, body="", accept_label="", deny_label="",
@@ -373,9 +337,9 @@ def handle_removed_packages(packages):
 
 def setup_additional_packages():
     """Enable additional software in persistence."""
-    _launch_persistence_setup("--no-gui",
-                              "--no-display-finished-message",
-                              "--force-enable-preset", "AdditionalSoftware")
+    launch_persistence_setup("--no-gui",
+                             "--no-display-finished-message",
+                             "--force-enable-preset", "AdditionalSoftware")
 
 
 def create_persistence_and_setup_additional_packages(packages):
@@ -387,27 +351,27 @@ def create_persistence_and_setup_additional_packages(packages):
     packages should be a list of packages names.
     """
     logging.info("Creating new persistent volume")
-    _launch_persistence_setup("--step", "bootstrap",
-                              "--no-display-finished-message",
-                              "--force-enable-preset", "AdditionalSoftware")
+    launch_persistence_setup("--step", "bootstrap",
+                             "--no-display-finished-message",
+                             "--force-enable-preset", "AdditionalSoftware")
     add_additional_packages(packages, search_new_persistence=True)
     # show persistence configuration
-    _launch_persistence_setup()
+    launch_persistence_setup()
     # APT lists and APT archive cache will be synchronized at shutdown by
     # tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
 
 
 def show_configuration_window():
     """Show additional packages configuration window."""
-    _launch_x_application(LIVE_USERNAME,
-                          "/usr/local/bin/tails-additional-software-config")
+    launch_x_application(LIVE_USERNAME,
+                         "/usr/local/bin/tails-additional-software-config")
 
 
 def show_system_log():
     """Show additional packages configuration window."""
-    _launch_x_application(LIVE_USERNAME,
-                          "/usr/bin/gedit",
-                          ASP_LOG_FILE)
+    launch_x_application(LIVE_USERNAME,
+                         "/usr/bin/gedit",
+                         ASP_LOG_FILE)
 
 
 def apt_hook_pre():
