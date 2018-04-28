@@ -89,8 +89,9 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
         dialog.destroy()
 
     def cb_persistence_button_clicked(self, button, data=None):
-        appinfo = Gio.DesktopAppInfo.new("tails-persistence-setup.desktop")
-        appinfo.launch()
+        launch_persistence_setup("--no-gui",
+                                 "--no-display-finished-message",
+                                 "--force-enable-preset", "AdditionalSoftware")
         return True
 
     def cb_window_show(self, window):
