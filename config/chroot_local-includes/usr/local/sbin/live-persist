@@ -242,8 +242,8 @@ persistence_conf_file_has_correct_access_rights ()
 {
 	local conf="$1"
 	local expected_perms="$2"
-	local expected_user="$3"
-	local expected_group="$4"
+	local expected_user=tails-persistence-setup
+	local expected_group=tails-persistence-setup
 	local expected_acl=""
 
 	if [ $(stat -c %U "$conf") != "$expected_user" ]
@@ -376,8 +376,7 @@ activate_volumes ()
 	# configuration files with wrong access rights.
 	for f in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
-		if ! persistence_conf_file_has_correct_access_rights "$f" "600" \
-				"tails-persistence-setup" "tails-persistence-setup"
+		if ! persistence_conf_file_has_correct_access_rights "$f" "600"
 		then
 			warning "Disabling '$f', that has unsafe access rights"
 			disable_and_create_empty_persistence_conf_file "$f"
@@ -385,8 +384,7 @@ activate_volumes ()
 	done
 	for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
 	do
-		if ! persistence_conf_file_has_correct_access_rights "$f" "640" \
-				"tails-persistence-setup" "amnesia"
+		if ! persistence_conf_file_has_correct_access_rights "$f" "644"
 		then
 			warning "Disabling '$f', that has unsafe access rights"
 			disable_and_create_empty_persistence_conf_file "$f"
