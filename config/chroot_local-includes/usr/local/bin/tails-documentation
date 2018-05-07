@@ -37,18 +37,19 @@ class DocumentationWindow(tailsgreeter.gui.GreeterHelpWindow):
             "load-changed",
             lambda webview, e: back_button.set_visible(webview.can_go_back())
         )
-        self.find_entry = Gtk.Entry()
+        self.find_entry = Gtk.Entry(visible=False, no_show_all=True)
         self.find_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                                 "search")
         self.find_entry.connect("activate", self.find_forward)
         self.find_entry.connect("changed", self.find_forward)
         self.find_entry.connect("key-press-event", self.cb_find_entry_key_press)
         headerbar.pack_end(self.find_entry)
-        self.find_entry.show()
-        accelgroup = Gtk.AccelGroup.new()
-        self.add_accel_group(accelgroup)
-        accelgroup.connect(Gdk.KEY_f, Gdk.ModifierType.CONTROL_MASK, 0,
-                           lambda *args: self.find_entry.grab_focus())
+        self.connect("key-press-event", self.cb_window_key_press)
+
+    def cb_window_key_press(self, window, event):
+        if event.keyval == Gdk.KEY_f and event.state & Gdk.ModifierType.CONTROL_MASK:
+            self.find_entry.show()
+            self.find_entry.grab_focus()
 
     def cb_load_started(self, webview, ressource, request):
         super().cb_load_started(webview, ressource, request)
@@ -72,6 +73,7 @@ class DocumentationWindow(tailsgreeter.gui.GreeterHelpWindow):
         find_controller = self.webview.get_find_controller()
         find_controller.search_finish()
         self.find_entry.set_text('')
+        self.find_entry.hide()
         self.webview.grab_focus()
 
     def cb_find_entry_key_press(self, entry, event, user_data=None):
