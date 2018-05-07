@@ -198,7 +198,7 @@ Mozilla SSL Configuration Generator</a>.
 Download a snapshot of the current Tails files:
 
 	rsync -rt --delete \
-	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
+	         mirrors.rsync.tails.boum.org::amnesia-archive /var/www/YOUR_PATH/
 
 <a id="cron"></a>
 
@@ -208,7 +208,7 @@ Your mirror should sync every hour + a random time (maximum 40 minutes).
 Use `cron` or equivalent to schedule the same `rsync` command
 as above.
 
-    0 * * * * root sleep $(perl -E 'print int(rand(2400))') && rsync -rt --delete rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
+    0 * * * * root sleep $(perl -E 'print int(rand(2400))') && flock -n /var/run/lock/tails-mirror-rsync rsync -rt --delete mirrors.rsync.tails.boum.org::amnesia-archive /var/www/YOUR_PATH/
 
 You can now [[ask for your mirror to be added to the pool|mirror#http-pool]].
 
