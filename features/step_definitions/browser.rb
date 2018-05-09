@@ -10,7 +10,7 @@ When /^I successfully start the Unsafe Browser$/ do
   step "the Unsafe Browser has started"
 end
 
-When /^I close the Unsafe Browser$/ do
+When /^I close the (?:Tor|Unsafe) Browser$/ do
   @screen.type("q", Sikuli::KeyModifier.CTRL)
 end
 
