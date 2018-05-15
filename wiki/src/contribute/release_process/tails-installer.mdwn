@@ -16,19 +16,19 @@ tails-installer.
 
 The `master` branch must always be the one that targets current Tails
 and possibly *also* earlier Debian releases. At the moment it supports
-Debian Jessie, Stretch, Buster and Sid.
+Debian Stretch, Buster and Sid.
 
 But that's not enough, since we also need to put releases out with code
 that works on current Debian testing/unstable. Thus, we maintain several upstream
 release branches in parallel, each with their own major version number:
 
- * for work and releases that target Jessie and Stretch (and, as long
+ * for work and releases that target Stretch (and, as long
    as compatible, that target Debian testing/unstable as well):
    * branch = `master`
    * version = `5.*`
    * tag = `tails-installer_5.*`
 
-Once we can't support both Jessie, Stretch and Debian testing/unstable
+Once we can't support both Stretch and Debian testing/unstable
 with the same codebase anymore, we'll fork a new upstream release
 branch that targets Debian testing, it'll be called
 `feature/$codename`, use version `6.*`, etc.
@@ -50,7 +50,7 @@ targeted at current Tails, as said above. More specifically:
   in practice this is something like `debian/5.3+dfsg-1`.
 * The `debian/$codename-backports` branch is used to prepare packages
   that we upload to the official backports repository for Debian `$codename`.
-  E.g. here we want to have `debian/jessie-backports` soon after the initially
+  E.g. here we want to have `debian/stretch-backports` soon after the initially
   uploaded package reaches Debian testing. The tags on this branch are
   also called `debian/$package_version`. In practice this is something
   like `debian/5.3+dfsg-1~bpo8+1`.
@@ -64,9 +64,8 @@ targeted at current Tails, as said above. More specifically:
 * The `upstream/4.x+dfsg`, `upstream/5.x+dfsg`, etc. branches are what
   we tell `gbp` to use as its "upstream" branch. Make sure to check
   them out when setting up the repository for the first time.
-* For Ubuntu, we want to support the current Ubuntu version (currently
-  `yakkety`), the upcoming version (currently `zesty`), and the
-  current LTS (currently `xenial`).
+* For Ubuntu, we want to support the current Ubuntu version, the
+  upcoming version, and the current LTS: [[!wikipedia Ubuntu version history]].
   We do not maintain any Git branches related to Ubuntu releases, as
   simply the changelog entries are modified.
 
@@ -227,7 +226,7 @@ If you are a member of the Debian pkg-privacy team
 
 Add the remote:
 
-    git remote add debian ssh://git.debian.org/git/pkg-privacy/packages/tails-installer.git
+    git remote add debian git@salsa.debian.org:pkg-privacy-team/tails-installer.git
 
 Then push:
 
@@ -254,7 +253,7 @@ Update the Debian package
 -------------------------
 
 This assumes that the latest upstream release has been imported into
-a `tails/master` already.
+the `tails/master` branch already.
 
 And then, a maintainer of `tails-installer` in Debian updates the
 package in sid accordingly, for example:
@@ -266,14 +265,14 @@ package in sid accordingly, for example:
 * have gbp create a `debian/5.3+dfsg-1` tag
 * push the Debian packaging branch (`debian/sid`) and the new tag
 
-Example for a backport to Jessie:
+Example for a backport to Stretch:
 
-* check out the `debian/jessie-backports` branch
+* check out the `debian/stretch-backports` branch
 * merge the `debian/sid` branch
-* `dch --bpo` to bump version to `5.3+dfsg-1~bpo8+1`
-* build, test and upload to jessie-backports
-* have gbp create a `debian/5.3+dfsg-1_bpo8+1` tag
-* push the Debian packaging branch (`debian/jessie-backports`) and the new tag
+* `dch --bpo` to bump version to `5.3+dfsg-1~bpo9+1`
+* build, test and upload to stretch-backports
+* have gbp create a `debian/5.3+dfsg-1_bpo9+1` tag
+* push the Debian packaging branch (`debian/stretch-backports`) and the new tag
 
 Upload a package to our Ubuntu PPA
 ----------------------------------
@@ -293,7 +292,7 @@ You'll need to configure the dput tool to upload to the PPA and put into
 
 * checkout the `debian/sid` branch
   to build a package for the next Ubuntu release or checkout the
-  `debian/jessie-backports` branch to build a package for the
+  `debian/stretch-backports` branch to build a package for the
   current Ubuntu version or current LTS.
 * bump version to `5.3+dfsg-0ubuntu1~$codename` using `dch -i`
   where `$codename` is the name of the target Ubuntu distribution.
