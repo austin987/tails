@@ -152,3 +152,22 @@ can be fed back to Weblate by cherry picking.
 On the long term, we will automate this process by
 - pulling automatically from tails/master and applying a merge strategy
   for po [[!tails_ticket ]]
+
+
+Weblate installation and maintenance - a hybrid approach
+--------------------------------------------------------
+
+The Tails infrastructure uses Puppet to make it easier to enforce and replicate system configuration, and usually relies on Debian packages to ensure stability of the system. But the effort to maintain a stable system somehow conflicts with installing and maintaining Weblate, a Python web application, which requires using up-to-date versions of Weblate itself and of its dependencies.
+
+Having that in mind, and taking into account that we already started using Docker to replicate the translation server environment to experiment with upgrading and running an up-to-date version of Weblate, it can be a good trade-off to use Puppet to provide an environment to run Docker, and to use a Docker container to actually run an up-to-date Weblate installation.
+
+From the present state of the Docker image, which currently uses (slightly modified/updated) Puppet code to configure the environment and then sets up Weblate, the following steps could be taken to achieve a new service configuration as described above:
+
+* Move the database to a separate Docker service.
+* Remove all Puppet code from the Docker image: inherit from the simplest possible Docker image and setup a Weblate Docker image with all needed dependencies.
+* Modify the Puppet code to account for setting up an environment that has Docker installed and that runs the Weblate Docker image.
+* Set up persistence for the Weblate git repository and configuration.
+* Set up persistence and backups for the database service.
+* Update the Puppet code to run tmserver (if/when it's needed -- latest Weblate accounts for basic suggestions using its own database).
+
+After that, we should have a clear separation between stable infrastructure maintenance using Debian+Puppet in one side and up-to-date Weblate application deployment using Docker in the other side. The Docker image would have to be constantly maintained to account for Weblate upgrades, but that should be easier cleaner than deploying Weblate directly in the server.
