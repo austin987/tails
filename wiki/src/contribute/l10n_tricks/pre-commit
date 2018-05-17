@@ -21,7 +21,7 @@ path=$(git rev-parse --show-toplevel)
 exec 1>&2
 
 # If we try to commit po files, check that they do not contain errors.
-if test $(git diff --ignore-submodules --name-only --exit-code -- . '*.po' $against |
+if test $(git diff --ignore-submodules --name-only --cached --exit-code -- . '*.po' $against |
     LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0 ; then
     if ! ${path}/./wiki/src/contribute/l10n_tricks/check_po.sh ; then
         echo
