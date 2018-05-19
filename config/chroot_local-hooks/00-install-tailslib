@@ -17,10 +17,6 @@ ensure_hook_dependency_is_installed python3-setuptools
     python3 setup.py install
 
     package_glob_pattern="/usr/local/lib/python3.*/dist-packages/Tailslib*.egg"
-    if [ ! -f ${package_glob_pattern} ]; then
-       echo "Cannot find Tailslib Python package \"${package_glob_pattern}\"" >&2
-       exit 1
-    fi
-    strip_nondeterminism_wrapper --type zip "$(realpath ${package_glob_pattern})" 2>/dev/null
+    strip_nondeterminism_wrapper --type zip ${package_glob_pattern}
 )
 rm -rf /tmp/pythonlib
