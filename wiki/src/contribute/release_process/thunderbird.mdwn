@@ -19,6 +19,7 @@ released:
 
     VERSION="52.3.0-4~deb9u1"
     TAG="debian/1%$(echo ${VERSION:?} | tr '~' '_')"
+    UPSTREAM_VERSION=$(echo ${VERSION:?} | perl -pi -E 's/-.*//')
 
 1. `git fetch && git fetch debian-upstream`
 
@@ -49,7 +50,7 @@ released:
 
           quilt push -a
 
-   2. Regardless of whether our  they do, clean up:
+   2. Regardless of whether our patches applied cleanly, clean up:
 
           quilt pop -a && rm -rf .pc
 
@@ -69,7 +70,7 @@ released:
 1. Then let's release a new version:
 
         TAILS_VERSION="1:${VERSION:?}.0tails1" && \
-        DISTRIBUTION="feature-thunderbird-${VERSION:?}" && \
+        DISTRIBUTION="bugfix-${TICKET:?}-thunderbird-${UPSTREAM_VERSION:?}" && \
         dch \
            --newversion "${TAILS_VERSION:?}" \
            --force-bad-version \
@@ -79,33 +80,10 @@ released:
         git commit debian/changelog \
             -m "document changes and release ${TAILS_VERSION:?}"
 
-1. Fetch the Debian sources to be used for the build:
-
-        THUNDERBIRD_SOURCES="$(mktemp -d)" && \
-        GIT_DIR="$(pwd)" && \
-        ( \
-        cd "${THUNDERBIRD_SOURCES:?}" && \
-        apt --download-only source thunderbird="1:${VERSION:?}" && \
-        mkdir -p "${GIT_DIR:?}/../tarballs/" && \
-        for tarball in thunderbird_*.orig*.tar.xz ; do
-           ln -s \
-              "${GIT_DIR:?}/../tarballs/$tarball" \
-              "${GIT_DIR:?}/../$tarball"
-        done
-        cp thunderbird_*.orig*.tar.xz "${GIT_DIR:?}/../tarballs/" \
-        ) && \
-        rm -rf "${THUNDERBIRD_SOURCES:?}"
-
-   Note: we cannot use the `pristine-tar` branch since Jessie builds
-   expect split .orig sources for l10n stuff, which is not the case in
-   Sid, which `pristine-tar` is made for. Or something like
-   this. Let's not waste time on investigating this.
-
 1. Build packages in a Stretch amd64 chroot:
 
         gbp buildpackage \
             --git-debian-branch=tails/stretch \
-            --git-no-pristine-tar \
             --git-export=WC
 
 1. Tag the new version:
@@ -115,7 +93,9 @@ released:
 
 1. Include all sources in the `.changes` file:
 
-        CHANGES_FILE="../thunderbird_$(echo "${TAILS_VERSION?}" | sed 's/^1://')_amd64.changes" && \
+        cd path/to/build/artifacts/directory && \
+        cp path/to/build-area/*${UPSTREAM_VERSION:?}*.orig*.tar.xz . && \
+        CHANGES_FILE="thunderbird_$(echo "${TAILS_VERSION:?}" | sed 's/^1://')_amd64.changes" && \
         changestool "${CHANGES_FILE:?}" includeallsources
 
 1. Due to [[!tails_ticket 11531]] we won't be able to push the tag
@@ -131,10 +111,13 @@ released:
 
 1. Git push and upload packages:
 
-        git push --follow-tags origin ${NEW_GBP_TAG:?} tails/stretch && \
-        debsign "${CHANGES_FILE:?}" && \
-        dupload --to tails "${CHANGES_FILE:?}"
+        git push --follow-tags origin \
+           ${NEW_GBP_TAG:?} \
+           tails/stretch \
+           upstream-52.x \
+           pristine-tar && \
+        (cd /path/to/build/artifacts && \
+         debsign "${CHANGES_FILE:?}" && \
+         dupload --to tails "${CHANGES_FILE:?}")
 
-   At the moment pushing `$GBP_TAG` may fail due to
-   [[!tails_ticket 11531]]. We'll just have to save these tags locally
-   until when it's solved, and then push...
+   Note: pushing some tags will fail due to [[!tails_ticket 11531]].
