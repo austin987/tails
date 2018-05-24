@@ -79,33 +79,10 @@ released:
         git commit debian/changelog \
             -m "document changes and release ${TAILS_VERSION:?}"
 
-1. Fetch the Debian sources to be used for the build:
-
-        THUNDERBIRD_SOURCES="$(mktemp -d)" && \
-        GIT_DIR="$(pwd)" && \
-        ( \
-        cd "${THUNDERBIRD_SOURCES:?}" && \
-        apt --download-only source thunderbird="1:${VERSION:?}" && \
-        mkdir -p "${GIT_DIR:?}/../tarballs/" && \
-        for tarball in thunderbird_*.orig*.tar.xz ; do
-           ln -s \
-              "${GIT_DIR:?}/../tarballs/$tarball" \
-              "${GIT_DIR:?}/../$tarball"
-        done
-        cp thunderbird_*.orig*.tar.xz "${GIT_DIR:?}/../tarballs/" \
-        ) && \
-        rm -rf "${THUNDERBIRD_SOURCES:?}"
-
-   Note: we cannot use the `pristine-tar` branch since Jessie builds
-   expect split .orig sources for l10n stuff, which is not the case in
-   Sid, which `pristine-tar` is made for. Or something like
-   this. Let's not waste time on investigating this.
-
 1. Build packages in a Stretch amd64 chroot:
 
         gbp buildpackage \
             --git-debian-branch=tails/stretch \
-            --git-no-pristine-tar \
             --git-export=WC
 
 1. Tag the new version:
