@@ -93,7 +93,9 @@ released:
 
 1. Include all sources in the `.changes` file:
 
-        CHANGES_FILE="../thunderbird_$(echo "${TAILS_VERSION:?}" | sed 's/^1://')_amd64.changes" && \
+        cd path/to/build/artifacts/directory && \
+        cp path/to/build-area/*${UPSTREAM_VERSION:?}*.orig*.tar.xz . && \
+        CHANGES_FILE="thunderbird_$(echo "${TAILS_VERSION:?}" | sed 's/^1://')_amd64.changes" && \
         changestool "${CHANGES_FILE:?}" includeallsources
 
 1. Due to [[!tails_ticket 11531]] we won't be able to push the tag
