@@ -111,9 +111,14 @@ released:
 
 1. Git push and upload packages:
 
-        git push --follow-tags origin ${NEW_GBP_TAG:?} tails/stretch && \
-        debsign "${CHANGES_FILE:?}" && \
-        dupload --to tails "${CHANGES_FILE:?}"
+        git push --follow-tags origin \
+           ${NEW_GBP_TAG:?} \
+           tails/stretch \
+           upstream-52.x \
+           pristine-tar && \
+        (cd /path/to/build/artifacts && \
+         debsign "${CHANGES_FILE:?}" && \
+         dupload --to tails "${CHANGES_FILE:?}")
 
    At the moment pushing `$GBP_TAG` may fail due to
    [[!tails_ticket 11531]]. We'll just have to save these tags locally
