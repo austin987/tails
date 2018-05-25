@@ -135,10 +135,12 @@ Feature: Browsing the web using the Tor Browser
     Then the persistent Tor Browser directory exists
     And there is a GNOME bookmark for the persistent Tor Browser directory
     When I start the Tor Browser
-    And the Tor Browser loads the startup page
+    And I open the address "https://tails.boum.org/about" in the Tor Browser
     And I can save the current page as "index.html" to the persistent Tor Browser directory
+    And I close the Tor Browser
+    When I start the Tor Browser
     When I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
-    Then I see "TorBrowserSavedStartupPage.png" after at most 10 seconds
+    Then "Tails - About" has loaded in the Tor Browser
     # XXX: re-enable once #15336 is fixed
     # And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
