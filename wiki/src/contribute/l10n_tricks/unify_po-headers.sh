@@ -27,17 +27,17 @@ find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
 # another option would be to call python/perl to get a reex that is easier to read.
 # python: '^.*<Key>:(.*\n)*.*\\n.*$'
 
-#unify Project-Id-Version
+# Unify Project-Id-Version
 find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
         | xargs -0 --max-procs="$CPUS" --max-args=64 -I {} \
 	sed -i -n '1h;1!H;${;g;s/[^\n]*Project-Id-Version: [^\\]*\\n[^\n]*/"Project-Id-Version: \\n"/g;p;}' {}
 
-#unify Language-Team
+# Unify Language-Team
 find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
         | xargs -0 --max-procs="$CPUS" --max-args=64 -I {} \
         sed -i -n '1h;1!H;${;g;s/[^\n]*Language-Team: [^\\]*\\n[^\n]*/"Language-Team: Tails translators <tails-l10n@boum.org>\\n"/g;p;}' {}
 
-#unify Last-Translator
+# Unify Last-Translator
 find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
         | xargs -0 --max-procs="$CPUS" --max-args=64 -I {} \
 	sed -i -n '1h;1!H;${;g;s/[^\n]*Last-Translator: [^\\]*\\n[^\n]*/"Last-Translator: Tails translators\\n"/g;p;}' {}
