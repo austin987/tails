@@ -20,10 +20,11 @@ path=$(git rev-parse --show-toplevel)
 # Redirect output to stderr.
 exec 1>&2
 
+POLIST=$(git diff --ignore-submodules --name-only --cached --exit-code --diff-filter=d -- '*.po' $against | tr '\n' ' ')
+
 # If we try to commit po files, check that they do not contain errors.
-if test $(git diff --ignore-submodules --name-only --cached --exit-code -- . '*.po' $against |
-    LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0 ; then
-    if ! ${path}/./wiki/src/contribute/l10n_tricks/check_po.sh ; then
+if ! [ -z  "$POLIST" ] ; then
+    if ! ${path}/./wiki/src/contribute/l10n_tricks/check_po.sh ${POLIST}; then
         echo
         echo "The po files you're trying to commit contain errors. Please fix them and try again."
         echo
