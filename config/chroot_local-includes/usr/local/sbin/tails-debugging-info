@@ -52,39 +52,39 @@ def main():
 
     """
 
-    debug_info = OrderedDict()
-    debug_info.update(debug_file('root', '/proc/cmdline'))
+    debug_info = []
+    debug_info.append(debug_file('root', '/proc/cmdline'))
 
     # General hardware and filesystems information
-    debug_info.update(debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer'))
-    debug_info.update(debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name'))
-    debug_info.update(debug_command('/usr/sbin/dmidecode', '-s', 'system-version'))
-    debug_info.update(debug_command('/usr/bin/lspci', '-nn'))
-    debug_info.update(debug_command('/bin/df', '--human-readable', '--print-type'))
-    debug_info.update(debug_command('/bin/mount', '--show-labels'))
-    debug_info.update(debug_command('/bin/lsmod'))
-    debug_info.update(debug_file('root', '/proc/asound/cards'))
-    debug_info.update(debug_file('root', '/proc/asound/devices'))
-    debug_info.update(debug_file('root', '/proc/asound/modules'))
+    debug_info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer'))
+    debug_info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name'))
+    debug_info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-version'))
+    debug_info.append(debug_command('/usr/bin/lspci', '-nn'))
+    debug_info.append(debug_command('/bin/df', '--human-readable', '--print-type'))
+    debug_info.append(debug_command('/bin/mount', '--show-labels'))
+    debug_info.append(debug_command('/bin/lsmod'))
+    debug_info.append(debug_file('root', '/proc/asound/cards'))
+    debug_info.append(debug_file('root', '/proc/asound/devices'))
+    debug_info.append(debug_file('root', '/proc/asound/modules'))
 
     # Miscellaneous configuration and log files
-    debug_info.update(debug_file('root', '/etc/X11/xorg.conf'))
-    debug_info.update(debug_file('Debian-gdm', '/var/log/gdm3/tails-greeter.errors'))
-    debug_info.update(debug_file('root', '/var/log/live/boot.log'))
-    debug_info.update(debug_file('root', '/var/log/live/config.log'))
-    debug_info.update(debug_file('root', '/var/lib/live/config/tails.physical_security'))
+    debug_info.append(debug_file('root', '/etc/X11/xorg.conf'))
+    debug_info.append(debug_file('Debian-gdm', '/var/log/gdm3/tails-greeter.errors'))
+    debug_info.append(debug_file('root', '/var/log/live/boot.log'))
+    debug_info.append(debug_file('root', '/var/log/live/config.log'))
+    debug_info.append(debug_file('root', '/var/lib/live/config/tails.physical_security'))
 
     # Persistence
-    debug_info.update(debug_file('root', '/var/lib/gdm3/tails.persistence'))
-    debug_info.update(debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/persistence.conf'))
-    debug_info.update(debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/live-additional-software.conf'))
-    debug_info.update(debug_directory('root', '/live/persistence/TailsData_unlocked/apt-sources.list.d'))
-    debug_info.update(debug_file('root', '/var/log/live-persist'))
+    debug_info.append(debug_file('root', '/var/lib/gdm3/tails.persistence'))
+    debug_info.append(debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/persistence.conf'))
+    debug_info.append(debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/live-additional-software.conf'))
+    debug_info.append(debug_directory('root', '/live/persistence/TailsData_unlocked/apt-sources.list.d'))
+    debug_info.append(debug_file('root', '/var/log/live-persist'))
 
     # The Journal
-    # debug_info.update(debug_command('/bin/journalctl', '--catalog', '--no-pager'))
+    debug_info.append(debug_command('/bin/journalctl', '--catalog', '--no-pager'))
 
-    print(json.dumps(debug_info, indent=4))
+    print(json.dumps(debug_info))
 
 
 def debug_command(command, *args):
@@ -93,8 +93,8 @@ def debug_command(command, *args):
     >>> debug_command('echo', 'foo')
     {'echo foo': 'foo'}
     """
-    return {'{}'.format(' '.join((command,) + args)):
-	    subprocess.check_output([command, *args]).decode().strip()}
+    command_output = subprocess.check_output([command, *args]).decode('UTF-8').strip().split('\n')
+    return {'{}'.format(' '.join((command,) + args)): command_output}
 
 
 def debug_file(user, filename):
