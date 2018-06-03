@@ -29,6 +29,12 @@ If any of these rules does not apply, the file cannot be added here
 safely and something is probably quite wrong and should be
 investigated carefully.
 
+>>> # run script
+>>> import sh
+>>> this_command = sh.Command(sys.argv[0])
+>>> this_command()
+<BLANKLINE>
+...
 """
 
 import json
@@ -50,50 +56,58 @@ os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
 def main():
     """Print debug information serialized as json.
 
+    >>> main()
+    <BLANKLINE>
+    ...
     """
 
-    debug_info = []
-    debug_info.append(debug_file('root', '/proc/cmdline'))
+    info = []
+    info.append(debug_file('root', '/proc/cmdline'))
 
     # General hardware and filesystems information
-    debug_info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer'))
-    debug_info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name'))
-    debug_info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-version'))
-    debug_info.append(debug_command('/usr/bin/lspci', '-nn'))
-    debug_info.append(debug_command('/bin/df', '--human-readable', '--print-type'))
-    debug_info.append(debug_command('/bin/mount', '--show-labels'))
-    debug_info.append(debug_command('/bin/lsmod'))
-    debug_info.append(debug_file('root', '/proc/asound/cards'))
-    debug_info.append(debug_file('root', '/proc/asound/devices'))
-    debug_info.append(debug_file('root', '/proc/asound/modules'))
+    info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer'))
+    info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name'))
+    info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-version'))
+    info.append(debug_command('/usr/bin/lspci', '-nn'))
+    info.append(debug_command('/bin/df', '--human-readable', '--print-type'))
+    info.append(debug_command('/bin/mount', '--show-labels'))
+    info.append(debug_command('/bin/lsmod'))
+    info.append(debug_file('root', '/proc/asound/cards'))
+    info.append(debug_file('root', '/proc/asound/devices'))
+    info.append(debug_file('root', '/proc/asound/modules'))
 
     # Miscellaneous configuration and log files
-    debug_info.append(debug_file('root', '/etc/X11/xorg.conf'))
-    debug_info.append(debug_file('Debian-gdm', '/var/log/gdm3/tails-greeter.errors'))
-    debug_info.append(debug_file('root', '/var/log/live/boot.log'))
-    debug_info.append(debug_file('root', '/var/log/live/config.log'))
-    debug_info.append(debug_file('root', '/var/lib/live/config/tails.physical_security'))
+    info.append(debug_file('root', '/etc/X11/xorg.conf'))
+    info.append(debug_file('Debian-gdm', '/var/log/gdm3/tails-greeter.errors'))
+    info.append(debug_file('root', '/var/log/live/boot.log'))
+    info.append(debug_file('root', '/var/log/live/config.log'))
+    info.append(debug_file('root', '/var/lib/live/config/tails.physical_security'))
 
     # Persistence
-    debug_info.append(debug_file('root', '/var/lib/gdm3/tails.persistence'))
-    debug_info.append(debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/persistence.conf'))
-    debug_info.append(debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/live-additional-software.conf'))
-    debug_info.append(debug_directory('root', '/live/persistence/TailsData_unlocked/apt-sources.list.d'))
-    debug_info.append(debug_file('root', '/var/log/live-persist'))
+    info.append(debug_file('root', '/var/lib/gdm3/tails.persistence'))
+    info.append(debug_file('tails-persistence-setup',
+                           '/live/persistence/TailsData_unlocked/persistence.conf'))
+    info.append(debug_file('tails-persistence-setup',
+                           '/live/persistence/TailsData_unlocked/live-additional-software.conf'))
+    info.append(debug_directory('root',
+                                '/live/persistence/TailsData_unlocked/apt-sources.list.d'))
+    info.append(debug_file('root', '/var/log/live-persist'))
 
     # The Journal
-    debug_info.append(debug_command('/bin/journalctl', '--catalog', '--no-pager'))
+    info.append(debug_command('/bin/journalctl', '--catalog', '--no-pager'))
 
-    print(json.dumps(debug_info))
+    print()
+    print(json.dumps(info))
 
 
 def debug_command(command, *args):
-    """Return the command and it's result as dict.
+    """Return the command and it's standard input as dict.
 
     >>> debug_command('echo', 'foo')
-    {'echo foo': 'foo'}
+    {'echo foo': ['foo']}
     """
-    command_output = subprocess.check_output([command, *args]).decode('UTF-8').strip().split('\n')
+    command_output = subprocess.check_output([command, *args])
+    command_output = command_output.decode('UTF-8').strip().split('\n')
     return {'{}'.format(' '.join((command,) + args)): command_output}
 
 
@@ -104,7 +118,7 @@ def debug_file(user, filename):
     >>> with tempfile.NamedTemporaryFile('w') as f:
     ...     _ = f.write("foo\\nbar")
     ...     _ = f.seek(0)
-    ...     debug_file(getpass.getuser(), f.name) 
+    ...     debug_file(getpass.getuser(), f.name)
     {...: ['foo', 'bar']}
     """
     if not os.path.isfile(filename):
@@ -114,17 +128,19 @@ def debug_file(user, filename):
     # for the complete requirements required for security
     owner = getpwuid(os.stat(filename).st_uid).pw_name
     if owner != user:
-        return {filename: 'WARNING: not opening file {}, because it is owned by {} instead of {}'.format(filename, owner, user)}
-        
+        return {filename: '''WARNING: not opening file {}, because it is '''
+                          '''owned by {} instead of {}'''.format(filename, owner, user)}
 
-    file_content = [] 
+    file_content = []
     with open(filename) as f:
         for l in f:
             file_content.append(l.replace('\n', ''))
     return {filename: file_content}
 
+
 def debug_directory(user, dir_name):
-    """Return a dict with the dir_name and dicts with the content of all contained files (non-recursively).
+    """Return a dict with the dir_name and dicts with
+    the content of all contained files (non-recursively).
 
     >>> import os, getpass
     >>> tmpdir = '/tmp/mytempdir'
@@ -135,19 +151,19 @@ def debug_directory(user, dir_name):
     ...     result = debug_directory(getpass.getuser(), tmpdir)
     >>> os.remove(os.path.join(tmpdir, 'foo'))
     >>> os.rmdir(tmpdir)
-    >>> result 
+    >>> result
     {'/tmp/mytempdir': [{'/tmp/mytempdir/foo': ['foobar', 'bar']}]}
     """
     if not os.path.isdir(dir_name):
         return {dir_name: 'Not found'}
 
-
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
     owner = getpwuid(os.stat(dir_name).st_uid).pw_name
     if owner != user:
-       return {dir_name: 'WARNING: not opening directory {}, because it is owned by {} instead of {}'.format(dir_name, owner, user)}
-        
+        return {dir_name: '''WARNING: not opening directory {}, because it is '''
+                          '''owned by {} instead of {}'''.format(dir_name, owner, user)}
+
     files = os.listdir(dir_name)
 
     listing = []
