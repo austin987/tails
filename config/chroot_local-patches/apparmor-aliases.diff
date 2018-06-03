@@ -9,23 +9,6 @@ diff -Naur etc/apparmor.d.orig/abstractions/base etc/apparmor.d/abstractions/bas
    /etc/writable/localtime        r,
    /usr/share/locale-bundle/**    r,
    /usr/share/locale-langpack/**  r,
-@@ -64,10 +65,12 @@
-   /opt/*-linux-uclibc/lib/ld-uClibc*so* mr,
- 
-   # we might as well allow everything to use common libraries
--  /{usr/,}lib{,32,64}/**                r,
--  /{usr/,}lib{,32,64}/lib*.so*          mr,
--  /{usr/,}lib{,32,64}/**/lib*.so*       mr,
--  /{usr/,}lib/@{multiarch}/**            r,
-+  /{usr/,}lib{32,64}/**                r,
-+  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**                r,
-+  /{usr/,}lib{,32,64}/lib*.so*       mr,
-+  /{usr/,}lib{32,64}/**/lib*.so*       mr,
-+  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/lib*.so*       mr,
-+  /{usr/,}lib/@{multiarch}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**            r,
-   /{usr/,}lib/@{multiarch}/lib*.so*      mr,
-   /{usr/,}lib/@{multiarch}/**/lib*.so*   mr,
-   /{usr/,}lib/tls/i686/{cmov,nosegneg}/lib*.so*    mr,
 diff -Naur etc/apparmor.d.orig/abstractions/ubuntu-helpers etc/apparmor.d/abstractions/ubuntu-helpers
 --- a/etc/apparmor.d/abstractions/ubuntu-helpers	2018-02-25 18:23:21.000000000 +0000
 +++ b/etc/apparmor.d/abstractions/ubuntu-helpers	2018-03-10 08:03:52.281671815 +0000
@@ -40,13 +23,3 @@ diff -Naur etc/apparmor.d.orig/abstractions/ubuntu-helpers etc/apparmor.d/abstra
    /opt/google/chrome{,-beta,-unstable}/chrome-sandbox PUxr,
    /opt/google/chrome{,-beta,-unstable}/google-chrome Pixr,
    /opt/google/chrome{,-beta,-unstable}/chrome Pixr,
-@@ -77,7 +77,8 @@
-   # Full access
-   / r,
-   /** rwkl,
--  /{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m,
-+  /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}{,**/}*.so{,.*} m,
-+  /usr{/,/local/}lib{,32,64}/{,**/}*.so{,.*} m,
- 
-   # Dangerous files
-   audit deny owner /**/* m,              # compiled libraries
