@@ -263,7 +263,7 @@ end
 
 Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
-  tails_is_installed_helper(target_name, "/lib/live/mount/medium", loader)
+  tails_is_installed_helper(target_name, "/run/live/medium", loader)
 end
 
 Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
@@ -371,7 +371,7 @@ end
 def boot_device
   # Approach borrowed from
   # config/chroot_local_includes/lib/live/config/998-permissions
-  boot_dev_id = $vm.execute("udevadm info --device-id-of-file=/lib/live/mount/medium").stdout.chomp
+  boot_dev_id = $vm.execute("udevadm info --device-id-of-file=/run/live/medium").stdout.chomp
   boot_dev = $vm.execute("readlink -f /dev/block/'#{boot_dev_id}'").stdout.chomp
   return boot_dev
 end
@@ -663,7 +663,7 @@ TAILS_VERSION_ID="#{version}"
       path += "var/lib/#{chroot_browser}/chroot/" if chroot_browser
       path += change[:path]
     when :medium
-      path = '/lib/live/mount/medium/' + change[:path]
+      path = '/run/live/medium/' + change[:path]
     else
       raise "Unknown filesysten '#{change[:filesystem]}'"
     end

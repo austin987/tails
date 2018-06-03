@@ -92,7 +92,7 @@ Feature: Chatting anonymously using Pidgin
     Then I cannot add a certificate from the "/home/amnesia/.gnupg" directory to Pidgin
     When I close Pidgin's certificate import failure dialog
     And I close Pidgin's certificate manager
-    Then I cannot add a certificate from the "/lib/live/mount/overlay/home/amnesia/.gnupg" directory to Pidgin
+    Then I cannot add a certificate from the "/run/live/overlay/home/amnesia/.gnupg" directory to Pidgin
     When I close Pidgin's certificate import failure dialog
     And I close Pidgin's certificate manager
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
