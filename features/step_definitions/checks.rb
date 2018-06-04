@@ -107,7 +107,7 @@ Then /^the documentation viewer opens the "(Support|Documentation)" page$/ do |p
     if page == 'Support'
       expected_heading = 'Search the documentation'
     else
-      expected_heading = 'Found a bug?'
+      expected_heading = 'First steps with Tails'
     end
   end
   app = Dogtail::Application.new('tails-documentation')
