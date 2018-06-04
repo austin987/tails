@@ -564,7 +564,7 @@ Given /^the package "([^"]+)" is installed$/ do |package|
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
-  if version
+  if not version.empty?
     raise "Unsupported version '#{version}'"
   else
     $vm.execute_successfully(
