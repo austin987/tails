@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.bin.thunderbird.orig	2018-01-09 20:30:54.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.thunderbird	2018-02-23 14:48:02.180000000 +0000
+--- a/etc/apparmor.d/usr.bin.thunderbird.orig  2018-01-09 20:30:54.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.thunderbird       2018-02-23 14:48:02.180000000 +0000
 @@ -16,7 +16,6 @@
    # TODO: finetune this for required accesses
    #include <abstractions/dbus>
@@ -37,18 +37,17 @@
 -  /usr/bin/pulseaudio Pixr,
 -
    owner @{HOME}/.{cache,config}/dconf/user rw,
+   owner @{HOME}/.cache/thumbnails/** r,
    owner /run/user/[0-9]*/dconf/user rw,
-   owner @{HOME}/.config/gtk-3.0/bookmarks r,
-@@ -107,6 +96,8 @@
-   /etc/gre.d/* r,
+@@ -113,6 +102,7 @@
  
    # noisy
-+  deny /etc/dconf/profile/user r,
+   /etc/dconf/profile/user r,
 +  deny /etc/machine-id r,
    deny @{MOZ_LIBDIR}/** w,
    deny /usr/lib/thunderbird-addons/** w,
    deny /usr/lib/xulrunner-addons/** w,
-@@ -138,7 +129,6 @@
+@@ -239,7 +229,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
    /usr/lib/thunderbird/crashreporter ix,
@@ -56,43 +55,9 @@
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/** r,
  
-@@ -190,15 +180,6 @@
-   deny /usr/share/mozilla/extensions/**/ w,
-   deny /usr/share/mozilla/ w,
- 
--  # Miscellaneous (to be abstracted)
--  # Ideally these would use a child profile. They are all ELF executables
--  # so running with 'Ux', while not ideal, is ok because we will at least
--  # benefit from glibc's secure execute.
--  /usr/bin/mkfifo Uxr,  # investigate
--  /{usr/,}bin/ps Uxr,
--  /{usr/,}bin/uname Uxr,
--  /usr/bin/locale Uxr,
--
-   /usr/bin/gpg               Cx -> gpg,
-   /usr/bin/gpg2              Cx -> gpg,
-   /usr/bin/gpgconf           Cx -> gpg,
-@@ -224,7 +205,9 @@
-     deny owner @{HOME}/.cache/thunderbird/**/_CACHE_* w,
- 
-     # noise from inherited files
-+    deny @{HOME}/.thunderbird/*.default/ImapMail/*/INBOX w,
-     deny /usr/{lib,share}/thunderbird/omni.ja r,
-+    deny /usr/share/thunderbird/extensions/** r,
- 
-     # For smartcards?
-     /dev/bus/usb/ r,
-@@ -255,6 +255,7 @@
-     owner @{HOME}/.gnupg/.#*[0-9]x rwl,
-     owner @{HOME}/.gnupg/.#lk0x[0-9a-f]* rwl,
-     owner @{HOME}/.gnupg/.gpg-v[0-9]*-migrated rw,
-+    owner @{HOME}/.gnupg/openpgp-revocs.d/{,[A-F0-9]*.rev} rw,
-     owner @{HOME}/** r,
-     owner @{PROC}/@{pids}/mountinfo r,
- 
-@@ -272,13 +255,16 @@
-     /usr/bin/dirmngr ix,
-     owner @{PROC}/@{pids}/task/@{tid}/comm rw,
+@@ -373,13 +362,16 @@
+     # for revocation certificate generation
+     owner @{HOME}/.{icedove,thunderbird}/*/0x[A-F0-9]*_rev.asc rw,
  
 +    # for revocation certificate generation
 +    owner @{HOME}/.{icedove,thunderbird}/*.default/0x[A-F0-9]*_rev.asc rw,
