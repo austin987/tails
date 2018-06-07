@@ -134,7 +134,7 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with (persistence enabled)?)?( and)?(an administration password)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, useless_syntax_with, persistence_on, useless_syntax_and, admin_password|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?( (and|with) an administration password)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, and_or_with, admin_password|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
   if network_unplugged
     step "the network is unplugged"
