@@ -101,7 +101,7 @@ When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|
         step "the ASP persistence is correctly configured for package \"#{package}\""
       end
     when "deny"
-      gnome_shell.child('Install only once', roleName: 'push button').click
+      gnome_shell.child('Install Only Once', roleName: 'push button').click
       step "\"#{package}\" is not part of ASP persistence configuration"
     end
   when "remove"
