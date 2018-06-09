@@ -1,0 +1,291 @@
+[[!meta title="Using VeraCrypt encrypted volumes"]]
+
+[[!toc levels=2]]
+
+Introduction to <span class="application">VeraCrypt</span>
+==========================================================
+
+<span class="application">[VeraCrypt](https://www.veracrypt.fr/)</span> is a
+disk encryption software that works on on Windows, macOS, and Linux.
+
+Use <span class="application">VeraCrypt</span> to share encrypted files across
+different operating systems.
+
+In Tails, you can only open <span class="application">VeraCrypt</span> volumes
+but you cannot create new ones.
+
+- To create <span class="application">VeraCrypt</span> volumes, do so outside
+  of Tails.
+
+  See the step-by-step guides by Security-in-a-Box:
+  - [VeraCrypt for Windows](https://securityinabox.org/en/guide/veracrypt/win/)
+  - [VeraCrypt for macOS](https://securityinabox.org/en/guide/veracrypt/mac/)
+  - [VeraCrypt for Linux](https://securityinabox.org/en/guide/veracrypt/linux/)
+
+- To create encrypted volumes in Tails, use
+  <span class="application">[[LUKS|encrypted_volumes]]</span> instead.
+  <span class="application">LUKS</span> works only on Linux.
+
+Comparison between <span class="application">LUKS</span> and <span class="application">VeraCrypt</span>
+-------------------------------------------------------------------------------------------------------
+
+You can also create and open <span class="application">LUKS</span>
+encrypted volumes in Tails. <span class="application">LUKS</span> is the
+standard for disk encryption in Linux. [[See our documentation about
+<span class="application">LUKS</span>.|encrypted_volumes]]
+
+[[!inline pages="doc/encryption_and_privacy/luks_vs_veracrypt.inline" raw="yes" sort="age"]]
+
+<a id="container-vs-partition"></a>
+
+Difference between file containers and partitions
+-------------------------------------------------
+
+With <span class="application">VeraCrypt</span> you can store your files
+encrypted in two different kinds of *volumes*:
+
+- *File containers*. A file container is a single big file inside which you can
+  store several files encrypted, a bit like a ZIP file.
+
+- *Partitions*. Usually USB sticks and hard disks have a single
+  partition of their entire size but they can also be split into several
+  partitions. This way you can encrypted a whole USB stick for example.
+
+<a id="parameters"></a>
+
+Unlocking parameters
+--------------------
+
+To unlock a <span class="application">VeraCrypt</span> volume you might need
+the following parameters, depending on the options that were selected when the
+volume was created:
+
+- **Passphrase**
+
+- **Keyfiles**: instead, or in addition to, the passphrase a
+  <span class="application">VeraCrypt</span> volume can be unlocked using a
+  particular files or set of files.
+
+  [See the <span class="application">VeraCrypt</span> documentation on
+  keyfiles.](https://www.veracrypt.fr/en/Keyfiles.html).
+
+- **PIM**: a number that is needed if it was specified when creating the
+  <span class="application">VeraCrypt</span> volume.
+
+  [See the <span class="application">VeraCrypt</span> documentation on
+  PIM.](https://www.veracrypt.fr/en/Personal%20Iterations%20Multiplier%20(PIM).html)
+
+- **Hidden volume**: if you want to open the hidden volume inside the
+  <span class="application">VeraCrypt</span> volume.
+
+  [See the <span class="application">VeraCrypt</span> documentation on hidden
+  volumes.](https://www.veracrypt.fr/en/Hidden%20Volume.html)
+
+Unlocking a file container
+==========================
+
+<a id="container-files"></a>
+
+Using <span class="application">Files</span>
+--------------------------------------------
+
+If your file container requires keyfiles to unlock, use
+<span class="application">Disks</span> instead. See the [[Using
+<span class="application">Disks</span>|veracrypt#containers-disks]] section
+below.
+
+1. To start <span class="application">Files</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guisubmenuitem">Files</span></span>.
+
+1. Navigate to the folder containing the file container that you want to open.
+
+1. Right-click on the file container and choose <span class="guimenuitem">Open
+   With Other Application</span>.
+
+1. In the <span class="guilabel">Select Application</span> dialog, click the
+   <span class="button">View All Applications</span> button.
+
+1. In the list of applications, choose <span class="application">Disk Image
+   Mounter</span>.
+
+1. Click on the <span class="guilabel">Encrypted</span> label of the new volume
+   that appears in the sidebar.
+
+   [[!img container-encrypted-label.png link="no" alt="105 MB Encrypted"]]
+
+1. Enter the parameters to unlock the volume. For more information, see
+   the [[Unlocking parameters|veracrypt#parameters]] section above.
+
+   Click <span class="button">Unlock</span>.
+
+1. <span class="application">Files</span> opens your volume.
+
+<a id="container-disks"></a>
+
+Using <span class="application">Disks</span>
+--------------------------------------------
+
+1. To start <span class="application">Files</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Utilities</span>&nbsp;▸
+     <span class="guisubmenuitem">Disks</span></span>.
+
+1. Choose <span class=menuchoice">
+     <span class="guimenu">Disks</span>&nbsp;▸
+     <span class="guimenuitem">Attach Disk Image&hellip;</span></span> from the
+     top navigation bar.
+
+1. In the <span class="button">Select Disk Image to Attach</span> dialog:
+
+   - Unselect the <span class="guilabel">Set up read-only loop device</span>
+     check box in the bottom-left corner if you want to modify the content of
+     the file container.
+
+     [[!img read-only.png link="no" alt=""]]
+
+   - Choose <span class="guilabel">All Files</span> in the file filter in the
+     bottom-right corner.
+
+     [[!img all-files.png link="no" alt=""]]
+
+   - Navigate to the folder containing the file container that you want to open.
+
+   - Select the file container and click <span class="button">Attach</span>.
+
+1. In the left pane, select the new <span class="guilabel">Loop Device</span>
+   that corresponds to your file container.
+
+   In the right pane, it should have an
+   <span class="guilabel">Encrypted?</span> label.
+
+   [[!img container-locked.png link="no" alt=""]]
+
+1. Click the <span class="button">[[!img lib/unlock.png alt="Unlock
+   selected encrypted partition" class="symbolic" link="no"]]</span>
+   button in the right pane.
+
+1. Enter the parameters to unlock the volume. For more information, see
+   the [[Unlocking parameters|veracrypt#parameters]] section above.
+
+   Click <span class="button">Unlock</span>.
+
+1. Select the file system that appears below the unlocked volume. It
+   probably has a <span class="guilabel">FAT</span> or
+   <span class="guilabel">NTFS</span> content.
+
+1. Click the <span class="button">[[!img lib/media-playback-start.png
+   alt="Mount selected partition" class="symbolic" link="no"]]</span>
+   button to mount the volume.
+
+1. Click on the <span class="filename">*/media/amnesia/*</span> link in
+   the right pane to open the volume in
+   <span class="application">Files</span>.
+
+1. Your volume opens in <span class="application">Files</span>.
+
+Closing a file container
+------------------------
+
+1. Click on the <span class="button">[[!img lib/media-eject.png
+   alt="Eject" class="symbolic" link="no"]]</span> button on the label
+   of the volume corresponding to your file container in the sidebar of
+   <span class="application">Files</span>.
+
+   [[!img eject-container.png link="no" alt=""]]
+
+Unlocking a partition
+=====================
+
+<a id="partition-files"></a>
+
+Using <span class="application">Files</span>
+--------------------------------------------
+
+If your partition requires keyfiles to unlock or is on an internal hard disk,
+use <span class="application">Disks</span> instead. See the [[Using
+<span class="application">Disks</span>|veracrypt#partition-disks]]
+section below.
+
+1. To start <span class="application">Files</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guisubmenuitem">Files</span></span>.
+
+1. Plug in the USB stick or the hard disk which has the partition.
+
+1. Click on the <span class="guilabel">Encrypted</span> label of the new volume
+   that appears in the sidebar.
+
+   [[!img partition-encrypted-label.png link="no" alt="Mount and open '8.2 GB Encrypted'"]]
+
+1. Enter the parameters to unlock the volume. For more information, see
+   the [[Unlocking parameters|veracrypt#parameters]] section above.
+
+   Click <span class="button">Unlock</span>.
+
+1. <span class="application">Files</span> opens your volume.
+
+<a id="partition-disks"></a>
+
+Using <span class="application">Disks</span>
+--------------------------------------------
+
+1. If your partition is on an internal hard disk, [[set up an administration
+   password|doc/first_steps/startup_options/administration_password]] when
+   starting Tails.
+   
+   Otherwise, plug in the USB stick or the hard disk which has the partition.
+
+1. To start <span class="application">Disks</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Utilities</span>&nbsp;▸
+     <span class="guisubmenuitem">Disks</span></span>.
+
+1. In the left pane, select the device that corresponds to your USB stick or
+   hard disk.
+
+   [[!img partition-locked.png link="no" alt=""]]
+
+1. In the right pane, select the partition that corresponds to your *VeraCrypt*
+   volume.
+
+   It should have an <span class="guilabel">Encrypted?</span> label.
+
+1. Click the <span class="button">[[!img lib/unlock.png alt="Unlock
+   selected encrypted partition" class="symbolic" link="no"]]</span>
+   button in the right pane.
+
+1. Enter the parameters to unlock the volume. For more information, see
+   the [[Unlocking parameters|veracrypt#parameters]] section above.
+
+   Click <span class="button">Unlock</span>.
+
+1. Select the file system that appears below the unlocked volume. It
+   probably has a <span class="guilabel">FAT</span> or
+   <span class="guilabel">NTFS</span> content.
+
+1. Click the <span class="button">[[!img lib/media-playback-start.png
+   alt="Mount selected partition" class="symbolic" link="no"]]</span>
+   button to mount the volume.
+
+1. Click on the <span class="filename">*/media/amnesia/*</span> link in
+   the right pane to open the volume in
+   <span class="application">Files</span>.
+
+1. Your volume opens in <span class="application">Files</span>.
+
+Closing a partition
+-------------------
+
+1. Click on the <span class="button">[[!img lib/media-eject.png
+   alt="Eject" class="symbolic" link="no"]]</span> button on the label
+   of the volume corresponding to your file container in the sidebar of
+   <span class="application">Files</span>.
+
+   [[!img eject-partition.png link="no" alt=""]]
