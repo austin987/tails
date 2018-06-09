@@ -816,8 +816,10 @@ Prepare upgrade-description files
      or RC), drop all `--next-version`
      arguments, and instead pass (**untested!**)
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
-   * If preparing a point-release, don't pass
-     `--next-version "${VERSION:?}.1"`
+   * Adjust `--next-version "${VERSION:?}.1"` so it matches the next
+     potential emergency release. E.g. when releasing 3.7.1,
+     pass `--next-version 3.7.2` and when releasing 3.8, pass
+     `--next-version 3.8.1`.
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
