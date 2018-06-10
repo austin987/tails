@@ -220,10 +220,10 @@ end
 # python2 (#12185) we have terrible unicode support; for instance
 # `.child('Tails - Getting started…')` will fail since Dogtail expects
 # ascii and cannot decode "…".
-Then /^the Tor Browser opens the Getting started page$/ do
+Then /^the Tor Browser opens the "Documentation" page$/ do
   try_for(60) do
     @torbrowser
       .children(roleName: "document frame")
-      .any? { |f| f.name == 'Tails - Getting started…' }
+      .any? { |f| f.name == 'Tails - Documentation' }
   end
 end
