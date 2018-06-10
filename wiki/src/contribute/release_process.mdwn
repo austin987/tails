@@ -567,8 +567,8 @@ suite should be ready, so it is time to:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-        git push origin "${RELEASE_BRANCH:?}" && \
-        git push --force origin "${TAG:?}"
+        git push --force origin "${TAG:?}" && \
+        git push origin "${RELEASE_BRANCH:?}"
 
    Note: for Jenkins to build the release you must push the release
    branch with its tip tagged. I.e. if you deviate from the above
@@ -751,7 +751,7 @@ and run the following:
 
 Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
-Jessie too.
+Debian stable too.
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
@@ -816,9 +816,10 @@ Prepare upgrade-description files
      or RC), drop all `--next-version`
      arguments, and instead pass (**untested!**)
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
-   * If preparing a point-release, pass neither
-     `--next-version "${VERSION:?}.1"`,
-     nor `--next-version "${VERSION:?}.1~rc1"`
+   * Adjust `--next-version "${VERSION:?}.1"` so it matches the next
+     potential emergency release. E.g. when releasing 3.7.1,
+     pass `--next-version 3.7.2` and when releasing 3.8, pass
+     `--next-version 3.8.1`.
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -932,8 +933,8 @@ above).
 
 <a id="publish-iuk"></a>
 
-Publish the ISO and IUK over HTTP
----------------------------------
+Publish the ISO and IUKs over HTTP
+----------------------------------
 
 Upload the IUKs to the primary rsync mirror:
 
@@ -1067,47 +1068,35 @@ Update the website and Git repository
 =====================================
 
 What follows in this section happens on the `$WEBSITE_RELEASE_BRANCH`
-branch in `${RELEASE_CHECKOUT:?}`.
+branch in `${RELEASE_CHECKOUT:?}`:
+
+	cd "${RELEASE_CHECKOUT:?}" && \
+	   git checkout "${WEBSITE_RELEASE_BRANCH:?}"
 
 If preparing a final release
 ----------------------------
 
 Skip this part if preparing a RC.
 
-Rename the `.packages` file to remove the `.iso` and build date parts
-of its name:
+Rename, copy, garbage collect and update various files:
 
 	mv "${ARTIFACTS:?}"/tails-amd64-"${VERSION:?}".iso.packages \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages"
-
-Rename the manifest of needed packages as well:
-
+	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" && \
 	mv "${PACKAGES_MANIFEST:?}" \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
-
-Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
-`.torrent.sig` files into the website repository:
-
+	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" && \
 	cp "${ISO_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
-
-Remove from `wiki/src/torrents/files/` any remaining file from the
-previous release (including any RC).
-
-Update the size of the ISO image in `inc/*`:
-
-        LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
-          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
-          > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html"
-
-Generate the expected signature verification output:
-
-      LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
-      sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
-      "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
+	git rm \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,packages,torrent} && \
+	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
+	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
+	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
+	LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
@@ -1168,16 +1157,16 @@ If preparing a final release, what follows happens on the
 `$WEBSITE_RELEASE_BRANCH` in `$RELEASE_CHECKOUT`. Else, it happens in
 `$MASTER_CHECKOUT`.
 
-Generate PO files for the announcements with `./build-website`.
+Generate PO files for the announcements and record the last commit
+before putting the release out for real:
 
-Then, send them to <tails-l10n@boum.org> so that they get translated
-shortly, perhaps even soon enough to integrate them before pushing the
-release out officially.
-
-Then, record the last commit before putting the release out for real:
-
+	./build-website && \
 	git add wiki/src && \
-	git commit -m "releasing version ${VERSION:?}"
+	git commit -m "Releasing version ${VERSION:?}"
+
+Then, send the PO files for the announcements to <tails-l10n@boum.org>
+so that they get translated shortly, perhaps even soon enough to
+integrate them before pushing the release out officially.
 
 Go wild!
 ========
@@ -1222,8 +1211,7 @@ repository and put `master` in the following state:
       git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
     )
 
-Then (or if you preparing a release candidate) ensure that `master`
-has `stable` as its base branch:
+In any case, ensure that `master` has `stable` as its base branch:
 
     ( cd "${MASTER_CHECKOUT:?}" && \
       echo "stable" > config/base_branch && \
@@ -1244,7 +1232,7 @@ Check translation are correct
 -----------------------------
 
 Once the push is over and the live website is build, check that each
-`news/version_${VERSION}` HTML and RSS pages looks OK in all supported
+`news/version_${VERSION}` HTML pages looks OK in all supported
 languages.
 
 Bug tracker
@@ -1377,7 +1365,13 @@ XXX: adapt / fork for release candidates. In the meantime, read all
 this, and skip what does not make sense for a RC.
 
 1. If you just released a new stable release, remove the previous
-   stable release on the mirrors.
+   stable release from:
+   - our rsync server:
+     `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+   - our Bittorrent seed: get the previous release's _Transmission_ ID
+     with `ssh bittorrent.lizard transmission-remote --list` and then
+     delete it with
+     `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
 1. Remove any remaining RC for the just-published release from
    the mirrors.
 1. Remove IUKs that are more than 6 months old from
