@@ -1365,7 +1365,13 @@ XXX: adapt / fork for release candidates. In the meantime, read all
 this, and skip what does not make sense for a RC.
 
 1. If you just released a new stable release, remove the previous
-   stable release on the mirrors.
+   stable release from:
+   - our rsync server:
+     `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+   - our Bittorrent seed: get the previous release's _Transmission_ ID
+     with `ssh bittorrent.lizard transmission-remote --list` and then
+     delete it with
+     `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
 1. Remove any remaining RC for the just-published release from
    the mirrors.
 1. Remove IUKs that are more than 6 months old from
