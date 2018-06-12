@@ -41,7 +41,7 @@ find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
 # Unify Last-Translator
 find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
         | xargs -0 --max-procs="$CPUS" --max-args=64 -I {} \
-	sed -i -n '1h;1!H;${;g;s/[^\n]*Last-Translator: [^\\]*\\n[^\n]*/"Last-Translator: Tails translators\\n"/g;p;}' {}
+	sed -i -n '1h;1!H;${;g;s/[^\n]*Last-Translator: [^\\]*\\n[^\n]*/"Last-Translator: Tails translators <tails-l10n@boum.org>\\n"/g;p;}' {}
 
 # Rewrap po file to 79 chars
 find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
