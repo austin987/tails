@@ -12,6 +12,7 @@
 import os
 import subprocess
 import random
+import re
 import locale
 import gettext
 
@@ -173,7 +174,7 @@ def mail_appended_info():
         process = subprocess.Popen (["sudo", "/usr/local/sbin/tails-debugging-info"], 
                                     stdout=subprocess.PIPE)
         for line in process.stdout:
-            debugging_info += line.decode('utf-8')
+            debugging_info += re.sub(r'^--\s*', '', line.decode('utf-8'))
         process.wait()
     except OSError:
         debugging_info += "sudo command not found\n"
