@@ -1,6 +1,7 @@
 #!/bin/sh
 # -*- mode: sh; sh-basic-offset: 4; indent-tabs-mode: nil; -*-
 # vim: set filetype=sh sw=4 sts=4 expandtab autoindent:
+# This file unifies PO headers and rewraps PO files to 79 chars.
 
 set -e
 
@@ -41,3 +42,8 @@ find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
 find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
         | xargs -0 --max-procs="$CPUS" --max-args=64 -I {} \
 	sed -i -n '1h;1!H;${;g;s/[^\n]*Last-Translator: [^\\]*\\n[^\n]*/"Last-Translator: Tails translators\\n"/g;p;}' {}
+
+# Rewrap po file to 79 chars
+find -wholename ./tmp -prune -o \( -iname "$FILE_GLOB" -print0 \) \
+        | xargs -0 --max-procs="$CPUS" --max-args=64 -I {} \
+        msgcat -w 79 "{}" -o "{}"
