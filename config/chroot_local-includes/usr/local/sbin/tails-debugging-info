@@ -96,18 +96,18 @@ def main():
     info.append(debug_command('/bin/journalctl', '--catalog', '--no-pager'))
 
     print()
-    print(json.dumps(info))
+    print(json.dumps(info, indent=4))
 
 
 def debug_command(command, *args):
     """Return the command and it's standard output as dict.
 
     >>> debug_command('echo', 'foo')
-    {'echo foo': ['foo']}
+    {...'key': 'echo foo'...}
     """
     command_output = subprocess.check_output([command, *args])
     command_output = command_output.decode('UTF-8').strip().split('\n')
-    return {'{}'.format(' '.join((command,) + args)): command_output}
+    return {'type': 'command', 'key': '{}'.format(' '.join((command,) + args)), 'content': command_output}
 
 
 def debug_file(user, filename):
@@ -118,23 +118,23 @@ def debug_file(user, filename):
     ...     _ = f.write("foo\\nbar")
     ...     _ = f.seek(0)
     ...     debug_file(getpass.getuser(), f.name)
-    {...: ['foo', 'bar']}
+    {...'content': ['foo', 'bar']...}
     """
     if not os.path.isfile(filename):
-        return {filename: 'Not found'}
+        return {'type': 'file', 'user': user, 'key': filename, 'content': 'Not found'}
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
     owner = getpwuid(os.stat(filename).st_uid).pw_name
     if owner != user:
-        return {filename: '''WARNING: not opening file {}, because it is '''
+        return {'type': 'file', 'user': user, 'key': filename, 'content': '''WARNING: not opening file {}, because it is '''
                           '''owned by {} instead of {}'''.format(filename, owner, user)}
 
     file_content = []
     with open(filename) as f:
         for l in f:
             file_content.append(l.replace('\n', ''))
-    return {filename: file_content}
+    return {'type': 'file', 'user': user, 'key': filename, 'content': file_content}
 
 
 def debug_directory(user, dir_name):
@@ -151,10 +151,10 @@ def debug_directory(user, dir_name):
     >>> os.remove(os.path.join(tmpdir, 'foo'))
     >>> os.rmdir(tmpdir)
     >>> result
-    {'/tmp/mytempdir': [{'/tmp/mytempdir/foo': ['foobar', 'bar']}]}
+    {'/tmp/mytempdir': [{...['foobar', 'bar']...}]}
     """
     if not os.path.isdir(dir_name):
-        return {dir_name: 'Not found'}
+        return {'key':dir_name, 'user': user, 'content': 'Not found'}
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
@@ -169,7 +169,7 @@ def debug_directory(user, dir_name):
 
     for f in files:
         listing.append(debug_file(user, os.path.join(dir_name, f)))
-    return {dir_name: listing}
+    return {'key':dir_name, 'user': user, 'content': listing}
 
 
 if __name__ == '__main__':
