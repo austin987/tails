@@ -25,6 +25,9 @@ pref("mailnews.database.global.indexer.enabled", false);
 // Disable chat
 pref("mail.chat.enabled", false);
 
+// Hide the "Know your rights" message
+pref("mail.rights.version", 1);
+
 // Disable system addons
 pref("extensions.autoDisableScopes", 3);
 pref("extensions.enabledScopes", 4);
