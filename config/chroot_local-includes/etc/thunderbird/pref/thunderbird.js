@@ -56,7 +56,5 @@ pref("mailnews.auto_config.dns_mx_lookup.enabled", false);
 
 // We disable Memory Hole for encrypted email until support is more
 // mature and widely spread (#15201).
-pref("extensions.enigmail.protectHeaders", false);
 pref("extensions.enigmail.protectedHeaders", 0);
-pref("extensions.torbirdy.custom.extensions.enigmail.protectHeaders", false);
 pref("extensions.torbirdy.custom.extensions.enigmail.protectedHeaders", 0);
