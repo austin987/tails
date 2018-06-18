@@ -60,7 +60,7 @@ def main():
     ...
     """
 
-    config  = None
+    config = None
     with open('/etc/whisperback/debugging-info.json', 'r') as conf_file:
         config = json.load(conf_file)
 
@@ -68,6 +68,8 @@ def main():
     for _type, _args in config:
         if _type == 'command':
             info.append(debug_command(_args['args'][0], *_args['args'][1:]))
+        elif _type == 'directory':
+            info.append(debug_directory(_args['user'], _args['path']))
         else:
             info.append(debug_file(_args['user'], _args['path']))
     print()
@@ -103,7 +105,7 @@ def debug_file(user, filename):
     owner = getpwuid(os.stat(filename).st_uid).pw_name
     if owner != user:
         return {'key': filename, 'content': '''WARNING: not opening file {}, because it is '''
-                          '''owned by {} instead of {}'''.format(filename, owner, user)}
+                '''owned by {} instead of {}'''.format(filename, owner, user)}
 
     file_content = []
     with open(filename) as f:
@@ -129,14 +131,14 @@ def debug_directory(user, dir_name):
     {...[{...['foobar', 'bar']...}]}
     """
     if not os.path.isdir(dir_name):
-        return {'key':dir_name, 'content': 'Not found'}
+        return {'key': dir_name, 'content': 'Not found'}
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
     owner = getpwuid(os.stat(dir_name).st_uid).pw_name
     if owner != user:
-            return {'key': dir_name, 'content': '''WARNING: not opening directory {}, because it is '''
-                          '''owned by {} instead of {}'''.format(dir_name, owner, user)}
+            return {'key': dir_name, 'content': '''WARNING: not opening directory {}, because '''
+                    '''it is owned by {} instead of {}'''.format(dir_name, owner, user)}
 
     files = os.listdir(dir_name)
 
@@ -144,7 +146,7 @@ def debug_directory(user, dir_name):
 
     for f in files:
         listing.append(debug_file(user, os.path.join(dir_name, f)))
-    return {'key':dir_name, 'content': listing}
+    return {'key': dir_name, 'content': listing}
 
 
 if __name__ == '__main__':
