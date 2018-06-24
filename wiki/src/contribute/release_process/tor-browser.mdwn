@@ -164,7 +164,7 @@ Import a new set of Tor Browser tarballs
 
 1. Download and verify all the tarballs we need:
 
-        TMPDIR=$(mktemp --tmpdir -d "tor-browser-${TBB_VERSION}.XXXXXXXXXX")
+        DL_DIR=$(mktemp --tmpdir -d "tor-browser-${TBB_VERSION}.XXXXXXXXXX")
         CHROOT_INCLUDES="config/chroot_local-includes"
         TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
         TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
@@ -175,14 +175,14 @@ Import a new set of Tor Browser tarballs
            git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
            | while read expected_sha256 tarball; do
               (
-                 cd "$TMPDIR"
+                 cd "$DL_DIR"
                  echo "Retrieving '${TBB_TARBALLS_BASE_URL}/${tarball}'..."
                  curl --remote-name --continue-at - \
                     "${TBB_TARBALLS_BASE_URL}/${tarball}"
               )
            done
            (
-              cd "$TMPDIR" && \
+              cd "$DL_DIR" && \
               git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
                  | sha256sum -c -
            )
@@ -192,7 +192,7 @@ Import a new set of Tor Browser tarballs
 
         cd "$TBB_ARCHIVE" && \
         mkdir "$TBB_VERSION" && cd "$TBB_VERSION" && \
-        git annex import --duplicate "$TMPDIR/"* "$TAILS_GIT_REPO/"sha256sums-*
+        git annex import --duplicate "$DL_DIR/"* "$TAILS_GIT_REPO/"sha256sums-*
 
 Commit and push your changes
 ----------------------------
