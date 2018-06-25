@@ -171,24 +171,9 @@ The patterns+settings file is stored as a converted sqlite text dump in
    from this Tor Browser instance into the root of Tails' Git repo and
    run the following command:
 
-        # For posterity: the general idea is to introduce \r\n as a
-        # token where we have made a line break to make the dump more
-        # diff-friendly (and, hence, Git-friendly). The most complex
-        # expression is the one done with perl, where we employ
-        # negative lookahead. What it means, is: replace single
-        # occurrences of | except when followed by \\n.
-        echo '.dump' | sqlite3 ublock0.sqlite | \
-            grep -v "cached_asset_content://cache://compiled-" | \
-            awk '!/^INSERT/; /^INSERT/ {print $0 | "sort -n"}' | \
-            sed 's_\\n_\\n\r\n_g' | \
-            sed 's_,_,\r\n_g' | \
-            perl -p -e 's/([^|])\|((?!\||\\n).)/\1\|\r\n\2/g' | \
-            sed "/^INSERT INTO \"settings\" VALUES('\(remoteBlacklists\|cached_asset_entries\)'/"'s_,_,\r\n_g' > \
-            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
-
-8. Commit:
-
-        git commit -m 'Update uBlock Origin patterns + settings file.' \
+        ./bin/convert-ublock-settings ublock0.sqlite > \
+            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
+        && git commit -m 'Update uBlock Origin patterns + settings file.' \
            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
         && rm ublock0.sqlite
 
