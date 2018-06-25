@@ -159,14 +159,16 @@ Update included files
 uBlock patterns and settings file
 ----------------
 
-The patterns+settings file is stored as a converted sqlite text dump in
+The patterns+settings file is stored as a SQLite text dump in
 `config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump`.
 
-1. Boot Tails
-2. Start the Tor Browser and open the uBlock dashboard by clicking on the uBlock icon.
-3. Select the tab *3rd-party filters*
-4. Click on the button *Update now* to update all used patterns
-5. Close the Tor Browser
+1. Start Tails
+2. Start *Tor Browser*
+2. Click on the uBlock icon and then click on the gears icon to open
+   the uBlock dashboard
+3. Open the *3rd-party filters* tab
+4. Click on the button *Update now* to update all filters
+5. Close *Tor Browser*
 7. Copy the `.tor-browser/profile.default/extension-data/ublock0.sqlite`
    from this Tor Browser instance into the root of Tails' Git repo and
    run the following command:
@@ -412,7 +414,7 @@ translators|contribute/how/translate]].
 
 To get a list of changes on the website:
 
-    git diff --stat ${PREVIOUS_VERSION:?}.. -- \
+    git diff --stat ${PREVIOUS_TAG:?}.. -- \
         wiki/src/'*'.{mdwn,html} \
         ':!wiki/src/blueprint*' \
         ':!wiki/src/contribute*' \
@@ -528,7 +530,7 @@ SquashFS file order
 1. Add `profile` to the kernel command-line.
 1. Login.
 1. Wait for the "Tor is ready" notification.
-1. Start the web browser.
+1. Start *Tor Browser*.
 1. A few minutes later, once the `boot-profile` process has been
    killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
@@ -556,7 +558,7 @@ suite should be ready, so it is time to:
 
 1. Mark the version as "released" in the changelog:
 
-        dch --release --no-force-save-on-release --maintmaint
+        dch --release --no-force-save-on-release --maintmaint && \
         git commit -m "Mark Tails ${VERSION:?} as released." debian/changelog
 
 1. Export `SOURCE_DATE_EPOCH`:
@@ -671,26 +673,19 @@ suite should be ready, so it is time to:
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name and go there:
+Create a directory with a suitable name, go there, move the built
+image to this brand new directory, generate detached OpenPGP
+signatures for the image to be published (in the same directory as the
+image and with a `.sig` extension), then go up to the parent
+directory, create a `.torrent` file and check the generated `.torrent`
+files metadata:
 
 	mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-	cd "${ISOS:?}/tails-amd64-${VERSION:?}"
-
-Second, move the built image to this brand new directory:
-
+	cd "${ISOS:?}/tails-amd64-${VERSION:?}" && \
 	mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}/"
-
-Third, generate detached OpenPGP signatures for the image to be
-published, in the same directory as the image and with a `.sig`
-extension; e.g.
-
-	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso
-	rename 's,\.asc$,.sig,' *.asc
-
-Fourth, go up to the parent directory, create a `.torrent` file and
-check the generated `.torrent` files metainfo:
-
+	   "${ISOS:?}/tails-amd64-${VERSION:?}/" && \
+	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso && \
+	rename 's,\.asc$,.sig,' *.asc && \
 	cd .. && \
 	mktorrent \
 	  -a 'udp://tracker.torrent.eu.org:451' \
@@ -936,7 +931,7 @@ above).
 Publish the ISO and IUKs over HTTP
 ----------------------------------
 
-Upload the IUKs to the primary rsync mirror:
+Upload the IUKs to our rsync server:
 
     for source_version in ${IUK_SOURCE_VERSIONS}; do
        rsync --partial --inplace --progress -v \
@@ -944,7 +939,7 @@ Upload the IUKs to the primary rsync mirror:
           rsync.lizard:
     done
 
-Upload the ISO signature to the primary rsync mirror:
+Upload the ISO signature to our rsync server:
 
     scp "${ISO_PATH:?}.sig" rsync.lizard:
 
@@ -954,7 +949,7 @@ an integer):
 
     MATCHING_JENKINS_BUILD_ID=XXX
 
-Copy the ISO to the primary rsync mirror and verify the signature:
+Copy the ISO to our rsync server and verify the signature:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh rsync.lizard gpg --import
@@ -981,7 +976,7 @@ Move files in place with proper ownership and permissions:
               /srv/rsync/tails/tails/${DIST:?}/iuk/
     EOF
 
-Update the time in `project/trace` file on the primary rsync mirror
+Update the time in `project/trace` file on our rsync server
 and on the live wiki (even for a release candidate):
 
 	TRACE_TIME=$(date +%s) &&
@@ -1094,7 +1089,8 @@ Rename, copy, garbage collect and update various files:
 	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
-	LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+    gpg --check-trustdb && \
+    LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
 
