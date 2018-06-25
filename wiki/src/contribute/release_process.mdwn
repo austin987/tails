@@ -673,26 +673,19 @@ suite should be ready, so it is time to:
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name and go there:
+Create a directory with a suitable name, go there, move the built
+image to this brand new directory, generate detached OpenPGP
+signatures for the image to be published (in the same directory as the
+image and with a `.sig` extension), then go up to the parent
+directory, create a `.torrent` file and check the generated `.torrent`
+files metadata:
 
 	mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-	cd "${ISOS:?}/tails-amd64-${VERSION:?}"
-
-Second, move the built image to this brand new directory:
-
+	cd "${ISOS:?}/tails-amd64-${VERSION:?}" && \
 	mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}/"
-
-Third, generate detached OpenPGP signatures for the image to be
-published, in the same directory as the image and with a `.sig`
-extension; e.g.
-
-	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso
-	rename 's,\.asc$,.sig,' *.asc
-
-Fourth, go up to the parent directory, create a `.torrent` file and
-check the generated `.torrent` files metainfo:
-
+	   "${ISOS:?}/tails-amd64-${VERSION:?}/" && \
+	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso && \
+	rename 's,\.asc$,.sig,' *.asc && \
 	cd .. && \
 	mktorrent \
 	  -a 'udp://tracker.torrent.eu.org:451' \
