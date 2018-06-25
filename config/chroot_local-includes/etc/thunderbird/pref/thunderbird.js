@@ -25,6 +25,9 @@ pref("mailnews.database.global.indexer.enabled", false);
 // Disable chat
 pref("mail.chat.enabled", false);
 
+// Hide the "Know your rights" message
+pref("mail.rights.version", 1);
+
 // Disable system addons
 pref("extensions.autoDisableScopes", 3);
 pref("extensions.enabledScopes", 4);
@@ -53,5 +56,5 @@ pref("mailnews.auto_config.dns_mx_lookup.enabled", false);
 
 // We disable Memory Hole for encrypted email until support is more
 // mature and widely spread (#15201).
-pref("extensions.enigmail.protectHeaders", false);
-pref("extensions.torbirdy.custom.extensions.enigmail.protectHeaders", false);
+pref("extensions.enigmail.protectedHeaders", 0);
+pref("extensions.torbirdy.custom.extensions.enigmail.protectedHeaders", 0);
