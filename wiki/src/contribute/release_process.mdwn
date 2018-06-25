@@ -931,7 +931,7 @@ above).
 Publish the ISO and IUKs over HTTP
 ----------------------------------
 
-Upload the IUKs to the primary rsync mirror:
+Upload the IUKs to our rsync server:
 
     for source_version in ${IUK_SOURCE_VERSIONS}; do
        rsync --partial --inplace --progress -v \
@@ -939,7 +939,7 @@ Upload the IUKs to the primary rsync mirror:
           rsync.lizard:
     done
 
-Upload the ISO signature to the primary rsync mirror:
+Upload the ISO signature to our rsync server:
 
     scp "${ISO_PATH:?}.sig" rsync.lizard:
 
@@ -949,7 +949,7 @@ an integer):
 
     MATCHING_JENKINS_BUILD_ID=XXX
 
-Copy the ISO to the primary rsync mirror and verify the signature:
+Copy the ISO to our rsync server and verify the signature:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh rsync.lizard gpg --import
@@ -976,7 +976,7 @@ Move files in place with proper ownership and permissions:
               /srv/rsync/tails/tails/${DIST:?}/iuk/
     EOF
 
-Update the time in `project/trace` file on the primary rsync mirror
+Update the time in `project/trace` file on our rsync server
 and on the live wiki (even for a release candidate):
 
 	TRACE_TIME=$(date +%s) &&
