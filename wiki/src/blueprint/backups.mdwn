@@ -256,6 +256,26 @@ partition if the destination USB is already a Tails USB stick.
 * No option to do incremental backups.
 * People need a dedicated USB stick.
 
+Duplicati
+---------
+
+- Mono application (.NET).
+- Unofficial Debian package. I found no reference to "duplicati" on bugs.debian.org.
+- The client side has both:
+  - a command-line interface
+  - a web server interface running on localhost:8200:
+    https://duplicati.readthedocs.io/en/latest/03-using-the-graphical-user-interface/.
+    I could pierce a hole in our firewall to access this from Firefox
+    ESR in Tails but then I couldn't make it connect to an SSH server.
+    I'm not sure how this would integrate with Tails in general but it
+    doesn't seem the right user interface for our users.
+- Backend supports for many types of remote storage: https://duplicati.readthedocs.io/en/latest/05-storage-providers/.
+- Backend supports incremental backups and deduplication.
+- I didn't manage to make the SSH backend work from the command line
+  (tried `torsocks`) but while doing so I can see in Onion Circuits that
+  Duplicati is calling back home in several ways: checking for update
+  and reporting usage stats.
+
 Other solutions
 ---------------
 
