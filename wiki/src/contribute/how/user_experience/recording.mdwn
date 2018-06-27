@@ -1,0 +1,106 @@
+[[!meta title="Recording user testing"]]
+
+[[!toc levels=2]]
+
+Recording with a camera using <span class="application">VLC</span>
+==================================================================
+
+Recording the screen with an external camera has the following
+advantages over recording with a screencast:
+
+- Recording a whole session, even if the user restarts Tails.
+- Saving the video directly to your computer and not relying on the
+  computer used for the tests.
+
+You can use a document camera. The [Ziggi-HD Plus by
+IPEVO](https://www.ipevo.com/) works fine from Tails.
+
+1. Move the <span class="guilabel">AF</span> switch of the camera to <span class="guilabel">C</span> to have continuous autofocus.
+
+1. Install <span class="application">VLC</span>:
+
+   <p class="pre command">apt install vlc</p>
+
+### Prepare the camera for recording
+
+1. In <span class="application">VLC</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Media</span>&nbsp;▸
+     <span class="guimenuitem">Open Capture Device...</span></span>.
+
+1. In the <span class="guilabel">Capture Device</span> tab, select:
+
+   - <span class="guilabel">Video device name</span>: /dev/video1
+   - <span class="guilabel">Audio device name</span>: hw:1,0
+
+1. Click the <span class="button">Play</span> button.
+
+1. Make sure that the microphone of the camera is captured as well.
+
+1. Adjust the orientation of the camera to capture as much of the screen as
+   possible while not obfuscating the light of sight of the participant.
+
+### Start recording
+
+1. In <span class="application">VLC</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Media</span>&nbsp;▸
+     <span class="guimenuitem">Convert / Save...</span></span>.
+
+1. In the <span class="guilabel">Capture Device</span> tab, select:
+
+   - <span class="guilabel">Video device name</span>: /dev/video1
+   - <span class="guilabel">Audio device name</span>: hw:1,0
+
+1. Click the <span class="button">Convert / Save</span> button.
+
+1. In the <span class="guilabel">Convert</span> dialog:
+
+   - Select the
+     <span class="guilabel">Video - H.264 + MP3 (MP4)</span> profile.
+
+   - Specify a destination file under
+     <span class="filename">~/Persistent/</span>.
+
+Recording a screencast
+======================
+
+Recording the screen with a screencast has the following advantages over
+recording with an external camera:
+
+- Better image quality
+- Lighter setup
+
+Using <span class="application">recordMyDesktop</span>
+------------------------------------------------------
+
+You can use
+[<span class="application">recordMyDesktop</span>](http://recordmydesktop.sourceforge.net/)
+from Tails:
+
+1. Install <span class="application">recordMyDesktop</span>:
+
+   <p class="pre command">apt install recordmydesktop</span>
+
+1. Navigate to a folder under <span class="filename">~/Persistent/.
+
+1. Start <span class="application">recordMyDesktop</span>:
+
+   <p class="pre command">recordmydesktop --on-the-fly-encoding --buffer-size 8192 --fps 10 --channels 1 <span class="command-placeholder">output.ogv</span></p>
+
+Using GNOME Shell
+-----------------
+
+Press <span class="keycap">Ctrl+Alt+Shift+R</span> in GNOME to start or stop
+capturing a screencast.
+
+The video is saved to <span class="filename">~/Videos/</span>.
+
+<div class="bug">
+
+<p>The screencast stops after 30 seconds. See [[!tails_ticket
+12723]].</p>
+
+<p>The screencast has no sound.</p>
+
+</div>

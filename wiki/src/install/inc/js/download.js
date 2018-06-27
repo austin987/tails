@@ -99,9 +99,9 @@ document.addEventListener("DOMContentLoaded", function() {
          - https://developer.chrome.com/extensions/api_index
     */
     minVersion = {
-      "firefox": 45,  // First release with chrome.runtime.getManifest
-      "chrome": 22,   // First release with chrome.runtime.getManifest
-      "torbrowser": 6 // First release based on Firefox 45
+      "firefox": 52,  // Tor Browser when releasing Tails Verification 1.0
+      "chrome": 57,   // Version from Debian Jessie, the oldest I could test
+      "torbrowser": 7 // First release based on Firefox 52
     };
     document.getElementById("min-version-firefox").textContent = minVersion.firefox.toString();
     document.getElementById("min-version-chrome").textContent = minVersion.chrome.toString();
@@ -216,11 +216,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (result === "failed") {
       show(document.getElementById("verification-failed"));
-      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool")); // Try again with different mirrors
+      // Try again with different mirrors
+      toggleDisplay(document.getElementsByClassName("use-mirror-pool"), "hide");
+      toggleDisplay(document.getElementsByClassName("use-mirror-pool-on-retry"), "show");
+      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool-on-retry"));
     }
     else if (result === "failed-again") {
       show(document.getElementById("verification-failed-again"));
-      replaceUrlPrefixWithRandomMirror(document.querySelectorAll(".use-mirror-pool")); // Change mirrors in case people try again anyway
     }
   }
 
