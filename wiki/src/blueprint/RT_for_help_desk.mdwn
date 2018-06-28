@@ -6,51 +6,56 @@ We want a tool that allows our help desk to
 MUST
 ----
 
- - Track easily what's been done and what's left from previous shifts:
+ - Track easily what's been done and what's left from previous help desk shifts:
    - Make it easy to ensure everything is answered
-   - Be able to follow an issue from the beginning to the end
+   - Allow a single person to follow an issue from the beginning to the end
  - Statistics:
-   - Know how many users encountered the same issue. Spot the "Top bug".
+   - Know how many users encountered the same issue. Spot the "Top bugs"
    - Be able to have stats on common issues
- - Security of the platform:
-   - Allow secure deletion of information over time. Not keep a database forever (how long? what to keep?)
-   - Handle incoming OpenPGP emails
-   - Handle outgoing OpenPGP emails
- - Be able to search into emails archive
- - Better interaction between user support and devs:
-   - Provide logs to devs
-   - Make it easy to drop more dev-related issues to devs
+   - Be able to categorize issues ("tags")
+ - Allow building a responsible data retention policy
+   - The platform will handle sensitive information (email addresses of
+     users, their hardware, their problems, etc.). We'll have to do some
+     threat modeling to figure out how to store each piece of
+     information and for how long. The platform might have built-in
+     capacity for this...
+ - Handle incoming and outgoing OpenPGP emails
+ - Allow searching in the archive of tickets
+   - Plain text search
+   - Search on metadata (eg. filter by the version of Tails)
+ - Make it easy to forward logs to devs (who might not have a direct
+   access to the platform)
  - Provide a separate queue of tickets per language [[!tails_ticket 9080]]
- - Make it easy to get new mates on board
+ - Make it easy to onboard new help desk members
  - Keep a database of template answers
+ - Allow cross-referencing Redmine tickets and help desk tickets
+   - For example, in order to know when a particular issue will be fixed
+   - Make it easy to contact the user back when there is a solution
+ - Parse automatically at least some metadata from WhisperBack reports
+   - We might want to parse automatically all kind of data from
+     WhisperBack reports but that might be hard to do (eg. hardware
+     information) but the platform should at least parse automatically the
+     WhisperBack headers (email address, version number, etc.)
 
 SHOULD
 ------
 
- - Make it easy to contact the user back when there is a solution
- - Hardware information
-   - Parse cleverly WhisperBack data (hardware, gpg, etc)
-   - Keep track of hardware compatibility (Tails works on XYZ, Wi-Fi card XYZ doesn't work)
- - Shift management:
-   - Replace the calendar of shifts and do something smart about that (send notifications to the person on duty)
-   - Automatically clock user support time
- - Replace the list of bad users. Flag them as nasty automatically
- - Allow forwarding issues from and to other user support projects (Tor, Access Now)
+ - Keep track of hardware compatibility (Tails works on XYZ, Wi-Fi card XYZ doesn't work)
+ - Replace the list of bad users and flag them automatically as nasty
  - Allow users to express whether they were satisfied with our answers
- - Be configurable using Puppet
- - Allow for easy extraction, archiving, and metrics on hardware
-   compatibility. For example to update our list of known issues easily
-   or to know whether Tails (and which version) worked on this same
-   hardware based on other WhisperBack reports. Hardware that would be
-   interesting to track:
-   - Laptop model (for boot issues)
-   - USB stick (to clean up known issues)
-   - Graphic cards
-   - Wi-Fi cards
 
 MAY
 ---
 
+ - As a start we'll aim at creating a tool that's only accessible to
+   help desk members (and maybe a few other core contributors) but not
+   to members of the Foundations and UX team in general.
+   But for the future, the platform might have built-in capacity to
+   handle different type of accesses to the data in terms of privacy.
+ - Shift management:
+   - Replace the calendar of shifts and do something smart about that (send notifications to the person on duty)
+   - Automatically clock user support time
+ - Allow forwarding issues from and to other user support projects (Tor, Access Now)
  - Have a disposable chat system for tricky cases (Tor does that)
 
 Resources
