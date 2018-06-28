@@ -60,54 +60,31 @@ def main():
     ...
     """
 
+    config = None
+    with open('/etc/whisperback/debugging-info.json', 'r') as conf_file:
+        config = json.load(conf_file)
+
     info = []
-    info.append(debug_file('root', '/proc/cmdline'))
-
-    # General hardware and filesystems information
-    info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer'))
-    info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name'))
-    info.append(debug_command('/usr/sbin/dmidecode', '-s', 'system-version'))
-    info.append(debug_command('/usr/bin/lspci', '-nn'))
-    info.append(debug_command('/bin/df', '--human-readable', '--print-type'))
-    info.append(debug_command('/bin/mount', '--show-labels'))
-    info.append(debug_command('/bin/lsmod'))
-    info.append(debug_file('root', '/proc/asound/cards'))
-    info.append(debug_file('root', '/proc/asound/devices'))
-    info.append(debug_file('root', '/proc/asound/modules'))
-
-    # Miscellaneous configuration and log files
-    info.append(debug_file('root', '/etc/X11/xorg.conf'))
-    info.append(debug_file('Debian-gdm', '/var/log/gdm3/tails-greeter.errors'))
-    info.append(debug_file('root', '/var/log/live/boot.log'))
-    info.append(debug_file('root', '/var/log/live/config.log'))
-    info.append(debug_file('root', '/var/lib/live/config/tails.physical_security'))
-
-    # Persistence
-    info.append(debug_file('root', '/var/lib/gdm3/tails.persistence'))
-    info.append(debug_file('tails-persistence-setup',
-                           '/live/persistence/TailsData_unlocked/persistence.conf'))
-    info.append(debug_file('tails-persistence-setup',
-                           '/live/persistence/TailsData_unlocked/live-additional-software.conf'))
-    info.append(debug_directory('root',
-                                '/live/persistence/TailsData_unlocked/apt-sources.list.d'))
-    info.append(debug_file('root', '/var/log/live-persist'))
-
-    # The Journal
-    info.append(debug_command('/bin/journalctl', '--catalog', '--no-pager'))
-
+    for _type, _args in config:
+        if _type == 'command':
+            info.append(debug_command(_args['args'][0], *_args['args'][1:]))
+        elif _type == 'directory':
+            info.append(debug_directory(_args['user'], _args['path']))
+        else:
+            info.append(debug_file(_args['user'], _args['path']))
     print()
-    print(json.dumps(info))
+    print(json.dumps(info, indent=4))
 
 
 def debug_command(command, *args):
     """Return the command and it's standard output as dict.
 
     >>> debug_command('echo', 'foo')
-    {'echo foo': ['foo']}
+    {...'key': 'echo foo'...}
     """
     command_output = subprocess.check_output([command, *args])
     command_output = command_output.decode('UTF-8').strip().split('\n')
-    return {'{}'.format(' '.join((command,) + args)): command_output}
+    return {'key': '{}'.format(' '.join((command,) + args)), 'content': command_output}
 
 
 def debug_file(user, filename):
@@ -118,23 +95,23 @@ def debug_file(user, filename):
     ...     _ = f.write("foo\\nbar")
     ...     _ = f.seek(0)
     ...     debug_file(getpass.getuser(), f.name)
-    {...: ['foo', 'bar']}
+    {...'content': ['foo', 'bar']...}
     """
     if not os.path.isfile(filename):
-        return {filename: 'Not found'}
+        return {'key': filename, 'content': 'Not found'}
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
     owner = getpwuid(os.stat(filename).st_uid).pw_name
     if owner != user:
-        return {filename: '''WARNING: not opening file {}, because it is '''
-                          '''owned by {} instead of {}'''.format(filename, owner, user)}
+        return {'key': filename, 'content': '''WARNING: not opening file {}, because it is '''
+                '''owned by {} instead of {}'''.format(filename, owner, user)}
 
     file_content = []
     with open(filename) as f:
         for l in f:
             file_content.append(l.replace('\n', ''))
-    return {filename: file_content}
+    return {'key': filename, 'content': file_content}
 
 
 def debug_directory(user, dir_name):
@@ -151,17 +128,17 @@ def debug_directory(user, dir_name):
     >>> os.remove(os.path.join(tmpdir, 'foo'))
     >>> os.rmdir(tmpdir)
     >>> result
-    {'/tmp/mytempdir': [{'/tmp/mytempdir/foo': ['foobar', 'bar']}]}
+    {...[{...['foobar', 'bar']...}]}
     """
     if not os.path.isdir(dir_name):
-        return {dir_name: 'Not found'}
+        return {'key': dir_name, 'content': 'Not found'}
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
     owner = getpwuid(os.stat(dir_name).st_uid).pw_name
     if owner != user:
-        return {dir_name: '''WARNING: not opening directory {}, because it is '''
-                          '''owned by {} instead of {}'''.format(dir_name, owner, user)}
+            return {'key': dir_name, 'content': '''WARNING: not opening directory {}, because '''
+                    '''it is owned by {} instead of {}'''.format(dir_name, owner, user)}
 
     files = os.listdir(dir_name)
 
@@ -169,7 +146,7 @@ def debug_directory(user, dir_name):
 
     for f in files:
         listing.append(debug_file(user, os.path.join(dir_name, f)))
-    return {dir_name: listing}
+    return {'key': dir_name, 'content': listing}
 
 
 if __name__ == '__main__':
