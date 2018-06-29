@@ -128,21 +128,6 @@ migrate_persistence_preset()
 	fi
 }
 
-migrate_icedove_to_thunderbird() {
-	local CONFIG="${1}"
-	local PERSISTENCE_DIR="$(dirname "${CONFIG}")"
-	if   [ -d "${PERSISTENCE_DIR}/thunderbird" ] || \
-	   ! [ -d "${PERSISTENCE_DIR}/icedove" ]
-	then
-		return
-	fi
-	mv "${PERSISTENCE_DIR}/icedove" "${PERSISTENCE_DIR}/thunderbird"
-	add_persistence_preset /home/amnesia/.thunderbird thunderbird "${conf}"
-	remove_persistence_preset /home/amnesia/.icedove "${conf}"
-	# The script /usr/local/bin/thunderbird takes care of the rest of
-	# the migration when starting Thunderbird.
-}
-
 # We override live-boot's logging facilities to get more useful error messages
 log_warning_msg ()
 {
@@ -382,12 +367,6 @@ activate_volumes ()
 			warning "Disabling '$f', that has unsafe access rights"
 			disable_and_create_empty_persistence_conf_file "$f"
 		fi
-	done
-
-	# Migrate persistence settings
-	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
-	do
-		migrate_icedove_to_thunderbird "${conf}"
 	done
 
 	# Fix permissions on persistent directories that were created
