@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+
+echo "Checking UIDs and GIDs stability"
+
+for file in passwd group; do
+	if ! cmp "/usr/share/tails/build/${file}" "/etc/${file}"; then
+		echo "/etc/${file} differs from expected:" >&2
+		diff -Naur "/usr/share/tails/build/${file}" "/etc/${file}" >&2
+		echo "If these changes are innocuous, update " \
+		     "config/chroot_local-includes/usr/share/tails/build/${file}." \
+		     >&2
+		echo >&2
+		echo "See #15407 and #13426 for more context." >&2
+	fi
+done
