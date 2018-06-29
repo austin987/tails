@@ -102,7 +102,7 @@ def debug_file(user, filename):
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
-    owner = getpwuid(os.stat(filename).st_uid).pw_name
+    owner = getpwuid(os.stat(filename, follow_symlinks=False).st_uid).pw_name
     if owner != user:
         return {'key': filename, 'content': '''WARNING: not opening file {}, because it is '''
                 '''owned by {} instead of {}'''.format(filename, owner, user)}
@@ -135,7 +135,7 @@ def debug_directory(user, dir_name):
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
-    owner = getpwuid(os.stat(dir_name).st_uid).pw_name
+    owner = getpwuid(os.stat(dir_name, follow_symlinks=False).st_uid).pw_name
     if owner != user:
             return {'key': dir_name, 'content': '''WARNING: not opening directory {}, because '''
                     '''it is owned by {} instead of {}'''.format(dir_name, owner, user)}
