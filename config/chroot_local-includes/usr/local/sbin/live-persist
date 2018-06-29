@@ -388,15 +388,6 @@ activate_volumes ()
 	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
 		migrate_icedove_to_thunderbird "${conf}"
-
-		# Let's make sure to get rid of any Enigmail configuredVersion
-		# that we previously used to set in a way that would become
-		# persistent in these files (see #12680).
-		tb_profile="$(dirname "${conf}")/thunderbird/profile.default"
-		rm -f "${tb_profile}/preferences/0000tails.js"
-		sed -i --regexp-extended \
-		    '/^(user_)?pref\("extensions\.enigmail\.configuredVersion",/d' \
-		    "${tb_profile}/prefs.js"
 	done
 
 	# Fix permissions on persistent directories that were created
