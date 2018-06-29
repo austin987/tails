@@ -70,26 +70,26 @@ Feature: Browsing the web using the Tor Browser
     And the file "/run/live/overlay/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/live/overlay/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/tmp/synaptic.html" exists
-    Given I start monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    Given I start monitoring the AppArmor log of "torbrowser_firefox"
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And I open the address "file:///home/amnesia/Tor Browser/synaptic.html" in the Tor Browser
     Then I see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/Tor Browser/synaptic.html"
-    Given I restart monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    And AppArmor has not denied "torbrowser_firefox" from opening "/home/amnesia/Tor Browser/synaptic.html"
+    Given I restart monitoring the AppArmor log of "torbrowser_firefox"
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
-    Given I restart monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    And AppArmor has denied "torbrowser_firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
+    Given I restart monitoring the AppArmor log of "torbrowser_firefox"
     When I open the address "file:///run/live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/run/live/overlay/home/amnesia/.gnupg/synaptic.html"
-    Given I restart monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    And AppArmor has denied "torbrowser_firefox" from opening "/run/live/overlay/home/amnesia/.gnupg/synaptic.html"
+    Given I restart monitoring the AppArmor log of "torbrowser_firefox"
     When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     # Due to our AppArmor aliases, /live/overlay will be treated
     # as /run/live/overlay.
-    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/run/live/overlay/home/amnesia/.gnupg/synaptic.html"
+    And AppArmor has denied "torbrowser_firefox" from opening "/run/live/overlay/home/amnesia/.gnupg/synaptic.html"
     # We do not get any AppArmor log for when access to files in /tmp is denied
     # since we explictly override (commit 51c0060) the rules (from the user-tmp
     # abstration) that would otherwise allow it, and we do so with "deny", which
