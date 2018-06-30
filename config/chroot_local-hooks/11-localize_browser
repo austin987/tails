@@ -41,14 +41,14 @@ fi
 # This very long while-loop is fed the DESCRIPTIONS_FILE (IO
 # redirection at the bottom), which describes how we will localize
 # each supported Tor Browser locale. The format is:
-#   MOZILLA_LOCALE:LOCATION:LOCALIZED_LANG:STARTPAGE_LANG
+#   MOZILLA_LOCALE:LOCATION:LOCALIZED_LANG
 # Note that we're forced to pick some representative location for the
 # language-only locales, like Egypt (EG) for Arabic (ar).
-while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG; do
+while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG; do
     if [ -z "${MOZILLA_LOCALE}" ] || [ -z "${LOCATION}" ] || \
-       [ -z "${LOCALIZED_LANG}" ] || [ -z "${STARTPAGE_LANG}" ]; then
+       [ -z "${LOCALIZED_LANG}" ]; then
         echo "Something is wrong with ${DESCRIPTIONS_FILE}" >&2
-        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}:${LOCALIZED_LANG}:${STARTPAGE_LANG}" >&2
+        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}:${LOCALIZED_LANG}" >&2
        exit 1
     fi
 
@@ -66,11 +66,6 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG; do
     LANG_CODE="$(language_code_from_locale "${NORMAL_LOCALE}")"
     TARGET_SEARCHPLUGINS_DIR="${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/${MOZILLA_LOCALE}"
     mkdir -p "${TARGET_SEARCHPLUGINS_DIR}"
-
-    sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
-        -e "s/\${LANG}/${STARTPAGE_LANG}/" \
-        "${BROWSER_LOCALIZATION_DIR}/startpage.xml-template" > \
-        "${TARGET_SEARCHPLUGINS_DIR}/startpage-${MOZILLA_LOCALE}.xml"
 
     DDG_PLUGIN="${TARGET_SEARCHPLUGINS_DIR}/ddg-${MOZILLA_LOCALE}.xml"
     DDG_LANG_UI="${NORMAL_LOCALE}"
@@ -158,7 +153,6 @@ rm -r "${BROWSER_LOCALIZATION_DIR}"
 # alter it.
 7z d -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
    'chrome/en-US/locale/browser/searchplugins/ddg*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
    'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
    'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
 # For consistency, fixup the internal timestamps of these archives with
@@ -169,7 +163,6 @@ strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
 for pack in "${TBB_EXT}"/langpack-*.xpi; do
     7z d -mtc=off -tzip "${pack}" \
        'browser/chrome/*/locale/browser/searchplugins/ddg*.xml' \
-       'browser/chrome/*/locale/browser/searchplugins/startpage*.xml' \
        'browser/chrome/*/locale/browser/searchplugins/wikipedia*.xml' \
        'browser/chrome/*/locale/browser/searchplugins/yahoo*.xml'
     strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
