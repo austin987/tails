@@ -41,14 +41,14 @@ fi
 # This very long while-loop is fed the DESCRIPTIONS_FILE (IO
 # redirection at the bottom), which describes how we will localize
 # each supported Tor Browser locale. The format is:
-#   MOZILLA_LOCALE:LOCATION:LOCALIZED_LANG:STARTPAGE_LANG:STARTPAGE_LANG_UI
+#   MOZILLA_LOCALE:LOCATION:LOCALIZED_LANG:STARTPAGE_LANG
 # Note that we're forced to pick some representative location for the
 # language-only locales, like Egypt (EG) for Arabic (ar).
-while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE_LANG_UI; do
+while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG; do
     if [ -z "${MOZILLA_LOCALE}" ] || [ -z "${LOCATION}" ] || \
        [ -z "${LOCALIZED_LANG}" ] || [ -z "${STARTPAGE_LANG}" ]; then
         echo "Something is wrong with ${DESCRIPTIONS_FILE}" >&2
-        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}:${LOCALIZED_LANG}:${STARTPAGE_LANG}:${STARTPAGE_LANG_UI}" >&2
+        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}:${LOCALIZED_LANG}:${STARTPAGE_LANG}" >&2
        exit 1
     fi
 
@@ -67,12 +67,8 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     TARGET_SEARCHPLUGINS_DIR="${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/${MOZILLA_LOCALE}"
     mkdir -p "${TARGET_SEARCHPLUGINS_DIR}"
 
-    if [ -z "${STARTPAGE_LANG_UI}" ]; then
-        STARTPAGE_LANG_UI=english
-    fi
     sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
         -e "s/\${LANG}/${STARTPAGE_LANG}/" \
-        -e "s/\${LANG_UI}/${STARTPAGE_LANG}/" \
         "${BROWSER_LOCALIZATION_DIR}/startpage.xml-template" > \
         "${TARGET_SEARCHPLUGINS_DIR}/startpage-${MOZILLA_LOCALE}.xml"
 
