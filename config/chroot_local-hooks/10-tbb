@@ -324,7 +324,7 @@ fi
 TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
 TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
 
-# The Debian Iceweasel extensions we want to install and make
+# The Debian Firefox extensions we want to install and make
 # available in the Tor Browser.
 DEBIAN_EXT_PKGS="xul-ext-ublock-origin"
 
@@ -349,11 +349,11 @@ rm -r "${TMP}"
 mv "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
 rmdir "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions
 
-# ... and then install a few Iceweasel extension by using a fake
-# Iceweasel equivs package to satisfy the dependencies.
+# ... and then install a few Firefox extension by using a fake
+# firefox equivs package to satisfy the dependencies.
 FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/application.ini)
-FAKE_ICEWEASEL_VERSION=${FIREFOX_VERSION}+fake1
-install_fake_package iceweasel "${FAKE_ICEWEASEL_VERSION}" web
+FAKE_FIREFOX_VERSION=${FIREFOX_VERSION}+fake1
+install_fake_package firefox "${FAKE_FIREFOX_VERSION}" web
 install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
 
 mkdir -p "${TBB_PROFILE}"
