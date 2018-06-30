@@ -118,8 +118,8 @@ EOF
 # TBB works around the lack of code signing for its extensions by
 # hacking in exceptions. We do the same!
 apply_extension_code_signing_hacks () {
-    local destination tmp tbb_timestamp
-    destination="${1}"
+    local tbb_install
+    tbb_install="${1}"
 
     # For consistency we'll set timestamps of files we modify to the
     # same one used by the Tor Browser instead of SOURCE_DATE_EPOCH.
@@ -128,7 +128,7 @@ apply_extension_code_signing_hacks () {
     tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z x -tzip "${TBB_INSTALL}/omni.ja"
+        7z x -tzip "${tbb_install}/omni.ja"
         patch -p1 <<EOF
 diff -Naur a/chrome/toolkit/content/mozapps/extensions/extensions.js b/chrome/toolkit/content/mozapps/extensions/extensions.js
 --- a/chrome/toolkit/content/mozapps/extensions/extensions.js 2000-01-01 00:00:00.000000000 +0000
@@ -167,14 +167,14 @@ diff -Naur a/modules/addons/XPIProvider.jsm b/modules/addons/XPIProvider.jsm
 EOF
         touch --date="@${tbb_timestamp}" modules/addons/XPIProvider.jsm \
               chrome/toolkit/content/mozapps/extensions/extensions.js
-        rm "${TBB_INSTALL}/omni.ja"
-        7z a -mtc=off -tzip "${TBB_INSTALL}/omni.ja" *
+        rm "${tbb_install}/omni.ja"
+        7z a -mtc=off -tzip "${tbb_install}/omni.ja" *
     )
     rm -r "${tmp}"
     tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z x -tzip "${TBB_INSTALL}/browser/omni.ja"
+        7z x -tzip "${tbb_install}/browser/omni.ja"
         patch -p1 <<EOF
 diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
 --- a/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
@@ -191,8 +191,8 @@ diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
            }
 EOF
         touch --date="@${tbb_timestamp}" components/nsBrowserGlue.js
-        rm "${TBB_INSTALL}/browser/omni.ja"
-        7z a -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" *
+        rm "${tbb_install}/browser/omni.ja"
+        7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
     )
     rm -r "${tmp}"
 }
