@@ -199,16 +199,16 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
   config.each do |config_item|
     debug_log("Looking at #{config_item}")
     next unless config_item[0] == 'file'
-    user = config_item[1]['user']
+    debug_user = config_item[1]['user']
     debug_file = config_item[1]['path']
     # We're only testing leak of information, that's normally not
     # accessible to the amnesia user, via "sudo tails-debugging-info"
-    next if user == LIVE_USER
+    next if debug_user == LIVE_USER
     # Skip files that do not exist, or cannot be removed (e.g. the
     # ones in /proc).
     next if not($vm.execute("rm #{debug_file}").success?)
     # Ensure the target of the symlink is owned by the expected user
-    $vm.execute_successfully("chown #{user}:#{user} #{secret_file}")
+    $vm.execute_successfully("chown #{debug_user}:#{debug_user} #{secret_file}")
     # Check what would happen *if* the amnesia user managed to replace
     # the debugging file with a symlink to the secret.
     $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
