@@ -194,7 +194,6 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
   secret_contents = 'T0P S3Cr1t -- 3yEs oN1y'
   $vm.file_append(secret_file, secret_contents)
   $vm.execute_successfully("chmod u=rw,go= #{secret_file}")
-  $vm.execute_successfully("chown root:root #{secret_file}")
   config = JSON.load($vm.file_content('/etc/whisperback/debugging-info.json'))
   debug_log("Config: #{config}")
   config.each do |config_item|
@@ -208,6 +207,8 @@ Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
     # Skip files that do not exist, or cannot be removed (e.g. the
     # ones in /proc).
     next if not($vm.execute("rm #{debug_file}").success?)
+    # Ensure the target of the symlink is owned by the expected user
+    $vm.execute_successfully("chown #{user}:#{user} #{secret_file}")
     # Check what would happen *if* the amnesia user managed to replace
     # the debugging file with a symlink to the secret.
     $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
