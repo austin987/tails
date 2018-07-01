@@ -78,12 +78,6 @@ pref("browser.newtabpage.directory.ping", "");
 // ... and disable the explanation shown the first time
 pref("browser.newtabpage.introShown", true);
 
-// Don't use geographically specific search prefs, like
-// browser.search.*.US for US locales. Our generated localization
-// profiles localizes search-engines in an incompatible but equivalent
-// way.
-pref("browser.search.geoSpecificDefaults", false);
-
 // Without setting this, the Download Management page will not update
 // the progress being made.
 pref("browser.download.panel.shown", true);

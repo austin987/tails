@@ -197,36 +197,6 @@ EOF
     rm -r "${tmp}"
 }
 
-# Modern Firefox doesn't apply browser.search.defaultenginename on
-# start, and the other ways to get it to work (e.g. pre-generating
-# search.json.mozlz4) seems rather complex. Instead, let's just make
-# browser.search.defaultenginename work again by employing some
-# Enterprise features to run arbitrary JavaScript with access to the
-# Firefox internals. For the details of this feature, see:
-# https://developer.mozilla.org/en-US/Firefox/Enterprise_deployment
-apply_default_searchengine_hacks () {
-    local destination
-    destination="${1}"
-
-    cat > "${destination}/defaults/pref/autoconfig.js" <<EOF
-// This file must start with a comment
-pref("general.config.filename", "mozilla.cfg");
-pref("general.config.obscure_value", 0);
-EOF
-
-    cat > "${destination}/mozilla.cfg" <<EOF
-// This file must start with a comment
-var searchService = Components.classes["@mozilla.org/browser/search-service;1"].getService(Components.interfaces.nsIBrowserSearchService);
-var engineName = getPref("browser.search.defaultenginename");
-if (engineName) {
-    var engine = searchService.getEngineByName(engineName);
-    if (engine) {
-        searchService.currentEngine = engine;
-    }
-}
-EOF
-}
-
 apply_extension_prefs_hacks() {
     local tbb_install tmp tbb_timestamp
     tbb_install="${1}"
@@ -333,7 +303,6 @@ download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 apply_extension_code_signing_hacks "${TBB_INSTALL}"
-apply_default_searchengine_hacks "${TBB_INSTALL}"
 apply_extension_prefs_hacks "${TBB_INSTALL}"
 strip_nondeterminism "${TBB_INSTALL}"
 
