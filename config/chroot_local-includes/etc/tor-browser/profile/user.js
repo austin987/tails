@@ -1,11 +1,8 @@
 // As suggested in TBB's start-tor-browser script for system-wide Tor
 // instances
 user_pref("network.security.ports.banned", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9062,9150,9051");
-user_pref("extensions.torbutton.custom.socks_host", "127.0.0.1");
-user_pref("extensions.torbutton.custom.socks_port", 9150);
 user_pref("extensions.torbutton.launch_warning",  false);
 user_pref("extensions.torbutton.settings_method", "custom");
-user_pref("extensions.torbutton.socks_port", 9150);
 user_pref("extensions.torbutton.use_privoxy", false);
 
 // Tails-specific configuration below
