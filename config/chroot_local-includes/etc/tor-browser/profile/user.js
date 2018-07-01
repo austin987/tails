@@ -18,14 +18,8 @@ user_pref("extensions.torbutton.prompted_language", true);
 
 // Tails-specific Torbutton preferences
 user_pref("extensions.torbutton.lastUpdateCheck", "9999999999.999");
-user_pref("extensions.torbutton.startup", true);
-user_pref("extensions.torbutton.startup_state", 1);
 user_pref("extensions.torbutton.test_enabled", false); // Tails-specific
 user_pref("extensions.torbutton.control_port", 9051);
-
-// Not setting this prevents some add-on GUI elements from appearing
-// on the first run of the browser, e.g. uBlock Origin's button.
-user_pref("extensions.torbutton.inserted_button", true);
 
 // These must be set to the same value to prevent Torbutton from
 // flashing its upgrade notification.
