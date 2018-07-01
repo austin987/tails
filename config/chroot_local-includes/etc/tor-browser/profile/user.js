@@ -21,7 +21,6 @@ user_pref("extensions.torbutton.lastUpdateCheck", "9999999999.999");
 user_pref("extensions.torbutton.startup", true);
 user_pref("extensions.torbutton.startup_state", 1);
 user_pref("extensions.torbutton.test_enabled", false); // Tails-specific
-user_pref("extensions.torbutton.tor_memory_jar", true);
 user_pref("extensions.torbutton.control_port", 9051);
 
 // Not setting this prevents some add-on GUI elements from appearing
