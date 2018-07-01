@@ -46,15 +46,6 @@ user_pref("layout.spellcheckDefault", 0);
 user_pref("network.dns.disableIPv6", true);
 user_pref("security.warn_submit_insecure", true);
 
-// Disable fetching of the new tab page's Tiles links/ads. Ads are
-// generally unwanted, and also the fetching is a "phone home" type of
-// feature that generates traffic at least the first time the browser
-// is started.
-user_pref("browser.newtabpage.directory.source", "");
-user_pref("browser.newtabpage.directory.ping", "");
-// ... and disable the explanation shown the first time
-user_pref("browser.newtabpage.introShown", true);
-
 // Without setting this, the Download Management page will not update
 // the progress being made.
 user_pref("browser.download.panel.shown", true);
