@@ -32,14 +32,6 @@ user_pref("extensions.torbutton.inserted_button", true);
 user_pref("extensions.torbutton.lastBrowserVersion", "Tails");
 user_pref("torbrowser.version", "Tails");
 
-// Quoting TBB: "Now handled by plugins.click_to_play"
-// Tails: we don't support these plugins, so letting NoScript block it seems
-// to be potentially useful defense-in-depth.
-user_pref("noscript.forbidFlash", true);
-user_pref("noscript.forbidSilverlight", true);
-user_pref("noscript.forbidJava", true);
-user_pref("noscript.forbidPlugins", true);
-
 // Other Tails-specific NoScript preferences
 user_pref("noscript.untrusted", "google-analytics.com");
 
