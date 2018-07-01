@@ -12,8 +12,10 @@
 # dictionary looking something like this:
 #
 #     - name: blabla
-#       exe-paths:
-#         - path_to_executable
+#       apparmor-profiles:
+#         - path_to_executable_if_that_is_the_name_of_the_apparmor_profile
+#         # or
+#         - explicit_apparmor_profile_name
 #         ...
 #       users:
 #         - user
@@ -47,10 +49,10 @@
 # least one of the elements match the client. For local (loopback)
 # clients the following qualifiers are relevant:
 #
-# * `exe-paths`: a list of strings, each describing the path to
-#   the binary or script of the client with `*` matching
-#   anything. While this matcher always works for binaries, it only
-#   works for scripts with an enabled AppArmor profile (not
+# * `apparmor-profiles`: a list of strings, each being the name
+#   of the AppArmor profile applied to the binary or script of the client,
+#   with `*` matching anything. While this matcher always works for binaries,
+#   it only works for scripts with an enabled AppArmor profile (not
 #   necessarily enforced, complain mode is good enough).
 #
 # * `users`: a list of strings, each describing the user of the
@@ -163,7 +165,7 @@ def pid_of_laddr(address):
         return None
 
 
-def exe_path_of_pid(pid):
+def apparmor_profile_of_pid(pid):
     # Here we leverage AppArmor's in-kernel solution for determining
     # the exact executable invoked. Looking at /proc/pid/exe when an
     # interpreted script is running will just point to the
@@ -172,12 +174,12 @@ def exe_path_of_pid(pid):
     # using one of its profiles. However, we fallback to /proc/pid/exe
     # in case there is no AppArmor profile, so the only unsupported
     # mode here is unconfined scripts.
-    enabled_aa_profile_re = r'^(/.+) \((?:complain|enforce)\)$'
+    enabled_aa_profile_re = r'^(.+) \((?:complain|enforce)\)$'
     with open('/proc/{}/attr/current'.format(str(pid)), "rb") as fh:
         aa_profile_status = str(fh.read().strip(), 'UTF-8')
-        exe_path_match = re.match(enabled_aa_profile_re, aa_profile_status)
-        if exe_path_match:
-            return exe_path_match.group(1)
+        apparmor_profile_match = re.match(enabled_aa_profile_re, aa_profile_status)
+        if apparmor_profile_match:
+            return apparmor_profile_match.group(1)
         else:
             return psutil.Process(pid).exe()
 
@@ -580,11 +582,11 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             # client being killed before we find the PID.
             if not self.client_pid:
                 return
-            client_exe_path = exe_path_of_pid(self.client_pid)
+            client_apparmor_profile = apparmor_profile_of_pid(self.client_pid)
             client_user = psutil.Process(self.client_pid).username()
             matchers = [
-                ('exe-paths', client_exe_path),
-                ('users',     client_user),
+                ('apparmor-profiles', client_apparmor_profile),
+                ('users',             client_user),
             ]
         else:
             self.client_pid = None
@@ -593,9 +595,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
             ]
         self.match_and_parse_filter(matchers)
         if local_connection:
-            self.client_desc = '{exe} (pid: {pid}, user: {user}, ' \
+            self.client_desc = '{aa_profile} (pid: {pid}, user: {user}, ' \
                                'port: {port}, filter: {filter_name})'.format(
-                                   exe=client_exe_path,
+                                   aa_profile=client_apparmor_profile,
                                    pid=self.client_pid,
                                    user=client_user,
                                    port=self.client_address[1],

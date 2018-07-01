@@ -109,9 +109,13 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Run the [tests the Tor Browser folks
   use](https://trac.torproject.org/projects/tor/wiki/doc/build/BuildSignoff#TestPagestoUse).
   (automate: [[!tails_ticket 10260]])
-* Compare the fingerprint of Tails and the latest Tor Browser using at least
+* Compare the fingerprint Tor Browser in Tails with the fingerprint of
+  the same version of Tor Browser (running outside of Tails), using at least
   <https://panopticlick.eff.org/> (automate: [[!tails_ticket 10262]])
   - The exposed User-Agent should match the latest Tor Browser's one.
+  - Ignore the result of the "blocking tracking ads" and "blocking
+    invisible trackers" tests, which seem unreliable (we've seen
+    different results for the very same version of Tor Browser).
   - Update the *Browser fingerprint* section of the
     [[known issues|support/known_issues]] if needed.
 * WebRTC should be disabled: (automate: [[!tails_ticket 10264]])
@@ -157,12 +161,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
   4. Check the dump for the HELO/EHLO message and
      verify that it only contains `127.0.0.1`:
      `sudo tcpdump -A -r dump | grep EHLO`
-* Make sure Thunderbird Mail use its dedicated `SocksPort` (see "SocksPort
-  for the MUA" in `/etc/tor/torrc`) when connecting to IMAP / POP3 /
-  SMTP servers (both clearnet and hidden services) by monitoring the
-  output of this command:
-
-      sudo watch -n 0.1 'ss -taupen | grep thunderbird'
 
 # Tor
 
@@ -198,15 +196,18 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Incremental upgrades
 
-* List the versions from which an upgrade paths to this one is described.
-  In the `stable` or `testing` branch:
+* List the versions from which an upgrade path to this one is described.
+  On the `master` branch:
 
-      git grep -l "  version: '\?0.23'\?" wiki/src/upgrade/
+      git grep -E -l "  version: '?0.23'?" \
+          wiki/src/upgrade/v1/Tails/*/*/test/upgrades.yml
+
+  … replacing "0.23" with the version you are testing.
 
 * For each description file, open it and verify if it allows incremental upgrade
   or only full upgrade.
 
-* For each previous version from which an upgrade paths is described, install it
+* For each previous version from which an upgrade path is described, install it
   and try to upgrade:
   * For every incremental upgrade path: make sure the resulting updated
     system "works fine" (boots, pretends to be the correct version,
@@ -246,7 +247,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
     To synchronize your local copy:
 
-        torsocks rsync -rt --progress --delete rsync.torproject.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
+        torsocks rsync -rt --progress --delete mirrors.rsync.tails.boum.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
 
   * Patch `/etc/hosts` in Tails to point to your web server:
 
@@ -273,20 +274,29 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Tails Verification
 
-* Verify the ISO image of the current release (for example $N=3.7)
-  using *Tails Verification* from Tor Browser in the version that you
-  are testing (for example $N+1=3.8):
+* The goal is is to check that *Tails Verification* works in *Tor
+  Browser* in the version of Tails we are testing here. *Tails
+  Verification* only supports verifying the current release so for
+  example, when doing tests for the Tails 3.9 release, we use it in
+  the tentative Tails 3.9 to verify the Tails 3.8 ISO image.
 
-  1. Visit <https://tails.boum.org/install/download/>.
+  1. Start the Tails that you are testing.
 
-  1. Download the ISO image of the current release (or click "*I already
-     downloaded Tails $N*").
+  2. Start *Tor Browser*.
 
-  1. Install *Tails Verification*.
+  3. Visit <https://tails.boum.org/install/download/>.
 
-  1. Click the **Verify Tails $N** button.
+  4. If you already have the ISO image for the last, already released
+     version of Tails, i.e. the one that's advertised in the sidebar
+     of our production website, then click "*I already downloaded Tails $N*".
+     Otherwise follow the instructions on that web page to download
+     the ISO image.
 
-  1. The verification should be successful.
+  5. Install *Tails Verification*.
+
+  6. Click the **Verify Tails $N** button.
+
+  7. The verification should be successful.
 
 # Real (non-VM) hardware
 
@@ -337,7 +347,8 @@ You *really* have to reboot between each language.
   - work in Tor Browser when activated after the browser has started;
   - work in Thunderbird when activated after Thunderbird has started;
   - be auto-configured to use the same keyboard layout as the
-    X session.
+    X session (known exceptions: Chinese, Persian, Português,
+    Russian, Tiếng Việt).
 * In the Tor Browser:
   - DuckDuckGo must be the default, pre-selected search plugin. (automate: [[!tails_ticket 10265]])
   - the search plugins must be localized for the expected locales
@@ -387,9 +398,6 @@ identifying other language names in):
 
 # Misc
 
-* Check that Tails Greeter's "more options" screen displays properly
-  on a display with 600 px height, preferably in a language that's
-  more verbose than English (e.g. French). (automate: [[!tails_ticket 10276]])
 * Check that all seems well during init: (automate: [[!tails_ticket 10277]])
   - `systemctl --failed --all` should say `0 loaded units listed`
   - the output of `journalctl` should seem OK.
