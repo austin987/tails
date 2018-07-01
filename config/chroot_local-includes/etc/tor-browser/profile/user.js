@@ -2,8 +2,6 @@
 // instances
 user_pref("network.security.ports.banned", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9062,9150,9051");
 user_pref("extensions.torbutton.launch_warning",  false);
-user_pref("extensions.torbutton.settings_method", "custom");
-user_pref("extensions.torbutton.use_privoxy", false);
 
 // Tails-specific configuration below
 
@@ -18,17 +16,8 @@ user_pref("app.update.enabled", false);
 user_pref("extensions.torbutton.spoof_english", true);
 user_pref("extensions.torbutton.prompted_language", true);
 
-// Block read and write access to the history in non-Tor mode
-user_pref("extensions.torbutton.block_nthread", true);
-user_pref("extensions.torbutton.block_nthwrite", true);
-
 // Tails-specific Torbutton preferences
-user_pref("extensions.torbutton.block_tforms", false);
-user_pref("extensions.torbutton.display_panel", false);
 user_pref("extensions.torbutton.lastUpdateCheck", "9999999999.999");
-user_pref("extensions.torbutton.no_updates", true);
-user_pref("extensions.torbutton.nonontor_sessionstore", true);
-user_pref("extensions.torbutton.nontor_memory_jar", true);
 user_pref("extensions.torbutton.startup", true);
 user_pref("extensions.torbutton.startup_state", 1);
 user_pref("extensions.torbutton.test_enabled", false); // Tails-specific
