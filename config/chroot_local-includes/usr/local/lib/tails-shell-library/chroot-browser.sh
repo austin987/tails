@@ -126,9 +126,8 @@ configure_chroot_browser_profile () {
     done
 
     # Set preferences
-    local browser_prefs="${browser_profile}/preferences/prefs.js"
+    local browser_prefs="${browser_profile}/user.js"
     local chroot_browser_config="/usr/share/tails/chroot-browsers"
-    mkdir -p "$(dirname "${browser_prefs}")"
     cat "${chroot_browser_config}/common/prefs.js" \
         "${chroot_browser_config}/${browser_name}/prefs.js" > "${browser_prefs}"
 
