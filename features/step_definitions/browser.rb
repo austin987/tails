@@ -44,7 +44,7 @@ def xul_application_info(application)
     address_bar_image = nil
     # The standalone Tor Launcher uses fewer libs than the full
     # browser.
-    unused_tbb_libs.concat(["libfreebl3.so", "libnssckbi.so", "libsoftokn3.so"])
+    unused_tbb_libs.concat(["libfreebl3.so", "libfreeblpriv3.so", "libnssckbi.so", "libsoftokn3.so"])
   else
     raise "Invalid browser or XUL application: #{application}"
   end
