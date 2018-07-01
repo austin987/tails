@@ -34,21 +34,6 @@ start_thunderbird() {
 
     configure_default_incoming_protocol
 
-    # Apply only the relevant parts of Debian's Icedove → Thunderbird
-    # migration procedure.
-    TB_PROFILE_FOLDER="${THUNDERBIRD_CONFIG_DIR}"
-    if [ ! -f "${TB_PROFILE_FOLDER}/.migrated" ]; then
-        # Debian's migration helpers are not designed to have set -e
-        # or -u enabled.
-        set +e
-        set +u
-        . /usr/lib/thunderbird/thunderbird-wrapper-helper.sh
-        do_fix_mimetypes_rdf
-        do_create_migrated_mark_file
-        set -e
-        set -u
-    fi
-
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
 
