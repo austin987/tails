@@ -90,7 +90,7 @@ configure_xulrunner_app_locale() {
     locale="${2}"
     mkdir -p "${profile}"/preferences
     echo "pref(\"general.useragent.locale\", \"${locale}\");" > \
-        "${profile}"/preferences/0000locale.js
+        "${profile}"/prefs.js
 }
 
 configure_best_tor_browser_locale() {
@@ -99,7 +99,7 @@ configure_best_tor_browser_locale() {
     best_locale="$(guess_best_tor_browser_locale)"
     configure_xulrunner_app_locale "${profile}" "${best_locale}"
     cat "/etc/tor-browser/locale-profiles/${best_locale}.js" \
-        >> "${profile}/preferences/0000locale.js"
+        >> "${profile}/prefs.js"
 }
 
 configure_best_tor_launcher_locale() {

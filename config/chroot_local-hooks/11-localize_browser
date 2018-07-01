@@ -114,7 +114,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG; do
             echo "Trying to make search plugin '${PLUGIN}' the default for ${MOZILLA_LOCALE} but it unexpectedly wasn't the one we generated earlier" >&2
             exit 1
         fi
-        set_mozilla_pref "${LOCALE_PROFILE_FILE}" "${KEY}" "\"${PLUGIN}\""
+        set_mozilla_pref "${LOCALE_PROFILE_FILE}" "${KEY}" "\"${PLUGIN}\"" "user_pref"
     done
     TBB_DICTIONARIES_DIR="${TBB_INSTALL}/dictionaries"
     unset SPELLCHECKER_LOCALE
@@ -133,7 +133,8 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG; do
     fi
     set_mozilla_pref "${LOCALE_PROFILE_FILE}" \
                           "spellchecker.dictionary" \
-                          "\"${SPELLCHECKER_LOCALE}\""
+                          "\"${SPELLCHECKER_LOCALE}\"" \
+                           "user_pref"
     HOMEPAGE="https://tails.boum.org/home/"
     if echo "${TAILS_WIKI_SUPPORTED_LANGUAGES}" | grep -qw "${LANG_CODE}"; then
         HOMEPAGE="${HOMEPAGE}index.${LANG_CODE}.html"
