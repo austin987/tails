@@ -647,7 +647,7 @@ namespace :basebox do
     boxes.sort! { |a, b| basebox_date(a) <=> basebox_date(b) }
     boxes.pop
     boxes.each do |box|
-      if basebox_date(box) < Date.today - 365.0/3.0
+      if basebox_date(box) < Date.today - 365.0/2.0
         clean_up_basebox(box)
       end
     end
