@@ -29,35 +29,10 @@ configure_default_incoming_protocol() {
 }
 
 start_thunderbird() {
-   # Give Thunderbird its own temp directory, similar rationale to a1fd1f0f & #9558.
-    TMPDIR="${PROFILE}/tmp"
-    mkdir --mode=0700 -p "$TMPDIR"
-    export TMPDIR
-
-    # Clean the temporary directory: it's generally persistent, and then
-    # temporary files (including decrypted attachements) would otherwise
-    # be stored forever there (#13340).
-    rm -rf "${TMPDIR}"/*
-
     export GNOME_ACCESSIBILITY=1
     unset SESSION_MANAGER
 
     configure_default_incoming_protocol
-
-    # Apply only the relevant parts of Debian's Icedove → Thunderbird
-    # migration procedure.
-    TB_PROFILE_FOLDER="${THUNDERBIRD_CONFIG_DIR}"
-    if [ ! -f "${TB_PROFILE_FOLDER}/.migrated" ]; then
-        # Debian's migration helpers are not designed to have set -e
-        # or -u enabled.
-        set +e
-        set +u
-        . /usr/lib/thunderbird/thunderbird-wrapper-helper.sh
-        do_fix_mimetypes_rdf
-        do_create_migrated_mark_file
-        set -e
-        set -u
-    fi
 
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
