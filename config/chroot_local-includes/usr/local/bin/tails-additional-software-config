@@ -96,7 +96,12 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
         dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT)
         dialog.add_button(Gtk.STOCK_REMOVE, Gtk.ResponseType.ACCEPT)
         if dialog.run() == Gtk.ResponseType.ACCEPT:
-            self.remove_asp_func(package_name)
+            try:
+                self.remove_asp_func(package_name)
+            except subprocess.CalledProcessError as e:
+                self.__show_exception_dialog(
+                    _("Failed to remove {pkg}").format(pkg=package_name),
+                    e)
         dialog.destroy()
 
     def cb_persistence_button_clicked(self, button, data=None):
