@@ -207,7 +207,8 @@ class ASPConfigApplication(Gtk.Application):
             remove_asp_func=self.remove_additional_software)
 
         packages_list_file = Gio.File.new_for_path(
-            get_packages_list_path(search_new_persistence=True))
+            get_packages_list_path(search_new_persistence=True,
+                                   return_nonexistent=True))
         self.packages_list_monitor = packages_list_file.monitor(
             Gio.FileMonitorFlags.NONE, None)
         self.packages_list_monitor.connect(
