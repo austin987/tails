@@ -68,6 +68,17 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
             current.show()
             row.set_header(current)
 
+    def __show_exception_dialog(self, explanation, exception):
+        dialog = Gtk.MessageDialog(
+            self,
+            Gtk.DialogFlags.DESTROY_WITH_PARENT,
+            Gtk.MessageType.ERROR,
+            Gtk.ButtonsType.OK,
+            explanation)
+        dialog.format_secondary_text(str(exception))
+        dialog.run()
+        dialog.destroy()
+
     def cb_activate_link(self, label, uri):
         if uri.endswith(".desktop"):
             appinfo = Gio.DesktopAppInfo.new(uri)
@@ -100,15 +111,9 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
         try:
             packages = self.get_config_func()
         except Exception as e:
-            dialog = Gtk.MessageDialog(
-                self,
-                Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                Gtk.MessageType.ERROR,
-                Gtk.ButtonsType.OK,
-                _("Failed to read additional software configuration"))
-            dialog.format_secondary_text(str(e))
-            dialog.run()
-            dialog.destroy()
+            self.__show_exception_dialog(
+                _("Failed to read additional software configuration"),
+                e)
             self.hide()
             return
         self.persistence_button.set_visible(False)
