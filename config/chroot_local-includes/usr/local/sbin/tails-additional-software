@@ -199,17 +199,17 @@ def _spawn_daemon(func):
     func()
 
 
-def _format_list(lst):
-    """Return a nice formatted version of list."""
-    lst = sorted(lst)
+def _format_iterable(iterable):
+    """Return a nice formatted string with the elements of iterable."""
+    iterable = sorted(iterable)
 
-    if len(lst) == 1:
+    if len(iterable) == 1:
         return lst[0]
-    elif len(lst) > 1:
-        return "{beginning} and {last}".format(beginning=", ".join(lst[:-1]),
-                                               last=lst[-1])
+    elif len(iterable) > 1:
+        return _("{beginning} and {last}").format(
+            beginning=_(", ").join(iterable[:-1]), last=iterable[-1])
     else:
-        return str(lst)
+        return str(iterabl)
 
 
 def has_additional_packages_list(search_new_persistence=False):
@@ -272,7 +272,7 @@ def handle_installed_packages(packages):
     logging.info("New packages manually installed: %s" % packages)
     if has_unlocked_persistence(search_new_persistence=True):
         if _notify(_("Add {packages} to your additional software?").format(
-                    packages=_format_list(packages)),
+                    packages=_format_iterable(packages)),
                    _("To install it automatically from your persistent "
                      "storage when starting Tails."),
                    _("Add to Persistent Storage"),
@@ -300,7 +300,7 @@ def handle_installed_packages(packages):
                      "additional software.")
     elif is_tails_media_writable():
         if _notify(_("Add {packages} to your additional software?").format(
-                    packages=_format_list(packages)),
+                    packages=_format_iterable(packages)),
                    _("To install it automatically when starting Tails, you "
                      "can create a persistent storage and activate the "
                      "<b>Additional Software</b> feature."),
@@ -321,7 +321,7 @@ def handle_installed_packages(packages):
             open(ASP_STATE_INSTALLER_ASKED, 'a').close()
             _notify(_("You could install {packages} automatically when "
                       "starting Tails").format(
-                        packages=_format_list(packages)),
+                        packages=_format_iterable(packages)),
                     _("To do so, you need to run Tails from a USB stick "
                       "installed using <i>Tails Installer</i>."),
                     documentation_target="install/clone",
@@ -336,7 +336,7 @@ def handle_removed_packages(packages):
     """
     logging.info("Additional packages removed: %s" % packages)
     if _notify(_("Remove {packages} from your additional software?").format(
-                 packages=_format_list(packages)),
+                 packages=_format_iterable(packages)),
                "",
                _("Remove"),
                _("Cancel"),
