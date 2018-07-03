@@ -181,7 +181,7 @@ set_chroot_browser_name () {
             # Surprisingly, the default locale is en, not en-US
             torbutton_locale_dir="${chroot}/usr/share/xul-ext/torbutton/chrome/locale/en"
         fi
-        sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
+        sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
         # Since Torbutton decides the name, we don't have to mess with
         # with the browser's own branding, which will save time and
         # memory.
@@ -199,9 +199,13 @@ set_chroot_browser_name () {
         rest="en-US/locale"
     fi
     local tmp="$(mktemp -d)"
-    local branding="${top}/${rest}/branding/brand.dtd"
-    7z x -o"${tmp}" "${pack}" "${branding}"
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${tmp}/${branding}"
+    local branding_dtd="${top}/${rest}/branding/brand.dtd"
+    local branding_properties="${top}/${rest}/branding/brand.properties"
+    7z x -o"${tmp}" "${pack}" "${branding_dtd}" "${branding_properties}"
+    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${tmp}/${branding_dtd}"
+    perl -pi -E \
+	 's/^(brand(?:Full|Short|Shorter)Name=).*$/$1'"${human_readable_name}/" \
+         "${tmp}/${branding_properties}"
     (cd ${tmp} ; 7z u -tzip "${pack}" .)
     chmod a+r "${pack}"
     rm -Rf "${tmp}"
