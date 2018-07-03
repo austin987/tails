@@ -145,7 +145,7 @@ class Volume(object):
             udisks_object = self.udisks_object
 
         return bool(udisks_object.get_encrypted() and
-                    udisks_object.get_block().props.id_type in ("crypto_TCRYPT", "crypto_unknown", "crypto_LUKS"))
+                    udisks_object.get_block().props.id_type in ("crypto_TCRYPT", "crypto_unknown"))
 
     @property
     def is_file_container(self) -> bool:
