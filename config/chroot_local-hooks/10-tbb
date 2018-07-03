@@ -212,6 +212,10 @@ apply_extension_prefs_hacks() {
         # Remove TBB's Tor Launcher settings since we don't enable it in
 	# our Tor Browser.
 	sed -i '/extensions\.torlauncher\./d' defaults/preferences/000-tor-browser.js
+	# Display the Stop/Reload button: our test suite currently depends on it
+	perl -pi -E \
+	    's/^(pref\("browser.uiCustomization.state",.*\\"loop-button\\")/$1,\\"stop-reload-button\\"/' \
+	    defaults/preferences/000-tor-browser.js
 	touch --date="@${tbb_timestamp}" defaults/preferences/000-tor-browser.js
         rm "${tbb_install}/browser/omni.ja"
         7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
