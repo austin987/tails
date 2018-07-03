@@ -100,15 +100,15 @@ end
 Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   if @language == 'German'
     browser_name = 'Tor-Browser'
-    reload_action = 'Aktuelle Seite neu laden'
+    reload_action = 'Neu laden'
   else
     browser_name = 'Tor Browser'
-    reload_action = 'Reload current page'
+    reload_action = 'Reload'
   end
   expected_title = "#{title} - #{browser_name}"
   try_for(60) { @torbrowser.child(expected_title, roleName: 'frame') }
-  # The 'Reload current page' button (graphically shown as a looping
-  # arrow) is only shown when a page has loaded, so once we see the
+  # The 'Reload' button (graphically shown as a looping arrow)
+  # is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
   try_for(60) { @torbrowser.child(reload_action, roleName: 'push button') }
