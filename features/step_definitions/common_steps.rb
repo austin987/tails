@@ -780,9 +780,13 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   @screen.type("p", Sikuli::KeyModifier.CTRL)
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
   print_dialog.child('Print to File', 'table cell').click
-  entry = print_dialog.child(roleName: 'text')
-  assert_equal('output.pdf', entry.text, "Failed to find the text entry")
-  entry.text = output_dir + '/' + output_file
+  print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click()
+  @screen.wait("Gtk3PrintFileDialog.png", 10)
+  # Only the file's basename is selected when the file selector dialog opens,
+  # so we type only the desired file's basename to replace it
+  $vm.set_clipboard(output_dir + '/' + output_file.sub(/[.]pdf$/, ''))
+  @screen.type('v', Sikuli::KeyModifier.CTRL)
+  @screen.type(Sikuli::Key.ENTER)
   print_dialog.button('Print').click
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
