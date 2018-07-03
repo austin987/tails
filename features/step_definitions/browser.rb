@@ -25,11 +25,13 @@ def xul_application_info(application)
     user = LIVE_USER
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
+    browser_reload_button_image = "TorBrowserReloadButton.png"
     new_tab_button_image = "TorBrowserNewTabButton.png"
   when "Unsafe Browser"
     user = "clearnet"
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
+    browser_reload_button_image = "UnsafeBrowserReloadButton.png"
     new_tab_button_image = "UnsafeBrowserNewTabButton.png"
   when "Tor Launcher"
     user = "tor-launcher"
@@ -42,6 +44,7 @@ def xul_application_info(application)
     chroot = ""
     new_tab_button_image = nil
     address_bar_image = nil
+    browser_reload_button_image = nil
     # The standalone Tor Launcher uses fewer libs than the full
     # browser.
     unused_tbb_libs.concat(["libfreebl3.so", "libfreeblpriv3.so", "libnssckbi.so", "libsoftokn3.so"])
@@ -54,6 +57,7 @@ def xul_application_info(application)
     :chroot => chroot,
     :new_tab_button_image => new_tab_button_image,
     :address_bar_image => address_bar_image,
+    :browser_reload_button_image => browser_reload_button_image,
     :unused_tbb_libs => unused_tbb_libs,
   }
 end
@@ -81,7 +85,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   recovery_on_failure = Proc.new do
     @screen.type(Sikuli::Key.ESC)
-    @screen.waitVanish('BrowserReloadButton.png', 3)
+    @screen.waitVanish(info[:browser_reload_button_image], 3)
     open_address.call
   end
   if browser == "Tor Browser"
@@ -91,7 +95,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   open_address.call
   retry_method.call(recovery_on_failure) do
-    @screen.wait('BrowserReloadButton.png', 120)
+    @screen.wait(info[:browser_reload_button_image], 120)
   end
 end
 
