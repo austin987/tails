@@ -20,6 +20,9 @@ pref("extensions.torbutton.prompted_language", true);
 pref("extensions.torbutton.lastUpdateCheck", "9999999999.999");
 pref("extensions.torbutton.control_port", 9051);
 
+// Skip migration of prefs from Tor Browser 5 or older
+pref("extensions.torbutton.pref_fixup_version", 1);
+
 // These must be set to the same value to prevent Torbutton from
 // flashing its upgrade notification.
 pref("extensions.torbutton.lastBrowserVersion", "Tails");
