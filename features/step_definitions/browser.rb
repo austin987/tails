@@ -204,7 +204,7 @@ Then /^Tails homepage loads in the Unsafe Browser$/ do
 end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
-  page = @torbrowser.child("Problem loading page", roleName: "document frame")
+  page = @torbrowser.child("Problem loading page - Tor Browser", roleName: "frame")
   headers = page.children(roleName: "heading")
   found = headers.any? { |heading| heading.text == error }
   raise "Could not find the '#{error}' error in the Tor Browser" unless found
