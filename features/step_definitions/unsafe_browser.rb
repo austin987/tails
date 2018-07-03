@@ -117,6 +117,15 @@ Then /^I can start the Unsafe Browser again$/ do
   step "I start the Unsafe Browser"
 end
 
+Then /^I open the Unsafe Browser proxy settings dialog$/ do
+  step "I open the address \"about:preferences\" in the Unsafe Browser"
+  @screen.wait('BrowserPreferencesPage.png', 10)
+  @screen.type('proxy')
+  @screen.wait('BrowserPreferencesProxyHeading.png', 10)
+  @screen.wait_and_click('BrowserPreferencesProxySettingsButton.png', 10)
+  @screen.wait('BrowserProxySettingsWindow.png', 10)
+end
+
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   socks_proxy = 'C' # Alt+Shift+c for socks proxy
   socksport_lines =
@@ -128,15 +137,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   proxies.each do |proxy_type, proxy_host, proxy_port|
     @screen.hide_cursor
 
-    # Open proxy settings
-    @screen.click('UnsafeBrowserMenuButton.png')
-    @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-    @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
-    hit, _ = @screen.waitAny(['UnsafeBrowserNetworkTabAlreadySelected.png',
-                              'UnsafeBrowserNetworkTab.png'], 10)
-    @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
-    @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
-    @screen.wait_and_click('UnsafeBrowserProxySettingsWindow.png', 10)
+    step "I open the Unsafe Browser proxy settings dialog"
 
     # Ensure the desired proxy configuration
     @screen.type("M", Sikuli::KeyModifier.ALT)
@@ -144,25 +145,20 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port)
 
     # Close settings
-    @screen.click('UnsafeBrowserProxySettingsOkButton.png')
-    @screen.waitVanish('UnsafeBrowserProxySettingsWindow.png', 10)
+    @screen.type(Sikuli::Key.ENTER)
+    @screen.waitVanish('BrowserProxySettingsWindow.png', 10)
 
     # Test that the proxy settings work as they should
     step 'I open Tails homepage in the Unsafe Browser'
-    @screen.wait('UnsafeBrowserProxyRefused.png', 60)
+    @screen.wait('BrowserProxyRefused.png', 60)
   end
 end
 
 Then /^the Unsafe Browser has no proxy configured$/ do
-  @screen.click('UnsafeBrowserMenuButton.png')
-  @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-  @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
-  @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
-  @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
-  @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
-  @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
+  step "I open the Unsafe Browser proxy settings dialog"
+  @screen.wait('BrowserNoProxySelected.png', 10)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
-  @screen.type("w", Sikuli::KeyModifier.CTRL)
+  @screen.type(Sikuli::Key.ESC)
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do
