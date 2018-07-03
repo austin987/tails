@@ -744,7 +744,7 @@ end
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   should_work = should_work == 'can' ? true : false
   @screen.type("s", Sikuli::KeyModifier.CTRL)
-  @screen.wait("TorBrowserSaveDialog.png", 10)
+  @screen.wait("Gtk3SaveFileDialog.png", 10)
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
     @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)

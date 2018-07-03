@@ -194,7 +194,7 @@ end
 
 When /^I save the file to the default Tor Browser download directory$/ do
   @screen.click('BrowserDownloadDialogSaveAsButton.png')
-  @screen.wait('BrowserDownloadFileToDialog.png', 10)
+  @screen.wait('Gtk3SaveFileDialog.png', 10)
   @screen.type(Sikuli::Key.ENTER)
 end
 
