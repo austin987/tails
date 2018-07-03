@@ -13,7 +13,7 @@ Then /^I can print the current document to "([^"]+)"$/ do |output_file|
   $vm.set_clipboard(output_file.sub(/[.]pdf$/, ''))
   @screen.type('v', Sikuli::KeyModifier.CTRL)
   @screen.type(Sikuli::Key.ENTER)
-  @screen.wait_and_click("EvincePrintButton.png", 10)
+  @screen.wait_and_click("Gtk3PrintButton.png", 10)
   try_for(10, :msg => "The document was not printed to #{output_file}") {
     $vm.file_exist?(output_file)
   }
