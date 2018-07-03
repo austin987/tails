@@ -13,6 +13,10 @@ pref("extensions.torbutton.show_slider_notification", false);
 pref("app.update.enabled", false);
 
 // Suppress prompt and always spoof useragent as English
+pref("privacy.spoof_english", 2);
+// XXX: Now handled by privacy.spoof_english; remove the next two
+// lines once Tor Button stops doing it itself in addition to what
+// Firefox does.
 pref("extensions.torbutton.spoof_english", true);
 pref("extensions.torbutton.prompted_language", true);
 
