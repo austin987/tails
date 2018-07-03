@@ -787,7 +787,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   $vm.set_clipboard(output_dir + '/' + output_file.sub(/[.]pdf$/, ''))
   @screen.type('v', Sikuli::KeyModifier.CTRL)
   @screen.type(Sikuli::Key.ENTER)
-  print_dialog.button('Print').click
+  @screen.wait_and_click("Gtk3PrintButton.png", 10)
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }
