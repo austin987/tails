@@ -402,10 +402,12 @@ Given /^the Tor Browser (?:has started|starts)( in offline mode)?$/ do |offline|
   end
 end
 
-Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
   case page
   when "startup page"
     title = 'Tails - News'
+  when "Tails homepage"
+    title = 'Tails - Privacy for anyone anywhere'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else

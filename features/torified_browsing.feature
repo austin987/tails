@@ -111,7 +111,7 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And I open Tails homepage in the Tor Browser
-    Then Tails homepage loads in the Tor Browser
+    Then the Tor Browser loads the Tails homepage
     When I request a new identity using Torbutton
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page

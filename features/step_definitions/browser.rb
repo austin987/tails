@@ -199,11 +199,6 @@ When /^I open Tails homepage in the (.+)$/ do |browser|
   step "I open the address \"https://tails.boum.org\" in the #{browser}"
 end
 
-Then /^Tails homepage loads in the Tor Browser$/ do
-  title = 'Tails - Privacy for anyone anywhere'
-  step "\"#{title}\" has loaded in the Tor Browser"
-end
-
 Then /^Tails homepage loads in the Unsafe Browser$/ do
   @screen.wait('TailsHomepage.png', 60)
 end
