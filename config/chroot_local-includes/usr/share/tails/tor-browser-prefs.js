@@ -18,7 +18,6 @@ pref("extensions.torbutton.prompted_language", true);
 
 // Tails-specific Torbutton preferences
 pref("extensions.torbutton.lastUpdateCheck", "9999999999.999");
-pref("extensions.torbutton.test_enabled", false); // Tails-specific
 pref("extensions.torbutton.control_port", 9051);
 
 // These must be set to the same value to prevent Torbutton from
