@@ -89,7 +89,7 @@ configure_xulrunner_app_locale() {
     profile="${1}"
     locale="${2}"
     mkdir -p "${profile}"/preferences
-    echo "pref(\"intl.locale.requested\", \"${locale}\");" > \
+    echo "user_pref(\"intl.locale.requested\", \"${locale}\");" > \
         "${profile}"/prefs.js
 }
 
