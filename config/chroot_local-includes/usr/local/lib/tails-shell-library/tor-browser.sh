@@ -89,8 +89,9 @@ configure_xulrunner_app_locale() {
     profile="${1}"
     locale="${2}"
     mkdir -p "${profile}"/preferences
-    echo "user_pref(\"intl.locale.requested\", \"${locale}\");" > \
-        "${profile}"/prefs.js
+    set_mozilla_pref "${profile}"/prefs.js \
+                     "intl.locale.requested" "\"${locale}\"" \
+                     "user_pref"
 }
 
 configure_best_tor_browser_locale() {
