@@ -27,6 +27,14 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
+  #11458, #14771
+  @fragile
+  Scenario: The Unsafe Browser can load a web page
+    Given I have started Tails from DVD and logged in and the network is connected
+    When I successfully start the Unsafe Browser
+    When I open Tails homepage in the Unsafe Browser
+    Then Tails homepage loads in the Unsafe Browser
+
   #11457, #11458
   @fragile
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.

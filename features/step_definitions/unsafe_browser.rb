@@ -119,13 +119,11 @@ end
 
 Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
   socks_proxy = 'C' # Alt+Shift+c for socks proxy
-  no_proxy    = 'y' # Alt+y for no proxy
-  proxies = [[no_proxy, nil, nil]]
   socksport_lines =
     $vm.execute_successfully('grep -w "^SocksPort" /etc/tor/torrc').stdout
   assert(socksport_lines.size >= 4, "We got fewer than four Tor SocksPorts")
   socksports = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/)
-  proxies += socksports.map { |host, port| [socks_proxy, host, port] }
+  proxies = socksports.map { |host, port| [socks_proxy, host, port] }
 
   proxies.each do |proxy_type, proxy_host, proxy_port|
     @screen.hide_cursor
@@ -141,14 +139,9 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
     @screen.wait_and_click('UnsafeBrowserProxySettingsWindow.png', 10)
 
     # Ensure the desired proxy configuration
-    if proxy_type == no_proxy
-      @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
-      @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
-    else
-      @screen.type("M", Sikuli::KeyModifier.ALT)
-      @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
-      @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port)
-    end
+    @screen.type("M", Sikuli::KeyModifier.ALT)
+    @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
+    @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port)
 
     # Close settings
     @screen.click('UnsafeBrowserProxySettingsOkButton.png')
@@ -156,11 +149,7 @@ Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
 
     # Test that the proxy settings work as they should
     step 'I open Tails homepage in the Unsafe Browser'
-    if proxy_type == no_proxy
-      step 'Tails homepage loads in the Unsafe Browser'
-    else
-      @screen.wait('UnsafeBrowserProxyRefused.png', 60)
-    end
+    @screen.wait('UnsafeBrowserProxyRefused.png', 60)
   end
 end
 
