@@ -8,10 +8,12 @@ PERL_PROGS="/usr/local/bin/tails-security-check \
     /usr/local/lib/tails-virt-notify-user"
 PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/electrum \
+    /usr/local/bin/veracrypt-mounter \
     /usr/local/bin/tails-about \
     /usr/local/bin/tails-screen-locker \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
-    /usr/local/sbin/tails-additional-software"
+    /usr/local/sbin/tails-additional-software \
+    /usr/local/lib/python3.5/dist-packages/veracrypt_mounter/volume_list.py"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
     /usr/local/bin/keepassx \
     /usr/local/lib/tails-spoof-mac \
@@ -21,6 +23,8 @@ JAVASCRIPT_PROGS=" \
     /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js \
     /usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js \
 "
+GLADE_FILES="/usr/share/veracrypt-mounter/ui/main.ui \
+    /usr/share/veracrypt-mounter/ui/volume.ui"
 
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 
@@ -44,6 +48,12 @@ prog_potfile () {
     case $prog in
         /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js)
             domain=status-menu-helper-extension.js
+            ;;
+        /usr/share/veracrypt-mounter/ui/*)
+            domain=veracrypt-mounter-ui
+            ;;
+        /usr/local/lib/*/veracrypt_mounter/*)
+            domain=veracrypt-mounter
             ;;
         *)
             domain=$(basename $prog)
@@ -163,6 +173,7 @@ for prog in $PERL_PROGS   ; do create_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do create_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do create_pot $prog Shell  ; done
 for prog in $JAVASCRIPT_PROGS  ; do create_pot $prog JavaScript ; done
+for prog in $GLADE_FILES  ; do create_pot $prog Glade ; done
 intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes
