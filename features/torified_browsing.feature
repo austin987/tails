@@ -41,13 +41,12 @@ Feature: Browsing the web using the Tor Browser
 
   #11592
   @check_tor_leaks @fragile
-  Scenario: Playing HTML5 audio
+  Scenario: Playing an Ogg audio track
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And no application is playing audio
-    And I open the address "http://www.terrillthompson.com/tests/html5-audio.html" in the Tor Browser
-    And I click the HTML5 play button
+    And I open the address "http://www.terrillthompson.com/music/audio/smallf.ogg" in the Tor Browser
     And 1 application is playing audio after 10 seconds
 
   #10442

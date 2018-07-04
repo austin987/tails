@@ -737,10 +737,6 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
   end
 end
 
-When /^I click the HTML5 play button$/ do
-  @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
-end
-
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   should_work = should_work == 'can' ? true : false
   @screen.type("s", Sikuli::KeyModifier.CTRL)
