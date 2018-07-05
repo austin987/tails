@@ -237,6 +237,7 @@ delete_chroot_browser_searchplugins() {
         7z u -tzip "${pack}" "${searchplugins_list}"
     )
     rm -r "${tmp}"
+    chmod a+r "${pack}"
 }
 
 configure_chroot_browser () {
