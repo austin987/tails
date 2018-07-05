@@ -23,8 +23,6 @@ JAVASCRIPT_PROGS=" \
     /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js \
     /usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js \
 "
-GLADE_FILES="/usr/share/veracrypt-mounter/ui/main.ui \
-    /usr/share/veracrypt-mounter/ui/volume.ui"
 
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
 
@@ -49,11 +47,8 @@ prog_potfile () {
         /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js)
             domain=status-menu-helper-extension.js
             ;;
-        /usr/share/veracrypt-mounter/ui/*)
-            domain=veracrypt-mounter-ui
-            ;;
         /usr/local/lib/*/veracrypt_mounter/*)
-            domain=veracrypt-mounter
+            domain="veracrypt-mounter-$(basename "$prog")"
             ;;
         *)
             domain=$(basename $prog)
@@ -173,7 +168,6 @@ for prog in $PERL_PROGS   ; do create_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do create_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do create_pot $prog Shell  ; done
 for prog in $JAVASCRIPT_PROGS  ; do create_pot $prog JavaScript ; done
-for prog in $GLADE_FILES  ; do create_pot $prog Glade ; done
 intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes
