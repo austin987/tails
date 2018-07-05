@@ -231,7 +231,7 @@ delete_chroot_browser_searchplugins() {
     (
         cd "${tmp}"
         7z x -tzip "${pack}" "${searchplugins_dir}"
-        ls "${searchplugins_dir}"/*.xml | xargs 7z d -tzip
+        ls "${searchplugins_dir}"/*.xml | xargs 7z d -tzip "${pack}"
         echo '{"default": {"visibleDefaultEngines": []}, "experimental-hidden": {"visibleDefaultEngines": []}}' \
              > "${searchplugins_list}"
         7z u -tzip "${pack}" "${searchplugins_list}"
