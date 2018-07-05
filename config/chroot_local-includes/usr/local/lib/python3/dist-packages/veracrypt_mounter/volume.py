@@ -3,6 +3,7 @@ from typing import Union
 
 from gi.repository import Gtk, GLib, Gio, UDisks
 
+from veracrypt_mounter import _
 from veracrypt_mounter.config import VOLUME_UI_FILE, APP_NAME
 from veracrypt_mounter.exceptions import UdisksObjectNotFoundError
 
@@ -47,7 +48,7 @@ class Volume(object):
         elif partition and partition.props.name:
             return "%s (%s)" % (partition.props.name, self.size_for_display)
         else:
-            return "%s Volume" % self.size_for_display
+            return _("{volume_size} Volume".format(volume_size=self.size_for_display))
 
     @property
     def size_for_display(self) -> str:
@@ -86,17 +87,19 @@ class Volume(object):
         desc = self.name
 
         if self.udisks_object.get_block().props.read_only:
-            desc += " (Read-Only)"
+            desc += _(" (Read-Only)")
 
         if self.partition_table_object and self.partition_table_object.get_loop():
             # This is a partition of a loop device, so lets include the backing file name
-            desc += " in " + self.backing_file_name
+            desc = _("{partition_name} in {container_path}").format(partition_name=desc,
+                                                                    container_path=self.backing_file_name)
         elif self.is_file_container:
             # This is file container, lets include the file name
             desc += " – " + self.backing_file_name
         elif self.is_partition and self.drive_object:
             # This is a partition on a drive, lets include the drive name
-            desc += " on " + self.drive_name
+            desc = _("{partition_name} on {drive_name}").format(partition_name=desc,
+                                                                drive_name=self.drive_name)
         elif self.drive_name:
             # This is probably an unpartitioned drive, so lets include the drive name
             desc += " – " + self.drive_name
