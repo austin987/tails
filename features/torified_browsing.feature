@@ -47,7 +47,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser loads the startup page
     And no application is playing audio
     And I open the address "http://www.terrillthompson.com/music/audio/smallf.ogg" in the Tor Browser
-    And 1 application is playing audio after 10 seconds
+    And 1 application is playing audio after 30 seconds
 
   #10442
   @check_tor_leaks @fragile
