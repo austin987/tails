@@ -73,7 +73,7 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
           places_uris_counter += p
         elsif k == "uri"
           uri = v
-          if uri.match("^https://www\.mozilla\.org/")
+          if uri.match("^https://(?:support|www)\.mozilla\.org/")
             mozilla_uris_counter += 1
           elsif uri.match("^place:(sort|folder|type)=")
             places_uris_counter += 1
