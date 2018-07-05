@@ -211,6 +211,34 @@ set_chroot_browser_name () {
     rm -Rf "${tmp}"
 }
 
+delete_chroot_browser_searchplugins() {
+    local chroot="${1}"
+    local locale="${2}"
+    local ext_dir="${chroot}/${TBB_EXT}"
+
+    if [ "${locale}" != "en-US" ]; then
+        pack="${ext_dir}/langpack-${locale}@firefox.mozilla.org.xpi"
+        top="browser/chrome"
+        rest="${locale}/locale"
+    else
+        pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+        top="chrome"
+        rest="en-US/locale"
+    fi
+    local searchplugins_dir="${top}/${rest}/browser/searchplugins"
+    local searchplugins_list="${searchplugins_dir}/list.json"
+    local tmp="$(mktemp -d)"
+    (
+        cd "${tmp}"
+        7z x -tzip "${pack}" "${searchplugins_dir}"
+        ls "${searchplugins_dir}"/*.xml | xargs 7z d -tzip
+        echo '{"default": {"visibleDefaultEngines": []}, "experimental-hidden": {"visibleDefaultEngines": []}}' \
+             > "${searchplugins_list}"
+        7z u -tzip "${pack}" "${searchplugins_list}"
+    )
+    rm -r "${tmp}"
+}
+
 configure_chroot_browser () {
     local chroot="${1}" ; shift
     local browser_user="${1}" ; shift
@@ -227,6 +255,7 @@ configure_chroot_browser () {
         "${best_locale}"
     set_chroot_browser_name "${chroot}" "${human_readable_name}"  \
         "${browser_name}" "${browser_user}" "${best_locale}"
+    delete_chroot_browser_searchplugins "${chroot}" "${best_locale}"
     set_chroot_browser_permissions "${chroot}" "${browser_name}" \
         "${browser_user}"
 }
