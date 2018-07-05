@@ -78,13 +78,9 @@ class VolumeList(object, metaclass=abc.ABCMeta):
 
 class ContainerList(VolumeList):
     """Manages attached file containers"""
-    placeholder_label = _(
-        "No file containers added"
-    )
+    placeholder_label = _("No file containers added")
 
 
 class DeviceList(VolumeList):
     """Manages physically connected drives and partitions"""
-    placeholder_label = _(
-        "No VeraCrypt devices detected"
-    )
+    placeholder_label = _("No VeraCrypt devices detected")
