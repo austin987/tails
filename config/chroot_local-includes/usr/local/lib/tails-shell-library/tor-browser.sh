@@ -114,3 +114,23 @@ supported_tor_browser_locales() {
         basename "${langpack}" | sed 's,^langpack-\([^@]\+\)@.*$,\1,'
     done
 }
+
+set_firefox_content_process_count() {
+    local profile="$1"
+    local count="$2"
+
+        set_mozilla_pref "${profile}/prefs.js" \
+                         "dom.ipc.processCount" "$count" \
+                         user_pref
+}
+
+configure_tor_browser_memory_usage() {
+    local profile="${1}"
+
+    # Unit: KiB
+    system_ram=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)
+
+    if [ "$system_ram" -lt "$((3 * 1024 * 1024))" ]; then
+        set_firefox_content_process_count "$profile" 2
+    fi
+}
