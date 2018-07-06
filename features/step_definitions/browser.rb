@@ -219,6 +219,24 @@ Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
   raise "Could not find the '#{error}' error in the Tor Browser" unless found
 end
 
+Then /^I can listen to an Ogg audio track in Tor Browser$/ do
+  test_url = 'https://archive.org/download/MussorgskyPicturesAtAnExhibitionorch.Ravel/09Mussorgsky_PicturesAtAnExhibition-LimogesTheMarketPlace.ogg'
+  info = xul_application_info('Tor Browser')
+  open_test_url = Proc.new do
+    step "I open the address \"#{test_url}\" in the Tor Browser"
+  end
+  recovery_on_failure = Proc.new do
+    @screen.type(Sikuli::Key.ESC)
+    @screen.waitVanish(info[:browser_reload_button_image], 3)
+    open_test_url.call
+  end
+  step "no application is playing audio"
+  open_test_url.call
+  retry_tor(recovery_on_failure) do
+    step "1 application is playing audio after 30 seconds"
+  end
+end
+
 Then /^I can watch a WebM video in Tor Browser$/ do
   test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
   info = xul_application_info('Tor Browser')

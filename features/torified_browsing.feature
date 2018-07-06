@@ -45,9 +45,7 @@ Feature: Browsing the web using the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
-    And no application is playing audio
-    And I open the address "https://archive.org/download/MussorgskyPicturesAtAnExhibitionorch.Ravel/09Mussorgsky_PicturesAtAnExhibition-LimogesTheMarketPlace.ogg" in the Tor Browser
-    And 1 application is playing audio after 30 seconds
+    Then I can listen to an Ogg audio track in Tor Browser
 
   #10442
   @check_tor_leaks @fragile
