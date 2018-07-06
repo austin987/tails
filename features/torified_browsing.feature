@@ -46,7 +46,7 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And no application is playing audio
-    And I open the address "http://www.terrillthompson.com/music/audio/smallf.ogg" in the Tor Browser
+    And I open the address "https://archive.org/download/MussorgskyPicturesAtAnExhibitionorch.Ravel/09Mussorgsky_PicturesAtAnExhibition-LimogesTheMarketPlace.ogg" in the Tor Browser
     And 1 application is playing audio after 30 seconds
 
   #10442
