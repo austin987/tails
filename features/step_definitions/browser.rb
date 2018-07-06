@@ -222,15 +222,15 @@ end
 Then /^I can watch a WebM video in Tor Browser$/ do
   test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
   info = xul_application_info('Tor Browser')
-  open_webm_url = Proc.new do
+  open_test_url = Proc.new do
     step "I open the address \"#{test_url}\" in the Tor Browser"
   end
   recovery_on_failure = Proc.new do
     @screen.type(Sikuli::Key.ESC)
     @screen.waitVanish(info[:browser_reload_button_image], 3)
-    open_webm_url.call
+    open_test_url.call
   end
-  open_webm_url.call
+  open_test_url.call
   retry_tor(recovery_on_failure) do
     @screen.wait("TorBrowserSampleRemoteWebMVideoFrame.png", 30)
   end
