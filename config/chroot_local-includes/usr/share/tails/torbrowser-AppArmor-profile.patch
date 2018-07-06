@@ -174,7 +174,7 @@ index fe95fdb..7ebf9d6 100644
  
    signal (receive) set=("term") peer=torbrowser_firefox,
  
-@@ -24,8 +24,8 @@ profile torbrowser_plugin_container {
+@@ -24,14 +24,15 @@ profile torbrowser_plugin_container {
    deny /etc/group r,
    deny /etc/mailcap r,
  
@@ -185,7 +185,14 @@ index fe95fdb..7ebf9d6 100644
  
    /etc/mime.types r,
    /usr/share/applications/gnome-mimeapps.list r,
-@@ -39,28 +39,27 @@ profile torbrowser_plugin_container {
+ 
+   /dev/shm/ r,
+ 
++  owner @{PROC}/@{pid}/environ r,
+   owner @{PROC}/@{pid}/fd/ r,
+   owner @{PROC}/@{pid}/mountinfo r,
+   owner @{PROC}/@{pid}/stat r,
+@@ -39,28 +40,28 @@ profile torbrowser_plugin_container {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -215,6 +222,7 @@ index fe95fdb..7ebf9d6 100644
 +  @{torbrowser_home_dir}/** mr,
 +  @{torbrowser_home_dir}/plugin-container ixmr,
 +
++  owner @{HOME}/.tor-browser/profile.default/startupCache/scriptCache-child-current.bin r,
 +  owner @{HOME}/.tor-browser/profile.default/tmp/* rw,
 +
 +  owner "@{HOME}/Tor Browser/" rw,
@@ -235,7 +243,7 @@ index fe95fdb..7ebf9d6 100644
  
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/present r,
-@@ -86,10 +85,16 @@ profile torbrowser_plugin_container {
+@@ -86,10 +87,16 @@ profile torbrowser_plugin_container {
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
