@@ -44,11 +44,13 @@ class Volume(object):
         block_label = self.udisks_object.get_block().props.id_label
         partition = self.udisks_object.get_partition()
         if block_label:
-            return "%s (%s)" % (block_label, self.size_for_display)
+            return _("{volume_label} ({volume_size})").format(volume_label=block_label,
+                                                              volume_size=self.size_for_display)
         elif partition and partition.props.name:
-            return "%s (%s)" % (partition.props.name, self.size_for_display)
+            return _("{partition_name} ({partition_size})").format(partition_name=partition.props.name,
+                                                                   partition_size=self.size_for_display)
         else:
-            return _("{volume_size} Volume".format(volume_size=self.size_for_display))
+            return _("{volume_size} Volume").format(volume_size=self.size_for_display)
 
     @property
     def size_for_display(self) -> str:
@@ -84,27 +86,27 @@ class Volume(object):
     @property
     def description(self) -> str:
         """Longer description for display to the user."""
-        desc = self.name
-
         if self.udisks_object.get_block().props.read_only:
-            desc += _(" (Read-Only)")
+            desc = _("{volume_name} (Read-Only)").format(volume_name=self.name)
+        else:
+            desc = self.name
 
         if self.partition_table_object and self.partition_table_object.get_loop():
             # This is a partition of a loop device, so lets include the backing file name
-            desc = _("{partition_name} in {container_path}").format(partition_name=desc,
+            return _("{partition_name} in {container_path}").format(partition_name=desc,
                                                                     container_path=self.backing_file_name)
         elif self.is_file_container:
             # This is file container, lets include the file name
-            desc += " – " + self.backing_file_name
+            return " – " + self.backing_file_name
         elif self.is_partition and self.drive_object:
             # This is a partition on a drive, lets include the drive name
-            desc = _("{partition_name} on {drive_name}").format(partition_name=desc,
+            return _("{partition_name} on {drive_name}").format(partition_name=desc,
                                                                 drive_name=self.drive_name)
         elif self.drive_name:
             # This is probably an unpartitioned drive, so lets include the drive name
-            desc += " – " + self.drive_name
-
-        return desc
+            return " – " + self.drive_name
+        else:
+            return desc
 
     @property
     def device_file(self) -> str:
