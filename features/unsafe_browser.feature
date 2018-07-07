@@ -4,7 +4,7 @@ Feature: Browsing the web using the Unsafe Browser
   when I browse the web using the Unsafe Browser
   I should have direct access to the web
 
-  #11458, #14771
+  #11458
   @fragile
   Scenario: The Unsafe Browser can access the LAN
     Given I have started Tails from DVD and logged in and the network is connected
@@ -57,7 +57,7 @@ Feature: Browsing the web using the Unsafe Browser
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 
-  #11458, #14771
+  #11458
   @fragile
   Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
     Given I have started Tails from DVD and logged in and the network is connected
