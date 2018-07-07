@@ -387,7 +387,9 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
                      .dialog('Tor is not ready')
-    offline_prompt.button('Start Tor Browser').click
+    start_button = offline_prompt.button('Start Tor Browser')
+    start_button.grabFocus
+    start_button.click
   end
   step "the Tor Browser has started#{offline}"
   if offline
