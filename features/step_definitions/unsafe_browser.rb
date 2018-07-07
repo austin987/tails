@@ -102,7 +102,7 @@ Then /^the Unsafe Browser has a red theme$/ do
 end
 
 Then /^the Unsafe Browser shows a warning as its start page$/ do
-  @screen.wait("UnsafeBrowserStartPage.png", 30)
+  @screen.wait("UnsafeBrowserStartPage.png", 60)
 end
 
 Then /^the Unsafe Browser has started$/ do
