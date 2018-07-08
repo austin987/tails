@@ -87,24 +87,35 @@ class Volume(object):
     def description(self) -> str:
         """Longer description for display to the user."""
         if self.udisks_object.get_block().props.read_only:
+            # Translators: Don't translate {volume_name}, it's a placeholder.
             desc = _("{volume_name} (Read-Only)").format(volume_name=self.name)
         else:
             desc = self.name
 
         if self.partition_table_object and self.partition_table_object.get_loop():
             # This is a partition of a loop device, so lets include the backing file name
+            # Translators: Don't translate {partition_name} and {container_path}, they
+            # are placeholders and will be replaced.
             return _("{partition_name} in {container_path}").format(partition_name=desc,
                                                                     container_path=self.backing_file_name)
         elif self.is_file_container:
             # This is file container, lets include the file name
+            # Translators: Don't translate {volume_name} and {path_to_file_container},
+            # they are placeholders and will be replaced. You should only have to translate
+            # this string if it makes sense to reverse the order of the placeholders.
             return _("{volume_name} – {path_to_file_container}").format(volume_name=desc,
                                                                         path_to_file_container=self.backing_file_name)
         elif self.is_partition and self.drive_object:
             # This is a partition on a drive, lets include the drive name
+            # Translators: Don't translate {partition_name} and {drive_name}, they
+            # are placeholders and will be replaced.
             return _("{partition_name} on {drive_name}").format(partition_name=desc,
                                                                 drive_name=self.drive_name)
         elif self.drive_name:
             # This is probably an unpartitioned drive, so lets include the drive name
+            # Translators: Don't translate {volume_name} and {drive_name},
+            # they are placeholders and will be replaced. You should only have to translate
+            # this string if it makes sense to reverse the order of the placeholders.
             return _("{volume_name} – {drive_name}").format(volume_name=desc,
                                                             drive_name=self.drive_name)
         else:
