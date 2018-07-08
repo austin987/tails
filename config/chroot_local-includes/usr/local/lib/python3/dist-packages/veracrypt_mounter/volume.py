@@ -97,14 +97,16 @@ class Volume(object):
                                                                     container_path=self.backing_file_name)
         elif self.is_file_container:
             # This is file container, lets include the file name
-            return " – " + self.backing_file_name
+            return _("{volume_name} – {path_to_file_container}").format(volume_name=desc,
+                                                                        path_to_file_container=self.backing_file_name)
         elif self.is_partition and self.drive_object:
             # This is a partition on a drive, lets include the drive name
             return _("{partition_name} on {drive_name}").format(partition_name=desc,
                                                                 drive_name=self.drive_name)
         elif self.drive_name:
             # This is probably an unpartitioned drive, so lets include the drive name
-            return " – " + self.drive_name
+            return _("{volume_name} – {drive_name}").format(volume_name=desc,
+                                                            drive_name=self.drive_name)
         else:
             return desc
 
