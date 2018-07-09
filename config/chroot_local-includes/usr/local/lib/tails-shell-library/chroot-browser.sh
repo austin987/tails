@@ -137,9 +137,6 @@ configure_chroot_browser_profile () {
             "${browser_prefs}"
     fi
 
-    # Remove all bookmarks
-    rm "${chroot}/${TBB_PROFILE}/bookmarks.html"
-
     # Set an appropriate theme
     cat "${chroot_browser_config}/${browser_name}/theme.js" >> "${browser_prefs}"
 
