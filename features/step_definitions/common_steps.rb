@@ -866,27 +866,22 @@ Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
   @apparmor_profile_monitoring_start[profile] = guest_time
 end
 
-When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
+When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_test, profile, file|
   assert(@apparmor_profile_monitoring_start &&
          @apparmor_profile_monitoring_start[profile],
          "It seems the profile '#{profile}' isn't being monitored by the " +
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
-  block = Proc.new do
-    audit_log = $vm.execute(
-      "journalctl --full --no-pager " +
-      "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
-      "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
-    ).stdout.chomp
-    assert(audit_log.empty? == (anti_test ? true : false))
-    true
-  end
   begin
-    if time
-      try_for(time.to_i) { block.call }
-    else
-      block.call
-    end
+    try_for(10, { :delay => 1 }) {
+      audit_log = $vm.execute(
+        "journalctl --full --no-pager " +
+        "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
+        "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
+      ).stdout.chomp
+      assert(audit_log.empty? == (anti_test ? true : false))
+      true
+    }
   rescue Timeout::Error, Test::Unit::AssertionFailedError => e
     raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
   end
