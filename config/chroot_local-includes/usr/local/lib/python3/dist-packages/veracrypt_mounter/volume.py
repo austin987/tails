@@ -87,7 +87,8 @@ class Volume(object):
     def description(self) -> str:
         """Longer description for display to the user."""
         if self.udisks_object.get_block().props.read_only:
-            # Translators: Don't translate {volume_name}, it's a placeholder.
+            # Translators: Don't translate {volume_name}, it's a placeholder and
+            # will be replaced.
             desc = _("{volume_name} (Read-Only)").format(volume_name=self.name)
         else:
             desc = self.name
@@ -200,6 +201,8 @@ class Volume(object):
 
                 body = "Couldn't unlock volume %s:\n%s" % (self.name, e.message)
                 self.manager.show_warning(title, body)
+            finally:
+                self.manager.mount_op_lock.release()
 
         logger.info("Unlocking volume %s", self.device_file)
         self.dialog_is_showing = False
@@ -207,6 +210,9 @@ class Volume(object):
         mount_operation.set_username("user")
         mount_operation.connect("reply", on_mount_operation_reply)
 
+        # Things break if multiple mount operations are running at the same time,
+        # so we use a lock to prevent that
+        self.manager.acquire_mount_op_lock()
         self.gio_volume.mount(0,                # Gio.MountMountFlags
                               mount_operation,  # Gtk.MountOperation
                               None,             # Gio.Cancellable

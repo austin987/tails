@@ -1,5 +1,6 @@
 from logging import getLogger
 import abc
+from typing import List, Union
 
 from gi.repository import Gtk
 
@@ -13,10 +14,10 @@ class VolumeList(object, metaclass=abc.ABCMeta):
 
     placeholder_label = str()
 
-    def __init__(self, window):
-        self.window = window
+    def __init__(self):
         self.volumes = list()
         self.list_box = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+        self.list_box.set_header_func(self.listbox_header_func)
         self.placeholder_row = Gtk.ListBoxRow(activatable=False, selectable=False)
         self.placeholder_row.add(Gtk.Label(self.placeholder_label))
         self.show_placeholder()
@@ -79,6 +80,15 @@ class VolumeList(object, metaclass=abc.ABCMeta):
 class ContainerList(VolumeList):
     """Manages attached file containers"""
     placeholder_label = _("No file containers added")
+
+    @property
+    def backing_file_paths(self) -> List[str]:
+        return [volume.backing_file_name for volume in self.volumes]
+
+    def find_by_backing_file(self, path: str) -> Union[Volume, None]:
+        for volume in self.volumes:
+            if volume.backing_file_name == path:
+                return volume
 
 
 class DeviceList(VolumeList):
