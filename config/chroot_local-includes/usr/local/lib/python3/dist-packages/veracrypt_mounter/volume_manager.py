@@ -67,10 +67,9 @@ class VolumeManager(object):
 
     def remove_volume(self, volume: Volume):
         logger.info("Removing volume %s", volume.device_file)
-        if volume.is_file_container:
-            logger.debug("Removing from container list")
+        if volume in self.container_list:
             self.container_list.remove(volume)
-        else:
+        elif volume in self.device_list:
             self.device_list.remove(volume)
 
     def update_volume(self, volume: Volume):
@@ -111,16 +110,11 @@ class VolumeManager(object):
     def on_add_file_container_button_clicked(self, button, data=None):
         path = self.choose_container_path()
         if path:
-            self.attach_file_container(path)
+            self.open_file_container(path)
 
     def attach_file_container(self, path: str) -> Union[Volume, None]:
         logger.debug("attaching file %s. backing_file_paths: %s", path, self.container_list.backing_file_paths)
         warning = None
-
-        if path in self.container_list.backing_file_paths:
-            self.show_warning(title=_("Container already added"),
-                              body=_("The file container %s should already be listed.") % path)
-            return self.container_list.find_by_backing_file(path)
 
         try:
             fd = os.open(path, os.O_RDWR)
@@ -145,7 +139,7 @@ class VolumeManager(object):
                                                                    None)  # cancellable
         logger.debug("Created loop device %s", udisks_path)
 
-        volume = self._wait_for_volume(path)
+        volume = self._wait_for_loop_setup(path)
         if volume:
             if warning:
                 self.show_warning(title=warning[0], body=warning[1])
@@ -163,7 +157,7 @@ class VolumeManager(object):
                               body=_("Could not add file container %s: Timeout while waiting for loop setup."
                                      "Please try using the <i>Disks</i> application instead.") % path)
 
-    def _wait_for_volume(self, path: str) -> Union[Volume, None]:
+    def _wait_for_loop_setup(self, path: str) -> Union[Volume, None]:
         start_time = time.perf_counter()
         while time.perf_counter() - start_time < WAIT_FOR_LOOP_SETUP_TIMEOUT:
             volume = self.container_list.find_by_backing_file(path)
@@ -180,12 +174,7 @@ class VolumeManager(object):
         if not udisks_object:
             return False
 
-        udisks_block = udisks_object.get_block()
-        if not udisks_block:
-            return False
-
-        if udisks_block.props.id_type in ("crypto_TCRYPT", "crypto_unknown"):
-            return True
+        return Volume(self, udisks_object=udisks_object).is_tcrypt
 
     @staticmethod
     def process_mainloop_events():
@@ -193,13 +182,22 @@ class VolumeManager(object):
         while context.pending():
             context.iteration()
 
-    def unlock_file_container(self, path: str):
+    def open_file_container(self, path: str, open_if_already_added=False):
         if path in self.container_list.backing_file_paths:
-            volume = self.container_list.find_by_backing_file(path)
+            if open_if_already_added:
+                volume = self.container_list.find_by_backing_file(path)
+            else:
+                self.show_warning(title=_("Container already added"),
+                                  body=_("The file container %s should already be listed.") % path)
+                return
         else:
             volume = self.attach_file_container(path)
+        if not volume:
+            return
 
-        if volume:
+        if volume.is_unlocked:
+            volume.open()
+        else:
             volume.unlock()
 
     def choose_container_path(self):
@@ -225,11 +223,7 @@ class VolumeManager(object):
             if volume.is_tcrypt:
                 self.update_volume(volume)
         except UdisksObjectNotFoundError:
-            volume = Volume(self, gio_volume, with_udisks=False)
-            if volume in self.device_list:
-                self.device_list.remove(volume)
-            elif volume in self.container_list:
-                self.container_list.remove(volume)
+            self.remove_volume(Volume(self, gio_volume, with_udisks=False))
 
     def on_volume_added(self, volume_monitor: Gio.VolumeMonitor, gio_volume: Gio.Volume):
         logger.debug("in on_volume_added. volume: %s",
@@ -241,11 +235,7 @@ class VolumeManager(object):
     def on_volume_removed(self, volume_monitor: Gio.VolumeMonitor, gio_volume: Gio.Volume):
         logger.debug("in on_volume_removed. volume: %s",
                      gio_volume.get_identifier(Gio.VOLUME_IDENTIFIER_KIND_UNIX_DEVICE))
-        volume = Volume(self, gio_volume)
-        if volume in self.device_list:
-            self.remove_volume(volume)
-        elif volume in self.container_list:
-            self.container_list.remove(volume)
+        self.remove_volume(Volume(self, gio_volume, with_udisks=False))
 
     def open_uri(self, uri: str):
         # This is the recommended way, but it turns the cursor into wait status for up to

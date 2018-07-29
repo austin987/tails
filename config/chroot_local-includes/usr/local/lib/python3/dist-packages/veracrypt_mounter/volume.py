@@ -1,5 +1,6 @@
 from logging import getLogger
 from typing import Union
+import time
 
 from gi.repository import Gtk, GLib, Gio, UDisks
 
@@ -10,13 +11,25 @@ from veracrypt_mounter.exceptions import UdisksObjectNotFoundError
 logger = getLogger(__name__)
 
 
+WAIT_FOR_MOUNT_FINISH = 1
+
+
 class Volume(object):
-    def __init__(self, manager, gio_volume: Gio.Volume, with_udisks=True):
+    def __init__(self, manager,
+                 gio_volume: Gio.Volume = None,
+                 udisks_object: UDisks.Object = None,
+                 with_udisks=True):
         self.manager = manager
         self.udisks_client = manager.udisks_client
         self.udev_client = manager.udev_client
         self.gio_volume = gio_volume
-        self.udisks_object = self._find_udisks_object() if with_udisks else None
+
+        if udisks_object:
+            self.udisks_object = udisks_object
+        elif self.gio_volume and with_udisks:
+            self.udisks_object = self._find_udisks_object()
+        else:
+            self.udisks_object = None
 
         self.spinner_is_showing = False
         self.dialog_is_showing = False
@@ -32,7 +45,7 @@ class Volume(object):
         self.lock_button = self.builder.get_object("lock_button")       # type: Gtk.Button
         self.unlock_button = self.builder.get_object("unlock_button")   # type: Gtk.Button
         self.detach_button = self.builder.get_object("detach_button")   # type: Gtk.Button
-        self.spinner = Gtk.Spinner(visible=True)
+        self.spinner = Gtk.Spinner(visible=True, margin_right=10)
 
     def __eq__(self, other: "Volume"):
         return self.device_file == other.device_file
@@ -124,7 +137,16 @@ class Volume(object):
 
     @property
     def device_file(self) -> str:
-        return self.gio_volume.get_identifier(Gio.VOLUME_IDENTIFIER_KIND_UNIX_DEVICE)
+        if self.gio_volume:
+            return self.gio_volume.get_identifier(Gio.VOLUME_IDENTIFIER_KIND_UNIX_DEVICE)
+        elif self.udisks_object:
+            return self.udisks_object.get_block().props.device
+
+    @property
+    def backing_volume(self) -> Union["Volume", None]:
+        if self.backing_udisks_object:
+            return Volume(self.manager, udisks_object=self.backing_udisks_object)
+        return None
 
     @property
     def backing_udisks_object(self) -> Union[UDisks.Object, None]:
@@ -181,11 +203,14 @@ class Volume(object):
             if result == Gio.MountOperationResult.HANDLED:
                 self.show_spinner()
 
-        def mount_cb(volume: Gio.Volume, result: Gio.AsyncResult):
+        def mount_cb(gio_volume: Gio.Volume, result: Gio.AsyncResult):
             logger.debug("in mount_cb")
             self.hide_spinner()
             try:
-                volume.mount_finish(result)
+                gio_volume.mount_finish(result)
+                volume = Volume(self.manager, gio_volume)
+                if self._wait_for_mount_finish(volume):
+                    volume.open()
             except GLib.Error as e:
                 if e.code == Gio.IOErrorEnum.FAILED_HANDLED:
                     logger.info("Couldn't unlock volume: %s:", e.message)
@@ -218,10 +243,19 @@ class Volume(object):
                               None,             # Gio.Cancellable
                               mount_cb)         # callback
 
+    def _wait_for_mount_finish(self, volume: "Volume"):
+        start_time = time.perf_counter()
+        while time.perf_counter() - start_time < WAIT_FOR_MOUNT_FINISH:
+            file_system = volume.udisks_object.get_filesystem()
+            if file_system and file_system.props.mount_points:
+                return True
+            self.manager.process_mainloop_events()
+            time.sleep(0.1)
+        logger.error("Timeout waiting for mount_finish (timeout: %s)", WAIT_FOR_MOUNT_FINISH)
+
     def lock(self):
-        self.unmount()
-        self.backing_udisks_object.get_encrypted().call_lock_sync(GLib.Variant('a{sv}', {}),  # options
-                                                                  None)                       # cancellable
+        self.udisks_object.get_encrypted().call_lock_sync(GLib.Variant('a{sv}', {}),  # options
+                                                          None)                       # cancellable
 
     def unmount(self):
         while self.udisks_object.get_filesystem().props.mount_points:
@@ -262,7 +296,14 @@ class Volume(object):
 
     def on_lock_button_clicked(self, button):
         logger.debug("in on_lock_button_clicked")
-        self.lock()
+        loop = self.backing_volume.udisks_object.get_loop()
+        if loop:
+            # Ensure that the loop device is removed after locking the volume
+            loop.call_set_autoclear_sync(True,
+                                         GLib.Variant('a{sv}', {}),  # options
+                                         None)                       # cancellable
+        self.unmount()
+        self.backing_volume.lock()
 
     def on_unlock_button_clicked(self, button):
         logger.debug("in on_unlock_button_clicked")

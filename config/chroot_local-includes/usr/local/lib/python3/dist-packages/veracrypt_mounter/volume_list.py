@@ -50,7 +50,7 @@ class VolumeList(object, metaclass=abc.ABCMeta):
         # Note that we can't use any properties and functions of the volume here
         # which use udisks, because the volume might be already removed from udisks
         if volume not in self.volumes:
-            logger.warning("Can't remove volume %s: Not in list")
+            logger.warning("Can't remove volume %s: Not in list", volume.device_file)
             return
 
         index = self.volumes.index(volume)
