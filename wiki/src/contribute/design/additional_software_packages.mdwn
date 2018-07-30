@@ -5,11 +5,13 @@
 Rationale
 =========
 
-Tails includes a coherent but limited set of applications. As the system
-is amnesic, new software packages for Debian can be installed a in a working session but they are not installed anymore next time Tails is started.
+Tails includes a coherent but limited set of applications. As the system is
+amnesic, new software packages for Debian can be installed a in a working
+session but they are not installed anymore next time Tails is started.
 
-Additional Software Packages is a feature to remember a set of Debian
-Packages to be installed automatically from [[persistent storage|contribute/design/persistence]] each time Tails is started.
+Additional Software Packages is a feature to remember a set of Debian Packages
+to be installed automatically from [[persistent
+storage|contribute/design/persistence]] each time Tails is started.
 
 Usecases
 ========
@@ -61,26 +63,34 @@ Implementation
 Software installation at startup
 --------------------------------
 
-The systemd user unit `tails-additional-software-install.service` is
-`WantedBy=desktop.target`. It starts the system unit `tails-additional-software-install.service` with sudo (see `config/chroot_local-includes/etc/sudoers.d/zzz_tails-additional-software`).
+The systemd user unit
+[[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-additional-software-install.service]]
+is `WantedBy=desktop.target`. It starts the system unit
+[[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-additional-software-install.service]]
+with sudo (see
+[[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tails-additional-software]]).
 
-`tails-additional-software-install.service` starts if the configuration file `/live/persistence/TailsData_unlocked/live-additional-software.conf` is not empty. It is a oneshot service that executes `/usr/local/sbin/tails-additional-software install` then creates `/run/live-additional-software/installed`.
+`tails-additional-software-install.service` starts if the configuration file
+`/live/persistence/TailsData_unlocked/live-additional-software.conf` is not
+empty. It is a oneshot service that executes
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]
+ `install` then creates `/run/live-additional-software/installed`.
 
-`tails-additional-software install` reads
-`live-additional-software.conf` which contains a package name per line
-and install these packages with `apt-get` (using
-`DEBIAN_PRIORITY=critical` and the command line options `--yes` and `--option DPkg::Options::=--force-confold`).
+`tails-additional-software install` reads `live-additional-software.conf` which
+contains a package name per line and install these packages with `apt-get`
+(using `DEBIAN_PRIORITY=critical` and the command line options `--yes` and
+`--option DPkg::Options::=--force-confold`).
 
 In the beginnihg of the process, the user is notified through desktop
 notifications that additional software are being installed:
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - installing.png"/>
 
-In the end, she is informed of success of failure. On the latter case,
-she is offered to open a configuration window or to examine to logs to
-better understand the issue. The notifications with buttons displayed as the
-desktop user are implemented in
-`config/chroot_local-includes/usr/local/lib/tails-additional-software-notify`.
+In the end, she is informed of success of failure. On the latter case, she is
+offered to open a configuration window or to examine to logs to better
+understand the issue. The notifications with buttons displayed as the desktop
+user are implemented in
+[[!tails_gitweb config/chroot_local-includes/usr/local/lib/tails-additional-software-notify]].
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - installation failed.png"/>
 
@@ -88,25 +98,25 @@ desktop user are implemented in
 Software upgrade on Internet connection
 ---------------------------------------
 
-A network-manager dispatcher hook starts the systemd unit
-`tails-additional-software-upgrade.path` which waits for
-`/run/live-additional-software/installed` then starts the oneshot
-service `/usr/local/sbin/tails-additional-software upgrade` after
-`tor-has-bootstrapped.service` and
-`tails-additional-software-install.service` if the configuration file
-`/live/persistence/TailsData_unlocked/live-additional-software.conf` is
-not empty.
+A network-manager dispatcher hook starts the systemd unit 
+[[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-additional-software-upgrade.path]]
+which waits for `/run/live-additional-software/installed` then starts the
+oneshot service `/usr/local/sbin/tails-additional-software upgrade` after
+`tor-has-bootstrapped.service` and `tails-additional-software-install.service`
+if the configuration file
+`/live/persistence/TailsData_unlocked/live-additional-software.conf` is not
+empty.
 
-`tails-additional-software update` saves a copy of apt lists, then
-starts `apt-get update` and launch the installation process again,
-trigerring an upgrade if necessary.
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin.tails-additional-software]]
+`update` saves a copy of apt lists, then starts `apt-get update` and launch the
+installation process again, trigerring an upgrade if necessary.
 
 If the upgrade is successful, the copy of old apt lists is deleted.
 Else, it would be restored by the installation process next time Tails
 is started, ensuring that a network disconnection or another unexpected
 issue doesn't make the Additional Software Packages unavailable.
 
-In the beginnihg of the process, the user is notified through desktop
+In the beginning of the process, the user is notified through desktop
 notifications that additional software are being upgraded.
 
 In the end, she is informed of success of failure. On the latter case,
@@ -123,9 +133,10 @@ a graphical interface like Synaptic, a notification is displayed to let
 them add or remove it from their list of additional software.
 
 Two APT hooks are configured in
-`config/chroot_local-includes/etc/apt/apt.conf.d/80tails-additional-software.disabled`,
+[[!tails_gitweb config/chroot_local-includes/etc/apt/apt.conf.d/80tails-additional-software.disabled]],
 which are enabled by
-`config/chroot_local-hooks/99-zz-install-ASP-DPKG-hooks` in the end of
+[[!tails_gitweb config/chroot_local-hooks/99-zz-install-ASP-DPKG-hooks]] in the
+end of
 the build process.
 
 The first hooks `DPkg::Pre-Install-Pkgs` runs before any actual
@@ -134,7 +145,10 @@ installation happens and calls
 of installed and removed packages as JSON in
 `/run/live-additional-software/packages`.
 
-The second hook `DPkg::Post-Invoke` runs in the end of the installation process and calls `/usr/local/sbin/tails-additional-software apt-post`. It double forks so that APT properly returns, then parses the JSON file written before to check which packages were manually installed or removed.
+The second hook `DPkg::Post-Invoke` runs in the end of the installation process
+and calls `/usr/local/sbin/tails-additional-software apt-post`. It double forks
+so that APT properly returns, then parses the JSON file written before to check
+which packages were manually installed or removed.
 
 ### When a package is installed
 
@@ -150,7 +164,7 @@ When *Add To Persistent Storage* is clicked,
 `AdditionalSoftware` preset. The new additional packages are then added
 atomically to the `live-additional-software.conf` configuration file
 (this logic is handeled by
-`submodules/pythonlib/tailslib/additionalsoftware/config.py`).
+[[!tails_gitweb submodules/pythonlib/tailslib/additionalsoftware/config.py]])
 
 #### With no persistent storage
 
@@ -164,9 +178,12 @@ automatically enabled. The new additional packages are then added to the
 `live-additional-software.conf` configuration file, which is in this
 case mounted in `/media/tails-persistence-setup/TailsData` instead of
 `/live/persistence/TailsData_unlocked` (this logic in handeled by
-`submodules/pythonlib/tailslib/persistence.py).
+[[!tails_gitweb submodules/pythonlib/tailslib/persistence.py]]).
 
-The systemd service `config/chroot_local-includes/lib/systemd/system/tails-synchronize-data-to-new-persistent-volume-on-shutdown.service` is used to synchronize APT data (lists and cached packages) to the newly created persistent storage on Tails shutdown.
+The systemd service
+[[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-synchronize-data-to-new-persistent-volume-on-shutdown.service]]
+is used to synchronize APT data (lists and cached packages) to the newly
+created persistent storage on Tails shutdown.
 
 #### With a persistent storage locked
 
@@ -198,7 +215,7 @@ too much.
 When *Remove* is clicked, the packages are packages removed
 atomically from the `live-additional-software.conf` configuration file
 (this logic is handeled by
-`submodules/pythonlib/tailslib/additionalsoftware/config.py`).
+[[!tails_gitweb submodules/pythonlib/tailslib/additionalsoftware/config.py]]).
 
 Additional Software configuration window
 ----------------------------------------
@@ -212,12 +229,14 @@ Software** feature in the persistent storage settings
 
 This application is implemented in the following files:
 
-- `config/chroot_local-includes/usr/local/bin/tails-additional-software-config`
-- `config/chroot_local-includes/usr/share/applications/org.boum.tails.additional-software-config.desktop.in`
-- `config/chroot_local-includes/usr/share/tails/additional-software/configuration-window.ui`
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-additional-software-config]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/applications/org.boum.tails.additional-software-config.desktop.in]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/tails/additional-software/configuration-window.ui]]
 
-If there is no persistent storage or before any package is added, if the persistent storage is locked or if it is impossible to have a persistent storage (for example, when running from a DVD or virtual machine) the
-window shows an explanation text with appropriate pointers:
+If there is no persistent storage or before any package is added, if the
+persistent storage is locked or if it is impossible to have a persistent
+storage (for example, when running from a DVD or virtual machine) the window
+shows an explanation text with appropriate pointers:
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - without persistent storage.png"/>
 
@@ -236,4 +255,8 @@ When clicking on the delete cross, a confirmation dialog is displayed:
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - remove.png"/>
 
-The privileged helper `config/chroot_local-includes/usr/local/sbin/tails-additional-software-remove` is called through *pkexec* to remove the software from the `live-additional-software.conf` configuration file (see `config/chroot_local-includes/usr/share/polkit-1/actions/org.boum.tails.additional-software.policy`)
+The privileged helper 
+[[!tails_gitweb config/chroot_config/chroot_local-includes/usr/local/sbin/tails-additional-software-remove]]
+is called through *pkexec* to remove the software from the
+`live-additional-software.conf` configuration file (see
+[[!tails_gitweb config/chroot_config/chroot_local-includes/usr/share/polkit-1/actions/org.boum.tails.additional-software.policy]]
