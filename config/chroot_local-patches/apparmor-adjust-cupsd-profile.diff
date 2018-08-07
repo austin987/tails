@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.sbin.cupsd	2017-10-05 14:55:01.196875278 +0200
-+++ b/etc/apparmor.d/usr.sbin.cupsd	2017-10-05 14:57:07.532087292 +0200
+--- a/etc/apparmor.d/usr.sbin.cupsd	2018-07-12 16:48:48.000000000 +0000
++++ b/etc/apparmor.d/usr.sbin.cupsd	2018-08-07 05:24:17.943554061 +0000
 @@ -4,6 +4,8 @@
  
  #include <tunables/global>
@@ -35,18 +35,15 @@
    /{usr/,}sbin/* ixr,
    /usr/lib/** rm,
  
-@@ -85,7 +88,10 @@
-   /usr/lib/cups/backend/bluetooth ixr,
+@@ -86,6 +89,7 @@
    /usr/lib/cups/backend/dnssd ixr,
    /usr/lib/cups/backend/http ixr,
-+  /usr/lib/cups/backend/https ixr,
    /usr/lib/cups/backend/ipp ixr,
 +  /usr/lib/cups/backend/ipp[0-9][0-9] ixr,
-+  /usr/lib/cups/backend/ipps ixr,
    /usr/lib/cups/backend/lpd ixr,
+   /usr/lib/cups/backend/mdns ixr,
    /usr/lib/cups/backend/parallel ixr,
-   /usr/lib/cups/backend/serial ixr,
-@@ -102,7 +108,13 @@
+@@ -103,7 +107,12 @@
  
    # third party backends get no restrictions as they often need high
    # privileges and this is beyond our control
@@ -57,11 +54,10 @@
 +  /usr/lib/cups/backend/gutenprint52+usb Cx -> third_party,
 +  /usr/lib/cups/backend/hp Cx -> third_party,
 +  /usr/lib/cups/backend/hpfax Cx -> third_party,
-+  /usr/lib/cups/backend/mdns Cx -> third_party,
  
    /usr/lib/cups/cgi-bin/* ixr,
    /usr/lib/cups/daemon/* ixr,
-@@ -127,8 +139,13 @@
+@@ -128,8 +137,13 @@
    /var/cache/cups/** rwk,
    /var/log/cups/ rw,
    /var/log/cups/* rw,
@@ -75,7 +71,7 @@
  
    # third-party printer drivers; no known structure here
    /opt/** rix,
-@@ -141,7 +158,7 @@
+@@ -142,7 +156,7 @@
    /etc/krb5.conf r,
    deny /etc/krb5.conf w,
    /etc/krb5.keytab rk,
@@ -84,7 +80,7 @@
    /tmp/krb5cc* k,
  
    # likewise authentication
-@@ -197,8 +214,8 @@
+@@ -198,8 +212,8 @@
    /{usr/,}bin/bash ixr,
    /{usr/,}bin/cp ixr,
    /etc/papersize r,
