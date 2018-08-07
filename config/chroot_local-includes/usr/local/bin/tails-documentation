@@ -16,6 +16,7 @@ try:
 except IndexError:
     anchor = None
 
+tails_homepage = 'https://tails.boum.org'
 wiki_path = '/usr/share/doc/tails/website'
 lang_code = os.getenv('LANG', 'en')[0:2]
 
@@ -24,9 +25,9 @@ lang_code = os.getenv('LANG', 'en')[0:2]
 if os.system('/usr/local/sbin/tor-has-bootstrapped') == 0:
     if os.path.isfile(os.path.join(
             wiki_path, page + '.' + lang_code + ".html")):
-        uri = 'https://tails.boum.org/' + page + '/index.' + lang_code + '.html'
+        uri = tails_homepage + '/' + page + '/index.' + lang_code + '.html'
     else:
-        uri = 'https://tails.boum.org/' + page
+        uri = tails_homepage + '/' + page
 else:
     trials = [
         os.path.join(wiki_path, page + code + ".html")
