@@ -58,3 +58,9 @@ pref("mailnews.auto_config.dns_mx_lookup.enabled", false);
 // mature and widely spread (#15201).
 pref("extensions.enigmail.protectedHeaders", 0);
 pref("extensions.torbirdy.custom.extensions.enigmail.protectedHeaders", 0);
+
+// Don't decrypt subordinate message parts that otherwise might reveal
+// decrypted content to the attacker, i.e. the optional part of the fixes
+// for EFAIL.
+// Reference: https://www.thunderbird.net/en-US/thunderbird/52.9.1/releasenotes/
+pref("mailnews.p7m_subparts_external", true);
