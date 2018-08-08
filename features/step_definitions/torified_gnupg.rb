@@ -187,6 +187,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
                                'seahorse')
     @screen.wait('SeahorseFindKeysWindow.png', 10)
     # Seahorse doesn't seem to support searching for fingerprints
+    # (https://gitlab.gnome.org/GNOME/seahorse/issues/177)
     @screen.type(keyid + Sikuli::Key.ENTER)
     begin
       @screen.waitAny(['SeahorseFoundKeyResult.png',
