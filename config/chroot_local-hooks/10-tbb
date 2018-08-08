@@ -118,12 +118,9 @@ EOF
 # TBB works around the lack of code signing for its extensions by
 # hacking in exceptions. We do the same!
 apply_extension_code_signing_hacks () {
-    local tbb_install
+    local tbb_install tbb_timestamp
     tbb_install="${1}"
-
-    # For consistency we'll set timestamps of files we modify to the
-    # same one used by the Tor Browser instead of SOURCE_DATE_EPOCH.
-    tbb_timestamp="$(date --date='2000-01-01 00:00:00' +%s)"
+    tbb_timestamp="${2}"
 
     tmp="$(mktemp -d)"
     (
@@ -200,10 +197,7 @@ EOF
 apply_prefs_hacks() {
     local tbb_install tmp tbb_timestamp
     tbb_install="${1}"
-
-    # For consistency we'll set timestamps of files we modify to the
-    # same one used by the Tor Browser instead of SOURCE_DATE_EPOCH.
-    tbb_timestamp="$(date --date='2000-01-01 00:00:00' +%s)"
+    tbb_timestamp="${2}"
 
     tmp="$(mktemp -d)"
     (
@@ -227,8 +221,10 @@ apply_prefs_hacks() {
 }
 
 strip_nondeterminism () {
-    local tbb_install
+    local tbb_install tbb_timestamp
     tbb_install="${1}"
+    tbb_timestamp="${2}"
+
     for archive in "${tbb_install}/omni.ja" "${tbb_install}/browser/omni.ja"; do
         strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
                                      "${archive}" 2>/dev/null
@@ -285,6 +281,10 @@ create_default_profile() {
     done
 }
 
+# For consistency we'll set timestamps of files we modify to the
+# same one used by the Tor Browser instead of SOURCE_DATE_EPOCH.
+TBB_TIMESTAMP="$(date --date='2000-01-01 00:00:00' +%s)"
+
 TBB_SHA256SUMS_FILE=/usr/share/tails/tbb-sha256sums.txt
 TBB_TARBALLS="$(grep "\<tor-browser-linux64-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
 
@@ -309,9 +309,9 @@ TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
-apply_extension_code_signing_hacks "${TBB_INSTALL}"
-apply_prefs_hacks "${TBB_INSTALL}"
-strip_nondeterminism "${TBB_INSTALL}"
+apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 
 mkdir -p "${TBB_EXT}"
 if [ "${NIGHTLY_BUILD}" != yes ]; then
