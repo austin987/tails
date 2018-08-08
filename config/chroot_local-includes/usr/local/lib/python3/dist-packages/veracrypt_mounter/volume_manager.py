@@ -10,7 +10,7 @@ from gi.repository import Gtk, Gio, UDisks, GUdev, GLib
 from veracrypt_mounter import _
 from veracrypt_mounter.volume_list import ContainerList, DeviceList
 from veracrypt_mounter.volume import Volume
-from veracrypt_mounter.exceptions import UdisksObjectNotFoundError
+from veracrypt_mounter.exceptions import UdisksObjectNotFoundError, VolumeNotFoundError
 from veracrypt_mounter.config import APP_NAME, MAIN_UI_FILE
 
 
@@ -110,7 +110,7 @@ class VolumeManager(object):
     def on_add_file_container_button_clicked(self, button, data=None):
         path = self.choose_container_path()
         if path:
-            self.open_file_container(path)
+            self.unlock_file_container(path)
 
     def attach_file_container(self, path: str) -> Union[Volume, None]:
         logger.debug("attaching file %s. backing_file_paths: %s", path, self.container_list.backing_file_paths)
@@ -160,11 +160,11 @@ class VolumeManager(object):
     def _wait_for_loop_setup(self, path: str) -> Union[Volume, None]:
         start_time = time.perf_counter()
         while time.perf_counter() - start_time < WAIT_FOR_LOOP_SETUP_TIMEOUT:
-            volume = self.container_list.find_by_backing_file(path)
-            if volume:
-                return volume
-            self.process_mainloop_events()
-            time.sleep(0.1)
+            try:
+                return self.container_list.find_by_backing_file(path)
+            except VolumeNotFoundError:
+                self.process_mainloop_events()
+                time.sleep(0.1)
 
     def _udisks_object_is_tcrypt(self, path: str) -> bool:
         if not path:
@@ -182,22 +182,24 @@ class VolumeManager(object):
         while context.pending():
             context.iteration()
 
-    def open_file_container(self, path: str, open_if_already_added=False):
-        if path in self.container_list.backing_file_paths:
-            if open_if_already_added:
-                volume = self.container_list.find_by_backing_file(path)
-            else:
-                self.show_warning(title=_("Container already added"),
-                                  body=_("The file container %s should already be listed.") % path)
-                return
-        else:
+    def open_file_container(self, path: str):
+        try:
+            volume = self.container_list.find_by_backing_file(path)
+        except VolumeNotFoundError:
             volume = self.attach_file_container(path)
-        if not volume:
+
+        if volume:
+            volume.open()
+
+    def unlock_file_container(self, path: str):
+        if path in self.container_list.backing_file_paths:
+            self.show_warning(title=_("Container already added"),
+                              body=_("The file container %s should already be listed.") % path)
             return
 
-        if volume.is_unlocked:
-            volume.open()
-        else:
+        volume = self.attach_file_container(path)
+
+        if volume:
             volume.unlock()
 
     def choose_container_path(self):

@@ -6,6 +6,7 @@ from gi.repository import Gtk
 
 from veracrypt_mounter import _
 from veracrypt_mounter.volume import Volume
+from veracrypt_mounter.exceptions import VolumeNotFoundError
 
 logger = getLogger(__name__)
 
@@ -89,6 +90,7 @@ class ContainerList(VolumeList):
         for volume in self.volumes:
             if volume.backing_file_name == path:
                 return volume
+        raise VolumeNotFoundError()
 
 
 class DeviceList(VolumeList):

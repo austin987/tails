@@ -1,6 +1,5 @@
 from logging import getLogger
 from typing import Union
-import time
 
 from gi.repository import Gtk, GLib, Gio, UDisks
 
@@ -9,9 +8,6 @@ from veracrypt_mounter.config import VOLUME_UI_FILE, APP_NAME
 from veracrypt_mounter.exceptions import UdisksObjectNotFoundError
 
 logger = getLogger(__name__)
-
-
-WAIT_FOR_MOUNT_FINISH = 1
 
 
 class Volume(object):
@@ -208,9 +204,6 @@ class Volume(object):
             self.hide_spinner()
             try:
                 gio_volume.mount_finish(result)
-                volume = Volume(self.manager, gio_volume)
-                if self._wait_for_mount_finish(volume):
-                    volume.open()
             except GLib.Error as e:
                 if e.code == Gio.IOErrorEnum.FAILED_HANDLED:
                     logger.info("Couldn't unlock volume: %s:", e.message)
@@ -242,16 +235,6 @@ class Volume(object):
                               mount_operation,  # Gtk.MountOperation
                               None,             # Gio.Cancellable
                               mount_cb)         # callback
-
-    def _wait_for_mount_finish(self, volume: "Volume"):
-        start_time = time.perf_counter()
-        while time.perf_counter() - start_time < WAIT_FOR_MOUNT_FINISH:
-            file_system = volume.udisks_object.get_filesystem()
-            if file_system and file_system.props.mount_points:
-                return True
-            self.manager.process_mainloop_events()
-            time.sleep(0.1)
-        logger.error("Timeout waiting for mount_finish (timeout: %s)", WAIT_FOR_MOUNT_FINISH)
 
     def lock(self):
         self.udisks_object.get_encrypted().call_lock_sync(GLib.Variant('a{sv}', {}),  # options
