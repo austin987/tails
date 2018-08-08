@@ -103,8 +103,13 @@ Then /^the support documentation page opens in Tor Browser$/ do
      expected_heading = 'Search the documentation'
    end
    step "\"#{expected_title}\" has loaded in the Tor Browser"
+   if @language == 'German'
+     browser_name = 'Tor-Browser'
+   else
+     browser_name = 'Tor Browser'
+   end
    headings = @torbrowser
-              .child(expected_title, roleName: 'document frame')
+              .child(expected_title + " - #{browser_name}", roleName: 'frame')
               .children(roleName: 'heading')
    assert(
      headings.any? { |heading| heading.text == expected_heading }
