@@ -66,7 +66,7 @@ setup_chroot_for_browser () {
     mount -t aufs -o "noatime,noxino,dirs=${aufs_dirs}" aufs "${chroot}" && \
     mount -t proc proc "${chroot}/proc" && \
     mount --bind "/dev" "${chroot}/dev" && \
-    mount --bind "/dev/shm" "${chroot}/dev/shm" || \
+    mount -t tmpfs -o rw,nosuid,nodev tmpfs "${chroot}/dev/shm" || \
         return 1
 
     # Workaround for #6110
