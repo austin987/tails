@@ -10,7 +10,7 @@ Feature: Localization
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
     And I log in to a new session in German
     When I double-click on the Report an Error launcher on the desktop
-    Then the documentation viewer opens the "Support" page
+    Then the support documentation page opens in Tor Browser
 
   #11711
   @fragile
