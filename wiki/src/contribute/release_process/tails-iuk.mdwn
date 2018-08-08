@@ -13,19 +13,14 @@ Pre-requisites
 Install build and test dependencies
 ===================================
 
-    git checkout debian && \
-    sudo apt install devscripts && \
-    mk-build-deps -i -r --root-cmd sudo && \
+    git checkout master && \
     sudo apt install \
-       libdist-zilla-perl \
-       libdist-zilla-plugin-changelogfromgit-perl \
-       libdist-zilla-plugins-cjm-perl \
-       libdist-zilla-plugin-installguide-perl \
-       libdist-zilla-plugin-localemsgfmt-perl \
-       libdist-zilla-plugin-test-perl-critic-perl \
-       libdist-zilla-plugin-test-notabs-perl \
-       libdist-zilla-plugin-git-perl \
-       dh-make-perl
+       devscripts \
+       dh-make-perl \
+       libdist-zilla-app-command-authordebs-perl && \
+    dzil authordebs --install && \
+    git checkout debian && \
+    mk-build-deps -i -r --root-cmd sudo
 
 Update POT and PO files
 =======================
