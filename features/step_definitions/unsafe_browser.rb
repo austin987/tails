@@ -1,6 +1,6 @@
 When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do |locale|
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  if ['ar_EG.utf8', 'fa_IR', 'he_IL'].include?(locale)
+  if ['ar_EG.utf8', 'fa_IR', 'he_IL', 'he_IL.utf8'].include?(locale)
     # Take into account button ordering in RTL languages
     @screen.type(Sikuli::Key.LEFT + Sikuli::Key.ENTER)
   else
