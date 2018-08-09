@@ -28,7 +28,7 @@ Then /^the Unsafe Browser works in all supported languages$/ do
   supported_torbrowser_languages.sample(3).each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
-      step "the Unsafe Browser has started"
+      step "the Unsafe Browser has started in the \"#{lang}\" locale"
     rescue RuntimeError
       failed << lang
       next
@@ -96,12 +96,25 @@ Then /^the Unsafe Browser has a red theme$/ do
   @screen.wait("UnsafeBrowserRedTheme.png", 10)
 end
 
-Then /^the Unsafe Browser shows a warning as its start page$/ do
-  @screen.wait("UnsafeBrowserStartPage.png", 60)
+Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" locale)?$/ do |locale|
+  case locale
+  # Languages that have a translated version of the Unsafe Browser homepage,
+  # and more specifically of the "You are currently using the Unsafe Browser"
+  # string.
+  when /\A(de|fa|fr|it)/
+    start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
+  else
+    start_page_image = "UnsafeBrowserStartPage.png"
+  end
+  @screen.wait(start_page_image, 60)
 end
 
-Then /^the Unsafe Browser has started$/ do
-  step 'the Unsafe Browser shows a warning as its start page'
+Then /^the Unsafe Browser has started(?: in the "([^"]+)" locale)?$/ do |locale|
+  if locale
+    step "the Unsafe Browser shows a warning as its start page in the \"#{locale}\" locale"
+  else
+    step "the Unsafe Browser shows a warning as its start page"
+  end
 end
 
 Then /^I see a warning about another instance already running$/ do
