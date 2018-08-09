@@ -124,7 +124,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser loads the startup page
     Then the Tor Browser has no plugins installed
 
-  #11592
+  #11592, #15336
   @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
@@ -136,13 +136,13 @@ Feature: Browsing the web using the Tor Browser
     And there is a GNOME bookmark for the persistent Tor Browser directory
     When I start the Tor Browser
     And I open the address "https://tails.boum.org/about" in the Tor Browser
+    And "Tails - About" has loaded in the Tor Browser
     And I can save the current page as "index.html" to the persistent Tor Browser directory
     And I close the Tor Browser
     When I start the Tor Browser
-    When I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
+    And I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
     Then "Tails - About" has loaded in the Tor Browser
-    # XXX: re-enable once #15336 is fixed
-    # And I can print the current page as "output.pdf" to the persistent Tor Browser directory
+    And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
   #11585
   @fragile
