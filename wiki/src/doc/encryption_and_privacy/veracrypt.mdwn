@@ -6,7 +6,7 @@ Introduction to <span class="application">VeraCrypt</span>
 ==========================================================
 
 <span class="application">[VeraCrypt](https://www.veracrypt.fr/)</span> is a
-disk encryption software that works on Windows, macOS, and Linux.
+disk encryption tool that works on Windows, macOS, and Linux.
 
 Comparison between <span class="application">LUKS</span> and <span class="application">VeraCrypt</span>
 -------------------------------------------------------------------------------------------------------
@@ -43,14 +43,14 @@ several files encrypted, a bit like a ZIP file.</p>
 </div>
 </div>
 
-<h3>Partitions (or entire disks)</h3>
+<h3>Partitions or drives</h3>
 
 <div class="icon">
 [[!img partition-icon.png link="no"]]
 <div class="text">
-<p>Usually USB sticks and hard disks have a single partition of their
-entire size but they can also be split into several partitions. This way
-you can encrypted a whole USB stick for example.</p>
+<p>Usually, drives (USB sticks and hard disks) have a single partition of their
+entire size. This way, you can encrypt a whole USB stick, for example.
+But, drives can also be split into several partitions.
 </div>
 </div>
 
@@ -59,13 +59,13 @@ you can encrypted a whole USB stick for example.</p>
 Unlocking parameters
 --------------------
 
-To unlock a <span class="application">VeraCrypt</span> volume you might need
+To unlock a <span class="application">VeraCrypt</span> volume, you might need
 the following parameters, depending on the options that were selected when the
 volume was created:
 
 - **Passphrase**
 
-- **Keyfiles**: instead or in addition to the passphrase, a
+- **Keyfiles**: instead of or in addition to the passphrase, a
   <span class="application">VeraCrypt</span> volume can be unlocked using a
   particular file or set of files.
 
@@ -78,11 +78,23 @@ volume was created:
   [See the <span class="application">VeraCrypt</span> documentation on
   PIM.](https://www.veracrypt.fr/en/Personal%20Iterations%20Multiplier%20\(PIM\).html)
 
-- **Hidden volume**: if you want to open the hidden volume inside the
+<div class="bug">
+
+<p>Due to current limitations in Debian, using a PIM fails in Tails. It
+will become possible in Tails 4.0 (late 2019).</p>
+
+</div>
+
+- **Hidden volume**: if you want to unlock the hidden volume inside the
   <span class="application">VeraCrypt</span> volume.
 
   [See the <span class="application">VeraCrypt</span> documentation on hidden
   volumes.](https://www.veracrypt.fr/en/Hidden%20Volume.html)
+
+- **System volume**: if you want to unlock an encrypted Windows system partition.
+
+  [See the <span class="application">VeraCrypt</span> documentation on
+  encrypting a Windows system partition.](https://www.veracrypt.fr/en/System%20Encryption.html)
 
 Using a file container
 ======================
@@ -110,7 +122,7 @@ Unlocking a file container without keyfiles
 
 1. <span class="application">VeraCrypt Mounter</span> opens your volume.
 
-1. If unlocking the volume fails (for example if you mistyped the
+1. If unlocking the volume fails (for example, if you mistyped the
    password), click on <span class="button">Unlock</span> to try
    unlocking again.
 
@@ -198,15 +210,22 @@ You can either:
   link="no" alt=""]]</span> button in the line that corresponds to your
   file container.
 
-Using a partition (or entire disk)
-==================================
+Using a partition or drive
+==========================
 
 [[!img partition-icon.png link="no" alt=""]]
 
 <a id="partition-files"></a>
 
-Unlocking a partition (or entire disk) without keyfiles
--------------------------------------------------------
+Unlocking a partition or drive without keyfiles
+-----------------------------------------------
+
+1. If your partition or drive is on an internal hard disk, [[set up an administration
+   password|doc/first_steps/startup_options/administration_password]] when
+   starting Tails.
+
+   Otherwise, plug in the USB stick or the hard disk that you want to
+   unlock.
 
 1. Choose
    <span class="menuchoice">
@@ -214,14 +233,8 @@ Unlocking a partition (or entire disk) without keyfiles
      <span class="guisubmenu">Accessories</span>&nbsp;▸
      <span class="guisubmenuitem">VeraCrypt Mounter</span></span>.
 
-1. Plug in the USB stick or the hard disk that you want to unlock.
-
-   If your partition is on an internal hard disk, refer to [[Unlocking a
-   partition (or entire disk) with keyfiles|veracrypt#partition-disks]]
-   instead.
-
-1. Click <span class="button">Unlock</span> in the line that appears in
-   the list of partitions.
+1. In the list of partitions, click <span class="button">Unlock</span> in the
+   line that corresponds to your USB stick or hard disk.
 
    [[!img partition-encrypted-label.png link="no" alt="Mount and open '8.2 GB Encrypted'"]]
 
@@ -236,10 +249,10 @@ Unlocking a partition (or entire disk) without keyfiles
 
 <a id="partition-disks"></a>
 
-Unlocking a partition (or entire disk) with keyfiles
-----------------------------------------------------
+Unlocking a partition or drive with keyfiles
+--------------------------------------------
 
-1. If your partition is on an internal hard disk, [[set up an administration
+1. If your partition or drive is on an internal hard disk, [[set up an administration
    password|doc/first_steps/startup_options/administration_password]] when
    starting Tails.
    
@@ -286,8 +299,8 @@ Unlocking a partition (or entire disk) with keyfiles
 
 1. Your volume opens in <span class="application">Files</span>.
 
-Closing a partition (or entire disk)
-------------------------------------
+Closing a partition or drive
+----------------------------
 
 You can either:
 
@@ -301,4 +314,4 @@ You can either:
 - In <span class="application">VeraCrypt Mounter</span>, click on the
   <span class="button">[[!img lib/window-close.png class="symbolic"
   link="no" alt=""]]</span> button in the line that corresponds to your
-  partition.
+  USB stick or hard disk.
