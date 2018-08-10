@@ -8,10 +8,14 @@ PERL_PROGS="/usr/local/bin/tails-security-check \
     /usr/local/lib/tails-virt-notify-user"
 PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/electrum \
+    /usr/local/bin/liferea \
     /usr/local/bin/tails-about \
     /usr/local/bin/tails-screen-locker \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
-    /usr/local/sbin/tails-additional-software"
+    /usr/local/sbin/tails-additional-software \
+    /usr/local/lib/python3/dist-packages/veracrypt_mounter/volume.py \
+    /usr/local/lib/python3/dist-packages/veracrypt_mounter/volume_list.py \
+    /usr/local/lib/python3/dist-packages/veracrypt_mounter/volume_manager.py"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
     /usr/local/bin/keepassx \
     /usr/local/lib/tails-spoof-mac \
@@ -45,6 +49,9 @@ prog_potfile () {
         /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js)
             domain=status-menu-helper-extension.js
             ;;
+        /usr/local/lib/*/veracrypt_mounter/*)
+            domain="veracrypt-mounter-$(basename "$prog")"
+            ;;
         *)
             domain=$(basename $prog)
             ;;
@@ -60,7 +67,7 @@ create_pot () {
         pot="$(prog_potfile "${prog}")"
         mkdir -p "$(dirname ${pot})"
         xgettext --language="${proglang}" --from-code=UTF-8 \
-                 -o "${pot}" "${progpath}"
+                 --add-comments="Translators:" -o "${pot}" "${progpath}"
         normalize_pot "${pot}"
     else
         echo "error: We are supposed to create a POT file for '${prog}'" \
