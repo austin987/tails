@@ -258,18 +258,20 @@ persistence_conf_file_has_correct_access_rights ()
 disable_and_create_empty_persistence_conf_file ()
 {
 	local conf="$1"
+	local mode="$2"
 
 	mv "$conf" "${conf}.insecure_disabled" \
 		|| error "Failed to disable '$conf': $?"
-	create_empty_persistence_conf_file "$conf"
+	create_empty_persistence_conf_file "$conf" "$mode"
 }
 
 create_empty_persistence_conf_file ()
 {
 	local conf="$1"
+	local mode="$2"
 
 	install --owner tails-persistence-setup \
-		--group tails-persistence-setup --mode 0600 \
+		--group tails-persistence-setup --mode "$mode" \
 		/dev/null "$conf" \
 		|| error "Failed to create empty '$conf': $?"
 }
@@ -341,7 +343,7 @@ activate_volumes ()
 	do
 		if test ! -f "$mountpoint/live-additional-software.conf"
 		then
-			create_empty_persistence_conf_file "$mountpoint/live-additional-software.conf"
+			create_empty_persistence_conf_file "$mountpoint/live-additional-software.conf" "0644"
 		fi
 	done
 
@@ -369,6 +371,9 @@ activate_volumes ()
 	done
 	for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
 	do
+		if persistence_conf_file_has_correct_access_rights "$f" "600"
+			chmod 0644 "$f"
+		fi
 		if ! persistence_conf_file_has_correct_access_rights "$f" "644"
 		then
 			warning "Disabling '$f', that has unsafe access rights"
