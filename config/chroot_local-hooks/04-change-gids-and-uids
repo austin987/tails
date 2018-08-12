@@ -6,14 +6,31 @@ set -e
 
 echo "Change GIDs and UIDs"
 
-TPS_GROUP_STEALER=$(getent group 122 | awk -F ':' '{print $1}')
-if [ -n "$TPS_GROUP_STEALER" ]; then
-   groupmod --gid 150 "$TPS_GROUP_STEALER"
-   find / -wholename /proc -prune -o \( \! -type l -a -gid 122 -exec chgrp 150 '{}' \; \)
-fi
+Change_uid () {
+	OLD="$1"
+	NEW="$2"
+	NAME=$(getent passwd "$OLD" | awk -F ':' '{print $1}')
 
-TPS_USER_STEALER=$(getent passwd 115 | awk -F ':' '{print $1}')
-if [ -n "$TPS_USER_STEALER" ]; then
-   usermod --uid 150 "$TPS_USER_STEALER"
-   find / -wholename /proc -prune -o \( \! -type l -a -uid 115 -exec chown 150 '{}' \; \)
-fi
+	if [ -n "$NAME" ]; then
+		echo "Changing UID for $NAME ($OLD -> $NEW)"
+		usermod --uid "$NEW" "$NAME"
+		find / -wholename /proc -prune -o \( \! -type l -a -uid "$OLD" -exec chown "$NEW" '{}' \; \)
+	fi
+}
+
+Change_gid () {
+	OLD="$1"
+	NEW="$2"
+	NAME=$(getent group "$OLD" | awk -F ':' '{print $1}')
+
+	if [ -n "$NAME" ]; then
+		echo "Changing GID for $NAME ($OLD -> $NEW)"
+		groupmod --gid "$NEW" "$NAME"
+		find / -wholename /proc -prune -o \( \! -type l -a -gid "$OLD" -exec chgrp "$NEW" '{}' \; \)
+	fi
+}
+
+
+# tails-persistent-setup
+Change_uid 115 150
+Change_gid 122 150
