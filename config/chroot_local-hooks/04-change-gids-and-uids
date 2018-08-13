@@ -7,11 +7,11 @@ set -e
 echo "Change GIDs and UIDs"
 
 Change_uid () {
-	OLD="$1"
+	NAME="$1"
 	NEW="$2"
-	NAME=$(getent passwd "$OLD" | awk -F ':' '{print $1}')
+	OLD="$(getent passwd "$NAME" | awk -F ':' '{print $3}')"
 
-	if [ -n "$NAME" ]; then
+	if [ -n "$OLD" ]; then
 		echo "Changing UID for $NAME ($OLD -> $NEW)"
 		usermod --uid "$NEW" "$NAME"
 		find / -wholename /proc -prune -o \( \! -type l -a -uid "$OLD" -exec chown "$NEW" '{}' \; \)
@@ -19,11 +19,11 @@ Change_uid () {
 }
 
 Change_gid () {
-	OLD="$1"
+	NAME="$1"
 	NEW="$2"
-	NAME=$(getent group "$OLD" | awk -F ':' '{print $1}')
+	OLD="$(getent group "$NAME" | awk -F ':' '{print $3}')"
 
-	if [ -n "$NAME" ]; then
+	if [ -n "$OLD" ]; then
 		echo "Changing GID for $NAME ($OLD -> $NEW)"
 		groupmod --gid "$NEW" "$NAME"
 		find / -wholename /proc -prune -o \( \! -type l -a -gid "$OLD" -exec chgrp "$NEW" '{}' \; \)
@@ -31,6 +31,11 @@ Change_gid () {
 }
 
 
-# tails-persistent-setup
-Change_uid 115 150
-Change_gid 122 150
+Change_uid tails-persistent-setup 150
+Change_gid tails-persistent-setup 150
+
+# Ensure debian-tor's gid remains does not break upgrades (#15695)
+Change_gid monkeysphere 151
+Change_gid debian-tor 152
+Change_gid lpadmin 153
+Change_gid vboxsf 154
