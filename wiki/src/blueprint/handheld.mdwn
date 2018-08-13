@@ -11,10 +11,26 @@ Generic
 * Minimized applications in the taskbar can't be raised via the
   taskbar. They can be raised via the *Activities Overwiew*.
 
-Toshiba Encore 2
-----------------
+Toshiba Encore 2 WT8-B
+----------------------
 
-feature/jessie + 32-bit UEFI, 20150507:
+* Intel Atom CPU Z3735F @ 1.33GHz (Bay Trail)
+* can cold-boot from USB: hold down the Vol+ button, then hold down
+  the Power button, until the boot selection menu appears.
+  Select the desired boot device and press the Windows key.
+
+### Tails pre-3.9 devel branch (Stretch) + feature/15763-linux-4.17
+
+* MAC spoofing fails
+* Backlight tuning: GNOME Shell offers the UI, but it has no visible effect.
+* Display rotation (probably because we don't install `iio-sensor-proxy`)
+* Sound card is detected but no sound output. The kernel complains
+  about missing `intel/fw_sst_0f28.bin` firmware while it's supposed
+  to be shipped in [[!debpts firmware-intel-sound]].
+  <http://www.studioteabag.com/science/dell-venue-pro-linux/#ALSA> has
+  some configuration tricks that might help.
+
+### feature/jessie + 32-bit UEFI, 20150507
 
 * The Florence virtual keyboard is not very usable:
   - its default font size is way too small, but that can be configured
@@ -35,16 +51,33 @@ feature/jessie + 32-bit UEFI, 20150507:
 Works fine
 ==========
 
-Generic
--------
-
 Toshiba Encore 2
 ----------------
 
-feature/jessie + 32-bit UEFI, 20150507:
+### Tails pre-3.9 devel branch (Stretch) + feature/15763-linux-4.17
+
+* _sometimes_ boots fine after:
+  - removing `slab_nomerge`, `slub_debug=FZP`, `vsyscall=none`, `page_poison=1`,
+    `quiet` and `splash` → XXX: which of these changes are are really needed?
+  - adding `nosplash` → XXX: really needed?
+  - adding `clocksource=tsc tsc=reliable` → XXX: really needed?
+  - `intel_idle.max_cstate=1` (<https://bugzilla.kernel.org/show_bug.cgi?id=109051>) → XXX: really needed?
+* Battery level monitoring
+
+### feature/jessie + 32-bit UEFI, 20150507
 
 * boots fine with `nomodeset` (otherwise screen blanks at `switching
   to inteldrmfb from simplefb`, although the OS continues loading)
 * X.Org with KMS
 * touchscreen
 * USB
+
+Resources
+=========
+
+* <https://twitter.com/kapper1224> gave an inspiring talk at DebConf18
+  ([slides](https://www.slideshare.net/kapper1224/hacking-with-x86-windows-tablet-and-mobile-devices-on-debian-debconf18))
+  about "Hacking with x86 Windows Tablet and mobile devices on
+  Debian".
+* <https://nmilosev.svbtle.com/fedora-on-baytrail-tablets-2017-edition>
+* <http://www.studioteabag.com/science/dell-venue-pro-linux/>
