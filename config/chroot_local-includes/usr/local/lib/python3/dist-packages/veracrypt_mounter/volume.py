@@ -5,7 +5,7 @@ from gi.repository import Gtk, GLib, Gio, UDisks
 
 from veracrypt_mounter import _
 from veracrypt_mounter.config import VOLUME_UI_FILE, APP_NAME
-from veracrypt_mounter.exceptions import UdisksObjectNotFoundError
+from veracrypt_mounter.exceptions import UdisksObjectNotFoundError, AlreadyUnlockedError
 
 logger = getLogger(__name__)
 
@@ -206,7 +206,7 @@ class Volume(object):
                 gio_volume.mount_finish(result)
             except GLib.Error as e:
                 if e.code == Gio.IOErrorEnum.FAILED_HANDLED:
-                    logger.info("Couldn't unlock volume: %s:", e.message)
+                    logger.warning("Couldn't unlock volume: %s:", e.message)
                     return
 
                 logger.exception(e)
@@ -221,6 +221,9 @@ class Volume(object):
                 self.manager.show_warning(title, body)
             finally:
                 self.manager.mount_op_lock.release()
+
+        if self.is_unlocked:
+            raise AlreadyUnlockedError("Volume %s is already unlocked" % self.device_file)
 
         logger.info("Unlocking volume %s", self.device_file)
         self.dialog_is_showing = False
@@ -237,10 +240,12 @@ class Volume(object):
                               mount_cb)         # callback
 
     def lock(self):
+        logger.info("Locking volume %s", self.device_file)
         self.udisks_object.get_encrypted().call_lock_sync(GLib.Variant('a{sv}', {}),  # options
                                                           None)                       # cancellable
 
     def unmount(self):
+        logger.info("Unmounting volume %s", self.device_file)
         while self.udisks_object.get_filesystem().props.mount_points:
             try:
                 self.udisks_object.get_filesystem().call_unmount_sync(GLib.Variant('a{sv}', {}),  # options
@@ -251,6 +256,7 @@ class Volume(object):
                 raise
 
     def detach_loop_device(self):
+        logger.info("Detaching volume %s", self.device_file)
         if self.is_loop_device:
             self.udisks_object.get_loop().call_delete_sync(GLib.Variant('a{sv}', {}),  # options
                                                            None)                       # cancellable
@@ -259,8 +265,18 @@ class Volume(object):
                                                                     None)                       # cancellable
 
     def open(self):
-        mount_point = self.udisks_object.get_filesystem().props.mount_points[0]
-        self.manager.open_uri(GLib.filename_to_uri(mount_point))
+        logger.info("Opening volume %s", self.device_file)
+        mount_points = self.udisks_object.get_filesystem().props.mount_points
+        if not mount_points:
+            self.mount()
+            self.open()
+        else:
+            self.manager.open_uri(GLib.filename_to_uri(mount_points[0]))
+
+    def mount(self):
+        logger.info("Mounting volume %s", self.device_file)
+        self.udisks_object.get_filesystem().call_mount_sync(GLib.Variant('a{sv}', {}),  # options
+                                                            None)                       # cancellable
 
     def show_spinner(self):
         logger.debug("in show_spinner")

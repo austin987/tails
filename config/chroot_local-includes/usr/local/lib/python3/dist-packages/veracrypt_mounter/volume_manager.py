@@ -73,7 +73,7 @@ class VolumeManager(object):
             self.device_list.remove(volume)
 
     def update_volume(self, volume: Volume):
-        logger.info("Updating volume %s", volume.device_file)
+        logger.debug("Updating volume %s", volume.device_file)
         if volume.is_file_container:
             self.container_list.remove(volume)
             self.container_list.add(volume)
@@ -109,12 +109,18 @@ class VolumeManager(object):
 
     def on_add_file_container_button_clicked(self, button, data=None):
         path = self.choose_container_path()
+
+        if path in self.container_list.backing_file_paths:
+            self.show_warning(title=_("Container already added"),
+                              body=_("The file container %s should already be listed.") % path)
+            return
+
         if path:
             self.unlock_file_container(path)
 
     def attach_file_container(self, path: str) -> Union[Volume, None]:
         logger.debug("attaching file %s. backing_file_paths: %s", path, self.container_list.backing_file_paths)
-        warning = None
+        warning = dict()
 
         try:
             fd = os.open(path, os.O_RDWR)
@@ -122,11 +128,11 @@ class VolumeManager(object):
             # Try opening read-only
             try:
                 fd = os.open(path, os.O_RDONLY)
-                warning = (_("Container opened read-only"),
-                           _("The file container {path} could not be opened with write access. "
-                             "It was opened read-only instead. You will not be able to modify the "
-                             "content of the container.\n"
-                             "{error_message}").format(path=path, error_message=str(e)))
+                warning["title"] = _("Container opened read-only")
+                warning["body"] = _("The file container {path} could not be opened with write access. "
+                                    "It was opened read-only instead. You will not be able to modify the "
+                                    "content of the container.\n"
+                                    "{error_message}").format(path=path, error_message=str(e))
             except PermissionError as e:
                 self.show_warning(title=_("Error opening file"), body=str(e))
                 return None
@@ -142,7 +148,7 @@ class VolumeManager(object):
         volume = self._wait_for_loop_setup(path)
         if volume:
             if warning:
-                self.show_warning(title=warning[0], body=warning[1])
+                self.show_warning(title=warning["title"], body=warning["body"])
             return volume
         elif not self._udisks_object_is_tcrypt(udisks_path):
             # Remove the loop device
@@ -183,24 +189,20 @@ class VolumeManager(object):
             context.iteration()
 
     def open_file_container(self, path: str):
-        try:
-            volume = self.container_list.find_by_backing_file(path)
-        except VolumeNotFoundError:
-            volume = self.attach_file_container(path)
-
+        volume = self.ensure_file_container_is_attached(path)
         if volume:
             volume.open()
 
     def unlock_file_container(self, path: str):
-        if path in self.container_list.backing_file_paths:
-            self.show_warning(title=_("Container already added"),
-                              body=_("The file container %s should already be listed.") % path)
-            return
-
-        volume = self.attach_file_container(path)
-
+        volume = self.ensure_file_container_is_attached(path)
         if volume:
             volume.unlock()
+
+    def ensure_file_container_is_attached(self, path: str) -> Volume:
+        try:
+            return self.container_list.find_by_backing_file(path)
+        except VolumeNotFoundError:
+            return self.attach_file_container(path)
 
     def choose_container_path(self):
         dialog = Gtk.FileChooserDialog(_("Choose File Container"),

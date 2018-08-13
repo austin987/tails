@@ -4,3 +4,7 @@ class UdisksObjectNotFoundError(Exception):
 
 class VolumeNotFoundError(Exception):
     pass
+
+
+class AlreadyUnlockedError(Exception):
+    pass

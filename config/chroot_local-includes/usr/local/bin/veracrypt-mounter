@@ -13,6 +13,7 @@ gi.require_version('GUdev', '1.0')
 from gi.repository import Gtk, Gio
 
 from veracrypt_mounter.volume_manager import VolumeManager
+from veracrypt_mounter.exceptions import AlreadyUnlockedError
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,11 @@ class VeraCryptMounter(Gtk.Application):
         self.activate()
 
         for file in files:
+            try:
+                self.manager.unlock_file_container(file.get_path())
+            except AlreadyUnlockedError:
+                pass
+
             self.manager.open_file_container(file.get_path())
 
 
