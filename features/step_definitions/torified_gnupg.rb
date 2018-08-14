@@ -27,12 +27,12 @@ def start_or_restart_seahorse
   step 'Seahorse has opened'
 end
 
-Then /^the key "([^"]+)" has (only|more than) (\d+) signatures$/ do |key, qualifier, num|
+Then /^the key "([^"]+)" has (less|more) than (\d+) signatures$/ do |key, qualifier, num|
   count = count_gpg_signatures(key)
   case qualifier
-  when 'only'
-    assert_equal(count, num.to_i, "Expected #{num} signatures but instead found #{count}")
-  when 'more than'
+  when 'less'
+    assert(count < num.to_i, "Expected less than #{num} signatures but found #{count}")
+  when 'more'
     assert(count > num.to_i, "Expected more than #{num} signatures but found #{count}")
   else
     raise "Unknown operator #{qualifier} passed"
