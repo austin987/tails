@@ -12,8 +12,6 @@ Feature: Localization
     When I double-click on the Report an Error launcher on the desktop
     Then the documentation viewer opens the "Support" page
 
-  #11711
-  @fragile
   Scenario: The Unsafe Browser can be used in all languages supported in Tails
     Given I have started Tails from DVD and logged in and the network is connected
     Then the Unsafe Browser works in all supported languages

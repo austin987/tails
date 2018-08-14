@@ -14,7 +14,7 @@ Feature: Tails documentation
     Given I have started Tails from DVD and logged in and the network is connected
     When I double-click on the Tails documentation launcher on the desktop
     Then the Tor Browser starts
-    And the Tor Browser opens the "Documentation" page
+    And "Tails - Documentation" has loaded in the Tor Browser
 
   #15321
   @fragile
