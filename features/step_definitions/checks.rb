@@ -94,26 +94,27 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-Then /^the documentation viewer opens the "(Support|Documentation)" page$/ do |page|
-  if @language == 'German'
-    expected_title = 'Tails-Dokumentation'
-    if page == 'Support'
-      expected_heading = 'Die Dokumentation durchsuchen'
-    else
-      expected_heading = 'Einen Fehler gefunden?'
-    end
-  else
-    expected_title = 'Tails documentation'
-    if page == 'Support'
-      expected_heading = 'Search the documentation'
-    else
-      expected_heading = 'First steps with Tails'
-    end
-  end
-  app = Dogtail::Application.new('tails-documentation')
-  app.child(expected_title, roleName: 'frame', recursive: false)
-  app.child(expected_heading, roleName: 'heading')
-end
+Then /^the support documentation page opens in Tor Browser$/ do
+   if @language == 'German'
+     expected_title = 'Tails - Hilfe & Support'
+     expected_heading = 'Die Dokumentation durchsuchen'
+   else
+     expected_title = 'Tails - Support'
+     expected_heading = 'Search the documentation'
+   end
+   step "\"#{expected_title}\" has loaded in the Tor Browser"
+   if @language == 'German'
+     browser_name = 'Tor-Browser'
+   else
+     browser_name = 'Tor Browser'
+   end
+   headings = @torbrowser
+              .child(expected_title + " - #{browser_name}", roleName: 'frame')
+              .children(roleName: 'heading')
+   assert(
+     headings.any? { |heading| heading.text == expected_heading }
+   )
+ end
 
 Given /^I plug and mount a USB drive containing a sample PNG$/ do
   @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))
