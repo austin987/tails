@@ -34,8 +34,18 @@ Change_gid () {
 Change_uid tails-persistent-setup 150
 Change_gid tails-persistent-setup 150
 
-# Ensure debian-tor's gid remains does not break upgrades (#15695)
-Change_gid monkeysphere 151
-Change_gid debian-tor 152
-Change_gid lpadmin 153
-Change_gid vboxsf 154
+### Ensure GIDs are stable accross releases
+#   ... otherwise, things such as tor@service are broken
+#   after applying an automatic upgrade (#15695, #15424, #13426, #15407)
+
+# Temporarily give these groups a GID that's out of the way, to avoid collisions
+Change_gid vboxsf       1120
+Change_gid monkeysphere 1130
+Change_gid debian-tor   1140
+Change_gid lpadmin      1150
+
+# Finally, give these groups the desired GID
+Change_gid vboxsf       112
+Change_gid monkeysphere 113
+Change_gid debian-tor   114
+Change_gid lpadmin      115
