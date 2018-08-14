@@ -7,6 +7,9 @@ set -x
 # Import set_mozilla_pref()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Import guess_best_thunderbird_locale():
+. /usr/local/lib/tails-shell-library/thunderbird.sh
+
 THUNDERBIRD_CONFIG_DIR="${HOME}/.thunderbird"
 PROFILE="${THUNDERBIRD_CONFIG_DIR}/profile.default"
 
@@ -28,11 +31,23 @@ configure_default_incoming_protocol() {
                      "${default_protocol}"
 }
 
+configure_best_thunderbird_locale() {
+    local locale
+    locale=$(guess_best_thunderbird_locale)
+    mkdir -p "${PROFILE}"
+    set_mozilla_pref "${PROFILE}/prefs.js"   \
+                     "intl.locale.requested" \
+                     "\"${locale}\""         \
+                     user_pref
+}
+
 start_thunderbird() {
     export GNOME_ACCESSIBILITY=1
     unset SESSION_MANAGER
 
     configure_default_incoming_protocol
+
+    configure_best_thunderbird_locale
 
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
