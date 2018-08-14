@@ -193,10 +193,10 @@ class VolumeManager(object):
         if volume:
             volume.open()
 
-    def unlock_file_container(self, path: str):
+    def unlock_file_container(self, path: str, open_after_unlock=False):
         volume = self.ensure_file_container_is_attached(path)
         if volume:
-            volume.unlock()
+            volume.unlock(open_after_unlock=open_after_unlock)
 
     def ensure_file_container_is_attached(self, path: str) -> Volume:
         try:

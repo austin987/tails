@@ -192,7 +192,7 @@ class Volume(object):
         if "/dev/dm" in self.device_file:
             return bool(self.backing_udisks_object and self.backing_udisks_object.get_loop())
 
-    def unlock(self):
+    def unlock(self, open_after_unlock=False):
 
         def on_mount_operation_reply(mount_op: Gtk.MountOperation, result: Gio.MountOperationResult):
             logger.debug("in on_mount_operation_reply")
@@ -219,8 +219,12 @@ class Volume(object):
 
                 body = "Couldn't unlock volume %s:\n%s" % (self.name, e.message)
                 self.manager.show_warning(title, body)
+                return
             finally:
                 self.manager.mount_op_lock.release()
+
+            if open_after_unlock:
+                self.open()
 
         if self.is_unlocked:
             raise AlreadyUnlockedError("Volume %s is already unlocked" % self.device_file)
