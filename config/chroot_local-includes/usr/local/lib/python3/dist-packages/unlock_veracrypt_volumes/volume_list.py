@@ -4,9 +4,9 @@ from typing import List, Union
 
 from gi.repository import Gtk
 
-from veracrypt_mounter import _
-from veracrypt_mounter.volume import Volume
-from veracrypt_mounter.exceptions import VolumeNotFoundError
+from unlock_veracrypt_volumes import _
+from unlock_veracrypt_volumes.volume import Volume
+from unlock_veracrypt_volumes.exceptions import VolumeNotFoundError
 
 logger = getLogger(__name__)
 

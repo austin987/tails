@@ -7,11 +7,11 @@ from threading import Lock
 
 from gi.repository import Gtk, Gio, UDisks, GUdev, GLib
 
-from veracrypt_mounter import _
-from veracrypt_mounter.volume_list import ContainerList, DeviceList
-from veracrypt_mounter.volume import Volume
-from veracrypt_mounter.exceptions import UdisksObjectNotFoundError, VolumeNotFoundError
-from veracrypt_mounter.config import APP_NAME, MAIN_UI_FILE
+from unlock_veracrypt_volumes import _
+from unlock_veracrypt_volumes.volume_list import ContainerList, DeviceList
+from unlock_veracrypt_volumes.volume import Volume
+from unlock_veracrypt_volumes.exceptions import UdisksObjectNotFoundError, VolumeNotFoundError
+from unlock_veracrypt_volumes.config import APP_NAME, MAIN_UI_FILE
 
 
 WAIT_FOR_LOOP_SETUP_TIMEOUT = 1
@@ -37,7 +37,7 @@ class VolumeManager(object):
 
         self.window = self.builder.get_object("window")  # type: Gtk.ApplicationWindow
         self.window.set_application(application)
-        self.window.set_title("VeraCrypt Mounter")
+        self.window.set_title("Unlock VeraCrypt Volumes")
 
         self.container_list = ContainerList()
         self.device_list = DeviceList()

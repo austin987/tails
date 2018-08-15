@@ -3,9 +3,9 @@ from typing import Union
 
 from gi.repository import Gtk, GLib, Gio, UDisks
 
-from veracrypt_mounter import _
-from veracrypt_mounter.config import VOLUME_UI_FILE, APP_NAME
-from veracrypt_mounter.exceptions import UdisksObjectNotFoundError, AlreadyUnlockedError
+from unlock_veracrypt_volumes import _
+from unlock_veracrypt_volumes.config import VOLUME_UI_FILE, APP_NAME
+from unlock_veracrypt_volumes.exceptions import UdisksObjectNotFoundError, AlreadyUnlockedError
 
 logger = getLogger(__name__)
 
