@@ -450,6 +450,14 @@ activate_volumes ()
 		fi
 	fi
 
+	# Get rid of any Enigmail configuredVersion that we previously used
+	# to set in a way that would persistently override the value maintained
+	# by Enigmail itself (#12680, #15693). We stopped writing this pref
+	# there a long time ago but recently instructed users to reintroduce
+	# this problem as a workaround (#15692).
+	tb_profile="$(dirname "${conf}")/thunderbird/profile.default"
+	rm -f "${tb_profile}/preferences/0000tails.js"
+
 	for vol in ${open_volumes}
 	do
 		if grep -qe "^${vol}\>" /proc/mounts

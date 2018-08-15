@@ -1,86 +1,8 @@
 #!/usr/bin/env python3
 
-import gettext
-import gi
-import locale
 import os
 import os.path
 import sys
-import tailsgreeter.gui
-
-gi.require_version('Gdk', '3.0')
-from gi.repository import Gdk                                   # NOQA: E402
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk                                   # NOQA: E402
-gi.require_version('WebKit2', '4.0')
-from gi.repository import WebKit2                               # NOQA: E402
-
-# We'll only use a single translation, "Tails documentation", which
-# already is translated for the launcher. For this reason, this script
-# is not managed by `refresh-translations`.
-gettext.textdomain('tails')
-
-# The browser from the Greeter is good as-is, but a button for
-# navigating backwards in the history would be nice.
-class DocumentationWindow(tailsgreeter.gui.GreeterHelpWindow):
-    def _build_ui(self):
-        super()._build_ui()
-        # The super class' headerbar is not exposed as an instance
-        # variable, but we need it!
-        headerbar = next(child for child in self.get_children() \
-                         if isinstance(child, Gtk.HeaderBar))
-        back_button = Gtk.Button.new_from_icon_name('back', Gtk.IconSize.BUTTON)
-        back_button.connect("clicked", lambda x: self.webview.go_back())
-        headerbar.pack_start(back_button)
-        back_button.show()
-        self.webview.connect(
-            "load-changed",
-            lambda webview, e: back_button.set_visible(webview.can_go_back())
-        )
-        self.find_entry = Gtk.Entry(visible=False, no_show_all=True)
-        self.find_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                                "search")
-        self.find_entry.connect("activate", self.find_forward)
-        self.find_entry.connect("changed", self.find_forward)
-        self.find_entry.connect("key-press-event", self.cb_find_entry_key_press)
-        headerbar.pack_end(self.find_entry)
-        self.connect("key-press-event", self.cb_window_key_press)
-
-    def cb_window_key_press(self, window, event):
-        if event.keyval == Gdk.KEY_f and event.state & Gdk.ModifierType.CONTROL_MASK:
-            self.find_entry.show()
-            self.find_entry.grab_focus()
-
-    def cb_load_started(self, webview, ressource, request):
-        super().cb_load_started(webview, ressource, request)
-        if not request.get_uri().startswith("file://"):
-            # An external link was clicked, let's abort following it
-            # in our WebKit browser; any configured external protocol
-            # handler will still open the link's uri.
-            webview.stop_loading()
-
-    def find_forward(self, entry, user_data=None):
-        find_controller = self.webview.get_find_controller()
-        find_options = WebKit2.FindOptions.CASE_INSENSITIVE | \
-                       WebKit2.FindOptions.WRAP_AROUND
-        find_controller.search(self.find_entry.get_text(), find_options, 32)
-
-    def find_previous(self):
-        find_controller = self.webview.get_find_controller()
-        find_controller.search_previous()
-
-    def find_finish(self):
-        find_controller = self.webview.get_find_controller()
-        find_controller.search_finish()
-        self.find_entry.set_text('')
-        self.find_entry.hide()
-        self.webview.grab_focus()
-
-    def cb_find_entry_key_press(self, entry, event, user_data=None):
-        if event.keyval == Gdk.KEY_Return and event.state & Gdk.ModifierType.SHIFT_MASK:
-            self.find_previous()
-        if event.keyval == Gdk.KEY_Escape:
-            self.find_finish()
 
 # Main
 
@@ -94,6 +16,7 @@ try:
 except IndexError:
     anchor = None
 
+tails_homepage = 'https://tails.boum.org'
 wiki_path = '/usr/share/doc/tails/website'
 lang_code = os.getenv('LANG', 'en')[0:2]
 
@@ -102,30 +25,24 @@ lang_code = os.getenv('LANG', 'en')[0:2]
 if os.system('/usr/local/sbin/tor-has-bootstrapped') == 0:
     if os.path.isfile(os.path.join(
             wiki_path, page + '.' + lang_code + ".html")):
-        uri = 'https://tails.boum.org/' + page + '/index.' + lang_code + '.html'
+        uri = tails_homepage + '/' + page + '/index.' + lang_code + '.html'
     else:
-        uri = 'https://tails.boum.org/' + page
-    if anchor is not None:
-        uri = uri + '#' + anchor
-    os.execv('/usr/local/bin/tor-browser',
-             ['/usr/local/bin/tor-browser', '--new-tab',
-              uri])
+        uri = tails_homepage + '/' + page
+else:
+    trials = [
+        os.path.join(wiki_path, page + code + ".html")
+        for code in ['.' + lang_code, '.en', '']
+    ]
+    try:
+        uri = 'file://' + next(
+            trial for trial in trials if os.path.isfile(trial)
+        )
+    except StopIteration:
+        sys.exit('error: could not find the requested documentation page')
 
-trials = [
-    os.path.join(wiki_path, page + code + ".html")
-    for code in ['.' + lang_code, '.en', '']
-]
-try:
-    uri = 'file://' + next(trial for trial in trials if os.path.isfile(trial))
-except StopIteration:
-    sys.exit('error: could not find the requested documentation page')
 if anchor is not None:
     uri = uri + '#' + anchor
-if '..' in uri.split(os.sep):
-    sys.exit('error: cannot escape from {}'.format(wiki_path))
 
-helpwindow = DocumentationWindow(uri)
-helpwindow.connect("delete-event", Gtk.main_quit)
-helpwindow.window.set_title(gettext.gettext('Tails documentation'))
-helpwindow.show()
-Gtk.main()
+os.environ['TOR_BROWSER_SKIP_OFFLINE_WARNING'] = 'yes'
+os.execv('/usr/local/bin/tor-browser',
+         ['/usr/local/bin/tor-browser', '--new-tab', uri])
