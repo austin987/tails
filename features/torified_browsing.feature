@@ -41,14 +41,11 @@ Feature: Browsing the web using the Tor Browser
 
   #11592
   @check_tor_leaks @fragile
-  Scenario: Playing HTML5 audio
+  Scenario: Playing an Ogg audio track
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
-    And no application is playing audio
-    And I open the address "http://www.terrillthompson.com/tests/html5-audio.html" in the Tor Browser
-    And I click the HTML5 play button
-    And 1 application is playing audio after 10 seconds
+    Then I can listen to an Ogg audio track in Tor Browser
 
   #10442
   @check_tor_leaks @fragile
@@ -56,8 +53,7 @@ Feature: Browsing the web using the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
-    And I open the address "https://tails.boum.org/lib/test_suite/test.webm" in the Tor Browser
-    Then I see "TorBrowserSampleRemoteWebMVideoFrame.png" after at most 180 seconds
+    Then I can watch a WebM video in Tor Browser
 
   #11592
   @fragile
@@ -111,7 +107,7 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And I open Tails homepage in the Tor Browser
-    Then Tails homepage loads in the Tor Browser
+    Then the Tor Browser loads the Tails homepage
     When I request a new identity using Torbutton
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page
@@ -124,7 +120,7 @@ Feature: Browsing the web using the Tor Browser
     And the Tor Browser loads the startup page
     Then the Tor Browser has no plugins installed
 
-  #11592
+  #11592, #15336
   @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
@@ -136,13 +132,13 @@ Feature: Browsing the web using the Tor Browser
     And there is a GNOME bookmark for the persistent Tor Browser directory
     When I start the Tor Browser
     And I open the address "https://tails.boum.org/about" in the Tor Browser
-    And I can save the current page as "index.html" to the persistent Tor Browser directory
-    And I close the Tor Browser
-    When I start the Tor Browser
-    When I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
+    And "Tails - About" has loaded in the Tor Browser
+    Then I can save the current page as "index.html" to the persistent Tor Browser directory
+    When I close the Tor Browser
+    And I start the Tor Browser
+    And I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
     Then "Tails - About" has loaded in the Tor Browser
-    # XXX: re-enable once #15336 is fixed
-    # And I can print the current page as "output.pdf" to the persistent Tor Browser directory
+    And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
   #11585
   @fragile

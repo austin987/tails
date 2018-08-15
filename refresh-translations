@@ -10,8 +10,14 @@ PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/electrum \
     /usr/local/bin/liferea \
     /usr/local/bin/tails-about \
+    /usr/local/bin/tails-additional-software-config \
     /usr/local/bin/tails-screen-locker \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
+    /usr/local/sbin/tails-additional-software \
+    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume.py \
+    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_list.py \
+    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_manager.py
+    /usr/local/lib/tails-additional-software-notify \
     /usr/local/sbin/tails-additional-software"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
     /usr/local/bin/keepassx \
@@ -21,6 +27,9 @@ SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
 JAVASCRIPT_PROGS=" \
     /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js \
     /usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js \
+"
+GLADE_UI="\
+    /usr/share/tails/additional-software/configuration-window.ui \
 "
 
 LOCALE_BASEDIR=config/chroot_local-includes/usr/share/locale
@@ -46,6 +55,12 @@ prog_potfile () {
         /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js)
             domain=status-menu-helper-extension.js
             ;;
+	/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js)
+            domain=torstatus-extension.js
+            ;;
+        /usr/local/lib/*/unlock_veracrypt_volumes/*)
+            domain="unlock-veracrypt-volumes-$(basename "$prog")"
+            ;;
         *)
             domain=$(basename $prog)
             ;;
@@ -61,7 +76,7 @@ create_pot () {
         pot="$(prog_potfile "${prog}")"
         mkdir -p "$(dirname ${pot})"
         xgettext --language="${proglang}" --from-code=UTF-8 \
-                 -o "${pot}" "${progpath}"
+                 --add-comments="Translators:" -o "${pot}" "${progpath}"
         normalize_pot "${pot}"
     else
         echo "error: We are supposed to create a POT file for '${prog}'" \
@@ -164,6 +179,7 @@ for prog in $PERL_PROGS   ; do create_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do create_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do create_pot $prog Shell  ; done
 for prog in $JAVASCRIPT_PROGS  ; do create_pot $prog JavaScript ; done
+for prog in $GLADE_UI     ; do create_pot $prog Glade  ; done
 intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes

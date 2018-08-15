@@ -12,6 +12,15 @@ diff -Naur etc/apparmor.d.orig/abstractions/base etc/apparmor.d/abstractions/bas
 diff -Naur etc/apparmor.d.orig/abstractions/ubuntu-helpers etc/apparmor.d/abstractions/ubuntu-helpers
 --- a/etc/apparmor.d/abstractions/ubuntu-helpers	2018-02-25 18:23:21.000000000 +0000
 +++ b/etc/apparmor.d/abstractions/ubuntu-helpers	2018-03-10 08:03:52.281671815 +0000
+@@ -48,6 +49,8 @@
+   # ld.so.cache and ld are used to load shared libraries; they are best
+   # available everywhere
+   /etc/ld.so.cache               mr,
++  /etc/ld.so.conf                r,
++  /etc/ld.so.conf.d/{,*.conf}    r,
+   /etc/ld.so.preload             r,
+   /{usr/,}lib{,32,64}/ld{,32,64}-*.so   mr,
+   /{usr/,}lib/@{multiarch}/ld{,32,64}-*.so    mr,
 @@ -67,8 +67,8 @@
    # in limited libraries so glibc's secure execution should be enough to not
    # require the santized_helper (ie, LD_PRELOAD will only use standard system
