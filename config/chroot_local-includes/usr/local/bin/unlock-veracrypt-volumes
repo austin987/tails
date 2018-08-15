@@ -19,7 +19,7 @@ from unlock_veracrypt_volumes.exceptions import AlreadyUnlockedError
 logger = logging.getLogger(__name__)
 
 
-class VeraCryptMounter(Gtk.Application):
+class App(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="org.boum.tails.unlock_veracrypt_volumes", flags=Gio.ApplicationFlags.HANDLES_OPEN)
         self.manager = None  # type: VolumeManager
@@ -67,7 +67,7 @@ def main():
     # Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=622084
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    app = VeraCryptMounter()
+    app = App()
     app.run(app_args)
 
 
