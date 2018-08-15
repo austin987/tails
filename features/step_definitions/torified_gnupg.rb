@@ -137,7 +137,7 @@ Then /^I synchronize keys in Seahorse$/ do
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
-    if count_gpg_signatures(@fetched_openpgp_keyid) > 2 || \
+    if count_gpg_signatures(@fetched_openpgp_keyid) > 42 || \
       @screen.exists('GnomeCloseButton.png')  || \
       !$vm.has_process?('seahorse')
         true
