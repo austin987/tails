@@ -190,41 +190,6 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
   end
 end
 
-Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
-  secret_file = '/secret'
-  secret_contents = 'T0P S3Cr1t -- 3yEs oN1y'
-  $vm.file_append(secret_file, secret_contents)
-  $vm.execute_successfully("chmod u=rw,go= #{secret_file}")
-  config = JSON.load($vm.file_content('/etc/whisperback/debugging-info.json'))
-  debug_log("Config: #{config}")
-  config.each do |config_item|
-    debug_log("Looking at #{config_item}")
-    next unless config_item[0] == 'file'
-    debug_user = config_item[1]['user']
-    debug_file = config_item[1]['path']
-    # We're only testing leak of information, that's normally not
-    # accessible to the amnesia user, via "sudo tails-debugging-info"
-    next if debug_user == LIVE_USER
-    # Skip files that do not exist, or cannot be removed (e.g. the
-    # ones in /proc).
-    next if not($vm.execute("rm #{debug_file}").success?)
-    # Ensure the target of the symlink is owned by the expected user
-    $vm.execute_successfully("chown #{debug_user}:#{debug_user} #{secret_file}")
-    # Check what would happen *if* the amnesia user managed to replace
-    # the debugging file with a symlink to the secret.
-    $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
-    $vm.execute_successfully("chown --no-dereference #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
-    if $vm.execute("sudo /usr/local/sbin/tails-debugging-info | " +
-                   "grep '#{secret_contents}'",
-                   :user => LIVE_USER).success?
-      raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
-    end
-    # Remove the secret so it cannot possibly interfere with the
-    # following iterations (even though it should not).
-    $vm.execute_successfully("echo > #{debug_file}")
-  end
-end
-
 When /^I disable all networking in the Tails Greeter$/ do
   open_greeter_additional_settings()
   @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
