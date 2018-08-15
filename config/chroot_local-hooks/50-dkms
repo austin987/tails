@@ -6,7 +6,7 @@ set -x
 
 echo "Building VirtualBox guest modules"
 
-. /usr/share/amnesia/build/variables
+. /usr/share/tails/build/variables
 
 # Import ensure_hook_dependency_is_installed()
 # and install_fake_package()
@@ -28,8 +28,9 @@ done
 # which does not match our kernel version, the modules won't be built
 # and then we should abort the build.
 for module in vboxguest vboxsf vboxvideo ; do
-   for modules_dir in /lib/modules/*/updates ; do
-      if [ ! -f "${modules_dir}/${module}.ko" ]; then
+   for modules_dir in /lib/modules/* ; do
+      found=$(find "$modules_dir" -name "${module}.ko" | wc -l)
+      if [ "$found" = 0 ]; then
 	  echo "Can not find ${module} module in '${modules_dir}" >&2
 	  exit 1
       fi
