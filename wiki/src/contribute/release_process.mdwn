@@ -203,13 +203,18 @@ Transifex branches of `git://git.torproject.org/translation.git` (e.g.
 `whisperback_completed`) instead. In this case, skip PO files for
 [[translation teams that use Git|contribute/how/translate#translate]].
 
-Add and commit.
-
 Then check the PO files:
 
 	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
 
-Correct any displayed error, then commit the changes if any.
+… and `git rm` the PO files that have issues (alternatively, if you
+feel like it you can fix them but your changes will be overwritten
+next time we import translations from Transifex).
+
+And finally, commit:
+
+    git commit po \
+	    -m "Update POT and PO files, pull updated translations from Transifex."
 
 Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
