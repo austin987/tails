@@ -3,10 +3,11 @@ def thunderbird_app
 end
 
 def thunderbird_main
-  # The main window title depends on context so without regexes it
-  # will be hard to find it, but it so happens that it is always the
-  # first frame of Thunderbird, so we do not have to be specific.
-  thunderbird_app.child(roleName: 'frame')
+  # Thunderbird has an empty, unnamed frame; so use a search on all
+  # children and match whatever frame has a non-empty name:
+  thunderbird_app.children(roleName: 'frame', recursive: false).find do |e|
+    e.name.match(/^(.+)$/)
+  end
 end
 
 def thunderbird_wizard
