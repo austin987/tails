@@ -44,16 +44,11 @@ Export new upstream version number:
 Export location of a checkout of the branch of the main Tails Git
 repository used to prepare the release (typically `stable` or `testing`):
 
-    export TAILS_GIT_CHECKOUT=XXX
+    export TAILS_GIT_CHECKOUT="$RELEASE_CHECKOUT"
 
 Export source date epoch:
 
-    export SOURCE_DATE_EPOCH=$(date \
-       --utc \
-       --date="$(dpkg-parsechangelog \
-                    --file "$TAILS_GIT_CHECKOUT/debian/changelog" \
-                    --show-field=Date)" \
-       +%s)
+    export SOURCE_DATE_EPOCH=$(date --utc +%s)
 
 Update version number in `bin/tails-create-iuk`, commit all files that
 need to be.
@@ -72,8 +67,8 @@ Run the upstream test suite:
     umask 077
     
     # Run the test suite
-    NODE_PATH="/path/to/tails.git/submodules/mirror-pool-dispatcher/lib/js" \
-    PATH="/path/to/tails.git/submodules/mirror-pool-dispatcher/bin:$PATH" \
+    NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
+    PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
        RELEASE_TESTING=1 \
        LC_ALL=C \
        dzil test
