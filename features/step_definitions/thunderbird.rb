@@ -53,8 +53,12 @@ Then /^I cancel setting up an email account$/ do
 end
 
 Then /^I open Thunderbird's Add-ons Manager$/ do
-  thunderbird_main.button('AppMenu').click
-  thunderbird_main.child('Add-ons', roleName: 'menu item').click
+  # Make sure AppMenu is available, even if it seems hard to click its
+  # "Add-ons" menu + menu item...
+  thunderbird_main.button('AppMenu')
+  # ... then use keyboard shortcuts:
+  @screen.type('t', Sikuli::KeyModifier.ALT)
+  @screen.type('a')
   @thunderbird_addons = thunderbird_app.child(
     'Add-ons Manager - Mozilla Thunderbird', roleName: 'frame'
   )
