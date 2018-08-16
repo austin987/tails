@@ -840,13 +840,30 @@ Prepare upgrade-description files
         )
 
 1. If preparing anything but a final release (e.g. an alpha, beta
-   or RC), copy the generated or updated files to
-   `${MASTER_CHECKOUT:?}`, replace `channel: alpha` with `channel:
-   test`, sign them, commit and push.
+   or RC), copy the generated UDFs for the previous releases
+   to the *test* channel in `$MASTER_CHECKOUT`, modify their content
+   accordingly, sign them, commit and push:
 
-1. Else, if preparing a final release, copy the generated UDF for the previous
-   release to the *test* channel in `$MASTER_CHECKOUT`, modify its content
-   accordingly, sign it, commit and push:
+        ( \
+          cd ${MASTER_CHECKOUT:?} && \
+          git fetch && \
+          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+            alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
+            test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
+            mkdir -p "$(dirname "$test_udf")" && \
+            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${alpha_udf:?} \
+              | sed -e 's/channel: alpha/channel: test/' > ${test_udf:?} && \
+            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+            mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+            git add ${test_udf:?}* ; \
+          done && \
+          git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
+          git push origin master:master \
+        )
+
+1. Else, if preparing a final release, copy the generated UDFs for the previous
+   releases to the *test* channel in `$MASTER_CHECKOUT`, modify their content
+   accordingly, sign them, commit and push:
 
         ( \
           cd ${MASTER_CHECKOUT:?} && \
