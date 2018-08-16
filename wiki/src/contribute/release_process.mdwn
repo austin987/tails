@@ -191,17 +191,13 @@ up-to-date localization files, so:
 
 For each bundled Debian package, `cd` into the package's root
 directory (e.g. a checkout of the `whisperback` repository),
-and then run the `import-translations` script that is in the
-main Tails repository. For example:
+import translations from Transifex and sanity-check them:
 
 	cd whisperback
-	"${RELEASE_CHECKOUT:?}"/import-translations
-
-Then check the PO files:
-
+	"${RELEASE_CHECKOUT:?}"/import-translations && \
 	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
 
-… and `git rm` the PO files that have issues (alternatively, if you
+Then, `git rm` the PO files that have issues (alternatively, if you
 feel like it you can fix them but your changes will be overwritten
 next time we import translations from Transifex).
 
