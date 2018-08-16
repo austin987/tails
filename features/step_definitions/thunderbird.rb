@@ -187,7 +187,7 @@ When /^I send an email to myself$/ do
   compose_window.child('Subject:', roleName: 'entry')
     .typeText(@subject)
   compose_window = thunderbird_app.child("Write: #{@subject} - Thunderbird")
-  compose_window.child('about:blank', roleName: 'document frame')
+  compose_window.child('', roleName: 'internal frame')
     .typeText('test')
   compose_window.child('Composition Toolbar', roleName: 'tool bar')
     .button('Send').click
