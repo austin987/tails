@@ -567,10 +567,16 @@ suite should be ready, so it is time to:
 
 1. build the final image!
 
-1. compare the new build manifest with the one from the previous,
-   almost final build; they should be identical, except that the
-   `debian-security` serial might be higher. To ensure we publish
-   the final build's `.build-manifest`, please run:
+1. Compare the new build manifest with the one from the previous,
+   almost final build:
+
+        diff -Naur \
+           "${PACKAGES_MANIFEST:?}" \
+           "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
+
+   They should be identical, except that the `debian-security` serial might be higher.
+
+1. To ensure we publish the final build's `.build-manifest`, run:
 
         export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
