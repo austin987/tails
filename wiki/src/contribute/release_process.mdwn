@@ -521,19 +521,18 @@ SquashFS file order
 1. Start *Tor Browser*.
 1. A few minutes later, once the `boot-profile` process has been
    killed, retrieve the new sort file from `/var/log/boot-profile`.
+1. Backup the old sort file: `cp config/binary_rootfs/squashfs.sort{,.old}`
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
 1. Cleanup a bit:
    - remove `var/log/live/config.pipe`: otherwise the boot is broken
      or super-slow
    - remove the bits about `kill-boot-profile` at the end: they're
      only useful when profiling the boot
-1. Inspect the Git diff (including diff stat), apply common sense.
-   The following command is also helpful but requires that you save a
-   copy of the old sort file into `/tmp/squashfs.sort.old`:
+1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
-            <( cut -d' ' -f1 /tmp/squashfs.sort.old | sort ) \
-            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort | sort ) \
+            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort.old | sort ) \
+            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort     | sort ) \
             | less
 
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
