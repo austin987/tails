@@ -13,19 +13,14 @@ Pre-requisites
 Install build and test dependencies
 ===================================
 
-    git checkout debian && \
-    sudo apt install devscripts && \
-    mk-build-deps -i -r --root-cmd sudo && \
+    git checkout master && \
     sudo apt install \
-       libdist-zilla-perl \
-       libdist-zilla-plugin-changelogfromgit-perl \
-       libdist-zilla-plugins-cjm-perl \
-       libdist-zilla-plugin-installguide-perl \
-       libdist-zilla-plugin-localemsgfmt-perl \
-       libdist-zilla-plugin-test-perl-critic-perl \
-       libdist-zilla-plugin-test-notabs-perl \
-       libdist-zilla-plugin-git-perl \
-       dh-make-perl
+       devscripts \
+       dh-make-perl \
+       libdist-zilla-app-command-authordebs-perl && \
+    dzil authordebs --install && \
+    git checkout debian && \
+    mk-build-deps -i -r --root-cmd sudo
 
 Update POT and PO files
 =======================
@@ -49,16 +44,11 @@ Export new upstream version number:
 Export location of a checkout of the branch of the main Tails Git
 repository used to prepare the release (typically `stable` or `testing`):
 
-    export TAILS_GIT_CHECKOUT=XXX
+    export TAILS_GIT_CHECKOUT="$RELEASE_CHECKOUT"
 
 Export source date epoch:
 
-    export SOURCE_DATE_EPOCH=$(date \
-       --utc \
-       --date="$(dpkg-parsechangelog \
-                    --file "$TAILS_GIT_CHECKOUT/debian/changelog" \
-                    --show-field=Date)" \
-       +%s)
+    export SOURCE_DATE_EPOCH=$(date --utc +%s)
 
 Update version number in `bin/tails-create-iuk`, commit all files that
 need to be.
@@ -77,8 +67,8 @@ Run the upstream test suite:
     umask 077
     
     # Run the test suite
-    NODE_PATH="/path/to/tails.git/submodules/mirror-pool-dispatcher/lib/js" \
-    PATH="/path/to/tails.git/submodules/mirror-pool-dispatcher/bin:$PATH" \
+    NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
+    PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
        RELEASE_TESTING=1 \
        LC_ALL=C \
        dzil test
@@ -99,8 +89,7 @@ upstream tarball, update `debian/changelog`:
     git checkout debian && \
        gbp import-orig --upstream-vcs-tag=$VERSION \
           ../Tails-IUK-$VERSION.tar.gz && \
-       gbp dch --auto && \
-       dch -e
+       gbp dch --auto --spawn-editor=always
 
 (Do not forget to set the appropriate release.)
 
@@ -115,9 +104,9 @@ Commit `debian/changelog`:
 Git-Dch: Ignore
 "
 
-Build a Debian package (use a Stretch chroot with the right version of
-`tails-perl5lib` installed), add a signed tag to the repository and
-push the changes:
+Build a Debian package (use a Stretch/amd64 chroot, that has
+`stretch-backports` enabled and on top of that: either tails-perl5lib
+installed or the Tails APT repository configured):
 
     gbp buildpackage && \
     gbp buildpackage --git-tag-only --git-sign-tags && \

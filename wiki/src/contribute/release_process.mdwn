@@ -4,6 +4,10 @@
 
 See the [[release_schedule]].
 
+<div class="caution">
+Read the remainder of this document from the branch used to prepare the release!
+</div>
+
 Requirements
 ============
 
@@ -38,15 +42,15 @@ the scripts snippets found on this page:
 * `NEXT_PLANNED_MINOR_VERSION`: set to the version number of the next
   *minor* Tails release; if the next release is a point-release, use
   that one; otherwise, use `${VERSION}.1`
-* `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
+* `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
+  candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
   sub-directories like the ones downloaded with BitTorrent.
 * `ARTIFACTS`: the directory where build artifacts (e.g.
   the `.packages` file) land.
 * `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
   Tails Git repository.
-* `RELEASE_BRANCH`: the name of the branch of the main Tails Git
-  repository used to prepare the release (`stable` or `testing`).
+* `RELEASE_BRANCH=$(if [ "$MAJOR_RELEASE" = 1 ]; then echo -n testing; else echo -n stable; fi)`
 * `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
   repository used to prepare the release (`stable` or `testing`).
 * `TAILS_SIGNATURE_KEY=A490D0F4D311A4153E2BB7CADBB802B258ACD84F`
@@ -57,7 +61,7 @@ the scripts snippets found on this page:
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export DEBEMAIL='tails@boum.org'`
 * `export DEBFULLNAME='Tails developers'`
-* `export WEBSITE_RELEASE_BRANCH="web/release-${VERSION:?}"`
+* `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 
 Pre-freeze
 ==========
@@ -69,16 +73,6 @@ Coordinate with Debian security updates
 ---------------------------------------
 
 See [[release_process/Debian_security_updates]].
-
-Select the right branch
-=======================
-
-What we refer to as the "release branch" (and `RELEASE_BRANCH`) should
-be `testing` for major releases, and `stable` for point-releases.
-
-<div class="caution">
-Read the remainder of this document from the branch used to prepare the release!
-</div>
 
 Sanity check
 ============
@@ -96,7 +90,7 @@ If we are at freeze time for a major release:
 
 1. Merge the `master` Git branch into `devel`:
 
-        git checkout devel && git merge --no-ff origin/master
+        git checkout devel && git fetch origin && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `devel` branch's `config/APT_overlays.d/` into the `devel`
@@ -179,36 +173,40 @@ The patterns+settings file is stored as a SQLite text dump in
            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
         && rm ublock0.sqlite
 
+<a id="upgrade-custom-debs"></a>
+
 Upgrade bundled binary Debian packages
 --------------------------------------
 
-Skip this section unless we are at freeze time for a major release
-(i.e. we are about to prepare a release candidate).
+Skip this section if you are preparing a point-release.
 
-That is: make sure the bundled binary Debian packages contain
-up-to-date localization files.
+The goal here is to make sure the bundled binary Debian packages contain
+up-to-date localization files, so:
+
+ - If you are preparing a release candidate, build at least the packages
+   that change user-visible strings, so that translators can use the RC
+   to check the status of their work and identify what's left to do.
+ - If you are preparing a major release, build at least the packages
+   that got translation updates since the RC: we've sent a call for
+   translation while releasing the RC so the least we can do is to
+   incorporate the work that ensued into our final release :)
 
 For each bundled Debian package, `cd` into the package's root
 directory (e.g. a checkout of the `whisperback` repository),
-and then run the `import-translations` script that is in the
-main Tails repository. For example:
+import translations from Transifex and sanity-check them:
 
 	cd whisperback
-	"${RELEASE_CHECKOUT:?}"/import-translations
-
-If the `import-translations` script fails to import translations for
-the current package, manually copy updated PO files from the
-Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`) instead. In this case, skip PO files for
-[[translation teams that use Git|contribute/how/translate#translate]].
-
-Add and commit.
-
-Then check the PO files:
-
+	"${RELEASE_CHECKOUT:?}"/import-translations && \
 	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
 
-Correct any displayed error, then commit the changes if any.
+Then, `git rm` the PO files that have issues (alternatively, if you
+feel like it you can fix them but your changes will be overwritten
+next time we import translations from Transifex).
+
+And finally, commit:
+
+    git add po && git commit \
+	    -m "Update POT and PO files, pull updated translations from Transifex."
 
 Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
