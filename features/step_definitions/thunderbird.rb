@@ -10,7 +10,7 @@ def thunderbird_main
 end
 
 def thunderbird_wizard
-  thunderbird_app.child('Mail Account Setup', roleName: 'frame')
+  thunderbird_app.child('Set Up an Existing Email Account', roleName: 'frame')
 end
 
 def thunderbird_inbox
@@ -172,7 +172,7 @@ end
 
 When /^I send an email to myself$/ do
   thunderbird_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
-  compose_window = thunderbird_app.child('Write: (no subject)')
+  compose_window = thunderbird_app.child('Write: (no subject) - Thunderbird')
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
     .typeText($config['Icedove']['address'])
   # The randomness of the subject will make it easier for us to later
@@ -181,7 +181,7 @@ When /^I send an email to myself$/ do
   @subject = "Automated test suite: #{random_alnum_string(32)}"
   compose_window.child('Subject:', roleName: 'entry')
     .typeText(@subject)
-  compose_window = thunderbird_app.child("Write: #{@subject}")
+  compose_window = thunderbird_app.child("Write: #{@subject} - Thunderbird")
   compose_window.child('about:blank', roleName: 'document frame')
     .typeText('test')
   compose_window.child('Composition Toolbar', roleName: 'tool bar')
