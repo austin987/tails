@@ -328,11 +328,11 @@ just appeared:
 After a new Tails release is out
 --------------------------------
 
-If you just put out a final release:
+### If you just put out a final release
 
 * [[merge `stable` or `testing` into
   `devel`|APT_repository/custom#workflow-merge-main-branch]]
-* increment the version number in devel's `debian/changelog` to match
+* increment the version number in `devel`'s `debian/changelog` to match
   the next major release, so that
   next builds from the `devel` branch do not use the APT suite meant
   for the last release:
@@ -356,20 +356,6 @@ If you just put out a final release:
         git commit debian/changelog \
            -m "Add dummy changelog entry for ${NEXT_PLANNED_MINOR_VERSION:?}."
 
-
-If you just released a RC (XXX: please automate these steps during the
-3.2~rc1 release process, based on the above commands):
-
-* add a dummy changelog entry (for the upcoming, non-RC version) in
-  the branch used for the release (`stable` or `testing`), so that the
-  next builds from it do not use the APT suite meant for the RC
-* add a dummy changelog entry (for the release *after* the one you
-  released a RC for) in the branch used for the release (`stable` or
-  `testing`), so that the next builds from it do not use the APT suite
-  meant for the RC (XXX: I don't understand what this is about; is it
-  instead about adding an entry for that release on the `devel`
-  branch? -- intrigeri)
-
 If the release was a major one, then:
 
 1. [[Hard reset the stable APT suite to
@@ -381,6 +367,30 @@ If the release was a major one, then:
         git rm config/APT_overlays.d/* && \
         git commit config/APT_overlays.d/ \
            -m "Empty the list of APT overlays: they were merged"
+
+### Else, if you just released a RC
+
+* increment the version number in `debian/changelog` on the branch
+  used for the release, to match the upcoming non-RC release, so that
+  the next builds from it do not use the APT suite meant for the RC:
+
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout "${RELEASE_BRANCH:?}" && \
+        dch --newversion "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
+
+* increment the version number in `devel`'s `debian/changelog` to
+  match the second next major release, so that images built from there
+  have the right version number:
+
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout devel && \
+        dch --newversion "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}."
 
 Giving access to a core developer
 ---------------------------------
