@@ -1134,14 +1134,14 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
-Copy the `.iso.sig` file into the website repository:
+Copy the signature and the Torrent into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-	      "${MASTER_CHECKOUT:?}/wiki/src/torrents/files/"
+	      "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
-`${MASTER_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
+`${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
 
 - Update the `meta title` directive.
 - Update the `meta date` directive.
@@ -1158,10 +1158,6 @@ Write the announcement for the release in
 
 In any case
 -----------
-
-If preparing a final release, what follows happens on the
-`$WEBSITE_RELEASE_BRANCH` in `$RELEASE_CHECKOUT`. Else, it happens in
-`$MASTER_CHECKOUT`.
 
 Generate PO files for the announcements and record the last commit
 before putting the release out for real:
@@ -1204,8 +1200,8 @@ Push
 
 ### Git
 
-If preparing an actual release, push the last commits to our Git
-repository and put `master` in the following state:
+Push the last commits to our Git repository and put `master` in the
+following state:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1214,12 +1210,7 @@ repository and put `master` in the following state:
     ) && \
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
-    )
-
-In any case, ensure that `master` has `stable` as its base branch:
-
-    ( cd "${MASTER_CHECKOUT:?}" && \
+      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
       echo "stable" > config/base_branch && \
       git commit config/base_branch \
           -m "Restore master's base branch." \
