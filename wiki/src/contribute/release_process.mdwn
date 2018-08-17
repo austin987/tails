@@ -1364,14 +1364,14 @@ this, and skip what does not make sense for a RC.
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
 1. Remove any remaining RC for the just-published release from
    the mirrors.
-1. Remove IUKs that are more than 6 months old from
+1. Remove IUKs that are more than 9 months old from
    `/{stable,alpha}/iuk` on the rsync server:
    - first check that it's not going to remove anything we want to keep:
 
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
-                    -type f -name '*.iuk' -mtime '+183' \
+                    -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -ls \
              \"
 
@@ -1380,7 +1380,7 @@ this, and skip what does not make sense for a RC.
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
-                    -type f -name '*.iuk' -mtime '+183' \
+                    -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -delete \
              \"
 
