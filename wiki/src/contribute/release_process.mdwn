@@ -4,6 +4,10 @@
 
 See the [[release_schedule]].
 
+<div class="caution">
+Read the remainder of this document from the branch used to prepare the release!
+</div>
+
 Requirements
 ============
 
@@ -17,6 +21,8 @@ To release Tails you'll need some packages installed:
   `debian/control` in the `debian` branch of its repo)
 * `tails-perl5lib` dependencies (same trick as `tails-iuk` to get the
   list)
+* `po4a` _from Stretch_: the version in testing/sid extracts Markdown headings
+   in a different way, which makes tons of strings fuzzy.
 
 Environment
 ===========
@@ -38,15 +44,15 @@ the scripts snippets found on this page:
 * `NEXT_PLANNED_MINOR_VERSION`: set to the version number of the next
   *minor* Tails release; if the next release is a point-release, use
   that one; otherwise, use `${VERSION}.1`
-* `MAJOR_RELEASE`: set to 1 if preparing a major release, to 0 else
+* `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
+  candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
   sub-directories like the ones downloaded with BitTorrent.
 * `ARTIFACTS`: the directory where build artifacts (e.g.
   the `.packages` file) land.
 * `MASTER_CHECKOUT`: a checkout of the `master` branch of the main
   Tails Git repository.
-* `RELEASE_BRANCH`: the name of the branch of the main Tails Git
-  repository used to prepare the release (`stable` or `testing`).
+* `RELEASE_BRANCH=$(if [ "$MAJOR_RELEASE" = 1 ]; then echo -n testing; else echo -n stable; fi)`
 * `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
   repository used to prepare the release (`stable` or `testing`).
 * `TAILS_SIGNATURE_KEY=A490D0F4D311A4153E2BB7CADBB802B258ACD84F`
@@ -57,7 +63,7 @@ the scripts snippets found on this page:
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export DEBEMAIL='tails@boum.org'`
 * `export DEBFULLNAME='Tails developers'`
-* `export WEBSITE_RELEASE_BRANCH="web/release-${VERSION:?}"`
+* `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 
 Pre-freeze
 ==========
@@ -69,16 +75,6 @@ Coordinate with Debian security updates
 ---------------------------------------
 
 See [[release_process/Debian_security_updates]].
-
-Select the right branch
-=======================
-
-What we refer to as the "release branch" (and `RELEASE_BRANCH`) should
-be `testing` for major releases, and `stable` for point-releases.
-
-<div class="caution">
-Read the remainder of this document from the branch used to prepare the release!
-</div>
 
 Sanity check
 ============
@@ -96,7 +92,7 @@ If we are at freeze time for a major release:
 
 1. Merge the `master` Git branch into `devel`:
 
-        git checkout devel && git merge --no-ff origin/master
+        git checkout devel && git fetch origin && git merge --no-ff origin/master
 
 2. [[Merge each APT overlay suite|APT_repository/custom#workflow-merge-overlays]]
    listed in the `devel` branch's `config/APT_overlays.d/` into the `devel`
@@ -179,36 +175,40 @@ The patterns+settings file is stored as a SQLite text dump in
            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
         && rm ublock0.sqlite
 
+<a id="upgrade-custom-debs"></a>
+
 Upgrade bundled binary Debian packages
 --------------------------------------
 
-Skip this section unless we are at freeze time for a major release
-(i.e. we are about to prepare a release candidate).
+Skip this section if you are preparing a point-release.
 
-That is: make sure the bundled binary Debian packages contain
-up-to-date localization files.
+The goal here is to make sure the bundled binary Debian packages contain
+up-to-date localization files, so:
+
+ - If you are preparing a release candidate, build at least the packages
+   that change user-visible strings, so that translators can use the RC
+   to check the status of their work and identify what's left to do.
+ - If you are preparing a major release, build at least the packages
+   that got translation updates since the RC: we've sent a call for
+   translation while releasing the RC so the least we can do is to
+   incorporate the work that ensued into our final release :)
 
 For each bundled Debian package, `cd` into the package's root
 directory (e.g. a checkout of the `whisperback` repository),
-and then run the `import-translations` script that is in the
-main Tails repository. For example:
+import translations from Transifex and sanity-check them:
 
 	cd whisperback
-	"${RELEASE_CHECKOUT:?}"/import-translations
-
-If the `import-translations` script fails to import translations for
-the current package, manually copy updated PO files from the
-Transifex branches of `git://git.torproject.org/translation.git` (e.g.
-`whisperback_completed`) instead. In this case, skip PO files for
-[[translation teams that use Git|contribute/how/translate#translate]].
-
-Add and commit.
-
-Then check the PO files:
-
+	"${RELEASE_CHECKOUT:?}"/import-translations && \
 	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
 
-Correct any displayed error, then commit the changes if any.
+Then, `git rm` the PO files that have issues (alternatively, if you
+feel like it you can fix them but your changes will be overwritten
+next time we import translations from Transifex).
+
+And finally, commit:
+
+    git add po && git commit \
+	    -m "Update POT and PO files, pull updated translations from Transifex."
 
 Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
@@ -289,18 +289,21 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
-2. Merge `devel` into `feature/buster`, *without* following the instructions for
+2. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+   branch, the time-based APT repository snapshots that were used
+   during the freeze.
+
+3. Merge `devel` into `feature/buster`, *without* following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
    (For now `feature/buster` is handled as any other topic branch
    forked off `devel`: its base branch is set to `devel`.)
+   If the merge conflicts don't look like something you feel confident
+   resolving properly, abort this merge and let the Foundations
+   Team know.
 
-3. Ensure that the release, `devel` and `feature/buster` branches
+4. Ensure that the release, `devel` and `feature/buster` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
-
-4. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
-   branch, the time-based APT repository snapshots that were used
-   during the freeze.
 
 5. Push the modified branches to Git:
 
@@ -518,19 +521,18 @@ SquashFS file order
 1. Start *Tor Browser*.
 1. A few minutes later, once the `boot-profile` process has been
    killed, retrieve the new sort file from `/var/log/boot-profile`.
+1. Backup the old sort file: `cp config/binary_rootfs/squashfs.sort{,.old}`
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
 1. Cleanup a bit:
    - remove `var/log/live/config.pipe`: otherwise the boot is broken
      or super-slow
    - remove the bits about `kill-boot-profile` at the end: they're
      only useful when profiling the boot
-1. Inspect the Git diff (including diff stat), apply common sense.
-   The following command is also helpful but requires that you save a
-   copy of the old sort file into `/tmp/squashfs.sort.old`:
+1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
-            <( cut -d' ' -f1 /tmp/squashfs.sort.old | sort ) \
-            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort | sort ) \
+            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort.old | sort ) \
+            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort     | sort ) \
             | less
 
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
@@ -565,10 +567,16 @@ suite should be ready, so it is time to:
 
 1. build the final image!
 
-1. compare the new build manifest with the one from the previous,
-   almost final build; they should be identical, except that the
-   `debian-security` serial might be higher. To ensure we publish
-   the final build's `.build-manifest`, please run:
+1. Compare the new build manifest with the one from the previous,
+   almost final build:
+
+        diff -Naur \
+           "${PACKAGES_MANIFEST:?}" \
+           "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
+
+   They should be identical, except that the `debian-security` serial might be higher.
+
+1. To ensure we publish the final build's `.build-manifest`, run:
 
         export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
@@ -794,7 +802,7 @@ Prepare upgrade-description files
      or RC), add `--channel alpha`
    * If preparing anything but a final release (e.g. an alpha, beta
      or RC), drop all `--next-version`
-     arguments, and instead pass (**untested!**)
+     arguments, and instead pass
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
    * Adjust `--next-version "${VERSION:?}.1"` so it matches the next
      potential emergency release. E.g. when releasing 3.7.1,
@@ -832,13 +840,30 @@ Prepare upgrade-description files
         )
 
 1. If preparing anything but a final release (e.g. an alpha, beta
-   or RC), copy the generated or updated files to
-   `${MASTER_CHECKOUT:?}`, replace `channel: alpha` with `channel:
-   test`, sign them, commit and push.
+   or RC), copy the generated UDFs for the previous releases
+   to the *test* channel in `$MASTER_CHECKOUT`, modify their content
+   accordingly, sign them, commit and push:
 
-1. Else, if preparing a final release, copy the generated UDF for the previous
-   release to the *test* channel in `$MASTER_CHECKOUT`, modify its content
-   accordingly, sign it, commit and push:
+        ( \
+          cd ${MASTER_CHECKOUT:?} && \
+          git fetch && \
+          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+            alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
+            test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
+            mkdir -p "$(dirname "$test_udf")" && \
+            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${alpha_udf:?} \
+              | sed -e 's/channel: alpha/channel: test/' > ${test_udf:?} && \
+            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+            mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+            git add ${test_udf:?}* ; \
+          done && \
+          git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
+          git push origin master:master \
+        )
+
+1. Else, if preparing a final release, copy the generated UDFs for the previous
+   releases to the *test* channel in `$MASTER_CHECKOUT`, modify their content
+   accordingly, sign them, commit and push:
 
         ( \
           cd ${MASTER_CHECKOUT:?} && \
