@@ -71,8 +71,12 @@ install_tor_browser() {
     done
 
     # Let's use the libstdc++ that the Tor Browser is intended to be used with,
-    # instead of the system one.
-    cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
+    # instead of the system one, whenever ours is too old.
+    # For details see projects/firefox/abicheck.cc in
+    # https://git.torproject.org/builders/tor-browser-build.git
+    # Tor Browser 8.0a10 requires GLIBCXX_3.4.22, which Stretch has
+    # so disable this for now.
+    # cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
 
     # We don't need the Tor binary, the shared libraries Tor needs
     # (but Firefox doesn't) and documentation shipped in the TBB.
