@@ -21,6 +21,8 @@ To release Tails you'll need some packages installed:
   `debian/control` in the `debian` branch of its repo)
 * `tails-perl5lib` dependencies (same trick as `tails-iuk` to get the
   list)
+* `po4a` _from Stretch_: the version in testing/sid extracts Markdown headings
+   in a different way, which makes tons of strings fuzzy.
 
 Environment
 ===========
@@ -38,7 +40,14 @@ the scripts snippets found on this page:
 * `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
   (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
 * `NEXT_PLANNED_MAJOR_VERSION`: set to the version number of the next
-  *major* Tails release
+  *major* Tails release; if you're preparing a RC for a major release,
+  use that major release; otherwise, use whatever the next planned
+  major release is
+* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: set to the version number of
+  the second next *major* Tails release; e.g. if preparing the RC for
+  the 3.9 major release, then set this to 3.12 (3.9 is the next major
+  release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
+  release).
 * `NEXT_PLANNED_MINOR_VERSION`: set to the version number of the next
   *minor* Tails release; if the next release is a point-release, use
   that one; otherwise, use `${VERSION}.1`
@@ -287,18 +296,21 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
-2. Merge `devel` into `feature/buster`, *without* following the instructions for
+2. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+   branch, the time-based APT repository snapshots that were used
+   during the freeze.
+
+3. Merge `devel` into `feature/buster`, *without* following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
    (For now `feature/buster` is handled as any other topic branch
    forked off `devel`: its base branch is set to `devel`.)
+   If the merge conflicts don't look like something you feel confident
+   resolving properly, abort this merge and let the Foundations
+   Team know.
 
-3. Ensure that the release, `devel` and `feature/buster` branches
+4. Ensure that the release, `devel` and `feature/buster` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
-
-4. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
-   branch, the time-based APT repository snapshots that were used
-   during the freeze.
 
 5. Push the modified branches to Git:
 
@@ -516,19 +528,18 @@ SquashFS file order
 1. Start *Tor Browser*.
 1. A few minutes later, once the `boot-profile` process has been
    killed, retrieve the new sort file from `/var/log/boot-profile`.
+1. Backup the old sort file: `cp config/binary_rootfs/squashfs.sort{,.old}`
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
 1. Cleanup a bit:
    - remove `var/log/live/config.pipe`: otherwise the boot is broken
      or super-slow
    - remove the bits about `kill-boot-profile` at the end: they're
      only useful when profiling the boot
-1. Inspect the Git diff (including diff stat), apply common sense.
-   The following command is also helpful but requires that you save a
-   copy of the old sort file into `/tmp/squashfs.sort.old`:
+1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
-            <( cut -d' ' -f1 /tmp/squashfs.sort.old | sort ) \
-            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort | sort ) \
+            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort.old | sort ) \
+            <( cut -d' ' -f1 config/binary_rootfs/squashfs.sort     | sort ) \
             | less
 
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
@@ -563,10 +574,16 @@ suite should be ready, so it is time to:
 
 1. build the final image!
 
-1. compare the new build manifest with the one from the previous,
-   almost final build; they should be identical, except that the
-   `debian-security` serial might be higher. To ensure we publish
-   the final build's `.build-manifest`, please run:
+1. Compare the new build manifest with the one from the previous,
+   almost final build:
+
+        diff -Naur \
+           "${PACKAGES_MANIFEST:?}" \
+           "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
+
+   They should be identical, except that the `debian-security` serial might be higher.
+
+1. To ensure we publish the final build's `.build-manifest`, run:
 
         export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
 
@@ -792,7 +809,7 @@ Prepare upgrade-description files
      or RC), add `--channel alpha`
    * If preparing anything but a final release (e.g. an alpha, beta
      or RC), drop all `--next-version`
-     arguments, and instead pass (**untested!**)
+     arguments, and instead pass
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
    * Adjust `--next-version "${VERSION:?}.1"` so it matches the next
      potential emergency release. E.g. when releasing 3.7.1,
@@ -830,13 +847,30 @@ Prepare upgrade-description files
         )
 
 1. If preparing anything but a final release (e.g. an alpha, beta
-   or RC), copy the generated or updated files to
-   `${MASTER_CHECKOUT:?}`, replace `channel: alpha` with `channel:
-   test`, sign them, commit and push.
+   or RC), copy the generated UDFs for the previous releases
+   to the *test* channel in `$MASTER_CHECKOUT`, modify their content
+   accordingly, sign them, commit and push:
 
-1. Else, if preparing a final release, copy the generated UDF for the previous
-   release to the *test* channel in `$MASTER_CHECKOUT`, modify its content
-   accordingly, sign it, commit and push:
+        ( \
+          cd ${MASTER_CHECKOUT:?} && \
+          git fetch && \
+          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+            alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
+            test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
+            mkdir -p "$(dirname "$test_udf")" && \
+            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${alpha_udf:?} \
+              | sed -e 's/channel: alpha/channel: test/' > ${test_udf:?} && \
+            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
+            mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
+            git add ${test_udf:?}* ; \
+          done && \
+          git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
+          git push origin master:master \
+        )
+
+1. Else, if preparing a final release, copy the generated UDFs for the previous
+   releases to the *test* channel in `$MASTER_CHECKOUT`, modify their content
+   accordingly, sign them, commit and push:
 
         ( \
           cd ${MASTER_CHECKOUT:?} && \
@@ -1040,7 +1074,7 @@ Testing
    due time.
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file ticket?
-   release blocker?
+   release blocker? improve the test description (steps, expected outcome)?
 
 Update the website and Git repository
 =====================================
@@ -1107,14 +1141,14 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
-Copy the `.iso.sig` file into the website repository:
+Copy the signature and the Torrent into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-	      "${MASTER_CHECKOUT:?}/wiki/src/torrents/files/"
+	      "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
-`${MASTER_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
+`${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
 
 - Update the `meta title` directive.
 - Update the `meta date` directive.
@@ -1131,10 +1165,6 @@ Write the announcement for the release in
 
 In any case
 -----------
-
-If preparing a final release, what follows happens on the
-`$WEBSITE_RELEASE_BRANCH` in `$RELEASE_CHECKOUT`. Else, it happens in
-`$MASTER_CHECKOUT`.
 
 Generate PO files for the announcements and record the last commit
 before putting the release out for real:
@@ -1177,8 +1207,8 @@ Push
 
 ### Git
 
-If preparing an actual release, push the last commits to our Git
-repository and put `master` in the following state:
+Push the last commits to our Git repository and put `master` in the
+following state:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1187,12 +1217,8 @@ repository and put `master` in the following state:
     ) && \
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
-    )
-
-In any case, ensure that `master` has `stable` as its base branch:
-
-    ( cd "${MASTER_CHECKOUT:?}" && \
+      git merge origin/master && \
+      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
       echo "stable" > config/base_branch && \
       git commit config/base_branch \
           -m "Restore master's base branch." \
@@ -1320,14 +1346,6 @@ We announce *major* releases on the Tor blog:
 - click *Preview* and ensure everything is OK
 - click *Save and publish*
 
-Tor weekly news
----------------
-
-Write a short announcement for the [Tor weekly
-news](https://trac.torproject.org/projects/tor/wiki/TorWeeklyNews)'s
-next issue (follow the *Next steps* link), or find someone who's happy
-to do it.
-
 Amnesia news
 ------------
 
@@ -1353,14 +1371,14 @@ this, and skip what does not make sense for a RC.
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
 1. Remove any remaining RC for the just-published release from
    the mirrors.
-1. Remove IUKs that are more than 6 months old from
+1. Remove IUKs that are more than 9 months old from
    `/{stable,alpha}/iuk` on the rsync server:
    - first check that it's not going to remove anything we want to keep:
 
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
-                    -type f -name '*.iuk' -mtime '+183' \
+                    -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -ls \
              \"
 
@@ -1369,7 +1387,7 @@ this, and skip what does not make sense for a RC.
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
-                    -type f -name '*.iuk' -mtime '+183' \
+                    -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -delete \
              \"
 
@@ -1416,6 +1434,7 @@ this, and skip what does not make sense for a RC.
    appropriately (they should expire after the major release _after_
    the one you're preparing). Look carefully at the output of this command:
 
+        cd "${RELEASE_CHECKOUT:?}" && \
         git checkout "${RELEASE_BRANCH:?}" && \
         for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
         (
