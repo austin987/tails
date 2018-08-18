@@ -40,7 +40,14 @@ the scripts snippets found on this page:
 * `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
   (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
 * `NEXT_PLANNED_MAJOR_VERSION`: set to the version number of the next
-  *major* Tails release
+  *major* Tails release; if you're preparing a RC for a major release,
+  use that major release; otherwise, use whatever the next planned
+  major release is
+* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: set to the version number of
+  the second next *major* Tails release; e.g. if preparing the RC for
+  the 3.9 major release, then set this to 3.12 (3.9 is the next major
+  release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
+  release).
 * `NEXT_PLANNED_MINOR_VERSION`: set to the version number of the next
   *minor* Tails release; if the next release is a point-release, use
   that one; otherwise, use `${VERSION}.1`
@@ -1134,14 +1141,14 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
-Copy the `.iso.sig` file into the website repository:
+Copy the signature and the Torrent into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-	      "${MASTER_CHECKOUT:?}/wiki/src/torrents/files/"
+	      "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
-`${MASTER_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
+`${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
 
 - Update the `meta title` directive.
 - Update the `meta date` directive.
@@ -1158,10 +1165,6 @@ Write the announcement for the release in
 
 In any case
 -----------
-
-If preparing a final release, what follows happens on the
-`$WEBSITE_RELEASE_BRANCH` in `$RELEASE_CHECKOUT`. Else, it happens in
-`$MASTER_CHECKOUT`.
 
 Generate PO files for the announcements and record the last commit
 before putting the release out for real:
@@ -1204,8 +1207,8 @@ Push
 
 ### Git
 
-If preparing an actual release, push the last commits to our Git
-repository and put `master` in the following state:
+Push the last commits to our Git repository and put `master` in the
+following state:
 
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git push origin \
@@ -1214,12 +1217,8 @@ repository and put `master` in the following state:
     ) && \
     ( cd "${MASTER_CHECKOUT:?}" && \
       git fetch && \
-      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
-    )
-
-In any case, ensure that `master` has `stable` as its base branch:
-
-    ( cd "${MASTER_CHECKOUT:?}" && \
+      git merge origin/master && \
+      git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" && \
       echo "stable" > config/base_branch && \
       git commit config/base_branch \
           -m "Restore master's base branch." \
@@ -1347,14 +1346,6 @@ We announce *major* releases on the Tor blog:
 - click *Preview* and ensure everything is OK
 - click *Save and publish*
 
-Tor weekly news
----------------
-
-Write a short announcement for the [Tor weekly
-news](https://trac.torproject.org/projects/tor/wiki/TorWeeklyNews)'s
-next issue (follow the *Next steps* link), or find someone who's happy
-to do it.
-
 Amnesia news
 ------------
 
@@ -1380,14 +1371,14 @@ this, and skip what does not make sense for a RC.
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
 1. Remove any remaining RC for the just-published release from
    the mirrors.
-1. Remove IUKs that are more than 6 months old from
+1. Remove IUKs that are more than 9 months old from
    `/{stable,alpha}/iuk` on the rsync server:
    - first check that it's not going to remove anything we want to keep:
 
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
-                    -type f -name '*.iuk' -mtime '+183' \
+                    -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -ls \
              \"
 
@@ -1396,7 +1387,7 @@ this, and skip what does not make sense for a RC.
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
-                    -type f -name '*.iuk' -mtime '+183' \
+                    -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -delete \
              \"
 
@@ -1443,6 +1434,7 @@ this, and skip what does not make sense for a RC.
    appropriately (they should expire after the major release _after_
    the one you're preparing). Look carefully at the output of this command:
 
+        cd "${RELEASE_CHECKOUT:?}" && \
         git checkout "${RELEASE_BRANCH:?}" && \
         for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
         (
