@@ -16,7 +16,7 @@ end
 
 def xul_application_info(application)
   binary = $vm.execute_successfully(
-    'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
+    'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
   ).stdout.chomp
   address_bar_image = "BrowserAddressBar.png"
   unused_tbb_libs = ['libnssdbm3.so', "libmozavcodec.so", "libmozavutil.so"]

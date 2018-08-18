@@ -39,7 +39,7 @@ exec_firefox_helper() {
 }
 
 exec_firefox() {
-    exec_firefox_helper firefox "${@}"
+    exec_firefox_helper firefox.real "${@}"
 }
 
 exec_unconfined_firefox() {
