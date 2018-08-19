@@ -99,9 +99,9 @@ document.addEventListener("DOMContentLoaded", function() {
          - https://developer.chrome.com/extensions/api_index
     */
     minVersion = {
-      "firefox": 45,  // First release with chrome.runtime.getManifest
-      "chrome": 22,   // First release with chrome.runtime.getManifest
-      "torbrowser": 6 // First release based on Firefox 45
+      "firefox": 52,  // Tor Browser when releasing Tails Verification 1.0
+      "chrome": 57,   // Version from Debian Jessie, the oldest I could test
+      "torbrowser": 7 // First release based on Firefox 52
     };
     document.getElementById("min-version-firefox").textContent = minVersion.firefox.toString();
     document.getElementById("min-version-chrome").textContent = minVersion.chrome.toString();
@@ -132,9 +132,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     toggleDisplay(document.getElementsByClassName("no-js"), "hide");
     if (browser === "Firefox") {
-      if (version === 52) {
-        show(document.getElementById("broken-in-3-6"));
-      }
       if (version >= minVersion.firefox) {
         // Supported Firefox
         toggleDisplay(document.getElementsByClassName("supported-browser"), "show");

@@ -28,35 +28,35 @@ configure_default_incoming_protocol() {
                      "${default_protocol}"
 }
 
+thunderbird_profile_is_new() {
+   [ ! -f "${PROFILE}/extensions.ini" ]
+}
+
+initialize_enigmail_configured_version() {
+    mkdir -p "${PROFILE}/preferences"
+    version="$(dpkg-query --show \
+                          --showformat='${source:Upstream-Version}' \
+                          enigmail | sed -E 's,\+.*$,,')"
+    # Set the value in prefs.js so that Enigmail can manage it itself
+    # once we've done this once.
+    set_mozilla_pref "${PROFILE}/prefs.js" \
+                     "extensions.enigmail.configuredVersion" \
+                     "\"${version}\"" \
+		     'user_pref'
+}
+
 start_thunderbird() {
-   # Give Thunderbird its own temp directory, similar rationale to a1fd1f0f & #9558.
-    TMPDIR="${PROFILE}/tmp"
-    mkdir --mode=0700 -p "$TMPDIR"
-    export TMPDIR
-
-    # Clean the temporary directory: it's generally persistent, and then
-    # temporary files (including decrypted attachements) would otherwise
-    # be stored forever there (#13340).
-    rm -rf "${TMPDIR}"/*
-
     export GNOME_ACCESSIBILITY=1
     unset SESSION_MANAGER
 
     configure_default_incoming_protocol
 
-    # Apply only the relevant parts of Debian's Icedove → Thunderbird
-    # migration procedure.
-    TB_PROFILE_FOLDER="${THUNDERBIRD_CONFIG_DIR}"
-    if [ ! -f "${TB_PROFILE_FOLDER}/.migrated" ]; then
-        # Debian's migration helpers are not designed to have set -e
-        # or -u enabled.
-        set +e
-        set +u
-        . /usr/lib/thunderbird/thunderbird-wrapper-helper.sh
-        do_fix_mimetypes_rdf
-        do_create_migrated_mark_file
-        set -e
-        set -u
+    # Suppress Enigmail's configuration wizard by pretending that the current
+    # version was already configured. Only do this on first run though:
+    # once we've done this we let Enigmail manage this setting itself
+    # so it can run any migration code it wants to on upgrades.
+    if thunderbird_profile_is_new; then
+	initialize_enigmail_configured_version
     fi
 
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"

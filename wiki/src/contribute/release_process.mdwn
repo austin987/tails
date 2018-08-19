@@ -156,42 +156,6 @@ Bootstrap manual testing coordination:
 Update included files
 =====================
 
-uBlock patterns and settings file
-----------------
-
-The patterns+settings file is stored as a converted sqlite text dump in
-`config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump`.
-
-1. Boot Tails
-2. Start the Tor Browser and open the uBlock dashboard by clicking on the uBlock icon.
-3. Select the tab *3rd-party filters*
-4. Click on the button *Update now* to update all used patterns
-5. Close the Tor Browser
-7. Copy the `.tor-browser/profile.default/extension-data/ublock0.sqlite`
-   from this Tor Browser instance into the root of Tails' Git repo and
-   run the following command:
-
-        # For posterity: the general idea is to introduce \r\n as a
-        # token where we have made a line break to make the dump more
-        # diff-friendly (and, hence, Git-friendly). The most complex
-        # expression is the one done with perl, where we employ
-        # negative lookahead. What it means, is: replace single
-        # occurrences of | except when followed by \\n.
-        echo '.dump' | sqlite3 ublock0.sqlite | \
-            grep -v "cached_asset_content://cache://compiled-" | \
-            awk '!/^INSERT/; /^INSERT/ {print $0 | "sort -n"}' | \
-            sed 's_\\n_\\n\r\n_g' | \
-            sed 's_,_,\r\n_g' | \
-            perl -p -e 's/([^|])\|((?!\||\\n).)/\1\|\r\n\2/g' | \
-            sed "/^INSERT INTO \"settings\" VALUES('\(remoteBlacklists\|cached_asset_entries\)'/"'s_,_,\r\n_g' > \
-            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump
-
-8. Commit:
-
-        git commit -m 'Update uBlock Origin patterns + settings file.' \
-           config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
-        && rm ublock0.sqlite
-
 Upgrade bundled binary Debian packages
 --------------------------------------
 
@@ -302,15 +266,10 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
-2. Merge `devel` into `feature/buster` following the instructions for
+2. Merge `devel` into `feature/buster`, *without* following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
-   Given that these two branches' APT suites have diverged a lot, and
-   that `tails-merge-suite` currently happily overwrites newer
-   packages in the target with older packages from the source, it's
-   probably easier to just merge each individual APT overlay that was
-   just merged into the release branch into `feature/buster`'s APT
-   suite. Also, most of our just upgraded bundled packages
-   (e.g. `tails-greeter`) may need to be rebuilt for Stretch.
+   (For now `feature/buster` is handled as any other topic branch
+   forked off `devel`: its base branch is set to `devel`.)
 
 3. Ensure that the release, `devel` and `feature/buster` branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
@@ -417,7 +376,7 @@ translators|contribute/how/translate]].
 
 To get a list of changes on the website:
 
-    git diff --stat ${PREVIOUS_VERSION:?}.. -- \
+    git diff --stat ${PREVIOUS_TAG:?}.. -- \
         wiki/src/'*'.{mdwn,html} \
         ':!wiki/src/blueprint*' \
         ':!wiki/src/contribute*' \
@@ -533,7 +492,7 @@ SquashFS file order
 1. Add `profile` to the kernel command-line.
 1. Login.
 1. Wait for the "Tor is ready" notification.
-1. Start the web browser.
+1. Start *Tor Browser*.
 1. A few minutes later, once the `boot-profile` process has been
    killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
@@ -561,7 +520,7 @@ suite should be ready, so it is time to:
 
 1. Mark the version as "released" in the changelog:
 
-        dch --release --no-force-save-on-release --maintmaint
+        dch --release --no-force-save-on-release --maintmaint && \
         git commit -m "Mark Tails ${VERSION:?} as released." debian/changelog
 
 1. Export `SOURCE_DATE_EPOCH`:
@@ -572,8 +531,8 @@ suite should be ready, so it is time to:
 
         git tag -f -u "${TAILS_SIGNATURE_KEY:?}" \
                 -m "tagging version ${VERSION:?}" "${TAG:?}" && \
-        git push origin "${RELEASE_BRANCH:?}" && \
-        git push --force origin "${TAG:?}"
+        git push --force origin "${TAG:?}" && \
+        git push origin "${RELEASE_BRANCH:?}"
 
    Note: for Jenkins to build the release you must push the release
    branch with its tip tagged. I.e. if you deviate from the above
@@ -676,26 +635,19 @@ suite should be ready, so it is time to:
 Generate the OpenPGP signatures and Torrents
 ============================================
 
-First, create a directory with a suitable name and go there:
+Create a directory with a suitable name, go there, move the built
+image to this brand new directory, generate detached OpenPGP
+signatures for the image to be published (in the same directory as the
+image and with a `.sig` extension), then go up to the parent
+directory, create a `.torrent` file and check the generated `.torrent`
+files metadata:
 
 	mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-	cd "${ISOS:?}/tails-amd64-${VERSION:?}"
-
-Second, move the built image to this brand new directory:
-
+	cd "${ISOS:?}/tails-amd64-${VERSION:?}" && \
 	mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}/"
-
-Third, generate detached OpenPGP signatures for the image to be
-published, in the same directory as the image and with a `.sig`
-extension; e.g.
-
-	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso
-	rename 's,\.asc$,.sig,' *.asc
-
-Fourth, go up to the parent directory, create a `.torrent` file and
-check the generated `.torrent` files metainfo:
-
+	   "${ISOS:?}/tails-amd64-${VERSION:?}/" && \
+	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso && \
+	rename 's,\.asc$,.sig,' *.asc && \
 	cd .. && \
 	mktorrent \
 	  -a 'udp://tracker.torrent.eu.org:451' \
@@ -756,7 +708,7 @@ and run the following:
 
 Note that developer tools for creating IUK and upgrade-description
 files were only tested on Debian sid. It should hopefully work well on
-Jessie too.
+Debian stable too.
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
@@ -821,9 +773,10 @@ Prepare upgrade-description files
      or RC), drop all `--next-version`
      arguments, and instead pass (**untested!**)
      `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
-   * If preparing a point-release, pass neither
-     `--next-version "${VERSION:?}.1"`,
-     nor `--next-version "${VERSION:?}.1~rc1"`
+   * Adjust `--next-version "${VERSION:?}.1"` so it matches the next
+     potential emergency release. E.g. when releasing 3.7.1,
+     pass `--next-version 3.7.2` and when releasing 3.8, pass
+     `--next-version 3.8.1`.
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -832,7 +785,11 @@ Prepare upgrade-description files
            -type f -name upgrades.yml | \
            while read udf; do
                if [ -n "$(git status --porcelain "${udf:?}")" ]; then
-                   gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign "${udf:?}"
+                   for x in 1 2 3; do
+                       gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor \
+                           --detach-sign "${udf:?}" \
+                       && break
+                   done
                    mv --force "${udf:?}.asc" "${udf:?}.pgp"
                    ( \
                      cd ${IUK_CHECKOUT:?} && \
@@ -933,10 +890,10 @@ above).
 
 <a id="publish-iuk"></a>
 
-Publish the ISO and IUK over HTTP
----------------------------------
+Publish the ISO and IUKs over HTTP
+----------------------------------
 
-Upload the IUKs to the primary rsync mirror:
+Upload the IUKs to our rsync server:
 
     for source_version in ${IUK_SOURCE_VERSIONS}; do
        rsync --partial --inplace --progress -v \
@@ -944,7 +901,7 @@ Upload the IUKs to the primary rsync mirror:
           rsync.lizard:
     done
 
-Upload the ISO signature to the primary rsync mirror:
+Upload the ISO signature to our rsync server:
 
     scp "${ISO_PATH:?}.sig" rsync.lizard:
 
@@ -954,7 +911,7 @@ an integer):
 
     MATCHING_JENKINS_BUILD_ID=XXX
 
-Copy the ISO to the primary rsync mirror and verify the signature:
+Copy the ISO to our rsync server and verify the signature:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh rsync.lizard gpg --import
@@ -981,7 +938,7 @@ Move files in place with proper ownership and permissions:
               /srv/rsync/tails/tails/${DIST:?}/iuk/
     EOF
 
-Update the time in `project/trace` file on the primary rsync mirror
+Update the time in `project/trace` file on our rsync server
 and on the live wiki (even for a release candidate):
 
 	TRACE_TIME=$(date +%s) &&
@@ -1013,7 +970,8 @@ and on the live wiki (even for a release candidate):
           "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
        cd && \
-       chmod -R go+rX "tails-amd64-${VERSION:?}" && \
+       chgrp -R debian-transmission "tails-amd64-${VERSION:?}" && \
+       chmod -R go+rX,g+w "tails-amd64-${VERSION:?}" && \
        mv \
           "tails-amd64-${VERSION:?}" \
           /var/lib/transmission-daemon/downloads/ && \
@@ -1067,47 +1025,36 @@ Update the website and Git repository
 =====================================
 
 What follows in this section happens on the `$WEBSITE_RELEASE_BRANCH`
-branch in `${RELEASE_CHECKOUT:?}`.
+branch in `${RELEASE_CHECKOUT:?}`:
+
+	cd "${RELEASE_CHECKOUT:?}" && \
+	   git checkout "${WEBSITE_RELEASE_BRANCH:?}"
 
 If preparing a final release
 ----------------------------
 
 Skip this part if preparing a RC.
 
-Rename the `.packages` file to remove the `.iso` and build date parts
-of its name:
+Rename, copy, garbage collect and update various files:
 
 	mv "${ARTIFACTS:?}"/tails-amd64-"${VERSION:?}".iso.packages \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages"
-
-Rename the manifest of needed packages as well:
-
+	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" && \
 	mv "${PACKAGES_MANIFEST:?}" \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
-
-Copy the `.iso.sig`, `.build-manifest`, `.packages`, `.torrent` and
-`.torrent.sig` files into the website repository:
-
+	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" && \
 	cp "${ISO_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
-
-Remove from `wiki/src/torrents/files/` any remaining file from the
-previous release (including any RC).
-
-Update the size of the ISO image in `inc/*`:
-
-        LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
-          cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
-          > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html"
-
-Generate the expected signature verification output:
-
-      LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
-      sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
-      "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
+	git rm \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,packages,torrent} && \
+	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
+	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
+	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
+    gpg --check-trustdb && \
+    LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
@@ -1168,16 +1115,16 @@ If preparing a final release, what follows happens on the
 `$WEBSITE_RELEASE_BRANCH` in `$RELEASE_CHECKOUT`. Else, it happens in
 `$MASTER_CHECKOUT`.
 
-Generate PO files for the announcements with `./build-website`.
+Generate PO files for the announcements and record the last commit
+before putting the release out for real:
 
-Then, send them to <tails-l10n@boum.org> so that they get translated
-shortly, perhaps even soon enough to integrate them before pushing the
-release out officially.
-
-Then, record the last commit before putting the release out for real:
-
+	./build-website && \
 	git add wiki/src && \
-	git commit -m "releasing version ${VERSION:?}"
+	git commit -m "Releasing version ${VERSION:?}"
+
+Then, send the PO files for the announcements to <tails-l10n@boum.org>
+so that they get translated shortly, perhaps even soon enough to
+integrate them before pushing the release out officially.
 
 Go wild!
 ========
@@ -1222,8 +1169,7 @@ repository and put `master` in the following state:
       git merge "origin/${WEBSITE_RELEASE_BRANCH:?}" \
     )
 
-Then (or if you preparing a release candidate) ensure that `master`
-has `stable` as its base branch:
+In any case, ensure that `master` has `stable` as its base branch:
 
     ( cd "${MASTER_CHECKOUT:?}" && \
       echo "stable" > config/base_branch && \
@@ -1244,7 +1190,7 @@ Check translation are correct
 -----------------------------
 
 Once the push is over and the live website is build, check that each
-`news/version_${VERSION}` HTML and RSS pages looks OK in all supported
+`news/version_${VERSION}` HTML pages looks OK in all supported
 languages.
 
 Bug tracker
@@ -1370,14 +1316,20 @@ stuck in the moderation
 queue. [Log in](https://mailman.boum.org/admindb/amnesia-news) and
 accept it.
 
-Prepare for the next release
-============================
+Prepare for the next development cycle
+======================================
 
 XXX: adapt / fork for release candidates. In the meantime, read all
 this, and skip what does not make sense for a RC.
 
 1. If you just released a new stable release, remove the previous
-   stable release on the mirrors.
+   stable release from:
+   - our rsync server:
+     `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+   - our Bittorrent seed: get the previous release's _Transmission_ ID
+     with `ssh bittorrent.lizard transmission-remote --list` and then
+     delete it with
+     `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
 1. Remove any remaining RC for the just-published release from
    the mirrors.
 1. Remove IUKs that are more than 6 months old from
