@@ -1,16 +1,11 @@
-diff --git a/profiles/apparmor.d/abstractions/python b/profiles/apparmor.d/abstractions/python
-index 2ec2a4b7..f99ae64d 100644
 --- a/etc/apparmor.d/abstractions/python
 +++ b/etc/apparmor.d/abstractions/python
-@@ -28,7 +28,7 @@
-   /{var,usr}/lib/{pyshared,pycentral,python-support}/**  r,
-   /usr/lib/{pyshared,pycentral,python-support}/**.so     mr,
-   /var/lib/{pyshared,pycentral,python-support}/**.pyc    mr,
--  /usr/lib/python3/dist-packages/**.so                   mr,
-+  /usr/{,local/}lib/python3/dist-packages/**.so          mr,
+@@ -17,7 +17,7 @@
  
-   # wx paths
-   /usr/lib/wx/python/*.pth r,
--- 
-2.18.0
-
+   /usr/local/lib{,32,64}/python{2.[4-7],3.[0-5]}/**.{pyc,so}           mr,
+   /usr/local/lib{,32,64}/python{2.[4-7],3.[0-5]}/**.{egg,py,pth}       r,
+-  /usr/local/lib{,32,64}/python{2.[4-7],3.[0-5]}/{site,dist}-packages/ r,
++  /usr/local/lib{,32,64}/python{2.[4-7],3,3.[0-5]}/{site,dist}-packages/ r,
+   /usr/local/lib{,32,64}/python3.[0-5]/lib-dynload/*.so            mr,
+ 
+   # Site-wide configuration

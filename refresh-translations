@@ -13,9 +13,9 @@ PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/tails-screen-locker \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
     /usr/local/sbin/tails-additional-software \
-    /usr/local/lib/python3/dist-packages/veracrypt_mounter/volume.py \
-    /usr/local/lib/python3/dist-packages/veracrypt_mounter/volume_list.py \
-    /usr/local/lib/python3/dist-packages/veracrypt_mounter/volume_manager.py"
+    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume.py \
+    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_list.py \
+    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_manager.py"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
     /usr/local/bin/keepassx \
     /usr/local/lib/tails-spoof-mac \
@@ -49,8 +49,11 @@ prog_potfile () {
         /usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org/extension.js)
             domain=status-menu-helper-extension.js
             ;;
-        /usr/local/lib/*/veracrypt_mounter/*)
-            domain="veracrypt-mounter-$(basename "$prog")"
+	/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js)
+            domain=torstatus-extension.js
+            ;;
+        /usr/local/lib/*/unlock_veracrypt_volumes/*)
+            domain="unlock-veracrypt-volumes-$(basename "$prog")"
             ;;
         *)
             domain=$(basename $prog)
