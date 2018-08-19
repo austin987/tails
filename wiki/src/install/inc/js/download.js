@@ -11,12 +11,15 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (event.data.action === "verification-failed") {
       showVerificationResult("failed");
+      hitCounter("failed");
     }
     else if (event.data.action === "verification-failed-again") {
       showVerificationResult("failed-again");
+      hitCounter("failed-again");
     }
     else if (event.data.action === "verification-success") {
       showVerificationResult("successful");
+      hitCounter("successful");
     }
     else if (event.data.action === "progress") {
       showVerificationProgress(event.data.percentage);
@@ -168,6 +171,15 @@ document.addEventListener("DOMContentLoaded", function() {
       hide(document.getElementById("next-bittorrent"));
       show(document.getElementById(state));
     }
+  }
+
+  function hitCounter(status) {
+    var counter_url, url, scenario, version;
+    counter_url = "https://tails.boum.org/install/download/counter";
+    url = window.location.href.split("/");
+    scenario = url[url.lastIndexOf("install") + 1];
+    version = document.getElementById("tails-version").textContent.replace("\n", "");
+    fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status);
   }
 
   function resetVerificationResult(result) {
