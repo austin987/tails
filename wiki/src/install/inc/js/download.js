@@ -282,7 +282,10 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-torrent").onclick = function() {
+  document.getElementById("download-img-torrent").onclick = function() { displayBitTorrentVerification(); }
+  document.getElementById("download-iso-torrent").onclick = function() { displayBitTorrentVerification(); }
+
+  function displayBitTorrentVerification() {
     toggleDirectBitTorrent("bittorrent");
   }
 
