@@ -106,11 +106,10 @@ released:
    named tag:
 
         GBP_TAG="debian/$(echo ${TAILS_VERSION:?} | tr '~:' '_%')"
-        GBP_TAG_COMMIT="$(git rev-list -n 1 "${GBP_TAG}")"
         NEW_GBP_TAG="$(echo ${GBP_TAG:?} | sed 's@/1%@/@')" && \
         git tag -s "${NEW_GBP_TAG:?}" \
                 -m "thunderbird Debian release 1:${TAILS_VERSION:?}" \
-                "${GBP_TAG_COMMIT:?}"
+                "${GBP_TAG:?}"
 
 1. Git push and upload packages:
 
