@@ -7,7 +7,7 @@ Pre-requisites
 
 * a Debian Stretch (or newer) system
 * Tails' `devel` APT suite enabled
-* the right version of the `tails-perl5lib` package installed
+* the latest version of the `tails-perl5lib` package installed
 
 Install build and test dependencies
 ===================================
@@ -32,13 +32,11 @@ Export new upstream version number:
 
     export VERSION=XXX
 
-Update version number in `bin/tails-persistence-setup`:
+Update version number in `bin/tails-persistence-setup` and
+commit all files that need to be:
 
-    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-persistence-setup
-    perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," bin/tails-persistence-setup
-
-Commit all files that need to be:
-
+    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-persistence-setup && \
+    perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," bin/tails-persistence-setup && \
     git commit bin/tails-persistence-setup -m "tails-persistent-setup $VERSION"
 
 Optionally, run the upstream test suite (it is run as part of the
@@ -70,7 +68,7 @@ Checkout the Debian packaging branch and import the new upstream tarball:
 
 Update `debian/changelog`:
 
-    gbp dch && dch -e
+    gbp dch --auto --spawn-editor=always
 
 (Do not forget to set the appropriate release.)
 
@@ -82,9 +80,9 @@ Commit `debian/changelog`:
 Git-Dch: Ignore
 "
 
-Build a Debian package (use a Stretch/amd64 chroot, that
-has either tails-perl5lib installed, or the Tails APT repository
-configured):
+Build a Debian package (use a Stretch/amd64 chroot, that has
+`stretch-backports` enabled and on top of that: either tails-perl5lib
+installed or the Tails APT repository configured):
 
     gbp buildpackage
 
