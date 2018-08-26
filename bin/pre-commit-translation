@@ -20,7 +20,7 @@ path=$(git rev-parse --show-toplevel)
 # Redirect output to stderr.
 exec 1>&2
 
-STAGED_PO_FILES=$(git diff --ignore-submodules --name-only --cached --diff-filter=d -- '*.po' $against | tr '\n' ' ')
+STAGED_PO_FILES=$(git diff --ignore-submodules --name-only --cached --diff-filter=d -- '*.po' $against | grep '^wiki/' | tr '\n' ' ')
 
 # If we try to commit po files, check that they do not contain errors.
 if ! [ -z  "$STAGED_PO_FILES" ] ; then
