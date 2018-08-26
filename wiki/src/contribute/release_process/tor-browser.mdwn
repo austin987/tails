@@ -87,7 +87,8 @@ checksum file.
 Lastly, commit:
 
     git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
-        -m "Upgrade Tor Browser to ${TBB_VERSION}."
+        -m "Upgrade Tor Browser to ${TBB_VERSION}." && \
+    git show
 
 <div class="caution">
 <p>
@@ -104,7 +105,7 @@ Adapt our `config/chroot_local-includes/usr/local/bin/tor-browser`
 and/or
 `config/chroot_local-includes/usr/local/lib/tails-shell-library/tor-browser.sh`
 for recent changes in `RelativeLink/start-tor-browser` in the
-[Tor Browser builder's Git repo](https://git.torproject.org/builders/tor-browser-build.git). Look
+[Tor Browser build Git repo](https://git.torproject.org/builders/tor-browser-build.git). Look
 in the Git history:
 
     git log -p projects/tor-browser/RelativeLink/start-tor-browser
@@ -164,7 +165,7 @@ Import a new set of Tor Browser tarballs
 
 1. Download and verify all the tarballs we need:
 
-        TMPDIR=$(mktemp -d)
+        DL_DIR=$(mktemp --tmpdir -d "tor-browser-${TBB_VERSION}.XXXXXXXXXX")
         CHROOT_INCLUDES="config/chroot_local-includes"
         TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
         TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
@@ -175,14 +176,14 @@ Import a new set of Tor Browser tarballs
            git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
            | while read expected_sha256 tarball; do
               (
-                 cd "$TMPDIR"
+                 cd "$DL_DIR"
                  echo "Retrieving '${TBB_TARBALLS_BASE_URL}/${tarball}'..."
                  curl --remote-name --continue-at - \
                     "${TBB_TARBALLS_BASE_URL}/${tarball}"
               )
            done
            (
-              cd "$TMPDIR" && \
+              cd "$DL_DIR" && \
               git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
                  | sha256sum -c -
            )
@@ -192,7 +193,7 @@ Import a new set of Tor Browser tarballs
 
         cd "$TBB_ARCHIVE" && \
         mkdir "$TBB_VERSION" && cd "$TBB_VERSION" && \
-        git annex import --duplicate "$TMPDIR/"* "$TAILS_GIT_REPO/"sha256sums-*
+        git annex import --duplicate "$DL_DIR/"* "$TAILS_GIT_REPO/"sha256sums-*
 
 Commit and push your changes
 ----------------------------
@@ -225,5 +226,13 @@ Adjust the URL in the main Git repository
        echo "http://torbrowser-archive.tails.boum.org/${TBB_VERSION}/" > \
             config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
        git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
-           -m "Fetch Tor Browser from our own archive."
+           -m "Fetch Tor Browser from our own archive." && \
+       git show
     done
+
+Clean up
+--------
+
+	cd "$TBB_ARCHIVE" && \
+	git annex drop -- "${TBB_VERSION}" && \
+    rm -rf "$DL_DIR"
