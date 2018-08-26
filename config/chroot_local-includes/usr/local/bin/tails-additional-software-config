@@ -22,7 +22,8 @@ from tailslib.persistence import (                          # NOQA: E402
 
 from tailslib.additionalsoftware.config import (            # NOQA: E402
     get_additional_packages,
-    get_packages_list_path)
+    get_packages_list_path,
+    filter_package_details)
 
 _ = gettext.gettext
 
@@ -237,14 +238,14 @@ class ASPConfigApplication(Gtk.Application):
 
     def get_asp_configuration(self):
         additional_packages = get_additional_packages(
-            search_new_persistence=True,
-            filter_version=True)
+            search_new_persistence=True)
         apt_cache = apt.cache.Cache()
 
         packages_with_description = []
         for package in sorted(additional_packages):
+            package_name = filter_package_details(pkg)
             try:
-                apt_package = apt_cache[package]
+                apt_package = apt_cache[package_name]
             except KeyError:
                 summary = _("[package not available]")
             else:
