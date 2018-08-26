@@ -15,7 +15,8 @@ import apt.cache
 
 from tailslib import LIVE_USERNAME
 
-from tailslib.additionalsoftware.config import (
+from tailslib.additionalsoftware import (
+    ASPDataError,
     add_additional_packages,
     filter_package_details,
     get_additional_packages,
@@ -415,7 +416,8 @@ def apt_hook_pre():
     removed_packages = []
 
     line = sys.stdin.readline()
-    assert line.startswith("VERSION 3")
+    if not line.startswith("VERSION 3"):
+        raise ASPDataError("APT data is not version 3")
     line = sys.stdin.readline()
     # Ignore configuration space, which ends with an empty line
     while line != "\n":
