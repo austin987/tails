@@ -20,11 +20,11 @@ path=$(git rev-parse --show-toplevel)
 # Redirect output to stderr.
 exec 1>&2
 
-POLIST=$(git diff --ignore-submodules --name-only --cached --diff-filter=d -- '*.po' $against | tr '\n' ' ')
+STAGED_PO_FILES=$(git diff --ignore-submodules --name-only --cached --diff-filter=d -- '*.po' $against | tr '\n' ' ')
 
 # If we try to commit po files, check that they do not contain errors.
-if ! [ -z  "$POLIST" ] ; then
-    if ! ${path}/./submodules/jenkins-tools/slaves/check_po ${POLIST}; then
+if ! [ -z  "$STAGED_PO_FILES" ] ; then
+    if ! ${path}/./submodules/jenkins-tools/slaves/check_po ${STAGED_PO_FILES}; then
         echo
         echo "The po files you're trying to commit contain errors. Please fix them and try again."
         echo
