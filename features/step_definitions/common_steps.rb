@@ -419,8 +419,8 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ 
 end
 
 When /^I request a new identity using Torbutton$/ do
-  @screen.wait_and_click('TorButtonIcon.png', 30)
-  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+  @torbrowser.child('Tor Browser', roleName: 'push button').click
+  @torbrowser.child('New Identity', roleName: 'push button').click
 end
 
 When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do

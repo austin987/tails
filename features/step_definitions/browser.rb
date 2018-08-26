@@ -15,14 +15,14 @@ When /^I close the (?:Tor|Unsafe) Browser$/ do
 end
 
 def xul_application_info(application)
-  binary = $vm.execute_successfully(
-    'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
-  ).stdout.chomp
   address_bar_image = "BrowserAddressBar.png"
   unused_tbb_libs = ['libnssdbm3.so', "libmozavcodec.so", "libmozavutil.so"]
   case application
   when "Tor Browser"
     user = LIVE_USER
+    binary = $vm.execute_successfully(
+      'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
+    ).stdout.chomp
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
     browser_reload_button_image = "TorBrowserReloadButton.png"
@@ -30,6 +30,9 @@ def xul_application_info(application)
     new_tab_button_image = "TorBrowserNewTabButton.png"
   when "Unsafe Browser"
     user = "clearnet"
+    binary = $vm.execute_successfully(
+      'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
+    ).stdout.chomp
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
     browser_reload_button_image = "UnsafeBrowserReloadButton.png"
@@ -38,7 +41,9 @@ def xul_application_info(application)
   when "Tor Launcher"
     user = "tor-launcher"
     # We do not enable AppArmor confinement for the Tor Launcher.
-    binary = "#{binary}-unconfined"
+    binary = $vm.execute_successfully(
+      'echo ${TBB_INSTALL}/firefox-unconfined', :libs => 'tor-browser'
+    ).stdout.chomp
     tor_launcher_install = $vm.execute_successfully(
       'echo ${TOR_LAUNCHER_INSTALL}', :libs => 'tor-browser'
     ).stdout.chomp
