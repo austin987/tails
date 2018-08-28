@@ -5,15 +5,15 @@ You can run it with --help to see the usage.
 
 ./unify_po-headers.py --help
 
-run it for example with a list of files:
+run with a list of files:
 
 ./unify_po-headers.py file1.de.po file2.fr.po
 
-or unifiy all po file that are in git stage:
+or unifies all po file that are in git stage:
 
 ./unify_po-headers.py --cached
 
-or unify all po files of one language in the current dir and all sub directories:
+or unify all po files of one language in the current directory and all sub directories:
 
 ./unify_po-headers.py --lang de
 
@@ -55,7 +55,7 @@ class PoFile:
         self.__changed = False
 
     def lang(self) -> str:
-        """retuns the langauge out of the filename"""
+        """retun the language of the filename"""
         exts = self.fname.split(".")
         if len(exts) < 3:
             raise Exception("po file should have a language in his name.", self.fname)
@@ -66,7 +66,7 @@ class PoFile:
         m = self.regexKey(key).search(self.content)
         if not m:
             return False
-        # Remove po file soft linebreaks, as line length is handeld outside this
+        # Remove po file soft line breaks, as line length is handled outside this
         fileValue = m.group("value").replace('"\n"',"")
         return (fileValue == value)
 
@@ -103,7 +103,7 @@ class PoFile:
             subprocess.check_call(cmd)
 
 def unifyPoFile(fname: str) -> None:
-    """unifiy PO header and runs msgcat for file named fname"""
+    """unify PO header and runs msgcat for file named fname"""
     with PoFile(fname) as poFile:
         poFile.unifyKey("Language", poFile.lang())
         poFile.unifyKey("Content-Type", "text/plain; charset=UTF-8")
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     import glob
     import os.path
 
-    parser = argparse.ArgumentParser(description='unifiy po files')
+    parser = argparse.ArgumentParser(description='unify po files')
     parser.add_argument('--lang', dest='lang', help='all files for a specific language.')
     parser.add_argument('--cached', dest='cached', action='store_true', help='all po files within git stage.')
     parser.add_argument('files', metavar='file', type=str, nargs='*',
@@ -145,6 +145,6 @@ if __name__ == '__main__':
         args.files += [os.path.join(toplevel,f) for f in output.decode().split("\n") if f.endswith(".po")]
 
     if not args.files:
-        print("WARNING: no file to unifiy :( You may want to add files to operate on. See --help for further information.")
+        print("WARNING: no file to unify :( You may want to add files to operate on. See --help for further information.")
 
     main(args.files)
