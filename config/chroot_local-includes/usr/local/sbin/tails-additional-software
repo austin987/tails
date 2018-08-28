@@ -17,6 +17,7 @@ from tailslib import LIVE_USERNAME
 
 from tailslib.additionalsoftware.config import (
     add_additional_packages,
+    filter_package_details,
     get_additional_packages,
     get_packages_list_path,
     remove_additional_packages)
@@ -461,15 +462,15 @@ def apt_hook_post():
         packages = json.load(f)
     os.remove(ASP_STATE_PACKAGES)
 
-    additional_packages = get_additional_packages(search_new_persistence=True,
-                                                  filter_details=True)
+    additional_packages = get_additional_packages(search_new_persistence=True)
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
     # as additional software
     new_manually_installed_packages = set(filter(
         lambda pkg: not apt_cache[pkg].is_auto_installed
-                    and pkg not in additional_packages,         # NOQA: E131
+                    and pkg not in map(filter_package_details,
+                                       additional_packages),    # NOQA: E131
         set(packages["installed"])))
     if new_manually_installed_packages:
         handle_installed_packages(new_manually_installed_packages)
