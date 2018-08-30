@@ -96,7 +96,7 @@ When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|
     step "I see the \"#{title}\" notification after at most 300 seconds"
     case decision
     when "confirm"
-      gnome_shell.child('Add to Persistent Storage', roleName: 'push button').click
+      gnome_shell.child('Install Every Time', roleName: 'push button').click
       try_for(30) do
         step "the ASP persistence is correctly configured for package \"#{package}\""
       end
