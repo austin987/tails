@@ -998,7 +998,26 @@ candidate):
 	   git push origin master
 	)
 
-## Announce, seed and test the Torrents
+## Announce, seed and test the Torrent
+
+Check if there's enough space on our Bittorrent seed to import the new
+ISO:
+
+    ssh bittorrent.lizard df -h /var/lib/transmission-daemon/downloads
+
+If not, list already running Torrents:
+
+    ssh bittorrent.lizard transmission-remote --list
+
+… set `$ID` to the oldest one and delete it:
+
+    ssh bittorrent.lizard -t "${ID:?}" --remove-and-delete
+
+… and finally check disk space again:
+
+    ssh bittorrent.lizard df -h /var/lib/transmission-daemon/downloads
+
+Now you can announce and seed the Torrent for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
