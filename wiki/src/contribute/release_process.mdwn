@@ -704,7 +704,7 @@ Include each such version in a white-space separated list called
 `IUK_SOURCE_VERSIONS`, (e.g. `IUK_SOURCE_VERSIONS="2.8 2.9 2.9.1 2.10~rc1"`)
 and run the following:
 
-    for source_version in ${IUK_SOURCE_VERSIONS}; do
+    for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
         if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
             echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
             break
@@ -830,7 +830,7 @@ Prepare upgrade-description files
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
-          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
             alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
@@ -851,7 +851,7 @@ Prepare upgrade-description files
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
-          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
             stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
@@ -926,7 +926,7 @@ Publish the ISO and IUKs over HTTP
 
 Upload the IUKs to our rsync server:
 
-    for source_version in ${IUK_SOURCE_VERSIONS}; do
+    for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
        rsync --partial --inplace --progress -v \
           "${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk" \
           rsync.lizard:
