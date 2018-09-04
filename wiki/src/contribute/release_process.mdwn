@@ -956,7 +956,8 @@ and on the live website (even for a release candidate):
        wget \
           "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,}
-    EOF && \
+    EOF
+
     ssh rsync.lizard << EOF
       sudo install -o root -g rsync_tails -m 0755 -d \
          /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
@@ -964,7 +965,8 @@ and on the live website (even for a release candidate):
       sudo chmod u=rwX,go=rX tails-amd64-${VERSION:?}.iso* && \
       sudo mv tails-amd64-${VERSION:?}.iso* \
               /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?}
-    EOF && \
+    EOF
+
 	TRACE_TIME=$(date +%s) &&
 	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
 	[ -n "${MASTER_CHECKOUT:?}" ] && \
@@ -986,7 +988,8 @@ candidate):
       sudo chmod u=rwX,go=rX Tails_amd64_*_to_${VERSION:?}.iuk && \
       sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
               /srv/rsync/tails/tails/${DIST:?}/iuk/
-    EOF && \
+    EOF
+
 	TRACE_TIME=$(date +%s) &&
 	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
 	[ -n "${MASTER_CHECKOUT:?}" ] && \
