@@ -933,6 +933,8 @@ Upload the IUKs to our rsync server:
           rsync.lizard:
     done
 
+While waiting for the IUKs to be uploaded, you can proceed with the next steps.
+
 Upload the ISO signature to our rsync server:
 
     scp "${ISO_PATH:?}.sig" rsync.lizard:
@@ -943,7 +945,10 @@ an integer):
 
     MATCHING_JENKINS_BUILD_ID=XXX
 
-Copy the ISO to our rsync server and verify the signature:
+Copy the ISO to our rsync server, verify its signature,
+move them in place with proper ownership and permissions
+and update the time in `project/trace` file on our rsync server
+and on the live website (even for a release candidate):
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh rsync.lizard gpg --import
@@ -951,28 +956,15 @@ Copy the ISO to our rsync server and verify the signature:
        wget \
           "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,}
-    EOF
-
-Move files in place with proper ownership and permissions:
-
+    EOF && \
     ssh rsync.lizard << EOF
       sudo install -o root -g rsync_tails -m 0755 -d \
          /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
-      sudo chown root:rsync_tails \
-         tails-amd64-${VERSION:?}.iso* \
-         Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo chmod u=rwX,go=rX \
-         tails-amd64-${VERSION:?}.iso* \
-         Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo chown root:rsync_tails tails-amd64-${VERSION:?}.iso* && \
+      sudo chmod u=rwX,go=rX tails-amd64-${VERSION:?}.iso* && \
       sudo mv tails-amd64-${VERSION:?}.iso* \
-              /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
-      sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
-              /srv/rsync/tails/tails/${DIST:?}/iuk/
-    EOF
-
-Update the time in `project/trace` file on our rsync server
-and on the live wiki (even for a release candidate):
-
+              /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?}
+    EOF && \
 	TRACE_TIME=$(date +%s) &&
 	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
 	[ -n "${MASTER_CHECKOUT:?}" ] && \
@@ -980,10 +972,31 @@ and on the live wiki (even for a release candidate):
 	(
 	   cd "${MASTER_CHECKOUT:?}" && \
 	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading ${VERSION:?}." && \
+	      -m "Updating trace file after uploading the ISO for ${VERSION:?}." && \
 	   git push origin master
 	)
 
+Once the IUKs are uploaded, move them IUKs in place with proper
+ownership and permissions and update the time in `project/trace` file
+on our rsync server and on the live website (even for a release
+candidate):
+
+    ssh rsync.lizard << EOF
+      sudo chown root:rsync_tails Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo chmod u=rwX,go=rX Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
+              /srv/rsync/tails/tails/${DIST:?}/iuk/
+    EOF && \
+	TRACE_TIME=$(date +%s) &&
+	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	[ -n "${MASTER_CHECKOUT:?}" ] && \
+	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
+	(
+	   cd "${MASTER_CHECKOUT:?}" && \
+	   git commit wiki/src/inc/trace \
+	      -m "Updating trace file after uploading the IUKs for ${VERSION:?}." && \
+	   git push origin master
+	)
 
 ## Announce, seed and test the Torrents
 
