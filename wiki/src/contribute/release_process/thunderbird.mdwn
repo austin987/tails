@@ -76,7 +76,7 @@ released:
            --force-bad-version \
            --distribution "${DISTRIBUTION:?}" \
            --force-distribution \
-           "Rebuild Thunderbird with Tails' secure autoconfiguration patches." && \
+           "Rebuild with Tails' secure autoconfiguration patches." && \
         git commit debian/changelog \
             -m "document changes and release ${TAILS_VERSION:?}"
 
@@ -91,7 +91,10 @@ released:
         gbp buildpackage --git-debian-branch=tails/stretch \
             --git-sign-tags --git-tag-only
 
-1. Include all sources in the `.changes` file:
+1. If you've built a package based on an _upstream_ release (as in:
+   what's before the first `-` in the package version number)
+   whose `.orig.tar.xz` tarball was never uploaded to our custom
+   APT repository, include all sources in the `.changes` file:
 
         cd path/to/build/artifacts/directory && \
         cp path/to/build-area/*${UPSTREAM_VERSION:?}*.orig*.tar.xz . && \
@@ -103,18 +106,17 @@ released:
    named tag:
 
         GBP_TAG="debian/$(echo ${TAILS_VERSION:?} | tr '~:' '_%')"
-        GBP_TAG_COMMIT="$(git rev-list -n 1 "${GBP_TAG}")"
         NEW_GBP_TAG="$(echo ${GBP_TAG:?} | sed 's@/1%@/@')" && \
         git tag -s "${NEW_GBP_TAG:?}" \
                 -m "thunderbird Debian release 1:${TAILS_VERSION:?}" \
-                "${GBP_TAG_COMMIT:?}"
+                "${GBP_TAG:?}"
 
 1. Git push and upload packages:
 
         git push --follow-tags origin \
            ${NEW_GBP_TAG:?} \
            tails/stretch \
-           upstream-52.x \
+           upstream-60.x \
            pristine-tar && \
         (cd /path/to/build/artifacts && \
          debsign "${CHANGES_FILE:?}" && \

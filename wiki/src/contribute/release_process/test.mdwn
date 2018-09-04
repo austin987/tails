@@ -114,7 +114,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
   - For the "evercookie" test to work, you may have to disable
     _uBlock_ on its web page.
 * Compare the fingerprint Tor Browser in Tails with the fingerprint of
-  the same version of Tor Browser (running outside of Tails), using at least
+  the same version of Tor Browser (running on Linux outside of Tails), using at least
   <https://panopticlick.eff.org/> (automate: [[!tails_ticket 10262]]).
   Click "Show full results for fingerprinting" to see the details
   we're interested in.
@@ -135,14 +135,16 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * Running `/usr/local/lib/getTorBrowserUserAgent` should produce the User-Agent set by the
   installed version of Torbutton, and used in the Tor Browser. (automate: [[!tails_ticket 10268]])
 
+<a id="Thunderbird"></a>
+
 # Thunderbird
 
 * Check mail over IMAP using:
-  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
+  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion on port 993 with SSL).
 * Check mail over POP using:
-  - a hidden service POP server (e.g. Riseup, zsolxunfmbfuq7wf.onion with SSL).
+  - a hidden service POP server (see above, on port 995 with SSL).
 * Send an email using:
-  - a hidden service SMTP server (see above).
+  - a hidden service SMTP server (see above, on port 465 with SSL).
 
 * Check that the profile works and is torified:
   1. Send an email using Thunderbird and a non-anonymizing SMTP relay (a
@@ -231,16 +233,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
   then:
 
-        # Set TAILS_CHANNEL accordingly:
-        
-        # For actual releases:
-        TAILS_CHANNEL=test
-        
-        # For other (~rc, ~alpha...) releases:
-        TAILS_CHANNEL=alpha
-        
-        # Run:
-        echo "TAILS_CHANNEL=\"${TAILS_CHANNEL}\"" | sudo tee --append /etc/os-release && \
+        echo "TAILS_CHANNEL=\"test\" | sudo tee --append /etc/os-release && \
         tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
@@ -323,7 +316,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 # Documentation
 
 * The "Tails documentation" desktop launcher should open the
-  [[getting started]] page (automate: [[!tails_ticket 8788]]):
+  [[doc]] page (automate: [[!tails_ticket 8788]]):
   - in one language to which the website is translated
   - in one language to which the website is not translated (=> English)
 * Browse around in the documentation shipped in the image. Internal

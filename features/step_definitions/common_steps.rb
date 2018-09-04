@@ -419,8 +419,8 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ 
 end
 
 When /^I request a new identity using Torbutton$/ do
-  @screen.wait_and_click('TorButtonIcon.png', 30)
-  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+  @torbrowser.child('Tor Browser', roleName: 'push button').click
+  @torbrowser.child('New Identity', roleName: 'push button').click
 end
 
 When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
@@ -643,7 +643,7 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
 end
 
 def is_persistent?(app)
-  conf = get_persistence_presets(true)["#{app}"]
+  conf = get_persistence_presets_config(true)["#{app}"]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
   # This check assumes that we haven't enabled read-only persistence.
   c.success? and c.stdout.chomp != "aufs"

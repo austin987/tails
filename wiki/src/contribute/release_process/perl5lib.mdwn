@@ -58,8 +58,7 @@ upstream tarball, update `debian/changelog`:
     git checkout debian && \
        gbp import-orig --upstream-vcs-tag=Tails-perl5lib_$VERSION \
           ../Tails-perl5lib-$VERSION.tar.gz && \
-       gbp dch --auto && \
-       dch -e
+       gbp dch --auto --spawn-editor=always
 
 (Do not forget to set the appropriate release.)
 
@@ -74,7 +73,8 @@ Commit `debian/changelog`:
 Git-Dch: Ignore
 "
 
-Build a Debian package (use a Stretch/amd64 chroot):
+Build a Debian package (use a Stretch/amd64 chroot with `stretch-backports`
+enabled):
 
     gbp buildpackage
 
