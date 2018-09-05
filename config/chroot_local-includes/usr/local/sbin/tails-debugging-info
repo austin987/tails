@@ -37,10 +37,11 @@ investigated carefully.
 ...
 """
 
+import json
 import os
 import sys
-from pwd import getpwuid
 import subprocess
+from pwd import getpwuid
 
 
 # AppArmor Ux rules don't sanitize PATH, which can lead to an
@@ -52,121 +53,100 @@ os.environ['PATH'] = '/usr/local/bin:/usr/bin:/bin'
 
 
 def main():
-    """Print debug information.
+    """Print debug information serialized as json.
 
     >>> main()
     <BLANKLINE>
     ...
     """
 
-    debug_file('root', '/proc/cmdline')
+    config = None
+    with open('/etc/whisperback/debugging-info.json', 'r') as conf_file:
+        config = json.load(conf_file)
 
-    # General hardware and filesystems information
-    debug_command('/usr/sbin/dmidecode', '-s', 'system-manufacturer')
-    debug_command('/usr/sbin/dmidecode', '-s', 'system-product-name')
-    debug_command('/usr/sbin/dmidecode', '-s', 'system-version')
-    debug_command('/usr/bin/lspci', '-nn')
-    debug_command('/bin/df', '--human-readable', '--print-type')
-    debug_command('/bin/mount', '--show-labels')
-    debug_command('/bin/lsmod')
-    debug_file('root', '/proc/asound/cards')
-    debug_file('root', '/proc/asound/devices')
-    debug_file('root', '/proc/asound/modules')
-
-    # Miscellaneous configuration and log files
-    debug_file('root', '/etc/X11/xorg.conf')
-    debug_file('Debian-gdm', '/var/log/gdm3/tails-greeter.errors')
-    debug_file('root', '/var/log/live/boot.log')
-    debug_file('root', '/var/log/live/config.log')
-    debug_file('root', '/var/lib/live/config/tails.physical_security')
-
-    # Persistence
-    debug_file('root', '/var/lib/gdm3/tails.persistence')
-    debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/persistence.conf')
-    debug_file('tails-persistence-setup', '/live/persistence/TailsData_unlocked/live-additional-software.conf')
-    debug_directory('root', '/live/persistence/TailsData_unlocked/apt-sources.list.d')
-    debug_file('root', '/var/log/live-persist')
-
-    # The Journal
-    debug_command('/bin/journalctl', '--catalog', '--no-pager')
+    info = []
+    for _type, _args in config:
+        if _type == 'command':
+            info.append(debug_command(_args['args'][0], *_args['args'][1:]))
+        elif _type == 'directory':
+            info.append(debug_directory(_args['user'], _args['path']))
+        else:
+            info.append(debug_file(_args['user'], _args['path']))
+    print()
+    print(json.dumps(info, indent=4))
 
 
 def debug_command(command, *args):
-    """Print the command and then run it.
+    """Return the command and it's standard output as dict.
 
     >>> debug_command('echo', 'foo')
-    <BLANKLINE>
-    ===== output of command echo foo =====
-    foo
+    {...'key': 'echo foo'...}
     """
-    print()
-    print('===== output of command {} ====='.format(' '.join((command,) + args)))
-    print(subprocess.check_output([command, *args]).decode().strip())
+    command_output = subprocess.check_output([command, *args])
+    command_output = command_output.decode('UTF-8').strip().split('\n')
+    return {'key': '{}'.format(' '.join((command,) + args)), 'content': command_output}
 
 
 def debug_file(user, filename):
-    """Print file content.
+    """Return the filename and the file content as dict.
 
     >>> import tempfile, getpass
     >>> with tempfile.NamedTemporaryFile('w') as f:
     ...     _ = f.write("foo\\nbar")
     ...     _ = f.seek(0)
     ...     debug_file(getpass.getuser(), f.name)
-    <BLANKLINE>
-    ===== content of ... =====
-    foo
-    bar
+    {...'content': ['foo', 'bar']...}
     """
     if not os.path.isfile(filename):
-        return
+        return {'key': filename, 'content': 'Not found'}
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
     owner = getpwuid(os.stat(filename).st_uid).pw_name
     if owner != user:
-        print()
-        print('WARNING: not opening file {}, '.format(filename), end='')
-        print('because it is owned by {} instead of {}'.format(owner, user))
-        return
+        return {'key': filename, 'content': '''WARNING: not opening file {}, because it is '''
+                '''owned by {} instead of {}'''.format(filename, owner, user)}
 
-    print()
-    print('===== content of {} ====='.format(filename))
+    file_content = []
     with open(filename) as f:
-        print(f.read(), end='')
+        for l in f:
+            file_content.append(l.replace('\n', ''))
+    return {'key': filename, 'content': file_content}
 
 
 def debug_directory(user, dir_name):
-    """List directory and print content of all contained files (non-recursively).
+    """Return a dict with the dir_name and dicts with
+    the content of all contained files (non-recursively).
 
-    >>> import tempfile, getpass
-    >>> with tempfile.TemporaryDirectory() as tmpdir:
-    ...     open(os.path.join(tmpdir, 'foo'), 'w').close()
-    ...     debug_directory(getpass.getuser(), tmpdir)
-    <BLANKLINE>
-    ===== listing of ... =====
-    foo
+    >>> import os, getpass
+    >>> tmpdir = '/tmp/mytempdir'
+    >>> os.makedirs(tmpdir)
+    >>> with open(os.path.join(tmpdir, 'foo'), 'w') as f:
+    ...     _ = f.write("foobar\\nbar")
+    ...     _ = f.seek(0)
+    ...     result = debug_directory(getpass.getuser(), tmpdir)
+    >>> os.remove(os.path.join(tmpdir, 'foo'))
+    >>> os.rmdir(tmpdir)
+    >>> result
+    {...[{...['foobar', 'bar']...}]}
     """
     if not os.path.isdir(dir_name):
-        return
-
-    print()
+        return {'key': dir_name, 'content': 'Not found'}
 
     # This check is not sufficient, see the comment at the top of the file
     # for the complete requirements required for security
     owner = getpwuid(os.stat(dir_name).st_uid).pw_name
     if owner != user:
-        print('WARNING: not opening directory {}, '.format(dir_name), end='')
-        print('because it is owned by {} instead of {}'.format(owner, user))
-        return
+            return {'key': dir_name, 'content': '''WARNING: not opening directory {}, because '''
+                    '''it is owned by {} instead of {}'''.format(dir_name, owner, user)}
 
     files = os.listdir(dir_name)
 
-    print('===== listing of {} ====='.format(dir_name))
-    for f in files:
-        print(f)
+    listing = []
 
     for f in files:
-        debug_file(user, f)
+        listing.append(debug_file(user, os.path.join(dir_name, f)))
+    return {'key': dir_name, 'content': listing}
 
 
 if __name__ == '__main__':

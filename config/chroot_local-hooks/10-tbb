@@ -71,8 +71,12 @@ install_tor_browser() {
     done
 
     # Let's use the libstdc++ that the Tor Browser is intended to be used with,
-    # instead of the system one.
-    cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
+    # instead of the system one, whenever ours is too old.
+    # For details see projects/firefox/abicheck.cc in
+    # https://git.torproject.org/builders/tor-browser-build.git
+    # Tor Browser 8.0a10 requires GLIBCXX_3.4.22, which Stretch has
+    # so disable this for now.
+    # cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
 
     # We don't need the Tor binary, the shared libraries Tor needs
     # (but Firefox doesn't) and documentation shipped in the TBB.
@@ -118,17 +122,14 @@ EOF
 # TBB works around the lack of code signing for its extensions by
 # hacking in exceptions. We do the same!
 apply_extension_code_signing_hacks () {
-    local destination tmp tbb_timestamp
-    destination="${1}"
-
-    # For consistency we'll set timestamps of files we modify to the
-    # same one used by the Tor Browser instead of SOURCE_DATE_EPOCH.
-    tbb_timestamp="$(date --date='2000-01-01 00:00:00' +%s)"
+    local tbb_install tbb_timestamp
+    tbb_install="${1}"
+    tbb_timestamp="${2}"
 
     tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z x -tzip "${TBB_INSTALL}/omni.ja"
+        7z x -tzip "${tbb_install}/omni.ja"
         patch -p1 <<EOF
 diff -Naur a/chrome/toolkit/content/mozapps/extensions/extensions.js b/chrome/toolkit/content/mozapps/extensions/extensions.js
 --- a/chrome/toolkit/content/mozapps/extensions/extensions.js 2000-01-01 00:00:00.000000000 +0000
@@ -167,14 +168,14 @@ diff -Naur a/modules/addons/XPIProvider.jsm b/modules/addons/XPIProvider.jsm
 EOF
         touch --date="@${tbb_timestamp}" modules/addons/XPIProvider.jsm \
               chrome/toolkit/content/mozapps/extensions/extensions.js
-        rm "${TBB_INSTALL}/omni.ja"
-        7z a -mtc=off -tzip "${TBB_INSTALL}/omni.ja" *
+        rm "${tbb_install}/omni.ja"
+        7z a -mtc=off -tzip "${tbb_install}/omni.ja" *
     )
     rm -r "${tmp}"
     tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z x -tzip "${TBB_INSTALL}/browser/omni.ja"
+        7z x -tzip "${tbb_install}/browser/omni.ja"
         patch -p1 <<EOF
 diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
 --- a/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
@@ -191,44 +192,47 @@ diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
            }
 EOF
         touch --date="@${tbb_timestamp}" components/nsBrowserGlue.js
-        rm "${TBB_INSTALL}/browser/omni.ja"
-        7z a -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" *
+        rm "${tbb_install}/browser/omni.ja"
+        7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
     )
     rm -r "${tmp}"
-    for archive in "${TBB_INSTALL}/omni.ja" "${TBB_INSTALL}/browser/omni.ja"; do
+}
+
+apply_prefs_hacks() {
+    local tbb_install tmp tbb_timestamp
+    tbb_install="${1}"
+    tbb_timestamp="${2}"
+
+    tmp="$(mktemp -d)"
+    (
+        cd "${tmp}"
+        7z x -tzip "${tbb_install}/browser/omni.ja"
+        # Remove TBB's Tor Launcher settings since we don't enable it in
+	# our Tor Browser.
+	sed -i '/extensions\.torlauncher\./d' defaults/preferences/000-tor-browser.js
+	# Display the Stop/Reload button: our test suite currently depends on it
+	perl -pi -E \
+	    's/^(pref\("browser.uiCustomization.state",.*\\"loop-button\\")/$1,\\"stop-reload-button\\"/' \
+	    defaults/preferences/000-tor-browser.js
+	# Append our custom prefs
+	cat /usr/share/tails/tor-browser-prefs.js \
+	    >> defaults/preferences/000-tor-browser.js
+	touch --date="@${tbb_timestamp}" defaults/preferences/000-tor-browser.js
+        rm "${tbb_install}/browser/omni.ja"
+        7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
+    )
+    rm -r "${tmp}"
+}
+
+strip_nondeterminism () {
+    local tbb_install tbb_timestamp
+    tbb_install="${1}"
+    tbb_timestamp="${2}"
+
+    for archive in "${tbb_install}/omni.ja" "${tbb_install}/browser/omni.ja"; do
         strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
                                      "${archive}" 2>/dev/null
     done
-}
-
-# Modern Firefox doesn't apply browser.search.defaultenginename on
-# start, and the other ways to get it to work (e.g. pre-generating
-# search.json.mozlz4) seems rather complex. Instead, let's just make
-# browser.search.defaultenginename work again by employing some
-# Enterprise features to run arbitrary JavaScript with access to the
-# Firefox internals. For the details of this feature, see:
-# https://developer.mozilla.org/en-US/Firefox/Enterprise_deployment
-apply_default_searchengine_hacks () {
-    local destination
-    destination="${1}"
-
-    cat > "${destination}/defaults/pref/autoconfig.js" <<EOF
-// This file must start with a comment
-pref("general.config.filename", "mozilla.cfg");
-pref("general.config.obscure_value", 0);
-EOF
-
-    cat > "${destination}/mozilla.cfg" <<EOF
-// This file must start with a comment
-var searchService = Components.classes["@mozilla.org/browser/search-service;1"].getService(Components.interfaces.nsIBrowserSearchService);
-var engineName = getPref("browser.search.defaultenginename");
-if (engineName) {
-    var engine = searchService.getEngineByName(engineName);
-    if (engine) {
-        searchService.currentEngine = engine;
-    }
-}
-EOF
 }
 
 install_langpacks_from_bundles() {
@@ -262,8 +266,9 @@ install_debian_extensions() {
     destination="${1}"
     shift
     apt-get install --yes "${@}"
-    ln -s /usr/share/xul-ext/ublock-origin/ \
+    ln -s /usr/share/webext/ublock-origin/ \
           "${destination}"/'uBlock0@raymondhill.net'
+    patch -p1 < /usr/share/tails/uBlock-disable-autoUpdate.diff
 }
 
 create_default_profile() {
@@ -275,15 +280,15 @@ create_default_profile() {
     rsync -a --exclude bookmarks.html --exclude extensions \
           "${tbb_profile}"/ "${destination}"/
 
-    # Remove TBB's Tor Launcher settings since we don't enable it in
-    # our Tor Browser.
-    sed -i '/extensions\.torlauncher\./d' "${destination}"/preferences/extension-overrides.js
-
     mkdir -p "${destination}"/extensions
     for ext in "${tbb_extensions_dir}"/*; do
         ln -s "${ext}" "${destination}"/extensions/
     done
 }
+
+# For consistency we'll set timestamps of files we modify to the
+# same one used by the Tor Browser instead of SOURCE_DATE_EPOCH.
+TBB_TIMESTAMP="$(date --date='2000-01-01 00:00:00' +%s)"
 
 TBB_SHA256SUMS_FILE=/usr/share/tails/tbb-sha256sums.txt
 TBB_TARBALLS="$(grep "\<tor-browser-linux64-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
@@ -301,16 +306,17 @@ fi
 TBB_DIST_URL_FILE=/usr/share/tails/tbb-dist-url.txt
 TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}")"
 
-# The Debian Iceweasel extensions we want to install and make
+# The Firefox extensions we want to install from Debian and make
 # available in the Tor Browser.
-DEBIAN_EXT_PKGS="xul-ext-ublock-origin"
+DEBIAN_EXT_PKGS="webext-ublock-origin"
 
 TMP="$(mktemp -d)"
 download_and_verify_files "${TBB_TARBALLS_BASE_URL}" "${TBB_TARBALLS}" "${TMP}"
 
 install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
-apply_extension_code_signing_hacks "${TBB_INSTALL}"
-apply_default_searchengine_hacks "${TBB_INSTALL}"
+apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 
 mkdir -p "${TBB_EXT}"
 if [ "${NIGHTLY_BUILD}" != yes ]; then
@@ -324,11 +330,11 @@ rm -r "${TMP}"
 mv "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions/* "${TBB_EXT}"
 rmdir "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default/extensions
 
-# ... and then install a few Iceweasel extension by using a fake
-# Iceweasel equivs package to satisfy the dependencies.
+# ... and then install a few Firefox extension by using a fake
+# firefox equivs package to satisfy the dependencies.
 FIREFOX_VERSION=$(get_firefox_version "${TBB_INSTALL}"/application.ini)
-FAKE_ICEWEASEL_VERSION=${FIREFOX_VERSION}+fake1
-install_fake_package iceweasel "${FAKE_ICEWEASEL_VERSION}" web
+FAKE_FIREFOX_VERSION=${FIREFOX_VERSION}+fake1
+install_fake_package firefox "${FAKE_FIREFOX_VERSION}" web
 install_debian_extensions "${TBB_EXT}" ${DEBIAN_EXT_PKGS}
 
 mkdir -p "${TBB_PROFILE}"
@@ -336,7 +342,7 @@ create_default_profile "${TBB_INSTALL}"/TorBrowser/Data/Browser/profile.default 
 
 # Create a copy of the Firefox binary, for use e.g. by Tor Launcher.
 # It won't be subject to AppArmor confinement.
-cp -a "${TBB_INSTALL}/firefox" "${TBB_INSTALL}/firefox-unconfined"
+cp -a "${TBB_INSTALL}/firefox.real" "${TBB_INSTALL}/firefox-unconfined"
 
 chown -R root:root "${TBB_INSTALL}" "${TBB_PROFILE}" "${TBB_EXT}"
 chmod -R a+rX "${TBB_INSTALL}" "${TBB_PROFILE}" "${TBB_EXT}"

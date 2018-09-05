@@ -40,21 +40,26 @@ pref("toolkit.telemetry.prompted", 2);
 pref("toolkit.telemetry.rejected", true);
 pref("toolkit.telemetry.enabled", false);
 
+// Only allow SSL channels when fetching from the ISP.
+pref("mailnews.auto_config.fetchFromISP.ssl_only", true);
 // Only allow Thunderbird's automatic configuration wizard to use and
 // configure secure (SSL/TLS) protocols. This is the Thunderbird default
 // but let's be extra sure!
-pref("mailnews.auto_config.ssl_only", true);
+pref("mailnews.auto_config.account_constraints.ssl_only", true);
 // Drop auto-fetched configurations using Oauth2 -- they do not work
 // together with Torbirdy since it disables needed functionality (like
 // JavaScript and cookies) in the embedded browser.
-pref("mailnews.auto_config.oauth2.enabled", false);
-// Disable MX lookup which is susceptible to MitM (without
-// DNSSEC). Note that the lookup is not done using the system
-// resolver, but over HTTPS to some DNS web service, but that web
-// service could still be targeted.
-pref("mailnews.auto_config.dns_mx_lookup.enabled", false);
+pref("mailnews.auto_config.account_constraints.allow_oauth2", false);
+// The timeout (in seconds) for each guess
+pref("mailnews.auto_config.guess.timeout", 30);
 
 // We disable Memory Hole for encrypted email until support is more
 // mature and widely spread (#15201).
 pref("extensions.enigmail.protectedHeaders", 0);
 pref("extensions.torbirdy.custom.extensions.enigmail.protectedHeaders", 0);
+
+// Don't decrypt subordinate message parts that otherwise might reveal
+// decrypted content to the attacker, i.e. the optional part of the fixes
+// for EFAIL.
+// Reference: https://www.thunderbird.net/en-US/thunderbird/52.9.1/releasenotes/
+pref("mailnews.p7m_subparts_external", true);

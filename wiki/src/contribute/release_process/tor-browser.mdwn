@@ -98,21 +98,27 @@ the corresponding tarballs ourselves, so read on the next section.
 </p>
 </div>
 
-Sync with the start-tor-browser script
+Sync with the upstream wrapper scripts
 ======================================
 
 Adapt our `config/chroot_local-includes/usr/local/bin/tor-browser`
 and/or
 `config/chroot_local-includes/usr/local/lib/tails-shell-library/tor-browser.sh`
-for recent changes in `RelativeLink/start-tor-browser` in the
-[Tor Browser build Git repo](https://git.torproject.org/builders/tor-browser-build.git). Look
-in the Git history:
+for recent changes made in the
+[Tor Browser build Git repo](https://git.torproject.org/builders/tor-browser-build.git):
 
-    git log -p projects/tor-browser/RelativeLink/start-tor-browser
+    git log -p \
+        projects/firefox/abicheck.cc \
+        projects/firefox/start-firefox \
+        projects/tor-browser/RelativeLink/start-tor-browser
 
-and take note of changes to environment variables (or newly added
-ones) and the commandline options passed to the `firefox` executable,
-etc.
+Then apply any relevant change, e.g. to:
+
+ - environment variables;
+ - commandline options passed to the `firefox` executable;
+ - required libstdc++6 version bumps; if there's been any change upstream,
+   look for `abicheck` in `config/chroot_local-hooks/10-tbb` and adjust
+   that hook as needed.
 
 Self-hosted Tor Browser tarballs archive
 ========================================
