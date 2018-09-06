@@ -258,7 +258,7 @@ def stream_isolation_info(application)
     }
   when "Tor Browser"
     {
-      :grep_monitor_expr => 'users:(("firefox"',
+      :grep_monitor_expr => 'users:(("firefox\.real"',
       :socksport => 9150,
       :controller => true,
     }

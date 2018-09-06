@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Checking for Thunderbird language packages"
+
+SUFFIX="@thunderbird.mozilla.org.xpi"
+LANG_PACK_COUNT=$(find /usr/share/thunderbird/extensions/ -name "langpack-*${SUFFIX}" | wc -l)
+
+if [ "$LANG_PACK_COUNT" = "0" ]; then
+  cat >&2 <<EOF
+E: No language packages matching the ${SUFFIX} suffix.
+   It is likely that tails-shell-library/thunderbird.sh needs an update
+EOF
+  exit 1
+else
+  echo "I: ${LANG_PACK_COUNT} language packages found" >&2
+fi
+

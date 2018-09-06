@@ -1,0 +1,27 @@
+From: Cyril Brulebois <cyril@debamax.com>
+Date: Tue, 14 Aug 2018 22:48:09 +0200
+Subject: Enable the gpg_already_torified setting in the system configuration
+
+There's:
+  /usr/share/xul-ext/torbirdy/defaults/preferences/000system.js → /etc/xul-ext/torbirdy.js
+
+which is read after:
+  /usr/share/xul-ext/torbirdy/defaults/preferences/prefs.js
+
+but setting extensions.torbirdy.gpg_already_torified to true in the former
+doesn't seem sufficient, even though strace confirms it's being read.
+
+Without this setting, fetching key from a keyserver doesn't work out of the
+box.
+
+--- a/usr/share/xul-ext/torbirdy/defaults/preferences/prefs.js
++++ b/usr/share/xul-ext/torbirdy/defaults/preferences/prefs.js
+@@ -5,7 +5,7 @@
+ pref("extensions.torbirdy.startup_folder", false);
+ pref("extensions.torbirdy.enigmail.throwkeyid", false);
+ pref("extensions.torbirdy.enigmail.confirmemail", false);
+-pref("extensions.torbirdy.gpg_already_torified", false);
++pref("extensions.torbirdy.gpg_already_torified", true);
+ pref("extensions.torbirdy.timezone", true);
+ pref("extensions.torbirdy.whonix_run", true);
+ pref("extensions.torbirdy.info_run", false);

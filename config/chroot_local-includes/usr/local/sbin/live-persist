@@ -128,21 +128,6 @@ migrate_persistence_preset()
 	fi
 }
 
-migrate_icedove_to_thunderbird() {
-	local CONFIG="${1}"
-	local PERSISTENCE_DIR="$(dirname "${CONFIG}")"
-	if   [ -d "${PERSISTENCE_DIR}/thunderbird" ] || \
-	   ! [ -d "${PERSISTENCE_DIR}/icedove" ]
-	then
-		return
-	fi
-	mv "${PERSISTENCE_DIR}/icedove" "${PERSISTENCE_DIR}/thunderbird"
-	add_persistence_preset /home/amnesia/.thunderbird thunderbird "${conf}"
-	remove_persistence_preset /home/amnesia/.icedove "${conf}"
-	# The script /usr/local/bin/thunderbird takes care of the rest of
-	# the migration when starting Thunderbird.
-}
-
 # We override live-boot's logging facilities to get more useful error messages
 log_warning_msg ()
 {
@@ -241,9 +226,9 @@ other::r-x"
 persistence_conf_file_has_correct_access_rights ()
 {
 	local conf="$1"
+	local expected_perms="$2"
 	local expected_user=tails-persistence-setup
 	local expected_group=tails-persistence-setup
-	local expected_perms=600
 	local expected_acl=""
 
 	if [ $(stat -c %U "$conf") != "$expected_user" ]
@@ -273,18 +258,25 @@ persistence_conf_file_has_correct_access_rights ()
 disable_and_create_empty_persistence_conf_file ()
 {
 	local conf="$1"
+	local mode="$2"
+
+	if [ -z "$mode" ]
+	then
+		mode=0600
+	fi
 
 	mv "$conf" "${conf}.insecure_disabled" \
 		|| error "Failed to disable '$conf': $?"
-	create_empty_persistence_conf_file "$conf"
+	create_empty_persistence_conf_file "$conf" "$mode"
 }
 
 create_empty_persistence_conf_file ()
 {
 	local conf="$1"
+	local mode="$2"
 
 	install --owner tails-persistence-setup \
-		--group tails-persistence-setup --mode 0600 \
+		--group tails-persistence-setup --mode "$mode" \
 		/dev/null "$conf" \
 		|| error "Failed to create empty '$conf': $?"
 }
@@ -356,7 +348,7 @@ activate_volumes ()
 	do
 		if test ! -f "$mountpoint/live-additional-software.conf"
 		then
-			create_empty_persistence_conf_file "$mountpoint/live-additional-software.conf"
+			create_empty_persistence_conf_file "$mountpoint/live-additional-software.conf" "0644"
 		fi
 	done
 
@@ -364,39 +356,39 @@ activate_volumes ()
 	# has wrong access rights.
 	if [ "$ACCESS_RIGHTS_ARE_CORRECT" != true ]
 	then
-		for f in $(ls /live/persistence/*_unlocked/persistence.conf \
-		              /live/persistence/*_unlocked/live-additional-software.conf || true)
+		for f in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 		do
 			warning "Disabling '$f': persistent volume has unsafe access rights"
 			disable_and_create_empty_persistence_conf_file "$f"
+		done
+		for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
+		do
+			warning "Disabling '$f': persistent volume has unsafe access rights"
+			disable_and_create_empty_persistence_conf_file "$f" "644"
 		done
 	fi
 
 	# Regardless of the mountpoint access rights, disable persistence
 	# configuration files with wrong access rights.
-	for f in $(ls /live/persistence/*_unlocked/persistence.conf \
-	              /live/persistence/*_unlocked/live-additional-software.conf || true)
+	for f in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 	do
-		if ! persistence_conf_file_has_correct_access_rights "$f"
+		if ! persistence_conf_file_has_correct_access_rights "$f" "600"
 		then
 			warning "Disabling '$f', that has unsafe access rights"
 			disable_and_create_empty_persistence_conf_file "$f"
 		fi
 	done
-
-	# Migrate persistence settings
-	for conf in $(ls /live/persistence/*_unlocked/persistence.conf || true)
+	for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
 	do
-		migrate_icedove_to_thunderbird "${conf}"
-
-		# Let's make sure to get rid of any Enigmail configuredVersion
-		# that we previously used to set in a way that would become
-		# persistent in these files (see #12680).
-		tb_profile="$(dirname "${conf}")/thunderbird/profile.default"
-		rm -f "${tb_profile}/preferences/0000tails.js"
-		sed -i --regexp-extended \
-		    '/^(user_)?pref\("extensions\.enigmail\.configuredVersion",/d' \
-		    "${tb_profile}/prefs.js"
+		if persistence_conf_file_has_correct_access_rights "$f" "600"
+		then
+			chmod 0644 "$f"
+		fi
+		if ! persistence_conf_file_has_correct_access_rights "$f" "644"
+		then
+			warning "Disabling '$f', that has unsafe access rights"
+			disable_and_create_empty_persistence_conf_file "$f" "644"
+		fi
 	done
 
 	# Fix permissions on persistent directories that were created
@@ -466,6 +458,14 @@ activate_volumes ()
 			|| warning "Could not update gpg.conf"
 		fi
 	fi
+
+	# Get rid of any Enigmail configuredVersion that we previously used
+	# to set in a way that would persistently override the value maintained
+	# by Enigmail itself (#12680, #15693). We stopped writing this pref
+	# there a long time ago but recently instructed users to reintroduce
+	# this problem as a workaround (#15692).
+	tb_profile="$(dirname "${conf}")/thunderbird/profile.default"
+	rm -f "${tb_profile}/preferences/0000tails.js"
 
 	for vol in ${open_volumes}
 	do

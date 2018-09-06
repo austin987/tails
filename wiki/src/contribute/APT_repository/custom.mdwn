@@ -314,13 +314,15 @@ Tagging a new Tails release
 Once the new release's Git tag is pushed, a cronjob creates
 a new APT suite on the custom APT repository's side within a few minutes.
 This new APT suite is called the same as the new release version.
-One may check it has appeared in `~reprepro/conf/distributions`.
 
-Then, the APT suite corresponding to the branch that was used to
-prepare the release must be copied to the new empty APT suite that
-just appeared:
+Wait for this new (empty) APT suite to be created and initialize it
+with the packages currently found in the APT suite corresponding to
+the branch that is used to prepare the release:
 
-	$ ssh reprepro@incoming.deb.tails.boum.org \
+	while ! ssh reprepro@incoming.deb.tails.boum.org reprepro list "${TAG:?}" >/dev/null 2>&1; do
+	   sleep 5
+	done && \
+	ssh reprepro@incoming.deb.tails.boum.org \
 	     tails-merge-suite "$RELEASE_BRANCH" "$TAG"
 
 <a id="workflow-post-release"></a>
@@ -329,6 +331,22 @@ After a new Tails release is out
 --------------------------------
 
 ### If you just put out a final release
+
+If the release was a major one, then:
+
+1. [[Hard reset the `stable` APT suite to
+   the state of the `testing` one|APT_repository/custom#workflow-reset]].
+
+2. Empty `config/APT_overlays.d` in the `stable` branch:
+
+        git checkout stable && \
+		if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
+           git rm config/APT_overlays.d/* && \
+           git commit config/APT_overlays.d/ \
+              -m "Empty the list of APT overlays: they were merged"
+        fi
+
+In any case:
 
 * [[merge `stable` or `testing` into
   `devel`|APT_repository/custom#workflow-merge-main-branch]]
@@ -355,18 +373,6 @@ After a new Tails release is out
            "Dummy entry for next release." && \
         git commit debian/changelog \
            -m "Add dummy changelog entry for ${NEXT_PLANNED_MINOR_VERSION:?}."
-
-If the release was a major one, then:
-
-1. [[Hard reset the stable APT suite to
-   the state of the testing one|APT_repository/custom#workflow-reset]].
-
-2. Empty `config/APT_overlays.d` in the `stable` branch:
-
-        git checkout stable && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
 
 ### Else, if you just released a RC
 

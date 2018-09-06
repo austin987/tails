@@ -36,10 +36,11 @@ ensure_hook_dependency_is_installed() {
 }
 
 install_fake_package() {
-    local name version section tmp control_file
+    local name version section provides tmp control_file
     name="${1}"
     version="${2}"
     section="${3:-misc}"
+    provides="${4:-}"
     ensure_hook_dependency_is_installed equivs
     tmp="$(mktemp -d)"
     control_file="${tmp}/${name}_${version}.control"
@@ -53,6 +54,7 @@ Package: ${name}
 Version: ${version}
 Maintainer: Tails developers <tails@boum.org>
 Architecture: all
+Provides: ${provides}
 Description: (Fake) ${name}
  Dummy packaged used to meet some dependency without installing the
  real ${name} package.
