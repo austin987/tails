@@ -70,9 +70,13 @@ Then /^I install "(.+)" using apt$/ do |package_name|
   end
   retry_tor(recovery_proc) do
     Timeout::timeout(2*60) do
-      $vm.execute_successfully("echo #{@sudo_password} | " +
+      $vm.execute("echo #{@sudo_password} | " +
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package_name}",
-                               :user => LIVE_USER)
+                               :user => LIVE_USER,
+                               :spawn => true)
+      try_for(60) do
+        $vm.execute_successfully("dpkg -s '#{package_name}' 2>/dev/null | grep -qs '^Status:.*installed$'")
+      end
     end
   end
 end

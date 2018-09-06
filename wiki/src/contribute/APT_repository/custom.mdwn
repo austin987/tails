@@ -314,13 +314,15 @@ Tagging a new Tails release
 Once the new release's Git tag is pushed, a cronjob creates
 a new APT suite on the custom APT repository's side within a few minutes.
 This new APT suite is called the same as the new release version.
-One may check it has appeared in `~reprepro/conf/distributions`.
 
-Then, the APT suite corresponding to the branch that was used to
-prepare the release must be copied to the new empty APT suite that
-just appeared:
+Wait for this new (empty) APT suite to be created and initialize it
+with the packages currently found in the APT suite corresponding to
+the branch that is used to prepare the release:
 
-	$ ssh reprepro@incoming.deb.tails.boum.org \
+	while ! ssh reprepro@incoming.deb.tails.boum.org reprepro list "${TAG:?}" >/dev/null 2>&1; do
+	   sleep 5
+	done && \
+	ssh reprepro@incoming.deb.tails.boum.org \
 	     tails-merge-suite "$RELEASE_BRANCH" "$TAG"
 
 <a id="workflow-post-release"></a>
@@ -328,11 +330,27 @@ just appeared:
 After a new Tails release is out
 --------------------------------
 
-If you just put out a final release:
+### If you just put out a final release
+
+If the release was a major one, then:
+
+1. [[Hard reset the `stable` APT suite to
+   the state of the `testing` one|APT_repository/custom#workflow-reset]].
+
+2. Empty `config/APT_overlays.d` in the `stable` branch:
+
+        git checkout stable && \
+		if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
+           git rm config/APT_overlays.d/* && \
+           git commit config/APT_overlays.d/ \
+              -m "Empty the list of APT overlays: they were merged"
+        fi
+
+In any case:
 
 * [[merge `stable` or `testing` into
   `devel`|APT_repository/custom#workflow-merge-main-branch]]
-* increment the version number in devel's `debian/changelog` to match
+* increment the version number in `devel`'s `debian/changelog` to match
   the next major release, so that
   next builds from the `devel` branch do not use the APT suite meant
   for the last release:
@@ -356,31 +374,29 @@ If you just put out a final release:
         git commit debian/changelog \
            -m "Add dummy changelog entry for ${NEXT_PLANNED_MINOR_VERSION:?}."
 
+### Else, if you just released a RC
 
-If you just released a RC (XXX: please automate these steps during the
-3.2~rc1 release process, based on the above commands):
+* increment the version number in `debian/changelog` on the branch
+  used for the release, to match the upcoming non-RC release, so that
+  the next builds from it do not use the APT suite meant for the RC:
 
-* add a dummy changelog entry (for the upcoming, non-RC version) in
-  the branch used for the release (`stable` or `testing`), so that the
-  next builds from it do not use the APT suite meant for the RC
-* add a dummy changelog entry (for the release *after* the one you
-  released a RC for) in the branch used for the release (`stable` or
-  `testing`), so that the next builds from it do not use the APT suite
-  meant for the RC (XXX: I don't understand what this is about; is it
-  instead about adding an entry for that release on the `devel`
-  branch? -- intrigeri)
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout "${RELEASE_BRANCH:?}" && \
+        dch --newversion "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
 
-If the release was a major one, then:
+* increment the version number in `devel`'s `debian/changelog` to
+  match the second next major release, so that images built from there
+  have the right version number:
 
-1. [[Hard reset the stable APT suite to
-   the state of the testing one|APT_repository/custom#workflow-reset]].
-
-2. Empty `config/APT_overlays.d` in the `stable` branch:
-
-        git checkout stable && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
+        cd "${RELEASE_CHECKOUT}" && \
+        git checkout devel && \
+        dch --newversion "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}" \
+           "Dummy entry for next release." && \
+        git commit debian/changelog \
+           -m "Add dummy changelog entry for ${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}."
 
 Giving access to a core developer
 ---------------------------------

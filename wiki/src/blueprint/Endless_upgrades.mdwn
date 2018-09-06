@@ -131,6 +131,7 @@ This survey will be updated in a while with [[!tails_ticket 15277]].
   - [file system and autoupdate system](https://www.chromium.org/chromium-os/chromiumos-design-docs/filesystem-autoupdate)
   - [Android's A/B System Updates](https://source.android.com/devices/tech/ota/ab_updates.html)
 * [Endless ostree builder](https://github.com/cosimoc/deb-ostree-builder)
+* [[!debbug 824649 desc=" ostree: document how to prepare and update a .deb-based system root"]]
 
 ### Not suitable
 
@@ -311,7 +312,11 @@ The IUK size is involved in at least four concerns:
   `config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper`)
   so the upgrade would fail. This is a regression for users with 2 GB
   memory: for all of 2.x and 3.x, all IUKs have been under 400 MB,
-  which would work fine with 2 GB of memory.
+  which would work fine with 2 GB of memory. If that's a blocker, then
+  we have to solve it by changing the format of the IUKs
+  ([[!tails_ticket 6876]]); we should coordinate this with other changes
+  that will break automated upgrades from Tails N to N+1, such as
+  Tails 4.0 and the migration to overlayfs ([[!tails_ticket 9373]]) .
 * Bandwidth needs of the RM. Uploading 10 GB of IUKs can be a pain for
   some of us, but that can easily be solved by making it possible to
   generate IUKs on lizard (and then compare them with the ones you

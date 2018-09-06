@@ -94,7 +94,6 @@ Mac
   works properly.
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
-* MacBook Pro (early 2011) fails to boot from DVD since Tails 1.1.
 * Mac Pro Tower and MacBook Pro 4,1 (both from early 2008)
   fails to boot from a USB stick created by
   Tails Installer.
@@ -227,6 +226,188 @@ a persistent volume.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
+
+Graphics issues
+===============
+
+GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
+----------------------------------------------------------------------
+
+Some computers [[!tails_ticket 11095 desc="cannot start the GNOME
+desktop"]].
+
+After the <span class="application">Tails Greeter</span> they freeze, or
+sometimes fail with the message <span class="error">"Oh no! Something has gone
+wrong. A problem has occurred and the system can't recover. Please contact a
+system administrator"</span>.
+
+This issue has appeared with the following graphic adapters:
+
+- Mars XTX [Radeon HD 8790M]
+- Mars XTX [Radeon HD 8790M] (rev ff)
+- Cedar [Radeon HD 5000/6000 7350/8350 Series]
+- Broadway PRO [Mobility Radeon HD 5850]
+- RV730/M96 [Mobility Radeon HD 4650/5165]
+
+For some models, adding `radeon.modeset=0` to the
+[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
+
+Tails Greeter fails to start with some AMD/ATI Radeon graphic adapters
+----------------------------------------------------------------------
+
+Some computers cannot start Tails Greeter. This issue has appeared
+with the following graphic adapters:
+
+- AMD Radeon R9 390
+
+Adding `radeon.dpm=0` to the
+[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
+fixes the issue.
+
+<a id="nvidia-maxwell"></a>
+
+Tails Greeter fails to start on computers with NVIDIA Maxwell graphic cards
+---------------------------------------------------------------------------
+
+Some computers cannot start Tails Greeter. This appears with some
+graphic cards in the
+[NVIDIA Maxwell family](https://nouveau.freedesktop.org/wiki/CodeNames/#nv110familymaxwell).
+This problem has been fixed in Tails 3.2 for some of these graphic
+cards. If Tails Greeter still does not start for you:
+
+1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
+   [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
+2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
+   address so we can contact you to debug the problem.
+   Please reference [[!tails_ticket 15116]] in your bug report.
+
+<a id="nvidia-pascal"></a>
+
+Tails Greeter fails to start on computers with NVIDIA Pascal graphic cards
+---------------------------------------------------------------------------
+
+Some computers cannot start Tails Greeter. This may appear with the
+[NVIDIA Pascal family](https://nouveau.freedesktop.org/wiki/CodeNames/#nv130familypascal)
+of graphic adapters.
+
+If Tails Greeter does not start for you:
+
+1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
+   [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
+2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
+   address so we can contact you to debug the problem.
+   Please reference [[!tails_ticket 15116]] in your bug report.
+
+<a id="switchable_graphics_black_screen"></a>
+
+Black screen with switchable graphics computers
+-----------------------------------------------
+
+Some computers with switchable graphics (such as Optimus) fail to
+choose a video card and end up on a black screen. This has been
+reported for MacBook Pro 6,2, MacBook Pro 10,1 Retina, MacBook Pro
+15-inch (early 2011) and might affect many others.
+
+There are several possible workarounds for this issue:
+
+* Explicitly select one of the two graphics adapters in the BIOS
+  instead of letting the system choose one automatically. If this does
+  not solve the problem, try selecting the other graphics adapter.
+
+* For the Mac computers, it is possible to use a third-party
+  application, <http://gfx.io/>, to force integrated graphics only through OS X.
+  Then restart in that special mode that works with Tails.
+
+* Expert Linux users can also do the following:
+
+  1. Add the `i915.modeset=0 rootpw=pass` option in the
+     [[Boot Loader Menu|doc/first_steps/startup_options#boot_loader_menu]].
+
+  2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
+     following content:
+
+         Section "Device"
+             Identifier "Device0"
+             Driver "nouveau"
+             BusID "1:0:0"
+         EndSection
+
+  4. Restart X with the command:
+
+         service gdm3 restart
+
+  5. After the GNOME session has started, change again the root password with
+     the command:
+
+         sudo passwd
+
+For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken with switchable graphics"]].
+
+<a id=switchable_graphics_segfault></a>
+
+Cannot start GNOME session with switchable graphics computers
+-------------------------------------------------------------
+
+On some computers with switchable graphics, Tails 2.10 and later fails
+to start the GNOME session and keeps returning to [[Tails
+Greeter|doc/first_steps/startup_options#greeter]].
+
+Starting in **Troubleshooting Mode** works, as well as adding the
+`modeprobe.blacklist=nouveau` to the [[startup
+options|doc/first_steps/startup_options#boot_loader_menu]].
+
+Laptops with Intel 855GM graphic card
+-------------------------------------
+
+Laptops with graphic card Intel 855GM (as Dell Inspiron 510M)
+crash after Tails Greeter.
+
+See [[!debbug 776911 desc="relevant bug report"]] for more information.
+
+Laptops with Intel GM965/GL960 graphic card
+-------------------------------------------
+
+Laptops with graphic card Intel GM965/GL960 crash while running Tails.
+Add `video=SVIDEO-1:d` on the boot command line to work around this problem.
+
+See [[!linuxbug 187001]] for more information.
+
+<a id="xorg-driver"></a>
+
+Systems with Intel graphic cards
+--------------------------------
+
+The graphical interface fails to start on some Intel graphics
+adapters. If this happens to you:
+
+1. Add the `xorg-driver=intel` option in the
+   [[boot menu|doc/first_steps/startup_options#boot_menu]].
+2. If this fixes the problem, report to <tails-support-private@boum.org>
+   the output of the following commands:
+   
+         lspci -v
+         lspci -mn
+   
+   … so we get the identifier of your graphics adapter and can have
+   this fix applied automatically in the next Tails release.
+3. If this does not fix the problem, try Troubleshooting Mode and
+   [[report a bug|doc/first_steps/bug_reporting]]. Include the exact
+   model of your Intel graphics adapter.
+
+Virtual machines with *virt-manager*, *libvirt* and *QEMU*
+----------------------------------------------------------
+
+See the
+[[dedicated troubleshooting documentation|doc/advanced_topics/virtualization/virt-manager#graphics-issues]]
+about graphics issues in Tails running inside a virtual machine
+with *virt-manager*.
+
+Virtual machines with *VMware*
+------------------------------
+
+To improve support of Tails running inside a virtual machine with
+*VMware*, [[install|doc/advanced_topics/additional_software]] the
+`open-vm-tools-desktop` software package in Tails.
 
 <a id="wi-fi"></a>
 
@@ -458,6 +639,113 @@ To fix this problem, you can [[update your Tails
 manually|doc/first_steps/upgrade/#manual]].
 
 Note that your Persistent Volume will be safely preserved.
+
+<a id="persistence-disappears"></a>
+
+Persistent folder disappears and persistent feature configurations do not load
+------------------------------------------------------------------------------
+
+Sometimes, the <span class="filename">Persistent</span> folder is missing and
+the configurations for persistent features do not load.
+
+Most likely this means that the <span class="filename">persistence.conf</span>
+file has disappeared. However, the files in the
+<span class="filename">Persistent</span> folder and the persistent feature
+configurations should still be saved.
+
+If you encounter this problem:
+
+1. Enable your encrypted persistent storage in
+   <span class="application">Tails Greeter</span> when you start Tails.
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Tails</span>&nbsp;▸
+     <span class="guimenuitem">Configure persistent volume</span></span>.
+
+1. If you are asked to enter a passphrase, enter the same passphrase that you
+   used to unlock your persistent storage.
+
+1. Click <span class="button">Save</span>, then restart Tails.
+
+Your <span class="filename">Persistent</span> folder and persistent feature
+configurations should be restored.
+
+<a id="partial-upgrade"></a>
+
+## Tails behaves weirdly if an automatic upgrade is only partially applied
+
+Tails might behave weirdly if an automatic upgrade is only partially applied.
+For example, your keyboard might not respond to key presses or you might
+be unable to connect to networks.
+
+To fix this problem:
+
+### Mount your Tails system partition in another Linux system
+
+1. Start in another Tails or in a Linux system such as Debian or Ubuntu.
+
+1. Open <span class="application">GNOME Disks</span>.
+
+1. Plug in your Tails USB stick that behaves weirdly.
+
+1. If a prompt appears to unlock the persistent volume on your Tails
+   USB stick, click <span class="button">Cancel</span>.
+
+1. Your Tails USB stick should appear in the left pane of
+   <span class="application">GNOME Disks</span>. Click on your Tails USB
+   stick.
+
+1. In the right pane, click on the partition labeled
+   <span class="guilabel">Tails</span>. It should be listed as
+   <span class="guilabel">Partition 1</span>.
+
+1. Click on the
+   <span class="button">[[!img lib/media-playback-start.png alt="Mount selected partition" class="symbolic" link="no"]]</span>
+   button to mount the Tails partition.
+
+1. Click on the link in the right pane to open the Tails partition in the <span class="application">Files</span>
+   browser. The link should look something like
+   <span class="filename">/media/<span class="command-placeholder">username</span>/Tails</span>.
+
+### Edit your <span class="filename">Tails.module</span> file
+
+1. In the <span class="application">Files</span> browser, open the <span class="filename">live</span> folder.
+   Then open the file named <span class="filename">Tails.module</span>
+   with a text editor, for example, <span class="application">GNOME Text Editor</span>.
+
+1. Add the line <span class="command-placeholder">x.x</span>.squashfs to the
+   end of the <span class="filename">Tails.module</span> file. Replace
+   <span class="command-placeholder">x.x</span> with the Tails version you are
+   upgrading to.
+
+   For example, if you are upgrading to version 3.8, you would
+   add `3.8.squashfs` to the end of the <span class="filename">Tails.module</span> file.
+
+   Your <span class="filename">Tails.module</span> file should look
+   something like this, with different version numbers:
+
+   <pre>
+   filesystem.squashfs
+   3.7.squashfs
+   3.7.1.squashfs
+   3.8.squashfs
+   </pre>
+
+1. Save the <span class="filename">Tails.module</span> file.
+
+1. In the sidebar of the <span class="application">Files</span> browser, click on the
+   <span class="guimenu">[[!img lib/media-eject.png alt="Eject" class="symbolic" link="no"]]</span>
+   button on the <span class="guilabel">Tails</span> label to unmount the
+   partition.  If your persistent volume shows in the sidebar, also click on
+   the
+   <span class="guimenu">[[!img lib/media-eject.png alt="Eject" class="symbolic" link="no"]]</span>
+   button on the persistent volume label.
+
+1. Unplug your Tails USB stick.
+
+Your Tails should now work properly.
 
 <a id="restart-shell"></a>
 

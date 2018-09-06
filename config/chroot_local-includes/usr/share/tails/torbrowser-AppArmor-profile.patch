@@ -1,17 +1,21 @@
+diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
+index d0aded9..87a0191 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
-@@ -1,8 +1,9 @@
+@@ -1,10 +1,11 @@
  #include <tunables/global>
  #include <tunables/torbrowser>
  
--/home/*/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox {
-+/usr/local/lib/tor-browser/firefox {
+-@{torbrowser_firefox_executable} = /home/*/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox
++@{torbrowser_firefox_executable} = /usr/local/lib/tor-browser/firefox.real
+ 
+ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    #include <abstractions/gnome>
 +  #include <abstractions/ibus>
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -22,13 +23,16 @@
+@@ -25,13 +26,16 @@
    deny /etc/passwd r,
    deny /etc/group r,
    deny /etc/mailcap r,
@@ -30,7 +34,7 @@
    owner @{PROC}/@{pid}/fd/ r,
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
-@@ -36,28 +40,32 @@
+@@ -39,30 +43,32 @@
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -44,6 +48,8 @@
 -  owner @{torbrowser_home_dir}.bak/ rwk,
 -  owner @{torbrowser_home_dir}.bak/** rwk,
 -  owner @{torbrowser_home_dir}/*.so mr,
+-  owner @{torbrowser_home_dir}/.cache/fontconfig/ rwk,
+-  owner @{torbrowser_home_dir}/.cache/fontconfig/** rwkl,
 -  owner @{torbrowser_home_dir}/components/*.so mr,
 -  owner @{torbrowser_home_dir}/browser/components/*.so mr,
 -  owner @{torbrowser_home_dir}/firefox rix,
@@ -77,15 +83,23 @@
 +  /etc/xul-ext/** r,
 +  /usr/local/share/tor-browser-extensions/ r,
 +  /usr/local/share/tor-browser-extensions/** rk,
-+  /usr/share/xul-ext/ r,
-+  /usr/share/xul-ext/** r,
++  /usr/share/{xul-,web}ext/ r,
++  /usr/share/{xul-,web}ext/** r,
 +
 +  /usr/share/doc/tails/website/ r,
 +  /usr/share/doc/tails/website/** r,
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -80,12 +88,6 @@
+@@ -70,6 +76,7 @@
+   /usr/share/ r,
+   /usr/share/mime/ r,
+   /usr/share/themes/ r,
++  /usr/share/glib-2.0/schemas/gschemas.compiled r,
+   /usr/share/applications/** rk,
+   /usr/share/gnome/applications/ r,
+   /usr/share/gnome/applications/kde4/ r,
+@@ -85,12 +92,6 @@
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -98,7 +112,7 @@
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
  
-@@ -99,6 +101,32 @@
+@@ -104,6 +105,32 @@
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
@@ -109,7 +123,7 @@
 +  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
 +  deny /usr/local/lib/tor-browser/update.test/ rw,
 +
-+  /usr/local/lib/tor-browser/firefox Pix,
++  @{torbrowser_firefox_executable} px -> torbrowser_plugin_container,
 +
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
@@ -131,7 +145,7 @@
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -110,5 +138,11 @@
+@@ -119,5 +146,10 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
@@ -143,25 +157,24 @@
 +  deny owner /tmp/**         rwklx,
 +  deny /tmp/                 rwklx,
  }
-+
+diff --git a/etc/apparmor.d/torbrowser.Browser.plugin-container b/etc/apparmor.d/torbrowser.Browser.plugin-container
+index fe95fdb..32d0c38 100644
 --- a/etc/apparmor.d/torbrowser.Browser.plugin-container
 +++ b/etc/apparmor.d/torbrowser.Browser.plugin-container
-@@ -8,10 +8,10 @@ profile torbrowser_plugin_container {
-   # to have direct access to your sound hardware. You will also
-   # need to remove the "deny" word in the machine-id lines further
-   # bellow.
+@@ -10,9 +10,9 @@ profile torbrowser_plugin_container {
+   #  - the "deny" word in the machine-id lines
+   #  - the rules that deny reading /etc/pulse/client.conf
+   #    and executing /usr/bin/pulseaudio
 -  # #include <abstractions/audio>
 -  # /etc/asound.conf r,
--  # owner @{PROC}/@{pid}/fd/ r,
 -  # owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/tmp/mozilla-temp-* rw,
 +  #include <abstractions/audio>
 +  /etc/asound.conf r,
-+  owner @{PROC}/@{pid}/fd/ r,
 +  owner @{HOME}/.tor-browser/profile.default/tmp/mozilla-temp-* rw,
  
-   deny /etc/host.conf r,
-   deny /etc/hosts r,
-@@ -21,8 +21,10 @@ profile torbrowser_plugin_container {
+   signal (receive) set=("term") peer=torbrowser_firefox,
+ 
+@@ -24,14 +24,15 @@ profile torbrowser_plugin_container {
    deny /etc/group r,
    deny /etc/mailcap r,
  
@@ -169,12 +182,17 @@
 -  deny /var/lib/dbus/machine-id r,
 +  /etc/machine-id r,
 +  /var/lib/dbus/machine-id r,
-+
-+  /usr/share/applications/gnome-mimeapps.list r,
  
+   /etc/mime.types r,
+   /usr/share/applications/gnome-mimeapps.list r,
+ 
+   /dev/shm/ r,
+ 
++  owner @{PROC}/@{pid}/environ r,
+   owner @{PROC}/@{pid}/fd/ r,
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
-@@ -30,28 +32,27 @@ profile torbrowser_plugin_container {
+@@ -39,28 +40,28 @@ profile torbrowser_plugin_container {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -204,6 +222,7 @@
 +  @{torbrowser_home_dir}/** mr,
 +  @{torbrowser_home_dir}/plugin-container ixmr,
 +
++  owner @{HOME}/.tor-browser/profile.default/startupCache/scriptCache-child-current.bin r,
 +  owner @{HOME}/.tor-browser/profile.default/tmp/* rw,
 +
 +  owner "@{HOME}/Tor Browser/" rw,
@@ -216,19 +235,23 @@
 +  /etc/xul-ext/** r,
 +  /usr/local/share/tor-browser-extensions/ r,
 +  /usr/local/share/tor-browser-extensions/** rk,
-+  /usr/share/xul-ext/ r,
-+  /usr/share/xul-ext/** r,
++  /usr/share/{xul-,web}ext/ r,
++  /usr/share/{xul-,web}ext/** r,
 +
 +  /usr/share/doc/tails/website/ r,
 +  /usr/share/doc/tails/website/** r,
  
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/present r,
-@@ -77,6 +78,12 @@ profile torbrowser_plugin_container {
+@@ -86,10 +87,16 @@ profile torbrowser_plugin_container {
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
 +  deny @{HOME}/.cache/fontconfig/ w,
+ 
+   # Silence denial logs about PulseAudio
+   deny /etc/pulse/client.conf r,
+   deny /usr/bin/pulseaudio x,
  
 -  #include <local/torbrowser.Browser.plugin-container>
 +  # Deny access to global tmp directories, that's granted by the user-tmp
@@ -238,6 +261,8 @@
 +  deny owner /tmp/**         rwklx,
 +  deny /tmp/                 rwklx,
  }
+diff --git a/etc/apparmor.d/tunables/torbrowser b/etc/apparmor.d/tunables/torbrowser
+index 9b31139..f77e082 100644
 --- a/etc/apparmor.d/tunables/torbrowser
 +++ b/etc/apparmor.d/tunables/torbrowser
 @@ -1,2 +1 @@
