@@ -22,7 +22,8 @@ from tailslib.persistence import (                          # NOQA: E402
 
 from tailslib.additionalsoftware.config import (            # NOQA: E402
     get_additional_packages,
-    get_packages_list_path)
+    get_packages_list_path,
+    filter_package_details)
 
 _ = gettext.gettext
 
@@ -165,41 +166,43 @@ class ASPConfigApplicationWindow(Gtk.ApplicationWindow):
             self.listbox.show_all()
             self.stack.set_visible_child(self.package_list_page)
             self.install_label.set_markup(
-                'To add more, install some software using '
-                '<a href="synaptic.desktop">Synaptic Package Manager</a> '
-                'or <a href="org.gnome.Terminal.desktop">APT on the '
-                'command line</a>.')
+                _('To add more, install some software using '
+                  '<a href="synaptic.desktop">Synaptic Package Manager</a> '
+                  'or <a href="org.gnome.Terminal.desktop">APT on the '
+                  'command line</a>.'))
         else:
             self.stack.set_visible_child(self.no_package_page)
             self.install_label.set_markup(
-                'To do so, install some software using '
-                '<a href="synaptic.desktop">Synaptic Package Manager</a> '
-                'or <a href="org.gnome.Terminal.desktop">APT on the '
-                'command line</a>.')
+                _('To do so, install some software using '
+                  '<a href="synaptic.desktop">Synaptic Package Manager</a> '
+                  'or <a href="org.gnome.Terminal.desktop">APT on the '
+                  'command line</a>.'))
             if has_unlocked_persistence(search_new_persistence=True):
                 # The label from the UI file is good unmodified
                 pass
             elif has_persistence():
                 self.install_label.set_markup(
-                    'To do so, unlock your persistent storage '
-                    'when starting Tails and '
-                    'install some software using '
-                    '<a href="synaptic.desktop">Synaptic Package Manager</a> '
-                    'or <a href="org.gnome.Terminal.desktop">APT on the '
-                    'command line</a>.')
+                    _('To do so, unlock your persistent storage '
+                      'when starting Tails and '
+                      'install some software using '
+                      '<a href="synaptic.desktop">Synaptic Package '
+                      'Manager</a> or '
+                      '<a href="org.gnome.Terminal.desktop">APT on the '
+                      'command line</a>.'))
             elif is_tails_media_writable():
                 self.persistence_button.set_visible(True)
                 self.install_label.set_markup(
-                    'To do so, create a persistent storage and install some '
-                    'software using '
-                    '<a href="synaptic.desktop">Synaptic Package Manager</a> '
-                    'or <a href="org.gnome.Terminal.desktop">APT on the '
-                    'command line</a>.')
+                    _('To do so, create a persistent storage and install some '
+                      'software using '
+                      '<a href="synaptic.desktop">Synaptic Package '
+                      'Manager</a> or '
+                      '<a href="org.gnome.Terminal.desktop">APT on the '
+                      'command line</a>.'))
             else:   # It's impossible to have a persistent storage
                 self.install_label.set_markup(
-                    'To do so, install Tails on a USB stick using '
-                    '<a href="tails-installer.desktop">Tails Installer</a> '
-                    'and create a persistent storage.')
+                    _('To do so, install Tails on a USB stick using '
+                      '<a href="tails-installer.desktop">Tails Installer</a> '
+                      'and create a persistent storage.'))
 
 
 class ASPConfigApplication(Gtk.Application):
@@ -240,8 +243,9 @@ class ASPConfigApplication(Gtk.Application):
 
         packages_with_description = []
         for package in sorted(additional_packages):
+            package_name = filter_package_details(package)
             try:
-                apt_package = apt_cache[package]
+                apt_package = apt_cache[package_name]
             except KeyError:
                 summary = _("[package not available]")
             else:
