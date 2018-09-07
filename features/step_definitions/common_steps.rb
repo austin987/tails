@@ -352,13 +352,17 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  step "the additional software package upgrade service has started"
-  begin
-    try_for(30) { $vm.execute('systemctl is-system-running').success? }
-  rescue Timeout::Error
-    jobs = $vm.execute('systemctl list-jobs').stdout
-    units_status = $vm.execute('systemctl').stdout
-    raise "The system is not fully running yet:\n#{jobs}\n#{units_status}"
+  # When we test for ASP upgrade failure the following tests would fail,
+  # so let's skip them in this case.
+  if !$vm.file_exist?('/run/live-additional-software/doomed_to_fail')
+    step "the additional software package upgrade service has started"
+    begin
+      try_for(30) { $vm.execute('systemctl is-system-running').success? }
+    rescue Timeout::Error
+      jobs = $vm.execute('systemctl list-jobs').stdout
+      units_status = $vm.execute('systemctl').stdout
+      raise "The system is not fully running yet:\n#{jobs}\n#{units_status}"
+    end
   end
 end
 

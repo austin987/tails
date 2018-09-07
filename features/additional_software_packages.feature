@@ -120,27 +120,39 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" is not installed
 
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I install an old version "" of the "cowsay" package using apt
+    When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
     And I confirm when I am asked if I want to add "cowsay" to ASP configuration
     And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    And I start Tails from USB drive "__internal" with network unplugged
+    And I enable persistence
+    # We need to add back the custom APT source for the ASP install step, as it
+    # was not saved in persistence
+    And I configure APT with a custom source for the old version of cowsay
+    And I log in to a new session
     And the additional software package installation service has started
-    And the package "cowsay" installed version is ""
+    And the package "cowsay" installed version is "3.03+dfsg2-1"
+    # And then to remove it so that cowsay gets updated
+    And I remove the custom APT source for the old cowsay version
     And I prepare the ASP upgrade process to fail
     And the network is plugged
     And Tor is ready
     And all notifications have disappeared
     And available upgrades have been checked
-    And the additional software package upgrade service has started
-    And I am notified the "ASP upgrade service" failed
+    And I see the "The upgrade of your additional software failed" notification after at most 300 seconds
+    And I can open the ASP configuration from the notification
     And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    And I start Tails from USB drive "__internal" with network unplugged
+    And I enable persistence
+    # We need to add back the custom APT source for the ASP install step, as it
+    # was not saved in persistence
+    And I configure APT with a custom source for the old version of cowsay
+    And I log in to a new session
     Then the additional software package installation service has started
-    And the package "cowsay" is installed
+    And the package "cowsay" installed version is "3.03+dfsg2-1"
 
   @check_tor_leaks
   Scenario: I am notified when ASP fails to install a package
@@ -153,5 +165,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
     And I log in to a new session
-    Then I am notified the "ASP installation service" failed
+    And all notifications have disappeared
+    Then I see the "The installation of your additional software failed" notification after at most 300 seconds
+    And I can open the ASP log file from the notification
     And the package "vrms" is not installed

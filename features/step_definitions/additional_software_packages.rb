@@ -29,17 +29,6 @@ Then /^I am notified that the installation succeeded$/  do
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I am notified the "([^"]*)" failed$/  do |service|
-  case service
-  when "ASP installation service"
-    title = "The installation of your additional software failed"
-    step "I see the \"#{title}\" notification after at most 300 seconds"
-  when "ASP upgrade service"
-    title = "The upgrade of your additional software failed"
-    step "I see the \"#{title}\" notification after at most 300 seconds"
-  end
-end
-
 Then /^I am proposed to create an ASP persistence for the "([^"]*)" package$/  do |package|
   title = "Add #{package} to your additional software?"
   step "I see the \"#{title}\" notification after at most 300 seconds"
@@ -118,7 +107,15 @@ Given /^I remove "([^"]*)" from the list of ASP packages$/  do |package|
 end
 
 When /^I prepare the ASP upgrade process to fail$/  do
-  pending # Write code here that turns the phrase above into concrete actions
+  # Remove the newest cowsay package from the APT cache with a DPKG hook
+  # before it gets installed so that we simulate a failing upgrade.
+  failing_dpkg_hook = "DPkg::Pre-Invoke {
+  \"test -e #{ASP_STATE_DIR}/installed && \
+  ls -tr1 /var/cache/apt/archives/cowsay*.deb | head -n 1 | xargs rm -f\";
+};"
+  $vm.file_overwrite('/etc/apt/apt.conf.d/00failingDPKGhook', failing_dpkg_hook)
+  # Tell the upgrade service check step not to run
+  $vm.execute("touch #{ASP_STATE_DIR}/doomed_to_fail")
 end
 
 When /^I remove the "([^"]*)" deb file from the APT cache$/  do |package|
@@ -141,4 +138,16 @@ Then /^ASP has been started for "([^"]*)" and shuts up because the persistence i
   assert(!$vm.file_empty?(asp_logs))
   try_for(60) { $vm.execute("grep #{package} #{asp_logs}").success? }
   try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
+end
+
+When /^I can open the ASP configuration from the notification$/ do
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  gnome_shell.child('Configure', roleName: 'push button').click
+  try_for(60) { @asp = Dogtail::Application.new('Additional Software') }
+end
+
+Then /^I can open the ASP log file from the notification$/ do
+  gnome_shell = Dogtail::Application.new('gnome-shell')
+  gnome_shell.child('Show Log', roleName: 'push button').click
+  try_for(60) { @gedit = Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
 end
