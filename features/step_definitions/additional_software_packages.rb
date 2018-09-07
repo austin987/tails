@@ -1,31 +1,16 @@
-Then /^I am notified the ASP installation service is starting$/  do
-  #title = "Installing your additional software from persistent storage"
-  #step "I see the \"#{title}\" notification after at most 120 seconds"
-  # Hairy, but this notification disappears as promptly as the APT install
-  # command is finished, thus it vanishes sometimes too fast for the Dogtail
-  # based sniffing to catch this notification at this stage of the GNOME
-  # session startup. Meanwhile let's try to grossly find it in the journal so
-  # that we at least know it has been fired up. There's maybe a UX problem
-  # that may need fixing in ASP itself. 
-  try_for(120) do
-      !$vm.execute(
-        "journalctl -a | grep \"/usr/local/lib/tails-additional-software-notify Installing your additional software from persistent storage \""
-      ).stdout.empty?
-  end
-end
+ASP_STATE_DIR = "/run/live-additional-software"
 
 Then /^the additional software package (upgrade|installation) service has started$/ do |service|
   if !$vm.file_empty?('/live/persistence/TailsData_unlocked/live-additional-software.conf')
     case service
     when "installation"
-      state_file = "/run/live-additional-software/installed"
+      state_file = "#{ASP_STATE_DIR}/installed"
       seconds_to_wait = 300
     when "upgrade"
-      state_file = "/run/live-additional-software/upgraded"
+      state_file = "#{ASP_STATE_DIR}/upgraded"
       seconds_to_wait = 900
     end
     if !$vm.file_exist?(state_file)
-      #step "I am notified the ASP installation service is starting"
       try_for(seconds_to_wait) do
         $vm.file_exist?(state_file)
       end
@@ -152,7 +137,7 @@ Then /^I can open the documentation from the notification link$/  do
 end
 
 Then /^ASP has been started for "([^"]*)" and shuts up because the persistence is locked$/ do |package|
-  asp_logs = '/run/live-additional-software/log'
+  asp_logs = "#{ASP_STATE_DIR}/log"
   assert(!$vm.file_empty?(asp_logs))
   try_for(60) { $vm.execute("grep #{package} #{asp_logs}").success? }
   try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
