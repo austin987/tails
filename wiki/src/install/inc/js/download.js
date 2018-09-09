@@ -11,15 +11,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     else if (event.data.action === "verification-failed") {
       showVerificationResult("failed");
-      hitCounter("failed");
     }
     else if (event.data.action === "verification-failed-again") {
       showVerificationResult("failed-again");
-      hitCounter("failed-again");
     }
     else if (event.data.action === "verification-success") {
       showVerificationResult("successful");
-      hitCounter("successful");
     }
     else if (event.data.action === "progress") {
       showVerificationProgress(event.data.percentage);
@@ -221,6 +218,7 @@ document.addEventListener("DOMContentLoaded", function() {
     showVerifyDownload();
     hide(document.getElementById("verify-download-wrapper"));
     resetVerificationResult();
+    hitCounter(result);
     if (result === "successful") {
       show(document.getElementById("verification-successful"));
       opaque(document.getElementById("step-continue-direct"));
