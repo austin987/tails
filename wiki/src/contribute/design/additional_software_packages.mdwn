@@ -1,4 +1,4 @@
-[[!meta title="Additional software packages design documentation"]]
+[[!meta title="Additional software packages"]]
 
 [[!toc levels=2]]
 
@@ -78,8 +78,9 @@ empty. It is a oneshot service that executes
 
 `tails-additional-software install` reads `live-additional-software.conf` which
 contains a package name per line and install these packages with `apt-get`
-(using `DEBIAN_PRIORITY=critical` and the command line options `--yes` and
-`--option DPkg::Options::=--force-confold`).
+(using options prevent questions being asked to the user, see
+`install_additional_packages` and `_launch_apt_get` in
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]).
 
 In the beginning of the process, the user is notified through desktop
 notifications that additional software is being installed:
@@ -107,7 +108,7 @@ if the configuration file
 `/live/persistence/TailsData_unlocked/live-additional-software.conf` is not
 empty.
 
-[[!tails_gitweb config/chroot_local-includes/usr/local/sbin.tails-additional-software]]
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]
 `update` saves a copy of apt lists, then starts `apt-get update` and launches the
 installation process again, triggering an upgrade if necessary.
 
@@ -164,7 +165,7 @@ When *Add To Persistent Storage* is clicked,
 `AdditionalSoftware` preset. The new additional packages are then added
 atomically to the `live-additional-software.conf` configuration file
 (this logic is handled by
-[[!tails_gitweb submodules/pythonlib/tailslib/additionalsoftware/config.py]])
+<https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware/config.py>)
 
 #### Without persistent storage
 
@@ -178,7 +179,7 @@ automatically enabled. The new additional packages are then added to the
 `live-additional-software.conf` configuration file, which is in this
 case mounted to `/media/tails-persistence-setup/TailsData` instead of
 `/live/persistence/TailsData_unlocked` (this logic in handled by
-[[!tails_gitweb submodules/pythonlib/tailslib/persistence.py]]).
+<https://git-tails.immerda.ch/pythonlib/plain/tailslib/persistence.py>).
 
 The systemd service
 [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-synchronize-data-to-new-persistent-volume-on-shutdown.service]]
@@ -214,7 +215,7 @@ too much.
 When *Remove* is clicked, the packages are removed atomically from the
 `live-additional-software.conf` configuration file (this logic is
 handled by
-[[!tails_gitweb submodules/pythonlib/tailslib/additionalsoftware/config.py]]).
+<https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware/config.py>).
 
 Additional Software configuration window
 ----------------------------------------
@@ -255,7 +256,7 @@ When clicking on the delete cross, a confirmation dialog is displayed:
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - remove.png"/>
 
 The privileged helper 
-[[!tails_gitweb config/chroot_config/chroot_local-includes/usr/local/sbin/tails-additional-software-remove]]
+[[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software-remove]]
 is called through *pkexec* to remove the software from the
 `live-additional-software.conf` configuration file (see
-[[!tails_gitweb config/chroot_config/chroot_local-includes/usr/share/polkit-1/actions/org.boum.tails.additional-software.policy]]
+[[!tails_gitweb config/chroot_local-includes/usr/share/polkit-1/actions/org.boum.tails.additional-software.policy]]
