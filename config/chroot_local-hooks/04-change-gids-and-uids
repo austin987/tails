@@ -6,14 +6,46 @@ set -e
 
 echo "Change GIDs and UIDs"
 
-TPS_GROUP_STEALER=$(getent group 122 | awk -F ':' '{print $1}')
-if [ -n "$TPS_GROUP_STEALER" ]; then
-   groupmod --gid 150 "$TPS_GROUP_STEALER"
-   find / -wholename /proc -prune -o \( \! -type l -a -gid 122 -exec chgrp 150 '{}' \; \)
-fi
+Change_uid () {
+	NAME="$1"
+	NEW="$2"
+	OLD="$(getent passwd "$NAME" | awk -F ':' '{print $3}')"
 
-TPS_USER_STEALER=$(getent passwd 115 | awk -F ':' '{print $1}')
-if [ -n "$TPS_USER_STEALER" ]; then
-   usermod --uid 150 "$TPS_USER_STEALER"
-   find / -wholename /proc -prune -o \( \! -type l -a -uid 115 -exec chown 150 '{}' \; \)
-fi
+	if [ -n "$OLD" ]; then
+		echo "Changing UID for $NAME ($OLD -> $NEW)"
+		usermod --uid "$NEW" "$NAME"
+		find / -wholename /proc -prune -o \( \! -type l -a -uid "$OLD" -exec chown "$NEW" '{}' \; \)
+	fi
+}
+
+Change_gid () {
+	NAME="$1"
+	NEW="$2"
+	OLD="$(getent group "$NAME" | awk -F ':' '{print $3}')"
+
+	if [ -n "$OLD" ]; then
+		echo "Changing GID for $NAME ($OLD -> $NEW)"
+		groupmod --gid "$NEW" "$NAME"
+		find / -wholename /proc -prune -o \( \! -type l -a -gid "$OLD" -exec chgrp "$NEW" '{}' \; \)
+	fi
+}
+
+
+Change_uid tails-persistent-setup 150
+Change_gid tails-persistent-setup 150
+
+### Ensure GIDs are stable accross releases
+#   ... otherwise, things such as tor@service are broken
+#   after applying an automatic upgrade (#15695, #15424, #13426, #15407)
+
+# Temporarily give these groups a GID that's out of the way, to avoid collisions
+Change_gid vboxsf       1120
+Change_gid monkeysphere 1130
+Change_gid debian-tor   1140
+Change_gid lpadmin      1150
+
+# Finally, give these groups the desired GID
+Change_gid vboxsf       112
+Change_gid monkeysphere 113
+Change_gid debian-tor   114
+Change_gid lpadmin      115

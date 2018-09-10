@@ -36,7 +36,7 @@ export TOR_NO_DISPLAY_NETWORK_SETTINGS='yes'
 
 ask_for_confirmation() {
     if [ "${TOR_BROWSER_SKIP_OFFLINE_WARNING:-}" = 'yes' ] || \
-       pgrep -u "${LIVE_USERNAME}" -f "${TBB_INSTALL}/firefox"; then
+       pgrep -u "${LIVE_USERNAME}" -f "${TBB_INSTALL}/firefox.real"; then
         return
     fi
 
@@ -56,6 +56,8 @@ start_browser() {
     TMPDIR="${PROFILE}/tmp"
     mkdir --mode=0700 -p "$TMPDIR"
     export TMPDIR
+
+    configure_tor_browser_memory_usage "${PROFILE}"
 
     # We need to set general.useragent.locale properly to get
     # localized search plugins (and perhaps other things too). It is

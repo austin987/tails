@@ -94,26 +94,27 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-Then /^the documentation viewer opens the "(Support|Documentation)" page$/ do |page|
-  if @language == 'German'
-    expected_title = 'Tails-Dokumentation'
-    if page == 'Support'
-      expected_heading = 'Die Dokumentation durchsuchen'
-    else
-      expected_heading = 'Einen Fehler gefunden?'
-    end
-  else
-    expected_title = 'Tails documentation'
-    if page == 'Support'
-      expected_heading = 'Search the documentation'
-    else
-      expected_heading = 'First steps with Tails'
-    end
-  end
-  app = Dogtail::Application.new('tails-documentation')
-  app.child(expected_title, roleName: 'frame', recursive: false)
-  app.child(expected_heading, roleName: 'heading')
-end
+Then /^the support documentation page opens in Tor Browser$/ do
+   if @language == 'German'
+     expected_title = 'Tails - Hilfe & Support'
+     expected_heading = 'Die Dokumentation durchsuchen'
+   else
+     expected_title = 'Tails - Support'
+     expected_heading = 'Search the documentation'
+   end
+   step "\"#{expected_title}\" has loaded in the Tor Browser"
+   if @language == 'German'
+     browser_name = 'Tor-Browser'
+   else
+     browser_name = 'Tor Browser'
+   end
+   headings = @torbrowser
+              .child(expected_title + " - #{browser_name}", roleName: 'frame')
+              .children(roleName: 'heading')
+   assert(
+     headings.any? { |heading| heading.text == expected_heading }
+   )
+ end
 
 Given /^I plug and mount a USB drive containing a sample PNG$/ do
   @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))
@@ -186,38 +187,6 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
     assert_equal(2, status, "#{process} not confined with Seccomp in filter mode")
   else
     raise "Unsupported mode #{mode} passed"
-  end
-end
-
-Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
-  secret_file = '/secret'
-  secret_contents = 'T0P S3Cr1t -- 3yEs oN1y'
-  $vm.file_append(secret_file, secret_contents)
-  $vm.execute_successfully("chmod u=rw,go= #{secret_file}")
-  $vm.execute_successfully("chown root:root #{secret_file}")
-  script_path = '/usr/local/sbin/tails-debugging-info'
-  script_lines = $vm.file_content(script_path).split("\n")
-  script_lines.grep(/^debug_file\s+/).each do |line|
-    _, user, debug_file = line.split
-    # root can always mount symlink attacks
-    next if user == 'root'
-    # Remove quoting around the file
-    debug_file.gsub!(/["']/, '')
-    # Skip files that do not exist, or cannot be removed (e.g. the
-    # ones in /proc).
-    next if not($vm.execute("rm #{debug_file}").success?)
-    # Check what would happen *if* the amnesia user managed to replace
-    # the debugging file with a symlink to the secret.
-    $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
-    $vm.execute_successfully("chown --no-dereference #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
-    if $vm.execute("sudo /usr/local/sbin/tails-debugging-info | " +
-                   "grep '#{secret_contents}'",
-                   :user => LIVE_USER).success?
-      raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
-    end
-    # Remove the secret so it cannot possibly interfere with the
-    # following iterations (even though it should not).
-    $vm.execute_successfully("echo > #{debug_file}")
   end
 end
 
