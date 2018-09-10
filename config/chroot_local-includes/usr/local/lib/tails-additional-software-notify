@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+
+import gettext
+import os
+import os.path
+import subprocess
+import sys
+
+import gi
+
+from gi.repository import GLib
+
+gi.require_version('Notify', '0.7')
+from gi.repository import Notify                                # NOQA: E402
+
+_ = gettext.gettext
+
+
+class ASPNotifier(object):
+    """Display a notification and exit with a meaningful code."""
+
+    def __init__(self, title, body, accept_label=None, deny_label=None,
+                 documentation_target=None, urgent=False):
+        """Shows a notification with two optional action buttons.
+
+        If there are no buttons, exit straight away with a meaningful code.
+        """
+        Notify.init("org.boum.tails.additional-software-packages")
+
+        # We need to hold a reference to the notification until the callbacks
+        # are called. That's why we use an instance variable.
+        self.notification = Notify.Notification.new(
+                title, body, icon="package-x-generic")
+        if urgent:
+            self.notification.set_urgency(Notify.Urgency.CRITICAL)
+        if documentation_target:
+            self.notification.add_action("documentation", _("Documentation"),
+                                         self.cb_notification_clicked,
+                                         documentation_target)
+        if deny_label:
+            self.notification.add_action("deny", deny_label,
+                                         self.cb_notification_clicked, None)
+        if accept_label:
+            self.notification.add_action("accept", accept_label,
+                                         self.cb_notification_clicked, None)
+        self.notification.connect("closed", self.cb_notification_closed)
+        self.notification.show()
+        sys.stdout.write("id=%i" % self.notification.props.id)
+        if not (accept_label or deny_label or documentation_target):
+            sys.exit(2)
+
+    def cb_notification_clicked(self, notification, action, user_data=None):
+        """Exit the program with a meaningful code on action triggering."""
+        if action == "accept":
+            sys.exit(0)
+        elif action == "deny":
+            sys.exit(3)
+        elif action == "documentation":
+            subprocess.Popen(["tails-documentation", user_data])
+            sys.exit(5)
+
+    def cb_notification_closed(self, notification):
+        """Exit the program with a meaningful code on notification close."""
+        sys.exit(4)
+
+
+def print_help():
+    """The subcommand which displays help
+    """
+    program_name = os.path.basename(sys.argv[0])
+    sys.stderr.write(
+        "Usage: %s <summary> <body> [<accept_label> [<deny_label> "
+        "[documentation_target [<urgent>]]]]\n" % program_name)
+    sys.stderr.write(
+        "Shows a notification with <summary>, <body> and optional "
+        "buttons.\n"
+        "\n"
+        "Returns: 0 if the button with <accept_label> is selected\n"
+        "         2 if the arguments are wrong\n"
+        "         3 if the button with <deny_label> is selected\n"
+        "         4 if the notification is closed another way\n",
+        "         5 if the documentation button is selected and the"
+        "           documentation helper is launched.\n")
+
+
+if __name__ == "__main__":
+    os.environ["DBUS_SESSION_BUS_ADDRESS"] = \
+        "unix:path=/run/user/{uid}/bus".format(uid=os.getuid())
+
+    gettext.install("tails")
+
+    if not 3 <= len(sys.argv) <= 7:
+        print_help()
+        sys.exit(2)
+
+    mainloop = GLib.MainLoop.new(None, False)
+    ASPNotifier(*sys.argv[1:])
+    mainloop.run()

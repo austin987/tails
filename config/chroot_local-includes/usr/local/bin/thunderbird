@@ -7,6 +7,9 @@ set -x
 # Import set_mozilla_pref()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
+# Import guess_best_thunderbird_locale():
+. /usr/local/lib/tails-shell-library/thunderbird.sh
+
 THUNDERBIRD_CONFIG_DIR="${HOME}/.thunderbird"
 PROFILE="${THUNDERBIRD_CONFIG_DIR}/profile.default"
 
@@ -22,10 +25,38 @@ configure_default_incoming_protocol() {
     else
         default_protocol=1
     fi
-    mkdir -p "${PROFILE}/preferences"
-    set_mozilla_pref "${PROFILE}/preferences/0000tails.js" \
+    mkdir -p "${PROFILE}"
+    set_mozilla_pref "${PROFILE}/prefs.js"                 \
                      "extensions.torbirdy.defaultprotocol" \
-                     "${default_protocol}"
+                     "${default_protocol}"                 \
+                     user_pref
+}
+
+configure_best_thunderbird_locale() {
+    local locale
+    locale=$(guess_best_thunderbird_locale)
+    mkdir -p "${PROFILE}"
+    set_mozilla_pref "${PROFILE}/prefs.js"   \
+                     "intl.locale.requested" \
+                     "\"${locale}\""         \
+                     user_pref
+}
+
+thunderbird_profile_is_new() {
+   [ ! -f "${PROFILE}/extensions.ini" ]
+}
+
+initialize_enigmail_configured_version() {
+    mkdir -p "${PROFILE}/preferences"
+    version="$(dpkg-query --show \
+                          --showformat='${source:Upstream-Version}' \
+                          enigmail | sed -E 's,\+.*$,,')"
+    # Set the value in prefs.js so that Enigmail can manage it itself
+    # once we've done this once.
+    set_mozilla_pref "${PROFILE}/prefs.js" \
+                     "extensions.enigmail.configuredVersion" \
+                     "\"${version}\"" \
+		     'user_pref'
 }
 
 start_thunderbird() {
@@ -34,20 +65,15 @@ start_thunderbird() {
 
     configure_default_incoming_protocol
 
-    # Apply only the relevant parts of Debian's Icedove → Thunderbird
-    # migration procedure.
-    TB_PROFILE_FOLDER="${THUNDERBIRD_CONFIG_DIR}"
-    if [ ! -f "${TB_PROFILE_FOLDER}/.migrated" ]; then
-        # Debian's migration helpers are not designed to have set -e
-        # or -u enabled.
-        set +e
-        set +u
-        . /usr/lib/thunderbird/thunderbird-wrapper-helper.sh
-        do_fix_mimetypes_rdf
-        do_create_migrated_mark_file
-        set -e
-        set -u
+    # Suppress Enigmail's configuration wizard by pretending that the current
+    # version was already configured. Only do this on first run though:
+    # once we've done this we let Enigmail manage this setting itself
+    # so it can run any migration code it wants to on upgrades.
+    if thunderbird_profile_is_new; then
+	initialize_enigmail_configured_version
     fi
+
+    configure_best_thunderbird_locale
 
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }

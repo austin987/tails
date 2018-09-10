@@ -9,7 +9,16 @@ diff -Naur etc/apparmor.d.orig/abstractions/base etc/apparmor.d/abstractions/bas
    /etc/writable/localtime        r,
    /usr/share/locale-bundle/**    r,
    /usr/share/locale-langpack/**  r,
-@@ -56,10 +57,12 @@
+@@ -48,6 +49,8 @@
+   # ld.so.cache and ld are used to load shared libraries; they are best
+   # available everywhere
+   /etc/ld.so.cache               mr,
++  /etc/ld.so.conf                r,
++  /etc/ld.so.conf.d/{,*.conf}    r,
+   /etc/ld.so.preload             r,
+   /{usr/,}lib{,32,64}/ld{,32,64}-*.so   mr,
+   /{usr/,}lib/@{multiarch}/ld{,32,64}-*.so    mr,
+@@ -56,10 +59,12 @@
    /opt/*-linux-uclibc/lib/ld-uClibc*so* mr,
  
    # we might as well allow everything to use common libraries

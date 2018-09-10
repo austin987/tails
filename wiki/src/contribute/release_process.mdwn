@@ -68,8 +68,6 @@ the scripts snippets found on this page:
 * `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
   `perl5lib` Git repository.
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
-* `export DEBEMAIL='tails@boum.org'`
-* `export DEBFULLNAME='Tails developers'`
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 
 Pre-freeze
@@ -155,32 +153,10 @@ Bootstrap manual testing coordination:
    into it.
 3. Send the pad URL to the usual testers (see `manual_testers.mdwn` in
    the `internal.git` repository).
+   XXX: move this document to a repo that all RMs have access to.
 
 Update included files
 =====================
-
-uBlock patterns and settings file
-----------------
-
-The patterns+settings file is stored as a SQLite text dump in
-`config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump`.
-
-1. Start Tails
-2. Start *Tor Browser*
-2. Click on the uBlock icon and then click on the gears icon to open
-   the uBlock dashboard
-3. Open the *3rd-party filters* tab
-4. Click on the button *Update now* to update all filters
-5. Close *Tor Browser*
-7. Copy the `.tor-browser/profile.default/extension-data/ublock0.sqlite`
-   from this Tor Browser instance into the root of Tails' Git repo and
-   run the following command:
-
-        ./bin/convert-ublock-settings ublock0.sqlite > \
-            config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
-        && git commit -m 'Update uBlock Origin patterns + settings file.' \
-           config/chroot_local-includes/usr/share/tails/ublock-origin/ublock0.dump \
-        && rm ublock0.sqlite
 
 <a id="upgrade-custom-debs"></a>
 
@@ -329,6 +305,7 @@ Remove the placeholder entry for next release in `debian/changelog`,
 and then:
 
 	git checkout "${RELEASE_BRANCH:?}" && \
+	DEBEMAIL='tails@boum.org' DEBFULLNAME='Tails developers' \
 	./release ${VERSION:?} ${PREVIOUS_TAG:?}
 
 This populates the Changelog with the Git log entries.
@@ -381,7 +358,6 @@ matches the date of the future signature.
 
 	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html
 	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html
-	sed -ri "s%news/version_.*]]%news/version_${VERSION:?}]]%" wiki/src/inc/stable_amd64_release_notes.*
 	${EDITOR:?} wiki/src/inc/*.html
 	./build-website
 	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
@@ -728,7 +704,7 @@ Include each such version in a white-space separated list called
 `IUK_SOURCE_VERSIONS`, (e.g. `IUK_SOURCE_VERSIONS="2.8 2.9 2.9.1 2.10~rc1"`)
 and run the following:
 
-    for source_version in ${IUK_SOURCE_VERSIONS}; do
+    for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
         if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
             echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
             break
@@ -802,7 +778,8 @@ Prepare upgrade-description files
      Note that multi-steps incremental upgrade paths are valid and
      supported: e.g. when releasing 1.1.2, 1.1 users should still be
      able to incrementally upgrade to 1.1.1, and in turn to 1.1.2; to
-     make this work, one must _not_ pass `--previous-version 1.1`,
+     make this work, unless there's a IUK from 1.1 to 1.1.2,
+	 one must _not_ pass `--previous-version 1.1`,
      that would remove the existing incremental upgrade path from 1.1
      to 1.1.1.
    * If preparing anything but a final release (e.g. an alpha, beta
@@ -854,7 +831,7 @@ Prepare upgrade-description files
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
-          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
             alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
@@ -875,7 +852,7 @@ Prepare upgrade-description files
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
-          for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
             stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
@@ -950,11 +927,13 @@ Publish the ISO and IUKs over HTTP
 
 Upload the IUKs to our rsync server:
 
-    for source_version in ${IUK_SOURCE_VERSIONS}; do
+    for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
        rsync --partial --inplace --progress -v \
           "${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk" \
           rsync.lizard:
     done
+
+While waiting for the IUKs to be uploaded, you can proceed with the next steps.
 
 Upload the ISO signature to our rsync server:
 
@@ -966,7 +945,10 @@ an integer):
 
     MATCHING_JENKINS_BUILD_ID=XXX
 
-Copy the ISO to our rsync server and verify the signature:
+Copy the ISO to our rsync server, verify its signature,
+move them in place with proper ownership and permissions
+and update the time in `project/trace` file on our rsync server
+and on the live website (even for a release candidate):
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh rsync.lizard gpg --import
@@ -976,25 +958,14 @@ Copy the ISO to our rsync server and verify the signature:
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,}
     EOF
 
-Move files in place with proper ownership and permissions:
-
     ssh rsync.lizard << EOF
       sudo install -o root -g rsync_tails -m 0755 -d \
          /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
-      sudo chown root:rsync_tails \
-         tails-amd64-${VERSION:?}.iso* \
-         Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo chmod u=rwX,go=rX \
-         tails-amd64-${VERSION:?}.iso* \
-         Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo chown root:rsync_tails tails-amd64-${VERSION:?}.iso* && \
+      sudo chmod u=rwX,go=rX tails-amd64-${VERSION:?}.iso* && \
       sudo mv tails-amd64-${VERSION:?}.iso* \
-              /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
-      sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
-              /srv/rsync/tails/tails/${DIST:?}/iuk/
+              /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?}
     EOF
-
-Update the time in `project/trace` file on our rsync server
-and on the live wiki (even for a release candidate):
 
 	TRACE_TIME=$(date +%s) &&
 	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
@@ -1003,12 +974,53 @@ and on the live wiki (even for a release candidate):
 	(
 	   cd "${MASTER_CHECKOUT:?}" && \
 	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading ${VERSION:?}." && \
+	      -m "Updating trace file after uploading the ISO for ${VERSION:?}." && \
 	   git push origin master
 	)
 
+Once the IUKs are uploaded, move them IUKs in place with proper
+ownership and permissions and update the time in `project/trace` file
+on our rsync server and on the live website (even for a release
+candidate):
 
-## Announce, seed and test the Torrents
+    ssh rsync.lizard << EOF
+      sudo chown root:rsync_tails Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo chmod u=rwX,go=rX Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
+              /srv/rsync/tails/tails/${DIST:?}/iuk/
+    EOF
+
+	TRACE_TIME=$(date +%s) &&
+	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	[ -n "${MASTER_CHECKOUT:?}" ] && \
+	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
+	(
+	   cd "${MASTER_CHECKOUT:?}" && \
+	   git commit wiki/src/inc/trace \
+	      -m "Updating trace file after uploading the IUKs for ${VERSION:?}." && \
+	   git push origin master
+	)
+
+## Announce, seed and test the Torrent
+
+Check if there's enough space on our Bittorrent seed to import the new
+ISO:
+
+    ssh bittorrent.lizard df -h /var/lib/transmission-daemon/downloads
+
+If not, list already running Torrents:
+
+    ssh bittorrent.lizard transmission-remote --list
+
+… set `$ID` to the oldest one and delete it:
+
+    ssh bittorrent.lizard -t "${ID:?}" --remove-and-delete
+
+… and finally check disk space again:
+
+    ssh bittorrent.lizard df -h /var/lib/transmission-daemon/downloads
+
+Now you can announce and seed the Torrent for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
@@ -1042,6 +1054,7 @@ ISO history
 Push the released ISO to our Tails ISO history git-annex repo, so that
 our isotesters can fetch it from there for their testing. How to do so
 is described in our internal Git repo.
+XXX: move this document to a repo that all RMs have access to.
 
 Testing
 =======
@@ -1199,6 +1212,9 @@ Sanity checks
 * Check the outcome of the "Testing" section above.
 * Wait for the Mozilla security advisory
   [to be published](https://www.mozilla.org/en-US/security/advisories/).
+* While waiting, if preparing a major release, you can drop the post for Tor blog:
+  see the "Tor blog" section below. If you do that, uncheck the *Publish*
+  checkbox and click *Save* to save the draft.
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
 
@@ -1337,11 +1353,11 @@ We announce *major* releases on the Tor blog:
   * tails
   * anonymous operating system
   * tails releases
-- set *Title* to "Tails $VERSION is out"
+- set *Title* to "New Release: Tails $VERSION"
 - choose *Filtered HTML* as the *Text format* in the blog post editor
 - copy the text you have prepared into the *Post Body* textarea of the
   blog post editor
-- open *Content Settings* and verify that comments are *Closed*
+- open *Comment Settings* and verify that comments are *Closed*
 - open *Promotion Options* and check *Promoted to front page*
 - click *Preview* and ensure everything is OK
 - click *Save and publish*
