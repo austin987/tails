@@ -257,8 +257,11 @@ document.addEventListener("DOMContentLoaded", function() {
   opaque(document.getElementById("continue-link-direct"));
   opaque(document.getElementById("continue-link-bittorrent"));
 
-  // Display "Verify with your browser" when ISO image is clicked
-  document.getElementById("download-iso").onclick = function() {
+  // Display "Verify with your browser" when image is clicked
+  document.getElementById("download-img").onclick = function() { displayVerificationExtension(); }
+  document.getElementById("download-iso").onclick = function() { displayVerificationExtension(); }
+
+  function displayVerificationExtension() {
     toggleDirectBitTorrent("direct");
     resetVerificationResult();
   }
@@ -270,13 +273,19 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // Reset verification when downloading again after failure
-  document.getElementById("download-iso-again").onclick = function() {
+  document.getElementById("download-img-again").onclick = function() { resetVerification(); }
+  document.getElementById("download-iso-again").onclick = function() { resetVerification(); }
+
+  function resetVerification() {
     toggleDirectBitTorrent("direct");
     resetVerificationResult();
   }
 
   // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-torrent").onclick = function() {
+  document.getElementById("download-img-torrent").onclick = function() { displayBitTorrentVerification(); }
+  document.getElementById("download-iso-torrent").onclick = function() { displayBitTorrentVerification(); }
+
+  function displayBitTorrentVerification() {
     toggleDirectBitTorrent("bittorrent");
   }
 
