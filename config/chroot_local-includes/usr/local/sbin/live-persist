@@ -260,6 +260,11 @@ disable_and_create_empty_persistence_conf_file ()
 	local conf="$1"
 	local mode="$2"
 
+	if [ -z "$mode" ]
+	then
+		mode=0600
+	fi
+
 	mv "$conf" "${conf}.insecure_disabled" \
 		|| error "Failed to disable '$conf': $?"
 	create_empty_persistence_conf_file "$conf" "$mode"
@@ -351,11 +356,15 @@ activate_volumes ()
 	# has wrong access rights.
 	if [ "$ACCESS_RIGHTS_ARE_CORRECT" != true ]
 	then
-		for f in $(ls /live/persistence/*_unlocked/persistence.conf \
-		              /live/persistence/*_unlocked/live-additional-software.conf || true)
+		for f in $(ls /live/persistence/*_unlocked/persistence.conf || true)
 		do
 			warning "Disabling '$f': persistent volume has unsafe access rights"
 			disable_and_create_empty_persistence_conf_file "$f"
+		done
+		for f in $(ls /live/persistence/*_unlocked/live-additional-software.conf || true)
+		do
+			warning "Disabling '$f': persistent volume has unsafe access rights"
+			disable_and_create_empty_persistence_conf_file "$f" "644"
 		done
 	fi
 
@@ -378,7 +387,7 @@ activate_volumes ()
 		if ! persistence_conf_file_has_correct_access_rights "$f" "644"
 		then
 			warning "Disabling '$f', that has unsafe access rights"
-			disable_and_create_empty_persistence_conf_file "$f"
+			disable_and_create_empty_persistence_conf_file "$f" "644"
 		fi
 	done
 

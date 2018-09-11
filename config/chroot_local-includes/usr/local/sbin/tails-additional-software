@@ -17,6 +17,7 @@ from tailslib import LIVE_USERNAME
 
 from tailslib.additionalsoftware.config import (
     add_additional_packages,
+    filter_package_details,
     get_additional_packages,
     get_packages_list_path,
     remove_additional_packages)
@@ -461,27 +462,32 @@ def apt_hook_post():
         packages = json.load(f)
     os.remove(ASP_STATE_PACKAGES)
 
-    additional_packages = get_additional_packages(search_new_persistence=True)
+    additional_packages_names = map(
+        filter_package_details,
+        get_additional_packages(search_new_persistence=True))
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
     # as additional software
     new_manually_installed_packages = set(filter(
         lambda pkg: not apt_cache[pkg].is_auto_installed
-                    and pkg not in additional_packages,         # NOQA: E131
+                    and pkg not in additional_packages_names,    # NOQA: E131
         set(packages["installed"])))
     if new_manually_installed_packages:
         handle_installed_packages(new_manually_installed_packages)
 
     # Filter non-additional software packages
     additional_packages_removed = set(packages["removed"]).intersection(
-        additional_packages)
+        additional_packages_names)
     if additional_packages_removed:
         handle_removed_packages(additional_packages_removed)
 
 
-def install_additional_packages(ignore_old_apt_lists=False):
-    """Subcommand which activates and installs all additional packages."""
+def install_additional_packages(upgrade_mode=False):
+    """Subcommand which activates and installs all additional packages.
+
+    If upgrade_mode is True, don't attempt to restore old apt lists and don't
+    notify the user using desktop notifications."""
     logging.info("Starting to install additional software...")
 
     if not has_additional_packages_list():
@@ -495,7 +501,7 @@ def install_additional_packages(ignore_old_apt_lists=False):
     # installation step below in this function will fail. To avoid
     # that, we restore the old APT lists: there are greater chances
     # that the APT packages cache still has the corresponding packages.
-    if os.path.isdir(OLD_APT_LISTS_DIR) and not ignore_old_apt_lists:
+    if os.path.isdir(OLD_APT_LISTS_DIR) and not upgrade_mode:
         logging.warn("Found a copy of old APT lists, restoring it.")
         try:
             restore_old_apt_lists()
@@ -513,7 +519,8 @@ def install_additional_packages(ignore_old_apt_lists=False):
     if not packages:
         logging.warn("Warning: no packages to install, exiting")
         return True
-    installing_notification_id = _notify(
+    if not upgrade_mode:
+        installing_notification_id = _notify(
             _("Installing your additional software from persistent "
               "storage..."),
             _("This can take several minutes."),
@@ -525,22 +532,25 @@ def install_additional_packages(ignore_old_apt_lists=False):
          "--option", "DPkg::Options::=--force-confold",
          "install"] + list(packages))
     if apt_get_returncode:
-        _close_notification(installing_notification_id)
         logging.warn("Warning: installation of %s failed" % " ".join(packages))
-        _notify_failure(_("The installation of your additional software "
-                          "failed"))
+        if not upgrade_mode:
+            _close_notification(installing_notification_id)
+            _notify_failure(_("The installation of your additional software "
+                              "failed"))
         return False
     else:
         logging.info("Installation completed successfully.")
-        _close_notification(installing_notification_id)
-        # XXX: there should be a "Configure" button in this notification.
-        # However, the easy way to implement it makes this process not return
-        # until the notification is clicked. The notification process could be
-        # detached, and handle the "configure" action itself.
-        #  if _notify(_("Additional software installed successfully"),
-        #             accept_label=_("Configure")):
-        #      show_configuration_window()
-        _notify(_("Additional software installed successfully"))
+        if not upgrade_mode:
+            _close_notification(installing_notification_id)
+            # XXX: there should be a "Configure" button in this notification.
+            # However, the easy way to implement it makes this process not
+            # return until the notification is clicked. The notification
+            # process could be detached, and handle the "configure" action
+            # itself.
+            #  if _notify(_("Additional software installed successfully"),
+            #             accept_label=_("Configure")):
+            #      show_configuration_window()
+            _notify(_("Additional software installed successfully"))
         return True
 
 
@@ -566,7 +576,7 @@ def upgrade_additional_packages():
                           "restart Tails, or read the system log to "
                           "understand the problem."))
         return False
-    if install_additional_packages(ignore_old_apt_lists=True):
+    if install_additional_packages(upgrade_mode=True):
         logging.info("The upgrade was successful.")
     else:
         _notify_failure(_("The upgrade of your additional software failed"),

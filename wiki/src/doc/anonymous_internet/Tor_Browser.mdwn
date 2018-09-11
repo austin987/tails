@@ -3,14 +3,22 @@
 [[!img Tor_Browser/mozicon128.png link=no alt=""]]
 
 <span class="application">[Tor Browser](https://www.torproject.org/projects/torbrowser.html.en)</span> is a web
-browser based on [Mozilla Firefox](http://getfirefox.com) and configured to
-protect your anonymity. Given the popularity of Firefox, you might have used it
-before and its user interface is like any other modern web browser.
+browser based on [Mozilla Firefox](http://getfirefox.com) but configured
+to protect your privacy.
 
-Some frequently asked questions about the browser can be found in
+Tor alone is not enough to protect your anonymity and privacy while browsing the
+web. All modern web browsers, such as Firefox, support [[!wikipedia
+JavaScript]], [[!wikipedia Adobe_Flash]], [[!wikipedia HTTP_cookie
+desc="cookies"]], and other services which have been shown to be able to defeat
+the anonymity provided by the Tor network.
+
+<span class="application">Tor Browser</span> integrates all sorts
+of security measures to prevent such attacks. But since
+<span class="application">Tor Browser</span> disables some dangerous functionalities, some sites might not work as
+usual.
+
+Some frequently asked questions about <span class="application">Tor Browser</span> can be found in
 [[the FAQ|support/faq#browser]].
-
-Here are a few things worth mentioning in the context of Tails.
 
 [[!toc levels=2]]
 
@@ -29,14 +37,14 @@ AppArmor confinement
 
 <span class="application">Tor Browser</span> in Tails is confined with
 [[!debwiki AppArmor]] to protect the system and your data from some
-types of attack against <span class="application">Tor Browser</span>.
-As a consequence, it can only read and write to a limited number of
-folders.
+types of attacks against <span class="application">Tor Browser</span>.
+As a consequence, <span class="application">Tor Browser</span> in Tails can
+only read and write to a limited number of folders.
 
 <div class="note">
 
-This is why you might face <span class="guilabel">Permission
-denied</span> errors, for example if you try to download files to the
+This is why, for example, you might face <span class="guilabel">Permission
+denied</span> errors if you try to download files to the
 <span class="filename">Home</span> folder.
 
 </div>
@@ -68,95 +76,75 @@ persistence feature.</p>
 </div>
 
 <a id="https"></a>
+<a id="https-everywhere"></a>
 
-HTTPS Encryption
-================
+HTTPS encryption with HTTPS Everywhere
+======================================
 
-Using HTTPS instead of HTTP encrypts your communication while browsing the web.
+Using HTTPS instead of HTTP encrypts your communications while browsing the web.
 
-All the data exchanged between your browser and the server you are visiting are
-encrypted. It prevents the
-[[Tor exit node to eavesdrop on your communication|doc/about/warning#exit_node]].
+All the data exchanged between your browser and the server you are visiting is
+encrypted. HTTPS prevents the
+[[Tor exit node from eavesdropping on your communications|doc/about/warning#exit_node]].
 
 HTTPS also includes mechanisms to authenticate the server you are communicating
-with. But those mechanisms can be flawed,
+with. But, those mechanisms can be flawed,
 [[as explained on our warning page|about/warning#man-in-the-middle]].
 
-For example, here is how the browser looks like when we try to log in an email
+For example, here is how the browser looks when we try to log in to an email
 account at [riseup.net](https://riseup.net/), using their [webmail
 interface](https://mail.riseup.net/):
 
 [[!img doc/anonymous_internet/Tor_Browser/riseup.png link=no alt=""]]
 
-Notice the padlock icon on the left of the address bar saying "mail.riseup.net"
-and the address beginning with "https://" (instead of "http://"). These are the
+Notice the padlock icon on the left of the address bar saying "mail.riseup.net".
+Notice also the address beginning with "https://" (instead of "http://"). These are the
 indicators that an encrypted connection using [[!wikipedia HTTPS]] is being
 used.
 
-You should try to only use services providing HTTPS when you are sending or
-retrieving sensitive information (like passwords), otherwise its very easy for
-an eavesdropper to steal whatever information you are sending or to modify the
-content of a page on its way to your browser.
-
-<a id="https-everywhere"></a>
-
-HTTPS Everywhere
-----------------
+When you are sending or retrieving sensitive information (like passwords), you
+should try to only use services providing HTTPS. Otherwise, it is very easy
+for an eavesdropper to steal whatever information you are sending, or to
+modify the content of a page on its way to your browser.
 
 [[!img https-everywhere.jpg link=no alt=""]]
 
 [HTTPS Everywhere](https://www.eff.org/https-everywhere) is a Firefox extension
-included in <span class="application">Tor Browser</span> and produced as a collaboration between [The Tor
+included in <span class="application">Tor Browser</span>. It is produced as a collaboration between [The Tor
 Project](https://torproject.org/) and the [Electronic Frontier
 Foundation](https://eff.org/). It encrypts your communications with a number of
 major websites. Many sites on the web offer some limited support for encryption
-over HTTPS, but make it difficult to use. For instance, they may default to
+over HTTPS, but make it difficult to use. For example, they might default to
 unencrypted HTTP, or fill encrypted pages with links that go back to the
 unencrypted site. The HTTPS Everywhere extension fixes these problems by
 rewriting all requests to these sites to HTTPS.
 
-To learn more about HTTPS Everywhere you can see:
+To learn more about HTTPS Everywhere, you can see:
 
  - the [HTTPS Everywhere homepage](https://www.eff.org/https-everywhere)
  - the [HTTPS Everywhere FAQ](https://www.eff.org/https-everywhere/faq/)
 
 <a id="torbutton"></a>
 
-Torbutton
-=========
-
-Tor alone is not enough to protect your anonymity and privacy while browsing the
-web.  All modern web browsers, such as Firefox, support [[!wikipedia
-JavaScript]], [[!wikipedia Adobe_Flash]], [[!wikipedia HTTP_cookie
-desc="cookies"]] and other services which have been shown to be able to defeat
-the anonymity provided by the Tor network.
-
-In <span class="application">Tor Browser</span> all such features are handled from inside the browser by an extension
-called [Torbutton](https://www.torproject.org/docs/torbutton/) which does all sorts
-of things to prevent the above type of attacks. But that comes at a price: since
-this will disable some functionalities and some sites might not work as
-intended.
-
 <a id="javascript"></a>
 
 Protection against dangerous JavaScript
----------------------------------------
+=======================================
 
 Having all JavaScript disabled by default would disable a lot of harmless and
-possibly useful JavaScript and render unusable many websites.
+possibly useful JavaScript, and might render many websites unusable.
 
-That's why **JavaScript is enabled by default** in <span class="application">Tor Browser</span>.
+That is why **JavaScript is enabled by default** in <span class="application">Tor Browser</span>.
 
-But we rely on Torbutton to **disable all potentially dangerous JavaScript**.
+But, we rely on Torbutton to **disable all potentially dangerous JavaScript**.
 
-We consider this as a necessary compromise between security and usability and as
-of today we are not aware of any JavaScript that would compromise Tails
-anonymity.
+We consider this as a necessary compromise between security and usability. As
+of today we are not aware of any JavaScript that would compromise the anonymity provided by Tails.
 
 <div class="note">
 
 <p>To understand better the behavior of <span class="application">Tor
-Browser</span>, for example regarding JavaScript and cookies, you can
+Browser</span>, for example, regarding JavaScript and cookies, you can
 refer to the <a href="https://www.torproject.org/projects/torbrowser/design/">
 <span class="application">Tor Browser</span> design document</a>.</p>
 
@@ -165,65 +153,53 @@ refer to the <a href="https://www.torproject.org/projects/torbrowser/design/">
 <a id="security_slider"></a>
 
 Security slider
----------------
+===============
 
-You can use the security slider of <span class="application">Torbutton</span>
+You can use the security slider of <span class="application">Tor Browser</span>
 to disable browser features as a trade-off between security and usability.
 For example, you can use the security slider to disable JavaScript completely.
 
-The security slider is set to *low* by default. This value provides the
-default level of protection of <span class="application">Torbutton</span>
-and the most usable experience.
+The security slider is set to **Standard** by default which gives
+the most usable experience.
 
-To change the value of the security slider, click on the [[!img torbutton.png link=no class=symbolic alt="green onion"]] button
-and choose **Privacy and Security Settings**.
+To change the value of the security slider, click on the [[!img torbutton.png link="no" class="symbolic" alt=""]] button
+on the left of the address bar and choose **Security Settings&hellip;**
 
 [[!img security_slider.png link="no" alt="Security slider in its default value (low)"]]
 
 <a id="circuit_view"></a>
+<a id="new_circuit"></a>
 
-<span class="guilabel">Circuit view</span> feature
---------------------------------------------------
+Tor circuit
+===========
+
 [[!img circuit_view.png link=no]]
 
-The <span class="guilabel">Circuit view</span> feature of
-<span class="application">Torbutton</span>
-shows you the three Tor relays used for the website in the current tab,
-including the corresponding IP addresses and the countries they're located
-in. The node immediately above the
-<span class="guilabel">Internet</span> node is the *Exit relay*; the
-country it is located in might determine how the website is presented
-to you. You can use
-<span class="guilabel">[[New Tor Circuit for this Site|Tor_Browser#new_circuit]]</span>
-to change to another country.
+Click on the
+[[!img i.png link="no" class="symbolic" alt="Show site information"]]
+button in the address bar to show the Tor circuit that is used to connect to
+the website in the current tab, its 3 relays, their IP addresses, and
+countries.
+
+The last relay in the circuit, the one immediately above the
+destination website, is the *exit relay*. Its
+country might influence how the website behaves.
+
+Click on the
+<span class="guilabel">[[New Circuit for this Site|Tor_Browser#new_circuit]]</span> button
+to use a different circuit.
 
 You can use
 <span class="application">[[Onion Circuits|doc/anonymous_internet/tor_status]]</span>
 to get more detailed information about the circuits being used.
 
-<a id="new_circuit"></a>
-
-<span class="guilabel">New Tor Circuit for this Site</span> feature
--------------------------------------------------------------------
-
-The <span class="guilabel">New Tor Circuit for this Site</span> feature
-of <span class="application">Torbutton</span> builds a new Tor Circuit for the website in the current
-tab and reloads it. This is particularly useful if the *Exit relay* is
-located in a country which negatively affects the presentation of the
-website you are visiting, e.g. due to censorship, localization into a
-language you do not know, and similar.
-
-To use it, click on the
-[[!img torbutton.png link=no class=symbolic alt="green onion"]] button and select
-<span class="guilabel">New Tor Circuit for this Site</span>.
-
 <a id="new_identity"></a>
 
 <span class="guilabel">New Identity</span> feature
---------------------------------------------------
+==================================================
 
 The <span class="guilabel">New Identity</span> feature of
-<span class="application">Torbutton</span>:
+<span class="application">Tor Browser</span>:
 
   - Closes all open tabs.
   - Clears the session state including cache, history, and cookies
@@ -231,17 +207,18 @@ The <span class="guilabel">New Identity</span> feature of
   - Closes all existing web connections and creates new Tor circuits.
   - Erases the content of the clipboard.
 
-To use this feature click on the
-[[!img torbutton.png link=no class=symbolic alt="green onion"]] button
-and select <span class="guilabel">New Identity</span>.
+To switch to a new identity, click on the
+[[!img torbutton.png link="no" class="symbolic" alt=""]] button
+on the left of the address bar
+and choose <span class="guilabel">New Identity</span>.
 
 <div class="caution">
 
 <p>This feature is not enough to strongly [[separate contextual identities|about/warning#identities]]
-in the context of Tails as the connections outside of
+in the context of Tails, as the connections outside of
 <span class="application">Tor Browser</span> are not restarted.</p>
 
-<p>Shutdown and restart Tails instead.</p>
+<p>Restart Tails instead.</p>
 
 </div>
 
@@ -254,14 +231,14 @@ NoScript to have even more control over JavaScript
 
 [[!img noscript.png link=no alt=""]]
 
-To allow more control over JavaScript, for example to disable JavaScript
-completely on some websites, <span class="application">Tor Browser</span> includes the <span class="application">NoScript</span>
-extension.
+<span class="application">Tor Browser</span> includes the
+<span class="application">NoScript</span> extension to allow more control over
+JavaScript, for example, to disable JavaScript completely on some websites.
 
 By default, <span class="application">NoScript</span> is disabled and some
-JavaScript is allowed by the <span
-class="application">[[Torbutton|Tor_Browser#javascript]]</span> extension as
+JavaScript is allowed by <span
+class="application">[[Tor Browser|Tor_Browser#javascript]]</span>, as
 explained above.
 
-For more information you can refer to the NoScript
+For more information, you can refer to the NoScript
 [website](http://noscript.net/) and [features](http://noscript.net/features).

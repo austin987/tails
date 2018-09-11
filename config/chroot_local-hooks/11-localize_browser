@@ -22,7 +22,7 @@ ensure_hook_dependency_is_installed p7zip imagemagick
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
 LOCALE_PROFILES_DIR="/etc/tor-browser/locale-profiles/"
-NO_SPELLCHECKER_LOCALES="ja tr zh"
+NO_SPELLCHECKER_LOCALES="ca ga id is ja nb tr zh"
 
 # Sanity check that each supported Tor Browser locale has a
 # description for how to localize it further.
@@ -40,14 +40,13 @@ fi
 # This very long while-loop is fed the DESCRIPTIONS_FILE (IO
 # redirection at the bottom), which describes how we will localize
 # each supported Tor Browser locale. The format is:
-#   MOZILLA_LOCALE:LOCATION:LOCALIZED_LANG
+#   MOZILLA_LOCALE:LOCATION
 # Note that we're forced to pick some representative location for the
 # language-only locales, like Egypt (EG) for Arabic (ar).
-while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG; do
-    if [ -z "${MOZILLA_LOCALE}" ] || [ -z "${LOCATION}" ] || \
-       [ -z "${LOCALIZED_LANG}" ]; then
+while IFS=: read MOZILLA_LOCALE LOCATION; do
+    if [ -z "${MOZILLA_LOCALE}" ] || [ -z "${LOCATION}" ]; then
         echo "Something is wrong with ${DESCRIPTIONS_FILE}" >&2
-        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}:${LOCALIZED_LANG}" >&2
+        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}" >&2
        exit 1
     fi
 
