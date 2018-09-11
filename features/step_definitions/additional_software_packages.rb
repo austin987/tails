@@ -143,7 +143,7 @@ end
 When /^I can open the ASP configuration from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Configure', roleName: 'push button').click
-  try_for(60) { @asp = Dogtail::Application.new('Additional Software') }
+  try_for(60) { @asp = Dogtail::Application.new('tails-additional-software-config') }
 end
 
 Then /^I can open the ASP log file from the notification$/ do
