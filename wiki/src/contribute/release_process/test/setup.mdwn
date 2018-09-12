@@ -111,31 +111,3 @@ test suite domain for you and display the Tails VM. E.g.
 where `$DISPLAY` is the display given to you by `run_test_suite` (often 0):
 
     vncviewer -viewonly -via user@level0 localhost:$DISPLAY
-
-Running the test suite as a non-root user
------------------------------------------
-
-This is entirely possible, but there's some additional configuration
-required. Run the following as `root`:
-
-    addgroup tcpdump
-    dpkg-statoverride --update --add root tcpdump 754 /usr/sbin/tcpdump
-    setcap CAP_NET_RAW+eip /usr/sbin/tcpdump
-    adduser $USER tcpdump
-    adduser $USER libvirt
-    adduser $USER libvirt-qemu
-
-It's important to run `setcap` after `dpkg-statoverride` since the
-latter deletes all capabilities. Unfortunately the `setcap` command
-has to be rerun for that reason everytime the `tcpdump` package is
-updated until [[!debbug 662845]] is fixed.
-
-Running these commands will add some interesting capabilities to
-`$USER`, so you may want to do this for a dedicated user separate from
-your normal user. In that case (and if you run the tests as root) the
-`--view` option won't work unless you grant `$USER` access to your
-display via `xhost +SI:localhost:$USER`. Alternatively you can use the
-`--vnc-server-only` option and manually connect to the VNC server with
-your normal user. Just make sure the VNC viewer is in view-only mode
-(e.g. `xtigervncviewer --view-only ...`) in order to not interfere
-with the testing session.
