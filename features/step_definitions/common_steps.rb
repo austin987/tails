@@ -56,9 +56,10 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) (?:([[:alpha:]]+) )disk named "([^"]+)"$/ do |temporary, size, unit, type, name|
+  type ||= "qcow2"
   $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
-                                     :type => "qcow2"})
+                                     :type => type})
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
 end
 
