@@ -52,4 +52,13 @@ Feature: Using VeraCrypt encrypted volumes
     When I lock the currently opened VeraCrypt file container
     Then I am told the VeraCrypt file container has been unmounted
 
-  # XXX: Add missing file container scenarios.
+  @unlock_veracrypt_volumes @file_container
+  Scenario: Use Unlock VeraCrypt Volumes to unlock a hidden VeraCrypt file container
+    When I plug and mount a USB drive containing a hidden VeraCrypt file container
+    And I unlock and mount this VeraCrypt file container with Unlock VeraCrypt Volumes
+    And I open this VeraCrypt volume in GNOME Files
+    Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
+    When I lock the currently opened VeraCrypt file container
+    Then I am told the VeraCrypt file container has been unmounted
+
+  # XXX: Add file container scenarios with GNOME Disks
