@@ -5,7 +5,7 @@ Then /^the additional software package (upgrade|installation) service has starte
     case service
     when "installation"
       state_file = "#{ASP_STATE_DIR}/installed"
-      seconds_to_wait = 300
+      seconds_to_wait = 600
     when "upgrade"
       state_file = "#{ASP_STATE_DIR}/upgraded"
       seconds_to_wait = 900
