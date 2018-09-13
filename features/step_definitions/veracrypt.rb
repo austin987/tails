@@ -120,7 +120,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   end
 end
 
-When /^I unlock and mount this VeraCrypt volume with GNOME Disks$/ do
+When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disks$/ do |support|
   @veracrypt_tool = 'GNOME Disks'
   pending # express the regexp above with the code you wish you had
 end
