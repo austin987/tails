@@ -89,7 +89,7 @@ When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/
   step 'I plug USB drive "veracrypt"'
 end
 
-When(/^I unlock and mount this VeraCrypt volume with Unlock VeraCrypt Volumes$/) do
+When /^I unlock and mount this VeraCrypt volume with Unlock VeraCrypt Volumes$/ do
   @veracrypt_tool = 'Unlock VeraCrypt Volumes'
   step 'I start "Unlock VeraCrypt Volumes" via GNOME Activities Overview'
   @screen.wait_and_click('UnlockVeraCryptVolumesUnlockButton.png', 10)
@@ -105,12 +105,12 @@ When(/^I unlock and mount this VeraCrypt volume with Unlock VeraCrypt Volumes$/)
   end
 end
 
-When(/^I unlock and mount this VeraCrypt volume with GNOME Disks$/) do
+When /^I unlock and mount this VeraCrypt volume with GNOME Disks$/ do
   @veracrypt_tool = 'GNOME Disks'
   pending # express the regexp above with the code you wish you had
 end
 
-When(/^I open this VeraCrypt volume in GNOME Files$/) do
+When /^I open this VeraCrypt volume in GNOME Files$/ do
   step "all notifications have disappeared"
   case @veracrypt_tool
   when 'Unlock VeraCrypt Volumes'
@@ -126,7 +126,7 @@ When(/^I open this VeraCrypt volume in GNOME Files$/) do
   )
 end
 
-When(/^I lock the currently opened VeraCrypt volume$/) do
+When /^I lock the currently opened VeraCrypt volume$/ do
   # Sometimes the eject button is not updated fast enough and is still
   # about the drive that contains the VeraCrypt volume, which cannot
   # be ejected as it's still in use.
@@ -137,7 +137,7 @@ When(/^I lock the currently opened VeraCrypt volume$/) do
   end
 end
 
-When(/^I am told the VeraCrypt volume has been unmounted$/) do
+When /^I am told the VeraCrypt volume has been unmounted$/ do
   notification_text = "You can now unplug QEMU QEMU HARDDISK"
   step "I see the \"#{notification_text}\"" \
        + " notification after at most 30 seconds"
