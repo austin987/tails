@@ -102,7 +102,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   step 'I start "Unlock VeraCrypt Volumes" via GNOME Activities Overview'
   case support
   when 'volume'
-    @screen.wait_and_click('UnlockVeraCryptVolumesUnlockButton.png', 10)
+    @screen.wait_and_click('Gtk3UnlockButton.png', 10)
   when 'file container'
     @screen.wait_and_click('UnlockVeraCryptVolumesAddButton.png', 10)
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
@@ -122,7 +122,39 @@ end
 
 When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disks$/ do |support|
   @veracrypt_tool = 'GNOME Disks'
-  pending # express the regexp above with the code you wish you had
+  step 'I start "Disks" via GNOME Activities Overview'
+  case support
+  when 'volume'
+    disks = Dogtail::Application.new('gnome-disks')
+    disks.children(roleName: 'table cell').find { |row|
+      /^105 MB Drive/.match(row.name)
+    }.grabFocus
+  when 'file container'
+    pending
+    @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
+    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt' + Sikuli::Key.ENTER)
+  end
+  disks.child('', roleName: 'panel', description: 'Unlock selected encrypted partition').click
+  unlock_dialog = disks.dialog('Set options to unlock')
+  passphrase_field = unlock_dialog.child('', roleName: 'password text')
+  passphrase_field.grabFocus()
+  passphrase_field.typeText(
+    @veracrypt_is_hidden ? $veracrypt_hidden_passphrase : $veracrypt_passphrase
+  )
+  if @veracrypt_needs_keyfile
+    # not accessible and unreachable with the keyboard (#15952)
+    @screen.click('GnomeDisksUnlockDialogKeyfileComboBox.png')
+    @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
+    $vm.file_overwrite('/tmp/keyfile', 'asdf')
+    @screen.type('/tmp/keyfile' + Sikuli::Key.ENTER)
+  end
+  @screen.click('GnomeDisksUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
+  @screen.wait_and_click('Gtk3UnlockButton.png', 10)
+  disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel').click
+  disks.child('', roleName: 'panel', description: 'Mount selected partition').click
+  try_for(10) do
+    $vm.execute_successfully('ls /media/amnesia/*/SecretFile')
+  end
 end
 
 When /^I open this VeraCrypt volume in GNOME Files$/ do
@@ -131,7 +163,7 @@ When /^I open this VeraCrypt volume in GNOME Files$/ do
     # XXX: isn't this supposed to happen automatically? (#15951)
     $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
   when 'GNOME Disks'
-    pending
+    $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
   else
     raise "Unsupported tool: '#{@veracrypt_tool}'"
   end
