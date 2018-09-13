@@ -137,7 +137,7 @@ When /^I lock the currently opened VeraCrypt volume$/ do
   end
 end
 
-When /^I am told the VeraCrypt volume has been unmounted$/ do
+Then /^I am told the VeraCrypt volume has been unmounted$/ do
   notification_text = "You can now unplug QEMU QEMU HARDDISK"
   step "I see the \"#{notification_text}\"" \
        + " notification after at most 30 seconds"
