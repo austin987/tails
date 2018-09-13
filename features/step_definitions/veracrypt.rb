@@ -126,7 +126,6 @@ When /^I unlock and mount this VeraCrypt volume with GNOME Disks$/ do
 end
 
 When /^I open this VeraCrypt volume in GNOME Files$/ do
-  step "all notifications have disappeared"
   case @veracrypt_tool
   when 'Unlock VeraCrypt Volumes'
     # XXX: isn't this supposed to happen automatically? (#15951)
@@ -142,10 +141,8 @@ When /^I open this VeraCrypt volume in GNOME Files$/ do
 end
 
 When /^I lock the currently opened VeraCrypt (?:volume|file container)$/ do
-  # Sometimes the eject button is not updated fast enough and is still
-  # about the drive that contains the VeraCrypt volume, which cannot
-  # be ejected as it's still in use.
-  sleep 3
+  # notifications sometimes interfere with mouse focus
+  step "all notifications have disappeared"
   @screen.click('NautilusFocusedEjectButton.png')
   try_for(10) do
     ! $vm.execute('ls /media/amnesia/*/SecretFile').success?
