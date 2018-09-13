@@ -9,8 +9,8 @@ def veracrypt_volume_size_in_GNOME(is_hidden)
   is_hidden ? '52 MB' : '105 MB'
 end
 
-def create_veracrypt_keyfile(name)
-  keyfile = Tempfile.new("#{name}.keyfile", $config["TMPDIR"])
+def create_veracrypt_keyfile()
+  keyfile = Tempfile.new('veracrypt-keyfile', $config["TMPDIR"])
   keyfile << 'asdf'
   keyfile.close
   return keyfile.path
@@ -24,12 +24,12 @@ def reply_prompt(r_f, w_f, prompt_re, answer)
   end
 end
 
-Given(/^USB drive "([^"]+)" has a (.+) VeraCrypt volume( with a keyfile)?$/) do |name, type, with_keyfile|
+def create_veracrypt_volume(type, with_keyfile)
   @veracrypt_is_hidden = (type == 'hidden')
   @veracrypt_needs_keyfile = with_keyfile
-  step "I temporarily create a 100 MiB raw disk named \"#{name}\""
-  disk_path = $vm.storage.disk_path(name)
-  keyfile = create_veracrypt_keyfile(name)
+  step "I temporarily create a 100 MiB raw disk named \"veracrypt\""
+  disk_path = $vm.storage.disk_path('veracrypt')
+  keyfile = create_veracrypt_keyfile()
   fatal_system "losetup -f '#{disk_path}'"
   loop_dev = `losetup -j '#{disk_path}'`.split(':').first
   tcplay_create_cmd = "tcplay --create --device='#{loop_dev}'" \
@@ -57,7 +57,7 @@ Given(/^USB drive "([^"]+)" has a (.+) VeraCrypt volume( with a keyfile)?$/) do 
     end
     $?.exitstatus == 0 or raise "#{tcplay_create_cmd} exited with #{$?.exitstatus}"
   end
-  tcplay_map_cmd = "tcplay --map='#{name}' --device='#{loop_dev}'"
+  tcplay_map_cmd = "tcplay --map=veracrypt --device='#{loop_dev}'"
   tcplay_map_cmd += " --keyfile='#{keyfile}'" if @veracrypt_needs_keyfile
   debug_log "tcplay map command: #{tcplay_map_cmd}"
   PTY.spawn(tcplay_map_cmd) do |r_f, w_f, pid|
@@ -72,19 +72,24 @@ Given(/^USB drive "([^"]+)" has a (.+) VeraCrypt volume( with a keyfile)?$/) do 
     end
     $?.exitstatus == 0 or raise "#{tcplay_map_cmd} exited with #{$?.exitstatus}"
   end
-  fatal_system "mkfs.vfat '/dev/mapper/#{name}' >/dev/null"
-  Dir.mktmpdir(name, $config["TMPDIR"]) { |mountpoint|
-    fatal_system "mount -t vfat '/dev/mapper/#{name}' '#{mountpoint}'"
+  fatal_system "mkfs.vfat '/dev/mapper/veracrypt' >/dev/null"
+  Dir.mktmpdir('veracrypt-mountpoint', $config["TMPDIR"]) { |mountpoint|
+    fatal_system "mount -t vfat '/dev/mapper/veracrypt' '#{mountpoint}'"
     # must match SecretFileOnVeraCryptVolume.png when displayed in GNOME Files
     FileUtils.cp('/usr/share/common-licenses/GPL-3', "#{mountpoint}/SecretFile")
     fatal_system "umount '#{mountpoint}'"
   }
-  fatal_system "tcplay --unmap='#{name}'"
+  fatal_system "tcplay --unmap=veracrypt"
   fatal_system "losetup -d '#{loop_dev}'"
   File.delete(keyfile)
 end
 
-When(/^I unlock and mount the VeraCrypt volume on drive "([^"]+)" with Unlock VeraCrypt Volumes$/) do |name|
+When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/ do |type, with_keyfile|
+  create_veracrypt_volume(type, with_keyfile)
+  step 'I plug USB drive "veracrypt"'
+end
+
+When(/^I unlock and mount this VeraCrypt volume with Unlock VeraCrypt Volumes$/) do
   @veracrypt_tool = 'Unlock VeraCrypt Volumes'
   step 'I start "Unlock VeraCrypt Volumes" via GNOME Activities Overview'
   @screen.wait_and_click('UnlockVeraCryptVolumesUnlockButton.png', 10)
@@ -100,12 +105,12 @@ When(/^I unlock and mount the VeraCrypt volume on drive "([^"]+)" with Unlock Ve
   end
 end
 
-When(/^I unlock and mount the VeraCrypt volume on drive "([^"]+)" with GNOME Disks$/) do |name|
+When(/^I unlock and mount this VeraCrypt volume with GNOME Disks$/) do
   @veracrypt_tool = 'GNOME Disks'
   pending # express the regexp above with the code you wish you had
 end
 
-When(/^I open the VeraCrypt volume "([^"]+)" in GNOME Files$/) do |name|
+When(/^I open this VeraCrypt volume in GNOME Files$/) do
   step "all notifications have disappeared"
   case @veracrypt_tool
   when 'Unlock VeraCrypt Volumes'
