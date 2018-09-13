@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'expect'
 require 'pty'
 require 'tempfile'
@@ -27,8 +28,8 @@ end
 def create_veracrypt_volume(type, with_keyfile)
   @veracrypt_is_hidden = (type == 'hidden')
   @veracrypt_needs_keyfile = with_keyfile
-  step "I temporarily create a 100 MiB raw disk named \"veracrypt\""
-  disk_path = $vm.storage.disk_path('veracrypt')
+  step "I temporarily create a 100 MiB raw disk named \"veracrypt.img\""
+  disk_path = $vm.storage.disk_path('veracrypt.img')
   keyfile = create_veracrypt_keyfile()
   fatal_system "losetup -f '#{disk_path}'"
   loop_dev = `losetup -j '#{disk_path}'`.split(':').first
@@ -86,14 +87,14 @@ end
 
 When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/ do |type, with_keyfile|
   create_veracrypt_volume(type, with_keyfile)
-  step 'I plug USB drive "veracrypt"'
+  step 'I plug USB drive "veracrypt.img"'
 end
 
 When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( with a keyfile)?$/ do |type, with_keyfile|
   create_veracrypt_volume(type, with_keyfile)
-  @veracrypt_shared_dir_in_guest = share_host_files($vm.storage.disk_path('veracrypt'))
+  @veracrypt_shared_dir_in_guest = share_host_files($vm.storage.disk_path('veracrypt.img'))
   $vm.execute_successfully(
-    "chown #{LIVE_USER}:#{LIVE_USER} '#{@veracrypt_shared_dir_in_guest}/veracrypt'"
+    "chown #{LIVE_USER}:#{LIVE_USER} '#{@veracrypt_shared_dir_in_guest}/veracrypt.img'"
   )
 end
 
@@ -106,7 +107,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   when 'file container'
     @screen.wait_and_click('UnlockVeraCryptVolumesAddButton.png', 10)
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
-    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt' + Sikuli::Key.ENTER)
+    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt.img' + Sikuli::Key.ENTER)
   end
   @screen.wait('VeraCryptUnlockDialog.png', 10)
   @screen.type(
@@ -123,16 +124,39 @@ end
 When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disks$/ do |support|
   @veracrypt_tool = 'GNOME Disks'
   step 'I start "Disks" via GNOME Activities Overview'
+  disks = Dogtail::Application.new('gnome-disks')
   case support
   when 'volume'
-    disks = Dogtail::Application.new('gnome-disks')
     disks.children(roleName: 'table cell').find { |row|
       /^105 MB Drive/.match(row.name)
     }.grabFocus
   when 'file container'
-    pending
-    @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
-    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt' + Sikuli::Key.ENTER)
+    gnome_shell = Dogtail::Application.new('gnome-shell')
+    menu = gnome_shell.menu('Disks')
+    menu.click()
+    @screen.wait_and_click('GnomeDisksAttachDiskImageMenuEntry.png', 10)
+    # Once we use a more recent Dogtail that can deal with UTF-8 (#12185),
+    # we can instead do:
+    # gnome_shell.child('Attach Disk Image…', roleName: 'label').click
+    attach_dialog = disks.child('Select Disk Image to Attach', roleName: 'file chooser')
+    attach_dialog.child('Set up read-only loop device', roleName: 'check box').click
+    filter = attach_dialog.child('Disk Images (*.img, *.iso)', roleName: 'combo box')
+    filter.click
+    sleep 1 # avoid "Attempting to generate a mouse event at negative coordinates"
+    filter.child('All Files', roleName: 'menu item').click
+    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt.img')
+    sleep 2 # avoid ENTER being eaten by the auto-completion system
+    @screen.type(Sikuli::Key.ENTER)
+    try_for(5) do
+      begin
+        disks.children(roleName: 'table cell').find { |row|
+          /^105 MB Loop Device/.match(row.name)
+        }.grabFocus
+        true
+      rescue NoMethodError
+        false
+      end
+    end
   end
   disks.child('', roleName: 'panel', description: 'Unlock selected encrypted partition').click
   unlock_dialog = disks.dialog('Set options to unlock')
