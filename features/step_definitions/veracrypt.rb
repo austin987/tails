@@ -89,10 +89,25 @@ When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/
   step 'I plug USB drive "veracrypt"'
 end
 
-When /^I unlock and mount this VeraCrypt volume with Unlock VeraCrypt Volumes$/ do
+When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( with a keyfile)?$/ do |type, with_keyfile|
+  create_veracrypt_volume(type, with_keyfile)
+  @veracrypt_shared_dir_in_guest = share_host_files($vm.storage.disk_path('veracrypt'))
+  $vm.execute_successfully(
+    "chown #{LIVE_USER}:#{LIVE_USER} '#{@veracrypt_shared_dir_in_guest}/veracrypt'"
+  )
+end
+
+When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock VeraCrypt Volumes$/ do |support|
   @veracrypt_tool = 'Unlock VeraCrypt Volumes'
   step 'I start "Unlock VeraCrypt Volumes" via GNOME Activities Overview'
-  @screen.wait_and_click('UnlockVeraCryptVolumesUnlockButton.png', 10)
+  case support
+  when 'volume'
+    @screen.wait_and_click('UnlockVeraCryptVolumesUnlockButton.png', 10)
+  when 'file container'
+    @screen.wait_and_click('UnlockVeraCryptVolumesAddButton.png', 10)
+    @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
+    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt' + Sikuli::Key.ENTER)
+  end
   @screen.wait('VeraCryptUnlockDialog.png', 10)
   @screen.type(
     @veracrypt_is_hidden ? $veracrypt_hidden_passphrase : $veracrypt_passphrase
@@ -126,7 +141,7 @@ When /^I open this VeraCrypt volume in GNOME Files$/ do
   )
 end
 
-When /^I lock the currently opened VeraCrypt volume$/ do
+When /^I lock the currently opened VeraCrypt (?:volume|file container)$/ do
   # Sometimes the eject button is not updated fast enough and is still
   # about the drive that contains the VeraCrypt volume, which cannot
   # be ejected as it's still in use.
@@ -137,8 +152,14 @@ When /^I lock the currently opened VeraCrypt volume$/ do
   end
 end
 
-Then /^I am told the VeraCrypt volume has been unmounted$/ do
-  notification_text = "You can now unplug QEMU QEMU HARDDISK"
+Then /^I am told the VeraCrypt (volume|file container) has been unmounted$/ do |support|
+  case support
+  when 'volume'
+    notification_text = "You can now unplug QEMU QEMU HARDDISK"
+  when 'file container'
+    volume_name = "#{veracrypt_volume_size_in_GNOME(@veracrypt_is_hidden)} Volume"
+    notification_text = "#{volume_name} has been unmounted"
+  end
   step "I see the \"#{notification_text}\"" \
        + " notification after at most 30 seconds"
 end
