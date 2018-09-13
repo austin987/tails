@@ -7,6 +7,7 @@ Feature: Using VeraCrypt encrypted volumes
   Background:
     Given I have started Tails from DVD without network and logged in
 
+  @unlock_veracrypt_volumes @usb_drive
   Scenario: Use Unlock VeraCrypt Volumes to unlock a USB drive that has a basic VeraCrypt volume
     Given USB drive "vc-basic" has a basic VeraCrypt volume
     When I plug USB drive "vc-basic"
@@ -16,6 +17,7 @@ Feature: Using VeraCrypt encrypted volumes
     When I lock the currently opened VeraCrypt volume
     Then I am told the VeraCrypt volume has been unmounted
 
+  @gnome_disks @usb_drive
   Scenario: Use GNOME Disks to unlock a USB drive that has a basic VeraCrypt volume with a keyfile
     Given USB drive "vc-basic-with-keyfile" has a basic VeraCrypt volume with a keyfile
     When I plug USB drive "vc-basic-with-keyfile"
@@ -25,6 +27,7 @@ Feature: Using VeraCrypt encrypted volumes
     When I lock the currently opened VeraCrypt volume
     Then I am told the VeraCrypt volume has been unmounted
 
+  @unlock_veracrypt_volumes @usb_drive
   Scenario: Use Unlock VeraCrypt Volumes to unlock a USB drive that has a hidden VeraCrypt volume
     Given USB drive "vc-hidden" has a hidden VeraCrypt volume
     When I plug USB drive "vc-hidden"
@@ -34,6 +37,7 @@ Feature: Using VeraCrypt encrypted volumes
     When I lock the currently opened VeraCrypt volume
     Then I am told the VeraCrypt volume has been unmounted
 
+  @gnome_disks @usb_drive
   Scenario: Use GNOME Disks to unlock a USB drive that has a hidden VeraCrypt volume
     Given USB drive "vc-hidden" has a hidden VeraCrypt volume
     When I plug USB drive "vc-hidden"
