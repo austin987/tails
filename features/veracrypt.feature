@@ -48,15 +48,6 @@ Feature: Using VeraCrypt encrypted volumes
 ### GNOME Disks
 
   @gnome_disks @usb_drive
-  Scenario: Use GNOME Disks to unlock a USB drive that has a basic VeraCrypt volume
-    When I plug a USB drive containing a basic VeraCrypt volume
-    And I unlock and mount this VeraCrypt volume with GNOME Disks
-    And I open this VeraCrypt volume in GNOME Files
-    Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
-    When I lock the currently opened VeraCrypt volume
-    Then I am told the VeraCrypt volume has been unmounted
-
-  @gnome_disks @usb_drive
   Scenario: Use GNOME Disks to unlock a USB drive that has a basic VeraCrypt volume with a keyfile
     When I plug a USB drive containing a basic VeraCrypt volume with a keyfile
     And I unlock and mount this VeraCrypt volume with GNOME Disks
