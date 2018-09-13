@@ -30,6 +30,7 @@ Given(/^USB drive "([^"]+)" has a (.+) VeraCrypt volume( with a keyfile)?$/) do 
                     + " --weak-keys --insecure-erase"
   tcplay_create_cmd += " --hidden" if type == 'hidden'
   tcplay_create_cmd += " --keyfile='#{keyfile}'" if with_keyfile
+  debug_log "tcplay create command: #{tcplay_create_cmd}"
   PTY.spawn(tcplay_create_cmd) do |r_f, w_f, pid|
     begin
       w_f.sync = true
@@ -52,6 +53,7 @@ Given(/^USB drive "([^"]+)" has a (.+) VeraCrypt volume( with a keyfile)?$/) do 
   end
   tcplay_map_cmd = "tcplay --map='#{name}' --device='#{loop_dev}'"
   tcplay_map_cmd += " --keyfile='#{keyfile}'" if with_keyfile
+  debug_log "tcplay create command: #{tcplay_map_cmd}"
   PTY.spawn(tcplay_map_cmd) do |r_f, w_f, pid|
     begin
       w_f.sync = true
