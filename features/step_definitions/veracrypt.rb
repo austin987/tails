@@ -138,8 +138,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.wait_and_click('GnomeDisksAttachDiskImageMenuEntry.png', 10)
     # Once we use a more recent Dogtail that can deal with UTF-8 (#12185),
     # we can instead do:
-    # gnome_shell.child('Attach Disk Image…', roleName: 'label').click
-    attach_dialog = disks.child('Select Disk Image to Attach', roleName: 'file chooser')
+    #   gnome_shell.child('Attach Disk Image…', roleName: 'label').click
+    # Otherwise Disks is sometimes minimized
+    attach_dialog = disks.child('Select Disk Image to Attach', roleName: 'file chooser', showingOnly: true)
     attach_dialog.child('Set up read-only loop device', roleName: 'check box').click
     filter = attach_dialog.child('Disk Images (*.img, *.iso)', roleName: 'combo box')
     filter.click
