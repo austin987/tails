@@ -171,8 +171,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     $vm.file_overwrite('/tmp/keyfile', 'asdf')
     @screen.type('/tmp/keyfile' + Sikuli::Key.ENTER)
+    @screen.waitVanish('Gtk3FileChooserDesktopButton.png', 10)
   end
-  @screen.click('GnomeDisksUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
+  @screen.wait_and_click('GnomeDisksUnlockDialogHiddenVolumeLabel.png', 10) if @veracrypt_is_hidden
   # Clicking is robust neither with Dogtail (no visible effect) nor with Sikuli
   # (that sometimes clicks just a little bit outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)
