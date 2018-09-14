@@ -100,7 +100,6 @@ When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( 
 end
 
 When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock VeraCrypt Volumes$/ do |support|
-  @veracrypt_tool = 'Unlock VeraCrypt Volumes'
   step 'I start "Unlock VeraCrypt Volumes" via GNOME Activities Overview'
   case support
   when 'volume'
@@ -123,7 +122,6 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
 end
 
 When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disks$/ do |support|
-  @veracrypt_tool = 'GNOME Disks'
   step 'I start "Disks" via GNOME Activities Overview'
   disks = Dogtail::Application.new('gnome-disks')
   case support
@@ -205,14 +203,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
 end
 
 When /^I open this VeraCrypt volume in GNOME Files$/ do
-  case @veracrypt_tool
-  when 'Unlock VeraCrypt Volumes'
-    $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
-  when 'GNOME Disks'
-    $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
-  else
-    raise "Unsupported tool: '#{@veracrypt_tool}'"
-  end
+  $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
   Dogtail::Application.new('nautilus').window(
     veracrypt_volume_size_in_GNOME(@veracrypt_is_hidden) + ' Volume'
   )
