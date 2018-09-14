@@ -147,7 +147,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt.img')
     sleep 2 # avoid ENTER being eaten by the auto-completion system
     @screen.type(Sikuli::Key.ENTER)
-    try_for(5) do
+    try_for(15) do
       begin
         disks.children(roleName: 'table cell').find { |row|
           /^105 MB Loop Device/.match(row.name)
