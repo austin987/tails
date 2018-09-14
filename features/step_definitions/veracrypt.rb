@@ -207,7 +207,6 @@ end
 When /^I open this VeraCrypt volume in GNOME Files$/ do
   case @veracrypt_tool
   when 'Unlock VeraCrypt Volumes'
-    # XXX: isn't this supposed to happen automatically? (#15951)
     $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
   when 'GNOME Disks'
     $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
