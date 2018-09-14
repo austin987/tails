@@ -180,7 +180,16 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   @screen.wait('Gtk3UnlockButton.png', 10)
   @screen.type('u', Sikuli::KeyModifier.ALT) # "Unlock" button
   disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel').click
-  disks.child('', roleName: 'panel', description: 'Mount selected partition').click
+  try_for(5) do
+    begin
+      disks.child('', roleName: 'panel', description: 'Mount selected partition').click
+      true
+    rescue RuntimeError
+      # we probably clicked too early, which triggered an "Attempting
+      # to generate a mouse event at negative coordinates" Dogtail error
+      false
+    end
+  end
   try_for(10) do
     $vm.execute_successfully('ls /media/amnesia/*/SecretFile')
   end
