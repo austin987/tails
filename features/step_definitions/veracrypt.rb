@@ -207,7 +207,7 @@ When /^I lock the currently opened VeraCrypt (?:volume|file container)$/ do
   # Sometimes the eject button is not updated fast enough and is still
   # about the drive that contains the VeraCrypt volume, which cannot
   # be ejected as it's still in use.
-  sleep 2
+  sleep 5
   @screen.click('NautilusFocusedEjectButton.png')
   try_for(10) do
     ! $vm.execute('ls /media/amnesia/*/SecretFile').success?
