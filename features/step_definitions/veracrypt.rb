@@ -143,8 +143,16 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     attach_dialog.child('Set up read-only loop device', roleName: 'check box').click
     filter = attach_dialog.child('Disk Images (*.img, *.iso)', roleName: 'combo box')
     filter.click
-    sleep 1 # avoid "Attempting to generate a mouse event at negative coordinates"
-    filter.child('All Files', roleName: 'menu item').click
+    try_for(5) do
+      begin
+        filter.child('All Files', roleName: 'menu item').click
+        true
+      rescue RuntimeError
+        # we probably clicked too early, which triggered an "Attempting
+        # to generate a mouse event at negative coordinates" Dogtail error
+        false
+      end
+    end
     @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
     sleep 2 # avoid ENTER being eaten by the auto-completion system
     @screen.type(Sikuli::Key.ENTER)
