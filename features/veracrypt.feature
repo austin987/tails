@@ -15,7 +15,7 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt volume
-    Then I am told the VeraCrypt volume has been unmounted
+    Then the VeraCrypt volume has been unmounted and locked
 
   Scenario: Use Unlock VeraCrypt Volumes to unlock a USB drive that has a hidden VeraCrypt volume
     When I plug a USB drive containing a hidden VeraCrypt volume
@@ -23,7 +23,7 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt volume
-    Then I am told the VeraCrypt volume has been unmounted
+    Then the VeraCrypt volume has been unmounted and locked
 
   Scenario: Use Unlock VeraCrypt Volumes to unlock a basic VeraCrypt file container
     When I plug and mount a USB drive containing a basic VeraCrypt file container
@@ -31,7 +31,7 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt file container
-    Then I am told the VeraCrypt file container has been unmounted
+    Then the VeraCrypt file container has been unmounted and locked
 
   Scenario: Use Unlock VeraCrypt Volumes to unlock a hidden VeraCrypt file container
     When I plug and mount a USB drive containing a hidden VeraCrypt file container
@@ -39,7 +39,7 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt file container
-    Then I am told the VeraCrypt file container has been unmounted
+    Then the VeraCrypt file container has been unmounted and locked
 
 ### GNOME Disks
 
@@ -49,7 +49,7 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt volume
-    Then I am told the VeraCrypt volume has been unmounted
+    Then the VeraCrypt volume has been unmounted and locked
 
   Scenario: Use GNOME Disks to unlock a USB drive that has a hidden VeraCrypt volume
     When I plug a USB drive containing a hidden VeraCrypt volume
@@ -57,7 +57,7 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt volume
-    Then I am told the VeraCrypt volume has been unmounted
+    Then the VeraCrypt volume has been unmounted and locked
 
   Scenario: Use GNOME Disks to unlock a basic VeraCrypt file container with a keyfile
     When I plug and mount a USB drive containing a basic VeraCrypt file container with a keyfile
@@ -65,7 +65,7 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt file container
-    Then I am told the VeraCrypt file container has been unmounted
+    Then the VeraCrypt file container has been unmounted and locked
 
   Scenario: Use GNOME Disks to unlock a hidden VeraCrypt file container
     When I plug and mount a USB drive containing a hidden VeraCrypt file container
@@ -73,4 +73,4 @@ Feature: Using VeraCrypt encrypted volumes
     And I open this VeraCrypt volume in GNOME Files
     Then I see "SecretFileOnVeraCryptVolume.png" after at most 10 seconds
     When I lock the currently opened VeraCrypt file container
-    Then I am told the VeraCrypt file container has been unmounted
+    Then the VeraCrypt file container has been unmounted and locked

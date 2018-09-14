@@ -219,27 +219,19 @@ When /^I open this VeraCrypt volume in GNOME Files$/ do
   )
 end
 
-When /^I lock the currently opened VeraCrypt (?:volume|file container)$/ do
-  # notifications sometimes interfere with mouse focus
-  step "all notifications have disappeared"
-  # Sometimes the eject button is not updated fast enough and is still
-  # about the drive that contains the VeraCrypt volume, which cannot
-  # be ejected as it's still in use.
-  sleep 5
-  @screen.click('NautilusFocusedEjectButton.png')
-  try_for(10) do
-    ! $vm.execute('ls /media/amnesia/*/SecretFile').success?
-  end
+When /^I lock the currently opened VeraCrypt (volume|file container)$/ do |support|
+  $vm.execute_successfully(
+    'udisksctl unmount --block-device /dev/mapper/tcrypt-*',
+    :user => LIVE_USER
+  )
+  device = support == 'volume' ? '/dev/sda' : '/dev/loop1'
+  $vm.execute_successfully(
+    "udisksctl lock --block-device #{device}",
+    :user => LIVE_USER
+  )
 end
 
-Then /^I am told the VeraCrypt (volume|file container) has been unmounted$/ do |support|
-  case support
-  when 'volume'
-    notification_text = "You can now unplug QEMU QEMU HARDDISK"
-  when 'file container'
-    volume_name = "#{veracrypt_volume_size_in_GNOME(@veracrypt_is_hidden)} Volume"
-    notification_text = "#{volume_name} has been unmounted"
-  end
-  step "I see the \"#{notification_text}\"" \
-       + " notification after at most 30 seconds"
+Then /^the VeraCrypt (volume|file container) has been unmounted and locked$/ do |support|
+  assert(! $vm.execute('ls /media/amnesia/*/SecretFile').success?)
+  assert(! $vm.execute('ls /dev/mapper/tcrypt-*').success?)
 end
