@@ -5,6 +5,7 @@ require 'tempfile'
 
 $veracrypt_passphrase = 'asdf'
 $veracrypt_hidden_passphrase = 'fdsa'
+$veracrypt_volume_name = 'veracrypt'
 
 def veracrypt_volume_size_in_GNOME(is_hidden)
   is_hidden ? '52 MB' : '105 MB'
@@ -28,8 +29,8 @@ end
 def create_veracrypt_volume(type, with_keyfile)
   @veracrypt_is_hidden = (type == 'hidden')
   @veracrypt_needs_keyfile = with_keyfile
-  step "I temporarily create a 100 MiB raw disk named \"veracrypt.img\""
-  disk_path = $vm.storage.disk_path('veracrypt.img')
+  step "I temporarily create a 100 MiB raw disk named \"#{$veracrypt_volume_name}\""
+  disk_path = $vm.storage.disk_path($veracrypt_volume_name)
   keyfile = create_veracrypt_keyfile()
   fatal_system "losetup -f '#{disk_path}'"
   loop_dev = `losetup -j '#{disk_path}'`.split(':').first
@@ -87,14 +88,14 @@ end
 
 When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/ do |type, with_keyfile|
   create_veracrypt_volume(type, with_keyfile)
-  step 'I plug USB drive "veracrypt.img"'
+  step "I plug USB drive \"#{$veracrypt_volume_name}\""
 end
 
 When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( with a keyfile)?$/ do |type, with_keyfile|
   create_veracrypt_volume(type, with_keyfile)
-  @veracrypt_shared_dir_in_guest = share_host_files($vm.storage.disk_path('veracrypt.img'))
+  @veracrypt_shared_dir_in_guest = share_host_files($vm.storage.disk_path($veracrypt_volume_name))
   $vm.execute_successfully(
-    "chown #{LIVE_USER}:#{LIVE_USER} '#{@veracrypt_shared_dir_in_guest}/veracrypt.img'"
+    "chown #{LIVE_USER}:#{LIVE_USER} '#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
   )
 end
 
@@ -107,7 +108,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   when 'file container'
     @screen.wait_and_click('UnlockVeraCryptVolumesAddButton.png', 10)
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
-    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt.img' + Sikuli::Key.ENTER)
+    @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name + Sikuli::Key.ENTER)
   end
   @screen.wait('VeraCryptUnlockDialog.png', 10)
   @screen.type(
@@ -144,7 +145,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     filter.click
     sleep 1 # avoid "Attempting to generate a mouse event at negative coordinates"
     filter.child('All Files', roleName: 'menu item').click
-    @screen.type(@veracrypt_shared_dir_in_guest + '/veracrypt.img')
+    @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
     sleep 2 # avoid ENTER being eaten by the auto-completion system
     @screen.type(Sikuli::Key.ENTER)
     try_for(15) do
