@@ -65,6 +65,7 @@ end
 
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   $vm.plug_drive(name, bus.downcase)
+  sleep 1
   if $vm.is_running?
     step "drive \"#{name}\" is detected by Tails"
   end
