@@ -187,10 +187,10 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   # (that sometimes clicks just a little bit outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)
   @screen.type('u', Sikuli::KeyModifier.ALT) # "Unlock" button
-  disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel').click
+  disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel', showingOnly: true).click
   try_for(5) do
     begin
-      disks.child('', roleName: 'panel', description: 'Mount selected partition').click
+      disks.child('', roleName: 'panel', description: 'Mount selected partition', showingOnly: true).click
       true
     rescue RuntimeError
       # we probably clicked too early, which triggered an "Attempting
