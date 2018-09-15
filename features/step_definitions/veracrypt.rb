@@ -187,14 +187,21 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   # (that sometimes clicks just a little bit outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)
   @screen.type('u', Sikuli::KeyModifier.ALT) # "Unlock" button
-  disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel', showingOnly: true).click
   try_for(5) do
     begin
+      unlocked_volume = disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel', showingOnly: true)
+      unlocked_volume.click
+      # Move the focus down to the "Filesystem\n107 MB FAT" item (that Dogtail
+      # is not able to find) using the 'Down' arrow, in order to display
+      # the "Mount selected partition" button.
+      unlocked_volume.grabFocus()
+      sleep 0.5 # otherwise the following key press is sometimes lost
+      disks.pressKey('Down')
       disks.child('', roleName: 'panel', description: 'Mount selected partition', showingOnly: true).click
       true
     rescue RuntimeError
-      # we probably clicked too early, which triggered an "Attempting
-      # to generate a mouse event at negative coordinates" Dogtail error
+      # we probably did something too early, which triggered a Dogtail error
+      # such as "Attempting to generate a mouse event at negative coordinates"
       false
     end
   end
