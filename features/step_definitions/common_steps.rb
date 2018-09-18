@@ -675,7 +675,13 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
-  @screen.type(app_name)
+  # Trigger startup of search providers
+  @screen.type(app_name[0])
+  # Give search providers some time to start (#13469#note-5) otherwise
+  # our search sometimes returns no results at all.
+  sleep 1
+  # Type the rest of the search query
+  @screen.type(app_name[1..-1])
   @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
