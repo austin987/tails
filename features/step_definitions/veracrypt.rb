@@ -187,7 +187,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   # (that sometimes clicks just a little bit outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)
   @screen.type('u', Sikuli::KeyModifier.ALT) # "Unlock" button
-  try_for(5, :msg => "Failed to mount the unlocked volume") do
+  try_for(10, :msg => "Failed to mount the unlocked volume") do
     begin
       unlocked_volume = disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel', showingOnly: true)
       unlocked_volume.click
