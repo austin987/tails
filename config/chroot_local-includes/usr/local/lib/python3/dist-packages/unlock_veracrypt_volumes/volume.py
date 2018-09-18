@@ -224,6 +224,11 @@ class Volume(object):
                 self.manager.mount_op_lock.release()
 
             if open_after_unlock:
+                # The GVolume now changed from the loop device to the dm device, so
+                # by also updating the udisks object we change this volume from the
+                # crypto backing loop device to the unlocked device-mapper device,
+                # which we can then open
+                self.udisks_object = self._find_udisks_object()
                 self.open()
 
         if self.is_unlocked:
