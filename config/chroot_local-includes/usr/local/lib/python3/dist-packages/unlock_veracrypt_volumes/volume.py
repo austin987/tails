@@ -255,12 +255,16 @@ class Volume(object):
 
     def unmount(self):
         logger.info("Unmounting volume %s", self.device_file)
+        unmounted_at_least_once = False
         while self.udisks_object.get_filesystem().props.mount_points:
             try:
                 self.udisks_object.get_filesystem().call_unmount_sync(GLib.Variant('a{sv}', {}),  # options
                                                                       None)                       # cancellable
+                unmounted_at_least_once = True
             except GLib.Error as e:
                 if "org.freedesktop.UDisks2.Error.NotMounted" in e.message:
+                    if not unmounted_at_least_once:
+                        logger.warning("Failed to unmount volume %s: %s", self.device_file, e.message)
                     return
                 raise
 
