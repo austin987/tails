@@ -89,4 +89,19 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('amount').value = newvalue;
     });
   }
+
+  // Pass-through the ?r= parameter to /donate/thanks and /donate/canceled
+  var url = new URL(window.location.href);
+  var r = url.searchParams.get("r");
+  if (r) {
+    let thanks = document.getElementsByName("return")[0];
+    let thanksUrl = new URL(thanks.value);
+    thanks.value = thanksUrl.origin + thanksUrl.pathname + "?r=" + r;
+    let canceled = document.getElementsByName("cancel_return")[0];
+    let canceledUrl = new URL(canceled.value);
+    canceled.value = canceledUrl.origin + canceledUrl.pathname + "?r=" + r;
+  }
+  console.log(document.getElementsByName("return")[0].value);
+  console.log(document.getElementsByName("cancel_return")[0].value);
+
 });
