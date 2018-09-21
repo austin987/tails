@@ -101,7 +101,5 @@ document.addEventListener('DOMContentLoaded', function() {
     let canceledUrl = new URL(canceled.value);
     canceled.value = canceledUrl.origin + canceledUrl.pathname + "?r=" + r;
   }
-  console.log(document.getElementsByName("return")[0].value);
-  console.log(document.getElementsByName("cancel_return")[0].value);
 
 });
