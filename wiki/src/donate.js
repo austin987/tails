@@ -94,12 +94,12 @@ document.addEventListener('DOMContentLoaded', function() {
   var url = new URL(window.location.href);
   var r = url.searchParams.get("r");
   if (r) {
-    let thanks = document.getElementsByName("return")[0];
-    let thanksUrl = new URL(thanks.value);
-    thanks.value = thanksUrl.origin + thanksUrl.pathname + "?r=" + r;
-    let canceled = document.getElementsByName("cancel_return")[0];
-    let canceledUrl = new URL(canceled.value);
-    canceled.value = canceledUrl.origin + canceledUrl.pathname + "?r=" + r;
+    var returnUrls = document.getElementsByClassName('return-url');
+    for (let i = 0; i < returnUrls.length; i++) {
+      let element = returnUrls[i];
+      let url = new URL(element.value);
+      element.value = url.origin + url.pathname + "?r=" + r;
+    }
   }
 
 });
