@@ -89,4 +89,26 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('amount').value = newvalue;
     });
   }
+
+  // Alternate between our different bitcoin addresses
+  var bitcoinAddresses = document.getElementsByClassName('bitcoin-address'),
+  current_top_weight = 0,
+  picked_value,
+  ranges_end = [];
+
+  for (let i = 0; i < bitcoinAddresses.length; i++) {
+    hide(bitcoinAddresses[i]);
+    ranges_end[i]
+    = current_top_weight
+    = current_top_weight + parseInt(bitcoinAddresses[i].dataset.weight);
+  }
+
+  picked_value = Math.floor(Math.random() * current_top_weight);
+
+  for (let i = 0; i <= bitcoinAddresses.length; i++) {
+    if (picked_value < ranges_end[i]) {
+      show(bitcoinAddresses[i]);
+      break;
+    }
+  }
 });
