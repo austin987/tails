@@ -1,5 +1,5 @@
 diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index 69354d1..3429689 100644
+index 9f269e1..dabecab 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,10 +1,11 @@
@@ -34,7 +34,7 @@ index 69354d1..3429689 100644
    owner @{PROC}/@{pid}/fd/ r,
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
-@@ -39,30 +43,32 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -39,32 +43,34 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -53,7 +53,6 @@ index 69354d1..3429689 100644
 -  owner @{torbrowser_home_dir}/components/*.so mr,
 -  owner @{torbrowser_home_dir}/browser/components/*.so mr,
 -  owner @{torbrowser_home_dir}/firefox rix,
--  owner @{torbrowser_home_dir}/plugin-container px -> torbrowser_plugin_container,
 -  owner @{torbrowser_home_dir}/{,TorBrowser/UpdateInfo/}updates/[0-9]*/updater ix,
 -  owner @{torbrowser_home_dir}/{,TorBrowser/UpdateInfo/}updates/0/MozUpdater/bgupdate/updater ix,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profiles.ini r,
@@ -64,7 +63,6 @@ index 69354d1..3429689 100644
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so.* mr,
 +  @{torbrowser_home_dir}/ r,
 +  @{torbrowser_home_dir}/** mr,
-+  @{torbrowser_home_dir}/plugin-container px -> torbrowser_plugin_container,
 +
 +  owner "@{HOME}/Tor Browser/" rw,
 +  owner "@{HOME}/Tor Browser/**" rwk,
@@ -89,9 +87,13 @@ index 69354d1..3429689 100644
 +  /usr/share/doc/tails/website/ r,
 +  /usr/share/doc/tails/website/** r,
  
+   # Web Content processes
+-  owner @{torbrowser_firefox_executable} px -> torbrowser_plugin_container,
++  @{torbrowser_firefox_executable} px -> torbrowser_plugin_container,
+ 
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -86,12 +92,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -88,12 +94,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -104,7 +106,7 @@ index 69354d1..3429689 100644
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
  
-@@ -105,6 +105,32 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -107,6 +107,30 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
@@ -114,8 +116,6 @@ index 69354d1..3429689 100644
 +  deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
 +  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
 +  deny /usr/local/lib/tor-browser/update.test/ rw,
-+
-+  @{torbrowser_firefox_executable} px -> torbrowser_plugin_container,
 +
 +  # Grant access to assistive technologies
 +  # (otherwise, Firefox crashes when Orca is enabled:
@@ -137,7 +137,7 @@ index 69354d1..3429689 100644
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -120,5 +146,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -122,5 +146,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
@@ -150,10 +150,19 @@ index 69354d1..3429689 100644
 +  deny /tmp/                 rwklx,
  }
 diff --git a/etc/apparmor.d/torbrowser.Browser.plugin-container b/etc/apparmor.d/torbrowser.Browser.plugin-container
-index fe95fdb..32d0c38 100644
+index 7ec8a00..346f2ad 100644
 --- a/etc/apparmor.d/torbrowser.Browser.plugin-container
 +++ b/etc/apparmor.d/torbrowser.Browser.plugin-container
-@@ -10,9 +10,9 @@ profile torbrowser_plugin_container {
+@@ -1,7 +1,7 @@
+ #include <tunables/global>
+ #include <tunables/torbrowser>
+ 
+-@{torbrowser_firefox_executable} = /home/*/.local/share/torbrowser/tbb/{i686,x86_64}/tor-browser_*/Browser/firefox.real
++@{torbrowser_firefox_executable} = /usr/local/lib/tor-browser/firefox.real
+ 
+ profile torbrowser_plugin_container {
+   #include <abstractions/gnome>
+@@ -12,9 +12,9 @@ profile torbrowser_plugin_container {
    #  - the "deny" word in the machine-id lines
    #  - the rules that deny reading /etc/pulse/client.conf
    #    and executing /usr/bin/pulseaudio
@@ -166,7 +175,7 @@ index fe95fdb..32d0c38 100644
  
    signal (receive) set=("term") peer=torbrowser_firefox,
  
-@@ -24,14 +24,15 @@ profile torbrowser_plugin_container {
+@@ -26,8 +26,8 @@ profile torbrowser_plugin_container {
    deny /etc/group r,
    deny /etc/mailcap r,
  
@@ -177,14 +186,7 @@ index fe95fdb..32d0c38 100644
  
    /etc/mime.types r,
    /usr/share/applications/gnome-mimeapps.list r,
- 
-   /dev/shm/ r,
- 
-+  owner @{PROC}/@{pid}/environ r,
-   owner @{PROC}/@{pid}/fd/ r,
-   owner @{PROC}/@{pid}/mountinfo r,
-   owner @{PROC}/@{pid}/stat r,
-@@ -39,28 +40,28 @@ profile torbrowser_plugin_container {
+@@ -42,31 +42,29 @@ profile torbrowser_plugin_container {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -198,11 +200,12 @@ index fe95fdb..32d0c38 100644
 -  owner @{torbrowser_home_dir}/browser/components/*.so mr,
 -  owner @{torbrowser_home_dir}/defaults/pref/     r,
 -  owner @{torbrowser_home_dir}/defaults/pref/*.js r,
+-  owner @{torbrowser_home_dir}/dependentlibs.list r,
 -  owner @{torbrowser_home_dir}/fonts/   r,
 -  owner @{torbrowser_home_dir}/fonts/** r,
 -  owner @{torbrowser_home_dir}/omni.ja r,
--  owner @{torbrowser_home_dir}/plugin-container ixmr,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/extensions/*.xpi r,
+-  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/startupCache/* r,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/tmp/* rw,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/fontconfig/fonts.conf r,
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/ r,
@@ -210,11 +213,12 @@ index fe95fdb..32d0c38 100644
 -  owner @{torbrowser_home_dir}/TorBrowser/Tor/*.so.* mr,
 -  owner @{torbrowser_home_dir}/Downloads/ rwk,
 -  owner @{torbrowser_home_dir}/Downloads/** rwk,
+-
+-  owner @{torbrowser_firefox_executable} ixmr -> torbrowser_plugin_container,
 +  @{torbrowser_home_dir}/ r,
 +  @{torbrowser_home_dir}/** mr,
-+  @{torbrowser_home_dir}/plugin-container ixmr,
 +
-+  owner @{HOME}/.tor-browser/profile.default/startupCache/scriptCache-child-current.bin r,
++  owner @{HOME}/.tor-browser/profile.default/startupCache/* r,
 +  owner @{HOME}/.tor-browser/profile.default/tmp/* rw,
 +
 +  owner "@{HOME}/Tor Browser/" rw,
@@ -232,10 +236,12 @@ index fe95fdb..32d0c38 100644
 +
 +  /usr/share/doc/tails/website/ r,
 +  /usr/share/doc/tails/website/** r,
++
++  @{torbrowser_firefox_executable} ixmr -> torbrowser_plugin_container,
  
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/present r,
-@@ -86,10 +87,16 @@ profile torbrowser_plugin_container {
+@@ -92,10 +90,16 @@ profile torbrowser_plugin_container {
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
