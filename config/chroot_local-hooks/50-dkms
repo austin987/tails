@@ -6,9 +6,10 @@ set -x
 
 echo "Building VirtualBox guest modules"
 
-. /usr/share/amnesia/build/variables
+. /usr/share/tails/build/variables
 
 # Import ensure_hook_dependency_is_installed()
+# and install_fake_package()
 . /usr/local/lib/tails-shell-library/build.sh
 
 # Any -dkms package must be installed *after* dkms to be properly registered
@@ -27,8 +28,9 @@ done
 # which does not match our kernel version, the modules won't be built
 # and then we should abort the build.
 for module in vboxguest vboxsf vboxvideo ; do
-   for modules_dir in /lib/modules/*/updates ; do
-      if [ ! -f "${modules_dir}/${module}.ko" ]; then
+   for modules_dir in /lib/modules/* ; do
+      found=$(find "$modules_dir" -name "${module}.ko" | wc -l)
+      if [ "$found" = 0 ]; then
 	  echo "Can not find ${module} module in '${modules_dir}" >&2
 	  exit 1
       fi
@@ -39,6 +41,10 @@ done
 # built binary module; let's delete it before the package gets purged.
 rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
 
-# Also copy the udev rules installed by virtualbox-guest-dkms to enable guest
-# additions by default.
-cp -a /lib/udev/rules.d/60-virtualbox-guest-dkms.rules /etc/udev/rules.d/
+# Install a fake package so that the real virtualbox-guest-dkms can be purged
+# when the clean-up for this hook happens, even if virtualbox-guest-utils
+# depends on it. The 4th parameter needs to embed the real package version
+# since there's a dependency on the source version between packages.
+REAL_PKG_VERSION=$(dpkg-query -W -f='${Version}\n' virtualbox-guest-dkms)
+FAKE_PKG_VERSION=${REAL_PKG_VERSION}+tails.fake1
+install_fake_package virtualbox-guest-dkms-dummy "${FAKE_PKG_VERSION}" kernel "virtualbox-guest-dkms (= ${REAL_PKG_VERSION})"

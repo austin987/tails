@@ -1,3 +1,204 @@
+tails (3.9) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 8.0 (Closes: #15803, #15907).
+      Notable user-visible changes and relevant details:
+      · Adjust to the fact Tor Browser 8.0a10 replaces firefox with a wrapper.
+      · Don't use the bundled copy of libstdc++.so.6, ours is recent enough.
+      · Drop obsolete Torbutton prefs (Closes: #15706).
+      · Switch back to 128px icons (Closes: #15081).
+      · AppArmor profile: take into account new Firefox binary path.
+    - Upgrade Thunderbird to 60.0 (Closes: #15792).
+      Notable user-visible changes and relevant details:
+      · AppArmor profile: patch to avoid conflicting x modifiers for ps(1).
+    - Upgrade tor to 0.3.4.7-rc (Closes: #15772).
+
+  * Security fixes
+    - Upgrade Linux to 4.17.17-1 and intel-microcode to 3.20180807a.1
+      This fixes CVE-2018-3620 aka. Foreshadow aka. L1 Terminal Fault
+      (Closes: #15796).
+    - Upgrade OpenSSH to 1:7.4p1-10+deb9u4 (DSA-4280).
+
+  * Bugfixes
+    - Fix Totem on Intel graphics cards by inlining the backported mesa
+      and dri-enumerate abstractions into its AppArmor profile: they are needed
+      with recent Mesa and libdrm (Closes: #15821). Regression introduced
+      in 3.9~rc1.
+    - Fix unlocking "hidden" TrueCrypt/VeraCrypt volumes via GNOME Shell
+      (Closes: #15843).
+    - Fix confusing error message when unlocking TrueCrypt/VeraCrypt volumes
+      (Closes: #15733).
+    - Revert to Stretch's X.Org nouveau video driver (Closes: #15833).
+      It seems that the regression brought by the upgraded one
+      is worse than the improvements reported after our call for testing.
+      Regression introduced in 3.9~rc1.
+    - Use the intel X.Org driver for Intel Corporation UHD Graphics 620.
+    - Fix regressions introduced in 3.9~rc1 in/by Additional Software Packages:
+      · Don't break new empty persistence configuration files creation when
+        permissions are incorrect (Closes: #15802).
+      · Fix UX when the user has specified a distribution or version
+        for a given package in their live-additional-software.conf
+        (Closes: #15822).
+      · Don't show installation notifications on upgrade (Closes: #15879).
+    - Make more Additional Software Packages strings translatable in the
+      configuration dialog and PolicyKit messages.
+
+  * Minor improvements and updates
+    - Upgrade firmware-nonfree to 20180825-1.
+    - Update the deb.torproject.org APT repository signing key.
+    - Unlock VeraCrypt Volumes: add disclaimer (Closes: #15849).
+
+  * Test suite
+    - Update Thunderbird test suite for 60.0 (Closes: #15791).
+    - Fix various robustness issues.
+    - Make the Chutney nodes use a higher V3AuthVotingInterval to make client
+      bootstrap more robust (Closes: #15799).
+    - Update the Tor Launcher binary path.
+    - Adjust to the fact "New Circuit for this Site" is now in the site
+      information and not under the Torbutton anymore.
+    - Delete unused images.
+
+ -- Tails developers <tails@boum.org>  Tue, 04 Sep 2018 12:15:43 +0000
+
+tails (3.9~rc1) unstable; urgency=medium
+
+  * Major changes
+    - Integrate the Additional Software Packages feature into the desktop
+      and revamp the interface of "Configure Persistent Volume".
+    - Support TrueCrypt/VeraCrypt encrypted volumes on the desktop.
+    - Upgrade Tor Browser to 8.0a9, based on Firefox 60 ESR (Closes: #15023).
+      Notable user-visible changes and relevant details:
+      · Drop search engine customization and stick to Tor Browser's defaults.
+      · Upgrade uBlock Origin to its WebExtension version and now rely
+        on the filter lists shipped in the Debian package.
+      · Tweak the number of web content processes to work better with 2 GiB
+        of RAM (Closes: #15716).
+      · Revamp how we're handling our custom prefs, drop obsolete ones,
+        reduce our delta with pristine Tor Browser.
+    - Upgrade Thunderbird to 60.0b10 (Closes: #15091). Notable details:
+      · Install Torbirdy 0.2.5 from stretch-backports and drop our patches
+        that were merged upstream.
+      · Enable the optional part of the fixes for EFAIL (Closes: #15602).
+    - Upgrade Linux to 4.17 (Closes: #15763).
+    - Upgrade tor to 0.3.4.6-rc (Closes: #15770).
+    - Upgrade to Debian Stretch 9.5.
+
+  * Security fixes
+    - Upgrade CUPS to 2.2.1-8+deb9u2 (DSA-4243).
+    - Upgrade Exiv2 to 0.25-3.1+deb9u1 (DSA-4238).
+    - Upgrade FUSE to 2.9.7-1+deb9u1 (DSA-4257).
+    - Upgrade GDM to 3.22.3-3+deb9u2 (DSA-4270).
+    - Upgrade libsoup to 2.56.0-2+deb9u2 (DSA-4241).
+    - Upgrade Imagemagick to 8:6.9.7.4+dfsg-11+deb9u5 (DSA-4245).
+    - Upgrade ffmpeg to 7:3.2.12-1~deb9u1 (DSA-4258, DSA-4249).
+    - Upgrade libmspack to 0.5-1+deb9u2 (DSA-4260).
+    - Upgrade Samba to 2:4.5.12+dfsg-2+deb9u3 (DSA-4271).
+    - Upgrade the Apache XML Security for C++ library to 1.7.3-4+deb9u1
+      (DSA-4265).
+
+  * Bugfixes
+    - Don't display the Enigmail configuration wizard in every Tails session
+      (Closes: #15693, #15746). Fix against Tails 3.8.
+    - Make the torstatus GNOME Shell extension actually translatable
+      (Closes: #15715). Fix against the first Tails release that included
+      this extension.
+    - Drop Icedove → Thunderbird migration code which started causing trouble.
+    - Tails Installer:
+      · Link to upgrade documentation when upgrading (Closes: #7904).
+      · Show the reinstall option only when the device is big enough to make
+        a full reinstallation (Closes: #14810).
+      · Make the main window fit in a 600px-high screen (Closes: #14849).
+      · Show the correct device size in the reinstall confirmation dialog
+        (Closes: #15590).
+    - Tails Greeter: don't display file:/// URLs to users (Closes: #15582).
+
+  * Minor improvements and updates
+    - Install Mesa and libdrm* from stretch-backports and upgrade the Nouveau
+      X.Org video driver to 1.0.15. This improves support for some graphics
+      cards such as NVIDIA Pascal series (Closes: #14910)
+    - htpdate: improve diagnostics output when the date header can't be fetched.
+    - Onion Grater: support named AppArmor profiles.
+    - Update Onion Grater's config for new Tor Browser AppArmor profile name.
+    - Enable e10s in the Unsafe Browser.
+    - Delete all search plugins for the Unsafe Browser (Closes: #15708).
+    - Display a deprecation warning when starting Liferea (#11082).
+    - Upgrade VirtualBox guest modules to 5.2.16-dfsg-3~bpo9+2.
+    - Use Tor Browser for browsing the documentation even when offline
+      (Closes: #15720).
+    - Provide feedback while Tor Browser, "Tails documentation"
+      or "Report an error" are starting (Closes: #15101).
+    - WhisperBack: remove the right pane (Closes: #7180).
+    - tails-debugging-info: return machine-readable, structured data.
+      Adjust WhisperBack accordingly (Closes: #8514). This paves the way
+      towards more usable bug reports (#8722).
+    - Port lots of our Perl code to more lightweight libraries.
+      This decreases the amount of memory used by the persistence
+      configuration interface.
+    - Do not hide applications that require an admin password (Closes: #11013).
+    - Try unlocking every persistent volume when multiple ones are
+      available (Closes: #15653).
+    - Upgrade Electrum to 3.1.3-1~bpo9+1.
+    - Upgrade most firmware to 20180518-1.
+    - Upgrade Intel microcode to 3.20180703.2~bpo9+1.
+    - Upgrade AMD microcode to 3.20180524.1.
+
+  * Build system
+    - Drop AppArmor feature set pinning: this is now done in Debian Stretch
+      (Closes: #15341).
+    - Remove the now unused deb.torproject.org sid APT source (Closes: #15638).
+    - Install OnionShare from our custom APT repo instead of from sid.
+      We've mistakenly tracked sid for a while and it has become a problem,
+      so stick to the version that works for us until Tails 4.0.
+    - Fix building the ISO on zfs by dropping the cache=none setting for
+      vmproxy's storage (Closes: #14404).
+    - Update the Vagrant basebox for any change under vagrant/.
+      Previously, some relevant changes were not effective until something under
+      vagrant/definitions/tails-builder/ was changed.
+    - Make intltool ignore .py files: `intltool-update --maintain` seems to be
+      buggy with .py files.
+    - Refresh our CUPS AppArmor profile patch to apply on 2.2.1-8+deb9u2.
+    - Make it more obvious that the .orig file check is fatal (Closes: #15727).
+    - Delete baseboxes once they're 6 months old instead of 4.
+      This is more in line with the delay between our major releases these days.
+    - Rename /usr/share/amnesia to /usr/share/tails. It was about time.
+    - Abort the build if /etc/{passwd,group} has changed (Closes: #15419).
+      Such changes can break Tails after an automatic upgrade was applied
+      so let's detect it ASAP. Consequently, ensure a few GIDs — that wanted
+      to play musical chairs — are the same as in Tails 3.8 (Closes: #15695).
+    - Don't fail the build if the APT lists don't include any package
+      whose name matches ^geoclue.
+
+  * Test suite
+    - Adjust to the new tails-persistence-setup API.
+    - Update the Tor Browser's AppArmor profile name.
+    - Re-enable the "I can print the current page […]" test.
+    - Update tests wrt. the fact tails-upgrade-frontend-wrapper was ported
+      to Python (Closes: #15379).
+    - Make a test more robust by waiting for the page to have loaded.
+    - Adjust to the fact the WhisperBack debugging info is now configured
+      in a machine-readable file.
+    - Remove test for tails-debugging-info, that has been a no-op for a while.
+    - Adjust for Tor Browser 8.
+    - Make the "I open the address" step more robust and accordingly
+      stop marking the tests that use it in the Unsafe Browser
+      as fragile (refs: #14771).
+    - De-duplicate a number of images of standard GTK+ 3 widgets.
+    - Make the audio and WebM tests more robust.
+    - Make the "I start the Tor Browser in offline mode" step more robust.
+    - Make the "AppArmor has (not )? denied" step more robust.
+    - Don't try and use XVFB_PID if it's not set (Closes: #15730).
+    - Adjust Pidgin test to use a certificate that's still in Debian
+      (Closes: #15762).
+    - Use a hopefully more reliable public GnuPG key and make tests
+      more robust against new subkeys being added (Closes: #15771).
+    - Stop hard-coding the list of RTL Tor Browser locales.
+    - Fix the "Unsafe Browser can be used in all languages supported in Tails"
+      test for locales that have a translated homepage (Closes: #11711).
+    - Take into account that apt(8) won't return when run in the remote shell
+      with the ASP hooks enabled.
+
+ -- Tails developers <tails@boum.org>  Thu, 16 Aug 2018 18:37:47 +0000
+
 tails (3.8) unstable; urgency=medium
 
   * Security fixes
@@ -219,7 +420,7 @@ tails (3.6) unstable; urgency=medium
       dialog. (Closes: #8775)
     - Dogtailify electrum.feature.
     - Add additional software packages feature. (Closes: #14572)
-    - Disable test that is broken due to a Tor Browser bug. (Closes: #15336)
+    - Disable test that is broken due to a Tor Browser bug. (refs: #15336)
 
  -- Tails developers <tails@boum.org>  Mon, 12 Mar 2018 21:28:29 +0100
 
