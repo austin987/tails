@@ -1,5 +1,5 @@
 diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index 9f269e1..dabecab 100644
+index 9f269e1..8c7c830 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,10 +1,11 @@
@@ -106,7 +106,7 @@ index 9f269e1..dabecab 100644
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
  
-@@ -107,6 +107,30 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -107,6 +107,29 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
@@ -114,7 +114,6 @@ index 9f269e1..dabecab 100644
 +  deny @{PROC}/@{pid}/net/route r,
 +  deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
 +  deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-+  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
 +  deny /usr/local/lib/tor-browser/update.test/ rw,
 +
 +  # Grant access to assistive technologies
@@ -137,7 +136,7 @@ index 9f269e1..dabecab 100644
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -122,5 +146,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -122,5 +145,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
