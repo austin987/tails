@@ -332,6 +332,22 @@ After a new Tails release is out
 
 ### If you just put out a final release
 
+If the release was a major one, then:
+
+1. [[Hard reset the `stable` APT suite to
+   the state of the `testing` one|APT_repository/custom#workflow-reset]].
+
+2. Empty `config/APT_overlays.d` in the `stable` branch:
+
+        git checkout stable && \
+		if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
+           git rm config/APT_overlays.d/* && \
+           git commit config/APT_overlays.d/ \
+              -m "Empty the list of APT overlays: they were merged"
+        fi
+
+In any case:
+
 * [[merge `stable` or `testing` into
   `devel`|APT_repository/custom#workflow-merge-main-branch]]
 * increment the version number in `devel`'s `debian/changelog` to match
@@ -357,18 +373,6 @@ After a new Tails release is out
            "Dummy entry for next release." && \
         git commit debian/changelog \
            -m "Add dummy changelog entry for ${NEXT_PLANNED_MINOR_VERSION:?}."
-
-If the release was a major one, then:
-
-1. [[Hard reset the stable APT suite to
-   the state of the testing one|APT_repository/custom#workflow-reset]].
-
-2. Empty `config/APT_overlays.d` in the `stable` branch:
-
-        git checkout stable && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
 
 ### Else, if you just released a RC
 
