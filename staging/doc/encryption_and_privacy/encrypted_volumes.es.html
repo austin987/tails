@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+
+<html lang="es" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Create and use LUKS encrypted volumes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+<link rel="prev" href="./keyringer.es.html" title="Compartir secretos encriptados con keyringer" />
+
+<link rel="up" href="../encryption_and_privacy.index.es.html" title="encryption and privacy.index.es" />
+
+<link rel="next" href="./veracrypt.es.html" title="Using VeraCrypt encrypted volumes" />
+
+
+
+
+</head>
+
+
+<body class="es">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.es.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.es.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../doc.es.html">doc</a></li>
+
+
+
+
+
+<li><a href="../encryption_and_privacy.es.html">encryption and privacy</a></li>
+
+
+
+
+<li>Create and use LUKS encrypted volumes</li>
+
+</ul>
+</span>
+<span class="title">
+Create and use LUKS encrypted volumes
+</span>
+</span>
+</div>
+
+
+
+
+<div id="otherlanguages">
+<ul>
+   
+   <li class="current">
+   <span class="visible">EspaÃ±ol
+(48&nbsp;%)
+   </span>
+   <span class="hidden">EspaÃ±ol
+(48&nbsp;%)
+   </span>
+   </li>
+
+   
+
+
+   
+
+   <li  class="master">
+
+   <span class="visible"><a href="./encrypted_volumes.en.html">en</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.en.html">English
+    : master 
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.ar.html">ar</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.ar.html">Arabic
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.ca.html">ca</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.ca.html">Catalan
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.de.html">de</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.de.html">Deutsch
+   (23%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.fa.html">fa</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.fa.html">Farsi
+   (20%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.fr.html">fr</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.fr.html">Français
+   (89%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.it.html">it</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.it.html">Italiano
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.pl.html">pl</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.pl.html">Polish
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.pt.html">pt</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.pt.html">PortuguÃªs
+   (5%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.sr_Latn.html">sr_Latn</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.sr_Latn.html">Serbian(Latin)
+   (0%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.tr.html">tr</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.tr.html">Turkish
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.ru.html">ru</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.ru.html">Russian
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.zh.html">zh</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.zh.html">Chinese
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+
+   <li >
+
+   <span class="visible"><a href="./encrypted_volumes.zh_TW.html">zh_TW</a></span>
+   <span class="hidden"><a href="./encrypted_volumes.zh_TW.html">Chinese(Taiwan)
+   (4%)
+   </a>
+   </span>
+
+   </li>
+   
+</ul>
+</div>
+
+
+
+
+<div class="trails">
+<div class="trail">
+
+<span class="trailprev">
+<span class="trailarrow">←</span>
+<a href="./keyringer.es.html">Compartir secretos encriptados con keyringer</a>
+<span class="trailsep">|</span>
+</span>
+
+<span class="trailup">
+<a href="../encryption_and_privacy.index.es.html">encryption and privacy.index.es</a>
+</span>
+
+<span class="trailnext">
+<span class="trailsep">|</span>
+<a href="./veracrypt.es.html">Using VeraCrypt encrypted volumes</a>
+<span class="trailarrow">→</span>
+</span>
+
+</div>
+</div>
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.es.html"><span class="download">Instala</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.es.html">Acerca</a></li>
+    <li><a href="../../getting_started.es.html">Comenzando…</a></li>
+    <li><a href="../../doc.es.html">Documentación</a></li>
+    <li><a href="../../support.es.html">Ayuda &amp; Soporte</a></li>
+    <li><a href="../../contribute.es.html">Colabora</a></li>
+    <li><a href="../../news.es.html">Noticias</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donar</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Introduction to LUKS</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Comparison between LUKS and VeraCrypt</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index2h1">Crea una partición cifrada</a>
+	<ol>
+		<li class="L2"><a href="#index2h2">Identifica tu dispositivo de almacenamiento externo</a>
+		</li>
+		<li class="L2"><a href="#index3h2">Formatea el dispositivo</a>
+		</li>
+		<li class="L2"><a href="#index4h2">Crea una nueva partición cifrada</a>
+		</li>
+		<li class="L2"><a href="#index5h2">Usa la nueva partición</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index3h1">Abrir una partición cifrada existente</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Guardando documentos sensibles</a>
+	</li>
+	<li class="L1"><a href="#index5h1">Abriendo volúmenes cifrados desde otros sistemas operativos</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Introduction to <span class="application">LUKS</span></h1>
+
+<div class="tip">
+
+<p>The simplest way to carry around the documents that you want to use
+with Tails encrypted is to use the <a href="../first_steps/persistence.es.html">encrypted persistent
+storage</a>.</p>
+
+</div>
+
+
+<p>You can create other encrypted volumes using
+<span class="application">LUKS</span> to encrypt, for example, another
+USB stick or an external hard disk.
+<span class="application">LUKS</span> is the standard for disk
+encryption in Linux.</p>
+
+<ul>
+<li><span class="application">Discos GNOME</span> te permite crear volúmenes
+cifrados.</li>
+<li>El escritorio de GNOME te permite abrir volúmenes cifrados.</li>
+</ul>
+
+
+<h2><a name="index1h2"></a>Comparison between <span class="application">LUKS</span> and <span class="application">VeraCrypt</span></h2>
+
+<p>You can also open <span class="application">VeraCrypt</span> encrypted
+volumes in Tails. <span class="application">VeraCrypt</span> is a disk
+encryption tool for Windows, macOS, and Linux. <a href="./veracrypt.es.html">See our documentation
+about <span class="application">VeraCrypt</span>.</a></p>
+
+<p>We recommend you use:</p>
+
+<ul>
+<li><span class="application">VeraCrypt</span> to share encrypted files
+across different operating systems.</li>
+<li><span class="application">LUKS</span> to encrypt files for Tails and
+Linux.</li>
+</ul>
+
+
+<table>
+<tr><th></th><th class="w30"><span class="application">LUKS</span></th><th class="w30"><span class="application">VeraCrypt</span></th></tr>
+<tr><td>Compatibility</td><td>Linux</td><td>Windows + macOS + Linux</td></tr>
+<tr><td>Create new volumes</td><td class="check"><span class="check">Yes</span></td><td class="cross">Outside of Tails</td></tr>
+<tr><td>Open and modify existing volumes</td><td class="check">Yes</td><td class="check">Yes</td></tr>
+<tr><td>Encrypted partitions (or entire disks) ¹</td><td class="check">Yes</td><td class="check">Yes</td></tr>
+<tr><td>Encrypted file containers ¹</td><td class="cross">Complicated ²</td><td class="check">Easy</td></tr>
+<tr><td>Plausible deniability ³</td><td class="cross">No</td><td class="check">Yes</td></tr>
+<tr><td>Ease of use</td><td class="check">Easier</td><td class="cross">More complicated</td></tr>
+<tr><td>Speed</td><td class="check">Faster</td><td class="cross">Slower</td></tr>
+</table>
+
+
+<ol>
+<li><p>See the <a href="./veracrypt.en.html#container-vs-partition">difference between <em>file containers</em> and <em>partitions</em></a>.</p></li>
+<li><p>See <a href="http://www.tylerburton.ca/2014/06/how-to-migrate-from-truecrypt-to-luks-file-containers/">Tyler Burton: How to migrate from TrueCrypt to LUKS file containers</a>.</p></li>
+<li><p><em>Plausible deniability</em>: in some cases (for example, with
+<span class="application">VeraCrypt</span> hidden volumes), it is
+impossible for an adversary to technically prove the existence of an
+encrypted volume.</p>
+
+<p>Still, <a href="https://en.wikipedia.org/wiki/deniable%5Fencryption">deniable encryption</a> might not protect you if
+you are forced to reveal the existence of the encrypted volume. See:</p>
+
+<ul>
+<li><a href="https://www.veracrypt.fr/en/Plausible%20Deniability.html">VeraCrypt: Plausible Deniability</a></li>
+<li><a href="https://securityinabox.org/en/guide/veracrypt/windows#creating-a-hidden-volume">Security-in-a-Box: Creating a hidden volume</a></li>
+</ul>
+</li>
+</ol>
+
+
+<h1><a name="index2h1"></a>Crea una partición cifrada</h1>
+
+<p>Para abrir <span class="application">GNOME Disks</span> elige
+<span class="menuchoice">
+  <span class="guimenu">Aplicaciones</span>&nbsp;▸
+  <span class="guisubmenu">Utilidades</span>&nbsp;▸
+  <span class="guimenuitem">Discos</span></span>.</p>
+
+<h2><a name="index2h2"></a>Identifica tu dispositivo de almacenamiento externo</h2>
+
+<p><span class="application">Disks</span> lists all the current storage
+devices on the left side of the screen.</p>
+
+<ol>
+<li><p>Introduce el dispositivo de almacenamiento externo que quieres usar.</p></li>
+<li><p>Un nuevo dispositivo aparece en la lista de dispositivos de
+ almacenamiento. Haz click en él:</p>
+
+<p> <img src="./encrypted_volumes/storage_devices_after.png" width="248" height="174" alt="" class="img" /></p></li>
+<li><p>Check that the description of the device on the right side of the screen
+corresponds to your device: its brand, its size, etc.</p></li>
+</ol>
+
+
+<h2><a name="index3h2"></a>Formatea el dispositivo</h2>
+
+<ol>
+<li><p>Click on the <span class="guimenu"><img src="../../lib/open-menu.png" width="16" height="16" alt="Menu" class="symbolic" /></span> button in the titlebar and choose
+ <span class="guilabel">Format Disk…</span> to erase all the existing
+ partitions on the device.</p></li>
+<li><p>En el diálogo <span class="guilabel">Formatea Disco</span>:</p>
+
+<ul>
+<li><p>Si quieres borrar todos los datos de modo seguro, elige <span class="guilabel">Sobreescribir los datos con ceros</span> en el menú
+ desplegable <span class="guilabel">Borrar</span>.</p></li>
+<li><p>Elige <span class="guilabel">Compatible con todos los sistemas y
+dispositivos (MBR/DOS)</span> en la el menú desplegable <span class="guilabel">Tipo</span>.</p></li>
+</ul>
+
+
+<p> Entonces haz click en el botón <span class="button">Format…</span>.</p></li>
+<li><p>In the confirmation dialog, make sure that the device is correct. Click
+ <span class="button">Format</span> to confirm.</p></li>
+</ol>
+
+
+<h2><a name="index4h2"></a>Crea una nueva partición cifrada</h2>
+
+<p>Now the schema of the partitions in the middle of the screen shows an empty
+device:</p>
+
+<p><img src="./encrypted_volumes/empty_device.png" width="491" height="293" alt="Free Space 8.1 GB" class="img" /></p>
+
+<ol>
+<li><p>Click on the <span class="guimenu"><img src="../../lib/list-add.png" width="16" height="16" alt="Create
+ partition" class="symbolic" /></span> button to create a new
+ partition on the device.</p></li>
+<li><p>En el diálogo <span class="guilabel">Crear partición</span>:</p>
+
+<ul>
+<li><p><span class="guilabel">Partition Size</span>: you can create a
+ partition on the whole device or only on part of it. In this example
+ we are creating a partition of 4.0 GB on a device of 8.1 GB.</p></li>
+<li><p><span class="guilabel">Type</span>: choose <span class="guilabel">Encrypted, compatible with Linux systems (LUKS +
+Ext4)</span> from the drop-down list.</p></li>
+<li><p><span class="guilabel">Name</span>: you can set a name for the
+partition.  This name remains invisible until the partition is open
+but can help you to identify it during use.</p></li>
+<li><p><span class="guilabel">Passphrase</span>: type a passphrase for the
+encrypted partition and repeat it to confirm.</p></li>
+</ul>
+
+
+<p> Haz click en <span class="button">Crear</span>.</p>
+
+<p> <div class="bug">
+ <p>If an error occurs while creating the new partition, try to unplug the
+ device, restart <span class="application">GNOME Disks</span>,
+ and follow all steps again from the beginning.</p>
+ </div></p></li>
+<li><p>Creating the partition takes from a few seconds to a few minutes. After
+ that, the new encrypted partition appears in the volumes on the device:</p>
+
+<p> <img src="./encrypted_volumes/encrypted_partition.png" width="491" height="321" alt="Partition 1 4.0 GB LUKS / secret 4.0 GB Ext4" class="img" /></p></li>
+<li><p>If you want to create another partition in the free space on the
+ device, click on the free space and then click on the <span class="guimenu"><img src="../../lib/list-add.png" width="16" height="16" alt="Create partition" class="symbolic" /></span> button again.</p></li>
+</ol>
+
+
+<h2><a name="index5h2"></a>Usa la nueva partición</h2>
+
+<p>Puedes abrir esta nueva partición desde la barra lateral del explorador de
+archivos con el nombre que le diste.</p>
+
+<p>After opening the partition with the file browser, you can also access it
+from the <span class="guimenu">Places</span> menu.</p>
+
+<h1><a name="index3h1"></a>Abrir una partición cifrada existente</h1>
+
+<p>When plugging in a device containing an encrypted partition, Tails does not
+open the partition automatically but you can do so from the file browser.</p>
+
+<ol>
+<li><p>Elige
+<span class="menuchoice">
+  <span class="guimenu">Lugares</span>&nbsp;▸
+  <span class="guisubmenu">Equipo</span></span>
+para abrir el explorador de archivos.</p></li>
+<li><p>Da click en la partición cifrada que quieres abrir en la barra lateral.</p>
+
+<p><img src="./encrypted_volumes/nautilus_encrypted.png" width="659" height="542" alt="File browser with &#39;4.0 GB Encrypted&#39; entry in the sidebar" class="img" /></p></li>
+<li><p>Enter the passphrase of the partition in the password prompt and click
+<span class="button">Unlock</span>.</p></li>
+<li><p>After opening the partition with the file browser, you can also access it
+from the <span class="guimenu">Places</span> menu.</p></li>
+<li><p>To close the partition after you finished using it, click on the <span class="guimenu"><img src="../../lib/media-eject.png" width="16" height="16" alt="Eject" class="symbolic" /></span> button next to the partition in the sidebar of the
+file browser.</p></li>
+</ol>
+
+
+<h1><a name="index4h1"></a>Guardando documentos sensibles</h1>
+
+<p>Such encrypted volumes are not hidden. An attacker in possession of the
+device can know that there is an encrypted volume on it. Take into
+consideration that you can be forced or tricked to give out its passphrase.</p>
+
+<h1><a name="index5h1"></a>Abriendo volúmenes cifrados desde otros sistemas operativos</h1>
+
+<p>Es posible abrir estos volúmenes cifrados desde otros sistemas operativos,
+pero hacerlo podría comprometer la seguridad que da Tails.</p>
+
+<p>Por ejemplo, las imágenes en miniatura podrían ser creadas y guardadas por
+otro sistema operativo. O, los contenidos de los archivos podrían ser
+indexados por el otro sistema operativo.</p>
+
+<p><a id="change"></a></p>
+
+<p>Cambia la frase contraseña de una partición cifrada existente</p>
+
+<hr />
+
+<p>Para abrir <span class="application">GNOME Disks</span> elige
+<span class="menuchoice">
+  <span class="guimenu">Aplicaciones</span>&nbsp;▸
+  <span class="guisubmenu">Utilidades</span>&nbsp;▸
+  <span class="guimenuitem">Discos</span></span>.</p>
+
+<ol>
+<li><p>Plug in the external storage device containing the encrypted partition that you
+want to change the passphrase for.</p></li>
+<li><p>The device appears in the list of storage devices. Click on it:</p>
+
+<p><img src="./encrypted_volumes/storage_devices_after.png" width="248" height="174" alt="" class="img" /></p></li>
+<li><p>Check that the description of the device on the right side of the screen
+corresponds to your device: its brand, its size, etc.</p></li>
+<li><p>Click on the partition displaying a <img src="../../lib/network-wireless-encrypted.png" width="16" height="16" alt="padlock" class="symbolic" /> at the bottom-right corner.</p></li>
+<li><p>Haz click en el botón <span class="guimenu">
+<img src="../../lib/system-run.png" width="16" height="16" alt="Additional partition options" class="symbolic" />
+</span> button and choose <span class="guimenu">Change Passphrase…</span></p></li>
+</ol>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+<div class="trails">
+<div class="trail">
+
+<span class="trailprev">
+<span class="trailarrow">←</span>
+<a href="./keyringer.es.html">Compartir secretos encriptados con keyringer</a>
+<span class="trailsep">|</span>
+</span>
+
+<span class="trailup">
+<a href="../encryption_and_privacy.index.es.html">encryption and privacy.index.es</a>
+</span>
+
+<span class="trailnext">
+<span class="trailsep">|</span>
+<a href="./veracrypt.es.html">Using VeraCrypt encrypted volumes</a>
+<span class="trailarrow">→</span>
+</span>
+
+</div>
+</div>
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../../about.es.html">about.es</a>
+
+<a href="../about/features.es.html">about/features.es</a>
+
+<a href="../../contribute/reports/SponsorS/2015/2016_01.html">contribute/reports/SponsorS/2015/2016 01</a>
+
+<a href="../encryption_and_privacy.index.es.html">encryption and privacy.index.es</a>
+
+<a href="../first_steps/persistence/delete.es.html">first steps/persistence/delete.es</a>
+
+<a href="../../news/report_2017_04.html">news/report 2017 04</a>
+
+<a href="../../news/report_end_of_2014.es.html">news/report end of 2014.es</a>
+
+<a href="../../support/faq.es.html">support/faq.es</a>
+
+<a href="./veracrypt.es.html">veracrypt.es</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=doc/encryption_and_privacy/encrypted_volumes.es">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

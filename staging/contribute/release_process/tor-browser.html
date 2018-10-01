@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Upgrading the Tor Browser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../release_process.html">release process</a></li>
+
+
+
+
+<li>Upgrading the Tor Browser</li>
+
+</ul>
+</span>
+<span class="title">
+Upgrading the Tor Browser
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">The big picture</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Upgrade Tor Browser in Tails</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Sync with the upstream wrapper scripts</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Self-hosted Tor Browser tarballs archive</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Initial setup</a>
+		</li>
+		<li class="L2"><a href="#index2h2">Set up environment variables</a>
+		</li>
+		<li class="L2"><a href="#index3h2">Import a new set of Tor Browser tarballs</a>
+		</li>
+		<li class="L2"><a href="#index4h2">Commit and push your changes</a>
+		</li>
+		<li class="L2"><a href="#index5h2">Wait for the synchronization</a>
+		</li>
+		<li class="L2"><a href="#index6h2">Adjust the URL in the main Git repository</a>
+		</li>
+		<li class="L2"><a href="#index7h2">Clean up</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>The big picture</h1>
+
+<p>The Tails ISO build system <a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/10-tbb">downloads</a> a set of Tor
+Browser tarballs from a location specified in <a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt">config/chroot local-includes/usr/share/tails/tbb-dist-url.txt</a>, and
+compares their hash with previously verified ones found in
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt">config/chroot local-includes/usr/share/tails/tbb-sha256sums.txt</a>.</p>
+
+<p>Once released officially, Tor Browser tarballs can be found in
+a <a href="http://archive.torproject.org/tor-package-archive/torbrowser/">permanent (?)
+location</a>.
+However, when upgrading Tor Browser for an imminent Tails release, we
+generally have to use Tor Browser tarballs that are under QA and not
+officially released yet. So, we have to retrieve them from another,
+temporary location, such as
+<a href="http://people.torproject.org/~mikeperry/builds/">http://people.torproject.org/~mikeperry/builds/</a>. If we hard-coded
+this temporary URL in <code>tbb-dist-url.txt</code>, then our release tag would
+only be buildable for as long the tarballs stay in that place, which
+at best is a few months.</p>
+
+<p>To solve this, we host ourselves the Tor Browser tarballs we need, and
+point to <a href="http://torbrowser-archive.tails.boum.org/">this permanent
+location</a> for anything that
+we tag.</p>
+
+<p>Still, one can set an arbitrary download location in
+<code>tbb-dist-url.txt</code>, which should provide all the flexibility needed
+for development purposes.</p>
+
+<h1><a name="index2h1"></a>Upgrade Tor Browser in Tails</h1>
+
+<p>Have a look at</p>
+
+<ul>
+<li><a href="https://archive.torproject.org/tor-package-archive/torbrowser/">https://archive.torproject.org/tor-package-archive/torbrowser/</a></li>
+<li><a href="https://www.torproject.org/dist/torbrowser/">https://www.torproject.org/dist/torbrowser/</a></li>
+<li><a href="https://people.torproject.org/~mikeperry/builds/">https://people.torproject.org/~mikeperry/builds/</a></li>
+<li><a href="https://people.torproject.org/~gk/builds/">https://people.torproject.org/~gk/builds/</a></li>
+<li><a href="https://people.torproject.org/~boklm/builds/">https://people.torproject.org/~boklm/builds/</a></li>
+<li><a href="https://people.torproject.org/~linus/builds/">https://people.torproject.org/~linus/builds/</a></li>
+</ul>
+
+
+<p>and see if the desired version is available. Set <code>TBB_DIST_URL</code> to the
+chosen URL, and set <code>TBB_VERSION</code> to the desired Tor Browser version, for
+example:</p>
+
+<pre><code>TBB_DIST_URL=https://people.torproject.org/~mikeperry/builds/4.5-build5/
+TBB_VERSION=4.5-build5
+</code></pre>
+
+<div class="caution">
+Ensure you include the "-buildN" part.
+</div>
+
+
+<p>Fetch the version's hash file and its detached signature, and verify
+with GnuPG:</p>
+
+<pre><code>wget ${TBB_DIST_URL}/sha256sums-unsigned-build.txt{.asc,} &amp;&amp; \
+gpg --verify sha256sums-unsigned-build.txt{.asc,}
+</code></pre>
+
+<p>Filter the tarballs we want and make them available at build time,
+when the tarballs are fetched:</p>
+
+<pre><code>grep --color=never "\&lt;tor-browser-linux64-.*\.tar.xz$" sha256sums-unsigned-build.txt \
+| grep -v '\&lt;tor-browser-linux64-debug\.tar\.xz$' \
+&gt; config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
+</code></pre>
+
+<p>Then update the URL to the one chosen above:</p>
+
+<pre><code>echo "${TBB_DIST_URL}" | sed "s,^https://,http://," &gt; \
+     config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt
+</code></pre>
+
+<div class="note">
+<p>
+We cannot use HTTPS due to limitations/bugs in
+<code>apt-cacher-ng</code>, which often is used in Tails build
+environments. However, it is of no consequence since we verify the
+checksum file.
+</p>
+</div>
+
+
+<p>Lastly, commit:</p>
+
+<pre><code>git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
+    -m "Upgrade Tor Browser to ${TBB_VERSION}." &amp;&amp; \
+git show
+</code></pre>
+
+<div class="caution">
+<p>
+If this new Tor Browser is meant to be included in a Tails
+release, then that's not enough: as explained above, we need to host
+the corresponding tarballs ourselves, so read on the next section.
+</p>
+</div>
+
+
+<h1><a name="index3h1"></a>Sync with the upstream wrapper scripts</h1>
+
+<p>Adapt our <code>config/chroot_local-includes/usr/local/bin/tor-browser</code>
+and/or
+<code>config/chroot_local-includes/usr/local/lib/tails-shell-library/tor-browser.sh</code>
+for recent changes made in the
+<a href="https://git.torproject.org/builders/tor-browser-build.git">Tor Browser build Git repo</a>:</p>
+
+<pre><code>git log -p \
+    projects/firefox/abicheck.cc \
+    projects/firefox/start-firefox \
+    projects/tor-browser/RelativeLink/start-tor-browser
+</code></pre>
+
+<p>Then apply any relevant change, e.g. to:</p>
+
+<ul>
+<li>environment variables;</li>
+<li>commandline options passed to the <code>firefox</code> executable;</li>
+<li>required libstdc++6 version bumps; if there's been any change upstream,
+look for <code>abicheck</code> in <code>config/chroot_local-hooks/10-tbb</code> and adjust
+that hook as needed.</li>
+</ul>
+
+
+<h1><a name="index4h1"></a>Self-hosted Tor Browser tarballs archive</h1>
+
+<h2><a name="index1h2"></a>Initial setup</h2>
+
+<p>First, install <a href="https://tracker.debian.org/pkg/git%2Dannex">git-annex</a>.</p>
+
+<p>Then, make sure you have an entry for <code>git.puppet.tails.boum.org</code> in
+your <code>~/.ssh/config</code>. See <code>systems/ISO_history.mdwn</code> in the internal Git repo
+for details.</p>
+
+<p>Then, clone the metadata repository and initialize git-annex:</p>
+
+<pre><code>git clone gitolite@git.puppet.tails.boum.org:torbrowser-archive.git &amp;&amp; \
+cd torbrowser-archive &amp;&amp; \
+git annex init 
+</code></pre>
+
+<p>You now have a lot of (dangling) symlinks in place of the files that are
+available in this git-annex repo.</p>
+
+<p>To synchronize your local git-annex metadata with the remote, run:</p>
+
+<pre><code>git annex sync
+</code></pre>
+
+<h2><a name="index2h2"></a>Set up environment variables</h2>
+
+<ol>
+<li><p>Make sure you still have the environment variables defined in the
+previous section set.</p></li>
+<li><p>Make <code>TAILS_GIT_REPO</code> point to the main Tails Git repository
+checkout where <code>tbb-dist-url.txt</code> is being worked on, for example:</p>
+
+<pre><code> TAILS_GIT_REPO="$HOME/tails/git"
+</code></pre></li>
+<li><p>Make <code>TBB_ARCHIVE</code> point to your local git annex working
+copy of our Tor Browser archive, for example:</p>
+
+<pre><code> TBB_ARCHIVE="$HOME/tails/torbrowser-archive"
+</code></pre></li>
+<li><p>Make <code>TBB_IMPORT_BRANCH</code> point to the branch where you want to
+import the new Tor Browser's metadata, for example:</p>
+
+<pre><code> TBB_IMPORT_BRANCH=feature/123456-torbrowser-42.3.4
+</code></pre></li>
+</ol>
+
+
+<h2><a name="index3h2"></a>Import a new set of Tor Browser tarballs</h2>
+
+<ol>
+<li><p>Download and verify all the tarballs we need:</p>
+
+<pre><code> DL_DIR=$(mktemp --tmpdir -d "tor-browser-${TBB_VERSION}.XXXXXXXXXX")
+ CHROOT_INCLUDES="config/chroot_local-includes"
+ TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
+ TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
+ cd "$TAILS_GIT_REPO" &amp;&amp; git checkout "$TBB_IMPORT_BRANCH"
+ TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")"
+ current_branch=$(git -C "$TAILS_GIT_REPO" branch | awk '/^\* / { print $2 }')
+ for branch in "$current_branch" ; do
+    git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
+    | while read expected_sha256 tarball; do
+       (
+          cd "$DL_DIR"
+          echo "Retrieving '${TBB_TARBALLS_BASE_URL}/${tarball}'..."
+          curl --remote-name --continue-at - \
+             "${TBB_TARBALLS_BASE_URL}/${tarball}"
+       )
+    done
+    (
+       cd "$DL_DIR" &amp;&amp; \
+       git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
+          | sha256sum -c -
+    )
+ done
+</code></pre></li>
+<li><p>Move the tarballs into your local Git annex:</p>
+
+<pre><code> cd "$TBB_ARCHIVE" &amp;&amp; \
+ mkdir "$TBB_VERSION" &amp;&amp; cd "$TBB_VERSION" &amp;&amp; \
+ git annex import --duplicate "$DL_DIR/"* "$TAILS_GIT_REPO/"sha256sums-*
+</code></pre></li>
+</ol>
+
+
+<h2><a name="index4h2"></a>Commit and push your changes</h2>
+
+<pre><code>cd "$TBB_ARCHIVE" &amp;&amp; \
+git commit -m "Add Tor Browser ${TBB_VERSION}." &amp;&amp; \
+git annex sync &amp;&amp; \
+git annex copy --to origin -- "${TBB_VERSION}"
+</code></pre>
+
+<h2><a name="index5h2"></a>Wait for the synchronization</h2>
+
+<p>Once you've gone through these steps, a cronjob that runs every
+5 minutes will download the tarballs and make them available on
+<a href="http://torbrowser-archive.tails.boum.org/">http://torbrowser-archive.tails.boum.org/</a>.</p>
+
+<p>Wait for this to happen before you proceed with the next steps.</p>
+
+<p>In the meantime, you might want to import the new Tor Browser tarballs
+into your <code>apt-cacher-ng</code> local cache.</p>
+
+<h2><a name="index6h2"></a>Adjust the URL in the main Git repository</h2>
+
+<pre><code>cd "$TAILS_GIT_REPO" &amp;&amp; \
+git checkout "$TBB_IMPORT_BRANCH"
+current_branch=$(git branch | awk '/^\* / { print $2 }')
+for branch in "$current_branch" ; do
+   git checkout "$branch" &amp;&amp; \
+   echo "http://torbrowser-archive.tails.boum.org/${TBB_VERSION}/" &gt; \
+        config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt &amp;&amp; \
+   git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
+       -m "Fetch Tor Browser from our own archive." &amp;&amp; \
+   git show
+done
+</code></pre>
+
+<h2><a name="index7h2"></a>Clean up</h2>
+
+<pre><code>cd "$TBB_ARCHIVE" &amp;&amp; \
+git annex drop -- "${TBB_VERSION}" &amp;&amp; \
+rm -rf "$DL_DIR"
+</code></pre>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../release_process.html">release process</a>
+
+<a href="../working_together/roles/release_manager.html">working together/roles/release manager</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/release_process/tor-browser">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

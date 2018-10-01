@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Vagrant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../build.html">build</a></li>
+
+
+
+
+<li>Vagrant</li>
+
+</ul>
+</span>
+<span class="title">
+Vagrant
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Tails can be <a href="../build.html">built</a> in a virtual machine that is
+managed using <a href="http://vagrantup.com/">Vagrant</a> and <a href="https://github.com/vagrant-libvirt/vagrant-libvirt/">vagrant-libvirt</a>. Here lies more details
+on how Tails uses Vagrant, its configuration, and how to create and
+upload the template virtual machine.</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Configuration</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Automated basebox creation</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Jenkins</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Configuration</h1>
+
+<p>Vagrant support files are located in the <code>vagrant</code> directory at the root of the
+<a href="../git.html">amnesia.git</a> repository.</p>
+
+<p>This directory contains:</p>
+
+<ul>
+<li><code>Vagrantfile</code>: <a href="http://vagrantup.com/docs/vagrantfile/">configuration file for Vagrant</a>,</li>
+<li><code>provision/setup-tails-builder</code>: idempotent provisioning script that is
+run inside the virtual machine upon boot,</li>
+<li><code>provision/assets/build-tails</code>: build script to be run inside the
+virtual machine,</li>
+<li>to build the base box:
+
+<ul>
+<li><code>definitions/tails-builder/generate-tails-builder-box.sh</code>: Script
+that generates the base box.</li>
+<li><code>definitions/tails-builder/postinstall.sh</code>: Script that is run
+inside the base box before finalizing it, e.g. for installing the
+packages we need.</li>
+<li><code>vagrant/lib/tails_build_settings.rb</code> defines the basebox properties
+(memory, Debian version, architecture, ...) and the basebox name.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>We choose to use the <a href="http://vagrantup.com/docs/provisioners/shell.html">Shell
+provisioner</a>, as long as we
+make this script reentrant it will lower the learning curve for contributors
+not familiar with Puppet or Chef.</p>
+
+<p>The Tails <a href="https://git-tails.immerda.ch/tails/plain/vagrant/Vagrantfile">Vagrantfile</a> is
+configured to share the local clone of the Tails repository inside the running
+basebox through a 9pfs mount.</p>
+
+<h1><a name="index2h1"></a>Automated basebox creation</h1>
+
+<p>While implementing <span class="createlink">reproducible builds</span> of
+Tails, we choose to automate the basebox creation. Rather than downloading a
+big binary, everyone building Tails for the first time will start by generating
+the approriate basebox if it's not already available locally.</p>
+
+<p>To ensure that the baseboxes are identical enough, we defined a mechanism for
+its generation:</p>
+
+<p>To freeze the build environment, we use APT snapshots in the same way we do in
+the Tails build system, by storing the serials for the various APT repositories
+in <a href="https://git-tails.immerda.ch/tails/tree/vagrant/definitions/tails-builder/config/APT_snapshots.d/">vagrant/definitions/tails-builder/config/APT snapshots.d/</a>.</p>
+
+<p>Only the debian-security APT source uses Debian's APT repository, so that we
+get security fixes. This will probably not influence the reproducibility of the
+ISO. This is done in the <a href="https://git-tails.immerda.ch/tails/plain/vagrant/provision/setup-tails-builder">Vagrant provisioning script</a>.</p>
+
+<p>To ensure that changes in the Vagrant build system are still taken into account
+when using a basebox, we dynamically set the name of the basebox by including
+the short ID of the last commit in the <code>vagrant</code> directory in the related
+branch, as well as its date, in the name of the basebox. That's done with
+<a href="https://git-tails.immerda.ch/tails/tree/vagrant/lib/tails_build_settings.rb">vagrant/lib/tails build settings.rb</a> as explained above.</p>
+
+<p>We update the basebox APT snapshots serials <a href="../APT_repository/time-based_snapshots.html#bump-expiration-date-for-all-snapshots">at every Tails
+release</a>.</p>
+
+<p>A new VM is created from the basebox for each build. After the build, the VM is
+destroyed (<a href="https://labs.riseup.net/code/issues/11980">#11980</a> and <a href="https://labs.riseup.net/code/issues/11981">#11981</a>).</p>
+
+<p>The <code>keeprunning</code> build option can be used so that the VM is kept running and
+reused for subsequent builds of the same branch.</p>
+
+<p>The VM encodes (in <code>/var/lib/vagrant_box_build_from</code>) the branch for which it
+has been started for. The ISO build aborts if the branch being built is not the
+same as the one that is encoded in this file. This prevents the reuse of a
+running VM to build another branch than the one it has been started for
+initially.</p>
+
+<p>To ensure that the <code>apt-cacher-ng</code> cache is not lost when the VM is destroyed,
+it is stored in a dedicated virtual disk, and plugged into every new build VM.</p>
+
+<h1><a name="index3h1"></a>Jenkins</h1>
+
+<p>All these features and the <a href="../build.html">basic ones</a> are used by our
+Jenkins ISO builders. See <a href="../working_together/roles/sysadmins/automated_builds_in_Jenkins.html">here for
+specifics</a>.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../build.html">build</a>
+
+<a href="../working_together/roles/sysadmins/automated_builds_in_Jenkins.html">working together/roles/sysadmins/automated builds in Jenkins</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/build/vagrant-setup">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

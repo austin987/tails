@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Upstream our changes to Tor Browser&#x27;s AppArmor policy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../release_process.html">release process</a></li>
+
+
+
+
+<li>Upstream our changes to Tor Browser&#x27;s AppArmor policy</li>
+
+</ul>
+</span>
+<span class="title">
+Upstream our changes to Tor Browser&#x27;s AppArmor policy
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<h1>Preparation (first time)</h1>
+
+<p>If you don't have our <code>torbrowser-launcher</code> Git repo, clone it:</p>
+
+<pre><code>git clone tails@git.tails.boum.org:torbrowser-launcher
+</code></pre>
+
+<p>and add a remote for Debian, which is our immediate upstream:</p>
+
+<pre><code>git remote add debian https://anonscm.debian.org/git/pkg-privacy/packages/torbrowser-launcher.git
+</code></pre>
+
+<p>and add a remote for the final upstream:</p>
+
+<pre><code>git remote add upstream-repo https://github.com/micahflee/torbrowser-launcher
+</code></pre>
+
+<h1>Make our repo up-to-date</h1>
+
+<p>Fetch:</p>
+
+<pre><code>git checkout master &amp;&amp; \
+git pull &amp;&amp; \
+git fetch debian &amp;&amp; \
+git fetch upstream-repo
+</code></pre>
+
+<p>Finally, make our repo up-to-date:</p>
+
+<pre><code>LATEST_TAG="$(git tag --list 'debian/*' --sort=version:refname | grep -v -E '_bpo[0-9]' | tail -n1)"
+git merge --no-ff "${LATEST_TAG}"
+</code></pre>
+
+<p>Just pay attention that you didn't merge some unwanted version from
+Debian experimental!</p>
+
+<h1>Prepare a branch for upstream</h1>
+
+<p>Prepare a branch, e.g.:</p>
+
+<pre><code>UPSTREAM_FEATURE_BRANCH=silence-tor-browser-apparmor-logs
+git checkout -b "${UPSTREAM_FEATURE_BRANCH}" upstream-repo/master
+</code></pre>
+
+<p>Edit <code>apparmor/torbrowser.Browser.firefox</code>, adding changes that are
+supposed to go upstream , and commit. Then:</p>
+
+<pre><code>TAILS_FEATURE_BRANCH=feature/14606-silence-tor-browser-apparmor-logs
+git checkout -b "${TAILS_FEATURE_BRANCH}" origin/master
+git merge "${UPSTREAM_FEATURE_BRANCH}"
+</code></pre>
+
+<p>Again, edit <code>apparmor/torbrowser.Browser.firefox</code>, now adding changes
+that are Tails-specific, and commit. Then push:</p>
+
+<pre><code>git push -u origin "${UPSTREAM_FEATURE_BRANCH}" "${TAILS_FEATURE_BRANCH}"
+</code></pre>
+
+<p>Then submit <code>TAILS_FEATURE_BRANCH</code> for review on the Tails'
+side, and ask the reviewer to submit <code>UPSTREAM_FEATURE_BRANCH</code> as a
+pull request to
+<a href="https://github.com/micahflee/torbrowser-launcher/">upstream</a> once s/he
+is happy with its state (alternatively, the reviewer reminds the patch
+submitter to send it).</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/release_process/tor-browser_AppArmor_patch">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Tor stream isolation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../design.html">design</a></li>
+
+
+
+
+<li>Tor stream isolation</li>
+
+</ul>
+</span>
+<span class="title">
+Tor stream isolation
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Tails implements basic Tor stream isolation, using functionality
+described in
+<a href="https://gitweb.torproject.org/torspec.git/blob/HEAD:/proposals/171-separate-streams.txt">Tor proposal 171</a>.</p>
+
+<h1>Special needs</h1>
+
+<h2>Tails-specific applications</h2>
+
+<p>Tails-specific applications use a dedicated <code>SocksPort</code>, so that they
+don't help trivial correlating of other kinds of network traffic with
+Tails:</p>
+
+<ul>
+<li>incremental updates</li>
+<li>htpdate</li>
+<li>security check</li>
+<li>WhisperBack</li>
+</ul>
+
+
+<h2>Web Browser</h2>
+
+<p>Until the Tor Browser implements clever fine-grained stream isolation
+(<a href="https://bugs.torproject.org/3455">bug #3455 on Tor Project's Trac</a>) it is merely directed to a dedicated SOCKS port.</p>
+
+<h2>Destination address/port -based circuit isolation</h2>
+
+<p>Do we want to use <code>IsolateDestAddr</code> and/or <code>IsolateDestPort</code>?</p>
+
+<p>Using these settings may help protecting against traffic correlation.
+However:</p>
+
+<ul>
+<li>These settings are likely to have a performance impact on
+applications that connect to many remote hosts.</li>
+<li>These settings probably put more load on the network. On the other
+hand, the Tor people probably are happy with people using it given
+they have added the option in the first place. We will anyway ask
+them to review our proposed configuration with network load in mind
+before we ship it to the masses.</li>
+</ul>
+
+
+<p>For performance reasons, we will start with <em>not</em> using
+<code>IsolateDestAddr</code>/<code>IsolateDestPort</code> for the Tor Browser: nowadays,
+loading a mere web page often requires fetching resources from a dozen
+or more remote sources. (Also, it looks like the use of
+<code>IsolateDestAddr</code> in a modern web browser may create very uncommon
+HTTP behaviour patterns, that could ease fingerprinting.)</p>
+
+<p>Consider Pidgin with several accounts configured for different
+identities. If you connect with all of the accounts at the same time,
+they'll all get the same circuit, so the identities can be correlated.
+While Tails does not formally support using multiple contextual
+identities at the same time, Pidgin generally opens very few network
+connections, so the performance impact of using <code>IsolateDestAddr</code>
+should be small. Given how cheap it is, it looks like it is worth
+having Pidgin use a (not necessarily dedicated) <code>SocksPort</code> that has
+<code>IsolateDestAddr</code> and <code>IsolateDestPort</code> enabled.</p>
+
+<p>For the same reason, we actually want to enable <code>IsolateDestAddr</code> and
+<code>IsolateDestPort</code> for the <code>SocksPort</code> used by most applications,
+unless we tell them otherwise. It may break POP-before-SMTP
+in Thunderbird.</p>
+
+<h1>Implementation</h1>
+
+<p>A few SOCKS ports are configured
+in <a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/tor/torrc">config/chroot local-includes/etc/tor/torrc</a>:</p>
+
+<ul>
+<li>default system-wide <code>SocksPort</code> (9050): <code>IsolateDestAddr</code> and
+<code>IsolateDestPort</code> enabled</li>
+<li>dedicated <code>SocksPort</code> for Tails-specific applications (9062):
+<code>IsolateDestAddr</code> and <code>IsolateDestPort</code> enabled</li>
+<li>dedicated <code>SocksPort</code> for web browser (9150): no stream
+isolation options</li>
+<li>no specific isolation options for the <code>TransPort</code> (<a href="https://labs.riseup.net/code/issues/6378">#6378</a>)</li>
+</ul>
+
+
+<p>Applications are configured to use the right SOCKS port:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/tails/tor-browser-prefs.js">config/chroot local-includes/usr/share/tails/tor-browser-prefs.js</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/htpdate.service">config/chroot local-includes/lib/systemd/system/htpdate.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/bin/tails-security-check">config/chroot local-includes/usr/local/bin/tails-security-check</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/bin/thunderbird">config/chroot local-includes/usr/local/bin/thunderbird</a></li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../design.html">design</a>
+
+<a href="../../doc/about/features.en.html">doc/about/features</a>
+
+<a href="../../doc/about/features.ar.html">doc/about/features.ar</a>
+
+<a href="../../doc/about/features.ca.html">doc/about/features.ca</a>
+
+<a href="../../doc/about/features.de.html">doc/about/features.de</a>
+
+<a href="../../doc/about/features.es.html">doc/about/features.es</a>
+
+<a href="../../doc/about/features.fa.html">doc/about/features.fa</a>
+
+<a href="../../doc/about/features.fr.html">doc/about/features.fr</a>
+
+<a href="../../doc/about/features.it.html">doc/about/features.it</a>
+
+<a href="../../doc/about/features.pl.html">doc/about/features.pl</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../../doc/about/features.pt.html">doc/about/features.pt</a>
+
+<a href="../../doc/about/features.ru.html">doc/about/features.ru</a>
+
+<a href="../../doc/about/features.sr_Latn.html">doc/about/features.sr Latn</a>
+
+<a href="../../doc/about/features.tr.html">doc/about/features.tr</a>
+
+<a href="../../doc/about/features.zh.html">doc/about/features.zh</a>
+
+<a href="../../doc/about/features.zh_TW.html">doc/about/features.zh TW</a>
+
+<a href="../../news/version_0.14.html">news/version 0.14</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/stream_isolation">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

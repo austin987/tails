@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Building a Tails image</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../local.css" type="text/css" />
+
+
+<script src="../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../index.en.html"><img src="../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../contribute.en.html">contribute</a></li>
+
+
+
+
+<li>Building a Tails image</li>
+
+</ul>
+</span>
+<span class="title">
+Building a Tails image
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../about.en.html">About</a></li>
+    <li><a href="../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../doc.en.html">Documentation</a></li>
+    <li><a href="../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../contribute.en.html">Contribute</a></li>
+    <li><a href="../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>The following instructions will lead you through the process of building
+a Tails ISO image with <a href="http://rake.rubyforge.org/">Rake</a>, <a href="http://vagrantup.com/">Vagrant</a> and <a href="https://github.com/vagrant-libvirt/vagrant-libvirt/">vagrant-libvirt</a>.</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Requirements</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Setup the build environment</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Build Tails</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Known issues and workarounds</a>
+	</li>
+	<li class="L1"><a href="#index5h1">Build settings</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">SquashFS compression settings</a>
+		</li>
+		<li class="L2"><a href="#index2h2">Memory build settings</a>
+		</li>
+		<li class="L2"><a href="#index3h2">Network settings</a>
+		</li>
+		<li class="L2"><a href="#index4h2">Git settings</a>
+		</li>
+		<li class="L2"><a href="#index5h2">Variations useful for testing build reproducibility</a>
+		</li>
+		<li class="L2"><a href="#index6h2">Developer convenience settings</a>
+		</li>
+		<li class="L2"><a href="#index7h2">HTTP proxy settings</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index6h1">Verify if the resulting ISO is reproducible</a>
+	</li>
+	<li class="L1"><a href="#index7h1">More information</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Requirements</h1>
+
+<p>To build Tails you need:</p>
+
+<ul>
+<li>Debian 9 (Stretch) or newer</li>
+<li>the KVM virtual machine hypervisor</li>
+<li>at least 1 GiB of free RAM</li>
+<li>20 GB of free storage</li>
+</ul>
+
+
+<h1><a name="index2h1"></a>Setup the build environment</h1>
+
+<ol>
+<li><p>To install everything the Tails build system needs, execute the
+following command:</p>
+
+<pre><code>sudo apt install \
+    psmisc \
+    git \
+    rake \
+    libvirt-daemon-system \
+    dnsmasq-base \
+    ebtables \
+    qemu-system-x86 \
+    qemu-utils \
+    vagrant \
+    vagrant-libvirt \
+    vmdebootstrap &amp;&amp; \
+sudo systemctl restart libvirtd
+</code></pre></li>
+<li><p>Ensure your user can run commands as root with <code>sudo</code>.</p></li>
+<li><p>Ensure your user is in the relevant groups:</p>
+
+<pre><code>for group in kvm libvirt libvirt-qemu ; do
+   sudo adduser "$(whoami)" "$group"
+done
+</code></pre></li>
+<li><p>Logout and log back in to apply the new group memberships.</p></li>
+</ol>
+
+
+<h1><a name="index3h1"></a>Build Tails</h1>
+
+<ol>
+<li><p>To get the Tails sources and checkout the
+<a href="./git.html#main-repo">development branch</a>, execute the
+following commands:</p>
+
+<pre><code> git clone https://git-tails.immerda.ch/tails &amp;&amp; \
+ cd tails &amp;&amp; \
+ git checkout devel &amp;&amp; \
+ git submodule update --init
+</code></pre></li>
+<li><p>To build an ISO image, execute the following command:</p>
+
+<pre><code> rake build &amp;&amp; rake vm:halt
+</code></pre>
+
+<p>When the build completes, several <code>tails-*</code> files
+will appear in the current directory.</p></li>
+</ol>
+
+
+<p>You may also want to <a href="./customize.html">customize</a> the content of the ISO
+image before building it.</p>
+
+<p><a id="vagrant-known-issues"></a></p>
+
+<h1><a name="index4h1"></a>Known issues and workarounds</h1>
+
+<ul>
+<li><p>If Vagrant fails to start the Tails builder VM with an error similar
+to <code>Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0</code>,
+see <a href="https://labs.riseup.net/code/issues/11411">#11411</a>.</p></li>
+<li><p>If Vagrant failed to start the Tails builder VM the first time
+(e.g. because of permission issues or the <code>kvm</code> module not being
+loaded) it will not automatically run the provisioning script, so
+you must run <code>rake vm:provision</code> yourself before attempting your
+first <code>rake build</code>. If that fails, run <code>rake vm:destroy</code>, which
+removes this half-broken VM, and then start from scratch with
+<code>rake build</code> or similar.</p></li>
+</ul>
+
+
+<h1><a name="index5h1"></a>Build settings</h1>
+
+<p>You can customize the build system using two environment variables:</p>
+
+<ul>
+<li><p><code>ARTIFACTS</code> is the path where the ISO image is stored once the
+build completes; for example:</p>
+
+<pre><code> ARTIFACTS='/path/to/directory'
+</code></pre></li>
+<li><p>To tweak other build settings, use <code>TAILS_BUILD_OPTIONS</code>,
+a space-separated list of build options documented below.</p>
+
+<p>For example, you can speed up the build by setting:</p>
+
+<pre><code> export TAILS_BUILD_OPTIONS="ram gzipcomp"
+</code></pre>
+
+<p>This will force the build to happen in RAM and SquashFS compression
+will be done using <em>gzip</em>.</p></li>
+</ul>
+
+
+<h2><a name="index1h2"></a>SquashFS compression settings</h2>
+
+<p>One of the most expensive operations when building Tails is the creation
+of the final SquashFS. It also depends on the compression algorithm used.
+When working on the <code>stable</code> or <code>testing</code> branch, the image will be made
+using the slow but efficient default. Any other setup will switch to the
+faster <em>gzip</em>.</p>
+
+<p>Forcing a specific behaviour can be done using:</p>
+
+<ul>
+<li><strong>gzipcomp</strong>: always use <em>gzip</em> to create the SquashFS.</li>
+<li><strong>defaultcomp</strong>: always use the default compression algorithm.</li>
+</ul>
+
+
+<h2><a name="index2h2"></a>Memory build settings</h2>
+
+<p>Tails builds way faster when everything is done in memory. If your computer
+runs Linux and happens to have enough free memory before you
+start the virtual machine, it will automatically switch to 'build in RAM'
+mode.</p>
+
+<p>To force a specific behaviour please set:</p>
+
+<ul>
+<li><strong>ram</strong>: start the virtual machine with lots of memory, build Tails
+inside a <code>tmpfs</code>. Build fails if the system is not in a proper state to
+do so.</li>
+<li><strong>noram</strong>: start the virtual machine with the bare minimum needed memory if not already
+done, build Tails using the virtual machine hard disk.</li>
+</ul>
+
+
+<h2><a name="index3h2"></a>Network settings</h2>
+
+<ul>
+<li><strong>offline</strong>: This option will make the build system do its best to
+not depend on the network, e.g. if you use the VM's caching proxy
+if will <em>only</em> use cached APT lists and packages. Use this when you
+do not have an Internet connection.</li>
+</ul>
+
+
+<h2><a name="index4h2"></a>Git settings</h2>
+
+<p>You can force the build system to handle the Git tree in a special
+way:</p>
+
+<ul>
+<li><p><strong>ignorechanges</strong>: allow to make a build that will ignore changes in the Git
+repository.</p>
+
+<p>The build system can only work on files that have been <em>committed</em> to the Git
+repository. By default, it will refuse to start a build in presence of
+uncommitted changes.</p></li>
+<li><p><strong>mergebasebranch</strong>: if building from a branch (not tag!) this
+forces a merge of the base branch before the build process starts
+for real. This is mostly meant for our Jenkins deployment, so use
+at your own risk.</p></li>
+</ul>
+
+
+<h2><a name="index5h2"></a>Variations useful for testing build reproducibility</h2>
+
+<p>These options allow one to vary the build environment in ways that may
+affect reproducibility of the ISO image:</p>
+
+<ul>
+<li><p><strong>dateoffset=<em>+n</em></strong>, <strong>dateoffset=<em>-n</em></strong>: change the virtual
+machine system time by <em>+n</em> or <em>-n</em> days.</p></li>
+<li><p><strong>cpus=<em>n</em></strong>: allocate <em>n</em> CPUs to the virtual machine.
+Obviously you should not allocate more virtual CPUs than the number
+of cores available to the host system. When using Linux, the number
+of CPUs allocated will default to be the same as the host system.</p></li>
+<li><p><strong>cpumodel=<em>model</em></strong>: type of the CPUs allocated to the virtual
+machine. See
+<a href="https://libvirt.org/formatdomain.html#elementsCPU">the corresponding libvirt documentation</a>.</p></li>
+<li><p><strong>machinetype=<em>type</em></strong>: type of the QEMU machine; see the output of
+<code>qemu-system-x86_64 -machine help</code> for available options.</p></li>
+</ul>
+
+
+<h2><a name="index6h2"></a>Developer convenience settings</h2>
+
+<ul>
+<li><p><strong>keeprunning</strong>: do not clean up the builder VM on build
+success.</p></li>
+<li><p><strong>forcecleanup</strong>: ensure a new builder VM is used for <code>rake build</code>,
+and also clean up this VM after the build, no matter if it
+succeeded or not.</p></li>
+<li><p><strong>rescue</strong>: implies <strong>keeprunning</strong> and will also not clean up the
+build directory, which is useful for investigating build failures.</p></li>
+</ul>
+
+
+<h2><a name="index7h2"></a>HTTP proxy settings</h2>
+
+<p>Building Tails requires downloading a little bit more than 2 GiB of
+data. By default, the build system will configure and use its own HTTP
+caching proxy in order to speed up the following builds.</p>
+
+<p>We recommend against modifying this behavior, but you can do it with
+the following build options:</p>
+
+<ul>
+<li><p><strong>extproxy</strong>: use the external proxy configured through the <code>http_proxy</code>
+environment variable. Fail if it is not set.</p>
+
+<p><div class="bug"></p>
+
+<p><ul></p>
+
+<p>  <li>An external HTTP proxy does not save any download bandwidth unless
+  configured in a very special and undocumented way.</li></p>
+
+<p>  <li>At least one step of the build does not honor the external proxy
+  settings, so outgoing Internet connections from the build VM must be
+  allowed to go through anyway.</li></p>
+
+<p></ul></p>
+
+<p></div></p></li>
+<li><p><strong>vmproxy</strong>: use the local proxy configured in the virtual machine even
+if a local HTTP proxy is set.</p></li>
+<li><p><strong>noproxy</strong>: do not use any HTTP proxy.</p></li>
+</ul>
+
+
+<h1><a name="index6h1"></a>Verify if the resulting ISO is reproducible</h1>
+
+<p>See <a href="./build/reproducible.html#verify-iso">verification</a> section.</p>
+
+<h1><a name="index7h1"></a>More information</h1>
+
+<p>To know all available Rake tasks, please run <code>rake -T</code>.</p>
+
+<p>More documentation about the build process can be found in the <a href="http://live.debian.net/manual/oldstable/html/live-manual.en.html">Debian
+Live Manual</a>.</p>
+
+<p>Details about how this Vagrant build system is setup, see its
+<a href="./build/vagrant-setup.html">design page</a>.</p>
+
+<p>Other related pages:</p>
+
+<div class="map">
+<ul>
+<li>
+<a href="./build/manually.html" class="mapitem">manually</a>
+</li>
+<li>
+<a href="./build/reproducible.html" class="mapitem">reproducible</a>
+</li>
+<li>
+<a href="./build/vagrant-setup.html" class="mapitem">vagrant-setup</a>
+</li>
+<li>
+<a href="./build/website.html" class="mapitem">website</a>
+<ul>
+<li>
+<a href="./build/website/languages.inline.html" class="mapitem">languages.inline</a>
+</li>
+<li>
+<a href="./build/website/src.inline.html" class="mapitem">src.inline</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./build/reproducible.html">build/reproducible</a>
+
+<a href="./build/vagrant-setup.html">build/vagrant-setup</a>
+
+<a href="../contribute.en.html">contribute</a>
+
+<a href="../contribute.ar.html">contribute.ar</a>
+
+<a href="../contribute.ca.html">contribute.ca</a>
+
+<a href="../contribute.de.html">contribute.de</a>
+
+<a href="../contribute.es.html">contribute.es</a>
+
+<a href="../contribute.fa.html">contribute.fa</a>
+
+<a href="../contribute.fr.html">contribute.fr</a>
+
+<a href="../contribute.it.html">contribute.it</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../contribute.pl.html">contribute.pl</a>
+
+<a href="../contribute.pt.html">contribute.pt</a>
+
+<a href="../contribute.ru.html">contribute.ru</a>
+
+<a href="../contribute.sr_Latn.html">contribute.sr Latn</a>
+
+<a href="../contribute.tr.html">contribute.tr</a>
+
+<a href="../contribute.zh.html">contribute.zh</a>
+
+<a href="../contribute.zh_TW.html">contribute.zh TW</a>
+
+<a href="./customize.html">customize</a>
+
+<a href="./design.html">design</a>
+
+<a href="../doc/about/features.en.html">doc/about/features</a>
+
+<a href="../doc/about/features.ar.html">doc/about/features.ar</a>
+
+<a href="../doc/about/features.ca.html">doc/about/features.ca</a>
+
+<a href="../doc/about/features.de.html">doc/about/features.de</a>
+
+<a href="../doc/about/features.es.html">doc/about/features.es</a>
+
+<a href="../doc/about/features.fa.html">doc/about/features.fa</a>
+
+<a href="../doc/about/features.fr.html">doc/about/features.fr</a>
+
+<a href="../doc/about/features.it.html">doc/about/features.it</a>
+
+<a href="../doc/about/features.pl.html">doc/about/features.pl</a>
+
+<a href="../doc/about/features.pt.html">doc/about/features.pt</a>
+
+<a href="../doc/about/features.ru.html">doc/about/features.ru</a>
+
+<a href="../doc/about/features.sr_Latn.html">doc/about/features.sr Latn</a>
+
+<a href="../doc/about/features.tr.html">doc/about/features.tr</a>
+
+<a href="../doc/about/features.zh.html">doc/about/features.zh</a>
+
+<a href="../doc/about/features.zh_TW.html">doc/about/features.zh TW</a>
+
+<a href="./how/code.html">how/code</a>
+
+<a href="./how/code/HACKING.html">how/code/HACKING</a>
+
+<a href="../news/report_2014_06-07.html">news/report 2014 06-07</a>
+
+<a href="../news/report_2016_02.html">news/report 2016 02</a>
+
+<a href="../news/report_2017_05.html">news/report 2017 05</a>
+
+<a href="../news/report_2017_09.html">news/report 2017 09</a>
+
+<a href="../news/reproducible_Tails.en.html">news/reproducible Tails</a>
+
+<a href="../news/reproducible_Tails.ar.html">news/reproducible Tails.ar</a>
+
+<a href="../news/reproducible_Tails.ca.html">news/reproducible Tails.ca</a>
+
+<a href="../news/reproducible_Tails.de.html">news/reproducible Tails.de</a>
+
+<a href="../news/reproducible_Tails.es.html">news/reproducible Tails.es</a>
+
+<a href="../news/reproducible_Tails.fa.html">news/reproducible Tails.fa</a>
+
+<a href="../news/reproducible_Tails.fr.html">news/reproducible Tails.fr</a>
+
+<a href="../news/reproducible_Tails.it.html">news/reproducible Tails.it</a>
+
+<a href="../news/reproducible_Tails.pl.html">news/reproducible Tails.pl</a>
+
+<a href="../news/reproducible_Tails.pt.html">news/reproducible Tails.pt</a>
+
+<a href="../news/reproducible_Tails.ru.html">news/reproducible Tails.ru</a>
+
+<a href="../news/reproducible_Tails.sr_Latn.html">news/reproducible Tails.sr Latn</a>
+
+<a href="../news/reproducible_Tails.tr.html">news/reproducible Tails.tr</a>
+
+<a href="../news/reproducible_Tails.zh.html">news/reproducible Tails.zh</a>
+
+<a href="../news/reproducible_Tails.zh_TW.html">news/reproducible Tails.zh TW</a>
+
+<a href="./release_process.html">release process</a>
+
+<a href="./reports/SponsorT/final.html">reports/SponsorT/final</a>
+
+<a href="./working_together/roles/sysadmins/automated_builds_in_Jenkins.html">working together/roles/sysadmins/automated builds in Jenkins</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/build">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

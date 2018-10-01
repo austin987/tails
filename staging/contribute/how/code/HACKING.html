@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Writing code for Tails</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../local.css" type="text/css" />
+
+
+<script src="../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../index.en.html"><img src="../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../how.html">how</a></li>
+
+
+
+
+
+<li><a href="../code.html">code</a></li>
+
+
+
+
+<li>Writing code for Tails</li>
+
+</ul>
+</span>
+<span class="title">
+Writing code for Tails
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../about.en.html">About</a></li>
+    <li><a href="../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Hi, prospective Tails contributor! This document is intended to
+quickly (in 20 minutes!) get you up to speed on how to write code for
+Tails by giving a brief overview the Tails source tree and Git branch
+organization without referring to more detailed (and hence longer)
+resources. As such it might not be enough for some specific things,
+but it should cover 95% of use cases for aspiring code
+contributors. Also, this document risks getting out of date, so don't
+trust every single detail as the written word of <code>$DEITY</code>.</p>
+
+<p>Note that this document will not teach you how to <em>contribute</em> code to
+Tails; it will only introduce you how to <em>write</em> code for Tails. Once
+you have something to contribute, please read our
+<a href="../code.html">extensive instructions for contributors</a>.</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Git branch organization</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Important files and directories</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">config/chroot_sources/</a>
+		</li>
+		<li class="L2"><a href="#index2h2">config/chroot_apt/preferences</a>
+		</li>
+		<li class="L2"><a href="#index3h2">config/chroot_local-packageslists/tails-common.list</a>
+		</li>
+		<li class="L2"><a href="#index4h2">config/chroot_local-packages/</a>
+		</li>
+		<li class="L2"><a href="#index5h2">config/base_branch</a>
+		</li>
+		<li class="L2"><a href="#index6h2">config/APT_overlays.d/</a>
+		</li>
+		<li class="L2"><a href="#index7h2">config/APT_snapshots.d/</a>
+		</li>
+		<li class="L2"><a href="#index8h2">config/binary_*</a>
+		</li>
+		<li class="L2"><a href="#index9h2">config/chroot_local-includes/</a>
+		</li>
+		<li class="L2"><a href="#index10h2">config/chroot_local-patches/</a>
+		</li>
+		<li class="L2"><a href="#index11h2">config/chroot_local-hooks/</a>
+		</li>
+		<li class="L2"><a href="#index12h2">config/chroot_local-includes/lib/live/config/</a>
+		</li>
+		<li class="L2"><a href="#index13h2">config/chroot_local-includes/etc/skel/</a>
+		</li>
+		<li class="L2"><a href="#index14h2">config/chroot_local-includes/usr/share/tails/</a>
+		</li>
+		<li class="L2"><a href="#index15h2">config/chroot_local-includes/usr/local/</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index3h1">Overview of the build process</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Building Tails</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Git branch organization</h1>
+
+<ul>
+<li><p><code>master</code>: as soon as something is pushed to this branch in Tails
+main git repository, the live Tails' website is rebuilt. This branch
+is <em>only</em> used for the website. Don't waste time trying to build it,
+or basing new branches on it if you intend to build them!</p></li>
+<li><p><code>devel</code>: This is the development branch, where new features end
+up. In general you should base new branches on this one.</p></li>
+<li><p><code>stable</code>: When a new major Tails release is out, we merge <code>devel</code>
+into <code>stable</code> and use it to build minor releases (e.g. when there's
+a new Tor Browser (= Firefox ESR) release) and emergency releases
+from. We only merge security fixes and bugfixes into this branch, so
+new such branches should be based on <code>stable</code>.</p></li>
+<li><p><code>testing</code>: After a freeze for a new major release (e.g. when we
+prepare release candidates), this is the branch were the continued
+work for this release happens. At that point <code>devel</code> is used for the
+<em>next</em> major release. Bugfixes on new features introduced in the
+this upcoming Tails release should be based on this branch (as
+should new translations).</p></li>
+<li><p><code>feature/DEBIAN_NEXT</code>: The development branch for Tails based on the
+next Debian major release.</p></li>
+<li><p><code>feature/XXXX-*</code>, <code>bugfix/XXXX-*</code>, <code>test/XXXX-*</code>: We use this naming
+scheme for the branches if new features, bugfixes and automated
+tests, where <code>XXXX</code> refers to the Redmine ticket they fix.</p></li>
+</ul>
+
+
+<p>We will sometimes talk about "base branches", which are <code>stable</code>,
+<code>testing</code>, <code>devel</code> and <code>feature/DEBIAN_NEXT</code>. When developing a new
+branch, this should be the branch you based it on. It will be used
+during the build to determine which packages from Tails APT repo to
+install (see some details about this below).</p>
+
+<p>For detailed information see our
+<a href="../../git.html">documentation about Git</a>.</p>
+
+<h1><a name="index2h1"></a>Important files and directories</h1>
+
+<p>Some of the more important files during build, and for running Tails
+sessions, are listed below. In general, just look at the existing
+files or content to understand the format -- we won't explain them
+fully here most of the time.</p>
+
+<h2><a name="index1h2"></a>config/chroot_sources/</h2>
+
+<p>The files in here determine which APT repositories to use during
+build, and in the resulting Tails image.</p>
+
+<p>Note that while it is possible to add non-Debian repositories, and
+that it is fine to do so for testing/development purposes, limitations
+inherent in Tails' APT snapshot system (see below) prevents us from
+using them in releases. In fact, in releases we can only use:</p>
+
+<ul>
+<li>Debian's APT repository</li>
+<li><code>deb.torproject.org</code></li>
+<li><code>deb.tails.boum.org</code></li>
+</ul>
+
+
+<p>So, if you need a package from some other repository, feel free to add
+through this mechanism it when developing your branch. When it's time
+to merge we will figure out the best way to get the packages available
+to us, usually by importing them to <code>deb.tails.boum.org</code>. The
+preferred solution is always to have the packages available in
+Debian.</p>
+
+<h2><a name="index2h2"></a>config/chroot_apt/preferences</h2>
+
+<p>The <code>/etc/apt/preferences</code> file that will be used during the build
+process, and later copied in to the resulting Tails filesystem. We use
+it <em>heavily</em>. If you want to install a package (or another version of
+a package) that is not in the stable Debian release, you will have to
+add a pinning rule in this file in order to make it install.</p>
+
+<h2><a name="index3h2"></a>config/chroot_local-packageslists/tails-common.list</h2>
+
+<p>The primary list of packages to install in Tails. Sometimes extra
+magic has to be done when installing a package, and then we install it
+with a build-time hook (see <code>config/chroot_local-hooks/</code> below). If
+the package is to be installed from another source than Debian Stable,
+make sure to add a pinning rule (see <code>config/chroot_apt/preferences</code>
+above).</p>
+
+<h2><a name="index4h2"></a>config/chroot_local-packages/</h2>
+
+<p>If you put a <code>.deb</code> here, it will be installed with high priority
+(disregarding the rules in <code>config/chroot_apt/preferences</code>). This is
+useful for testing purposes only!</p>
+
+<h2><a name="index5h2"></a>config/base_branch</h2>
+
+<p>This encodes which base branch (see above) the current branch is based
+on (the base branches themselves are "based" on themselves). In
+practice this determines which APT suite from <code>deb.tails.boum.org</code> to
+use (so if <code>config/base_branch</code> contains <code>devel</code>, then the <code>devel</code> APT
+suite will be used). These APT suites are the place where we upload
+all our custom Debian packages.</p>
+
+<h2><a name="index6h2"></a>config/APT_overlays.d/</h2>
+
+<p>Each file here corresponds to an APT suite on <code>deb.tails.boum.org</code> to
+be used. E.g. if we have <code>config/APT_overlays.d/feature-1234-example</code>
+then the <code>feature-1234-example</code> APT suite will be used. Each branch
+that is pushed to Tails' main Git repo will automatically have such a
+suite created (but with illegal charactes changed to <code>-</code>, so
+<code>feature/1234-example</code> becomes <code>feature-1234-example</code>).</p>
+
+<p>This is useful for importing specific package versions in between
+Tails releases, and gives us very exact control of which branches gets
+which packages.</p>
+
+<h2><a name="index7h2"></a>config/APT_snapshots.d/</h2>
+
+<p>The APT repositories used to install packages during the build process
+are snapshotted several times per day. The files in here simply encode
+which snapshot to use for each APT repository. In general, the <code>devel</code>
+branch always uses the latest snapshots, while all other branches more
+or less use the snapshot from the last feature freeze (when we prepare
+the release candidate for the last Tails major release). This way only
+<code>devel</code> is a bit crazy, and the build result depends on what happens
+e.g. in Debian's APT repository from day to day. Other branches remain
+pretty much the same until these snapshots are bumped, or something
+changes in <code>deb.tails.boum.org</code> (but then you should just merge your
+base branch, and all should be good again).</p>
+
+<p>For detailed information see our
+<a href="../../APT_repository.html">documentation about APT repositories</a>.</p>
+
+<h2><a name="index8h2"></a>config/binary_*</h2>
+
+<p>These files are about what will happen outside of Tails filesystem, on
+the ISO9660 filesystem of the resulting <code>.iso</code> image.</p>
+
+<h2><a name="index9h2"></a>config/chroot_local-includes/</h2>
+
+<p>These files and directories will be copied into the Tails file system,
+overwriting existing file. This is the main way to include e.g. static
+configurations, custom scripts, and similar things not handled by
+Debian packages.</p>
+
+<h2><a name="index10h2"></a>config/chroot_local-patches/</h2>
+
+<p>These patches will be applied on <code>/</code> of the Tails filesystem right
+after <code>config/chroot_local-includes/</code> is copied in. Here we patch
+various configuration files and similar installed by Debian packages,
+but where we still want to keep any changes made upstream. Remember,
+if we use <code>config/chroot_local-includes/</code> files are <em>overwritten</em>, so
+any such upstream changes are lost. With a patch we'll get them as
+well as our desired change (and we get build failures as a
+"notification" when the upstream has changed in a conflicting way,
+which is nice).</p>
+
+<h2><a name="index11h2"></a>config/chroot_local-hooks/</h2>
+
+<p>These scripts will run right after the patches in
+<code>config/chroot_local-patches/</code> are applied. Here we can pretty much do
+anything we want. We use it to reconfigure various things, install
+packages that require extra magic, programatically generating various
+files (images, configurations, even some scripts), cleaning up
+unneeded files etc.</p>
+
+<h2><a name="index12h2"></a>config/chroot_local-includes/lib/live/config/</h2>
+
+<p>These scripts will be run early during Tails' boot process, in lexical
+order. Quite a few of them are installed by the <code>live-config</code> package,
+but we have some custom ones in there as well. Note that
+<code>0030-user-setup</code> is when the Live user (<code>amnesia</code>) is created, so
+prior to that any reference to it won't work (e.g. in the build-hooks
+in <code>config/chroot_local-hooks/</code>).</p>
+
+<h2><a name="index13h2"></a>config/chroot_local-includes/etc/skel/</h2>
+
+<p>This is the seed for the Live user's (<code>amnesia</code> for now) home
+directory. Put static application configuration files ("dot files" and
+"dot dirs") here!</p>
+
+<h2><a name="index14h2"></a>config/chroot_local-includes/usr/share/tails/</h2>
+
+<p>A directory where we dump Tails-specific files with no obvious place
+to live. Generally these are files needed during build (and then we
+clean them up with a build hook) or during Tails operation (e.g. by
+some script).</p>
+
+<h2><a name="index15h2"></a>config/chroot_local-includes/usr/local/</h2>
+
+<p>This is where we put most of the custom scripts shipped in Tails. Some
+honorable mentions are:</p>
+
+<ul>
+<li><code>config/chroot_local-includes/usr/local/sbin/</code> for scripts used by
+root only.</li>
+<li><code>config/chroot_local-includes/usr/local/bin/</code> for scripts used by
+non-root users (and root too).</li>
+<li><code>config/chroot_local-includes/usr/local/lib/</code> for scripts that we
+don't want to expose to the user at all times (it's not in the
+<code>$PATH</code>).</li>
+<li><code>config/chroot_local-includes/usr/local/lib/tails-shell-library/</code>
+for "libraries" often included in the above scripts.</li>
+</ul>
+
+
+<h1><a name="index3h1"></a>Overview of the build process</h1>
+
+<p>The order of how things are applied matters greatly. In terms of the
+files and directories you have learned about above, this is how Tails
+is built, in order:</p>
+
+<ol>
+<li>A minimal Debian system is <code>debootstrap</code>:ed.</li>
+<li>APT is set up according to <code>config/chroot_sources/</code> and
+<code>config/chroot_apt/preferences</code> (and <code>config/APT_overlays.d/</code> and
+<code>config/APT_snapshots.d/</code>).</li>
+<li>Packages listed in
+<code>config/chroot_local-packageslists/tails-common.list</code> are
+installed.</li>
+<li>Packages stored in <code>config/chroot_local-packages/</code> are installed.</li>
+<li>Everyting in <code>config/chroot_local-includes/</code> is copied to <code>/</code>,
+overwriting existing files.</li>
+<li>All patches in <code>config/chroot_local-patches/</code> are applied on <code>/</code>.</li>
+<li>All build-time hooks in <code>config/chroot_local-hooks/</code> are run.</li>
+<li>Now the Tails filesystem is done!</li>
+<li>The ISO9660 filesystem used in the resulting <code>.iso</code> image is
+created according to <code>config/binary_*</code>.</li>
+</ol>
+
+
+<h1><a name="index4h1"></a>Building Tails</h1>
+
+<p>Just follow the "Using Vagrant" section in our
+<a href="../../build.html#vagrant">build</a> instruction. Copy-pasting the shell
+commands should be enough. Then it's as simple as:</p>
+
+<pre><code>rake build
+</code></pre>
+
+<p>although you may want to look through the build options you can supply
+via the <code>TAILS_BUILD_OPTIONS</code> environment variable.</p>
+
+<p>Happy hacking!</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../code.html">code</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/how/code/HACKING">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

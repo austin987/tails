@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Time syncing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../design.html">design</a></li>
+
+
+
+
+<li>Time syncing</li>
+
+</ul>
+</span>
+<span class="title">
+Time syncing
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Introduction</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Overview</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Guessing time based on Tor consensus</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Security discussion</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index4h1">HTP</a>
+	<ol>
+		<li class="L2"><a href="#index2h2">Why use a custom program?</a>
+		</li>
+		<li class="L2"><a href="#index3h2">Authentication of servers</a>
+		</li>
+		<li class="L2"><a href="#index4h2">HTP source pools</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index5h1">Fingerprinting Tails users</a>
+	</li>
+	<li class="L1"><a href="#index6h1">Implementation</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Introduction</h1>
+
+<p>Tor sometimes freaks out if they detect too large clock
+skews. It is therefore important for us to ensure that Tails somehow
+automatically synchronizes the system time at start in a safe manner.</p>
+
+<p>There probably is a
+whole bunch of fingerprinting attacks an attacker could mount if it
+could pose as the time server and mess with the user's time. We
+therefore want to be able to <em>authenticate</em> the servers that provide
+us with supposedly accurate time information. Home-made research
+<a href="https://labs.riseup.net/code/issues/6113">demonstrated</a> that NTPv4's server
+authentication features do not fit our usecase yet, so we have to look
+for solutions elsewhere.</p>
+
+<p>Since we want no direct internet traffic, the time syncing should be
+run through Tor, but that creates a catch 22: we want to set the time
+using Tor so we can make Tor usable.</p>
+
+<h1><a name="index2h1"></a>Overview</h1>
+
+<p>In short this is how time syncing is performed when Tails starts:</p>
+
+<ol>
+<li>Start Tor. If Tor is already working, skip to HTP step.</li>
+<li>Let Tor fetch a consensus (wait up to 150 seconds twice, restarting Tor
+in between).</li>
+<li>If the time is too badly off, the authority certificate may not be
+valid, so we set the system time to the <code>valid-after</code> of the unverified
+consensus Tor fetched for us, which will guarantee that the certificate
+and consensus are all valid. Then we restart Tor (since it behaves badly
+with time jumps during the early bootstrap stages) and wait until it
+accepts the consensus and finishes the bootstrap.</li>
+<li>Run HTP (see below) through Tor to get a more correct system time.</li>
+</ol>
+
+
+<p>A notification is shown while the whole process is running,
+informing the user that
+Tor may not function properly before it has finished (e.g. hidden
+services running Tor prior to version 0.2.3.7-alpha requires clients
+to have a time that is no more than 30 minutes incorrect).</p>
+
+<p>The hardware clock is not affected.</p>
+
+<h1><a name="index3h1"></a>Guessing time based on Tor consensus</h1>
+
+<p>This idea originates from Liberte Linux' <code>tordate</code> script which uses
+Tor's consensus file to initially roughly set the time. The consensus
+file contains such information:</p>
+
+<pre><code>valid-after 2010-12-27 16:00:00
+fresh-until 2010-12-27 17:00:00
+valid-until 2010-12-27 19:00:00
+</code></pre>
+
+<p>A consensus is valid for three hours. If the system time is in the
+[valid-after, valid-after + 2.5 hours] range, <code>tordate</code> exits.
+Else, it sets the system time to the middle of the [valid-after,
+fresh-until] range and restarts Tor.</p>
+
+<p>The system time is then ensured to be correct enough to enable Tor to
+successfully open a circuit, and HTP can then be used to more
+accurately set time <em>via Tor</em>. The whole idea is that while Tor does
+not manage to open a circuit if the system time is too incorrect, it
+still is able to retrieve its consensus file as soon as Internet
+connectivity is available.</p>
+
+<h2><a name="index1h2"></a>Security discussion</h2>
+
+<p>tordate's approach essentially removes the time skew check, which is
+used to prevent replay of consensus data. Let's discuss this class of
+attacks.</p>
+
+<p>First, replaying a consensus older than four weeks or so results in
+preventing access to the Tor network, and that's all, because onion
+keys will be wrong. An attacker who is in a position to replay a
+consensus to you could anyway do this, unrelated to time, so the issue
+at hand boils down to <em>replaying a consensus not older than four weeks
+or so</em>.</p>
+
+<p>Second, the same type of attacker as above could also try to forge a
+completely new consensus, which would be unverifiable since the
+attacker doesn't have access to the authorities' keys. We would still
+set Tails' system time according to the unverifiable consensus, but
+Tor would refuse to use the forged consensus, resulting in complete
+denial-of-service. An attacker in that position could do
+denial-of-service attacks in many other ways, so this doesn't make
+the situation any worse.</p>
+
+<p>Third, things are different depending on if you're using a bridge or
+not.</p>
+
+<p>If not using a bridge: Tails starts without a cached consensus, so its
+Tor client starts by connecting directly to a fallback directory
+mirror, so feeding you an old
+consensus requires the attacker either to break SSL, or to control the
+fallback directory mirror your Tor client connects to. Not good, but
+probably a compromise we can make.</p>
+
+<p>If using a bridge: your bridge can replay an old (four weeks old max.)
+consensus, which is used until HTP has fixed the time; not good, but
+probably a compromise we can make. If your bridge also can set up a SSL
+MitM attack against the HTP connections (e.g. the attacker also
+controls a SSL CA shipped by Debian), it can trick you into using this
+old consensus for max. four weeks, which is much worse.</p>
+
+<h1><a name="index4h1"></a>HTP</h1>
+
+<p><a href="http://www.vervest.org/htp/">HTP</a> is not really a protocol, but uses
+a feature from HTTP, aka web traffic. According the specifications of
+HTTP/1.1 (RFC 2616) a web server needs to put a timestamp in a
+response to a web browser request. In web browsers you don't see the
+HTTP headers, but these headers contain a timestamp in Greenwich Mean
+Time (GMT), accurate in seconds.</p>
+
+<p>These timestamps can be used to get a pretty good estimate of the
+current time, even though not to the same accuracy level as NTP.</p>
+
+<p>Being based on HTTP, HTP can use its ready-made features related to
+server authentication, such as X.509 certificates... for the time
+being.</p>
+
+<h2><a name="index2h2"></a>Why use a custom program?</h2>
+
+<p>As what follows clearly shows, the upstream HTP has quite a few
+drawbacks that make it unfit for our needs. That's why Tails uses a
+custom version of the Perl HTP client into
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/htpdate">config/chroot local-includes/usr/local/sbin/htpdate</a>.
+The repository we copied this script from can be found there:</p>
+
+<pre><code>https://git-tails.immerda.ch/htp
+</code></pre>
+
+<p>For reasons detailed below, this version of htpdate uses curl for all
+of its HTTP operations.</p>
+
+<h2><a name="index3h2"></a>Authentication of servers</h2>
+
+<p>The custom <code>/usr/local/sbin/htpdate</code> we use only connects to HTTPS servers,
+and delegates TLS X.509 certificate
+verification to curl. It also uses several different pools of time
+sources, and if there are too many that fail for any given pool,
+e.g. because of failed certificate checking or being unreachable, the
+pool is considered to be potentially compromised and htpdate aborts.</p>
+
+<p>curl is also directed to only use TLSv1 as a "secure" protocol.</p>
+
+<h2><a name="index4h2"></a>HTP source pools</h2>
+
+<p>What sources should be trusted? This is of course also a problem
+with NTP.</p>
+
+<p>The HTP pools used by Tails are based on stable and reliable
+webservers that get great amounts of traffic. They are categorized
+into three different pools according to their members' relationship to
+the members in the other pools; any member in a one pool should be
+unlikely to share logs (or other identifying data), or to agree to
+send fake time information, with a member from
+the the other pools. The pools are as follows:</p>
+
+<ul>
+<li>The "pal" pool are run by groups that are likely to take great care
+of their visitors' privacy.</li>
+<li>The "foe" pool are managed by adversaries of the "pal" pool.</li>
+<li>The "neutral" pool members have a neutral raltionship to both the
+"pal" and "foe" pool.</li>
+</ul>
+
+
+<p>The pools are listed in <a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/default/htpdate.pools">config/chroot local-includes/etc/default/htpdate.pools</a>.</p>
+
+<p>Basically, Tails <code>htpdate</code> pick three random servers (one from each
+pool), and then build the mediate of the three advertised dates.</p>
+
+<h1><a name="index5h1"></a>Fingerprinting Tails users</h1>
+
+<p>Tails runs HTP through Tor, so the fingerprintability should be
+limited to traffic flow only. It should be noted that HTP only fetches
+the HTTP header, so fingerprinting based on the known traffic pattern
+when fetching the full page of any of the members of Tails' HTP source
+pools is not possible.</p>
+
+<p>Our initial time guess based on the Tor consensus is probably easier
+to fingerprint, though: a fresh Tor is started,
+and restarted again right after the consensus has been
+downloaded.</p>
+
+<p>Tails developers still need to think thoroughly of these questions:
+are such fingerprinting possibilities a serious problem? What kind of
+efforts and compromise should be made to prevent these?</p>
+
+<h1><a name="index6h1"></a>Implementation</h1>
+
+<p>A Network Manager hook runs the whole thing:
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/dispatcher.d/20-time.sh">config/chroot local-includes/etc/NetworkManager/dispatcher.d/20-time.sh</a>.</p>
+
+<p>The <code>hwclock.sh</code> initscript is disabled at reboot/shutdown time,
+otherwise it would set the hardware clock to the system time,
+violating (a strict interpretation of) our "don't leave traces on the
+hardware being used" design goal:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-patches/do-not-modify-hardware-clock.diff">config/chroot local-patches/do-not-modify-hardware-clock.diff</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/52-update-rc.d">config/chroot local-hooks/52-update-rc.d</a></li>
+</ul>
+
+
+<p>See also:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/46-configure-htpdate">config/chroot local-hooks/46-configure-htpdate</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/htpdate.service">config/chroot local-includes/lib/systemd/system/htpdate.service</a></li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./Tor_network_configuration.html">Tor network configuration</a>
+
+<a href="../design.html">design</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.en.html">doc/about/acknowledgments and similar projects</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.ar.html">doc/about/acknowledgments and similar projects.ar</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.ca.html">doc/about/acknowledgments and similar projects.ca</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.de.html">doc/about/acknowledgments and similar projects.de</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.es.html">doc/about/acknowledgments and similar projects.es</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.fa.html">doc/about/acknowledgments and similar projects.fa</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.fr.html">doc/about/acknowledgments and similar projects.fr</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.it.html">doc/about/acknowledgments and similar projects.it</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.pl.html">doc/about/acknowledgments and similar projects.pl</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.pt.html">doc/about/acknowledgments and similar projects.pt</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.ru.html">doc/about/acknowledgments and similar projects.ru</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.sr_Latn.html">doc/about/acknowledgments and similar projects.sr Latn</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.tr.html">doc/about/acknowledgments and similar projects.tr</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.zh.html">doc/about/acknowledgments and similar projects.zh</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.zh_TW.html">doc/about/acknowledgments and similar projects.zh TW</a>
+
+<a href="./persistence.html">persistence</a>
+
+<a href="../reports/SponsorS/2015/2016_06.html">reports/SponsorS/2015/2016 06</a>
+
+<a href="../../support/faq.en.html">support/faq</a>
+
+<a href="../../support/faq.ar.html">support/faq.ar</a>
+
+<a href="../../support/faq.ca.html">support/faq.ca</a>
+
+<a href="../../support/faq.de.html">support/faq.de</a>
+
+<a href="../../support/faq.es.html">support/faq.es</a>
+
+<a href="../../support/faq.fa.html">support/faq.fa</a>
+
+<a href="../../support/faq.fr.html">support/faq.fr</a>
+
+<a href="../../support/faq.it.html">support/faq.it</a>
+
+<a href="../../support/faq.pl.html">support/faq.pl</a>
+
+<a href="../../support/faq.pt.html">support/faq.pt</a>
+
+<a href="../../support/faq.ru.html">support/faq.ru</a>
+
+<a href="../../support/faq.sr_Latn.html">support/faq.sr Latn</a>
+
+<a href="../../support/faq.tr.html">support/faq.tr</a>
+
+<a href="../../support/faq.zh.html">support/faq.zh</a>
+
+<a href="../../support/faq.zh_TW.html">support/faq.zh TW</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/Time_syncing">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

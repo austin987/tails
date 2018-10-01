@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Releasing persistence-setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../release_process.html">release process</a></li>
+
+
+
+
+<li>Releasing persistence-setup</li>
+
+</ul>
+</span>
+<span class="title">
+Releasing persistence-setup
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Pre-requisites</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Install build and test dependencies</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Make an upstream release</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Update the Debian package</a>
+	</li>
+	<li class="L1"><a href="#index5h1">Add the Debian package to Tails</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Pre-requisites</h1>
+
+<ul>
+<li>a Debian Stretch (or newer) system</li>
+<li>Tails' <code>devel</code> APT suite enabled</li>
+<li>the latest version of the <code>tails-perl5lib</code> package installed</li>
+</ul>
+
+
+<h1><a name="index2h1"></a>Install build and test dependencies</h1>
+
+<pre><code>git checkout master &amp;&amp; \
+sudo apt install \
+   devscripts \
+   dh-make-perl \
+   libdist-zilla-app-command-authordebs-perl &amp;&amp; \
+dzil authordebs --install &amp;&amp; \
+git checkout debian &amp;&amp; \
+mk-build-deps -i -r --root-cmd sudo
+</code></pre>
+
+<h1><a name="index3h1"></a>Make an upstream release</h1>
+
+<pre><code>git checkout master
+</code></pre>
+
+<p>Enable new translations in <code>po/PACKAGE</code> and commit.</p>
+
+<p>Export new upstream version number:</p>
+
+<pre><code>export VERSION=XXX
+</code></pre>
+
+<p>Update version number in <code>bin/tails-persistence-setup</code> and
+commit all files that need to be:</p>
+
+<pre><code>perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-persistence-setup &amp;&amp; \
+perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," bin/tails-persistence-setup &amp;&amp; \
+git commit bin/tails-persistence-setup -m "tails-persistent-setup $VERSION"
+</code></pre>
+
+<p>Optionally, run the upstream test suite (it is run as part of the
+Debian package build later, but running it early may avoid publishing
+a broken upstream release; however, beware if you are running Debian
+testing/sid: it has happened in the past that this code base required
+adjustments to work with newer versions of the libraries it depends
+on, so if tests fail on testing/sid, retry on Debian stable before
+going amok):</p>
+
+<pre><code>RELEASE_TESTING=1 LC_ALL=C fakeroot dzil test
+</code></pre>
+
+<p>Build an upstream tarball, tag the release, move the tarball out of
+the build repository and cleanup:</p>
+
+<pre><code>dzil build &amp;&amp; \
+   git tag -s $VERSION -m "tails-persistent-setup $VERSION" &amp;&amp; \
+   mv Tails-Persistence-*.tar.gz .. &amp;&amp; \
+   rm -rf Tails-Persistence-* .build po/*.mo
+</code></pre>
+
+<h1><a name="index4h1"></a>Update the Debian package</h1>
+
+<p>Checkout the Debian packaging branch and import the new upstream tarball:</p>
+
+<pre><code>git checkout debian &amp;&amp; \
+   gbp import-orig --upstream-vcs-tag=$VERSION \
+   ../Tails-Persistence-$VERSION.tar.gz
+</code></pre>
+
+<p>Update <code>debian/changelog</code>:</p>
+
+<pre><code>gbp dch --auto --spawn-editor=always
+</code></pre>
+
+<p>(Do not forget to set the appropriate release.)</p>
+
+<p>Commit <code>debian/changelog</code>:</p>
+
+<pre><code>    git commit debian/changelog \
+        -m "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))
+</code></pre>
+
+<p>Git-Dch: Ignore
+"</p>
+
+<p>Build a Debian package (use a Stretch/amd64 chroot, that has
+<code>stretch-backports</code> enabled and on top of that: either tails-perl5lib
+installed or the Tails APT repository configured):</p>
+
+<pre><code>gbp buildpackage
+</code></pre>
+
+<p>If everything is fine, add a signed tag to the repository and push the
+changes:</p>
+
+<pre><code>gbp buildpackage --git-tag-only --git-sign-tags &amp;&amp; \
+git push --follow-tags \
+               origin master:master \
+               debian:debian \
+               pristine-tar:pristine-tar \
+               upstream:upstream
+</code></pre>
+
+<p>(Make sure <code>master</code>, <code>upstream</code>, <code>debian</code> and <code>pristine-tar</code> were all pushed.)</p>
+
+<h1><a name="index5h1"></a>Add the Debian package to Tails</h1>
+
+<p>Sign the package:</p>
+
+<pre><code>debsign $CHANGES_FILE
+</code></pre>
+
+<p>Upload:</p>
+
+<pre><code>dupload --to tails $CHANGES_FILE
+</code></pre>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../release_process.html">release process</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/release_process/persistence-setup">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

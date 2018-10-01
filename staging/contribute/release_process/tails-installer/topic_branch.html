@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Packaging liveusb-creator topic branches</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../local.css" type="text/css" />
+
+
+<script src="../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../index.en.html"><img src="../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../release_process.html">release process</a></li>
+
+
+
+
+
+<li><a href="../tails-installer.html">tails-installer</a></li>
+
+
+
+
+<li>Packaging liveusb-creator topic branches</li>
+
+</ul>
+</span>
+<span class="title">
+Packaging liveusb-creator topic branches
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../about.en.html">About</a></li>
+    <li><a href="../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Let's say you want to build a package for a topic branch called
+<code>bugfix/12345-blah</code>. Please read on.</p>
+
+<div class="note">
+
+If your topic branch has been forked off a different branch than
+<code>master</code>, then you need to adjust the following
+instructions a bit: not only do you need to replace occurrences of
+<code>master</code>, but your <code>TARGET_DIST</code> will also
+be different.
+
+</div>
+
+
+<p>Prepare the environment:</p>
+
+<pre><code>export TARGET_DIST="tails/master"
+export TOPIC="bugfix/12345-blah"
+</code></pre>
+
+<p>Fork the appropriate packaging branch into a new one that's dedicated
+to packaging the work that your topic branch introduces:</p>
+
+<pre><code>git checkout -b "tails/$TOPIC" "$TARGET_DIST"
+</code></pre>
+
+<p>Create a patch representing the delta you want to add to the package,
+and import it into the current packaging branch as a quilt patch:</p>
+
+<pre><code>PATCH="$(mktemp).diff"
+git diff "master..$TOPIC" &gt; "$PATCH" &amp;&amp; \
+   quilt import "$PATCH"   &amp;&amp; \
+   git add debian/patches/ &amp;&amp; \
+   git commit -m "Import diff for $TOPIC as a quilt patch."
+</code></pre>
+
+<p>Fill <code>debian/changelog</code>:</p>
+
+<pre><code>gbp dch --auto --snapshot --ignore-branch
+</code></pre>
+
+<p>Then, insert something like <code>+bugfix.12345.blah</code> (with all special
+characters changed to full stops, i.e. ".") between the version last
+packaged in the <code>$TARGET_DIST</code> branch, and the gbp snapshot number (that
+looks like <code>~1.gbpNNNNNN</code>). In our example, it should look something
+like <code>4.3+dfsg-0tails1+bugfix.12345.blah~1.gbp4a0c9c</code> in the end.</p>
+
+<p>Verify the changelog manually.</p>
+
+<p>Commit:</p>
+
+<pre><code>git commit debian/changelog
+</code></pre>
+
+<p>Build in a suitable chroot with:</p>
+
+<pre><code>gbp buildpackage --git-ignore-branch
+</code></pre>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../liveusb-creator/topic_branch.html">liveusb-creator/topic branch</a>
+
+<a href="../tails-installer.html">tails-installer</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/release_process/tails-installer/topic_branch">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

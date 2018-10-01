@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Manual test suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../release_process.html">release process</a></li>
+
+
+
+
+<li>Manual test suite</li>
+
+</ul>
+</span>
+<span class="title">
+Manual test suite
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Changes</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Reproducibility</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Automated test suite</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Tor Browser</a>
+	</li>
+	<li class="L1"><a href="#index5h1">Thunderbird</a>
+	</li>
+	<li class="L1"><a href="#index6h1">Tor</a>
+	</li>
+	<li class="L1"><a href="#index7h1">WhisperBack</a>
+	</li>
+	<li class="L1"><a href="#index8h1">Root access control</a>
+	</li>
+	<li class="L1"><a href="#index9h1">Virtualization support</a>
+	</li>
+	<li class="L1"><a href="#index10h1">APT (automate: #8164)</a>
+	</li>
+	<li class="L1"><a href="#index11h1">Incremental upgrades</a>
+	</li>
+	<li class="L1"><a href="#index12h1">Unsafe Web Browser</a>
+	</li>
+	<li class="L1"><a href="#index13h1">Tails Verification</a>
+	</li>
+	<li class="L1"><a href="#index14h1">Real (non-VM) hardware</a>
+	</li>
+	<li class="L1"><a href="#index15h1">Documentation</a>
+	</li>
+	<li class="L1"><a href="#index16h1">Internationalization</a>
+	</li>
+	<li class="L1"><a href="#index17h1">Misc</a>
+	</li>
+</ol>
+</div>
+
+
+<p>Some <a href="./test/test_results.html">test results</a> that might be useful to keep are saved.</p>
+
+<div class="caution">
+Read this document from the branch used to prepare the release.
+</div>
+
+
+<h1><a name="index1h1"></a>Changes</h1>
+
+<p>Keeping an eye on the changes between released versions is one of the
+many safeguards against releasing crap.</p>
+
+<h2><a name="index1h2"></a>Source</h2>
+
+<p>Compare the to-be-released source code with previous version's one e.g.:</p>
+
+<p>Boot the candidate ISO and find the commit it was build from with the
+<code>tails-version</code> command.</p>
+
+<p>Then, from the source tree, see the diff:</p>
+
+<pre><code>git diff --find-renames &lt;old ISO commit&gt;..&lt;ISO commit&gt;
+</code></pre>
+
+<p>e.g. <code>git diff --find-renames 334e1c485a3a79be9fff899d4dc9d2db89cdc9e1..cfbde80925fdd0af008f10bc90c8a91a578c58e3</code></p>
+
+<h2><a name="index2h2"></a>Result</h2>
+
+<p>Compare the list of bundled packages and versions with the one shipped last
+time. <code>.packages</code> are usually attached to the email announcing the ISO is ready.</p>
+
+<pre><code>/usr/bin/diff -u \
+    wiki/src/torrents/files/tails-amd64-3.1.packages \
+    tails-amd64-3.2.packages \
+    | wdiff --diff-input  --terminal
+</code></pre>
+
+<p>Check the output for:</p>
+
+<ul>
+<li>new packages that may cause harm or make the images unnecessarily
+big</li>
+<li>packages that could be erroneously removed</li>
+<li>new versions of software we might not have audited yet (including:
+does the combination of our configuration with software X version
+Y+1 achieve the same wished results as with software X version Y?)</li>
+</ul>
+
+
+<h2><a name="index3h2"></a>Image size</h2>
+
+<p>Check the image size has not changed much since the last release.</p>
+
+<p>In a directory with many Tails ISO images:</p>
+
+<pre><code>find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 5
+</code></pre>
+
+<p><a id="reproducibility-final-check"></a></p>
+
+<h1><a name="index2h1"></a>Reproducibility</h1>
+
+<p>This section can only be done by the RM.</p>
+
+<p>Clear-sign the hashes of all products using <em>your personal</em> OpenPGP
+key:</p>
+
+<pre><code>( \
+    cd "${ISOS:?}" &amp;&amp; \
+    sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso \
+              Tails_amd64_*_to_${VERSION:?}.iuk \
+        | gpg --clear-sign \
+)
+</code></pre>
+
+<p>and leave the output in this section.</p>
+
+<h1><a name="index3h1"></a>Automated test suite</h1>
+
+<p>Our long term goal is to eliminate the manual test suite (except the
+parts which require real hardware) and have the automated test suite
+run all our tests. It's design, and how to write new tests, are
+documented on a <a href="./test/automated_tests.html">dedicated page</a>.</p>
+
+<h2><a name="index4h2"></a>Running the automated test suite</h2>
+
+<p>See <a href="./test/setup.html">setup</a> and <a href="./test/usage.html">usage</a>.</p>
+
+<p>Do point <code>--old-iso</code> to the ISO of the previous stable release.</p>
+
+<h2><a name="index5h2"></a>Automated test suite migration progress</h2>
+
+<p>The manual test suite below either contains tests that cannot be
+automated, has no automated test implemented yet, or has a test
+implemented, but it either hasn't been reviewed, had a confirmed pass
+by someone other than the test author, or has issues. The latter is
+tracked by tickets prefixed with <code>todo/test_suite:</code>.</p>
+
+<h1><a name="index4h1"></a>Tor Browser</h1>
+
+<h2><a name="index6h2"></a>Miscellaneous functionality</h2>
+
+<ul>
+<li>Test if <em>uBlock</em> works:
+
+<ul>
+<li>The <em>uBlock</em> icon must be visible.</li>
+<li>Visit a website that normally displays ads, such is
+<a href="https://www.nytimes.com/">https://www.nytimes.com/</a>. The ads should not be displayed and
+the uBlock icon should display a strictly positive number of
+blocked elements.</li>
+</ul>
+</li>
+</ul>
+
+
+<h2><a name="index7h2"></a>Security and fingerprinting</h2>
+
+<ul>
+<li>Run the <a href="https://trac.torproject.org/projects/tor/wiki/doc/build/BuildSignoff#TestPagestoUse">tests the Tor Browser folks
+use</a>
+and compare to the last released version of Tails. Results should
+not be worse.
+(automate: <a href="https://labs.riseup.net/code/issues/10260">#10260</a>)
+
+<ul>
+<li>For the "evercookie" test to work, you may have to disable
+<em>uBlock</em> on its web page.</li>
+</ul>
+</li>
+<li>Compare the fingerprint Tor Browser in Tails with the fingerprint of
+the same version of Tor Browser (running on Linux outside of Tails), using at least
+<a href="https://panopticlick.eff.org/">https://panopticlick.eff.org/</a> (automate: <a href="https://labs.riseup.net/code/issues/10262">#10262</a>).
+Click "Show full results for fingerprinting" to see the details
+we're interested in.
+
+<ul>
+<li>The exposed User-Agent should match the latest Tor Browser's one.</li>
+<li>Ignore the result of the "blocking tracking ads" and "blocking
+invisible trackers" tests, which seem unreliable (we've seen
+different results for the very same version of Tor Browser).</li>
+<li>Update the <em>Browser fingerprint</em> section of the
+<a href="../../support/known_issues.en.html">known issues</a> if needed.</li>
+</ul>
+</li>
+<li>WebRTC should be disabled: (automate: <a href="https://labs.riseup.net/code/issues/10264">#10264</a>)
+
+<ul>
+<li>In <code>about:config</code> check that <code>media.peerconnection.enabled</code> is set to
+<code>false</code>.</li>
+<li><a href="http://mozilla.github.io/webrtc-landing/">http://mozilla.github.io/webrtc-landing/</a>, especially the <code>getUserMedia</code>
+test. It's expected that the audio test works if you agree to share a
+microphone with the remote website; anything else should fail.</li>
+<li><a href="http://net.ipcalf.com/">http://net.ipcalf.com/</a> should display
+<code>ifconfig | grep inet | grep -v inet6 | cut -d" " -f2 | tail -n1</code></li>
+</ul>
+</li>
+<li>Running <code>/usr/local/lib/getTorBrowserUserAgent</code> should produce the User-Agent set by the
+installed version of Torbutton, and used in the Tor Browser. (automate: <a href="https://labs.riseup.net/code/issues/10268">#10268</a>)</li>
+</ul>
+
+
+<p><a id="Thunderbird"></a></p>
+
+<h1><a name="index5h1"></a>Thunderbird</h1>
+
+<ul>
+<li>Check mail over IMAP using:
+
+<ul>
+<li>a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion on port 993 with SSL).</li>
+</ul>
+</li>
+<li>Check mail over POP using:
+
+<ul>
+<li>a hidden service POP server (see above, on port 995 with SSL).</li>
+</ul>
+</li>
+<li><p>Send an email using:</p>
+
+<ul>
+<li>a hidden service SMTP server (see above, on port 465 with SSL).</li>
+</ul>
+</li>
+<li><p>Check that the profile works and is torified:</p>
+
+<ol>
+<li>Send an email using Thunderbird and a non-anonymizing SMTP relay (a
+SMTP relay that writes the IP address of the client it is
+relaying email for in the Received header).</li>
+<li>Then check that email's headers once received, especially the
+<code>Received:</code> one.</li>
+</ol>
+</li>
+<li>Also check that the EHLO/HELO SMTP message is not leaking anything
+at the application level:
+
+<ol>
+<li>Start Thunderbird using the GNOME Applications menu.</li>
+<li>Disable SSL/TLS for SMTP in Thunderbird (so take precautions for not
+leaking your password in plaintext by either changing it
+temporarily or using a disposable account). Or better, configure
+StartTLS, since it will send two EHLO/HELO: one before TLS is
+initiated; one after. The assumption here is that Thunderbird will
+send the same both times.</li>
+<li>Run <code>sudo tcpdump -n -i lo -w dump</code> while sending an email to
+capture the packets before Tor encrypts it, then close
+tcpdump. Note that the packet containing EHLO/HELO will be sent
+really early, so even if the email failed (e.g. because the mail
+server doesn't support plaintext SMTP on port 587) we are ok.</li>
+<li>Check the dump for the HELO/EHLO message and
+verify that it only contains <code>127.0.0.1</code>:
+<code>sudo tcpdump -A -r dump | grep EHLO</code></li>
+</ol>
+</li>
+</ul>
+
+
+<h1><a name="index6h1"></a>Tor</h1>
+
+<ul>
+<li>The version of Tor should be the latest stable one, which is the highest version number
+before alpha releases on <a href="http://deb.torproject.org/torproject.org/pool/main/t/tor/">http://deb.torproject.org/torproject.org/pool/main/t/tor/</a>. (automate:
+<a href="https://labs.riseup.net/code/issues/10259">#10259</a>)</li>
+</ul>
+
+
+<h1><a name="index7h1"></a>WhisperBack</h1>
+
+<ul>
+<li>I should be able to send a bug report with WhisperBack.</li>
+<li>When we receive this bug report on the tails-bugs mailing list,
+Schleuder tells us that it was sent encrypted.</li>
+</ul>
+
+
+<h1><a name="index8h1"></a>Root access control</h1>
+
+<ul>
+<li>Check you cannot login as root with <code>su</code> neither with the <code>amnesia</code> password nor
+with the <code>live</code> one. (automate: <a href="https://labs.riseup.net/code/issues/10274">#10274</a>)</li>
+</ul>
+
+
+<h1><a name="index9h1"></a>Virtualization support</h1>
+
+<ul>
+<li>Test that Tails starts and the browser launches in VirtualBox.</li>
+</ul>
+
+
+<h1><a name="index10h1"></a>APT (automate: <a href="https://labs.riseup.net/code/issues/8164">#8164</a>)</h1>
+
+<pre><code> grep -r jenw7xbd6tf7vfhp.onion /etc/apt/sources.list*
+</code></pre>
+
+<ul>
+<li>Make sure the Tails repository suite in matching the release tag (for example
+the release version number) is in APT sources.</li>
+<li>Make sure the Tails repository unversioned suites (e.g. <code>testing</code>,
+<code>stable</code> and <code>devel</code>) are <em>not</em> in APT sources.</li>
+</ul>
+
+
+<p><a id="incremental-upgrades"></a></p>
+
+<h1><a name="index11h1"></a>Incremental upgrades</h1>
+
+<ul>
+<li><p>List the versions from which an upgrade path to this one is described.
+On the <code>master</code> branch:</p>
+
+<pre><code>git grep -E -l "  version: '?0.23'?" \
+    wiki/src/upgrade/v1/Tails/*/*/test/upgrades.yml
+</code></pre>
+
+<p>… replacing "0.23" with the version you are testing.</p></li>
+<li><p>For each description file, open it and verify if it allows incremental upgrade
+or only full upgrade.</p></li>
+<li><p>For each previous version from which an upgrade path is described, install it
+and try to upgrade:</p>
+
+<ul>
+<li>For every incremental upgrade path: make sure the resulting updated
+system "works fine" (boots, pretends to be the correct version,
+and the following components work fine: Tor, Tor Browser, Unsafe Browser).</li>
+<li>For upgrade paths that only propose a full upgrade: make sure the
+user is told to do a manual upgrade.</li>
+</ul>
+
+
+<p>If:</p>
+
+<ul>
+<li>the update-description files have been published on the
+<em>test</em> channel already (see <a href="https://tails.boum.org/upgrade/v1/Tails/">https://tails.boum.org/upgrade/v1/Tails/</a>)</li>
+<li>and the IUK has been published already (see
+<a href="https://archive.torproject.org/amnesia.boum.org/tails/alpha/">https://archive.torproject.org/amnesia.boum.org/tails/alpha/</a>
+and <a href="https://archive.torproject.org/amnesia.boum.org/tails/stable/">https://archive.torproject.org/amnesia.boum.org/tails/stable/</a>):</li>
+</ul>
+
+
+<p>then:</p>
+
+<pre><code>  echo "TAILS_CHANNEL=\"test\" | sudo tee --append /etc/os-release &amp;&amp; \
+  tails-upgrade-frontend-wrapper
+</code></pre>
+
+<p>Else, use a local test setup:</p>
+
+<ul>
+<li>A web server on the LAN.</li>
+<li>A copy of <code>wiki/src/upgrade</code> from the <code>stable</code> or <code>testing</code> branch,
+for example in <code>/var/www/tails/upgrade/v1/Tails/3.14~rc2/amd64/stable/updates.yml</code></li>
+<li><p>A copy of the <code>iuk</code> directory of our HTTP mirrors,
+for example in <code>/var/www/tails/stable/iuk/Tails_amd64_3.14-rc2_to_3.14.iuk</code>.</p>
+
+<p>To synchronize your local copy:</p>
+
+<pre><code>torsocks rsync -rt --progress --delete mirrors.rsync.tails.boum.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
+</code></pre></li>
+<li><p>Patch <code>/etc/hosts</code> in Tails to point to your web server:</p>
+
+<pre><code>echo "192.168.1.4    dl.amnesia.boum.org" | sudo tee --append /etc/hosts
+</code></pre></li>
+<li><p>Patch sudo configuration to allow passing arbitrary arguments to
+<code>tails-upgrade-frontend</code>:</p>
+
+<pre><code>sudo sed -i \
+    -e 's,/usr/bin/tails-upgrade-frontend ""$,/usr/bin/tails-upgrade-frontend,' \
+    /etc/sudoers.d/zzz_upgrade
+</code></pre></li>
+<li><p>Call the upgrader must be called, from inside the system to upgrade,
+with every needed option to use the local web server rather than the
+online one, for example:</p>
+
+<pre><code>DISABLE_PROXY=1 SSL_NO_VERIFY=1 \
+tails-upgrade-frontend-wrapper --override-baseurl \
+http://192.168.1.4/tails
+</code></pre></li>
+</ul>
+</li>
+</ul>
+
+
+<h1><a name="index12h1"></a>Unsafe Web Browser</h1>
+
+<ul>
+<li>Browsing (by IP) a FTP server on the LAN should be possible. (automate: <a href="https://labs.riseup.net/code/issues/10252">#10252</a>)</li>
+</ul>
+
+
+<h1><a name="index13h1"></a>Tails Verification</h1>
+
+<ul>
+<li><p>The goal is is to check that <em>Tails Verification</em> works in <em>Tor
+Browser</em> in the version of Tails we are testing here. <em>Tails
+Verification</em> only supports verifying the current release so for
+example, when doing tests for the Tails 3.9 release, we use it in
+the tentative Tails 3.9 to verify the Tails 3.8 ISO image.</p>
+
+<ol>
+<li><p>Start the Tails that you are testing.</p></li>
+<li><p>Start <em>Tor Browser</em>.</p></li>
+<li><p>Visit <a href="https://tails.boum.org/install/download/">https://tails.boum.org/install/download/</a>.</p></li>
+<li><p>If you already have the ISO image for the last, already released
+version of Tails, i.e. the one that's advertised in the sidebar
+of our production website, then click "<em>I already downloaded Tails $N</em>".
+Otherwise follow the instructions on that web page to download
+the ISO image.</p></li>
+<li><p>Install <em>Tails Verification</em>.</p></li>
+<li><p>Click the <strong>Verify Tails $N</strong> button.</p></li>
+<li><p>The verification should be successful.</p></li>
+</ol>
+</li>
+</ul>
+
+
+<h1><a name="index14h1"></a>Real (non-VM) hardware</h1>
+
+<p><code>[can't-automate]</code></p>
+
+<ul>
+<li>Boot on bare-metal from USB. Measure the boot time (from the
+syslinux menu until the GNOME desktop is ready -- quickly press
+ENTER in the Greeter) and compare with the boot time of the previous
+Tails version. The new one should not be significantly slower to
+start.</li>
+<li>Boot on bare-metal from DVD. Measure the boot time (from the
+syslinux menu until the GNOME desktop is ready -- quickly press
+ENTER in the Greeter) and compare with the boot time of the previous
+Tails version. The new one should not be significantly slower to
+start (for release candidates we do not always update the squashfs
+sort file, so then it might be ok if somewhat slower).</li>
+</ul>
+
+
+<h1><a name="index15h1"></a>Documentation</h1>
+
+<ul>
+<li>The "Tails documentation" desktop launcher should open the
+<a href="../../doc.en.html">doc</a> page (automate: <a href="https://labs.riseup.net/code/issues/8788">#8788</a>):
+
+<ul>
+<li>in one language to which the website is translated</li>
+<li>in one language to which the website is not translated (=&gt; English)</li>
+</ul>
+</li>
+<li>Browse around in the documentation shipped in the image. Internal
+links should be fine. (automate: <a href="https://labs.riseup.net/code/issues/10254">#10254</a>)</li>
+</ul>
+
+
+<h1><a name="index16h1"></a>Internationalization</h1>
+
+<p>Boot and check basic functionality is working for these (language,
+region) tuples:</p>
+
+<ul>
+<li>Arabic - Egypt</li>
+<li>Chinese - China</li>
+<li>Deutsch - Deutschland</li>
+<li>English - USA</li>
+<li>Español - España</li>
+<li>Français - France</li>
+<li>Italiano - Italia</li>
+<li>Persian - Iran</li>
+<li>Português - Brasil</li>
+<li>Russian - Russian Federation</li>
+<li>Tiếng Việt - Vietnam</li>
+</ul>
+
+
+<p>You <em>really</em> have to reboot between each language.</p>
+
+<ul>
+<li>The chosen keyboard layout must be applied. (automate: <a href="https://labs.riseup.net/code/issues/10261">#10261</a>)</li>
+<li>The screen keyboard must (automate: <a href="https://labs.riseup.net/code/issues/10263">#10263</a>):
+
+<ul>
+<li>work in Tor Browser when activated after the browser has started;</li>
+<li>work in Thunderbird when activated after Thunderbird has started;</li>
+<li>be auto-configured to use the same keyboard layout as the
+X session (known exceptions: Chinese, Persian, Português,
+Russian, Tiếng Việt).</li>
+</ul>
+</li>
+<li>In the Tor Browser:
+
+<ul>
+<li>DuckDuckGo must be the default, pre-selected search plugin. (automate: <a href="https://labs.riseup.net/code/issues/10265">#10265</a>)</li>
+</ul>
+</li>
+</ul>
+
+
+<h2><a name="index8h2"></a>Spellchecking</h2>
+
+<p>To see which among the supported locales there should be no
+spellchecker, run this in a Tails Git checkout of the commit the
+release under testing was built from:</p>
+
+<pre><code>git grep NO_SPELLCHECKER_LOCALES= config/chroot_local-hooks/11-localize_browser
+</code></pre>
+
+<p>Then do the follow in the same Tor Browser session running in the
+<code>en_US.UTF-8</code> locale (or whatever locale you are most comfortable
+identifying other language names in):</p>
+
+<ul>
+<li>Check that the expected languages are listed in the list of languages for
+spell checking. (automate: <a href="https://labs.riseup.net/code/issues/10269">#10269</a>)
+
+<ul>
+<li>Visit <a href="https://translate.google.com/">https://translate.google.com/</a>.</li>
+<li>Right-click and choose "Check spelling".</li>
+<li>Right-click and check the list of available languages.</li>
+</ul>
+</li>
+<li>For a few languages, check the spell checking:
+
+<ul>
+<li>Type something in the textarea.</li>
+<li>Right-click and select a language.</li>
+<li>Verify that the spelling suggestion are from that language. (automate: <a href="https://labs.riseup.net/code/issues/10271">#10271</a>)</li>
+</ul>
+</li>
+</ul>
+
+
+<h1><a name="index17h1"></a>Misc</h1>
+
+<ul>
+<li>Check that all seems well during init: (automate: <a href="https://labs.riseup.net/code/issues/10277">#10277</a>)
+
+<ul>
+<li><code>systemctl --failed --all</code> should say <code>0 loaded units listed</code></li>
+<li>the output of <code>journalctl</code> should seem OK.</li>
+</ul>
+</li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../../contribute.en.html">contribute</a>
+
+<a href="../../contribute.ar.html">contribute.ar</a>
+
+<a href="../../contribute.ca.html">contribute.ca</a>
+
+<a href="../../contribute.de.html">contribute.de</a>
+
+<a href="../../contribute.es.html">contribute.es</a>
+
+<a href="../../contribute.fa.html">contribute.fa</a>
+
+<a href="../../contribute.fr.html">contribute.fr</a>
+
+<a href="../../contribute.it.html">contribute.it</a>
+
+<a href="../../contribute.pl.html">contribute.pl</a>
+
+<a href="../../contribute.pt.html">contribute.pt</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../../contribute.ru.html">contribute.ru</a>
+
+<a href="../../contribute.sr_Latn.html">contribute.sr Latn</a>
+
+<a href="../../contribute.tr.html">contribute.tr</a>
+
+<a href="../../contribute.zh.html">contribute.zh</a>
+
+<a href="../../contribute.zh_TW.html">contribute.zh TW</a>
+
+<a href="../derivatives.html">derivatives</a>
+
+<a href="../design.html">design</a>
+
+<a href="../design/incremental_upgrades.html">design/incremental upgrades</a>
+
+<a href="../design/reproducibility.html">design/reproducibility</a>
+
+<a href="../how/testing.html">how/testing</a>
+
+<a href="../../news/report_2016_11.html">news/report 2016 11</a>
+
+<a href="../release_process.html">release process</a>
+
+<a href="../../support/faq.en.html">support/faq</a>
+
+<a href="../../support/faq.ar.html">support/faq.ar</a>
+
+<a href="../../support/faq.ca.html">support/faq.ca</a>
+
+<a href="../../support/faq.de.html">support/faq.de</a>
+
+<a href="../../support/faq.es.html">support/faq.es</a>
+
+<a href="../../support/faq.fa.html">support/faq.fa</a>
+
+<a href="../../support/faq.fr.html">support/faq.fr</a>
+
+<a href="../../support/faq.it.html">support/faq.it</a>
+
+<a href="../../support/faq.pl.html">support/faq.pl</a>
+
+<a href="../../support/faq.pt.html">support/faq.pt</a>
+
+<a href="../../support/faq.ru.html">support/faq.ru</a>
+
+<a href="../../support/faq.sr_Latn.html">support/faq.sr Latn</a>
+
+<a href="../../support/faq.tr.html">support/faq.tr</a>
+
+<a href="../../support/faq.zh.html">support/faq.zh</a>
+
+<a href="../../support/faq.zh_TW.html">support/faq.zh TW</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/release_process/test">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

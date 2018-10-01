@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Tails Verification (browser extension)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../design.html">design</a></li>
+
+
+
+
+<li>Tails Verification (browser extension)</li>
+
+</ul>
+</span>
+<span class="title">
+Tails Verification (browser extension)
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Software verification is a critical step in the use of secure
+applications but it has traditionally been hard to provide, especially
+from a user perspective. Usual solutions are:</p>
+
+<ul>
+<li>Using HTTPS to download. But in the case of Tails, we are serving so
+many downloads that we have to rely on <a href="./mirrors.html">mirrors hosted by third
+parties</a>. HTTPS also doesn't protect from interrupted downloads leading to
+broken Tails installations.</li>
+<li>Providing OpenPGP signatures. But this really works only for the few
+people who know how to verify an OpenPGP signature and use the
+OpenPGP Web-of-Trust correctly.</li>
+</ul>
+
+
+<p>We are trying here to provide a usable solution to verify a download
+done through HTTP, while relying on cryptographic information fetched
+elsewhere through HTTPS (and possibly with stronger authentication
+mechanisms such as public key pinning from browser vendors).</p>
+
+<p>We use for that a browser extension, called
+<em>Tails Verification</em> which is available for:</p>
+
+<ul>
+<li>Firefox 45+ (and Tor Browser 6+)</li>
+<li>Chrome 22+</li>
+</ul>
+
+
+<p>The code of <em>Tails Verification</em> is available in <code>git clone https://git-tails.immerda.ch/verification-extension</code>.</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Related documents</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Scope</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Goals</a>
+		</li>
+		<li class="L2"><a href="#index2h2">Non goals</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index3h1">Security considerations</a>
+	<ol>
+		<li class="L2"><a href="#index3h2">Threat model</a>
+		</li>
+		<li class="L2"><a href="#index4h2">Security inside the browser</a>
+		</li>
+		<li class="L2"><a href="#index5h2">Updates mechanism</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index4h1">Functioning</a>
+	<ol>
+		<li class="L2"><a href="#index6h2">Extension technology</a>
+		</li>
+		<li class="L2"><a href="#index7h2">Data source</a>
+		</li>
+		<li class="L2"><a href="#index8h2">Checksum verification</a>
+		</li>
+		<li class="L2"><a href="#index9h2">Embedded Forge library</a>
+		</li>
+		<li class="L2"><a href="#index10h2">Manipulation of the download page</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Related documents</h1>
+
+<ul>
+<li><a href="./installation_assistant.html">Design document of the installation assistant, including the download page</a></li>
+</ul>
+
+
+<h1><a name="index2h1"></a>Scope</h1>
+
+<h2><a name="index1h2"></a>Goals</h2>
+
+<p>Provide a simple, automated, and cross-platform technique to verify the ISO
+image of the current version.</p>
+
+<h2><a name="index2h2"></a>Non goals</h2>
+
+<ul>
+<li>Verify deprecated ISO images.</li>
+<li>Verify ISO images downloaded from nightly.tails.boum.org.</li>
+<li>Verify ISO images downloaded through BitTorrent. If we can rely on
+our website to provide a correct cryptographic description of the
+ISO image then we can rely on it as well to provide a correct
+BitTorrent file. Then we rely on the BitTorrent client to verify the integrity of
+the download (<a href="https://labs.riseup.net/code/issues/9043">#9043</a>).</li>
+</ul>
+
+
+<p><a id="verification"></a></p>
+
+<h1><a name="index3h1"></a>Security considerations</h1>
+
+<p><a id="threat_model"></a></p>
+
+<h2><a name="index3h2"></a>Threat model</h2>
+
+<p>We are considering here an attacker who can:</p>
+
+<ul>
+<li><p>[A] Provide a malicious ISO image to the user for example by
+operating a rogue Tails mirror.</p></li>
+<li><p>[H] Operate a website that is loaded in a different tab in the same
+browser as the extension. See the section on <a href="./verification_extension.html#inside_the_browser">security inside the
+browser</a>.</p></li>
+</ul>
+
+
+<p>We are not considering an attacker who can:</p>
+
+<ul>
+<li><p>[B] Do a man-in-the-middle attack by providing a rogue HTTPS certificate
+for https://tails.boum.org/ signed by a certificate authority
+trusted by the
+browser but under the control of the attacker.</p>
+
+<p>Since the extension is targeted at new users, a MitM or exploit on
+our website could defeat any verification technique by providing
+simplified instructions or by faking ISO verification.</p>
+
+<p>Note that our website is already in the HSTS preload list of Firefox
+and Chrome which forces HTTPS connections to our website, even for
+first time visitors.</p></li>
+<li><p>[C] Insert malicious content on https://tails.boum.org/ through an
+exploit on our website as this could trick new users to skip the ISO
+verification all the way. To prevent this kind of attack we should
+instead:</p>
+
+<ul>
+<li>Monitor externally the most relevant parts of our website.</li>
+<li>Work on integrating full upgrades in Tails Upgrader to limit the
+number of times people have to rely on our website to upgrade. See
+<a href="https://labs.riseup.net/code/issues/7499">#7499</a>.</li>
+</ul>
+</li>
+<li><p>[D] Insert malicious information in our main Git repository as such
+an attacker could do attack [C] as well.</p></li>
+<li><p>[E] Insert targeted malware on the user's computer as this could
+defeat any possible verification mechanism that such an extension
+could do.</p></li>
+<li><p>[F] Provide a rogue extension to the user as this could defeat any
+possible verification mechanism that such an extension could do.</p></li>
+<li><p>[G] Insert malicious content on https://tails.boum.org/ after taking
+control of the web server, or entire system, behind it. Such an
+attacker could do attack [C] as well but in such a way that could be
+much harder to detect (for example by serving malicious content only to
+some users).</p>
+
+<p>To mitigate such an attack in some cases we could both:</p>
+
+<ul>
+<li>Encourage external documentation (screencasts on YouTube, printed
+forms, etc.). But those would be vulnerable to other kind of
+attacks.</li>
+<li>Not rely on the website to perform the ISO verification and rely
+on a native interface accessible from the add-ons menu.</li>
+</ul>
+
+
+<p>But the cost/benefit of such a technique is not very appealing…</p></li>
+<li><p>[I] Provide a malicious extension in the same browser as this would
+have similar effects to attack [F].</p></li>
+</ul>
+
+
+<p><a id="inside_the_browser"></a></p>
+
+<h2><a name="index4h2"></a>Security inside the browser</h2>
+
+<p>The threat described as [H] is taken care of by the internals of the
+browser (and the proper coding of the extension).</p>
+
+<h3><a name="index1h3"></a>Cross-origin communication</h3>
+
+<p>The extension uses cross-origin communication to modify the download
+page.</p>
+
+<ul>
+<li><p>To ensure that messages from the extension are only sent to pages on
+our website, the extension
+sets <code>targetOrigin</code> to <code>https://tails.boum.org</code> (no trailing slash needed) in
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage"><code>postMessage</code></a>.
+See commit c87ce92.</p></li>
+<li><p>Before processing the message, the download page verifies that it is
+coming from:</p>
+
+<ul>
+<li>The same tab (<code>event.source</code> is <code>window</code>)</li>
+<li>Our website (<code>event.origin</code> is <code>https://tails.boum.org</code>, no trailing slash needed)</li>
+</ul>
+
+
+<p>See <a href="https://git-tails.immerda.ch/tails/plain/wiki/src/install/inc/js/download.js"><code>receiveMessage()</code> in <em>download.js</em></a>.</p></li>
+<li><p>The code of the extension is only injected in tabs on
+<code>https://tails.boum.org/</code> (with a trailing slash). See <code>permissions</code>
+in <em>manifest.js</em> and <code>matches</code> in <em>scripts/background/background.js</em>.</p></li>
+<li><p>The communication is unidirectional: only the extension sends messages
+and the extension does not listen to messages.</p></li>
+</ul>
+
+
+<h3><a name="index2h3"></a>Content Security Policy</h3>
+
+<p>Instead of the default Content Security Policy, the extension uses the
+strictest policy: <code>default-src 'none'</code>.</p>
+
+<p><a id="update"></a></p>
+
+<h2><a name="index5h2"></a>Updates mechanism</h2>
+
+<h3><a name="index3h3"></a>Automatic update from browsers</h3>
+
+<ul>
+<li>Chrome checks for updates "<a href="https://developer.chrome.com/extensions/autoupdate">every few
+hours</a>".</li>
+<li>Firefox checks for updates once per day.</li>
+<li>Tor Browser doesn't prevent those updates <a href="https://lists.torproject.org/pipermail/tbb-dev/2015-April/000258.html">except for Torbutton and
+Tor Launcher</a>.</li>
+</ul>
+
+
+<h3><a name="index4h3"></a>Enforce version check on our download page</h3>
+
+<p>On top of this, the HTML code of our download page includes a tag to
+force a version of the extension. For example:</p>
+
+<pre>
+&lt;div id="extension-version"&gt;1.0&lt;/div&gt;
+</pre>
+
+
+<p><em>Tails Verification</em> checks the value of this tag and asks for an
+update if its version is lower than the requested version number.</p>
+
+<p>This mechanism might be useful to force updated extensions with a finer
+time granularity that the native automatic updates from the browsers.</p>
+
+<p><a id="technology"></a></p>
+
+<h1><a name="index4h1"></a>Functioning</h1>
+
+<h2><a name="index6h2"></a>Extension technology</h2>
+
+<p>The extension is written as a <em>Web Extension</em> and the same exact code
+works on both Firefox and Chrome.
+<a id="data_source"></p>
+
+<h2><a name="index7h2"></a>Data source</h2>
+
+<p>Building up on the format specified for <a href="./incremental_upgrades.html#upgrade-description-files">upgrade description
+files</a>,
+the verification extension fetches an <a href="https://git-tails.immerda.ch/tails/plain/wiki/src/install/v1/Tails/i386/stable/latest.yml">ISO description file</a> from our
+server to retrieve all the information it needs about the ISO image
+(URL, size, checksum, etc.). As a beginning, this ISO description file
+is not signed using OpenPGP.</p>
+
+<h3><a name="index5h3"></a>Example of an ISO description file</h3>
+
+<pre><code>---
+build-target: i386
+channel: stable
+product-name: Tails
+version: '0.23'
+target-files:
+- sha256: 359d104737f1a448375d2030f938dea3d529468b8218485998ab893c1f7509eb
+  size: 939571200
+  url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.23/tails-i386-0.23.iso
+</code></pre>
+
+<h2><a name="index8h2"></a>Checksum verification</h2>
+
+<p>When verifying an ISO image, the extension:</p>
+
+<ul>
+<li><p>Downloads the ISO description document (size, checksum) from:</p>
+
+<p><a href="https://tails.boum.org/v1/Tails/amd64/stable/latest.yml">https://tails.boum.org/v1/Tails/amd64/stable/latest.yml</a></p></li>
+<li><p>Verifies the ISO image against the document (first its size, then
+its checksum).</p></li>
+</ul>
+
+
+<p>Security properties:</p>
+
+<ul>
+<li>This technique would defeat attack [A] (malicious ISO).</li>
+</ul>
+
+
+<p>More complex verification mechanisms could be gradually <span class="createlink">built into
+Tails Installer</span> where we can
+defeat attacks [B], [C], [D], [F], and [G].</p>
+
+<h2><a name="index9h2"></a>Embedded <em>Forge</em> library</h2>
+
+<p>Contrary to its predecessor
+(<a href="https://git-tails.immerda.ch/download-and-verify-extension">DAVE</a>),
+<em>Tails Verification</em> cannot rely on native API calls to calculate the
+checksum. So it embeds the <em>Forge</em> library:</p>
+
+<p><a href="https://github.com/digitalbazaar/forge/">https://github.com/digitalbazaar/forge/</a></p>
+
+<p>We choose <em>Forge</em> because it was reported as being the fastest in this
+benchmark:</p>
+
+<p><a href="https://github.com/brillout/test-javascript-hash-implementations">https://github.com/brillout/test-javascript-hash-implementations</a></p>
+
+<p><a id="html"></p>
+
+<h2><a name="index10h2"></a>Manipulation of the download page</h2>
+
+<p>The extension modifies what is displayed on the page using two different
+mechanisms:</p>
+
+<ul>
+<li><p>Mostly through message communication (<code>postMessage</code>) sent to a
+script on the page (<a href="https://git-tails.immerda.ch/tails/plain/wiki/src/install/inc/js/download.js">wiki/src/install/inc/js/download.js</a>).</p></li>
+<li><p>If an extension is already installed when the page is loaded, through
+an HTML attribute (<code>documentElement.dataset.extension</code>) corresponding
+to some CSS declarations, to indicate whether the extension is
+up-to-date or outdated.</p></li>
+<li><p>If the extension gets installed on a page, through a background script
+that injects the JavaScript of the extension on the page. See commit
+d80b322.</p></li>
+</ul>
+
+
+<p>This decouples the code of the extension from the implementation of the
+display on the HTML page (ids, classes, etc.).</p>
+
+<p>When JavaScript is disabled, the page instructs the user to temporarily
+allow JavaScript on the page (through NoScript, the most likely scenario):</p>
+
+<p><img src="../../install/inc/screenshots/allow_js.png" width="212" height="118" class="img" /></p>
+
+<p>They can otherwise still download using BitTorrent.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../../install/inc/steps/download.inline.en.html">install/inc/steps/download.inline</a>
+
+<a href="../../install/inc/steps/download.inline.ar.html">install/inc/steps/download.inline.ar</a>
+
+<a href="../../install/inc/steps/download.inline.ca.html">install/inc/steps/download.inline.ca</a>
+
+<a href="../../install/inc/steps/download.inline.de.html">install/inc/steps/download.inline.de</a>
+
+<a href="../../install/inc/steps/download.inline.es.html">install/inc/steps/download.inline.es</a>
+
+<a href="../../install/inc/steps/download.inline.fa.html">install/inc/steps/download.inline.fa</a>
+
+<a href="../../install/inc/steps/download.inline.fr.html">install/inc/steps/download.inline.fr</a>
+
+<a href="../../install/inc/steps/download.inline.it.html">install/inc/steps/download.inline.it</a>
+
+<a href="../../install/inc/steps/download.inline.pl.html">install/inc/steps/download.inline.pl</a>
+
+<a href="../../install/inc/steps/download.inline.pt.html">install/inc/steps/download.inline.pt</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../../install/inc/steps/download.inline.ru.html">install/inc/steps/download.inline.ru</a>
+
+<a href="../../install/inc/steps/download.inline.sr_Latn.html">install/inc/steps/download.inline.sr Latn</a>
+
+<a href="../../install/inc/steps/download.inline.tr.html">install/inc/steps/download.inline.tr</a>
+
+<a href="../../install/inc/steps/download.inline.zh.html">install/inc/steps/download.inline.zh</a>
+
+<a href="../../install/inc/steps/download.inline.zh_TW.html">install/inc/steps/download.inline.zh TW</a>
+
+<a href="./installation_assistant.html">installation assistant</a>
+
+<a href="../../news/report_2017_12.html">news/report 2017 12</a>
+
+<a href="../../news/report_2018_03.html">news/report 2018 03</a>
+
+<a href="../working_together/roles/verification_extension.html">working together/roles/verification extension</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/verification_extension">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

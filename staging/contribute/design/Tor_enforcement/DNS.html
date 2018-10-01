@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - DNS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../local.css" type="text/css" />
+
+
+<script src="../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../index.en.html"><img src="../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../design.html">design</a></li>
+
+
+
+
+
+<li><a href="../Tor_enforcement.html">Tor enforcement</a></li>
+
+
+
+
+<li>DNS</li>
+
+</ul>
+</span>
+<span class="title">
+DNS
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../about.en.html">About</a></li>
+    <li><a href="../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Tor does not support UDP so we cannot simply redirect DNS queries to
+the Tor transparent proxy.</p>
+
+<p>Most DNS leaks are avoided by having the system resolver query
+the Tor network using the <code>DNSPort</code> configured in
+<code>torrc</code>.</p>
+
+<p>There is a concern that any application could attempt to do its own
+DNS resolution without using the system resolver; UDP datagrams are
+therefore blocked in order to prevent leaks. Another solution may be
+to use the Linux network filter to forward outgoing UDP datagrams to
+the local DNS proxy.</p>
+
+<p>Tails also forbids DNS queries to RFC1918 addresses; those might
+indeed allow the system to learn the local network's public IP
+address.</p>
+
+<p><code>resolv.conf</code> is configured to point to the Tor DNS resolver, and <span class="application">NetworkManager<span> and <code>dhclient</code> are configured
+not to manage <code>resolv.conf</code> at all:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/conf.d/dns.conf">config/chroot local-includes/etc/NetworkManager/conf.d/dns.conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/dhcp/dhclient-enter-hooks.d/disable_make_resolv_conf">config/chroot local-includes/etc/dhcp/dhclient-enter-hooks.d/disable make resolv conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/resolv.conf">config/chroot local-includes/etc/resolv.conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/tor/torrc">config/chroot local-includes/etc/tor/torrc</a></li>
+</ul>
+
+
+<p>Some applications need to be able to do clearnet DNS resolutions, so
+we save the DNS configuration obtained by NetworkManager:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-resolv-over-clearnet">config/chroot local-includes/etc/NetworkManager/dispatcher.d/00-resolv-over-clearnet</a></li>
+</ul>
+
+
+<p>The following is the complete list of the applications allowed to use
+the clearnet DNS configuration:</p>
+
+<ul>
+<li>the <code>tor</code> process itself, but only if the user requested to
+configure Tor's network settings in Tails Greeter; in this case
+<code>tor</code> being able to resolve hostnames is convenient (e.g. hostnames
+are human-readable, IP addresses not as much) or even necessary
+(e.g. for the Meek pluggable transport):
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/dispatcher.d/10-tor.sh">config/chroot local-includes/etc/NetworkManager/dispatcher.d/10-tor.sh</a></li>
+</ul>
+</li>
+<li>the <code>clearnet</code> user used to run the
+<a href="../Unsafe_Browser.html">Unsafe Browser</a>:
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/unsafe-browser">config/chroot local-includes/usr/local/sbin/unsafe-browser</a></li>
+</ul>
+</li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../../../support/faq.en.html">support/faq</a>
+
+<a href="../../../support/faq.ar.html">support/faq.ar</a>
+
+<a href="../../../support/faq.ca.html">support/faq.ca</a>
+
+<a href="../../../support/faq.de.html">support/faq.de</a>
+
+<a href="../../../support/faq.es.html">support/faq.es</a>
+
+<a href="../../../support/faq.fa.html">support/faq.fa</a>
+
+<a href="../../../support/faq.fr.html">support/faq.fr</a>
+
+<a href="../../../support/faq.it.html">support/faq.it</a>
+
+<a href="../../../support/faq.pl.html">support/faq.pl</a>
+
+<a href="../../../support/faq.pt.html">support/faq.pt</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../../../support/faq.ru.html">support/faq.ru</a>
+
+<a href="../../../support/faq.sr_Latn.html">support/faq.sr Latn</a>
+
+<a href="../../../support/faq.tr.html">support/faq.tr</a>
+
+<a href="../../../support/faq.zh.html">support/faq.zh</a>
+
+<a href="../../../support/faq.zh_TW.html">support/faq.zh TW</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/Tor_enforcement/DNS">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

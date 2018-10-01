@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Tails 0.9 is out</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../local.css" type="text/css" />
+
+
+<script src="../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../index.en.html"><img src="../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../news.en.html">news</a></li>
+
+
+
+
+<li>Tails 0.9 is out</li>
+
+</ul>
+</span>
+<span class="title">
+Tails 0.9 is out
+</span>
+<span class="date">Fri 11 Nov 2011 01:23:45 AM UTC</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../about.en.html">About</a></li>
+    <li><a href="../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../doc.en.html">Documentation</a></li>
+    <li><a href="../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../contribute.en.html">Contribute</a></li>
+    <li><a href="../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>The Amnesic Incognito Live System, version 0.9, is out.</p>
+
+<p>All users must upgrade as soon as possible.</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Changes</a>
+	</li>
+	<li class="L1"><a href="#index2h1">I want to try it / to upgrade!</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Known issue</a>
+	</li>
+	<li class="L1"><a href="#index4h1">A glimpse towards the future</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Changes</h1>
+
+<p>Notable user-visible changes include:</p>
+
+<ul>
+<li><p>Tor</p>
+
+<ul>
+<li>Upgrade to 0.2.2.34. This fixes CVE-2011-2768 and CVE-2011-2769
+which prompted for manual updates for users of Tails 0.8.1.</li>
+<li>Suppress Tor's warning about applications doing their own DNS
+lookups. Some users have reported concerns about these warnings,
+but it should be noted that they are completely harmless inside
+Tails as its system DNS resolver is Torified.</li>
+</ul>
+</li>
+<li><p>Linux 3.0.0-6, which fixed a great number of bugs and security issues.</p></li>
+<li><p>Iceweasel</p>
+
+<ul>
+<li>Upgrade to 3.5.16-11 ((fixes CVE-2011-3647, CVE-2011-3648,
+CVE-2011-3650).</li>
+<li>Torbutton: upgrade to 1.4.4.1-1, including support for the
+in-browser "New identity" feature.</li>
+<li>FireGPG: upgrade to 0.8-1+tails2. Users are notified that the
+FireGPG Text Editor is the only safe place for performing
+cryptographic operations, and these operations has been disabled
+in other places. Performing them outside of the editor opens up
+several severe attacks through JavaScript (e.g. leaking plaintext
+when decrypting, signing messages written by the attacker).</li>
+<li>Replace CS Lite with Cookie Monster for cookie management. Cookie
+Monster has an arguably nicer interface, is being actively
+maintained and is packaged in Debian.</li>
+</ul>
+</li>
+<li><p>Software</p>
+
+<ul>
+<li>Install <a href="https://mat.boum.org/">MAT</a>, the Metadata Anonymisation
+Toolkit. Its goal is to remove file metadata which otherwise
+could leak information about you in the documents and media files
+you publish. This is the result of a Tails developer's suggestion
+for GSoC 2011, although it ended up being mentored by The Tor
+Project.</li>
+<li>Upgrade WhisperBack to 1.5~rc1. Users are guided how to send their
+bug reports through alternative channels upon errors sending
+them. This will make bug reporting easier when there's no network
+connection available.</li>
+<li>Upgrade TrueCrypt to 7.1.</li>
+</ul>
+</li>
+<li><p>Miscellaneous</p>
+
+<ul>
+<li>The date and time setting system was completely reworked. This
+should prevent time syncing issues that may prevent Tor from
+working properly, which some users have reported. The new system
+will not leave a fingerprintable network signature, like the old
+system did. Previously that signature could be used to identify
+who is using Tails (but <em>not</em> deanonymize them).</li>
+<li>Erase memory at shutdown: run many instances of the memory
+wiper. Due to architectural limitations of i386 a process cannot
+access all memory at the same time, and hence a single memory wipe
+instance cannot clear all memory.</li>
+<li>Saner keyboard layouts for Arabic and Russian.</li>
+<li>Use Plymouth text-only splash screen at boot time.</li>
+</ul>
+</li>
+</ul>
+
+
+<p>Plus the usual bunch of minor bug reports and improvements.</p>
+
+<p>See the <a href="https://git-tails.immerda.ch/tails/plain/debian/changelog?h=0.9">online
+Changelog</a>
+for technical details.</p>
+
+<h1><a name="index2h1"></a>I want to try it / to upgrade!</h1>
+
+<p>See the <a href="../getting_started.en.html">Getting started</a> page.</p>
+
+<h1><a name="index3h1"></a>Known issue</h1>
+
+<p>The memory erasure on Tails shutdown cannot guarantee that all memory
+in the 2 GB to 4 GB region is wiped. The improvements made in Tails
+0.9 should at least make the situation better than previously.</p>
+
+<h1><a name="index4h1"></a>A glimpse towards the future</h1>
+
+<p>Were do we go from here? Have a look to our <a href="https://tails.boum.org/contribute/roadmap">roadmap</a> to
+see where we are heading to.</p>
+
+<p>Would you want to help? As explained in our <a href="../contribute.en.html">"how to contribute"
+documentation</a>, here are many ways <strong>you</strong> can contribute
+to Tails: no need to be a hardcore developer.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+<div class="tags">
+Tags:
+
+<a href="../tags/announce.html" rel="tag">announce</a>
+
+</div>
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../security/Numerous_security_holes_in_0.8.1.html">security/Numerous security holes in 0.8.1</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=news/version_0.9">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

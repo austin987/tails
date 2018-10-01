@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Tails August 2015 report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../../local.css" type="text/css" />
+
+
+<script src="../../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../../index.en.html"><img src="../../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../../reports.html">reports</a></li>
+
+
+
+
+
+<li><a href="../../SponsorS.html">SponsorS</a></li>
+
+
+
+
+
+<li><a href="../../../../index.en.html">2015</a></li>
+
+
+
+
+<li>Tails August 2015 report</li>
+
+</ul>
+</span>
+<span class="title">
+Tails August 2015 report
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../../about.en.html">About</a></li>
+    <li><a href="../../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">A. Replace Claws Mail with Icedove</a>
+	</li>
+	<li class="L1"><a href="#index2h1">B. Improve our quality assurance process</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">B.1. Automatically build ISO images for all the branches of our source code that are under active development</a>
+		</li>
+		<li class="L2"><a href="#index2h2">B.2. Continuously run our entire test suite on all those ISO images once they are built</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index3h1">C. Scale our infrastructure</a>
+	<ol>
+		<li class="L2"><a href="#index3h2">C.4. Maintain our already existing services</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index4h1">D. Migration to Debian Jessie</a>
+	<ol>
+		<li class="L2"><a href="#index4h2">D.1. Adjust to the change of desktop environment to GNOME Shell</a>
+		</li>
+		<li class="L2"><a href="#index5h2">D.2. Take advantage of systemd to improve the internals of Tails</a>
+		</li>
+		<li class="L2"><a href="#index6h2">D.6. Upgrade Tails-specific tools to Debian Jessie technologies</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index5h1">E. Release management</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>A. Replace Claws Mail with Icedove</h1>
+
+<p>In May we discovered than Claws Mail is leaking plaintext of encrypted
+emails to the IMAP server and that it was impossible to fix this
+properly in Tails. As a consequence, we're now considering moving to
+Icedove faster than planned initially (late January) and to:</p>
+
+<ul>
+<li>Replace Claws Mail with Icedove <em>without</em> its account creation
+wizard in Tails 1.7 (early November). TorBirdy already provides an
+alternative account wizard which is good enough for that step.</li>
+<li>Add the wizard in Tails 1.9 (late January).</li>
+</ul>
+
+
+<p>We also started prototyping tools for users to migrate their data from
+Claws Mail to Icedove but nothing is published yet.</p>
+
+<h1><a name="index2h1"></a>B. Improve our quality assurance process</h1>
+
+<h2><a name="index1h2"></a>B.1. Automatically build ISO images for all the branches of our source code that are under active development</h2>
+
+<ul>
+<li><p>B.1.9. Deploy, refresh our Jenkins jobs regularly</p>
+
+<p>After our code freeze for Tails 1.5, we realized that there was
+a bug in our algorithm that detects what Git branch should be built
+on Jenkins (<a href="https://labs.riseup.net/code/issues/9925">#9925</a>). We promptly worked around the
+problem initially, to not interfere with the release management work.
+And then, a proper fix was implemented and deployed.</p></li>
+</ul>
+
+
+<h2><a name="index2h2"></a>B.2. Continuously run our entire test suite on all those ISO images once they are built</h2>
+
+<ul>
+<li><p>B.2.1. Adjust our infrastructure to run tests in parallel: <a href="https://labs.riseup.net/code/issues/9645">#9645</a>, <a href="https://labs.riseup.net/code/issues/9486">#9486</a></p>
+
+<p>All the testing VMs we planned to deploy (four of them) are now live,
+and our test suite developers have access to them and can run the test
+suite there. They are connected to our Jenkins master, but have no
+jobs running on them yet. Our Puppet modules have been adapted to make
+this possible.</p>
+
+<p>Manual stress testing of these new systems is ongoing. It will allow
+us to see how our test suite behaves there, and how these systems cope
+with it.</p>
+
+<p>We still need to automate these test suite runs with Jenkins to have
+good statistics. It will also teach us whether we need to start a
+clean test VM before each test suite run. Ideas to implement this have
+been researched, evaluated, and discussed.</p></li>
+<li><p>B.2.2. Decide what kind of ISO images qualify for testing and when, how to process, advertise, and store the results: <a href="https://labs.riseup.net/code/issues/8667">#8667</a></p>
+
+<p>The discussion has almost reached its end, and <span class="createlink">the corresponding
+blueprint</span> is now essentially complete.  Now that this step is
+completed, we have clear design goals, and we know what will need to
+be done to deploy our automated test suite on our Jenkins
+infrastructure.</p></li>
+</ul>
+
+
+<h1><a name="index3h1"></a>C. Scale our infrastructure</h1>
+
+<h2><a name="index3h2"></a>C.4. Maintain our already existing services</h2>
+
+<p>This covers "C.4.3. Administer our services upto milestone III" until
+the end of August.</p>
+
+<ul>
+<li>We fixed the "reboot required" notifications on our Jessie and
+newer systems. The corresponding Puppet code was proposed upstream.</li>
+<li>We started adapting our Puppet code to migrate to Gitolite v3 (<a href="https://labs.riseup.net/code/issues/10093">#10093</a>).</li>
+<li>We experimented with http://httpredir.debian.org, with limited
+success so far. It should improve with the version of APT that will
+ship in Debian 9 (Stretch).</li>
+<li>We deployed to pre-production a meeting reminder system that should
+be more robust (<a href="https://labs.riseup.net/code/issues/9172">#9172</a>).</li>
+<li>We converted some obsolete service management we had to systemd.</li>
+<li>We installed the base system of the VM that was planned to be a
+failover for our critical services (<a href="https://labs.riseup.net/code/issues/6250">#6250</a>).</li>
+</ul>
+
+
+<h1><a name="index4h1"></a>D. Migration to Debian Jessie</h1>
+
+<p>Not much technical work in this area in August: we were busy attending
+GUADEC and DebConf.</p>
+
+<p>Still, aside of the achievements described below:</p>
+
+<ul>
+<li><p>We identified issues on Jessie with the AppArmor profile for CUPS
+(<a href="https://labs.riseup.net/code/issues/9963">#9963</a>). The Tails-specific part was corrected,
+and more generic maintainability issues were raised on the upstream
+mailing list.</p></li>
+<li><p>We identified a couple minor issues that we would like to address
+before the Tails 2.0 release (<a href="https://labs.riseup.net/code/issues/9966">#9966</a>, <a href="https://labs.riseup.net/code/issues/9967">#9967</a>), if time permits.</p></li>
+</ul>
+
+
+<h2><a name="index4h2"></a>D.1. Adjust to the change of desktop environment to GNOME Shell</h2>
+
+<ul>
+<li>Regarding the not fully solved problem we have with desktop
+notifications (<a href="https://labs.riseup.net/code/issues/7989">#7989</a>): we asked for advice to
+a GNOME developer, and were pointed to a technical solution that
+seems to be exactly what we need.</li>
+</ul>
+
+
+<h2><a name="index5h2"></a>D.2. Take advantage of systemd to improve the internals of Tails</h2>
+
+<ul>
+<li><p>D.2.2. Replace our patches to upstream initscripts with systemd
+drop-in overrides (<a href="https://labs.riseup.net/code/issues/9881">#9881</a>)</p>
+
+<p>We actually found a better solution to solve the underlying problem.
+The objective was to patch 9 initscripts maximum, and we are now
+modifying only 8.</p></li>
+</ul>
+
+
+<h2><a name="index6h2"></a>D.6. Upgrade Tails-specific tools to Debian Jessie technologies</h2>
+
+<ul>
+<li><p>D.6.1. Port Tails-specific tools from udisks 1 to udisks 2</p>
+
+<p>We worked a bit on simple reproducers for the race conditions we are
+seeing in udisks (<a href="https://labs.riseup.net/code/issues/9691">#9691</a>).</p></li>
+<li><p>D.6.3. Port WhisperBack, our integrated bug reporting tool, to Python 3</p>
+
+<p>We fixed a bug caused by a typo, and made progress on adding native
+SOCKS support to WhisperBack (<a href="https://labs.riseup.net/code/issues/9412">#9412</a>).</p></li>
+</ul>
+
+
+<h1><a name="index5h1"></a>E. Release management</h1>
+
+<ul>
+<li><p><a href="../../../../news/version_1.5.html">Tails 1.5</a> was released on 2015-08-11</p>
+
+<ul>
+<li>Disable access to the local network in the Tor Browser. Users
+should now use the Unsafe Browser to access the local network.</li>
+<li>Install Tor Browser 5.0 (based on Firefox 38esr).</li>
+<li>Install a 32-bit GRUB EFI boot loader. Tails now starts on some
+tablets with Intel Bay Trail processors and on some Mac with
+32-bit UEFI.</li>
+<li>Let the user know when Tails Installer has rejected a device
+because it is too small.</li>
+<li>Our AppArmor setup has been audited and improved in various ways
+which should harden the system.</li>
+</ul>
+</li>
+<li><p><a href="../../../../news/version_1.5.1.html">Tails 1.5.1</a> was released on 2015-08-28</p>
+
+<p>Tails 1.5.1 was an emergency release triggered by an unscheduled Firefox
+release meant to fix critical security issues.</p></li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/reports/SponsorS/2015/2015_08">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

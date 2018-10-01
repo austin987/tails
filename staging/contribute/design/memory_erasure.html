@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Memory erasure</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../design.html">design</a></li>
+
+
+
+
+<li>Memory erasure</li>
+
+</ul>
+</span>
+<span class="title">
+Memory erasure
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>In order to protect against memory recovery such as cold boot attack,
+most of the system RAM is overwritten when Tails is being shutdown or when the
+boot medium is physically removed. Also, memory allocated to processes
+is erased upon process termination.</p>
+
+<h4>The big picture</h4>
+
+<p>Tails now relies on the Linux kernel's freed memory poisoning feature.</p>
+
+<p>But memory poisoning only works when memory is actually freed,
+and a regular shutdown would not free the memory used by the aufs
+read-write branch. So we use the <code>systemd-shutdown</code> ability to return
+to the initramfs, to ensure the root filesystem is unmounted.</p>
+
+<p>The initramfs is unpacked in <code>/run/initramfs</code> at boot time:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/initramfs-shutdown.service">config/chroot local-includes/lib/systemd/system/initramfs-shutdown.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/initramfs-restore">config/chroot local-includes/usr/local/lib/initramfs-restore</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/udev-watchdog-wrapper">config/chroot local-includes/usr/local/lib/udev-watchdog-wrapper</a></li>
+</ul>
+
+
+<p>… so that the copy of <code>systemd-shutdown</code> that runs in the real,
+non-initramfs system can switch root into <code>/run/initramfs</code>, and run
+another copy of <code>systemd-shutdown</code> that's
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/initramfs-tools/hooks/shutdown">included</a>
+in the initramfs. That one will unmount all filesystems, run
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/initramfs-pre-shutdown-hook">a custom hook</a>
+that helps us automatically test this behavior, and finally perform
+the requested poweroff/reboot action.</p>
+
+<h4>Triggers</h4>
+
+<p>Different kinds of events trigger the memory erasure process. All lead
+to run the shutdown process that erases memory.</p>
+
+<p><strong>First, most memory is erased at the end of a normal shutdown/reboot
+sequence.</strong> This is implemented by the <a href="./kernel_hardening.html">Linux kernel's freed memory
+poisoning feature</a>, more specifically:</p>
+
+<ul>
+<li><code>page_poison</code></li>
+<li>passing "P" to <code>slub_debug</code></li>
+</ul>
+
+
+<p><a href="https://git-tails.immerda.ch/tails/plain/features/erase_memory.feature">Automated tests</a>
+ensure that the most important parts of memory are erased this way.</p>
+
+<p><strong>Second, the memory erasure process is triggered when the boot medium
+is physically removed during runtime (USB boot medium is unplugged or
+boot DVD is ejected).</strong> This is implemented by a custom <code>udev-watchdog</code>
+program monitors the boot medium; it's run by a wrapper, started at
+boot time, that brutally invokes the memory erasure process, bypassing
+other system shutdown scripts, when this medium happens to be
+physically removed.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/udev-watchdog-wrapper">config/chroot local-includes/usr/local/lib/udev-watchdog-wrapper</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/src/udev-watchdog.c">config/chroot local-includes/usr/src/udev-watchdog.c</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/52-udev-watchdog">config/chroot local-hooks/52-udev-watchdog</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-shutdown-on-media-removal.service">config/chroot local-includes/lib/systemd/system/tails-shutdown-on-media-removal.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/52-update-rc.d">config/chroot local-hooks/52-update-rc.d</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/gdm.service.d/restart.conf">config/chroot local-includes/lib/systemd/system/gdm.service.d/restart.conf</a></li>
+</ul>
+
+
+<h4>Making sure needed files are available</h4>
+
+<p>The <code>memlockd</code> daemon, appropriately configured, ensures every file
+needed by the memory erasure process is locked into memory from boot
+to memory erasure time.</p>
+
+<ul>
+<li><a href="https://tracker.debian.org/pkg/memlockd">memlockd</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/memlockd.cfg">config/chroot local-includes/etc/memlockd.cfg</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-patches/keep_memlockd_on_shutdown.diff">config/chroot local-patches/keep memlockd on shutdown.diff</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/memlockd.service.d/oom.conf">config/chroot local-includes/lib/systemd/system/memlockd.service.d/oom.conf</a></li>
+</ul>
+
+
+<h4>Limitations</h4>
+
+<p>As discussed in
+<a href="https://mailman.boum.org/pipermail/tails-dev/2017-January/011128.html">an email thread</a>
+with the authors of <code>PAX_MEMORY_SANITIZE</code>, kernel memory poisoning
+does not clear <em>all</em> kinds of memory once it's freed:</p>
+
+<ul>
+<li>we enable free poisoning for the buddy allocator and the slub/slab
+ones, but there may be other ways the Linux kernel allocates
+memory, that are not subject to poisoning;</li>
+<li>on shutdown all process memory is freed (and thus erased), but some
+kernel memory is not erased on shutdown, and is currently
+not erased.</li>
+</ul>
+
+
+<p>It's not obvious that our previous approaches (see below) did any
+better, and this one is much more reliable, so we think this trade-off
+is the most sensible one with the resources and skills currently
+available for Tails.</p>
+
+<h4>Obsolete approaches</h4>
+
+<p>The initial implementation of the Tails memory erasure feature
+suffered from flaws that were demonstrated by <a href="../../security/audits/Blackhat_De-Anonymizing_Live_CDs.html">external
+audit</a>. In short, it
+only erased free memory and let data in the aufs read-write branch in
+recoverable state.</p>
+
+<p>Then, in order to erase the biggest possible part of the system memory,
+a new implementation, shipped from Tails 0.7 to 2.12, runs in a
+fresh environment provided by a newly started Linux kernel. This way,
+a given part of the memory either is <em>used</em> by the memory erasure
+process itself or it is considered as free and thus <em>erased</em> by this
+process; in any case, it is at least overwritten once.</p>
+
+<p>Sadly, this approach suffered from severe usability and reliability
+problems (e.g. <a href="https://labs.riseup.net/code/issues/12354">#12354</a>, <a href="https://labs.riseup.net/code/issues/11786">#11786</a>).
+So it was removed in Tails 3.0.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.en.html">doc/about/acknowledgments and similar projects</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.ar.html">doc/about/acknowledgments and similar projects.ar</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.ca.html">doc/about/acknowledgments and similar projects.ca</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.de.html">doc/about/acknowledgments and similar projects.de</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.es.html">doc/about/acknowledgments and similar projects.es</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.fa.html">doc/about/acknowledgments and similar projects.fa</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.fr.html">doc/about/acknowledgments and similar projects.fr</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.it.html">doc/about/acknowledgments and similar projects.it</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.pl.html">doc/about/acknowledgments and similar projects.pl</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.pt.html">doc/about/acknowledgments and similar projects.pt</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.ru.html">doc/about/acknowledgments and similar projects.ru</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.sr_Latn.html">doc/about/acknowledgments and similar projects.sr Latn</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.tr.html">doc/about/acknowledgments and similar projects.tr</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.zh.html">doc/about/acknowledgments and similar projects.zh</a>
+
+<a href="../../doc/about/acknowledgments_and_similar_projects.zh_TW.html">doc/about/acknowledgments and similar projects.zh TW</a>
+
+<a href="../../news/version_3.0.en.html">news/version 3.0</a>
+
+<a href="../../news/version_3.0.ar.html">news/version 3.0.ar</a>
+
+<a href="../../news/version_3.0.ca.html">news/version 3.0.ca</a>
+
+<a href="../../news/version_3.0.de.html">news/version 3.0.de</a>
+
+<a href="../../news/version_3.0.es.html">news/version 3.0.es</a>
+
+<a href="../../news/version_3.0.fa.html">news/version 3.0.fa</a>
+
+<a href="../../news/version_3.0.fr.html">news/version 3.0.fr</a>
+
+<a href="../../news/version_3.0.it.html">news/version 3.0.it</a>
+
+<a href="../../news/version_3.0.pl.html">news/version 3.0.pl</a>
+
+<a href="../../news/version_3.0.pt.html">news/version 3.0.pt</a>
+
+<a href="../../news/version_3.0.ru.html">news/version 3.0.ru</a>
+
+<a href="../../news/version_3.0.sr_Latn.html">news/version 3.0.sr Latn</a>
+
+<a href="../../news/version_3.0.tr.html">news/version 3.0.tr</a>
+
+<a href="../../news/version_3.0.zh.html">news/version 3.0.zh</a>
+
+<a href="../../news/version_3.0.zh_TW.html">news/version 3.0.zh TW</a>
+
+<a href="../../support/faq.en.html">support/faq</a>
+
+<a href="../../support/faq.ar.html">support/faq.ar</a>
+
+<a href="../../support/faq.ca.html">support/faq.ca</a>
+
+<a href="../../support/faq.de.html">support/faq.de</a>
+
+<a href="../../support/faq.es.html">support/faq.es</a>
+
+<a href="../../support/faq.fa.html">support/faq.fa</a>
+
+<a href="../../support/faq.fr.html">support/faq.fr</a>
+
+<a href="../../support/faq.it.html">support/faq.it</a>
+
+<a href="../../support/faq.pl.html">support/faq.pl</a>
+
+<a href="../../support/faq.pt.html">support/faq.pt</a>
+
+<a href="../../support/faq.ru.html">support/faq.ru</a>
+
+<a href="../../support/faq.sr_Latn.html">support/faq.sr Latn</a>
+
+<a href="../../support/faq.tr.html">support/faq.tr</a>
+
+<a href="../../support/faq.zh.html">support/faq.zh</a>
+
+<a href="../../support/faq.zh_TW.html">support/faq.zh TW</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/memory_erasure">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

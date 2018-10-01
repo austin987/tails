@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - persistence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../design.html">design</a></li>
+
+
+
+
+<li>persistence</li>
+
+</ul>
+</span>
+<span class="title">
+persistence
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Data persistence is a somewhat tricky topic in a Live system context,
+especially one explicitly designed to avoid leaving any trace of
+its use.</p>
+
+<p>Some real-life usecases however require to set up some kind of data
+persistence, which were then carefully introduced and supported.</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Usecases</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">What can be made persistent?</a>
+		<ol>
+			<li class="L3"><a href="#index1h3">Application-specific configurations</a>
+			</li>
+			<li class="L3"><a href="#index2h3">User data store</a>
+			</li>
+			<li class="L3"><a href="#index3h3">Additional software packages</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index2h2">Persistence storage location</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index2h1">Specifications</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Current state of things</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Implementation</a>
+	<ol>
+		<li class="L2"><a href="#index3h2">Backend</a>
+		<ol>
+			<li class="L3"><a href="#index4h3">Example</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index4h2">User interface</a>
+		<ol>
+			<li class="L3"><a href="#index5h3">bootstrap persistent storage</a>
+			<ol>
+				<li class="L4"><a href="#index1h4">Design</a>
+				</li>
+			</ol>
+			</li>
+			<li class="L3"><a href="#index6h3">Configure which bits are persistent</a>
+			<ol>
+				<li class="L4"><a href="#index2h4">Design</a>
+				</li>
+			</ol>
+			</li>
+			<li class="L3"><a href="#index7h3">Enable persistence at boot time</a>
+			<ol>
+				<li class="L4"><a href="#index3h4">Design</a>
+				</li>
+			</ol>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index5h2">backend / tails-greeter interface</a>
+		<ol>
+			<li class="L3"><a href="#index8h3">Long story short</a>
+			</li>
+			<li class="L3"><a href="#index9h3">Interfacing</a>
+			</li>
+			<li class="L3"><a href="#index10h3">Possibly valid persistent containers</a>
+			</li>
+			<li class="L3"><a href="#index11h3">Asking live-persist to set up persistence</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index6h2">Additional software packages</a>
+		</li>
+		<li class="L2"><a href="#index7h2">Security</a>
+		</li>
+		<li class="L2"><a href="#index8h2">Migration from pre-0.21 persistent volumes</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Usecases</h1>
+
+<h2><a name="index1h2"></a>What can be made persistent?</h2>
+
+<p>Here are the usecases that are of interest for our users and we want
+to support.</p>
+
+<h3><a name="index1h3"></a>Application-specific configurations</h3>
+
+<p>This is relevant for the following applications:</p>
+
+<ul>
+<li>GnuPG, SSH and OTR key pairs</li>
+<li>GnuPG configuration</li>
+<li>SSH client configuration</li>
+<li>Tor Browser certificate trust</li>
+<li>Tor Browser bookmarks</li>
+<li>Pidgin configuration</li>
+<li>MUA configuration</li>
+<li>printers configuration</li>
+<li>Tor's data/cache for faster bootstrap with slow connections and
+better protections through more stable entry guards
+(<code>/var/lib/tor/</code>); beware, this breaks tordate
+<a href="./Time_syncing.html">Time syncing</a></li>
+<li>NoScript global behaviour (whitelist / blacklist) and exceptions</li>
+</ul>
+
+
+<p>A tool (<code>tails-persistence-setup</code>) helps the user to choose exactly
+what files/directories should be persistent. With such a general
+solution the above things don't have to be implemented individually,
+and are instead present as default suggestions in the tool, and
+advanced users with uncommon requirements can do whatever they want so
+we don't hear them nagging all the time.</p>
+
+<p>Stuff we don't want to actively support making persistent:</p>
+
+<ul>
+<li>web browser addons (while we don't want to make it impossible to
+install addons, we think it's a really bad idea, and won't actively
+support it, since it partitions the Tails users anonymity set, thus
+having bad consequences both on people who do it <em>and</em> on others)</li>
+</ul>
+
+
+<h3><a name="index2h3"></a>User data store</h3>
+
+<p>A persistent non-home data store for whatever random files the user
+wants to have persistent. This is the <code>~/Persistent/</code> directory.</p>
+
+<h3><a name="index3h3"></a>Additional software packages</h3>
+
+<p>If a user needs software that is not included in Tails by default it can be
+quite annoying to fetch the APT information and download it (slow over
+Tor) every time. Therefore, APT packages lists and cache can easily be
+made persistent. It's also possible to store in persistence a list of
+additional software packages to be automatically reinstalled on boot.</p>
+
+<h2><a name="index2h2"></a>Persistence storage location</h2>
+
+<p>The Tails persistent volume is a LUKS-encrypted GPT partition, labeled
+<code>TailsData</code>, stored on a removable storage device.</p>
+
+<h1><a name="index2h1"></a>Specifications</h1>
+
+<p>Once a persistent volume is enabled, changes to persistent files are saved.</p>
+
+<p>Moreover:</p>
+
+<ul>
+<li>Read-write access to a persistent data store is not the default: it
+requires a voluntary user action such as choosing enabling
+a <em>persistence</em> option in the boot menu.</li>
+<li>The persistent data is stored using strong, well-known, Free
+Software, peer-reviewed encryption tools (<code>dm-crypt</code> and LUKS)</li>
+<li>Fixed storage devices are be blacklisted by default from the search
+for persistent volumes. Rationale: preventing the risk of using
+a malicious persistent volume seems more important than supporting
+the rare "I want to store my persistent volume on a fixed hard-disk"
+use-case.</li>
+</ul>
+
+
+<h1><a name="index3h1"></a>Current state of things</h1>
+
+<p>Tails 0.11 and greater supports the <strong>persistent application-specific
+configurations</strong> and <strong>persistent user data store</strong> usecases.</p>
+
+<h1><a name="index4h1"></a>Implementation</h1>
+
+<h2><a name="index3h2"></a>Backend</h2>
+
+<p>Debian Live already supports several kinds of persistence, including
+snapshots of selected files and persistence store automounting, both
+at the <code>$HOME</code> and system-wide levels. LUKS persistent volumes
+are supported.</p>
+
+<p>Neither home automounting nor <code>live-snapshot</code> currently fit the
+application-specific configuration persistence use case. Both because
+they are not finely grained enough and persist too much.</p>
+
+<p>That's why we have decided to:</p>
+
+<ul>
+<li><a href="http://live.debian.net/devel/rfc/persistence/">generalize overlays</a>
+(<code>*-rw</code>) to handle arbitrary directories, not just <code>/</code> and <code>/home</code>,</li>
+<li>add a "linkfiles" (inspired by <a href="http://git.kitenet.net/?p=joey/home.git;a=blob;f=bin/dircombine">Joey Hess'
+dircombine</a>)
+option to create symlinks from the root of a non-persistent
+directory (e.g. <code>$HOME</code>) to regular files stored in
+a persistent location (e.g. <code>.gitconfig</code>, <code>.vimrc</code>, etc.)</li>
+</ul>
+
+
+<p>The code we ship lives in the <code>tmp-persistent-custom</code> branch in
+our <a href="../git.html">live-boot Git repository</a>. We build packages
+from the <code>master</code> branch in there, and drop them into the Tails main
+Git repository.</p>
+
+<h3><a name="index4h3"></a>Example</h3>
+
+<p>Example <code>live.persist</code> configuration file:</p>
+
+<pre><code># destination       options
+/var/cache/apt
+/home/amnesia       linkfiles,source=dotfiles
+</code></pre>
+
+<p>This will result in:</p>
+
+<ul>
+<li><code>$MEDIA/apt</code> is bind-mounted onto <code>/var/cache/apt</code></li>
+<li><code>/home/amnesia/</code> contains symlinks to every file in <code>$MEDIA/dotfiles</code></li>
+</ul>
+
+
+<h2><a name="index4h2"></a>User interface</h2>
+
+<h3><a name="index5h3"></a>bootstrap persistent storage</h3>
+
+<p>A <em>Configure persistent storage</em> menu entry is the entry point to the
+<em>bootstrap persistent storage</em> UI. This UI allows the user to set up
+a persistent storage container in the free space left on the USB stick
+by <a href="./installation.html">Tails Installer</a>.</p>
+
+<p>Choosing persistence is something <em>activelly</em> opt-in, i.e. "I want
+this, I read the documentation for related information, then run the
+setup tool", rather than something we throw to the face of every user
+who did not think of it herself.</p>
+
+<p>This UI is called <code>tails-persistence-setup</code> and its code lives in its
+own <a href="../git.html">Git</a> (gbp-style) repository.</p>
+
+<h4><a name="index1h4"></a>Design</h4>
+
+<p>Setting up a Tails persistent volume means:</p>
+
+<ul>
+<li>detect the device Tails is running from</li>
+<li>error out if not running from USB</li>
+<li>error out unless Tails was installed using Tails Installer (i.e.
+unless it's running from a GPT partition labeled <code>Tails</code>)</li>
+<li>error out if the device Tails is running from already has
+a persistent volume</li>
+<li>ask the user an encryption passphrase (welcome bonus: pointing to
+the relevant documentation about choosing a <em>strong</em> passphrase)</li>
+<li>create a LUKS-encrypted partition on the Tails USB stick
+
+<ul>
+<li>uses all the free space left by Tails Installer</li>
+<li>labeled <code>TailsData</code></li>
+<li>create a filesystem in the encrypted container</li>
+<li>give ownership on the filesystem to the default Tails user</li>
+</ul>
+</li>
+<li><p>explain the user how/when/why to run the <em>configure which bits are
+persistent</em> UI</p></li>
+<li><p><strong>How/when to run?</strong> Initially, we wanted to do so on first boot.
+However, to detect if a given Tails
+system is booting for the first time or not, every first boot must
+change something on the Tails system partition. We don't
+want to do this, hence the <code>tails-persistence-setup</code> will be run
+from the Applications menu by users who decide they want persistence.</p></li>
+<li><p><strong>Storage location</strong>: To keep the GUI and documentation simple, we
+only support setting up a persistent volume <em>on the USB stick Tails
+is running from</em>. <strong>Note</strong>: the underlying tools (live-boot backend,
+tails-greeter) will support storage on whatever relevant device,
+though; moreover, <code>tails-persistence-setup</code> actually knows how to
+set up persistence on arbitrary devices, thanks to command-line
+options. Therefore, brave and advanced users can prepare their store
+their persistent data wherever they want, but this is not something
+we will actively support and document beyond the bare minimum
+(<code>--help</code> and manpage).</p></li>
+<li><p><strong>Filesystem</strong> to create on the encrypted storage container: <code>ext3</code>
+looks like the safe bet. The default <code>ext3</code> journalling mode only
+journals metadata, not data, so the impact of journalling on Flash
+drives should be pretty minor.  Also, we could not find
+a <a href="https://en.wikipedia.org/wiki/Flash%20file%20system">Flash file system</a> with mature enough support for
+block devices: they are rather targeted at raw access to
+MTD devices.</p></li>
+<li><p><strong>Integration with other configuration steps</strong>: it seems doable to
+have <code>tails-persistence-setup</code> host both the <em>bootstrap persistent
+storage</em> and <em>configure which bits are persistent</em> user interfaces
+in a wizard-like way. The current code provides the foundations to
+do so, and the menu entry is called <em>Configure persistent storage</em>.
+One may call it using multiple <code>--step</code> options, and the UI will
+present every step sequentially; currently, the only implemented
+steps are <code>bootstrap</code>, <code>configure</code> (that implements the <em>configure
+which bits are persistent</em> UI) and <code>delete</code>.</p></li>
+<li><p><strong>Programming language</strong>: written in Perl, i.e. the language the one
+of us who wrote it is the most efficient at.</p></li>
+<li><p>Partition / filesystem / LUKS management is done using <code>udisks</code>; the
+<a href="https://labs.riseup.net/code/issues/5820">udisks bug wrt.
+partition attributes</a>
+is workaround'ed.</p></li>
+</ul>
+
+
+<h3><a name="index6h3"></a>Configure which bits are persistent</h3>
+
+<p>This is automatically run right after the persistent storage bootstrap
+step. The user is enabled to change the configuration later.
+Persistence settings changes are taken into account at next boot.</p>
+
+<h4><a name="index2h4"></a>Design</h4>
+
+<ul>
+<li>either persistence is currently enabled in read-write mode, and thus
+the persistence partition is already mounted; or the user is
+directly coming from bootstrap, and then we must mount the partition
+ourselves</li>
+<li>by default, set up a linkfiles-enabled persistent
+<code>${HOME}/dotfiles</code>, preconfigured to have its contents symlinked
+into <code>$HOME</code>.</li>
+<li>apart of this, let's consider non-directories persistence an
+advanced feature: to start with, and possibly forever, this could
+only be configured by manually editing live-persist file</li>
+<li>a few <strong>presets</strong> are made available (e.g. <code>~/.gnupg/</code>);
+technically, each of these has a name, optionally a short
+description and icon, and the needed information to make a simple
+directory persistent (e.g. make <code>/home/amnesia/.gnupg</code> persist,
+as the "gnupg" sub-directory of the persistent volume).
+The GUI
+displays every available preset, along with its current
+(enabled/disabled) status and available details (description, icon).
+tails-persistence-setup has means to
+merge its presets list with the configuration read from the input
+configuration file; to this end, it knows if a given preset
+is enabled in the input configuration file;</li>
+<li>by default, the current configuration is displayed as a list of
+items (= config lines); listed items may be toggled on/off; an <em>Add
+custom</em> button allows to enter custom source, destination (and
+comma-separated list of options?)</li>
+</ul>
+
+
+<h3><a name="index7h3"></a>Enable persistence at boot time</h3>
+
+<p>Choosing between various persistence modes is one of the reasons why
+we've written a graphical <a href="https://labs.riseup.net/code/issues/5528">boot menu</a>:
+<a href="https://labs.riseup.net/code/issues/5496">TailsGreeter</a>.</p>
+
+<h4><a name="index3h4"></a>Design</h4>
+
+<ul>
+<li>asks whether to enable persistence at all;</li>
+<li>ask list of possibly valid persistent containers to <code>live-persist</code></li>
+<li>initial implementation (MVC -speak): the model (<code>live-persist</code> and
+tails-greeter code that runs it) supports enabling multiple
+persistence containers, but the view (tails-greeter GUI) only
+supports <em>one</em> persistence container</li>
+<li>ask LUKS passphrase, deals with errors</li>
+<li>for a given persistent container, it's all or nothing: all bits of
+persistence configured in its <code>live.persist</code> are to be set up</li>
+<li>runs <code>live-persist</code> to set up persistent data where it belong</li>
+<li>pass information to the user session (at least
+<code>tails-persistence-setup</code> needs information) through shell variables
+set in <code>/var/lib/gdm3/tails.persistence</code></li>
+</ul>
+
+
+<h2><a name="index5h2"></a>backend / tails-greeter interface</h2>
+
+<h3><a name="index8h3"></a>Long story short</h3>
+
+<ol>
+<li>The user chooses to toggle persistence on in <code>tails-greeter</code>.</li>
+<li><code>tails-greeter</code> asks <code>live-boot</code> the list of possibly valid
+persistent containers.</li>
+<li>For each such volume, <code>tails-greeter</code> asks the user to enter the
+passphrase or to skip it, and tries to unlock. <code>tails-greeter</code>
+deals with error catching, retrying, etc. as appropriate.</li>
+<li><code>tails-greeter</code> asks <code>live-boot</code> to set up persistence (at least
+custom mounts and linkfiles), passing it the list of volumes that
+were successfully unlocked.</li>
+</ol>
+
+
+<h3><a name="index9h3"></a>Interfacing</h3>
+
+<p>A <code>live-persist</code> script shall be written, implementing each kind of
+<code>tails-greeter</code> to <code>live-boot</code> communication as a sub-command, such
+as:</p>
+
+<pre><code>live-persist [OPTIONS] list [LABEL]...
+live-persist [OPTIONS] activate VOLUME...
+</code></pre>
+
+<p><code>live-persist</code> will report success and failure as any other
+well-behaved synchronously-called shell script, that is: with
+appropriate exit codes and <code>STDERR</code>.</p>
+
+<h3><a name="index10h3"></a>Possibly valid persistent containers</h3>
+
+<p>In our case, that is quite simple: it means removable LUKS encrypted
+filesystem, stored on GPT partitions labeled <code>Tails-persistence</code> (or
+similar, must be decided upon taking into account technical
+restrictions such as what GPT supports).</p>
+
+<p>This means we need to:</p>
+
+<ul>
+<li>make sure we can pass this desired label to <code>live-boot</code>, probably on
+the kernel command-line along with other parameters</li>
+</ul>
+
+
+<p>In other (non-GPT) usecases, generally, it would be filesystems
+labeled with <code>live-rw</code> or <code>home-rw</code>, but if they're on encrypted
+device, then <code>live-boot</code> has to unlock the parent device them to see
+the label; also, in non-Tails usecases, any encrypted filesystem may
+contain a <code>*-rw</code> file, and must be unlocked to know too; so any
+encrypted device may be a valid persistent container that is worth
+passing to <code>tails-greeter</code>; . <code>live-persist</code> will support non-Tails
+usecases on a best-effort basis, leaving room for improvement in case
+other developers want to add support for their preferred usecases.</p>
+
+<h3><a name="index11h3"></a>Asking live-persist to set up persistence</h3>
+
+<p>To start with, we've factored out only the custom mounts part from the
+main <code>live-boot</code> script; it depends on factoring out other kinds of
+persistence (e.g. all types of unionfs-style filesystems) first.</p>
+
+<p><a id="additional-software-packages"></a></p>
+
+<h2><a name="index6h2"></a>Additional software packages</h2>
+
+<p>The <code>tails-additional-software</code> script installs a list of
+additional software packages stored in persistence.
+For details see <a href="./additional_software_packages.html">additional software packages</a>.</p>
+
+<p><a id="security"></a></p>
+
+<h2><a name="index7h2"></a>Security</h2>
+
+<p>The root directory of the persistent volume filesystem root is created
+by the persistence configuration assistant, owned by <code>root:root</code>, with
+permissions 0775:</p>
+
+<ul>
+<li>group-writable so that we can grant write access to other users with
+ACLs;</li>
+<li>world-readable for end-user's convenience;</li>
+<li>additionally, an ACL grants write access on this directory to the
+<code>tails-persistence-setup</code> user, so that it can edit the
+persistence configuration.</li>
+</ul>
+
+
+<p>The persistence configuration assistant is run with password-less sudo
+as the <code>tails-persistence-setup</code> dedicated user. It creates and
+updates a configuration file called <code>persistence.conf</code>, that is owned
+by <code>tails-persistence-setup:tails-persistence-setup</code>, with permissions
+0600 and no ACLs. It refuses to read configuration files with
+different permissions.</p>
+
+<p><code>live-persist</code> checks these permissions on the persistence root
+directory, on <code>persistence.conf</code> and on
+<code>live-additional-software.conf</code>. Then, <code>live-persist</code> disables every
+such file, and refuses to set up any persistence feature, if the
+persistent volume has wrong permissions. It also disables every such
+file that has wrong permissions itself.</p>
+
+<h2><a name="index8h2"></a>Migration from pre-0.21 persistent volumes</h2>
+
+<p>Before Tails 0.21, the persistent volume and configuration file had
+weaker permissions. An attacker who could run arbitrary code as the
+desktop <code>amnesia</code> user could tamper with the persistence
+configuration, and — with some minimal amount of imagination — give
+themselves persistent root credentials, etc.</p>
+
+<p>A migration process, available in Tails 0.21, allowed users to move to
+the new setup relatively safely and (in most cases) very easily.
+This migration code was removed in Tails 0.22.</p>
+
+<p>Still, after login, if some settings are found that were not fully
+migrated, or never migrated at all (i.e.
+if <code>live-additional-software.conf.disabled</code>, <code>live-persistence.conf</code>
+or <code>live-persistence.conf.old</code> is found), a desktop notification makes
+the user aware of it, and points them to the migration
+documentation so that they can
+learn how to migrate their configuration.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./additional_software_packages.html">additional software packages</a>
+
+<a href="./application_isolation.html">application isolation</a>
+
+<a href="../design.html">design</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.en.html">doc/first steps/persistence/recover insecure</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.ar.html">doc/first steps/persistence/recover insecure.ar</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.ca.html">doc/first steps/persistence/recover insecure.ca</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.de.html">doc/first steps/persistence/recover insecure.de</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.es.html">doc/first steps/persistence/recover insecure.es</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.fa.html">doc/first steps/persistence/recover insecure.fa</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.fr.html">doc/first steps/persistence/recover insecure.fr</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../../doc/first_steps/persistence/recover_insecure.it.html">doc/first steps/persistence/recover insecure.it</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.pl.html">doc/first steps/persistence/recover insecure.pl</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.pt.html">doc/first steps/persistence/recover insecure.pt</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.ru.html">doc/first steps/persistence/recover insecure.ru</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.sr_Latn.html">doc/first steps/persistence/recover insecure.sr Latn</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.tr.html">doc/first steps/persistence/recover insecure.tr</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.zh.html">doc/first steps/persistence/recover insecure.zh</a>
+
+<a href="../../doc/first_steps/persistence/recover_insecure.zh_TW.html">doc/first steps/persistence/recover insecure.zh TW</a>
+
+<a href="../glossary.html">glossary</a>
+
+<a href="./installation.html">installation</a>
+
+<a href="../../support/faq.en.html">support/faq</a>
+
+<a href="../../support/faq.ar.html">support/faq.ar</a>
+
+<a href="../../support/faq.ca.html">support/faq.ca</a>
+
+<a href="../../support/faq.de.html">support/faq.de</a>
+
+<a href="../../support/faq.es.html">support/faq.es</a>
+
+<a href="../../support/faq.fa.html">support/faq.fa</a>
+
+<a href="../../support/faq.fr.html">support/faq.fr</a>
+
+<a href="../../support/faq.it.html">support/faq.it</a>
+
+<a href="../../support/faq.pl.html">support/faq.pl</a>
+
+<a href="../../support/faq.pt.html">support/faq.pt</a>
+
+<a href="../../support/faq.ru.html">support/faq.ru</a>
+
+<a href="../../support/faq.sr_Latn.html">support/faq.sr Latn</a>
+
+<a href="../../support/faq.tr.html">support/faq.tr</a>
+
+<a href="../../support/faq.zh.html">support/faq.zh</a>
+
+<a href="../../support/faq.zh_TW.html">support/faq.zh TW</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/persistence">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

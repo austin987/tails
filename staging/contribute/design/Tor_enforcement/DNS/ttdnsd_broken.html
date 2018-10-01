@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - ttdnsd broken</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../../local.css" type="text/css" />
+
+
+<script src="../../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../../index.en.html"><img src="../../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../../design.html">design</a></li>
+
+
+
+
+
+<li><a href="../../Tor_enforcement.html">Tor enforcement</a></li>
+
+
+
+
+
+<li><a href="../DNS.html">DNS</a></li>
+
+
+
+
+<li>ttdnsd broken</li>
+
+</ul>
+</span>
+<span class="title">
+ttdnsd broken
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../../about.en.html">About</a></li>
+    <li><a href="../../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">the bugs</a>
+	</li>
+</ol>
+</div>
+
+
+<p>These issues were discovered when ttdnsd was in the default DNS
+resolution loop. Since then, we decided (<a href="mailto:85zk731slu.fsf@boum.org">&#56;&#53;&#122;&#107;&#55;&#51;&#49;&#115;&#108;&#117;&#46;&#102;&#115;&#102;&#64;&#98;&#111;&#117;&#109;&#46;&#111;&#114;&#103;</a>) to
+pull ttdnsd out of the "normal" DNS resolution loop, but leave it
+installed, configured and running. This was done in Tails 0.13.</p>
+
+<h1><a name="index1h1"></a>the bugs</h1>
+
+<h3><a name="index1h3"></a><code>ttdnsd</code> can't resolve</h3>
+
+<p>Running:</p>
+
+<pre><code>host -t A boum.org 127.0.0.2
+</code></pre>
+
+<p>produces the result:</p>
+
+<pre><code>;; connection timed out; no servers could be reached
+</code></pre>
+
+<p>In Tails' <code>ttdnsd</code> is configured to use Google's DNS server
+(<code>8.8.8.8</code>) which seem to have started to block connections
+originating from the Tor network. Configuring <code>ttdnsd</code> to use OpenDNS
+(<code>208.67.2222.222</code>) instead fixes this issue.</p>
+
+<h3><a name="index2h3"></a><code>ttdnsd</code> has concurrency issues, part 1 (upstream bug?)</h3>
+
+<p>In Tails, when Iceweasel starts, <code>ttdnsd</code> crashes. When Iceweasel
+starts it concurrently does an A and AAAA query for several of the
+search engines and the startpage. It seems like this is the cause of
+<code>ttdnsd</code> crashing. A crash can reliably be reproduced the following
+way:</p>
+
+<pre><code>host -t A boum.org 127.0.0.2 &amp;
+host -t AAAA boum.org 127.0.0.2 &amp;
+</code></pre>
+
+<p>It has been verified via packet sniffing that ttdnsd indeed gets both
+the A and AAAA queries sent by iceweasel (which is weird, see below),
+which creates the same situation as running the two commands above.</p>
+
+<p>Running ttdnsd with the <code>-c</code> option seems to prevent the crash, but
+then no circuits are built, so <code>ttdnsd</code> is still useless.</p>
+
+<p>It seems this crash only occurs when <code>ttdnsd</code> is configured to use a
+DNS server that blocks the Tor network, like Google DNS. Switching to
+OpenDNS prevents the crash, but...</p>
+
+<h3><a name="index3h3"></a><code>ttdnsd</code> has concurrency issues, part 2 (upstream bug?)</h3>
+
+<p>When using OpenDNS, running:</p>
+
+<pre><code>host -t A boum.org 127.0.0.2 &amp;
+host -t AAAA boum.org 127.0.0.2 &amp;
+</code></pre>
+
+<p>fails with the same old timeout error for both requests. It seems
+<code>ttdnsd</code> can only handle one request at a time; if a request is made
+while it handles another, <strong>both</strong> fails.</p>
+
+<h3><a name="index4h3"></a><code>ttdnsd</code> gets A queries (it shouldn't)</h3>
+
+<p>A fine question is why <code>ttdnsd</code> gets both the A and AAAA
+requests. Tails' system resolver, <code>pdnsd</code>, is configured to first use
+Tor's resolver (i.e. <code>DNSPort</code>), which should work for A requests, and
+fallback to <code>ttdnsd</code> only if the former failed, i.e. for all non-A
+requests. Explicitly using the system resolver shows this expected
+behaviour:</p>
+
+<pre><code>host -t A boum.org 127.0.0.1 &amp;
+host -t AAAA boum.org 127.0.0.1 &amp;
+</code></pre>
+
+<p>i.e. Tor's resolver handles At and <code>ttdnsd</code> handles AAAA.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/Tor_enforcement/DNS/ttdnsd_broken">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>
