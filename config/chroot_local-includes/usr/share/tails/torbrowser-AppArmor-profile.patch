@@ -1,5 +1,5 @@
 diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index d0aded9..87a0191 100644
+index d0aded9..e718ed5 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,10 +1,11 @@
@@ -15,7 +15,7 @@ index d0aded9..87a0191 100644
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -25,13 +26,16 @@
+@@ -25,13 +26,16 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny /etc/passwd r,
    deny /etc/group r,
    deny /etc/mailcap r,
@@ -34,7 +34,7 @@ index d0aded9..87a0191 100644
    owner @{PROC}/@{pid}/fd/ r,
    owner @{PROC}/@{pid}/mountinfo r,
    owner @{PROC}/@{pid}/stat r,
-@@ -39,30 +43,32 @@
+@@ -39,30 +43,32 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -91,7 +91,7 @@ index d0aded9..87a0191 100644
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -70,6 +76,7 @@
+@@ -70,6 +76,7 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /usr/share/ r,
    /usr/share/mime/ r,
    /usr/share/themes/ r,
@@ -99,7 +99,7 @@ index d0aded9..87a0191 100644
    /usr/share/applications/** rk,
    /usr/share/gnome/applications/ r,
    /usr/share/gnome/applications/kde4/ r,
-@@ -85,12 +92,6 @@
+@@ -85,12 +92,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -112,7 +112,7 @@ index d0aded9..87a0191 100644
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
  
-@@ -104,6 +105,32 @@
+@@ -104,6 +105,31 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
@@ -120,7 +120,6 @@ index d0aded9..87a0191 100644
 +  deny @{PROC}/@{pid}/net/route r,
 +  deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
 +  deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-+  deny /usr/local/lib/tor-browser/TorBrowser/UpdateInfo/ rw,
 +  deny /usr/local/lib/tor-browser/update.test/ rw,
 +
 +  @{torbrowser_firefox_executable} px -> torbrowser_plugin_container,
@@ -145,7 +144,7 @@ index d0aded9..87a0191 100644
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -119,5 +146,10 @@
+@@ -119,5 +145,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
