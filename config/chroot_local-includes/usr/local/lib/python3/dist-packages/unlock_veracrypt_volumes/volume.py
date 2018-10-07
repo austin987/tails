@@ -219,11 +219,11 @@ class Volume(object):
 
                 if "No key available with this passphrase" in e.message or \
                    "No device header detected with this passphrase" in e.message:
-                    title = "Wrong passphrase or parameters"
+                    title = _("Wrong passphrase or parameters")
                 else:
-                    title = "Error unlocking volume"
+                    title = _("Error unlocking volume")
 
-                body = "Couldn't unlock volume %s:\n%s" % (self.name, e.message)
+                body = _("Couldn't unlock volume {volume_name}:\n{error_message}".format(volume_name=self.name, error_message=e.message))
                 self.manager.show_warning(title, body)
                 return
             finally:
