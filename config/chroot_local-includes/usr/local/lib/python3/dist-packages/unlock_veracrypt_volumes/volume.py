@@ -53,12 +53,18 @@ class Volume(object):
         block_label = self.udisks_object.get_block().props.id_label
         partition = self.udisks_object.get_partition()
         if block_label:
+            # Translators: Don't translate {volume_label} or {volume_size},
+            # it's a placeholder and will be replaced.
             return _("{volume_label} ({volume_size})").format(volume_label=block_label,
                                                               volume_size=self.size_for_display)
         elif partition and partition.props.name:
+            # Translators: Don't translate {partition_name} or {partition_size},
+            # it's a placeholder and will be replaced.
             return _("{partition_name} ({partition_size})").format(partition_name=partition.props.name,
                                                                    partition_size=self.size_for_display)
         else:
+            # Translators: Don't translate {volume_size}, it's a placeholder
+            # and will be replaced.
             return _("{volume_size} Volume").format(volume_size=self.size_for_display)
 
     @property
