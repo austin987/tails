@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Time-based snapshots of upstream APT repositories</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../APT_repository.html">APT repository</a></li>
+
+
+
+
+<li>Time-based snapshots of upstream APT repositories</li>
+
+</ul>
+</span>
+<span class="title">
+Time-based snapshots of upstream APT repositories
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Overview</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Source code</a>
+	</li>
+	<li class="L1"><a href="#index3h1">SSH access</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Workflow</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Freeze snapshots</a>
+		</li>
+		<li class="L2"><a href="#index2h2">Thaw snapshots</a>
+		</li>
+		<li class="L2"><a href="#index3h2">Bump expiration date</a>
+		</li>
+		<li class="L2"><a href="#index4h2">Stop tracking a distribution</a>
+		</li>
+		<li class="L2"><a href="#index5h2">Freeze exception</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index5h1">Design notes</a>
+	<ol>
+		<li class="L2"><a href="#index6h2">gensnapshot</a>
+		</li>
+		<li class="L2"><a href="#index7h2">Garbage collection and Valid-Until</a>
+		</li>
+		<li class="L2"><a href="#index8h2">APT vs. reprepro: dist names</a>
+		</li>
+		<li class="L2"><a href="#index9h2">Freeze exceptions</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Overview</h1>
+
+<p>Our time-based snapshots of upstream APT repositories are published on
+<a href="http://time-based.snapshots.deb.tails.boum.org/">http://time-based.snapshots.deb.tails.boum.org/</a>.</p>
+
+<p>These are <em>full</em> snapshots of the upstream APT repositories we use for
+building Tails ISO images. They contain exactly the same set of
+packages as the mirrored repository. This has the advantage that some
+workflows are trivially handled, e.g. working on a topic branch that
+installs additional Debian packages; if such snapshots were not full
+ones, then to work on one such branch, one would need either that to
+have the credentials to import new packages from Debian into our own
+mirror or repositories (which raises the barrier for contributing), or
+that during some phases of Tails development the regular Debian
+archive is used instead of our own mirror, which feels prone to "time
+to QA vs. time to release" issues.</p>
+
+<p>We snapshot each upstream APT repository N times a day, and without
+further action, each snapshot is kept for D days.</p>
+
+<p>The main goal here is to be able to freeze the APT repositories used
+by a branch, whenever we freeze it.</p>
+
+<p>A time-based snapshot's name contains:</p>
+
+<ul>
+<li>an identifier of the APT repository this snapshot is about, e.g.
+<code>debian</code>, <code>debian-security</code>, <code>torproject</code>;</li>
+<li>a <code>YYYYMMDD$ID</code> serial, <code>$ID</code> being an incremental decimal number
+formatted on two digits (<code>01</code>, <code>02</code>, etc.).</li>
+</ul>
+
+
+<p>The APT repository mirroring infrastructure publishes the name of the
+latest snapshot for each mirrored repository over HTTP, in the
+<code>project/trace/$archive</code> file
+(<a href="http://time-based.snapshots.deb.tails.boum.org/debian-security/project/trace/debian-security">example</a>).
+Similarly, every ISO
+build exports the names of the APT repository snapshots it uses
+(<a href="http://nightly.tails.boum.org/build_Tails_ISO_devel/lastSuccessful/archive/latest.iso.apt-sources">example</a>).</p>
+
+<p>The corresponding data is not critical: we can restart the whole thing
+from scratch if needed, without too much pain ⇒ no need to synchronize
+this content to the failover server; no need to back it up.</p>
+
+<p>We don't bother merging mirrored APT repositories / suites into
+aggregated ones. It loses information, gives us more work, and brings
+little value.</p>
+
+<h1><a name="index2h1"></a>Source code</h1>
+
+<ul>
+<li><code>tails::reprepro::snapshots::time_based</code> class in
+<a href="https://git-tails.immerda.ch/puppet-tails">puppet-tails</a></li>
+<li>bits scattered in the main Tails Git repository (details below)</li>
+</ul>
+
+
+<h1><a name="index3h1"></a>SSH access</h1>
+
+<p>One must configure their SSH client to connect to the APT server:</p>
+
+<pre><code>Host incoming.deb.tails.boum.org
+    Port 3003
+</code></pre>
+
+<h1><a name="index4h1"></a>Workflow</h1>
+
+<p><a id="freeze"></a></p>
+
+<h2><a name="index1h2"></a>Freeze snapshots</h2>
+
+<p>For example, to encode in the <code>$RELEASE_BRANCH</code> branch the set of
+<span class="selflink">time-based APT repository snapshots</span>
+that shall be used during the freeze:</p>
+
+<pre><code>    git checkout "$RELEASE_BRANCH" &amp;&amp; \
+    ./auto/scripts/apt-snapshots-serials freeze
+</code></pre>
+
+<p>Normally when freezing the APT snapshots used when building Tails we
+also freeze the snapshots used to generate our builder VM:</p>
+
+<pre><code>    ( \
+        cd vagrant/definitions/tails-builder &amp;&amp; \
+        ../../../auto/scripts/apt-snapshots-serials freeze --freeze-debian-security \
+    )
+</code></pre>
+
+<p>Then commit:</p>
+
+<pre><code>    git commit \
+        -m "Freeze APT snapshots for ${VERSION}." \
+        config/APT_snapshots.d/*/serial \
+        vagrant/definitions/tails-builder/config/APT_snapshots.d/*/serial
+</code></pre>
+
+<p><a id="thaw"></a></p>
+
+<h2><a name="index2h2"></a>Thaw snapshots</h2>
+
+<p>For example, to encode in the <code>devel</code> Git branch the fact
+that it is not frozen anymore, that is remove the indication that
+a specific set of APT repository snapshots must be used:</p>
+
+<pre><code>    git checkout devel &amp;&amp; \
+    ./auto/scripts/apt-snapshots-serials thaw &amp;&amp; \
+    git commit \
+        -m "Thaw APT snapshots after Tails $VERSION was released." \
+        config/APT_snapshots.d/*/serial
+</code></pre>
+
+<p><a id="bump-expiration-date"></a></p>
+
+<h2><a name="index3h2"></a>Bump expiration date</h2>
+
+<p>We set <code>Valid-Until</code> of time-based snapshots 10 days after they are
+generated. In some cases, this can be too short, and we need to
+manually bump <code>Valid-Until</code> for a given time-based snapshot.</p>
+
+<p>Only release managers and sysadmins can do such operations.</p>
+
+<h3><a name="index1h3"></a>Bump one specific snapshot's expiration date</h3>
+
+<p>To bump <code>Valid-Until</code>, for a given snapshot (<code>$SERIAL</code>) of a given
+archive (<code>$ARCHIVE</code>), so that they are valid for <code>$DAYS_FROM_NOW</code> days
+from now:</p>
+
+<pre><code>ssh reprepro-time-based-snapshots@incoming.deb.tails.boum.org \
+   tails-bump-apt-snapshot-valid-until \
+       "${ARCHIVE:?}" "${SERIAL:?}" "${DAYS_FROM_NOW:?}"
+</code></pre>
+
+<p><a id="bump-expiration-date-for-all-snapshots"></a></p>
+
+<h3><a name="index2h3"></a>Bump all snapshots' expiration date</h3>
+
+<p>To bump <code>Valid-Until</code>, for every snapshot used by the current frozen
+<code>$RELEASE_BRANCH</code> branch, so that they are valid for <code>$DAYS_FROM_NOW</code>
+days from now:</p>
+
+<pre><code>git checkout "$RELEASE_BRANCH" &amp;&amp; \
+for dir in config/APT_snapshots.d vagrant/definitions/tails-builder/config/APT_snapshots.d; do
+    (
+        cd "${dir}" &amp;&amp; \
+        for ARCHIVE in * ; do
+            if ! grep -qs '^latest$' "$ARCHIVE"/serial; then
+                ssh reprepro-time-based-snapshots@incoming.deb.tails.boum.org \
+                    tails-bump-apt-snapshot-valid-until \
+                        "$ARCHIVE" "$(cat "$ARCHIVE"/serial)" \
+                        "${DAYS_FROM_NOW:?}"
+            fi
+        done
+    )
+done
+</code></pre>
+
+<h2><a name="index4h2"></a>Stop tracking a distribution</h2>
+
+<p>After we don't need snapshots for a given Debian distribution anymore,
+e.g. after we release Tails based on a new Debian, we need to stop
+including it in new snapshots, and to remove all corresponding
+time-based snapshots and the packages that are not referenced anymore.</p>
+
+<ol>
+<li><p>In <code>puppet-tails</code>, remove the bits about the distribution you want to
+stop tracking from the reprepro configuration templates:
+<code>templates/reprepro/snapshots/time_based/*/*</code>.</p></li>
+<li><p>In <code>puppet-tails</code>, remove references to the distribution you want to
+stop tracking from the <code>tails::reprepro::params</code> class.</p></li>
+<li><p>Commit, push and deploy on the system that hosts our time-based
+APT snapshots.</p></li>
+<li><p>In the directory for each repository (e.g. <code>debian</code>, <code>torproject</code>),
+adjust <code>s=jessie</code> to match the codename of the distribution you
+want to remove in the following command and run it:</p>
+
+<pre><code> reprepro --delete clearvanished &amp;&amp; \
+ reprepro export &amp;&amp; \
+ reprepro dumpreferences \
+   | grep -E '^s=jessie' \
+   | awk '{print $1}' \
+   | sort -u \
+   | xargs -n 1 reprepro _removereferences &amp;&amp; \
+ reprepro deleteunreferenced
+</code></pre></li>
+<li><p>Delete <code>dists/$codename/</code> in the directory of each repository.</p></li>
+<li><p>In the directory for each repository, delete files in the <code>logs</code>
+sub-directory that were about the distribution we just
+stopped tracking.</p></li>
+</ol>
+
+
+<p><a id="freeze-exception"></a></p>
+
+<h2><a name="index5h2"></a>Freeze exception</h2>
+
+<h3><a name="index3h3"></a>Grant a freeze exception</h3>
+
+<ol>
+<li><p>Import the package you want to upgrade into our own
+<a href="./custom.html">custom APT repository</a>, in the
+suite corresponding to the branch that we want to see this
+package in.</p>
+
+<p>For example:</p>
+
+<pre><code>    PBUILDER_OPTIONS='--basetgz /var/cache/pbuilder/base-jessie-i386.tgz' \
+    TARGET_DIST='testing' \
+    ./bin/import-package libgsecuredelete
+</code></pre>
+
+<p>See <a href="https://git-tails.immerda.ch/tails/plain/bin/import-package">bin/import-package</a> for more detailed usage information.</p></li>
+<li><p>If the imported package comes from a Debian distribution whose
+pinning value is at least 990 in <code>config/chroot_apt/preferences</code>:
+you can stop right here. Otherwise, read on.</p></li>
+<li><p>Add a pinning entry in <code>config/chroot_apt/preferences</code> for the
+package you imported:</p>
+
+<pre><code> Explanation: freeze exception
+ Package: XYZ
+ Pin: origin deb.tails.boum.org
+ Pin-Priority: 999
+</code></pre></li>
+<li><p>Commit:</p>
+
+<pre><code> git commit config/chroot_apt/preferences \
+     -m "Add freeze exceptions for $(dpkg-parsechangelog -SVersion)"
+</code></pre></li>
+<li><p>Push to Git.</p></li>
+</ol>
+
+
+<p><a id="freeze-exceptions-post-release"></a></p>
+
+<h3><a name="index4h3"></a>Post-release</h3>
+
+<p>Thaw the packages that were granted freeze exceptions, now that they
+can be fetched from a newer time-based snapshot of the repository
+we've initially pulled it from.</p>
+
+<ol>
+<li><p>For each entry in <code>config/chroot_apt/preferences</code> that has
+<code>Explanation: freeze exception</code>: set <code>Pin-Priority</code> to <code>-1</code>.</p></li>
+<li><p>Commit:</p>
+
+<pre><code> git commit config/chroot_apt/preferences \
+     -m "Remove freeze exceptions added for $(dpkg-parsechangelog -SVersion)"
+</code></pre></li>
+<li><p>Push to Git.</p></li>
+</ol>
+
+
+<h1><a name="index5h1"></a>Design notes</h1>
+
+<h2><a name="index6h2"></a>gensnapshot</h2>
+
+<p>We use reprepro's <code>gensnapshot</code> command, that basically copies
+a distribution, keeping references to the packages it contains.</p>
+
+<p>Compared to the "snapshots as full-blown distributions + <code>reprepro
+pull</code>" option we
+<a href="https://labs.riseup.net/code/issues/6295#note-14">used in our initial experiments</a>,
+we are saving <em>a lot</em> on database size, and thus in performance,
+because reprepro does less tracking on snapshots, than what it does
+for real distributions.</p>
+
+<p>The counterpart of using snapshots created with <code>gensnapshot</code> is that:</p>
+
+<ul>
+<li>garbage collecting expired snapshots is a bit more involved, i.e.
+we have to
+<a href="https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-delete-expired-apt-snapshots">do it ourselves</a>;</li>
+<li>bumping <code>Valid-Until</code> for a given time-based snapshot has to be
+done directly in <code>dist</code>, without any help from reprepro; so here
+again, we
+<a href="https://git-tails.immerda.ch/puppet-tails/tree/files/reprepro/snapshots/time_based/tails-bump-apt-snapshot-valid-until">do it ourselves</a>.</li>
+</ul>
+
+
+<p>None of these problems warrant going back to the other option... and
+having to deal with 80GB+ Berkeley DB databases.</p>
+
+<h2><a name="index7h2"></a>Garbage collection and Valid-Until</h2>
+
+<p>We expire snapshots older than 10 days in order to save disk space,
+and to prevent the reprepro database from growing too much.</p>
+
+<p>To ensure that garbage collection doesn't delete a snapshot we still
+need, e.g. the one currently referenced in the frozen <code>testing</code>
+branch, we rely on the <code>Valid-Until</code> field found in <code>Release</code> files:
+the way to express "I want to keep this specific snapshot around" is to
+postpone its expiration date; i.e. we don't differentiate "keep
+a given snapshot around" from "keep a given snapshot usable".</p>
+
+<p>See <a href="./time-based_snapshots.html#bump-expiration-date">above</a> for how we
+manage <code>Valid-Until</code> manually.</p>
+
+<p>One advantage of this design is that we don't have to regularly update
+<code>Valid-Until</code> fields, and the corresponding signatures: we only do
+that on a case-by-case basis, when needed. And thus, we can actually
+benefit from the protections offered by APT when <code>Valid-Until</code> fields
+are present, as any snapshot will expire unless we do something
+about it.</p>
+
+<p>In practice, the main use case for keeping a given time-based APT
+repository snapshot around and valid is when it's being used by
+a release branch:</p>
+
+<ul>
+<li><code>testing</code>: while it's frozen, that is for 5-10 days generally;</li>
+<li><code>stable</code>: that's a corner case, since <code>stable</code> generally uses the
+set of snapshots frozen during the last Tails freeze; if and when we
+decide to manually point <code>stable</code> to a different set of snapshots,
+then we bump <code>Valid-Until</code> manually.</li>
+</ul>
+
+
+<p>In passing, note that we ship an empty <code>/var/cache/apt/lists/</code> in the
+ISO ⇒ modifying <code>Release</code> and <code>Release.gpg</code> files on our APT
+repository won't prevent the ISO build from being deterministic.</p>
+
+<h2><a name="index8h2"></a>APT vs. reprepro: dist names</h2>
+
+<p>We need to encode in the APT sources' base URL the exact snapshot we
+want to use, in order to be able to pass it to <code>lb config --mirror-*</code>.
+But this doesn't match reprepro's directory structure as-is.</p>
+
+<p>Thankfully this problem can be workaround'ed with some symlinks or
+HTTP rewrite rules. Here's how.</p>
+
+<p>Let's assume:</p>
+
+<pre><code>lb config --distribution jessie
+lb config --mirror-chroot \
+   http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/
+lb config --mirror-chroot-security \
+   http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/
+[...]
+</code></pre>
+
+<p>Which generates this APT <code>sources.list</code>:</p>
+
+<pre><code>deb http://time-based.snapshots.deb.tails.boum.org/debian/2016031101/ jessie main
+deb http://time-based.snapshots.deb.tails.boum.org/debian-security/2016031102/ jessie/updates main
+[...]
+</code></pre>
+
+<p>As a result APT sends HTTP requests with URLs such as:</p>
+
+<ul>
+<li><a href="http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/dists/jessie/Release">http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/dists/jessie/Release</a></li>
+<li><a href="http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/pool/XYZ">http://time-based.snapshots.deb.tails.boum.org/debian/2016032401/pool/XYZ</a></li>
+<li><a href="http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/dists/jessie/updates/Release">http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/dists/jessie/updates/Release</a></li>
+<li><a href="http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/pool/XYZ">http://time-based.snapshots.deb.tails.boum.org/debian-security/2016032402/pool/XYZ</a></li>
+</ul>
+
+
+<p>The corresponding files in reprepro's filesystem (given that we have
+one reprepro instance per mirrored archive) are:</p>
+
+<ul>
+<li><p>in Debian archive's reprepro:</p>
+
+<ul>
+<li><code>/srv/apt-snapshots/time-based/repositories/debian/dists/jessie/snapshots/2016032401/Release</code>,
+that contains <code>Suite: jessie/snapshots/2016032401</code> and <code>Codename: jessie</code></li>
+<li><code>/srv/apt-snapshots/time-based/repositories/debian/pool/XYZ</code></li>
+</ul>
+</li>
+<li><p>in Debian security archive's reprepro:</p>
+
+<ul>
+<li><code>/srv/apt-snapshots/time-based/repositories/debian-security/dists/jessie/updates/snapshots/2016031102/Release</code>,
+that contains <code>Suite: jessie/updates/snapshots/2016031102</code> and
+<code>Codename: jessie/updates</code></li>
+<li><code>/srv/apt-snapshots/time-based/repositories/debian-security/pool/XYZ</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>To have the above HTTP requests translate to access to these files,
+we use
+<a href="https://git-tails.immerda.ch/puppet-tails/tree/templates/reprepro/snapshots/time_based/nginx_site.erb">a set of HTTP rewrite rules</a>.</p>
+
+<p>Note: this works because APT only warns when the codename in the
+<code>Release</code> file doesn't match the one requested in <code>sources.list</code>.
+There's a code comment around this check, dating back from 2004, that
+says something like "This might become fatal in the future". We bet that if it
+becomes fatal some day, it will be possible to turn it back into
+a warning via configuration. This affects only development builds
+since we're not going to configure APT <em>in the Tails ISO</em> to point to
+our own snapshots of the Debian archive anyway.</p>
+
+<p><a id="design-freeze-exceptions"></a></p>
+
+<h2><a name="index9h2"></a>Freeze exceptions</h2>
+
+<p>This is a new problem brought by using "frozen" snapshot of APT
+repositories during a Tails code freeze: some bug, that we want to see
+fixed in the release we are preparing, would be resolved if we pulled
+an upgraded package as-is from a freshest Debian APT repository.
+Before we could freeze APT repositories, we would have got this bugfix
+for free. Now we need to grant freeze exceptions.</p>
+
+<p>This is similar to "Upgrading to a new snapshot", except that we want
+to upgrade one package only. By definition, this only affects <em>frozen</em>
+release branches (<code>stable</code>, <code>testing</code>), and topic branches based on
+them: all other branches use the freshest set of APT repository
+snapshots available.</p>
+
+<p>Most of the time, a bugfix branch we want to merge into a frozen
+release branch doesn't need to upgrade packages from Debian, so this
+is a corner case for the time being. Moreover, so far we have always
+dealt with this problem entirely by hand, so it's not critical to
+provide much improved tools. What makes it tempting to improve the
+situation here is mostly:</p>
+
+<ul>
+<li>even though freeze exceptions will remain exceptions, frozen will
+add one use case:</li>
+<li>this will become a relatively common operation if we are based on
+Debian testing some day, so let's check that it's not only
+possible, but also reasonably easy to handle with this design
+(otherwise we may have to switch to more powerful tools, such as
+dak + britney).</li>
+</ul>
+
+
+<p>To grant a freeze exception to a given package, we simply import it
+into our own
+<a href="./custom.html">custom APT repository</a>, in the
+suite corresponding to the branch that we want to see this package in
+⇒ in the general case, the upgraded package will be installed in the
+next Tails release.</p>
+
+<p>This works because our APT pinning ranks Tails custom APT suites at
+the same level as the other APT sources corresponding to the current
+version of Debian Tails is based on, and higher than other Debian
+distribution (which, in passing, implies that we have to manually pin,
+in Git, the packages from our custom APT suites, that we want to
+override the ones found in other repositories regardless of version
+numbers):</p>
+
+<ul>
+<li><p>if the imported package comes from Debian stable: it will be
+installed simply because its version is greater than the version of
+the same package from Debian stable; and once we have thawed the
+corresponding snapshot, the package can be pulled equally from any
+of these two sources (Debian, and our custom APT repository), until
+a newer version of this package is uploaded to Debian, and then the
+newer one will supersede the package we have in our custom APT
+repository;</p></li>
+<li><p>if the imported package comes from another Debian distribution,
+that has a pinning value strictly lower than 990, such as Debian
+unstable: if we did nothing more, the package would be installed
+because its pinning (<code>origin deb.tails.boum.org</code>) is higher than
+the one from the Debian distribution we're importing it from;
+<em>however</em>, in this case we need to track this package, and to
+remove it from our custom repository after we have thawed the
+corresponding snapshot — otherwise, due to this pinning
+configuration, we would stick to the version of the package we have
+one day imported, while in most cases we want to resume tracking
+the version from Debian; so, we do this that way:</p>
+
+<ol>
+<li><p>Import the package we want to upgrade into our own
+<a href="./custom.html">custom APT repository</a>, in
+the suite corresponding to the branch that we want to see this
+package in.</p></li>
+<li><p>Explicitly pin, in <code>config/chroot_apt/preferences</code>, the upgraded
+package we have just imported to a value higher than 990, with
+a proper <code>Explanation:</code> field; this pinning is not required at
+this stage, but it is one way to encode in Git the packages we
+have imported, which simplifies the following (clean up) step.</p></li>
+<li><p>Once the corresponding APT snapshot has been thawed, that is
+once the upgraded package can be fetched from a newer time-based
+snapshot of the repository we've initially pulled it from: make
+it so branches stop using the upgraded package, and resume
+tracking the one available in Debian. To do that, we modify the
+pinning entry added at the previous step, and give it a value of
+<code>-1</code>. This should be done by the release manager, immediately
+after a release, when they thaw the APT snapshots used for the
+release, and merge it into other release branches.</p>
+
+<p>Ideas for future improvements:</p>
+
+<ul>
+<li><p>At some point a helper tool can do this automatically,
+assuming we always use the same <code>Explanation:</code> field to mark
+these pinning entries. (Ideally we would simply use
+a dedicated file under <code>apt/preferences.d/</code> for freeze
+exceptions, but <code>live-build</code> 2.x doesn't support that.)</p></li>
+<li><p>Ideally we would remove these imported packages from our
+custom APT repository at post-release time as well, so we can
+get rid of the <code>-1</code> pinning entries, but it really needs to be
+done in a 100% correct order, to ensure that after all the
+merges we do post-release (and sometimes at other times)
+between release branches, the imported packages are <em>not</em>
+present anymore in any of the corresponding APT suites.</p></li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../APT_repository.html">APT repository</a>
+
+<a href="../build/vagrant-setup.html">build/vagrant-setup</a>
+
+<a href="../release_process.html">release process</a>
+
+<a href="../working_together/roles/release_manager.html">working together/roles/release manager</a>
+
+<a href="../working_together/roles/sysadmins.html">working together/roles/sysadmins</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/APT_repository/time-based_snapshots">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

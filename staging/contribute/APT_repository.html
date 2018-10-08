@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - APT repository</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../local.css" type="text/css" />
+
+
+<script src="../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../index.en.html"><img src="../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../contribute.en.html">contribute</a></li>
+
+
+
+
+<li>APT repository</li>
+
+</ul>
+</span>
+<span class="title">
+APT repository
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../about.en.html">About</a></li>
+    <li><a href="../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../doc.en.html">Documentation</a></li>
+    <li><a href="../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../contribute.en.html">Contribute</a></li>
+    <li><a href="../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Our APT repositories</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Snapshots and branches</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Design notes</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Miscellaneous</a>
+		</li>
+		<li class="L2"><a href="#index2h2">APT sources used inside Tails</a>
+		</li>
+		<li class="L2"><a href="#index3h2">Upgrading to a new snapshot</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Our APT repositories</h1>
+
+<p>We have three kinds of APT repositories:</p>
+
+<ul>
+<li>our <a href="./APT_repository/custom.html">custom APT repository</a>,
+that stores our custom Debian packages;</li>
+<li>(full) <a href="./APT_repository/time-based_snapshots.html">time-based snapshots</a> of the
+upstream APT repositories we use, so that we can use frozen
+versions thereof when needed;</li>
+<li>(partial) <a href="./APT_repository/tagged_snapshots.html">tagged snapshots</a> of upstream
+APT repositories we need, so that one can rebuild a released ISO in
+the future, and we keep the corresponding source code around.</li>
+</ul>
+
+
+<h1><a name="index2h1"></a>Snapshots and branches</h1>
+
+<p>Here we discuss what APT snapshots of upstream repositories are used
+when building a Tails ISO image. This a is function of the branch we
+build from, as well as if we are building an ISO that is meant to be released (i.e.
+whether there is a tag in Git corresponding the last entry in
+debian/changelog).</p>
+
+<p>Note: when we say "building an ISO from the <code>B</code> branch" below, we only
+refer to the base branch, i.e. <code>B</code> is encoded in <code>config/base_branch</code>.
+Hence such statements also refers to topic branches with <code>B</code> as base
+branch.</p>
+
+<p>Building an ISO from the <code>devel</code> branch always uses the freshest set
+of APT repository snapshots available. Resolving what's the set of
+freshest APT repository snapshots is done at the beginning of the
+build (<a href="https://git-tails.immerda.ch/tails/plain/auto/config">auto/config</a>,
+<a href="https://git-tails.immerda.ch/tails/plain/auto/scripts/apt-mirror">auto/scripts/apt-mirror</a>), so that the entire build
+uses the exact same state of these
+repositories. This is needed for reproducible builds, and has a nice
+side effect: so long, <code>Hashsum mismatch</code>, and thanks for the fish.</p>
+
+<p>When building an ISO from the branch used to prepare the next major
+release (<code>testing</code>):</p>
+
+<ul>
+<li><strong>outside of the freeze period</strong>: the <code>testing</code> branch is not used;</li>
+<li><strong>freeze period</strong>: at freeze time, the RM encodes in the Git
+<code>testing</code> branch the set of APT repository snapshots (via their
+serial numbers) that shall be used during the freeze; the only
+exception is security.debian.org, for which we always use our
+latest snapshot;</li>
+<li><strong>at release time</strong>: when building from a tagged branch, similarly to
+what we do for our
+<a href="./APT_repository/custom.html">custom APT repository</a>, instead
+of using time-based APT repository snapshots, we use snapshots
+labeled with the Git tag (note that this is not needed, strictly speaking,
+as the APT sources used at Tails runtime will anyway be the
+official (and not frozen) Debian ones; this is mostly needed for
+legal purposes (this allows to distribute for a long
+time the source packages needed to build a given Tails ISO image),
+and it will be useful when we want to be able to reproduce a given
+Tails ISO build).</li>
+</ul>
+
+
+<p>When building an ISO from the branch used to prepare the next
+point-release (<code>stable</code>) we use the same time-based snapshots that
+were used to prepare the latest Tails release, except:</p>
+
+<ul>
+<li>we use our latest snapshot of security.debian.org;</li>
+<li>at release time: when building from a tagged branch, similarly to
+what we do for our
+<a href="./APT_repository/custom.html">custom APT repository</a>, instead
+of using time-based APT repository snapshots, we use snapshots
+labeled with the Git tag.</li>
+</ul>
+
+
+<h1><a name="index3h1"></a>Design notes</h1>
+
+<h2><a name="index1h2"></a>Miscellaneous</h2>
+
+<p>A given APT repository snapshot is immutable after it's been taken.
+We
+<a href="./APT_repository/time-based_snapshots.html#design-freeze-exceptions">deal with freeze exceptions separately</a>.</p>
+
+<p>We want to have reproducible builds some day. Therefore, the APT
+<code>sources.list</code> shipped in the ISO must be stable across rebuilds from
+the same release Git tag.</p>
+
+<p><a id="runtime-sources"></a></p>
+
+<h2><a name="index2h2"></a>APT sources used inside Tails</h2>
+
+<p>A running Tails' APT must be pointed at the official, live Debian
+archive, and not to a Tails-specific and already obsolete snapshot.</p>
+
+<p>Say <code>kedit</code> is a package shipped in Debian, but not in Tails. Then,
+when run inside Tails, <code>apt install kedit</code> must fetch <code>kedit</code> from
+current Debian, as opposed to installing it from a Tails-specific, and
+generally obsolete, snapshot of the Debian APT repository.</p>
+
+<p>To achieve that we tweak <code>sources.list</code> in
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/live/config/1500-reconfigure-APT">config/chroot local-includes/lib/live/config/1500-reconfigure-APT</a>.</p>
+
+<h2><a name="index3h2"></a>Upgrading to a new snapshot</h2>
+
+<p>In other words: bumping, in Git, the pointers to the set of snapshots
+that shall be used by a given branch.</p>
+
+<p>Let's use, as an example of a situation in which we might want to do
+that, upgrading to a new Debian point-release.</p>
+
+<p>With this design:</p>
+
+<ul>
+<li><code>devel</code> gets them automatically because it closely tracks the
+Debian archive;</li>
+<li>for release branches (<code>stable</code>, <code>testing</code>): on a case-by-case
+basis, depending on the respective Debian/Tails release schedule
+timing, we can choose whether to switch to using a new snapshot of
+the Debian archive for the next release. Note that this can be done
+via a topic-branch since this information is encoded in Git. If we
+choose not to manually pick the point release, which is the default
+if we don't act at all, then:
+
+<ul>
+<li><code>testing</code> will start using the new Debian point-release as soon
+as it is unfrozen, that is as soon as it has been used to release
+a new major version of Tails;</li>
+<li><code>stable</code> will start using the new Debian point-release once
+a <code>testing</code> branch that uses that point-release is merged into
+<code>stable</code>.</li>
+</ul>
+</li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./build/manually.html">build/manually</a>
+
+<a href="../contribute.en.html">contribute</a>
+
+<a href="../contribute.ar.html">contribute.ar</a>
+
+<a href="../contribute.ca.html">contribute.ca</a>
+
+<a href="../contribute.de.html">contribute.de</a>
+
+<a href="../contribute.es.html">contribute.es</a>
+
+<a href="../contribute.fa.html">contribute.fa</a>
+
+<a href="../contribute.fr.html">contribute.fr</a>
+
+<a href="../contribute.it.html">contribute.it</a>
+
+<a href="../contribute.pl.html">contribute.pl</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../contribute.pt.html">contribute.pt</a>
+
+<a href="../contribute.ru.html">contribute.ru</a>
+
+<a href="../contribute.sr_Latn.html">contribute.sr Latn</a>
+
+<a href="../contribute.tr.html">contribute.tr</a>
+
+<a href="../contribute.zh.html">contribute.zh</a>
+
+<a href="../contribute.zh_TW.html">contribute.zh TW</a>
+
+<a href="./how/code/HACKING.html">how/code/HACKING</a>
+
+<a href="../news/test_0.15-rc1.html">news/test 0.15-rc1</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/APT_repository">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

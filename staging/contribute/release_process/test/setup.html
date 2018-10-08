@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Test suite installation and setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../local.css" type="text/css" />
+
+
+<script src="../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../index.en.html"><img src="../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../release_process.html">release process</a></li>
+
+
+
+
+
+<li><a href="../test.html">test</a></li>
+
+
+
+
+<li>Test suite installation and setup</li>
+
+</ul>
+</span>
+<span class="title">
+Test suite installation and setup
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../about.en.html">About</a></li>
+    <li><a href="../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Here's how to set up an environment to run our automated test suite.
+Alternatively, you way want to use the <code>tails::tester</code> class from the
+<a href="https://git-tails.immerda.ch/puppet-tails">puppet-tails</a> Puppet module.</p>
+
+<p>Once you have a working environment, see <a href="./usage.html">usage</a>.</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Install dependencies</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Other requirements</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Synchronized clock</a>
+		</li>
+		<li class="L2"><a href="#index2h2">File permissions</a>
+		</li>
+		<li class="L2"><a href="#index3h2">AppArmor tweaks</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index3h1">Special use cases</a>
+	<ol>
+		<li class="L2"><a href="#index4h2">Access the system under test with VNC</a>
+		</li>
+		<li class="L2"><a href="#index5h2">Running the test suite as a non-root user</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Install dependencies</h1>
+
+<p>First of all, one needs a Debian Stretch system with:</p>
+
+<ul>
+<li>the <code>non-free</code> APT component enabled;</li>
+<li>the official backports repository configured.</li>
+</ul>
+
+
+<p>The following packages are necessary on Debian Stretch:</p>
+
+<pre><code>sudo apt update &amp;&amp; \
+sudo apt install \
+    cucumber \
+    devscripts \
+    dnsmasq-base \
+    gawk \
+    git \
+    i18nspector \
+    libav-tools \
+    libcap2-bin \
+    libsikulixapi-java \
+    libvirt-clients \
+    libvirt-daemon-system \
+    libvirt-dev \
+    libvirt0 \
+    obfs4proxy \
+    openssh-server \
+    ovmf \
+    pry \
+    python-jabberbot \
+    python-potr \
+    qemu-kvm \
+    qemu-system-common \
+    qemu-system-x86 \
+    qemu-utils \
+    redir \
+    ruby-guestfs \
+    ruby-json \
+    ruby-libvirt \
+    ruby-net-irc \
+    ruby-packetfu \
+    ruby-rb-inotify \
+    ruby-rjb \
+    ruby-rspec \
+    ruby-test-unit \
+    seabios \
+    tcpdump \
+    tor \
+    unclutter \
+    virt-viewer \
+    x11vnc \
+    tigervnc-viewer \
+    x264 \
+    xvfb \
+    &amp;&amp; \
+sudo service libvirtd restart
+</code></pre>
+
+<h1><a name="index2h1"></a>Other requirements</h1>
+
+<h2><a name="index1h2"></a>Synchronized clock</h2>
+
+<p>The system running the test suite needs an accurate clock since we
+sync the clock from the host to the Tails guest after a background
+snapshot restore to appease Tor.</p>
+
+<p>You might want to install <code>ntp</code> or your favorite time synchronization
+tool for this.</p>
+
+<h2><a name="index2h2"></a>File permissions</h2>
+
+<p>The user that runs QEMU (via libvirt) needs read-access at least to
+the content of <code>features/misc_files/</code> in the Git checkout.</p>
+
+<h2><a name="index3h2"></a>AppArmor tweaks</h2>
+
+<p>If libvirt has the <code>apparmor</code> security driver enabled:</p>
+
+<ul>
+<li>you may need to add the <code>/tmp/TailsToaster/TailsToasterStorage/*
+rw,</code> line to <code>/etc/apparmor.d/libvirt/TEMPLATE.qemu</code>, in the
+<code>profile LIBVIRT_TEMPLATE</code> section;</li>
+<li>you may hit various problems, such as denied access to
+<code>/usr/share/ovmf/OVMF.fd</code>; all such known problems are (as of
+2015-08-12) on their way for being fixed upstream in libvirt.
+Running a recent libvirt may help.</li>
+</ul>
+
+
+<h1><a name="index3h1"></a>Special use cases</h1>
+
+<h2><a name="index4h2"></a>Access the system under test with VNC</h2>
+
+<p>If you're running the test suite in a nested environnement, install
+<code>tigervnc-viewer</code> on the bare metal level-0 host. Then you can use vncviewer's
+<code>-via</code> option so that it automatically setup a ssh tunnel to your first level
+test suite domain for you and display the Tails VM. E.g.
+where <code>$DISPLAY</code> is the display given to you by <code>run_test_suite</code> (often 0):</p>
+
+<pre><code>vncviewer -viewonly -via user@level0 localhost:$DISPLAY
+</code></pre>
+
+<h2><a name="index5h2"></a>Running the test suite as a non-root user</h2>
+
+<p>This is entirely possible, but there's some additional configuration
+required. Run the following as <code>root</code>:</p>
+
+<pre><code>addgroup tcpdump
+dpkg-statoverride --update --add root tcpdump 754 /usr/sbin/tcpdump
+setcap CAP_NET_RAW+eip /usr/sbin/tcpdump
+adduser $USER tcpdump
+adduser $USER libvirt
+adduser $USER libvirt-qemu
+</code></pre>
+
+<p>It's important to run <code>setcap</code> after <code>dpkg-statoverride</code> since the
+latter deletes all capabilities. Unfortunately the <code>setcap</code> command
+has to be rerun for that reason everytime the <code>tcpdump</code> package is
+updated until <a href="https://bugs.debian.org/662845">Debian bug #662845</a> is fixed.</p>
+
+<p>Running these commands will add some interesting capabilities to
+<code>$USER</code>, so you may want to do this for a dedicated user separate from
+your normal user. In that case (and if you run the tests as root) the
+<code>--view</code> option won't work unless you grant <code>$USER</code> access to your
+display via <code>xhost +SI:localhost:$USER</code>. Alternatively you can use the
+<code>--vnc-server-only</code> option and manually connect to the VNC server with
+your normal user. Just make sure the VNC viewer is in view-only mode
+(e.g. <code>xtigervncviewer --view-only ...</code>) in order to not interfere
+with the testing session.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./automated_tests.html">automated tests</a>
+
+<a href="../test.html">test</a>
+
+<a href="./usage.html">usage</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/release_process/test/setup">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

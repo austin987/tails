@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Additional software packages</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../design.html">design</a></li>
+
+
+
+
+<li>Additional software packages</li>
+
+</ul>
+</span>
+<span class="title">
+Additional software packages
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Rationale</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Use cases</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Specifications</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Goals</a>
+		</li>
+		<li class="L2"><a href="#index2h2">Non-goals</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index4h1">Implementation</a>
+	<ol>
+		<li class="L2"><a href="#index3h2">Software installation at startup</a>
+		</li>
+		<li class="L2"><a href="#index4h2">Software upgrade on Internet connection</a>
+		</li>
+		<li class="L2"><a href="#index5h2">User interface for addition and removal of software</a>
+		</li>
+		<li class="L2"><a href="#index6h2">Additional Software configuration window</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Rationale</h1>
+
+<p>Tails includes a coherent but limited set of applications. As the system is
+amnesic, new software packages for Debian can be installed in a working
+session but they are not reinstalled at next reboot.</p>
+
+<p>Additional Software Packages is a feature to remember a set of Debian Packages
+to be installed automatically from <a href="./persistence.html">persistent
+storage</a> each time Tails is started.</p>
+
+<h1><a name="index2h1"></a>Use cases</h1>
+
+<p>Alice is a geographer working for an NGO in an unstable country. They need
+to use Tails but needs the QGis SIG to work. It would make little sense
+to add such a specific software in Tails. But thanks to Additional
+Software Packages, Alice can have QGis installed every time when they boot
+Tails with persistent storage enabled.</p>
+
+<p>Bob is a journalist and wants to publish videos made by other
+colleagues. Bob needs to convert these videos and is used to the open
+source video transcoder HandBrake. With Additional Software Packages,
+Bob doesn't need to install it every time when they boot Tails.</p>
+
+<h1><a name="index3h1"></a>Specifications</h1>
+
+<h2><a name="index1h2"></a>Goals</h2>
+
+<ul>
+<li><p>Allow people to choose to:</p>
+
+<ul>
+<li>Reinstall a package every time they start Tails.</li>
+<li>Stop reinstalling a package every time on boot.</li>
+</ul>
+</li>
+<li><p>Integrate this in:</p>
+
+<ul>
+<li>The usual installation and removal process of a package (through
+Synaptic, another graphical tool, or APT on the command line).</li>
+<li>The persistent storage configuration.</li>
+</ul>
+</li>
+<li><p>Ensure packages are installed even offline.</p></li>
+<li><p>Ensure packages are updated when the machine is connected to the Internet.</p></li>
+</ul>
+
+
+<h2><a name="index2h2"></a>Non-goals</h2>
+
+<ul>
+<li><p>We won't support installing software that is not in Debian's official
+repositories.</p></li>
+<li><p>We won't provide a way for people to specify which packages to install
+outside of the usual installation process of a package. We only ask
+people if they want to reinstall a package every time <em>after it has
+been successfully installed a first time</em>.</p></li>
+</ul>
+
+
+<h1><a name="index4h1"></a>Implementation</h1>
+
+<h2><a name="index3h2"></a>Software installation at startup</h2>
+
+<p>The systemd user unit
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/lib/systemd/user/tails-additional-software-install.service">config/chroot local-includes/usr/lib/systemd/user/tails-additional-software-install.service</a>
+is <code>WantedBy=desktop.target</code>. It starts the system unit
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-additional-software-install.service">config/chroot local-includes/lib/systemd/system/tails-additional-software-install.service</a>
+with sudo (see
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/sudoers.d/zzz_tails-additional-software">config/chroot local-includes/etc/sudoers.d/zzz tails-additional-software</a>).</p>
+
+<p><code>tails-additional-software-install.service</code> starts if the configuration file
+<code>/live/persistence/TailsData_unlocked/live-additional-software.conf</code> is not
+empty. It is a oneshot service that executes
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/tails-additional-software">config/chroot local-includes/usr/local/sbin/tails-additional-software</a>
+ <code>install</code> then creates <code>/run/live-additional-software/installed</code>.</p>
+
+<p><code>tails-additional-software install</code> reads <code>live-additional-software.conf</code> which
+contains a package name per line and install these packages with <code>apt-get</code>
+(using options prevent questions being asked to the user, see
+<code>install_additional_packages</code> and <code>_launch_apt_get</code> in
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/tails-additional-software">config/chroot local-includes/usr/local/sbin/tails-additional-software</a>).</p>
+
+<p>In the beginning of the process, the user is notified through desktop
+notifications that additional software is being installed:</p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - installing.png" /></p>
+
+<p>In the end, they are informed of success of failure. In the latter case, they are
+offered to open a configuration window or to examine the logs in order to better
+understand the issue. The notifications with buttons displayed are as the desktop
+user and are implemented in
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/tails-additional-software-notify">config/chroot local-includes/usr/local/lib/tails-additional-software-notify</a>.</p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - installation failed.png" /></p>
+
+<h2><a name="index4h2"></a>Software upgrade on Internet connection</h2>
+
+<p>A network-manager dispatcher hook starts the systemd unit
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-additional-software-upgrade.path">config/chroot local-includes/lib/systemd/system/tails-additional-software-upgrade.path</a>
+which waits for <code>/run/live-additional-software/installed</code> then starts the
+oneshot service <code>/usr/local/sbin/tails-additional-software upgrade</code> after
+<code>tor-has-bootstrapped.service</code> and <code>tails-additional-software-install.service</code>
+if the configuration file
+<code>/live/persistence/TailsData_unlocked/live-additional-software.conf</code> is not
+empty.</p>
+
+<p><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/tails-additional-software">config/chroot local-includes/usr/local/sbin/tails-additional-software</a>
+<code>update</code> saves a copy of apt lists, then starts <code>apt-get update</code> and launches the
+installation process again, triggering an upgrade if necessary.</p>
+
+<p>If the upgrade is successful, the copy of old apt lists is deleted.
+Else, it would be restored by the installation process next time Tails
+is started, ensuring that a network disconnection or another unexpected
+issue doesn't make the Additional Software Packages unavailable.</p>
+
+<p>In the beginning of the process, the user is notified via desktop
+notifications that additional software is being upgraded.</p>
+
+<p>In the end, they are informed of success of failure. In the latter case,
+they are offered to open a configuration window or to examine the logs
+in order to better understand the issue.</p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - upgrade failed.png" /></p>
+
+<h2><a name="index5h2"></a>User interface for addition and removal of software</h2>
+
+<p>When the user installs a package either through the APT command line or
+a graphical interface like Synaptic, a notification is displayed to let
+them add or remove it from their list of additional software.</p>
+
+<p>Two APT hooks are configured in
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/apt/apt.conf.d/80tails-additional-software.disabled">config/chroot local-includes/etc/apt/apt.conf.d/80tails-additional-software.disabled</a>,
+which are enabled by
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/99-zz-install-ASP-DPKG-hooks">config/chroot local-hooks/99-zz-install-ASP-DPKG-hooks</a> in the
+end of the build process.</p>
+
+<p>The first hook <code>DPkg::Pre-Install-Pkgs</code> runs before any actual
+installation happens and calls
+<code>/usr/local/sbin/tails-additional-software apt-pre</code> which saves a list
+of installed and removed packages as JSON in
+<code>/run/live-additional-software/packages</code>.</p>
+
+<p>The second hook <code>DPkg::Post-Invoke</code> runs in the end of the installation
+process and calls <code>/usr/local/sbin/tails-additional-software apt-post</code>.
+It double forks so that APT properly returns, then parses the JSON file
+written beforehand in order to check which packages were manually
+installed or removed.</p>
+
+<h3><a name="index1h3"></a>When a package is installed</h3>
+
+<p><img src="https://labs.riseup.net/code/attachments/download/1925/asp-flow-installed.svg" height="auto" /></p>
+
+<h4><a name="index1h4"></a>With persistent storage unlocked:</h4>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - add.png" /></p>
+
+<p>When <em>Add To Persistent Storage</em> is clicked,
+<code>/usr/bin/tails-persistence-setup</code> is started as
+<code>tails-persistence-setup</code> without a GUI to enable the
+<code>AdditionalSoftware</code> preset. The new additional packages are then added
+atomically to the <code>live-additional-software.conf</code> configuration file
+(this logic is handled by
+<a href="https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware/config.py">https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware/config.py</a>)</p>
+
+<h4><a name="index2h4"></a>Without persistent storage</h4>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - add without persistent storage.png" /></p>
+
+<p>When <em>Add To Persistent Storage</em> is clicked,
+<code>/usr/bin/tails-persistence-setup</code> is started as
+<code>tails-persistence-setup</code> with a GUI to lead the user through the process
+of creating a persistent storage. The <code>AdditionalSoftware</code> preset is
+automatically enabled. The new additional packages are then added to the
+<code>live-additional-software.conf</code> configuration file, which is in this
+case mounted to <code>/media/tails-persistence-setup/TailsData</code> instead of
+<code>/live/persistence/TailsData_unlocked</code> (this logic in handled by
+<a href="https://git-tails.immerda.ch/pythonlib/plain/tailslib/persistence.py">https://git-tails.immerda.ch/pythonlib/plain/tailslib/persistence.py</a>).</p>
+
+<p>The systemd service
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-synchronize-data-to-new-persistent-volume-on-shutdown.service">config/chroot local-includes/lib/systemd/system/tails-synchronize-data-to-new-persistent-volume-on-shutdown.service</a>
+is used to synchronize APT data (lists and cached packages) to the newly
+created persistent storage on Tails shutdown.</p>
+
+<h4><a name="index3h4"></a>With persistent storage locked</h4>
+
+<p>No notification is displayed as people who have a persistent storage but
+don't unlock it, probably do this only sometimes and for a reason. They
+probably otherwise unlock their persistent storage most of the time. If
+they install packages with their persistent storage locked, they
+probably do it with their persistent storage unlock as well and would
+learn about this feature when it's most relevant for them.</p>
+
+<h4><a name="index4h4"></a>When it's impossible to have persistent storage</h4>
+
+<p>This happens when running from a DVD, virtual machine, or intermediary
+Tails.</p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - impossible persistent storage.png" /></p>
+
+<p>The state file <code>/run/live-additional-software/installer-asked</code> ensures
+this notification is only shown once per session, not to bother people
+too much.</p>
+
+<h3><a name="index2h3"></a>When a package is removed</h3>
+
+<p><img src="https://labs.riseup.net/code/attachments/download/1926/asp-flow-removed.svg" height="auto" /></p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - remove.png" /></p>
+
+<p>When <em>Remove</em> is clicked, the packages are removed atomically from the
+<code>live-additional-software.conf</code> configuration file (this logic is
+handled by
+<a href="https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware/config.py">https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware/config.py</a>).</p>
+
+<h2><a name="index6h2"></a>Additional Software configuration window</h2>
+
+<p>The list of additional software can be opened from:</p>
+
+<ul>
+<li><strong>Applications</strong>&nbsp;▸ <strong>System Tools</strong>&nbsp;▸ <strong>Additional Software</strong></li>
+<li><strong>Applications</strong>&nbsp;▸ <strong>Tails</strong>&nbsp;▸ <strong>Additional Software</strong></li>
+<li>a click on the gear button next to the <strong>Additional
+Software</strong> feature in the persistent storage settings</li>
+</ul>
+
+
+<p>This application is implemented in the following files:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/bin/tails-additional-software-config">config/chroot local-includes/usr/local/bin/tails-additional-software-config</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/applications/org.boum.tails.additional-software-config.desktop.in">config/chroot local-includes/usr/share/applications/org.boum.tails.additional-software-config.desktop.in</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/tails/additional-software/configuration-window.ui">config/chroot local-includes/usr/share/tails/additional-software/configuration-window.ui</a></li>
+</ul>
+
+
+<p>If there is no persistent storage or before any package is added, if the
+persistent storage is locked, or if it is impossible to have a persistent
+storage (for example, when running from a DVD or a virtual machine) the window
+shows an explanation text with appropriate pointers:</p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - without persistent storage.png" /></p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - empty.png" /></p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - locked persistent storage.png" /></p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - impossible persistent storage.png" /></p>
+
+<p>When packages have already been added, the window displays a list of
+these Additional Software Packages:</p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software.png" /></p>
+
+<p>When clicking on the delete cross, a confirmation dialog is displayed:</p>
+
+<p><img src="https://git.tails.boum.org/ux/plain/additional software/png/additional software - remove.png" /></p>
+
+<p>The privileged helper
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/tails-additional-software-remove">config/chroot local-includes/usr/local/sbin/tails-additional-software-remove</a>
+is called through <em>pkexec</em> to remove the software from the
+<code>live-additional-software.conf</code> configuration file (see
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/polkit-1/actions/org.boum.tails.additional-software.policy">config/chroot local-includes/usr/share/polkit-1/actions/org.boum.tails.additional-software.policy</a></p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./persistence.html">persistence</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/additional_software_packages">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

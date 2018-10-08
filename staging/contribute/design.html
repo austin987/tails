@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Design: specification and implementation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../local.css" type="text/css" />
+
+
+<script src="../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../index.en.html"><img src="../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../contribute.en.html">contribute</a></li>
+
+
+
+
+<li>Design: specification and implementation</li>
+
+</ul>
+</span>
+<span class="title">
+Design: specification and implementation
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../about.en.html">About</a></li>
+    <li><a href="../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../doc.en.html">Documentation</a></li>
+    <li><a href="../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../contribute.en.html">Contribute</a></li>
+    <li><a href="../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">1 Introduction</a>
+	</li>
+	<li class="L1"><a href="#index2h1">2 Privacy Enhancing Live Distribution Specification</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">2.1 Intent</a>
+		<ol>
+			<li class="L3"><a href="#index1h3">2.1.1 Privacy on the Internet</a>
+			</li>
+			<li class="L3"><a href="#index2h3">2.1.2 Protection from data recovery after shutdown</a>
+			</li>
+			<li class="L3"><a href="#index3h3">2.1.3 Working on sensitive documents</a>
+			</li>
+			<li class="L3"><a href="#index4h3">2.1.4 Portability</a>
+			</li>
+			<li class="L3"><a href="#index5h3">2.1.5 Target user</a>
+			</li>
+			<li class="L3"><a href="#index6h3">2.1.6 Filling some empty room in the Tor distributions landscape</a>
+			</li>
+			<li class="L3"><a href="#index7h3">2.1.7 Summary</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index2h2">2.2 Threat model</a>
+		<ol>
+			<li class="L3"><a href="#index8h3">2.2.1 The goal of the attacker</a>
+			</li>
+			<li class="L3"><a href="#index9h3">2.2.2 Capabilities, methods and other means of the attacker</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index3h2">2.3 Distribution</a>
+		</li>
+		<li class="L2"><a href="#index4h2">2.4 Operational requirements</a>
+		<ol>
+			<li class="L3"><a href="#index10h3">2.4.1 Platform</a>
+			</li>
+			<li class="L3"><a href="#index11h3">2.4.2 Media</a>
+			</li>
+			<li class="L3"><a href="#index12h3">2.4.3 Virtual machines</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index5h2">2.5 Other considerations</a>
+		<ol>
+			<li class="L3"><a href="#index13h3">2.5.1 Maintainability</a>
+			</li>
+			<li class="L3"><a href="#index14h3">2.5.2 Sustainability</a>
+			</li>
+			<li class="L3"><a href="#index15h3">2.5.3 Open-source transparency, easing peer review</a>
+			</li>
+			<li class="L3"><a href="#index16h3">2.5.4 Easy feedback</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index6h2">2.6 Implementation requirements</a>
+		<ol>
+			<li class="L3"><a href="#index17h3">2.6.1 Kernel requirements</a>
+			</li>
+			<li class="L3"><a href="#index18h3">2.6.2 Network requirements</a>
+			</li>
+			<li class="L3"><a href="#index19h3">2.6.3 User interface and applications</a>
+			</li>
+			<li class="L3"><a href="#index20h3">2.6.4 Usability</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index7h2">2.7 The future</a>
+		<ol>
+			<li class="L3"><a href="#index21h3">2.7.1 Memory recovery attacks</a>
+			</li>
+			<li class="L3"><a href="#index22h3">2.7.2 HTTP keepalive</a>
+			</li>
+			<li class="L3"><a href="#index23h3">2.7.3 Mounting of filesystems stored on removable devices</a>
+			</li>
+			<li class="L3"><a href="#index24h3">2.7.4 Miscellaneous</a>
+			</li>
+		</ol>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index3h1">3 Implementation</a>
+	<ol>
+		<li class="L2"><a href="#index8h2">3.0 Other Tails design documents</a>
+		</li>
+		<li class="L2"><a href="#index9h2">3.1 Download</a>
+		</li>
+		<li class="L2"><a href="#index10h2">3.2 Software</a>
+		<ol>
+			<li class="L3"><a href="#index25h3">3.2.1 Core software</a>
+			</li>
+			<li class="L3"><a href="#index26h3">3.2.2 Other applications</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index11h2">3.3 Internationalization</a>
+		<ol>
+			<li class="L3"><a href="#index27h3">3.3.1 Input methods</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index12h2">3.4 Notification of security issues and new Tails releases</a>
+		</li>
+		<li class="L2"><a href="#index13h2">3.5 Feedback</a>
+		</li>
+		<li class="L2"><a href="#index14h2">3.6 Configuration</a>
+		<ol>
+			<li class="L3"><a href="#index28h3">3.6.1 The Tor® software</a>
+			</li>
+			<li class="L3"><a href="#index29h3">3.6.3 DNS</a>
+			</li>
+			<li class="L3"><a href="#index30h3">3.6.4 HTTP Proxy</a>
+			</li>
+			<li class="L3"><a href="#index31h3">3.6.5 SOCKS libraries</a>
+			</li>
+			<li class="L3"><a href="#index32h3">3.6.6 Network Filter</a>
+			</li>
+			<li class="L3"><a href="#index33h3">3.6.7 MAC address spoofing</a>
+			</li>
+			<li class="L3"><a href="#index34h3">3.6.8 Host system swap</a>
+			</li>
+			<li class="L3"><a href="#index35h3">3.6.9 Host system RAM</a>
+			</li>
+			<li class="L3"><a href="#index36h3">3.6.10 Host system disks and partitions</a>
+			</li>
+			<li class="L3"><a href="#index37h3">3.6.11 Filesystems stored on removable devices</a>
+			</li>
+			<li class="L3"><a href="#index38h3">3.6.11 Secure erasure of files and free disk space</a>
+			</li>
+			<li class="L3"><a href="#index39h3">3.6.12 Passwords</a>
+			</li>
+			<li class="L3"><a href="#index40h3">3.6.13 Tor Browser</a>
+			</li>
+			<li class="L3"><a href="#index41h3">3.6.14 Thunderbird</a>
+			</li>
+			<li class="L3"><a href="#index42h3">3.6.15 Pidgin</a>
+			</li>
+			<li class="L3"><a href="#index43h3">3.6.16 GnuPG</a>
+			</li>
+			<li class="L3"><a href="#index44h3">3.6.17 Persistence feature</a>
+			</li>
+			<li class="L3"><a href="#index45h3">3.6.18 Installation on USB sticks and SD cards</a>
+			</li>
+			<li class="L3"><a href="#index46h3">3.6.19 Wireless devices handling</a>
+			</li>
+			<li class="L3"><a href="#index47h3">3.6.20 OpenSSH</a>
+			</li>
+			<li class="L3"><a href="#index48h3">3.6.21 Incremental upgrades</a>
+			</li>
+			<li class="L3"><a href="#index49h3">3.6.22 Panel applets and GNOME Shell extensions</a>
+			</li>
+			<li class="L3"><a href="#index50h3">3.6.23 DHCP hostname leaks</a>
+			</li>
+			<li class="L3"><a href="#index51h3">3.6.24 TCP timestamps</a>
+			</li>
+			<li class="L3"><a href="#index52h3">3.6.25 Application isolation</a>
+			</li>
+			<li class="L3"><a href="#index53h3">3.6.26 wget</a>
+			</li>
+			<li class="L3"><a href="#index54h3">3.6.27 APT</a>
+			</li>
+			<li class="L3"><a href="#index55h3">3.6.28 Electrum</a>
+			</li>
+			<li class="L3"><a href="#index56h3">3.6.29 Kernel hardening</a>
+			</li>
+			<li class="L3"><a href="#index57h3">page_poison</a>
+			</li>
+			<li class="L3"><a href="#index58h3">kASLR</a>
+			</li>
+			<li class="L3"><a href="#index59h3">kernel.kexec_load_disabled = 1</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index15h2">3.7 Running Tails in virtual machines</a>
+		<ol>
+			<li class="L3"><a href="#index60h3">3.7.1 Current support</a>
+			</li>
+			<li class="L3"><a href="#index61h3">3.7.2 Security concerns</a>
+			</li>
+			<li class="L3"><a href="#index62h3">3.7.3 Running Tails inside a Windows session</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index16h2">3.8 Build process and maintenance</a>
+		<ol>
+			<li class="L3"><a href="#index63h3">3.8.1 Build tools</a>
+			</li>
+			<li class="L3"><a href="#index64h3">3.8.2 Testing process</a>
+			</li>
+			<li class="L3"><a href="#index65h3">3.8.3 Upgrades</a>
+			</li>
+		</ol>
+		</li>
+		<li class="L2"><a href="#index17h2">3.9 Hardware support</a>
+		</li>
+		<li class="L2"><a href="#index18h2">3.10 Caveats</a>
+		</li>
+		<li class="L2"><a href="#index19h2">3.11 Fingerprint</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index4h1">4 Security analysis</a>
+	</li>
+	<li class="L1"><a href="#index5h1">5 Bibliography</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>1 Introduction</h1>
+
+<p>In this document we present a specification of a <em>Privacy Enhancing
+Live Distribution</em> (PELD) as well as an actual implementation of it called
+<em>The Amnesic Incognito Live System</em> (in short: <em>Tails</em>).</p>
+
+<p>By writing this document we intend to help third-parties do
+security analyses of any given PELD and specifically of Tails.
+We also wish to help establish best practices in
+the field of PELD design and implementation, and thus raise the
+baseline for all similar projects out there.</p>
+
+<p>This document is heavily based on preliminary work that was done as
+part of <a href="https://web.archive.org/web/20100220124424/http://www.browseanonymouslyanywhere.com/incognito/uploadfiles/docs.html">Incognito 2008.1-r1
+Documentation</a>.
+The <em>Bibliography</em> section has pointers to other inspiration and reference sources.</p>
+
+<h1><a name="index2h1"></a>2 Privacy Enhancing Live Distribution Specification</h1>
+
+<p><strong>Note</strong>: the key words "MUST", "MUST NOT", "REQUIRED", "SHALL",
+"SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
+"OPTIONAL" in this document are to be interpreted as described in
+<a href="http://www.ietf.org/rfc/rfc2119.txt">RFC 2119</a>.</p>
+
+<h2><a name="index1h2"></a>2.1 Intent</h2>
+
+<p>Let us introduce what the PELD goals are: the features provided by the
+PELD, the kind of user the PELD targets, and the (empty) room we think
+the PELD fills in the Tor distributions landscape.</p>
+
+<h3><a name="index1h3"></a>2.1.1 Privacy on the Internet</h3>
+
+<p>The Privacy Enhancing Live Distribution (or PELD for short) aims at providing
+a software solution providing the user with the technological means
+for using popular Internet technologies while maintaining their privacy,
+in particular with respect to anonymity. While there are
+different techniques and services providing that functionality, this
+specification will assume the usage of <a href="https://www.torproject.org/">The Tor®
+Project</a>'s state-of-the-art anonymizing
+overlay network Tor.</p>
+
+<p>Due to its deep dependency on Tor, the PELD defers the same possible
+goals as Tor:</p>
+
+<ul>
+<li>The PELD does not try to conceal it is connected to the Tor network
+unless Tor bridge relays are used.</li>
+<li>The PELD is not secure against end-to-end attacks, such as
+end-to-end timing or intersection attacks.</li>
+</ul>
+
+
+<p>Moreover, the PELD is likely to be affected by any feasible attack
+against Tor; e.g. the PELD is not secure against some local attacks,
+such as confirmation attacks based on website fingerprinting: see Lexi
+and Dominik's <em>Contemporary Profiling of Web Users</em> <a href="http://events.ccc.de/congress/2010/Fahrplan/events/4140.en.html">conference at
+27C3</a>
+for details.</p>
+
+<h3><a name="index2h3"></a>2.1.2 Protection from data recovery after shutdown</h3>
+
+<p>The PELD aims at protecting the user from post-mortem analysis
+of the equipment (notably storage media and memory) he or
+she runs the PELD on. It is impossible for such a system to determine
+which information is sensitive and which is not. Thus, the PELD MUST
+be amnesic by default:</p>
+
+<ul>
+<li>It is REQUIRED no trace is left on local storage devices unless the user
+explicitly asks for it: the PELD MUST take care not to use any
+filesystem or swap volume that might exist on the host machine hard
+drives.</li>
+<li>The usage of encrypted removable storage devices (such as USB
+sticks) SHOULD be encouraged.</li>
+<li>Volatile memory MUST be erased on shutdown to prevent memory
+recovery such as <a href="https://en.wikipedia.org/wiki/cold%20boot%20attack">cold boot attack</a>.</li>
+<li>Secure erasure of files and free disk space SHOULD be made easy.</li>
+</ul>
+
+
+<h3><a name="index3h3"></a>2.1.3 Working on sensitive documents</h3>
+
+<p>The PELD aims at providing a "safe" environment to produce and
+optionally publish sensitive documents. While the combination of
+anonymous access to the Internet and resistance against future
+equipment analysis does most of the job, some application-level
+attacks deserve special treatment: e.g. tools needed to inspect and
+cleanup metadata — such as EXIF data — in files SHOULD be available.</p>
+
+<h3><a name="index4h3"></a>2.1.4 Portability</h3>
+
+<p>The PELD MUST be self-contained and portable (literally, not
+necessarily with respect to code portability), and thus possible to
+run in as many computing environments as possible from the same single
+distribution. In addition, while the PELD's main objective indeed is
+to act as a traditional Live Distribution (i.e. a <a href="https://en.wikipedia.org/wiki/Live%5FCD">Live CD</a> or
+<a href="https://en.wikipedia.org/wiki/Live%5FUSB">Live USB</a>) it SHOULD also be compatible with popular
+virtual machine technologies for users who simply want a sandboxed
+environment within their usual operating system.</p>
+
+<h3><a name="index5h3"></a>2.1.5 Target user</h3>
+
+<p>The PELD's target user is the average user in terms of computer
+literacy; he or she does not necessarily control fully the computer
+being used. Examples would be a public computer in a library, coffee
+shop, university or a residence. We assume that the target user does
+not want to do any configuration (at least with respect to
+security and anonymity) of the various applications and tools used
+themselves, either because of insufficient knowledge, lack of interest
+or other reasons. The PELD MUST provide strong anonymity with no
+need of advanced configuration whatsoever. It MUST be made as
+difficult as possible for the user to unknowingly compromise
+anonymity.</p>
+
+<h3><a name="index6h3"></a>2.1.6 Filling some empty room in the Tor distributions landscape</h3>
+
+<p>XXX: update</p>
+
+<p>The PELD is meant to be complementary to other Tor distributions. It
+has no such goal as replacing other existing tool that properly
+fulfills its use cases.</p>
+
+<p>The PELD fills an empty place alongside of other Tor distributions.
+Using the PELD certainly requires the user to change more of his or
+her habits than installing e.g. the <a href="https://www.torproject.org/projects/torbrowser.html.en">Tor Browser Bundle</a>. On the other
+hand, the PELD currently is the only tool that makes it feasible to
+use the Internet, and more generally computers, for certain activities
+in contexts where the user cannot afford the risks involved by other
+Tor distributions.</p>
+
+<p>On the online privacy side of things, the PELD is aimed at offering
+roughly the same protection level as e.g. the Tor Browser Bundle, but
+provides a full-blown Tor-ified operating system instead of a few
+selected and carefully configured applications; this e.g. allows to
+safely download and open files using external applications, as
+mentioned by the Torbutton warning popup when a user attempts such an
+operation outside the PELD.</p>
+
+<p>About protection from post-shutdown data recovery, thanks to its
+amnesic-by-default behavior, the PELD can aim at providing a level of
+protection only a fine-tuned Live operating system can offer. On the
+contrary Tor distributions that rely on an untrusted underlying
+operating system could hardly guarantee anything in this area,
+regardless of the amount of resources and cleverness that is spent to
+leave <em>less</em> traces on local storage:</p>
+
+<ul>
+<li>widespread operating systems and shipped Internet applications
+generally default to write all kinds of traces to local storage; Tor
+distributions that depend on such systems are therefore forced to
+adopt a blacklist approach to lessen the amount of traces left
+behind. Such an approach is known to be prone to human error,
+such as <a href="https://bugs.torproject.org/7449">bug #7449 on Tor Project's Trac</a>.</li>
+<li>widespread operating systems typically offer very few control knobs
+to userspace applications over their not-amnesic-by-default
+behavior, especially when run without any kind of administrator
+credentials. Tor distributions that depend on such systems generally
+have no choice but hope no undesired trace will be left e.g. in the
+system's swap file or partition.</li>
+</ul>
+
+
+<p>The PELD amnesic feature also allows the user to safely perform
+non-Internet activities, which is yet another distinctive trait
+compared to other Tor distributions.</p>
+
+<p>To sum up, one can be a Tor expert and carefully configure a
+non-amnesic system to be as much Tor-ified as the PELD, but he or she
+won't get the same post-mortem analysis protection.</p>
+
+<h3><a name="index7h3"></a>2.1.7 Summary</h3>
+
+<p>In short, the PELD aims at providing privacy on computers and on the
+Internet for anyone anywhere.</p>
+
+<h2><a name="index2h2"></a>2.2 Threat model</h2>
+
+<p>The goal of staying anonymous and keeping sensitive information
+protected stands in direct conflict with the goals of several entities
+"present" on the Internet. The following threat model is meant to
+describe the intentions and capabilities of such attackers.</p>
+
+<h3><a name="index8h3"></a>2.2.1 The goal of the attacker</h3>
+
+<p>The adversary may have one or more goals among the following ones.</p>
+
+<ul>
+<li><strong>Identify or locate the user, track his or her activities on the
+Internet</strong>: information such as the User-Agent HTTP header, locale
+and especially IP address can all be used in various degrees to
+identify or locate the user, and to track his or her activities on
+the Internet.</li>
+<li><strong>Eavesdrop on sensitive data</strong>: the Tor network only prevents the
+data from being traced (according to Tor's threat model) but does not
+protect it from eavesdropping.</li>
+<li><strong>Data recovery after system shutdown</strong>:  "normal" operating systems
+keep a lot of traces about their users' Internet activities (notably
+browser cache, cookies and history) on local storage media;
+similary, working on a sensitive document with a "normal" operating
+system is very likely to leave traces of this document. User's data
+can remain on the equipment even after the machine is shut down; be
+it stored in the filesystem or in the memories, both RAM and swap,
+which might as well retain data (for example encryption keys or
+passwords). The adversary may want to recover such information by
+analyzing the equipment that has been used.</li>
+</ul>
+
+
+<h3><a name="index9h3"></a>2.2.2 Capabilities, methods and other means of the attacker</h3>
+
+<p>The adversary may have capabilities needed to perform the following
+attacks.</p>
+
+<ul>
+<li><strong>Eavesdropping and content injection</strong>: it is assumed that the
+adversary is non-global and has full control over the network
+traffic of some portion of the Internet (e.g. some Tor exit nodes,
+upstream routers of exit nodes, or the ISP that provides the
+Internet connection the user is sitting behind). The adversary is
+thus able to eavesdrop, modify, delete or delay parts or all of the
+user's traffic on the Internet.</li>
+<li><strong>Bypass attacks</strong>: it is conceivable for attackers to mount attacks
+which bypass the proxy and DNS setup in the applications which could
+then be used to identify the user, either by injecting data or
+social engineering.</li>
+<li><strong>Exploit software vulnerabilities</strong>: the attacker might be able to
+run arbitrary code by exploiting vulnerabilities present in any of
+the software packages installed.</li>
+<li><strong>Application level attacks</strong>: the attacker can utilize certain
+applications' services and features to get identifying information.
+Examples are JavaScript and Java applets in web browsers, CTCP
+queries in IRC clients, etc.</li>
+<li><strong>Physical access, live monitoring, post-mortem equipment
+analysis</strong>: some users face adversaries with intermittent or
+constant physical access to the equipment they use. Users in
+Internet cafes, for example, face such a threat. This means the
+adversary might be physically monitoring the computer while the PELD
+is running on it. Moreover the adversary might raid the user at any
+moment and then confiscate and analyse the equipment, storage media
+and memory in particular.</li>
+</ul>
+
+
+<h2><a name="index3h2"></a>2.3 Distribution</h2>
+
+<p>The PELD MUST be distributed in a common format that can easily be
+used to install the PELD on the selected medium. For instance, if
+distributed as an ISO 9660 compatible image file it can be burned to a
+DVD with almost any DVD recording software available.</p>
+
+<p>Also, it is RECOMMENDED to make it possible for end-users to verify
+the downloaded PELD image's integrity using public-key cryptography.</p>
+
+<h2><a name="index4h2"></a>2.4 Operational requirements</h2>
+
+<p>This section handles mostly the criteria that the PELD should be
+portable and able to run in as many environments as possible.</p>
+
+<h3><a name="index10h3"></a>2.4.1 Platform</h3>
+
+<p>The binaries MUST all be executable on the most common computer
+hardware architecture(s). As of 2014, the x86 computer architecture
+seems to be the obvious choice as the vast majority of personal
+computers in use is compatible with it. The PELD SHOULD support UEFI.
+Supporting widespread hardware architectures used in mobile
+computers, such as phones, is also welcome.</p>
+
+<h3><a name="index11h3"></a>2.4.2 Media</h3>
+
+<p>The PELD SHOULD be able to boot and run natively from either a DVD or a
+USB drive. While running the PELD in native mode it MUST be completely
+independent from the host operating system and all other storage media
+on the host computer unless the user explicitly tries to access any of
+them.</p>
+
+<p>In all circumstances, binaries, dynamic libraries and other executable
+code susceptible to virus infections and similar MUST always be
+completely write-protected, even when running from a writeable USB
+medium. Such files SHOULD not even be modifiable temporarily, which
+could be the case even when running from DVD if the filesystem is
+loaded into memory (e.g. tmpfs).</p>
+
+<p>Configuration files, temporary files, user home directories and
+similar files that most likely need to be modifiable during operation
+MUST only be saved temporarily in memory (e.g. by use of something
+like tmpfs or unionfs) unless the user explicitly enables some
+persistence feature.</p>
+
+<p>It is tempting to use the possibility to write back data when running
+from USB in order to allow user settings to be persistent. If this is
+considered, this feature MUST be optional and offer the possibility
+to use strong encryption for the persistent storage.</p>
+
+<h3><a name="index12h3"></a>2.4.3 Virtual machines</h3>
+
+<p>As an alternative to running the PELD natively from a DVD or USB, it
+SHOULD also be possible to run it inside virtual machines.</p>
+
+<p>Running the PELD is such a virtualized environment provides weakened
+security compared to running it natively. This drawback is due to the
+dependency on the host OS. When the PELD runs as a guest OS:</p>
+
+<ul>
+<li>The PELD cannot defend against keyloggers, viruses and other malware
+that could be present in the host OS. The user activities in the
+PELD might thus be under surveillance by an attacker who would
+control the host OS enough.</li>
+<li>The PELD can not guarantee anything with respect to writing to local
+storage: the host OS does its own memory management and can write to
+swap any part of the memory being used by the PELD without the user
+being told.</li>
+</ul>
+
+
+<p>On the other hand, running the PELD inside a virtual machine is useful
+in situations where the user is not in a position to run the PELD
+natively, which often is the case with public computers. Additionally,
+many users seem to prefer this mode of operation and would prefer to
+use their usual operating system instead of rebooting to run the PELD
+natively; that alone is a reason for making sure it works.</p>
+
+<h2><a name="index5h2"></a>2.5 Other considerations</h2>
+
+<h3><a name="index13h3"></a>2.5.1 Maintainability</h3>
+
+<p>The procedure to update the PELD SHOULD NOT be prohibitive to provide
+timely software updates that address issues related to security or
+anonymity. A scripted, automatic build procedure is RECOMMENDED
+over manually setting up things.</p>
+
+<h3><a name="index14h3"></a>2.5.2 Sustainability</h3>
+
+<p>PELD development SHOULD be a team work rather than a one person work,
+and the deep knowledge of this work SHOULD be shared among the team
+members. Thus the development infrastructure SHOULD be designed and
+deployed in order to share this knowledge.</p>
+
+<h3><a name="index15h3"></a>2.5.3 Open-source transparency, easing peer review</h3>
+
+<p>For the sake of transparency the use of open-source software is
+RECOMMENDED. Binary blobs SHOULD only be used when no good alternative
+exists, which could be the case with certain hardware drivers or driver
+firmwares.</p>
+
+<p>Having third-parties analyze the PELD security is necessary to ensure
+it is working as intended. It is thus REQUIRED for the PELD itself
+to be open-source. Moreover decisions with non-trivial implications
+SHOULD be clearly and publicly documented: such information about what
+a PELD implementation intends to achieve and how it does so SHOULD be
+made available to reviewers.</p>
+
+<p>Third-parties SHALL be able to reproduce a PELD implementation by
+building it from the released source code and publicly available
+information. The process MUST yield consistent results.</p>
+
+<h3><a name="index16h3"></a>2.5.4 Easy feedback</h3>
+
+<p>In order to collect bug reports and wanted features, the PELD project
+SHOULD offer easy ways for end-users to provide feedback to the
+developers (email, web forum, bug tracker, shipped-within
+application, ...). Efforts SHOULD be made to offer the most anonymous
+(or at least pseudonymous) possible way to send this feedback.</p>
+
+<h2><a name="index6h2"></a>2.6 Implementation requirements</h2>
+
+<h3><a name="index17h3"></a>2.6.1 Kernel requirements</h3>
+
+<p>The role of the kernel is mainly to provide support for the features
+required elsewhere in this specification. This includes:</p>
+
+<ul>
+<li><strong>Good hardware support</strong> is REQUIRED: "good" is a sketchy word in a
+specification. The general idea is to include as much drivers for
+relevant hardware as possible, in particular for network cards
+(wired and wireless), video adapters and anything necessary for
+basic operation.</li>
+<li><strong>Support for a stateful firewall with packet filtering
+capabilities</strong> is REQUIRED: it must somehow be able to sort traffic out for
+transparent proxying (mentioned in the next section) to work.
+Similarly, it must be able to identify and drop traffic destined to
+the Internet that is not supported by the Tor network, such as
+transport layer protocols other than TCP.</li>
+<li><strong>Security features</strong> are RECOMMENDED: with the dangers of exploitable
+vulnerabilities in any code running, attempts to mitigate these on
+the kernel level is a good idea. Executable space protection with
+the NX bit, address space layout randomization and similar
+techniques are all interesting in this respect. Access control in
+the form of Mandatory Access Control, Role-Based Access control and
+so on SHOULD also be considered.</li>
+</ul>
+
+
+<h3><a name="index18h3"></a>2.6.2 Network requirements</h3>
+
+<h4><a name="index1h4"></a>2.6.2.1 Firewall</h4>
+
+<p>In order to prevent accidental leaks of information, proxy bypass
+attacks on Tor and similar, the access to the Internet MUST be
+heavily restricted by a firewall:</p>
+
+<ul>
+<li>All non-TCP transport layer protocols SHOULD be dropped as they are
+not supported by the Tor network.</li>
+<li>All TCP traffic not explicitly targeting Tor SHOULD be redirected to
+the transparent proxy (i.e. to the <code>TransPort</code> as set in <code>torrc</code>);
+alternatively this traffic SHOULD be dropped (then only applications
+explicitly configured to use Tor will reach the Internet).</li>
+<li>All DNS lookups SHOULD be made through the Tor network (i.e.
+redirected to <code>DNSPort</code> as set in <code>torrc</code>).</li>
+<li>All IPv6 traffic SHOULD be forbidden as it is not supported by the Tor
+network.</li>
+</ul>
+
+
+<p>Note that the above is not necessary (or desirable) for local network
+(RFC1918) addresses; it is RECOMMENDED to special-case DNS queries
+though as some home gateways and captive wifi portals reply the public
+IP provided by the ISP when one asks information about themselves to
+their DNS resolver (source: <a href="http://archives.seul.org/or/talk/Jul-2010/msg00007.html">The State of the DNS and Tor Union (also:
+a DNS UDP
+- TCP shim)</a>
+thread on the or-talk mailing list).</p>
+
+<p>Any exception to these rules MUST be thoroughly thought through and
+properly documented. If an action that is excepted from the above
+rules is user initiated, that MUST be made obvious to the user, and
+user opt-out MUST be offered, if possible.</p>
+
+<h4><a name="index2h4"></a>2.6.2.2 Fingerprinting</h4>
+
+<p>Efforts SHOULD be made so that it is harder to fingerprint PELD users <em>as
+being using the PELD</em>. Considering this goal can conflict with others,
+trying to reach perfection in this domain is not necessarily
+reasonable.</p>
+
+<h3><a name="index19h3"></a>2.6.3 User interface and applications</h3>
+
+<h4><a name="index3h4"></a>2.6.3.1 General user interface</h4>
+
+<p>The user SHOULD be able to do all relevant things with easy-to-use
+graphical interfaces. The PELD SHOULD present a solid, user-friendly
+desktop environment with all the expected features after booting: file
+management, system settings configuration, support applications etc.</p>
+
+<h4><a name="index4h4"></a>2.6.3.2 Internet applications</h4>
+
+<p>At least clients for the following Internet activities MUST be
+supported:</p>
+
+<ul>
+<li><strong>Web browsing</strong>: since the web browser is arguably the most used
+end-user Internet application as well as the one that offers the
+largest attack surface, the Tor Project has spent significant
+resources on analyzing and mitigating the many pitfalls of modern
+web browsers with respect to anonymity: media plugins,
+browser-specific bugs, web technologies such as JavaScript, CSS and
+cookies, etc. Benefiting from this work is essential for maintaining
+anonymity, so it is REQUIRED to include only web browsers that are
+endorsed by the Tor Project, accompanied with any configurations,
+extensions/plugins, etc. that they recommend (for instance, Tor
+Browser Bundle). The PELD browser fingerprint SHOULD make the PELD
+users appear uniformly among Tor users with generally recommended
+configuration, such as Tor Browser Bundle users.</li>
+<li><strong>Email</strong>: support for PGP or S/MIME is highly RECOMMENDED. Also,
+beware that the EHLO/HELO sent to the SMTP-server will contain the
+host's IP address in many email clients. The <code>Message-ID</code> headers and
+HTML/JavaScript email support are other usual leaking spots that
+MUST be taken care of.</li>
+<li><strong>Instant messaging</strong>, including IRC and XMPP.</li>
+<li><strong>Secure Shell</strong> client such as <a href="http://www.openssh.org/">OpenSSH</a>.</li>
+</ul>
+
+
+<p>Other RECOMMENDED clients for Internet activities include:</p>
+
+<ul>
+<li><strong>P2P file-sharing</strong> such as BitTorrent: note, however, that large
+scale file-sharing activity in general is frowned upon in the Tor
+community as it consumes extreme amounts of network resources
+compared to other kinds of services.</li>
+<li><strong>Collaborative text editing</strong> such as <a href="http://gobby.0x539.de">Gobby</a>.</li>
+<li><strong>Remote desktop</strong> such as VNC or RDP.</li>
+<li><strong>Feed aggregator</strong> for RSS/RDF, Atom and other widely spread feed
+formats.</li>
+</ul>
+
+
+<p>Given that these applications will be the user's interface to the
+Internet, they MUST be chosen and configured cautiously, and with
+security in mind. In general, as little information as possible SHOULD
+leak about the user, the applications used and the system settings.</p>
+
+<h4><a name="index5h4"></a>2.6.3.3 Document production applications</h4>
+
+<p>A great deal of communication over the Internet is done via the
+distribution of different types of commonly used media and document
+formats, so the PELD MUST contain the basic facilities for creating
+and editing such formats. More specifically, at least the following
+media and text production tasks MUST be possible using software
+shipped by the PELD:</p>
+
+<ul>
+<li><strong>Word processing</strong></li>
+<li><strong>Bitmap and vector graphics</strong></li>
+<li><strong>Sound recording and editing</strong></li>
+<li><strong>Desktop publishing</strong></li>
+<li><strong>Printing and scanning</strong></li>
+</ul>
+
+
+<p>Other RECOMMENDED media and text manipulation tools include:</p>
+
+<ul>
+<li><strong>Video editor</strong></li>
+<li><strong>Spreadsheet</strong></li>
+<li><strong>Presentation software</strong></li>
+<li><strong>Gettext catalogs (.po files) editor</strong></li>
+</ul>
+
+
+<p>These applications SHOULD be compatible with widely spread file formats in
+their domain.</p>
+
+<h4><a name="index6h4"></a>2.6.3.4 Cryptographic tools</h4>
+
+<p>Tools for securely signing, verifying, encrypting and decrypting files
+and messages SHOULD be available. In particular, some implementation
+of OpenPGP SHOULD be included as it is the de-facto standard for these
+tasks in the Free Software world. GUIs for managing keys and
+performing the relevant cryptographic tasks SHOULD be available. The
+OpenPGP implementation SHOULD be pre-configured to use an encrypted
+tunnel when connecting to a keyserver (read: <code>hkps://</code>).</p>
+
+<p>Tools for creating and using encrypted storage containers are also RECOMMENDED.</p>
+
+<p>A password manager SHOULD be included and allow one to store many
+passwords in an encrypted database which is protected by a single key.
+This is meant to encourage users to use strong passwords, and to
+discourage password reuse.</p>
+
+<p>Any cryptographic tool shipped in the PELD SHOULD by default use
+up-to-date parameters with respect to the current commonly agreed best
+practices: digests, ciphers and key sizes.</p>
+
+<h4><a name="index7h4"></a>2.6.3.5 Tor</h4>
+
+<p>Only stable releases SHOULD be considered since Tor really is at the
+core of the PELD.</p>
+
+<p>Tor SHOULD be set up to enable its DNS server (<code>DNSPort</code>) to allow DNS
+lookups through the Tor network; alternatively a local DNS server can
+be configured to use Tor.</p>
+
+<p>If transparent proxying (as opposed to dropping non-Tor traffic) was
+chosen in the network section, then Tor MUST be set up to enable its
+transparent proxy (<code>TransPort</code>, <code>TransListen</code>); alternatively any
+transparent proxy configured to use Tor as the parent proxy can be
+used.</p>
+
+<p>While there are many other interesting configuration possibilities
+described in the Tor manual, care MUST be taken to avoid those that may
+impair anonymity or security.</p>
+
+<p>A GUI Tor controller application such as Vidalia or TorK is highly
+RECOMMENDED. However, this requires opening the control port in Tor,
+and thus some means of authentication will be REQUIRED
+(<code>CookieAuthentication</code> preferably) to hinder attacks on the Tor
+software. XXX: this paragraph is mostly obsolete.</p>
+
+<h4><a name="index8h4"></a>2.6.3.6 Hardened tool chain and compiling</h4>
+
+<p>As an addition to the security against exploitable vulnerabilities
+provided by the kernel, compiling software with stack smashing
+protection, Position Independant Executable (PIE) and similar compiler
+security enhancements is RECOMMENDED. Note that some
+compiler-level options may be necessary to take advantage of in-kernel
+security features. Thus the use of a hardened tool chain might depend
+on the vendor distribution used to build the PELD upon. If such
+techniques are not widely deployed at this level, using them to build
+the PELD can require a lot of time from its developers and impact its
+ease of maintenance, which would make it harder for new contributors
+to get involved in the project. For this reason, compile-time
+hardening features should be carefully selected to balance the costs
+they impose against the extra security they bring. If using a hardened
+tool chain to build the PELD is deemed to require too much energy,
+resources could be better spent pushing usage of such hardening
+features in the base operating system.</p>
+
+<h4><a name="index9h4"></a>2.6.3.7 "Virtual" input system</h4>
+
+<p>Since one goal of the PELD is to permit usage of untrusted computers
+while preserving anonymity, measures MUST be taken against hardware
+that might de-anonymize or facilitate recording of a user, such as
+hardware <a href="http://en.wikipedia.org/wiki/Keylogger">keyloggers</a>. Thus a
+virtual keyboard (usable with the mouse) MUST be available.</p>
+
+<p><a id="spec-entropy"></a></p>
+
+<h4><a name="index10h4"></a>2.6.3.8 Entropy</h4>
+
+<p>Some crucial applications of the PELD, such as the Tor client, make
+heavy use of cryptographic techniques and therefore rely on a high
+quality pseudo-random number generator (PRNG). Initializing (seeding)
+a PRNG is tricky in a Live system context as the system state after
+boot, if not fully deterministic, is parameterized by far fewer
+variables than in the case of a non-Live system.</p>
+
+<p>Using an auxiliary entropy source such as
+<a href="http://www.irisa.fr/caps/projects/hipsor/">haveged</a> is thus
+REQUIRED.</p>
+
+<h3><a name="index20h3"></a>2.6.4 Usability</h3>
+
+<p>Security is usually hard to get. Therefore steps SHOULD be taken in
+order to make users more comfortable with the PELD, and also to
+educate users about specific risks and non-intuitive situations that
+may affect their anonymity on the Internet.</p>
+
+<h4><a name="index11h4"></a>2.6.4.1 Internationalization</h4>
+
+<p>The user MUST be able to easily select his or her language of
+preference among a great number of widespread ones. User applications
+SHOULD be localized to fit this preference, as SHOULD system settings
+such as keyboard layout.</p>
+
+<p>The PELD documentation, either online or shipped within, SHOULD be
+easily translatable. Software written specifically for the PELD SHOULD
+be developed with i18n/l10n-awareness in mind.</p>
+
+<h4><a name="index12h4"></a>2.6.4.2 Education and user help</h4>
+
+<p>The PELD SHOULD include an easy-to-read document explaining:</p>
+
+<ol>
+<li>what the PELD goals (and non-goals) are. The PELD is no magic wand.</li>
+<li>how to securely use the PELD and the bundled software.</li>
+</ol>
+
+
+<p>As the user is assumed to only have the knowledge of an average
+computer user, it will be required to explain some general security
+concepts.</p>
+
+<p>Real-world experience demonstrates that the average user quite rarely
+thinks about upgrading his or her PELD copy, and is often pretty happy
+unknowingly running an obsolete version affected by numerous
+well-known security issues. A PELD running copy SHOULD therefore
+notice it is affected by known security issues and notify the user if
+a newer release fixes some.</p>
+
+<h2><a name="index7h2"></a>2.7 The future</h2>
+
+<p>A few more or less well known issues shall be thought through so that
+this specification can provide reasonable guidance about them.</p>
+
+<h3><a name="index21h3"></a>2.7.1 Memory recovery attacks</h3>
+
+<p><a href="http://www.blackhat.com/html/bh-dc-11/bh-dc-11-briefings.html#Case">Research</a>
+aims at recovering a Live system's in-memory filesystem and partial
+recovery of its previously deleted contents. Most current Live systems
+do not protect against that kind of attacks: at best, they erase free
+memory on shutdown, leaving intact in memory any data saved in the
+unionfs/aufs ramdisk branch.</p>
+
+<p>This was
+<a href="http://archives.seul.org/or/talk/Jan-2011/msg00137.html">discussed</a>
+on the or-talk mailing list, and a new system that mitigates such
+attacks is part of Tails 0.7 and newer.</p>
+
+<p>This specification must warn about such matters.</p>
+
+<h3><a name="index22h3"></a>2.7.2 HTTP keepalive</h3>
+
+<p>Quoting the <a href="https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/LiveCDBestPractices">Live CD Best
+Practices</a>
+document on the Tor wiki:</p>
+
+<blockquote><p>OPTIONAL? To prevent the browser from keeping HTTP sessions open
+over existing circuits the following network settings should be
+applied. This will ensure that new circuits, such as requested via
+NEWNYM, will service subsequent HTTP requests.</p></blockquote>
+
+<p>The impact of HTTP keepalive and possible solutions are <a href="http://thread.gmane.org/gmane.linux.distributions.tails.devel/52">being
+discussed</a>
+on the <a href="../about/contact.en.html#tails-dev">tails-dev@boum.org</a> mailing list.</p>
+
+<h3><a name="index23h3"></a>2.7.3 Mounting of filesystems stored on removable devices</h3>
+
+<p>Some attacks recently put under the spotlights exploit vulnerabilities
+in the desktop software stack that triggers automatic mounting,
+display and files preview of filesystems stored on removable devices.</p>
+
+<p>This specification must warn about such matters.</p>
+
+<h3><a name="index24h3"></a>2.7.4 Miscellaneous</h3>
+
+<ul>
+<li>FireWire is known to allow read access to the system memory, at
+least when such devices are allowed to use DMA (Linux: <code>options
+ohci1394 phys_dma=0</code> helps mitigating that).</li>
+<li>IrDA and other network links might allow attacks.</li>
+</ul>
+
+
+<h1><a name="index3h1"></a>3 Implementation</h1>
+
+<p>Tails is an implementation of the PELD specification above. It is
+licensed under the GNU GPL version 3 or (at your option) any later
+version.</p>
+
+<p>Critical parts of the configuration are based on the ones from
+well-known and trusted sources, namely Tails ancestor
+<a href="http://www.browseanonymouslyanywhere.com/incognito/">Incognito</a>
+and the <a href="https://www.torproject.org/projects/torbrowser.html.en">Tor BrowserBundle</a>.
+This is for example the case for the firewall and Tor configurations.</p>
+
+<p><strong>NOTICE</strong>: this distribution is provided as-is with no warranty of
+fitness for a particular purpose, including total anonymity. Anonymity
+depends not only on the software but also on the user understanding
+the risks involved and how to manage those risks.</p>
+
+<h2><a name="index8h2"></a>3.0 Other Tails design documents</h2>
+
+<div class="map">
+<ul>
+<li>
+<a href="./design/MAC_address.html" class="mapitem">MAC address anonymization</a>
+</li>
+<li>
+<a href="./design/Time_syncing.html" class="mapitem">Time syncing</a>
+</li>
+<li>
+<a href="./design/Tor_enforcement.html" class="mapitem">Tor enforcement</a>
+<ul>
+<li>
+<a href="./design/Tor_enforcement/DNS.html" class="mapitem">DNS</a>
+<ul>
+<li>
+<a href="./design/Tor_enforcement/DNS/ttdnsd_broken.html" class="mapitem">ttdnsd broken</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="./design/Tor_enforcement/Network_filter.html" class="mapitem">Network filter</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="./design/Tor_network_configuration.html" class="mapitem">Tor network configuration</a>
+</li>
+<li>
+<a href="./design/UEFI.html" class="mapitem">UEFI</a>
+</li>
+<li>
+<a href="./design/Unsafe_Browser.html" class="mapitem">Unsafe Browser</a>
+</li>
+<li>
+<a href="./design/additional_software_packages.html" class="mapitem">Additional software packages</a>
+</li>
+<li>
+<a href="./design/application_isolation.html" class="mapitem">Application isolation</a>
+</li>
+<li>
+<a href="./design/hybrid_ISO.html" class="mapitem">hybrid ISO</a>
+</li>
+<li>
+<a href="./design/incremental_upgrades.html" class="mapitem">Incremental upgrades</a>
+<ul>
+<li>
+<a href="./design/incremental_upgrades/archive.html" class="mapitem">archive</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="./design/installation.html" class="mapitem">Tails Installer</a>
+</li>
+<li>
+<a href="./design/installation_assistant.html" class="mapitem">Installation assistant</a>
+</li>
+<li>
+<a href="./design/kernel_hardening.html" class="mapitem">kernel hardening</a>
+</li>
+<li>
+<a href="./design/memory_erasure.html" class="mapitem">Memory erasure</a>
+</li>
+<li>
+<a href="./design/mirrors.html" class="mapitem">HTTP mirror pool</a>
+</li>
+<li>
+<a href="./design/persistence.html" class="mapitem">persistence</a>
+</li>
+<li>
+<a href="./design/random.html" class="mapitem">Random numbers</a>
+</li>
+<li>
+<a href="./design/reproducibility.html" class="mapitem">Reproducible builds</a>
+</li>
+<li>
+<a href="./design/stream_isolation.html" class="mapitem">Tor stream isolation</a>
+</li>
+<li>
+<a href="./design/verification_extension.html" class="mapitem">Tails Verification (browser extension)</a>
+</li>
+<li>
+<a href="./design/virtualization_support.html" class="mapitem">virtualization support</a>
+</li>
+</ul>
+</div>
+
+
+<h2><a name="index9h2"></a>3.1 Download</h2>
+
+<p>See the <a href="../install.en.html">installation section</a> on <a href="../index.en.html">Tails's website</a>
+for download information. Published Tails images integrity can be
+checked using OpenPGP detached signatures made with a key that is well
+linked to the web-of-trust.</p>
+
+<p>The sources are stored in a bunch of <a href="http://git-scm.com/">Git</a>
+repositories. The <a href="./git.html">git page</a> on the Tails website provides all
+needed information to access these repositories.</p>
+
+<p>The latest version of this document can be found on the Tails
+website: <a href="https://tails.boum.org/contribute/design">contribute/design</a>.</p>
+
+<h2><a name="index10h2"></a>3.2 Software</h2>
+
+<p>Tails ships the following software. This list is not complete, but
+only contains packages deemed as important for whatever reason. The
+full packages list can be found in the <a href="/torrents/files/">BitTorrent files download
+directory</a> (look for files with the <code>.packages</code>
+extension).</p>
+
+<h3><a name="index25h3"></a>3.2.1 Core software</h3>
+
+<ul>
+<li><a href="https://www.debian.org/">Debian GNU/Linux</a>: the base operating
+system, provides hardware detection, infrastructure. Please note
+that the Debian distribution does not provide or endorse Tails.</li>
+<li><a href="http://www.torproject.org/">Tor</a>: anonymizing overlay network for
+TCP. Our intention is to always use the latest stable version.</li>
+</ul>
+
+
+<p>Being based in Debian, Tails benefits from its great package
+management tools, facilitating its build and the inclusion of new
+software. Sadly compile time options that would enhance Tails
+security (<code>-fPIE</code>, <code>-fPIC</code>, <code>-fstack-protector</code> etc.) are not widely
+used in Debian yet. Thus having them included in Tails would require
+to recompile every package with the right compile-time options. This
+would badly impact the development and build efforts required to
+release Tails. As an alternative, efforts <a href="https://bugs.debian.org/cgi-bin/pkgreport.cgi?tag=hardening;users=debian-security@lists.debian.org">have been
+started</a>
+to push usage of such hardening features in Debian.</p>
+
+<p>A lot of security features have been implemented upstream at the
+kernel level (ASLR, removal of <code>/dev/kmem</code>, <code>/dev/mem</code> protections,
+various stack and heap hardening features, <code>/proc</code> or <code>/sys</code> not leaking
+sensitive information, etc.), most of them being slowly integrated
+into Debian. This is the reason why the Tails kernel has no more special
+kernel security feature than the stock Debian kernel.</p>
+
+<h3><a name="index26h3"></a>3.2.2 Other applications</h3>
+
+<p>See <a href="../doc/about/features.en.html">features</a>.</p>
+
+<h2><a name="index11h2"></a>3.3 Internationalization</h2>
+
+<p>Tails ships, as is, localization files provided by the installed
+Debian packages. All available Tor Browser localization packages
+are installed. Spell checking software and data is installed for the
+set of best supported languages; it is usable at least is Tor Browser,
+LibreOffice and gedit.</p>
+
+<h3><a name="index27h3"></a>3.3.1 Input methods</h3>
+
+<p>Tails ships with IBus and a few engines (Anthy for Japanese, Pinyin
+and Bopomofo for Chinese, and Hangul for Korean).</p>
+
+<p>A login script prepares and configures IBus. When a Japanese,
+Chinese or Korean locale is selected, this login script selects
+the right default input method. GNOME starts the IBus daemon itself.</p>
+
+<p>Still, since one may want to work on documents written in
+Chinese, Japanese or Korean even when selecting English as their
+preferred language, IBus is also started in other locales, with all
+supported input engines pre-loaded.</p>
+
+<p>IBus' environment variables are always exported on login to make this work.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/lib/systemd/user/tails-configure-keyboard.service">config/chroot local-includes/usr/lib/systemd/user/tails-configure-keyboard.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/tails-configure-keyboard">config/chroot local-includes/usr/local/lib/tails-configure-keyboard</a></li>
+</ul>
+
+
+<h2><a name="index12h2"></a>3.4 Notification of security issues and new Tails releases</h2>
+
+<p>Tails ships a script that checks if there are security issues that are
+not fixed by any Tails release (and thus, affect the currently running
+Tails regardless of its version). A desktop notification is displayed
+for every such issue.</p>
+
+<p>The connections are made to the Tails website through Tor, over HTTPS
+with a pinned CA. The only piece of information leaked to the Tails
+web server (apart of <a href="http://metacpan.org/search?q=LWP%3A%3AUserAgent">LWP::UserAgent</a>'s specific User-Agent
+and HTTP behavior) is the first two chars of the <code>LANG</code>
+environment variable.</p>
+
+<p>This script is run after the user has logged-in and Tor is
+in known-working state.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/lib/systemd/user/tails-security-check.service">config/chroot local-includes/usr/lib/systemd/user/tails-security-check.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/bin/tails-security-check">config/chroot local-includes/usr/local/bin/tails-security-check</a></li>
+</ul>
+
+
+<p>Security issues that were fixed in a newer version of Tails are taken
+care of by <a href="./design/incremental_upgrades.html">Tails Upgrader</a>
+that tells the user whenever they should upgrade and leads them
+through the necessary steps.</p>
+
+<h2><a name="index13h2"></a>3.5 Feedback</h2>
+
+<p>Users can send feedback in several ways to Tails developers.
+A <a href="https://labs.riseup.net/code/projects/tails/issues?query_id=108">task tracker</a> is available.
+Users can also send email to the private <a href="../about/contact.en.html#tails">developers mailing
+list</a> or to the private <a href="../about/contact.en.html#tails-support-private">support mailing
+list</a>.</p>
+
+<p>A dedicated application called <em>WhisperBack</em>
+is also available in every running Tails copy. WhisperBack allows
+users to send anonymous or pseudonymous feedback via OpenPGP-encrypted
+email. It is configured in Tails to use a Tor hidden service run by
+Tails developers as the outgoing SMTP server. WhiperBack only sends
+email over a STARTTLS session after carefully verifying the remote
+SMTP SSL certificate. Some minimal information about the system is
+gathered and sent along with the report; the reporting user can
+opt-out of this though. Users can also provide an email address and an
+OpenPGP public key in case further discussion is needed to address the
+reported issue. WhisperBack's graphical interface fully supports
+internationalization and is ready to be translated.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/etc/whisperback">config/chroot local-includes/etc/whisperback</a></li>
+<li><a href="https://git-tails.immerda.ch/whisperback">WhisperBack source code</a></li>
+</ul>
+
+
+<h2><a name="index14h2"></a>3.6 Configuration</h2>
+
+<p>In this section we briefly present the setup of several key software
+packages and system settings of Tails with respect to security and
+anonymity. There are of course other minor tweaks here and there, but
+those are mainly for usability issues and similar.</p>
+
+<h3><a name="index28h3"></a>3.6.1 The Tor® software</h3>
+
+<p>The Tor software is currently configured as a client only (onion
+proxy). The client listens for control connections on port 9052 (using
+cookie authentication) which is non-standard (see about the "control
+port filter" below), as a transparent proxy on port 9040 (only used
+for remapped hidden services) and as a DNS server on port 8853.</p>
+
+<p>The client listens on a few SOCKS ports (the rationale being detailed
+on the <a href="./design/stream_isolation.html">Tor stream isolation design
+page</a>): 9050, 9062 and 9150.</p>
+
+<p>Only connections from localhost are accepted. It can be argued
+that running a Tor server (onion router) would increase one's
+anonymity for a number for reasons but we still feel that most users
+probably would not want this due to the added consumption of
+bandwidth.</p>
+
+<p>If a compromised software had access to the Tor control port,
+an attacker who controls it could simply ask Tor the public
+IP through the <code>GETINFO address</code> command.
+To prevent this, access to the Tor control port is only
+granted to the <code>root</code> user, as well as to the
+members of the <code>debian-tor</code> group (via the control socket).
+A filtering proxy to the control port runs on port 9051 (i.e. the default
+Tor ControlPort), so for instance
+Torbutton still can perform safe commands like <code>SIGNAL NEWNYM</code>. It
+allows defining fine-grained access whitelists of commands (and their
+argunents) and events on a per-application basis, which can enforce
+rules like "this <code>$user</code> (e.g. <code>amnesia</code>) when running this
+<code>$application</code> (e.g. <code>/usr/bin/onionshare</code>) can only run these commands
+(<code>ADD_ONION</code> etc.) and listen to these events (e.g. <code>HS_DESC</code>, which is
+expected after a successfull use of <code>ADD_ONION</code>)".</p>
+
+<p>We disabled the default warning messages of Tor (<code>WarnPlaintextPorts</code>)
+when connecting to ports 110 (POP3) and 143 (IMAP). These ports are used
+for both plaintext and StartTLS connections. As more and more email
+providers recommend and even enforce StartTLS on these ports, the effect
+of these warnings were most of the time counterproductive as people had
+to click through needlessly scary security warnings.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/etc/onion-grater.d/">config/chroot local-includes/etc/onion-grater.d/</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/onion-grater.service">config/chroot local-includes/lib/systemd/system/onion-grater.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/onion-grater">config/chroot local-includes/usr/local/lib/onion-grater</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/tor/torrc">config/chroot local-includes/etc/tor/torrc</a></li>
+</ul>
+
+
+<p><a href="https://git-tails.immerda.ch/onioncircuits">Onion Circuits</a> allows the
+user to view the state of their Tor circuits and streams. The Tor
+Status extension provides a permanent visual indication of whether Tor
+has bootstrapped already.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js">config/chroot local-includes/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js</a></li>
+</ul>
+
+
+<p><a id="dns"></a></p>
+
+<h3><a name="index29h3"></a>3.6.3 DNS</h3>
+
+<p>Tor does not support UDP so we cannot simply redirect DNS queries to
+the Tor transparent proxy.</p>
+
+<p>Most DNS leaks are avoided by having the system resolver query
+the Tor network using the <code>DNSPort</code> configured in
+<code>torrc</code>.</p>
+
+<p>There is a concern that any application could attempt to do its own
+DNS resolution without using the system resolver; UDP datagrams are
+therefore blocked in order to prevent leaks. Another solution may be
+to use the Linux network filter to forward outgoing UDP datagrams to
+the local DNS proxy.</p>
+
+<p>Tails also forbids DNS queries to RFC1918 addresses; those might
+indeed allow the system to learn the local network's public IP
+address.</p>
+
+<p><code>resolv.conf</code> is configured to point to the Tor DNS resolver, and <span class="application">NetworkManager<span> and <code>dhclient</code> are configured
+not to manage <code>resolv.conf</code> at all:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/conf.d/dns.conf">config/chroot local-includes/etc/NetworkManager/conf.d/dns.conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/dhcp/dhclient-enter-hooks.d/disable_make_resolv_conf">config/chroot local-includes/etc/dhcp/dhclient-enter-hooks.d/disable make resolv conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/resolv.conf">config/chroot local-includes/etc/resolv.conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/tor/torrc">config/chroot local-includes/etc/tor/torrc</a></li>
+</ul>
+
+
+<p>Some applications need to be able to do clearnet DNS resolutions, so
+we save the DNS configuration obtained by NetworkManager:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/dispatcher.d/00-resolv-over-clearnet">config/chroot local-includes/etc/NetworkManager/dispatcher.d/00-resolv-over-clearnet</a></li>
+</ul>
+
+
+<p>The following is the complete list of the applications allowed to use
+the clearnet DNS configuration:</p>
+
+<ul>
+<li>the <code>tor</code> process itself, but only if the user requested to
+configure Tor's network settings in Tails Greeter; in this case
+<code>tor</code> being able to resolve hostnames is convenient (e.g. hostnames
+are human-readable, IP addresses not as much) or even necessary
+(e.g. for the Meek pluggable transport):
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/dispatcher.d/10-tor.sh">config/chroot local-includes/etc/NetworkManager/dispatcher.d/10-tor.sh</a></li>
+</ul>
+</li>
+<li>the <code>clearnet</code> user used to run the
+<a href="./design/Unsafe_Browser.html">Unsafe Browser</a>:
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/unsafe-browser">config/chroot local-includes/usr/local/sbin/unsafe-browser</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h3><a name="index30h3"></a>3.6.4 HTTP Proxy</h3>
+
+<p>Tails does not include any HTTP proxy anymore.</p>
+
+<h3><a name="index31h3"></a>3.6.5 SOCKS libraries</h3>
+
+<p>torsocks and torify are installed. Since Tor-ification is done at a
+lower level (in-kernel network filter, Tor-ified DNS), these tools are
+actually unnecessary. They are solely included due to dependencies and
+configured for completeness.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/tor/tor-tsocks.conf">config/chroot local-includes/etc/tor/tor-tsocks.conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/09-torsocks-configuration">config/chroot local-hooks/09-torsocks-configuration</a></li>
+</ul>
+
+
+<h3><a name="index32h3"></a>3.6.6 Network Filter</h3>
+
+<p>One serious security issue is that we don't know what software will
+attempt to contact the network and whether their proxy settings are
+set up to use the Tor SOCKS proxy correctly.
+This is solved by blocking all outbound Internet traffic except Tor,
+and explicitly configuring all applications to use one of
+these.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/ferm/ferm.conf">config/chroot local-includes/etc/ferm/ferm.conf</a>
+(uses <a href="http://ferm.foo-projects.org/">ferm</a> to build an <code>iptables</code>
+ruleset)</li>
+</ul>
+
+
+<p>The default case is to block all outbound network traffic; let us now
+document all exceptions and some clarifications to this rule.</p>
+
+<h4><a name="index13h4"></a>Tor user</h4>
+
+<p>Tor itself obviously has to connect to the Internet without going
+through the Tor network. This is achieved by special-casing
+connections originating from the <code>debian-tor</code> Unix user.</p>
+
+<h4><a name="index14h4"></a>Unsafe Browser and the <code>clearnet</code> user</h4>
+
+<p>The <code>clearnet</code> user used to run the
+<a href="./design/Unsafe_Browser.html">Unsafe Browser</a> is granted full network access
+(but no loopback access) in order to deal with captive portals.</p>
+
+<h4><a name="index15h4"></a>Local Area Network (LAN)</h4>
+
+<p>Tails short description talks of sending through Tor <em>outgoing
+connections to the Internet</em>. Indeed: traffic to the local LAN
+(RFC1918 addresses) is wide open as well as the loopback traffic
+obviously.</p>
+
+<p>LAN DNS queries are forbidden to protect against some attacks.</p>
+
+<h4><a name="index16h4"></a>Local services whitelist</h4>
+
+<p>The Tails firewall uses a whitelist which only grants access to each
+local service to the users that actually need it. This blocks
+potential leaks due to misconfigurations or bugs, and deanonymization
+attacks by compromised processes. For specifics, see the firewall
+configuration where this is well commented:
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/ferm/ferm.conf">config/chroot local-includes/etc/ferm/ferm.conf</a></p>
+
+<h4><a name="index17h4"></a>Automapped addresses</h4>
+
+<p><code>AutomapHostsOnResolve</code> is enabled in Tor configuration, and
+a firewall rule transparently redirects to the Tor transparent proxy
+port the connections targeted at the <code>127.192.0.0/10</code> virtual mapped
+address space.</p>
+
+<p>Only the <code>amnesia</code> user is granted access to the Tor transparent proxy
+port, so in practice only this user can use this hostname-to-address
+mapping facility.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/tor/torrc">config/chroot local-includes/etc/tor/torrc</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/ferm/ferm.conf">config/chroot local-includes/etc/ferm/ferm.conf</a></li>
+</ul>
+
+
+<h4><a name="index18h4"></a>IPv6</h4>
+
+<p>Tor does not support IPv6 yet so IPv6 communication is blocked.</p>
+
+<h4><a name="index19h4"></a>UDP, ICMP and other non-TCP protocols</h4>
+
+<p>Tor only supports TCP. Non-TCP traffic to the Internet, such as UDP
+datagrams and ICMP packets, is dropped.</p>
+
+<p>An unfortunate consequence of fully blocking ICMP is that <a href="https://en.wikipedia.org/wiki/Path%20MTU%20Discovery">Path MTU Discovery</a> is broken. We workaround this problem by enabling
+<a href="https://www.ietf.org/rfc/rfc4821.txt">Packetization Layer Path MTU Discovery</a>.
+For details, see:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/commit/?id=1d1c83d">1d1c83d</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/sysctl.d/pmtud.conf">config/chroot local-includes/etc/sysctl.d/pmtud.conf</a></li>
+</ul>
+
+
+<h4><a name="index20h4"></a><code>RELATED</code> packets</h4>
+
+<p>As a general rule, the Tails' firewall does not accept <code>RELATED</code>
+packets: accepting them enables quite a lot of code in the kernel that
+we don't need, so we prefer reducing the attack surface a bit by
+blocking them. See the "[Tails-dev] Reducing attack surface of kernel
+and tightening firewall/sysctls" thread for details.</p>
+
+<p>However, <code>RELATED</code> ICMP packets to the loopback interface are let
+through, in order to smooth user experience whenever a program's local
+network connection is blocked, and the TCP stack generates ICMP
+packets (e.g. with <code>TYPE=3 CODE=3</code>, i.e. the destination port is
+unreachable) to let the program know what is going on early, instead
+of letting it wait for a timeout.</p>
+
+<h4><a name="index21h4"></a>netfilter's connection tracking helpers</h4>
+
+<p>We disable netfilter's automatic conntrack helper assignment
+(<code>nf_conntrack_helper</code>), that would otherwise enable a lot of code in
+the Linux kernel that
+<a href="https://home.regit.org/netfilter-en/secure-use-of-helpers/">parses incoming network packets, which seems potentially unsafe</a>
+compared to the little gain it brings in the use case of Tails:</p>
+
+<p><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/modprobe.d/no-conntrack-helper.conf">config/chroot local-includes/etc/modprobe.d/no-conntrack-helper.conf</a></p>
+
+<h3><a name="index33h3"></a>3.6.7 MAC address spoofing</h3>
+
+<p>See <a href="./design/MAC_address.html">the dedicated design document</a>.</p>
+
+<h3><a name="index34h3"></a>3.6.8 Host system swap</h3>
+
+<p>Tails takes care not to use any swap filesystem that might exist on
+the host machine hard drive. Most of this is done at build time:
+the <code>/sbin/swapon</code> binary is replaced by a fake no-op script, and
+live-boot's <code>swapon</code> option is not set.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/05-disable_swapon">config/chroot local-hooks/05-disable swapon</a></li>
+</ul>
+
+
+<h3><a name="index35h3"></a>3.6.9 Host system RAM</h3>
+
+<p>In order to protect against memory recovery such as cold boot attack,
+most of the system RAM is overwritten when Tails is being shutdown or when the
+boot medium is physically removed. Also, memory allocated to processes
+is erased upon process termination.</p>
+
+<h4><a name="index22h4"></a>The big picture</h4>
+
+<p>Tails now relies on the Linux kernel's freed memory poisoning feature.</p>
+
+<p>But memory poisoning only works when memory is actually freed,
+and a regular shutdown would not free the memory used by the aufs
+read-write branch. So we use the <code>systemd-shutdown</code> ability to return
+to the initramfs, to ensure the root filesystem is unmounted.</p>
+
+<p>The initramfs is unpacked in <code>/run/initramfs</code> at boot time:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/initramfs-shutdown.service">config/chroot local-includes/lib/systemd/system/initramfs-shutdown.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/initramfs-restore">config/chroot local-includes/usr/local/lib/initramfs-restore</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/udev-watchdog-wrapper">config/chroot local-includes/usr/local/lib/udev-watchdog-wrapper</a></li>
+</ul>
+
+
+<p>… so that the copy of <code>systemd-shutdown</code> that runs in the real,
+non-initramfs system can switch root into <code>/run/initramfs</code>, and run
+another copy of <code>systemd-shutdown</code> that's
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/initramfs-tools/hooks/shutdown">included</a>
+in the initramfs. That one will unmount all filesystems, run
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/initramfs-pre-shutdown-hook">a custom hook</a>
+that helps us automatically test this behavior, and finally perform
+the requested poweroff/reboot action.</p>
+
+<h4><a name="index23h4"></a>Triggers</h4>
+
+<p>Different kinds of events trigger the memory erasure process. All lead
+to run the shutdown process that erases memory.</p>
+
+<p><strong>First, most memory is erased at the end of a normal shutdown/reboot
+sequence.</strong> This is implemented by the <a href="./design/kernel_hardening.html">Linux kernel's freed memory
+poisoning feature</a>, more specifically:</p>
+
+<ul>
+<li><code>page_poison</code></li>
+<li>passing "P" to <code>slub_debug</code></li>
+</ul>
+
+
+<p><a href="https://git-tails.immerda.ch/tails/plain/features/erase_memory.feature">Automated tests</a>
+ensure that the most important parts of memory are erased this way.</p>
+
+<p><strong>Second, the memory erasure process is triggered when the boot medium
+is physically removed during runtime (USB boot medium is unplugged or
+boot DVD is ejected).</strong> This is implemented by a custom <code>udev-watchdog</code>
+program monitors the boot medium; it's run by a wrapper, started at
+boot time, that brutally invokes the memory erasure process, bypassing
+other system shutdown scripts, when this medium happens to be
+physically removed.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/udev-watchdog-wrapper">config/chroot local-includes/usr/local/lib/udev-watchdog-wrapper</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/src/udev-watchdog.c">config/chroot local-includes/usr/src/udev-watchdog.c</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/52-udev-watchdog">config/chroot local-hooks/52-udev-watchdog</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-shutdown-on-media-removal.service">config/chroot local-includes/lib/systemd/system/tails-shutdown-on-media-removal.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/52-update-rc.d">config/chroot local-hooks/52-update-rc.d</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/gdm.service.d/restart.conf">config/chroot local-includes/lib/systemd/system/gdm.service.d/restart.conf</a></li>
+</ul>
+
+
+<h4><a name="index24h4"></a>Making sure needed files are available</h4>
+
+<p>The <code>memlockd</code> daemon, appropriately configured, ensures every file
+needed by the memory erasure process is locked into memory from boot
+to memory erasure time.</p>
+
+<ul>
+<li><a href="https://tracker.debian.org/pkg/memlockd">memlockd</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/memlockd.cfg">config/chroot local-includes/etc/memlockd.cfg</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-patches/keep_memlockd_on_shutdown.diff">config/chroot local-patches/keep memlockd on shutdown.diff</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/memlockd.service.d/oom.conf">config/chroot local-includes/lib/systemd/system/memlockd.service.d/oom.conf</a></li>
+</ul>
+
+
+<h4><a name="index25h4"></a>Limitations</h4>
+
+<p>As discussed in
+<a href="https://mailman.boum.org/pipermail/tails-dev/2017-January/011128.html">an email thread</a>
+with the authors of <code>PAX_MEMORY_SANITIZE</code>, kernel memory poisoning
+does not clear <em>all</em> kinds of memory once it's freed:</p>
+
+<ul>
+<li>we enable free poisoning for the buddy allocator and the slub/slab
+ones, but there may be other ways the Linux kernel allocates
+memory, that are not subject to poisoning;</li>
+<li>on shutdown all process memory is freed (and thus erased), but some
+kernel memory is not erased on shutdown, and is currently
+not erased.</li>
+</ul>
+
+
+<p>It's not obvious that our previous approaches (see below) did any
+better, and this one is much more reliable, so we think this trade-off
+is the most sensible one with the resources and skills currently
+available for Tails.</p>
+
+<h4><a name="index26h4"></a>Obsolete approaches</h4>
+
+<p>The initial implementation of the Tails memory erasure feature
+suffered from flaws that were demonstrated by <a href="../security/audits/Blackhat_De-Anonymizing_Live_CDs.html">external
+audit</a>. In short, it
+only erased free memory and let data in the aufs read-write branch in
+recoverable state.</p>
+
+<p>Then, in order to erase the biggest possible part of the system memory,
+a new implementation, shipped from Tails 0.7 to 2.12, runs in a
+fresh environment provided by a newly started Linux kernel. This way,
+a given part of the memory either is <em>used</em> by the memory erasure
+process itself or it is considered as free and thus <em>erased</em> by this
+process; in any case, it is at least overwritten once.</p>
+
+<p>Sadly, this approach suffered from severe usability and reliability
+problems (e.g. <a href="https://labs.riseup.net/code/issues/12354">#12354</a>, <a href="https://labs.riseup.net/code/issues/11786">#11786</a>).
+So it was removed in Tails 3.0.</p>
+
+<h3><a name="index36h3"></a>3.6.10 Host system disks and partitions</h3>
+
+<p>Tails takes care not to use any filesystem that might exist on
+the host machine hard drive, unless explicitly told to do so by the
+user. The Debian Live persistence feature is disabled by passing
+<code>nopersistence</code> over the kernel command line to live-boot.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/amnesia">config/amnesia</a></li>
+</ul>
+
+
+<h3><a name="index37h3"></a>3.6.11 Filesystems stored on removable devices</h3>
+
+<p>Removable drives auto-mounting is disabled in Tails 0.7 and newer.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults">config/chroot local-includes/etc/dconf/db/local.d/00 Tails defaults</a></li>
+</ul>
+
+
+<h3><a name="index38h3"></a>3.6.11 Secure erasure of files and free disk space</h3>
+
+<p>Securely erasing files and free disk space is made easy by integrating
+<a href="http://www.thc.org">secure-delete</a> tools into the Nautilus file
+manager, thanks to <a href="http://wipetools.tuxfamily.org/nautilus-wipe.html">Nautilus
+Wipe</a>.</p>
+
+<h3><a name="index39h3"></a>3.6.12 Passwords</h3>
+
+<p>Two users are intended to be used for logins: <code>amnesia</code> and <code>root</code>.
+None have a password by default; the <code>amnesia</code> user is
+allowed to gain super user privileges, using <code>sudo</code>, if an
+administrator password is set in tails-greeter.</p>
+
+<p>The PELD specification recommends to prevent executable code to be
+modifiable, even temporarily; Tails does not implement this
+recommendation. Instead, thanks to the super user privileges being
+available to the end-user, Tails makes it possible to modify or add
+executable code by:</p>
+
+<ul>
+<li>upgrading bundled software: this allows (technical) users to protect
+themselves from serious security issues until an updated Tails is
+released</li>
+<li>installing additional software: this helps achieving the PELD
+"Working on sensitive documents" goal by enabling users to perform
+tasks that need software not shipped in Tails.</li>
+</ul>
+
+
+<p>Such modifications happen only in RAM, the user will remove the DVD/USB
+when done and there are no services allowing logins from the network.</p>
+
+<p>As a first step Tails has stopped
+granting <code>sudo</code> privileges to the <code>amnesia</code> user by default.
+Unless an administrator password is set in tails-greeter,
+no root access is possible afterwards.</p>
+
+<h3><a name="index40h3"></a>3.6.13 Tor Browser</h3>
+
+<p>Tails ships with the Tor Browser, which is based on Mozilla Firefox
+and patched by the Tor Project for improved anonymity by reducing
+information leaks, decreasing attack surface and similar. The actual
+binaries etc. used in Tails are those distributed by the Tor Project,
+but the configuration differs slightly, which is described below.</p>
+
+<p>In Tails we diverge from the Tor Browser's one-profile-only design, and
+install the Tor Browser in a globally accessible directory used by all
+browser profiles (and other XUL applications).</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/10-tbb">config/chroot local-hooks/10-tbb</a></li>
+</ul>
+
+
+<p>We only modify this Tor Browser installation slightly:</p>
+
+<ul>
+<li>We add a mandatory signing exception for the uBlock Origin add-on.</li>
+<li>We add/replace some search engine plugins with our own localized
+versions:
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/11-localize_browser">config/chroot local-hooks/11-localize browser</a></li>
+</ul>
+</li>
+<li>We use the myspell/hunspell dictionaries provided by Debian.</li>
+<li>We employ <a href="https://developer.mozilla.org/en-US/Firefox/Enterprise_deployment"><code>mozilla.cfg</code></a>
+to restore support for the <code>browser.search.defaultenginename</code> pref,
+otherwise this default gets messed up due to the localization we do.</li>
+</ul>
+
+
+<p>The default profile is split from the binaries and application data:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/etc/tor-browser">config/chroot local-includes/etc/tor-browser</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/tails/tor-browser-prefs.js">config/chroot local-includes/usr/share/tails/tor-browser-prefs.js</a></li>
+</ul>
+
+
+<p>As for extensions we have the following differences:</p>
+
+<ul>
+<li><p>Tails also installs the
+<a href="https://github.com/gorhill/uBlock/">uBlock Origin</a>
+extension to protect against many tracking possibilities by removing
+most ads.</p></li>
+<li><p>Tails does not install the Tor Launcher extension as part of the
+browser. Instead we extract Tor Launcher from the bundled .xpi and
+make it available as a stand-alone XUL application for Tor
+bridge/proxy configuration.</p></li>
+</ul>
+
+
+<p>In Tails we do not use the <code>start-tor-browser</code> script, since it does a
+lot of stuff not needed in Tails (error checking mainly) and isn't
+flexible since it looks for the browser profile in a specific
+place. Our custom script makes use of the global installation and also
+makes sure the default profile is used as a basis. Any shared libraries
+shipped inside the Tor Browser are also used (via <code>LD_LIBRARY_PATH</code>) since
+Debian stable often has too old versions to start the browser.</p>
+
+<p>Whenever the user tries to start the Tor Browser before Tor is
+ready, they are informed it won't work, and asked whether to start the
+browser anyway:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/bin/tor-browser">config/chroot local-includes/usr/local/bin/tor-browser</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/tails-shell-library/tor-browser.sh">config/chroot local-includes/usr/local/lib/tails-shell-library/tor-browser.sh</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/generate-tor-browser-profile">config/chroot local-includes/usr/local/lib/generate-tor-browser-profile</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-tor-has-bootstrapped.target">config/chroot local-includes/lib/systemd/system/tails-tor-has-bootstrapped.target</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-wait-until-tor-has-bootstrapped.service">config/chroot local-includes/lib/systemd/system/tails-wait-until-tor-has-bootstrapped.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/lib/systemd/user/tails-wait-until-tor-has-bootstrapped.service">config/chroot local-includes/usr/lib/systemd/user/tails-wait-until-tor-has-bootstrapped.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-tor-has-bootstrapped-flag-file.service">config/chroot local-includes/lib/systemd/system/tails-tor-has-bootstrapped-flag-file.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped">config/chroot local-includes/usr/local/sbin/tor-has-bootstrapped</a></li>
+</ul>
+
+
+<p>Once Tor is ready to be used, the user is informed they can now use
+the Internet:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready.sh">config/chroot local-includes/etc/NetworkManager/dispatcher.d/60-tor-ready.sh</a></li>
+</ul>
+
+
+<p>The remaining configuration differences can be found in:</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/usr/share/tails/tor-browser-prefs.js">config/chroot local-includes/usr/share/tails/tor-browser-prefs.js</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/14-generate-tor-browser-profile">config/chroot local-hooks/14-generate-tor-browser-profile</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/15-symlink-places.sqlite">config/chroot local-hooks/15-symlink-places.sqlite</a></li>
+</ul>
+
+
+<p>It should also be noted that the global Tor Browser installation is also used
+for the <a href="./design/Unsafe_Browser.html">Unsafe Browser</a>, although it is
+user-isolated and use a separate profile with very different
+configuration.</p>
+
+<h3><a name="index41h3"></a>3.6.14 Thunderbird</h3>
+
+<p>Thunderbird, in combination with TorBirdy, sends email through Tor.</p>
+
+<p>Thunderbird itself leaks a lot of data and makes DNS requests, for example by
+retrieving mail server configurations from a remote server over an insecure
+channel. This is prevented by the TorBirdy extension as well as by custom
+patches for Thunderbird in Tails, which we are currently in the process of
+upstreaming (<a href="https://labs.riseup.net/code/issues/11215">#11215</a>).</p>
+
+<p>Thunderbird generates <code>Message-ID</code> headers using the hostname part of
+the sender's email address, which does not leak usage of the PELD nor
+any user location information.</p>
+
+<p>It also always says <code>EHLO[127.0.0.1]</code> to the SMTP server instead of
+disclosing the real IP address and hostname.</p>
+
+<p>Torbirdy disables HTML email and inline attachments
+in order to get rid of a whole class of privacy concerns.
+Furthermore, when setting up an IMAP account, the drafts folder, instead
+of being remote, is set to <code>~$HOME/.thunderbird/Local Folders</code>.</p>
+
+<p>The original TorBirdy extension disables automatic email configuration
+through Thunderbird's email configuration wizard. This wizard is enabled in
+Tails. This is possible because our patches allow using only secure protocols
+for the domain and ISPDB lookups as well as for the actual mail account
+configuration. In detail this means:</p>
+
+<ol>
+<li>we prevent all testing of plaintext protocols when guessing configurations.</li>
+<li>we make autoconfiguration skip database lookups if <code>mailnews.auto_config_url</code>
+isn't HTTPS.</li>
+<li>we make ISP autoconfiguration lookups first try https, then http, but only
+if we allow insecure protocols.</li>
+<li>we discard any configurations using plaintext protocols.</li>
+</ol>
+
+
+<p>In addition, even when plaintext protocols are allowed, the patches make
+us prefer secure options if available.
+This setting can be disabled (opt-out by the user). This also applies to
+manual configuration.</p>
+
+<p>OpenPGP support is provided by the Enigmail addon.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js">config/chroot local-includes/etc/thunderbird/pref/thunderbird.js</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff">config/chroot local-patches/torbirdy-0001-secure-autoconfig-compat.diff</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff">config/chroot local-patches/torbirdy-0001-secure-autoconfig-compat.diff</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff">config/chroot local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/etc/skel/.thunderbird">config/chroot local-includes/etc/skel/.thunderbird</a> is copied to
+the user's <code>$HOME</code> at boot time</li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/bin/thunderbird">config/chroot local-includes/usr/local/bin/thunderbird</a></li>
+</ul>
+
+
+<h3><a name="index42h3"></a>3.6.15 Pidgin</h3>
+
+<p>Pidgin is configured in Tails to not log anything as well as not to reveal too
+much of user activity by disabling reporting of online/away/typing
+status. Only IRC and Jabber/XMPP protocols are left available, to
+avoid the usage of less well audited plugins. The Off-the-record
+plugin is enabled
+to help one-to-one conversations being as private and unrecordable as
+possible. At boot a language confluxer generates a random looking default
+nickname from the 2000 most common U.S. names (according to the U.S. social
+security administration in the 1970's), which results in something Englishesque
+sounding. The nickname is further made to look like a typical IRC nickname by
+prefixing it with ^ or _ with probability 0.05, and changing it to leet speak
+with probability 0.05. When answering to CTCP requests, Pidgin does
+not leak any information apart from PING and VERSION (<code>Purple IRC</code>),
+which is deemed acceptable as there are probably other weirdness in
+how the protocol is implemented, that disclose as much.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/live/config/2010-pidgin">config/chroot local-includes/lib/live/config/2010-pidgin</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/etc/skel/.purple">config/chroot local-includes/etc/skel/.purple</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-hooks/09-remove_unsupported_pidgin_libs">config/chroot local-hooks/09-remove unsupported pidgin libs</a></li>
+</ul>
+
+
+<h3><a name="index43h3"></a>3.6.16 GnuPG</h3>
+
+<p>GnuPG tools (namely: GPG itself and Seahorse) are configured to use
+the sks-keyservers pool since it's reliable, well-synchronized with
+the other HKP keyservers pools, and reachable over <code>hkps://</code>.</p>
+
+<p>Monkeysphere's <code>hkpms://</code> support will be used as soon as
+possible in place of the hierarchical X.509 certification model.</p>
+
+<p>GnuPG is configured accordingly to the <a href="https://help.riseup.net/en/security/message-security/openpgp/best-practices">OpenPGP Best
+Practices</a>,
+e.g. to prefer non-outdated digest algorithms from the
+SHA-2 family, to force exclusion of the version string in ASCII armored
+output, to avoid automatically locating and retrieving keys, and to
+disregard the preferred keyserver assigned to specific keys.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/skel/.gnupg/gpg.conf">config/chroot local-includes/etc/skel/.gnupg/gpg.conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/skel/.gnupg/dirmngr.conf">config/chroot local-includes/etc/skel/.gnupg/dirmngr.conf</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults">config/chroot local-includes/etc/dconf/db/local.d/00 Tails defaults</a></li>
+<li>hkpms is available in Debian: <a href="http://packages.debian.org/msva%2Dperl">msva-perl</a></li>
+</ul>
+
+
+<h3><a name="index44h3"></a>3.6.17 Persistence feature</h3>
+
+<p>An opt-in data persistence feature is available in Tails 0.11 and
+newer. See <a href="./design/persistence.html">persistence</a> for details.</p>
+
+<h3><a name="index45h3"></a>3.6.18 Installation on USB sticks and SD cards</h3>
+
+<p>An easy (read: not command-line based) way to install and upgrade
+Tails on USB sticks and SD cards is available in Tails 0.11 and newer.
+SD cards readers wired via SDIO are supported since Tails 0.21.
+See <a href="./design/installation.html">installation</a> for details.</p>
+
+<h3><a name="index46h3"></a>3.6.19 Wireless devices handling</h3>
+
+<p>Tails puts the wireless devices in a sensible state at boot time.</p>
+
+<p>At boot time, Tails unblocks Wi-Fi, WWAN and WiMAX radios
+and soft-blocks all other kinds of wireless devices (e.g. Bluetooth,
+UWB, GPS, FM).</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/systemd/system/tails-set-wireless-devices-state.service">config/chroot local-includes/lib/systemd/system/tails-set-wireless-devices-state.service</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/tails-set-wireless-devices-state">config/chroot local-includes/usr/local/lib/tails-set-wireless-devices-state</a></li>
+</ul>
+
+
+<h3><a name="index47h3"></a>3.6.20 OpenSSH</h3>
+
+<p>The OpenSSH client is configured to use the Tor SOCKS proxy.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/ssh/ssh_config">config/chroot local-includes/etc/ssh/ssh config</a></li>
+</ul>
+
+
+<h3><a name="index48h3"></a>3.6.21 Incremental upgrades</h3>
+
+<p>When a Tails release is out, Tails users are proposed to download and
+apply a partial upgrade (that is, only what has changed between two
+releases). See <a href="./design/incremental_upgrades.html">incremental upgrades</a> for details.
+To start with, this upgrade mechanism may be only available for
+point-releases.</p>
+
+<h3><a name="index49h3"></a>3.6.22 Panel applets and GNOME Shell extensions</h3>
+
+<p>Tails ships a few custom GNOME panel applets and GNOME Shell
+extensions.</p>
+
+<p>The status-menu-helper GNOME Shell extension provides two-clicks shutdown and
+restart actions, as well as screen locking.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org">config/chroot local-includes/usr/share/gnome-shell/extensions/status-menu-helper@tails.boum.org</a></li>
+</ul>
+
+
+<p>The Tails <a href="https://tracker.debian.org/pkg/openpgp%2Dapplet">OpenPGP applet</a> allows to symmetrically and asymmetrically
+encrypt and decrypt text, and to verify OpenPGP signatures.</p>
+
+<h3><a name="index50h3"></a>3.6.23 DHCP hostname leaks</h3>
+
+<p>Tails prevents dhclient from sending the hostname over the network.</p>
+
+<p>We patch NetworkManager to make it never instruct dhclient to send the
+hostname in DHCP requests, until <a href="https://bugzilla.gnome.org/show_bug.cgi?id=768076">GNOME bug #768076</a> is fixed.</p>
+
+<p>Also, dhclient itself is told not to send the hostname. This is
+needed because on Jessie, NetworkManager runs dhclient with the <code>-cf
+/var/lib/NetworkManager/dhclient-$UUID-eth0.conf</code> option, and generates that file by
+concatenating <code>/etc/dhcp/dhclient.conf</code> with its own settings.</p>
+
+<p>dhclient is told to override any hostname provided by the DHCP
+server with <code>amnesia</code>. This is meant to prevent dhclient hooks,
+NetworkManager and others from setting the hostname to a value
+controlled by the DHCP server.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/network-manager">network-manager</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-patches/dhcp-dont-send-hostname.diff">config/chroot local-patches/dhcp-dont-send-hostname.diff</a></li>
+</ul>
+
+
+<h3><a name="index51h3"></a>3.6.24 TCP timestamps</h3>
+
+<p><a href="https://www.ietf.org/rfc/rfc1323.txt">TCP time stamps</a> allow for tracking clock
+information with millisecond resolution. This may or may not allow an
+attacker to learn information about the system clock at such
+a resolution, depending on various issues such as network lag.
+This information is available to anyone who monitors the network
+somewhere between the attacked Tails system and the Tor entry nodes
+being used. It may allow an attacker to find out how long a given
+Tails system has been running, and to distinguish several Tails
+systems running behind NAT and using the same IP address. It might
+also allow to look for clocks that match an expected value to find the
+public IP used by a user.</p>
+
+<p>Hence, Tails disables this feature.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/sysctl.d/tcp_timestamps.conf">config/chroot local-includes/etc/sysctl.d/tcp timestamps.conf</a></li>
+</ul>
+
+
+<p>Note that TCP time stamps normally have some usefulness. They are
+needed for:</p>
+
+<ul>
+<li><p>the TCP protection against wrapped sequence numbers; however, to
+trigger a wrap, one needs to send roughly 2<sup>32</sup> packets in one
+minute:  as said in <a href="https://www.ietf.org/rfc/rfc1700.txt">RFC 1700</a>, "The current recommended default
+time to live (TTL) for the Internet Protocol (IP) [45,105] is 64".
+So, we don't think this is a practical problem in the context
+of Tails.</p></li>
+<li><p>"Round-Trip Time Measurement", which is only useful when the user
+manages to saturate their connection. When using Tails, we believe
+that the limiting factor for transmission speed is rarely the
+capacity of the user connection.</p></li>
+</ul>
+
+
+<h3><a name="index52h3"></a>3.6.25 Application isolation</h3>
+
+<p>Tails has some minimal <a href="./design/application_isolation.html">application isolation</a> to
+mitigate a bit the consequences of security issues in individual
+applications being exploited by attackers.</p>
+
+<h3><a name="index53h3"></a>3.6.26 wget</h3>
+
+<p>We wrap <code>wget</code> with <code>torsocks</code>, after unsetting the <code>http_proxy</code>
+environment variable and friends, so that it talks directly to the Tor
+SOCKS port.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/bin/wget">config/chroot local-includes/usr/local/bin/wget</a></li>
+</ul>
+
+
+<h3><a name="index54h3"></a>3.6.27 APT</h3>
+
+<p>During most of the ISO build process, APT uses the proxy configured
+through <code>live-build</code> (that is, usually a local <code>apt-cacher-ng</code>).</p>
+
+<p>However, at boot time, a hook does (a more elaborate version of)
+<code>s,http://,tor+http://</code> in APT sources. Then, APT will use the
+<code>tor+http</code> method, that is provided by <a href="http://packages.debian.org/apt%2Dtransport%2Dtor">apt-transport-tor</a>.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/lib/live/config/1500-reconfigure-APT">config/chroot local-includes/lib/live/config/1500-reconfigure-APT</a></li>
+</ul>
+
+
+<h3><a name="index55h3"></a>3.6.28 Electrum</h3>
+
+<p>We install the <a href="https://electrum.org">Electrum</a> Bitcoin client and the
+default configuration tells it to use the default of Tor's
+SOCKSPort:s, and sync the necessary parts of the Bitcoin blockchain
+(as a lightweight client) from the default server pool using SSL.</p>
+
+<p>There is also a persistence preset for the live user's <code>.electrum</code>
+configuration folder, which stores the Bitcoin wallet, application
+preferences and the cached Bitcoin blockchain.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/etc/skel/.electrum">config/chroot local-includes/etc/skel/.electrum</a></li>
+</ul>
+
+
+<h3><a name="index56h3"></a>3.6.29 Kernel hardening</h3>
+
+<p>We pass a few kernel parameters on the boot command line and /proc/sys
+to increase security at little to no cost.</p>
+
+<p>See <a href="https://labs.riseup.net/code/issues/11143">#11143</a> and <a href="https://labs.riseup.net/code/issues/10951">#10951</a> for the
+discussion that lead to this choice of parameters. Most of what
+follows come straight from what "cypherpunks" wrote there.</p>
+
+<h3><a name="index57h3"></a><code>page_poison</code></h3>
+
+<p>"[Clear memory at free], wiping any sensitive data so it doesn't have an
+opportunity to leak in various ways (e.g. accidentally uninitialized
+structures or padding), and that certain types of use-after-free flaws
+cannot be exploited since the memory has been wiped"
+(<a href="https://outflux.net/blog/archives/2016/09/30/security-things-in-linux-v4-6/">https://outflux.net/blog/archives/2016/09/30/security-things-in-linux-v4-6/</a>)</p>
+
+<h4><a name="index27h4"></a><code>slab_nomerge</code></h4>
+
+<p>Disables the merging of slabs of similar sizes. Many times some
+obscure slab will be used in a vulnerable way, allowing an attacker to
+mess with it more or less arbitrarily. Most slabs are not usable even
+when exploited, so this isn't too big of a deal. Unfortunately the
+kernel will merge similar slabs to save a tiny bit of space, and if
+a vulnerable and useless slab is merged with a safe but useful slab,
+an attacker can leverage that aliasing to do far more harm than they
+could have otherwise. In effect, this reduces kernel attack surface
+area by isolating slabs from each other. The trade-off is a very
+slight increase in kernel memory utilization. <code>slabinfo -a</code> can be
+used to tell what the memory footprint increase would be on
+a given system.</p>
+
+<h4><a name="index28h4"></a><code>slub_debug=FZP</code></h4>
+
+<p>Enables sanity checks (F), redzoning (Z) and poisoning (P). Sanity checks are
+self-evident and come with a modest performance impact, but this is
+unlikely to be significant on an average Tails system. The checks are
+basic but are still useful both for security and as a debugging
+measure. Redzoning adds extra areas around slabs that detect when
+a slab is overwritten past its real size, which can help detect
+overflows. Its performance impact is negligible.</p>
+
+<p>Poisoning writes an arbitrary value to freed objects, so any
+modification or reference to that object after being freed or before
+being initialized will be detected and prevented. This prevents many
+types of use-after-free vulnerabilities at little performance cost.</p>
+
+<p>An additional note: any time <code>slub_debug=</code> is put in the kernel
+command line, <code>slab_nomerge</code> is implied. But having <code>slab_nomerge</code>
+explicitely declared can help prevent regressions where disabling of
+debugging features is desired but re-enabling of merging is not.</p>
+
+<h4><a name="index29h4"></a><code>vsyscall=none</code></h4>
+
+<p>Virtual syscalls are the obsolete predecessor of vDSO calls.
+Unfortunately, both <code>vsyscall=native</code> and <code>vsyscall=emulate</code> (the
+default) have a negative security impact, with the latter a little
+less so. Namely, they provide a target for any attacker who has
+control of the return instruction pointer, which is increasingly
+common these days now that attackers need to resort to ROP and similar
+attacks which target a process' control flow. The impact of this is
+with reduced compatibility, however only legacy statically compiled
+binaries and old versions of glibc used vsyscalls. All software on
+modern Tails uses vDSO instead. If for some reason a program does try
+to use a vsyscall, the process will crash with a memory access
+violation, and won't bring the whole system down.</p>
+
+<h4><a name="index30h4"></a><code>mce=0</code></h4>
+
+<p>Mostly useful for systems with ECC memory, setting <code>mce</code> to 0 will
+cause the kernel to panic on any uncorrectable errors detected by the
+machine check exception system. Corrected errors will just be logged.
+The default is <code>mce=1</code>, which will SIGBUS on many uncorrected errors.
+Unfortunately this means malicious processes which try to exploit
+hardware bugginess (such as rowhammer) will be able to try over and
+over, suffering only a SIGBUS at failure. Setting <code>mce=0</code> should have
+no impact. Any hardware which regularly triggers a memory-based MCE is
+unlikely to even boot, and the default is 1 only for
+long-lived servers.</p>
+
+<h3><a name="index58h3"></a>kASLR</h3>
+
+<p>Linux kASLR is known as not being particularly strong, but one has to
+start somewhere.
+See <a href="https://github.com/torvalds/linux/blob/master/Documentation/security/self-protection.rst">self-protection.txt</a>
+for details.</p>
+
+<p>kASLR is enabled by default in the Debian kernel since 4.7~rc7-1~exp1
+(<code>CONFIG_RANDOMIZE_BASE</code> and <code>CONFIG_RANDOMIZE_MEMORY</code>) so there is no
+need to enable it with a specific kernel parameter.</p>
+
+<h4><a name="index31h4"></a><code>kernel.kptr_restrict=2</code></h4>
+
+<p>Some off-the-shelf malware exploit kernel addresses exposed via
+<code>/proc/kallsyms</code> so by not making these addresses easily available we
+increase the cost of such attack some what; now such malware has to
+check which kernel Tails is running and then fetch the corresponding
+kernel address map from some external source. This is not hard, but
+certainly not all malware has such functionality.</p>
+
+<p>For this reason, we also make sure to purge <code>/boot/System.map</code>.</p>
+
+<h4><a name="index32h4"></a><code>vm.mmap_rnd_bits</code>, <code>vm.mmap_rnd_compat_bits</code></h4>
+
+<p>These settings are
+<a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/sysctl.d/mmap_aslr.conf">set to the maximum supported value</a>
+in order to improve ASLR effectiveness for mmap, at the cost of
+increased address-space fragmentation.</p>
+
+<h3><a name="index59h3"></a><code>kernel.kexec_load_disabled = 1</code></h3>
+
+<p>kexec is dangerous: it enables replacement of the running kernel.</p>
+
+<h2><a name="index15h2"></a>3.7 Running Tails in virtual machines</h2>
+
+<h3><a name="index60h3"></a>3.7.1 Current support</h3>
+
+<p>Tails may of course be run in virtual machines. Due to the
+popularity of <a href="http://www.vmware.com/">VMWare</a> we include
+<a href="http://open-vm-tools.sourceforge.net/">open-vm-tools</a> (an open-source
+alternative to VMware tools) as well as special video drivers
+for an improved user experience in that environment. Due to the
+closed-source nature of VMWare we try to encourage users of open VMs,
+like <a href="http://virtualbox.org/">VirtualBox</a> and
+<a href="http://www.qemu.org/">QEMU</a>, by making sure that
+these also work. In the case of VirtualBox both video and input
+drivers are included, as well as the guest utilities.</p>
+
+<h3><a name="index61h3"></a>3.7.2 Security concerns</h3>
+
+<p>Security concerns for all VMs are numerous. Tails therefore tries to
+detect whether it is run inside a VM and <a href="./design/virtualization_support.html">warns the
+user</a> if it is.</p>
+
+<h3><a name="index62h3"></a>3.7.3 Running Tails inside a Windows session</h3>
+
+<p><a href="https://labs.riseup.net/code/issues/6083">Potential work</a> may make it easier to
+run the DVD/USB in a virtual machine inside a Windows session whenever
+native boot is impossible or not desirable. This probably will be
+implemented by shipping a <a href="http://www.qemu.org/">QEMU</a> or
+<a href="http://www.virtualbox.org/">VirtualBox</a> binary for Microsoft Windows.</p>
+
+<h2><a name="index16h2"></a>3.8 Build process and maintenance</h2>
+
+<h3><a name="index63h3"></a>3.8.1 Build tools</h3>
+
+<p>The <a href="http://live.debian.net/">Debian Live</a> is a toolkit to build Live
+systems based on Debian, such as Tails. Debian Live is designed to
+automate the build process of the target distribution, which eases
+Tails development and maintenance. As an added bonus, Debian Live
+makes it possible for other people to build custom systems based on
+Tails, e.g. to include additional software.</p>
+
+<p>For detailed instructions on how to build and modify Tails, see
+the <a href="./build.html">build</a> page and the <a href="../contribute.en.html">contribute</a> section on the wiki.</p>
+
+<h3><a name="index64h3"></a>3.8.2 Testing process</h3>
+
+<p>An automated build and test environment is useful to avoid
+regressions in Tails, especially anonymity and security related
+ones. It also makes it easier for developers to work on Tails with
+more confidence, and at release time to cut down the time needed for
+quality assurance work.</p>
+
+<p>Tails' <a href="./release_process/test.html">manual test suite</a> is "run"
+against Tails release candidates images before they are officially
+published. Automating this test suite is <a href="./release_process/test/automated_tests.html">partly
+done</a>, and a work
+in progress.</p>
+
+<h3><a name="index65h3"></a>3.8.3 Upgrades</h3>
+
+<p>Keeping Tor (stable releases only, unless the Tor core developers
+recommend otherwise) and the Tor Browser up-to-date is a priority.</p>
+
+<p>Remaining applications, including the base system, will be upgraded
+using Debian standard upgrade process, and generally based on the
+latest Debian stable release so there are not many problems.</p>
+
+<p>We intend to build and publish point releases (e.g.
+<a href="../news/version_0.6.1.html">0.6.1</a>) in a timely manner when security issues
+affect Tails. Such releases are based on the <a href="./git.html">stable Git
+branch</a> and can thus also fix important — although not
+security-related — bugs.</p>
+
+<h2><a name="index17h2"></a>3.9 Hardware support</h2>
+
+<p>Tails generally ships the latest Linux kernel from Debian unstable or <a href="http://backports.debian.org/">Debian
+Backports</a> as a compromise between
+stability and recent hardware support. Recent Intel and AMD microcode
+are included as well.</p>
+
+<p>Tails supports only the x86-64 hardware architecture.</p>
+
+<p>A 64-bit Linux kernel (<em>amd64</em> flavour) and userspace are included.</p>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/auto/config">auto/config</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/binary_local-hooks/20-syslinux_detect_cpu">config/binary local-hooks/20-syslinux detect cpu</a></li>
+</ul>
+
+
+<p>Binary firmware blobs from the Debian <code>non-free</code> archive are installed
+when no good Free Software alternative exists. Our reasoning behind
+this choice is:</p>
+
+<ul>
+<li>If Tails does not work out-of-the-box on the computer(s) they have
+available, most potential users will simply use something else, that
+will:
+
+<ol>
+<li>just work ("thanks" to the inclusion of binary firmware);</li>
+<li>be less safe in the vast majority of real-world cases.</li>
+</ol>
+</li>
+<li>Much hardware that does not require proprietary firmware to be
+injected into it at runtime is simply embedding such proprietary
+blobs, often on read-only memory. Not only this does not provide
+much more security than injecting proprietary firmware at runtime,
+but it prevents hardware vendors from fixing (potentially
+security-relevant) bugs in the firmware once it's been shipped
+to users.</li>
+</ul>
+
+
+<h2><a name="index18h2"></a>3.10 Caveats</h2>
+
+<p>Tails currently offers almost no protection against live physical
+monitoring, except for hardware keyloggers.</p>
+
+<p>UDP and IPv6 are a problem. The Tor network does not support any of
+those yet. Outgoing UDP and IPv6 packets are dropped altogether by
+netfilter for this reason.</p>
+
+<p>Support for <a href="https://labs.riseup.net/code/issues/6070">arbitrary DNS queries</a> is not
+provided anymore since we removed ttdnsd in Tails 3.0.</p>
+
+<p>Some tools currently available to command-line users lack the
+integration into Tails and/or graphical user interface that would be
+needed to make them useful to anyone.</p>
+
+<p>Other caveats are listed on the <a href="../support/known_issues.en.html">known issues</a> page.</p>
+
+<p>See the development <a href="https://tails.boum.org/contribute/roadmap">roadmap</a> for more information about
+where Tails is heading to.</p>
+
+<h2><a name="index19h2"></a>3.11 Fingerprint</h2>
+
+<p>Tails tries to make it as difficult as possible to distinguish Tails
+users from other Tor users.</p>
+
+<p>The Tor Browser used in Tails is configured to match the fingerprint of the Tor Browser
+Bundle and the known differences, if any, are listed in the <a href="../support/known_issues.en.html">known
+issues</a> page.</p>
+
+<p>However the fact that different browser extensions are installed in Tails and in
+the Tor Browser surely allows more sophisticated attacks that usual fingerprint
+as returned by tools such as <a href="https://panopticlick.eff.org/">https://panopticlick.eff.org/</a> and
+<a href="http://ip-check.info/">http://ip-check.info/</a>. For example, the fact that uBlock Origin is removing
+ads could be analysed.</p>
+
+<p>From the point of view of the local network administrator, Tails is
+almost exclusively generating Tor activity and that is probably quite
+different from other Tor Browser users. We believe this would be hard to avoid.
+Other possible fingerprint issues on the LAN or ISP exist but we believe
+they would be harder to detect. See the discussion on fingerprinting in
+the <a href="./design/Time_syncing.html">Time sync</a> design document and the
+<a href="../doc/about/fingerprint.en.html">fingerprint</a> documentation.</p>
+
+<h1><a name="index4h1"></a>4 Security analysis</h1>
+
+<p>See <a href="../security/audits.html">the security audits of Tails</a>.</p>
+
+<h1><a name="index5h1"></a>5 Bibliography</h1>
+
+<ul>
+<li><a href="https://trac.torproject.org/projects/tor/wiki/TheOnionRouter/LiveCDBestPractices">Live CD Best
+Practices</a>
+document on the Tor wiki</li>
+<li>Roger Dingledine, Nick Mathewson and Paul Syverson. <a href="https://svn.torproject.org/svn/projects/design-paper/tor-design.pdf">Tor: The
+Second-Generation Onion
+Router</a></li>
+<li>Mike Perry, Erinn Clark, Steven Murdoch. <a href="https://www.torproject.org/projects/torbrowser/design/">The Design and Implementation of the Tor Browser</a></li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="../about.en.html">about</a>
+
+<a href="../about.ar.html">about.ar</a>
+
+<a href="../about.ca.html">about.ca</a>
+
+<a href="../about.de.html">about.de</a>
+
+<a href="../about.es.html">about.es</a>
+
+<a href="../about.fa.html">about.fa</a>
+
+<a href="../about.fr.html">about.fr</a>
+
+<a href="../about.it.html">about.it</a>
+
+<a href="../about.pl.html">about.pl</a>
+
+<a href="../about.pt.html">about.pt</a>
+
+
+<span class="popup">...
+<span class="balloon">
+
+<a href="../about.ru.html">about.ru</a>
+
+<a href="../about.sr_Latn.html">about.sr Latn</a>
+
+<a href="../about.tr.html">about.tr</a>
+
+<a href="../about.zh.html">about.zh</a>
+
+<a href="../about.zh_TW.html">about.zh TW</a>
+
+<a href="../contribute.en.html">contribute</a>
+
+<a href="../contribute.ar.html">contribute.ar</a>
+
+<a href="../contribute.ca.html">contribute.ca</a>
+
+<a href="../contribute.de.html">contribute.de</a>
+
+<a href="../contribute.es.html">contribute.es</a>
+
+<a href="../contribute.fa.html">contribute.fa</a>
+
+<a href="../contribute.fr.html">contribute.fr</a>
+
+<a href="../contribute.it.html">contribute.it</a>
+
+<a href="../contribute.pl.html">contribute.pl</a>
+
+<a href="../contribute.pt.html">contribute.pt</a>
+
+<a href="../contribute.ru.html">contribute.ru</a>
+
+<a href="../contribute.sr_Latn.html">contribute.sr Latn</a>
+
+<a href="../contribute.tr.html">contribute.tr</a>
+
+<a href="../contribute.zh.html">contribute.zh</a>
+
+<a href="../contribute.zh_TW.html">contribute.zh TW</a>
+
+<a href="./design/UEFI.html">design/UEFI</a>
+
+<a href="./design/random.html">design/random</a>
+
+<a href="../doc/about/trust.en.html">doc/about/trust</a>
+
+<a href="../doc/about/trust.ar.html">doc/about/trust.ar</a>
+
+<a href="../doc/about/trust.ca.html">doc/about/trust.ca</a>
+
+<a href="../doc/about/trust.de.html">doc/about/trust.de</a>
+
+<a href="../doc/about/trust.es.html">doc/about/trust.es</a>
+
+<a href="../doc/about/trust.fa.html">doc/about/trust.fa</a>
+
+<a href="../doc/about/trust.fr.html">doc/about/trust.fr</a>
+
+<a href="../doc/about/trust.it.html">doc/about/trust.it</a>
+
+<a href="../doc/about/trust.pl.html">doc/about/trust.pl</a>
+
+<a href="../doc/about/trust.pt.html">doc/about/trust.pt</a>
+
+<a href="../doc/about/trust.ru.html">doc/about/trust.ru</a>
+
+<a href="../doc/about/trust.sr_Latn.html">doc/about/trust.sr Latn</a>
+
+<a href="../doc/about/trust.tr.html">doc/about/trust.tr</a>
+
+<a href="../doc/about/trust.zh.html">doc/about/trust.zh</a>
+
+<a href="../doc/about/trust.zh_TW.html">doc/about/trust.zh TW</a>
+
+<a href="../doc/introduction.en.html">doc/introduction</a>
+
+<a href="../doc/introduction.ar.html">doc/introduction.ar</a>
+
+<a href="../doc/introduction.ca.html">doc/introduction.ca</a>
+
+<a href="../doc/introduction.de.html">doc/introduction.de</a>
+
+<a href="../doc/introduction.es.html">doc/introduction.es</a>
+
+<a href="../doc/introduction.fa.html">doc/introduction.fa</a>
+
+<a href="../doc/introduction.fr.html">doc/introduction.fr</a>
+
+<a href="../doc/introduction.it.html">doc/introduction.it</a>
+
+<a href="../doc/introduction.pl.html">doc/introduction.pl</a>
+
+<a href="../doc/introduction.pt.html">doc/introduction.pt</a>
+
+<a href="../doc/introduction.ru.html">doc/introduction.ru</a>
+
+<a href="../doc/introduction.sr_Latn.html">doc/introduction.sr Latn</a>
+
+<a href="../doc/introduction.tr.html">doc/introduction.tr</a>
+
+<a href="../doc/introduction.zh.html">doc/introduction.zh</a>
+
+<a href="../doc/introduction.zh_TW.html">doc/introduction.zh TW</a>
+
+<a href="../getting_started.en.html">getting started</a>
+
+<a href="../getting_started.ar.html">getting started.ar</a>
+
+<a href="../getting_started.ca.html">getting started.ca</a>
+
+<a href="../getting_started.de.html">getting started.de</a>
+
+<a href="../getting_started.es.html">getting started.es</a>
+
+<a href="../getting_started.fa.html">getting started.fa</a>
+
+<a href="../getting_started.fr.html">getting started.fr</a>
+
+<a href="../getting_started.it.html">getting started.it</a>
+
+<a href="../getting_started.pl.html">getting started.pl</a>
+
+<a href="../getting_started.pt.html">getting started.pt</a>
+
+<a href="../getting_started.ru.html">getting started.ru</a>
+
+<a href="../getting_started.sr_Latn.html">getting started.sr Latn</a>
+
+<a href="../getting_started.tr.html">getting started.tr</a>
+
+<a href="../getting_started.zh.html">getting started.zh</a>
+
+<a href="../getting_started.zh_TW.html">getting started.zh TW</a>
+
+<a href="./glossary.html">glossary</a>
+
+<a href="./how/code.html">how/code</a>
+
+<a href="../news/report_2011_01-02.html">news/report 2011 01-02</a>
+
+<a href="../news/report_2013_05.html">news/report 2013 05</a>
+
+<a href="../press.en.html">press</a>
+
+<a href="../press.ar.html">press.ar</a>
+
+<a href="../press.ca.html">press.ca</a>
+
+<a href="../press.de.html">press.de</a>
+
+<a href="../press.es.html">press.es</a>
+
+<a href="../press.fa.html">press.fa</a>
+
+<a href="../press.fr.html">press.fr</a>
+
+<a href="../press.it.html">press.it</a>
+
+<a href="../press.pl.html">press.pl</a>
+
+<a href="../press.pt.html">press.pt</a>
+
+<a href="../press.ru.html">press.ru</a>
+
+<a href="../press.sr_Latn.html">press.sr Latn</a>
+
+<a href="../press.tr.html">press.tr</a>
+
+<a href="../press.zh.html">press.zh</a>
+
+<a href="../press.zh_TW.html">press.zh TW</a>
+
+<a href="../support/faq.en.html">support/faq</a>
+
+<a href="../support/faq.ar.html">support/faq.ar</a>
+
+<a href="../support/faq.ca.html">support/faq.ca</a>
+
+<a href="../support/faq.de.html">support/faq.de</a>
+
+<a href="../support/faq.es.html">support/faq.es</a>
+
+<a href="../support/faq.fa.html">support/faq.fa</a>
+
+<a href="../support/faq.fr.html">support/faq.fr</a>
+
+<a href="../support/faq.it.html">support/faq.it</a>
+
+<a href="../support/faq.pl.html">support/faq.pl</a>
+
+<a href="../support/faq.pt.html">support/faq.pt</a>
+
+<a href="../support/faq.ru.html">support/faq.ru</a>
+
+<a href="../support/faq.sr_Latn.html">support/faq.sr Latn</a>
+
+<a href="../support/faq.tr.html">support/faq.tr</a>
+
+<a href="../support/faq.zh.html">support/faq.zh</a>
+
+<a href="../support/faq.zh_TW.html">support/faq.zh TW</a>
+
+</span>
+</span>
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

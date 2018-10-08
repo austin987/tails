@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - July 2016 online meeting</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../meetings.html">meetings</a></li>
+
+
+
+
+<li>July 2016 online meeting</li>
+
+</ul>
+</span>
+<span class="title">
+July 2016 online meeting
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+<p>Unfortunatly, we were not able to reach redmine during the meeting, because the
+cert was expired and hsts. The hidden service also didn't work as expected, but
+we had at least the chance to access it for a short period time to get a list
+of tickets to be discussed.
+So no volunteers to handle "<a href="https://labs.riseup.net/code/versions/198">Hole in the
+roof</a>" and no volunteers to handle
+important tickets flagged for next release, but without assignee</p>
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Availability this month</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Consider installing gnome-sound-recorder on Jessie</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Enable Unsafe browser + Clearnet user via Greeter</a>
+	</li>
+	<li class="L1"><a href="#index4h1">Don't ship the testing and unstable APT sources</a>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Availability this month</h1>
+
+<ul>
+<li>nodens will be working on <a href="https://labs.riseup.net/code/issues/10190">#10190</a> and <a href="https://labs.riseup.net/code/issues/7711">#7711</a></li>
+<li>intrigeri will be back to his usual Tails availability in ~10 days
+and will be wrapping up the SponsorS contract at end of july</li>
+<li>flaplap will try to get more people to do translations</li>
+<li>u's availability will be reduced, but connected</li>
+<li>segfault will be working on the Tails server</li>
+</ul>
+
+
+<h1><a name="index2h1"></a><a href="https://labs.riseup.net/code/issues/10950">Consider installing gnome-sound-recorder on Jessie</a></h1>
+
+<p>We decided to add gnome-sound-recorder back to tails.
+If we had to decide between audacity and gnome-sound-recorder, we would ship
+the latter, because its easier to use for inexpierenced users. The former could
+be a case for the 'additional software packages', but we don't want a
+regression and there are usecases for audacity on Tails. Also g-s-r is really
+tiny. Thats why we ship both.</p>
+
+<h1><a name="index3h1"></a><a href="https://labs.riseup.net/code/issues/10100">Enable Unsafe browser + Clearnet user via Greeter</a></h1>
+
+<p>We agree with sajolidas reasoning on the ticket #note-6: there is already a
+blueprint for a new solution and there are some ux problems with adding that
+functionality to the greeter.
+intrigeri suggested the middle ground to block/forbid the unsafe browser as
+soon as Tor has bootstrapped, but thats not that easy to implement: one ux
+problem to solve would be how to handle roaming laptops that move into a wifi
+that requires a captive portal.  thats not worth the
+coding/reviewing/documentation effort for a temporary solution</p>
+
+<h1><a name="index4h1"></a><a href="https://labs.riseup.net/code/issues/11539">Don't ship the testing and unstable APT sources</a></h1>
+
+<p>Segfault explained that the reason for this ticket was that Tails Server needs
+to download the packge list the first time a service is installed, which takes
+a long time at the moment (30 seconds instead of 2 to 10 minutes).
+There could be corner cases where this could break stuff. intrigeri: "say we
+pull pkg P1 from sid, and then user wants to install package P2 themselves, and
+it depends on P3 but the version of P3 in stable conflicts with the version of
+P1 in stable, so the user would need to install P3 from sid, but we just broke
+that for them."
+We decided that this ticket needs more research into possible corner cases that
+could be broken.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/meetings/201607">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

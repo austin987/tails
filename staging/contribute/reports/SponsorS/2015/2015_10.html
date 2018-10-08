@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Tails October 2015 report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../../local.css" type="text/css" />
+
+
+<script src="../../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../../index.en.html"><img src="../../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../../reports.html">reports</a></li>
+
+
+
+
+
+<li><a href="../../SponsorS.html">SponsorS</a></li>
+
+
+
+
+
+<li><a href="../../../../index.en.html">2015</a></li>
+
+
+
+
+<li>Tails October 2015 report</li>
+
+</ul>
+</span>
+<span class="title">
+Tails October 2015 report
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../../about.en.html">About</a></li>
+    <li><a href="../../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">A. Replace Claws Mail with Icedove</a>
+	</li>
+	<li class="L1"><a href="#index2h1">B. Improve our quality assurance process</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">B.1. Automatically build ISO images for all the branches of our source code that are under active development</a>
+		</li>
+		<li class="L2"><a href="#index2h2">B.2. Continuously run our entire test suite on all those ISO images once they are built</a>
+		</li>
+		<li class="L2"><a href="#index3h2">B.3. Extend the coverage of our test suite</a>
+		</li>
+		<li class="L2"><a href="#index4h2">B.4. Freezable APT repository</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index3h1">C. Scale our infrastructure</a>
+	<ol>
+		<li class="L2"><a href="#index5h2">C.1. Change in depth the infrastructure of our pool of mirrors</a>
+		</li>
+		<li class="L2"><a href="#index6h2">C.2. Be able to detect within hours failures and malfunction on our services</a>
+		</li>
+		<li class="L2"><a href="#index7h2">C.4. Maintain our already existing services</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index4h1">D. Migration to Debian Jessie</a>
+	<ol>
+		<li class="L2"><a href="#index8h2">D. Migration to Debian Jessie</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<p>This reports covers the activity of Tails in October 2015.</p>
+
+<p>Everything in this report can be made public.</p>
+
+<h1><a name="index1h1"></a>A. Replace Claws Mail with Icedove</h1>
+
+<ul>
+<li><p>A.1.3. Integrate Icedove into Tails</p>
+
+<p>We configured Icedove in Tails to match our security goals (<a href="https://labs.riseup.net/code/issues/6151">#6151</a>),
+as part of this we disabled:</p>
+
+<ul>
+<li>The remote email account feature (<a href="https://labs.riseup.net/code/issues/10009">#10009</a>)</li>
+<li>The automatic add-on updates (<a href="https://labs.riseup.net/code/issues/10428">#10428</a>)</li>
+</ul>
+
+
+<p>We adapted Torbirdy to suit our needs in Tails. (<a href="https://labs.riseup.net/code/issues/10007">#10007</a>)</p>
+
+<p>During this work we discovered a bug in Torbirdy sometimes
+choosing a wrong language, which we patched upstream. Once our
+patch was merged, we updated the Torbirdy Debian package to a new
+version which we could also include in Tails. (<a href="https://labs.riseup.net/code/issues/9821">#9821</a>)</p></li>
+<li><p>A.1.4. Provide a migration path for our users from Claws Mail to Icedove</p>
+
+<p>We studied the most common Claws Mail persistence configuration
+(<a href="https://labs.riseup.net/code/issues/9494">#9494</a>, <a href="https://labs.riseup.net/code/issues/5663">#5663</a>), then provided a script (<a href="https://labs.riseup.net/code/issues/10453">#10453</a>) to migrate POP
+mailboxes to Icedove and wrote
+<span class="createlink">migration instructions</span>
+(<a href="https://labs.riseup.net/code/issues/9495">#9495</a>) for users to migrate their mailboxes, email account
+settings, and address books.</p>
+
+<p>To make this migration easier to users, we enabled automatically the
+Icedove persistence feature when the Claws Mail persistence was
+enabled (<a href="https://labs.riseup.net/code/issues/9498">#9498</a>) and temporarily added the <code>nmh</code> package to Tails.</p></li>
+<li><p>A.1.5. Update Icedove documentation</p>
+
+<p>The previous Thunderbird documentation was <span class="createlink">completely
+rewritten</span>). (<a href="https://labs.riseup.net/code/issues/7158">#7158</a>)</p></li>
+<li><p>A.1.6. Release Icedove in Tails</p>
+
+<p>Icedove has been added to Tails 1.7. (<a href="https://labs.riseup.net/code/issues/10285">#10285</a>)</p>
+
+<p>It is advertised as a technology preview in our
+<a href="../../../../news/version_1.7.html">release notes</a>). We want
+to have some more advanced users test our configuration and the
+migration process before we make Icedove the default email client
+and remove Claws Mail.</p></li>
+</ul>
+
+
+<h1><a name="index2h1"></a>B. Improve our quality assurance process</h1>
+
+<h2><a name="index1h2"></a>B.1. Automatically build ISO images for all the branches of our source code that are under active development</h2>
+
+<p>We installed the GlobalBuildStat Jenkins plugin back in February, which helps
+us collect the number of ISO images successfully built automatically by our
+servers since the deployment of the automatic ISO builds:</p>
+
+<ul>
+<li>2015-07: 101</li>
+<li>2015-08: 195</li>
+<li>2015-09: 470</li>
+<li>2015-10: 935</li>
+</ul>
+
+
+<h2><a name="index2h2"></a>B.2. Continuously run our entire test suite on all those ISO images once they are built</h2>
+
+<ul>
+<li><p>B.2.3. Research and design a solution to generate a set of Jenkins ISO test jobs</p>
+
+<p>Early in October we finally settled to the best option we found to
+reboot the VM between each run of the test suite in Jenkins (<a href="https://labs.riseup.net/code/issues/9486">#9486</a>).</p>
+
+<p>We finished evaluating the solution set up last month to share
+artifacts between the build jobs and the corresponding test jobs,
+and concluded that it works correctly. (<a href="https://labs.riseup.net/code/issues/9597">#9597</a>)</p>
+
+<p>We had to upgrade our jenkins-job-builder setup to the new 1.3.0 version,
+which was required to configure some Jenkins plugins our test jobs need. (<a href="https://labs.riseup.net/code/issues/9646">#9646</a>)</p>
+
+<p>We also pushed upstream a patch to handle the CucumberTestResult Jenkins
+plugin, so that we can easily use it in our setup and have a nice display of
+Cucumber reports. It has been merged and will be released with
+jenkins-job-builder 1.4.0: <a href="https://review.openstack.org/#/c/218668/">https://review.openstack.org/#/c/218668/</a>.</p>
+
+<p>We worked together with the test suite team on getting video artifacts
+for failing scenarios of a test job stored so that we could better debug. (<a href="https://labs.riseup.net/code/issues/10154">#10154</a>)</p>
+
+<p>With all this, we were able to deploy automated tests of ISO builds
+automatically for our main release branches at the end of the first week of
+October, which helped us confirm our design was working. (<a href="https://labs.riseup.net/code/issues/10117">#10117</a>)</p>
+
+<p><a href="https://tails.boum.org/blueprint/automated_builds_and_tests/jenkins/">https://tails.boum.org/blueprint/automated_builds_and_tests/jenkins/</a></p></li>
+<li><p>B.2.4. Deploy the best solution from this research</p>
+
+<p>With this first initial and limited deployment, we corrected some tiny
+configuration details we didn't catch during the design step.
+(<a href="https://labs.riseup.net/code/issues/10215">#10215</a>, <a href="https://labs.riseup.net/code/issues/10417">#10417</a>)</p>
+
+<p>We stumbled upon a bug due to hardware or kernel troubles with nested
+virtualization we had to workaround. (<a href="https://labs.riseup.net/code/issues/10229">#10229</a>)</p>
+
+<p>It also helped us fix some issues in the integration of our test
+in the Jenkins environment. (<a href="https://labs.riseup.net/code/issues/10356">#10356</a>, <a href="https://labs.riseup.net/code/issues/10359">#10359</a>)</p></li>
+<li><p>B.2.5. Write library code that maps Jenkins jobs from building to testing</p>
+
+<p>Now that we had a good example of how to manage a test job with our
+jenkins-job-builder setup, triggered by its upstream build job, we
+adapted our code that generates build jobs for active branches to
+output their corresponding test jobs. We also ended up using the power
+of a more recent jenkins-job-builder version to simplify
+this code quite a lot. (<a href="https://labs.riseup.net/code/issues/10118">#10118</a>, <a href="https://labs.riseup.net/code/issues/10119">#10119</a>)</p>
+
+<p>It was already clear that we wouldn't be able to notify the
+committers on test suite failures at first, as the number of false
+positives was too high, and we didn't want to train them to ignore
+such notifications. So we planned a first iteration during which
+only the test suite team would receive notifications upon failure,
+so that they'll be able to work on the remaining tests being too
+fragile. (<a href="https://labs.riseup.net/code/issues/10287">#10287</a>)</p>
+
+<p>By October 15th, we had the automated test deployed live in Jenkins
+for all active branches. However, we quickly understood that our Git
+branches based on our maintenance one were too old to run the test
+suite in Jenkins correctly. These topic branches were mainly
+documentation ones so we could turn off their automated testing
+temporarily (this could be reverted once Tails 1.7 was released).</p>
+
+<p>According to the GlobalBuildStat Jenkins plugin, in the second half of
+October, our Jenkins instance ran the test suite 240 times.</p>
+
+<p>We're also discussing on our public mailing list whether it makes sense to
+run our whole test suite on ISO images built from
+documentation branches. (<a href="https://labs.riseup.net/code/issues/10492">#10492</a>)</p></li>
+</ul>
+
+
+<h2><a name="index3h2"></a>B.3. Extend the coverage of our test suite</h2>
+
+<ul>
+<li><p>B.3.5. Write tests for I2P</p>
+
+<p>Basic I2P functionality and configuration that is important in the
+context of Tails is now tested (<a href="https://labs.riseup.net/code/issues/6306">#6306</a>):</p>
+
+<p><a href="https://git-tails.immerda.ch/tails/tree/features/i2p.feature?h=stable">https://git-tails.immerda.ch/tails/tree/features/i2p.feature?h=stable</a></p>
+
+<p>This was part of Milestone II (July 15, 2015).</p></li>
+<li><p>B.3.6. Fix newly identified issues to make our test suite more robust
+       and fast enough to be part of a continuous integration process</p>
+
+<p>A plan was devised to leverage out automated testing
+infrastructure for identifying robustness issues is our test suite, and isolating
+them into separate branches, where they can be dealt with in
+isolation. (<a href="https://labs.riseup.net/code/issues/10288">#10288</a>)</p>
+
+<p>Other improvements:</p>
+
+<ul>
+<li><p>The new snapshot system improved robustness noticeably, and
+reduced the amount of time needed for a full run with at least
+30%. (<a href="https://labs.riseup.net/code/issues/6094">#6094</a>)</p></li>
+<li><p>Restart Tor if bootstrapping stalls for too long.</p>
+
+<p>This started out as a robustness improvement in the test suite,
+since many tests failed randomly due to Tor. We then implemented
+it as a feature in Tails, since it arguably should improve the
+user experience too (<a href="https://labs.riseup.net/code/issues/9516">#9516</a>).</p></li>
+</ul>
+</li>
+<li><p>B.3.9. Optimize tests that need a persistent volume</p>
+
+<p>The new snapshot system was finished early (part of Milestone IV,
+January 15, 2015). (<a href="https://labs.riseup.net/code/issues/6094">#6094</a>, <a href="https://labs.riseup.net/code/issues/8008">#8008</a>)</p></li>
+<li><p>B.3.13. Split the "various checks" feature</p>
+
+<p>Started early, but not finished; so far only <code>mat.feature</code> and
+<code>localization.feature</code> have been created from split out
+scenarios. Thanks to <a href="https://labs.riseup.net/code/issues/6094">#6094</a>, the remainder of this work will be
+trivial.</p></li>
+<li><p>Some other new tests that were written:</p>
+
+<ul>
+<li><p>Write initial Icedove tests. (<a href="https://labs.riseup.net/code/issues/10332">#10332</a>)</p></li>
+<li><p>Write a test for the fix of a symlink attack. It was added at
+the same time as the fix, and this is the ideal workflow we hope
+to be ready to adopt soon. (<a href="https://labs.riseup.net/code/issues/10333">#10333</a>)</p></li>
+</ul>
+</li>
+<li><p>Some improvements for test suite developers:</p>
+
+<ul>
+<li><p>Organize automated test suite artifacts in per-run directories,
+and improve the naming so that it's easier to see e.g. which video
+belongs to which failed scenario. (<a href="https://labs.riseup.net/code/issues/10151">#10151</a>)</p></li>
+<li><p>Clean up automated test suite dependencies. (<a href="https://labs.riseup.net/code/issues/10208">#10208</a>)</p></li>
+<li><p>Force UTF-8 locale in automated test suite, to avoid implicitly
+relying on the system locales configuration. (<a href="https://labs.riseup.net/code/issues/10359">#10359</a>)</p></li>
+<li><p>Run the automated test suite's VNC server forever. (<a href="https://labs.riseup.net/code/issues/10345">#10345</a>)</p></li>
+<li><p>Don't print test suite information to STDERR, but use the
+Cucumber logging facilities so this information is included when
+logging to file. (<a href="https://labs.riseup.net/code/issues/10342">#10342</a>)</p></li>
+</ul>
+</li>
+<li><p>Bugs and regressions identified by our test suite</p>
+
+<p>We just started taking notes of them, so these records are
+probably not complete.</p>
+
+<ul>
+<li>"Restart Tor if bootstrapping stalls for too long", mentioned
+above (<a href="https://labs.riseup.net/code/issues/9516">#9516</a>).</li>
+<li>In September, implementing the automated MAC spoofing tests led
+us to notice that the MAC spoofing's panic mode was broken
+(<a href="https://labs.riseup.net/code/issues/10160">#10160</a>).</li>
+</ul>
+</li>
+</ul>
+
+
+<h2><a name="index4h2"></a>B.4. Freezable APT repository</h2>
+
+<ul>
+<li><p>B.4.1. Specify when we want to import foreign packages into which
+APT suites (<a href="https://labs.riseup.net/code/issues/9488">#9488</a>),
+B.4.4. Design freezable APT repository (<a href="https://labs.riseup.net/code/issues/5926">#5926</a>),
+and B.4.5. Implement processes and tools for importing and freezing
+those packages (<a href="https://labs.riseup.net/code/issues/9487">#9487</a>, <a href="https://labs.riseup.net/code/issues/6295">#6295</a>,
+<a href="https://labs.riseup.net/code/issues/7427">#7427</a>, <a href="https://labs.riseup.net/code/issues/6906">#6906</a>)</p>
+
+<p>Some initial research and experiments were conducted.</p>
+
+<p>The proposed design is described on a blueprint:
+<a href="https://tails.boum.org/blueprint/freezable_APT_repository/">https://tails.boum.org/blueprint/freezable_APT_repository/</a>.</p>
+
+<p>A server-side implementation (<a href="https://labs.riseup.net/code/issues/6296">#6296</a>, <a href="https://labs.riseup.net/code/issues/6299">#6299</a>) has been drafted in the
+<code>tails::reprepro::snapshots::*</code> Puppet classes in the
+<a href="https://git-tails.immerda.ch/puppet-tails/">https://git-tails.immerda.ch/puppet-tails/</a> module.</p></li>
+<li><p>B.4.2. Implement a mechanism to save the list of packages used at
+ISO build time (<a href="https://labs.riseup.net/code/issues/6297">#6297</a>)</p>
+
+<p>We have found ways to implement this, and have a working
+proof-of-concept, that now needs to be refined. This implied adding
+functionality we need to <code>debootstrap</code> upstream, and uploading
+a backport for Debian Jessie.</p></li>
+<li><p>B.4.6. Adjust the rest of our ecosystem to the freezable APT repository</p>
+
+<p>We adopted a documentation-driven approach, and started drafting
+documentation for the tools we will need to write:
+<a href="https://git-tails.immerda.ch/tails/log/?h=feature/5926-freezable-APT-repository">https://git-tails.immerda.ch/tails/log/?h=feature/5926-freezable-APT-repository</a>.</p></li>
+</ul>
+
+
+<h1><a name="index3h1"></a>C. Scale our infrastructure</h1>
+
+<h2><a name="index5h2"></a>C.1. Change in depth the infrastructure of our pool of mirrors</h2>
+
+<ul>
+<li><p>C.1.2. Write &amp; audit the code that makes the redirection decision</p>
+
+<p>Our prototype code (<a href="https://labs.riseup.net/code/issues/8639">#8639</a>) has been refined and will be adapted to work
+with our new installation assistant.</p></li>
+</ul>
+
+
+<h2><a name="index6h2"></a>C.2. Be able to detect within hours failures and malfunction on our services</h2>
+
+<ul>
+<li><p>C.2.1. Research and decide what monitoring solution to use: <a href="https://labs.riseup.net/code/issues/8645">#8645</a></p>
+
+<p>A little bit more research was done to ensure that our current best
+option will satisfy our needs.</p></li>
+</ul>
+
+
+<h2><a name="index7h2"></a>C.4. Maintain our already existing services</h2>
+
+<ul>
+<li><p>C.4.3. Administer our services upto milestone III</p>
+
+<ul>
+<li>We kept on answering to the request from the community as well as taking
+care of security updates.</li>
+<li>We had to reinstall one of our ISO builder VM that was failing too
+often. (<a href="https://labs.riseup.net/code/issues/10334">#10334</a>)</li>
+<li>The OpenPGP key of our Debian repository was going to expire, so we had to
+update it. (<a href="https://labs.riseup.net/code/issues/10419">#10419</a>)</li>
+<li>We thought a bit further how we could make our Jenkins instance public
+(#6270) which probably means to update to the packages provided by
+upstream. (<a href="https://labs.riseup.net/code/issues/10068">#10068</a>)</li>
+</ul>
+</li>
+</ul>
+
+
+<h1><a name="index4h1"></a>D. Migration to Debian Jessie</h1>
+
+<h2><a name="index8h2"></a>D. Migration to Debian Jessie</h2>
+
+<ul>
+<li><p>D.3.1 Update our test suite for Tails Jessie</p>
+
+<ul>
+<li><p>Fix memory erasure tests in Debian Jessie. (<a href="https://labs.riseup.net/code/issues/8317">#8317</a>, <a href="https://labs.riseup.net/code/issues/9705">#9705</a>)</p></li>
+<li><p>Work around screen blanking when testing Synaptic. (<a href="https://labs.riseup.net/code/issues/10403">#10403</a>)</p></li>
+<li><p>Fix a robustness issue with the "Applications" menu
+handling. (<a href="https://labs.riseup.net/code/issues/9706">#9706</a>)</p></li>
+</ul>
+</li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/reports/SponsorS/2015/2015_10">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

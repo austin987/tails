@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Unsafe Browser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../design.html">design</a></li>
+
+
+
+
+<li>Unsafe Browser</li>
+
+</ul>
+</span>
+<span class="title">
+Unsafe Browser
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Rationale</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Requirements</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Implementation</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">User interface</a>
+		</li>
+		<li class="L2"><a href="#index2h2">Security</a>
+		</li>
+		<li class="L2"><a href="#index3h2">Code</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<h1><a name="index1h1"></a>Rationale</h1>
+
+<p>Internet connections restricted by captive portals pose a problem in
+environments like Tails, where all Internet traffic is routed through
+Tor. There's a catch 22 since the portal cannot be reached before Tor
+is working (and it most likely isn't reachable through Tor any way)
+and Tor cannot work before logging in to the portal. Since most (if
+not all) of these portals are web based, a web browser with direct
+Internet access seem required for avoiding this problem.</p>
+
+<h1><a name="index2h1"></a>Requirements</h1>
+
+<ul>
+<li>It must run a completely separate browser profile from the
+Torified browser.</li>
+<li>It must be hard to start by mistake.</li>
+<li>It must be hard to mistake for the Torified browser.</li>
+<li>It must be configured to use the DNS provided by DHCP (which is required
+by some captive portals).</li>
+<li>It must be granted full access to the network so that any captive
+portals can be reached.</li>
+<li>It should be restricted access to as much information from the
+system as possible in case of leaks or compromise.</li>
+</ul>
+
+
+<h1><a name="index3h1"></a>Implementation</h1>
+
+<p>The aptly named <em>Unsafe Browser</em> implements all the above, although at
+this time only a reasonable effort has been made to sandbox it to
+fulfill the last point (restrict access to information).</p>
+
+<h2><a name="index1h2"></a>User interface</h2>
+
+<p>The Unsafe Browser can be found in the <code>Applications -&gt; Internet</code>
+section (with a "warning triangle" as icon) and does the following
+when started:</p>
+
+<ol>
+<li>Show a dialog asking the user for verification, while also briefly
+explaining that the Unsafe Browser won't be anonymous.</li>
+<li>"No" is the default answer, but if "Yes", we start a separate
+browser instance.</li>
+<li>The browser is configured to use a theme with scary colors (red).</li>
+<li>Its start page (locally stored) makes it clear that this is the Unsafe
+Browser and explains the issues involved with the Unsafe Browser
+and how to proceed from now on.</li>
+</ol>
+
+
+<h2><a name="index2h2"></a>Security</h2>
+
+<p>The Unsafe Browser is run by a separate <code>clearnet</code> user, wich is
+allowed to make TCP connections to any port, and UDP DNS queries;
+access to local services like Tor etc. are blocked so it cannot
+interfere with them if compromised. Restricting the TCP ports to
+HTTP(S) and DNS only is not done since some captive portals use
+non-standard ports. Port restrictions are a pretty weak defense any
+way since just <em>one</em> open port is enough to do anything.</p>
+
+<p>The Unsafe Browser is run inside a chroot consisting of a throw away
+aufs union between a read-only version of the pre-boot Tails
+filesystem, and a tmpfs as the rw branch. Hence, the post-boot
+filesystem (which contains all user data) isn't available to the
+Unsafe Browser within the chroot. The chroot and aufs union is created
+upon Unsafe Browser start, and is torn down after it exits, forcefully
+killing any remaining processes run from inside it.</p>
+
+<p>It should be noted that chroots are pretty weak jails, so an exploit
+could easily escape it and have access to the complete filesystem (as
+restricted for the <code>clearnet</code> user). Hence, the reason for using a
+chroot is not for that purpose, but for separating its insecure
+configuration from the rest of the Tails system. For instance, within
+the chroot the DNS server obtained through DNS is configured as the
+system resolver, which would be dangerous if used in the outside
+system.</p>
+
+<h2><a name="index3h2"></a>Code</h2>
+
+<ul>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/sbin/unsafe-browser">config/chroot local-includes/usr/local/sbin/unsafe-browser</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/local/lib/tails-shell-library/chroot-browser.sh">config/chroot local-includes/usr/local/lib/tails-shell-library/chroot-browser.sh</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/usr/share/applications/unsafe-browser.desktop.in">config/chroot local-includes/usr/share/applications/unsafe-browser.desktop.in</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/plain/config/chroot_local-includes/etc/sudoers.d/zzz_unsafe-browser">config/chroot local-includes/etc/sudoers.d/zzz unsafe-browser</a></li>
+<li><a href="https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/usr/share/tails/chroot-browsers/">config/chroot local-includes/usr/share/tails/chroot-browsers/</a></li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./Tor_enforcement/DNS.html">Tor enforcement/DNS</a>
+
+<a href="./Tor_enforcement/Network_filter.html">Tor enforcement/Network filter</a>
+
+<a href="../design.html">design</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/design/Unsafe_Browser">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

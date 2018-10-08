@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Building a Tails image manually</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../local.css" type="text/css" />
+
+
+<script src="../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../index.en.html"><img src="../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../build.html">build</a></li>
+
+
+
+
+<li>Building a Tails image manually</li>
+
+</ul>
+</span>
+<span class="title">
+Building a Tails image manually
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../about.en.html">About</a></li>
+    <li><a href="../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../doc.en.html">Documentation</a></li>
+    <li><a href="../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">Dependencies</a>
+	</li>
+	<li class="L1"><a href="#index2h1">Configure live-build</a>
+	</li>
+	<li class="L1"><a href="#index3h1">Build process</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">Customize the build process if needed</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+
+
+<div class="note">
+This section may not be in tested and working shape as all active
+developers use Vagrant.
+</div>
+
+
+<p>In order to build Tails manually, you need a running Debian Jessie
+system and some <a href="http://backports.debian.org/">backports</a>. Anything
+else will fail.</p>
+
+<h1><a name="index1h1"></a>Dependencies</h1>
+
+<p>The following Debian packages need to be installed:</p>
+
+<ul>
+<li><p>our <code>live-build</code> 2.x package, adapted for Wheezy and later. Its version is
+something like <em>3.0.5+really+is+2.0.12-0.tails2</em>. One can install it
+from:</p>
+
+<pre><code>deb http://deb.tails.boum.org/ builder-jessie main
+</code></pre>
+
+<p>This APT repository's signing key can be found:</p>
+
+<ul>
+<li>in our Git tree (that you have cloned already, right?):
+<code>config/chroot_sources/tails.chroot.gpg</code></li>
+<li>at <a href="http://deb.tails.boum.org/key.asc">http://deb.tails.boum.org/key.asc</a></li>
+<li>on the keyservers.</li>
+</ul>
+
+
+<p>It is certified by the
+<a href="../../doc/about/openpgp_keys.en.html#signing">Tails signing key</a>, and its
+fingerprint is:</p>
+
+<pre><code>221F 9A3C 6FA3 E09E 182E  060B C798 8EA7 A358 D82E
+</code></pre>
+
+<p>You should pin that repository, so that live-build isn't upgraded to
+the version of jessie.</p>
+
+<pre><code>#/etc/apt/preferences.d/00-builder-jessie-pinning
+Package: *
+Pin: release o=Debian,a=stable
+Pin-Priority: 700
+
+Package: *
+Pin: origin deb.tails.boum.org
+Pin-Priority: 800
+</code></pre>
+
+<p>Then install these dependencies from Jessie:</p>
+
+<pre><code>apt install \
+  dpkg-dev \
+  gettext \
+  intltool \
+  libfile-slurp-perl \
+  liblist-moreutils-perl \
+  libyaml-libyaml-perl \
+  libyaml-perl \
+  libyaml-syck-perl \
+  perlmagick \
+  po4a \
+  syslinux-utils \
+  time \
+  whois
+</code></pre>
+
+<p>And install these dependencies from jessie-backports (please verify
+manually that the following command actually does install the
+expected versions):</p>
+
+<pre><code>apt install \
+  debootstrap/jessie-backports \
+  ikiwiki/jessie-backports
+</code></pre></li>
+</ul>
+
+
+<h1><a name="index2h1"></a>Configure live-build</h1>
+
+<p>Remove any line matching <code>/^[[:space:]]*LB.*MIRROR.*=/</code> in
+<code>/etc/live/build.conf</code>.</p>
+
+<h1><a name="index3h1"></a>Build process</h1>
+
+<p>Every build command must be run as <code>root</code>, at the root of a clone of the
+<a href="../git.html"><code>tails</code> repository</a>. A local HTTP proxy is required.</p>
+
+<p>In short, a build shall be done using:</p>
+
+<pre><code>lb clean --all &amp;&amp; lb config --apt-http-proxy http://localhost:3142 &amp;&amp; lb build
+</code></pre>
+
+<p>Running <code>lb config</code> or <code>lb build</code> in an environment that wasn't full
+cleaned first is not supported.</p>
+
+<h2><a name="index1h2"></a>Customize the build process if needed</h2>
+
+<p>If you need to set custom build settings that are specific to your
+local environment, such as a custom Debian mirror or APT proxy, you
+probably want to configure live-build a bit.</p>
+
+<p>The most common customizations are documented on this wiki:</p>
+
+<ul>
+<li>to avoid compressing the SquashFS using XZ (efficient, but very
+slow), <code>export MKSQUASHFS_OPTIONS='-comp gzip'</code> in your
+build environment;</li>
+<li>to avoid downloading lots of Debian packages during every build, you
+can use <a href="https://tracker.debian.org/pkg/apt%2Dcacher%2Dng">apt-cacher-ng</a>; however, the build system
+constantly switches APT sources for our
+<a href="../APT_repository.html">APT repositories</a>, so some custom
+configuration is needed to make <code>apt-cacher-ng</code> useful: see the
+bits about <code>apt-cacher-ng</code> in
+<a href="https://git-tails.immerda.ch/tails/plain/vagrant/provision/assets/build-tails">vagrant/provision/assets/build-tails</a>.</li>
+</ul>
+
+
+<p>More documentation about this can be found in the <a href="http://live.debian.net/manual-2.x/html/live-manual.en.html">Debian Live
+Manual</a>.</p>
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/build/manually">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>

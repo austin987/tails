@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tails - Tails December 2017 report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="icon" href="../../../favicon.ico" type="image/x-icon" />
+
+<link rel="stylesheet" href="../../../style.css" type="text/css" />
+
+<link rel="stylesheet" href="../../../local.css" type="text/css" />
+
+
+<script src="../../../lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body class="en">
+
+
+<div class="searchform">
+
+
+
+</div>
+
+<div class="banner" role="banner">
+  <a class="tails" href="../../../index.en.html">
+    <span class="acronym">Tails</span><br/>
+    <span class="slogan">The Amnesic Incognito Live System</span>
+  </a>
+</div>
+
+<div class="page">
+
+<div class="pageheader">
+<div class="header">
+<span>
+<span class="parentlinks">
+<ul id="crumbs">
+<li><a href="../../../index.en.html"><img src="../../../lib/home.png"></a></li>
+
+
+
+
+
+
+
+<li><a href="../../../contribute.en.html">contribute</a></li>
+
+
+
+
+
+<li><a href="../../reports.html">reports</a></li>
+
+
+
+
+
+<li><a href="../SponsorW.html">SponsorW</a></li>
+
+
+
+
+<li>Tails December 2017 report</li>
+
+</ul>
+</span>
+<span class="title">
+Tails December 2017 report
+</span>
+</span>
+</div>
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+<div class="sidebar" role="navigation">
+<div class="download button">
+  <a href="../../../install.en.html"><span class="download">Install</span>
+    <span class="tails">Tails 
+3.9
+</span>
+    <span class="date">
+2018-09-05</span></a>
+</div>
+
+
+
+
+<div class="links">
+  <ul>
+    <li><a href="../../../about.en.html">About</a></li>
+    <li><a href="../../../getting_started.en.html">Getting started…</a></li>
+    <li><a href="../../../doc.en.html">Documentation</a></li>
+    <li><a href="../../../support.en.html">Help &amp; Support</a></li>
+    <li><a href="../../../contribute.en.html">Contribute</a></li>
+    <li><a href="../../../news.en.html">News</a></li>
+  </ul>
+</div>
+
+
+
+
+<div class="donate button">
+    <a href="https://tails.boum.org/donate?r=sidebar">Donate</a>
+</div>
+
+
+</div>
+
+
+
+<div id="pagebody">
+
+<div id="content" role="main">
+
+
+<div class="toc">
+<ol>
+	<li class="L1"><a href="#index1h1">A. VeraCrypt support in GNOME</a>
+	<ol>
+		<li class="L2"><a href="#index1h2">A.1 Research user needs and implementation costs</a>
+		</li>
+		<li class="L2"><a href="#index2h2">A.2 UX & UI design sprint</a>
+		</li>
+	</ol>
+	</li>
+	<li class="L1"><a href="#index2h1">B. Additional software</a>
+	<ol>
+		<li class="L2"><a href="#index3h2">B.4 Implement backend and GUI</a>
+		</li>
+		<li class="L2"><a href="#index4h2">B.5 Implement offline mode (#14570)</a>
+		</li>
+	</ol>
+	</li>
+</ol>
+</div>
+
+
+<p>This report covers the activity of Tails in December 2017.</p>
+
+<p>Everything in this report is public.</p>
+
+<p><a id="veracrypt"></a></p>
+
+<h1><a name="index1h1"></a>A. VeraCrypt support in GNOME</h1>
+
+<h2><a name="index1h2"></a>A.1 Research user needs and implementation costs</h2>
+
+<p>We analyzed the results of our online survey. We got 1011 complete answers for
+a participation rate of 1.97%. It was a great success!</p>
+
+<p>The detailed results are in our <span class="createlink">blueprint</span>.</p>
+
+<h3><a name="index1h3"></a>Summary of our findings on VeraCrypt usage</h3>
+
+<p>Justification of our work:</p>
+
+<ul>
+<li><p>40% of Tails users are also VeraCrypt users (<em>Tails+VeraCrypt
+users</em>), both inside and outside Tails.</p></li>
+<li><p>60% of Tails+VeraCrypt users only use VeraCrypt outside of Tails.</p></li>
+<li><p>Most of Tails+VeraCrypt users are regular users of VeraCrypt.</p></li>
+<li><p>VeraCrypt is of more interest to people who are not using Linux as
+their primary operating system.</p></li>
+<li><p>VeraCrypt is still a reference when people think about encrypting
+files.</p></li>
+<li><p>Integrating VeraCrypt in Tails will prevent dangerous behaviors:</p>
+
+<p><em>« I need to be able to open TrueCrypt file containers in Tails in
+order to move files securely between Tails and Windows. Right now, I
+have to copy my files unencrypted between Tails and Windows and this
+is quite dangerous. »</em></p></li>
+</ul>
+
+
+<p>Definition of the scope of our work:</p>
+
+<ul>
+<li>85% of Tails+VeraCrypt users mostly don't use the .TC or .HC file extension.</li>
+<li>76% of Tails+VeraCrypt users use file containers.</li>
+<li>65% of Tails+VeraCrypt users use partitions.</li>
+<li>65% of Tails+VeraCrypt users use hidden volumes.</li>
+<li>55% of Tails+VeraCrypt users have legacy TrueCrypt volumes.</li>
+<li>42% of Tails+VeraCrypt users use keyfiles.</li>
+</ul>
+
+
+<p><a id="sprint"></a></p>
+
+<h2><a name="index2h2"></a>A.2 UX & UI design sprint</h2>
+
+<p>The main developer and the UX designer working on this project gathered for
+three days of sprint in Berlin, at the Onion Space, a coworking space for
+Internet freedom technologists, on December 8, 9, and 10.</p>
+
+<h3><a name="index2h3"></a>Definition of the scope of our work</h3>
+
+<p>We started by better defining the scope of our work based on the
+preliminary research work that we did, both in terms of user needs
+(through the survey) and technical feasibility (through the
+backend code written until now).</p>
+
+<p>We structure the scope of our work in four iterations. We will implement
+and upstream each iteration one after the other and go as far as the
+budget allows:</p>
+
+<ol>
+<li>Unlocking partitions</li>
+<li>Unlocking file containers</li>
+<li>Creating and modifying partitions and containers</li>
+<li><em>VeraCrypt Mounter</em></li>
+</ol>
+
+
+<p>The details of each iteration is in our
+<span class="createlink">blueprint</span>.</p>
+
+<h3><a name="index3h3"></a>Paper prototyping</h3>
+
+<p>We created paper prototypes of the interactions that we designed for two key
+user scenarios:</p>
+
+<ul>
+<li>Scenario A: Unlocking a file container.</li>
+<li>Scenario B: Creating a new partition.</li>
+</ul>
+
+
+<p>Paper prototypes allowed us to:</p>
+
+<ul>
+<li>Make our ideas come to life without having to write a single line of code.</li>
+<li>Create a shared understanding between designer and developer.</li>
+<li>Identify issues what we overlooked so far.</li>
+</ul>
+
+
+<p>Example of a paper prototype showing steps of scenario A, locating the file
+container and opening it using <em>VeraCrypt Mounter</em>:</p>
+
+<p><img src="https://labs.riseup.net/code/attachments/download/1845/prototyping.jpg"></p>
+
+<p>We created our prototypes using
+<a href="https://wireframesketcher.com/">WireframeSketcher</a>. WireframeSketcher is
+proprietary software but can be installed in Tails easily. It includes sketchy
+templates of all common user interface elements so you can create and modify
+sketches very rapidly.</p>
+
+<p>Paper prototyping was especially useful as our work modifies many bits and
+pieces of existing GNOME utilities. It wouldn't have been possible to create
+even a rough code prototype.</p>
+
+<h3><a name="index4h3"></a>Formative testing with users</h3>
+
+<p>At the end of the first day, we started testing our prototypes with users.
+During the sprint, we had seven people come over for sessions of one hour each.
+After each test we debriefed our findings and improved our design.</p>
+
+<p>We recruited the participants through a <a href="news/veracrypt_ux_design">blog post on our
+website</a> and contacts we had in Berlin. We selected
+people who were users of both Tails and VeraCrypt and gave priority to people
+who were not using GNOME as their primary desktop environment.</p>
+
+<h3><a name="index5h3"></a>Output</h3>
+
+<p>Since our work is meant to integrate VeraCrypt volumes in the native GNOME
+utilities, we actually didn't design a lot of new interfaces. We modified two
+existing dialogs of GNOME Disks for the creating of a new partition. Our
+changes are circled in blue:</p>
+
+<p><img src="https://labs.riseup.net/code/attachments/download/1833/disks-format-partition.png"></p>
+
+<p><img src="https://labs.riseup.net/code/attachments/download/1834/disks-format-partition-password.png"></p>
+
+<p>We designed a variant of the <a href="https://wiki.gnome.org/Projects/gvfs">GVfs</a>
+dialog for the opening of encrypted volumes to include the additional options
+required by VeraCrypt volumes:</p>
+
+<p><img src="https://labs.riseup.net/code/attachments/download/1843/gvfs-monitor-unlock-veracrypt-volume.png"></p>
+
+<p>We designed <em>VeraCrypt Mounter</em>, a very simple application wrapper that makes
+it easier for users to learn how to use VeraCrypt in Tails and makes it faster
+to open file containers:</p>
+
+<p><img src="https://labs.riseup.net/code/attachments/download/1842/veracrypt-mounter.png"></p>
+
+<p>The need for <em>VeraCrypt Mounter</em> arose as people <em>all</em> looked for <em>something
+called VeraCrypt</em> in the menus because this it how they use VeraCrypt in other
+operating systems. A paradox of our integration work is that it made using
+VeraCrypt volumes <em>too transparent</em> for people to learn about it easily.</p>
+
+<p><em>VeraCrypt Mounter</em> would only be available in Tails. It's also optional in the
+scope of our work as it could be replaced with a launcher pointing to our
+documentation on VeraCrypt in Tails. Pointing to the documentation would lead
+to similar success rates and would teach people better how to use VeraCrypt in
+GNOME outside of Tails but it would be more time-consuming for first-time users
+and a bit more frustrating than having <em>VeraCrypt Mounter</em>.</p>
+
+<p>The most encouraging feedback that we got during the tests came from a digital
+security trainer. She came to the tests because she frequently teaches
+VeraCrypt but is very negative about the complexity and poor design of the
+native VeraCrypt interface. She ended up being extremely positive about our
+work as it finally looked like something she could teach people without too
+much pain.</p>
+
+<p>Having a better user experience than native VeraCrypt was not part of our
+objectives initially but we are know convinced that it will be a key outcome:
+our work will actually be much more usable than VeraCrypt itself.</p>
+
+<h1><a name="index2h1"></a>B. Additional software</h1>
+
+<p>Our developers had a first successful sprint during which they could
+dive into the problem space and start tackling the few issues that do
+not need to wait for the UX &amp; GUI design sprint.</p>
+
+<h2><a name="index3h2"></a>B.4 Implement backend and GUI</h2>
+
+<p>We worked on a limitation of the backend (<a href="https://labs.riseup.net/code/issues/9059">#9059</a>) which
+currently locks the opening of the desktop during more than a minute
+without any feedback, when the Additional Software feature is activated.
+We <span class="createlink">designed a
+solution</span>
+to this problem and started implementing it (<a href="https://labs.riseup.net/code/issues/9059">#9059</a>).
+The implementation is working, and should be reviewed and polished
+within the next month.</p>
+
+<p>We also fixed a problem that could theoretically happen in corner
+cases, when the user has added to their list of additional software
+a package that prompts upon installation (<a href="https://labs.riseup.net/code/issues/6038">#6038</a>).
+The fix will be released in Tails 3.5 (January, 2018).</p>
+
+<h2><a name="index4h2"></a>B.5 Implement offline mode (<a href="https://labs.riseup.net/code/issues/14570">#14570</a>)</h2>
+
+<p>We <span class="createlink">researched</span>
+the possible causes of issues with the Additional Software feature
+without any Internet connection and identified three
+potential problems:</p>
+
+<ul>
+<li>APT indices have expired: it turns out that changes in APT made
+this a non-issue on Debian Stretch.</li>
+<li>One of the packages was not cached in the first place: the root
+cause of this problem was identified and a fix has been
+released in Tails 3.4 (<a href="https://labs.riseup.net/code/issues/10958">#10958</a>).</li>
+<li>Incomplete online upgrade process: a solution has been designed and
+implemented; it passed a 1st review, and will be polishing and released in 2018Q1.</li>
+</ul>
+
+
+</div>
+
+
+
+
+
+
+
+</div>
+
+<div id="footer" class="pagefooter" role="contentinfo">
+
+<div id="pageinfo">
+
+
+
+
+
+
+
+<div id="backlinks">
+Pages linking to this one:
+
+<a href="./2018_01.html">2018 01</a>
+
+<a href="../../../news/report_2017_12.html">news/report 2017 12</a>
+
+<a href="../../../news/report_2018_01.html">news/report 2018 01</a>
+
+
+</div>
+
+
+
+
+
+
+</div>
+<div id="mirrorlist">Mirror: <a href="https://tails.boum.org/ikiwiki.cgi?do=goto&page=contribute/reports/SponsorW/2017_12">tails.boum.org</a></div>
+
+<!-- from The Amnesic Incognito Live System -->
+</div>
+
+</div>
+
+<script type="text/javascript">
+  var linkelements = document.querySelectorAll('.use-mirror-pool');
+  if(linkelements.length > 0) {
+    replaceUrlPrefixWithRandomMirror(linkelements);
+  }
+</script>
+
+</body>
+</html>
