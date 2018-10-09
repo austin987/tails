@@ -1,5 +1,5 @@
 [[!meta title="Tails report for September, 2018"]]
-[[!meta date="Tue, 10 Apr 2018 01:23:45 +0000"]] XXX: adjust date
+[[!meta date="Tue, 09 Oct 2018 17:42:12 +0000"]]
 [[!pagetemplate template="news.tmpl"]]
 
 [[!toc]]
@@ -7,30 +7,99 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
+* [[Tails 3.9 was released on September 5|news/version_3.9]] (major release).
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 3.10 is [[scheduled for October 23|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 3.9:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+### Additional Software
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+You can now install additional software automatically when starting Tails.
+
+When installing an additional Debian package from Tails, you can decide to
+install it automatically every time.
+
+To check your list of additional software packages, choose
+**Applications**&nbsp;▸ **System Tool**&nbsp;▸ **Additional Software**.
+
+[[Read our documentation on installing additional software.|doc/first_steps/additional_software]]
+
+### VeraCrypt integration
+
+To unlock *VeraCrypt* volume in Tails, choose **Applications**&nbsp;▸ **System
+Tool**&nbsp;▸ **Unlock VeraCrypt Volumes**.
+
+The integration of *VeraCrypt* in the *Files* and *Disks* utilities was done
+upstream in GNOME and will be available outside of Tails in Debian 10 (Buster)
+and Ubuntu 18.10 (Cosmic Cuttlefish).
+
+[[Read our documentation on using *VeraCrypt* volumes.|doc/encryption_and_privacy/veracrypt]]
+
+### News reading in *Thunderbird*
+
+*Thunderbird* is now the official RSS and Atom news feed reader in Tails.
+
+*Liferea* will be removed from Tails in version 3.12, early 2019.
+
+### Other changes
+
+- Improve the configuration of the persistent storage to make it easier
+  to scroll and consistent with the GNOME guidelines.
+
+### Included software
+
+- Update *Tor Browser* to 8.0, based on *Firefox* 60 ESR.
+
+  - Based on [*Firefox Quantum*](https://blog.mozilla.org/blog/2017/11/14/introducing-firefox-quantum/).
+
+  - New Tor circuit view
+
+- Update *Thunderbird* from 52 to [60](https://www.thunderbird.net/en-US/thunderbird/60.0/releasenotes/).
+
+- Update *Tor* to 0.3.4.7-rc.
+
+- Update *Electrum* to from 3.0.6 to [3.1.3](https://github.com/spesmilo/electrum/blob/master/RELEASE-NOTES).
+
+### Hardware support
+
+The following updates make Tails work better on recent hardware (graphics,
+Wi-Fi, etc.):
+
+- Update *Linux* to 4.17 which also fixes the
+  [Foreshadow](https://foreshadowattack.eu/) attack.
+
+- Update the *DRM* and *Mesa* libraries to improve support for some graphics
+  cards.
+
+- Update the Intel and AMD microcodes and most firmware packages.
+
+### Fixed problems
+
+- Stop displaying the *Enigmail* setup wizard every time Tails is restarted.
+  ([[!tails_ticket 15693]] and [[!tails_ticket 15746]])
+
+- Show a spinner while starting *Tor Browser*, *Tails documentation*, and
+  *WhisperBack*. ([[!tails_ticket 15101]])
+
+- Use *Tor Browser* again for browsing the documentation offline.
+  ([[!tails_ticket 15720]])
+
+- Show *Synaptic* and *Root Terminal* even when no administration
+  password is set. ([[!tails_ticket 11013]])
+
+- *Tails Installer*
+
+  - Link to upgrade documentation when upgrading. ([[!tails_ticket 7904]])
+  - Hide the **Reinstall** option when the USB stick is too small. ([[!tails_ticket 14810]])
+  - Correct the size of the USB stick in the confirmation dialog when reinstalling. ([[!tails_ticket 15590]])
 
 Code
 ====
 
-XXX: If you feel like it and developers don't do it themselves,
-     list important code work that is not covered already by the
-     Release section (for example, the changes being worked on for
-     the next version).
-
 - We successfully collaborated with the _Tor Browser_ team to fix
   a severe issue with _Tor Browser_ 8.0 in Tails, that was discovered
-  shortly before the Tails 3.9 release. Thanks a lot for everyone
+  shortly before the Tails 3.9 release. Thanks a lot to everyone
   who helped!
 
 - We fixed a number of regressions that were introduced in Tails 3.9, such as:
@@ -44,40 +113,22 @@ XXX: If you feel like it and developers don't do it themselves,
 Documentation and website
 =========================
 
-XXX: If you feel like it and technical writers don't do it
-     themselves, explore the Git history:
+- We updated our [[documentation on *Tor
+  Browser*|doc/anonymous_internet/Tor_Browser]] to *Tor Browser* 8.
 
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+- We added [Nothing2Hide](https://nothing2hide.org/) as an organization
+  providing Tails training.
 
 User experience
 ===============
 
-XXX: If you feel like it and the UX team does not do it
-     themselves, check the archives of tails-ux:
-     <https://mailman.boum.org/pipermail/tails-ux/>
+- We did some stats on the amount of RAM on computers sending us *WhisperBack*
+  reports.
 
-Hot topics on our help desk
-===========================
-
-XXX: Ask tails-bugs@boum.org to list hot topics for the last month.
-
-1.
-
-1.
-
-1.
+  Between 5&ndash;10% of our users seem to have less than 3 GiB of RAM.
 
 Infrastructure
 ==============
-
-XXX: Count the number of tests in /features at the beginning of next month
-
-         git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-         git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
-
-XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
-
-       - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
 
 - We started planning the migration of our Redmine to [[!tails_ticket
   15918 desc="a different hostname"]] and [[!tails_ticket 15919
@@ -96,7 +147,7 @@ XXX: Report only if more scenarios have been written and add the diff from the p
   access to our Jenkins CI platform so far. We've identified
   a [[!tails_ticket 11344 desc="few"]] [[!tails_ticket 15981
   desc="blockers"]], resolved them, and started giving such access
-  more liberally, which should make Tails development work more
+  more liberally. This should make Tails development work more
   pleasurable and efficient for a few more people.
 
 - The Tails sysadmin team discussed hiring a new team member, the
@@ -112,11 +163,14 @@ Funding
 
 - We published our [[finances for 2017|doc/about/finances#2017]].
 
-XXX: The fundraising team should look at the fundraising Git.
+- We prepared our end-of-year donation campaign and will launch it in the
+  coming weeks.
 
-       git log --patch --since='1 December' --until='1 January' origin/master
+- We added the postal address of RiseupLabs to our donation page as a way of
+  [[receiving US checks|donate#check]].
 
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
+- We removed Flattr as a donation method because it is not worth it
+  (raised ~200€ in 3 years).
 
 Outreach
 ========
@@ -124,40 +178,46 @@ Outreach
 Past events
 -----------
 
-- A few of us attended the Tor meeting in Mexico City.
+- emmapeel, intrigeri, and sajolida attended the Tor meeting in Mexico City.
 
-Upcoming events
----------------
-
-On-going discussions
-====================
-
-XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
-
-Press and testimonials
-======================
-
-XXX: Copy content from press/media_appearances_2018.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
+- sajolida gave a talk about Tails, user research, and free software
+  culture at the colloquium [Mecanismos de Privacidad y Anonimato en
+  Redes](https://priv-anon.unam.mx/) of UNAM, Mexico.
+  ([slides](https://un.poivron.org/~sajolida/unam.pdf))
 
 Translation
 ===========
 
-XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
-XXX: Add the output of (adjust month!):
+- Someone started [[translating our website in
+  Catalan|contribute/how/translate/team/ca]].
 
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+## All the website
+
+  - de: 55% (3192) strings translated, 6% strings fuzzy, 48% words translated
+  - es: 57% (3331) strings translated, 1% strings fuzzy, 47% words translated
+  - fa: 36% (2094) strings translated, 9% strings fuzzy, 38% words translated
+  - fr: 91% (5296) strings translated, 1% strings fuzzy, 89% words translated
+  - it: 32% (1874) strings translated, 6% strings fuzzy, 28% words translated
+  - pt: 27% (1614) strings translated, 7% strings fuzzy, 24% words translated
+
+Total original words: 61424
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 81% (1562) strings translated, 9% strings fuzzy, 81% words translated
+  - es: 96% (1850) strings translated, 1% strings fuzzy, 93% words translated
+  - fa: 33% (639) strings translated, 11% strings fuzzy, 33% words translated
+  - fr: 98% (1894) strings translated, 0% strings fuzzy, 98% words translated
+  - it: 67% (1291) strings translated, 15% strings fuzzy, 66% words translated
+  - pt: 45% (877) strings translated, 12% strings fuzzy, 49% words translated
+
+Total original words: 17456
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-* WHISPERBACK bug reports were received through WhisperBack.
+* Tails has been started more than 697&thinsp;294 times this month. This makes 23&thinsp;243 boots a day on average.
+* 9964 downloads of the OpenPGP signature of Tails ISO from our website.
+* 131 bug reports were received through WhisperBack.
 
 [[How do we know this?|support/faq#boot_statistics]]
-
-XXX: Ask <tails@boum.org> for these numbers.
