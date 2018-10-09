@@ -90,6 +90,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Pass-through the ?r= parameter to /donate/thanks and /donate/canceled
+  var url = new URL(window.location.href);
+  var r = url.searchParams.get("r");
+  if (r) {
+    var returnUrls = document.getElementsByClassName('return-url');
+    for (let i = 0; i < returnUrls.length; i++) {
+      let element = returnUrls[i];
+      let url = new URL(element.value);
+      element.value = url.origin + url.pathname + "?r=" + r;
+    }
+  }
+
   // Alternate between our different bitcoin addresses
   var bitcoinAddresses = document.getElementsByClassName('bitcoin-address'),
   current_top_weight = 0,
@@ -111,4 +123,5 @@ document.addEventListener('DOMContentLoaded', function() {
       break;
     }
   }
+
 });
