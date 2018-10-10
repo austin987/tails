@@ -224,6 +224,11 @@ class Volume(object):
                 self.manager.mount_op_lock.release()
 
             if open_after_unlock:
+                # The GVolume now changed from the loop device to the dm device, so
+                # by also updating the udisks object we change this volume from the
+                # crypto backing loop device to the unlocked device-mapper device,
+                # which we can then open
+                self.udisks_object = self._find_udisks_object()
                 self.open()
 
         if self.is_unlocked:
@@ -250,12 +255,16 @@ class Volume(object):
 
     def unmount(self):
         logger.info("Unmounting volume %s", self.device_file)
+        unmounted_at_least_once = False
         while self.udisks_object.get_filesystem().props.mount_points:
             try:
                 self.udisks_object.get_filesystem().call_unmount_sync(GLib.Variant('a{sv}', {}),  # options
                                                                       None)                       # cancellable
+                unmounted_at_least_once = True
             except GLib.Error as e:
                 if "org.freedesktop.UDisks2.Error.NotMounted" in e.message:
+                    if not unmounted_at_least_once:
+                        logger.warning("Failed to unmount volume %s: %s", self.device_file, e.message)
                     return
                 raise
 
