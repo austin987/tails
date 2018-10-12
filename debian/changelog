@@ -1,8 +1,109 @@
 tails (3.12) UNRELEASED; urgency=medium
 
-  * Dummy entry for next major release.
+  * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Fri, 17 Aug 2018 17:08:40 +0000
+ -- Tails developers <tails@boum.org>  Wed, 05 Sep 2018 16:51:53 +0000
+
+tails (3.10) UNRELEASED; urgency=medium
+
+  * Dummy entry for next release.
+
+ -- anonym <anonym@riseup.net>  Thu, 04 Oct 2018 14:08:41 +0200
+
+tails (3.9.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.0.2, based on Firefox 60.2.1 (Closes: #16017).
+    - Upgrade Thunderbird to 60.0-3~deb9u1.0tails2 (Closes: #15959). Also
+      imported the same security fixes that caused Tor Browser 8.0.2.
+    - XXX: #15978?
+    - Upgrade curl to 7.52.1-5+deb9u7 (DSA-4286).
+    - Upgrade Ghostscript to 9.20~dfsg-3.2+deb9u5 (DSA-4294).
+    - Upgrade libarchive-zip-perl to 1.59-1+deb9u1 (DSA-4300).
+    - Upgrade libkpathsea6 to 2016.20160513.41080.dfsg-2+deb9u1 (DSA-4299).
+    - Upgrade LittleCMS 2, aka. liblcms2-2, to 2.8-4+deb9u1 (DSA-4284).
+    - Upgrade Python 2.7 to 2.7.13-2+deb9u3 (DSA-4306).
+    - Upgrade Python 3.5 to 3.5.3-1+deb9u1 (DSA-4307).
+
+  * Bugfixes
+    - Make Thunderbird translated in non-English locales via
+      intl.locale.requested, which works correctly since 60.0-3
+      (Closes: #15942).
+    - Totem: backport AppArmor profile fix to allow opening the help
+      (Closes: #15841)
+    - Remove mutt, that was accidentally installed in 3.9 (Closes: #15904).
+    - Fix VeraCrypt volumes not being opened in GNOME Files (Closes: #15954).
+    - Fix displaying the "General" section in the Tor Browser preferences
+      (Closes: #15917).
+    - Fix APT pinning at Tails runtime for our custom APT repository
+      and for Debian backports (Closes: #15837, #15973).
+
+  * Minor improvements and updates
+    - Upgrade tor to 0.3.4.8-1~d90.stretch+1 (Closes: #15889).
+
+ -- Tails developers <tails@boum.org>  Wed, 03 Oct 2018 12:12:33 +0200
+
+tails (3.9) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 8.0 (Closes: #15803, #15907).
+      Notable user-visible changes and relevant details:
+      · Adjust to the fact Tor Browser 8.0a10 replaces firefox with a wrapper.
+      · Don't use the bundled copy of libstdc++.so.6, ours is recent enough.
+      · Drop obsolete Torbutton prefs (Closes: #15706).
+      · Switch back to 128px icons (Closes: #15081).
+      · AppArmor profile: take into account new Firefox binary path.
+    - Upgrade Thunderbird to 60.0 (Closes: #15792).
+      Notable user-visible changes and relevant details:
+      · AppArmor profile: patch to avoid conflicting x modifiers for ps(1).
+    - Upgrade tor to 0.3.4.7-rc (Closes: #15772).
+
+  * Security fixes
+    - Upgrade Linux to 4.17.17-1 and intel-microcode to 3.20180807a.1
+      This fixes CVE-2018-3620 aka. Foreshadow aka. L1 Terminal Fault
+      (Closes: #15796).
+    - Upgrade OpenSSH to 1:7.4p1-10+deb9u4 (DSA-4280).
+
+  * Bugfixes
+    - Fix Totem on Intel graphics cards by inlining the backported mesa
+      and dri-enumerate abstractions into its AppArmor profile: they are needed
+      with recent Mesa and libdrm (Closes: #15821). Regression introduced
+      in 3.9~rc1.
+    - Fix unlocking "hidden" TrueCrypt/VeraCrypt volumes via GNOME Shell
+      (Closes: #15843).
+    - Fix confusing error message when unlocking TrueCrypt/VeraCrypt volumes
+      (Closes: #15733).
+    - Revert to Stretch's X.Org nouveau video driver (Closes: #15833).
+      It seems that the regression brought by the upgraded one
+      is worse than the improvements reported after our call for testing.
+      Regression introduced in 3.9~rc1.
+    - Use the intel X.Org driver for Intel Corporation UHD Graphics 620.
+    - Fix regressions introduced in 3.9~rc1 in/by Additional Software Packages:
+      · Don't break new empty persistence configuration files creation when
+        permissions are incorrect (Closes: #15802).
+      · Fix UX when the user has specified a distribution or version
+        for a given package in their live-additional-software.conf
+        (Closes: #15822).
+      · Don't show installation notifications on upgrade (Closes: #15879).
+    - Make more Additional Software Packages strings translatable in the
+      configuration dialog and PolicyKit messages.
+
+  * Minor improvements and updates
+    - Upgrade firmware-nonfree to 20180825-1.
+    - Update the deb.torproject.org APT repository signing key.
+    - Unlock VeraCrypt Volumes: add disclaimer (Closes: #15849).
+
+  * Test suite
+    - Update Thunderbird test suite for 60.0 (Closes: #15791).
+    - Fix various robustness issues.
+    - Make the Chutney nodes use a higher V3AuthVotingInterval to make client
+      bootstrap more robust (Closes: #15799).
+    - Update the Tor Launcher binary path.
+    - Adjust to the fact "New Circuit for this Site" is now in the site
+      information and not under the Torbutton anymore.
+    - Delete unused images.
+
+ -- Tails developers <tails@boum.org>  Tue, 04 Sep 2018 12:15:43 +0000
 
 tails (3.9~rc1) unstable; urgency=medium
 
