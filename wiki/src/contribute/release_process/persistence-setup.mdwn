@@ -37,7 +37,7 @@ commit all files that need to be:
 
     perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-persistence-setup && \
     perl -pi -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," bin/tails-persistence-setup && \
-    git commit bin/tails-persistence-setup -m "tails-persistent-setup $VERSION"
+    git commit bin/tails-persistence-setup -m "tails-persistence-setup $VERSION"
 
 Optionally, run the upstream test suite (it is run as part of the
 Debian package build later, but running it early may avoid publishing
@@ -53,7 +53,7 @@ Build an upstream tarball, tag the release, move the tarball out of
 the build repository and cleanup:
 
     dzil build && \
-       git tag -s $VERSION -m "tails-persistent-setup $VERSION" && \
+       git tag -s $VERSION -m "tails-persistence-setup $VERSION" && \
        mv Tails-Persistence-*.tar.gz .. && \
        rm -rf Tails-Persistence-* .build po/*.mo
 
