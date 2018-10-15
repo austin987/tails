@@ -110,18 +110,6 @@ Set these environment variables accordingly:
     fi && \
     IUK_CHECKOUT_TAG="debian/${IUK_VERSION}"
 
-# Download published products
-
-    mkdir -p "${PUBLISHED_ARTIFACTS:?}" && \
-    cd "${PUBLISHED_ARTIFACTS:?}" && \
-    mkdir tails-amd64-${VERSION:?} && \
-    cd tails-amd64-${VERSION:?} && \
-    wget http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso && \
-    cd .. && \
-    for old_version in ${IUK_SOURCE_VERSIONS}; do
-        wget http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/Tails_amd64_${old_version}_to_${VERSION:?}.iuk
-    done
-
 # Obtain needed old Tails releases
 
     cd "${ISOS_CHECKOUT:?}" && \
@@ -184,14 +172,28 @@ potentially reporting multiple different issues.
     cd "${ISOS:?}" && \
     sha512sum -c "${SHA512SUMS:?}"
 
+## Wait for the release to be published
+
+The following steps have to be done only after the release has been made public.
+
+## Download published products
+
+    mkdir -p "${PUBLISHED_ARTIFACTS:?}" && \
+    cd "${PUBLISHED_ARTIFACTS:?}" && \
+    mkdir tails-amd64-${VERSION:?} && \
+    cd tails-amd64-${VERSION:?} && \
+    wget http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso && \
+    cd .. && \
+    for old_version in ${IUK_SOURCE_VERSIONS}; do
+        wget http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/Tails_amd64_${old_version}_to_${VERSION:?}.iuk
+    done
+
 ## Verify published products
 
     cd "${PUBLISHED_ARTIFACTS:?}" && \
     sha512sum -c "${SHA512SUMS:?}"
 
 ## Verify IDF
-
-This step can only be done after the release has been made public.
 
 Examine the IDF by running:
 
@@ -208,8 +210,6 @@ and checking that it matches the output of the following command:
 Keep this output, you will need it below!
 
 ## Verify UDFs
-
-This step can only be done after the release has been made public.
 
 Examine each UDF by running:
 
