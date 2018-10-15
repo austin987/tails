@@ -97,68 +97,69 @@ Set these environment variables accordingly:
     git checkout "${RELEASE_BRANCH:?}" && \
     git merge "origin/${RELEASE_BRANCH:?}" && \
 
-# Obtain needed old Tails releases
-
-    cd "${ISOS_CHECKOUT:?}" && \
-    git annex sync && \
-    for old_version in ${IUK_SOURCE_VERSIONS:?}; do
-        tails_dir="tails-amd64-${old_version}" && \
-        git annex get "${tails_dir}" && \
-        cp --dereference --recursive "${tails_dir}" "${ISOS:?}"
-    done
-
-# Reproduce Tails
-
-## Fetch and verify the Git tag
-
-    cd "${TAILS_CHECKOUT:?}" && \
-    git fetch origin "${TAG}" && \
-    git tag -v "${TAG}"
-
-* If the last output is a "Good signature" for the expected tag, made by
-  Tails signing key, then we are good.
-
-* Otherwise, if you see _anything_ else, we're _not_ good; immediately
-  contact the RM and <tails@boum.org>! Proceeding with the rest of the steps
-  are pointless in this case, so await instruction.
+# Build your own products
 
 ## Build your own ISO image
 
-    cd "${TAILS_CHECKOUT:?}" && \
-    git checkout "${TAG:?}" && \
-    git submodule update --init && \
-    export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
-    rake build && \
-    mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-    mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso*" \
-       "${ISOS:?}/tails-amd64-${VERSION:?}/"
+1. Fetch and verify the Git tag:
 
-## Refresh iuk and perl5lib Git repos
+        cd "${TAILS_CHECKOUT:?}" && \
+        git fetch origin "${TAG}" && \
+        git tag -v "${TAG}"
 
-    PERL5LIB_VERSION="$(awk '/^tails-perl5lib\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
-    if [ -z "${PERL5LIB_VERSION}" ]; then
-        echo 'Failed to determine PERL5LIB_VERSION, aborting' && \
-        false
-    fi && \
-    PERL5LIB_CHECKOUT_TAG="debian/${PERL5LIB_VERSION}" && \
-    IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
-    if [ -z "${IUK_VERSION}" ]; then
-        echo 'Failed to determine IUK_VERSION, aborting' && \
-        false
-    fi && \
-    IUK_CHECKOUT_TAG="debian/${IUK_VERSION}"
-    cd "${PERL5LIB_CHECKOUT:?}" && \
-    git fetch && \
-    git checkout "${PERL5LIB_CHECKOUT_TAG:?}" && \
-    cd "${IUK_CHECKOUT:?}" && \
-    git fetch && \
-    git checkout "${IUK_CHECKOUT_TAG:?}"
+   If the last output is a "Good signature" for the expected tag, made by
+   Tails signing key, then we are good.
+   Otherwise, if you see _anything_ else, we're _not_ good; immediately
+   contact the RM and <tails@boum.org>! Proceeding with the rest of the steps
+   are pointless in this case, so await instruction.
+
+2. Build an ISO image:
+
+        cd "${TAILS_CHECKOUT:?}" && \
+        git checkout "${TAG:?}" && \
+        git submodule update --init && \
+        export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
+        rake build && \
+        mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
+        mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso*" \
+           "${ISOS:?}/tails-amd64-${VERSION:?}/"
 
 ## Build your own IUKs
 
-Follow the [[Build the Incremental Upgrade
-Kits|contribute/release_process/#prepare-iuk]] instructions. Note that
-the value of `SOURCE_DATE_EPOCH` set above is needed!
+1. Obtain needed old Tails releases
+
+        cd "${ISOS_CHECKOUT:?}" && \
+        git annex sync && \
+        for old_version in ${IUK_SOURCE_VERSIONS:?}; do
+            tails_dir="tails-amd64-${old_version}" && \
+            git annex get "${tails_dir}" && \
+            cp --dereference --recursive "${tails_dir}" "${ISOS:?}"
+        done
+
+2. Set your `iuk` and `perl5lib` Git checkouts to the desired state:
+
+           PERL5LIB_VERSION="$(awk '/^tails-perl5lib\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
+           if [ -z "${PERL5LIB_VERSION}" ]; then
+               echo 'Failed to determine PERL5LIB_VERSION, aborting' && \
+               false
+           fi && \
+           PERL5LIB_CHECKOUT_TAG="debian/${PERL5LIB_VERSION}" && \
+           IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
+           if [ -z "${IUK_VERSION}" ]; then
+               echo 'Failed to determine IUK_VERSION, aborting' && \
+               false
+           fi && \
+           IUK_CHECKOUT_TAG="debian/${IUK_VERSION}"
+           cd "${PERL5LIB_CHECKOUT:?}" && \
+           git fetch && \
+           git checkout "${PERL5LIB_CHECKOUT_TAG:?}" && \
+           cd "${IUK_CHECKOUT:?}" && \
+           git fetch && \
+           git checkout "${IUK_CHECKOUT_TAG:?}"
+
+3. Follow the [[Build the Incremental Upgrade
+   Kits|contribute/release_process/#prepare-iuk]] instructions. Note that
+   the value of `SOURCE_DATE_EPOCH` set above is needed!
 
 # Verification
 
