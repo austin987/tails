@@ -1,0 +1,47 @@
+diff --git a/usr/lib/python2.7/dist-packages/tails_installer/gui.py b/usr/lib/python2.7/dist-packages/tails_installer/gui.py
+index 7cec7dc2..ed3def84 100755
+--- a/usr/lib/python2.7/dist-packages/tails_installer/gui.py
++++ b/usr/lib/python2.7/dist-packages/tails_installer/gui.py
+@@ -696,17 +696,20 @@
+         dialog.run()
+         self.close()
+ 
+-    def show_confirmation_dialog(self, title, message, warning):
++    def show_confirmation_dialog(self, title, message, warning,
++                                 label_string=_("Install")):
+         if (warning):
+             buttons=Gtk.ButtonsType.OK
+         else:
+-            buttons=Gtk.ButtonsType.YES_NO
++            buttons=Gtk.ButtonsType.NONE
+         dialog = Gtk.MessageDialog(parent=self,
+                                    flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                                    message_type=Gtk.MessageType.QUESTION,
+                                    buttons=buttons,
+                                    message_format=title)
+         dialog.format_secondary_text(message)
++        dialog.add_button(_("Cancel"), Gtk.ResponseType.CANCEL);
++        dialog.add_button(label_string, Gtk.ResponseType.YES);
+         reply = dialog.run()
+         dialog.hide()
+         if (reply == Gtk.ResponseType.YES):
+@@ -758,7 +761,8 @@
+                                     if self.live.drive['parent_size']
+                                     else self.live.drive['size'])
+                           },
+-                          False):
++                          False,
++                          label_string=_("Install")):
+                     self.confirmed = True
+                 else:
+                     return
+@@ -780,7 +784,8 @@
+                 'description': description,
+                 'persistence_message': persistence_message,
+             }
+-            if self.show_confirmation_dialog(_("Confirm the target USB stick"), msg, False):
++            if self.show_confirmation_dialog(_("Confirm the target USB stick"), \
++               msg, False, label_string=_("Upgrade")):
+                 # The user has confirmed that they wish to overwrite their
+                 # existing Live OS.  Here we delete it first, in order to
+                 # accurately calculate progress.
