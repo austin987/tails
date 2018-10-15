@@ -81,13 +81,12 @@ called `SHA512SUMS.txt`.
 Set these environment variables accordingly:
 
 * `ISOS_CHECKOUT`: path to your Tails ISO history repo checout.
-* `PACKAGES_FILE`: path to the `.packages` file for this release
-  (should be attached to the "Testing Tails `$VERSION`" email you have
-  in your inbox)
+* `PACKAGES_FILE="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.packages"`
 * `PUBLISHED_ARTIFACTS`: some _new_ directory where you can download
   gigabytes of data to.
 * `SHA512SUMS`: the path of the `SHA512SUMS.txt` file from above.
 * `TAILS_CHECKOUT`: path to your Tails Git repo checkout.
+
 
 ## Derived environment variables
 
@@ -97,18 +96,6 @@ Set these environment variables accordingly:
     git fetch && \
     git checkout "${RELEASE_BRANCH:?}" && \
     git merge "origin/${RELEASE_BRANCH:?}" && \
-    PERL5LIB_VERSION="$(awk '/^tails-perl5lib\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
-    if [ -z "${PERL5LIB_VERSION}" ]; then
-        echo 'Failed to determine PERL5LIB_VERSION, aborting' && \
-        false
-    fi && \
-    PERL5LIB_CHECKOUT_TAG="debian/${PERL5LIB_VERSION}" && \
-    IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
-    if [ -z "${IUK_VERSION}" ]; then
-        echo 'Failed to determine IUK_VERSION, aborting' && \
-        false
-    fi && \
-    IUK_CHECKOUT_TAG="debian/${IUK_VERSION}"
 
 # Obtain needed old Tails releases
 
@@ -119,15 +106,6 @@ Set these environment variables accordingly:
         git annex get "${tails_dir}" && \
         cp --dereference --recursive "${tails_dir}" "${ISOS:?}"
     done
-
-# Refresh iuk and perl5lib Git repos
-
-    cd "${PERL5LIB_CHECKOUT:?}" && \
-    git fetch && \
-    git checkout "${PERL5LIB_CHECKOUT_TAG:?}" && \
-    cd "${IUK_CHECKOUT:?}" && \
-    git fetch && \
-    git checkout "${IUK_CHECKOUT_TAG:?}"
 
 # Reproduce Tails
 
@@ -152,8 +130,29 @@ Set these environment variables accordingly:
     export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
     rake build && \
     mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-    mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso" \
+    mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso*" \
        "${ISOS:?}/tails-amd64-${VERSION:?}/"
+
+# Refresh iuk and perl5lib Git repos
+
+    PERL5LIB_VERSION="$(awk '/^tails-perl5lib\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
+    if [ -z "${PERL5LIB_VERSION}" ]; then
+        echo 'Failed to determine PERL5LIB_VERSION, aborting' && \
+        false
+    fi && \
+    PERL5LIB_CHECKOUT_TAG="debian/${PERL5LIB_VERSION}" && \
+    IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \
+    if [ -z "${IUK_VERSION}" ]; then
+        echo 'Failed to determine IUK_VERSION, aborting' && \
+        false
+    fi && \
+    IUK_CHECKOUT_TAG="debian/${IUK_VERSION}"
+    cd "${PERL5LIB_CHECKOUT:?}" && \
+    git fetch && \
+    git checkout "${PERL5LIB_CHECKOUT_TAG:?}" && \
+    cd "${IUK_CHECKOUT:?}" && \
+    git fetch && \
+    git checkout "${IUK_CHECKOUT_TAG:?}"
 
 ## Reproduce IUKs
 
