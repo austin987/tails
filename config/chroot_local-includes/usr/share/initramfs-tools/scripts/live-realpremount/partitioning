@@ -64,7 +64,7 @@ fi
 
 # Get new system partition size
 DEVICE_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
-DEVICE_SIZE_IN_MiB=$(expr ${DEVICE_SIZE} / 2 / 1024)
+DEVICE_SIZE_IN_MiB=$((${DEVICE_SIZE} / 2 / 1024))
 if [ "${DEVICE_SIZE_IN_MiB}" -lt 7200 ]; then
 	log_warning_msg "Not growing system partition because device is too small (< 7200 MiB)"
 	# Perform the other operations (fix GPT backup header and set random GUID)
