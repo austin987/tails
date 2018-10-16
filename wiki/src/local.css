@@ -1,11 +1,11 @@
 /*
 Tails custom colors: see tails_ticket#14836
-dark purple: #3a2354
-medium purple (logo): #56347c
-light purple: #a173d2
-dark green: #53b351
-medium green: #68bd4f (currently unused)
-light green: #ccaaff
+dark purple: #3a2354 hsl(268,58,33)
+medium purple (logo): #56347c hsl(268,58,49)
+light purple: #9f73d2 hsl(269,45,82)
+dark green: #276426 hsl(119,62,39)
+medium green (buttons): #53b351 hsl(119,55,70)
+light green: #73d171 hsl(119,46,82)
 
 Tails font style:
 Some text sizing use ems with decimals to calculate round pixel numbers by
@@ -23,7 +23,6 @@ Table of Content:
   - Layout
   - Sidebar
   - Columns
-  - Bullets
   - Download Buttons
   - Toggleable
   - Action Menu
@@ -38,12 +37,25 @@ Table of Content:
 /* Load RTL stylesheet */
 @import url("local.rtl.css");
 
+/* Load stylesheet for donation campaign */
+@import url("donate-banner.css");
+
 /* Fonts */
 
 @font-face { font-family: "Source Sans Pro Regular"; src: url("lib/SourceSansPro-Regular.ttf"); }
 @font-face { font-family: "Source Code Pro Regular"; src: url("lib/SourceCodePro-Regular.ttf"); }
 
 /* Base */
+
+/* Include padding and border in width calculations (like Bootstrap does) */
+
+*,
+*:before,
+*:after {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
 
 html {
     font-size: 16px !important;
@@ -75,10 +87,6 @@ body {
  * don't brake the rythm when they overlap. We set all top margin to 0. */
 p {
     margin: 0 0 1.5em 0; /* 14×1.5=21px=λ */
-}
-
-span.title {
-    font-family: "Source Sans Pro Regular", "DejaVu Sans", "Verdana", sans-serif;
 }
 
 h1, h2, h3, .sidebar {
@@ -149,7 +157,7 @@ th, td {
 }
 
 th {
-  background: #a173d2;
+  background: #9f73d2;
 }
 
 tr:nth-child(odd) {
@@ -231,7 +239,6 @@ ol, ul {
 
 #editcontent {
     width: auto;
-    box-sizing: border-box;
     max-width: 100%;
 }
 
@@ -240,7 +247,7 @@ ol, ul {
 .page {
     margin:0 auto;
     padding: 0 2em 2em 2em;
-    max-width:930px;
+    max-width:986px;
     position:relative;
     border :0px solid black;
     -moz-box-shadow: 3px 3px 5px #ccc;
@@ -249,8 +256,9 @@ ol, ul {
     background: white;
 }
 
-.header {
-    font-size: 1em; /* override style.css */
+div.header { /* override style.css */
+    font-size: 1em;
+    font-weight: normal;
 }
 
 .banner {
@@ -261,7 +269,7 @@ ol, ul {
     box-shadow: 3px 3px 5px #ccc;
     padding: 0 2em;
     margin: 0 auto;
-    max-width: 930px;
+    max-width: 986px;
     border: none;
 }
 
@@ -286,9 +294,9 @@ ol, ul {
 }
 
 span.title {
-    font-size: 2em;
-    line-height: 1;
-    font-weight: normal;
+    font-family: "Source Sans Pro Regular", "DejaVu Sans", "Verdana", sans-serif;
+    font-size: 2.8em;
+    line-height: 1em;
     display: block;
     margin: 1em 0;
     color: #56347c;
@@ -297,11 +305,18 @@ span.title {
     margin-left: -28px;
 }
 
+div.header span.date {
+    padding-left: 20px;
+    position: relative;
+    top: -2.5em;
+    margin-bottom: 1em;
+    font-style: italic;
+}
+
 .home-section {
     display: inline-block;
     width: 32%;
     vertical-align: top;
-    box-sizing: border-box;
 }
 
 @media all and (max-width: 480px) {
@@ -357,10 +372,6 @@ span.title {
     -moz-border-radius: 0.5em;
     -webkit-border-radius: 0.5em;
     border-radius: 0.5em;
-    -moz-box-sizing: border-box;
-    -o-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
     -webkit-transition: .3s ease-in-out;
     -moz-transition: .3s ease-in-out;
     transition: .3s linear;
@@ -536,7 +547,7 @@ div.inlinepage {
 
 .searchform {
     margin: 0 auto;
-    max-width: 930px;
+    max-width: 986px;
     position: relative;
 }
 
@@ -714,7 +725,6 @@ p.center {
 div.blocks {
     display: inline-block;
     margin: 0 5% 0 0;
-    box-sizing: border-box;
     text-align: center;
     vertical-align: top;
 }
@@ -748,29 +758,6 @@ div.blocks img {
     max-width: 100%;
     height: auto
 }
-
-/* Bullets */
-
-.bullet-number-one, .bullet-number-two, .bullet-number-three,
-.bullet-number-four, .bullet-number-five, .bullet-number-six,
-.bullet-number-seven, .bullet-number-eight, .bullet-number-nine {
-    position: relative;
-    left: -20px;
-    padding-left: 60px;
-    min-height: 52px;
-    padding-top: 12px;
-    margin-top: 42px;
-}
-.bullet-number-one   { background: url('lib/bullet/1.png') no-repeat top left; }
-.bullet-number-two   { background: url('lib/bullet/2.png') no-repeat top left; }
-.bullet-number-three { background: url('lib/bullet/3.png') no-repeat top left; }
-.bullet-number-four  { background: url('lib/bullet/4.png') no-repeat top left; }
-.bullet-number-five  { background: url('lib/bullet/5.png') no-repeat top left; }
-.bullet-number-six   { background: url('lib/bullet/6.png') no-repeat top left; }
-.bullet-number-seven { background: url('lib/bullet/7.png') no-repeat top left; }
-.bullet-number-eight { background: url('lib/bullet/8.png') no-repeat top left; }
-.bullet-number-nine  { background: url('lib/bullet/9.png') no-repeat top left; }
-.bullet-number-zero  { background: url('lib/bullet/0.png') no-repeat top left; }
 
 /* Download Buttons */
 
@@ -858,7 +845,7 @@ span.revert {
     border-bottom: none;
     display:none;
     text-align: right;
-    width: 930px;
+    width: 986px;
     max-width: 100%;
     height: auto;
 }
@@ -893,7 +880,7 @@ span.revert {
 }
 
 .pageheader .actions:hover ul li:hover {
-    border-bottom:2px solid #451E6F;
+    border-bottom:2px solid #451e6f;
     text-decoration:none;
     background:#EEEEEE;
 
@@ -914,11 +901,11 @@ blockquote > p {
     border-left:2px solid #53b351;
     -moz-transition:all 0.1s ease-out;
     padding-left:5px;
-    background:#F5F5F5;
+    background:#f5f5f5;
 }
 
 blockquote > p:hover {
-    background:#EEEEEE;
+    background:#eeeeee;
 }
 
 #crumbs ul, #crumbs li {
@@ -928,7 +915,7 @@ blockquote > p:hover {
 }
 
 #crumbs {
-    border-bottom:1px solid #DEDEDE;
+    border-bottom:1px solid #dedede;
     margin: 0 -2em;
     padding-right:2em;
     max-width:110%;
@@ -939,7 +926,6 @@ blockquote > p:hover {
     font-size: 0.9rem;
     line-height: 2.2em;
     height: 33px;
-    box-sizing: border-box;
 }
 
 #crumbs li {
@@ -1245,7 +1231,6 @@ pre.list-key {
     display: inline-block;
     padding: 0.5em 1em 0.5em 0.5em;
     width: 18em; /* sidebar - padding */
-    box-sizing-border-box;
 }
 
 #tor_check a img {
@@ -1302,16 +1287,12 @@ div.contribute-role img {
 /* Highlight */
 
 div#highlight {
-  border: 5px solid #56347C;
+  border: 5px solid #56347c;
   width: 44em;
   padding: 0.5em 1em;
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
   border-radius: 0.5em;
-  -moz-box-sizing: border-box;
-  -o-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
 }
 div#highlight p {
   margin: 0.5em 0;
@@ -1329,21 +1310,13 @@ div#highlight p {
   -moz-border-radius: 0.5em;
   -webkit-border-radius: 0.5em;
   border-radius: 0.5em;
-  -moz-box-sizing: border-box;
-  -o-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  text-decoration: none;
   padding: 0.5em 1em;
-  background: #56347c url('lib/donate.png') no-repeat scroll 10px 50% !important;
+  background: #53b351 url('lib/donate.png') no-repeat scroll 10px 50% !important;
   font-size: 26px;
   padding-left: 70px;
   line-height: 1em;
   font-weight: normal;
-}
-
-#donate-button a:hover {
-  background-color: #56347c;
+  color: black;
 }
 
 /* Partners page */
