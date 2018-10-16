@@ -15,7 +15,7 @@ esac
 
 # Print executed commands for debugging
 if [ -n "$debug" ]; then
-   set -x
+	set -x
 fi
 
 . /scripts/functions
@@ -26,25 +26,25 @@ success=
 i=0
 while [ "$i" -lt 300 ]; do
 	if [ -b "/dev/disk/by-uuid/${FSUUID}" ]; then
-	  success=1
-	  break
+		success=1
+		break
 	fi
 	sleep 0.2
 	i="$(($i + 1))"
 done
 
 if [ -n "$success" ]; then
-  log_end_msg
+	log_end_msg
 else
-  log_failure_msg "Reached timeout waiting for system partition. Skipping partitioning."
-  exit 1
+	log_failure_msg "Reached timeout waiting for system partition. Skipping partitioning."
+	exit 1
 fi
 
 
 
 # Get parent device
 # XXX: We assume here that the parent device is also ready if the
-#      system partition is.
+# system partition is.
 SYSTEM_PARTITION=$(readlink -f /dev/disk/by-uuid/${FSUUID})
 PARENT_PATH=$(udevadm info --query=property --name=${SYSTEM_PARTITION} \
 	| grep ID_PATH= | sed s/ID_PATH=//)
@@ -72,9 +72,9 @@ if [ ${TOTAL_SIZE_IN_MiB} -lt 7200 ]; then
 	sgdisk --move-second-header --disk-guid=R ${PARENT_DEVICE}
 	exit 0
 elif [ ${TOTAL_SIZE_IN_MiB} -lt 14500 ]; then
-    SIZE=4096M
+	SIZE=4096M
 else
-    SIZE=8192M
+	SIZE=8192M
 fi
 
 
