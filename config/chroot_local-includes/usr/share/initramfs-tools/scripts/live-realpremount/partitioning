@@ -63,17 +63,17 @@ fi
 
 
 # Get new system partition size
-TOTAL_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
-TOTAL_SIZE_IN_MiB=$(expr ${TOTAL_SIZE} / 2 / 1024)
-if [ "${TOTAL_SIZE_IN_MiB}" -lt 7200 ]; then
+DEVICE_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
+DEVICE_SIZE_IN_MiB=$(expr ${DEVICE_SIZE} / 2 / 1024)
+if [ "${DEVICE_SIZE_IN_MiB}" -lt 7200 ]; then
 	log_warning_msg "Not growing system partition because device is too small (< 7200 MiB)"
 	# Perform the other operations (fix GPT backup header and set random GUID)
 	sgdisk --move-second-header --disk-guid=R "${PARENT_DEVICE}"
 	exit 0
-elif [ "${TOTAL_SIZE_IN_MiB}" -lt 14500 ]; then
-	SIZE=4096M
+elif [ "${DEVICE_SIZE_IN_MiB}" -lt 14500 ]; then
+	SYSTEM_PARTITION_SIZE=4096M
 else
-	SIZE=8192M
+	SYSTEM_PARTITION_SIZE=8192M
 fi
 
 
@@ -81,7 +81,7 @@ fi
 # * Move GPT backup header to the end of the device
 # * Set a random disk GUID
 # * Delete the old system partition
-# * Create a new system partition of size ${SIZE}
+# * Create a new system partition of size ${SYSTEM_PARTITION_SIZE}
 # * Set the partition label to "Tails"
 # * Set the following attributes on the system partition:
 #   0: system partition
@@ -94,7 +94,7 @@ sgdisk \
 	--move-second-header \
 	--disk-guid=R \
 	--delete=1 \
-	--new=1:0:+"${SIZE}" \
+	--new=1:0:+"${SYSTEM_PARTITION_SIZE}" \
 	--change-name=1:Tails \
 	--attributes=1:set:0  \
 	--attributes=1:set:2  \
