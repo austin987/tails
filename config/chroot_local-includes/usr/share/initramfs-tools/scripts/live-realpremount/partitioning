@@ -45,15 +45,15 @@ fi
 # Get parent device
 # XXX: We assume here that the parent device is also ready if the
 # system partition is.
-SYSTEM_PARTITION=$(readlink -f /dev/disk/by-uuid/${FSUUID})
-PARENT_PATH=$(udevadm info --query=property --name=${SYSTEM_PARTITION} \
+SYSTEM_PARTITION=$(readlink -f "/dev/disk/by-uuid/${FSUUID}")
+PARENT_PATH=$(udevadm info --query=property --name="${SYSTEM_PARTITION}" \
 	| sed -n '/^ID_PATH=/ s/^ID_PATH=// p')
-PARENT_DEVICE=$(readlink -f /dev/disk/by-path/${PARENT_PATH})
+PARENT_DEVICE=$(readlink -f "/dev/disk/by-path/${PARENT_PATH}")
 DEVICE_NAME=$(basename "${PARENT_DEVICE}")
 
 
 # Check if this is first boot
-GUID=$(sgdisk --print ${PARENT_DEVICE} \
+GUID=$(sgdisk --print "${PARENT_DEVICE}" \
 	| sed -n '/^Disk identifier (GUID)/ s/^Disk identifier (GUID): // p')
 
 if [ ${GUID} != "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3" ]; then
@@ -65,12 +65,12 @@ fi
 # Get new system partition size
 TOTAL_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
 TOTAL_SIZE_IN_MiB=$(expr ${TOTAL_SIZE} / 2 / 1024)
-if [ ${TOTAL_SIZE_IN_MiB} -lt 7200 ]; then
+if [ "${TOTAL_SIZE_IN_MiB}" -lt 7200 ]; then
 	log_warning_msg "Not growing system partition because device is too small (< 7200 MiB)"
 	# Perform the other operations (fix GPT backup header and set random GUID)
-	sgdisk --move-second-header --disk-guid=R ${PARENT_DEVICE}
+	sgdisk --move-second-header --disk-guid=R "${PARENT_DEVICE}"
 	exit 0
-elif [ ${TOTAL_SIZE_IN_MiB} -lt 14500 ]; then
+elif [ "${TOTAL_SIZE_IN_MiB}" -lt 14500 ]; then
 	SIZE=4096M
 else
 	SIZE=8192M
@@ -94,14 +94,14 @@ sgdisk \
 	--move-second-header \
 	--disk-guid=R \
 	--delete=1 \
-	--new=1:0:+${SIZE} \
+	--new=1:0:+"${SIZE}" \
 	--change-name=1:Tails \
 	--attributes=1:set:0  \
 	--attributes=1:set:2  \
 	--attributes=1:set:60 \
 	--attributes=1:set:62 \
 	--attributes=1:set:63 \
-	${PARENT_DEVICE}
+	"${PARENT_DEVICE}"
 log_end_msg
 
 # Tell the kernel to reload the partition table
