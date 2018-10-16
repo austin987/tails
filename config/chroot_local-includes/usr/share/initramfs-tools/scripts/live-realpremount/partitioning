@@ -47,15 +47,14 @@ fi
 # system partition is.
 SYSTEM_PARTITION=$(readlink -f /dev/disk/by-uuid/${FSUUID})
 PARENT_PATH=$(udevadm info --query=property --name=${SYSTEM_PARTITION} \
-	| grep ID_PATH= | sed s/ID_PATH=//)
+	| sed -n '/^ID_PATH=/ s/^ID_PATH=// p')
 PARENT_DEVICE=$(readlink -f /dev/disk/by-path/${PARENT_PATH})
 DEVICE_NAME=$(basename "${PARENT_DEVICE}")
 
 
 # Check if this is first boot
 GUID=$(sgdisk --print ${PARENT_DEVICE} \
-	| grep "Disk identifier" \
-	| sed 's/Disk identifier (GUID): \(.*\)/\1/')
+	| sed -n '/^Disk identifier (GUID)/ s/^Disk identifier (GUID): // p')
 
 if [ ${GUID} != "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3" ]; then
 	_log_msg "Skipping partitioning because this is not the first boot"
