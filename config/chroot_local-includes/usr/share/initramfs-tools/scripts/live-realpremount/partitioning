@@ -112,3 +112,8 @@ log_end_msg
 
 # Tell the kernel to reload the partition table
 partprobe
+
+# Grow the filesystem
+# fatresize uses "Mi" for MiB, so we have to append an "i"
+FS_SIZE="${SYSTEM_PARTITION_SIZE}"i
+fatresize --size="${FS_SIZE}" "${SYSTEM_PARTITION}"
