@@ -44,18 +44,20 @@ The plan is to do this in a _partitioning_ script in the initramfs. There are di
 
 The initramfs in Tails is customized by [_live-boot_](http://manpages.ubuntu.com/manpages/xenial/man7/live-boot.7.html), which is poorly documented. 
 
-Some notes about the initramfs/live-boot process:
+### Some notes about the initramfs/live-boot process
 
 This is how the scripts in `/scripts/live-realpremount` are executed:
-* initramfs-tools calls mount `mountroot()`
-* `/scripts/live` line 12 in `mountroot()`
-* `9990-main.sh` line 124 in `Live ()`
-* `9990-overlay.sh` line 85 in `setup_unionfs ()`
+
+    initramfs-tools calls mountroot ()
+    /scripts/live line 12 in mountroot ()
+    9990-main.sh line 124 in Live ()
+    9990-overlay.sh line 85 in setup_unionfs ()
 
 This is how `/dev/sda1` is mounted:
-* `9990-main.sh` line 72 in `Live ()`
-* `9990-misc-helpers.sh` line 268 in `find_livefs ()`
-* `9990-misc-helpers.sh` line 128 in `check_dev ()`
+
+    9990-main.sh line 72 in Live ()
+    9990-misc-helpers.sh` line 268 in find_livefs ()
+    9990-misc-helpers.sh` line 128 in check_dev ()
 
 `/dev/sda1` is mounted before the scripts in `/scripts/live-realpremount` are executed.
 
