@@ -472,9 +472,9 @@ def apt_hook_post():
         packages = json.load(f)
     os.remove(ASP_STATE_PACKAGES)
 
-    additional_packages_names = map(
+    additional_packages_names = set(map(
         filter_package_details,
-        get_additional_packages(search_new_persistence=True))
+        get_additional_packages(search_new_persistence=True)))
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
