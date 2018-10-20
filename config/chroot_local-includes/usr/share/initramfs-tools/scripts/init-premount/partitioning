@@ -113,7 +113,17 @@ log_end_msg
 # Tell the kernel to reload the partition table
 partprobe
 
+# fatresize overwrites the VBR, so we have to back it up to be able to
+# restore the boot code later
+dd if="${SYSTEM_PARTITION}" of=/tmp/vbr bs=512 count=1
+
 # Grow the filesystem
 # fatresize uses "Mi" for MiB, so we have to append an "i"
 FS_SIZE="${SYSTEM_PARTITION_SIZE}"i
 fatresize --size="${FS_SIZE}" "${SYSTEM_PARTITION}"
+
+# Restore boot code overwritten by fatresize
+dd if=/tmp/vbr of="${SYSTEM_PARTITION}" bs=1 skip=90 seek=90 count=414
+
+# Restore JMP instruction which jumps to the bootcode
+dd if=/tmp/vbr of="${SYSTEM_PARTITION}" bs=3 count=1
