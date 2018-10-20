@@ -472,17 +472,18 @@ def apt_hook_post():
         packages = json.load(f)
     os.remove(ASP_STATE_PACKAGES)
 
-    additional_packages_names = set(map(
-        filter_package_details,
-        get_additional_packages(search_new_persistence=True)))
+    additional_packages_names = {
+        filter_package_details(pkg) for pkg in get_additional_packages(search_new_persistence=True)
+    }
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
     # as additional software
-    new_manually_installed_packages = set(filter(
-        lambda pkg: not apt_cache[pkg].is_auto_installed
-                    and pkg not in additional_packages_names,    # NOQA: E131
-        set(packages["installed"])))
+    new_manually_installed_packages = {
+        pkg for pkg in packages["installed"] if not apt_cache[pkg].is_auto_installed and
+                                                pkg not in additional_packages_names
+    }
+
     if new_manually_installed_packages:
         handle_installed_packages(new_manually_installed_packages)
 
