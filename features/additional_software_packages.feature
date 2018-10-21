@@ -10,7 +10,7 @@ Feature: Additional software packages
     And I update APT using apt
     When I install "sslh" using apt
     Then I am notified I can not use ASP for "sslh"
-    And I can open the documentation from the notification link
+    And I can open the ASP documentation from the notification link
 
   @check_tor_leaks
   Scenario: I can set up and use ASP when I install a package in a Tails that has no persistent partition
