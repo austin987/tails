@@ -113,7 +113,7 @@ When /^I start the computer$/ do
   post_vm_start_hook
 end
 
-Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
+Given /^I start Tails( from DVD)?( with network unplugged)?( and genuine APT sources)?( and I login)?$/ do |dvd_boot, network_unplugged, keep_apt_sources, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
   if network_unplugged
     step "the network is unplugged"
@@ -121,7 +121,11 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
     step "the network is plugged"
   end
   step "I start the computer"
-  step "the computer boots Tails"
+  if keep_apt_sources
+    step "the computer boots Tails with genuine APT sources"
+  else
+    step "the computer boots Tails"
+  end
   if do_login
     step "I log in to a new session"
     if network_unplugged
