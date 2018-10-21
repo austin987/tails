@@ -13,8 +13,8 @@ Feature: Additional software packages
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
     And I update APT using apt
     When I install "sslh" using apt
-    Then I am notified I can not use ASP for "sslh"
-    And I can open the ASP documentation from the notification link
+    Then I am notified I can not use Additional Software persistence for "sslh"
+    And I can open the Additional Software documentation from the notification link
 
   Scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
@@ -26,11 +26,11 @@ Feature: Additional software packages
     And available upgrades have been checked
     And I update APT using apt
     And I install "sslh" using apt
-    Then I am proposed to create an ASP persistence for the "sslh" package
-    And I create the ASP persistence
+    Then I am proposed to create an Additional Software persistence for the "sslh" package
+    And I create the Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    And the ASP persistence is correctly configured for package "sslh"
+    And the Additional Software persistence is correctly configured for package "sslh"
     And the additional software package installation service has started
     And the package "sslh" is installed
 
@@ -51,7 +51,7 @@ Feature: Additional software packages
     And I start Synaptic
     And I update APT using Synaptic
     When I install "cowsay" using Synaptic
-    And I confirm when I am asked if I want to add "cowsay" to ASP configuration
+    And I confirm when I am asked if I want to add "cowsay" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -62,7 +62,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "cowsay" using apt
-    And I confirm when I am asked if I want to remove "cowsay" from ASP configuration
+    And I confirm when I am asked if I want to remove "cowsay" from Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -73,7 +73,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "sslh" using apt
-    And I deny when I am asked if I want to remove "sslh" from ASP configuration
+    And I deny when I am asked if I want to remove "sslh" from Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -84,7 +84,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "sl" using apt
-    And I deny when I am asked if I want to add "sl" to ASP configuration
+    And I deny when I am asked if I want to add "sl" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -96,7 +96,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     # This step installs an old cowsay from a custom APT source
     When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
-    And I confirm when I am asked if I want to add "cowsay" to ASP configuration
+    And I confirm when I am asked if I want to add "cowsay" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
@@ -120,7 +120,7 @@ Feature: Additional software packages
     And the additional software package installation service has started
     And the package "cowsay" is installed
     And I start "Additional Software" via GNOME Activities Overview
-    And I remove "cowsay" from the list of ASP packages
+    And I remove "cowsay" from the list of additional software
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -131,7 +131,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
-    And I confirm when I am asked if I want to add "cowsay" to ASP configuration
+    And I confirm when I am asked if I want to add "cowsay" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
@@ -149,7 +149,7 @@ Feature: Additional software packages
     And all notifications have disappeared
     And available upgrades have been checked
     And I see the "The upgrade of your additional software failed" notification after at most 300 seconds
-    And I can open the ASP configuration from the notification
+    And I can open the Additional Software configuration window from the notification
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
@@ -165,7 +165,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "vrms" using apt
-    And I confirm when I am asked if I want to add "vrms" to ASP configuration
+    And I confirm when I am asked if I want to add "vrms" to Additional Software persistence
     And I remove the "vrms" deb file from the APT cache
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
@@ -173,5 +173,5 @@ Feature: Additional software packages
     And I log in to a new session
     And all notifications have disappeared
     Then I see the "The installation of your additional software failed" notification after at most 300 seconds
-    And I can open the ASP log file from the notification
+    And I can open the Additional Software log file from the notification
     And the package "vrms" is not installed

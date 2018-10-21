@@ -256,7 +256,7 @@ When /^I disable the first persistence preset$/ do
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
-Given /^I create a persistent partition( for ASP)?$/ do |asp|
+Given /^I create a persistent partition( for Additional Software)?$/ do |asp|
   @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)

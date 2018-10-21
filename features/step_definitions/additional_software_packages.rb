@@ -19,7 +19,7 @@ Then /^the additional software package (upgrade|installation) service has starte
   end
 end
 
-Then /^I am notified I can not use ASP for "([^"]*)"$/  do |package|
+Then /^I am notified I can not use Additional Software persistence for "([^"]*)"$/  do |package|
   title = "You could install #{package} automatically when starting Tails"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
@@ -29,24 +29,24 @@ Then /^I am notified that the installation succeeded$/  do
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I am proposed to create an ASP persistence for the "([^"]*)" package$/  do |package|
+Then /^I am proposed to create an Additional Software persistence for the "([^"]*)" package$/  do |package|
   title = "Add #{package} to your additional software?"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I create the ASP persistence$/  do
+Then /^I create the Additional Software persistence$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Create Persistent Storage', roleName: 'push button').click
-  step 'I create a persistent partition for ASP'
-  step 'The ASP persistence option is enabled'
+  step 'I create a persistent partition for Additional Software'
+  step 'The Additional Software persistence option is enabled'
   step 'I save and exit from the Persistence Wizard'
 end
 
-Then /^The ASP persistence option is enabled$/  do
+Then /^The Additional Software persistence option is enabled$/  do
   @screen.wait('ASPPersistenceSetupOptionEnabled', 60)
 end
 
-Then /^the ASP persistence is correctly configured for package "([^"]*)"$/ do |package|
+Then /^the Additional Software persistence is correctly configured for package "([^"]*)"$/ do |package|
   asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
   assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
@@ -55,14 +55,14 @@ Then /^the ASP persistence is correctly configured for package "([^"]*)"$/ do |p
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs '^.*_Packages$'").success?
 end
 
-Then /^"([^"]*)" is not part of ASP persistence configuration$/ do |package|
+Then /^"([^"]*)" is not part of Additional Software persistence configuration$/ do |package|
   asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
   assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
   $vm.execute("grep \"#{package}\" #{asp_conf}").stdout.empty?
 end
 
-When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|from) ASP configuration$/  do |decision, action, package, destination|
+When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|from) Additional Software persistence$/  do |decision, action, package, destination|
   gnome_shell = Dogtail::Application.new('gnome-shell')
   case action
   when "add"
@@ -72,37 +72,37 @@ When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|
     when "confirm"
       gnome_shell.child('Install Every Time', roleName: 'push button').click
       try_for(30) do
-        step "the ASP persistence is correctly configured for package \"#{package}\""
+        step "the Additional Software persistence is correctly configured for package \"#{package}\""
       end
     when "deny"
       gnome_shell.child('Install Only Once', roleName: 'push button').click
-      step "\"#{package}\" is not part of ASP persistence configuration"
+      step "\"#{package}\" is not part of Additional Software persistence configuration"
     end
   when "remove"
     title = "Remove #{package} from your additional software?"
     step "I see the \"#{title}\" notification after at most 300 seconds"
-    step "the ASP persistence is correctly configured for package \"#{package}\""
+    step "the Additional Software persistence is correctly configured for package \"#{package}\""
     case decision
     when "confirm"
       gnome_shell.child('Remove', roleName: 'push button').click
       try_for(30) do
-        step "\"#{package}\" is not part of ASP persistence configuration"
+        step "\"#{package}\" is not part of Additional Software persistence configuration"
       end
     when "deny"
       gnome_shell.child('Cancel', roleName: 'push button').click
-      step "the ASP persistence is correctly configured for package \"#{package}\""
+      step "the Additional Software persistence is correctly configured for package \"#{package}\""
     end
   end
 end
 
-Given /^I remove "([^"]*)" from the list of ASP packages$/  do |package|
+Given /^I remove "([^"]*)" from the list of additional software$/  do |package|
   @asp_gui = Dogtail::Application.new('tails-additional-software-config')
   installed_package = @asp_gui.child(package, roleName: 'label')
   installed_package.parent.parent.child('Close', roleName: 'push button').click
   @asp_gui.child('Question', roleName: 'alert').button('Remove').click
   deal_with_polkit_prompt(@sudo_password)
   try_for(120) do
-    step "\"#{package}\" is not part of ASP persistence configuration"
+    step "\"#{package}\" is not part of Additional Software persistence configuration"
   end
 end
 
@@ -122,7 +122,7 @@ When /^I remove the "([^"]*)" deb file from the APT cache$/  do |package|
   $vm.execute("rm -f /live/persistence/TailsData_unlocked/apt/cache/#{package}*.deb")
 end
 
-Then /^I can open the documentation from the notification link$/  do
+Then /^I can open the Additional Software documentation from the notification link$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Documentation', roleName: 'push button').click
   # For some reason the below two steps fail. Dogtail can not find the Firefox
@@ -140,13 +140,13 @@ Then /^ASP has been started for "([^"]*)" and shuts up because the persistence i
   try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
 end
 
-When /^I can open the ASP configuration from the notification$/ do
+When /^I can open the Additional Software configuration window from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Configure', roleName: 'push button').click
   try_for(60) { @asp = Dogtail::Application.new('tails-additional-software-config') }
 end
 
-Then /^I can open the ASP log file from the notification$/ do
+Then /^I can open the Additional Software log file from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Show Log', roleName: 'push button').click
   try_for(60) { @gedit = Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
