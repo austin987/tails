@@ -69,7 +69,7 @@ Feature: Additional software packages
     And the package "cowsay" is not installed
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: Packages I uninstall but don't want to remove from ASP are automatically installed
+  Scenario: Packages I remove but refuse removing from ASP are still automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "sslh" using apt
