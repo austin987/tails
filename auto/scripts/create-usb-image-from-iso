@@ -1,0 +1,382 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import logging
+from contextlib import contextmanager
+import re
+import tempfile
+import time
+import subprocess
+
+import gi
+gi.require_version('UDisks', '2.0')
+from gi.repository import UDisks, GLib, Gio
+
+
+logger = logging.getLogger(__name__)
+
+SYSTEM_PARTITION_FLAGS = (
+    1 << 0 |   # system partition
+    1 << 2 |   # legacy BIOS bootable
+    1 << 60 |  # read-only
+    1 << 62 |  # hidden
+    1 << 63    # do not automount
+)
+
+# EFI System Partition
+ESP_GUID = 'C12A7328-F81F-11D2-BA4B-00A0C93EC93B'
+
+PARTITION_LABEL = 'Tails'
+FILESYSTEM_LABEL = 'Tails'
+
+GET_UDISKS_OBJECT_TIMEOUT = 2
+WAIT_FOR_PARTITION_TIMEOUT = 2
+
+# Size that the system partition will be created larger than the contents of
+# the ISO, in MiB. This is must be enough to fit the partition table, reserved
+# sectors, and filesystem metadata.
+SYSTEM_PARTITION_ADDITIONAL_SIZE = 10
+
+SYSLINUX_COM32MODULES_DIR = '/usr/lib/syslinux/modules/bios'
+
+class ImageCreationError(Exception):
+    pass
+
+
+class ImageCreator(object):
+
+    def __init__(self, iso: str, image: str, free_space: int):
+        self.iso = iso
+        self.image = image
+        self.free_space = free_space
+        self._loop_device = None  # type: str
+        self._partition = None  # type: str
+        self.mountpoint = None  # type: str
+        self.system_partition_size = None  # type: int
+
+    @property
+    def loop_device(self) -> UDisks.ObjectProxy:
+        if not self._loop_device:
+            raise ImageCreationError("Loop device not set up")
+        return self.try_getting_udisks_object(self._loop_device)
+
+    @property
+    def partition(self) -> UDisks.ObjectProxy:
+        if not self._partition:
+            raise ImageCreationError("Partition not created")
+
+        return self.try_getting_udisks_object(self._partition)
+
+    def try_getting_udisks_object(self, object_path: str) -> UDisks.Object:
+        start_time = time.perf_counter()
+        while time.perf_counter() - start_time < GET_UDISKS_OBJECT_TIMEOUT:
+            with self.get_udisks_client() as udisks_client:
+                udisks_object = udisks_client.get_object(object_path)
+            if udisks_object:
+                return udisks_object
+            time.sleep(0.1)
+        raise ImageCreationError("Couldn't get UDisksObject for path '%s' (timeout: %s)" %
+                                 (object_path, GET_UDISKS_OBJECT_TIMEOUT))
+
+    @contextmanager
+    def get_udisks_client(self):
+        client = UDisks.Client().new_sync()
+        yield client
+        client.settle()
+
+    def create_image(self):
+        with self.extract_iso() as iso_extraction_dir:
+            self.system_partition_size = self.calculate_system_partition_size(iso_extraction_dir)
+            self.create_empty_image()
+
+            with self.setup_loop_device():
+                self.create_gpt()
+                self.create_partition()
+                self.set_partition_flags()
+                # XXX: Rescan?
+                self.format_partition()
+                # XXX: Verify that now everything is as it should be (see what Tails Installer is doing)
+                with self.mount_partition():
+                    self.copy_iso_contents_to_partition(iso_extraction_dir)
+                    self.set_permissions()
+                    self.update_configs()
+                    self.install_mbr()
+                    self.copy_syslinux_modules()
+
+                # This sleep is a workaround for a race condition which causes the
+                # syslinux installation to return without errors, even though the
+                # bootloader isn't actually installed
+                # XXX: Investigate and report this race condition
+                time.sleep(1)
+                self.install_syslinux()
+                self.set_guid()
+
+    @staticmethod
+    def calculate_system_partition_size(iso_extraction_dir: str) -> int:
+        """Size of the system partition that is to be created, in MiB"""
+        return get_dir_size(iso_extraction_dir) + SYSTEM_PARTITION_ADDITIONAL_SIZE
+
+    def copy_iso_contents_to_partition(self, iso_extraction_dir: str):
+        logger.info("Copying ISO contents to the partition")
+        execute(["cp", "-a", iso_extraction_dir + "/.", self.mountpoint])
+
+    def create_empty_image(self):
+        logger.info("Creating empty image %r", self.image)
+        image_size = self.system_partition_size + self.free_space
+        execute(["dd", "if=/dev/zero", "of=%s" % self.image, "bs=1M", "count=%s" % image_size])
+
+    @contextmanager
+    def setup_loop_device(self):
+        logger.info("Setting up loop device")
+        with self.get_udisks_client() as udisks_client:
+            manager = udisks_client.get_manager()
+
+            image_fd = os.open(self.image, os.O_RDWR)
+            resulting_device, fd_list = manager.call_loop_setup_sync(
+                arg_fd=GLib.Variant('h', 0),
+                arg_options=GLib.Variant('a{sv}', None),
+                fd_list=Gio.UnixFDList.new_from_array([image_fd]),
+                cancellable=None,
+            )
+
+            if not resulting_device:
+                raise ImageCreationError("Failed to set up loop device")
+
+        logger.info("Loop device: %r", resulting_device)
+        self._loop_device = resulting_device
+
+        try:
+            yield
+        finally:
+            logger.info("Tearing down loop device")
+            self.loop_device.props.loop.call_delete(
+                arg_options=GLib.Variant('a{sv}', None)
+            )
+
+    def create_gpt(self):
+        logger.info("Creating GPT")
+        self.loop_device.props.block.call_format_sync(
+            arg_type='gpt',
+            arg_options=GLib.Variant('a{sv}', None),
+            cancellable=None
+        )
+        # XXX: Try again on error, as Tails Installer does?
+
+    def create_partition(self):
+        logger.info("Creating partition")
+        partition = self.loop_device.props.partition_table.call_create_partition_sync(
+            arg_offset=0,
+            arg_size=self.system_partition_size * 2**20,
+            arg_type=ESP_GUID,
+            arg_name=PARTITION_LABEL,
+            arg_options=GLib.Variant('a{sv}', None),
+            cancellable=None
+        )
+        # XXX: Tails Installer ignores GLib errors here
+
+        logger.info("Partition: %r", partition)
+        self._partition = partition
+
+    def set_partition_flags(self):
+        logger.info("Setting partition flags")
+
+        start_time = time.perf_counter()
+        while time.perf_counter() - start_time < WAIT_FOR_PARTITION_TIMEOUT:
+            try:
+                self.partition.props.partition.call_set_flags_sync(
+                    arg_flags=SYSTEM_PARTITION_FLAGS,
+                    arg_options=GLib.Variant('a{sv}', None),
+                    cancellable=None
+                )
+            except GLib.Error as e:
+                if "GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface" in e.message:
+                    time.sleep(0.1)
+                    continue
+                raise
+            return
+
+    def format_partition(self):
+        logger.info("Formatting partition")
+        options = GLib.Variant(
+            'a{sv}',
+            {
+                'label': GLib.Variant('s', FILESYSTEM_LABEL),
+                'update-partition-type': GLib.Variant('s', 'FALSE')
+            }
+        )
+
+        self.partition.props.block.call_format_sync(
+            arg_type='vfat',
+            arg_options=options,
+            cancellable=None
+        )
+        # XXX: Try again on error, as Tails Installer does?
+
+    @contextmanager
+    def mount_partition(self):
+        logger.info("Mounting partition")
+        try:
+            self.mountpoint = self.partition.props.filesystem.call_mount_sync(
+                arg_options=GLib.Variant('a{sv}', None),
+                cancellable=None
+            )
+        except GLib.Error as e:
+            if "org.freedesktop.UDisks2.Error.AlreadyMounted" in e.message and \
+                    self.partition.props.filesystem.props.mount_points:
+                self.mountpoint = self.partition.props.filesystem.props.mount_points[0]
+                logger.info("Partition is already mounted at {}".format(self.mountpoint))
+            else:
+                raise
+
+        try:
+            yield
+        finally:
+            logger.info("Unmounting partition")
+            self.partition.props.filesystem.call_unmount(
+                arg_options=GLib.Variant('a{sv}', {'force': GLib.Variant('b', True)}),
+            )
+
+    @contextmanager
+    def extract_iso(self) -> str:
+        logger.info("Extracting ISO")
+        with tempfile.TemporaryDirectory(prefix="tails-iso-") as iso_extraction_dir:
+            execute(['7z', 'x', self.iso, '-x![BOOT]', '-y', '-o%s' % iso_extraction_dir])
+            yield iso_extraction_dir
+
+    def set_permissions(self):
+        logger.info("Setting file access permissions")
+        for root, dirs, files in os.walk(self.mountpoint):
+            for d in dirs:
+                os.chmod(os.path.join(root, d), 0o755)
+            for f in files:
+                os.chmod(os.path.join(root, f), 0o644)
+
+    def update_configs(self):
+        logger.info("Updating config files")
+        grubconf = os.path.join(self.mountpoint, "EFI", "BOOT", "grub.conf")
+        bootconf = os.path.join(self.mountpoint, "EFI", "BOOT", "boot.conf")
+        bootx64conf = os.path.join(self.mountpoint, "EFI", "BOOT", "bootx64.conf")
+        bootia32conf = os.path.join(self.mountpoint, "EFI", "BOOT", "bootia32.conf")
+        isolinux_dir = os.path.join(self.mountpoint, "isolinux")
+        syslinux_dir = os.path.join(self.mountpoint, "syslinux")
+        isolinux_cfg = os.path.join(syslinux_dir, "isolinux.cfg")
+
+        files_to_update = [
+            (os.path.join(self.mountpoint, "isolinux", "isolinux.cfg"),
+             os.path.join(self.mountpoint, "isolinux", "syslinux.cfg")),
+            (os.path.join(self.mountpoint, "isolinux", "stdmenu.cfg"),
+             os.path.join(self.mountpoint, "isolinux", "stdmenu.cfg")),
+            (os.path.join(self.mountpoint, "isolinux", "exithelp.cfg"),
+             os.path.join(self.mountpoint, "isolinux", "exithelp.cfg")),
+            (os.path.join(self.mountpoint, "EFI", "BOOT", "isolinux.cfg"),
+             os.path.join(self.mountpoint, "EFI", "BOOT", "syslinux.cfg")),
+            (grubconf, bootconf)
+        ]
+
+        for (infile, outfile) in files_to_update:
+            if os.path.exists(infile):
+                self.update_config(infile, outfile)
+
+        if os.path.exists(isolinux_dir):
+            execute(["mv", isolinux_dir, syslinux_dir])
+
+        if os.path.exists(isolinux_cfg):
+            os.remove(isolinux_cfg)
+
+    def update_config(self, infile, outfile):
+        uuid = self.loop_device.props.block.props.id_uuid
+        label = self.loop_device.props.block.props.id_label
+        fstype = self.partition.props.block.props.id_type
+        usblabel = "UUID=%s" % uuid if uuid else "LABEL=%s" % label
+
+        with open(infile) as f_in:
+            lines = f_in.readlines()
+
+        new_lines = list()
+
+        for line in lines:
+            line = re.sub('/isolinux/', '/syslinux/', line)
+            # XXX: Should we support overlay and kernel_args?
+            # if self.overlay and "liveimg" in line:
+            #     line = line.replace("liveimg", "liveimg overlay=" + usblabel)
+            #     line = line.replace(" ro ", " rw ")
+            # if self.opts.kernel_args:
+            #     line = line.replace("liveimg", "liveimg %s" %
+            #                         ' '.join(self.opts.kernel_args.split(',')))
+            new_lines.append(line)
+
+        with open(outfile, "w") as f_out:
+            f_out.writelines(new_lines)
+
+    def install_mbr(self):
+        logger.info("Installing MBR")
+        mbr_path = os.path.join(self.mountpoint, "utils/mbr/mbr.bin")
+        execute(["dd", "bs=440", "count=1", "conv=notrunc", "if=%s" % mbr_path, "of=%s" % self.image])
+
+    # Only required if using the running system's syslinux instead of the one on the ISO
+    def copy_syslinux_modules(self):
+        logger.info("Copying syslinux modules to device")
+
+        syslinux_dir = os.path.join(self.mountpoint, 'syslinux')
+        com32modules = [f for f in os.listdir(syslinux_dir) if f.endswith('.c32')]
+
+        for module in com32modules:
+            src_path = os.path.join(SYSLINUX_COM32MODULES_DIR, module)
+            if not os.path.isfile(src_path):
+                raise ImageCreationError("Could not find the '%s' COM32 module" % module)
+
+            logger.debug('Copying %s to the device' % src_path)
+            execute(["cp", "-a", src_path, os.path.join(syslinux_dir, module)])
+
+    def install_syslinux(self):
+        logger.info("Installing bootloader")
+        # XXX: Support --force and --stupid switches?
+        # We install syslinux directly on the image. Installing it on the loop
+        # device would cause this issue:
+        # https://bugs.chromium.org/p/chromium/issues/detail?id=508713#c8
+        execute([
+            # XXX: Why does this only work as root?
+            'pkexec',
+            'syslinux',
+            '--offset', str(self.partition.props.partition.props.offset),
+            '--directory', '/syslinux/',
+            '--install', self.image
+        ])
+
+    def set_guid(self):
+        execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3", self.image])
+
+
+def execute(cmd: list):
+    logger.info("Executing '%s'" % ' '.join(cmd))
+    subprocess.check_call(cmd)
+
+
+def get_dir_size(path: str) -> int:
+    """Returns the size of a directory in MiB"""
+    size_in_bytes = int(subprocess.check_output(["du", "-s", "--bytes", path]).split()[0])
+    return round(size_in_bytes // 1024 ** 2)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("ISO", help="Path to the ISO")
+    parser.add_argument("-d", "--directory", default=".", help="Output directory for the resulting image (the current directory by default)")
+    parser.add_argument("--free-space", type=int, default=0, help="Additional free space (for a persistent volume) in MiB")
+    args = parser.parse_args()
+    if not args.ISO.endswith(".iso"):
+        parser.error("Input file is not an ISO (no .iso extension)")
+
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('sh').setLevel(logging.WARNING)
+
+    iso = args.ISO
+    image = os.path.realpath(os.path.join(args.directory, os.path.basename(iso).replace(".iso", ".img")))
+
+    image_creator = ImageCreator(iso, image, args.free_space)
+    image_creator.create_image()
+
+
+if __name__ == "__main__":
+    main()

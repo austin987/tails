@@ -72,10 +72,13 @@ sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 echo "I: Installing Tails build dependencies."
 apt-get -y install \
         debootstrap \
+        dosfstools \
         dpkg-dev \
         eatmydata \
         faketime \
+        gdisk \
         gettext \
+        gir1.2-udisks-2.0 \
         git \
         ikiwiki \
         intltool \
@@ -93,12 +96,19 @@ apt-get -y install \
         libyaml-syck-perl \
         live-build \
         lsof \
+        p7zip-full \
         perlmagick \
+        policykit-1 \
         psmisc \
+        python3 \
+        python3-gi \
         rsync \
         ruby \
+        syslinux \
+        syslinux-common \
         syslinux-utils \
         time \
+        udisks2 \
         whois
 
 # Ensure we can use timedatectl
