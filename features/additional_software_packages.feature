@@ -91,7 +91,7 @@ Feature: Additional software packages
     And the package "sl" is not installed
 
   # Depends on scenario: Packages I uninstall and accept to remove from ASP are not installed anymore
-  Scenario: Packages I have installed and added to ASP are upgraded when a network is available
+  Scenario: Packages I have installed and added to ASP are upgraded when online
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     # This step installs an old cowsay from a custom APT source
@@ -113,7 +113,7 @@ Feature: Additional software packages
     Then the additional software package upgrade service has started
     And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
 
-  #Depends on scenario: Packages I have installed and added to ASP are upgraded when a network is available
+  #Depends on scenario: Packages I have installed and added to ASP are upgraded when online
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
