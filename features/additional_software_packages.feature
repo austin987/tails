@@ -14,7 +14,7 @@ Feature: Additional software packages
     And I update APT using apt
     When I install "sslh" using apt
     Then I am notified I can not use Additional Software persistence for "sslh"
-    And I can open the Additional Software documentation from the notification link
+    And I open the Additional Software documentation from the notification link
 
   Scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
@@ -35,7 +35,7 @@ Feature: Additional software packages
     And the package "sslh" is installed
 
   # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
-  Scenario: I can install packages in a Tails session with locked down persistence without being annoyed by ASP
+  Scenario: I install packages in a Tails session with locked down persistence without being annoyed by ASP
     Given a computer
     And I start Tails from USB drive "__internal" and I login with an administration password
     And I update APT using apt
@@ -149,7 +149,7 @@ Feature: Additional software packages
     And all notifications have disappeared
     And available upgrades have been checked
     And I see the "The upgrade of your additional software failed" notification after at most 300 seconds
-    And I can open the Additional Software configuration window from the notification
+    And I open the Additional Software configuration window from the notification
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
@@ -173,5 +173,5 @@ Feature: Additional software packages
     And I log in to a new session
     And all notifications have disappeared
     Then I see the "The installation of your additional software failed" notification after at most 300 seconds
-    And I can open the Additional Software log file from the notification
+    And I open the Additional Software log file from the notification
     And the package "vrms" is not installed

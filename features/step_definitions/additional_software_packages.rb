@@ -122,7 +122,7 @@ When /^I remove the "([^"]*)" deb file from the APT cache$/  do |package|
   $vm.execute("rm -f /live/persistence/TailsData_unlocked/apt/cache/#{package}*.deb")
 end
 
-Then /^I can open the Additional Software documentation from the notification link$/  do
+Then /^I open the Additional Software documentation from the notification link$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Documentation', roleName: 'push button').click
   # For some reason the below two steps fail. Dogtail can not find the Firefox
@@ -140,13 +140,13 @@ Then /^ASP has been started for "([^"]*)" and shuts up because the persistence i
   try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
 end
 
-When /^I can open the Additional Software configuration window from the notification$/ do
+When /^I open the Additional Software configuration window from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Configure', roleName: 'push button').click
   try_for(60) { @asp = Dogtail::Application.new('tails-additional-software-config') }
 end
 
-Then /^I can open the Additional Software log file from the notification$/ do
+Then /^I open the Additional Software log file from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Show Log', roleName: 'push button').click
   try_for(60) { @gedit = Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
