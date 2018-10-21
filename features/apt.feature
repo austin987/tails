@@ -1,9 +1,7 @@
 @product
-Feature: Installing packages through APT
+Feature: APT sources must be correctly configured
   As a Tails user
-  when I set an administration password in Tails Greeter
-  I should be able to install packages using APT and Synaptic
-  and all Internet traffic should flow only through Tor.
+  I want APT to be configured to use hidden services
 
   Scenario: APT sources are configured correctly
     Given a computer
