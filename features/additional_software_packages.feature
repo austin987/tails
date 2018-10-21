@@ -120,7 +120,7 @@ Feature: Additional software packages
     And the additional software package installation service has started
     And the package "cowsay" is installed
     And I start "Additional Software" via GNOME Activities Overview
-    And I remove "cowsay" from the list of additional software
+    And I remove "cowsay" from the list of ASP using Additional Software
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started

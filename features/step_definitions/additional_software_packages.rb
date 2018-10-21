@@ -95,7 +95,7 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (to|from) Additional Softwa
   end
 end
 
-Given /^I remove "([^"]*)" from the list of additional software$/  do |package|
+Given /^I remove "([^"]*)" from the list of ASP using Additional Software$/  do |package|
   @asp_gui = Dogtail::Application.new('tails-additional-software-config')
   installed_package = @asp_gui.child(package, roleName: 'label')
   installed_package.parent.parent.child('Close', roleName: 'push button').click
