@@ -79,7 +79,7 @@ Then /^I (un)?install "(.+)" using apt$/ do |removal, package|
   end
 end
 
-When /^I configure APT with a custom source for the old version of cowsay$/ do
+When /^I add a APT source which has the old version of cowsay$/ do
   apt_source = 'deb tor+http://deb.tails.boum.org/ asp-test-upgrade-cowsay main'
   apt_pref = 'Package: cowsay
 Pin: release o=Tails,a=asp-test-upgrade-cowsay
@@ -89,7 +89,7 @@ Pin-Priority: 999'
 end
 
 When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |version|
-  step 'I configure APT with a custom source for the old version of cowsay'
+  step 'I add a APT source which has the old version of cowsay'
   step 'I update APT using apt'
   step 'I install "cowsay" using apt'
   step "the package \"cowsay\" installed version is \"#{version}\""

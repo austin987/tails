@@ -102,7 +102,7 @@ Feature: Additional software packages
     And I enable persistence
     # We need to add back the custom APT source for the ASP install step, as it
     # was not saved in persistence
-    And I configure APT with a custom source for the old version of cowsay
+    And I add a APT source which has the old version of cowsay
     And I log in to a new session
     And the additional software package installation service has started
     And the package "cowsay" installed version is "3.03+dfsg2-1"
@@ -137,7 +137,7 @@ Feature: Additional software packages
     And I enable persistence
     # We need to add back the custom APT source for the ASP install step, as it
     # was not saved in persistence
-    And I configure APT with a custom source for the old version of cowsay
+    And I add a APT source which has the old version of cowsay
     And I log in to a new session
     And the additional software package installation service has started
     And the package "cowsay" installed version is "3.03+dfsg2-1"
@@ -155,7 +155,7 @@ Feature: Additional software packages
     And I enable persistence
     # We need to add back the custom APT source for the ASP install step, as it
     # was not saved in persistence
-    And I configure APT with a custom source for the old version of cowsay
+    And I add a APT source which has the old version of cowsay
     And I log in to a new session
     Then the additional software package installation service has started
     And the package "cowsay" installed version is "3.03+dfsg2-1"
