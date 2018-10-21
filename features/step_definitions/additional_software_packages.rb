@@ -62,33 +62,33 @@ Then /^"([^"]*)" is not part of Additional Software persistence configuration$/ 
   $vm.execute("grep \"#{package}\" #{asp_conf}").stdout.empty?
 end
 
-When /^I (deny|confirm) when I am asked if I want to (add|remove) "([^"]*)" (to|from) Additional Software persistence$/  do |decision, action, package, destination|
+When /^I (refuse|accept) (adding|removing) "([^"]*)" (to|from) Additional Software persistence$/  do |decision, action, package, destination|
   gnome_shell = Dogtail::Application.new('gnome-shell')
   case action
-  when "add"
+  when "adding"
     title = "Add #{package} to your additional software?"
     step "I see the \"#{title}\" notification after at most 300 seconds"
     case decision
-    when "confirm"
+    when "accept"
       gnome_shell.child('Install Every Time', roleName: 'push button').click
       try_for(30) do
         step "the Additional Software persistence is correctly configured for package \"#{package}\""
       end
-    when "deny"
+    when "refuse"
       gnome_shell.child('Install Only Once', roleName: 'push button').click
       step "\"#{package}\" is not part of Additional Software persistence configuration"
     end
-  when "remove"
+  when "removing"
     title = "Remove #{package} from your additional software?"
     step "I see the \"#{title}\" notification after at most 300 seconds"
     step "the Additional Software persistence is correctly configured for package \"#{package}\""
     case decision
-    when "confirm"
+    when "accept"
       gnome_shell.child('Remove', roleName: 'push button').click
       try_for(30) do
         step "\"#{package}\" is not part of Additional Software persistence configuration"
       end
-    when "deny"
+    when "refuse"
       gnome_shell.child('Cancel', roleName: 'push button').click
       step "the Additional Software persistence is correctly configured for package \"#{package}\""
     end

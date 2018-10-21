@@ -51,7 +51,7 @@ Feature: Additional software packages
     And I start Synaptic
     And I update APT using Synaptic
     When I install "cowsay" using Synaptic
-    And I confirm when I am asked if I want to add "cowsay" to Additional Software persistence
+    And I accept adding "cowsay" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -62,7 +62,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "cowsay" using apt
-    And I confirm when I am asked if I want to remove "cowsay" from Additional Software persistence
+    And I accept removing "cowsay" from Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -73,7 +73,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "sslh" using apt
-    And I deny when I am asked if I want to remove "sslh" from Additional Software persistence
+    And I refuse removing "sslh" from Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -84,7 +84,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "sl" using apt
-    And I deny when I am asked if I want to add "sl" to Additional Software persistence
+    And I refuse adding "sl" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     Then the additional software package installation service has started
@@ -96,7 +96,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     # This step installs an old cowsay from a custom APT source
     When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
-    And I confirm when I am asked if I want to add "cowsay" to Additional Software persistence
+    And I accept adding "cowsay" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
@@ -131,7 +131,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
-    And I confirm when I am asked if I want to add "cowsay" to Additional Software persistence
+    And I accept adding "cowsay" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
@@ -165,7 +165,7 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "vrms" using apt
-    And I confirm when I am asked if I want to add "vrms" to Additional Software persistence
+    And I accept adding "vrms" to Additional Software persistence
     And I remove the "vrms" deb file from the APT cache
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
