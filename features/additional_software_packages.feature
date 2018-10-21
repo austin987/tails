@@ -13,7 +13,7 @@ Feature: Additional software packages
     And I can open the ASP documentation from the notification link
 
   @check_tor_leaks
-  Scenario: I can set up and use ASP when I install a package in a Tails that has no persistent partition
+  Scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I set an administration password
     And I log in to a new session
