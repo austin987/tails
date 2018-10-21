@@ -5,7 +5,7 @@ Feature: Additional software packages
   I may want to install softwares not shipped in Tails
   And have them installed automatically when I enable persistence in the Greeter
 
-  Scenario: I am warned I can not use ASP when I boot Tails from a DVD and install a package
+  Scenario: I am warned I can not use ASP when I start Tails from a DVD and install a package
     Given I have started Tails from DVD and logged in with an administration password and the network is connected
     And I update APT using apt
     When I install "sslh" using apt
