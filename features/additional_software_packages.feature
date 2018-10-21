@@ -1,4 +1,4 @@
-@product
+@product @check_tor_leaks
 
 Feature: Additional software packages
   As a Tails user
@@ -16,7 +16,6 @@ Feature: Additional software packages
     Then I am notified I can not use ASP for "sslh"
     And I can open the ASP documentation from the notification link
 
-  @check_tor_leaks
   Scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I set an administration password
@@ -35,7 +34,6 @@ Feature: Additional software packages
     And the additional software package installation service has started
     And the package "sslh" is installed
 
-  @check_tor_leaks
   # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
   Scenario: I can install packages in a Tails session with locked down persistence without being annoyed by ASP
     Given a computer
@@ -46,7 +44,6 @@ Feature: Additional software packages
     And the package "cowsay" is installed
 
   #12586
-  @check_tor_leaks
   # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
     Given a computer
@@ -82,7 +79,6 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "sslh" is installed
 
-  @check_tor_leaks
   # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install but not do not add to ASP are not automatically installed
     Given a computer
@@ -94,7 +90,6 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "sl" is not installed
 
- @check_tor_leaks
   # Depends on scenario: Packages I uninstall and accept to remove from ASP are not installed anymore
   Scenario: Packages I have installed and added to ASP are upgraded when a network is available
     Given a computer
@@ -131,7 +126,6 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" is not installed
 
-  @check_tor_leaks
   # Depends on scenario: Packages I uninstall through ASP GUI are not installed anymore
   Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
     Given a computer
@@ -166,7 +160,6 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" installed version is "3.03+dfsg2-1"
 
-  @check_tor_leaks
   # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
   Scenario: I am notified when ASP fails to install a package
     Given a computer
