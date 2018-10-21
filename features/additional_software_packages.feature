@@ -16,7 +16,7 @@ Feature: Additional software packages
     Then I am notified I can not use Additional Software persistence for "sslh"
     And I open the Additional Software documentation from the notification link
 
-  Scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
+  Scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I set an administration password
     And I log in to a new session
@@ -34,7 +34,7 @@ Feature: Additional software packages
     And the additional software package installation service has started
     And the package "sslh" is installed
 
-  # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
+  # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: I install packages in a Tails session with locked down persistence without being annoyed by ASP
     Given a computer
     And I start Tails from USB drive "__internal" and I login with an administration password
@@ -44,7 +44,7 @@ Feature: Additional software packages
     And the package "cowsay" is installed
 
   #12586
-  # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
+  # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install with Synaptic and add to ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -68,7 +68,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" is not installed
 
-  # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
+  # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I uninstall but don't want to remove from ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -79,7 +79,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "sslh" is installed
 
-  # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
+  # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install but not do not add to ASP are not automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -160,7 +160,7 @@ Feature: Additional software packages
     Then the additional software package installation service has started
     And the package "cowsay" installed version is "3.03+dfsg2-1"
 
-  # Depends on scenario: I set up ASP when installing a package with no persistent partition and the package is installed next time I start Tails
+  # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: I am notified when ASP fails to install a package
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
