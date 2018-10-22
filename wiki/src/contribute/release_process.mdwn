@@ -48,8 +48,8 @@ the scripts snippets found on this page:
   the 3.9 major release, then set this to 3.12 (3.9 is the next major
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
   release).
-* `NEXT_PLANNED_MINOR_VERSION`: set to the version number of the next
-  *minor* Tails release; if the next release is a point-release, use
+* `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
+  *bugfix* Tails release; if the next release is a bugfix release, use
   that one; otherwise, use `${VERSION}.1`
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
@@ -124,10 +124,10 @@ If we are at freeze time for a major release:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
 
-Point-release
--------------
+Bugfix release
+--------------
 
-If we are at freeze time for a point-release:
+If we are at freeze time for a bugfix release:
 
 1. Merge the `master` Git branch into `stable`:
 
@@ -137,8 +137,8 @@ If we are at freeze time for a point-release:
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
    APT suite.
 
-Common steps for point and major releases
------------------------------------------
+Common steps for bugfix and major releases
+------------------------------------------
 
 Reset the release branch's `config/base_branch`:
 
@@ -163,7 +163,7 @@ Update included files
 Upgrade bundled binary Debian packages
 --------------------------------------
 
-Skip this section if you are preparing a point-release.
+Skip this section if you are preparing a bugfix release.
 
 The goal here is to make sure the bundled binary Debian packages contain
 up-to-date localization files, so:
@@ -257,11 +257,11 @@ Major release
 listed in the `testing` branch's `config/APT_overlays.d/` into the `testing`
 custom APT suite.
 
-Point-release
--------------
+Bugfix release
+--------------
 
 <div class="note">
-For point-releases, we generally do not put any RC out, so freeze time
+For bugfix releases, we generally do not put any RC out, so freeze time
 is the same as preparing the actual release. Hence, the following
 steps have already been done above, and this section is a noop in the
 general case.
@@ -761,7 +761,7 @@ Prepare upgrade-description files
             --version "${VERSION:?}" \
             --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
             --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
-            --next-version "${NEXT_PLANNED_MINOR_VERSION:?}" \
+            --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
             --next-version "${VERSION:?}.1" \
             --iso "${ISO_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
