@@ -80,40 +80,7 @@ Feature: Additional software packages
     Then "sl" is not part of Additional Software persistence configuration
 
   # Depends on scenario: Packages I uninstall and accept to remove from ASP are not installed anymore
-  Scenario: Packages I have installed and added to ASP are upgraded when online
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    # This step installs an old cowsay from a custom APT source
-    When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
-    And I accept adding "cowsay" to Additional Software persistence
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged
-    And I enable persistence
-    # We need to add back the custom APT source for the ASP install step, as it
-    # was not saved in persistence
-    And I add a APT source which has the old version of cowsay
-    And I log in to a new session
-    And the additional software package installation service has started
-    And the package "cowsay" installed version is "3.03+dfsg2-1"
-    # And then to remove it so that cowsay gets updated
-    And I remove the custom APT source for the old cowsay version
-    And the network is plugged
-    And Tor is ready
-    Then the additional software package upgrade service has started
-    And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
-
-  #Depends on scenario: Packages I have installed and added to ASP are upgraded when online
-  Scenario: Packages I uninstall through ASP GUI are not installed anymore
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    And the additional software package installation service has started
-    And the package "cowsay" is installed
-    And I start "Additional Software" via GNOME Activities Overview
-    And I remove "cowsay" from the list of ASP using Additional Software
-    Then "cowsay" is not part of Additional Software persistence configuration
-
-  # Depends on scenario: Packages I uninstall through ASP GUI are not installed anymore
-  Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
+  Scenario: Recovering in offline mode after ASP previously failed to upgrade and then succeed to upgrade when online
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
@@ -143,8 +110,24 @@ Feature: Additional software packages
     # was not saved in persistence
     And I add a APT source which has the old version of cowsay
     And I log in to a new session
-    Then the additional software package installation service has started
+    And the additional software package installation service has started
     And the package "cowsay" installed version is "3.03+dfsg2-1"
+    # And then to remove it so that cowsay gets updated
+    And I remove the custom APT source for the old cowsay version
+    And the network is plugged
+    And Tor is ready
+    Then the additional software package upgrade service has started
+    And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
+
+  # Depends on scenario: Recovering in offline mode after ASP previously failed to upgrade and then succeed to upgrade when online
+  Scenario: Packages I uninstall through ASP GUI are not installed anymore
+    Given a computer
+    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
+    And the additional software package installation service has started
+    And the package "cowsay" is installed
+    And I start "Additional Software" via GNOME Activities Overview
+    And I remove "cowsay" from the list of ASP using Additional Software
+    Then "cowsay" is not part of Additional Software persistence configuration
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: I am notified when ASP fails to install a package
