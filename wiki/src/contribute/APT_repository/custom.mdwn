@@ -332,6 +332,22 @@ After a new Tails release is out
 
 ### If you just put out a final release
 
+If the release was a major one, then:
+
+1. [[Hard reset the `stable` APT suite to
+   the state of the `testing` one|APT_repository/custom#workflow-reset]].
+
+2. Empty `config/APT_overlays.d` in the `stable` branch:
+
+        git checkout stable && \
+		if [ $(find config/APT_overlays.d -maxdepth 1 -type f | wc -l) -gt 1 ]; then
+           git rm config/APT_overlays.d/* && \
+           git commit config/APT_overlays.d/ \
+              -m "Empty the list of APT overlays: they were merged"
+        fi
+
+In any case:
+
 * [[merge `stable` or `testing` into
   `devel`|APT_repository/custom#workflow-merge-main-branch]]
 * increment the version number in `devel`'s `debian/changelog` to match
@@ -347,28 +363,16 @@ After a new Tails release is out
            -m "Add dummy changelog entry for ${NEXT_PLANNED_MAJOR_VERSION:?}."
 
 * increment the version number in stable's `debian/changelog` to match
-  the next point release, so that
+  the next bugfix release, so that
   next builds from the `stable` branch do not use the APT suite meant
   for the last release:
 
         cd "${RELEASE_CHECKOUT}" && \
         git checkout stable && \
-        dch --newversion "${NEXT_PLANNED_MINOR_VERSION:?}" \
+        dch --newversion "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
            "Dummy entry for next release." && \
         git commit debian/changelog \
-           -m "Add dummy changelog entry for ${NEXT_PLANNED_MINOR_VERSION:?}."
-
-If the release was a major one, then:
-
-1. [[Hard reset the stable APT suite to
-   the state of the testing one|APT_repository/custom#workflow-reset]].
-
-2. Empty `config/APT_overlays.d` in the `stable` branch:
-
-        git checkout stable && \
-        git rm config/APT_overlays.d/* && \
-        git commit config/APT_overlays.d/ \
-           -m "Empty the list of APT overlays: they were merged"
+           -m "Add dummy changelog entry for ${NEXT_PLANNED_BUGFIX_VERSION:?}."
 
 ### Else, if you just released a RC
 

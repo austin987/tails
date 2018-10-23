@@ -1,8 +1,85 @@
-tails (3.10) UNRELEASED; urgency=medium
+tails (3.10) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Security fixes
+    - Harden sudo config to avoid potential future privilege escalation
+      (Closes: #15829).
+    - Upgrade Linux to 4.18 and aufs to 4.18-20181008 (Closes: #15936).
+    - Upgrade the snapshot of the Debian archive to 2018100901 accordingly.
+    - Upgrade Tor Browser to 8.0.3-build1 (Closes: #16067).
+    - Upgrade Thunderbird to 60.2.1 (Closes: #16037).
 
- -- Tails developers <tails@boum.org>  Wed, 05 Sep 2018 16:52:02 +0000
+  * Bugfixes
+    - Fix installation of mesa/stretch-backports by installing libwayland*
+      from stretch-backports (Closes: #15846).
+    - Tor Browser AppArmor profile patch: update to apply cleanly on top
+      of torbrowser-launcher 0.2.9-5.
+    - Additional Software: fix issues spotted during the code review
+      (Closes: #15838).
+    - Additional Software: make sure to offer persistence only for newly
+      installed packages, avoiding inconsistency (Closes: #15983).
+    - Improve button labels in confirmation dialogs of the Tails installer
+      (Closes: #11501).
+    - Hardcode User Agent in htpdate.user-agent (Closes: #15912), as the
+      Tor Browser doesn't expose it anymore.
+    - Fix encoding-related crashes in Tails Installer (Closes: #15166).
+    - Set the Firefox preferences to spoof English, to avoid leaking
+      information about locale settings (Closes: #16029).
+    - VeraCrypt: Hide PIM entries in GNOME Shell and Disks, since a newer
+      cryptsetup would be needed (Closes: #16031).
+    - VeraCrypt: Fix support for multiple encryption, by iterating over
+      all children in the device-mapper tree (Closes: #15967).
+    - Update translations.
+
+  * Minor improvements and updates
+    - Add dmsetup and losetup output in WhisperBack reports to help debug
+      VeraCrypt-related issues (Closes: #15966).
+    - Let AppArmor allow access to /usr/local/share/mime, reducing noise
+      in logs due to many DENIED entries (Closes: #15965).
+    - Use proper stem.connection module in onion-grater instead of trying
+      to read the auth cookie manually: that's fragile and breaks some use
+      cases (e.g. custom auth cookie).
+    - Unlock VeraCrypt Volumes: Improve internationalization support.
+
+  * Test suite
+    - Ensure the test suite doesn't break when changing the headline of
+      /home (Closes: #12156).
+    - Update test suite for updated button labels in confirmation dialogs
+      of the Tails installer (Closes: #11501).
+
+ -- Tails developers <tails@boum.org>  Tue, 23 Oct 2018 01:30:00 +0200
+
+tails (3.9.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.0.2, based on Firefox 60.2.1 (Closes: #16017).
+    - Upgrade Thunderbird to 60.0-3~deb9u1.0tails2 (Closes: #15959). Also
+      imported the same security fixes that caused Tor Browser 8.0.2.
+    - XXX: #15978?
+    - Upgrade curl to 7.52.1-5+deb9u7 (DSA-4286).
+    - Upgrade Ghostscript to 9.20~dfsg-3.2+deb9u5 (DSA-4294).
+    - Upgrade libarchive-zip-perl to 1.59-1+deb9u1 (DSA-4300).
+    - Upgrade libkpathsea6 to 2016.20160513.41080.dfsg-2+deb9u1 (DSA-4299).
+    - Upgrade LittleCMS 2, aka. liblcms2-2, to 2.8-4+deb9u1 (DSA-4284).
+    - Upgrade Python 2.7 to 2.7.13-2+deb9u3 (DSA-4306).
+    - Upgrade Python 3.5 to 3.5.3-1+deb9u1 (DSA-4307).
+
+  * Bugfixes
+    - Make Thunderbird translated in non-English locales via
+      intl.locale.requested, which works correctly since 60.0-3
+      (Closes: #15942).
+    - Totem: backport AppArmor profile fix to allow opening the help
+      (Closes: #15841)
+    - Remove mutt, that was accidentally installed in 3.9 (Closes: #15904).
+    - Fix VeraCrypt volumes not being opened in GNOME Files (Closes: #15954).
+    - Fix displaying the "General" section in the Tor Browser preferences
+      (Closes: #15917).
+    - Fix APT pinning at Tails runtime for our custom APT repository
+      and for Debian backports (Closes: #15837, #15973).
+
+  * Minor improvements and updates
+    - Upgrade tor to 0.3.4.8-1~d90.stretch+1 (Closes: #15889).
+
+ -- Tails developers <tails@boum.org>  Wed, 03 Oct 2018 12:12:33 +0200
 
 tails (3.9) unstable; urgency=medium
 

@@ -48,8 +48,8 @@ the scripts snippets found on this page:
   the 3.9 major release, then set this to 3.12 (3.9 is the next major
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
   release).
-* `NEXT_PLANNED_MINOR_VERSION`: set to the version number of the next
-  *minor* Tails release; if the next release is a point-release, use
+* `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
+  *bugfix* Tails release; if the next release is a bugfix release, use
   that one; otherwise, use `${VERSION}.1`
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
@@ -124,10 +124,10 @@ If we are at freeze time for a major release:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
 
-Point-release
--------------
+Bugfix release
+--------------
 
-If we are at freeze time for a point-release:
+If we are at freeze time for a bugfix release:
 
 1. Merge the `master` Git branch into `stable`:
 
@@ -137,8 +137,8 @@ If we are at freeze time for a point-release:
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
    APT suite.
 
-Common steps for point and major releases
------------------------------------------
+Common steps for bugfix and major releases
+------------------------------------------
 
 Reset the release branch's `config/base_branch`:
 
@@ -163,7 +163,7 @@ Update included files
 Upgrade bundled binary Debian packages
 --------------------------------------
 
-Skip this section if you are preparing a point-release.
+Skip this section if you are preparing a bugfix release.
 
 The goal here is to make sure the bundled binary Debian packages contain
 up-to-date localization files, so:
@@ -220,6 +220,11 @@ Upgrade Thunderbird
 
 See the dedicated page: [[thunderbird]]
 
+Upgrade custom packages for VeraCrypt integration
+-------------------------------------------------
+
+See the dedicated page: [[veracrypt]]
+
 Update PO files
 ---------------
 
@@ -252,11 +257,11 @@ Major release
 listed in the `testing` branch's `config/APT_overlays.d/` into the `testing`
 custom APT suite.
 
-Point-release
--------------
+Bugfix release
+--------------
 
 <div class="note">
-For point-releases, we generally do not put any RC out, so freeze time
+For bugfix releases, we generally do not put any RC out, so freeze time
 is the same as preparing the actual release. Hence, the following
 steps have already been done above, and this section is a noop in the
 general case.
@@ -603,7 +608,7 @@ suite should be ready, so it is time to:
 
        - If you cannot rule out that the difference is harmful: let's take
          a step back; we might be compromised, so we are in no position to
-         release. Halt the release, involve the rest of `tails@`, and then
+         release. Halt the release, involve the rest of <tails@boum.org>, and then
          try to re-establish trust in all build machines and infra
          involved, etc. Have fun!
 
@@ -756,7 +761,7 @@ Prepare upgrade-description files
             --version "${VERSION:?}" \
             --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
             --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
-            --next-version "${NEXT_PLANNED_MINOR_VERSION:?}" \
+            --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
             --next-version "${VERSION:?}.1" \
             --iso "${ISO_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
@@ -895,10 +900,8 @@ Done with OpenPGP signing
 By now you are done with Tails signing key, so please make sure it is
 not usable by your system any more.
 
-<div class="note">
-
-Beware! If your have to plug your OpenPGP smart card or reassemble the
-key again after this point it invalidates <i>everything</i> done for
+**Beware!** If your have to plug your OpenPGP smart card or reassemble the
+key again after this point it invalidates *everything* done for
 the [[reproduction of this release|test#reproducibility-final-check]]
 so it has to be started from the beginning:
 
@@ -908,8 +911,6 @@ so it has to be started from the beginning:
   and then starts from scratch.
 
 So please try to avoid this!
-
-</div>
 
 Upload images
 =============
@@ -1073,7 +1074,6 @@ Testing
 1. Email <tails@boum.org> and potential contributors (see
    `manual_testers.mdwn` in the internal Git repository) that tests
    may start:
-   - make sure the Trusted Verifier is in the list of recipients
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
@@ -1353,7 +1353,7 @@ We announce *major* releases on the Tor blog:
   * tails
   * anonymous operating system
   * tails releases
-- set *Title* to "Tails $VERSION is out"
+- set *Title* to "New Release: Tails $VERSION"
 - choose *Filtered HTML* as the *Text format* in the blog post editor
 - copy the text you have prepared into the *Post Body* textarea of the
   blog post editor
@@ -1422,8 +1422,8 @@ this, and skip what does not make sense for a RC.
         git fetch && \
         git submodule update && \
         bare_repo=$(mktemp -d)
-        git clone --bare --reference "${MASTER_CHECKOUT:?}" \
-           boum_org_amnesia@webmasters.boum.org:wiki.git \
+        torsocks git clone --bare --reference "${MASTER_CHECKOUT:?}" \
+           gitolite@d53ykjpeekuikgoq.onion:tails \
            "${bare_repo:?}" && \
         PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
            --repo "${bare_repo:?}" && \
