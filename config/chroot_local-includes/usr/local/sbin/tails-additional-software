@@ -480,15 +480,17 @@ def apt_hook_post():
     os.remove(ASP_STATE_PACKAGES)
 
     additional_packages_names = {
-        filter_package_details(pkg) for pkg in get_additional_packages(search_new_persistence=True)
+        filter_package_details(pkg) for pkg in
+        get_additional_packages(search_new_persistence=True)
     }
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
     # as additional software
     new_manually_installed_packages = {
-        pkg for pkg in packages["installed"] if not apt_cache[pkg].is_auto_installed and
-                                                pkg not in additional_packages_names
+        pkg for pkg in packages["installed"] if (
+            not apt_cache[pkg].is_auto_installed and
+            pkg not in additional_packages_names)
     }
 
     if new_manually_installed_packages:
@@ -499,6 +501,7 @@ def apt_hook_post():
         additional_packages_names)
     if additional_packages_removed:
         handle_removed_packages(additional_packages_removed)
+
 
 def install_additional_packages(upgrade_mode=False):
     """Subcommand which activates and installs all additional packages.
