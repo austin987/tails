@@ -52,9 +52,7 @@ Feature: Additional software packages
     And I update APT using Synaptic
     When I install "cowsay" using Synaptic
     And I accept adding "cowsay" to Additional Software persistence
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service has started
+    Then the Additional Software persistence is correctly configured for package "cowsay"
     And the package "cowsay" is installed
 
   # Depends on scenario: Packages I install with Synaptic and add to ASP are automatically installed
@@ -63,10 +61,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "cowsay" using apt
     And I accept removing "cowsay" from Additional Software persistence
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service has started
-    And the package "cowsay" is not installed
+    Then "cowsay" is not part of Additional Software persistence configuration
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I remove but refuse removing from ASP are still automatically installed
@@ -74,10 +69,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "sslh" using apt
     And I refuse removing "sslh" from Additional Software persistence
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service has started
-    And the package "sslh" is installed
+    Then the Additional Software persistence is correctly configured for package "sslh"
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install but not do not add to ASP are not automatically installed
@@ -85,10 +77,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "sl" using apt
     And I refuse adding "sl" to Additional Software persistence
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service has started
-    And the package "sl" is not installed
+    Then "sl" is not part of Additional Software persistence configuration
 
   # Depends on scenario: Packages I uninstall and accept to remove from ASP are not installed anymore
   Scenario: Packages I have installed and added to ASP are upgraded when online
@@ -121,10 +110,7 @@ Feature: Additional software packages
     And the package "cowsay" is installed
     And I start "Additional Software" via GNOME Activities Overview
     And I remove "cowsay" from the list of ASP using Additional Software
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then the additional software package installation service has started
-    And the package "cowsay" is not installed
+    Then "cowsay" is not part of Additional Software persistence configuration
 
   # Depends on scenario: Packages I uninstall through ASP GUI are not installed anymore
   Scenario: Recovering in offline mode after ASP previously failed to upgrade a package
