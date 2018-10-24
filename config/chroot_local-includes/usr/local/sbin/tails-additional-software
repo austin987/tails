@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import gettext
 import json
@@ -15,7 +15,8 @@ import apt.cache
 
 from tailslib import LIVE_USERNAME
 
-from tailslib.additionalsoftware.config import (
+from tailslib.additionalsoftware import (
+    ASPDataError,
     add_additional_packages,
     filter_package_details,
     get_additional_packages,
@@ -74,7 +75,8 @@ def _launch_apt_get(specific_args):
             logging.info(line.rstrip())
     apt_get.wait()
     if apt_get.returncode:
-        logging.warn("apt-get exited with returncode %i" % apt_get.returncode)
+        logging.warning("apt-get exited with returncode %i"
+                        % apt_get.returncode)
     return apt_get.returncode
 
 
@@ -116,8 +118,8 @@ def _notify(title, body="", accept_label="", deny_label="",
             # sudo failed to execute the command
             raise OSError(completed_process.stderr)
     except OSError as e:
-        logging.warn("Warning: unable to notify the user. %s" % e)
-        logging.warn("The notification was: %s %s" % (title, body))
+        logging.warning("Warning: unable to notify the user. %s" % e)
+        logging.warning("The notification was: %s %s" % (title, body))
         return None
 
     if return_id:
@@ -136,7 +138,7 @@ def _notify(title, body="", accept_label="", deny_label="",
 def _notify_failure(summary, details=None):
     """Display a failure notification to the user of the live system.
 
-    The user has the option to edit the configuration of to view the system
+    The user has the option to edit the configuration or to view the system
     log.
     """
     if details:
@@ -148,7 +150,7 @@ def _notify_failure(summary, details=None):
     else:
         details = _("Please check your list of additional "
                     "software or read the system log to "
-                    "understand the problem.").format(details=details)
+                    "understand the problem.")
 
     action_clicked = _notify(summary, details, _("Show Log"), _("Configure"),
                              urgent=True)
@@ -230,13 +232,13 @@ def has_additional_packages_list(search_new_persistence=False):
     try:
         packages_list_path = get_packages_list_path(search_new_persistence)
     except FileNotFoundError as e:
-        logging.warn("Warning: {}".format(e))
+        logging.warning("Warning: {}".format(e))
         return False
     if os.path.isfile(packages_list_path):
         logging.info("Found additional packages list.")
         return True
     else:
-        logging.warn("Warning: no configuration file found.")
+        logging.warning("Warning: no configuration file found.")
         return False
 
 
@@ -248,8 +250,8 @@ def delete_old_apt_lists(old_apt_lists_dir=OLD_APT_LISTS_DIR):
 def save_old_apt_lists(srcdir=APT_LISTS_DIR, destdir=OLD_APT_LISTS_DIR):
     """Save a copy of the APT lists"""
     if os.path.exists(destdir):
-        logging.warn("Warning: a copy of the APT lists already exists, "
-                     "which should never happen. Removing it.")
+        logging.warning("Warning: a copy of the APT lists already exists, "
+                        "which should never happen. Removing it.")
         delete_old_apt_lists(destdir)
     shutil.copytree(srcdir, destdir, symlinks=True)
 
@@ -306,8 +308,8 @@ def handle_installed_packages(packages):
         # If they install packages with their persistent storage locked, they
         # probably do it with their persistent storage unlock as well and would
         # learn about this feature when it's most relevant for them.
-        logging.warn("Warning: persistence storage is locked, can't add "
-                     "additional software.")
+        logging.warning("Warning: persistence storage is locked, can't add "
+                        "additional software.")
     elif is_tails_media_writable():
         # Translators: Don't translate {packages}, it's a placeholder and will be replaced.
         if _notify(_("Add {packages} to your additional software?").format(
@@ -327,7 +329,7 @@ def handle_installed_packages(packages):
                                   "failed."))
                 raise e
     else:   # It's impossible to have a persistent storage
-        logging.warn("Cannot create persistent storage on this media.")
+        logging.warning("Cannot create persistent storage on this media.")
         if not os.path.isfile(ASP_STATE_INSTALLER_ASKED):
             open(ASP_STATE_INSTALLER_ASKED, 'a').close()
             # Translators: Don't translate {packages}, it's a placeholder and will be replaced.
@@ -414,7 +416,8 @@ def apt_hook_pre():
     removed_packages = []
 
     line = sys.stdin.readline()
-    assert line.startswith("VERSION 3")
+    if not line.startswith("VERSION 3"):
+        raise ASPDataError("APT data is not version 3")
     line = sys.stdin.readline()
     # Ignore configuration space, which ends with an empty line
     while line != "\n":
@@ -469,17 +472,18 @@ def apt_hook_post():
         packages = json.load(f)
     os.remove(ASP_STATE_PACKAGES)
 
-    additional_packages_names = map(
-        filter_package_details,
-        get_additional_packages(search_new_persistence=True))
+    additional_packages_names = {
+        filter_package_details(pkg) for pkg in get_additional_packages(search_new_persistence=True)
+    }
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
     # as additional software
-    new_manually_installed_packages = set(filter(
-        lambda pkg: not apt_cache[pkg].is_auto_installed
-                    and pkg not in additional_packages_names,    # NOQA: E131
-        set(packages["installed"])))
+    new_manually_installed_packages = {
+        pkg for pkg in packages["installed"] if not apt_cache[pkg].is_auto_installed and
+                                                pkg not in additional_packages_names
+    }
+
     if new_manually_installed_packages:
         handle_installed_packages(new_manually_installed_packages)
 
@@ -488,7 +492,6 @@ def apt_hook_post():
         additional_packages_names)
     if additional_packages_removed:
         handle_removed_packages(additional_packages_removed)
-
 
 def install_additional_packages(upgrade_mode=False):
     """Subcommand which activates and installs all additional packages.
@@ -509,12 +512,12 @@ def install_additional_packages(upgrade_mode=False):
     # that, we restore the old APT lists: there are greater chances
     # that the APT packages cache still has the corresponding packages.
     if os.path.isdir(OLD_APT_LISTS_DIR) and not upgrade_mode:
-        logging.warn("Found a copy of old APT lists, restoring it.")
+        logging.warning("Found a copy of old APT lists, restoring it.")
         try:
             restore_old_apt_lists()
         except Exception as e:
-            logging.warn("Restoring old APT lists failed with %r, "
-                         "deleting them and proceeding anyway." % e)
+            logging.warning("Restoring old APT lists failed with %r, "
+                            "deleting them and proceeding anyway." % e)
         # In all cases, delete the old APT lists: if they could be
         # restored we don't need them anymore (and we don't want to
         # restore them again next time); if they could not be
@@ -524,7 +527,7 @@ def install_additional_packages(upgrade_mode=False):
 
     packages = get_additional_packages()
     if not packages:
-        logging.warn("Warning: no packages to install, exiting")
+        logging.warning("Warning: no packages to install, exiting")
         return True
     if not upgrade_mode:
         installing_notification_id = _notify(
@@ -539,7 +542,8 @@ def install_additional_packages(upgrade_mode=False):
          "--option", "DPkg::Options::=--force-confold",
          "install"] + list(packages))
     if apt_get_returncode:
-        logging.warn("Warning: installation of %s failed" % " ".join(packages))
+        logging.warning("Warning: installation of %s failed"
+                        % " ".join(packages))
         if not upgrade_mode:
             _close_notification(installing_notification_id)
             _notify_failure(_("The installation of your additional software "
@@ -576,7 +580,7 @@ def upgrade_additional_packages():
 
     apt_get_returncode = _launch_apt_get(["update"])
     if apt_get_returncode:
-        logging.warn("Warning: the update failed.")
+        logging.warning("Warning: the update failed.")
         _notify_failure(_("The check for upgrades of your additional software "
                           "failed"),
                         _("Please check your network connection, "
@@ -606,7 +610,7 @@ def upgrade_additional_packages():
     # must have been upgraded already.
     apt_get_returncode = _launch_apt_get(["autoclean"])
     if apt_get_returncode:
-        logging.warn("Warning: autoclean failed.")
+        logging.warning("Warning: autoclean failed.")
     return True
 
 
@@ -635,10 +639,10 @@ if __name__ == "__main__":
     else:
         log_level = logging.INFO
         log_format = "[%(levelname)s] %(message)s"
-    syslog_handler = logging.handlers.SysLogHandler(address="/dev/log")
+    stderr_handler = logging.StreamHandler()
     file_handler = logging.FileHandler(ASP_LOG_FILE)
     logging.basicConfig(format=log_format,
-                        handlers=[syslog_handler, file_handler],
+                        handlers=[stderr_handler, file_handler],
                         level=log_level)
 
     gettext.install("tails")
