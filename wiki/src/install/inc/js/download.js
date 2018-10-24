@@ -171,12 +171,16 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function hitCounter(status) {
-    var counter_url, url, scenario, version;
-    counter_url = "https://tails.boum.org/install/download/counter";
-    url = window.location.href.split("/");
-    scenario = url[url.lastIndexOf("install") + 1];
-    version = document.getElementById("tails-version").textContent.replace("\n", "");
-    fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status);
+    try {
+      var counter_url, url, scenario, version;
+      counter_url = "https://tails.boum.org/install/download/counter";
+      url = window.location.href.split("/");
+      scenario = url[url.lastIndexOf("install") + 1];
+      version = document.getElementById("tails-version").textContent.replace("\n", "");
+      fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status);
+    } catch (e) {
+      console.log(e.toString());
+    }
   }
 
   function resetVerificationResult(result) {
