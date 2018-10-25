@@ -45,7 +45,7 @@ Feature: Additional software packages
 
   #12586
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: Packages I install with Synaptic and add to ASP are automatically installed
+  Scenario: Packages I install with Synaptic and accept to add to ASP are automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     And I start Synaptic
@@ -64,7 +64,7 @@ Feature: Additional software packages
     Then "cowsay" is not part of Additional Software persistence configuration
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: Packages I remove but refuse removing from ASP are still automatically installed
+  Scenario: Packages I uninstall but refuse to remove from ASP are still automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "sslh" using apt
@@ -72,7 +72,7 @@ Feature: Additional software packages
     Then the Additional Software persistence is correctly configured for package "sslh"
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: Packages I install but not do not add to ASP are not automatically installed
+  Scenario: Packages I install but refuse to add to ASP are not automatically installed
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "sl" using apt
