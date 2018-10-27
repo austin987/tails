@@ -178,7 +178,9 @@ document.addEventListener("DOMContentLoaded", function() {
       scenario = url[url.lastIndexOf("install") + 1];
       version = document.getElementById("tails-version").textContent.replace("\n", "");
       fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status);
-    } catch (e) { } // Ignore if we fail to hit the download counter
+    } catch (e) {
+      console.log(e.toString());
+    }
   }
 
   function resetVerificationResult(result) {
