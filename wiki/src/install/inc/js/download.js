@@ -172,12 +172,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function hitCounter(status) {
     try {
-      var counter_url, url, scenario, version;
+      var counter_url, url, scenario, version, cachebust;
       counter_url = "https://tails.boum.org/install/download/counter";
       url = window.location.href.split("/");
       scenario = url[url.lastIndexOf("install") + 1];
       version = document.getElementById("tails-version").textContent.replace("\n", "");
-      fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status);
+      cachebust = Math.round(new Date().getTime() / 1000);
+      fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status + "&cachebust=" + cachebust);
     } catch (e) { } // Ignore if we fail to hit the download counter
   }
 
