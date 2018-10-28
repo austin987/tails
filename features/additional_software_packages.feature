@@ -16,6 +16,8 @@ Feature: Additional software packages
     Then I am notified I can not use Additional Software persistence for "sslh"
     And I open the Additional Software documentation from the notification link
 
+  # Starting from here 'sslh' is configured in ASP and is then always
+  # reinstalled, so we need to use different packages in later scenarios.
   Scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I set an administration password
