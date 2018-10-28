@@ -39,9 +39,9 @@ Feature: Additional software packages
     Given a computer
     And I start Tails from USB drive "__internal" and I login with an administration password
     And I update APT using apt
-    When I install "cowsay" using apt
-    Then ASP has been started for "cowsay" and shuts up because the persistence is locked
-    And the package "cowsay" is installed
+    When I install "makepp" using apt
+    Then ASP has been started for "makepp" and shuts up because the persistence is locked
+    And the package "makepp" is installed
 
   #12586
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
