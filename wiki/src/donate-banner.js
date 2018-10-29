@@ -2,13 +2,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var endOfCampaign = new Date("2019-01-15");
 
-  // Display days remaining when JS is enabled
-  var days = document.getElementsByClassName('counter-days');
-  for (let i = 0; i < days.length; i++) {
-    days[i].style.display = "block";
-  }
-
   // Adjust the number of days remaining
+  // Without JS, it's still displayed but not updated automatically and thus slightly outdated
   var numberOfDays = document.getElementsByClassName('counter-number-of-days');
   for (let i = 0; i < numberOfDays.length; i++) {
     let now = new Date();
