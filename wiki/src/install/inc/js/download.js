@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function hitCounter(status) {
     try {
       var counter_url, url, scenario, version, cachebust;
-      counter_url = "https://tails.boum.org/install/download/counter";
+      counter_url = "/install/download/counter";
       url = window.location.href.split("/");
       scenario = url[url.lastIndexOf("install") + 1];
       version = document.getElementById("tails-version").textContent.replace("\n", "");
