@@ -48,8 +48,8 @@ the scripts snippets found on this page:
   the 3.9 major release, then set this to 3.12 (3.9 is the next major
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
   release).
-* `NEXT_PLANNED_MINOR_VERSION`: set to the version number of the next
-  *minor* Tails release; if the next release is a point-release, use
+* `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
+  *bugfix* Tails release; if the next release is a bugfix release, use
   that one; otherwise, use `${VERSION}.1`
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
@@ -124,10 +124,10 @@ If we are at freeze time for a major release:
    [[APT_repository/time-based_snapshots#bump-expiration-date-for-all-snapshots]]
 
 
-Point-release
--------------
+Bugfix release
+--------------
 
-If we are at freeze time for a point-release:
+If we are at freeze time for a bugfix release:
 
 1. Merge the `master` Git branch into `stable`:
 
@@ -137,8 +137,8 @@ If we are at freeze time for a point-release:
    listed in the `stable` branch's `config/APT_overlays.d/` into the `stable`
    APT suite.
 
-Common steps for point and major releases
------------------------------------------
+Common steps for bugfix and major releases
+------------------------------------------
 
 Reset the release branch's `config/base_branch`:
 
@@ -163,7 +163,7 @@ Update included files
 Upgrade bundled binary Debian packages
 --------------------------------------
 
-Skip this section if you are preparing a point-release.
+Skip this section if you are preparing a bugfix release.
 
 The goal here is to make sure the bundled binary Debian packages contain
 up-to-date localization files, so:
@@ -257,11 +257,11 @@ Major release
 listed in the `testing` branch's `config/APT_overlays.d/` into the `testing`
 custom APT suite.
 
-Point-release
--------------
+Bugfix release
+--------------
 
 <div class="note">
-For point-releases, we generally do not put any RC out, so freeze time
+For bugfix releases, we generally do not put any RC out, so freeze time
 is the same as preparing the actual release. Hence, the following
 steps have already been done above, and this section is a noop in the
 general case.
@@ -488,13 +488,14 @@ Sanity check
 ------------
 
 Verify that the Tor Browser release used in Tails still is the most
-recent. Also look if there's a new `-buildX` tag for the targeted
-Tor Browser version in these Git repositories:
+recent. Also look if there's a new `-buildX` tag (e.g.
+`tor-browser-60.3.0esr-8.0-1-build1`) for the Firefox version the Tor
+Browser we want to ship is based on in these Git repositories:
 
-* <https://gitweb.torproject.org/builders/tor-browser-bundle.git>
+* <https://git.torproject.org/builders/tor-browser-build.git>
 * <https://gitweb.torproject.org/tor-browser.git>
 
-A new tag may indicate that a new Tor Browser release is imminent.
+A new tag may indicate that a new Tor Browser release or rebuild is imminent.
 
 Better catch this before people spend time doing manual tests.
 
@@ -608,7 +609,7 @@ suite should be ready, so it is time to:
 
        - If you cannot rule out that the difference is harmful: let's take
          a step back; we might be compromised, so we are in no position to
-         release. Halt the release, involve the rest of `tails@`, and then
+         release. Halt the release, involve the rest of <tails@boum.org>, and then
          try to re-establish trust in all build machines and infra
          involved, etc. Have fun!
 
@@ -761,7 +762,7 @@ Prepare upgrade-description files
             --version "${VERSION:?}" \
             --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
             --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
-            --next-version "${NEXT_PLANNED_MINOR_VERSION:?}" \
+            --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
             --next-version "${VERSION:?}.1" \
             --iso "${ISO_PATH:?}" \
             --previous-version "${PREVIOUS_VERSION:?}" \
@@ -900,10 +901,8 @@ Done with OpenPGP signing
 By now you are done with Tails signing key, so please make sure it is
 not usable by your system any more.
 
-<div class="note">
-
-Beware! If your have to plug your OpenPGP smart card or reassemble the
-key again after this point it invalidates <i>everything</i> done for
+**Beware!** If your have to plug your OpenPGP smart card or reassemble the
+key again after this point it invalidates *everything* done for
 the [[reproduction of this release|test#reproducibility-final-check]]
 so it has to be started from the beginning:
 
@@ -913,8 +912,6 @@ so it has to be started from the beginning:
   and then starts from scratch.
 
 So please try to avoid this!
-
-</div>
 
 Upload images
 =============
@@ -1056,7 +1053,7 @@ Test that you can start downloading the ISO with a BitTorrent client.
 ISO history
 -----------
 
-Push the released ISO to our Tails ISO history git-annex repo, so that
+Push the released ISO and its build log to our Tails ISO history git-annex repo, so that
 our isotesters can fetch it from there for their testing. How to do so
 is described in our internal Git repo.
 XXX: move this document to a repo that all RMs have access to.
@@ -1078,7 +1075,6 @@ Testing
 1. Email <tails@boum.org> and potential contributors (see
    `manual_testers.mdwn` in the internal Git repository) that tests
    may start:
-   - make sure the Trusted Verifier is in the list of recipients
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
@@ -1273,6 +1269,9 @@ tracker. For a list of candidates, see:
   status](https://labs.riseup.net/code/projects/tails/issues?query_id=111);
 * the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
   in Redmine.
+
+Postpone to next release any remaining open issue for the version
+you've just released.
 
 Then, mark the just-released Redmine milestone as done: go to the
 target version page, click *Edit*, and set *Status* to *Closed*.
