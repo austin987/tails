@@ -27,8 +27,7 @@ Feature: Additional software packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     And the Additional Software persistence is correctly configured for package "sslh"
-    And the additional software package installation service has started
-    And the package "sslh" is installed
+    And the package "sslh" is installed after ASP has been started
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: ASP doesn't notify me when I install packages in a Tails session with locked down persistence
@@ -88,8 +87,7 @@ Feature: Additional software packages
     # was not saved in persistence
     And I add a APT source which has the old version of cowsay
     And I log in to a new session
-    And the additional software package installation service has started
-    And the package "cowsay" installed version is "3.03+dfsg2-1"
+    And the package "cowsay" installed version is "3.03+dfsg2-1" after ASP has been started
     # And then to remove it so that cowsay gets updated
     And I remove the custom APT source for the old cowsay version
     And I prepare the ASP upgrade process to fail
@@ -106,8 +104,7 @@ Feature: Additional software packages
     # was not saved in persistence
     And I add a APT source which has the old version of cowsay
     And I log in to a new session
-    And the additional software package installation service has started
-    And the package "cowsay" installed version is "3.03+dfsg2-1"
+    And the package "cowsay" installed version is "3.03+dfsg2-1" after ASP has been started
     # And then to remove it so that cowsay gets updated
     And I remove the custom APT source for the old cowsay version
     And the network is plugged
@@ -119,8 +116,7 @@ Feature: Additional software packages
   Scenario: Packages I uninstall through ASP GUI are not installed anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    And the additional software package installation service has started
-    And the package "cowsay" is installed
+    And the package "cowsay" is installed after ASP has been started
     And I start "Additional Software" via GNOME Activities Overview
     And I remove "cowsay" from the list of ASP using Additional Software
     Then "cowsay" is not part of Additional Software persistence configuration

@@ -99,7 +99,10 @@ When /^I remove the custom APT source for the old cowsay version$/ do
   $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
 end
 
-When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"$/ do |package, newer_than, version|
+When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"( after ASP has been started)?$/ do |package, newer_than, version, asp|
+  if asp
+    step 'the additional software package installation service has started'
+  end
   current_version = $vm.execute("dpkg-query -W -f='${Version}' #{package}").stdout
   if newer_than
     $vm.execute_successfully("dpkg --compare-versions #{version} lt #{current_version}")
