@@ -31,12 +31,12 @@ Feature: Additional software packages
     And the package "sslh" is installed
 
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: I install packages in a Tails session with locked down persistence without being annoyed by ASP
+  Scenario: ASP doesn't notify me when I install packages in a Tails session with locked down persistence
     Given a computer
     And I start Tails from USB drive "__internal" and I login with an administration password
     And I update APT using apt
     When I install "makepp" using apt
-    Then ASP has been started for "makepp" and shuts up because the persistence is locked
+    Then ASP has been started for "makepp" and doesn't notify me as the persistence is locked
     And the package "makepp" is installed
 
   #12586
