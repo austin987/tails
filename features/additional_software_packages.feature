@@ -78,17 +78,20 @@ Feature: Additional software packages
   Scenario: Recovering in offline mode after ASP previously failed to upgrade and then succeed to upgrade when online
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
+    # Here we add a custom APT source repo with an outdated cowsay package,
+    # pin it and install this version
     When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
     And I accept adding "cowsay" to Additional Software persistence
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
-    # We need to add back the custom APT source for the ASP install step, as it
+    # We need to add back this custom APT source for the ASP install step, as it
     # was not saved in persistence
     And I add a APT source which has the old version of cowsay
     And I log in to a new session
     And the package "cowsay" installed version is "3.03+dfsg2-1" after ASP has been started
-    # And then to remove it so that cowsay gets updated
+    # We then remove the custom APT source so that APT knows only about the
+    # newest cowsay in Debian offlicial repo and updates the package
     And I remove the custom APT source for the old cowsay version
     And I prepare the ASP upgrade process to fail
     And the network is plugged
@@ -100,12 +103,13 @@ Feature: Additional software packages
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
-    # We need to add back the custom APT source for the ASP install step, as it
+    # We need to add back this custom APT source for the ASP install step, as it
     # was not saved in persistence
     And I add a APT source which has the old version of cowsay
     And I log in to a new session
     And the package "cowsay" installed version is "3.03+dfsg2-1" after ASP has been started
-    # And then to remove it so that cowsay gets updated
+    # We then remove the custom APT source so that APT knows only about the
+    # newest cowsay in Debian offlical repo and updates the package
     And I remove the custom APT source for the old cowsay version
     And the network is plugged
     And Tor is ready
