@@ -93,6 +93,8 @@ Feature: Additional software packages
     # We then remove the custom APT source so that APT knows only about the
     # newest cowsay in Debian offlicial repo and updates the package
     And I remove the custom APT source for the old cowsay version
+    # But we remove the newest package after it has been downloaded and before
+    # it is installed, so that the upgrade process fails
     And I prepare the ASP upgrade process to fail
     And the network is plugged
     And Tor is ready
