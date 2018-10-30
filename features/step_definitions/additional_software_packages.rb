@@ -133,7 +133,7 @@ Then /^I open the Additional Software documentation from the notification link$/
   @screen.wait('ASPDocumentationInstallCloning', 120)
 end
 
-Then /^ASP has been started for "([^"]*)" and doesn't notify me as the persistence is locked$/ do |package|
+Then /^ASP dpkg hook has been run for package "([^"]*)" and doesn't notify me as the persistence is locked$/ do |package|
   asp_logs = "#{ASP_STATE_DIR}/log"
   assert(!$vm.file_empty?(asp_logs))
   try_for(60) { $vm.execute("grep #{package} #{asp_logs}").success? }

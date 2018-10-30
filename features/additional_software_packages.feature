@@ -35,7 +35,7 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" and I login with an administration password
     And I update APT using apt
     When I install "makepp" using apt
-    Then ASP has been started for "makepp" and doesn't notify me as the persistence is locked
+    Then ASP dpkg hook has been run for package "makepp" and doesn't notify me as the persistence is locked
     And the package "makepp" is installed
 
   #12586
