@@ -19,13 +19,7 @@ Feature: Additional software packages
   # Starting from here 'sslh' is configured in ASP and is then always
   # reinstalled, so we need to use different packages in later scenarios.
   Scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
-    Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
-    And I set an administration password
-    And I log in to a new session
-    And the network is plugged
-    And Tor is ready
-    And all notifications have disappeared
-    And available upgrades have been checked
+    Given I start Tails from a freshly installed USB drive with an administration password and the network is plugged
     And I update APT using apt
     And I install "sslh" using apt
     Then I am proposed to create an Additional Software persistence for the "sslh" package
