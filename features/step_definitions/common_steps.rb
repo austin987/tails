@@ -407,7 +407,7 @@ end
 Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - News'
+    title = 'Tails'
   when "Tails homepage"
     title = 'Tails - Privacy for anyone anywhere'
   when "Tails roadmap"
