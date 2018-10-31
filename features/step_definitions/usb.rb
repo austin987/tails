@@ -262,6 +262,9 @@ When /^I disable the first persistence preset$/ do
 end
 
 Given /^I create a persistent partition( for Additional Software)?$/ do |asp|
+  if not asp
+    step 'I start "Configure persistent volume" via GNOME Activities Overview'
+  end
   @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)

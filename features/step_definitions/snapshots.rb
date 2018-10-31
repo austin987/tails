@@ -93,7 +93,6 @@ def checkpoints
       :description => "I have started Tails without network from a USB drive with a persistent partition and stopped at Tails Greeter's login screen",
       :parent_checkpoint => 'usb-install-logged-in',
       :steps => [
-        'I start "Configure persistent volume" via GNOME Activities Overview',
         'I create a persistent partition',
         'a Tails persistence partition exists on USB drive "__internal"',
         'I shutdown Tails and wait for the computer to power off',

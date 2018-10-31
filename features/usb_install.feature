@@ -65,8 +65,7 @@ Feature: Installing Tails to a USB drive
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
-    When I start "Configure persistent volume" via GNOME Activities Overview
-    And I create a persistent partition
+    When I create a persistent partition
     Then a Tails persistence partition exists on USB drive "__internal"
 
   Scenario: Booting Tails from a USB drive without a persistent partition

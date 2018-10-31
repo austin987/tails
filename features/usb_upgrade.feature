@@ -38,7 +38,6 @@ Feature: Upgrading an old Tails USB installation
     Given a computer
     And I start Tails from USB drive "old" with network unplugged and I login
     Then Tails is running from USB drive "old"
-    And I start "Configure persistent volume" via GNOME Activities Overview
     And I create a persistent partition
     And I take note of which persistence presets are available
     Then a Tails persistence partition exists on USB drive "old"
