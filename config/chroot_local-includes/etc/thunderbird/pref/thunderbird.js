@@ -9,8 +9,12 @@
 
 pref("extensions.update.enabled", false);
 
-// Use LANG environment variable to choose locale
-pref("intl.locale.matchOS", true);
+// Use LANG environment variable to choose locale from system
+// The old environment setting 'pref("intl.locale.matchOS", true);' is
+// currently not working anymore. The new introduced setting
+// 'intl.locale.requested' is now used for this. Setting an empty string is
+// pulling the system locale into Thunderbird.
+pref("intl.locale.requested", "");
 
 // Disable default mail checking (gnome).
 pref("mail.shell.checkDefaultMail", false);
