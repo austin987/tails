@@ -138,6 +138,6 @@ Feature: Additional software packages
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
     And I log in to a new session
-    Then I see the "The installation of your additional software failed" notification after at most 300 seconds
+    Then I see the "The installation of your additional software failed" notification after at most 900 seconds
     And I open the Additional Software log file from the notification
     And the package "vrms" is not installed
