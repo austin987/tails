@@ -1444,9 +1444,15 @@ this, and skip what does not make sense for a RC.
    during the freeze. This should generally be a no-op but if there
    was some hiccup earlier it could be needed.
 1. Follow the
-   [[post-release|APT_repository/custom#workflow-post-release]]
-   custom APT repository documentation. Make sure there are upgrade-description
-   files for any new versions that were added.
+   [[post-release|APT_repository/custom#workflow-post-release]] custom
+   APT repository documentation. This includes some git operations,
+   like creating an appropriate _"dummy changelog entry"_ in the
+   `debian/changelog` file.
+1. Make sure there are upgrade-description files for any new versions
+   that were added in the `debian/changelog` file since the last
+   release. Background: From time to time the UDF generation/update
+   step isn't perfect and entries might be missing from
+   `wiki/src/upgrade/v1/Tails/<VERSION>/<ARCH>/<CHANNEL>`.
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
    appropriately (they should expire after the major release _after_
