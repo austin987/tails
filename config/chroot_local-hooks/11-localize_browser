@@ -19,11 +19,10 @@ echo "Localize each supported browser locale"
 
 ensure_hook_dependency_is_installed p7zip imagemagick
 
-TBB_LOCALIZED_SEARCHPLUGINS_DIR="${TBB_INSTALL}/distribution/searchplugins/locale/"
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
 LOCALE_PROFILES_DIR="/etc/tor-browser/locale-profiles/"
-NO_SPELLCHECKER_LOCALES="ja ko nl pl tr zh"
+NO_SPELLCHECKER_LOCALES="ca ga id is ja nb tr zh"
 
 # Sanity check that each supported Tor Browser locale has a
 # description for how to localize it further.
@@ -34,21 +33,20 @@ for LOCALE in $(supported_tor_browser_locales); do
     fi
 done
 if [ -n "${BROKEN_LOCALES}" ]; then
-    echo "The following supported browser locales lack search plugin descriptions in ${DESCRIPTIONS_FILE}:${BROKEN_LOCALES}" >&2
+    echo "The following supported browser locales lack descriptions in ${DESCRIPTIONS_FILE}:${BROKEN_LOCALES}" >&2
     exit 1
 fi
 
 # This very long while-loop is fed the DESCRIPTIONS_FILE (IO
 # redirection at the bottom), which describes how we will localize
 # each supported Tor Browser locale. The format is:
-#   MOZILLA_LOCALE:LOCATION:LOCALIZED_LANG:STARTPAGE_LANG:STARTPAGE_LANG_UI
+#   MOZILLA_LOCALE:LOCATION
 # Note that we're forced to pick some representative location for the
 # language-only locales, like Egypt (EG) for Arabic (ar).
-while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE_LANG_UI; do
-    if [ -z "${MOZILLA_LOCALE}" ] || [ -z "${LOCATION}" ] || \
-       [ -z "${LOCALIZED_LANG}" ] || [ -z "${STARTPAGE_LANG}" ]; then
+while IFS=: read MOZILLA_LOCALE LOCATION; do
+    if [ -z "${MOZILLA_LOCALE}" ] || [ -z "${LOCATION}" ]; then
         echo "Something is wrong with ${DESCRIPTIONS_FILE}" >&2
-        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}:${LOCALIZED_LANG}:${STARTPAGE_LANG}:${STARTPAGE_LANG_UI}" >&2
+        echo "Description: ${MOZILLA_LOCALE}:${LOCATION}" >&2
        exit 1
     fi
 
@@ -64,67 +62,11 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
         NORMAL_LOCALE="${MOZILLA_LOCALE}_${LOCATION}"
     fi
     LANG_CODE="$(language_code_from_locale "${NORMAL_LOCALE}")"
-    TARGET_SEARCHPLUGINS_DIR="${TBB_LOCALIZED_SEARCHPLUGINS_DIR}/${MOZILLA_LOCALE}"
-    mkdir -p "${TARGET_SEARCHPLUGINS_DIR}"
-
-    if [ -z "${STARTPAGE_LANG_UI}" ]; then
-        STARTPAGE_LANG_UI=english
-    fi
-    sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
-        -e "s/\${LANG}/${STARTPAGE_LANG}/" \
-        -e "s/\${LANG_UI}/${STARTPAGE_LANG}/" \
-        "${BROWSER_LOCALIZATION_DIR}/startpage.xml-template" > \
-        "${TARGET_SEARCHPLUGINS_DIR}/startpage-${MOZILLA_LOCALE}.xml"
-
-    DDG_PLUGIN="${TARGET_SEARCHPLUGINS_DIR}/ddg-${MOZILLA_LOCALE}.xml"
-    DDG_LANG_UI="${NORMAL_LOCALE}"
-    if [ "${DDG_LANG_UI}" = "vi_VN" ]; then
-        # DDG uses a non-standard locale for Vietnamese
-        DDG_LANG_UI="vi_VI"
-    fi
-    sed -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
-        -e "s/\${LANG_UI}/${DDG_LANG_UI}/" \
-        "${BROWSER_LOCALIZATION_DIR}/ddg.xml-template" > \
-        "${DDG_PLUGIN}"
-
-    # We generate a Wikipedia plugin with localized icons since we
-    # want to provide both English and the locale's plugin, and
-    # Firefox' new search bar only shows icons; the description (which
-    # is localized) is only shown in a pop-up nowdays, so it's easy to
-    # mix them up.
-    CAPITALIZED_LANG_CODE="$(echo "${LANG_CODE}" | tr 'a-z' 'A-Z')"
-    LOCALIZED_WIKIPEDIA_ICON_PATH="/tmp/wikipedia-icon-${LANG_CODE}.png"
-    WIKIPEDIA_SEARCH_ICON_BASE64_PATH="${LOCALIZED_WIKIPEDIA_ICON_PATH}.base64"
-    WIKIPEDIA_ICON_TEMPLATE="${BROWSER_LOCALIZATION_DIR}/Wikipedia-icon.png"
-    convert "${WIKIPEDIA_ICON_TEMPLATE}" \
-            -gravity SouthEast -pointsize 130 -font Liberation-Sans-Bold \
-            -fill black -annotate 0 "${CAPITALIZED_LANG_CODE}" \
-            +set date:create +set date:modify -define png:exclude-chunk=time \
-            -resize 16x16 "${LOCALIZED_WIKIPEDIA_ICON_PATH}"
-    base64 "${LOCALIZED_WIKIPEDIA_ICON_PATH}" | tr -d "\n" > \
-           "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
-    sed -e "s/\${LANG_CODE}/${LANG_CODE}/" \
-        -e "s/\${LOCALIZED_LANG}/${LOCALIZED_LANG}/" \
-        -e "/\${BASE64_PNG_16x16}/ r ${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}" \
-        -e "/\${BASE64_PNG_16x16}/d" \
-        "${BROWSER_LOCALIZATION_DIR}/wikipedia.xml-template" > \
-        "${TARGET_SEARCHPLUGINS_DIR}/wikipedia-${MOZILLA_LOCALE}.xml"
-    rm "${LOCALIZED_WIKIPEDIA_ICON_PATH}" \
-       "${WIKIPEDIA_SEARCH_ICON_BASE64_PATH}"
 
     # Our Tor Browser wrapper script will make use of the following
     # per-locale profiles to set localized defaults for various prefs.
     mkdir -p "${LOCALE_PROFILES_DIR}"
     LOCALE_PROFILE_FILE="${LOCALE_PROFILES_DIR}/${MOZILLA_LOCALE}.js"
-    for KEY in browser.search.defaultenginename \
-               browser.search.selectedEngine; do
-        PLUGIN="DuckDuckGo - ${LOCALIZED_LANG}"
-        if ! grep -q "<ShortName>${PLUGIN}</ShortName>" "${DDG_PLUGIN}"; then
-            echo "Trying to make search plugin '${PLUGIN}' the default for ${MOZILLA_LOCALE} but it unexpectedly wasn't the one we generated earlier" >&2
-            exit 1
-        fi
-        set_mozilla_pref "${LOCALE_PROFILE_FILE}" "${KEY}" "\"${PLUGIN}\""
-    done
     TBB_DICTIONARIES_DIR="${TBB_INSTALL}/dictionaries"
     unset SPELLCHECKER_LOCALE
     for LOCALE in "${NORMAL_LOCALE}" "${LANG_CODE}"; do
@@ -142,7 +84,8 @@ while IFS=: read MOZILLA_LOCALE LOCATION LOCALIZED_LANG STARTPAGE_LANG STARTPAGE
     fi
     set_mozilla_pref "${LOCALE_PROFILE_FILE}" \
                           "spellchecker.dictionary" \
-                          "\"${SPELLCHECKER_LOCALE}\""
+                          "\"${SPELLCHECKER_LOCALE}\"" \
+                           "user_pref"
     HOMEPAGE="https://tails.boum.org/home/"
     if echo "${TAILS_WIKI_SUPPORTED_LANGUAGES}" | grep -qw "${LANG_CODE}"; then
         HOMEPAGE="${HOMEPAGE}index.${LANG_CODE}.html"
@@ -154,47 +97,6 @@ done < "${DESCRIPTIONS_FILE}"
 # This directory is not needed after build time.
 rm -r "${BROWSER_LOCALIZATION_DIR}"
 
-# Remove unwanted browser search plugins bundled in the Tor Browser.
-# Note for posterity: the searchplugins/list.txt file must not be
-# removed! It must list the filename (excl. .xml) of each plugin
-# present, otherwise they won't work. It's not a problem to list
-# nonexisting ones, so as long as we delete plugins we do not have to
-# alter it.
-7z d -mtc=off -tzip "${TBB_INSTALL}/browser/omni.ja" \
-   'chrome/en-US/locale/browser/searchplugins/ddg*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/startpage*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/wikipedia*.xml' \
-   'chrome/en-US/locale/browser/searchplugins/yahoo*.xml'
-# For consistency, fixup the internal timestamps of these archives with
-# the same ones used by the Tor Browser instead of SOURCE_DATE_EPOCH.
-tbb_timestamp="$(date --date='2000-01-01 00:00:00' +%s)"
-strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
-                             "${TBB_INSTALL}/browser/omni.ja" 2>/dev/null
-for pack in "${TBB_EXT}"/langpack-*.xpi; do
-    7z d -mtc=off -tzip "${pack}" \
-       'browser/chrome/*/locale/browser/searchplugins/ddg*.xml' \
-       'browser/chrome/*/locale/browser/searchplugins/startpage*.xml' \
-       'browser/chrome/*/locale/browser/searchplugins/wikipedia*.xml' \
-       'browser/chrome/*/locale/browser/searchplugins/yahoo*.xml'
-    strip_nondeterminism_wrapper --type zip --timestamp "${tbb_timestamp}" \
-                                 "${pack}" 2>/dev/null
-done
-
-# We want our localized English Wikipedia plugin to be available in
-# all locales.
-(
-    cd "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}"
-    for dir in *; do
-        if [ -d "${dir}" ] && [ "${dir}" != en-US ]; then
-            (
-                cd "${dir}"
-                cp -a ../en-US/wikipedia-en-US.xml .
-            )
-        fi
-    done
-)
-
 # All generated and modified files must remain world-readable.
-chmod -R a+rX "${TBB_LOCALIZED_SEARCHPLUGINS_DIR}" \
-              "${LOCALE_PROFILES_DIR}" \
+chmod -R a+rX "${LOCALE_PROFILES_DIR}" \
               "${TBB_EXT}"

@@ -26,6 +26,6 @@ DISTRIBUTION = "stretch"
 def box_name
   git_root = `git rev-parse --show-toplevel`.chomp
   shortid, date = `git log -1 --date="format:%Y%m%d" --pretty="%h %ad" -- \
-                   #{git_root}/vagrant/definitions/tails-builder/`.chomp.split
+                   #{git_root}/vagrant/`.chomp.split
   return "tails-builder-#{ARCHITECTURE}-#{DISTRIBUTION}-#{date}-#{shortid}"
 end

@@ -50,15 +50,15 @@ rm -rf cache/stages_rootfs
 
 # save variables that are needed by chroot_local-hooks
 echo "KERNEL_VERSION=${KERNEL_VERSION}" \
-   >> config/chroot_local-includes/usr/share/amnesia/build/variables
+   >> config/chroot_local-includes/usr/share/tails/build/variables
 echo "KERNEL_SOURCE_VERSION=${KERNEL_SOURCE_VERSION}" \
-   >> config/chroot_local-includes/usr/share/amnesia/build/variables
-echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/share/amnesia/build/variables
+   >> config/chroot_local-includes/usr/share/tails/build/variables
+echo "LB_DISTRIBUTION=${LB_DISTRIBUTION}" >> config/chroot_local-includes/usr/share/tails/build/variables
 echo "POTFILES_DOT_IN='$(
          /bin/grep -E --no-filename '[^ #]*\.in$' po/POTFILES.in \
        | sed -e 's,^config/chroot_local-includes,,' | tr "\n" ' '
    )'" \
-   >> config/chroot_local-includes/usr/share/amnesia/build/variables
+   >> config/chroot_local-includes/usr/share/tails/build/variables
 
 # fix permissions on some source files that will be copied as is to the chroot.
 # they may be wrong, e.g. if the Git repository was cloned with a strict umask.
@@ -111,7 +111,7 @@ DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_KEYRING"
 export DEBOOTSTRAP_OPTIONS
 
 : ${MKSQUASHFS_OPTIONS:='-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K -no-exports'}
-MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/amnesia/build/mksquashfs-excludes"
+MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -wildcards -ef chroot/usr/share/tails/build/mksquashfs-excludes"
 export MKSQUASHFS_OPTIONS
 
 # build the doc wiki

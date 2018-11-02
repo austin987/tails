@@ -58,19 +58,20 @@ In a directory with many Tails ISO images:
 
 # Reproducibility
 
-This section can only be done by the RM.
+This section can **not** be done by the RM.
 
-Clear-sign the hashes of all products using *your personal* OpenPGP
-key:
+1. Download the ISO and all the
+   [IUKs](https://mirrors.wikimedia.org/tails/stable/iuk/) that
+   upgrade to the version you are testing.
 
-    ( \
-        cd "${ISOS:?}" && \
+2. Clear-sign the hashes of all products using your OpenPGP key:
+
         sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso \
-                  Tails_amd64_*_to_${VERSION:?}.iuk \
-            | gpg --clear-sign \
-    )
+            | gpg --clear-sign
 
-and leave the output in this section.
+3. Send the output of the previous command to the _Trusted Reproducer_,
+   whose name is on the
+   [release calendar](https://tails.boum.org/contribute/calendar/).
 
 # Automated test suite
 
@@ -233,7 +234,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
   then:
 
-        echo "TAILS_CHANNEL=\"test\" | sudo tee --append /etc/os-release && \
+        echo 'TAILS_CHANNEL="test"' | sudo tee --append /etc/os-release && \
         tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
@@ -350,28 +351,6 @@ You *really* have to reboot between each language.
     Russian, Tiếng Việt).
 * In the Tor Browser:
   - DuckDuckGo must be the default, pre-selected search plugin. (automate: [[!tails_ticket 10265]])
-  - the search plugins must be localized for the expected locales
-    (automate: [[!tails_ticket 10267]]).
-    
-    StartPage should have localized *user interface* for (run this in
-    a Tails Git checkout of the commit the release under testing was built
-    from):
-    
-        grep --extended-regexp "[^:]*:[^:]*:[^:]*:[^:]*:[^:]+" \
-            config/chroot_local-includes/usr/share/tails/browser-localization/descriptions | \
-            sed -n --regexp-extended 's/^([^:]+):.*$/\1/p'
-    
-    StartPage should have localized *search results* for:
-    
-        grep --extended-regexp "[^:]*:[^:]*:[^:]*:[^:]+:[^:]*" \
-            config/chroot_local-includes/usr/share/tails/browser-localization/descriptions | \
-            sed -n --regexp-extended 's/^([^:]+):.*$/\1/p'
-    
-    DDG should have localized user interface *and* search results, and
-    Wikipedia should have a localized plugin, for:
-    
-        sed -n --regexp-extended 's/^([^:]+):.*$/\1/p' \
-            config/chroot_local-includes/usr/share/tails/browser-localization/descriptions
 
 ## Spellchecking
 

@@ -1,14 +1,14 @@
---- a/etc/apparmor.d/usr.bin.thunderbird.orig  2018-01-09 20:30:54.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.thunderbird       2018-02-23 14:48:02.180000000 +0000
+--- a/etc/apparmor.d/usr.bin.thunderbird	2018-08-19 09:32:11.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.thunderbird	2018-08-21 07:03:51.744244552 +0000
 @@ -16,7 +16,6 @@
    # TODO: finetune this for required accesses
    #include <abstractions/dbus>
    #include <abstractions/dbus-accessibility>
 -  #include <abstractions/dbus-session>
+   #include <abstractions/dconf>
    #include <abstractions/gnome>
    #include <abstractions/ibus>
-   #include <abstractions/nameservice>
-@@ -24,29 +23,19 @@
+@@ -25,7 +24,6 @@
    #include <abstractions/p11-kit>
    #include <abstractions/private-files>
    #include <abstractions/ssl_certs>
@@ -16,10 +16,12 @@
    #include <abstractions/ubuntu-browsers.d/java>
    #include <abstractions/ubuntu-helpers>
  
+@@ -46,23 +44,14 @@
+ 
    # Allow opening attachments
    # TODO: create and use abstractions for opening various file formats
 -  /{usr/local/,usr/,}bin/* Cx -> sanitized_helper,
-+  /{usr/local/,usr/,}bin/{[^g],g[^p],gp[^g]}* Cx -> sanitized_helper,
++  /{usr/local/,usr/,}bin/{[^gp],g[^p],p[^s],gp[^g]}* Cx -> sanitized_helper,
    /usr/lib/libreoffice/program/soffice Cxr -> sanitized_helper,
  
 -  # For Xubuntu to launch the browser
@@ -39,15 +41,15 @@
    owner @{HOME}/.{cache,config}/dconf/user rw,
    owner @{HOME}/.cache/thumbnails/** r,
    owner /run/user/[0-9]*/dconf/user rw,
-@@ -113,6 +102,7 @@
- 
-   # noisy
-   /etc/dconf/profile/user r,
+@@ -135,6 +124,7 @@
+   deny /.suspended r,
+   deny /boot/initrd.img* r,
+   deny /boot/vmlinuz* r,
 +  deny /etc/machine-id r,
-   deny @{MOZ_LIBDIR}/** w,
-   deny /usr/lib/thunderbird-addons/** w,
-   deny /usr/lib/xulrunner-addons/** w,
-@@ -239,7 +229,6 @@
+   deny /var/cache/fontconfig/ w,
+ 
+   # noisy file dialog:
+@@ -254,7 +244,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
    /usr/lib/thunderbird/crashreporter ix,

@@ -43,10 +43,14 @@ apt-get --yes purge  \
    texinfo \
    wamerican
 
+### Remove packages that can get a different priority in the security
+### archive (see https://bugs.debian.org/867668):
+apt-get --yes purge  \
+   mutt
+
 ### Deinstall some other unwanted packages.
 apt-get --yes purge  \
     '^aptitude*' \
-    '^geoclue*' \
     krb5-locales \
     libdvdcss2-dbgsym \
     live-build \
@@ -55,6 +59,12 @@ apt-get --yes purge  \
     tasksel \
     tasksel-data \
     tcpd
+
+### Deinstall some other unwanted packages whose regexp might not be match
+### anything when building with partial, tagged APT snapshots.
+if dpkg --get-selections | grep -qs -E '^geoclue'; then
+    apt-get --yes purge '^geoclue*'
+fi
 
 ### Deinstall dependencies of the just removed packages.
 apt-get --yes --purge autoremove
