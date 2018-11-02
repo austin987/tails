@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 
-"""unifies PO headers and rewraps PO files to 79 chars.
+"""Unifies PO headers and rewraps PO files to 79 chars.
 You can run it with --help to see the usage.
 
 ./unify_po-headers.py --help
 
-run with a list of files:
+Run with a list of files:
 
 ./unify_po-headers.py file1.de.po file2.fr.po
 
-or unifies all po file that are in git stage:
+or unify all po files that are staged for git commit:
 
 ./unify_po-headers.py --cached
 
-or unify all po files of one language in the current directory and all sub directories:
+or unify all po files of one language in the current directory and all subdirectories:
 
 ./unify_po-headers.py --lang de
 
-To check if the current type annotations matches use mypy:
+When modifying unify_po, you should check if the current type annotations match using `mypy` (`apt install mypy`):
 
 mypy unify_po-headers.py
 """
@@ -39,7 +39,7 @@ class PoFile:
         self.fname = fname
 
     def __enter__(self) -> 'PoFile':
-        """magic method for with statement returns self so it can be used with "as" """
+        """magic method for with statement. @returns self so it can be used with "as" """
         self.open()
         return self
 
@@ -49,20 +49,20 @@ class PoFile:
             self.write()
 
     def open(self) -> None:
-        """read the po file"""
+        """read po file content"""
         with open(self.fname, 'r') as f:
             self.content = f.read()
         self.__changed = False
 
     def lang(self) -> str:
-        """retun the language of the filename"""
+        """@returns: language of filename"""
         exts = self.fname.split(".")
         if len(exts) < 3:
             raise Exception("po file should have a language in his name.", self.fname)
         return exts[-2]
 
     def check(self, key: str, value: str) -> bool:
-        """check if there is "key: value\\n" in in PO header"""
+        """check if there is "key: value\\n" in PO header"""
         m = self.regexKey(key).search(self.content)
         if not m:
             return False
@@ -71,7 +71,7 @@ class PoFile:
         return (fileValue == value)
 
     def unifyKey(self, key: str, value: str) -> None:
-        """ set value for PO header key to "key: value\\n" """
+        """ set value of PO header key to "key: value\\n" """
         if not self.check(key, value):
             self.content = self.regexKey(key).sub('"{key}: {value}\\\\n"'.format(key=key, value=value),
                    self.content
@@ -79,13 +79,13 @@ class PoFile:
             self.__changed = True
 
     def write(self) -> None:
-        """writes file, if the content was changed"""
+        """write file, if content was changed"""
         if self.__changed:
             with open(self.fname, 'w') as f:
                 f.write(self.content)
 
     def msgcat(self) -> None:
-        """runs msgcat over file, if file is already opened, than just the opened copy is modified"""
+        """runs msgcat over file, if file is already opened, than only the opened copy is modified"""
         cmd = ["msgcat",] + MSGCAT_OPTIONS
         if hasattr(self, "content"):
             cmd.append("-") # use stdin as input
@@ -103,7 +103,7 @@ class PoFile:
             subprocess.check_call(cmd)
 
 def unifyPoFile(fname: str) -> None:
-    """unify PO header and runs msgcat for file named fname"""
+    """unify PO header and run msgcat for file named fname"""
     with PoFile(fname) as poFile:
         poFile.unifyKey("Language", poFile.lang())
         poFile.unifyKey("Content-Type", "text/plain; charset=UTF-8")
@@ -113,7 +113,7 @@ def unifyPoFile(fname: str) -> None:
         poFile.msgcat()
 
 def main(files: List[str]) -> None:
-    """unifies PO header for a list of files"""
+    """unify PO headers for a list of files"""
     pool = multiprocessing.Pool()
     list(pool.map(unifyPoFile,files))
 
@@ -122,19 +122,19 @@ if __name__ == '__main__':
     import glob
     import os.path
 
-    parser = argparse.ArgumentParser(description='unify po files')
-    parser.add_argument('--lang', dest='lang', help='all files for a specific language.')
-    parser.add_argument('--cached', dest='cached', action='store_true', help='all po files within git stage.')
+    parser = argparse.ArgumentParser(description='Unify PO files')
+    parser.add_argument('--lang', dest='lang', help='all files of a specific language.')
+    parser.add_argument('--cached', dest='cached', action='store_true', help='all git staged PO files.')
     parser.add_argument('files', metavar='file', type=str, nargs='*',
-        help='list files to process')
+        help='list of files to process')
     args = parser.parse_args()
 
     if args.lang:
         args.files += glob.glob("**/*.{lang}.po".format(lang=args.lang))
 
     if args.cached:
-        # get toplevel directory of the current git repository
-        # git diff returns always relative paths to the toplevel directory
+        # get top level directory of the current git repository
+        # git diff returns always relative paths to the top level directory
         toplevel = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
         toplevel = toplevel.decode()[:-1] # get rid of tailing \n
 
@@ -145,6 +145,6 @@ if __name__ == '__main__':
         args.files += [os.path.join(toplevel,f) for f in output.decode().split("\n") if f.endswith(".po")]
 
     if not args.files:
-        print("WARNING: no file to unify :( You may want to add files to operate on. See --help for further information.")
+        print("WARNING: no file to unify:( You may want to add files to operate on. See --help for further information.")
 
     main(args.files)
