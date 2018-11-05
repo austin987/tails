@@ -119,7 +119,7 @@ Feature: Additional softwares
     And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
 
   # Depends on scenario: Recovering in offline mode after ASP previously failed to upgrade and then succeed to upgrade when online
-  Scenario: Packages I uninstall through ASP GUI are not installed anymore
+  Scenario: Packages I remove from additional softwares through the GUI are not in the additional software list anymore
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     And the package "cowsay" is installed after ASP has been started
