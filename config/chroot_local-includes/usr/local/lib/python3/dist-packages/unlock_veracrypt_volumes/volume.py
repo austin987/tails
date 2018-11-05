@@ -53,12 +53,18 @@ class Volume(object):
         block_label = self.udisks_object.get_block().props.id_label
         partition = self.udisks_object.get_partition()
         if block_label:
+            # Translators: Don't translate {volume_label} or {volume_size},
+            # they are placeholders and will be replaced.
             return _("{volume_label} ({volume_size})").format(volume_label=block_label,
                                                               volume_size=self.size_for_display)
         elif partition and partition.props.name:
+            # Translators: Don't translate {partition_name} or {partition_size},
+            # they are placeholders and will be replaced.
             return _("{partition_name} ({partition_size})").format(partition_name=partition.props.name,
                                                                    partition_size=self.size_for_display)
         else:
+            # Translators: Don't translate {volume_size}, it's a placeholder
+            # and will be replaced.
             return _("{volume_size} Volume").format(volume_size=self.size_for_display)
 
     @property
@@ -213,11 +219,13 @@ class Volume(object):
 
                 if "No key available with this passphrase" in e.message or \
                    "No device header detected with this passphrase" in e.message:
-                    title = "Wrong passphrase or parameters"
+                    title = _("Wrong passphrase or parameters")
                 else:
-                    title = "Error unlocking volume"
+                    title = _("Error unlocking volume")
 
-                body = "Couldn't unlock volume %s:\n%s" % (self.name, e.message)
+                # Translators: Don't translate {volume_name} or {error_message},
+                # they are placeholder and will be replaced.
+                body = _("Couldn't unlock volume {volume_name}:\n{error_message}".format(volume_name=self.name, error_message=e.message))
                 self.manager.show_warning(title, body)
                 return
             finally:

@@ -136,7 +136,7 @@ Then, clone the metadata repository and initialize git-annex:
 
 	git clone gitolite@git.puppet.tails.boum.org:torbrowser-archive.git && \
 	cd torbrowser-archive && \
-	git annex init 
+	git annex init
 
 You now have a lot of (dangling) symlinks in place of the files that are
 available in this git-annex repo.
@@ -242,3 +242,21 @@ Clean up
 	cd "$TBB_ARCHIVE" && \
 	git annex drop -- "${TBB_VERSION}" && \
     rm -rf "$DL_DIR"
+
+Update the htpdate User Agent
+=============================
+
+We want to use the same user agent in our htpdate script (see the
+[[Time syncing design|contribute/design/Time_syncing]]
+for more info on that) as in Tor Browser.
+
+To find out the User Agent of the new Tor Browser:
+
+1. Start Tor Browser (outside of Tails, if there is no ISO yet with the new
+   Tor Browser)
+2. Open the _Network_ tab in the _Developer Tools_ (Ctrl+Shift+E)
+3. Load a website (e.g. <https://tails.boum.org>)
+4. Select one of the GET requests in the _Developer Tools_
+5. Scroll down to `User-Agent` in the _Request headers_ section
+
+Now replace the User Agent in `config/chroot_local-includes/etc/default/htpdate.user-agent` with the one you found above.

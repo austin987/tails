@@ -134,6 +134,7 @@ import socket
 import socketserver
 import stem
 import stem.control
+import stem.connection
 import struct
 import sys
 import textwrap
@@ -565,12 +566,8 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         ))
 
     def connect_to_real_control_port(self):
-        with open(global_args.control_cookie_path, "rb") as f:
-            cookie = f.read()
-        controller = stem.control.Controller.from_socket_file(
-            global_args.control_socket_path
-        )
-        controller.authenticate(cookie)
+        controller = stem.connection.connect(control_socket=global_args.control_socket_path)
+        stem.connection.authenticate_cookie(controller, cookie_path=global_args.control_cookie_path)
         return controller
 
     def handle(self):

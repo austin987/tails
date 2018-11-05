@@ -4,11 +4,61 @@ tails (3.12) UNRELEASED; urgency=medium
 
  -- Tails developers <tails@boum.org>  Wed, 05 Sep 2018 16:51:53 +0000
 
-tails (3.10) UNRELEASED; urgency=medium
+tails (3.10.1) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Declare that Enigmail is compatible with Thunderbird 60.*.
 
- -- anonym <anonym@riseup.net>  Thu, 04 Oct 2018 14:08:41 +0200
+ -- Tails developers <tails@boum.org>  Tue, 23 Oct 2018 01:30:00 +0200
+
+tails (3.10) unstable; urgency=medium
+
+  * Security fixes
+    - Harden sudo config to avoid potential future privilege escalation
+      (Closes: #15829).
+    - Upgrade Linux to 4.18 and aufs to 4.18-20181008 (Closes: #15936).
+    - Upgrade the snapshot of the Debian archive to 2018100901 accordingly.
+    - Upgrade Tor Browser to 8.0.3-build1 (Closes: #16067).
+    - Upgrade Thunderbird to 60.2.1 (Closes: #16037).
+
+  * Bugfixes
+    - Fix installation of mesa/stretch-backports by installing libwayland*
+      from stretch-backports (Closes: #15846).
+    - Tor Browser AppArmor profile patch: update to apply cleanly on top
+      of torbrowser-launcher 0.2.9-5.
+    - Additional Software: fix issues spotted during the code review
+      (Closes: #15838).
+    - Additional Software: make sure to offer persistence only for newly
+      installed packages, avoiding inconsistency (Closes: #15983).
+    - Improve button labels in confirmation dialogs of the Tails installer
+      (Closes: #11501).
+    - Hardcode User Agent in htpdate.user-agent (Closes: #15912), as the
+      Tor Browser doesn't expose it anymore.
+    - Fix encoding-related crashes in Tails Installer (Closes: #15166).
+    - Set the Firefox preferences to spoof English, to avoid leaking
+      information about locale settings (Closes: #16029).
+    - VeraCrypt: Hide PIM entries in GNOME Shell and Disks, since a newer
+      cryptsetup would be needed (Closes: #16031).
+    - VeraCrypt: Fix support for multiple encryption, by iterating over
+      all children in the device-mapper tree (Closes: #15967).
+    - Update translations.
+
+  * Minor improvements and updates
+    - Add dmsetup and losetup output in WhisperBack reports to help debug
+      VeraCrypt-related issues (Closes: #15966).
+    - Let AppArmor allow access to /usr/local/share/mime, reducing noise
+      in logs due to many DENIED entries (Closes: #15965).
+    - Use proper stem.connection module in onion-grater instead of trying
+      to read the auth cookie manually: that's fragile and breaks some use
+      cases (e.g. custom auth cookie).
+    - Unlock VeraCrypt Volumes: Improve internationalization support.
+
+  * Test suite
+    - Ensure the test suite doesn't break when changing the headline of
+      /home (Closes: #12156).
+    - Update test suite for updated button labels in confirmation dialogs
+      of the Tails installer (Closes: #11501).
+
+ -- Tails developers <tails@boum.org>  Tue, 23 Oct 2018 01:30:00 +0200
 
 tails (3.9.1) unstable; urgency=medium
 

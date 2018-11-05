@@ -129,6 +129,7 @@ class VolumeManager(object):
             try:
                 fd = os.open(path, os.O_RDONLY)
                 warning["title"] = _("Container opened read-only")
+                # Translators: Don't translate {path}, it's a placeholder  and will be replaced.
                 warning["body"] = _("The file container {path} could not be opened with write access. "
                                     "It was opened read-only instead. You will not be able to modify the "
                                     "content of the container.\n"
