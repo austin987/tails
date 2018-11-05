@@ -1,5 +1,5 @@
 @product
-Feature: APT sources must be correctly configured
+Feature: APT sources are correctly configured
   As a Tails user
   I want APT to be configured to use hidden services
 
