@@ -95,7 +95,7 @@ When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |
   step "the package \"cowsay\" installed version is \"#{version}\""
 end
 
-When /^I remove the custom APT source for the old cowsay version$/ do
+When /^I remove the custom APT source that has the old cowsay version$/ do
   $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
 end
 
