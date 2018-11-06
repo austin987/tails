@@ -19,7 +19,7 @@ Then /^the additional software package (upgrade|installation) service has starte
   end
 end
 
-Then /^I am notified I can not use Additional Software persistence for "([^"]*)"$/  do |package|
+Then /^I am notified I can not use Additional Software for "([^"]*)"$/  do |package|
   title = "You could install #{package} automatically when starting Tails"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
@@ -46,7 +46,7 @@ Then /^The Additional Software persistence option is enabled$/  do
   @screen.wait('ASPPersistenceSetupOptionEnabled', 60)
 end
 
-Then /^the Additional Software persistence is correctly configured for package "([^"]*)"$/ do |package|
+Then /^the Additional Software is correctly configured for package "([^"]*)"$/ do |package|
   asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
   assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
@@ -55,14 +55,14 @@ Then /^the Additional Software persistence is correctly configured for package "
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs '^.*_Packages$'").success?
 end
 
-Then /^"([^"]*)" is not part of Additional Software persistence configuration$/ do |package|
+Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
   asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
   assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
   $vm.execute("grep \"#{package}\" #{asp_conf}").stdout.empty?
 end
 
-When /^I (refuse|accept) (adding|removing) "([^"]*)" (to|from) Additional Software persistence$/  do |decision, action, package, destination|
+When /^I (refuse|accept) (adding|removing) "([^"]*)" (to|from) Additional Software$/  do |decision, action, package, destination|
   gnome_shell = Dogtail::Application.new('gnome-shell')
   case action
   when "adding"
