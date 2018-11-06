@@ -38,7 +38,6 @@ Feature: Additional softwares
     Then ASP dpkg hook has been run for package "makepp" and doesn't notify me as the persistence is locked
     And the package "makepp" is installed
 
-  #12586
   # Depends on scenario: I set up ASP when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install with Synaptic and accept to add to ASP are automatically installed
     Given a computer
