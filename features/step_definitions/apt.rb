@@ -79,23 +79,22 @@ Then /^I (un)?install "(.+)" using apt$/ do |removal, package|
   end
 end
 
-When /^I add a APT source which has the old version of cowsay$/ do
+When /^I configure APT to prefer an old version of cowsay$/ do
   apt_source = 'deb tor+http://deb.tails.boum.org/ asp-test-upgrade-cowsay main'
   apt_pref = 'Package: cowsay
 Pin: release o=Tails,a=asp-test-upgrade-cowsay
 Pin-Priority: 999'
   $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list', apt_source)
   $vm.file_overwrite('/etc/apt/preferences.d/asp-test-upgrade-cowsay', apt_pref)
+  step 'I update APT using apt'
 end
 
 When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |version|
-  step 'I add a APT source which has the old version of cowsay'
-  step 'I update APT using apt'
   step 'I install "cowsay" using apt'
   step "the package \"cowsay\" installed version is \"#{version}\""
 end
 
-When /^I remove the custom APT source that has the old cowsay version$/ do
+When /^I revert the APT tweaks that made it prefer an old version of cowsay$/ do
   $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
 end
 
