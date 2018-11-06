@@ -111,7 +111,7 @@ Feature: Additional softwares
     And I log in to a new session
     And the package "cowsay" installed version is "3.03+dfsg2-1" after ASP has been started
     # We then remove the custom APT source so that APT knows only about the
-    # newest cowsay in Debian offlical repo and upgrades the package
+    # newest cowsay in Debian official repo and upgrades the package
     And I remove the custom APT source that has the old cowsay version
     And the network is plugged
     And Tor is ready
