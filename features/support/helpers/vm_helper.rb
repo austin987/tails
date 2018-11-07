@@ -523,10 +523,7 @@ class VM
   end
 
   def file_empty?(file)
-    if file_exist?(file)
-      return file_content(file).empty?
-    end
-    return true
+    return file_content(file).empty?
   end
 
   def directory_exist?(directory)
