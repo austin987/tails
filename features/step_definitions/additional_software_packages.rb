@@ -140,7 +140,7 @@ end
 When /^I open the Additional Software configuration window from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Configure', roleName: 'push button').click
-  try_for(60) { @asp = Dogtail::Application.new('tails-additional-software-config') }
+  @asp = Dogtail::Application.new('tails-additional-software-config')
 end
 
 Then /^I open the Additional Software log file from the notification$/ do
