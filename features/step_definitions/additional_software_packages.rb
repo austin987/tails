@@ -48,15 +48,19 @@ end
 Then /^the Additional Software is correctly configured for package "([^"]*)"$/ do |package|
   assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
-  assert($vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?)
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb").success?
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages").success?
+  try_for(30) do
+    assert($vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?)
+  end
 end
 
 Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
   assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
-  $vm.execute("grep \"#{package}\" #{ASP_CONF}").stdout.empty?
+  try_for(30) do
+    $vm.execute("grep \"#{package}\" #{ASP_CONF}").stdout.empty?
+  end
 end
 
 When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/  do |decision, action, package, destination|
@@ -68,26 +72,17 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Soft
     case decision
     when "accept"
       gnome_shell.child('Install Every Time', roleName: 'push button').click
-      try_for(30) do
-        step "the Additional Software is correctly configured for package \"#{package}\""
-      end
     when "refuse"
       gnome_shell.child('Install Only Once', roleName: 'push button').click
-      step "\"#{package}\" is not in the list of Additional Software"
     end
   when "removing"
     title = "Remove #{package} from your additional software?"
     step "I see the \"#{title}\" notification after at most 300 seconds"
-    step "the Additional Software is correctly configured for package \"#{package}\""
     case decision
     when "accept"
       gnome_shell.child('Remove', roleName: 'push button').click
-      try_for(30) do
-        step "\"#{package}\" is not in the list of Additional Software"
-      end
     when "refuse"
       gnome_shell.child('Cancel', roleName: 'push button').click
-      step "the Additional Software is correctly configured for package \"#{package}\""
     end
   end
 end
