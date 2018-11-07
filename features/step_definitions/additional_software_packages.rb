@@ -127,7 +127,7 @@ Then /^I open the Additional Software documentation from the notification link$/
   #try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
   #step '"Install from another Tails" has loaded in the Tor Browser'
   # So instead let's try to find the title of the page with Sikuli.
-  @screen.wait('ASPDocumentationInstallCloning', 120)
+  @screen.wait('ASPDocumentationInstallCloning.png', 120)
 end
 
 Then /^Additional Software dpkg hook has been run for package "([^"]*)" and doesn't notify me as the persistence is locked$/ do |package|
