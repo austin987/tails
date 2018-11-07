@@ -48,9 +48,9 @@ end
 Then /^the Additional Software is correctly configured for package "([^"]*)"$/ do |package|
   assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
-  assert($vm.execute("grep #{package} #{ASP_CONF}").success?)
-  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/ | grep -qs '^#{package}.*\.deb$'").success?
-  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs '^.*_Packages$'").success?
+  assert($vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?)
+  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb").success?
+  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages").success?
 end
 
 Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
