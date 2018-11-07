@@ -86,10 +86,10 @@ Pin: release o=Tails,a=asp-test-upgrade-cowsay
 Pin-Priority: 999'
   $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list', apt_source)
   $vm.file_overwrite('/etc/apt/preferences.d/asp-test-upgrade-cowsay', apt_pref)
-  step 'I update APT using apt'
 end
 
 When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |version|
+  step 'I update APT using apt'
   step 'I install "cowsay" using apt'
   step "the package \"cowsay\" installed version is \"#{version}\""
 end
