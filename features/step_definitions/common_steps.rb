@@ -151,7 +151,7 @@ Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I 
     step "I enable persistence" if persistence_on
     step "I set an administration password" if admin_password
     step "I log in to a new session"
-    step "the Additional Software package installation service has started"
+    step "the Additional Software installation service has started"
     if network_unplugged
       step "all notifications have disappeared"
     else
@@ -369,7 +369,7 @@ Given /^Tor is ready$/ do
   # When we test for ASP upgrade failure the following tests would fail,
   # so let's skip them in this case.
   if !$vm.file_exist?('/run/live-additional-software/doomed_to_fail')
-    step "the Additional Software package upgrade service has started"
+    step "the Additional Software upgrade service has started"
     begin
       try_for(30) { $vm.execute('systemctl is-system-running').success? }
     rescue Timeout::Error
@@ -592,7 +592,7 @@ Given /^the package "([^"]+)" is( not)? installed( after Additional Software has
            "Package '#{package}' is present in dpkg database")
   else
     if asp
-      step 'the Additional Software package installation service has started'
+      step 'the Additional Software installation service has started'
     end
     assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
            "Package '#{package}' is not installed")
