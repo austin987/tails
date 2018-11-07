@@ -98,7 +98,7 @@ Given /^I remove "([^"]*)" from the list of Additional Software using Additional
   installed_package.parent.parent.child('Close', roleName: 'push button').click
   @asp_gui.child('Question', roleName: 'alert').button('Remove').click
   deal_with_polkit_prompt(@sudo_password)
-  try_for(120) do
+  try_for(60) do
     step "\"#{package}\" is not part of Additional Software persistence configuration"
   end
 end
