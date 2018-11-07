@@ -92,15 +92,12 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Soft
   end
 end
 
-Given /^I remove "([^"]*)" from the list of Additional Software using Additional Software$/  do |package|
+Given /^I remove "([^"]*)" from the list of Additional Software using Additional Software GUI$/  do |package|
   @asp_gui = Dogtail::Application.new('tails-additional-software-config')
   installed_package = @asp_gui.child(package, roleName: 'label')
   installed_package.parent.parent.child('Close', roleName: 'push button').click
   @asp_gui.child('Question', roleName: 'alert').button('Remove').click
   deal_with_polkit_prompt(@sudo_password)
-  try_for(60) do
-    step "\"#{package}\" is not part of Additional Software persistence configuration"
-  end
 end
 
 When /^I prepare the Additional Software upgrade process to fail$/  do

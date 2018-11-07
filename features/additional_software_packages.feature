@@ -119,7 +119,7 @@ Feature: Additional softwares
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     And the package "cowsay" is installed after Additional Software has been started
     And I start "Additional Software" via GNOME Activities Overview
-    And I remove "cowsay" from the list of Additional Software using Additional Software
+    And I remove "cowsay" from the list of Additional Software using Additional Software GUI
     Then "cowsay" is not in the list of Additional Software
 
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
