@@ -1,4 +1,5 @@
 ASP_STATE_DIR = "/run/live-additional-software"
+ASP_CONF = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
 
 Then /^the Additional Software (upgrade|installation) service has started$/ do |service|
   if !$vm.file_empty?('/live/persistence/TailsData_unlocked/live-additional-software.conf')
@@ -45,19 +46,17 @@ Then /^The Additional Software persistence option is enabled$/  do
 end
 
 Then /^the Additional Software is correctly configured for package "([^"]*)"$/ do |package|
-  asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
-  assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
+  assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
-  assert($vm.execute("grep #{package} #{asp_conf}").success?)
+  assert($vm.execute("grep #{package} #{ASP_CONF}").success?)
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/ | grep -qs '^#{package}.*\.deb$'").success?
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/ | grep -qs '^.*_Packages$'").success?
 end
 
 Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
-  asp_conf = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
-  assert($vm.file_exist?(asp_conf), "ASP configuration file not found")
+  assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
-  $vm.execute("grep \"#{package}\" #{asp_conf}").stdout.empty?
+  $vm.execute("grep \"#{package}\" #{ASP_CONF}").stdout.empty?
 end
 
 When /^I (refuse|accept) (adding|removing) "([^"]*)" (to|from) Additional Software$/  do |decision, action, package, destination|
