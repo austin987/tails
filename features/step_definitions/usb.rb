@@ -242,10 +242,10 @@ Given /^I enable all persistence presets$/ do
       debug_log("setting already enabled, skipping")
     end
   end
-  step "I save and exit the Persistence Wizard"
+  save_and_exit_the_persistence_wizard
 end
 
-When /^I save and exit the Persistence Wizard$/ do
+def save_and_exit_the_persistence_wizard
   @screen.type(Sikuli::Key.ENTER) # Press the Save button
   @screen.wait('PersistenceWizardDone.png', 60)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)

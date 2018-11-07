@@ -38,7 +38,7 @@ Then /^I create the Additional Software persistence$/  do
   gnome_shell.child('Create Persistent Storage', roleName: 'push button').click
   step 'I create a persistent partition for Additional Software'
   step 'The Additional Software persistence option is enabled'
-  step 'I save and exit the Persistence Wizard'
+  save_and_exit_the_persistence_wizard
 end
 
 Then /^The Additional Software persistence option is enabled$/  do
