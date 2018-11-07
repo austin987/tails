@@ -98,9 +98,9 @@ When /^I revert the APT tweaks that made it prefer an old version of cowsay$/ do
   $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
 end
 
-When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"( after ASP has been started)?$/ do |package, newer_than, version, asp|
+When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
   if asp
-    step 'the additional software package installation service has started'
+    step 'the Additional Software package installation service has started'
   end
   current_version = $vm.execute("dpkg-query -W -f='${Version}' #{package}").stdout
   if newer_than

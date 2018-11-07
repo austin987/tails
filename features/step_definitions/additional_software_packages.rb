@@ -1,6 +1,6 @@
 ASP_STATE_DIR = "/run/live-additional-software"
 
-Then /^the additional software package (upgrade|installation) service has started$/ do |service|
+Then /^the Additional Software (upgrade|installation) service has started$/ do |service|
   if !$vm.file_empty?('/live/persistence/TailsData_unlocked/live-additional-software.conf')
     case service
     when "installation"
@@ -95,7 +95,7 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (to|from) Additional Softwa
   end
 end
 
-Given /^I remove "([^"]*)" from the list of ASP using Additional Software$/  do |package|
+Given /^I remove "([^"]*)" from the list of Additional Software using Additional Software$/  do |package|
   @asp_gui = Dogtail::Application.new('tails-additional-software-config')
   installed_package = @asp_gui.child(package, roleName: 'label')
   installed_package.parent.parent.child('Close', roleName: 'push button').click
@@ -106,7 +106,7 @@ Given /^I remove "([^"]*)" from the list of ASP using Additional Software$/  do 
   end
 end
 
-When /^I prepare the ASP upgrade process to fail$/  do
+When /^I prepare the Additional Software upgrade process to fail$/  do
   # Remove the newest cowsay package from the APT cache with a DPKG hook
   # before it gets installed so that we simulate a failing upgrade.
   failing_dpkg_hook = "DPkg::Pre-Invoke {
@@ -133,7 +133,7 @@ Then /^I open the Additional Software documentation from the notification link$/
   @screen.wait('ASPDocumentationInstallCloning', 120)
 end
 
-Then /^ASP dpkg hook has been run for package "([^"]*)" and doesn't notify me as the persistence is locked$/ do |package|
+Then /^Additional Software dpkg hook has been run for package "([^"]*)" and doesn't notify me as the persistence is locked$/ do |package|
   asp_logs = "#{ASP_STATE_DIR}/log"
   assert(!$vm.file_empty?(asp_logs))
   try_for(60) { $vm.execute("grep #{package} #{asp_logs}").success? }
