@@ -105,11 +105,12 @@ end
 
 When /^I prepare the Additional Software upgrade process to fail$/  do
   # Remove the newest cowsay package from the APT cache with a DPKG hook
-  # before it gets installed so that we simulate a failing upgrade.
-  failing_dpkg_hook = "DPkg::Pre-Invoke {
-  \"test -e #{ASP_STATE_DIR}/installed && \
-  ls -tr1 /var/cache/apt/archives/cowsay*.deb | head -n 1 | xargs rm -f\";
-};"
+  # before it gets upgraded so that we simulate a failing upgrade.
+  failing_dpkg_hook = <<-EOF
+DPkg::Pre-Invoke {
+  "ls -tr1 /var/cache/apt/archives/cowsay*.deb | head -n 1 | xargs rm";
+};
+EOF
   $vm.file_overwrite('/etc/apt/apt.conf.d/00failingDPKGhook', failing_dpkg_hook)
   # Tell the upgrade service check step not to run
   $vm.execute("touch #{ASP_STATE_DIR}/doomed_to_fail")
