@@ -4,18 +4,16 @@ Then /^the Additional Software (upgrade|installation) service has started$/ do |
   if !$vm.file_empty?('/live/persistence/TailsData_unlocked/live-additional-software.conf')
     case service
     when "installation"
-      state_file = "#{ASP_STATE_DIR}/installed"
+      service = "tails-additional-software-install"
       seconds_to_wait = 600
     when "upgrade"
-      state_file = "#{ASP_STATE_DIR}/upgraded"
+      service = "tails-additional-software-upgrade"
       seconds_to_wait = 900
     end
-    if !$vm.file_exist?(state_file)
-      try_for(seconds_to_wait) do
-        $vm.file_exist?(state_file)
-      end
-      step "I am notified that the installation succeeded"
+    try_for(seconds_to_wait) do
+      assert($vm.execute("systemctl status #{service}.service").success?)
     end
+    step "I am notified that the installation succeeded"
   end
 end
 
