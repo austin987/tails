@@ -69,25 +69,25 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Soft
     when "accept"
       gnome_shell.child('Install Every Time', roleName: 'push button').click
       try_for(30) do
-        step "the Additional Software persistence is correctly configured for package \"#{package}\""
+        step "the Additional Software is correctly configured for package \"#{package}\""
       end
     when "refuse"
       gnome_shell.child('Install Only Once', roleName: 'push button').click
-      step "\"#{package}\" is not part of Additional Software persistence configuration"
+      step "\"#{package}\" is not in the list of Additional Software"
     end
   when "removing"
     title = "Remove #{package} from your additional software?"
     step "I see the \"#{title}\" notification after at most 300 seconds"
-    step "the Additional Software persistence is correctly configured for package \"#{package}\""
+    step "the Additional Software is correctly configured for package \"#{package}\""
     case decision
     when "accept"
       gnome_shell.child('Remove', roleName: 'push button').click
       try_for(30) do
-        step "\"#{package}\" is not part of Additional Software persistence configuration"
+        step "\"#{package}\" is not in the list of Additional Software"
       end
     when "refuse"
       gnome_shell.child('Cancel', roleName: 'push button').click
-      step "the Additional Software persistence is correctly configured for package \"#{package}\""
+      step "the Additional Software is correctly configured for package \"#{package}\""
     end
   end
 end
