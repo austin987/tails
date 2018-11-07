@@ -588,7 +588,7 @@ end
 
 Given /^the package "([^"]+)" is( not)? installed( after ASP has been started)?$/ do |package, uninstalled, asp|
   if uninstalled
-    assert(!$vm.execute("dpkg -s '#{package}' 2>/dev/null").success?,
+    assert($vm.execute("dpkg -s '#{package}' 2>/dev/null").failure?,
            "Package '#{package}' is present in dpkg database")
   else
     if asp
