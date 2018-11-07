@@ -586,8 +586,8 @@ When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
-Given /^the package "([^"]+)" is( not)? installed( after ASP has been started)?$/ do |package, uninstalled, asp|
-  if uninstalled
+Given /^the package "([^"]+)" is( not)? installed( after ASP has been started)?$/ do |package, absent, asp|
+  if absent
     assert($vm.execute("dpkg -s '#{package}' 2>/dev/null").failure?,
            "Package '#{package}' is present in dpkg database")
   else
