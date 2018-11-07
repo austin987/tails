@@ -539,7 +539,7 @@ Then /^all persistence configuration files have safe access rights$/ do
       assert_equal("tails-persistence-setup", file_owner)
       assert_equal("tails-persistence-setup", file_group)
       case f
-      when /.*live-additional-software.conf$/
+      when /.*\/live-additional-software.conf$/
         assert_equal("644", file_perms)
       else
         assert_equal("600", file_perms)
