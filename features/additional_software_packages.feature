@@ -1,6 +1,6 @@
 @product @check_tor_leaks
 
-Feature: Additional softwares
+Feature: Additional software
   As a Tails user
   I may want to install softwares not shipped in Tails
   And have them installed automatically when I enable persistence in the Greeter
