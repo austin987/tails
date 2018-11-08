@@ -104,7 +104,7 @@ When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"( after
   end
   current_version = $vm.execute("dpkg-query -W -f='${Version}' #{package}").stdout
   if newer_than
-    $vm.execute_successfully("dpkg --compare-versions #{version} lt #{current_version}")
+    cmd_helper("dpkg --compare-versions '#{version}' lt '#{current_version}'")
   else
     assert_equal(current_version, version)
   end
