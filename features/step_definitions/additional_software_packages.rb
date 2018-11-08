@@ -63,7 +63,7 @@ Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
   end
 end
 
-When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/  do |decision, action, package, destination|
+When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/  do |decision, action, package|
   gnome_shell = Dogtail::Application.new('gnome-shell')
   case action
   when "adding"
