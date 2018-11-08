@@ -84,8 +84,8 @@ Feature: Additional software
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
-    # We need to add back this custom APT source for the Additional Software install step, as it
-    # was not saved in persistence
+    # We need to add back this custom APT source for the Additional Software
+    # install step, as it was not saved in persistence
     And I configure APT to prefer an old version of cowsay
     And I log in to a new session
     And the package "cowsay" installed version is "3.03+dfsg2-1" after Additional Software has been started
@@ -102,8 +102,8 @@ Feature: Additional software
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
-    # We need to add back this custom APT source for the Additional Software install step, as it
-    # was not saved in persistence
+    # We need to add back this custom APT source for the Additional Software
+    # install step, as it was not saved in persistence
     And I configure APT to prefer an old version of cowsay
     And I log in to a new session
     And the package "cowsay" installed version is "3.03+dfsg2-1" after Additional Software has been started
