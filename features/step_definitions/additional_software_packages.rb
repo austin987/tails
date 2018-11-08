@@ -45,7 +45,7 @@ Then /^The Additional Software persistence option is enabled$/  do
   @screen.wait('ASPPersistenceSetupOptionEnabled', 60)
 end
 
-Then /^the Additional Software is correctly configured for package "([^"]*)"$/ do |package|
+Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |package|
   assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb").success?

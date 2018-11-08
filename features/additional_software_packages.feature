@@ -46,7 +46,7 @@ Feature: Additional software
     And I update APT using Synaptic
     When I install "cowsay" using Synaptic
     And I accept adding "cowsay" to Additional Software
-    Then the Additional Software is correctly configured for package "cowsay"
+    Then Additional Software is correctly configured for package "cowsay"
     And the package "cowsay" is installed
 
   # Depends on scenario: Packages I install with Synaptic and accept to add to Additional Software are configured in the Additional Software list
@@ -63,7 +63,7 @@ Feature: Additional software
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "sslh" using apt
     And I refuse removing "sslh" from Additional Software
-    Then the Additional Software is correctly configured for package "sslh"
+    Then Additional Software is correctly configured for package "sslh"
 
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install but refuse to add to Additional Software are not configured in the Additional Software list
