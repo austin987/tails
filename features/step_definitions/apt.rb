@@ -100,7 +100,7 @@ end
 
 When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
   if asp
-    step 'the Additional Software package installation service has started'
+    step 'the Additional Software installation service has started'
   end
   current_version = $vm.execute("dpkg-query -W -f='${Version}' #{package}").stdout
   if newer_than

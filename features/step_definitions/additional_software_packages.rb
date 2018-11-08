@@ -12,7 +12,7 @@ Then /^the Additional Software (upgrade|installation) service has started$/ do |
       seconds_to_wait = 900
     end
     try_for(seconds_to_wait) do
-      assert($vm.execute("systemctl status #{service}.service").success?)
+      $vm.execute("systemctl status #{service}.service").success?
     end
     step "I am notified that the installation succeeded"
   end
@@ -51,7 +51,7 @@ Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |p
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb").success?
   $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages").success?
   try_for(30) do
-    assert($vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?)
+    $vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?
   end
 end
 
