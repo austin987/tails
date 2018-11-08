@@ -81,6 +81,7 @@ Feature: Additional software
     And I configure APT to prefer an old version of cowsay
     When I install an old version "3.03+dfsg2-1" of the cowsay package using apt
     And I accept adding "cowsay" to Additional Software
+    And Additional Software is correctly configured for package "cowsay"
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
