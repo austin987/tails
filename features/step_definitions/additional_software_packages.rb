@@ -2,7 +2,7 @@ ASP_STATE_DIR = "/run/live-additional-software"
 ASP_CONF = '/live/persistence/TailsData_unlocked/live-additional-software.conf'
 
 Then /^the Additional Software (upgrade|installation) service has started$/ do |service|
-  if !$vm.file_empty?('/live/persistence/TailsData_unlocked/live-additional-software.conf')
+  if $vm.file_exists?(ASP_CONF) and !$vm.file_empty?(ASP_CONF)
     case service
     when "installation"
       service = "tails-additional-software-install"
