@@ -19,7 +19,7 @@ Feature: Additional software
   # Starting from here 'sslh' is configured in Additional Software and is then always
   # reinstalled, so we need to use different packages in later scenarios.
   Scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
-    Given I start Tails from a freshly installed USB drive with an administration password and the network is plugged
+    Given I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login
     And I update APT using apt
     And I install "sslh" using apt
     Then I am proposed to create an Additional Software persistence for the "sslh" package

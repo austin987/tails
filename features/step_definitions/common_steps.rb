@@ -162,7 +162,7 @@ Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I 
   end
 end
 
-Given /^I start Tails from a freshly installed USB drive with an administration password and the network is plugged$/ do
+Given /^I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login$/ do
   step "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen"
   step "I set an administration password"
   step "I log in to a new session"
