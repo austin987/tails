@@ -30,7 +30,7 @@ Feature: Additional software
     And the package "sslh" is installed after Additional Software has been started
 
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: Additional Software notification is not shown when I install packages in a Tails session with locked down persistence
+  Scenario: No Additional Software notification is displayed when I install packages in a Tails session with locked down persistence
     Given a computer
     And I start Tails from USB drive "__internal" and I login with an administration password
     And I update APT using apt
