@@ -14,7 +14,7 @@ Feature: Additional software
     And I update APT using apt
     When I install "sslh" using apt
     Then I am notified I can not use Additional Software for "sslh"
-    And I open the Additional Software documentation from the notification link
+    And I can open the Additional Software documentation from the notification link
 
   # Starting from here 'sslh' is configured in Additional Software and is then always
   # reinstalled, so we need to use different packages in later scenarios.
@@ -136,5 +136,5 @@ Feature: Additional software
     And I log in to a new session
     And the Tails desktop is ready
     Then I see the "The installation of your additional software failed" notification after at most 900 seconds
-    And I open the Additional Software log file from the notification
+    And I can open the Additional Software log file from the notification
     And the package "vrms" is not installed

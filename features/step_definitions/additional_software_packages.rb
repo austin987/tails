@@ -112,7 +112,7 @@ When /^I remove the "([^"]*)" deb file from the APT cache$/  do |package|
   $vm.execute("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
 end
 
-Then /^I open the Additional Software documentation from the notification link$/  do
+Then /^I can open the Additional Software documentation from the notification link$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Documentation', roleName: 'push button').click
   # For some reason the below two steps fail. Dogtail can not find the Firefox
@@ -136,7 +136,7 @@ When /^I open the Additional Software configuration window from the notification
   @asp = Dogtail::Application.new('tails-additional-software-config')
 end
 
-Then /^I open the Additional Software log file from the notification$/ do
+Then /^I can open the Additional Software log file from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Show Log', roleName: 'push button').click
   try_for(60) { @gedit = Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
