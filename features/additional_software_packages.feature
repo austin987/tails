@@ -74,7 +74,7 @@ Feature: Additional software
     Then "sl" is not in the list of Additional Software
 
   # Depends on scenario: Packages I uninstall and accept to remove from Additional Software are not configured in the Additional Software list
-  #See https://tails.boum.org/blueprint/additional_software_packages/offline_mode/#index3h2 for high level logic
+  # See https://tails.boum.org/blueprint/additional_software_packages/offline_mode/#index3h2 for high level logic
   Scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
