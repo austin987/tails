@@ -137,7 +137,7 @@ When /^I open the Additional Software configuration window from the notification
 end
 
 When /^I disable the Additional Software installation service$/ do
-  $vm.exectute('systemctl disable tails-additional-software-install.service')
+  $vm.execute('systemctl disable tails-additional-software-install.service')
 end
 
 When /^I start the Additional Software installation service$/ do
