@@ -57,12 +57,12 @@ Then /^I install "(.+)" using apt$/ do |package|
     $vm.execute("apt purge #{package}")
   end
   retry_tor(recovery_proc) do
-    Timeout::timeout(2*60) do
+    Timeout::timeout(3*60) do
       $vm.execute("echo #{@sudo_password} | " +
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-      try_for(60) do
+      try_for(2*60) do
         $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
       end
     end
@@ -74,7 +74,7 @@ Then /^I uninstall "(.+)" using apt$/ do |package|
                                "sudo -S apt -y remove #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-  try_for(60) do
+  try_for(2*60) do
     $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*deinstall[[:space:]].*$'")
   end
 end
