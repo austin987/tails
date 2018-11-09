@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
 
 """Unifies PO headers and rewraps PO files to 79 chars.
-You can run it with --help to see the usage.
 
+Usage:
 ./unify_po-headers.py --help
 
 Run with a list of files:
-
 ./unify_po-headers.py file1.de.po file2.fr.po
 
 or unify all po files that are staged for git commit:
-
 ./unify_po-headers.py --cached
 
-or unify all po files of one language in the current directory and all subdirectories:
-
+or unify all po files of one language in the current directory and all
+subdirectories:
 ./unify_po-headers.py --lang de
 
-When modifying unify_po, you should check if the current type annotations match using `mypy` (`apt install mypy`):
+When modifying unify_po (this script), you should check if the current type
+annotations match, using `mypy` (`apt install mypy`):
 
 mypy unify_po-headers.py
 """
@@ -163,7 +162,7 @@ class PoFile:
 
 def checkPoFile(fname: str, extended: bool) -> List[str]:
     """check PO file for issues.
-    @returns: a list of errors, if empty the file is fine.
+    @returns: nothing or a list of errors
     @extended: is used to check the header fields in more detail.
     """
     errors = list()
@@ -183,7 +182,7 @@ def checkPoFile(fname: str, extended: bool) -> List[str]:
     return errors
 
 def unifyPoFile(fname: str) -> None:
-    """unify PO header and run msgcat for file named fname"""
+    """unify PO header and run msgcat for file named `fname`"""
     with PoFile(fname) as poFile:
         for key, value in poFile.fixedHeaders().items():
             poFile.unifyKey(key, value)
