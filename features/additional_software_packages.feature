@@ -129,6 +129,7 @@ Feature: Additional software
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "vrms" using apt
     And I accept adding "vrms" to Additional Software
+    And Additional Software is correctly configured for package "vrms"
     And I remove the "vrms" deb file from the APT cache
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
@@ -139,6 +140,6 @@ Feature: Additional software
     And I log in to a new session
     And all notifications have disappeared
     And I start the Additional Software installation service
-    Then I see the "The installation of your additional software failed" notification after at most 180 seconds
+    Then I see the "The installation of your additional software failed" notification after at most 300 seconds
     And I can open the Additional Software log file from the notification
     And the package "vrms" is not installed
