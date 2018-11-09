@@ -16,8 +16,8 @@ Feature: Additional software
     Then I am notified I can not use Additional Software for "sslh"
     And I can open the Additional Software documentation from the notification link
 
-  # Starting from here 'sslh' is configured in Additional Software and is then always
-  # reinstalled, so we need to use different packages in later scenarios.
+  # Here we install the sslh package to test if debconf does not prevent
+  # Additional Software from automatically installing packages.
   Scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
     Given I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login
     And I update APT using apt
@@ -39,6 +39,14 @@ Feature: Additional software
     And the package "makepp" is installed
 
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
+  Scenario: Packages I uninstall and accept to remove from Additional Software are not configured in the Additional Software list
+    Given a computer
+    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
+    When I uninstall "sslh" using apt
+    And I accept removing "sslh" from Additional Software
+    Then "sslh" is not in the list of Additional Software
+
+  # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I install with Synaptic and accept to add to Additional Software are configured in the Additional Software list
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
@@ -50,30 +58,31 @@ Feature: Additional software
     And the package "cowsay" is installed
 
   # Depends on scenario: Packages I install with Synaptic and accept to add to Additional Software are configured in the Additional Software list
-  Scenario: Packages I uninstall and accept to remove from Additional Software are not configured in the Additional Software list
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I uninstall "cowsay" using apt
-    And I accept removing "cowsay" from Additional Software
-    Then "cowsay" is not in the list of Additional Software
-
-  # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: Packages I uninstall but refuse to remove from Additional Software are still configured in the Additional Software list
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I uninstall "sslh" using apt
-    And I refuse removing "sslh" from Additional Software
-    Then Additional Software is correctly configured for package "sslh"
+    When I uninstall "cowsay" using apt
+    And I refuse removing "cowsay" from Additional Software
+    Then Additional Software is correctly configured for package "cowsay"
 
-  # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
+  # Depends on scenario: Packages I install with Synaptic and accept to add to Additional Software are configured in the Additional Software list
+  Scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
+    Given a computer
+    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
+    And the package "cowsay" is installed after Additional Software has been started
+    And I start "Additional Software" via GNOME Activities Overview
+    And I remove "cowsay" from the list of Additional Software using Additional Software GUI
+    Then "cowsay" is not in the list of Additional Software
+
+  # Depends on scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
   Scenario: Packages I install but refuse to add to Additional Software are not configured in the Additional Software list
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I install "sl" using apt
-    And I refuse adding "sl" to Additional Software
-    Then "sl" is not in the list of Additional Software
+    When I install "cowsay" using apt
+    And I refuse adding "cowsay" to Additional Software
+    Then "cowsay" is not in the list of Additional Software
 
-  # Depends on scenario: Packages I uninstall and accept to remove from Additional Software are not configured in the Additional Software list
+  # Depends on scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
   # See https://tails.boum.org/blueprint/additional_software_packages/offline_mode/#incomplete-online-upgrade for high level logic
   Scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
     Given a computer
@@ -113,15 +122,6 @@ Feature: Additional software
     And Tor is ready
     Then the Additional Software upgrade service has started
     And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
-
-  # Depends on scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
-  Scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    And the package "cowsay" is installed after Additional Software has been started
-    And I start "Additional Software" via GNOME Activities Overview
-    And I remove "cowsay" from the list of Additional Software using Additional Software GUI
-    Then "cowsay" is not in the list of Additional Software
 
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: I am notified when Additional Software fails to install a package
