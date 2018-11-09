@@ -136,6 +136,15 @@ When /^I open the Additional Software configuration window from the notification
   @asp = Dogtail::Application.new('tails-additional-software-config')
 end
 
+When /^I disable the Additional Software installation service$/ do
+  $vm.exectute('systemctl disable tails-additional-software-install.service')
+end
+
+When /^I start the Additional Software installation service$/ do
+  $vm.execute('systemctl enable tails-additional-software-install.service')
+  $vm.execute('systemctl --no-block start tails-additional-software-install.service')
+end
+
 Then /^I can open the Additional Software log file from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Show Log', roleName: 'push button').click

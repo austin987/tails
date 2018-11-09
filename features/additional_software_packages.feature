@@ -133,8 +133,12 @@ Feature: Additional software
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
+    # Trying to catch the notification at desktop startup is racy, so let's
+    # start the installation service only once the desktop has settled.
+    And I disable the Additional Software installation service
     And I log in to a new session
-    And the Tails desktop is ready
-    Then I see the "The installation of your additional software failed" notification after at most 900 seconds
+    And all notifications have disappeared
+    And I start the Additional Software installation service
+    Then I see the "The installation of your additional software failed" notification after at most 180 seconds
     And I can open the Additional Software log file from the notification
     And the package "vrms" is not installed
