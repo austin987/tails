@@ -99,7 +99,6 @@ apt-get -y install \
         p7zip-full \
         perlmagick \
         psmisc \
-        python3 \
         python3-gi \
         rsync \
         ruby \
