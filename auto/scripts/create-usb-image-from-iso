@@ -5,7 +5,6 @@ import os
 import logging
 from contextlib import contextmanager
 import re
-import tempfile
 import time
 import subprocess
 
@@ -33,9 +32,9 @@ FILESYSTEM_LABEL = 'Tails'
 GET_UDISKS_OBJECT_TIMEOUT = 2
 WAIT_FOR_PARTITION_TIMEOUT = 2
 
-# The size of the system partition will be:
+# The size of the system partition (in MiB) will be:
 #
-#   SYSTEM_PARTITION_ADDITIONAL_SIZE + size of the contents of the ISO
+#   SYSTEM_PARTITION_ADDITIONAL_SIZE + size of the ISO
 #
 # SYSTEM_PARTITION_ADDITIONAL_SIZE must be large enough to fit
 # the partition table, reserved sectors, and filesystem metadata.
@@ -55,8 +54,8 @@ class ImageCreator(object):
         self.free_space = free_space
         self._loop_device = None  # type: str
         self._partition = None  # type: str
+        self._system_partition_size = None  # type: int
         self.mountpoint = None  # type: str
-        self.system_partition_size = None  # type: int
 
     @property
     def loop_device(self) -> UDisks.ObjectProxy:
@@ -70,6 +69,13 @@ class ImageCreator(object):
             raise ImageCreationError("Partition not created")
 
         return self.try_getting_udisks_object(self._partition)
+
+    @property
+    def system_partition_size(self) -> int:
+        if self._system_partition_size is None:
+            self._system_partition_size = get_file_size(self.iso) + SYSTEM_PARTITION_ADDITIONAL_SIZE
+
+        return self._system_partition_size
 
     def try_getting_udisks_object(self, object_path: str) -> UDisks.Object:
         start_time = time.perf_counter()
@@ -89,41 +95,34 @@ class ImageCreator(object):
         client.settle()
 
     def create_image(self):
-        with self.extract_iso() as iso_extraction_dir:
-            self.system_partition_size = self.calculate_system_partition_size(iso_extraction_dir)
-            self.create_empty_image()
+        self.create_empty_image()
 
-            with self.setup_loop_device():
-                self.create_gpt()
-                self.create_partition()
-                self.set_partition_flags()
-                # XXX: Rescan?
-                self.format_partition()
-                # XXX: Verify that now everything is as it should be (see what Tails Installer is doing)
-                with self.mount_partition():
-                    self.copy_iso_contents_to_partition(iso_extraction_dir)
-                    self.set_permissions()
-                    self.update_configs()
-                    self.install_mbr()
-                    self.copy_syslinux_modules()
+        with self.setup_loop_device():
+            self.create_gpt()
+            self.create_partition()
+            self.set_partition_flags()
+            # XXX: Rescan?
+            self.format_partition()
+            # XXX: Verify that now everything is as it should be (see what Tails Installer is doing)
+            with self.mount_partition():
+                self.extract_iso()
+                self.set_permissions()
+                self.update_configs()
+                self.install_mbr()
+                self.copy_syslinux_modules()
 
-                # This sleep is a workaround for a race condition which causes the
-                # syslinux installation to return without errors, even though the
-                # bootloader isn't actually installed
-                # XXX: Investigate and report this race condition
-                # Might it be https://bugs.chromium.org/p/chromium/issues/detail?id=508713 ?
-                time.sleep(1)
-                self.install_syslinux()
-                self.set_guid()
+            # This sleep is a workaround for a race condition which causes the
+            # syslinux installation to return without errors, even though the
+            # bootloader isn't actually installed
+            # XXX: Investigate and report this race condition
+            # Might it be https://bugs.chromium.org/p/chromium/issues/detail?id=508713 ?
+            time.sleep(1)
+            self.install_syslinux()
+            self.set_guid()
 
-    @staticmethod
-    def calculate_system_partition_size(iso_extraction_dir: str) -> int:
-        """Size of the system partition that is to be created, in MiB"""
-        return get_dir_size(iso_extraction_dir) + SYSTEM_PARTITION_ADDITIONAL_SIZE
-
-    def copy_iso_contents_to_partition(self, iso_extraction_dir: str):
-        logger.info("Copying ISO contents to the partition")
-        execute(["cp", "-a", iso_extraction_dir + "/.", self.mountpoint])
+    def extract_iso(self):
+        logger.info("Extracting ISO contents to the partition")
+        execute(['7z', 'x', self.iso, '-x![BOOT]', '-y', '-o%s' % self.mountpoint])
 
     def create_empty_image(self):
         logger.info("Creating empty image %r", self.image)
@@ -241,13 +240,6 @@ class ImageCreator(object):
                 arg_options=GLib.Variant('a{sv}', {'force': GLib.Variant('b', True)}),
             )
 
-    @contextmanager
-    def extract_iso(self) -> str:
-        logger.info("Extracting ISO")
-        with tempfile.TemporaryDirectory(prefix="tails-iso-") as iso_extraction_dir:
-            execute(['7z', 'x', self.iso, '-x![BOOT]', '-y', '-o%s' % iso_extraction_dir])
-            yield iso_extraction_dir
-
     def set_permissions(self):
         logger.info("Setting file access permissions")
         for root, dirs, files in os.walk(self.mountpoint):
@@ -357,9 +349,9 @@ def execute(cmd: list):
     subprocess.check_call(cmd)
 
 
-def get_dir_size(path: str) -> int:
-    """Returns the size of a directory in MiB"""
-    size_in_bytes = int(subprocess.check_output(["du", "-s", "--bytes", path]).split()[0])
+def get_file_size(path: str) -> int:
+    """Returns the size of a file in MiB"""
+    size_in_bytes = os.path.getsize(path)
     return round(size_in_bytes // 1024 ** 2)
 
 
