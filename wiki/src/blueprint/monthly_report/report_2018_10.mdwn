@@ -1,5 +1,5 @@
 [[!meta title="Tails report for October, 2018"]]
-[[!meta date="Tue, 10 Apr 2018 01:23:45 +0000"]] XXX: adjust date
+[[!meta date="Sat, 10 Nov 2018 01:23:45 +0000"]]
 [[!pagetemplate template="news.tmpl"]]
 
 [[!toc]]
@@ -7,18 +7,19 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|bugfix] release).
+* [[Tails 3.10.1 was released on October 23rd|news/version_3.10.1]] ([bugfix] release).
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 3.11 is [[scheduled for December 11th|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 3.10.1:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+- Hide the [[**PIM** option|doc/encryption_and_privacy/veracrypt#parameters]]
+  when unlocking *VeraCrypt* volumes because *PIM* won't be supported until
+  Tails 4.0. ([[!tails_ticket 16031]])
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+- Rename the buttons in the confirmation dialog of *Tails Installer* to
+  **Install** (or **Upgrade**) and **Cancel** to be less confusing.
+  ([[!tails_ticket 11501]])
 
 Code
 ====
@@ -28,52 +29,70 @@ XXX: If you feel like it and developers don't do it themselves,
      Release section (for example, the changes being worked on for
      the next version).
 
+We finalized our work on the Additional Software feature. Small
+bugfixes will be shipped in the next release.
+
+We are very proud that our work to unlock VeraCrypt volumes has landed
+in GNOME and is being included in other distributions, as mentioned in
+the [release announcement of Ubuntu Cosmic
+Cuttlefish](https://blog.ubuntu.com/2018/10/19/welcome-ubuntu-desktop-18-10).
+
+Distributing USB images
+-----------------------
+
+We started working on [[distributing USB
+images|usb_install_and_upgrade/usb_bootable_disk_image]] which will make
+installing Tails much easier on Windows and macOS:
+
+- We have a first version of the code to transform ISO images into USB
+  images ([[!tails_ticket 15293]]).
+
+- We wrote the instructions to install an USB image on Debian using GNOME Disks
+  ([[!tails_ticket 15659]]) and Windows ([[!tails_ticket 15808]]) and macOS
+  ([[!tails_ticket 15809]]) using Etcher.
+
+This work will be released in Tails 3.12 (January 29).
+
 Documentation and website
 =========================
 
-XXX: If you feel like it and technical writers don't do it
-     themselves, explore the Git history:
-
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
-
-User experience
-===============
-
-XXX: If you feel like it and the UX team does not do it
-     themselves, check the archives of tails-ux:
-     <https://mailman.boum.org/pipermail/tails-ux/>
+- We updated our [[!tails_roadmap desc="roadmap"]] for the next 2 years.
 
 Hot topics on our help desk
 ===========================
 
-XXX: Ask tails-bugs@boum.org to list hot topics for the last month.
+1. Several users reported [[!tails_ticket 15978]], Keyboard and mouse do
+   not work after upgrading to tails 3.2, but that was fixed in Tails
+   3.10.1.
 
-1.
-
-1.
-
-1.
+1. Many users are suffering from [[!tails_ticket 14754]] and are unable
+   to automatically install software on their persistence, sometimes
+   after interrupting the upgrade process.
 
 Infrastructure
 ==============
 
-XXX: Count the number of tests in /features at the beginning of next month
+- Following-up on a process started in September, we were able to give
+  more Tails developers access to our Jenkins CI platform. This should
+  make their work more pleasurable and efficient.
 
-         git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-         git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
+- We made great progress on our new [[!wikipedia DIY]] low-power
+  backup server. We received the hardware, had great fun with Dremel
+  tools and epoxy resin to make everything fit into the case, and
+  finally installed the operating system. And what about… pictures?
+  [Here they are!](https://pics.puscii.nl/index.php?/category/120-stone) :)
 
-XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
+- We did most of the work that will allow us to remove the outdated
+  Gitolite instance we run on one of our systems. ([[!tails_ticket 14587]])
 
-       - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
+- We ordered new drives to expand the storage capacity of our main
+  server. ([[!tails_ticket 16041]])
 
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
-
-       git log --patch --since='1 December' --until='1 January' origin/master
-
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
+We launched our [[yearly donation campaign|/news/2018-fundraiser/]] and raised
+18% of our goal in the first 2 weeks.
 
 Outreach
 ========
@@ -81,20 +100,14 @@ Outreach
 Past events
 -----------
 
-Upcoming events
----------------
+* Tails was presented (among other tools) to journalists and journalism students in [Brittany Press Club](http://www.clubpresse-bretagne.com) (Rennes, France), [Sciences Po Rennes](http://www.sciencespo-rennes.fr/en/) (Rennes, France) and [Bordeaux Aquitaine Institute of Journalism (IJBA)](http://www.ijba.u-bordeaux-montaigne.fr/) (Bordeaux, France).
+
+* sajolida attended the OTF Summit in Taipei, Taiwan.
 
 On-going discussions
 ====================
 
 XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
-
-Press and testimonials
-======================
-
-XXX: Copy content from press/media_appearances_2018.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
 
 Translation
 ===========
@@ -109,10 +122,11 @@ XXX: Add the output of (adjust month!):
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-* WHISPERBACK bug reports were received through WhisperBack.
+We wrote some code on the download page to compute download metrics in
+the future. ([[!tails_ticket 14922]]).
+
+* Tails has been started more than 743,676 times this month. This makes 23,990 boots a day on average.
+* 10,158 downloads of the OpenPGP signature of Tails ISO from our website.
+* 117 bug reports were received through WhisperBack.
 
 [[How do we know this?|support/faq#boot_statistics]]
-
-XXX: Ask <tails@boum.org> for these numbers.
