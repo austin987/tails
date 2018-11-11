@@ -151,11 +151,11 @@ case "$LB_BINARY_IMAGES" in
       fatal "Image type ${LB_BINARY_IMAGES} is not supported."
       ;;
 esac
-BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
-BUILD_MANIFEST="${BUILD_DEST_FILENAME}.build-manifest"
-BUILD_APT_SOURCES="${BUILD_DEST_FILENAME}.apt-sources"
-BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
-BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
+BUILD_ISO_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
+BUILD_MANIFEST="${BUILD_ISO_FILENAME}.build-manifest"
+BUILD_APT_SOURCES="${BUILD_ISO_FILENAME}.apt-sources"
+BUILD_PACKAGES="${BUILD_ISO_FILENAME}.packages"
+BUILD_LOG="${BUILD_ISO_FILENAME}.buildlog"
 BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
 
 # Clone all output, from this point on, to the log file
@@ -191,7 +191,7 @@ if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
        print_iso_size "$ISO_FILE"
    fi
    echo "Renaming generated files..."
-   mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
+   mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_ISO_FILENAME}"
    mv -i binary.packages "${BUILD_PACKAGES}"
    generate-build-manifest chroot/debootstrap "${BUILD_MANIFEST}"
 else
@@ -199,4 +199,4 @@ else
 fi
 
 echo "Creating disk image ${BUILD_USB_IMAGE_FILENAME}..."
-create-usb-image-from-iso "${BUILD_DEST_FILENAME}"
+create-usb-image-from-iso "${BUILD_ISO_FILENAME}"
