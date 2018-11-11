@@ -56,14 +56,16 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) (?:([[:alpha:]]+) )?disk named "([^"]+)"$/ do |temporary, size, unit, type, name|
+  type ||= "qcow2"
   $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
-                                     :type => "qcow2"})
+                                     :type => type})
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
 end
 
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   $vm.plug_drive(name, bus.downcase)
+  sleep 1
   if $vm.is_running?
     step "drive \"#{name}\" is detected by Tails"
   end
@@ -71,7 +73,7 @@ end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
   raise "Tails is not running" unless $vm.is_running?
-  try_for(10, :msg => "Drive '#{name}' is not detected by Tails") do
+  try_for(20, :msg => "Drive '#{name}' is not detected by Tails") do
     $vm.disk_detected?(name)
   end
 end
@@ -673,7 +675,13 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
-  @screen.type(app_name)
+  # Trigger startup of search providers
+  @screen.type(app_name[0])
+  # Give search providers some time to start (#13469#note-5) otherwise
+  # our search sometimes returns no results at all.
+  sleep 1
+  # Type the rest of the search query
+  @screen.type(app_name[1..-1])
   @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
@@ -927,8 +935,8 @@ def share_host_files(files)
   files = [files] if files.class == String
   assert_equal(Array, files.class)
   disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
-  # Let's add some extra space for filesysten overhead etc.
-  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.10).ceil].max
+  # Let's add some extra space for filesystem overhead etc.
+  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.15).ceil].max
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
   step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
