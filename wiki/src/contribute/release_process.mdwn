@@ -1052,7 +1052,7 @@ Test that you can start downloading the ISO with a BitTorrent client.
 ISO history
 -----------
 
-Push the released ISO and its build log to our Tails ISO history git-annex repo, so that
+Push the released ISO and its artifacts (`.iso.buildlog`, `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex repo, so that
 our isotesters can fetch it from there for their testing. How to do so
 is described in the `ISO_history.mdwn` document in the RM team's Git repo.
 
@@ -1264,7 +1264,7 @@ Mark all issues fixed in this release as `Status: Resolved` in our bug
 tracker. For a list of candidates, see:
 
 * the [issues in *Fix committed*
-  status](https://labs.riseup.net/code/projects/tails/issues?query_id=111);
+  status](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=111);
 * the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
   in Redmine.
 
@@ -1283,7 +1283,7 @@ this release.
     find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
-            url="https://labs.riseup.net/code/issues/${ticket:?}"
+            url="https://redmine.tails.boum.org/code/issues/${ticket:?}"
             url_content=$(curl --fail --silent ${url:?})
             if [ "${?}" -ne 0 ] || [ -z "${url_content:-}" ]; then
                 echo "Failed to fetch ${url:?} so manually investigate #${ticket:?}" >&2
@@ -1444,9 +1444,15 @@ this, and skip what does not make sense for a RC.
    during the freeze. This should generally be a no-op but if there
    was some hiccup earlier it could be needed.
 1. Follow the
-   [[post-release|APT_repository/custom#workflow-post-release]]
-   custom APT repository documentation. Make sure there are upgrade-description
-   files for any new versions that were added.
+   [[post-release|APT_repository/custom#workflow-post-release]] custom
+   APT repository documentation. This includes some git operations,
+   like creating an appropriate _"dummy changelog entry"_ in the
+   `debian/changelog` file.
+1. Make sure there are upgrade-description files for any new versions
+   that were added in the `debian/changelog` file since the last
+   release. Background: From time to time the UDF generation/update
+   step isn't perfect and entries might be missing from
+   `wiki/src/upgrade/v1/Tails/<VERSION>/<ARCH>/<CHANNEL>`.
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
    appropriately (they should expire after the major release _after_
