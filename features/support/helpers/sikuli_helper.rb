@@ -156,6 +156,7 @@ def sikuli_screen_proxy.new(*args)
           begin
             return findfailed_hook(self, orig_method, args)
           rescue FindFailedHookFailure
+            debug_log("FindFailedHookFailure was raised, re-running the failing Sikuli method.")
             # Due to bugs in rjb we cannot re-throw Java exceptions,
             # which is what we want now. Instead we have to resort to
             # a hack: let's re-run the failing Sikuli method to
