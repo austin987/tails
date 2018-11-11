@@ -332,19 +332,21 @@ class ImageCreator(object):
         # device would cause this issue:
         # https://bugs.chromium.org/p/chromium/issues/detail?id=508713#c8
         execute([
-            # XXX: Why does this only work as root?
-            'pkexec',
             'syslinux',
             '--offset', str(self.partition.props.partition.props.offset),
             '--directory', '/syslinux/',
             '--install', self.image
-        ])
+        ],
+            as_root=True  # XXX: Why does this only work as root?
+        )
 
     def set_guid(self):
         execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3", self.image])
 
 
-def execute(cmd: list):
+def execute(cmd: list, as_root=False):
+    if as_root and os.geteuid() != 0:
+        cmd = ['pkexec'] + cmd
     logger.info("Executing '%s'" % ' '.join(cmd))
     subprocess.check_call(cmd)
 
