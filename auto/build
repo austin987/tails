@@ -159,12 +159,12 @@ trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
    cat config/chroot_sources/*.chroot
 ) > "$BUILD_APT_SOURCES"
 
-echo "Building ISO image ${BUILD_BASENAME}..."
+echo "Building ISO image ${BUILD_ISO_FILENAME}..."
 set -o pipefail
 time lb build noauto ${@}
 RET=$?
 if [ -e binary.iso ]; then
-   echo "Image was successfully created"
+   echo "ISO image was successfully created"
    [ "$RET" -eq 0 ] || \
        echo "Warning: lb build exited with code $RET"
    print_iso_size binary.iso
