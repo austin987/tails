@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
-"""Unifies PO headers and rewraps PO files to 79 chars.
+"""Checks and Unifies PO headers and rewraps PO files to 79 chars.
 
 Usage:
 ./unify_po-headers.py --help
+
+Default is check mode where the error are listed but not fixed.
+With --modify the files get changed and unified.
 
 Run with a list of files:
 ./unify_po-headers.py file1.de.po file2.fr.po
