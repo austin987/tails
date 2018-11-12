@@ -74,7 +74,7 @@ Then /^I uninstall "(.+)" using apt$/ do |package|
                                "sudo -S apt -y remove #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-  try_for(2*60) do
+  try_for(4*60) do
     $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*deinstall[[:space:]].*$'")
   end
 end
