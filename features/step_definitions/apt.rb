@@ -74,8 +74,8 @@ Then /^I uninstall "(.+)" using apt$/ do |package|
                                "sudo -S apt -y remove #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-  try_for(4*60) do
-    $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*deinstall[[:space:]].*$'")
+  try_for(3*60) do
+    $vm.execute_successfully("apt-cache policy #{package} | grep -E --line-regexp '\s{2}Installed:\s\(none\)'")
   end
 end
 
