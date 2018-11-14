@@ -251,8 +251,6 @@ class ImageCreator(object):
         logger.info("Updating config files")
         grubconf = os.path.join(self.mountpoint, "EFI", "BOOT", "grub.conf")
         bootconf = os.path.join(self.mountpoint, "EFI", "BOOT", "boot.conf")
-        bootx64conf = os.path.join(self.mountpoint, "EFI", "BOOT", "bootx64.conf")
-        bootia32conf = os.path.join(self.mountpoint, "EFI", "BOOT", "bootia32.conf")
         isolinux_dir = os.path.join(self.mountpoint, "isolinux")
         syslinux_dir = os.path.join(self.mountpoint, "syslinux")
         isolinux_cfg = os.path.join(syslinux_dir, "isolinux.cfg")
@@ -280,11 +278,6 @@ class ImageCreator(object):
             os.remove(isolinux_cfg)
 
     def update_config(self, infile, outfile):
-        uuid = self.loop_device.props.block.props.id_uuid
-        label = self.loop_device.props.block.props.id_label
-        fstype = self.partition.props.block.props.id_type
-        usblabel = "UUID=%s" % uuid if uuid else "LABEL=%s" % label
-
         with open(infile) as f_in:
             lines = f_in.readlines()
 
