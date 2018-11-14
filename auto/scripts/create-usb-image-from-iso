@@ -279,16 +279,9 @@ class ImageCreator(object):
 
     def update_config(self, infile, outfile):
         with open(infile) as f_in:
-            lines = f_in.readlines()
-
-        new_lines = list()
-
-        for line in lines:
-            line = re.sub('/isolinux/', '/syslinux/', line)
-            new_lines.append(line)
-
+            lines = [re.sub('/isolinux/', '/syslinux/', line) for line in f_in]
         with open(outfile, "w") as f_out:
-            f_out.writelines(new_lines)
+            f_out.writelines(lines)
 
     def install_mbr(self):
         logger.info("Installing MBR")
