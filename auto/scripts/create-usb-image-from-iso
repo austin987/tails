@@ -152,8 +152,9 @@ class ImageCreator(object):
             yield
         finally:
             logger.info("Tearing down loop device")
-            self.loop_device.props.loop.call_delete(
-                arg_options=GLib.Variant('a{sv}', None)
+            self.loop_device.props.loop.call_delete_sync(
+                arg_options=GLib.Variant('a{sv}', None),
+                cancellable=None,
             )
 
     def create_gpt(self):
@@ -233,8 +234,9 @@ class ImageCreator(object):
             yield
         finally:
             logger.info("Unmounting partition")
-            self.partition.props.filesystem.call_unmount(
+            self.partition.props.filesystem.call_unmount_sync(
                 arg_options=GLib.Variant('a{sv}', {'force': GLib.Variant('b', True)}),
+                cancellable=None,
             )
 
     def set_permissions(self):
