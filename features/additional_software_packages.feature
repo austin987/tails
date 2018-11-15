@@ -108,7 +108,7 @@ Feature: Additional software
     And all notifications have disappeared
     And available upgrades have been checked
     And I see the "The upgrade of your additional software failed" notification after at most 300 seconds
-    And I open the Additional Software configuration window from the notification
+    And I can open the Additional Software configuration window from the notification
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence

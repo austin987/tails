@@ -130,7 +130,7 @@ Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and 
   try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
 end
 
-When /^I open the Additional Software configuration window from the notification$/ do
+When /^I can open the Additional Software configuration window from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Configure', roleName: 'push button').click
   @asp = Dogtail::Application.new('tails-additional-software-config')
