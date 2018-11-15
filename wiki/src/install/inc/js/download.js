@@ -314,15 +314,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Install Chrome extension when clicking "chrome" links
-  // See https://developer.chrome.com/webstore/inline_installation
-  var chromeInstallationLinks = document.getElementsByClassName("chrome");
-  for (let i = 0; i < chromeInstallationLinks.length; i++) {
-    chromeInstallationLinks[i].onclick = function() {
-      chrome.webstore.install();
-    }
-  }
-
   // To debug the display of the different states:
   // showVerificationResult("successful");
   // showVerificationResult("failed");
