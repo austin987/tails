@@ -126,20 +126,15 @@ Feature: Additional software
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: I am notified when Additional Software fails to install a package
     Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    When I install "vrms" using apt
-    And I accept adding "vrms" to Additional Software
-    And Additional Software is correctly configured for package "vrms"
-    And I remove the "vrms" deb file from the APT cache
-    And I shutdown Tails and wait for the computer to power off
-    And I start Tails from USB drive "__internal" with network unplugged
+    And I start Tails from USB drive "__internal"
     And I enable persistence
     # Trying to catch the notification at desktop startup is racy, so let's
     # start the installation service only once the desktop has settled.
     And I disable the Additional Software installation service
     And I log in to a new session
     And all notifications have disappeared
+    And I remove the "cowsay" deb files from the APT cache
     And I start the Additional Software installation service
     Then I see the "The installation of your additional software failed" notification after at most 300 seconds
     And I can open the Additional Software log file from the notification
-    And the package "vrms" is not installed
+    And the package "cowsay" is not installed

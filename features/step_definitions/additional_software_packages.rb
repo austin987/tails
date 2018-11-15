@@ -108,7 +108,7 @@ EOF
   $vm.execute("touch #{ASP_STATE_DIR}/doomed_to_fail")
 end
 
-When /^I remove the "([^"]*)" deb file from the APT cache$/  do |package|
+When /^I remove the "([^"]*)" deb files from the APT cache$/  do |package|
   $vm.execute("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
 end
 
