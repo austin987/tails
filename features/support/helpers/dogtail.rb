@@ -13,6 +13,7 @@ module Dogtail
     :dialog,
     :menu,
     :menuItem,
+    :panel,
     :tab,
     :textentry,
   ]
@@ -61,6 +62,7 @@ module Dogtail
         "import dogtail.config",
         "import dogtail.tree",
         "import dogtail.predicate",
+        "import dogtail.rawinput",
         "dogtail.config.logDebugToFile = False",
         "dogtail.config.logDebugToStdOut = False",
         "dogtail.config.blinkOnActions = True",
@@ -184,6 +186,16 @@ module Dogtail
 
     def roleName
       get_field('roleName')
+    end
+
+    # Note: this is a global Dogtail action, which should probably live
+    # elsewhere than in our Application class, but currently we lack
+    # the infrastructure to do that: the Ruby plumbing that generates
+    # and runs Python code lives in the Application class.
+    def pressKey(key)
+      # Dogtail will prefix the value of key with 'KEY_'
+      # and the result must be a valid Gdk key symbol such as Gdk.KEY_Down
+      run("dogtail.rawinput.pressKey('#{key}')")
     end
 
     TREE_API_APP_SEARCHES.each do |method|
