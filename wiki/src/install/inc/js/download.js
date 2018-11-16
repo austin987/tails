@@ -170,6 +170,18 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
+  function hitCounter(status) {
+    try {
+      var counter_url, url, scenario, version, cachebust;
+      counter_url = "/install/download/counter";
+      url = window.location.href.split("/");
+      scenario = url[url.lastIndexOf("install") + 1];
+      version = document.getElementById("tails-version").textContent.replace("\n", "");
+      cachebust = Math.round(new Date().getTime() / 1000);
+      fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status + "&cachebust=" + cachebust);
+    } catch (e) { } // Ignore if we fail to hit the download counter
+  }
+
   function resetVerificationResult(result) {
     hide(document.getElementById("verifying-download"));
     hide(document.getElementById("verification-successful"));
@@ -209,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function() {
     showVerifyDownload();
     hide(document.getElementById("verify-download-wrapper"));
     resetVerificationResult();
+    hitCounter(result);
     if (result === "successful") {
       show(document.getElementById("verification-successful"));
       opaque(document.getElementById("step-continue-direct"));
@@ -258,35 +271,56 @@ document.addEventListener("DOMContentLoaded", function() {
   opaque(document.getElementById("continue-link-bittorrent"));
 
   // Display "Verify with your browser" when image is clicked
-  document.getElementById("download-img").onclick = function() { displayVerificationExtension(); }
-  document.getElementById("download-iso").onclick = function() { displayVerificationExtension(); }
+  document.getElementById("download-img").onclick = function(e) { displayVerificationExtension(e); }
+  document.getElementById("download-iso").onclick = function(e) { displayVerificationExtension(e); }
 
-  function displayVerificationExtension() {
-    toggleDirectBitTorrent("direct");
-    resetVerificationResult();
+  function displayVerificationExtension(e) {
+    try {
+      e.preventDefault();
+      hitCounter("download-iso");
+      toggleDirectBitTorrent("direct");
+      resetVerificationResult();
+    } finally {
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(this.getAttribute("href"), "_blank");
+    }
   }
 
   // Display "Verify with your browser" when "I already" is clicked
   document.getElementById("already-downloaded").onclick = function() {
+    hitCounter("already-downloaded");
     toggleDirectBitTorrent("direct");
     resetVerificationResult();
   }
 
   // Reset verification when downloading again after failure
-  document.getElementById("download-img-again").onclick = function() { resetVerification(); }
-  document.getElementById("download-iso-again").onclick = function() { resetVerification(); }
+  document.getElementById("download-img-again").onclick = function(e) { resetVerification(e); }
+  document.getElementById("download-iso-again").onclick = function(e) { resetVerification(e); }
 
-  function resetVerification() {
-    toggleDirectBitTorrent("direct");
-    resetVerificationResult();
+  function resetVerification(e) {
+    try {
+      e.preventDefault();
+      hitCounter("download-iso-again");
+      toggleDirectBitTorrent("direct");
+      resetVerificationResult();
+    } finally {
+      window.location = this.getAttribute("href");
+    }
   }
 
   // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-img-torrent").onclick = function() { displayBitTorrentVerification(); }
-  document.getElementById("download-iso-torrent").onclick = function() { displayBitTorrentVerification(); }
+  document.getElementById("download-img-torrent").onclick = function(e) { displayBitTorrentVerification(e); }
+  document.getElementById("download-iso-torrent").onclick = function(e) { displayBitTorrentVerification(e); }
 
-  function displayBitTorrentVerification() {
-    toggleDirectBitTorrent("bittorrent");
+  function displayBitTorrentVerification(e) {
+    try {
+      e.preventDefault();
+      hitCounter("download-torrent");
+      toggleDirectBitTorrent("bittorrent");
+    } finally {
+      window.location = this.getAttribute("href");
+    }
   }
 
   // Install Chrome extension when clicking "chrome" links
