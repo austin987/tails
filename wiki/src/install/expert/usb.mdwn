@@ -7,8 +7,6 @@
 
 Start in Debian, Ubuntu, or Linux Mint.
 
-[[!inline pages="install/inc/steps/debian_requirements.inline" raw="yes" sort="age"]]
-
 <h1 id="verify-key">Verify the Tails signing key</h1>
 
 <div class="tip">
@@ -127,35 +125,67 @@ using the Tails signing key.
      - The signature is marked as <code>Good signature</code> since you
        certified the Tails signing key with your own key.
 
-Install <span class="application">Tails Installer</span>
-========================================================
+Install Tails using <span class="command">dd</span>
+===================================================
 
-In this step, you will install <span class="application">Tails
-Installer</span>, a program designed specifically for installing Tails.
+1. Make sure that the USB stick on which you want to install Tails is
+   unplugged.
 
-1. If you are running:
+1. Execute the following command:
 
-   a. Debian, execute the following commands to add the
-   backports repository to your system:
+   <p class="pre command">ls -1 /dev/sd?</p>
 
-         BACKPORTS='deb http://http.debian.net/debian/ stretch-backports main'
-         echo $BACKPORTS | sudo tee /etc/apt/sources.list.d/stretch-backports.list && echo "OK"
+   It returns a list of the storage devices on the system. For example:
 
-   b. Ubuntu or Linux Mint, execute the following commands to add the
-   *universe* repository and our PPA to your system:
+   <p class="pre command-output">/dev/sda</p>
 
-         sudo add-apt-repository universe
-         sudo add-apt-repository ppa:tails-team/tails-installer
+1. Plug in the USB stick on which you want to install Tails.
 
-1. Update your lists of packages:
+1. Execute again the same command:
 
-       sudo apt update
+   <p class="pre command">ls -1 /dev/sd?</p>
 
-1. Install the <span class="code">tails-installer</span> package:
+   Your USB stick appears as a new device in the list.
 
-       sudo apt install tails-installer
+   <p class="pre command-output">/dev/sda
+   /dev/sdb</p>
 
-[[!inline pages="install/inc/steps/install_final.inline" raw="yes" sort="age"]]
+1. Take note of the *device name* of your USB stick.
+
+   In this example, the device name of the USB stick is
+   <span class="code">/dev/sdb</span>. Yours might be different.
+
+   <div class="caution">
+   <p>If you are unsure about the device name, you should stop proceeding or
+   <strong>you risk overwriting any hard disk on the system</strong>.</p>
+   </div>
+
+1. Execute the following commands to copy the ISO image that you
+   downloaded earlier to the USB stick.
+
+   Replace:
+
+   - <span class="command-placeholder">tails.img</span> with the path to the USB image
+
+   - <span class="command-placeholder">device</span> with the device name found in step 5
+
+   <p class="pre command">dd if=<span class="command-placeholder">tails.img</span> of=<span class="command-placeholder">device</span> bs=16M && sync</p>
+
+   You should get something like this:
+
+   <p class="pre command-example">dd if=/home/user/tails-amd64-3.0.iso of=/dev/sdb bs=16M && sync</p>
+
+   If no error message is returned, Tails is being copied on the USB
+   stick. The copy takes some time, generally a few minutes.
+
+   <div class="note">
+   <p>If you get a <span class="guilabel">Permission denied</span> error, try
+   adding <code>sudo</code> at the beginning of the command:</p>
+
+   <p class="pre command">sudo dd if=<span class="command-placeholder">tails.img</span> of=<span class="command-placeholder">device</span> bs=16M && sync</p>
+   </div>
+
+   The installation is complete after the command prompt reappears.
 
 [[!inline pages="install/inc/steps/restart_first_time.inline" raw="yes" sort="age"]]
 
