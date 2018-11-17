@@ -206,7 +206,8 @@ Download a snapshot of the current Tails files:
 
 Your mirror should sync every hour + a random time (maximum 40 minutes).
 Use `cron` or equivalent to schedule the same `rsync` command
-as above.
+as above. For example, you can create a file in `/etc/cron.d/` with
+this content:
 
     0 * * * * root sleep $(perl -E 'print int(rand(2400))') && flock -n /var/run/lock/tails-mirror-rsync rsync -rt --delete mirrors.rsync.tails.boum.org::amnesia-archive /var/www/YOUR_PATH/
 
