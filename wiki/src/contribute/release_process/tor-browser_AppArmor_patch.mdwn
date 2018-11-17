@@ -19,13 +19,38 @@ Fetch:
     git fetch salsa && \
     git fetch upstream-repo
 
-Finally, make our repo up-to-date:
+Compute the last version uploaded to Debian unstable:
 
     LATEST_TAG="$(git tag --list 'debian/*' --sort=version:refname | grep -v -E '_bpo[0-9]' | tail -n1)"
-    git merge --no-ff "${LATEST_TAG}"
 
-Just pay attention that you didn't merge some unwanted version from
+… and make sure it is not an unwanted version from
 Debian experimental!
+
+Then update our own branch:
+
+    git checkout debian/sid && \
+	git reset --hard "${LATEST_TAG}" && \
+	gbp pq drop && \
+	gbp pq import && \
+	git checkout master && \
+    git merge --no-ff patch-queue/debian/sid
+
+If needed, resolve merge conflicts and commit.
+
+Finally, make sure the diff looks OK:
+
+     git diff ORIG_HEAD.. -- apparmor/
+
+# Export the diff to the main Tails Git repository
+
+    git diff \
+        --relative=apparmor \
+        --src-prefix=a/etc/apparmor.d/ \
+        --dst-prefix=b/etc/apparmor.d/ \
+        patch-queue/debian/sid.. \
+        -- \
+        apparmor \
+        > ~/path/to/your/tails/git/config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch
 
 # Prepare a branch for upstream
 
