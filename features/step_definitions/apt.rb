@@ -75,7 +75,8 @@ Then /^I uninstall "(.+)" using apt$/ do |package|
                                :user => LIVE_USER,
                                :spawn => true)
   try_for(3*60) do
-    $vm.execute_successfully("apt-cache policy #{package} | grep -E --line-regexp '\s{2}Installed:\s\(none\)'")
+    state = $vm.execute("apt-cache policy #{package}").stdout.split("\n")[1]
+    /^\s{2}Installed:\s\(none\)$/.match(state) != nil
   end
 end
 
