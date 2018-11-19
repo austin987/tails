@@ -590,14 +590,12 @@ end
 
 Given /^the package "([^"]+)" is( not)? installed( after Additional Software has been started)?$/ do |package, absent, asp|
   if absent
-    assert($vm.execute("dpkg -s '#{package}' 2>/dev/null").failure?,
-           "Package '#{package}' is present in dpkg database")
+    is_not_installed?(package)
   else
     if asp
       step 'the Additional Software installation service has started'
     end
-    assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
-           "Package '#{package}' is not installed")
+    is_installed?(package)
   end
 end
 

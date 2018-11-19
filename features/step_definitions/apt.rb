@@ -51,6 +51,12 @@ When /^I update APT using apt$/ do
   end
 end
 
+def is_installed?(package)
+  try_for(2*60) do
+    $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
+  end
+end
+
 Then /^I install "(.+)" using apt$/ do |package|
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
@@ -62,10 +68,15 @@ Then /^I install "(.+)" using apt$/ do |package|
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-      try_for(2*60) do
-        $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
-      end
+      is_installed?(package)
     end
+  end
+end
+
+def is_not_installed?(package)
+  try_for(3*60) do
+    state = $vm.execute("apt-cache policy #{package}").stdout.split("\n")[1]
+    /^\s{2}Installed:\s\(none\)$/.match(state) != nil
   end
 end
 
@@ -74,10 +85,7 @@ Then /^I uninstall "(.+)" using apt$/ do |package|
                                "sudo -S apt -y remove #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-  try_for(3*60) do
-    state = $vm.execute("apt-cache policy #{package}").stdout.split("\n")[1]
-    /^\s{2}Installed:\s\(none\)$/.match(state) != nil
-  end
+  is_not_installed?(package)
 end
 
 When /^I configure APT to prefer an old version of cowsay$/ do
