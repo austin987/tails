@@ -1,0 +1,76 @@
+diff --git a/usr/share/perl5/Tails/IUK/Frontend.pm b/usr/share/perl5/Tails/IUK/Frontend.pm
+index dbf34dd..38fd9e6 100644
+--- a/usr/share/perl5/Tails/IUK/Frontend.pm
++++ b/usr/share/perl5/Tails/IUK/Frontend.pm
+@@ -163,8 +163,10 @@ method fatal_run_cmd (Str :$error_msg!, ArrayRef :$cmd!, Str :$as?, Str :$error_
+ method dialog (Str $question,
+                Str :$type = 'question', Str :$ok_label, Str :$cancel_label,
+                Str :$title) {
+-    if ($type ne 'question') {
++    if ($type ne 'question' && $type ne 'info') {
+         assert_undefined($ok_label);
++    }
++    if ($type ne 'question') {
+         assert_undefined($cancel_label);
+     }
+     my @cmd  = ('zenity', "--$type", '--text', $question);
+@@ -370,8 +372,7 @@ method run () {
+                     "<b>You should upgrade to %{name}s %{version}s.</b>\n\n".
+                     "For more information about this new version, go to %{details_url}s\n\n".
+                     "It is recommended to close all the open applications during the upgrade.\n".
+-                    "Downloading the upgrade might take a long time, from several minutes to a few hours.\n".
+-                    "The networking will be disabled after downloading the upgrade.\n\n".
++                    "Downloading the upgrade might take a long time, from several minutes to a few hours.\n\n".
+                     "Download size: %{size}s\n\n".
+                     "Do you want to upgrade now?"
+                 )),
+@@ -600,6 +601,19 @@ method do_incremental_upgrade ($upgrade_path) {
+         $upgrade_path, $url_transform, $target_files_tempdir
+     );
+ 
++    $self->dialog(
++        $self->encoding->decode(gettext(
++            "<b>The upgrade was successfully downloaded.</b>\n\n".
++            "The network connection will now be disabled.\n\n".
++            "Please save your work and close all other applications."
++        )),
++        type     => 'info',
++        title    => $self->encoding->decode(gettext(
++            q{Upgrade successfully downloaded}
++        )),
++        ok_label => $self->encoding->decode(gettext(q{Apply upgrade})),
++    );
++
+     $self->install_iuk($upgrade_path, $target_files_tempdir);
+ 
+     $self->dialog(
+@@ -678,7 +692,7 @@ method install_iuk ($upgrade_path, $target_files_tempdir) {
+     my ($exit_code, $stdout, $stderr, $zenity_h);
+     my $success = 1;
+ 
+-    $zenity_h = start [qw{zenity --progress --pulsate --auto-close --auto-kill},
++    $zenity_h = start [qw{zenity --progress --pulsate --no-cancel},
+                        '--title', $title, '--text', $info] unless $self->batch;
+     run \@cmd, '>', \$stdout, '2>', \$stderr or $success = 0;
+     $exit_code = $?;
+diff --git a/usr/share/perl5/Tails/IUK/Install.pm b/usr/share/perl5/Tails/IUK/Install.pm
+index 55f9b14..4976530 100644
+--- a/usr/share/perl5/Tails/IUK/Install.pm
++++ b/usr/share/perl5/Tails/IUK/Install.pm
+@@ -143,16 +143,6 @@ method fatal (@msg) {
+     );
+ }
+ 
+-method extracted_archives {
+-    return grep {
+-        $_ =~ m{
+-                   [.] tar       # literal .tar
+-                   (?: [.] bz2 )? # possibly followed by literal .bz2
+-                   \z            # at the end of the string
+-           }xms;
+-    } $self->tempdir->children;
+-}
+-
+ method space_available {
+     space_available($self->liveos_mountpoint->stringify);
+ }
