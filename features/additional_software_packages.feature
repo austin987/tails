@@ -39,45 +39,23 @@ Feature: Additional software
     And the package "makepp" is installed
 
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: Packages I uninstall and accept to remove from Additional Software are not configured in the Additional Software list
+  Scenario: My Additional Software list is configurable through a GUI or through notifications when I install or remove packages with APT or Synaptic
     Given a computer
     And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "sslh" using apt
     And I accept removing "sslh" from Additional Software
     Then "sslh" is not in the list of Additional Software
-
-  # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
-  Scenario: Packages I install with Synaptic and accept to add to Additional Software are configured in the Additional Software list
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    And I start Synaptic
+    When I start Synaptic
     And I update APT using Synaptic
-    When I install "cowsay" using Synaptic
+    And I install "cowsay" using Synaptic
     And I accept adding "cowsay" to Additional Software
     Then Additional Software is correctly configured for package "cowsay"
-    And the package "cowsay" is installed
-
-  # Depends on scenario: Packages I install with Synaptic and accept to add to Additional Software are configured in the Additional Software list
-  Scenario: Packages I uninstall but refuse to remove from Additional Software are still configured in the Additional Software list
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I uninstall "cowsay" using apt
     And I refuse removing "cowsay" from Additional Software
     Then Additional Software is correctly configured for package "cowsay"
-
-  # Depends on scenario: Packages I install with Synaptic and accept to add to Additional Software are configured in the Additional Software list
-  Scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
-    And the package "cowsay" is installed after Additional Software has been started
-    And I start "Additional Software" via GNOME Activities Overview
+    When I start "Additional Software" via GNOME Activities Overview
     And I remove "cowsay" from the list of Additional Software using Additional Software GUI
     Then "cowsay" is not in the list of Additional Software
-
-  # Depends on scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
-  Scenario: Packages I install but refuse to add to Additional Software are not configured in the Additional Software list
-    Given a computer
-    And I start Tails from USB drive "__internal" and I login with persistence enabled and an administration password
     When I install "cowsay" using apt
     And I refuse adding "cowsay" to Additional Software
     Then "cowsay" is not in the list of Additional Software

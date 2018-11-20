@@ -174,5 +174,6 @@ Then /^I install "(.+)" using Synaptic$/ do |package_name|
       @synaptic.child('Changes applied', roleName: 'frame', recursive: false)
       true
     end
+    step 'I kill the process "synaptic"'
   end
 end
