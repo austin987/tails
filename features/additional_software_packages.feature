@@ -126,7 +126,7 @@ Feature: Additional software
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
   Scenario: I am notified when Additional Software fails to install a package
     Given a computer
-    And I start Tails from USB drive "__internal"
+    And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
     # Trying to catch the notification at desktop startup is racy, so let's
     # start the installation service only once the desktop has settled.
