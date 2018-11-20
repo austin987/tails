@@ -109,7 +109,10 @@ EOF
 end
 
 When /^I remove the "([^"]*)" deb files from the APT cache$/  do |package|
-  $vm.execute("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
+  $vm.execute("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb && sync")
+  try_for(60) do
+    $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb").failure?
+  end
 end
 
 Then /^I can open the Additional Software documentation from the notification link$/  do
