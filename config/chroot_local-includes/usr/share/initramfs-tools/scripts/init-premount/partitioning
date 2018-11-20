@@ -85,7 +85,7 @@ fi
 
 # Update partition table. This in includes the following operations:
 # * Move GPT backup header to the end of the device
-# * Set a random disk GUID
+# * Set a random disk GUID and partition GUID
 # * Delete the old system partition
 # * Create a new system partition of size ${SYSTEM_PARTITION_SIZE}
 # * Set the partition label to "Tails"
@@ -98,7 +98,7 @@ fi
 log_begin_msg "Updating partition table"
 sgdisk \
 	--move-second-header \
-	--disk-guid=R \
+	--randomize-guids \
 	--delete=1 \
 	--new=1:0:+"${SYSTEM_PARTITION_SIZE}" \
 	--change-name=1:Tails \
