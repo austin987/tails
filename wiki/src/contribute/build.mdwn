@@ -76,6 +76,12 @@ image before building it.
   to `Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0`,
   see [[!tails_ticket 11411]].
 
+* If Vagrant fails to start the Tails builder VM with `Initialization
+  parameters must be an attributes hash, got NilClass nil
+  (ArgumentError)`, restart the libvirt service and try building again:
+
+        sudo systemctl restart libvirtd.service && rake build && rake vm:halt
+
 * If Vagrant failed to start the Tails builder VM the first time
   (e.g. because of permission issues or the `kvm` module not being
   loaded) it will not automatically run the provisioning script, so
