@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PREREQS=""
+PREREQS="plymouth"
 
 prereqs() { echo "$PREREQS"; }
 
@@ -67,15 +67,15 @@ if [ "${GUID}" != "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3" ]; then
 	exit 0
 fi
 
+DEVICE_TOO_SMALL_ERROR_MESSAGE="Sorry, this device is too small to run Tails. Please use a device with at least 8 GiB."
 
 # Get new system partition size
 DEVICE_SIZE=$(cat "/sys/block/${DEVICE_NAME}/size")
 DEVICE_SIZE_IN_MiB=$((${DEVICE_SIZE} / 2 / 1024))
 if [ "${DEVICE_SIZE_IN_MiB}" -lt 7200 ]; then
-	log_warning_msg "Not growing system partition because device is too small (< 7200 MiB)"
-	# Perform the other operations (fix GPT backup header and set random GUID)
-	sgdisk --move-second-header --disk-guid=R "${PARENT_DEVICE}"
-	exit 0
+    plymouth display-message --text="${DEVICE_TOO_SMALL_ERROR_MESSAGE}"
+    sleep 10
+    reboot --force
 elif [ "${DEVICE_SIZE_IN_MiB}" -lt 14500 ]; then
 	SYSTEM_PARTITION_SIZE=4096M
 else
