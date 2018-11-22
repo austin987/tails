@@ -321,6 +321,13 @@ class ImageCreator(object):
     def set_guids(self):
         execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3",
                  "--partition-guid", "1:34BF027A-8001-4B93-8243-1F9D3DCE7DE7", self.image])
+        with open(self.partition.props.block.props.device, "wb+") as vbr:
+            # Set fixed Volume ID in the FAT boot sector
+            vbr.seek(0x43)
+            vbr.write(b"\x70\x05\x81\x8B")
+            # Set fixed volume ID in the FAT backup boot sector
+            vbr.seek(0xC43)
+            vbr.write(b"\x70\x05\x81\x8B")
 
 
 def execute(cmd: list, as_root=False):
