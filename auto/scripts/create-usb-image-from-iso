@@ -118,7 +118,7 @@ class ImageCreator(object):
             # Might it be https://bugs.chromium.org/p/chromium/issues/detail?id=508713 ?
             time.sleep(1)
             self.install_syslinux()
-            self.set_guid()
+            self.set_guids()
 
     def extract_iso(self):
         logger.info("Extracting ISO contents to the partition")
@@ -318,8 +318,9 @@ class ImageCreator(object):
             as_root=True  # XXX: Why does this only work as root?
         )
 
-    def set_guid(self):
-        execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3", self.image])
+    def set_guids(self):
+        execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3",
+                 "--partition-guid", "1:34BF027A-8001-4B93-8243-1F9D3DCE7DE7", self.image])
 
 
 def execute(cmd: list, as_root=False):
