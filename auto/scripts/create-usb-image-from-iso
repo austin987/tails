@@ -111,14 +111,15 @@ class ImageCreator(object):
                 self.install_mbr()
                 self.copy_syslinux_modules()
 
-            # This sleep is a workaround for a race condition which causes the
-            # syslinux installation to return without errors, even though the
-            # bootloader isn't actually installed
-            # XXX: Investigate and report this race condition
-            # Might it be https://bugs.chromium.org/p/chromium/issues/detail?id=508713 ?
-            time.sleep(1)
-            self.install_syslinux()
-            self.set_guids()
+                # This sleep is a workaround for a race condition which causes the
+                # syslinux installation to return without errors, even though the
+                # bootloader isn't actually installed
+                # XXX: Investigate and report this race condition
+                # Might it be https://bugs.chromium.org/p/chromium/issues/detail?id=508713 ?
+                time.sleep(1)
+                self.install_syslinux()
+                self.set_guids()
+                self.reset_timestamps()
 
     def extract_iso(self):
         logger.info("Extracting ISO contents to the partition")
@@ -317,6 +318,13 @@ class ImageCreator(object):
         ],
             as_root=True  # XXX: Why does this only work as root?
         )
+
+    def reset_timestamps(self):
+        logger.info("Resetting timestamps")
+        for root, dirs, files in os.walk(self.mountpoint):
+            os.utime(root, (0, 0))
+            for file in files:
+                os.utime(os.path.join(root, file), (0, 0))
 
     def set_guids(self):
         execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3",
