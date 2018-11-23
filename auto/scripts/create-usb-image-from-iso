@@ -198,30 +198,38 @@ class ImageCreator(object):
 
     def format_partition(self):
         logger.info("Formatting partition")
-        options = GLib.Variant('a{sv}', {
-                'label': GLib.Variant('s', FILESYSTEM_LABEL),
-                'update-partition-type': GLib.Variant('b', False)
-        })
-
-        self.partition.props.block.call_format_sync(
-            arg_type='vfat',
-            arg_options=options
-        )
+        execute([
+            'mkfs.msdos',
+            # Use constants for normally randomly generated or time-based data
+            # such as volume ID and creation time
+            '--invariant',
+            # XXX: should not be necessary thanks to --invariant
+            '-i', "{:x}".format(int(os.environ['SOURCE_DATE_EPOCH'])),
+            self.partition.props.block.props.device,
+        ])
 
     @contextmanager
     def mount_partition(self):
         logger.info("Mounting partition")
-        try:
-            self.mountpoint = self.partition.props.filesystem.call_mount_sync(
-                arg_options=GLib.Variant('a{sv}', None)
-            )
-        except GLib.Error as e:
-            if "org.freedesktop.UDisks2.Error.AlreadyMounted" in e.message and \
-                    self.partition.props.filesystem.props.mount_points:
-                self.mountpoint = self.partition.props.filesystem.props.mount_points[0]
-                logger.info("Partition is already mounted at {}".format(self.mountpoint))
-            else:
-                raise
+
+        start_time = time.perf_counter()
+        while time.perf_counter() - start_time < WAIT_FOR_PARTITION_TIMEOUT:
+            try:
+                self.mountpoint = self.partition.props.filesystem.call_mount_sync(
+                    arg_options=GLib.Variant('a{sv}', None),
+                    cancellable=None
+                )
+            except AttributeError as e:
+                time.sleep(0.1)
+                continue
+            except GLib.Error as e:
+                if "org.freedesktop.UDisks2.Error.AlreadyMounted" in e.message and \
+                   self.partition.props.filesystem.props.mount_points:
+                    self.mountpoint = self.partition.props.filesystem.props.mount_points[0]
+                    logger.info("Partition is already mounted at {}".format(self.mountpoint))
+                    break
+                else:
+                    raise
 
         try:
             yield
