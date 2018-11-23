@@ -165,14 +165,19 @@ time lb build noauto ${@}
 
 echo "ISO image was successfully created"
 print_iso_size binary.iso
+
 echo "Hybriding it..."
 isohybrid $AMNESIA_ISOHYBRID_OPTS binary.iso || fatal "isohybrid failed"
 print_iso_size binary.iso
 truncate -s %2048 binary.iso
 print_iso_size binary.iso
+
 echo "Renaming generated files..."
 mv -i binary.iso "${BUILD_ISO_FILENAME}"
 mv -i binary.packages "${BUILD_PACKAGES}"
+
+echo "Generating build manifest..."
 generate-build-manifest chroot/debootstrap "${BUILD_MANIFEST}"
+
 echo "Creating USB image ${BUILD_USB_IMAGE_FILENAME}..."
 create-usb-image-from-iso "${BUILD_ISO_FILENAME}"
