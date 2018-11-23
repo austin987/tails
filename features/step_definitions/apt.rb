@@ -51,7 +51,7 @@ When /^I update APT using apt$/ do
   end
 end
 
-def is_installed?(package)
+def check_for_installation(package)
   try_for(2*60) do
     $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
   end
@@ -68,12 +68,12 @@ Then /^I install "(.+)" using apt$/ do |package|
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-      is_installed?(package)
+      check_for_installation(package)
     end
   end
 end
 
-def is_not_installed?(package)
+def check_for_removal(package)
   try_for(3*60) do
     state = $vm.execute("apt-cache policy #{package}").stdout.split("\n")[1]
     /^\s{2}Installed:\s\(none\)$/.match(state) != nil
@@ -85,7 +85,7 @@ Then /^I uninstall "(.+)" using apt$/ do |package|
                                "sudo -S apt -y remove #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-  is_not_installed?(package)
+  check_for_removal(package)
 end
 
 When /^I configure APT to prefer an old version of cowsay$/ do
