@@ -11,7 +11,7 @@ Then /^the Additional Software (upgrade|installation) service has started$/ do |
       service = "tails-additional-software-upgrade"
       seconds_to_wait = 900
     end
-    try_for(seconds_to_wait) do
+    try_for(seconds_to_wait, :delay => 10) do
       $vm.execute("systemctl status #{service}.service").success?
     end
     step "I am notified that the installation succeeded"
