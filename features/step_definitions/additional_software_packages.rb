@@ -88,10 +88,10 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Soft
 end
 
 Given /^I remove "([^"]*)" from the list of Additional Software using Additional Software GUI$/  do |package|
-  @asp_gui = Dogtail::Application.new('tails-additional-software-config')
-  installed_package = @asp_gui.child(package, roleName: 'label')
+  asp_gui = Dogtail::Application.new('tails-additional-software-config')
+  installed_package = asp_gui.child(package, roleName: 'label')
   installed_package.parent.parent.child('Close', roleName: 'push button').click
-  @asp_gui.child('Question', roleName: 'alert').button('Remove').click
+  asp_gui.child('Question', roleName: 'alert').button('Remove').click
   deal_with_polkit_prompt(@sudo_password)
 end
 
@@ -133,7 +133,7 @@ end
 When /^I can open the Additional Software configuration window from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Configure', roleName: 'push button').click
-  @asp = Dogtail::Application.new('tails-additional-software-config')
+  asp = Dogtail::Application.new('tails-additional-software-config')
 end
 
 When /^I disable the Additional Software installation service$/ do
@@ -148,5 +148,5 @@ end
 Then /^I can open the Additional Software log file from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Show Log', roleName: 'push button').click
-  try_for(60) { @gedit = Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
+  try_for(60) { gedit = Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
 end
