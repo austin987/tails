@@ -16,7 +16,6 @@ AfterConfiguration do |config|
     # space for other reasons:
     'features/untrusted_partitions.feature',
     # Features using temporary snapshots:
-    'features/apt.feature',
     'features/root_access_control.feature',
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
