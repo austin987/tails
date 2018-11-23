@@ -109,10 +109,7 @@ EOF
 end
 
 When /^I remove the "([^"]*)" deb files from the APT cache$/  do |package|
-  $vm.execute("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb && sync")
-  try_for(60) do
-    $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb").failure?
-  end
+  $vm.execute_successfully("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
 end
 
 Then /^I can open the Additional Software documentation from the notification link$/  do
@@ -140,12 +137,12 @@ When /^I can open the Additional Software configuration window from the notifica
 end
 
 When /^I disable the Additional Software installation service$/ do
-  $vm.execute('systemctl disable tails-additional-software-install.service')
+  $vm.execute_successfully('systemctl disable tails-additional-software-install.service')
 end
 
 When /^I start the Additional Software installation service$/ do
-  $vm.execute('systemctl enable tails-additional-software-install.service')
-  $vm.execute('systemctl --no-block start tails-additional-software-install.service')
+  $vm.execute_successfully('systemctl enable tails-additional-software-install.service')
+  $vm.execute_successfully('systemctl --no-block start tails-additional-software-install.service')
 end
 
 Then /^I can open the Additional Software log file from the notification$/ do
