@@ -111,14 +111,17 @@ class ImageCreator(object):
                 self.install_mbr()
                 self.copy_syslinux_modules()
 
-                # This sleep is a workaround for a race condition which causes the
-                # syslinux installation to return without errors, even though the
-                # bootloader isn't actually installed
-                # XXX: Investigate and report this race condition
-                # Might it be https://bugs.chromium.org/p/chromium/issues/detail?id=508713 ?
-                time.sleep(1)
-                self.install_syslinux()
-                self.set_guids()
+            # We have to install syslinux after the partition was unmounted.
+            # This sleep is a workaround for a race condition which causes the
+            # syslinux installation to return without errors, even though the
+            # bootloader isn't actually installed
+            # XXX: Investigate and report this race condition
+            # Might it be https://bugs.chromium.org/p/chromium/issues/detail?id=508713 ?
+            time.sleep(1)
+            self.install_syslinux()
+            self.set_guids()
+
+            with self.mount_partition():
                 self.reset_timestamps()
 
     def extract_iso(self):
