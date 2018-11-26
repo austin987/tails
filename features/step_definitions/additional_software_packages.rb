@@ -126,10 +126,10 @@ Then /^I can open the Additional Software documentation from the notification li
   @screen.wait('ASPDocumentationInstallCloning.png', 120)
 end
 
-Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and doesn't notify me as the persistence is locked$/ do |package|
+Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and notices the persistence is locked$/ do |package|
   asp_logs = "#{ASP_STATE_DIR}/log"
   assert(!$vm.file_empty?(asp_logs))
-  try_for(60) { $vm.execute("grep #{package} #{asp_logs}").success? }
+  try_for(60) { $vm.execute("grep -E '^.*New\spackages\smanually\sinstalled:\s.*#{package}.*$' #{asp_logs}").success? }
   try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
 end
 

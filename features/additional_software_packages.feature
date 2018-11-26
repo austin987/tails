@@ -35,7 +35,7 @@ Feature: Additional software
     And I start Tails from USB drive "__internal" and I login with an administration password
     And I update APT using apt
     When I install "makepp" using apt
-    Then the Additional Software dpkg hook has been run for package "makepp" and doesn't notify me as the persistence is locked
+    Then the Additional Software dpkg hook has been run for package "makepp" and notices the persistence is locked
     And the package "makepp" is installed
 
   # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
