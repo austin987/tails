@@ -21,6 +21,9 @@ AfterConfiguration do |config|
     'features/tor_bridges.feature',
     # Features using large amounts of scratch space for other reasons:
     'features/erase_memory.feature',
+    # This feature uses some snapshots and a disk that can be reused in
+    # the later feature below and reduce memory footprint on the system.
+    'features/additional_software_packages.feature',
     # This feature needs the almost biggest snapshot (USB install,
     # excluding persistence) and will create yet another disk and
     # install Tails on it. This should be the peak of disk usage.
