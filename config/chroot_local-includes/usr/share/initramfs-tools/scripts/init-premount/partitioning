@@ -95,12 +95,14 @@ fi
 #   60: read-only
 #   62: hidden
 #   63: do not automount
+ESP_GUID="C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
 log_begin_msg "Updating partition table"
 sgdisk \
 	--move-second-header \
 	--randomize-guids \
 	--delete=1 \
 	--new=1:0:+"${SYSTEM_PARTITION_SIZE}" \
+	--typecode="1:${ESP_GUID}" \
 	--change-name=1:Tails \
 	--attributes=1:set:0  \
 	--attributes=1:set:2  \
