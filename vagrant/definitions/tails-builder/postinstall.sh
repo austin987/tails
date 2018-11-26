@@ -96,6 +96,7 @@ apt-get -y install \
         libyaml-syck-perl \
         live-build \
         lsof \
+        mtools \
         p7zip-full \
         perlmagick \
         psmisc \

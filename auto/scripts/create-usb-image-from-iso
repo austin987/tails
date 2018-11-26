@@ -329,13 +329,9 @@ class ImageCreator(object):
     def set_guids(self):
         execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3",
                  "--partition-guid", "1:34BF027A-8001-4B93-8243-1F9D3DCE7DE7", self.image])
-        with open(self.partition.props.block.props.device, "wb+") as vbr:
-            # Set fixed Volume ID in the FAT boot sector
-            vbr.seek(0x43)
-            vbr.write(b"\x70\x05\x81\x8B")
-            # Set fixed volume ID in the FAT backup boot sector
-            vbr.seek(0xC43)
-            vbr.write(b"\x70\x05\x81\x8B")
+
+        with set_env("MTOOLS_SKIP_CHECK", "1"):
+            execute(["mlabel", "-i", self.partition.props.block.props.device, "-N", "a69020d2"])
 
 
 def execute(cmd: list, as_root=False):
@@ -343,6 +339,19 @@ def execute(cmd: list, as_root=False):
         cmd = ['pkexec'] + cmd
     logger.info("Executing '%s'" % ' '.join(cmd))
     subprocess.check_call(cmd)
+
+
+@contextmanager
+def set_env(name: str, value:str):
+    old_value = os.getenv(name)
+    os.putenv(name, value)
+    try:
+        yield
+    finally:
+        if old_value is not None:
+            os.putenv(name, value)
+        else:
+            os.unsetenv(name)
 
 
 def get_file_size(path: str) -> int:
