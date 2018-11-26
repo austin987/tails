@@ -205,13 +205,10 @@ class ImageCreator(object):
 
     def format_partition(self):
         logger.info("Formatting partition")
-        options = GLib.Variant(
-            'a{sv}',
-            {
+        options = GLib.Variant('a{sv}', {
                 'label': GLib.Variant('s', FILESYSTEM_LABEL),
-                'update-partition-type': GLib.Variant('s', 'FALSE')
-            }
-        )
+                'update-partition-type': GLib.Variant('b', False)
+        })
 
         self.partition.props.block.call_format_sync(
             arg_type='vfat',
