@@ -34,7 +34,7 @@ remove_build_dirs() {
 		tries=0
 		sudo lsof | grep --fixed-strings "${mountpoint}" || true
 		while ! sudo umount -f --verbose "${mountpoint}" && [ $tries -lt 12 ]; do
-			sudo fuser --ismountpoint --mount "${mountpoint}" --kill
+			sudo fuser --ismountpoint --mount "${mountpoint}" --kill || true
 			sleep 5
 			tries=$(expr $tries + 1)
 		done
