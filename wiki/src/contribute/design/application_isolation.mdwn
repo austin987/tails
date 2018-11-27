@@ -301,30 +301,34 @@ Alias rules dramatically increase the policy compile time (e.g.
 8 seconds with the aforementioned rule change in the
 `sanitized_helper` profile).
 
-To mitigate that problem, we could:
+<a id="pre-compiled-AppArmor-policy"></a>
 
-- either look at the rules and see if we can optimize it... which kind
-  of defeats the purpose of using alias rules in the first place to
-  avoid the need for modifying profiles;
-- or ship a cached pre-compiled policy. As long as the parser and
-  kernel are in sync, the policy can be pulled straight from the
-  cache, without any compilation. If the parser detects that the
-  policy is out of date, then the cache will be ignored and
-  compilation will happen. This is what is done for the Ubuntu phone.
-  Note that the "exact same kernel" requirement has been relaxed,
-  either `--match-string` or `--features-file` or both ought to let
-  a new-enough parser generate "correct" policy for a given target
-  kernel using any other kernel. This could allow precompiling on the
-  build hosts. See `apparmor_parser(8)`, `apparmor_parser --help`,
-  examples in `parser/tst/features_files/*`, and `parser.conf`.
-  Potential problems:
-  * missing documentation: see <https://bugs.launchpad.net/bugs/1491147>
-  * if alias rules need to be added at login time, then the cache must
-    be invalidated, and the policy entirely recompiled;
-  * it remains to be researched how well this would work, once
-    combined with the [[additional software
-    packages|doc/first_steps/persistence/configure]] persistence
-    feature.
+To mitigate that problem, we could ship a cached pre-compiled policy,
+that the parser will use as long as it considered it valid, and then
+no policy compilation happens at boot time; if the parser detects that
+the policy is out of date, then it will ignore the cache and compile
+the policy. For instance, this is what was done for the Ubuntu phone.
+To generate a valid binary policy cache at ISO build time:
+
+ - we need to call the parser with a `--features-file` value that
+   matches the pinned feature set used at Tails runtime; this comes
+   for free if we run the parser from the build chroot, where this
+   variable is set in the same `/etc/apparmor/parser.conf` file that
+   will be used at runtime;
+
+ - we need to use a similar enough version of the parser to the one
+   installed in Tails; here again, this comes for free if we run the
+   parser inside the build chroot;
+
+ - the version of the kernel used during the ISO build process, that
+   is the one the Vagrant box is running, should not matter: for
+   example, since 2.13-1, the [[!debpts apparmor]] package maintains
+   separate caches per feature set and a binary cache built on Linux
+   4.18 is still valid and used when booting on Linux 4.19 with the
+   same `features-file` setting.
+
+Resources: `apparmor_parser(8)`, `apparmor_parser --help`,
+examples in `parser/tst/features_files/*`, and `parser.conf`.
 
 <a id="rewrite-rules"></a>
 
