@@ -117,3 +117,14 @@ Feature: Installing Tails to a USB drive
     Then Tails is running from USB drive "isohybrid"
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "isohybrid"
+
+  Scenario: Starting Tails from an USB image, and making sure it is correctly set up and resized
+    Given a computer
+    And I temporarily create a 7200 MiB disk named "usbimage"
+    And I write the Tails USB image to disk "usbimage"
+    And I start Tails from USB drive "usbimage" with network unplugged and I login
+    Then Tails is running from USB drive "usbimage"
+    And the label of the FAT filesystem on the system partition on "usbimage" is "Tails"
+    And the system partition on "usbimage" is an ESP
+    And the FAT filesystem on the system partition on "usbimage" is at least 4096M large
+    And the FS UUID for the system partition on "usbimage" was randomized
