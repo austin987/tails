@@ -120,6 +120,7 @@ class ImageCreator(object):
             time.sleep(1)
             self.install_syslinux()
             self.set_guids()
+            self.set_fsuuid()
 
             with self.mount_partition():
                 self.reset_timestamps()
@@ -330,6 +331,7 @@ class ImageCreator(object):
         execute(["/sbin/sgdisk", "--disk-guid", "17B81DA0-8B1E-4269-9C39-FE5C7B9B58A3",
                  "--partition-guid", "1:34BF027A-8001-4B93-8243-1F9D3DCE7DE7", self.image])
 
+    def set_fsuuid(self):
         with set_env("MTOOLS_SKIP_CHECK", "1"):
             execute(["mlabel", "-i", self.partition.props.block.props.device, "-N", "a69020d2"])
 
