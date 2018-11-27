@@ -184,7 +184,11 @@ intltool_update_pot
 
 # If left out files are detected, intltool-update --maintain writes
 # them to po/missing.
-no_left_out_files || exit 3
+if ! no_left_out_files; then
+    echo "E: These files should be listed in POTFILES.in or POTFILES.skip:" >&2
+    cat po/missing
+    exit 3
+fi
 
 # Update PO files
 intltool_update_po $(po_languages)

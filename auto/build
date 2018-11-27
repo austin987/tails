@@ -122,8 +122,6 @@ export MKSQUASHFS_OPTIONS
 
 case "$LB_BINARY_IMAGES" in
    iso)
-      BUILD_FILENAME_EXT=iso
-      BUILD_FILENAME=binary
       which isohybrid >/dev/null || fatal 'Cannot find isohybrid in $PATH'
       installed_syslinux_utils_upstream_version="$(syslinux_utils_upstream_version)"
       if dpkg --compare-versions \
@@ -135,27 +133,16 @@ case "$LB_BINARY_IMAGES" in
 	      "while we need at least '${REQUIRED_SYSLINUX_UTILS_UPSTREAM_VERSION}'."
       fi
       ;;
-   iso-hybrid)
-      BUILD_FILENAME_EXT=iso
-      BUILD_FILENAME=binary-hybrid
-      ;;
-   tar)
-      BUILD_FILENAME_EXT=tar.gz
-      BUILD_FILENAME=binary-tar
-      ;;
-   usb-hdd)
-      BUILD_FILENAME_EXT=img
-      BUILD_FILENAME=binary
-      ;;
    *)
       fatal "Image type ${LB_BINARY_IMAGES} is not supported."
       ;;
 esac
-BUILD_DEST_FILENAME="${BUILD_BASENAME}.${BUILD_FILENAME_EXT}"
-BUILD_MANIFEST="${BUILD_DEST_FILENAME}.build-manifest"
-BUILD_APT_SOURCES="${BUILD_DEST_FILENAME}.apt-sources"
-BUILD_PACKAGES="${BUILD_DEST_FILENAME}.packages"
-BUILD_LOG="${BUILD_DEST_FILENAME}.buildlog"
+BUILD_ISO_FILENAME="${BUILD_BASENAME}.iso"
+BUILD_MANIFEST="${BUILD_BASENAME}.build-manifest"
+BUILD_APT_SOURCES="${BUILD_BASENAME}.apt-sources"
+BUILD_PACKAGES="${BUILD_BASENAME}.packages"
+BUILD_LOG="${BUILD_BASENAME}.buildlog"
+BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
 
 # Clone all output, from this point on, to the log file
 exec >  >(tee -a "$BUILD_LOG")
@@ -172,27 +159,25 @@ trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
    cat config/chroot_sources/*.chroot
 ) > "$BUILD_APT_SOURCES"
 
-echo "Building $LB_BINARY_IMAGES image ${BUILD_BASENAME}..."
-set -o pipefail
+echo "Building ISO image ${BUILD_ISO_FILENAME}..."
 time lb build noauto ${@}
-RET=$?
-if [ -e "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" ]; then
-   echo "Image was successfully created"
-   [ "$RET" -eq 0 ] || \
-       echo "Warning: lb build exited with code $RET"
-   if [ "$LB_BINARY_IMAGES" = iso ]; then
-       ISO_FILE="${BUILD_FILENAME}.${BUILD_FILENAME_EXT}"
-       print_iso_size "$ISO_FILE"
-       echo "Hybriding it..."
-       isohybrid $AMNESIA_ISOHYBRID_OPTS "$ISO_FILE" || fatal "isohybrid failed"
-       print_iso_size "$ISO_FILE"
-       truncate -s %2048 "$ISO_FILE"
-       print_iso_size "$ISO_FILE"
-   fi
-   echo "Renaming generated files..."
-   mv -i "${BUILD_FILENAME}.${BUILD_FILENAME_EXT}" "${BUILD_DEST_FILENAME}"
-   mv -i binary.packages "${BUILD_PACKAGES}"
-   generate-build-manifest chroot/debootstrap "${BUILD_MANIFEST}"
-else
-   fatal "lb build failed ($?)."
-fi
+[ -e binary.iso ] || fatal "lb build failed ($?)."
+
+echo "ISO image was successfully created"
+print_iso_size binary.iso
+
+echo "Hybriding it..."
+isohybrid $AMNESIA_ISOHYBRID_OPTS binary.iso || fatal "isohybrid failed"
+print_iso_size binary.iso
+truncate -s %2048 binary.iso
+print_iso_size binary.iso
+
+echo "Renaming generated files..."
+mv -i binary.iso "${BUILD_ISO_FILENAME}"
+mv -i binary.packages "${BUILD_PACKAGES}"
+
+echo "Generating build manifest..."
+generate-build-manifest chroot/debootstrap "${BUILD_MANIFEST}"
+
+echo "Creating USB image ${BUILD_USB_IMAGE_FILENAME}..."
+create-usb-image-from-iso "${BUILD_ISO_FILENAME}"
