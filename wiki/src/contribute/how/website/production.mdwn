@@ -1,0 +1,44 @@
+[[!meta title="Configuration of the production website"]]
+
+Whenever you work on our website or documentation, you may need to
+modify our ikiwiki configuration. You need to do so in three different
+places:
+
+ - The [[!tails_gitweb ikiwiki.setup]] configuration file that lives
+   in our main Git repository is used primarily for building the
+   offline copy of the website that is included in every Tails
+   release.
+
+ - The [[!tails_gitweb ikiwiki-cgi.setup]] configuration file, that
+   lives in our main Git repository too, is used for testing with
+   a local web server how our website will look like in the
+   production environment.
+
+ - Our live, [production website](https://tails.boum.org/) uses its
+   own configuration file which is managed differently.
+
+These configuration files must be updated in a coordinated way,
+otherwise one can easily break our production website. Here is how to
+do so:
+
+1. When submitting a topic branch with website changes that require
+   ikiwiki configuration changes:
+   - Apply these configuration changes to `ikiwiki.setup` and
+     `ikiwiki-cgi.setup` and include them in your topic branch.
+   - Make it clear to the reviewer that merging your topic branch must
+     be coordinated with
+     [[contribute/working_together/roles/sysadmins]].
+
+2. `git clone https://git-tails.immerda.ch/puppet-tails` and apply the
+   same changes to the ikiwiki configuration used by our production
+   website:
+   - <https://git-tails.immerda.ch/puppet-tails/tree/templates/website/ikiwiki.setup.erb>
+   - <https://git-tails.immerda.ch/puppet-tails/tree/manifests/website/params.pp>
+
+3. Submit these production website configuration changes to the
+   [[sysadmins team|contribute/working_together/roles/sysadmins]],
+   either in the form of Git patches prepared with
+   `git-format-patch(1)` or as a topic branch. Make it clear that
+   applying these changes must be coordinated with the person who is
+   responsible for merging the other topic branch that you've proposed
+   for the main Tails Git repository.
