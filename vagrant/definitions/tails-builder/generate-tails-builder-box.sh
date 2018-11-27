@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 set -u
+set -x
 
 # Based on ypcs' scripts found at:
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
