@@ -1,0 +1,240 @@
+This document is about:
+
+* How we keep track of upcoming Linux kernel upgrades we may want, or
+  have to, apply in Tails.
+* How we apply such upgrades.
+
+[[!toc levels=2]]
+
+# Background
+
+… where the reader learns why this page is even needed and a few
+relevant facts they should be aware of.
+
+## APT repositories
+
+Tails is built using a combination of snapshots of the Debian archive
+and overlay APT suites. This greatly impact the timeline and processes
+of upgrading any Debian package in Tails, and in particular the Linux
+kernel. This document assumes a good understanding of this [[somewhat
+complex system|contribute/APT_repository]].
+
+## The Debian side of things
+
+We generally ship the latest Linux kernel from Debian _unstable_ or
+_stable backports_. There's a delay for new Linux uploads to migrate
+from Debian _unstable_ to _testing_ and then to be uploaded and
+accepted into _stable backports_. So in practice we tend to ship the
+Linux kernel from Debian _unstable_: it happens regularly that the
+version we want to ship is in _unstable_ but not in _stable
+backports_ yet.
+
+The Linux kernel binary packages include an ABI version number, e.g.
+for `linux-image-4.18.0-2-amd64` the ABI is version 2.
+
+Tracking the kernel from Debian _unstable_ has one significant
+drawback: sometimes the only way to include security fixes is to
+upgrade Linux to a major new version. For example, say the current
+Tails release includes Linux 5.18.8, an important security issue was
+fixed in 5.18.9 and in 5.19.6. If 5.19.6 was uploaded to _unstable_
+but 5.18.9 never was, then our only option to include this security
+fix is to upgrade to 5.19.6.
+
+## _We_ need to decide
+
+Which exact Linux kernel version we ship in a given Tails release is
+a trade-off between packages availability, security fixes, stability,
+and hardware support. The Foundations Team has to make this decision
+during every Tails release cycle. Due to the way we manage our APT
+repositories and to the fact we don't publish release candidates for
+Tails bugfix releases, how this decision is made and implemented
+depends in great part on what kind of Tails release is upcoming (major
+or bugfix).
+
+The `KERNEL_VERSION` variable in [[!tails_gitweb config/amnesia]]
+determines what version of the kernel will be installed during the
+build. This includes the ABI version number, so even our `devel`
+branch does not get Linux point-release (e.g. 4.19.7) upgrades
+automatically if the ABI is bumped.
+
+# Process
+
+A Foundations Team member (generally the team lead, so far) creates
+a tracking ticket whenever:
+
+ - A new major version of Linux is released. At this point, that
+   version is generally available only in Debian _experimental_.
+ - A Linux point-release (e.g. 4.19.7) that includes potentially
+   relevant security fixes or changes the ABI is uploaded to Debian
+   _unstable_.
+
+Once this new kernel is available in our APT snapshots a Foundations
+Team member (you!) gathers the data that will inform our decision.
+There are two aspects to it: how it works for us and what the
+risk/benefit of the upgrade is.
+
+## Test the new kernel
+
+To learn how the new kernel works for us:
+
+1. Fork a branch off `devel` called
+   `feature/NNNNN-linux-X.Y+force-all-tests`.
+2. Adjust `KERNEL_VERSION` in `config/amnesia`. If `KERNEL_VERSION` is
+   unchanged (point-release without ABI bump), then this branch is
+   identical to `devel` and its only purpose is to force Jenkins to
+   run our entire test suite (`+force-all-tests`). But since this
+   branch has no commit on top of `devel`, Jenkins will ignore it, so
+   you need to create a dummy commit.
+3. Push this new branch to our CI.
+4. Set the _Feature Branch_ field on the ticket to the name of your
+   new branch.
+5. Quickly test a build from this branch on your hardware.
+6. Compare the Jenkins build and test results to the ones for our
+   `stable` and `devel` branch.
+7. Report your findings on the ticket.
+
+## Gather other data that will inform our decision
+
+You'll find the relevant data in:
+
+ - [Changelog](https://salsa.debian.org/kernel-team/linux/blob/sid/debian/changelog?expanded=true&viewer=simple)
+   of the Debian package
+ - Kernelnewbies's [human-readable
+   changelog](https://kernelnewbies.org/LinuxChanges) of upstream
+   changes (only relevant for a new major Linux release)
+ - [Debian BTS](https://bugs.debian.org/cgi-bin/pkgreport.cgi?archive=0;dist=unstable;ordering=normal;repeatmerged=0;src=linux)
+ - Debian [security tracker for
+   Linux](https://security-tracker.debian.org/tracker/source-package/linux)
+
+In there, look for:
+
+ - Security issues fixed in _unstable_ since the version we currently ship
+ - Major security fixes still not fixed in _unstable_ (in which case,
+   depending on when we are in our own release process, it may be worth
+   delaying the analysis a bit)
+ - Important regressions i.e. bugs with severity _important_ or higher
+   recently reported to Debian against this version of the kernel
+ - Relevant hardware support improvements
+
+Take notes on the ticket of the most relevant bits or lack thereof.
+
+## Make a decision
+
+With all the information you gathered earlier, use your best judgement
+to make a decision. The kind of decision you need to make depends on
+several factors:
+
+ - If the upcoming Tails release is a major one and upgrading the
+   kernel did not require modifying `KERNEL_VERSION`, then if we do
+   nothing particular, our next release will get the upgrade. So you
+   need to decide whether this kernel upgrade is bad enough for us to
+   opt-out, or important enough for us to fix whatever regressions it
+   may bring. In practice, opting-out of the upgrade is rarely the
+   best choice but YMMV.
+
+ - Otherwise, upgrading Linux in our next release will require work,
+   so you need to decide whether the overall cost/benefit of the
+   upgrade is worth it, factoring in the work needed and all the data
+   you've gathered earlier.
+
+If in doubt, ask your team-mates :)
+
+If the decision is "do nothing", close the ticket and stop reading here.
+Else, read on.
+
+## Implement the decision
+
+How to implement the decision depends on what kind of Tails release is
+upcoming.
+
+### Bugfix release
+
+The branch you've used so far to get results from our CI was forked
+off `devel` so it's not a valid candidate for merging into `stable`.
+Therefore, create a new
+`feature/NNNNN-linux-X.Y-stable+force-all-tests` topic branch forked
+off `stable` and transplant onto it the commits you had to create on
+your `devel`-based topic branch (`git rebase --onto` or `git
+cherry-pick`). Update the _Feature Branch_ field accordingly
+in Redmine.
+
+But the new resulting topic branch will likely not build: a bugfix
+release is built from our `stable` branch, that uses a set of APT
+snapshots frozen during the last major release process, and these old
+snapshots probably don't include the version of the kernel you want to
+upgrade to. So there are two options:
+
+ - Either bump the APT snapshot of the `debian` archive to the oldest
+   one that includes this new kernel. When it can reasonably be done,
+   this is the cheapest option so it's worth trying it first:
+
+   1. Update `config/APT_snapshots.d/debian/serial`, commit, push and
+      trigger a build on Jenkins.
+   2. Compare the `.build-manifest` and `.packages` files generated
+      by building your topic branch with [[!tails_gitweb_dir desc="the
+      ones for the current Tails release" wiki/src/torrents/files]].
+   3. If the diff seems reasonable, fine. Otherwise, fall back to the
+      next option (freeze exception).
+
+ - Or use our [[freeze
+   exception|contribute/APT_repository/time-based_snapshots#design-freeze-exceptions]]
+   mechanism i.e. import the new Linux packages into a dedicated
+   overlay suite in our custom APT repository and make your topic
+   branch use it.
+
+The CI results you got with your previous topic branch based on
+`devel` are not valid for your new branch: the new kernel may work
+fine in the former case thanks to corresponding userspace changes, but
+cause trouble in the context of our `stable` branch. So push your
+branch to our CI, trigger a build in Jenkins and analyze the
+test results. Once happy:
+
+1. Follow our usual process to get it reviewed and merged.
+2. Follow the instructions to [[enable new security
+   features|Linux_kernel#new-security-features]].
+
+### Major release
+
+If you decided to opt-out from a kernel upgrade we would otherwise
+automatically include: piggy-back on our [[freeze
+exception|contribute/APT_repository/time-based_snapshots#design-freeze-exceptions]]
+to force the installation of an older kernel.
+
+Else, you're trying to upgrade the kernel. It turns out you already
+have prepared the very topic branch we need to do that, so:
+
+1. Follow our usual process to get it reviewed and merged.
+2. Follow the instructions to [[enable new security
+   features|Linux_kernel#new-security-features]].
+
+<a id="new-security-features"></a>
+
+# Enable new security features
+
+This section assumes we have decided to upgrade to a major new version
+of Linux.
+
+Major new kernel versions often bring new security features.
+After each major kernel release, Kees Cook publishes on
+[his blog](https://outflux.net/blog/) an article titled
+"security things in Linux $VERSION" about these improvements.
+
+What you need to do depends on what it takes to benefit from each such
+improvement:
+
+ - Enabled by default: nothing to do, profit :)
+
+ - Guarded by local configuration such as a sysctl or a kernel command
+   line option: file a ticket about it on Redmine and add this ticket
+   to the Foundations Team' radar. Optionally, do the work yourself:
+   once you've got CI results about your topic branch with this new
+   option disabled, add a commit that enables it and compare the
+   results (including test suite total run time, to spot important
+   performance regressions).
+
+ - Needs to be enabled at kernel configuration time: check if it's
+   been enabled in the Debian kernel; if it's not been enabled there
+   yet and enabling it would make sense in a general-purpose distro
+   kernel where UX breakage and performance regressions can be serious
+   problems, file a wishlist bug against the `linux` source package.
+   Point to Kees' post and explain why you think it's worth it.

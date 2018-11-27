@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 set -u
+set -x
 
 # Based on ypcs' scripts found at:
 #     https://github.com/ypcs/vmdebootstrap-vagrant/
@@ -35,6 +36,7 @@ TAILS_SERIAL="$(get_serial tails)"
 
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "${DEBOOTSTRAP_GNUPG_HOMEDIR}" \
+    --no-tty \
     --import ../../../config/chroot_sources/tails.chroot.gpg
 DEBOOTSTRAP_GNUPG_PUBRING="${DEBOOTSTRAP_GNUPG_HOMEDIR}/pubring.kbx"
 if [ ! -e "${DEBOOTSTRAP_GNUPG_PUBRING}" ]; then

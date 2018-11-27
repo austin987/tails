@@ -20,10 +20,11 @@
 <TMPL_IF LOCAL_CSS>
 <link rel="stylesheet" href="<TMPL_VAR BASEURL><TMPL_VAR LOCAL_CSS>" type="text/css" />
 <TMPL_ELSE>
-<link rel="stylesheet" href="<TMPL_VAR BASEURL>local-donate.css" type="text/css" />
+<link rel="stylesheet" href="<TMPL_VAR BASEURL>local.css?reload20180211" type="text/css" />
 </TMPL_IF>
 
 <script src="<TMPL_VAR BASEURL>lib/js/mirror-dispatcher.js" type="text/javascript"></script>
+<script src="<TMPL_VAR BASEURL>donate-banner.js" type="text/javascript"></script>
 
 <TMPL_UNLESS DYNAMIC>
 <TMPL_IF EDITURL>
@@ -68,7 +69,7 @@
 
 <a id="donate-banner" href="https://tails.boum.org/donate/index.<TMPL_VAR HTML_LANG_CODE>.html?r=banner">
   <div class="donate-en">
-    <span class="first">Tails helps thousands of people to stay safe online every day and it's free.</span>
+    <span class="first">Tails helps thousands of people stay safe online every day. And it's free.</span>
     <span class="second">Donate today to protect and sustain Tails!</span>
   </div>
 
@@ -83,7 +84,7 @@
   </div>
 
   <div class="donate-fa">
-    <span class="first">Tails helps thousands of people to stay safe online every day and it's free.</span>
+    <span class="first">Tails helps thousands of people stay safe online every day. And it's free.</span>
     <span class="second">Donate today to protect and sustain Tails!</span>
   </div>
 
@@ -93,7 +94,7 @@
   </div>
 
   <div class="donate-it">
-    <span class="first">Tails helps thousands of people to stay safe online every day and it's free.</span>
+    <span class="first">Tails helps thousands of people stay safe online every day. And it's free.</span>
     <span class="second">Donate today to protect and sustain Tails!</span>
   </div>
 
@@ -101,6 +102,36 @@
     <span class="first">Tails ajuda milhares de pessoas a se protegerem na Internet todos os dias, e é gratuito.</span>
     <!-- Faça uma doação para ajudar o Tails a continuar a existir! -->
     <span class="second">Donate today to protect and sustain Tails!</span>
+  </div>
+
+  <div class="counter">
+    <div class="counter-amount donate-en">$30&#8239;359 out of $140&#8239;000</div>
+    <div class="counter-amount donate-es">26&#8239;956€ de 120&#8239;000€</div>
+    <div class="counter-amount donate-de">26&#8239;956€ von 120&#8239;000€</div>
+    <div class="counter-amount donate-fa">$30&#8239;359 out of $140&#8239;000</div>
+    <div class="counter-amount donate-fr">26&#8239;956€ sur 120&#8239;000€</div>
+    <div class="counter-amount donate-it">26&#8239;956€ out of 120&#8239;000€</div>
+    <div class="counter-amount donate-pt">26&#8239;956€ out of 120&#8239;000€</div>
+    <div id="counter-last-updated-info"><img src="<TMPL_VAR BASEURL>lib/info.png" alt="Info"></div>
+    <div id="counter-last-updated">
+      <span class="donate-en">Last updated on 2018-11-15.</span>
+      <span class="donate-es">Última actualización el 2018-11-15.</span>
+      <span class="donate-de">Last updated on 2018-11-15.</span>
+      <span class="donate-fa">Last updated on 2018-11-15.</span>
+      <span class="donate-fr">Dernière mise à jour le 2018-11-15.</span>
+      <span class="donate-it">Last updated on 2018-11-15.</span>
+      <span class="donate-pt">Last updated on 2018-11-15.</span>
+    </div>
+    <div class="counter-progress">
+      <div class="counter-progress-bar" role="progressbar" style="width: 22%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div class="donate-en"><div class="counter-days"><span class="counter-number-of-days">61</span> days remaining</div></div>
+    <div class="donate-es"><div class="counter-days">Quedan <span class="counter-number-of-days">61</span> días</div></div>
+    <div class="donate-de"><div class="counter-days">Noch <span class="counter-number-of-days">61</span> Tage übrig</div></div>
+    <div class="donate-fa"><div class="counter-days"><span class="counter-number-of-days">61</span> days remaining</div></div>
+    <div class="donate-fr"><div class="counter-days"><span class="counter-number-of-days">61</span> jours restants</div></div>
+    <div class="donate-it"><div class="counter-days"><span class="counter-number-of-days">61</span> days remaining</div></div>
+    <div class="donate-pt"><div class="counter-days"><span class="counter-number-of-days">61</span> days remaining</div></div>
   </div>
 </a>
 
@@ -307,7 +338,8 @@ License: <TMPL_VAR LICENSE>
 
 <script type="text/javascript">
   var linkelements = document.querySelectorAll('.use-mirror-pool');
-  if(linkelements.length > 0) {
+  // Avoid a traceback if mirror-dispatcher.js is not available.
+  if (typeof replaceUrlPrefixWithRandomMirror !== "undefined" && linkelements.length > 0) {
     replaceUrlPrefixWithRandomMirror(linkelements);
   }
 </script>
