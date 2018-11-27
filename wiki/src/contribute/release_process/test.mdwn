@@ -18,19 +18,19 @@ many safeguards against releasing crap.
 
 Compare the to-be-released source code with previous version's one e.g.:
 
-Boot the candidate ISO and find the commit it was build from with the
+Boot the candidate image and find the commit it was build from with the
 `tails-version` command.
 
 Then, from the source tree, see the diff:
 
-	git diff --find-renames <old ISO commit>..<ISO commit>
+	git diff --find-renames <old image commit>..<candidate image commit>
 
 e.g. `git diff --find-renames 334e1c485a3a79be9fff899d4dc9d2db89cdc9e1..cfbde80925fdd0af008f10bc90c8a91a578c58e3`
 
 ## Result
 
 Compare the list of bundled packages and versions with the one shipped last
-time. `.packages` are usually attached to the email announcing the ISO is ready.
+time. `.packages` are usually attached to the email announcing the image is ready.
 
 	/usr/bin/diff -u \
 	    wiki/src/torrents/files/tails-amd64-3.1.packages \
@@ -48,11 +48,12 @@ Check the output for:
 
 ## Image size
 
-Check the image size has not changed much since the last release.
+Check the images size has not changed much since the last release.
 
-In a directory with many Tails ISO images:
+In a directory with many Tails ISO and USB images:
 
-    find -iname "tails*.iso" -exec ls -lh '{}' \; | sort -rhk 5
+    find \( -iname "tails*.iso" -o -iname "tails*.img" \) \
+	     -exec ls -lh '{}' \; | sort -rhk 5
 
 <a id="reproducibility-final-check"></a>
 
@@ -60,13 +61,13 @@ In a directory with many Tails ISO images:
 
 This section can **not** be done by the RM.
 
-1. Download the ISO and all the
+1. Download the ISO and USB images plus all the
    [IUKs](https://mirrors.wikimedia.org/tails/stable/iuk/) that
    upgrade to the version you are testing.
 
 2. Clear-sign the hashes of all products using your OpenPGP key:
 
-        sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso \
+        sha512sum tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.{img,iso} \
             | gpg --clear-sign
 
 3. Send the output of the previous command to the _Trusted Reproducer_,
@@ -84,7 +85,8 @@ documented on a [[dedicated page|test/automated_tests]].
 
 See [[test/setup]] and [[test/usage]].
 
-Do point `--old-iso` to the ISO of the previous stable release.
+Do point `--old-iso` and `--old-img` respectively to the ISO and USB
+image of the previous stable release.
 
 ## Automated test suite migration progress
 
@@ -277,8 +279,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
 * The goal is is to check that *Tails Verification* works in *Tor
   Browser* in the version of Tails we are testing here. *Tails
   Verification* only supports verifying the current release so for
-  example, when doing tests for the Tails 3.9 release, we use it in
-  the tentative Tails 3.9 to verify the Tails 3.8 ISO image.
+  example, when doing tests for the Tails 3.13 release, we use it in
+  the tentative Tails 3.13 to verify the Tails 3.12 ISO and USB images.
 
   1. Start the Tails that you are testing.
 
@@ -297,6 +299,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
   6. Click the **Verify Tails $N** button.
 
   7. The verification should be successful.
+
+  8. Repeat for the USB image.
 
 # Real (non-VM) hardware
 
