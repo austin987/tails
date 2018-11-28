@@ -133,6 +133,6 @@ Feature: Installing Tails to a USB drive
     And I start Tails from USB drive "usbimage" with network unplugged and I login
     Then Tails is running from USB drive "usbimage"
     And the label of the FAT filesystem on the system partition on "usbimage" is "Tails"
-    And the system partition on "usbimage" is an ESP
+    And the system partition on "usbimage" is an EFI system partition
     And the FAT filesystem on the system partition on "usbimage" is at least 4096M large
     And the FS UUID for the system partition on "usbimage" was randomized

@@ -796,7 +796,7 @@ Then /^the label of the FAT filesystem on the system partition on "(.+)" is "(.+
   check_part_integrity(name, part_dev, "filesystem", "vfat", label)
 end
 
-Then /^the system partition on "(.+)" is an ESP$/ do |name|
+Then /^the system partition on "(.+)" is an EFI system partition$/ do |name|
   assert($vm.is_running?)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + "1"
