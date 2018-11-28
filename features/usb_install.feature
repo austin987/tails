@@ -126,7 +126,7 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "isohybrid"
 
-  Scenario: Starting Tails from an USB image, and making sure it is correctly set up and resized
+  Scenario: The system partition is updated when booting from a USB drive where a Tails USB image was copied
     Given a computer
     And I temporarily create a 7200 MiB disk named "usbimage"
     And I write the Tails USB image to disk "usbimage"
