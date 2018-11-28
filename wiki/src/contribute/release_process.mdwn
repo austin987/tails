@@ -1035,25 +1035,26 @@ Now you can announce and seed the Torrent for the release you're preparing:
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
 	for type in iso img ; do
+	   image_filename="tails-amd64-${VERSION:?}.${type:?}"
        scp \
-          "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" \
-          "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}/tails-amd64-${VERSION:?}.${type:?}.sig" \
+          "${ISOS:?}/${image_filename:?}.torrent" \
+          "${ISOS:?}/${image_filename:?}/${image_filename:?}.sig" \
           bittorrent.lizard: && \
        ssh bittorrent.lizard << EOF
-          mkdir --mode 0755 "tails-amd64-${VERSION:?}.${type:?}" && \
-          mv "tails-amd64-${VERSION:?}.${type:?}.sig" \
-             "tails-amd64-${VERSION:?}.${type:?}/" && \
-          cd "tails-amd64-${VERSION:?}.${type:?}" && \
+          mkdir --mode 0755 "${image_filename:?}" && \
+          mv "${image_filename:?}.sig" \
+             "${image_filename:?}/" && \
+          cd "${image_filename:?}" && \
           wget \
-             "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.${type:?}" && \
-          gpg --verify tails-amd64-${VERSION:?}.${type:?}{.sig,} && \
+             "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
+          gpg --verify ${image_filename:?}{.sig,} && \
           cd && \
-          chgrp -R debian-transmission "tails-amd64-${VERSION:?}.${type:?}" && \
-          chmod -R go+rX,g+w "tails-amd64-${VERSION:?}.${type:?}" && \
+          chgrp -R debian-transmission "${image_filename:?}" && \
+          chmod -R go+rX,g+w "${image_filename:?}" && \
           mv \
-             "tails-amd64-${VERSION:?}.${type:?}" \
+             "${image_filename:?}" \
              /var/lib/transmission-daemon/downloads/ && \
-          transmission-remote --add tails-amd64-${VERSION:?}.${type:?}.torrent \
+          transmission-remote --add ${image_filename:?}.torrent \
                               --find /var/lib/transmission-daemon/downloads/
     done
     EOF
