@@ -825,3 +825,13 @@ Then /^the FAT filesystem on the system partition on "(.+)" is at least (\d+)(.+
   assert(fs_size >= wanted_size,
          "FAT file system is too small: #{fs_size} is less than #{wanted_size}")
 end
+
+Then /^the FS UUID for the system partition on "(.+)" was randomized$/ do |name|
+  $vm.storage.guestfs_disk_helper(name) do |g, _|
+    partition = g.list_partitions().first
+    fs_uuid = g.blkid(partition)["UUID"]
+    static_uuid = 'A690-20D2'
+    assert(fs_uuid != static_uuid,
+           "FS UUID on #{name} wasn't randomized, it's still: #{fs_uuid}")
+  end
+end
