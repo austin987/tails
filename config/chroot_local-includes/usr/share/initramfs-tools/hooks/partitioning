@@ -17,3 +17,10 @@ copy_exec /sbin/sgdisk /sbin
 copy_exec /sbin/partprobe /sbin
 copy_exec /usr/sbin/fatresize /sbin
 copy_exec /usr/bin/mlabel /sbin
+
+# Needed by mlabel that uses iconv_open
+mkdir -p "$DESTDIR/usr/lib/x86_64-linux-gnu/gconv"
+# XXX: this probably makes the initramfs too big;
+# we should instead copy only what we really need
+cp -p /usr/lib/x86_64-linux-gnu/gconv/* \
+   "$DESTDIR/usr/lib/x86_64-linux-gnu/gconv/"
