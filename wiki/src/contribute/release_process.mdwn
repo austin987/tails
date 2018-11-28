@@ -662,26 +662,26 @@ image and with a `.sig` extension), then go up to the parent
 directory, create a `.torrent` file and check the generated `.torrent`
 files metadata:
 
-	mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-	cd "${ISOS:?}/tails-amd64-${VERSION:?}" && \
 	for type in iso img ; do
+	   mkdir "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}" && \
+	   cd "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}" && \
 	   mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.${type:?}" ./ && \
 	   gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *".${type:?}" && \
-	done && \
-	rename 's,\.asc$,.sig,' *.asc && \
-	cd .. && \
-	mktorrent \
-	  -a 'udp://tracker.torrent.eu.org:451' \
-	  -a 'udp://tracker.coppersurfer.tk:6969'   \
-	  "tails-amd64-${VERSION:?}" && \
-	transmission-show tails-amd64-${VERSION:?}.torrent
+	   rename 's,\.asc$,.sig,' *.asc && \
+	   cd .. && \
+	   mktorrent \
+	      -a 'udp://tracker.torrent.eu.org:451' \
+	      -a 'udp://tracker.coppersurfer.tk:6969'   \
+	      "tails-amd64-${VERSION:?}.${type:?}" && \
+	   transmission-show tails-amd64-${VERSION:?}.torrent
+	done
 
 Lastly, let's set some variables to be used later:
 
-    ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso"
+    ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}.iso/tails-amd64-${VERSION:?}.iso"
     ISO_SHA256SUM="$(sha256sum "${ISO_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH:?}")"
-    IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.img"
+    IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}.img/tails-amd64-${VERSION:?}.img"
     IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
 
@@ -725,8 +725,8 @@ and run the following:
           PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
             ./bin/tails-create-iuk \
                --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
-               --old-iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
-               --new-iso \"${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso\"          \
+               --old-iso \"${ISOS:?}/tails-amd64-${source_version:?}.iso/tails-amd64-${source_version:?}.iso\" \
+               --new-iso \"${ISOS:?}/tails-amd64-${VERSION:?}.iso/tails-amd64-${VERSION:?}.iso\"          \
                --outfile \"${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\""
     done
 
@@ -1034,28 +1034,28 @@ Now you can announce and seed the Torrent for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
-    scp \
-       "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISO_PATH:?}.sig" \
-       bittorrent.lizard: && \
-    ssh bittorrent.lizard << EOF
-       mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
-       mv "tails-amd64-${VERSION:?}.iso.sig" \
-          "tails-amd64-${VERSION:?}/" && \
-       cd "tails-amd64-${VERSION:?}" && \
-       wget \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
-       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
-       gpg --verify tails-amd64-${VERSION:?}.img{.sig,} && \
-       cd && \
-       chgrp -R debian-transmission "tails-amd64-${VERSION:?}" && \
-       chmod -R go+rX,g+w "tails-amd64-${VERSION:?}" && \
-       mv \
-          "tails-amd64-${VERSION:?}" \
-          /var/lib/transmission-daemon/downloads/ && \
-       transmission-remote --add tails-amd64-${VERSION:?}.torrent \
-                           --find /var/lib/transmission-daemon/downloads/
+	for type in iso img ; do
+       scp \
+          "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" \
+          "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}/tails-amd64-${VERSION:?}.${type:?}.sig" \
+          bittorrent.lizard: && \
+       ssh bittorrent.lizard << EOF
+          mkdir --mode 0755 "tails-amd64-${VERSION:?}.${type:?}" && \
+          mv "tails-amd64-${VERSION:?}.${type:?}.sig" \
+             "tails-amd64-${VERSION:?}.${type:?}/" && \
+          cd "tails-amd64-${VERSION:?}.${type:?}" && \
+          wget \
+             "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.${type:?}" && \
+          gpg --verify tails-amd64-${VERSION:?}.${type:?}{.sig,} && \
+          cd && \
+          chgrp -R debian-transmission "tails-amd64-${VERSION:?}.${type:?}" && \
+          chmod -R go+rX,g+w "tails-amd64-${VERSION:?}.${type:?}" && \
+          mv \
+             "tails-amd64-${VERSION:?}.${type:?}" \
+             /var/lib/transmission-daemon/downloads/ && \
+          transmission-remote --add tails-amd64-${VERSION:?}.${type:?}.torrent \
+                              --find /var/lib/transmission-daemon/downloads/
+    done
     EOF
 
 Test that you can start downloading the ISO and USB images with a BitTorrent client.
