@@ -135,4 +135,4 @@ Feature: Installing Tails to a USB drive
     And the label of the FAT filesystem on the system partition on "usbimage" is "Tails"
     And the system partition on "usbimage" is an EFI system partition
     And the FAT filesystem on the system partition on "usbimage" is at least 4096M large
-    And the FS UUID for the system partition on "usbimage" was randomized
+    And the UUID of the FAT filesystem on the system partition on "usbimage" was randomized

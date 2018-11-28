@@ -823,10 +823,10 @@ Then /^the FAT filesystem on the system partition on "(.+)" is at least (\d+)(.+
     "df --output=size -B 1 '/lib/live/mount/medium'"
   ).stdout.split("\n")[1].to_i
   assert(fs_size >= wanted_size,
-         "FAT file system is too small: #{fs_size} is less than #{wanted_size}")
+         "FAT filesystem is too small: #{fs_size} is less than #{wanted_size}")
 end
 
-Then /^the FS UUID for the system partition on "(.+)" was randomized$/ do |name|
+Then /^the UUID of the FAT filesystem on the system partition on "(.+)" was randomized$/ do |name|
   $vm.storage.guestfs_disk_helper(name) do |g, _|
     partition = g.list_partitions().first
     fs_uuid = g.blkid(partition)["UUID"]
