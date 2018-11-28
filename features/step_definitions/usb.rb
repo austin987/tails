@@ -274,7 +274,7 @@ def check_disk_integrity(name, dev, scheme)
          "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
 end
 
-def check_part_integrity(name, dev, usage, fs_type, part_label, part_type = nil)
+def check_part_integrity(name, dev, usage, fs_type, part_label = nil, part_type = nil)
   info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
@@ -283,8 +283,10 @@ def check_part_integrity(name, dev, usage, fs_type, part_label, part_type = nil)
          "Unexpected device field 'usage' on USB drive '#{name}', '#{dev}'")
   assert(dev_info.match("^    IdType: +#{fs_type}$"),
          "Unexpected device field 'IdType' on USB drive '#{name}', '#{dev}'")
-  assert(part_info.match("^    Name: +#{part_label}$"),
-         "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+  if part_label
+    assert(part_info.match("^    Name: +#{part_label}$"),
+           "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+  end
   if part_type
     assert(part_info.match("^    Type: +#{part_type}$"),
            "Unexpected partition type on USB drive '#{name}', '#{dev}'")
