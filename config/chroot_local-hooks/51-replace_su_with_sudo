@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -e
+
+# Replace su by a message to use sudo
+# https://redmine.tails.boum.org/code/issues/15583
+
+echo "Disabling usage of su"
+
+OPTS_FILE='/etc/bash.bashrc'
+NO_PASSWORD_LECTURE_FILE='/etc/sudoers.d/tails-greeter-no-password-lecture'
+
+cat <<EOF>> "${OPTS_FILE}"
+su (){
+    if [ -f "${NO_PASSWORD_LECTURE_FILE}" ]; then
+        echo By default, the administration password is disabled for better security.
+        echo
+        echo In order to perform administration tasks, you need to setup an
+        echo administration password when starting Tails.
+        echo
+        echo Then execute commands with sudo.
+        echo
+        echo See the corresponding documentation:
+        echo https://tails.boum.org/administration_password/
+        echo
+    fi
+
+    echo su is disabled. Please use sudo instead.
+}
+EOF
