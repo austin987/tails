@@ -888,19 +888,8 @@ Update the image description file (IDF) used by the browser extension:
        --version "${VERSION:?}" \
        --iso "${ISO_PATH:?}" \
        > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-    cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/amd64/stable/latest.yml <<EOF
-    ---
-    build-target: amd64
-    channel: stable
-    product-name: Tails
-    version: '${VERSION:?}'
-    target-files:
-    - sha256: ${ISO_SHA256SUM}
-      size: ${ISO_SIZE_IN_BYTES:?}
-      url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
-    EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v{1,2}/Tails/amd64/stable/latest.{yml,json} && \
+      git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
       git commit -m "Update IDF file for Tails Verification." )
 
 Done with OpenPGP signing
