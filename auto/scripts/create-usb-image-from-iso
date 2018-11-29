@@ -349,7 +349,10 @@ class ImageCreator(object):
         """Set a fixed filesystem UUID aka. FAT Volume ID / serial number"""
         logger.info("Setting filesystem UUID")
         with set_env("MTOOLS_SKIP_CHECK", "1"):
-            execute(["mlabel", "-i", self.partition.props.block.props.device, "-N", "a69020d2"])
+            execute(["mlabel", "-i", self.partition.props.block.props.device,
+                     "-N", "a69020d2",
+                     # Otherwise mlabel -N will remove the pre-existing label
+                     "::%s" % FILESYSTEM_LABEL])
 
 
 def execute(cmd: list, as_root=False):
