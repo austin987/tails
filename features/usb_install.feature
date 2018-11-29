@@ -1,9 +1,10 @@
 @product
-# XXX: rename to tails_installer.feature and move things that don't use Tails
-# Installer elsewhere?
 Feature: Installing Tails to a USB drive
   As a Tails user
   I want to install Tails to a suitable USB drive
+
+# XXX: rename to tails_installer.feature and move things that don't use Tails
+# Installer elsewhere?
 
   Scenario: Try installing Tails to a too small USB drive without partition table
     Given I have started Tails from DVD without network and logged in
