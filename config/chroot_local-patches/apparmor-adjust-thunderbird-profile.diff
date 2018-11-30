@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.bin.thunderbird	2018-08-19 09:32:11.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.thunderbird	2018-08-21 07:03:51.744244552 +0000
+--- a/etc/apparmor.d/usr.bin.thunderbird	2018-11-22 21:33:46.676704745 +0100
++++ b/etc/apparmor.d/usr.bin.thunderbird	2018-11-22 21:33:34.948766716 +0100
 @@ -16,7 +16,6 @@
    # TODO: finetune this for required accesses
    #include <abstractions/dbus>
@@ -16,13 +16,16 @@
    #include <abstractions/ubuntu-browsers.d/java>
    #include <abstractions/ubuntu-helpers>
  
-@@ -46,23 +44,14 @@
+@@ -46,26 +44,17 @@
  
    # Allow opening attachments
    # TODO: create and use abstractions for opening various file formats
 -  /{usr/local/,usr/,}bin/* Cx -> sanitized_helper,
 +  /{usr/local/,usr/,}bin/{[^gp],g[^p],p[^s],gp[^g]}* Cx -> sanitized_helper,
    /usr/lib/libreoffice/program/soffice Cxr -> sanitized_helper,
+ 
+   # Allow opening links
+   /usr/lib/@{multiarch}/glib-[0-9]*/gio-launch-desktop ix,
  
 -  # For Xubuntu to launch the browser
 -  /usr/bin/exo-open ixr,
@@ -41,7 +44,7 @@
    owner @{HOME}/.{cache,config}/dconf/user rw,
    owner @{HOME}/.cache/thumbnails/** r,
    owner /run/user/[0-9]*/dconf/user rw,
-@@ -135,6 +124,7 @@
+@@ -138,6 +124,7 @@
    deny /.suspended r,
    deny /boot/initrd.img* r,
    deny /boot/vmlinuz* r,
@@ -49,7 +52,7 @@
    deny /var/cache/fontconfig/ w,
  
    # noisy file dialog:
-@@ -254,7 +244,6 @@
+@@ -264,7 +251,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
    /usr/lib/thunderbird/crashreporter ix,
