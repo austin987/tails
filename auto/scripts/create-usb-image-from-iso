@@ -101,6 +101,10 @@ class ImageCreator(object):
         with self.setup_loop_device():
             self.create_gpt()
             self.create_partition()
+            # udisks' create_partition function seems to ignore arg_type
+            # in Stretch, so we set it via sgdisk.
+            # XXX:Buster: Remove set_partition_type
+            self.set_partition_type()
             self.set_partition_flags()
             # XXX: Rescan?
             self.format_partition()
@@ -188,6 +192,9 @@ class ImageCreator(object):
         # before Buster's udisks2 + libblockdev 2.15-1
         # (https://github.com/storaged-project/udisks/issues/418)
         execute(["/sbin/sgdisk", "--attributes=1:=:%x" % SYSTEM_PARTITION_FLAGS, self.image])
+
+    def set_partition_type(self):
+        execute(["/sbin/sgdisk", "--typecode=1:%s" % ESP_GUID, self.image])
 
     def format_partition(self):
         logger.info("Formatting partition")
