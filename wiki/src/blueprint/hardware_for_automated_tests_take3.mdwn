@@ -116,9 +116,8 @@ Pros:
 
 Cons:
 
- * High initial money investment (10-12 cores at 3+GHz, e.g.
-   HPE ProLiant DL360) unless we get it sponsored or get a big
-   discount from a vendor.
+ * High initial money investment… unless we get it sponsored or get
+   a big discount from a vendor.
  * On-going cost for hosting a second server.
 
 Extra options:
@@ -132,6 +131,35 @@ Extra options:
    - Our test suite currently assumes only one instance is running on
      a given system ⇒ if we go this way we have to remove
      this limitation.
+
+Specs:
+
+ * For simplicity's sake, the following assumes we have Jenkins
+   workers that are each able to run all the kinds of jobs we have.
+ * CPU: assuming 2 cores (4 hyperthreads) per Jenkins worker, for
+   8 workers, we need 16 cores at 3.5 GHz base frequency, which is
+   roughly equivalent to 4 × the Intel NUC mentioned below.
+   Our options are:
+    - 4 × [quad-core CPU](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=4&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
+      (on 2018-12-01, one result: [Xeon Gold 5122](https://ark.intel.com/products/120475/Intel-Xeon-Gold-5122-Processor-16-5M-Cache-3-60-GHz-) → 4×105 W = 420 W)
+    - 2 × [octo-core CPUs](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=8&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
+      (on 2018-12-01, one result: [Xeon Gold 6144](https://ark.intel.com/products/124943/Intel-Xeon-Gold-6144-Processor-24-75M-Cache-3-50-GHz-) → 2×150 W = 300 W)
+    - 1 × [16-core CPU](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=16&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
+      (2018-12-01: no result)
+    - Higher-density systems, with 2+ servers in a chassis e.g.
+      Supermicro Twin solutions, might allow using cheaper CPUs that
+      don't support multi-processor setups.
+ * RAM:  
+   + 208 GB = 26 GB × 8 Jenkins workers  
+   + Jenkins VM + host system + a few accessory VMs  
+   = round to 256 GB; 192 GB might feasible with super fast storage
+   (at least 4 × NVMe × 2 for RAID-1) if that's cheaper
+ * storage:  
+   + 480 GB = 60 GB × 8 Jenkins workers  
+   + 600 GB for the Jenkins artifacts store  
+   +  70 GB for APT cacher (make it cache ISO history too)  
+   + Jenkins VM + host system + a few accessory VMs  
+   = round to 1.5 TB × 2 (RAID-1)
 
 ## Custom-built cluster of consumer-grade hardware dedicated to CI, aka. the hacker option
 
@@ -390,7 +418,7 @@ Cons:
 
 3. Describe our needs for each option:
    - 2nd bare metal server-grade machine:
-     * hardware specs [intrigeri]
+     * <strike>hardware specs [intrigeri]</strike> [DONE]
      * hosting needs (high power consumption) [intrigeri]
    - cloud (nested KVM, management tools in Debian), iff. the new
      sysadmin hired in 2019 knows is excited to learn and use
