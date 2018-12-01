@@ -298,9 +298,7 @@ class ImageCreator(object):
             '--offset', str(self.partition.props.partition.props.offset),
             '--directory', '/syslinux/',
             '--install', self.image
-        ],
-            as_root=True  # XXX: Why does this only work as root?
-        )
+        ])
 
     def reset_timestamps(self):
         logger.info("Resetting timestamps")
@@ -324,9 +322,7 @@ class ImageCreator(object):
                      "::%s" % FILESYSTEM_LABEL])
 
 
-def execute(cmd: list, as_root=False):
-    if as_root and os.geteuid() != 0:
-        cmd = ['pkexec'] + cmd
+def execute(cmd: list):
     logger.info("Executing '%s'" % ' '.join(cmd))
     subprocess.check_call(cmd)
 
@@ -358,6 +354,9 @@ def main():
     args = parser.parse_args()
     if not args.ISO.endswith(".iso"):
         parser.error("Input file is not an ISO (no .iso extension)")
+
+    if os.geteuid() != 0:
+        raise PermissionError("This script must be run as root")
 
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('sh').setLevel(logging.WARNING)
