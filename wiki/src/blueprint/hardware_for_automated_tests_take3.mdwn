@@ -32,30 +32,45 @@ area:
    virtualization too.
  * As we add more automated tests, and re-enable tests previously
    flagged as fragile, a full test run takes longer and longer.
-   We're now up to 160 minutes / run. We can't make it faster by
+   We're now up to 200 minutes / run. We can't make it faster by
    adding RAM anymore nor by adding CPUs to ISO testers. But faster
    CPU cores would fix that: the same test suite only takes 105
    minutes on a replica of our Jenkins setup, also using nested
    virtualization, with a poor Internet connection but a faster CPU.
- * Building our website takes a long while (8 minutes on our ISO
-   builders i.e. 17% of the entire ISO build time), which makes ISO
+ * Building our website takes a long while (12 minutes on our ISO
+   builders i.e. 20% of the entire ISO build time), which makes ISO
    builds take longer than they could. This will get worse as new
    languages are added to our website. This is a single-threaded task,
    so adding more CPU cores or RAM would not help: only faster CPU
-   cores would fix that. For example, the ISO build only takes 30
-   minutes (including 4.5 minutes for building the website) on
+   cores would fix that. For example, the ISO build only takes 38
+   minutes (including 6-7 minutes for building the website) on
    a replica of our Jenkins setup, also using nested virtualization,
    with a poor Internet connection but faster CPU cores.
  * Waiting time in queue for ISO build and test jobs is acceptable
-   most of the time, but too high during peak load periods: between
-   2017-06-17 and 2017-12-17, 4% of the test jobs have to wait for
-   more than 1 hour, and 1% more than 2 hours; similarly, 2% of the
-   ISO build jobs had to wait more than 1 hour. That's not many jobs
-   of course, but this congestion happens precisely when we need
-   results from our CI infra ASAP, be it because there's intense
-   ongoing development or because we're reviewing and merging lots of
-   branches close to a code freeze, so these delays hurt our
-   development and release process.
+   most of the time, but too high during peak load periods:
+
+   - between 2017-06-17 and 2017-12-17:
+     - 4% of the test jobs had to wait for more than 1 hour.
+	 - 1% of the test jobs had to wait for more than 2 hours.
+	 - 2% of the ISO build jobs had to wait more than 1 hour.
+
+   - between 2018-05-01 and 2018-11-30:
+     - We've run 3342 ISO test jobs; median duration: 195 minutes.
+     - 7% of the test jobs had to wait for more than 1 hour.
+	 - 3% of the test jobs had to wait for more than 2 hours.
+     - We've run 3355 ISO successful build jobs; median duration: 60 minutes.
+	 - 7.2% of the ISO build jobs had to wait more than 15 minutes.
+	 - 2% of the ISO build jobs had to wait more than 1 hour.
+	 - We've run 3355 `reproducibly_build_*` jobs; median duration: 70 minutes.
+	 - 10% of the `reproducibly_build_*` jobs had to wait more than 15 minutes.
+	 - 3.2% of the `reproducibly_build_*` jobs had to wait more than 1 hour.
+
+   That's not many jobs of course, but this congestion happens
+   precisely when we need results from our CI infra ASAP, be it
+   because there's intense ongoing development or because we're
+   reviewing and merging lots of branches close to a code freeze, so
+   these delays hurt our development and release process.
+
  * Our current server was purchased at the end of 2014. The hardware
    can last quite a few more years, but we should plan (at least
    budget-wise) for replacing it when it is 5 years old, at the end of
