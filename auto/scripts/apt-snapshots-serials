@@ -7,7 +7,7 @@ set -o pipefail
 BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
 CONFIG=config/APT_snapshots.d
 SERIAL_ONLY=
-APT_SNAPSHOT_SERIALS=
+APT_SNAPSHOTS_SERIALS=
 FREEZE_EXCEPTIONS=debian-security
 
 get_latest_serial() {
@@ -32,7 +32,7 @@ else
 	fi
 	if [ "$action" = "prepare-build" ]; then
 		if [ $# -eq 1 ]; then
-			APT_SNAPSHOT_SERIALS="${1}"
+			APT_SNAPSHOTS_SERIALS="${1}"
 			shift
 		fi
 	fi
@@ -87,9 +87,9 @@ case "$action" in
 		rm -rf tmp/APT_snapshots.d
 		mkdir -p tmp
 		cp -r config/APT_snapshots.d tmp/
-		if [ "${APT_SNAPSHOT_SERIALS}" ]; then
+		if [ "${APT_SNAPSHOTS_SERIALS}" ]; then
 			$(dirname "$0")/apt-snapshots-serials-load-json \
-				"$APT_SNAPSHOT_SERIALS" \
+				"$APT_SNAPSHOTS_SERIALS" \
 				> tmp/cached_APT_snapshots_serials
 		else
 			$0 get-latest > tmp/cached_APT_snapshots_serials
