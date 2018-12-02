@@ -30,12 +30,20 @@ else
 		FREEZE_EXCEPTIONS=
 		shift
 	fi
-	if [ "$action" = "prepare-build" ]; then
-		if [ $# -eq 1 ]; then
-			APT_SNAPSHOTS_SERIALS="${1}"
-			shift
-		fi
-	fi
+	case "$action" in
+		prepare-build)
+			if [ $# -eq 1 ]; then
+				APT_SNAPSHOTS_SERIALS="${1}"
+				shift
+			fi
+		;;
+		cat-json)
+			if [ $# -eq 1 ]; then
+				CONFIG="${1}"
+				shift
+			fi
+		;;
+	esac
 	if [ $# -eq 0 ]; then
 		ORIGINS="$(cd ${CONFIG}; ls -d *)"
 	else
