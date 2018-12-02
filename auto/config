@@ -102,11 +102,18 @@ $RUN_LB_CONFIG --distribution stretch ${@}
 
 # set up everything for time-based snapshots:
 if [ -n "${APT_SNAPSHOTS_SERIALS:-}" ]; then
-    echo "Fixing 'latest' APT snapshots serials to: ${APT_SNAPSHOTS_SERIALS}."
+    echo "Fixing 'latest' APT snapshots serials to: '${APT_SNAPSHOTS_SERIALS}'."
     apt-snapshots-serials prepare-build "${APT_SNAPSHOTS_SERIALS}"
 else
     apt-snapshots-serials prepare-build
 fi
+# record what APT snapshots this build is going to use, so that one
+# can try to reproduce it more reliably
+JENKINS_ENV_PROPERTIES=tails-build-env.list
+echo "# This file is in Java property file format"   >> "$JENKINS_ENV_PROPERTIES"
+echo "# (https://en.wikipedia.org/wiki/.properties)" >> "$JENKINS_ENV_PROPERTIES"
+echo "APT_SNAPSHOTS_SERIALS = $(apt-snapshots-serials cat-json tmp/APT_snapshots.d)" \
+   >> "$JENKINS_ENV_PROPERTIES"
 
 DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"

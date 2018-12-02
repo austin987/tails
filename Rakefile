@@ -317,7 +317,8 @@ end
 def list_artifacts
   user = vagrant_ssh_config('User')
   stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " +
-                                        "-name 'tails-amd64-*'").first
+                                        "-name 'tails-amd64-*' " +
+                                        "-o -name tails-build-env.list").first
   stdout.split("\n")
 rescue VagrantCommandError
   return Array.new
