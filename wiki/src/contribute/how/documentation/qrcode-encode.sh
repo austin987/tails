@@ -9,7 +9,7 @@ if [ ! -x /usr/bin/qrencode ]; then
 fi
 
 for code in "${@}" ; do
-    file="$(echo "${code}" | sed -r "s#http(s)?://##;s#/\$##;s#[/\.?]#_#g;s#_+#_#g")"
+    file="$(echo "${code}" | sed -r "s#http(s)?://##;s#/\$##;s#[/.?]#_#g;s#_+#_#g")"
     qrencode -o "${file}.png" -s 5 "${code}"
     "$(dirname "${0}")/compress-image.sh" "${file}.png"
 done
