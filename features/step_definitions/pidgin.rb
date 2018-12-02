@@ -53,6 +53,12 @@ def pidgin_force_allowed_dbus_call(method, *args, **opts)
   policy_file = '/etc/dbus-1/session.d/im.pidgin.purple.PurpleService.conf'
   $vm.execute_successfully("mv #{policy_file} #{policy_file}.disabled")
   # From dbus-daemon(1): "Policy changes should take effect with SIGHUP"
+  # Note that HUP is asynchronous, so there is no guarantee whatsoever
+  # that the HUP will take effect before we do the dbus call. In
+  # practice, however, the delays imposed by using the remote shell is
+  # (in general) much larger than the processing time needed for
+  # handling signals, so they are in effect synchronous in our
+  # context.
   $vm.execute_successfully("pkill -HUP -u #{opts[:user]} 'dbus-daemon'")
   pidgin_dbus_call(method, *args, **opts)
 ensure
@@ -450,7 +456,7 @@ end
 
 def pidgin_add_certificate_from (cert_file)
   # Here, we need a certificate that is not already in the NSS database
-  step "I copy \"/usr/share/ca-certificates/mozilla/CNNIC_ROOT.crt\" to \"#{cert_file}\" as user \"amnesia\""
+  step "I copy \"/usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_EV_Root_CA.crt\" to \"#{cert_file}\" as user \"amnesia\""
 
   $vm.focus_window('Buddy List')
   @screen.wait_and_click('PidginToolsMenu.png', 10)

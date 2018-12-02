@@ -2,96 +2,109 @@
 
 [[!toc levels=2]]
 
-Vision
-======
+Installing Tails on a USB stick is the most common and the
+recommended scenario for using Tails as it allows automatic upgrades and
+persistence. DVDs are also getting less and less popular.
 
-Installing Tails onto a USB stick is probably the most common and
-recommended scenario when started with Tails as this allows incremental
-upgrades and persistence.
+But as of 2016, installing Tails on a USB stick still:
 
-But as of 2014, getting Tails installed on a USB stick requires having a
-first temporary Tails to boot from and then running Tails Installer.
-Also, due to the way Tails Installer partitions the USB stick, this
-requires having two USB sticks and going through manual installation
-steps, often using command line.
+  - Requires going through the command line sometimes, for example on macOS.
+  - Requires going through an intermediary USB stick or DVD which is more
+    complex, slower, and relies on third-party software (eg. UUI).
+
+Future work
+===========
+
+We have plans to [[!tails_ticket 11679 desc="rethink the installation
+process and upgrade process"]] in depth. This would take into account
+the future work described in this section.
 
 We want to eliminate the need for a first temporary Tails and have Tails
 Installer available on Linux, Windows, and macOS.
 
-As part of the ISO verification process we also want to push more
-verification logic to Tails Installer. See the [[blueprint on ISO
-verification|verification]].
+Do we really need a custom installer?
+-------------------------------------
 
-Tails Installer is also used to do full upgrades. We want to move this
-to Tails Upgrader. See the [[blueprint on Tails Upgrader|upgrade]].
+While working on porting Tails Installer to Debian and Ubuntu in 2015, we came
+to question the future of *Tails Installer* in many ways. On the one hand, it's
+a lot of work to maintain and port custom programs like *Tails Installer* and
+we would be happy to lower this workload by relying on other installation
+techniques or programs that would not be custom to Tails; on the other hand,
+having a custom installer gives us much more control and possibilities in terms
+of features proposed to the user and trust that we can put in a software that
+we make and distribute ourselves.
 
-Roadmap
-=======
+What could we use instead of Tails Installer?
 
-<a id="2015"></a>
+  - Other multiplatform USB installers
 
-2015
-----
+    - None of the usual suspects (YUMI, Unetbooting, Rufus, etc.) work on
+      Linux, Windows, and macOS.
+    - New tools for flashing disk images on SD cards for Raspberry Pies are
+      appearing, like [[!tails_ticket 11348 desc="Etcher"]] but they are too
+      green to be reliable.
 
-In 2015 we will work on porting Tails Installer to Debian. This is a
-first step before having Tails available on any other platform.
-This requires rethinking the scenarios in which Tails Installer is
-used ([[!tails_ticket 7046]]) and adapting its interface accordingly.
+  - Core utilities from other operating systems
 
-Those are the improvements that we propose for 2015:
+    - GNOME Disks has a way to copy a disk image on a block device.
+    - macOS supports only some formats. ([[!tails_ticket 8802]])
+    - We couldn't found such utility for Windows. ([[!tails_ticket 8550]])
 
-- Implement "Install from ISO". (([[!tails_ticket 8865]])
-- Adapt the splash screen to work outside of Tails (no "Clone"
-  option).
-- Rework the wording of the main interface. ([[!tails_ticket 8866]])
-- Add visual and textual context to main interface.
-- Add a splash about creating persistence after rebooting.
-- Backport Tails Installer to Jessie ([[!tails_ticket 8805]]).
+Porting Tails Installer to Windows and macOS
+--------------------------------------------
 
-This will have to be coordinated with the Ubuntu release calendar.
-Ubuntu 15.10 is planned to be freezed in August 2015.
+Porting Tails Installer to Windows and macOS would provide a consistent and
+simple way for installing Tails across all platforms and remove the need for an
+intermediary USB stick or DVD. Still, this would require a massive amount of
+work and skills that will be very hard to gather.
 
-<a id="bonus_for_2015"></a>
+We started doing a feasibility study for:
 
-Bonus for 2015
---------------
+  - [[Porting Tails Installer to Windows|blueprint/Port_Tails_Installer_to_Windows]].
+  - [[Porting Tails Installer to macOS|blueprint/Port_Tails_Installer_to_OS_X]].
 
-The following improvements would be a nice addition to the roadmap for
-2015.
-
-First of all:
-
-1. Autodetect if the destination key has Tails already, without making
-   this visible to the user yet, but that's a prerequisite for the
-   next steps.
-2. Simplify the splash screen a bit thanks to the autodetection code:
-   merge "Clone and Install" and "Clone and Upgrade" into one single
-   "Clone" button: Depending on whether the destination device already
-   has Tails installed or not, dynamically change the label of main
-   action button to "Install" or "Upgrade" (for the second device).
-   (Note: this breaks the "re-installing Tails from scratch" use case,
-   but IIRC we already have documented how to uninstall Tails, so that's
-   no big deal). ([[!tails_ticket 9006]])
-3. If the destination device already has Tails installed, add a second
-   button below or side-by-side with the "Install" button with the label
-   "Upgrade". This allows to choose once more to either reinstall Tails
-   from scratch or to upgrade the exisiting installation.
-4. When using the installer in Tails (as opposed to using the installer
-   from another platform), remove the splash screen and add a "Clone"
-   button to the main interface. ([[!tails_ticket 8859]])
-
-And then:
+Other nice bonuses would be:
 
 - If using the installer outside of Tails, point to the website to
   download the ISO. ([[!tails_ticket 8867]])
 - Make it possible to "Upgrade from ISO" from
-  the command line. See the [[Debian Hacker|bootstrapping#tools]] bootstrapping path. ([[!tails_ticket 8861]])
+  the command line, for the [[Debian expert|install/expert/usb]] instructions. ([[!tails_ticket 8861]])
 - Make it possible to "Install from ISO" from
-  the command line. See the [[Debian Hacker|bootstrapping#tools]] bootstrapping path. ([[!tails_ticket 8861]]).
+  the command line, for the [[Debian expert|install/expert/usb]] instructions. ([[!tails_ticket 8861]]).
 - Store version of Tails on destination key after install and upgrade. ([[!tails_ticket 8863]])
-  - This would allow to display version in "Target Device". ([[!tails_ticket 8862]])
-- Have Tails Installer available on macOS as there is currently no suitable other
-  installation technique using a graphical interface.
+- This would allow to display the installed version in "Target Device". ([[!tails_ticket 8862]])
+
+ISO verification
+----------------
+
+The capacities of our [[*Tails Verification* browser extension|contribute/design/verification_extension]]
+are limited as can be seen in its
+[[thread model|contribute/design/verification_extension#threat_model]].
+
+A stronger solution might be to do the OpenPGP verification automatically from
+Tails Installer. Users have to trust Tails Installer anyway (currently *on top
+of* trusting the ISO image) and most modern operating systems have software
+distribution mechanisms that are quite strong, hopefully stronger than plain
+HTTPS (Debian's *APT*, Apple's *Mac App Store*, etc.).
+
+  - Automating the OpenPGP verification would be easy to achieve on
+    Linux but would require more research for other platforms.
+  - Do we want Tails Installer to include the Tails signing key or to rather
+    depend on external mechanisms to fetch and verify the signing key? Thinking
+    about key transitions…
+  - Should we allow people to burn DVDs from Tails Installer as well? If Tails
+    Installer becomes the recommended tool for verifying Tails, it makes
+    sense to be able to burn DVDs from it.
+  - We should still allow expert users to build more trust in our signing key through
+    the OpenPGP WoT.
+
+Endless full upgrades
+---------------------
+
+As of now, Tails Installer is also used to do full upgrades. We want to be able
+to do this in Tails Upgrader instead.  See the [[blueprint on endless
+upgrades|endless_upgrades]]. This might duplicate or conflict with some of the
+work proposed to [[simplify the interface|installer#simplify]].
 
 Future
 ------

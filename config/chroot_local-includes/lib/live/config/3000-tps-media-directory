@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# We need laxer permissions than the default (tails-persistence-setup:root,
+# 0700) here so that a newly created persistent volume is accessible
+# to the amnesia user, that runs the tails-additional-software-config
+# GUI app which needs to read
+# /media/tails-persistence-setup/TailsData/live-additional-software.conf.
+
+Create_tps_media_directory ()
+{
+	echo "- creating tails-persistence-setup's directory under /media"
+	install -o tails-persistence-setup -g amnesia \
+	        -m 0710 -d /media/tails-persistence-setup
+
+	# Creating state file
+	touch /var/lib/live/config/tps-media-directory
+}
+
+Create_tps_media_directory

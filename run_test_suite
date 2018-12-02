@@ -15,7 +15,7 @@ git
 i18nspector
 libav-tools
 libcap2-bin
-libsikuli-script-java
+libsikulixapi-java
 libvirt-clients
 libvirt-daemon-system
 libvirt-dev
@@ -142,7 +142,10 @@ next_free_display() {
 }
 
 test_suite_cleanup() {
-    (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
+    if [ -n "${XVFB_PID:-}" ]; then
+        (kill -0 ${XVFB_PID} 2>/dev/null && kill ${XVFB_PID}) || /bin/true
+    fi
+    return $?
 }
 
 start_xvfb() {

@@ -116,6 +116,20 @@ def checkpoints
         'all persistent directories have safe access rights',
       ],
     },
+
+    'usb-install-with-persistence-logged-in-with-administration-password' => {
+      :description => "I have started Tails without network from a USB drive with a persistent partition enabled and logged in with an administration password",
+      :parent_checkpoint => 'usb-install-with-persistence-tails-greeter',
+      :steps => [
+        'I enable persistence',
+        'I set an administration password',
+        'I log in to a new session',
+        'all persistence presets are enabled',
+        'all persistent filesystems have safe access rights',
+        'all persistence configuration files have safe access rights',
+        'all persistent directories have safe access rights',
+      ],
+    },
   }
 end
 

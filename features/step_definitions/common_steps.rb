@@ -56,14 +56,16 @@ Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
   $vm.set_disk_boot(name, type.downcase)
 end
 
-Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) disk named "([^"]+)"$/ do |temporary, size, unit, name|
+Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) (?:([[:alpha:]]+) )?disk named "([^"]+)"$/ do |temporary, size, unit, type, name|
+  type ||= "qcow2"
   $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
-                                     :type => "qcow2"})
+                                     :type => type})
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
 end
 
 Given /^I plug (.+) drive "([^"]+)"$/ do |bus, name|
   $vm.plug_drive(name, bus.downcase)
+  sleep 1
   if $vm.is_running?
     step "drive \"#{name}\" is detected by Tails"
   end
@@ -71,7 +73,7 @@ end
 
 Then /^drive "([^"]+)" is detected by Tails$/ do |name|
   raise "Tails is not running" unless $vm.is_running?
-  try_for(10, :msg => "Drive '#{name}' is not detected by Tails") do
+  try_for(20, :msg => "Drive '#{name}' is not detected by Tails") do
     $vm.disk_detected?(name)
   end
 end
@@ -387,7 +389,9 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
                      .dialog('Tor is not ready')
-    offline_prompt.button('Start Tor Browser').click
+    start_button = offline_prompt.button('Start Tor Browser')
+    start_button.grabFocus
+    start_button.click
   end
   step "the Tor Browser has started#{offline}"
   if offline
@@ -395,17 +399,19 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   end
 end
 
-Given /^the Tor Browser has started( in offline mode)?$/ do |offline|
+Given /^the Tor Browser (?:has started|starts)( in offline mode)?$/ do |offline|
   try_for(60) do
     @torbrowser = Dogtail::Application.new('Firefox')
     @torbrowser.child?(roleName: 'frame', recursive: false)
   end
 end
 
-Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
+Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails - News'
+    title = 'Tails'
+  when "Tails homepage"
+    title = 'Tails - Privacy for anyone anywhere'
   when "Tails roadmap"
     title = 'Roadmap - Tails - RiseupLabs Code Repository'
   else
@@ -415,8 +421,8 @@ Given /^the Tor Browser loads the (startup page|Tails roadmap)$/ do |page|
 end
 
 When /^I request a new identity using Torbutton$/ do
-  @screen.wait_and_click('TorButtonIcon.png', 30)
-  @screen.wait_and_click('TorButtonNewIdentity.png', 30)
+  @torbrowser.child('Tor Browser', roleName: 'push button').click
+  @torbrowser.child('New Identity', roleName: 'push button').click
 end
 
 When /^I acknowledge Torbutton's New Identity confirmation prompt$/ do
@@ -639,7 +645,7 @@ When /^I copy "([^"]+)" to "([^"]+)" as user "([^"]+)"$/ do |source, destination
 end
 
 def is_persistent?(app)
-  conf = get_persistence_presets(true)["#{app}"]
+  conf = get_persistence_presets_config(true)["#{app}"]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
   # This check assumes that we haven't enabled read-only persistence.
   c.success? and c.stdout.chomp != "aufs"
@@ -669,7 +675,13 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   @screen.wait('GnomeApplicationsMenu.png', 10)
   $vm.execute_successfully('xdotool key Super', user: LIVE_USER)
   @screen.wait('GnomeActivitiesOverview.png', 10)
-  @screen.type(app_name)
+  # Trigger startup of search providers
+  @screen.type(app_name[0])
+  # Give search providers some time to start (#13469#note-5) otherwise
+  # our search sometimes returns no results at all.
+  sleep 1
+  # Type the rest of the search query
+  @screen.type(app_name[1..-1])
   @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
@@ -729,20 +741,18 @@ end
 
 When /^I double-click on the (Tails documentation|Report an Error) launcher on the desktop$/ do |launcher|
   image = 'Desktop' + launcher.split.map { |s| s.capitalize } .join + '.png'
+  info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
-    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{LIVE_USER} --full --full tails-documentation").failure?
+    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    step 'the Tor Browser has started'
   end
-end
-
-When /^I click the HTML5 play button$/ do
-  @screen.wait_and_click("TorBrowserHtml5PlayButton.png", 30)
 end
 
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   should_work = should_work == 'can' ? true : false
   @screen.type("s", Sikuli::KeyModifier.CTRL)
-  @screen.wait("TorBrowserSaveDialog.png", 10)
+  @screen.wait("Gtk3SaveFileDialog.png", 10)
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
     @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
@@ -776,14 +786,16 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
   @screen.type("p", Sikuli::KeyModifier.CTRL)
-  @screen.wait("TorBrowserPrintDialog.png", 20)
-  @screen.wait_and_click("BrowserPrintToFile.png", 10)
-  @screen.wait_and_double_click("TorBrowserPrintOutputFile.png", 10)
-  @screen.hide_cursor
-  @screen.wait("TorBrowserPrintOutputFileSelected.png", 10)
-  # Only the file's basename is selected by double-clicking,
+  print_dialog = @torbrowser.child('Print', roleName: 'dialog')
+  print_dialog.child('Print to File', 'table cell').click
+  print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click()
+  @screen.wait("Gtk3PrintFileDialog.png", 10)
+  # Only the file's basename is selected when the file selector dialog opens,
   # so we type only the desired file's basename to replace it
-  @screen.type(output_dir + '/' + output_file.sub(/[.]pdf$/, '') + Sikuli::Key.ENTER)
+  $vm.set_clipboard(output_dir + '/' + output_file.sub(/[.]pdf$/, ''))
+  @screen.type('v', Sikuli::KeyModifier.CTRL)
+  @screen.type(Sikuli::Key.ENTER)
+  @screen.wait_and_click("Gtk3PrintButton.png", 10)
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }
@@ -864,27 +876,22 @@ Given /^I (?:re)?start monitoring the AppArmor log of "([^"]+)"$/ do |profile|
   @apparmor_profile_monitoring_start[profile] = guest_time
 end
 
-When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"(?: after at most (\d+) seconds)?$/ do |anti_test, profile, file, time|
+When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_test, profile, file|
   assert(@apparmor_profile_monitoring_start &&
          @apparmor_profile_monitoring_start[profile],
          "It seems the profile '#{profile}' isn't being monitored by the " +
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
-  block = Proc.new do
-    audit_log = $vm.execute(
-      "journalctl --full --no-pager " +
-      "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
-      "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
-    ).stdout.chomp
-    assert(audit_log.empty? == (anti_test ? true : false))
-    true
-  end
   begin
-    if time
-      try_for(time.to_i) { block.call }
-    else
-      block.call
-    end
+    try_for(10, { :delay => 1 }) {
+      audit_log = $vm.execute(
+        "journalctl --full --no-pager " +
+        "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
+        "SYSLOG_IDENTIFIER=kernel | grep -w '#{audit_line_regex}'"
+      ).stdout.chomp
+      assert(audit_log.empty? == (anti_test ? true : false))
+      true
+    }
   rescue Timeout::Error, Test::Unit::AssertionFailedError => e
     raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
   end
@@ -928,8 +935,8 @@ def share_host_files(files)
   files = [files] if files.class == String
   assert_equal(Array, files.class)
   disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
-  # Let's add some extra space for filesysten overhead etc.
-  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.10).ceil].max
+  # Let's add some extra space for filesystem overhead etc.
+  disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.15).ceil].max
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
   step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +

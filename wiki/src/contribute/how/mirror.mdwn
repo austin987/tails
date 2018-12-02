@@ -135,7 +135,7 @@ module|mirror#http-puppet]].
 
 Set up a virtual host for the hostname chosen at the
 previous step. The virtual host will need to
-have indexing enabled and [[!wikipedia HTTP_ETag desc="ETags"]] disabled.
+have indexing enabled.
 
 Files must be served over HTTP and HTTPS. To be helpful in our
 context, this requires a certificate that is considered valid by
@@ -163,7 +163,6 @@ from [Let's Encrypt](https://letsencrypt.org/) for example.
 	   DocumentRoot /var/www/YOUR_PATH/
 	   <Directory /var/www/YOUR_PATH/>
 	      Options Indexes
-	      FileETag None
 	      AllowOverride None
 	      IndexIgnore README.html
 	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
@@ -179,7 +178,6 @@ Mozilla SSL Configuration Generator</a>.
 
 #### Lighttpd configuration example
 
-	static-file.etags = "disable"
 	$HTTP["host"] =~ "^(\d+\.)?dl\.amnesia\.boum\.org$" {
 		server.document-root = "/var/www/YOUR_PATH/"
 		server.dir-listing = "enable"
@@ -189,7 +187,6 @@ Mozilla SSL Configuration Generator</a>.
 
 	server {
 		server_name dl.amnesia.boum.org *.dl.amnesia.boum.org;
-		etag off;
 		root /var/www/YOUR_PATH;
 		location / {
 			autoindex on;
@@ -201,7 +198,7 @@ Mozilla SSL Configuration Generator</a>.
 Download a snapshot of the current Tails files:
 
 	rsync -rt --delete \
-	         rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
+	         mirrors.rsync.tails.boum.org::amnesia-archive /var/www/YOUR_PATH/
 
 <a id="cron"></a>
 
@@ -209,9 +206,10 @@ Download a snapshot of the current Tails files:
 
 Your mirror should sync every hour + a random time (maximum 40 minutes).
 Use `cron` or equivalent to schedule the same `rsync` command
-as above.
+as above. For example, you can create a file in `/etc/cron.d/` with
+this content:
 
-    0 * * * * root sleep $(perl -E 'print int(rand(2400))') && rsync -rt --delete rsync.torproject.org::amnesia-archive /var/www/YOUR_PATH/
+    0 * * * * root sleep $(perl -E 'print int(rand(2400))') && flock -n /var/run/lock/tails-mirror-rsync rsync -rt --delete mirrors.rsync.tails.boum.org::amnesia-archive /var/www/YOUR_PATH/
 
 You can now [[ask for your mirror to be added to the pool|mirror#http-pool]].
 

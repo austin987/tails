@@ -1,5 +1,8 @@
 [[!meta title="Frequently asked questions"]]
 
+- For hardware compatibility issues, refer to our [[known issues|support/known_issues]].
+- To learn what you can do with Tails, refer to our [[documentation|doc]].
+
 [[!toc levels=2]]
 
 <a id="project"></a>
@@ -164,6 +167,27 @@ Selling preinstalled devices would in fact be a pretty bad idea:
   cryptographic verification techniques anymore. Being able to trust
   your Tails USB stick is something that we really care about.
 
+<a id="checksum"></a>
+
+Where can I find the checksum to verify my Tails download?
+----------------------------------------------------------
+
+We do not provide a checksum (SHA hash or similar) to verify your Tails download.
+
+Verification using a checksum would be no better than verifying using
+one of the techniques documented on our download page: our browser
+extension, BitTorrent, or basic OpenPGP.
+
+These verification methods all rely on some information being securely
+downloaded from our website using HTTPS. Similarly, verification using a
+checksum would rely on the checksum being securely downloaded from our
+website.
+
+In order to verify your Tails download without having to rely on some
+information being securely downloaded from our website, you need to use
+[[OpenPGP and authenticate our signing key through the OpenPGP Web of
+Trust|install/download#openpgp]].
+
 <a id="browser"></a>
 
 Web browser
@@ -253,8 +277,8 @@ Adobe Flash Player is not included in Tails for several reasons:
   - Adobe only maintains their GNU/Linux Flash plugin for Google Chrome.
 
 We have considered including open-source alternative software to Adobe
-Flash, such as [Gnash](http://www.gnu.org/software/gnash/), but it is
-not the case yet, see [[!tails_ticket 5363]].
+Flash, such as [Gnash](http://www.gnu.org/software/gnash/), but rejected
+them since they are not mature enough and Flash is less and less used anyway.
 
 But you can already watch HTML5 videos with <span class="application">Tor Browser</span>.
 
@@ -312,7 +336,7 @@ features|doc/first_steps/persistence/configure#features]].
 
 We are frequently requested to add new persistent features but we are usually
 busy working on other priorities. See our [open
-tickets](https://labs.riseup.net/code/projects/tails/issues?query_id=122)
+tickets](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=122)
 about persistence. Any bit of help [[is welcome|contribute/how/code]].
 
 <a id="luks"></a>
@@ -325,13 +349,13 @@ the one we recommend for [[creating and using encrypted
 volumes|doc/encryption_and_privacy/encrypted_volumes]] in general.
 
 LUKS is a very popular standard for disk encryption in Linux. LUKS is the
-default technique for full-disk encryption proposed by many distribution,
+default technique for full-disk encryption proposed by many distributions,
 including Debian and Ubuntu, when installing a regular system.
 
 Currently the default cipher is `aes-cbc-essiv:sha256` with a key size of 256
 bits.
 
-To understand better how persistence work, see our [[design
+To understand better how persistence works, see our [[design
 document|contribute/design/persistence]].
 
 <a id="recover_passphrase"></a>
@@ -383,10 +407,10 @@ to bypass the limitations imposed by your ISP.
 
 ### Connecting to a VPN using Tor (VPN after Tor)
 
-In some situtations, it can be useful to connect to a VPN through Tor:
+In some situations, it can be useful to connect to a VPN through Tor:
 
   - To access services that block connections coming from Tor.
-  - To access ressources only available inside a VPN, for example at your
+  - To access resources only available inside a VPN, for example at your
     company or University.
 
 This is currently not possible easily using Tails.
@@ -422,7 +446,7 @@ Tor requires the system clock to be well synchronized in order to work
 properly. When starting Tails, a notification is displayed while the clock is
 being synchronized.
 
-This synchronization is made by sending HTTPS queries through Tor to severals
+This synchronization is made by sending HTTPS queries through Tor to several
 websites and deducing a correct time from their answers. The list of websites
 that could be queried in this process can be found in `/etc/default/htpdate`.
 
@@ -433,8 +457,7 @@ See also our [[design document|contribute/design/Time_syncing]] on this topic.
 Can I help the Tor network by running a relay or a bridge in Tails?
 -------------------------------------------------------------------
 
-It is currently impossible to run a Tor relay or bridge in Tails. See
-[[!tails_ticket 5418]].
+It is currently impossible to run a Tor relay or bridge in Tails.
 
 <a id="hidden_service"></a>
 
@@ -444,8 +467,8 @@ Can I run a Tor hidden service on Tails?
 It is technically possible to use Tails to provide a hidden service
 but it is complicated and not documented yet.
 
-For example, some people have been working on how to run a web server
-behind a hidden service on Tails. See [[!tails_ticket 7879]].
+For example, some people have been working on
+[[!tails_ticket 5688 desc="self-hosted services behind Tails-powered onion services"]].
 
 <a id="ping"></a>
 
@@ -511,9 +534,9 @@ working session.
 Here is some of the software we are often asked to include in Tails:
 
   - **bitmessage**: not in Debian
-  - **torchat**: see [[!tails_ticket 5554]]
   - **retroshare**: not in Debian
-  - **veracrypt**: can not be in Debian because of license issues, see [[!debbug 814352]]
+  - **rar/unrar**: is not [[free software|doc/about/license]], but you can use the
+	[[additional software|doc/first_steps/additional_software]] feature to install it
 
 <a id="bittorrent"></a>
 
@@ -539,7 +562,7 @@ Can I download videos from websites?
 ------------------------------------
 
 You can install <span class="code">youtube-dl</span> as an [[additional
-package|doc/advanced_topics/additional_software/]]. <span class="application">youtube-dl</span>
+package|doc/first_steps/additional_software]]. <span class="application">youtube-dl</span>
 allows downloading videos from more than
 [700 websites](https://github.com/rg3/youtube-dl/blob/master/docs/supportedsites.md).
 
@@ -562,8 +585,8 @@ Why is the time set wrong?
 --------------------------
 
 When Tails starts, the system timezone is set to UTC (Greenwich time). So, this time
-might be a few hours in the future if you are West from the United
-Kingdom, or in the past if you are East from the UK. The minutes
+might be a few hours in the future if you are west of the United
+Kingdom, or in the past if you are east of the UK. The minutes
 should be accurate.
 
 We do this for anonymity reasons: if some application reveals your actual
@@ -615,7 +638,7 @@ liar; the answer of a true liar would always be "no".
 
 - To verify the integrity of a DVD from a separate trusted system, you can
   verify the signature of the ISO image as documented in [[verify the ISO image
-  using OpenPGP|install/download/openpgp]]
+  using OpenPGP|install/download#openpgp]]
   against the DVD itself.
 
 - There is no documented method of verifying the integrity of a Tails USB stick
@@ -662,20 +685,6 @@ was dangerous:
 
 Tails is a full operating system, so a *new identity* should be thought on a
 broader level. **Restart Tails instead**.
-
-<a id="truecrypt"></a>
-
-Can I use TrueCrypt with Tails?
--------------------------------
-
-No, <span class="application">TrueCrypt</span> was removed in Tails 1.2.1.
-But you can still [[open <span class="application">TrueCrypt</span>
-volumes using <span class="code">cryptsetup</span>|doc/encryption_and_privacy/truecrypt]].
-
-Furthermore, [TrueCrypt is now discontinued](http://truecrypt.sourceforge.net/)
-and its development team recommends against using it. We recommend using other
-[[encryption tools|doc/encryption_and_privacy/encrypted_volumes]] such as
-[[LUKS|faq#luks]].
 
 <a id="boot_statistics"></a>
 

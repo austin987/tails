@@ -1,22 +1,43 @@
-#!/bin/sh
+#! /usr/bin/env python3
 
-set -e
+import logging
+import time
+import sys
 
-# Import try_for()
-. /usr/local/lib/tails-shell-library/common.sh
+import sh
 
-# Import tor_bootstrap_progress()
-. /usr/local/lib/tails-shell-library/tor.sh
+from tailslib.tor import tor_has_bootstrapped
+from tailslib.exceptions import TorFailedToBoostrapError
 
-# Import log()
-. /usr/local/lib/tails-shell-library/log.sh
-_LOG_TAG="$(basename $0)"
 
-systemctl restart tor@default.service
+logger = logging.getLogger(__name__)
 
-if try_for 270 '[ "$(tor_bootstrap_progress)" -eq 100 ]'; then
-    log "Tor has successfully bootstrapped."
-else
-    log "Tor failed to bootstrap"
-    exit 1
-fi
+TIMEOUT = 270
+
+
+def main():
+    restart_tor()
+
+
+def restart_tor():
+    """ Restart the Tor systemd service
+
+    >>> restart_tor()
+    """
+    sh.systemctl('restart', 'tor@default.service')
+
+    for i in range(TIMEOUT):
+        if tor_has_bootstrapped():
+            logger.info("Tor has successfully bootstrapped")
+            return
+        time.sleep(1)
+
+    raise TorFailedToBoostrapError("Tor failed to bootstrap within %s seconds" % TIMEOUT)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == 'doctest':
+        import doctest
+        doctest.testmod()
+    else:
+        main()

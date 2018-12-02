@@ -1,0 +1,242 @@
+[[!meta title="Verification of Tails reproducibility"]]
+
+<div class="note">
+
+After accepting to be the <i>Trusted Reproducer</i> you should have been
+instructed to go here immediately and read the "Preparation"
+section. For a planned release you should be doing this weeks before
+the release you are about to reproduce; for emergency releases you
+likely only have days or even hours. If you were not, file a
+ticket about this, since an important part of process must have been
+missed by the RM.
+
+</div>
+
+[[!toc levels=3]]
+
+<a id="preparation"></a>
+
+# Preparation (when accepting to be the Trusted Reproducer)
+
+Use whatever scheduling tool you prefer to make sure you will, on your
+own initiative, return to this document and follow it within 72 hours
+from the start of the manual testing session. In particular, do not
+trust anything said by the RM about this process: we assume their
+system may be compromised and could be used by an adversary to
+mislead you.
+
+# Gather input data
+
+## Inputs from the release process
+
+Look at the "Environment" section at the beginning of [[the release
+process instructions|contribute/release_process]] and set the
+following variables as instructed:
+
+* `ARTIFACTS`
+* `DIST`
+* `ISOS`
+* `RELEASE_BRANCH`
+* `VERSION`
+<!-- * `IUK_CHECKOUT` -->
+<!-- * `PERL5LIB_CHECKOUT` -->
+
+<!-- Now for the only tricky part, setting `IUK_SOURCE_VERSIONS`. It should -->
+<!-- simply list the old Tails versions that will get an automatic upgrade -->
+<!-- to the current release, and should be set correctly by this command -->
+<!-- most of the time: -->
+
+<!--     IUK_SOURCE_VERSIONS="$( -->
+<!--         curl "http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/" \ -->
+<!--         | grep --extended-regexp --only-matching \ -->
+<!--                "Tails_amd64_[^_]+_to_${VERSION:?}.iuk" \ -->
+<!--         | sort -u \ -->
+<!--         | tr '_' ' ' \ -->
+<!--         | cut -d' ' -f3 -->
+<!--     )" -->
+<!--     echo -e "Got these IUK source versions:\n${IUK_SOURCE_VERSIONS}" -->
+
+<!-- Now sanity check the contents of `IUK_SOURCE_VERSIONS`: -->
+
+<!-- * If empty, the RM has probably not uploaded them yet so you may have -->
+<!--   to wait. -->
+<!-- * Make sure each listed version actually has been released! :) -->
+<!-- * [[Figure out the rules for how to set this -->
+<!--   variable|contribute/release_process#prepare-iuk]] and double-check -->
+<!--   that it makes sense! Note that exceptions happen (e.g. there could -->
+<!--   be a bug in some old versions upgrader so we skip it). -->
+<!-- * If the release notes have already been written (generally there is a -->
+<!--   ticket about it) it should list which versions have automatic upgrades. -->
+
+## Inputs from manual testers
+
+A manual tester should have sent you
+clear-signed hashes for all products of this release. Verify that the
+signature is valid and made by one of our usual manual testers, and
+put the hashes (excluding the OpenPGP signature data) into a file
+called `SHA512SUMS.txt`.
+
+## Your inputs
+
+Set these environment variables accordingly:
+
+* `ISOS_CHECKOUT`: path to your Tails ISO history repo checout.
+<!-- * `PACKAGES_FILE="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.packages"` -->
+* `PUBLISHED_ARTIFACTS`: some _new_ directory where you can download
+  gigabytes of data to.
+* `SHA512SUMS`: the path of the `SHA512SUMS.txt` file from above.
+* `TAILS_CHECKOUT`: path to your Tails Git repo checkout.
+
+
+## Derived environment variables
+
+    cd "${TAILS_CHECKOUT:?}" && \
+    TAG="$(echo $VERSION | tr '~' '-')" && \
+    TAG_COMMIT="$(git rev-parse --verify ${TAG:?})" && \
+    git fetch && \
+    git checkout "${RELEASE_BRANCH:?}" && \
+    git merge "origin/${RELEASE_BRANCH:?}" && \
+
+# Build your own products
+
+## Build your own ISO image
+
+1. Fetch and verify the Git tag:
+
+        cd "${TAILS_CHECKOUT:?}" && \
+        git fetch origin "${TAG}" && \
+        git tag -v "${TAG}"
+
+   If the last output is a "Good signature" for the expected tag, made by
+   Tails signing key, then we are good.
+   Otherwise, if you see _anything_ else, we're _not_ good; immediately
+   contact the RM and <tails@boum.org>! Proceeding with the rest of the steps
+   are pointless in this case, so await instruction.
+
+2. Build an ISO image:
+
+        cd "${TAILS_CHECKOUT:?}" && \
+        git checkout "${TAG:?}" && \
+        git submodule update --init && \
+        export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
+        rake build && \
+        mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
+        mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso*" \
+           "${ISOS:?}/tails-amd64-${VERSION:?}/"
+
+<!-- ## Build your own IUKs -->
+
+<!-- 1. Obtain needed old Tails releases: -->
+
+<!--         cd "${ISOS_CHECKOUT:?}" && \ -->
+<!--         git annex sync && \ -->
+<!--         for old_version in ${IUK_SOURCE_VERSIONS:?}; do -->
+<!--             tails_dir="tails-amd64-${old_version}" && \ -->
+<!--             git annex get "${tails_dir}" && \ -->
+<!--             cp --dereference --recursive "${tails_dir}" "${ISOS:?}" -->
+<!--         done -->
+
+<!-- 2. Set your `iuk` and `perl5lib` Git checkouts to the desired state: -->
+
+<!--            PERL5LIB_VERSION="$(awk '/^tails-perl5lib\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \ -->
+<!--            if [ -z "${PERL5LIB_VERSION}" ]; then -->
+<!--                echo 'Failed to determine PERL5LIB_VERSION, aborting' && \ -->
+<!--                false -->
+<!--            fi && \ -->
+<!--            PERL5LIB_CHECKOUT_TAG="debian/${PERL5LIB_VERSION}" && \ -->
+<!--            IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \ -->
+<!--            if [ -z "${IUK_VERSION}" ]; then -->
+<!--                echo 'Failed to determine IUK_VERSION, aborting' && \ -->
+<!--                false -->
+<!--            fi && \ -->
+<!--            IUK_CHECKOUT_TAG="debian/${IUK_VERSION}" -->
+<!--            cd "${PERL5LIB_CHECKOUT:?}" && \ -->
+<!--            git fetch && \ -->
+<!--            git checkout "${PERL5LIB_CHECKOUT_TAG:?}" && \ -->
+<!--            cd "${IUK_CHECKOUT:?}" && \ -->
+<!--            git fetch && \ -->
+<!--            git checkout "${IUK_CHECKOUT_TAG:?}" -->
+
+<!-- 3. Follow the [[Build the Incremental Upgrade -->
+<!--    Kits|contribute/release_process#prepare-iuk]] instructions. Note that -->
+<!--    the value of `SOURCE_DATE_EPOCH` set above is needed! -->
+
+# Verification
+
+If there is *any* type of mismatch at some point below, let the RM and
+<tails@boum.org> know *immediately*! But still proceed and do everything below,
+potentially reporting multiple different issues.
+
+## Verify that your products match what was tested
+
+    cd "${ISOS:?}" && \
+    sha512sum -c "${SHA512SUMS:?}"
+
+## Wait for the release to be published
+
+In order to get the guarantees we're looking for here,
+the following steps have to be done only after the release has been made public.
+
+## Download published products
+
+    mkdir -p "${PUBLISHED_ARTIFACTS:?}" && \
+    cd "${PUBLISHED_ARTIFACTS:?}" && \
+    mkdir tails-amd64-${VERSION:?} && \
+    cd tails-amd64-${VERSION:?} && \
+    wget http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso && \
+
+## Verify that your products match what was published
+
+### ISO
+
+    cd "${PUBLISHED_ARTIFACTS:?}" && \
+    sha512sum -c "${SHA512SUMS:?}"
+
+### IDF
+
+Examine the IDF by running:
+
+    curl https://tails.boum.org/install/v1/Tails/amd64/${DIST:?}/latest.yml
+
+and checking that it matches the output of the following command:
+
+    cat <<-EOF
+    sha256: $(sha256sum "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso" | cut -f 1 -d ' ' | tr -d '\n')
+    size: $(du --bytes "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso" | cut -f1)
+    url: http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-$VERSION/tails-amd64-$VERSION.iso
+    EOF
+
+Keep this output, you will need it below!
+
+<!-- ### UDFs -->
+
+<!-- Examine each UDF by running: -->
+
+<!--     for old_version in ${IUK_SOURCE_VERSIONS}; do -->
+<!--         url=https://tails.boum.org/upgrade/v1/Tails/${old_version}/amd64/${DIST:?}/upgrades.yml -->
+<!--         ( -->
+<!--             echo "Looking at '${url}':" -->
+<!--             echo -->
+<!--             curl --silent --show-error ${url} -->
+<!--         ) | less -->
+<!--     done -->
+
+<!-- and checking that there are either two `target-files` entries: -->
+
+<!-- * one of `type: full`, i.e. a full upgrade (so it refers to the ISO image) -->
+<!--   and must have the same values as for the IDF (you were asked to save -->
+<!--   the output above), so verify that it matches! -->
+
+<!-- * one of `type: incremental`, i.e. an incremental upgrade (so it refers to a -->
+<!--   IUK) and should match the output of: -->
+
+<!--       for old_version in ${IUK_SOURCE_VERSIONS}; do -->
+<!--       cat <<EOF -->
+<!--       Expected values for https://tails.boum.org/upgrade/v1/Tails/${old_version}/amd64/${DIST:?}/upgrades.yml: -->
+      
+<!--       sha256: $(sha256sum "${ISOS:?}/Tails_amd64_${old_version}_to_${VERSION:?}.iuk" | cut -f 1 -d ' ' | tr -d '\n') -->
+<!--       size: $(du --bytes "${ISOS:?}/Tails_amd64_${old_version}_to_${VERSION:?}.iuk" | cut -f1) -->
+<!--       url: http://dl.amnesia.boum.org/tails/${DIST:?}/iuk/Tails_amd64_${old_version}_to_${VERSION:?}.iuk -->
+      
+<!--       EOF -->
+<!--       done -->

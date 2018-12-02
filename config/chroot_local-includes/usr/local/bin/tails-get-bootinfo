@@ -1,31 +1,57 @@
-#!/bin/sh
+#! /usr/bin/env python3
+"""
+Get Tails boot info.
 
-LIVE_IMAGE_MOUNTPOINT=/lib/live/mount/medium
-for arg in $(cat /proc/cmdline) ; do
-   case "$arg" in
-      BOOT_IMAGE=*)
-         kernel="${arg#BOOT_IMAGE=}"
-	 ;;
-      initrd=*)
-         initrd="${arg#initrd=}"
-	 ;;
-   esac
-done
+Test with "python3 tails-get-bootinfo.py doctest".
 
-# Sanity checks
-[ -n "$kernel" ] || exit 4
-[ -n "$initrd" ] || exit 5
+goodcrypto.com converted from bash to python and added basic tests.
 
-case "$1" in
-   kernel)
-      echo "${LIVE_IMAGE_MOUNTPOINT}${kernel}"
-      ;;
-   initrd)
-      echo "${LIVE_IMAGE_MOUNTPOINT}${initrd}"
-      ;;
-   *)
-      echo "Usage: $0 kernel|initrd" >&2
-      exit 3
-esac
+>>> import sh
+>>> sh.Command(sys.argv[0])('kernel')
+/lib/live/mount/medium/live/vmlinuz
+>>> sh.Command(sys.argv[0])('initrd')
+/lib/live/mount/medium/live/initrd.img
+>>> sh.Command(sys.argv[0])(_ok_code=(1))
+Usage: tails-get-bootinfo kernel|initrd
+<BLANKLINE>
+"""
 
-exit 0
+import sys
+
+LIVE_IMAGE_MOUNTPOINT = '/lib/live/mount/medium'
+
+
+def main(*args):
+    kernel = None
+    initrd = None
+
+    with open('/proc/cmdline') as f:
+        kernel_params = f.read().split()
+    for param in kernel_params:
+        if param.startswith('BOOT_IMAGE='):
+            kernel = param[len('BOOT_IMAGE='):]
+        elif param.startswith('initrd='):
+            initrd = param[len('initrd='):]
+
+    if not kernel or not initrd:
+        print('Failed to parse /proc/cmdline', file=sys.stderr)
+        sys.exit(1)
+
+    if 'kernel' in args:
+        print(LIVE_IMAGE_MOUNTPOINT + kernel, end="")
+    elif 'initrd' in args:
+        print(LIVE_IMAGE_MOUNTPOINT + initrd, end="")
+    else:
+        print('Usage: tails-get-bootinfo kernel|initrd', file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == 'doctest':
+        import doctest
+        doctest.testmod()
+    elif len(sys.argv) == 2:
+        main(*sys.argv[1:])
+    else:
+        print('Usage: tails-get-bootinfo kernel|initrd', file=sys.stderr)
+        sys.exit(1)

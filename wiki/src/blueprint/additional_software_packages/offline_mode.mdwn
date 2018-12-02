@@ -10,7 +10,7 @@ Have Additional software packages to work offline forever, but to upgrade when c
 
 # Current status
 
-According to [[!tails_ticket 6260]] Additional Software Packages works offline for a dew days after being connected, but then fails.
+According to [[!tails_ticket 6260]] Additional Software Packages works offline for a few days after being connected, but then fails.
 
 We researched the possible root causes of this class of issues and
 identified three:
@@ -60,6 +60,8 @@ I start Tails the next time, this package won't be installed.
 The root cause of this problem was identified and a fix has been
 committed for Tails 3.5 ([[!tails_ticket 10958]]).
 
+<a id="incomplete-online-upgrade"></a>
+
 ## Incomplete online upgrade process
 
 Assume that during an online Tails session, the APT indices are
@@ -72,17 +74,31 @@ This is the only remaining problem we should consider fixing.
 
 ### Proposed solution
 
-- in the *upgrade* operation : save the content `/var/lib/apt/lists/` before running the `apt-get update`. It could be stored to a specific location, e.g. `/live/persistence/TailsData_unlocked/tails-additional-software/working_apt_lists/`. After a successful `apt-get upgrade`, remove the *working_apt_lists*.
-- in the *install* operation : if there is a backup present, restore it before running `apt-get install`
+- in the *upgrade* operation : save a copy of `/var/lib/apt/lists/`
+  before running the `apt-get update`. It could be stored to
+  a specific location, e.g.
+  `/live/persistence/TailsData_unlocked/tails-additional-software/apt/lists.old/`.
+  After a successful `apt-get upgrade`, remove this copy of the old
+  APT lists.
+- in the *install* operation : if there is a copy of the old APT lists, restore it before running `apt-get install`
 
 ### Testing procedure
 
 We should find a testing procedure, which doesn't look trivial, as the problem only occurs when there is an upgrade of an additional software package.
 
-- setup **offline** tails with persistence including *APT lists* and *APT cache*
-- setup an *Additional Software Package* that has been upgraded in the last point release 
-- copy lists before the last Debian point release to `/var/lib/apt/lists`
-- copy the old version of the package in `/val/lib/apt/archives`
+- setup **offline** Tails with persistence including *APT lists* and *APT cache*
+- setup an *Additional Software Package* that has been upgraded in the
+  last point release, e.g. [[!debpts abiword]] was updated from
+  3.0.2-2 to 3.0.2-2+deb9u1 in Stretch 9.3.
+- copy APT lists from before the last Debian point release to
+  `/var/lib/apt/lists`, e.g.:
+
+          deb [check-valid-until=no] tor+http://snapshot.debian.org/archive/debian/20171207T033657Z/ stretch main contrib
+
+- copy the old version of the package in `/var/lib/apt/archives`
+- shut down Tails
+- backup the persistent volume
 - reboot online. The installation should work.
-- reboot online and cut the network after APT update, but before the upgrade. The lists should be uptodate, but the packages not updated.
-- reboot offline. The installation should currently fail.
+- restore the persistent volume from the backup, reboot online and shut down the network after APT update, but before the upgrade. The lists should be up-to-date, but the packages not upgraded.
+- reboot offline. The installation currently fails, while it should
+  work once we've fixed this bug.

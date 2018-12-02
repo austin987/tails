@@ -25,13 +25,4 @@ if ! "${git_dir}/bin/sanity-check-website" ; then
     fi
 fi
 
-# If I knew Ikiwiki better I'd probably figure out how to just make it
-# keep the misc/*.html files as-is instead of this hack.
-fixup_14962_workaround() {
-    mkdir -p config/chroot_local-includes/usr/share/doc/tails/website/misc
-    rm -f config/chroot_local-includes/usr/share/doc/tails/website/misc/*
-    cp wiki/src/misc/*.html \
-       config/chroot_local-includes/usr/share/doc/tails/website/misc
-}
-
-ikiwiki -setup ikiwiki.setup -refresh "$@" && fixup_14962_workaround
+ikiwiki -setup ikiwiki.setup -refresh "$@"

@@ -29,7 +29,17 @@ rm /var/lib/systemd/catalog/database
 # Delete non-deterministically generated files, that should not be shared among
 # all Tails systems anyway. We don't ship SSHd, so we don't bother generating
 # them at boot.
-rm -r /var/lib/monkeysphere/authentication/
+# We remove with -f due to a suspected race condition: it seems that
+# .../authentication/sphere/S.gpg-agent can be removed (by gpg-agent?)
+# *right after* `rm -r` has listed it, so that when `rm` tries to
+# remove it, it doesn't exist any more and it fails.
+if [ -d /var/lib/monkeysphere/authentication/ ]; then
+    rm -rf /var/lib/monkeysphere/authentication/
+else
+    echo 'Cannot remove /var/lib/monkeysphere/authentication/:' \
+         'directory does not exist' >&2
+    exit 1
+fi
 
 # Empty non-deterministically generated file. If it exists and is empty, systemd
 # will automatically set up a new unique ID. But if does not exist, systemd

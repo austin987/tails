@@ -1,0 +1,300 @@
+[[!meta title="Tails Verification (browser extension)"]]
+
+Software verification is a critical step in the use of secure
+applications but it has traditionally been hard to provide, especially
+from a user perspective. Usual solutions are:
+
+  - Using HTTPS to download. But in the case of Tails, we are serving so
+    many downloads that we have to rely on [[mirrors hosted by third
+    parties|contribute/design/mirrors]]. HTTPS also doesn't protect from interrupted downloads leading to
+    broken Tails installations.
+  - Providing OpenPGP signatures. But this really works only for the few
+    people who know how to verify an OpenPGP signature and use the
+    OpenPGP Web-of-Trust correctly.
+
+We are trying here to provide a usable solution to verify a download
+done through HTTP, while relying on cryptographic information fetched
+elsewhere through HTTPS (and possibly with stronger authentication
+mechanisms such as public key pinning from browser vendors).
+
+We use for that a browser extension, called
+*Tails Verification* which is available for:
+
+* Firefox 45+ (and Tor Browser 6+)
+* Chrome 22+
+
+The code of *Tails Verification* is available in `git clone https://git-tails.immerda.ch/verification-extension`.
+
+[[!toc levels=2]]
+
+Related documents
+=================
+
+- [[Design document of the installation assistant, including the download page|installation_assistant]]
+
+Scope
+=====
+
+Goals
+-----
+
+Provide a simple, automated, and cross-platform technique to verify the ISO
+image of the current version.
+
+Non goals
+---------
+
+  - Verify deprecated ISO images.
+  - Verify ISO images downloaded from nightly.tails.boum.org.
+  - Verify ISO images downloaded through BitTorrent. If we can rely on
+    our website to provide a correct cryptographic description of the
+    ISO image then we can rely on it as well to provide a correct
+    BitTorrent file. Then we rely on the BitTorrent client to verify the integrity of
+    the download ([[!tails_ticket 9043]]).
+    Any current ISO image (downloaded over BitTorrent, copied from a
+    friend, downloaded from one of our mirrors) can be verified by the
+    extension though.
+
+<a id="verification"></a>
+
+Security considerations
+=======================
+
+<a id="threat_model"></a>
+
+Threat model
+------------
+
+We are considering here an attacker who can:
+
+  - [A] Provide a malicious ISO image to the user for example by
+    operating a rogue Tails mirror.
+
+  - [H] Operate a website that is loaded in a different tab in the same
+    browser as the extension. See the section on [[security inside the
+    browser|verification_extension#inside_the_browser]].
+
+We are not considering an attacker who can:
+
+  - [B] Do a man-in-the-middle attack by providing a rogue HTTPS certificate
+    for https://tails.boum.org/ signed by a certificate authority
+    trusted by the
+    browser but under the control of the attacker.
+
+    Since the extension is targeted at new users, a MitM or exploit on
+    our website could defeat any verification technique by providing
+    simplified instructions or by faking ISO verification.
+
+    Note that our website is already in the HSTS preload list of Firefox
+    and Chrome which forces HTTPS connections to our website, even for
+    first time visitors.
+
+  - [C] Insert malicious content on https://tails.boum.org/ through an
+    exploit on our website as this could trick new users to skip the ISO
+    verification all the way. To prevent this kind of attack we should
+    instead:
+
+    - Monitor externally the most relevant parts of our website.
+    - Work on integrating full upgrades in Tails Upgrader to limit the
+      number of times people have to rely on our website to upgrade. See
+      [[!tails_ticket 7499]].
+
+  - [D] Insert malicious information in our main Git repository as such
+    an attacker could do attack [C] as well.
+
+  - [E] Insert targeted malware on the user's computer as this could
+    defeat any possible verification mechanism that such an extension
+    could do.
+
+  - [F] Provide a rogue extension to the user as this could defeat any
+    possible verification mechanism that such an extension could do.
+
+  - [G] Insert malicious content on https://tails.boum.org/ after taking
+    control of the web server, or entire system, behind it. Such an
+    attacker could do attack [C] as well but in such a way that could be
+    much harder to detect (for example by serving malicious content only to
+    some users).
+
+    To mitigate such an attack in some cases we could both:
+
+    - Encourage external documentation (screencasts on YouTube, printed
+      forms, etc.). But those would be vulnerable to other kind of
+      attacks.
+    - Not rely on the website to perform the ISO verification and rely
+      on a native interface accessible from the add-ons menu.
+
+    But the cost/benefit of such a technique is not very appealing…
+
+  - [I] Provide a malicious extension in the same browser as this would
+    have similar effects to attack [F].
+
+  - [J] Provide a malicious copy of our website on a similar looking URL
+    that could pretend that verification has succeeded without actually
+    verifying anything.
+
+<a id="inside_the_browser"></a>
+
+Security inside the browser
+---------------------------
+
+The threat described as [H] is taken care of by the internals of the
+browser (and the proper coding of the extension).
+
+### Cross-origin communication
+
+The extension uses cross-origin communication to modify the download
+page.
+
+- To ensure that messages from the extension are only sent to pages on
+  our website, the extension
+  sets `targetOrigin` to `https://tails.boum.org` (no trailing slash needed) in
+  [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+  See commit c87ce92.
+
+- Before processing the message, the download page verifies that it is
+  coming from:
+
+  - The same tab (`event.source` is `window`)
+  - Our website (`event.origin` is `https://tails.boum.org`, no trailing slash needed)
+
+  See [[!tails_gitweb wiki/src/install/inc/js/download.js
+  desc="`receiveMessage()` in *download.js*"]].
+
+- The code of the extension is only injected in tabs on
+  `https://tails.boum.org/` (with a trailing slash). See `permissions`
+  in *manifest.js* and `matches` in *scripts/background/background.js*.
+
+- The communication is unidirectional: only the extension sends messages
+  and the extension does not listen to messages.
+
+### Content Security Policy
+
+Instead of the default Content Security Policy, the extension uses the
+strictest policy: `default-src 'none'`.
+
+<a id="update"></a>
+
+Updates mechanism
+-----------------
+
+### Automatic update from browsers
+
+- Chrome checks for updates "[every few
+  hours](https://developer.chrome.com/extensions/autoupdate)".
+- Firefox checks for updates once per day.
+- Tor Browser doesn't prevent those updates [except for Torbutton and
+  Tor Launcher](https://lists.torproject.org/pipermail/tbb-dev/2015-April/000258.html).
+
+### Enforce version check on our download page
+
+On top of this, the HTML code of our download page includes a tag to
+force a version of the extension. For example:
+
+<pre>
+&lt;div id="extension-version"&gt;1.0&lt;/div&gt;
+</pre>
+
+*Tails Verification* checks the value of this tag and asks for an
+update if its version is lower than the requested version number.
+
+This mechanism might be useful to force updated extensions with a finer
+time granularity that the native automatic updates from the browsers.
+
+<a id="technology"></a>
+
+Functioning
+===========
+
+Extension technology
+--------------------
+
+The extension is written as a *Web Extension* and the same exact code
+works on both Firefox and Chrome.
+<a id="data_source">
+
+Data source
+-----------
+
+Building up on the format specified for [[upgrade description
+files|contribute/design/incremental_upgrades#upgrade-description-files]],
+the verification extension fetches an [[!tails_gitweb wiki/src/install/v1/Tails/i386/stable/latest.yml desc="ISO description file"]] from our
+server to retrieve all the information it needs about the ISO image
+(URL, size, checksum, etc.). As a beginning, this ISO description file
+is not signed using OpenPGP.
+
+### Example of an ISO description file
+
+    ---
+    build-target: i386
+    channel: stable
+    product-name: Tails
+    version: '0.23'
+    target-files:
+    - sha256: 359d104737f1a448375d2030f938dea3d529468b8218485998ab893c1f7509eb
+      size: 939571200
+      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.23/tails-i386-0.23.iso
+
+Checksum verification
+---------------------
+
+When verifying an ISO image, the extension:
+
+  - Downloads the ISO description document (size, checksum) from:
+
+    <https://tails.boum.org/v1/Tails/amd64/stable/latest.yml>
+
+  - Verifies the ISO image against the document (first its size, then
+    its checksum).
+
+Security properties:
+
+  - This technique would defeat attack [A] (malicious ISO).
+
+More complex verification mechanisms could be gradually [[built into
+Tails Installer|blueprint/bootstrapping/installer]] where we can
+defeat attacks [B], [C], [D], [F], and [G].
+
+Embedded *Forge* library
+------------------------
+
+Contrary to its predecessor
+([DAVE](https://git-tails.immerda.ch/download-and-verify-extension)),
+*Tails Verification* cannot rely on native API calls to calculate the
+checksum. So it embeds the *Forge* library:
+
+<https://github.com/digitalbazaar/forge/>
+
+We choose *Forge* because it was reported as being the fastest in this
+benchmark:
+
+<https://github.com/brillout/test-javascript-hash-implementations>
+
+<a id="html">
+
+Manipulation of the download page
+---------------------------------
+
+The extension modifies what is displayed on the page using two different
+mechanisms:
+
+- Mostly through message communication (`postMessage`) sent to a
+  script on the page ([[!tails_gitweb wiki/src/install/inc/js/download.js]]).
+
+- If an extension is already installed when the page is loaded, through
+  an HTML attribute (`documentElement.dataset.extension`) corresponding
+  to some CSS declarations, to indicate whether the extension is
+  up-to-date or outdated.
+
+- If the extension gets installed on a page, through a background script
+  that injects the JavaScript of the extension on the page. See commit
+  d80b322.
+
+This decouples the code of the extension from the implementation of the
+display on the HTML page (ids, classes, etc.).
+
+When JavaScript is disabled, the page instructs the user to temporarily
+allow JavaScript on the page (through NoScript, the most likely scenario):
+
+[[!img install/inc/screenshots/allow_js.png link="no"]]
+
+They can otherwise still download using BitTorrent.

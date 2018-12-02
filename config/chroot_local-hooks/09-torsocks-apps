@@ -5,7 +5,8 @@ set -e
 echo "Wrapping some applications with torsocks"
 
 APPS="gobby-0.5 net.sourceforge.liferea openpgp-applet seahorse"
-DBUS_SERVICES="net.sourceforge.liferea org.gnome.seahorse.Application org.fedoraproject.Config.Printing"
+DBUS_SERVICES="org.gnome.seahorse.Application org.fedoraproject.Config.Printing"
+WRAPPED_DBUS_SERVICES="net.sourceforge.liferea"
 
 for app in $APPS; do
    sed -i'' --regexp-extended 's,^Exec=(.*),Exec=torsocks \1,' \
@@ -14,6 +15,12 @@ done
 
 for dbus_service in $DBUS_SERVICES; do
    sed -i'' --regexp-extended 's,^Exec=(.*),Exec=/usr/bin/torsocks \1,' \
+       "/usr/share/dbus-1/services/${dbus_service}.service"
+done
+
+# Wrapped by both torsocks and a binary in /usr/local
+for dbus_service in $WRAPPED_DBUS_SERVICES; do
+   sed -i'' --regexp-extended 's,^Exec=/usr/(.*),Exec=/usr/bin/torsocks /usr/local/\1,' \
        "/usr/share/dbus-1/services/${dbus_service}.service"
 done
 

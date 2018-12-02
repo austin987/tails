@@ -1,54 +1,91 @@
 [[!meta title="USB install and upgrade"]]
 
+We [[!tails_ticket 11679 desc="started a process"]] of rethinking
+Tails installation and upgrade process, identifying changes we can do
+relatively quickly and that have a good cost/benefit ratio, and
+thinking about long-term solutions.
+
 [[!toc levels=3]]
+
+<a id="problems"></a>
+
+Problems identified in Tails installation & upgrade process
+===========================================================
+
+Tags
+----
+
+Problems below are tagged this way:
+
+* `[fixed-by-disk-image]`: would be solved by distributing
+  a [[USB image|usb_install_and_upgrade/bootable USB disk image]]
+  ([[!tails_ticket 15292]])
+* `[fixed-by-1-big-iuk]`: would solved by a smallish change to our
+  upgrade system that would allow users to automatically upgrade
+  through a whole Tails series such as 3.x (this idea is also known as
+  "IUKs on steroids", "1 big IUK", "endless upgrades"), i.e.
+  [[!tails_ticket 15281]] and
+  [[Endless_upgrades#single-squashfs-diff]]
+
+Installation process
+--------------------
+
+* Installation on macOS, Windows and non-Debian Linux is complicated
+  and time intensive. [fixed-by-disk-image]
+* When creating an intermediary Tails, the resulting USB fails to boot
+  on many (U)EFI systems ([[!tails_ticket 12146]]). [fixed-by-disk-image]
+* Users have to follow different processes on different
+  operating systems. [fixed-by-disk-image]
+* Relying on 3rd party software for the initial USB installation
+  is painful. [fixed-by-disk-image]
+* Users have to first understand a complex mental model in which they
+  download an ISO image, have to use an installation program and create
+  some kind of "magic USB" key.
+* Users need to turn off [[UEFI Secure Boot]] to start Tails.
+* Supporting Tails Installer in Debian (code, doc, etc.) is costly.
+* There's a mess around what device is considered "removable":
+  we have slightly different definitions in various places.
+
+Upgrade process
+---------------
+
+* Regular Tails users need to go through manual upgrades twice a year.
+  [fixed-by-1-big-iuk]
+* It's currently not possible to autoupgrade from an older Tails
+  version, i.e. It's impossible to autoupgrade from Tails 3.1 to Tails
+  3.5. [fixed-by-1-big-iuk]
+* IUK size is not efficient. Users have to download a big blob of data
+  which can be very long over Tor.
+* On upgrade failure our recovery handling is poor.
+* Upon upgrades our user experience is poor.
+* Manual upgrades are very complicated.
+* Sometimes manual upgrades are required.
+* Our upgrade system has never been audited yet.
+* Because we instruct people not to use `apt upgrade` they have to wait
+  for us to release bugfixes, and these are often made too late after
+  the release.
+
+Envisioned solutions to the problems that are not `fixed-by-1-big-iuk`:
+[[!tails_ticket 15279]], [[!tails_ticket 15282]],
+[[!tails_ticket 7499]].
+
+<a id="roadmap"></a>
 
 Roadmap
 =======
 
-We have released something useful in Tails 0.11, based on the work we've already done on
-the basis of Fedora liveusb-creator.
-
-Next steps are:
-
-Bugfixes and minor improvements of liveusb-creator
---------------------------------------------------
-
-* Remove devices from the list when unplugged.
-* Set cursor to waiting (hourglass) state while working.
-* Allow setting the system/overlay partitions size via command-line
-  option(s).
-* command-line option --local-hard-disks that would enable
-  installation on local hard disks (= not external USB);
-  is half-implemented by `--force`, see special casing in the
-  detect_removable_devices method.
-* Should be more explicit when no target device is available:
-  currently displays an empty list, no message, is not that easy to understand.
-
-### Other tasks and bugs
-
-See the [Installer tickets on Redmine](https://labs.riseup.net/code/projects/tails/issues?query_id=120).
-
-Incremental upgrades
---------------------
-
-See the dedicated page about [[todo/incremental_upgrades]].
-
-Choose again
-------------
-
-Implement our [[specifications|future_spec]] in (probably) Ubuntu's
-[usb-creator](https://launchpad.net/usb-creator), that has a much
-saner codebase.
-
-This should also open the possibility to take care of, at least, verified
-downloads and Windows support.
+* improving upgrade UX: [[!tails_ticket 15281]] and
+  [[Endless_upgrades#single-squashfs-diff]]
+* improve installation UX, by shipping a disk image that can
+  be dd'ed to a USB stick and produce a _final Tails_:
+  [[USB image|usb_install_and_upgrade/usb_bootable_disk_image]]
+  ([[!tails_ticket 15292]])
+* come back to the upgrade topic later ([[!tails_ticket 15277]])
 
 Resources
 =========
 
+* [[notes about UEFI|UEFI]]
 * [[notes about GPT|usb_install_and_upgrade/gpt]]
-* the **code**: our work on liveusb-creator is in a [[dedicated Git
-  repository|contribute/git]]. Integration work is made in the
-  `feature/usb_installer` branch in the main Tails Git repository.
 * USB installation [[specification and design|contribute/design/installation]]
-* archived [[roundup of existing tools|todo/usb_install_and_upgrade/archive]]
+* archived [[roundup of existing tools|usb_install_and_upgrade/archive]]

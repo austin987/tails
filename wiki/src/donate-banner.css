@@ -1,211 +1,137 @@
-/* Reset bootstrap */
-
-* {
-    -webkit-box-sizing: unset;
-    box-sizing: unset;
-}
-
-.page * {
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-}
-
-/* Reset */
-
-.searchform {
+/* Position banner */
+#donate-banner {
     position: relative;
-}
-
-form#searchform {
-    top: 1.5em !important;
-    right: 2em !important;
-}
-
-#tails-installation-assistant {
-    display: none;
-}
-
-@-webkit-keyframes breathinganimation {
-    0% { background-color: #53b351;}
-    100% { background-color: #ccffaa;}
-}
-@-moz-keyframes breathinganimation {
-    0% { background-color: #53b351;}
-    100% { background-color: #ccffaa;}
-}
-@-o-keyframes breathinganimation {
-    0% { background-color: #53b351;}
-    100% { background-color: #ccffaa;}
-}
-@keyframes breathinganimation {
-    0% { background-color: #53b351;}
-    100% { background-color: #ccffaa;}
-}
-
-.searchform, #donate-strip {
     margin: 0 auto;
-    max-width: 930px;
-    padding: 0 2em;
-}
-
-#donate-strip {
-    position: relative;
+    max-width: 986px;
+    padding: 1em 2em;
+    display: block;
     font-family: "Source Sans Pro Regular", sans-serif;
-    background-color:#53b351;
-
-    -webkit-animation: breathinganimation ease-in-out 15s -2s infinite alternate;
-    -moz-animation:    breathinganimation ease-in-out 13s -2s infinite alternate;
-    -o-animation:      breathinganimation ease-in-out 15s -2s infinite alternate;
-    animation:         breathinganimation ease-in-out 15s -2s infinite alternate;
-
-    background-repeat: no-repeat;
-    background-image: url(donate/donate_hand_usb_single.png);
-    background-position: left bottom;
-    min-height: 100px;
-    -webkit-transition: .3s ease-in-out;
-    -moz-transition: .3s ease-in-out;
-    transition: .3s linear;
+    background-color: white;
 }
 
-#donate-strip a {
-    color: #005509;
-    text-decoration: none;
-}
-
-#donate-strip strong {
-    font-weight: normal;
-}
-
+/* Hide all translations of the banner by default */
 body .donate-de,
-body .donate-en,
+body .donate-es,
+body .donate-fa,
 body .donate-fr,
-body .donate-pt,
-body.de .donate-l,
-body.en .donate-l,
-body.fr .donate-l,
-body.pt .donate-l {
+body .donate-it,
+body .donate-pt {
     display: none;
 }
 
-body.de .donate-de,
-body.en .donate-en,
+/* Hide the English banner for all other languages
+
+   This way, the English banner is still displayed when the PO plugin is
+   disabled. This is useful for development
+   */
+body.de .donate-en,
+body.es .donate-en,
 body.fa .donate-en,
-body.fr .donate-fr,
+body.fr .donate-en,
 body.it .donate-en,
+body.pt .donate-en {
+    display: none;
+}
+
+/* Show the banner corresponding to the current language */
+body.de .donate-de,
+body.es .donate-es,
+body.fa .donate-fa,
+body.fr .donate-fr,
+body.it .donate-it,
 body.pt .donate-pt {
     display: block !important;
 }
 
-.donate-l .donate-title {
-    margin: 0 0 0 135px;
-    padding: 1em 0;
-    width: 70%;
-    box-sizing: border-box;
+/* Counter */
+
+#donate-banner {
+  padding-right: 14em;
 }
 
-#donate-strip strong {
-    display: block;
-    font-size: 1.2em;
-    line-height: 1.35em;
+.counter {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%); /* Align vertically */
+  right: 15px;
+  width: 200px;
+  font-weight: normal;
+  text-align: center;
 }
 
-#donate-strip .donate-title-big {
-    font-size: 2em;
+/* Place counter belong text on small screens */
+@media only screen and (max-width : 700px) {
+  #donate-banner {
+    padding-right: 2em;
+    background: red;
+  }
+
+  .counter {
+    position: relative;
+    top: 0.5em;
+    transform: none;
+    right: 0;
+  }
+}
+
+.counter-progress {
+  margin-top: 4px;
+  height: 20px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.5);
+  padding: 3px;
+}
+
+.counter-progress-bar {
+  height: 100%;
+  background: black;
+}
+
+/* Hide 'Last updated' by default */
+#counter-last-updated {
+  display: none;
+}
+
+/* Hide 'Last updated' info icon when there is no JS to display 'Last updated' */
+#counter-last-updated-info {
+  display: none;
+}
+
+#counter-last-updated-info {
+  position: absolute;
+  top: -4px;
+  right: 0;
+}
+
+#counter-last-updated {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 0.5em;
+  width: 300px;
+  height: 2.6em;
+  top: 1.5em;
+  left: -50px;
+}
+
+/* Style for 2018 */
+
+#donate-banner {
+    background: yellow url(donate-banner/give-love.svg) no-repeat 1.2em;
+    background-size: 4.6em;
+    color: black;
+    padding-left: 7em;
+    font-size: 16px;
     font-weight: bold;
-    letter-spacing: 0.02em;
-    -webkit-transition: .5s ease-in-out;
-    -moz-transition: .5s ease-in-out;
-    transition: .5s linear;
-    display: block;
-    margin: 0;
-    padding: 0;
-    line-height: 1.1em;
-    margin-top: 0.2em;
-    color: #005509;
 }
 
-#donate-strip:hover .donate-title-big {
-    color: #fff;
+#donate-banner .first {
+    display: inline-block;
+    margin-bottom: 0.1em;
 }
 
-#donate-strip .donate-slogan {
-    display: none;
-}
-
-/* <3 Flip background images in RTL languages instead of redefining new ones. */
-
-html[dir="rtl"] #donate-strip {
-    transform-origin: center;
-    transform: scaleX(-1);
-}
-
-html[dir="rtl"] #donate-strip .donate-en {
-    transform: scaleX(-1);
-}
-
-html[dir="rtl"] .donate-l .donate-title {
-    margin: 0 15% 0 0;
-}
-
-html[dir="rtl"] #donate-strip .donate-title-big {
-    transform: scaleX(1);
-}
-
-@media all and (max-width: 479px) {
-    #donate-strip {
-        background-image: url(donate/donate_hand_usb_single.png);
-        background-position: -35px bottom;
-    }
-    html[dir="rtl"] #donate-strip * {
-        transform-origin: unset;
-    }
-    .donate-l .donate-title {
-        margin: 0 1% 0 25%;
-        width: 74%;
-    }
-}
-
-@media all and (min-width: 640px) {
-    #donate-strip {
-        background-image: url(donate/donate_hand_usb_single.png), url(donate/donate_hand_arrow.png);
-        background-position: left bottom, right bottom;
-    }
-}
-@media all and (min-width: 880px) {
-    #donate-strip {
-        background-image: url(donate/donate_hand_usb_single.png), url(donate/donate_hand_single.png);
-    }
-    #donate-strip:hover {
-        background-image: url(donate/donate_hand_usb_single.png), url(donate/donate_hands.png);
-    }
-    #donate-strip .donate-slogan {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        padding: 0 1em 1em;
-        box-sizing: border-box;
-        width: 25%;
-        text-align: center;
-        -webkit-transition: .1s ease-in-out;
-        -moz-transition: .1s ease-in-out;
-        transition: .1s linear;
-        display: block;
-        font-size: 1em;
-    }
-
-    html[dir="rtl"] #donate-strip .donate-slogan {
-        right: auto;
-        left: 0;
-        transform-origin: 165%;
-    }
-
-    #donate-strip #donate-slogan-off,
-    #donate-strip:hover #donate-slogan-on {
-        display: none;
-    }
-
-    #donate-strip:hover #donate-slogan-off {
-        display: block;
-        color: #fff;
-    }
+#donate-banner .second {
+    display: inline-block;
+    border-bottom: 2px solid black;
 }

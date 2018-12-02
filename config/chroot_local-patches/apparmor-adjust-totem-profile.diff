@@ -1,6 +1,6 @@
-diff -Naur a/etc/apparmor.d/abstractions/totem b/etc/apparmor.d/abstractions/totem
---- a/etc/apparmor.d/abstractions/totem	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/abstractions/totem	2016-11-18 10:42:07.902658411 +0000
+diff -Naur etc/apparmor.d.orig/abstractions/totem etc/apparmor.d/abstractions/totem
+--- a/etc/apparmor.d/abstractions/totem	2017-01-06 09:00:08.000000000 +0000
++++ b/etc/apparmor.d/abstractions/totem	2018-08-29 06:30:15.364263734 +0000
 @@ -30,13 +30,26 @@
  
    /usr/lib/@{multiarch}/gstreamer[0-9]*.[0-9]*/gstreamer-[0-9]*.[0-9]*/gst-plugin-scanner Cix -> gst_plugin_scanner,
@@ -31,9 +31,9 @@ diff -Naur a/etc/apparmor.d/abstractions/totem b/etc/apparmor.d/abstractions/tot
 +  /run/udev/data/+usb* r,
  
    /sys/devices/system/node/*/meminfo r,
-diff -Naur a/etc/apparmor.d/usr.bin.totem b/etc/apparmor.d/usr.bin.totem
---- a/etc/apparmor.d/usr.bin.totem	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.totem	2016-11-18 10:42:07.902658411 +0000
+diff -Naur etc/apparmor.d.orig/usr.bin.totem etc/apparmor.d/usr.bin.totem
+--- a/etc/apparmor.d/usr.bin.totem	2017-01-06 09:00:08.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.totem	2018-09-03 20:45:28.960000000 +0200
 @@ -6,6 +6,7 @@
  /usr/bin/totem {
    #include <abstractions/audio>
@@ -59,9 +59,31 @@ diff -Naur a/etc/apparmor.d/usr.bin.totem b/etc/apparmor.d/usr.bin.totem
  
    owner /{,var/}run/user/*/dconf/user w,
    owner /{,var/}run/user/*/at-spi2-*/   rw,
-diff -Naur a/etc/apparmor.d/usr.bin.totem-previewers b/etc/apparmor.d/usr.bin.totem-previewers
---- a/etc/apparmor.d/usr.bin.totem-previewers	2016-07-29 08:50:17.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.totem-previewers	2016-11-18 10:43:59.736805950 +0000
+@@ -27,6 +30,21 @@
+ 
+   /sys/devices/pci[0-9]*/**/config r,
+ 
++  # Backported from the mesa abstraction, available in AppArmor >2.13
++  /dev/dri/ r, # libGLX_mesa.so calls drmGetDevice2()
++  owner @{HOME}/.cache/ w, # if user clears all caches
++  owner @{HOME}/.cache/mesa_shader_cache/ w,
++  owner @{HOME}/.cache/mesa_shader_cache/index rw,
++  owner @{HOME}/.cache/mesa_shader_cache/??/ w,
++  owner @{HOME}/.cache/mesa_shader_cache/??/* rwk,
++
++  # Backported from the dri-enumerate abstraction, available in AppArmor 2.13
++  /sys/devices/pci[0-9]*/**/{device,subsystem_device,subsystem_vendor,uevent,vendor} r,
++
++  # Help browser (backported)
++  #include <abstractions/ubuntu-helpers>
++  /usr/bin/yelp Cx -> sanitized_helper,
++
+   # Site-specific additions and overrides. See local/README for details.
+   #include <local/usr.bin.totem>
+ }
+diff -Naur etc/apparmor.d.orig/usr.bin.totem-previewers etc/apparmor.d/usr.bin.totem-previewers
+--- a/etc/apparmor.d/usr.bin.totem-previewers	2017-01-06 09:00:08.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.totem-previewers	2018-08-29 06:30:15.364263734 +0000
 @@ -6,16 +6,17 @@
  /usr/bin/totem-video-thumbnailer {
    #include <abstractions/totem>
@@ -93,3 +115,4 @@ diff -Naur a/etc/apparmor.d/usr.bin.totem-previewers b/etc/apparmor.d/usr.bin.to
  
    # Site-specific additions and overrides. See local/README for details.
    #include <local/usr.bin.totem-previewers>
+

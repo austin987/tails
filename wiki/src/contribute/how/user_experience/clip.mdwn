@@ -1,0 +1,39 @@
+[[!meta title="Preparing video clips"]]
+
+Rencode the video
+-----------------
+
+It makes it lighter and easier to view with *VLC* (but not with *Totem*):
+
+    ffmpeg -i [input.ogv] [output.webm]
+
+For example:
+
+    ffmpeg -i P1.ogv P1.webm
+
+Cut out a video clip from a longer recording
+--------------------------------------------
+
+    ffmpeg -i [input] -ss [start] -t [duration] -c copy [output]
+
+For example:
+
+    ffmpeg -i P4.ogv -ss 25:20 -t 10 -c copy clip.webm
+
+Amplify the audio in a video clip
+---------------------------------
+
+    ffmpeg -i [input] -af "volume=25dB" [output]
+
+For example:
+
+    ffmpeg -i clip.webm -af "volume=25dB" clip-amplified.webm
+
+Remove the sound in a video clip
+--------------------------------
+
+    ffmpeg -i [input] -an [output]
+
+For example:
+
+    ffmpeg -i clip.webm -an clip-nosound.webm

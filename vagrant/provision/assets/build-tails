@@ -35,7 +35,7 @@ remove_build_dirs() {
 		tries=0
 		sudo lsof | grep --fixed-strings "${mountpoint}" || true
 		while ! sudo umount -f --verbose "${mountpoint}" && [ $tries -lt 12 ]; do
-			sudo fuser --ismountpoint --mount "${mountpoint}" --kill
+			sudo fuser --ismountpoint --mount "${mountpoint}" --kill || true
 			sleep 5
 			tries=$(expr $tries + 1)
 		done
@@ -94,6 +94,19 @@ if [ -n "$TAILS_DATE_OFFSET" ]; then
 	DESIRED_DATE=$(date --utc --date="${TAILS_DATE_OFFSET} days" '+%F %T')
 	echo "Setting system time to ${DESIRED_DATE}"
 	as_root_do timedatectl set-time "$DESIRED_DATE"
+fi
+
+if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
+    # The apt-cacher-ng cache disk is 15G, so let's ensure at most 10G
+    # of it is used there is 5G before each build, which should be
+    # enough for any build, even if we have to download a complete set
+    # of new packages for a new Debian release.
+    /usr/lib/apt-cacher-ng/acngtool shrink 10G -f || \
+        echo "The clean-up of apt-cacher-ng's cache failed: this is" \
+             "not fatal and most likely just means that some disk" \
+             "space could not be reclaimed -- in order to fix that" \
+             "situation you need to manually investigate " \
+             "/var/cache/apt-cacher-ng/apt-cacher-ng-log/main_*.html" >&2
 fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)

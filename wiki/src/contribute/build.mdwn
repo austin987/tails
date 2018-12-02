@@ -24,6 +24,7 @@ To build Tails you need:
    following command:
 
        sudo apt install \
+           psmisc \
            git \
            rake \
            libvirt-daemon-system \
@@ -36,13 +37,15 @@ To build Tails you need:
            vmdebootstrap && \
        sudo systemctl restart libvirtd
 
-2. Ensure your user is in the relevant groups:
+2. Ensure your user can run commands as root with `sudo`.
+
+3. Ensure your user is in the relevant groups:
 
        for group in kvm libvirt libvirt-qemu ; do
           sudo adduser "$(whoami)" "$group"
        done
 
-3. Logout and log back in to apply the new group memberships.
+4. Logout and log back in to apply the new group memberships.
 
 # Build Tails
 
@@ -70,8 +73,21 @@ image before building it.
 # Known issues and workarounds
 
 * If Vagrant fails to start the Tails builder VM with an error similar
-  to `Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0`,
-  see [[!tails_ticket 11411]].
+  to:
+
+        Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0
+
+  … then see [[!tails_ticket 11411]].
+
+* If Vagrant fails to start the Tails builder VM with:
+
+        Initialization parameters must be an attributes hash, got NilClass nil (ArgumentError)
+
+  … then restart the libvirtd service:
+
+        sudo systemctl restart libvirtd.service
+
+  Finally, try building again.
 
 * If Vagrant failed to start the Tails builder VM the first time
   (e.g. because of permission issues or the `kvm` module not being

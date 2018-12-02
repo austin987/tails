@@ -1,5 +1,23 @@
+def electrum_app
+  Dogtail::Application.new('electrum')
+end
+
+def electrum_main
+  electrum_app.child(roleName: 'frame')
+end
+
+def electrum_wizard
+  electrum_app.child(roleName: 'dialog')
+end
+
 Then /^I start Electrum through the GNOME menu$/ do
   step "I start \"Electrum Bitcoin Wallet\" via GNOME Activities Overview"
+end
+
+Then /^Electrum (?:has started|starts)$/ do
+  try_for(60) do
+    electrum_app
+  end
 end
 
 When /^a bitcoin wallet is (|not )present$/ do |existing|
@@ -14,41 +32,70 @@ When /^a bitcoin wallet is (|not )present$/ do |existing|
   end
 end
 
-When /^I create a new bitcoin wallet$/ do
-  @screen.wait("ElectrumNoWallet.png", 10)
-  @screen.wait_and_click("ElectrumNextButton.png", 10)
-  @screen.wait("ElectrumCreateNewSeed.png", 10)
-  @screen.wait_and_click("ElectrumNextButton.png", 10)
-  @screen.wait("ElectrumWalletGenerationSeed.png", 15)
-  @screen.wait_and_click("ElectrumWalletSeedTextbox.png", 15)
-  @screen.type('a', Sikuli::KeyModifier.CTRL) # select wallet seed
-  @screen.type('c', Sikuli::KeyModifier.CTRL) # copy seed to clipboard
-  seed = $vm.get_clipboard
-  @screen.wait_and_click("ElectrumNextButton.png", 15)
-  @screen.wait("ElectrumSeedVerificationPrompt.png", 15)
-  @screen.wait_and_click("ElectrumWalletSeedTextbox.png", 15)
-  @screen.type(seed) # Confirm seed
-  @screen.wait_and_click("ElectrumNextButton.png", 10)
-  @screen.wait("ElectrumEncryptWallet.png", 10)
-  @screen.type(Sikuli::Key.TAB)          # focus first password field
-  @screen.type("asdf" + Sikuli::Key.TAB) # set password
-  @screen.type("asdf" + Sikuli::Key.TAB) # confirm password
-  @screen.wait_and_click("ElectrumNextButton.png", 10)
-  @screen.wait("ElectrumPreferencesButton.png", 30)
+Then /^I am prompted to (configure Electrum|enter my Electrum wallet password)$/ do |mode|
+  try_for(30) do
+    electrum_wizard.child('Electrum wallet', roleName: 'label')
+  end
+  case mode
+  when 'configure Electrum'
+    expected = "This file does not exist.\nPress 'Next' to create this wallet, or choose another file."
+  when 'enter my Electrum wallet password'
+    expected = "This file is encrypted.\nEnter your password or choose another file."
+  else
+    raise 'Unsupported'
+  end
+  electrum_wizard.children(expected, roleName: 'label')
+end
+
+When /^I follow the Electrum wizard to create a new bitcoin wallet$/ do
+  electrum_wizard.button('Next').click
+  electrum_wizard.child('What kind of wallet do you want to create?',
+                         roleName: 'panel')
+  electrum_wizard.child('Standard wallet', roleName: 'radio button').click
+  electrum_wizard.button('Next').click
+  electrum_wizard.child('Keystore', roleName: 'label')
+  electrum_wizard.child('Create a new seed', roleName: 'radio button').click
+  electrum_wizard.button('Next').click
+  electrum_wizard.child('Choose Seed type', roleName: 'label')
+  electrum_wizard.child('Standard', roleName: 'radio button').click
+  electrum_wizard.button('Next').click
+  electrum_wizard.child('Your wallet generation seed is:', roleName: 'label')
+  seed = electrum_wizard.child(roleName: 'text').text
+  electrum_wizard.button('Next').click
+  electrum_wizard.child('Confirm Seed', roleName: 'label')
+  electrum_wizard.child(roleName: 'text').text = seed
+  electrum_wizard.button('Next').click
+  @electrum_password = 'asdf'
+  electrum_wizard.children(roleName: 'password text').each do |n|
+    n.typeText(@electrum_password)
+  end
+  electrum_wizard.button('Next').click
 end
 
 Then /^I see a warning that Electrum is not persistent$/ do
-  @screen.wait('GnomeQuestionDialogIcon.png', 30)
+  assert(
+    Dogtail::Application.new('zenity')
+      .child(roleName: 'label')
+      .name
+      .start_with?("Persistence is disabled for Electrum")
+  )
 end
 
-Then /^I am prompted to configure Electrum$/ do
-  @screen.wait("ElectrumNoWallet.png", 60)
+When /^I enter my Electrum wallet password$/ do
+  electrum_wizard.child(roleName: 'password text').typeText(@electrum_password)
+  electrum_wizard.button('Next').click
 end
 
 Then /^I see the main Electrum client window$/ do
-  @screen.wait('ElectrumPreferencesButton.png', 20)
+  electrum_main
 end
 
 Then /^Electrum successfully connects to the network$/ do
-  @screen.wait('ElectrumStatus.png', 180)
+  electrum_statusbar = electrum_main.child(roleName: 'status bar')
+  try_for(180) do
+    electrum_statusbar.children(roleName: 'label').any? do |n|
+      # The balance is shown iff we are connected.
+      n.name.start_with?('Balance: ')
+    end
+  end
 end

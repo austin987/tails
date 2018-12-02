@@ -2,10 +2,14 @@
 
 set -e
 
-echo "Installing AppArmor profile for Tor Browser"
+echo "Installing AppArmor profiles for Tor Browser"
+
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+ensure_hook_dependency_is_installed patch
 
 PATCH='/usr/share/tails/torbrowser-AppArmor-profile.patch'
-PROFILE='/etc/apparmor.d/torbrowser'
 
 ### Functions
 
@@ -33,14 +37,17 @@ toggle_src_APT_sources() {
    apt-get --yes update
 }
 
-install_torbrowser_AppArmor_profile() {
+install_torbrowser_AppArmor_profiles() {
    tmpdir="$(mktemp -d)"
    (
       cd "$tmpdir"
       apt-get source torbrowser-launcher/sid
       install -m 0644 \
-              torbrowser-launcher-*/apparmor/torbrowser.Browser.firefox \
-              "$PROFILE"
+              torbrowser-launcher-*/apparmor/torbrowser.Browser.* \
+              /etc/apparmor.d/
+      install -m 0644 \
+              torbrowser-launcher-*/apparmor/tunables/* \
+              /etc/apparmor.d/tunables/
    )
    rm -r "$tmpdir"
 }
@@ -48,7 +55,7 @@ install_torbrowser_AppArmor_profile() {
 ### Main
 
 toggle_src_APT_sources on
-install_torbrowser_AppArmor_profile
+install_torbrowser_AppArmor_profiles
 toggle_src_APT_sources off
-patch --forward --batch "$PROFILE" < "$PATCH"
+(cd / && patch --forward --batch -p1 < "$PATCH")
 rm "$PATCH"

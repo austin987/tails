@@ -1,18 +1,20 @@
-Global process:
+[[!meta title="Mac compatibility list"]]
 
-  - First step (simple solution):
-    - Generic instructions that would work in most of the case.
-  - Second step (difficult solution):
-    - Maintain a list of Macs and their compatibility
+As part of the initial implementation of the [[installation assistant
+for Mac|install/mac]] we based our work on generic installation
+instructions that should work in all cases. But depending on the Mac
+model, these can imply try and error, and being much more complex than
+they would be if we knew in advance the model of the Mac and which
+techniques work for it.
 
-<a id="generic"></a>
+While working on this first implementation, we proposed maintaining
+and guiding people through a list of Mac models and their compatibility
+with Tails and our different installation techniques.
 
-Generic instructions that would work in most cases
-==================================================
+[[!toc levels=3]]
 
-Implementation is happening there: [[!tails_ticket 9316]]
-
-Truths about Mac:
+Truths about Mac (in 2015)
+==========================
 
   - DVD
     - No DVD on some model
@@ -24,78 +26,43 @@ Truths about Mac:
       - Macbook Air 1.1: 32-bit UEFI
       - Macbook Air 3.1: 64-bit UEFI
     - 32-bit might work with next version (#8471)
-    - Test Tails 1.5 with dd :mercedes:tchou:
   - Tails Installer
     - 32-bit doesn't work with Tails Installer
     - 64-bit work sometimes yes and sometimes no
-    - Test Tails 1.5 with Installer on Macbook Air 1.1 :mercedes:
   - rEFInd
     - Don't ask people to do that
   - Bootcamp
     - No good
 
-Algorithm:
-
-  - if have a friend
-    - clone
-    - if works → happy
-    - if fails
-      - DVD
-      - dd
-      - if works → stay on DVD or dd
-      - if fails → sad
-  - else
-    - DVD
-    - dd
-    - another computer (different Mac, different OS)
-    - if fails → sad
-    - if DVD or dd works
-      - clone
-        - if works → happy
-        - else → stay on DVD or dd
-    - if another computer works until full-feature Tails
-      - if works → happy
-      - else → try temporary Tails
-
 List of compatibility with Mac
 ==============================
 
-Seeing that:
-
-- A lot of current and potential users are Mac users.
-- Tails is running more or less on this devices.
-- There are a limited number of different models.
-
-We will maintain the state of Tails compatibility on these computers.
+Redmine ticket: [[!tails_ticket 9150]]
 
 Roadmap
 -------
 
-Bootstrap
----------
+### Bootstrap
 
 - Specifying the data type.
-- Know the precise models. #9322
+- Know the precise models. ([[!tails_ticket 9322]])
 - Setup a git repo.
 
-Start to fill it
-----------------
+### Start to fill it
 
 - Frontdesk starts to fill it
 
-Have it on the website
-----------------------
+### Have it on the website
 
 - Full list in markdown thanks to a routine
  - In the web installation assistant
  - In/linked in the troubleshooting section
 - Maybe later an interactive app in the assistant
 
-### Data type
+Data type
+---------
 
 The data could be stored in a YAML file, in the git repo. See [[!tails_ticket 9892]] for work in progress.
-
-### Data content
 
 - Fields ("strings", boolean?):
 
@@ -158,7 +125,7 @@ And some samples :
 
 
 
-* "model id": #9322. For one model id, there is one or several reports. (note that there is not realy the "state" for one model: the is different reports who can help to guess the state.)
+* "model id": [[!tails_ticket 9322]]. For one model id, there is one or several reports. (note that there is not realy the "state" for one model: the is different reports who can help to guess the state.)
 * "Tails version": can be useful to:
   - Have a better view of how the support Mac evolves.
   - Let the user or frontdesk know when the compatibility got broken.
@@ -170,20 +137,21 @@ And some samples :
   the last relevant informations.
 * "Comments" is raw information on harward issues (touchpad, bluetooth). The most common issues are fields (wifi, mac spoofing, graphic card)
 
-
-### How to feed the list
+How to feed the list
+--------------------
 
 - Call to heavily test sometimes
 - Ask to people doing Tails trainings
 - Update from frontdesk
 - Maybe something editable by users
 
-### Later implementation
+Later implementation
+--------------------
 
 In the Mac page of the router, we could implement this in two ways, that
 could be two iterations.
 
-#### All information (without form)
+### All information (without form)
 
 - Raw data is transformed server-side into an HTML table with links to
   the available scenarios for each model (maybe using
@@ -196,7 +164,7 @@ could be two iterations.
   of Mac (iMac, Macbook, MacBook Air, etc.)
 - If JavaScript is disabled, the full list is displayed.
 
-#### Only relevant information (with form)
+### Only relevant information (with form)
 
 - Some information is displayed to know easily what kind of mac is
   working
@@ -206,7 +174,3 @@ could be two iterations.
   the relevant model and displays the possible scenarios.
 - If implemented in JavaScript, it would fallback on the "without form"
   version described earlier.
-
-### Redmine
-
-This tickets wants to fix the same problem : [[!tails_ticket 9150]]

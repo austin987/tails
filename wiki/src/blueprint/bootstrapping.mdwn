@@ -9,129 +9,80 @@ Big logical steps are:
   - Learn what Tails is
   - Download the ISO
   - Verify the ISO
-  - Install medium (might require going through a bootstrapping medium)
+  - Install medium (might require going through an intermediary Tails)
   - Create persistence
-
-Subpages
-========
-
-Check the following subpages to see the improvements that we proposed in
-different area of that process:
-
-  - [[ISO verification|verification]]
-  - [[Browser extension|extension]]
-  - [[Tails Installer|installer]]
-  - [[Booting|booting]]
-  - [[Upgrades|upgrade]]
 
 Table of content
 ================
 
 [[!toc levels=3]]
 
+Related documents
+=================
+
+Design documents:
+
+- [[Installation assistant|contribute/design/installation_assistant]]
+- [[*Tails Verification*|contribute/design/verification_extension]]
+- [[*Tails Installer*|contribute/design/installation]]
+- [[Persistence|contribute/design/persistence]]
+
+Blueprints for future work on specific parts of this process:
+
+[[!map pages="page(blueprint/bootstrapping/*)" show="title"]]
+
 2014
 ====
+
+In 2014 the different steps in this process were scattered all around our
+website and users had to fight their way through it:
 
 [[Diagram of the detailed workflow as of December 2014|2014.fodg]]
 
 2015
 ====
 
-Over 2015 we will work on several improvements to simplify greatly this
+In 2015 we worked on several improvements to simplify greatly this
 workflow:
 
-  - Tails Installer in Debian
-  - [[Browser extensions|extension]] for automatic verification of the ISO
-  - [[Web assistant|assistant]] to guide the user throughout this process
+  - Tails Installer in [Debian](https://tracker.debian.org/tails-installer) and [Ubuntu](https://launchpad.net/~tails-team/+archive/ubuntu/tails-installer)
+  - *Download and Verify Extension* for Firefox now replaced by the
+    *Tails Verification* browser extension. ([[Design document|contribute/design/verification_extension]])
+  - Installation Assistant to guide the user throughout this process. ([[Blueprint|assistant]])
 
-[[Diagram of the detailed workflow as of December 2015|2015.fodg]] (work in progress)
+[[Diagram of the detailed workflow as of December 2015|2015.fodg]]
 
 <a id="tools"></a>
 
-Involved tools
---------------
+2017
+====
 
-[[!img tools.png link=tools.fodg]]
+In 2017 we worked on:
 
-Notes:
+  - Simplified *Tails Installer* by [[removing the splash screen|news/version_3.2]].
+  - Porting *Download and Verify Extension* to Web Extensions for Firefox 57 which implied:
+    - Creating *Tails Verification*, its successor.
+      *Tails Verification* works on Firefox and Chrome but cannot be embedded nor
+      monitor the download of the ISO image anymore.
+      ([[Design document|contribute/design/verification_extension]])
+    - Redesigning the download page as a consequence.
+      ([[Blueprint|assistant]])
 
-- **Debian Hacker** corresponds to a path on the command line only. Its
-  main benefit is to go through the **Debian keyring** verification
-  which is the strongest verification technique that we propose.
-- **Debian** is a path for Debian derivatives where Tails Installer is
-  available. That will be the case of Ubuntu starting from 15.10,
-  Debian Jessie backports, and Debian Stretch ([[!tails_ticket 8805]]).
-- **Other OS** is Windows, macOS, Fedora, etc.
-- **OpenPGP with Debian keyring** are command line instructions for verifying the
-  Tails signing key against the Debian keyring.
-- **Extension from Debian** takes for granted that the ISO verification
-  extension will be available in Debian ([[!tails_ticket 8822]]). This
-  might not be the case and then people would fallback on **Extension
-  from browser**.
-- **GNOME Disks** now has a "Restore Disk Image" feature which can be
-  used to copy an ISO image onto a USB stick and is widely available.
-- **UUI** has been our canonical installer on Windows for years.
-- **DiskUtils** should be tested on Mac, unfortunately it doesn't work
-  for us ([[!tails_ticket 8802]]).
+Future work
+===========
 
-Bonus for 2015
---------------
+Graphical installer for Mac
+---------------------------
 
-- Add splash when booting manual installation from USB [[!tails_ticket #8838]].
+In 2015 we couldn't find a graphical way of creating an intermediary Tails on
+USB stick from Mac ([[!tails_ticket 8802]]) and people have to go through the
+command line. Finding this would be game changer for Mac users
+([[!tails_ticket 11682]]).
 
-Use cases
-=========
+Lead people from one big step to the next through software
+----------------------------------------------------------
 
-This is a brainstorming on the different use cases dealing with
-downloading, verifying, installing, and upgrading Tails.
-This list should be useful to check whether all scenarios are covered.
-The comments, placed after ':' correspond to our rough objectives for
-2015.
+We could:
 
-- Download
-  - HTTP
-    - Successful: 15 to 60 minutes
-    - Failed: ?
-    - Corrupted: ?
-  - Torrent
-    - Corrupted: ?
-  - Nightly
-- Verify
-  - Checksum
-    - Firefox: extension, what's up with Torrents?
-    - Chrome: extension? [[!tails_ticket 8803]], [[!tails_ticket 8531]]
-    - Other browsers:
-      - Windows: fallback on OpenPGP?
-      - Mac: fallback on OpenPGP?
-      - Linux: fallback on OpenPGP?
-  - OpenPGP
-    - GNOME: seahorse-nautilus
-    - Other Linux: command line
-    - Windows: Gpg4Win
-    - Mac: GPGTools [[!tails_ticket 8807]]
-- Install
-  - DVD
-  - USB
-    - Tails: friend + Tails Installer
-    - Debian
-      - Jessie: Tails Installer backport? [[!tails_ticket 8005]]
-      - Stretch: Tails Installer [[!tails_ticket 8549]]
-    - Ubuntu
-      - Latest LTS, 14.04: Tails Installer? [[!tails_ticket 8806]]
-      - Latest, 15.04: Tails Installer? [[!tails_ticket 8806]]
-      - Next LTS, 16.04: Tails Installer? [[!tails_ticket 8806]]
-      - Next, 15.10: Tails Installer? [[!tails_ticket 8806]]
-  - Windows: UUI
-  - macOS: command line or new graphical tool? [[!tails_ticket 8802]]
-  - Virtualization: VirtualBox, GNOME Boxes, virt-manager
-- Upgrade from ISO (full upgrade or nightly)
-  - Full upgrade
-    - From Debian, Ubuntu if available
-    - From Tails otherwise: need bootstrapping device
-  - Incremental upgrade
-  - Virtualization: virt-manager
-- Misc
-  - Newsletter
-  - Donation: [[!tails_ticket 7176]]?
-  - Backups: [[!tails_ticket 8812]]?
-  - Signing key revocation or change
+  - Add splash screen about *Tails Installer* when starting on an intermediary Tails USB stick. ([[!tails_ticket 8836]])
+  - Add splash screen about persistence when starting for the first time on a final Tails USB stick.
