@@ -43,12 +43,14 @@ else
 				shift
 			fi
 		;;
+		cat|get-latest|freeze|thaw)
+			if [ $# -eq 0 ]; then
+				ORIGINS="$(cd ${CONFIG}; ls -d *)"
+			else
+				ORIGINS="${@}"
+			fi
+		;;
 	esac
-	if [ $# -eq 0 ]; then
-		ORIGINS="$(cd ${CONFIG}; ls -d *)"
-	else
-		ORIGINS="${@}"
-	fi
 fi
 
 case "$action" in
