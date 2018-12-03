@@ -2,9 +2,17 @@
 
 set -e
 
-# Free the fixed GIDs and UIDs we're using.
+echo "Set fixed GIDs and UIDs"
 
-echo "Change GIDs and UIDs"
+Debug_gids_and_uids () {
+	for file in passwd group; do
+		diff -Naur "/usr/share/tails/build/${file}" "/etc/${file}" >&2 || :
+		echo >&2
+		echo "Content of '/etc/${file}':" >&2
+		cat "/etc/${file}" >&2
+		echo >&2
+	done
+}
 
 Change_uid () {
 	NAME="$1"
@@ -13,7 +21,10 @@ Change_uid () {
 
 	if [ -n "$OLD" ]; then
 		echo "Changing UID for $NAME ($OLD -> $NEW)"
-		usermod --uid "$NEW" "$NAME"
+		if ! usermod --uid "$NEW" "$NAME"; then
+			Debug_gids_and_uids
+			exit 1
+		fi
 		find / -wholename /proc -prune -o \( \! -type l -a -uid "$OLD" -exec chown "$NEW" '{}' \; \)
 	fi
 }
@@ -25,27 +36,48 @@ Change_gid () {
 
 	if [ -n "$OLD" ]; then
 		echo "Changing GID for $NAME ($OLD -> $NEW)"
-		groupmod --gid "$NEW" "$NAME"
+		if ! groupmod --gid "$NEW" "$NAME"; then
+			Debug_gids_and_uids
+			exit 1
+		fi
 		find / -wholename /proc -prune -o \( \! -type l -a -gid "$OLD" -exec chgrp "$NEW" '{}' \; \)
 	fi
 }
-
-
-Change_uid tails-persistent-setup 150
-Change_gid tails-persistent-setup 150
 
 ### Ensure GIDs are stable accross releases
 #   ... otherwise, things such as tor@service are broken
 #   after applying an automatic upgrade (#15695, #15424, #13426, #15407)
 
 # Temporarily give these groups a GID that's out of the way, to avoid collisions
+Change_gid messagebus   1050
+Change_gid ssh          1090
+Change_gid memlockd     1100
+Change_gid ssl-cert     1110
 Change_gid vboxsf       1120
 Change_gid monkeysphere 1130
 Change_gid debian-tor   1140
 Change_gid lpadmin      1150
+Change_gid scanner      1160
+Change_gid colord       1170
+Change_gid saned        1180
+Change_gid pulse        1190
+Change_gid pulse-access 1200
+Change_gid Debian-gdm   1210
+Change_gid kvm          1500
 
 # Finally, give these groups the desired GID
+Change_gid messagebus   105
+Change_gid ssh          109
+Change_gid memlockd     110
+Change_gid ssl-cert     111
 Change_gid vboxsf       112
 Change_gid monkeysphere 113
 Change_gid debian-tor   114
 Change_gid lpadmin      115
+Change_gid scanner      116
+Change_gid colord       117
+Change_gid saned        118
+Change_gid pulse        119
+Change_gid pulse-access 120
+Change_gid Debian-gdm   121
+Change_gid kvm          150
