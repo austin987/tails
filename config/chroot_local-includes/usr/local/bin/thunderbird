@@ -25,6 +25,14 @@ configure_locale() {
                      user_pref
 }
 
+disable_autocrypt() {
+    # Disable Autocrypt since it is not safe (#15923).
+    set_mozilla_pref "${PROFILE}/prefs.js"                 \
+                     "mail.server.default.enableAutocrypt" \
+                     "false"                               \
+                     user_pref
+}
+
 configure_default_incoming_protocol() {
     # For extensions.torbirdy.defaultprotocol, POP = 0, IMAP = 1
     local default_protocol
@@ -42,6 +50,7 @@ configure_default_incoming_protocol() {
 reconfigure_profile() {
     mkdir -p "${PROFILE}"
     configure_locale
+    disable_autocrypt
     configure_default_incoming_protocol
 
     # Suppress Enigmail's configuration wizard by pretending that the current
