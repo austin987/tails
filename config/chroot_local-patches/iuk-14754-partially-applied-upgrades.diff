@@ -1,5 +1,5 @@
 diff --git a/usr/share/perl5/Tails/IUK/Frontend.pm b/usr/share/perl5/Tails/IUK/Frontend.pm
-index dbf34dd..38fd9e6 100644
+index dbf34dd..7d14688 100644
 --- a/usr/share/perl5/Tails/IUK/Frontend.pm
 +++ b/usr/share/perl5/Tails/IUK/Frontend.pm
 @@ -163,8 +163,10 @@ method fatal_run_cmd (Str :$error_msg!, ArrayRef :$cmd!, Str :$as?, Str :$error_
@@ -14,12 +14,14 @@ index dbf34dd..38fd9e6 100644
          assert_undefined($cancel_label);
      }
      my @cmd  = ('zenity', "--$type", '--text', $question);
-@@ -370,8 +372,7 @@ method run () {
+@@ -369,9 +371,8 @@ method run () {
+                 $self->encoding->decode(gettext(
                      "<b>You should upgrade to %{name}s %{version}s.</b>\n\n".
                      "For more information about this new version, go to %{details_url}s\n\n".
-                     "It is recommended to close all the open applications during the upgrade.\n".
+-                    "It is recommended to close all the open applications during the upgrade.\n".
 -                    "Downloading the upgrade might take a long time, from several minutes to a few hours.\n".
 -                    "The networking will be disabled after downloading the upgrade.\n\n".
++                    "We recommend you close all other applications during the upgrade.\n".
 +                    "Downloading the upgrade might take a long time, from several minutes to a few hours.\n\n".
                      "Download size: %{size}s\n\n".
                      "Do you want to upgrade now?"
@@ -30,7 +32,7 @@ index dbf34dd..38fd9e6 100644
  
 +    $self->dialog(
 +        $self->encoding->decode(gettext(
-+            "<b>The upgrade was successfully downloaded.</b>\n\n".
++            "The upgrade was successfully downloaded.\n\n".
 +            "The network connection will now be disabled.\n\n".
 +            "Please save your work and close all other applications."
 +        )),
