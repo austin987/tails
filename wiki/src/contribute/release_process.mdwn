@@ -560,13 +560,13 @@ suite should be ready, so it is time to:
 
         diff -Naur \
            "${PACKAGES_MANIFEST:?}" \
-           "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
+           "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
    They should be identical, except that the `debian-security` serial might be higher.
 
 1. To ensure we publish the final build's `.build-manifest`, run:
 
-        export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
+        export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
 
 1. <a id="reproducibility-sanity-check-iso"></a>
@@ -1108,10 +1108,6 @@ Skip this part if preparing a RC.
 
 Rename, copy, garbage collect and update various files:
 
-	mv "${ARTIFACTS:?}"/tails-amd64-"${VERSION:?}".iso.packages \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" && \
-	mv "${PACKAGES_MANIFEST:?}" \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" && \
 	cp "${ISO_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
