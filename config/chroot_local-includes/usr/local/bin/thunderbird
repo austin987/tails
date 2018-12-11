@@ -14,6 +14,25 @@ thunderbird_config_is_persistent() {
     [ "$(findmnt --noheadings --output SOURCE --target "${THUNDERBIRD_CONFIG_DIR}")" = "/dev/mapper/TailsData_unlocked[/thunderbird]" ]
 }
 
+configure_locale() {
+    # Thunderbird will set the locale based on the environment when
+    # this pref is empty, but will then save the result to this pref
+    # disabling this "guess" for the next time. We want Thunderbird to
+    # always match the locale of the Tails session.
+    set_mozilla_pref "${PROFILE}/prefs.js"   \
+                     "intl.locale.requested" \
+                     '""'                    \
+                     user_pref
+}
+
+disable_autocrypt() {
+    # Disable Autocrypt since it is not safe (#15923).
+    set_mozilla_pref "${PROFILE}/prefs.js"                 \
+                     "mail.server.default.enableAutocrypt" \
+                     "false"                               \
+                     user_pref
+}
+
 configure_default_incoming_protocol() {
     # For extensions.torbirdy.defaultprotocol, POP = 0, IMAP = 1
     local default_protocol
@@ -22,13 +41,26 @@ configure_default_incoming_protocol() {
     else
         default_protocol=1
     fi
-    mkdir -p "${PROFILE}"
     set_mozilla_pref "${PROFILE}/prefs.js"                 \
                      "extensions.torbirdy.defaultprotocol" \
                      "${default_protocol}"                 \
                      user_pref
 }
 
+reconfigure_profile() {
+    mkdir -p "${PROFILE}"
+    configure_locale
+    disable_autocrypt
+    configure_default_incoming_protocol
+
+    # Suppress Enigmail's configuration wizard by pretending that the current
+    # version was already configured. Only do this on first run though:
+    # once we've done this we let Enigmail manage this setting itself
+    # so it can run any migration code it wants to on upgrades.
+    if thunderbird_profile_is_new; then
+	initialize_enigmail_configured_version
+    fi
+}
 
 thunderbird_profile_is_new() {
    [ ! -f "${PROFILE}/extensions.ini" ]
@@ -50,17 +82,7 @@ initialize_enigmail_configured_version() {
 start_thunderbird() {
     export GNOME_ACCESSIBILITY=1
     unset SESSION_MANAGER
-
-    configure_default_incoming_protocol
-
-    # Suppress Enigmail's configuration wizard by pretending that the current
-    # version was already configured. Only do this on first run though:
-    # once we've done this we let Enigmail manage this setting itself
-    # so it can run any migration code it wants to on upgrades.
-    if thunderbird_profile_is_new; then
-	initialize_enigmail_configured_version
-    fi
-
+    reconfigure_profile
     exec /usr/bin/thunderbird --class "Thunderbird" -profile "${PROFILE}" "${@}"
 }
 
