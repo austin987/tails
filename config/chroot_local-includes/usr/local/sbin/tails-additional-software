@@ -142,7 +142,8 @@ def _notify_failure(summary, details=None):
     log.
     """
     if details:
-        # Translators: Don't translate {details}, it's a placeholder and will be replaced.
+        # Translators: Don't translate {details}, it's a placeholder and will
+        # be replaced.
         details = _("{details} Please check your list of additional "
                     "software or read the system log to "
                     "understand the problem.").format(details=details)
@@ -216,7 +217,8 @@ def _format_iterable(iterable):
     if len(iterable) == 1:
         return iterable[0]
     elif len(iterable) > 1:
-        # Translators: Don't translate {beginning} or {last}, they are placeholders and will be replaced.
+        # Translators: Don't translate {beginning} or {last}, they are
+        # placeholders and will be replaced.
         return _("{beginning} and {last}").format(
             beginning=_(", ").join(iterable[:-1]), last=iterable[-1])
     else:
@@ -282,7 +284,8 @@ def handle_installed_packages(packages):
     """
     logging.info("New packages manually installed: %s" % packages)
     if has_unlocked_persistence(search_new_persistence=True):
-        # Translators: Don't translate {packages}, it's a placeholder and will be replaced.
+        # Translators: Don't translate {packages}, it's a placeholder and will
+        # be replaced.
         if _notify(_("Add {packages} to your additional software?").format(
                     packages=_format_iterable(packages)),
                    _("To install it automatically from your persistent "
@@ -311,7 +314,8 @@ def handle_installed_packages(packages):
         logging.warning("Warning: persistence storage is locked, can't add "
                         "additional software.")
     elif is_tails_media_writable():
-        # Translators: Don't translate {packages}, it's a placeholder and will be replaced.
+        # Translators: Don't translate {packages}, it's a placeholder and will
+        # be replaced.
         if _notify(_("Add {packages} to your additional software?").format(
                     packages=_format_iterable(packages)),
                    _("To install it automatically when starting Tails, you "
@@ -332,7 +336,8 @@ def handle_installed_packages(packages):
         logging.warning("Cannot create persistent storage on this media.")
         if not os.path.isfile(ASP_STATE_INSTALLER_ASKED):
             open(ASP_STATE_INSTALLER_ASKED, 'a').close()
-            # Translators: Don't translate {packages}, it's a placeholder and will be replaced.
+            # Translators: Don't translate {packages}, it's a placeholder and
+            # will be replaced.
             _notify(_("You could install {packages} automatically when "
                       "starting Tails").format(
                         packages=_format_iterable(packages)),
@@ -349,10 +354,12 @@ def handle_removed_packages(packages):
     actually remove them if requested.
     """
     logging.info("Additional packages removed: %s" % packages)
-    # Translators: Don't translate {packages}, it's a placeholder and will be replaced.
+    # Translators: Don't translate {packages}, it's a placeholder and will be
+    # replaced.
     if _notify(_("Remove {packages} from your additional software?").format(
                  packages=_format_iterable(packages)),
-               # Translators: Don't translate {packages}, it's a placeholder and will be replaced.
+               # Translators: Don't translate {packages}, it's a placeholder
+               # and will be replaced.
                _("This will stop installing {packages} automatically.").format(
                  packages=_format_iterable(packages)),
                _("Remove"),
@@ -473,15 +480,17 @@ def apt_hook_post():
     os.remove(ASP_STATE_PACKAGES)
 
     additional_packages_names = {
-        filter_package_details(pkg) for pkg in get_additional_packages(search_new_persistence=True)
+        filter_package_details(pkg) for pkg in
+        get_additional_packages(search_new_persistence=True)
     }
 
     apt_cache = apt.cache.Cache()
     # Filter automatically installed packages and packages already configured
     # as additional software
     new_manually_installed_packages = {
-        pkg for pkg in packages["installed"] if not apt_cache[pkg].is_auto_installed and
-                                                pkg not in additional_packages_names
+        pkg for pkg in packages["installed"] if (
+            not apt_cache[pkg].is_auto_installed and
+            pkg not in additional_packages_names)
     }
 
     if new_manually_installed_packages:
@@ -492,6 +501,7 @@ def apt_hook_post():
         additional_packages_names)
     if additional_packages_removed:
         handle_removed_packages(additional_packages_removed)
+
 
 def install_additional_packages(upgrade_mode=False):
     """Subcommand which activates and installs all additional packages.
