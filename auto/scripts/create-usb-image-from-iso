@@ -42,10 +42,6 @@ SYSTEM_PARTITION_ADDITIONAL_SIZE = 10
 
 SYSLINUX_COM32MODULES_DIR = '/usr/lib/syslinux/modules/bios'
 
-# SOURCE_DATE_EPOCH converted to a format suitable for faketime(1)
-FAKE_TIMESTAMP = time.strftime('%Y-%m-%d %H:%M:%S',
-                               time.gmtime(int(os.environ['SOURCE_DATE_EPOCH'])))
-
 
 class ImageCreationError(Exception):
     pass
@@ -133,12 +129,12 @@ class ImageCreator(object):
         for root, dirs, files in os.walk(self.iso_mountpoint):
             for d in sorted(dirs):
                 with set_env("MTOOLS_SKIP_CHECK", "1"):
-                    execute(['faketime', FAKE_TIMESTAMP, 'mmd',
+                    execute(['mmd',
                              "-i", self.partition.props.block.props.device,
                              "::%s" % os.path.join(os.path.relpath(root, start=self.iso_mountpoint), d)])
             for f in sorted(files):
                 with set_env("MTOOLS_SKIP_CHECK", "1"):
-                    execute(['faketime', FAKE_TIMESTAMP, 'mcopy',
+                    execute(['mcopy',
                              "-i", self.partition.props.block.props.device,
                              os.path.join(root, f),
                              "::%s" % os.path.join(os.path.relpath(root, start=self.iso_mountpoint), f)])
@@ -237,11 +233,9 @@ class ImageCreator(object):
     def adjust_syslinux_configuration(self):
         logger.info("Adjusting syslinux configuration")
         with set_env("MTOOLS_SKIP_CHECK", "1"):
-            execute(['faketime', FAKE_TIMESTAMP,
-                     'mren', "-i", self.partition.props.block.props.device,
+            execute(['mren', "-i", self.partition.props.block.props.device,
                      "::isolinux", "::syslinux"])
-            execute(['faketime', FAKE_TIMESTAMP,
-                     'mren', "-i", self.partition.props.block.props.device,
+            execute(['mren', "-i", self.partition.props.block.props.device,
                      "::syslinux/isolinux.cfg", "::syslinux/syslinux.cfg"])
 
     def install_mbr(self):
@@ -264,8 +258,7 @@ class ImageCreator(object):
 
             logger.debug('Copying %s to the device' % src_path)
             with set_env("MTOOLS_SKIP_CHECK", "1"):
-                execute(['faketime', FAKE_TIMESTAMP,
-                         'mcopy', '-D', 'o',
+                execute(['mcopy', '-D', 'o',
                          '-i', self.partition.props.block.props.device,
                          src_path,
                          "::%s" % os.path.join('syslinux', module)])
