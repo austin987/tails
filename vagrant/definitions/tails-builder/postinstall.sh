@@ -97,7 +97,6 @@ apt-get -y install \
         live-build \
         lsof \
         mtools \
-        p7zip-full \
         perlmagick \
         psmisc \
         python3-gi \
