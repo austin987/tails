@@ -228,6 +228,9 @@ class ImageCreator(object):
             '--invariant',
             # XXX: should not be necessary thanks to --invariant
             '-i', "{:x}".format(int(os.environ['SOURCE_DATE_EPOCH'])),
+            # Fill all 11 chars of the volume label to avoid any uninitialized
+            # memory from sneaking in
+            '-n', 'TAILS123456',
             self.partition.props.block.props.device,
         ])
 
