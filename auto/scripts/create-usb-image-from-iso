@@ -61,6 +61,7 @@ class ImageCreator(object):
         self._loop_device = None  # type: str
         self._partition = None  # type: str
         self._system_partition_size = None  # type: int
+        self.iso_mountpoint = None  # type: str
 
     @property
     def loop_device(self) -> UDisks.ObjectProxy:
@@ -299,7 +300,7 @@ def execute(cmd: list):
 
 
 @contextmanager
-def set_env(name: str, value:str):
+def set_env(name: str, value: str):
     old_value = os.getenv(name)
     os.putenv(name, value)
     try:
