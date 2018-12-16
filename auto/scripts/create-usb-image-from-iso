@@ -242,7 +242,10 @@ class ImageCreator(object):
         execute(["dd", "bs=440", "count=1", "conv=notrunc",
                  "if=%s" % mbr_path, "of=%s" % self.image])
 
-    # Only required if using the running system's syslinux instead of the one on the ISO
+    # Ensure the syslinux modules come from the same package as the
+    # binary we'll use in install_syslinux, i.e. the system's one
+    # and not the one that's in the ISO; otherwise their ABI may
+    # be incompatible
     def copy_syslinux_modules(self):
         logger.info("Copying syslinux modules to device")
 
