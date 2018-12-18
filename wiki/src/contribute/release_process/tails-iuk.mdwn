@@ -9,6 +9,11 @@ Pre-requisites
 * Tails' `devel` APT suite enabled
 * the right version of the `tails-perl5lib` package installed
 * a user that has sudo credentials
+* Environment:
+  - Export location of a checkout of the `stable` branch of the main
+    Tails Git repository:
+
+    	export TAILS_GIT_CHECKOUT="$RELEASE_CHECKOUT"
 
 Install build and test dependencies
 ===================================
@@ -26,9 +31,10 @@ Update POT and PO files
 =======================
 
     git checkout master && \
-        ( cd po && make pot && make update-po ) && \
-        git add po && \
-        git commit -m 'Update POT and PO files.'
+    "${RELEASE_CHECKOUT:?}"/import-translations && \
+    "${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po && \
+    git add po && \
+    git commit -m 'Update POT and PO files, pull updated translations from Transifex.'
 
 Make an upstream release
 ========================
@@ -40,11 +46,6 @@ Enable new translations in `po/PACKAGE` and commit.
 Export new upstream version number:
 
     export VERSION=XXX
-
-Export location of a checkout of the branch of the main Tails Git
-repository used to prepare the release (typically `stable` or `testing`):
-
-    export TAILS_GIT_CHECKOUT="$RELEASE_CHECKOUT"
 
 Export source date epoch:
 
