@@ -101,6 +101,10 @@ class ImageCreator(object):
         with self.setup_loop_device():
             self.create_gpt()
             self.create_partition()
+            # udisks' create_partition function seems to ignore arg_type
+            # in Stretch, so we set it via sgdisk.
+            # XXX:Buster: Remove set_partition_type
+            self.set_partition_type()
             self.set_partition_flags()
             # XXX: Rescan?
             self.format_partition()
@@ -145,7 +149,6 @@ class ImageCreator(object):
                 arg_fd=GLib.Variant('h', 0),
                 arg_options=GLib.Variant('a{sv}', None),
                 fd_list=Gio.UnixFDList.new_from_array([image_fd]),
-                cancellable=None,
             )
 
             if not resulting_device:
@@ -160,15 +163,13 @@ class ImageCreator(object):
             logger.info("Tearing down loop device")
             self.loop_device.props.loop.call_delete_sync(
                 arg_options=GLib.Variant('a{sv}', None),
-                cancellable=None,
             )
 
     def create_gpt(self):
         logger.info("Creating GPT")
         self.loop_device.props.block.call_format_sync(
             arg_type='gpt',
-            arg_options=GLib.Variant('a{sv}', None),
-            cancellable=None
+            arg_options=GLib.Variant('a{sv}', None)
         )
 
     def create_partition(self):
@@ -178,8 +179,7 @@ class ImageCreator(object):
             arg_size=self.system_partition_size * 2**20,
             arg_type=ESP_GUID,
             arg_name=PARTITION_LABEL,
-            arg_options=GLib.Variant('a{sv}', None),
-            cancellable=None
+            arg_options=GLib.Variant('a{sv}', None)
         )
         # XXX: Tails Installer ignores GLib errors here
 
@@ -187,22 +187,14 @@ class ImageCreator(object):
         self._partition = partition
 
     def set_partition_flags(self):
-        logger.info("Setting partition flags")
+        # We use sgdisk directly instead of udisks' set_flags method, because the
+        # latter sometimes resets the partition type / partition table type
+        # before Buster's udisks2 + libblockdev 2.15-1
+        # (https://github.com/storaged-project/udisks/issues/418)
+        execute(["/sbin/sgdisk", "--attributes=1:=:%x" % SYSTEM_PARTITION_FLAGS, self.image])
 
-        start_time = time.perf_counter()
-        while time.perf_counter() - start_time < WAIT_FOR_PARTITION_TIMEOUT:
-            try:
-                self.partition.props.partition.call_set_flags_sync(
-                    arg_flags=SYSTEM_PARTITION_FLAGS,
-                    arg_options=GLib.Variant('a{sv}', None),
-                    cancellable=None
-                )
-            except GLib.Error as e:
-                if "GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface" in e.message:
-                    time.sleep(0.1)
-                    continue
-                raise
-            return
+    def set_partition_type(self):
+        execute(["/sbin/sgdisk", "--typecode=1:%s" % ESP_GUID, self.image])
 
     def format_partition(self):
         logger.info("Formatting partition")
@@ -213,8 +205,7 @@ class ImageCreator(object):
 
         self.partition.props.block.call_format_sync(
             arg_type='vfat',
-            arg_options=options,
-            cancellable=None
+            arg_options=options
         )
 
     @contextmanager
@@ -222,8 +213,7 @@ class ImageCreator(object):
         logger.info("Mounting partition")
         try:
             self.mountpoint = self.partition.props.filesystem.call_mount_sync(
-                arg_options=GLib.Variant('a{sv}', None),
-                cancellable=None
+                arg_options=GLib.Variant('a{sv}', None)
             )
         except GLib.Error as e:
             if "org.freedesktop.UDisks2.Error.AlreadyMounted" in e.message and \
@@ -239,7 +229,6 @@ class ImageCreator(object):
             logger.info("Unmounting partition")
             self.partition.props.filesystem.call_unmount_sync(
                 arg_options=GLib.Variant('a{sv}', {'force': GLib.Variant('b', True)}),
-                cancellable=None,
             )
 
     def set_permissions(self):
@@ -316,9 +305,7 @@ class ImageCreator(object):
             '--offset', str(self.partition.props.partition.props.offset),
             '--directory', '/syslinux/',
             '--install', self.image
-        ],
-            as_root=True  # XXX: Why does this only work as root?
-        )
+        ])
 
     def reset_timestamps(self):
         logger.info("Resetting timestamps")
@@ -336,12 +323,13 @@ class ImageCreator(object):
         """Set a fixed filesystem UUID aka. FAT Volume ID / serial number"""
         logger.info("Setting filesystem UUID")
         with set_env("MTOOLS_SKIP_CHECK", "1"):
-            execute(["mlabel", "-i", self.partition.props.block.props.device, "-N", "a69020d2"])
+            execute(["mlabel", "-i", self.partition.props.block.props.device,
+                     "-N", "a69020d2",
+                     # Otherwise mlabel -N will remove the pre-existing label
+                     "::%s" % FILESYSTEM_LABEL])
 
 
-def execute(cmd: list, as_root=False):
-    if as_root and os.geteuid() != 0:
-        cmd = ['pkexec'] + cmd
+def execute(cmd: list):
     logger.info("Executing '%s'" % ' '.join(cmd))
     subprocess.check_call(cmd)
 
@@ -373,6 +361,9 @@ def main():
     args = parser.parse_args()
     if not args.ISO.endswith(".iso"):
         parser.error("Input file is not an ISO (no .iso extension)")
+
+    if os.geteuid() != 0:
+        raise PermissionError("This script must be run as root")
 
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('sh').setLevel(logging.WARNING)
