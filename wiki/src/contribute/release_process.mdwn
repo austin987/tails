@@ -491,7 +491,7 @@ recent. Also look if there's a new `-buildX` tag (e.g.
 `tor-browser-60.3.0esr-8.0-1-build1`) for the Firefox version the Tor
 Browser we want to ship is based on in these Git repositories:
 
-* <https://git.torproject.org/builders/tor-browser-build.git>
+* <https://gitweb.torproject.org/builders/tor-browser-build.git>
 * <https://gitweb.torproject.org/tor-browser.git>
 
 A new tag may indicate that a new Tor Browser release or rebuild is imminent.
@@ -560,13 +560,13 @@ suite should be ready, so it is time to:
 
         diff -Naur \
            "${PACKAGES_MANIFEST:?}" \
-           "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
+           "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
    They should be identical, except that the `debian-security` serial might be higher.
 
 1. To ensure we publish the final build's `.build-manifest`, run:
 
-        export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso.build-manifest"
+        export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
 
 1. <a id="reproducibility-sanity-check-iso"></a>
@@ -895,7 +895,7 @@ Update the image description file (IDF) used by the browser extension:
       url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
     EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v{1,2}/Tails/amd64/stable/latest.{yml,json} && \
+      git add wiki/src/install/v{1,2}/Tails/amd64/stable/latest.* && \
       git commit -m "Update IDF file for Tails Verification." )
 
 Done with OpenPGP signing
@@ -1108,10 +1108,6 @@ Skip this part if preparing a RC.
 
 Rename, copy, garbage collect and update various files:
 
-	mv "${ARTIFACTS:?}"/tails-amd64-"${VERSION:?}".iso.packages \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" && \
-	mv "${PACKAGES_MANIFEST:?}" \
-	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" && \
 	cp "${ISO_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
@@ -1123,7 +1119,7 @@ Rename, copy, garbage collect and update various files:
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
     gpg --check-trustdb && \
-    LANG=C TZ=UTC gpg --no-options --keyid-format 0xlong --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+    LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
 
