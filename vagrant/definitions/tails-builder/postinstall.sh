@@ -64,7 +64,7 @@ EOF
 # XXX: remove once the Vagrant build VM has mtools >= 4.0.18-2.1 (Buster)
 echo "I: Adding Debian Buster APT suite..."
 echo " deb http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}/ buster main"\
-	> "/etc/apt/sources.list.d/stretch-updates.list"
+	> "/etc/apt/sources.list.d/buster.list"
 echo "I: Adding APT pinning for Buster..."
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/buster << EOF
 	Package: *
