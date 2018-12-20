@@ -101,11 +101,11 @@ class ImageCreator(object):
         with self.setup_loop_device():
             self.create_gpt()
             self.create_partition()
-            self.set_partition_flags()
-            # set_partition_flags() resets the partition type
-            # before Buster's udisks2 + libblockdev 2.15-1
-            # (https://github.com/storaged-project/udisks/issues/418)
+            # udisks' create_partition function seems to ignore arg_type
+            # in Stretch, so we set it via sgdisk.
+            # XXX:Buster: Remove set_partition_type
             self.set_partition_type()
+            self.set_partition_flags()
             # XXX: Rescan?
             self.format_partition()
             with self.mount_partition():
@@ -187,38 +187,14 @@ class ImageCreator(object):
         self._partition = partition
 
     def set_partition_flags(self):
-        logger.info("Setting partition flags")
-
-        start_time = time.perf_counter()
-        while time.perf_counter() - start_time < WAIT_FOR_PARTITION_TIMEOUT:
-            try:
-                self.partition.props.partition.call_set_flags_sync(
-                    arg_flags=SYSTEM_PARTITION_FLAGS,
-                    arg_options=GLib.Variant('a{sv}', None)
-                )
-            except GLib.Error as e:
-                if "GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface" in e.message:
-                    time.sleep(0.1)
-                    continue
-                raise
-            return
+        # We use sgdisk directly instead of udisks' set_flags method, because the
+        # latter sometimes resets the partition type / partition table type
+        # before Buster's udisks2 + libblockdev 2.15-1
+        # (https://github.com/storaged-project/udisks/issues/418)
+        execute(["/sbin/sgdisk", "--attributes=1:=:%x" % SYSTEM_PARTITION_FLAGS, self.image])
 
     def set_partition_type(self):
-        logger.info("Setting partition type")
-
-        start_time = time.perf_counter()
-        while time.perf_counter() - start_time < WAIT_FOR_PARTITION_TIMEOUT:
-            try:
-                self.partition.props.partition.call_set_type_sync(
-                    ESP_GUID,
-                    GLib.Variant('a{sv}', None)
-                )
-            except GLib.Error as e:
-                if "GDBus.Error:org.freedesktop.DBus.Error.UnknownMethod: No such interface" in e.message:
-                    time.sleep(0.1)
-                    continue
-                raise
-            return
+        execute(["/sbin/sgdisk", "--typecode=1:%s" % ESP_GUID, self.image])
 
     def format_partition(self):
         logger.info("Formatting partition")
@@ -329,9 +305,7 @@ class ImageCreator(object):
             '--offset', str(self.partition.props.partition.props.offset),
             '--directory', '/syslinux/',
             '--install', self.image
-        ],
-            as_root=True  # XXX: Why does this only work as root?
-        )
+        ])
 
     def reset_timestamps(self):
         logger.info("Resetting timestamps")
@@ -355,9 +329,7 @@ class ImageCreator(object):
                      "::%s" % FILESYSTEM_LABEL])
 
 
-def execute(cmd: list, as_root=False):
-    if as_root and os.geteuid() != 0:
-        cmd = ['pkexec'] + cmd
+def execute(cmd: list):
     logger.info("Executing '%s'" % ' '.join(cmd))
     subprocess.check_call(cmd)
 
@@ -389,6 +361,9 @@ def main():
     args = parser.parse_args()
     if not args.ISO.endswith(".iso"):
         parser.error("Input file is not an ISO (no .iso extension)")
+
+    if os.geteuid() != 0:
+        raise PermissionError("This script must be run as root")
 
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('sh').setLevel(logging.WARNING)
