@@ -713,7 +713,7 @@ Use `tails-create-iuk` to build the following IUKs:
   next version.
 
 Include each such version in a white-space separated list called
-`IUK_SOURCE_VERSIONS`, (e.g. `IUK_SOURCE_VERSIONS="2.8 2.9 2.9.1 2.10~rc1"`)
+`IUK_SOURCE_VERSIONS`, (e.g. `IUK_SOURCE_VERSIONS="2.8 2.9 2.9.1 2.10~rc1"`), optionally setting `TMPDIR` to an existing absolute path where disk space is available,
 and run the following:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
@@ -724,6 +724,7 @@ and run the following:
         sudo su -c "cd ${IUK_CHECKOUT:?} && \
           SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
+          TMPDIR=\"${TMPDIR:-/tmp}\" \
           PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
             ./bin/tails-create-iuk \
                --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
