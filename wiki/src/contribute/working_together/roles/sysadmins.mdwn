@@ -313,6 +313,16 @@ Below, importance level is evaluated based on:
   - [[sysadmins/automated_tests_in_Jenkins]]
 * importance: critical (as a key component of our development process)
 
+## Mail
+
+* purpose: handle incoming and outgoing email for some of our
+  [[Schleuder lists|sysadmins#schleuder]]
+* access: public MTA listening on `mail.tails.boum.org`
+* tools: [[!debpts postfix]], [[!debpts amavisd-new]], [[!debpts spamassassin]]
+* configuration: `tails::postfix`, `tails::amavisd_new` and
+  `tails::spamassassin` classes in [[!tails_gitweb_repo puppet-tails]]
+* importance: high (at least because WhisperBack bug reports go through this MTA)
+
 <a id="mumble"></a>
 
 ## Mumble
@@ -339,6 +349,17 @@ Below, importance level is evaluated based on:
   - users and credentials are managed with the `tails_secrets_rsync`
     Puppet module
 * importance: critical (needed to release Tails)
+
+<a id="schleuder"></a>
+
+## Schleuder
+
+* purpose: host some of our Schleuder mailing lists
+* access: anyone can send email to these lists
+* tools: [[!debpts schleuder]]
+* configuration: `tails::schleuder` class in [[!tails_gitweb_repo
+  puppet-tails]]
+* importance: high (at least because WhisperBack bug reports go through this service)
 
 ## Tor bridge
 
