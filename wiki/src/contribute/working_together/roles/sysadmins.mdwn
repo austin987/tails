@@ -197,6 +197,23 @@ Below, importance level is evaluated based on:
 * configuration: done by hand ([[!tails_ticket 6926]])
 * importance: low
 
+## DNS
+
+* purpose: authoritative nameserver for the `tails.boum.org` and
+  `amnesia.boum.org` zones
+* access:
+  - anyone can query this nameserver
+  - members of the mirrors team control some of the content of the
+    `dl.amnesia.boum.org` sub-zone
+  - Tails sysadmins can edit the zones with `pdnsutil edit-zone`
+* tools: [[!debpts pdns]] with its MySQL backend
+* configuration:
+  - `tails::pdns` and `tails::pdns::*` resources in
+    [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_repo puppet-powerdns]]
+* importance: critical (most of our other services are not available
+  if this one is not working)
+
 ## Gitolite
 
 * purpose:
