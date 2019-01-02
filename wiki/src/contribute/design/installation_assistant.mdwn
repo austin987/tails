@@ -21,16 +21,15 @@ being usable by expert users.
 
 The following scenarios are proposed:
 
-  - [[Install from another Tails (for PC)|install/win/clone-overview]]
-  - [[Install from another Tails (for Mac)|install/mac/clone-overview]]
+  - [[Clone from another Tails (for PC)|install/win/clone-overview]]
+  - [[Clone from another Tails (for Mac)|install/mac/clone-overview]]
   - [[Install from Windows|install/win/usb-overview]]
-  - [[Install from Debian, Ubuntu, or Mint|install/debian/usb-overview]]
+  - [[Install from macOS|install/mac/usb-overview]]
+  - [[Install from Linux (all distributions)|install/linux/usb-overview]]
   - [[Install from Debian, Ubuntu, or Mint using the command line and GnuPG|install/expert/usb-overview]]
-  - [[Install from other Linux distributions|install/linux/usb-overview]]
-  - [[Install from macOS by burning a DVD first|install/mac/dvd-overview]]
-  - [[Install from macOS and the command line|install/mac/usb-overview]]
   - [[Burn a DVD|install/dvd]]
-  - [[Download without installing|install/download]]
+  - [[Download only for USB sticks|install/download]]
+  - [[Download only for DVDs and virtual machines|install/download-iso]]
 
 The installation assistant is also adapted to cover two [[manual upgrade
 scenarios|upgrade]]:
@@ -71,8 +70,7 @@ massive amount of content in ikiwiki.
 The [inline directive](https://ikiwiki.info/ikiwiki/directive/inline/) of
 ikiwiki allows embedding a file into another file to avoid duplicating content.
 It is quite limited and brittle, especially when used together with the PO
-plugin. See [[!tails_ticket 6907]]. Many inlines also slow down the build
-process quite a lot.
+plugin. See [[!tails_ticket 6907]].
 
 ### Conditional CSS content
 
@@ -82,7 +80,7 @@ program used to install an intermediary Tails on Windows and Linux we
 wrote:
 
 <pre>
-&lt;span class="windows"&gt;a program called Universal USB Installer.&lt;/span&gt;
+&lt;span class="windows"&gt;a program called Etcher.&lt;/span&gt;
 &lt;span class="linux"&gt;a program called GNOME Disks.&lt;/span&gt;
 </pre>
 
@@ -92,25 +90,20 @@ scenario and elements with the
 
 - Classes for elements potentially displayed on different pages:
   - `clone` for content involving cloning
+  - `download` for all download pages
   - `usb` for content with a USB stick as destination device
-  - `windows` for content for Windows
-  - `mac` for content for macOS
-  - `debian` for content for Debian, Ubuntu, or Mint
-  - `expert` for content for Debian, Ubuntu, or Mint on the command line
-  - `linux` for content for other Linux
   - `upgrade` for content for manual upgrade
 - Classes for elements displayed only on one scenario:
+  - `windows` for [[/install/win/usb|/install/win/usb]]
+  - `mac` for [[/install/mac/usb|/install/mac/usb]]
+  - `linux` for [[/install/linux/usb|/install/linux/usb]]
+  - `expert` for [[/install/expert/usb|/install/expert/usb]]
   - `dvd` for [[/install/dvd-download|/install/dvd-download]]
-  - `vm` for [[/doc/advanced_topics/virtualization|/doc/advanced_topics/virtualization]]
-  - `download-only` for [[/install/download|/install/download]]
+  - `vm` for [[/install/vm-download|/install/vm-download]]
+  - `download-only-img` for [[/install/download|/install/download]]
+  - `download-only-iso` for [[/install/download|/install/download-iso]]
   - `install-clone` for [[/install/clone|/install/clone]]
-  - `windows-usb` for [[/install/win/usb|/install/win/usb]]
-  - `mac-usb` for [[/install/mac/usb|/install/mac/usb]]
-  - `mac-dvd` for [[/install/mac/dvd|/install/mac/dvd]]
   - `mac-clone` for [[/install/mac/clone|/install/mac/clone]]
-  - `debian-usb` for [[/install/debian/usb|/install/debian/usb]]
-  - `expert-usb` for [[/install/expert/usb|/install/expert/usb]]
-  - `linux-usb` for [[/install/linux/usb|/install/linux/usb]]
   - `upgrade-clone` for [[/upgrade/clone|/upgrade/clone]]
   - `upgrade-tails` for [[/upgrade/tails|/upgrade/tails]]
 
@@ -124,8 +117,7 @@ installation scenario to follow. It is divided by operating systems:
 
   - Windows
   - macOS
-  - Linux with `APT` and `tails-installer`: Debian, Ubuntu, or Mint
-  - Other Linux distributions
+  - Linux
 
 Notes:
 
@@ -180,9 +172,9 @@ The *overview* is a single page summarizing graphically:
     next and how complex it is. This is particularly important as the
     *steps* are a single and very long page.
 
-For example, the content of the overview for installing from Debian is
-stored in [[!tails_gitweb wiki/src/install/debian/usb-overview.html]] which includes a common block of
-HTML stored in [[!tails_gitweb wiki/src/install/inc/overview.html]] and uses the `debian` CSS
+For example, the content of the overview for installing from Windows is
+stored in [[!tails_gitweb wiki/src/install/win/usb-overview.html]] which includes a common block of
+HTML stored in [[!tails_gitweb wiki/src/install/inc/overview.html]] and uses the `windows` CSS
 class to adapt to the scenario.
 
 <a id="download"></a>
@@ -191,13 +183,17 @@ Download
 ========
 
 The download of the ISO image comes as a dedicated page between the
-overview and steps (except for `clone`, `upgrade-clone`, and `expert`). It
+overview and steps (except for `install-clone`, `mac-clone`, `upgrade-clone`, and `expert`). It
 is also available as a [[standalone page|install/download]].
 
 The download is split as a dedicated page (while still labeled as "Step
 1") to make it harder for people to skip the verification. It is still
 possible to skip the download or even the verification but the link to
 do so is labeled as a warning.
+
+Depending on the installation scenario, the download page points to the
+download of the ISO image (on `dvd` and `vm`) or the USB image (on all
+other scenarios).
 
 We propose two download techniques displayed in equal weight and combined
 with two verification techniques that have a level of verification at least as

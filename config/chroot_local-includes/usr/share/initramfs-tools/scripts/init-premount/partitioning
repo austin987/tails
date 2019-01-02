@@ -89,12 +89,6 @@ fi
 # * Delete the old system partition
 # * Create a new system partition of size ${SYSTEM_PARTITION_SIZE}
 # * Set the partition label to "Tails"
-# * Set the following attributes on the system partition:
-#   0: system partition
-#   2: legacy BIOS bootable
-#   60: read-only
-#   62: hidden
-#   63: do not automount
 ESP_GUID="C12A7328-F81F-11D2-BA4B-00A0C93EC93B"
 log_begin_msg "Updating partition table"
 sgdisk \
@@ -104,25 +98,18 @@ sgdisk \
 	--new=1:0:+"${SYSTEM_PARTITION_SIZE}" \
 	--typecode="1:${ESP_GUID}" \
 	--change-name=1:Tails \
-	--attributes=1:set:0  \
-	--attributes=1:set:2  \
-	--attributes=1:set:60 \
-	--attributes=1:set:62 \
-	--attributes=1:set:63 \
 	"${PARENT_DEVICE}"
 log_end_msg
 
 # Tell the kernel to reload the partition table
 partprobe
 
-# Set a random filesystem UUID (aka. FAT "Volume ID" / "serial number")
-MTOOLS_SKIP_CHECK=1 mlabel -i "${SYSTEM_PARTITION}" -n ::Tails
-
 # fatresize overwrites the VBR, so we have to back it up to be able to
 # restore the boot code later
 dd if="${SYSTEM_PARTITION}" of=/tmp/vbr bs=512 count=1
 
 # Grow the filesystem
+# Note that fatresize resets partition attributes
 # fatresize uses "Mi" for MiB, so we have to append an "i"
 FS_SIZE="${SYSTEM_PARTITION_SIZE}"i
 fatresize --size="${FS_SIZE}" "${SYSTEM_PARTITION}"
@@ -132,3 +119,24 @@ dd if=/tmp/vbr of="${SYSTEM_PARTITION}" bs=1 skip=90 seek=90 count=414
 
 # Restore JMP instruction which jumps to the bootcode
 dd if=/tmp/vbr of="${SYSTEM_PARTITION}" bs=3 count=1
+
+# Set a random filesystem UUID (aka. FAT "Volume ID" / "serial number")
+MTOOLS_SKIP_CHECK=1 mlabel -i "${SYSTEM_PARTITION}" -n ::Tails
+
+# Set the following attributes on the system partition (we have to
+# set them after running fatresize, because fatresize resets them):
+#   0: system partition
+#   2: legacy BIOS bootable
+#   60: read-only
+#   62: hidden
+#   63: do not automount
+sgdisk \
+	--attributes=1:set:0  \
+	--attributes=1:set:2  \
+	--attributes=1:set:60 \
+	--attributes=1:set:62 \
+	--attributes=1:set:63 \
+	"${PARENT_DEVICE}"
+
+# Tell the kernel to reload the partition table
+partprobe

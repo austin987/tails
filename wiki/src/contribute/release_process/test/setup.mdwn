@@ -55,6 +55,7 @@ The following packages are necessary on Debian Stretch:
         ruby-test-unit \
         seabios \
         tcpdump \
+        tcplay \
         tor \
         unclutter \
         virt-viewer \
@@ -75,8 +76,8 @@ The system running the test suite needs an accurate clock since we
 sync the clock from the host to the Tails guest after a background
 snapshot restore to appease Tor.
 
-You might want to install `ntp` or your favorite time synchronization
-tool for this.
+You might want to enable `systemd-timesyncd.service` or your favorite
+time synchronization tool for this.
 
 File permissions
 ----------------
@@ -87,15 +88,14 @@ the content of `features/misc_files/` in the Git checkout.
 AppArmor tweaks
 ---------------
 
-If libvirt has the `apparmor` security driver enabled:
+If you have AppArmor enabled:
 
-* you may need to add the `/tmp/TailsToaster/TailsToasterStorage/*
-  rw,` line to `/etc/apparmor.d/libvirt/TEMPLATE.qemu`, in the
-  `profile LIBVIRT_TEMPLATE` section;
-* you may hit various problems, such as denied access to
-  `/usr/share/ovmf/OVMF.fd`; all such known problems are (as of
-  2015-08-12) on their way for being fixed upstream in libvirt.
-  Running a recent libvirt may help.
+* You need to add the `/tmp/TailsToaster/** rwk,` line
+  to `/etc/apparmor.d/libvirt/TEMPLATE.qemu`, in the
+  `profile LIBVIRT_TEMPLATE` section; then delete
+  `/etc/apparmor.d/libvirt/libvirt-*` and retry.
+  If you use a custom `TMPDIR` to run the test suite,
+  replace `/tmp/TailsToaster` with the value of that `$TMPDIR`.
 
 Special use cases
 =================
@@ -110,31 +110,3 @@ test suite domain for you and display the Tails VM. E.g.
 where `$DISPLAY` is the display given to you by `run_test_suite` (often 0):
 
     vncviewer -viewonly -via user@level0 localhost:$DISPLAY
-
-Running the test suite as a non-root user
------------------------------------------
-
-This is entirely possible, but there's some additional configuration
-required. Run the following as `root`:
-
-    addgroup tcpdump
-    dpkg-statoverride --update --add root tcpdump 754 /usr/sbin/tcpdump
-    setcap CAP_NET_RAW+eip /usr/sbin/tcpdump
-    adduser $USER tcpdump
-    adduser $USER libvirt
-    adduser $USER libvirt-qemu
-
-It's important to run `setcap` after `dpkg-statoverride` since the
-latter deletes all capabilities. Unfortunately the `setcap` command
-has to be rerun for that reason everytime the `tcpdump` package is
-updated until [[!debbug 662845]] is fixed.
-
-Running these commands will add some interesting capabilities to
-`$USER`, so you may want to do this for a dedicated user separate from
-your normal user. In that case (and if you run the tests as root) the
-`--view` option won't work unless you grant `$USER` access to your
-display via `xhost +SI:localhost:$USER`. Alternatively you can use the
-`--vnc-server-only` option and manually connect to the VNC server with
-your normal user. Just make sure the VNC viewer is in view-only mode
-(e.g. `xtigervncviewer --view-only ...`) in order to not interfere
-with the testing session.
