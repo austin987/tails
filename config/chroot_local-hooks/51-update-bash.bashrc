@@ -1,17 +1,17 @@
 #!/bin/sh
 
 set -e
+set -u
 
-# Update /etc/bash.bashrc at runtime as defined in /etc/bash.bashrc.d/*
+# Make /etc/bash.bashrc source /etc/bash.bashrc.d/*
 
 echo "Updating /etc/bash.bashrc"
 
 OPTS_FILE='/etc/bash.bashrc'
-OPTS_DIR='/etc/bash.bashrc.d/*'
 
 cat <<EOF>> "${OPTS_FILE}"
 
-for file in ${OPTS_DIR};
+for file in /etc/bash.bashrc.d/*;
 do
     source "\$file"
 done
