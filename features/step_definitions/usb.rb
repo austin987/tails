@@ -844,3 +844,13 @@ Then /^the label of the FAT filesystem on the system partition on "(.+)" is "(.+
   assert(label == fs_label,
          "FS label on #{name} is #{fs_label} instead of the expected #{label}")
 end
+
+Then /^the system partition on "(.+)" has the expected flags$/ do |name|
+  $vm.storage.guestfs_disk_helper(name) do |g, _|
+    partition = g.list_partitions().first
+    partition_flags = g.blkid(partition)["PART_ENTRY_FLAGS"]
+    expected_flags = '0xd000000000000005'
+    assert(partition_flags == expected_flags,
+           "Got #{partition_flags} as partition flags on #{name}, instead of the expected #{expected_flags}")
+  end
+end
