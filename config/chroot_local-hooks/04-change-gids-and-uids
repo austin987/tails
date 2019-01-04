@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -e
+
+echo "Set fixed GIDs and UIDs"
+
+Debug_gids_and_uids () {
+	for file in passwd group; do
+		diff -Naur "/usr/share/tails/build/${file}" "/etc/${file}" >&2 || :
+		echo >&2
+		echo "Content of '/etc/${file}':" >&2
+		cat "/etc/${file}" >&2
+		echo >&2
+	done
+}
+
+Change_uid () {
+	NAME="$1"
+	NEW="$2"
+	OLD="$(getent passwd "$NAME" | awk -F ':' '{print $3}')"
+
+	if [ -n "$OLD" ]; then
+		echo "Changing UID for $NAME ($OLD -> $NEW)"
+		if ! usermod --uid "$NEW" "$NAME"; then
+			Debug_gids_and_uids
+			exit 1
+		fi
+		find / -wholename /proc -prune -o \( \! -type l -a -uid "$OLD" -exec chown "$NEW" '{}' \; \)
+	fi
+}
+
+Change_gid () {
+	NAME="$1"
+	NEW="$2"
+	OLD="$(getent group "$NAME" | awk -F ':' '{print $3}')"
+
+	if [ -n "$OLD" ]; then
+		echo "Changing GID for $NAME ($OLD -> $NEW)"
+		if ! groupmod --gid "$NEW" "$NAME"; then
+			Debug_gids_and_uids
+			exit 1
+		fi
+		find / -wholename /proc -prune -o \( \! -type l -a -gid "$OLD" -exec chgrp "$NEW" '{}' \; \)
+	fi
+}
