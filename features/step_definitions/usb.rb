@@ -791,7 +791,7 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
   @screen.wait('TailsUpgraderDone.png', 60)
 end
 
-Then /^the label of the FAT filesystem on the system partition on "(.+)" is "(.+)"$/ do |name, label|
+Then /^the label of the system partition on "(.+)" is "(.+)"$/ do |name, label|
   assert($vm.is_running?)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + "1"
