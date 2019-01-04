@@ -779,9 +779,12 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
     step 'I agree to install the incremental upgrade'
   end
   failure_pic = 'TailsUpgraderFailure.png'
-  success_pic = "TailsUpgraderDone.png"
+  success_pic = 'TailsUpgraderDownloadComplete.png'
   retry_tor(recovery_proc) do
     match, _ = @screen.waitAny([success_pic, failure_pic], 2*60)
     assert_equal(success_pic, match)
   end
+  @screen.click('TailsUpgraderApplyUpgradeButton.png')
+  @screen.wait('TailsUpgraderApplyingUpgrade.png', 20)
+  @screen.wait('TailsUpgraderDone.png', 60)
 end
