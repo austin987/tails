@@ -32,46 +32,71 @@ area:
    virtualization too.
  * As we add more automated tests, and re-enable tests previously
    flagged as fragile, a full test run takes longer and longer.
-   We're now up to 160 minutes / run. We can't make it faster by
+   We're now up to 200 minutes / run. We can't make it faster by
    adding RAM anymore nor by adding CPUs to ISO testers. But faster
    CPU cores would fix that: the same test suite only takes 105
    minutes on a replica of our Jenkins setup, also using nested
    virtualization, with a poor Internet connection but a faster CPU.
- * Building our website takes a long while (8 minutes on our ISO
-   builders i.e. 17% of the entire ISO build time), which makes ISO
+ * Building our website takes a long while (12 minutes on our ISO
+   builders i.e. 20% of the entire ISO build time), which makes ISO
    builds take longer than they could. This will get worse as new
    languages are added to our website. This is a single-threaded task,
    so adding more CPU cores or RAM would not help: only faster CPU
-   cores would fix that. For example, the ISO build only takes 30
-   minutes (including 4.5 minutes for building the website) on
+   cores would fix that. For example, the ISO build only takes 38
+   minutes (including 6-7 minutes for building the website) on
    a replica of our Jenkins setup, also using nested virtualization,
    with a poor Internet connection but faster CPU cores.
  * Waiting time in queue for ISO build and test jobs is acceptable
-   most of the time, but too high during peak load periods: between
-   2017-06-17 and 2017-12-17, 4% of the test jobs have to wait for
-   more than 1 hour, and 1% more than 2 hours; similarly, 2% of the
-   ISO build jobs had to wait more than 1 hour. That's not many jobs
-   of course, but this congestion happens precisely when we need
-   results from our CI infra ASAP, be it because there's intense
-   ongoing development or because we're reviewing and merging lots of
-   branches close to a code freeze, so these delays hurt our
-   development and release process.
+   most of the time, but too high during peak load periods:
+
+   - between 2017-06-17 and 2017-12-17:
+     - 4% of the test jobs had to wait for more than 1 hour.
+	 - 1% of the test jobs had to wait for more than 2 hours.
+	 - 2% of the ISO build jobs had to wait more than 1 hour.
+
+   - between 2018-05-01 and 2018-11-30:
+     - We've run 3342 ISO test jobs; median duration: 195 minutes.
+     - 7% of the test jobs had to wait for more than 1 hour.
+	 - 3% of the test jobs had to wait for more than 2 hours.
+     - We've run 3355 ISO successful build jobs; median duration: 60 minutes.
+	 - 7.2% of the ISO build jobs had to wait more than 15 minutes.
+	 - 2% of the ISO build jobs had to wait more than 1 hour.
+	 - We've run 3355 `reproducibly_build_*` jobs; median duration: 70 minutes.
+	 - 10% of the `reproducibly_build_*` jobs had to wait more than 15 minutes.
+	 - 3.2% of the `reproducibly_build_*` jobs had to wait more than 1 hour.
+
+   That's not many jobs of course, but this congestion happens
+   precisely when we need results from our CI infra ASAP, be it
+   because there's intense ongoing development or because we're
+   reviewing and merging lots of branches close to a code freeze, so
+   these delays hurt our development and release process.
+
  * Our current server was purchased at the end of 2014. The hardware
    can last quite a few more years, but we should plan (at least
    budget-wise) for replacing it when it is 5 years old, at the end of
    2019, to the latest.
- * New candidate services are being considered, such as Piwik
-   ([[!tails_ticket 14601]]) and self-hosting our website
-   ([[!tails_ticket 14588]]). At least Piwik will require lots of
-   resources and put quite some load on the system where we run it.
-   Both need to be hosted on hardware we control, where we can do our
-   best to guarantee our users' privacy. Once the Weblate service
-   reaches production status in 2018 and is advertised, it'll eat much
-   more resources; in passing, part of its job will be to often
-   rebuild the website, which is affected by the single-threaded task
-   performance limitations described above. OTOH there's no
-   security/privacy reason why our CI system has to be hosted on
-   hardware we control.
+ * The Tails community keeps needing new services; some of them need
+   to be hosted on hardware we control for security/privacy reasons
+   (which is not the case for our CI system):
+   - Added already: self-host our website
+   - Will be added soon:
+     - [[!tails_ticket 16121 desc="Schleuder"]]
+     - [[!tails_ticket 15919 desc="Redmine"]]
+   - Under consideration:
+     - [[!tails_ticket 14601 desc="Matomo"]] will require huge amounts
+       of resources and put quite some load on the system where we run
+       it; it needs to be hosted on hardware we control.
+	 - [[!tails_ticket 9960 desc="Request tracker for help desk"]]):
+	   unknown resources requirements; needs to be hosted on hardware
+	   we control.
+   - WIP and will need more resources once they reach production
+     status or are used more often:
+	 - Weblate is a serious CPU and I/O consumer; besides, part of its
+       job is to rebuild the website, which is affected by the
+       single-threaded task performance limitations described above.
+	 - survey platform
+ * We're allowing more and more people to use our CI infrastructure.
+   This may increase its resources needs eventually.
 
 # Options
 
@@ -93,8 +118,8 @@ Pros:
 
 Cons:
 
- * High initial money investment (10-12 cores at 3+GHz, e.g.
-   HPE ProLiant DL360).
+ * High initial money investment… unless we get it sponsored or get
+   a big discount from a vendor.
  * On-going cost for hosting a second server.
 
 Extra options:
@@ -109,9 +134,38 @@ Extra options:
      a given system ⇒ if we go this way we have to remove
      this limitation.
 
+Specs:
+
+ * For simplicity's sake, the following assumes we have Jenkins
+   workers that are each able to run all the kinds of jobs we have.
+ * CPU: assuming 2 cores (4 hyperthreads) per Jenkins worker, for
+   8 workers, we need 16 cores at 3.5 GHz base frequency, which is
+   roughly equivalent to 4 × the Intel NUC mentioned below.
+   Our options are:
+    - 4 × [quad-core CPU](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=4&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
+      (on 2018-12-01, one result: [Xeon Gold 5122](https://ark.intel.com/products/120475/Intel-Xeon-Gold-5122-Processor-16-5M-Cache-3-60-GHz-) → 4×105 W = 420 W)
+    - 2 × [octo-core CPUs](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=8&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
+      (on 2018-12-01, one result: [Xeon Gold 6144](https://ark.intel.com/products/124943/Intel-Xeon-Gold-6144-Processor-24-75M-Cache-3-50-GHz-) → 2×150 W = 300 W)
+    - 1 × [16-core CPU](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=16&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
+      (2018-12-01: no result)
+    - Higher-density systems, with 2+ servers in a chassis e.g.
+      Supermicro Twin solutions, might allow using cheaper CPUs that
+      don't support multi-processor setups.
+ * RAM:  
+   + 208 GB = 26 GB × 8 Jenkins workers  
+   + Jenkins VM + host system + a few accessory VMs  
+   = round to 256 GB; 192 GB might feasible with super fast storage
+   (at least 4 × NVMe × 2 for RAID-1) if that's cheaper
+ * storage:  
+   + 480 GB = 60 GB × 8 Jenkins workers  
+   + 600 GB for the Jenkins artifacts store  
+   +  70 GB for APT cacher (make it cache ISO history too)  
+   + Jenkins VM + host system + a few accessory VMs  
+   = round to 1.5 TB × 2 (RAID-1)
+
 ## Custom-built cluster of consumer-grade hardware dedicated to CI, aka. the hacker option
 
-For example, we could stuff 4-6 × Intel NUC NUC6i7KYK or similar
+For example, we could stuff 4-6 × Intel NUC or similar
 together in a custom case, with whatever cooling, PoE and network boot
 system this high-density cluster would need. Each of these nodes
 should be able to run 2 Jenkins workers.
@@ -132,11 +186,38 @@ Cons:
  * Hosting this is a hard sell for collocations.
  * We need to buy a node in order to measure how it would perform
    (as opposed to server-grade hardware that can be rented).
-   OTOH we already have data about the Intel NUC NUC6i7KYK so if we
-   pick a similar enough CPU we can reuse that.
+   OTOH:
+   - We already have data about the Intel NUC NUC6i7KYK so if we
+     pick a similar enough CPU we can reuse that.
+   - If we buy one such machine to try this out and decide not to go
+     for this option, likely this computer can be put to good use
+     by a Tails developer or sysadmin.
  * On-going cost for hosting this cluster.
 
+Availability:
+
+ * Intel: as of 2018-12-01, none of the eighth generation NUC8i7
+   support vPro, so the fastest models with vPro remain those, that
+   share
+   a [i7-8650U](https://ark.intel.com/products/124968/Intel-Core-i7-8650U-Processor-8M-Cache-up-to-4-20-GHz-)
+   CPU, UCFF (4"x4") form factor, and 12-24 VDC DC input voltage:
+   - kit: [NUC7i7DNHE](https://ark.intel.com/products/130393/Intel-NUC-Kit-NUC7i7DNHE),
+     [NUC7i7DNKE](https://ark.intel.com/products/130392/Intel-NUC-Kit-NUC7i7DNKE).
+   - board: [NUC7i7DNBE](https://ark.intel.com/products/130394/Intel-NUC-Board-NUC7i7DNBE)
+ * Other vendors have started selling UCFF boards/kits with fast CPUs.
+ * Similar smallish [[!wikipedia Computer_form_factor desc="form
+   factors"]] would be worth investigating, e.g. there are plenty of
+   [[!wikipedia Mini-ITX]] options on the market that could give us
+   the high density we need.
+
 ## Run builds and/or tests in the cloud
+
+<div class="caution">
+Some of the following numbers are outdated in the sense that they don't
+take into account that we'll build and test USB images as well soon,
+which impacts mostly the amount of data that need to be 1. transferred
+between the Jenkins master and workers; 2. stored on the Jenkins master.
+</div>
 
 EC2 does not support running KVM inside their VMs yet. Both Azure and
 Google Cloud support it. OpenStack supports it too as long as the
@@ -335,14 +416,15 @@ Cons:
    computers but if that's the best option we can do it
 
 2. Keep gathering data about our needs while going through the next steps:
-   - upcoming services [intrigeri]
-   - what if we allowed more people to use our CI infrastructure?
+   - upcoming services [intrigeri] (last updated: 2018-12-01)
 
 3. Describe our needs for each option:
    - 2nd bare metal server-grade machine:
-     * hardware specs [intrigeri]
+     * <strike>hardware specs [intrigeri]</strike> [DONE]
      * hosting needs (high power consumption) [intrigeri]
-   - cloud (nested KVM, management tools in Debian) [intrigeri]
+   - cloud (nested KVM, management tools in Debian), iff. the new
+     sysadmin hired in 2019 knows is excited to learn and use
+     such technologies.
    - the hacker option: hosting
 
 5. Ask potential hardware/VMs donors (e.g. HPE, ProfitBricks) if they
@@ -351,9 +433,11 @@ Cons:
    [intrigeri]
 
 6. Benchmark how our workload would be handled by the options we have
-   no data about yet: rent a bare metal server and cloud VMs for
-   a short time, run CI jobs in a realistic way, measure.
-   [intrigeri]
+   no data about yet:
+   - Rent a bare metal server for a short time, run CI jobs in
+     a realistic way, measure. [intrigeri]
+   - Rent cloud VMs for a short time, run CI jobs in a realistic way,
+     measure.
 
 7. Decide what we do and look into the details e.g.:
    - bare metal options: where to host it?

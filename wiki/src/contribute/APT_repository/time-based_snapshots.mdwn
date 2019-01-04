@@ -105,7 +105,7 @@ a specific set of APT repository snapshots must be used:
         git checkout devel && \
         ./auto/scripts/apt-snapshots-serials thaw && \
         git commit \
-            -m "Thaw APT snapshots after Tails $VERSION was released." \
+            -m "Thaw APT snapshots." \
             config/APT_snapshots.d/*/serial
 
 <a id="bump-expiration-date"></a>
@@ -160,11 +160,11 @@ e.g. after we release Tails based on a new Debian, we need to stop
 including it in new snapshots, and to remove all corresponding
 time-based snapshots and the packages that are not referenced anymore.
 
-1. In puppet-tails, remove the bits about the distribution you want to
+1. In `puppet-tails`, remove the bits about the distribution you want to
    stop tracking from the reprepro configuration templates:
    `templates/reprepro/snapshots/time_based/*/*`.
 
-2. In puppet-tails, remove references to the distribution you want to
+2. In `puppet-tails`, remove references to the distribution you want to
    stop tracking from the `tails::reprepro::params` class.
 
 3. Commit, push and deploy on the system that hosts our time-based
@@ -276,18 +276,17 @@ having to deal with 80GB+ Berkeley DB databases.
 ## Garbage collection and Valid-Until
 
 We expire snapshots older than 10 days in order to save disk space,
-and to avoid the reprepro database to grow too much.
+and to prevent the reprepro database from growing too much.
 
 To ensure that garbage collection doesn't delete a snapshot we still
 need, e.g. the one currently referenced in the frozen `testing`
 branch, we rely on the `Valid-Until` field found in `Release` files:
-the way to express "I want to keep a given snapshot around" is to
+the way to express "I want to keep this specific snapshot around" is to
 postpone its expiration date; i.e. we don't differentiate "keep
-a given snapshot around" from "keep a given snapshot usable", which
-seems to make sense.
+a given snapshot around" from "keep a given snapshot usable".
 
 See [[above|time-based_snapshots#bump-expiration-date]] for how we
-can manage `Valid-Until` manually, whenever needed.
+manage `Valid-Until` manually.
 
 One advantage of this design is that we don't have to regularly update
 `Valid-Until` fields, and the corresponding signatures: we only do
@@ -300,12 +299,11 @@ In practice, the main use case for keeping a given time-based APT
 repository snapshot around and valid is when it's being used by
 a release branch:
 
- - `testing`: while it's frozen, that is during 5-10 days most of the
-   time;
+ - `testing`: while it's frozen, that is for 5-10 days generally;
  - `stable`: that's a corner case, since `stable` generally uses the
-   set of tagged snapshots of the latest Tails release; if and when we
+   set of snapshots frozen during the last Tails freeze; if and when we
    decide to manually point `stable` to a different set of snapshots,
-   then we can as well deal with `Valid-Until` manually.
+   then we bump `Valid-Until` manually.
 
 In passing, note that we ship an empty `/var/cache/apt/lists/` in the
 ISO ⇒ modifying `Release` and `Release.gpg` files on our APT

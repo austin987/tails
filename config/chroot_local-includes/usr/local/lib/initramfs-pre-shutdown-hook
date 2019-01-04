@@ -22,20 +22,20 @@ mount -o remount,rw /
 
 # Otherwise aufs pseudo-links can't be removed while unmounting /oldroot,
 # and we can't clean up the content of /mnt/live/overlay.
-mount -o remount,rw /oldroot/lib/live/mount/overlay
+mount -o remount,rw /oldroot/run/live/overlay
 
 # Move /oldroot/* mountpoints out of the way
 mkdir -p /mnt/live/overlay
 mount --move \
-      /oldroot/lib/live/mount/overlay \
+      /oldroot/run/live/overlay \
       /mnt/live/overlay
 mkdir -p /mnt/live/squashfs
 mount --move \
-      /oldroot/lib/live/mount/rootfs/filesystem.squashfs \
+      /oldroot/run/live/rootfs/filesystem.squashfs \
       /mnt/live/squashfs
 mkdir -p /mnt/live/medium
 mount --move \
-      /oldroot/lib/live/mount/medium \
+      /oldroot/run/live/medium \
       /mnt/live/medium
 
 # Finally, really unmount relevant filesystems

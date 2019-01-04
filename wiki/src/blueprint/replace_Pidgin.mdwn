@@ -4,11 +4,12 @@ It would be nice to replace Pidgin with another secure IM client. Unfortunately 
 
 The document can also list candidate clients together with some indication where they are lacking (and where they shine).
 
-TODO: Would a pair of two separate client (XMPP and IRC) also be okay, or are we only looking for a single client that can do both? In fact, it is not even clear if Tails needs to contain an IRC client at all, after #tails and #tails-dev have been moved to XMPP.
-
 [[!toc levels=3]]
 
 # Requirements
+
+**Note**: this is a work in progress. See [[!tails_ticket 11686]]
+and its blockers for the next steps.
 
 **Note**: the key words "MUST", "MUST NOT", "REQUIRED", "SHALL", 
 "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and 
@@ -44,8 +45,6 @@ The client must have a easy to use GUI that makes it hard for users to use the c
 
 The client must support connections using TLS.
 
-TODO: Is STARTTLS needed?
-
 ### Support for Tor
 
 The client must support Tor and must not leak any private data (hostname, username, local IP, ...) at the application level.
@@ -62,6 +61,15 @@ TODO: Pidgin already has an apparmor profile; should we require that a replaceme
 
 The client MUST NOT save logs of conversations.
 
+### Candidates
+
+Suggested by sajolida on <https://mailman.boum.org/pipermail/tails-dev/2016-January/010123.html>:
+
+* private group chat
+* search and archive past public communications
+* offline-friendliness
+* <https://dymaxion.org/essays/pleasestop.html>
+
 ## XMPP (Jabber)
 
  *( Here is a [list](https://developer.pidgin.im/wiki/SupportedXEPs) of XMPP extensions supported by Pidgin )*
@@ -75,16 +83,22 @@ The client must support SASL authentication.
 
 # Candidate alternatives 
 
-## CoyIM (based on xmpp-client) ([[!tails_ticket 8574]])
+## CoyIM
 
 * [Homepage](https://coy.im/)
-* [Github](https://github.com/twstrike/coyim/)
+* [Github](https://github.com/coyim/coyim/)
 * CoyIM only supports XMPP.
 * CoyIM [is in Debian](https://tracker.debian.org/pkg/coyim)
+* Support for multi-user chatrooms (MUC) is [in
+  progress](https://github.com/coyim/coyim/projects/2) and lacks some
+  important features such as having a persistent list of rooms
+  persistently saved in the configuration
 * Supports Tor, TLS, OTR
 * Supports creation of random accounts.
+* Supports importing accounts from Pidgin.
 * No logging, no clickable links.
 * Not audited.
+* Test results in Tails: [[!tails_ticket 8574]]
 
 ## dino
 
@@ -92,7 +106,7 @@ The client must support SASL authentication.
 * implemented in GTK+/Vala
 * supports XMPP and OMEMO; OTR support is
   [not high on the todo list](https://github.com/dino/dino/issues/97)
-* is be [[!debpts dino-im desc="in Debian"]] experimental
+* is [[!debpts dino-im desc="in Debian"]] Buster
 * the Debian maintainer wants to add an AppArmor profile and got in
   touch with intrigeri about it
 

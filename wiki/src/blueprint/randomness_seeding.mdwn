@@ -1,33 +1,43 @@
-# /dev/random and /dev/urandom radomness seeding in Tails
+# /dev/random and /dev/urandom randomness seeding in Tails
 
-/dev/random and /dev/urandom are special Linux devices that provide access from
-user land to the Linux kernel Cryptographically Secure Pseudo Random Number
-Generator (CSPRNG). This generator is used for almost every security protocol,
-like TLS/SSL key generation, choosing TCP sequences, ASLR offsets, and GPG key
-generation [1]. In order for this CSPRNG to be really cryptographically secure,
-it's recommended to seed it with a 'good' entropy source, even though The Linux
-kernel collects entropy from several sources, for example keyboard typing,
+/dev/random and /dev/urandom are special Linux devices that provide
+access from user land to the Linux kernel Cryptographically Secure
+Pseudo Random Number Generator (CSPRNG). This generator is used for
+almost every security protocol, like TLS/SSL key generation, choosing
+TCP sequences, ASLR offsets, and
+[https://eprint.iacr.org/2006/086.pdf](GPG key generation) . In order
+for this CSPRNG to indeed be cryptographically secure, it's recommended
+to seed it with a 'good' entropy source, even though The Linux kernel
+collects entropy from several sources, for example keyboard typing,
 mouse movement, among others.
 
-Because of the Tails nature of being amnesic, and run from different type of
-live devices (from DVDs to USB sticks), special care must be taken to ensure
-the system still gets enough entropy and boots with enough randomness. This is
-not easy in the Tails context, where the system is almost always booting the
-same way. Even the squashfs file is ordered to optimize boot time.
+Because of Tails' feature of being amnesic, and run from different types
+of live devices (from DVDs to USB sticks), special care must be taken to
+ensure the system gets enough entropy and boots with enough randomness.
+This proves to be hard within the Tails context, where the system is
+almost always booting the same way. Even the squashfs file is ordered to
+optimize boot time.
 
-Although these problem have been documented since a long time (see [7] and
-[8]), there's not much done to tackle the problem. We looked at notes and
-research from LiveCD OS's and supply them here for completements sake. Whonix
-has a [wiki page](https://www.whonix.org/wiki/Dev/Entropy) with some notes, and
-Qubes has tickets about this ([3],[4],[5] and [6]).
+Although these problems have been documented since a long time (see
+[https://www.av8n.com/computer/htm/secure-random.htm] and
+[http://www.av8n.com/computer/htm/fixup-live-cd.htm]), there's not much
+done to tackle the problem. We looked at notes and research from LiveCD
+OS's and supply them here for completeness' sake. Whonix has a [wiki
+page](https://www.whonix.org/wiki/Dev/Entropy) with some notes, and
+Qubes has tickets about this
+[http://wiki.qubes-os.org/trac/ticket/673](Qubes 673),
+[https://github.com/QubesOS/qubes-issues/issues/1311](Qubes 1311),
+[https://groups.google.com/forum/#!msg/qubes-devel/Q65boPAbqbE/9ZOZUInQCgAJ](Qubes devel),
+[https://groups.google.com/forum/#!topic/qubes-devel/5wI8ygbaohk](Qubes devel).
 
 ## Current situation
 
 See the related [[design document|contribute/design/random]]
 
-Tails do not ship /var/lib/urandom/random-seed in the ISO, since it means
-shipping a fixed known value for every Tails installation which means its
-entropy contribution is zero, and breaks reproducibility of the ISO image.
+Tails does not ship /var/lib/urandom/random-seed in the ISO, since it
+means shipping a fixed known value for every Tails installation, which
+in turn means that entropy contribution would be zero. Furthermore, this
+breaks reproducibility of the ISO image.
 
 Without this random seed, systemd-random-seed won't write anything to
 /dev/urandom, so we rely purely on the kernel CSPRNG and current system entropy
@@ -39,8 +49,8 @@ Tails ships Haveged and rngd since a while. Still there are concerns about
 Haveged's reliability to provide cryptographically secure randomness, and rngd
 is only really useful when random generator devices are used.
 
-Taking other measures to seed the Linux Kernel CSPRNG with good material is
-something worst spending efforts on.
+Taking other measures to seed the Linux Kernel CSPRNG with good material seems
+worth spending efforts on.
 
 ## Use cases
 
@@ -55,33 +65,33 @@ add one.
 
 On the other hand, that's not the installation method we want to support the
 most, and probably not the most used when people want to secure other
-communication types than HTTPS (e.g persistence is very usefull for OpenPGP key
+communication types than HTTPS (e.g persistence is very useful for OpenPGP key
 storage and usage, chat account configuration, ...).
 
 So we may eventually just document somewhere to users that they MUST NOT use
-this type of installation if they want to rely on good cryptograpy for their
+this type of installation if they want to rely on good cryptography for their
 communications and key generation, or that they should wait after having
-interacting a long (but hard to define) time with the system so that it had time
+interacted a long (but hard to define) time with the system so that it had time
 to collect entropy, and does not rely on the CSPRNG, Haveged and rngd only.
 
 We could also add some kind of notification to users when entropy gets too low,
-or just saying them that the way they use Tails is not compatible with strong
+or just tell them that the way they use Tails is not compatible with strong
 cryptography.
 
 ### Intermediary USB
 
 This type of installation is supposed to be used when people are installing
 Tails from another OS (except Debian and Ubuntu, where they can use the Tails
-installer). In most case, this means having a bit by bit copy of the Tails ISO
+installer). In most cases, this means having a bit-by-bit copy of the Tails ISO
 on the USB stick, except for Windows where we ask to use the [Universal USB
 Installer](http://www.pendrivelinux.com/universal-usb-installer-easy-as-1-2-3/)
 
 In this case the situation is pretty much the same than with the DVD one. No
-seed, and adding one is very difficult if not impossible (except with the
+seed. And adding one is very difficult if not impossible (except with the
 Windows installation where we may ask upstream to implement that in the
 Universal USB Installer, but well...).
 
-That's also not really the way we encourge users to use Tails, so as with DVD
+That's also not really the way we encourage users to use Tails, so as with DVD
 there's maybe no point to fix the situation here, and the same workaround could
 be applied (document it).
 
@@ -92,10 +102,11 @@ That's supposed to be the standard way to use Tails.
 Note that in this case, there are two situations: booting this installation
 with persistence enabled, and without.
 
-It is worth noting too that the first time this Tails installation is booted,
-most of the time the first step is to configure persistence, which means
-creating an encrypted partition. At this step though, there is at the moment
-probably very little entropy, so this may weaken the LUKS volume encryption.
+It is worth noting that the first time this Tails installation is
+booted, most of the time the first step is to configure persistence,
+which means creating an encrypted partition. At this step though, there
+is probably very little entropy at this moment, which may weaken the
+LUKS volume encryption.
 
 ### Virtual Machines
 
@@ -120,6 +131,9 @@ partition is created.
 
 ###  Use the Tails installer to create a better seed [[!tails_ticket 11897]]
 
+Note that we'll likely soon distribute a USB image and won't use Tails
+installer anymore for creating Tails devices. [[!tails_ticket 15292]]
+
 Tails installer can be used on Debian and Ubuntu, and is the tool people
 running OSX or Windows are told to use to install their final Tails
 USB stick with, by using an intermediary Tails to create the final USB.
@@ -128,32 +142,34 @@ Tails installer could store a seed in the FAT filesystem of the system
 partition. That would workaround this first boot problem not handled by the
 persistence option.
 
-We can't sadly update this seed while running Tails, as mounting RW the system
+We sadly can't update this seed while running Tails, as read-write mounting the system
 FAT partition during a Tails session does not work. So the question whether updating it
 or not is open.
 
 If we want to do so, we'll have to update it at the system shutdown. This will
 mean remount this partition, write the new random seed, then unmount it and
 start the shutdown of the system. Obviously we can do this only in normal
-shutdown process, and will have to avoid it in emergency shutdown mode.
+shutdown process, and we'll have to avoid it in emergency shutdown mode.
 
 We may alternatively not update it, and use it only when the persistence is not
 enabled. That would still be a unique source of entropy per Tails installation,
-so that would be a better situation that the current one.
+so that would be a better situation than the current one.
 
 One drawback: this would break the ability to verify this system partition with
 a simple shasum operation.
 
 ### Use stronger/more entropy collectors [[!tails_ticket 5650]]
 
-As already stated, Tails run Haveged, and rngd (since 2.6 for the later).
+As already stated, Tails runs Haveged, and rngd (since 2.6 for the later).
 
 We may want to add other sources though, given there are concerns about Haveged,
 and rngd starts only when a hardware RNG is detected, which is not so often the
 case.
 
-XXX: It would be nice to have a study (read: a survey of packages, etc) of all the
-useful entropy gathering daemons that might be of use on a Tails system. (and have this tested on computers with/without intel rng or things like an entropykey)
+XXX: It would be nice to have a study (read: a survey of packages, etc)
+of all the useful entropy gathering daemons that might be of use on a
+Tails system. (and have this tested on computers with/without intel rng
+or things like an entropykey)
 
 An evaluation of some of them [has been done
 already](https://volumelabs.net/best-random-data-software/)
@@ -167,43 +183,43 @@ Possible candidates:
 * randomsound: probably a bad idea in the Tails context as we're discussing a
   Greeter option to deactivate the microphone.
 
-### Block booting till enough entropy has been gathered
+### Block booting until enough entropy has been gathered
 
-One way to ensure Tails is booting with enough entropy would be to block during
-the boot if the system is lacking of it.
+One way to ensure Tails is booting with enough entropy would be to block
+the boot while the system is lacking it.
 
 But this brings questions about how to interact correctly with the users,
 as blocking without notifications would be terrible UX. Also Tails boot time is
 a bit long already, and this may grow it quite a bit more again.
 
 XXX: So before going on, we need a bit more data about the state of the entropy when
-Tails boot, specially now that we have several entropy collector daemons. It may
-very well be that this case do not happen anymore. And if it is, we need to know
-on average how much time that blocking would last. [Sycamoreone] [[!tails_ticket
+Tails boots, especially now that we have several entropy collector daemons. It may
+very well be that this case does not happen anymore. And if it does, we need to know
+on average how much time that blocking would last. [[!tails_ticket
 11758]]
 
-### Regulary check available entropy and notify if low
+### Regularly check available entropy and notify if low
 
-An idea that has been mentioned several time is to have a service that
-check if the available entropy is high enough, and notify the user if
-it's not the case. One downside, is that observing the entropy pool costs
+An idea that has been mentioned several times is to have a service that
+checks if the available entropy is high enough, and notifies the user if
+it's not the case. One downside is, that observing the entropy pool costs
 randomness, so this may have to be implemented with care or is worth
 discussing/researching the costs/benefits.
+
+## Also see
+
+* [Schleuder thread about haveged](https://0xacab.org/schleuder/schleuder/issues/194)
+* The
+  [federal office for IT security in Germany analysed the rng in linux kernel 4.9 and all changes made up to 4.17](https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/Studies/LinuxRNG/LinuxRNG_EN.pdf?__blob=publicationFile&v=10).
+* [checking for available entropy](https://salsa.debian.org/tookmund-guest/pgpcr/issues/16)
 
 ## Related tickets
 
 This is about [[!tails_ticket 7642]], [[!tails_ticket 7675]],
 [[!tails_ticket 6116]], [[!tails_ticket 11897]] and friends.
 
-## References
+## More references
 
-* [1] <https://eprint.iacr.org/2006/086.pdf>
-* [2] <https://eprint.iacr.org/2013/338.pdf>
-* [3] <http://wiki.qubes-os.org/trac/ticket/673>
-* [4] <https://github.com/QubesOS/qubes-issues/issues/1311>
-* [5] <https://groups.google.com/forum/#!msg/qubes-devel/Q65boPAbqbE/9ZOZUInQCgAJ>
-* [6] <https://groups.google.com/forum/#!topic/qubes-devel/5wI8ygbaohk>
-* [7] <https://www.av8n.com/computer/htm/secure-random.htm>
-* [8] <http://www.av8n.com/computer/htm/fixup-live-cd.htm>
-* [9] <https://www.python.org/dev/peps/pep-0506/>
-* [10]<https://docs.python.org/2/library/os.html#os.urandom>
+* <https://eprint.iacr.org/2013/338.pdf>
+* <https://www.python.org/dev/peps/pep-0506/>
+* <https://docs.python.org/2/library/os.html#os.urandom>

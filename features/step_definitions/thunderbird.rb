@@ -3,14 +3,15 @@ def thunderbird_app
 end
 
 def thunderbird_main
-  # The main window title depends on context so without regexes it
-  # will be hard to find it, but it so happens that it is always the
-  # first frame of Thunderbird, so we do not have to be specific.
-  thunderbird_app.child(roleName: 'frame')
+  # Thunderbird has an empty, unnamed frame; so use a search on all
+  # children and match whatever frame has a non-empty name:
+  thunderbird_app.children(roleName: 'frame', recursive: false).find do |e|
+    e.name.match(/^(.+)$/)
+  end
 end
 
 def thunderbird_wizard
-  thunderbird_app.child('Mail Account Setup', roleName: 'frame')
+  thunderbird_app.child('Set Up an Existing Email Account', roleName: 'frame')
 end
 
 def thunderbird_inbox
@@ -52,8 +53,14 @@ Then /^I cancel setting up an email account$/ do
 end
 
 Then /^I open Thunderbird's Add-ons Manager$/ do
-  thunderbird_main.button('AppMenu').click
-  thunderbird_main.child('Add-ons', roleName: 'menu item').click
+  # Make sure AppMenu is available, even if it seems hard to click its
+  # "Add-ons" menu + menu item...
+  thunderbird_main.button('AppMenu')
+  # ... then use keyboard shortcuts, with a little delay between both
+  # so that the menu has a chance to pop up:
+  @screen.type('t', Sikuli::KeyModifier.ALT)
+  sleep(1)
+  @screen.type('a')
   @thunderbird_addons = thunderbird_app.child(
     'Add-ons Manager - Mozilla Thunderbird', roleName: 'frame'
   )
@@ -172,7 +179,7 @@ end
 
 When /^I send an email to myself$/ do
   thunderbird_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
-  compose_window = thunderbird_app.child('Write: (no subject)')
+  compose_window = thunderbird_app.child('Write: (no subject) - Thunderbird')
   compose_window.child('To:', roleName: 'autocomplete').child(roleName: 'entry')
     .typeText($config['Icedove']['address'])
   # The randomness of the subject will make it easier for us to later
@@ -181,8 +188,8 @@ When /^I send an email to myself$/ do
   @subject = "Automated test suite: #{random_alnum_string(32)}"
   compose_window.child('Subject:', roleName: 'entry')
     .typeText(@subject)
-  compose_window = thunderbird_app.child("Write: #{@subject}")
-  compose_window.child('about:blank', roleName: 'document frame')
+  compose_window = thunderbird_app.child("Write: #{@subject} - Thunderbird")
+  compose_window.child('', roleName: 'internal frame')
     .typeText('test')
   compose_window.child('Composition Toolbar', roleName: 'tool bar')
     .button('Send').click

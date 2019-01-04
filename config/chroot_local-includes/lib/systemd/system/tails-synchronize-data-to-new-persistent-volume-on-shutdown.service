@@ -1,0 +1,19 @@
+[Unit]
+Description=Synchronize data to newly created persistent volume on shutdown
+
+[Service]
+RemainAfterExit=yes
+Type=oneshot
+ExecStop=/bin/sh -c '                                                        \
+    if mountpoint -q /media/tails-persistence-setup/TailsData                \
+            && test ! -d /media/tails-persistence-setup/TailsData/apt; then  \
+        echo "Copy APT data to newly created persistent volume";             \
+        mkdir /media/tails-persistence-setup/TailsData/apt/ &&               \
+        cp -a /var/cache/apt/archives                                        \
+                   /media/tails-persistence-setup/TailsData/apt/cache &&     \
+        cp -a /var/lib/apt/lists                                             \
+                   /media/tails-persistence-setup/TailsData/apt/;            \
+    fi'
+
+[Install]
+WantedBy=multi-user.target

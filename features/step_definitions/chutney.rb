@@ -170,24 +170,11 @@ def chutney_onionservice_redir(remote_address, remote_port)
     kill_redir.call
   end
   local_address, local_port, _ = chutney_onionservice_info
-  # XXX:Stretch: revert the commit introducing this command once we
-  # stop supporting the test suite on Debian Jessie.
-  redir_cmd = ['/usr/bin/redir']
-  redir_version = Gem::Version.new(cmd_helper(redir_cmd + ['--version']))
-  if redir_version < Gem::Version.new('3.0')
-    redir_cmd += [
-      "--laddr", local_address,
-      "--lport", local_port,
-      "--caddr", remote_address,
-      "--cport", remote_port,
-    ]
-  else
-    redir_cmd += [
-      "#{local_address}:#{local_port}",
-      "#{remote_address}:#{remote_port}",
-    ]
-  end
-  $chutney_onionservice_job = IO.popen(redir_cmd)
+  $chutney_onionservice_job = IO.popen(
+    ['/usr/bin/redir',
+     "#{local_address}:#{local_port}",
+     "#{remote_address}:#{remote_port}"]
+  )
   add_after_scenario_hook { kill_redir.call }
   return $chutney_onionservice_job
 end

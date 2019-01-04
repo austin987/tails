@@ -14,14 +14,14 @@ echo "Removing unwanted packages"
 apt-get --yes purge  \
    '^linux-compiler-*' \
    '^linux-kbuild-*' \
-   debhelper dpkg-dev \
+   build-essential \
+   debhelper \
+   dh-autoreconf \
    gcc gcc-6 \
-   intltool-debian \
-   libc6-dev \
-   libelf-dev \
-   linux-libc-dev \
-   make \
-   po-debconf \
+   gcc-7 \
+   gdbm-l10n \
+   libgcc-7-dev \
+   libtool \
    rsyslog \
    libdvdcss-dev
 
@@ -35,16 +35,26 @@ apt-get --yes purge  \
    procmail \
    texinfo
 
+### Remove packages that can get a different priority in the security
+### archive (see https://bugs.debian.org/867668):
+apt-get --yes purge  \
+   mutt
+
 ### Deinstall some other unwanted packages.
 apt-get --yes purge  \
     '^aptitude*' \
-    '^geoclue*' \
     libdvdcss2-dbgsym \
     live-build \
     rpcbind \
     tasksel \
     tasksel-data \
     tcpd
+
+### Deinstall some other unwanted packages whose regexp might not be match
+### anything when building with partial, tagged APT snapshots.
+if dpkg --get-selections | grep -qs -E '^geoclue'; then
+    apt-get --yes purge '^geoclue*'
+fi
 
 ### Deinstall dependencies of the just removed packages.
 apt-get --yes --purge autoremove

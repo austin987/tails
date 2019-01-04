@@ -25,7 +25,7 @@ Feature: Using Evince
     Given I have started Tails from DVD without network and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
-    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
+    And the file "/run/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
     And the file "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
     Given I start monitoring the AppArmor log of "/usr/bin/evince"
     When I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
@@ -33,16 +33,16 @@ Feature: Using Evince
     And AppArmor has denied "/usr/bin/evince" from opening "/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
     Given I restart monitoring the AppArmor log of "/usr/bin/evince"
-    When I try to open "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
+    When I try to open "/run/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
-    And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
+    And AppArmor has denied "/usr/bin/evince" from opening "/run/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
     When I close Evince
     Given I restart monitoring the AppArmor log of "/usr/bin/evince"
     When I try to open "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
     # Due to our AppArmor aliases, /live/overlay will be treated
-    # as /lib/live/mount/overlay.
-    And AppArmor has denied "/usr/bin/evince" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf"
+    # as /run/live/overlay.
+    And AppArmor has denied "/usr/bin/evince" from opening "/run/live/overlay/home/amnesia/.gnupg/default-testpage.pdf"
 
   #10994
   @fragile

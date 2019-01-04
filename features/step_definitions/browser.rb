@@ -15,26 +15,35 @@ When /^I close the (?:Tor|Unsafe) Browser$/ do
 end
 
 def xul_application_info(application)
-  binary = $vm.execute_successfully(
-    'echo ${TBB_INSTALL}/firefox', :libs => 'tor-browser'
-  ).stdout.chomp
   address_bar_image = "BrowserAddressBar.png"
   unused_tbb_libs = ['libnssdbm3.so', "libmozavcodec.so", "libmozavutil.so"]
   case application
   when "Tor Browser"
     user = LIVE_USER
+    binary = $vm.execute_successfully(
+      'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
+    ).stdout.chomp
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.tor-browser/profile\.default"
     chroot = ""
+    browser_reload_button_image = "TorBrowserReloadButton.png"
+    browser_stop_button_image = "TorBrowserStopButton.png"
     new_tab_button_image = "TorBrowserNewTabButton.png"
   when "Unsafe Browser"
     user = "clearnet"
+    binary = $vm.execute_successfully(
+      'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
+    ).stdout.chomp
     cmd_regex = "#{binary} .* -profile /home/#{user}/\.unsafe-browser/profile\.default"
     chroot = "/var/lib/unsafe-browser/chroot"
+    browser_reload_button_image = "UnsafeBrowserReloadButton.png"
+    browser_stop_button_image = "UnsafeBrowserStopButton.png"
     new_tab_button_image = "UnsafeBrowserNewTabButton.png"
   when "Tor Launcher"
     user = "tor-launcher"
     # We do not enable AppArmor confinement for the Tor Launcher.
-    binary = "#{binary}-unconfined"
+    binary = $vm.execute_successfully(
+      'echo ${TBB_INSTALL}/firefox-unconfined', :libs => 'tor-browser'
+    ).stdout.chomp
     tor_launcher_install = $vm.execute_successfully(
       'echo ${TOR_LAUNCHER_INSTALL}', :libs => 'tor-browser'
     ).stdout.chomp
@@ -42,9 +51,11 @@ def xul_application_info(application)
     chroot = ""
     new_tab_button_image = nil
     address_bar_image = nil
+    browser_reload_button_image = nil
+    browser_stop_button_image = nil
     # The standalone Tor Launcher uses fewer libs than the full
     # browser.
-    unused_tbb_libs.concat(["libfreebl3.so", "libnssckbi.so", "libsoftokn3.so"])
+    unused_tbb_libs.concat(["libfreebl3.so", "libfreeblpriv3.so", "libnssckbi.so", "libsoftokn3.so"])
   else
     raise "Invalid browser or XUL application: #{application}"
   end
@@ -54,6 +65,8 @@ def xul_application_info(application)
     :chroot => chroot,
     :new_tab_button_image => new_tab_button_image,
     :address_bar_image => address_bar_image,
+    :browser_reload_button_image => browser_reload_button_image,
+    :browser_stop_button_image => browser_stop_button_image,
     :unused_tbb_libs => unused_tbb_libs,
   }
 end
@@ -81,7 +94,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   recovery_on_failure = Proc.new do
     @screen.type(Sikuli::Key.ESC)
-    @screen.waitVanish('BrowserReloadButton.png', 3)
+    @screen.waitVanish(info[:browser_stop_button_image], 3)
     open_address.call
   end
   if browser == "Tor Browser"
@@ -91,7 +104,8 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   open_address.call
   retry_method.call(recovery_on_failure) do
-    @screen.wait('BrowserReloadButton.png', 120)
+    @screen.waitVanish(info[:browser_stop_button_image], 120)
+    @screen.wait(info[:browser_reload_button_image], 120)
   end
 end
 
@@ -100,15 +114,15 @@ end
 Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   if @language == 'German'
     browser_name = 'Tor-Browser'
-    reload_action = 'Aktuelle Seite neu laden'
+    reload_action = 'Neu laden'
   else
     browser_name = 'Tor Browser'
-    reload_action = 'Reload current page'
+    reload_action = 'Reload'
   end
   expected_title = "#{title} - #{browser_name}"
   try_for(60) { @torbrowser.child(expected_title, roleName: 'frame') }
-  # The 'Reload current page' button (graphically shown as a looping
-  # arrow) is only shown when a page has loaded, so once we see the
+  # The 'Reload' button (graphically shown as a looping arrow)
+  # is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
   try_for(60) { @torbrowser.child(reload_action, roleName: 'push button') }
@@ -185,7 +199,7 @@ end
 
 When /^I save the file to the default Tor Browser download directory$/ do
   @screen.click('BrowserDownloadDialogSaveAsButton.png')
-  @screen.wait('BrowserDownloadFileToDialog.png', 10)
+  @screen.wait('Gtk3SaveFileDialog.png', 10)
   @screen.type(Sikuli::Key.ENTER)
 end
 
@@ -199,31 +213,48 @@ When /^I open Tails homepage in the (.+)$/ do |browser|
   step "I open the address \"https://tails.boum.org\" in the #{browser}"
 end
 
-Then /^Tails homepage loads in the Tor Browser$/ do
-  title = 'Tails - Privacy for anyone anywhere'
-  step "\"#{title}\" has loaded in the Tor Browser"
-end
-
 Then /^Tails homepage loads in the Unsafe Browser$/ do
   @screen.wait('TailsHomepage.png', 60)
 end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
-  page = @torbrowser.child("Problem loading page", roleName: "document frame")
+  page = @torbrowser.child("Problem loading page - Tor Browser", roleName: "frame")
   headers = page.children(roleName: "heading")
   found = headers.any? { |heading| heading.text == error }
   raise "Could not find the '#{error}' error in the Tor Browser" unless found
 end
 
-# This step shouldn't be needed (the '"$title}" has loaded in the Tor
-# Browser' step should be enough), but since we run Dogtail with
-# python2 (#12185) we have terrible unicode support; for instance
-# `.child('Tails - Getting started…')` will fail since Dogtail expects
-# ascii and cannot decode "…".
-Then /^the Tor Browser opens the "Documentation" page$/ do
-  try_for(60) do
-    @torbrowser
-      .children(roleName: "document frame")
-      .any? { |f| f.name == 'Tails - Documentation' }
+Then /^I can listen to an Ogg audio track in Tor Browser$/ do
+  test_url = 'https://archive.org/download/MussorgskyPicturesAtAnExhibitionorch.Ravel/09Mussorgsky_PicturesAtAnExhibition-LimogesTheMarketPlace.ogg'
+  info = xul_application_info('Tor Browser')
+  open_test_url = Proc.new do
+    step "I open the address \"#{test_url}\" in the Tor Browser"
+  end
+  recovery_on_failure = Proc.new do
+    @screen.type(Sikuli::Key.ESC)
+    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    open_test_url.call
+  end
+  step "no application is playing audio"
+  open_test_url.call
+  retry_tor(recovery_on_failure) do
+    step "1 application is playing audio after 30 seconds"
+  end
+end
+
+Then /^I can watch a WebM video in Tor Browser$/ do
+  test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
+  info = xul_application_info('Tor Browser')
+  open_test_url = Proc.new do
+    step "I open the address \"#{test_url}\" in the Tor Browser"
+  end
+  recovery_on_failure = Proc.new do
+    @screen.type(Sikuli::Key.ESC)
+    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    open_test_url.call
+  end
+  open_test_url.call
+  retry_tor(recovery_on_failure) do
+    @screen.wait("TorBrowserSampleRemoteWebMVideoFrame.png", 30)
   end
 end

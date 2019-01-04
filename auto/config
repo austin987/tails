@@ -94,11 +94,16 @@ if [ $(dpkg --print-architecture) != amd64 ] ; then
     exit 1
 fi
 
+
+# space-separated list of additional packages debootstrap installs
+#  - gnupg: needed by apt-key, not installed by default anymore on Buster
+export LB_BOOTSTRAP_INCLUDE="gnupg"
+
 # init variables
 RUN_LB_CONFIG="lb config noauto"
 
 # init config/ with defaults for the target distribution
-$RUN_LB_CONFIG --distribution stretch ${@}
+$RUN_LB_CONFIG --distribution buster ${@}
 
 # set up everything for time-based snapshots:
 apt-snapshots-serials prepare-build
@@ -149,6 +154,7 @@ $RUN_LB_CONFIG \
    --packages-lists none \
    --tasks none \
    --linux-packages="linux-image-${KERNEL_VERSION}" \
+   --security false \
    --syslinux-menu vesamenu \
    --syslinux-splash data/splash.png \
    --syslinux-timeout 4 \
