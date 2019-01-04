@@ -42,9 +42,9 @@ systemctl --no-block restart tails-tor-has-bootstrapped.target
 # configuration is needed. Too bad users who simply need to configure
 # a HTTP proxy or allowed firewall ports won't get the sandboxing, but
 # much better than nothing.
-# if [ "$(tails_netconf)" = "direct" ]; then
-#     tor_set_in_torrc Sandbox 1
-# fi
+if [ "$(tails_netconf)" = "direct" ]; then
+    tor_set_in_torrc Sandbox 1
+fi
 
 # We would like Tor to be started during init time, even before the
 # network is up, and then send it a SIGHUP here to make it start
