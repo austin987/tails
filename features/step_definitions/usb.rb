@@ -838,3 +838,9 @@ Then /^the UUID of the FAT filesystem on the system partition on "(.+)" was rand
            "FS UUID on #{name} wasn't randomized, it's still: #{fs_uuid}")
   end
 end
+
+Then /^the label of the FAT filesystem on the system partition on "(.+)" is "(.+)"$/ do |name, label|
+  fs_label = $vm.execute_successfully("udisksctl info --block-device /dev/sda1 | awk '/IdLabel:/ {print $2}'").stdout.chomp
+  assert(label == fs_label,
+         "FS label on #{name} is #{fs_label} instead of the expected #{label}")
+end
