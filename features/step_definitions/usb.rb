@@ -856,13 +856,16 @@ Then /^the FAT filesystem on the system partition on "([^"]+)" is at least (\d+)
 end
 
 Then /^the UUID of the FAT filesystem on the system partition on "([^"]+)" was randomized$/ do |name|
-  $vm.storage.guestfs_disk_helper(name) do |g, _|
-    partition = g.list_partitions().first
-    fs_uuid = g.blkid(partition)["UUID"]
-    static_uuid = 'A690-20D2'
-    assert(fs_uuid != static_uuid,
-           "FS UUID on #{name} wasn't randomized, it's still: #{fs_uuid}")
-  end
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+
+  # Get the UUID from the block area:
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  fs_uuid = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Block']['IdUUID']
+
+  static_uuid = 'A690-20D2'
+  assert(fs_uuid != static_uuid,
+         "FS UUID on #{name} wasn't randomized, it's still: #{fs_uuid}")
 end
 
 Then /^the label of the FAT filesystem on the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
