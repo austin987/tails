@@ -24,6 +24,7 @@ latest_serial(){
 }
 
 if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
+    echo "I: Configuring HTTP proxy..."
     # Ensure that the apt-cacher-ng cache disk is formated and mounted
     if [ ! -b /dev/vdb1 ]; then
         echo '1,,83' | sfdisk /dev/vdb
@@ -43,19 +44,24 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
     systemctl restart apt-cacher-ng.service
 fi
 
+echo "I: Updating debian-security APT source..."
 # Always set the latest serial for debian-security
 stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
 security_serial="$(latest_serial debian-security)"
 sed -i -e "s/${stable_serial}/${security_serial}/g" /etc/apt/sources.list.d/stretch-security.list
+
+echo "I: Current APT sources are:"
 cat /etc/apt/sources.list /etc/apt/sources.list.d/*
 
-# Upgrade if needed
+echo "I: Upgrading system..."
 apt-key add /amnesia.git/config/chroot_sources/tails.binary.gpg
 apt-get update
 apt-get -y dist-upgrade
 
-# Add build script
+echo "I: Installing build script..."
 install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
+
+echo "I: Forcing live-build to use the mirrors configured in auto/config..."
 
 disable_live_build_conf()
 {
@@ -65,7 +71,6 @@ disable_live_build_conf()
 	sed -e "/^[[:space:]]*$var=/d" -i /etc/live/build.conf
 }
 
-# Force live-build to use the mirrors configured in auto/config
 for prefix in MIRROR PARENT_MIRROR ; do
 	for target in BOOTSTRAP BINARY CHROOT ; do
 		for archive in '' BACKPORTS SECURITY UPDATES VOLATILE ; do
@@ -80,10 +85,11 @@ for prefix in MIRROR PARENT_MIRROR ; do
 	done
 done
 
-# Clean up
+echo "I: Cleaning up..."
 apt-get -y autoremove
 apt-get -y clean
 
+echo "I: Configuring Git..."
 # Necessary so that vagrant can merge the base branch
 git config --global user.name vagrant
 git config --global user.email vagrant@tailsbuilder
