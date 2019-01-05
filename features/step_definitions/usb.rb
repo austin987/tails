@@ -868,7 +868,11 @@ end
 Then /^the label of the FAT filesystem on the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + "1"
-  fs_label = $vm.execute_successfully("udisksctl info --block-device #{part_dev} | awk '/IdLabel:/ {print $2}'").stdout.chomp
+
+  # Get FS label from the block area:
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  fs_label = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Block']['IdLabel']
+
   assert(label == fs_label,
          "FS label on #{part_dev} is #{fs_label} instead of the expected #{label}")
 end
