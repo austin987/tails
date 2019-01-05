@@ -836,16 +836,18 @@ Then /^the system partition on "([^"]+)" is an EFI system partition$/ do |name|
 end
 
 Then /^the FAT filesystem on the system partition on "([^"]+)" is at least (\d+)(.+) large$/ do |name, size, unit|
+  # Let's use bytes all the way:
   wanted_size = convert_to_bytes(size.to_i, unit)
 
-  $vm.storage.guestfs_disk_helper(name) do |g, _|
-    partition = g.list_partitions().first
-    # returned PART_ENTRY_SIZE is expressed in (512-byte) blocks
-    partition_size = g.blkid(partition)["PART_ENTRY_SIZE"].to_i * 512
-    wanted_size = convert_to_bytes(size.to_i, unit)
-    assert(partition_size >= wanted_size,
-           "FAT partition is too small: #{partition_size} is less than #{wanted_size}")
-  end
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  partition_size = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Partition']['Size'].to_i
+
+  # Partition size:
+  assert(partition_size >= wanted_size,
+         "FAT partition is too small: #{partition_size} is less than #{wanted_size}")
 
   # -B 1 forces size to be expressed in bytes rather than (1K) blocks:
   fs_size = $vm.execute_successfully(
