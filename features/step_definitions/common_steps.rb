@@ -312,6 +312,8 @@ end
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   @screen.wait(desktop_started_picture, 180)
+  # XXX: Disable checking desktop icons, they're gone for now (#16283)
+if false
   # Workaround #13461 by restarting nautilus-desktop
   # if Desktop icons are not visible
   begin
@@ -321,6 +323,7 @@ Given /^the Tails desktop is ready$/ do
     $vm.spawn('nautilus-desktop', user: LIVE_USER)
     @screen.wait("DesktopTailsDocumentation.png", 30)
   end
+end
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
