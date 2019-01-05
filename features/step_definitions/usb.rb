@@ -877,13 +877,13 @@ Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + "1"
 
-  # Extract partition area:
-  part_details = $vm.execute_successfully("udisksctl info --block-device #{part_dev} | sed '1,/^  org\.freedesktop\.UDisks2\.Partition:$/d'").stdout
+  # Look at the flags from the partition area:
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  flags = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Partition']['Flags']
 
   # See SYSTEM_PARTITION_FLAGS in create-usb-image-from-iso: 0xd000000000000005,
   # displayed in decimal (14987979559889010693) in udisksctl's output:
   expected_flags = 0xd000000000000005
-  flags = part_details.scan(/^\s+Flags:\s+(\d+)$/).first.first
   assert(flags == expected_flags.to_s,
          "Got #{flags} as partition flags on #{part_dev} (for #{name}), instead of the expected #{expected_flags}")
 end
