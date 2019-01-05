@@ -455,6 +455,32 @@ def boot_device_type
   device_info(boot_device)['ID_BUS']
 end
 
+# Turn udisksctl info output into something more manipulable:
+def parse_udisksctl_info(input)
+  tree = {}
+  section = nil
+  key = nil
+  input.chomp.split("\n").each { |line|
+    case line
+    when /^\/org\/freedesktop\/UDisks2\/block_devices\//
+      # no-op, ignore first line = device
+    when /^  (org\.freedesktop\.UDisks2\..+):$/
+      section = $1
+      tree[section] = {}
+    when /^\s+(.+?):\s+(.+)$/
+      key = $1
+      value = $2
+      tree[section][key] = value
+    else
+      # XXX: Best effort = consider this a continuation from previous
+      # line (e.g. Symlinks), and add the whole line, without
+      # stripping anything (e.g. leading whitespaces)
+      tree[section][key] += line
+    end
+  }
+  return tree
+end
+
 Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
   bus = bus.downcase
   case bus
