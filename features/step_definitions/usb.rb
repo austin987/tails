@@ -839,11 +839,12 @@ Then /^the UUID of the FAT filesystem on the system partition on "([^"]+)" was r
   end
 end
 
-Then /^the label of the FAT filesystem on the system partition is "([^"]+)"$/ do |label|
-  partition = '/dev/sda1'
-  fs_label = $vm.execute_successfully("udisksctl info --block-device #{partition} | awk '/IdLabel:/ {print $2}'").stdout.chomp
+Then /^the label of the FAT filesystem on the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+  fs_label = $vm.execute_successfully("udisksctl info --block-device #{part_dev} | awk '/IdLabel:/ {print $2}'").stdout.chomp
   assert(label == fs_label,
-         "FS label on #{partition} is #{fs_label} instead of the expected #{label}")
+         "FS label on #{part_dev} is #{fs_label} instead of the expected #{label}")
 end
 
 Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
