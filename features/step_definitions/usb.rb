@@ -791,7 +791,7 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
   @screen.wait('TailsUpgraderDone.png', 60)
 end
 
-Then /^the label of the system partition on "(.+)" is "(.+)"$/ do |name, label|
+Then /^the label of the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
   assert($vm.is_running?)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + "1"
@@ -799,7 +799,7 @@ Then /^the label of the system partition on "(.+)" is "(.+)"$/ do |name, label|
   check_part_integrity(name, part_dev, "filesystem", "vfat", label)
 end
 
-Then /^the system partition on "(.+)" is an EFI system partition$/ do |name|
+Then /^the system partition on "([^"]+)" is an EFI system partition$/ do |name|
   assert($vm.is_running?)
   disk_dev = $vm.disk_dev(name)
   part_dev = disk_dev + "1"
@@ -809,7 +809,7 @@ Then /^the system partition on "(.+)" is an EFI system partition$/ do |name|
                        'c12a7328-f81f-11d2-ba4b-00a0c93ec93b')
 end
 
-Then /^the FAT filesystem on the system partition on "(.+)" is at least (\d+)(.+) large$/ do |name, size, unit|
+Then /^the FAT filesystem on the system partition on "([^"]+)" is at least (\d+)(.+) large$/ do |name, size, unit|
   wanted_size = convert_to_bytes(size.to_i, unit)
 
   $vm.storage.guestfs_disk_helper(name) do |g, _|
@@ -829,7 +829,7 @@ Then /^the FAT filesystem on the system partition on "(.+)" is at least (\d+)(.+
          "FAT filesystem is too small: #{fs_size} is less than #{wanted_size}")
 end
 
-Then /^the UUID of the FAT filesystem on the system partition on "(.+)" was randomized$/ do |name|
+Then /^the UUID of the FAT filesystem on the system partition on "([^"]+)" was randomized$/ do |name|
   $vm.storage.guestfs_disk_helper(name) do |g, _|
     partition = g.list_partitions().first
     fs_uuid = g.blkid(partition)["UUID"]
@@ -839,13 +839,13 @@ Then /^the UUID of the FAT filesystem on the system partition on "(.+)" was rand
   end
 end
 
-Then /^the label of the FAT filesystem on the system partition on "(.+)" is "(.+)"$/ do |name, label|
+Then /^the label of the FAT filesystem on the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
   fs_label = $vm.execute_successfully("udisksctl info --block-device /dev/sda1 | awk '/IdLabel:/ {print $2}'").stdout.chomp
   assert(label == fs_label,
          "FS label on #{name} is #{fs_label} instead of the expected #{label}")
 end
 
-Then /^the system partition on "(.+)" has the expected flags$/ do |name|
+Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
   $vm.storage.guestfs_disk_helper(name) do |g, _|
     partition = g.list_partitions().first
     partition_flags = g.blkid(partition)["PART_ENTRY_FLAGS"]
