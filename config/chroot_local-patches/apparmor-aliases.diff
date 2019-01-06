@@ -1,6 +1,6 @@
-diff -Naur etc/apparmor.d.orig/abstractions/base etc/apparmor.d/abstractions/base
---- a/etc/apparmor.d/abstractions/base	2018-02-25 18:23:21.000000000 +0000
-+++ b/etc/apparmor.d/abstractions/base	2018-03-10 08:03:52.281671815 +0000
+diff -Naur /etc/apparmor.d/abstractions.orig/base /etc/apparmor.d/abstractions/base
+--- a/etc/apparmor.d/abstractions.orig/base	2018-11-01 11:52:15.000000000 +0000
++++ b/etc/apparmor.d/abstractions/base	2019-01-05 11:30:54.808397903 +0000
 @@ -26,6 +26,7 @@
    /etc/locale/**                 r,
    /etc/locale.alias              r,
@@ -9,9 +9,26 @@ diff -Naur etc/apparmor.d.orig/abstractions/base etc/apparmor.d/abstractions/bas
    /etc/writable/localtime        r,
    /usr/share/locale-bundle/**    r,
    /usr/share/locale-langpack/**  r,
-diff -Naur etc/apparmor.d.orig/abstractions/ubuntu-helpers etc/apparmor.d/abstractions/ubuntu-helpers
---- a/etc/apparmor.d/abstractions/ubuntu-helpers	2018-11-01 11:52:15.000000000 +0000
-+++ b/etc/apparmor.d/abstractions/ubuntu-helpers	2018-11-05 19:49:38.227528246 +0000
+@@ -64,10 +65,12 @@
+   /opt/*-linux-uclibc/lib/ld-uClibc*so* mr,
+ 
+   # we might as well allow everything to use common libraries
+-  /{usr/,}lib{,32,64}/**                r,
+-  /{usr/,}lib{,32,64}/lib*.so*          mr,
+-  /{usr/,}lib{,32,64}/**/lib*.so*       mr,
+-  /{usr/,}lib/@{multiarch}/**            r,
++  /{usr/,}lib{32,64}/**                r,
++  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**                r,
++  /{usr/,}lib{,32,64}/lib*.so*       mr,
++  /{usr/,}lib{32,64}/**/lib*.so*       mr,
++  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/lib*.so*       mr,
++  /{usr/,}lib/@{multiarch}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**            r,
+   /{usr/,}lib/@{multiarch}/lib*.so*      mr,
+   /{usr/,}lib/@{multiarch}/**/lib*.so*   mr,
+   /{usr/,}lib/tls/i686/{cmov,nosegneg}/lib*.so*    mr,
+diff -Naur /etc/apparmor.d/abstractions.orig/ubuntu-helpers /etc/apparmor.d/abstractions/ubuntu-helpers
+--- a/etc/apparmor.d/abstractions.orig/ubuntu-helpers	2018-11-01 11:52:15.000000000 +0000
++++ b/etc/apparmor.d/abstractions/ubuntu-helpers	2019-01-05 11:30:54.808397903 +0000
 @@ -65,8 +65,8 @@
    # in limited libraries so glibc's secure execution should be enough to not
    # require the santized_helper (ie, LD_PRELOAD will only use standard system
@@ -23,3 +40,13 @@ diff -Naur etc/apparmor.d.orig/abstractions/ubuntu-helpers etc/apparmor.d/abstra
    /opt/google/chrome{,-beta,-unstable}/chrome-sandbox PUxr,
    /opt/google/chrome{,-beta,-unstable}/google-chrome Pixr,
    /opt/google/chrome{,-beta,-unstable}/chrome Pixr,
+@@ -75,7 +75,8 @@
+   # Full access
+   / r,
+   /** rwkl,
+-  /{,usr/,usr/local/}lib{,32,64}/{,**/}*.so{,.*} m,
++  /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}{,**/}*.so{,.*} m,
++  /usr{/,/local/}lib{,32,64}/{,**/}*.so{,.*} m,
+ 
+   # Dangerous files
+   audit deny owner /**/* m,              # compiled libraries
