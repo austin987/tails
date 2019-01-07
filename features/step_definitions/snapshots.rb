@@ -176,7 +176,8 @@ def reach_checkpoint(name)
                 color: :green, timestamp: false)
       step_action = "And"
     end
-    $vm.save_snapshot(name)
+    # Disable snapshots entirely by never saving any of them (#16316):
+    #$vm.save_snapshot(name)
   end
 end
 
