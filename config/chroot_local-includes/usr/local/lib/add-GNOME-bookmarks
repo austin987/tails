@@ -29,5 +29,7 @@ if persistence_is_enabled_for "${HOME}/Persistent" ; then
 fi
 
 for launcher in Report_an_error tails-documentation ; do
-    gio set "${HOME}/Desktop/${launcher}.desktop" metadata::trusted yes
+    path=$HOME/Desktop/${launcher}.desktop
+    gio set "${path}" metadata::trusted true
+    touch $path    # Needed otherwise the desktop icon plugin, won't update the icons
 done
