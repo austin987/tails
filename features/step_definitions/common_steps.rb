@@ -528,7 +528,8 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  try_for(3*60) do
+  # Timeout bumped from 3 to 10 minutes because of #16312:
+  try_for(10*60) do
     if mode == 'restarts'
       @screen.find('TailsGreeter.png')
       true

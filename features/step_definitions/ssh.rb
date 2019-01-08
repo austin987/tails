@@ -145,6 +145,7 @@ Then /^I verify the SSH fingerprint for the SFTP server$/ do
   end
   # Here we'd like to click on the button using Dogtail, but something
   # is buggy so let's just use the keyboard.
+  @screen.type(Sikuli::Key.TAB)
   @screen.type(Sikuli::Key.ENTER)
 end
 

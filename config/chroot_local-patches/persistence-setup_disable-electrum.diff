@@ -1,0 +1,34 @@
+From f24e7918de140b332162786fbb50beed4b100527 Mon Sep 17 00:00:00 2001
+From: Cyril Brulebois <ckb@riseup.net>
+Date: Sun, 6 Jan 2019 12:42:15 +0100
+Subject: [PATCH] Disable electrum to avoid crashes due to missing electrum
+ icon (refs: #16303).
+
+---
+ lib/Tails/Persistence/Configuration/Presets.pm | 15 ---------------
+ 1 file changed, 15 deletions(-)
+
+--- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
+@@ -162,21 +162,6 @@ method _build__presets () {
+             ],
+         },
+         {
+-            id          => 'BitcoinClient',
+-            name        => $self->encoding->decode(gettext(q{Bitcoin Client})),
+-            description => $self->encoding->decode(gettext(
+-                q{Electrum's bitcoin wallet and configuration}
+-            )),
+-            icon_name   => 'electrum',
+-            enabled     => 0,
+-            atoms_args  => [
+-                {
+-                    destination => '/home/amnesia/.electrum',
+-                    options     => [ 'source=electrum' ],
+-                },
+-            ],
+-        },
+-        {
+             id          => 'Pidgin',
+             name        => $self->encoding->decode(gettext(q{Pidgin})),
+             description => $self->encoding->decode(gettext(
