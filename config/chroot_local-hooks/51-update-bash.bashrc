@@ -7,9 +7,8 @@ set -u
 
 echo "Updating /etc/bash.bashrc"
 
-OPTS_FILE='/etc/bash.bashrc'
-
-cat <<EOF>> "${OPTS_FILE}"
+cat <<EOF>> /etc/bash.bashrc
+# The following code snippet is added by 'config/chroot_local-hooks/51-update-bash.bashrc'
 
 for file in /etc/bash.bashrc.d/*;
 do
