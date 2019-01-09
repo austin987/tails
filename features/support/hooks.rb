@@ -159,29 +159,35 @@ def add_lan_host(ipaddr, port)
 end
 
 BeforeFeature('@product') do |feature|
-  if TAILS_ISO.nil?
-    raise "No Tails ISO image specified, and none could be found in the " +
-          "current directory"
-  end
-  if File.exist?(TAILS_ISO)
-    # Workaround: when libvirt takes ownership of the ISO image it may
-    # become unreadable for the live user inside the guest in the
-    # host-to-guest share used for some tests.
-
-    if !File.world_readable?(TAILS_ISO)
-      if File.owned?(TAILS_ISO)
-        File.chmod(0644, TAILS_ISO)
-      else
-        raise "warning: the Tails ISO image must be world readable or be " +
-              "owned by the current user to be available inside the guest " +
-              "VM via host-to-guest shares, which is required by some tests"
-      end
+  images = {'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG}
+  images.each { |type, path|
+    if path.nil?
+      raise "No Tails #{type} image specified, and none could be found in the " +
+            "current directory"
     end
-  else
-    raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
-  end
+    if File.exist?(path)
+      # Workaround: when libvirt takes ownership of the ISO/IMG image it may
+      # become unreadable for the live user inside the guest in the
+      # host-to-guest share used for some tests.
+
+      if !File.world_readable?(path)
+        if File.owned?(path)
+          File.chmod(0644, path)
+        else
+          raise "warning: the Tails #{type} image must be world readable or be " +
+                "owned by the current user to be available inside the guest " +
+                "VM via host-to-guest shares, which is required by some tests"
+        end
+      end
+    else
+      raise "The specified Tails #{type} image '#{path}' does not exist"
+    end
+  }
   if !File.exist?(OLD_TAILS_ISO)
     raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
+  end
+  if !File.exist?(OLD_TAILS_IMG)
+    raise "The specified old Tails IMG image '#{OLD_TAILS_IMG}' does not exist"
   end
   if not($started_first_product_feature)
     $virt = Libvirt::open("qemu:///system")
