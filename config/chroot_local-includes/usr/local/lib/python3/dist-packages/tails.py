@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# This file is part of Tails. The purpose of this file is to provide a
+# system-wide library that may be useful for other components of Tails.
+
 import subprocess
 
 def is_password_set():
