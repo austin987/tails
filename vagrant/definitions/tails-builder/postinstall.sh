@@ -30,6 +30,12 @@ EOF
 cat > /etc/apt/apt.conf.d/99retries << EOF
 APT::Acquire::Retries "20";
 EOF
+# This effectively disables apt-daily*.{timer,service}, which might
+# interfere with an ongoing build. We run apt-get
+# {update,dist-upgrade,clean} ourselves in setup-tails-builder.
+cat > /etc/apt/apt.conf.d/99periodic << EOF
+APT::Periodic::Enable "0";
+EOF
 
 echo "I: Install Tails APT repo signing key."
 apt-key add /tmp/tails.binary.gpg
@@ -151,6 +157,12 @@ apt-get -y install localepurge
 localepurge
 apt-get -y remove localepurge
 rm -f "${TEMPFILE}"
+
+echo "I: Disabling irrelevant timers"
+# By default we reboot the system between each build, which makes this
+# timer useless. Besides, it is started 15 minutes after boot, which
+# has potential to interfere with an ongoing build.
+systemctl mask systemd-tmpfiles-clean.timer
 
 echo "I: Cleaning up..."
 apt-get -y autoremove
