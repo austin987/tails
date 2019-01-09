@@ -66,3 +66,6 @@ systemctl mask apt-daily.timer
 
 # Do not let pppd-dns manage /etc/resolv.conf
 systemctl mask pppd-dns.service
+
+# Conflicts with our custom shutdown procedure
+systemctl mask live-tools.service
