@@ -162,6 +162,7 @@ def chutney_onionservice_redir(remote_address, remote_port)
   kill_redir = Proc.new do
     begin
       Process.kill("TERM", $chutney_onionservice_job.pid)
+      $chutney_onionservice_job.close
     rescue
       # noop
     end

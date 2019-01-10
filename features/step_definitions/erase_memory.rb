@@ -43,7 +43,10 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
   FileUtils.touch(dump)
   FileUtils.chmod(0666, dump)
   $vm.domain.core_dump(dump)
-  patterns = IO.popen(['grep', '--text', '-c', 'wipe_didnt_work', dump]).gets.to_i
+  # Make sure to close after reading stdout, to avoid Zombies:
+  grep = IO.popen(['grep', '--text', '-c', 'wipe_didnt_work', dump])
+  patterns = grep.gets.to_i
+  grep.close
   File.delete dump
   # Pattern is 16 bytes long
   patterns_b = patterns*16
