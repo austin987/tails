@@ -60,6 +60,11 @@ do_stop() {
 	/bin/systemctl --signal=9 kill gdm.service || true
 	/bin/loginctl --signal=9 kill-user Debian-gdm || true
 
+	# This allows systemd-shutdown to execute /run/initramfs/shutdown.
+	# XXX:Bullseye: if https://github.com/systemd/systemd/pull/9429 is merged,
+	# we can remove this custom code.
+	/bin/mount -o remount,exec /run
+
 	# Finally, return to the initramfs and poweroff the system
 	/bin/systemctl --force poweroff
 }

@@ -29,6 +29,12 @@ in the initramfs. That one will unmount all filesystems, run
 that helps us automatically test this behavior, and finally perform
 the requested poweroff/reboot action.
 
+To make this work, `/run` is [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-remount-run-exec.service desc="remounted"]] with
+the `exec` option before `final.target` is started.
+
+For details about the underlying systemd mechanisms, see `bootup(7)`
+and `systemd-shutdown(8)`.
+
 #### Triggers
 
 Different kinds of events trigger the memory erasure process. All lead
