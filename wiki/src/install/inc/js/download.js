@@ -277,7 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function displayVerificationExtension(e) {
     try {
       e.preventDefault();
-      hitCounter("download-iso");
+      hitCounter("download-image");
       toggleDirectBitTorrent("direct");
       resetVerificationResult();
     } finally {
@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function resetVerification(e) {
     try {
       e.preventDefault();
-      hitCounter("download-iso-again");
+      hitCounter("download-image-again");
       toggleDirectBitTorrent("direct");
       resetVerificationResult();
     } finally {
