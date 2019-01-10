@@ -112,7 +112,7 @@ Then /^I enable key synchronization in Seahorse$/ do
   @screen.wait('SeahorsePreferences.png', 20)
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
-  @screen.type("c", Sikuli::KeyModifier.ALT) # Button: "Close"
+  @screen.type(Sikuli::Key.ESC) # no "Close" button
 end
 
 Then /^I synchronize keys in Seahorse$/ do
