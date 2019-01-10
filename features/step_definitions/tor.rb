@@ -332,9 +332,9 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
   # and our CTRL-t is lost.
   gobby.child('Failed to share documents', roleName: 'label')
   gobby.menu('File').click
-  gobby.menuItem('Connect to Server...').click
+  gobby.menuItem('Connect To Server...').click
   @screen.type("t", Sikuli::KeyModifier.CTRL)
-  connect_dialog = gobby.dialog('Connect to Server')
+  connect_dialog = gobby.dialog('Connect To Server')
   connect_dialog.child('', roleName: 'text').typeText(host)
   connect_dialog.button('Connect').click
   # This looks for the live user's presence entry in the chat, which
