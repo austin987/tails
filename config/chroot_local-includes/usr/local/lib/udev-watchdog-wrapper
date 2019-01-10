@@ -44,13 +44,6 @@ boot_device() {
 
 # First clean the screen, then brutally shutdown the machine.
 do_stop() {
-	# Really make sure that the CD is ejected
-	# FIXME: this might not be necessary with future kernel/udev
-	if [ "${DEV_TYPE}" = "cd" ]; then
-		/usr/bin/eject -i off "${BOOT_DEVICE}" || true
-		/usr/bin/eject -m "${BOOT_DEVICE}" || true
-	fi
-
 	# Kill everything run by amnesia or Debian-gdm, otherwise emergency
 	# shutdown fails for some reason. Incidentally, this also allows
 	# the test suite to look for a known message ("Happy dumping!")
@@ -59,11 +52,6 @@ do_stop() {
 	/bin/systemctl stop gdm.service || true
 	/bin/systemctl --signal=9 kill gdm.service || true
 	/bin/loginctl --signal=9 kill-user Debian-gdm || true
-
-	# This allows systemd-shutdown to execute /run/initramfs/shutdown.
-	# XXX:Bullseye: if https://github.com/systemd/systemd/pull/9429 is merged,
-	# we can remove this custom code.
-	/bin/mount -o remount,exec /run
 
 	# Finally, return to the initramfs and poweroff the system
 	/bin/systemctl --force poweroff

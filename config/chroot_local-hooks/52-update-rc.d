@@ -13,12 +13,12 @@ systemctl enable onion-grater.service
 systemctl enable tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
 systemctl enable tails-autotest-broken-Xorg.service
 systemctl enable tails-autotest-remote-shell.service
-systemctl enable tails-remount-run-exec.service
 systemctl enable tails-set-wireless-devices-state.service
 systemctl enable tails-shutdown-on-media-removal.service
 systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
+systemctl enable run-initramfs.mount
 systemctl enable var-tmp.mount
 
 # Enable our own systemd user unit files
