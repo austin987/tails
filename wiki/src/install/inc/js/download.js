@@ -305,7 +305,9 @@ document.addEventListener("DOMContentLoaded", function() {
       toggleDirectBitTorrent("direct");
       resetVerificationResult();
     } finally {
-      window.location = this.getAttribute("href");
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(this.getAttribute("href"), "_blank");
     }
   }
 
