@@ -333,7 +333,6 @@ When /^I connect Gobby to "([^"]+)"$/ do |host|
   gobby.child('Failed to share documents', roleName: 'label')
   gobby.menu('File').click
   gobby.menuItem('Connect To Server...').click
-  @screen.type("t", Sikuli::KeyModifier.CTRL)
   connect_dialog = gobby.dialog('Connect To Server')
   connect_dialog.child('', roleName: 'text').typeText(host)
   connect_dialog.button('Connect').click
