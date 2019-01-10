@@ -201,7 +201,8 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     end
     check_for_seahorse_error
     @screen.click("SeahorseKeyResultWindow.png")
-    @screen.click("SeahorseFoundKeyResult.png")
+    # Use the context menu to import the key:
+    @screen.right_click("SeahorseFoundKeyResult.png")
     @screen.click("SeahorseImport.png")
     try_for(120) do
       change_of_status?(keyid)
