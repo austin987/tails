@@ -1,5 +1,8 @@
 @product
 Feature: Emergency shutdown
+  As a Tails user
+  when I unplug my Tails device to trigger emergency shutdown
+  I want the system memory to be free from sensitive data.
 
   # Test something close to real-world usage, without interfering,
   # i.e. without the "I prepare Tails for memory erasure tests" step;
