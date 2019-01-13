@@ -18,21 +18,21 @@ Feature: Upgrading an old Tails USB installation
     When I start Tails Installer
     Then I am told by Tails Installer that I "need to use a downloaded Tails ISO image"
 
-  # XXX: take a shortcut and write the USB image directly to a USB drive
+  # Installation method inspired by the usb-install-tails-greeter
+  # checkpoint, variations are using the old Tails USB image and a
+  # different device name ("old" instead of "__internal")
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
-    And the computer is set to boot from the old Tails DVD
-    And the network is unplugged
-    And I start the computer
-    When the computer boots Tails
-    And I log in to a new session
-    And all notifications have disappeared
     And I create a 7200 MiB disk named "old"
     And I plug USB drive "old"
-    When I install Tails to USB drive "old" by cloning
-    Then the running Tails is installed on USB drive "old"
-    But there is no persistence partition on USB drive "old"
-    And I unplug USB drive "old"
+    And I write an old version of the Tails USB image to disk "old"
+    When I start Tails from USB drive "old" with network unplugged
+    Then the boot device has safe access rights
+    And Tails is running from USB drive "old"
+    And there is no persistence partition on USB drive "old"
+    And process "udev-watchdog" is running
+    And udev-watchdog is monitoring the correct device
+    And I shutdown Tails and wait for the computer to power off
 
   # Depends on scenario: Installing an old version of Tails to a pristine USB drive
   Scenario: Creating a persistent partition with the old Tails USB installation
