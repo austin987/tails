@@ -99,40 +99,6 @@ Feature: Upgrading an old Tails USB installation
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
 
-  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
-  # XXX: still documented? if not, drop it.
-  Scenario: Upgrading an old Tails USB installation from an ISO image, running on the old version
-    Given a computer
-    And I clone USB drive "old" to a new USB drive "to_upgrade"
-    When I start Tails from USB drive "old" with network unplugged and I login
-    And I plug and mount a USB drive containing the Tails ISO
-    And I plug USB drive "to_upgrade"
-    And I upgrade Tails on USB drive "to_upgrade" from an ISO
-    Then the ISO's Tails is installed on USB drive "to_upgrade"
-    And I unplug USB drive "to_upgrade"
-
-  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
-  # XXX: still documented? if not, drop it.
-  Scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
-    Given I have started Tails from DVD without network and logged in
-    And I plug and mount a USB drive containing the Tails ISO
-    And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And I plug USB drive "to_upgrade"
-    And I upgrade Tails on USB drive "to_upgrade" from an ISO
-    Then the ISO's Tails is installed on USB drive "to_upgrade"
-    And I unplug USB drive "to_upgrade"
-
-  # Depends on scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
-  # XXX: still documented? if not, drop it.
-  Scenario: Booting a USB drive upgraded from ISO with persistence enabled
-    Given a computer
-    And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence enabled
-    Then all persistence presets from the old Tails version are enabled
-    And Tails is running from USB drive "to_upgrade"
-    And the boot device has safe access rights
-    And the expected persistent files created with the old Tails version are present in the filesystem
-    And all persistent directories from the old Tails version have safe access rights
-
   Scenario: Upgrading Tails with Tails Upgrader through an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think it is running version 1.0~test
