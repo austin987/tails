@@ -80,7 +80,6 @@ Feature: Upgrading an old Tails USB installation
 
   # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
-    # XXX: ensure we do this Given without Tails Installer (usb-install-tails-greeter)
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
     And I clone USB drive "old" to a new USB drive "to_upgrade"

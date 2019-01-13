@@ -68,14 +68,12 @@ Feature: Installing Tails to a USB drive
     Then the running Tails is installed on USB drive "install"
     And there is no persistence partition on USB drive "install"
 
-  # XXX: do this without Tails Installer
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
     When I create a persistent partition
     Then a Tails persistence partition exists on USB drive "__internal"
 
-  # XXX: do this without Tails Installer
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
@@ -83,7 +81,6 @@ Feature: Installing Tails to a USB drive
     And the persistent Tor Browser directory does not exist
     And there is no persistence partition on USB drive "__internal"
 
-  # XXX: do this without Tails Installer
   #13459
   @fragile
   Scenario: Booting Tails from a USB drive in UEFI mode
