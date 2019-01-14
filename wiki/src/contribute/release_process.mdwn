@@ -323,7 +323,7 @@ Then, gather other useful information from:
 * every custom bundled package's own Changelog (Greeter, Persistent
   Volume Assistant, etc.);
 * the diff between the previous version's `.packages` file and the one
-  from the to-be-released ISO; look for:
+  from the to-be-released images; look for:
   - security fixes
   - new upstream releases of applications mentioned in [[doc/about/features]]
   - new upstream releases of other important components such as the
@@ -362,7 +362,18 @@ matches the date of the future signature.
 
 	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html
 	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html
-	${EDITOR:?} wiki/src/inc/*.html
+	for type in img iso; do
+	   basename="tails-amd64-${VERSION:?}"
+	   filename="${basename:?}.${type:?}"
+	   echo "gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
+	        > wiki/src/inc/stable_amd64_${type:?}_gpg_verify.html && \
+	   echo "http://dl.amnesia.boum.org/tails/stable/${basename:?}/${filename:?}" \
+	        > wiki/src/inc/stable_amd64_${type:?}_url.html
+	   echo "https://tails.boum.org/torrents/files/${filename:?}.sig" \
+	        > wiki/src/inc/stable_amd64_${type:?}_sig_url.html
+	   echo "https://tails.boum.org/torrents/files/${filename:?}.torrent" \
+	        > wiki/src/inc/stable_amd64_${type:?}_torrent_url.html
+	done
 	./build-website
 	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
 
@@ -432,10 +443,9 @@ signatures, like the defaults we set in Tails:
 Build the almost-final image
 ============================
 
-1. [[Build an ISO image|contribute/build]] from the release branch.
+1. [[Build ISO and USB images|contribute/build]] from the release branch.
 2. Carefully read the build logs to make sure nothing bad happened.
-3. Keep at least the resulting ISO image and the manifest of needed
-   packages until the end of this release process.
+3. Keep the resulting build artifacts until the end of this release process.
 4. Record where the manifest of needed packages is stored:
 
         export PACKAGES_MANIFEST=XXX ; \
@@ -501,8 +511,8 @@ Better catch this before people spend time doing manual tests.
 SquashFS file order
 -------------------
 
-1. Burn the almost final ISO image to a DVD.
-1. Boot this DVD **on bare metal**.
+1. Install the almost final USB image to a USB stick.
+1. Boot this USB stick **on bare metal**.
 1. Add `profile` to the kernel command-line.
 1. Login.
 1. Wait for the "Tor is ready" notification.
@@ -570,18 +580,18 @@ suite should be ready, so it is time to:
 
 
 1. <a id="reproducibility-sanity-check-iso"></a>
-   Let's sanity check that Jenkins reproduced your image.
+   Let's sanity check that Jenkins reproduced your images.
 
    Visit the URL printed by this command:
 
        echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
 
    Find the job (probably the last one)
-   and make sure the image built by Jenkins:
+   and make sure the ISO and USB images built by Jenkins:
 
-   - was built from the correct Git commit
-   - has the same file size as the image you built
-   - has the same hash (in the `.shasum` file) as the image you built
+   - were built from the correct Git commit
+   - have the same file size as the images you built
+   - have the same hash (in the `.shasum` file) as the images you built
 
    Then:
 
@@ -603,6 +613,8 @@ suite should be ready, so it is time to:
               --max-diff-input-lines 10000000 \
                   path/to/your/tails-amd64-${VERSION:?}.iso \
                   path/to/jenkins/tails-amd64-${VERSION:?}.iso
+
+     Do the same for the USB image as well.
 
      Then carefully investigate the `diffoscope` report:
 
@@ -646,7 +658,7 @@ suite should be ready, so it is time to:
         git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" "${TAG:?}" && \
         git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
 
-   (as soon as a new commit is created on `$RELEASE_BRANCH`, its ISO
+   (as soon as a new commit is created on `$RELEASE_BRANCH`, its
    build will start failing until a new changelog entry is created,
    which we don't want to do on `$RELEASE_BRANCH` before it's merged
    into `master` at release time)
@@ -661,24 +673,28 @@ image and with a `.sig` extension), then go up to the parent
 directory, create a `.torrent` file and check the generated `.torrent`
 files metadata:
 
-	mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-	cd "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-	mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}/" && \
-	gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *.iso && \
-	rename 's,\.asc$,.sig,' *.asc && \
-	cd .. && \
-	mktorrent \
-	  -a 'udp://tracker.torrent.eu.org:451' \
-	  -a 'udp://tracker.coppersurfer.tk:6969'   \
-	  "tails-amd64-${VERSION:?}" && \
-	transmission-show tails-amd64-${VERSION:?}.torrent
+	for type in iso img ; do
+	   mkdir "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}" && \
+	   cd "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}" && \
+	   mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.${type:?}" . && \
+	   gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *".${type:?}" && \
+	   rename 's,\.asc$,.sig,' *.asc && \
+	   cd .. && \
+	   mktorrent \
+	      -a 'udp://tracker.torrent.eu.org:451'   \
+	      -a 'udp://tracker.coppersurfer.tk:6969' \
+	      "tails-amd64-${VERSION:?}.${type:?}" && \
+	   transmission-show tails-amd64-${VERSION:?}.torrent
+	done
 
 Lastly, let's set some variables to be used later:
 
-    ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso"
+    ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}.iso/tails-amd64-${VERSION:?}.iso"
     ISO_SHA256SUM="$(sha256sum "${ISO_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH:?}")"
+    IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}.img/tails-amd64-${VERSION:?}.img"
+    IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
+    IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
 
 <a id="prepare-iuk"></a>
 
@@ -720,8 +736,8 @@ and run the following:
           PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
             ./bin/tails-create-iuk \
                --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
-               --old-iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
-               --new-iso \"${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso\"          \
+               --old-iso \"${ISOS:?}/tails-amd64-${source_version:?}.iso/tails-amd64-${source_version:?}.iso\" \
+               --new-iso \"${ISOS:?}/tails-amd64-${VERSION:?}.iso/tails-amd64-${VERSION:?}.iso\"          \
                --outfile \"${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\""
     done
 
@@ -872,8 +888,8 @@ Prepare upgrade-description files
         )
 
 
-Prepare the ISO description file for *Tails Verification*
----------------------------------------------------------
+Prepare the image description file for *Tails Verification*
+-----------------------------------------------------------
 
 If preparing a RC, skip this part.
 
@@ -883,19 +899,8 @@ Update the image description file (IDF) used by the browser extension:
        --version "${VERSION:?}" \
        --iso "${ISO_PATH:?}" \
        > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-    cat > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v1/Tails/amd64/stable/latest.yml <<EOF
-    ---
-    build-target: amd64
-    channel: stable
-    product-name: Tails
-    version: '${VERSION:?}'
-    target-files:
-    - sha256: ${ISO_SHA256SUM}
-      size: ${ISO_SIZE_IN_BYTES:?}
-      url: http://dl.amnesia.boum.org/tails/stable/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso
-    EOF
     ( cd "${RELEASE_CHECKOUT:?}" && \
-      git add wiki/src/install/v{1,2}/Tails/amd64/stable/latest.* && \
+      git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
       git commit -m "Update IDF file for Tails Verification." )
 
 Done with OpenPGP signing
@@ -927,8 +932,8 @@ above).
 
 <a id="publish-iuk"></a>
 
-Publish the ISO and IUKs over HTTP
-----------------------------------
+Publish the ISO, IMG and IUKs over HTTP
+---------------------------------------
 
 Upload the IUKs to our rsync server:
 
@@ -940,17 +945,17 @@ Upload the IUKs to our rsync server:
 
 While waiting for the IUKs to be uploaded, you can proceed with the next steps.
 
-Upload the ISO signature to our rsync server:
+Upload the ISO and USB image signatures to our rsync server:
 
-    scp "${ISO_PATH:?}.sig" rsync.lizard:
+    scp "${ISO_PATH:?}.sig" "${IMG_PATH:?}.sig" rsync.lizard:
 
-Pick a build from `$RELEASE_BRANCH` that produced an ISO identical to
-the one you've built locally (`XXX` must be the job ID, i.e.
+Pick a build from `$RELEASE_BRANCH` that produced identical ISO and USB images
+to the ones you've built locally (`XXX` must be the job ID, i.e.
 an integer):
 
     MATCHING_JENKINS_BUILD_ID=XXX
 
-Copy the ISO to our rsync server, verify its signature,
+Copy the ISO and USB images to our rsync server, verify their signature,
 move them in place with proper ownership and permissions
 and update the time in `project/trace` file on our rsync server
 and on the live website (even for a release candidate):
@@ -959,16 +964,18 @@ and on the live website (even for a release candidate):
        | ssh rsync.lizard gpg --import
     ssh rsync.lizard << EOF
        wget \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
-       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,}
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
+       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
+       gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
     EOF
 
     ssh rsync.lizard << EOF
       sudo install -o root -g rsync_tails -m 0755 -d \
          /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?} && \
-      sudo chown root:rsync_tails tails-amd64-${VERSION:?}.iso* && \
-      sudo chmod u=rwX,go=rX tails-amd64-${VERSION:?}.iso* && \
-      sudo mv tails-amd64-${VERSION:?}.iso* \
+      sudo chown root:rsync_tails tails-amd64-${VERSION:?}.{iso,img}* && \
+      sudo chmod u=rwX,go=rX tails-amd64-${VERSION:?}.{iso,img}* && \
+      sudo mv tails-amd64-${VERSION:?}.{iso,img}* \
               /srv/rsync/tails/tails/${DIST:?}/tails-amd64-${VERSION:?}
     EOF
 
@@ -1009,7 +1016,7 @@ candidate):
 ## Announce, seed and test the Torrent
 
 Check if there's enough space on our Bittorrent seed to import the new
-ISO:
+ISO and USB images:
 
     ssh bittorrent.lizard df -h /var/lib/transmission-daemon/downloads
 
@@ -1029,42 +1036,45 @@ Now you can announce and seed the Torrent for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
-    scp \
-       "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-       "${ISO_PATH:?}.sig" \
-       bittorrent.lizard: && \
-    ssh bittorrent.lizard << EOF
-       mkdir --mode 0755 "tails-amd64-${VERSION:?}" && \
-       mv "tails-amd64-${VERSION:?}.iso.sig" \
-          "tails-amd64-${VERSION:?}/" && \
-       cd "tails-amd64-${VERSION:?}" && \
-       wget \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" && \
-       gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
-       cd && \
-       chgrp -R debian-transmission "tails-amd64-${VERSION:?}" && \
-       chmod -R go+rX,g+w "tails-amd64-${VERSION:?}" && \
-       mv \
-          "tails-amd64-${VERSION:?}" \
-          /var/lib/transmission-daemon/downloads/ && \
-       transmission-remote --add tails-amd64-${VERSION:?}.torrent \
-                           --find /var/lib/transmission-daemon/downloads/
+    for type in iso img ; do
+       image_filename="tails-amd64-${VERSION:?}.${type:?}"
+       scp \
+          "${ISOS:?}/${image_filename:?}.torrent" \
+          "${ISOS:?}/${image_filename:?}/${image_filename:?}.sig" \
+          bittorrent.lizard: && \
+       ssh bittorrent.lizard << EOF
+          mkdir --mode 0755 "${image_filename:?}" && \
+          mv "${image_filename:?}.sig" \
+             "${image_filename:?}/" && \
+          cd "${image_filename:?}" && \
+          wget \
+             "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
+          gpg --verify ${image_filename:?}{.sig,} && \
+          cd && \
+          chgrp -R debian-transmission "${image_filename:?}" && \
+          chmod -R go+rX,g+w "${image_filename:?}" && \
+          mv \
+             "${image_filename:?}" \
+             /var/lib/transmission-daemon/downloads/ && \
+          transmission-remote --add ${image_filename:?}.torrent \
+                              --find /var/lib/transmission-daemon/downloads/
+    done
     EOF
 
-Test that you can start downloading the ISO with a BitTorrent client.
+Test that you can start downloading the ISO and USB images with a BitTorrent client.
 
 ISO history
 -----------
 
-Push the released ISO and its artifacts (`.iso.buildlog`, `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex repo, so that
-our isotesters can fetch it from there for their testing. How to do so
+Push the released ISO and USB images and their artifacts (`.buildlog`, `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex repo, so that
+our isotesters can fetch them from there for their testing. How to do so
 is described in the `ISO_history.mdwn` document in the RM team's Git repo.
 
 Testing
 =======
 
 1. Using `check-mirrors`, choose a fast mirror that already has the
-   tentative ISO. E.g. <https://mirrors.kernel.org/tails/> or
+   tentative ISO and USB images. E.g. <https://mirrors.kernel.org/tails/> or
    <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
    of bandwidth.
 
@@ -1073,7 +1083,7 @@ Testing
             tails-amd64-${VERSION:?}
 
 1. Email <tails-testers@boum.org> to ask them to test the tentative
-   ISO, pointing them to the up-to-date mirror you've found previously.
+   ISO and USB images, pointing them to the up-to-date mirror you've found previously.
 1. Email <tails@boum.org> and potential contributors (see
    `manual_testers.mdwn` in the internal Git repository) that tests
    may start:
@@ -1109,19 +1119,26 @@ Skip this part if preparing a RC.
 Rename, copy, garbage collect and update various files:
 
 	cp "${ISO_PATH:?}.sig" \
+	   "${IMG_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
 	git rm \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,packages,torrent} && \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,torrent} && \
 	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
+	LC_NUMERIC=C ls -l -h ${IMG_PATH:?} | \
+	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
+	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html" && \
     gpg --check-trustdb && \
     LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_gpg_signature_output.html"
+	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_gpg_signature_output.html" && \
+    LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
+	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_gpg_signature_output.html"
 
         XXX: Adapt this section to generate:
 
@@ -1150,8 +1167,8 @@ Write an announcement listing the security bugs affecting the previous
 version in
 `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
 in order to let the users of the old versions
-know that they have to upgrade. Date it a few days before the ISO
-image to be released was *built*. Including:
+know that they have to upgrade. Date it a few days before the
+images to be released were *built*. Including:
 
 - if we are not shipping Linux from Debian stable, the list of
   CVE fixed in Linux since the one shipped in the previous release of
@@ -1172,11 +1189,12 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
-Copy the signature and the Torrent into the website repository:
+Copy the signatures and the Torrent into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
+	   "${IMG_PATH:?}.sig" \
 	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
-	      "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
 `${RELEASE_CHECKOUT:?}/wiki/src/news/test_${TAG:?}.mdwn`, including:
@@ -1214,7 +1232,7 @@ Go wild!
 Wait for the HTTP mirrors to catch up
 -------------------------------------
 
-Test downloading the ISO and IUK over HTTP.
+Test downloading the ISO, USB image and IUK over HTTP.
 
 Make sure every active mirror in the pool has the new version:
 
