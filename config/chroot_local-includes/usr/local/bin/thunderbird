@@ -4,10 +4,6 @@ set -e
 set -u
 set -x
 
-. gettext.sh
-TEXTDOMAIN="tails"
-export TEXTDOMAIN
-
 # Import set_mozilla_pref()
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
@@ -29,40 +25,12 @@ configure_locale() {
                      user_pref
 }
 
-prompt_for_disable_autocrypt() {
-    local server="${1}"
-    local dialog_msg="`eval_gettext \"<b><big>Do you want disable Autocrypt?</big></b>
-
-You have Autocrypt enabled for <i>\\\${server}</i>.
-Autocrypt is a quite new feature, that should help you encrypting without even think about it.
-In the past, there were cases, where unencrypted messages were sent unexpectitly.
-Tails recommend to disable Autocrypt for the moment, but you can still keep it enabled, if you know what you do.
-
-Do you want to disable Autocrypt for <i>\\\${server}</i>?\"`
-"
-    local disable="`gettext \"Disable\"`"
-    local keep="`gettext \"Keep enabled\"`"
-    zenity --question --title "" --text "${dialog_msg}" --default-ok \
-           --ok-label "${disable}" --cancel-label "${keep}"
-}
-
 disable_autocrypt() {
     # Disable Autocrypt since it is not safe (#15923).
     set_mozilla_pref "${PROFILE}/prefs.js"                 \
                      "mail.server.default.enableAutocrypt" \
                      "false"                               \
                      user_pref
-
-    # Search all accounts, where Autocrypt is enabled and ask for disable Autocrypt.
-    enabledAccountsAutocrypt=`sed -n -E 's/.*\("mail\.server\.(server[0-9]+)\.enableAutocrypt"\s*,\s*true\s*\);\s*/\1/p' "${PROFILE}/prefs.js"`
-    for server in ${enabledAccountsAutocrypt}; do
-        if prompt_for_disable_autocrypt "${server}"; then
-            set_mozilla_pref "${PROFILE}/prefs.js"                   \
-                             "mail.server.${server}.enableAutocrypt" \
-                             "false"                                 \
-                             user_pref
-        fi
-    done
 }
 
 configure_default_incoming_protocol() {
