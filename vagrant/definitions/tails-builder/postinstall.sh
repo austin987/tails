@@ -9,12 +9,12 @@ echo "$(date)" > /var/lib/vagrant_box_build_time
 
 export DEBIAN_FRONTEND="noninteractive"
 
-echo "I: Add sudo permissions to user vagrant..."
+echo "I: Adding sudo permissions to user vagrant..."
 cat > /etc/sudoers.d/vagrant << EOF
 vagrant         ALL=(ALL) NOPASSWD: ALL
 EOF
 
-echo "I: Add pubkey for vagrant..."
+echo "I: Adding pubkey for vagrant..."
 mkdir -p /home/vagrant/.ssh
 cat > /home/vagrant/.ssh/authorized_keys << EOF
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key
@@ -37,10 +37,10 @@ cat > /etc/apt/apt.conf.d/99periodic << EOF
 APT::Periodic::Enable "0";
 EOF
 
-echo "I: Install Tails APT repo signing key."
+echo "I: Installing Tails APT repo signing key..."
 apt-key add /tmp/tails.binary.gpg
 
-echo "I: Add standard APT suites."
+echo "I: Adding standard APT suites..."
 cat "/etc/apt/sources.list" | \
 	sed -e 's/stretch/stretch-updates/' \
 	> "/etc/apt/sources.list.d/stretch-updates.list"
@@ -48,7 +48,7 @@ cat "/etc/apt/sources.list" | \
 echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ stretch/updates main" \
 	> "/etc/apt/sources.list.d/stretch-security.list"
 
-echo "I: Adding our builder-jessie suite with live-build, pin it low."
+echo "I: Adding our builder-jessie suite with live-build and pinning it low..."
 echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
@@ -67,6 +67,23 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/stretch-backports << EOF
 	Pin-Priority: 100
 EOF
 
+# XXX: remove once the Vagrant build VM has mtools >= 4.0.18-2.1 (Buster)
+echo "I: Adding Debian Buster APT suite..."
+echo " deb http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}/ buster main"\
+	> "/etc/apt/sources.list.d/buster.list"
+echo "I: Adding APT pinning for Buster..."
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/buster << EOF
+	Package: *
+	Pin: release n=buster
+	Pin-Priority: -1
+EOF
+echo "I: Adding APT pinning for mtools..."
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/mtools << EOF
+	Package: mtools
+	Pin: release n=buster
+	Pin-Priority: 999
+EOF
+
 apt-get update
 
 echo "I: Installing Vagrant dependencies..."
@@ -75,7 +92,7 @@ apt-get -y install ca-certificates curl grub2 openssh-server wget
 echo "I: Configuring GRUB..."
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 
-echo "I: Installing Tails build dependencies."
+echo "I: Installing Tails build dependencies..."
 apt-get -y install \
         debootstrap \
         dosfstools \
@@ -103,7 +120,6 @@ apt-get -y install \
         live-build \
         lsof \
         mtools \
-        p7zip-full \
         perlmagick \
         psmisc \
         python3-gi \
