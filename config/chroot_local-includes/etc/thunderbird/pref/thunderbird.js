@@ -62,6 +62,10 @@ pref("mailnews.auto_config.guess.timeout", 30);
 pref("extensions.enigmail.protectedHeaders", 0);
 pref("extensions.torbirdy.custom.extensions.enigmail.protectedHeaders", 0);
 
+// Disable Autocrypt by default for new accounts (#16222).
+// This does not change anything for accounts that were created before.
+pref("mail.server.default.enableAutocrypt", false);
+
 // Don't decrypt subordinate message parts that otherwise might reveal
 // decrypted content to the attacker, i.e. the optional part of the fixes
 // for EFAIL.
