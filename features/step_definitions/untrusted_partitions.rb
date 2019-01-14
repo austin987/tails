@@ -29,9 +29,10 @@ Given /^I create an?( (\d+) ([[:alpha:]]+))? ([[:alnum:]]+) partition( labeled "
   $vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
 end
 
-Given /^I write the Tails (ISO|USB) image to disk "([^"]+)"$/ do |type, name|
+Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"$/ do |old, type, name|
   src_disk = {
-    :path => (type == 'ISO' ? TAILS_ISO : TAILS_IMG),
+    :path => (old == '' ? (type == 'ISO' ? TAILS_ISO : TAILS_IMG)
+                        : (type == 'ISO' ? OLD_TAILS_ISO : OLD_TAILS_IMG)),
     :opts => {
       :format => "raw",
       :readonly => true
