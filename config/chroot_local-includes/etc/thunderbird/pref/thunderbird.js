@@ -60,7 +60,13 @@ pref("mailnews.auto_config.guess.timeout", 30);
 // We disable Memory Hole for encrypted email until support is more
 // mature and widely spread (#15201).
 pref("extensions.enigmail.protectedHeaders", 0);
+// This setting is a good guess - but not used at the moment
 pref("extensions.torbirdy.custom.extensions.enigmail.protectedHeaders", 0);
+
+// Those settings are useless at the moment, just needed to display
+// the correct checkmark in torbirdy (#13649#note-31).
+pref("extensions.enigmail.protectHeaders", false);
+pref("extensions.torbirdy.custom.extensions.enigmail.protectHeaders", false);
 
 // Disable Autocrypt by default for new accounts (#16222).
 // This does not change anything for accounts that were created before.
