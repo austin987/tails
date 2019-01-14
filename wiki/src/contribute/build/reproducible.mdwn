@@ -19,8 +19,8 @@ What are reproducible builds?
 
 (Quoted from <https://reproducible-builds.org>)
 
-Tails ISO images should be reproducible: everybody who
-builds the ISO should be able to obtain the exact same resulting ISO
+Tails ISO and USB images should be reproducible: everybody who
+builds one of them should be able to obtain the exact same resulting
 image from a given Git tag.
 
 Why is it important?
@@ -28,8 +28,8 @@ Why is it important?
 
 Reproducibility increases confidence in the value of our continuous
 quality assurance processes as well as the trust that users, and anyone
-interested can put into our released build products (such as ISO images)
-and our development and release process.
+interested can put into our released build products (such as ISO and USB
+images) and our development and release process.
 
 Reproducible builds help [detect
 bugs](https://reproducible-builds.org/docs/buy-in/) and ensure that
@@ -43,54 +43,57 @@ developers](https://reproducible-builds.org/docs/buy-in/), improves
 users' security, and allows developers to sleep better at night (as the
 incentive for an attacker to compromise developers' systems, or to
 compromise developers themselves, is lowered). In turn, this avoids the
-need to trust people (or software) who build the ISO we release, which
-in turn allows more people to get involved in release management work.
+need to trust people (or software) who build the ISO and USB images we
+release, which in turn allows more people to get involved in release
+management work.
 
-Release managers do not have to upload the ISO image anymore when they
+Release managers do not have to upload the ISO and USB images anymore when they
 do a release: they can  instead build it both on our infrastructure
 (Jenkins) and locally and compare the outputs: if they match, one can
-publish the ISO built by Jenkins. Uploading an ISO can take many hours
+publish the ISO and USB images built by Jenkins. Uploading the ISO and USB
+images can take many hours
 with some commonly found means of accessing the Internet, so removing
 the need to go through this step decreases our time to remediation for
 fixing security issues, and makes it easier for developers with poor
 access to the Internet to take care of a release.
 
-Build and compare a Tails ISO image
-===================================
+Build and compare Tails ISO and USB images
+==========================================
 
-Build a Tails ISO image
------------------------
+Build Tails ISO and USB images
+------------------------------
 
 See the [[build instructions|contribute/build]].
 
 <a id="verify-iso"></a>
-How do I verify the ISO I have built against the official one?
---------------------------------------------------------------
+How do I verify the image I have built against the official one?
+----------------------------------------------------------------
 
-You can verify that the ISO image you have built is identical to the
+You can verify that the image you have built is identical to the
 official one we published either with OpenPGP or with a checksum.
 
 ### Verify with OpenPGP
 
-When you reproducibly build our ISO you should obtain a file that is
-exactly the same as the official Tails ISO image, thus, *our* signature
-should be able to verify *your* ISO for you.
+When you reproducibly build our image you should obtain a file that is
+exactly the same as the official Tails image, thus, *our* signature
+should be able to verify *your* image for you.
 
 [[Download and verify our OpenPGP signature|/install/download#openpgp]]
-against your own ISO image.
+against your own ISO or USB image.
 
 ### Verify with a checksum
 
-To verify that the ISO image you have built is identical as the
+To verify that the ISO or USB image you have built is identical as the
 official one:
 
-1. Compute the checksum of your ISO image by executing the following
-   command on it:
+1. Compute the checksum of your image by executing one of the following
+   commands on it:
 
         sha256sum yourimage.iso
+        sha256sum yourimage.img
 
-2. Compare the SHA-256 checksum of your ISO image with the one found
-   in the official [ISO description file](https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json).
+2. Compare the SHA-256 checksum of your images with the ones found
+   in the official [image description file](https://tails.boum.org/install/v2/Tails/amd64/stable/latest.json).
 
 Build and compare a Tails upgrade (IUK)
 =======================================
