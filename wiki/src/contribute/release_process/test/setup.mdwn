@@ -13,8 +13,7 @@ Install dependencies
 
 First of all, one needs a Debian Stretch system with:
 
- * the `non-free` APT component enabled;
- * the official backports repository configured.
+ * the `non-free` APT component enabled.
 
 The following packages are necessary on Debian Stretch:
 
@@ -96,6 +95,22 @@ If you have AppArmor enabled:
   `/etc/apparmor.d/libvirt/libvirt-*` and retry.
   If you use a custom `TMPDIR` to run the test suite,
   replace `/tmp/TailsToaster` with the value of that `$TMPDIR`.
+
+Known issues
+============
+
+## System under test freezes when creating a persistent volume
+
+If the host system runs Debian Stretch, due to [[!tails_ticket 12142]]
+aka. [[!debbug 851694]], any test scenario that creates a persistent
+volume will fail. To work around this problem, rebuild [[!debpts
+qemu]] locally with the upstream fix applied. For example, the `qemu`
+source package in this APT suite has the fix:
+
+        deb-src http://deb.tails.boum.org/ isotester-stretch main
+
+This problem does not affect host systems that run Debian Buster
+or newer.
 
 Special use cases
 =================
