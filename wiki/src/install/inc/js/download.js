@@ -312,16 +312,16 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-img-torrent").onclick = function(e) { displayBitTorrentVerification(e); }
-  document.getElementById("download-iso-torrent").onclick = function(e) { displayBitTorrentVerification(e); }
+  document.getElementById("download-img-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
+  document.getElementById("download-iso-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
 
-  function displayBitTorrentVerification(e) {
+  function displayBitTorrentVerification(e, elm) {
     try {
       e.preventDefault();
       hitCounter("download-torrent");
       toggleDirectBitTorrent("bittorrent");
     } finally {
-      window.location = this.getAttribute("href");
+      window.location = elm.getAttribute("href");
     }
   }
 
