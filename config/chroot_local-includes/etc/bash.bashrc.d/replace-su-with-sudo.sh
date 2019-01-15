@@ -14,7 +14,7 @@
 
 # Since we don't want to add 'su' function for root user, we will stop
 # execution of this script if $USER is root.
-[ "$USER" == root ] && return
+[ "$USER" == "amnesia" ] || return
 
 su (){
     /usr/local/bin/replace-su-with-sudo
