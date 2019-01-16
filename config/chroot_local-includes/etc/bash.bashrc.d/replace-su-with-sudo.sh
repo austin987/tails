@@ -12,9 +12,12 @@
 #
 # https://redmine.tails.boum.org/code/issues/15583
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
 # Since we don't want to add 'su' function for root user, we will stop
 # execution of this script if $USER is root.
-[ "$USER" == "amnesia" ] || return
+[ "$USER" == "$LIVE_USERNAME" ] || return
 
 su (){
     /usr/local/bin/replace-su-with-sudo
