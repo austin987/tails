@@ -15,8 +15,7 @@
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
-# Since we don't want to add 'su' function for root user, we will stop
-# execution of this script if $USER is root.
+# Only add the 'su' function for the desktop user.
 [ "$USER" == "$LIVE_USERNAME" ] || return
 
 su (){
