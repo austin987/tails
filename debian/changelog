@@ -1,8 +1,90 @@
 tails (3.12) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * XXX: add anything done after 98578d2aae24e51734576369736f343fe8b66b72
+  * XXX: see various XXX below
 
- -- Tails developers <tails@boum.org>  Wed, 05 Sep 2018 16:51:53 +0000
+  * Major changes
+    - Make the USB image the main supported way to install Tails (refs: #15292).
+      On first boot, grow the system partition to a size that's a factor
+      of the size of the boot medium and randomize GUIDs (Closes: #15319).
+    - Upgrade Linux to 4.19, version 4.19.13-1 (Closes: #16073, #16224).
+      XXX: CVEs 4.18.20-2..4.19.13-1
+    - Remove Liferea (Closes: #11082, #15776).
+    - Upgrade to the Debian Stretch 9.6 point-release.
+
+  * Security fixes
+    - XXX: Tor Browser
+    - Upgrade Thunderbird to 60.4.0 (DSA-4362-1; Closes: #16261).
+    - Upgrade OpenSSL to 1.0.2q-1~deb9u1 (DSA-4355-1).
+    - Upgrade libarchive to 3.2.2-2+deb9u1 (DSA-4360-1).
+    - Upgrade GnuTLS to 3.5.8-5+deb9u4 (CVE-2018-10844, CVE-2018-10845).
+    - Upgrade libgd3 to 2.2.4-2+deb9u3 (CVE-2018-1000222, CVE-2018-5711).
+    - Upgrade libmspack to 0.5-1+deb9u3 (CVE-2018-18584, CVE-2018-18585).
+    - Upgrade libopenmpt to 0.2.7386~beta20.3-3+deb9u3 (CVE-2018-10017).
+    - Upgrade libx11 to 2:1.6.4-3+deb9u1 (CVE-2018-14598, CVE-2018-14599,
+      CVE-2018-14600).
+    - Upgrade libxcursor to 1:1.1.14-1+deb9u2 (CVE-2015-9262).
+    - XXX: NetworkManager (#16365).
+    - Upgrade wpa to 2:2.4-1+deb9u2 (CVE-2018-14526).
+    - Upgrade zeromq3 to 4.2.1-4+deb9u1 (CVE-2019-6250).
+
+  * Bugfixes
+    - Fix Totem's access to the Internet when it's started from the Applications
+      menu.
+    - Rename HTP pools to avoid confusion (Closes: #15428).
+    - Fix memory erasure on shutdown with systemd v239+, by mounting
+      a dedicated tmpfs on /run/initramfs instead of trying to remount /run
+      with the "exec" option (Closes: #16097).
+    - Make the KeePassX wrapper dialog translatable.
+    - Fix detection of first Thunderbird run.
+
+
+  * Minor improvements and updates
+    - Upgrade tor to 0.3.4.9-1~d90.stretch+1.
+    - Upgrade Mesa to 18.2.6-1~bpo9+1, libdrm to 2.4.95-1~bpo9+1,
+      and libglvnd to 1.1.0-1~bpo9+1.
+    - Upgrade firmware-linux and firmware-nonfree to 20190114-1.
+    - Upgrade amd64-microcode to 3.20181128.1.
+    - Upgrade intel-microcode to 3.20180807a.2~bpo9+1.
+    - Remove the boot readahead feature (Closes: #15915).
+      In most supported use cases, it did not improve boot time anymore,
+      or even increases it.
+    - Require TLS 1.2 in our Upgrader and tails-security-check (Closes: 11815).
+    - Enable O_CREAT restriction in /tmp directories for FIFOs and regular
+      files (Closes: #16072).
+    - Upgrade systemd to 240-4~bpo9+0tails1 (Closes: #16352).
+      Fixes CVE-2018-16864, CVE-2018-16865, and CVE-2018-16866.
+    - Upgrade Enigmail to 2.0.8-5~deb9u1 (Closes: #15657).
+    - Upgrade Torbirdy to 0.2.6-1~bpo9+1 (Closes: #15661).
+    - Modify Torbirdy configuration in a way that's easier to maintain.
+
+  * Build system
+    - Make the build of the USB image reproducible (Closes: #15985).
+    - Allow specifying which set of APT snapshots shall be used during
+      the build, with the APT_SNAPSHOTS_SERIALS build option (Closes: #15107).
+    - Fix more GIDs and display more information when changing UIDs or GIDs
+      fails (Closes: #16036).
+    - Remove obsolete patches, refresh remaining ones to apply on top
+      of currently installed packages version.
+    - Disable irrelevant recurring jobs in Vagrant build box (refs: #16177)
+      that increase the chance of FTBFS due to mksquashfs being reaped
+      by the OOM killer.
+    - Adjust for recent GnuPG error'ing out when it has no controlling terminal.
+
+  * Test suite
+    - Adjust test suite for USB image:
+      - Add tests that exercise behavior on first boot from a device
+        installed using the USB image (Closes: #16003).
+      - Drop tests for use cases we don't support anymore with the introduction
+        of the USB image (refs: #16004).
+      - Adjust remaining tests to focus on main supported use cases,
+        i.e. Tails installed from a USB image (refs: #16004.
+    - In scenarios where we simulate MAC spoofing failure, test safety-critical
+      properties even if the desktop notification is buggy (refs: #10774).
+    - Update expected title for our Redmine (Closes: #16237).
+    - Update expected image for OpenPGP key search.
+
+ -- Tails developers <tails@boum.org>  Wed, 16 Jan 2019 13:48:23 +0000
 
 tails (3.11) unstable; urgency=medium
 
