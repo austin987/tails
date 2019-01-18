@@ -175,7 +175,11 @@ document.addEventListener("DOMContentLoaded", function() {
       var counter_url, url, scenario, version, cachebust;
       counter_url = "/install/download/counter";
       url = window.location.href.split("/");
-      scenario = url[url.lastIndexOf("install") + 1];
+      if (window.location.href.match(/\/upgrade\//)) {
+        scenario = 'upgrade';
+      } else {
+        scenario = url[url.lastIndexOf("install") + 1];
+      }
       version = document.getElementById("tails-version").textContent.replace("\n", "");
       cachebust = Math.round(new Date().getTime() / 1000);
       fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status + "&cachebust=" + cachebust);

@@ -37,8 +37,6 @@ the scripts snippets found on this page:
         export PREVIOUS_VERSION=$(dpkg-parsechangelog --offset 1 --count 1 -SVersion)
         export PREVIOUS_TAG=$(echo "${PREVIOUS_VERSION:?}" | sed -e 's,~,-,')
 
-* `NEXT_PLANNED_VERSION`: set to the version number of the next Tails release
-  (e.g. 0.23 when releasing 0.22.1, and 1.3 when releasing 1.2)
 * `NEXT_PLANNED_MAJOR_VERSION`: set to the version number of the next
   *major* Tails release; if you're preparing a RC for a major release,
   use that major release; otherwise, use whatever the next planned
@@ -317,6 +315,15 @@ This populates the Changelog with the Git log entries.
 Then, launch an editor for the needed cleanup of the result:
 
 	dch -e
+
+Changelog entries can be dispatched into those usual sections:
+
+ * Major changes
+ * Security fixes
+ * Bugfixes
+ * Minor improvements and updates
+ * Build system
+ * Test suite
 
 Then, gather other useful information from:
 
@@ -722,7 +729,7 @@ Use `tails-create-iuk` to build the following IUKs:
   next version.
 
 Include each such version in a white-space separated list called
-`IUK_SOURCE_VERSIONS`, (e.g. `IUK_SOURCE_VERSIONS="2.8 2.9 2.9.1 2.10~rc1"`)
+`IUK_SOURCE_VERSIONS`, (e.g. `IUK_SOURCE_VERSIONS="2.8 2.9 2.9.1 2.10~rc1"`), optionally setting `TMPDIR` to an existing absolute path where disk space is available,
 and run the following:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
@@ -730,9 +737,11 @@ and run the following:
             echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
             break
         fi
+        echo "Generating IUK file from ${source_version:?} to ${VERSION:?}"
         sudo su -c "cd ${IUK_CHECKOUT:?} && \
           SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
+          TMPDIR=\"${TMPDIR:-/tmp}\" \
           PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
             ./bin/tails-create-iuk \
                --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
@@ -742,8 +751,9 @@ and run the following:
     done
 
 Note that developer tools for creating IUK and upgrade-description
-files were only tested on Debian sid. It should hopefully work well on
-Debian stable too.
+files are primarily developed and tested on Debian sid. They may
+therefore occasionally be broken on Debian stable. As of December 2018
+they work fine on Debian Stretch.
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
@@ -1407,7 +1417,7 @@ Amnesia news
 The release announcement are automatically sent to `amnesia-news@`
 (thanks to the `announce` flag) on an hourly basis, but it will be
 stuck in the moderation
-queue. [Log in](https://mailman.boum.org/admindb/amnesia-news) and
+queue. [Log in](https://www.autistici.org/mailman/admindb/amnesia-news) and
 accept it.
 
 Prepare for the next development cycle
@@ -1468,8 +1478,9 @@ this, and skip what does not make sense for a RC.
            --repo "${bare_repo:?}" && \
         rm -rf "${bare_repo:?}"
 
-1. Remove all old versions in `wiki/src/upgrade/v1/Tails` and
-   `debian/changelog` that were never released. Explanation: the
+1. On the `stable` and `devel` branches, remove all old versions in
+   that were never released from `wiki/src/upgrade/v1/Tails` and
+   `debian/changelog`. Explanation: the
    post-release APT repository steps from the previous stable release
    will usually have had us prepare for an emergency release that was
    never made.
