@@ -175,7 +175,11 @@ document.addEventListener("DOMContentLoaded", function() {
       var counter_url, url, scenario, version, cachebust;
       counter_url = "/install/download/counter";
       url = window.location.href.split("/");
-      scenario = url[url.lastIndexOf("install") + 1];
+      if (window.location.href.match(/\/upgrade\//)) {
+        scenario = 'upgrade';
+      } else {
+        scenario = url[url.lastIndexOf("install") + 1];
+      }
       version = document.getElementById("tails-version").textContent.replace("\n", "");
       cachebust = Math.round(new Date().getTime() / 1000);
       fetch(counter_url + "?scenario=" + scenario + "&version=" + version + "&status=" + status + "&cachebust=" + cachebust);
@@ -271,19 +275,19 @@ document.addEventListener("DOMContentLoaded", function() {
   opaque(document.getElementById("continue-link-bittorrent"));
 
   // Display "Verify with your browser" when image is clicked
-  document.getElementById("download-img").onclick = function(e) { displayVerificationExtension(e); }
-  document.getElementById("download-iso").onclick = function(e) { displayVerificationExtension(e); }
+  document.getElementById("download-img").onclick = function(e) { displayVerificationExtension(e, this); }
+  document.getElementById("download-iso").onclick = function(e) { displayVerificationExtension(e, this); }
 
-  function displayVerificationExtension(e) {
+  function displayVerificationExtension(e, elm) {
     try {
       e.preventDefault();
-      hitCounter("download-iso");
+      hitCounter("download-image");
       toggleDirectBitTorrent("direct");
       resetVerificationResult();
     } finally {
       // Setting window.location.href will abort AJAX requests resulting
       // in a NetworkError depending on the timing and browser.
-      window.open(this.getAttribute("href"), "_blank");
+      window.open(elm.getAttribute("href"), "_blank");
     }
   }
 
@@ -295,31 +299,33 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // Reset verification when downloading again after failure
-  document.getElementById("download-img-again").onclick = function(e) { resetVerification(e); }
-  document.getElementById("download-iso-again").onclick = function(e) { resetVerification(e); }
+  document.getElementById("download-img-again").onclick = function(e) { resetVerification(e, this); }
+  document.getElementById("download-iso-again").onclick = function(e) { resetVerification(e, this); }
 
-  function resetVerification(e) {
+  function resetVerification(e, elm) {
     try {
       e.preventDefault();
-      hitCounter("download-iso-again");
+      hitCounter("download-image-again");
       toggleDirectBitTorrent("direct");
       resetVerificationResult();
     } finally {
-      window.location = this.getAttribute("href");
+      // Setting window.location.href will abort AJAX requests resulting
+      // in a NetworkError depending on the timing and browser.
+      window.open(elm.getAttribute("href"), "_blank");
     }
   }
 
   // Display "Verify with BitTorrent" when Torrent file is clicked
-  document.getElementById("download-img-torrent").onclick = function(e) { displayBitTorrentVerification(e); }
-  document.getElementById("download-iso-torrent").onclick = function(e) { displayBitTorrentVerification(e); }
+  document.getElementById("download-img-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
+  document.getElementById("download-iso-torrent").onclick = function(e) { displayBitTorrentVerification(e, this); }
 
-  function displayBitTorrentVerification(e) {
+  function displayBitTorrentVerification(e, elm) {
     try {
       e.preventDefault();
       hitCounter("download-torrent");
       toggleDirectBitTorrent("bittorrent");
     } finally {
-      window.location = this.getAttribute("href");
+      window.location = elm.getAttribute("href");
     }
   }
 

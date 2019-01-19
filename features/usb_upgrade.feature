@@ -18,21 +18,21 @@ Feature: Upgrading an old Tails USB installation
     When I start Tails Installer
     Then I am told by Tails Installer that I "need to use a downloaded Tails ISO image"
 
-  # XXX: take a shortcut and write the USB image directly to a USB drive
+  # Installation method inspired by the usb-install-tails-greeter
+  # checkpoint, variations are using the old Tails USB image and a
+  # different device name ("old" instead of "__internal")
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
-    And the computer is set to boot from the old Tails DVD
-    And the network is unplugged
-    And I start the computer
-    When the computer boots Tails
-    And I log in to a new session
-    And all notifications have disappeared
     And I create a 7200 MiB disk named "old"
     And I plug USB drive "old"
-    When I install Tails to USB drive "old" by cloning
-    Then the running Tails is installed on USB drive "old"
-    But there is no persistence partition on USB drive "old"
-    And I unplug USB drive "old"
+    And I write an old version of the Tails USB image to disk "old"
+    When I start Tails from USB drive "old" with network unplugged
+    Then the boot device has safe access rights
+    And Tails is running from USB drive "old"
+    And there is no persistence partition on USB drive "old"
+    And process "udev-watchdog" is running
+    And udev-watchdog is monitoring the correct device
+    And I shutdown Tails and wait for the computer to power off
 
   # Depends on scenario: Installing an old version of Tails to a pristine USB drive
   Scenario: Creating a persistent partition with the old Tails USB installation
@@ -80,7 +80,6 @@ Feature: Upgrading an old Tails USB installation
 
   # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
   Scenario: Upgrading an old Tails USB installation from another Tails USB drive
-    # XXX: ensure we do this Given without Tails Installer (usb-install-tails-greeter)
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
     And I clone USB drive "old" to a new USB drive "to_upgrade"
@@ -100,42 +99,7 @@ Feature: Upgrading an old Tails USB installation
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
 
-  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
-  # XXX: still documented? if not, drop it.
-  Scenario: Upgrading an old Tails USB installation from an ISO image, running on the old version
-    Given a computer
-    And I clone USB drive "old" to a new USB drive "to_upgrade"
-    When I start Tails from USB drive "old" with network unplugged and I login
-    And I plug and mount a USB drive containing the Tails ISO
-    And I plug USB drive "to_upgrade"
-    And I upgrade Tails on USB drive "to_upgrade" from an ISO
-    Then the ISO's Tails is installed on USB drive "to_upgrade"
-    And I unplug USB drive "to_upgrade"
-
-  # Depends on scenario: Writing files to a read/write-enabled persistent partition with the old Tails USB installation
-  # XXX: still documented? if not, drop it.
-  Scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
-    Given I have started Tails from DVD without network and logged in
-    And I plug and mount a USB drive containing the Tails ISO
-    And I clone USB drive "old" to a new USB drive "to_upgrade"
-    And I plug USB drive "to_upgrade"
-    And I upgrade Tails on USB drive "to_upgrade" from an ISO
-    Then the ISO's Tails is installed on USB drive "to_upgrade"
-    And I unplug USB drive "to_upgrade"
-
-  # Depends on scenario: Upgrading an old Tails USB installation from an ISO image, running on the new version
-  # XXX: still documented? if not, drop it.
-  Scenario: Booting a USB drive upgraded from ISO with persistence enabled
-    Given a computer
-    And I start Tails from USB drive "to_upgrade" with network unplugged and I login with persistence enabled
-    Then all persistence presets from the old Tails version are enabled
-    And Tails is running from USB drive "to_upgrade"
-    And the boot device has safe access rights
-    And the expected persistent files created with the old Tails version are present in the filesystem
-    And all persistent directories from the old Tails version have safe access rights
-
   Scenario: Upgrading Tails with Tails Upgrader through an incremental upgrade
-    # XXX: ensure we do this Given without Tails Installer (usb-install-tails-greeter)
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think it is running version 1.0~test
     And the file system changes introduced in version 1.1~test are not present

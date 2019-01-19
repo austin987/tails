@@ -56,26 +56,23 @@ Feature: Installing Tails to a USB drive
     But there is no persistence partition on USB drive "install"
 
   Scenario: Re-installing Tails over an existing USB installation with a persistent partition
-    # XXX: We reach this first checkpoint only to ensure that the ' __internal' disk has reached the state (Tails installed + persistent partition set up) we need before we clone it below.
-    # XXX: do this "Given" without Tails Installer
+    # We reach this first checkpoint only to ensure that the ' __internal' disk has reached the state (Tails installed + persistent partition set up) we need before we clone it below.
+    # This first part is done without Tails Installer (install from Tails USB image)
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     Given I have started Tails from DVD without network and logged in
     And I clone USB drive "__internal" to a temporary USB drive "install"
     And I plug USB drive "install"
-    # XXX: keep doing reinstall with Tails Installer: that's what this scenario
-    # is about
+    # This second part is done with Tails Installer, that's what this scenario is about
     When I reinstall Tails to USB drive "install" by cloning
     Then the running Tails is installed on USB drive "install"
     And there is no persistence partition on USB drive "install"
 
-  # XXX: do this without Tails Installer
   Scenario: Booting Tails from a USB drive without a persistent partition and creating one
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     And I log in to a new session
     When I create a persistent partition
     Then a Tails persistence partition exists on USB drive "__internal"
 
-  # XXX: do this without Tails Installer
   Scenario: Booting Tails from a USB drive without a persistent partition
     Given I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen
     When I log in to a new session
@@ -83,7 +80,6 @@ Feature: Installing Tails to a USB drive
     And the persistent Tor Browser directory does not exist
     And there is no persistence partition on USB drive "__internal"
 
-  # XXX: do this without Tails Installer
   #13459
   @fragile
   Scenario: Booting Tails from a USB drive in UEFI mode
