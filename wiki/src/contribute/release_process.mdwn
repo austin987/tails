@@ -1068,8 +1068,8 @@ Now you can announce and seed the Torrent for the release you're preparing:
              /var/lib/transmission-daemon/downloads/ && \
           transmission-remote --add ${image_filename:?}.torrent \
                               --find /var/lib/transmission-daemon/downloads/
-    done
     EOF
+    done
 
 Test that you can start downloading the ISO and USB images with a BitTorrent client.
 
@@ -1106,8 +1106,9 @@ Testing
 1. Make sure that enough people are here to run the tests, that they
    report their results in due time, and that they make it clear when
    they're leaving for good.
-1. Fill the holes and make sure that the manual test suite is done in
-   due time.
+1. Fill the holes and make sure that the automated and manual test
+   suites are done in due time. Clock and report this work separately
+   from your RM'ing work.
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
@@ -1132,7 +1133,7 @@ Rename, copy, garbage collect and update various files:
 	   "${IMG_PATH:?}.sig" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest" \
 	   "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.packages" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
+	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
 	git rm \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,torrent} && \
@@ -1203,7 +1204,7 @@ Copy the signatures and the Torrent into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \
-	   "${ISOS:?}/tails-amd64-${VERSION:?}.torrent" \
+	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/"
 
 Write the announcement for the release in
