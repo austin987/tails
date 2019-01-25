@@ -14,7 +14,7 @@ Feature: Additional software
     And I update APT using apt
     When I install "sslh" using apt
     Then I am notified I can not use Additional Software for "sslh"
-    And I can open the Additional Software documentation from the notification link
+    And I can open the Additional Software documentation from the notification
 
   # Here we install the sslh package to test if debconf does not prevent
   # Additional Software from automatically installing packages.
