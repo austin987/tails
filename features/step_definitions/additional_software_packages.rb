@@ -42,7 +42,7 @@ Then /^I create the Additional Software persistence$/  do
 end
 
 Then /^The Additional Software persistence option is enabled$/  do
-  @screen.wait('ASPPersistenceSetupOptionEnabled', 60)
+  @screen.wait('ASPPersistenceSetupOptionEnabled.png', 60)
 end
 
 Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |package|
