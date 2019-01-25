@@ -139,12 +139,16 @@ When /^I can open the Additional Software configuration window from the notifica
   asp = Dogtail::Application.new('tails-additional-software-config')
 end
 
-When /^I disable the Additional Software installation service$/ do
-  $vm.execute_successfully('systemctl disable tails-additional-software-install.service')
+When /^I disable the user session's Additional Software installation service$/ do
+  # This service is the one that would otherwise start the system-wide
+  # tails-additional-software-install.service
+  $vm.execute_successfully('systemctl --global disable tails-additional-software-install.service')
 end
 
-When /^I start the Additional Software installation service$/ do
-  $vm.execute_successfully('systemctl enable tails-additional-software-install.service')
+When /^I start the system-wide Additional Software installation service$/ do
+  # This service is not enabled by default. In the relevant scenarios,
+  # the other service (user session's tails-additional-software-install.service)
+  # that would start it was disabled so we need to start this one ourselves.
   $vm.execute_successfully('systemctl --no-block start tails-additional-software-install.service')
 end
 
