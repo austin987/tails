@@ -437,7 +437,7 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ 
   when "Tails homepage"
     title = 'Tails - Privacy for anyone anywhere'
   when "Tails roadmap"
-    title = 'Roadmap - Tails - RiseupLabs Code Repository'
+    title = 'Roadmap - Tails - Tails Ticket Tracker'
   else
     raise "Unsupported page: #{page}"
   end

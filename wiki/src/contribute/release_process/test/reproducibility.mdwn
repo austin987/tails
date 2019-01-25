@@ -80,7 +80,7 @@ called `SHA512SUMS.txt`.
 
 Set these environment variables accordingly:
 
-* `ISOS_CHECKOUT`: path to your Tails ISO history repo checout.
+* `ISOS_CHECKOUT`: path to your Tails ISO history repo checkout.
 <!-- * `PACKAGES_FILE="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso.packages"` -->
 * `PUBLISHED_ARTIFACTS`: some _new_ directory where you can download
   gigabytes of data to.
@@ -99,7 +99,7 @@ Set these environment variables accordingly:
 
 # Build your own products
 
-## Build your own ISO image
+## Build your own images
 
 1. Fetch and verify the Git tag:
 
@@ -113,7 +113,7 @@ Set these environment variables accordingly:
    contact the RM and <tails@boum.org>! Proceeding with the rest of the steps
    are pointless in this case, so await instruction.
 
-2. Build an ISO image:
+2. Build ISO and USB images:
 
         cd "${TAILS_CHECKOUT:?}" && \
         git checkout "${TAG:?}" && \
@@ -121,7 +121,7 @@ Set these environment variables accordingly:
         export SOURCE_DATE_EPOCH=$(date --utc --date="$(dpkg-parsechangelog --show-field=Date)" '+%s') && \
         rake build && \
         mkdir "${ISOS:?}/tails-amd64-${VERSION:?}" && \
-        mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.iso*" \
+        mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.*" \
            "${ISOS:?}/tails-amd64-${VERSION:?}/"
 
 <!-- ## Build your own IUKs -->
@@ -183,11 +183,11 @@ the following steps have to be done only after the release has been made public.
     cd "${PUBLISHED_ARTIFACTS:?}" && \
     mkdir tails-amd64-${VERSION:?} && \
     cd tails-amd64-${VERSION:?} && \
-    wget http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso && \
+    wget http://dl.amnesia.boum.org/tails/${DIST:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.{img,iso}
 
 ## Verify that your products match what was published
 
-### ISO
+### ISO and USB images
 
     cd "${PUBLISHED_ARTIFACTS:?}" && \
     sha512sum -c "${SHA512SUMS:?}"

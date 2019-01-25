@@ -11,5 +11,8 @@ set -e
 
 echo "Creating the tails-persistence-setup user"
 
+# If this fails because UID 115 or GID 122 are already in use,
+# move the "stealer" user/group out of the way in 04-change-gids-and-uids.
+
 addgroup --system --gid 122 tails-persistence-setup
 adduser --system --uid 115 --gid 122 --no-create-home tails-persistence-setup
