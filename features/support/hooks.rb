@@ -25,8 +25,8 @@ AfterConfiguration do |config|
     # excluding persistence) and will create yet another disk and
     # install Tails on it. This should be the peak of disk usage.
     'features/usb_install.feature',
-    # This feature uses some snapshots and a disk that can be reused in
-    # the later feature below and reduce memory footprint on the system.
+    # This feature uses a few temporary snapshots, a network-enabled
+    # snapshot, and a large disk.
     'features/additional_software_packages.feature',
     # This feature needs a copy of the ISO and creates a new disk.
     'features/usb_upgrade.feature',
