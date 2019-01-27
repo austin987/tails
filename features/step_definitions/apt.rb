@@ -75,14 +75,15 @@ end
 
 def check_for_removal(package)
   try_for(3*60) do
-    state = $vm.execute("apt-cache policy #{package}").stdout.split("\n")[1]
-    /^\s{2}Installed:\s\(none\)$/.match(state) != nil
+    # Once purged, a package is removed from the installed package status database
+    # and "dpkg -s" returns a non-zero exit code
+    ! $vm.execute("dpkg -s #{package}").success?
   end
 end
 
 Then /^I uninstall "(.+)" using apt$/ do |package|
   $vm.execute("echo #{@sudo_password} | " +
-                               "sudo -S apt -y remove #{package}",
+                               "sudo -S apt -y purge #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
   check_for_removal(package)
