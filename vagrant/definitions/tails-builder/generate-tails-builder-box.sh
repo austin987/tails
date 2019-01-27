@@ -47,6 +47,7 @@ fi
 # already exists
 rm -f "${TARGET_NAME}".*
 
+# FIXME: vmdebootstrap is orphaned/deprecated (#15349).
 sudo ${http_proxy:+http_proxy="$http_proxy"} \
      LC_ALL=${LC_ALL} \
      ARCHITECTURE=${ARCHITECTURE} \
