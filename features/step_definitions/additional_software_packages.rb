@@ -14,7 +14,9 @@ Then /^the Additional Software (upgrade|installation) service has started$/ do |
     try_for(seconds_to_wait, :delay => 10) do
       $vm.execute("systemctl status #{service}.service").success?
     end
-    step "I am notified that the installation succeeded"
+    if service == "installation"
+      step "I am notified that the installation succeeded"
+    end
   end
 end
 
