@@ -85,6 +85,11 @@ Feature: Additional software
     And I prepare the Additional Software upgrade process to fail
     And the network is plugged
     And Tor is ready
+    # Note: the next step races against the appearance of the "The
+    # upgrade of your additional software failed" notification.
+    # It should win most of the time, which is good, but there's no
+    # guarantee it does. If it loses, then it'll remove the notification
+    # we'll be trying to interact with below ("I can open…")
     And all notifications have disappeared
     And available upgrades have been checked
     And I see the "The upgrade of your additional software failed" notification after at most 300 seconds
