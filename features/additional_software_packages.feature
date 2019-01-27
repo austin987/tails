@@ -114,8 +114,10 @@ Feature: Additional software
     And I start Tails from USB drive "__internal" with network unplugged
     And I enable persistence
     And I remove the "cowsay" deb files from the APT cache
+    # Prevent the "Warning: virtual machine detected!" notification from racing
+    # with the one we'll be interacting with below.
+    And I disable the tails-virt-notify-user.service user unit
     And I log in to a new session
-    And all notifications have disappeared
     Then I see the "The installation of your additional software failed" notification after at most 300 seconds
     And I can open the Additional Software log file from the notification
     And the package "cowsay" is not installed

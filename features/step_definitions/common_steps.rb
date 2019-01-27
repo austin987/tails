@@ -1077,3 +1077,8 @@ When /^I upload "([^"]*)" to "([^"]*)"$/ do |source, destination|
     end
   end
 end
+
+When /^I disable the (.*) (system|user) unit$/ do |unit, scope|
+  options = scope == 'system' ? '' : '--global'
+  $vm.execute_successfully("systemctl #{options} disable '#{unit}'")
+end
