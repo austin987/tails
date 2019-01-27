@@ -18,7 +18,7 @@ Feature: Additional software
 
   # Here we install the sslh package to test if debconf does not prevent
   # Additional Software from automatically installing packages.
-  # This scenario also sets up the "__internal" drive that most following
+  # This scenario also sets up the "__internal" drive that the following
   # scenarios will reuse.
   Scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
     Given I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login
