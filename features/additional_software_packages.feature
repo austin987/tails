@@ -103,7 +103,7 @@ Feature: Additional software
     Then the Additional Software upgrade service has started
     And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
 
-  # Depends on scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
+  # Depends on scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
   Scenario: I am notified when Additional Software fails to install a package
     Given a computer
     And I start Tails from USB drive "__internal" with network unplugged
