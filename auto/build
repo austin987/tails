@@ -98,6 +98,7 @@ DEBOOTSTRAP_OPTIONS="${DEBOOTSTRAP_OPTIONS:-} --no-merged-usr"
 # use our own APT repository's key:
 DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "$DEBOOTSTRAP_GNUPG_HOMEDIR" \
+    --no-tty \
     --import config/chroot_sources/tails.chroot.gpg
 if [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg" ]; then
     DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"

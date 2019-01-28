@@ -25,7 +25,23 @@ Change_uid () {
 			Debug_gids_and_uids
 			exit 1
 		fi
-		find / -wholename /proc -prune -o \( \! -type l -a -uid "$OLD" -exec chown "$NEW" '{}' \; \)
+		# chown(1) and chgrp(1) clear the setuid and setgid bits;
+		# let's preserve them.
+		#
+		# Using "-exec CMD +", find builds command lines incrementally,
+		# before executing chown. Which is why the operation below is
+		# not the "if a file has the setuid bit, then give it the setuid
+		# bit" no-op, but rather "if a file had the setuid bit before
+		# chown was run, then set it back".
+		find / -wholename /proc -prune -o \( \
+				\! -type l -uid "$OLD" \
+				-exec chown "$NEW" '{}' + \
+				\( \
+					   -perm -6000 -exec chmod gu+s '{}' + \
+					-o -perm -4000 -exec chmod u+s  '{}' + \
+					-o -perm -2000 -exec chmod g+s  '{}' + \
+				\) \
+			\)
 	fi
 }
 
@@ -40,6 +56,15 @@ Change_gid () {
 			Debug_gids_and_uids
 			exit 1
 		fi
-		find / -wholename /proc -prune -o \( \! -type l -a -gid "$OLD" -exec chgrp "$NEW" '{}' \; \)
+		# See comments in Change_uid().
+		find / -wholename /proc -prune -o \( \
+				\! -type l -gid "$OLD" \
+				-exec chgrp "$NEW" '{}' + \
+				\( \
+					   -perm -6000 -exec chmod gu+s '{}' + \
+					-o -perm -4000 -exec chmod u+s  '{}' + \
+					-o -perm -2000 -exec chmod g+s  '{}' + \
+				\) \
+			\)
 	fi
 }
