@@ -212,7 +212,7 @@ task :parse_build_options do
   options << 'vmproxy'
 
   # Default to fast compression on development branches
-  options << 'gzipcomp' unless is_release?
+  options << 'fastcomp' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
@@ -242,7 +242,7 @@ task :parse_build_options do
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
-    when 'gzipcomp'
+    when 'fastcomp', 'gzipcomp'
       ENV['MKSQUASHFS_OPTIONS'] = '-comp xz'
       if is_release?
         raise 'We must use the default compression when building releases!'
