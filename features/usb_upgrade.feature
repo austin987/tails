@@ -21,6 +21,10 @@ Feature: Upgrading an old Tails USB installation
   # Installation method inspired by the usb-install-tails-greeter
   # checkpoint, variations are using the old Tails USB image and a
   # different device name ("old" instead of "__internal")
+  #
+  # Boot the system to make sure resizing has happened, and to check
+  # the system is sane (safe access rights, no persistence, etc.); end
+  # with unplugging to get both a clean state and a stopped machine.
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
     And I create a 7200 MiB disk named "old"
