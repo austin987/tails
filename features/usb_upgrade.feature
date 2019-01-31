@@ -32,7 +32,7 @@ Feature: Upgrading an old Tails USB installation
     And there is no persistence partition on USB drive "old"
     And process "udev-watchdog" is running
     And udev-watchdog is monitoring the correct device
-    And I shutdown Tails and wait for the computer to power off
+    And I unplug USB drive "old"
 
   # Depends on scenario: Installing an old version of Tails to a pristine USB drive
   Scenario: Creating a persistent partition with the old Tails USB installation
