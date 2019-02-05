@@ -31,8 +31,8 @@ Update POT and PO files
 =======================
 
     git checkout master && \
-    "${RELEASE_CHECKOUT:?}"/import-translations && \
-    "${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po && \
+    "${TAILS_GIT_CHECKOUT:?}"/import-translations && \
+    "${TAILS_GIT_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po && \
     git add po && \
     git commit -m 'Update POT and PO files, pull updated translations from Transifex.'
 
@@ -100,7 +100,7 @@ and then update `debian/changelog` again if needed.
 Commit `debian/changelog`:
 
     git commit debian/changelog \
-        -m "$(echo "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))\n\nGit-Dch: Ignore\n")"
+        -m "$(echo -e "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))\n\nGit-Dch: Ignore\n")"
 
 Build a Debian package (use a Stretch/amd64 chroot, that has
 `stretch-backports` enabled and on top of that: either tails-perl5lib
