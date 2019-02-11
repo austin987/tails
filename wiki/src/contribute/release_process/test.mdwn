@@ -65,12 +65,18 @@ This section can **not** be done by the RM.
    [IUKs](https://mirrors.wikimedia.org/tails/stable/iuk/) that
    upgrade to the version you are testing.
 
-2. Clear-sign the hashes of all products using your OpenPGP key:
+2. Clear-sign the hashes of all products using your OpenPGP key
+   and gzip the output (otherwise the signed text could be mangled
+   at some point in the email chain):
 
-        sha512sum *.iso *.img *.iuk | gpg --clear-sign
+        DEST_DIR=$(mktemp -d)
+        sha512sum *.iso *.img *.iuk \
+          | gpg --clear-sign \
+          | gzip \
+          > "$DEST_DIR/TR-bits.gz"
 
-3. Send the output of the previous command to the _Trusted Reproducer_,
-   whose name is on the
+3. Send the `$DEST_DIR/TR-bits.gz` file as an attachment
+   to the _Trusted Reproducer_, whose name is on the
    [release calendar](https://tails.boum.org/contribute/calendar/).
 
 # Automated test suite
