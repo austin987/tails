@@ -862,6 +862,7 @@ Prepare upgrade-description files
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
+          git merge origin/master && \
           for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
             alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
@@ -908,6 +909,7 @@ Update the image description file (IDF) used by the browser extension:
     ./bin/idf-content \
        --version "${VERSION:?}" \
        --iso "${ISO_PATH:?}" \
+       --img "${IMG_PATH:?}" \
        > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v2/Tails/amd64/stable/latest.json && \
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
