@@ -61,16 +61,14 @@ In a directory with many Tails ISO and USB images:
 
 This section can **not** be done by the RM.
 
-1. Download the ISO and USB images plus all the
-   [IUKs](https://mirrors.wikimedia.org/tails/stable/iuk/) that
-   upgrade to the version you are testing.
+1. Download the ISO and USB images.
 
 2. Clear-sign the hashes of all products using your OpenPGP key
    and gzip the output (otherwise the signed text could be mangled
    at some point in the email chain):
 
         DEST_DIR=$(mktemp -d)
-        sha512sum *.iso *.img *.iuk \
+        sha512sum *.iso *.img \
           | gpg --clear-sign \
           | gzip \
           > "$DEST_DIR/TR-bits.gz"
