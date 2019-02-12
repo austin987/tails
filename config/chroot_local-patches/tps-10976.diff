@@ -1,0 +1,68 @@
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm b/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
+index 3433f70..aa5f8a7 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Atom.pm
+@@ -13,7 +13,6 @@ use MooX::late;
+ with 'Tails::Persistence::Role::ConfigurationLine';
+ 
+ use autodie qw(:all);
+-use warnings FATAL => 'all';
+ 
+ use Function::Parameters;
+ use List::MoreUtils qw{all pairwise};
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
+index d5ac42d..fc3ab2f 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
+@@ -12,9 +12,9 @@ use MooX::late;
+ use MooX::HandlesVia;
+ 
+ use autodie qw(:all);
+-use warnings FATAL => 'all';
+ use Carp;
+ use Function::Parameters;
++use IPC::System::Simple qw{systemx};
+ use Tails::Persistence::Configuration::Line;
+ use Types::Path::Tiny qw{AbsPath};
+ 
+@@ -48,7 +48,7 @@ has 'lines' => (
+ =cut
+ 
+ method BUILD (@args) {
+-    $self->config_file_path->touch;
++    $self->config_file_path->exists || $self->config_file_path->touch;
+ }
+ 
+ method _build_lines () {
+@@ -84,12 +84,14 @@ Throw exception on error.
+ 
+ =cut
+ method save () {
+-    my $output = $self->output;
+-    my $fh = $self->config_file_path->openw();
+-    print $fh $output;
+-    $fh->sync;
+-    close $fh;
++    $self->config_file_path->copy($self->config_file_path . '.bak');
++    $self->config_file_path->spew($self->output);
+     $self->config_file_path->chmod(0600);
++    # Ensure our changes land on the disk
++    systemx('sync', $self->config_file_path->stringify);
++    # Ensure changes made by other code (e.g. live-persist) are written
++    # synchronously on the disk
++    systemx('chattr', '+S', $self->config_file_path->stringify);
+ }
+ 
+ no Moo;
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
+index befc2f0..23b4af9 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
+@@ -14,7 +14,6 @@ use MooX::late;
+ with 'Tails::Role::HasEncoding';
+ 
+ use autodie qw(:all);
+-use warnings FATAL => 'all';
+ use Carp;
+ use Function::Parameters;
+ use List::MoreUtils qw{all};
