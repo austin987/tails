@@ -790,8 +790,11 @@ Prepare upgrade-description files
             --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
             --next-version "${VERSION:?}.1" \
             --iso "${ISO_PATH:?}" \
-            --previous-version "${PREVIOUS_VERSION:?}" \
-            --previous-version "${VERSION:?}~rc1" \
+            $( \
+                for version in ${IUK_SOURCE_VERSIONS:?}; do
+                   echo "--previous-version ${version:?}"
+                done \
+            ) \
             --iuks "${ISOS:?}" \
             --release-checkout "${RELEASE_CHECKOUT:?}" \
             --major-release "${MAJOR_RELEASE:?}" \
@@ -800,19 +803,6 @@ Prepare upgrade-description files
    Note:
    * The `--iuks` argument must point to the directory where the IUKs
      generated at the previous step are stored.
-   * At least the last stable release and the previous release
-     candidates for the version being released must be passed to
-     `--previous-version`.
-   * Older versions for which there is no incremental upgrade path to
-     the new release must be passed with `--previous-version`, so that
-     users who skipped a release or two are informed of the new one.
-     Note that multi-steps incremental upgrade paths are valid and
-     supported: e.g. when releasing 1.1.2, 1.1 users should still be
-     able to incrementally upgrade to 1.1.1, and in turn to 1.1.2; to
-     make this work, unless there's a IUK from 1.1 to 1.1.2,
-	 one must _not_ pass `--previous-version 1.1`,
-     that would remove the existing incremental upgrade path from 1.1
-     to 1.1.1.
    * If preparing anything but a final release (e.g. an alpha, beta
      or RC), add `--channel alpha`
    * If preparing anything but a final release (e.g. an alpha, beta
