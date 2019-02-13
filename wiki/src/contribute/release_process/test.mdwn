@@ -238,7 +238,8 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
   then:
 
-        echo 'TAILS_CHANNEL="test"' | sudo tee --append /etc/os-release && \
+        sudo sh -c 'sed -i /^TAILS_CHANNEL=/d /etc/os-release &&
+                    echo TAILS_CHANNEL=\"test\" >> /etc/os-release' && \
         tails-upgrade-frontend-wrapper
 
   Else, use a local test setup:
