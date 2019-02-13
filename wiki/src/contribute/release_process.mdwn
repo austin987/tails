@@ -372,7 +372,7 @@ matches the date of the future signature.
 	for type in img iso; do
 	   basename="tails-amd64-${VERSION:?}"
 	   filename="${basename:?}.${type:?}"
-	   echo "gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
+	   echo "TZ=UTC gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
 	        > wiki/src/inc/stable_amd64_${type:?}_gpg_verify.html && \
 	   echo "http://dl.amnesia.boum.org/tails/stable/${basename:?}/${filename:?}" \
 	        > wiki/src/inc/stable_amd64_${type:?}_url.html
@@ -827,6 +827,7 @@ Prepare upgrade-description files
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
 
+        cd "${RELEASE_CHECKOUT:?}" && \
         find "${RELEASE_CHECKOUT:?}/wiki/src/upgrade/" \
            -type f -name upgrades.yml | \
            while read udf; do
@@ -1090,7 +1091,7 @@ Testing
    <https://mirrors.wikimedia.org/tails/> are reliable and have plenty
    of bandwidth.
 
-        ./check-mirrors.rb --allow-multiple --channel ${DIST:?} \
+        ./check-mirrors.rb --allow-multiple --fast --channel ${DIST:?} \
             --ip $(dig +short mirrors.kernel.org | tail -n1) \
             tails-amd64-${VERSION:?}
 
@@ -1138,7 +1139,7 @@ Rename, copy, garbage collect and update various files:
 	   "${ISOS:?}/tails-amd64-${VERSION:?}".{iso,img}.torrent \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
 	git rm \
-	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,torrent} && \
+	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
 	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
@@ -1152,25 +1153,6 @@ Rename, copy, garbage collect and update various files:
     LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_gpg_signature_output.html"
-
-        XXX: Adapt this section to generate:
-
-		inc/stable_amd64_date.html
-		inc/stable_amd64_version.html
-
-		inc/stable_amd64_img_gpg_signature_output.html
-		inc/stable_amd64_img_gpg_verify.html
-		inc/stable_amd64_img_sig_url.html
-		inc/stable_amd64_img_size.html
-		inc/stable_amd64_img_torrent_url.html
-		inc/stable_amd64_img_url.html
-
-		inc/stable_amd64_iso_gpg_signature_output.html
-		inc/stable_amd64_iso_gpg_verify.html
-		inc/stable_amd64_iso_sig_url.html
-		inc/stable_amd64_iso_size.html
-		inc/stable_amd64_iso_torrent_url.html
-		inc/stable_amd64_iso_url.html
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
