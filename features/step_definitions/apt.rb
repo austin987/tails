@@ -38,18 +38,6 @@ EOF
   )
 end
 
-When /^I make my current APT sources persistent$/ do
-  $vm.execute("install -d -m 755 /live/persistence/TailsData_unlocked/apt-sources.list.d")
-  $vm.file_append(
-    '/live/persistence/TailsData_unlocked/persistence.conf',
-    "/etc/apt/sources.list.d  source=apt-sources.list.d,link\n"
-  )
-  $vm.file_overwrite(
-    '/live/persistence/TailsData_unlocked/apt-sources.list.d/persistent.list',
-    $vm.file_content($vm.file_glob('/etc/apt/{,*/}*.list'))
-  )
-end
-
 When /^I update APT using apt$/ do
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
@@ -63,21 +51,72 @@ When /^I update APT using apt$/ do
   end
 end
 
-Then /^I install "(.+)" using apt$/ do |package_name|
+def check_for_installation(package)
+  try_for(2*60) do
+    $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
+  end
+end
+
+Then /^I install "(.+)" using apt$/ do |package|
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
-    $vm.execute("apt purge #{package_name}")
+    $vm.execute("apt purge #{package}")
   end
   retry_tor(recovery_proc) do
-    Timeout::timeout(2*60) do
+    Timeout::timeout(3*60) do
       $vm.execute("echo #{@sudo_password} | " +
-                               "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package_name}",
+                               "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-      try_for(60) do
-        $vm.execute_successfully("dpkg -s '#{package_name}' 2>/dev/null | grep -qs '^Status:.*installed$'")
-      end
+      check_for_installation(package)
     end
+  end
+end
+
+def check_for_removal(package)
+  try_for(3*60) do
+    # Once purged, a package is removed from the installed package status database
+    # and "dpkg -s" returns a non-zero exit code
+    ! $vm.execute("dpkg -s #{package}").success?
+  end
+end
+
+Then /^I uninstall "(.+)" using apt$/ do |package|
+  $vm.execute("echo #{@sudo_password} | " +
+                               "sudo -S apt -y purge #{package}",
+                               :user => LIVE_USER,
+                               :spawn => true)
+  check_for_removal(package)
+end
+
+When /^I configure APT to prefer an old version of cowsay$/ do
+  apt_source = 'deb tor+http://deb.tails.boum.org/ asp-test-upgrade-cowsay main'
+  apt_pref = 'Package: cowsay
+Pin: release o=Tails,a=asp-test-upgrade-cowsay
+Pin-Priority: 999'
+  $vm.file_overwrite('/etc/apt/sources.list.d/asp-test-upgrade-cowsay.list', apt_source)
+  $vm.file_overwrite('/etc/apt/preferences.d/asp-test-upgrade-cowsay', apt_pref)
+end
+
+When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |version|
+  step 'I update APT using apt'
+  step 'I install "cowsay" using apt'
+  step "the package \"cowsay\" installed version is \"#{version}\""
+end
+
+When /^I revert the APT tweaks that made it prefer an old version of cowsay$/ do
+  $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
+end
+
+When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
+  if asp
+    step 'the Additional Software installation service has started'
+  end
+  current_version = $vm.execute("dpkg-query -W -f='${Version}' #{package}").stdout
+  if newer_than
+    cmd_helper("dpkg --compare-versions '#{version}' lt '#{current_version}'")
+  else
+    assert_equal(current_version, version)
   end
 end
 
@@ -136,5 +175,6 @@ Then /^I install "(.+)" using Synaptic$/ do |package_name|
       @synaptic.child('Changes applied', roleName: 'frame', recursive: false)
       true
     end
+    step 'I kill the process "synaptic"'
   end
 end
