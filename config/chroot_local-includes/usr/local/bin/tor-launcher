@@ -18,8 +18,11 @@ fi
 
 PROFILE="${HOME}/.tor-launcher/profile.default"
 if [ ! -d "${PROFILE}" ]; then
-  mkdir -p "${PROFILE}"
-  configure_best_tor_launcher_locale "${PROFILE}"
+    mkdir -p "${PROFILE}/extensions"
+    for ext in "${TBB_EXT}"/langpack-*.xpi; do
+        ln -s "${ext}" "${PROFILE}/extensions/"
+    done
+    configure_best_tor_launcher_locale "${PROFILE}"
 fi
 
 exec_unconfined_firefox \
