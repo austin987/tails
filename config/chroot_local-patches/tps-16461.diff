@@ -11,7 +11,7 @@ index 3433f70..aa5f8a7 100644
  use Function::Parameters;
  use List::MoreUtils qw{all pairwise};
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
-index d5ac42d..fc3ab2f 100644
+index d5ac42d..b3c94d9 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
 @@ -12,9 +12,9 @@ use MooX::late;
@@ -34,7 +34,24 @@ index d5ac42d..fc3ab2f 100644
  }
  
  method _build_lines () {
-@@ -84,12 +84,14 @@ Throw exception on error.
+@@ -77,6 +77,16 @@ method output () {
+     return $out;
+ }
+ 
++=head2 backup
++
++Copy the on-disk configuration file to a backup file.
++
++=cut
++
++method backup () {
++    $self->config_file_path->copy($self->config_file_path . '.bak');
++}
++
+ =head2 save
+ 
+ Save the in-memory configuration to disk.
+@@ -84,12 +94,19 @@ Throw exception on error.
  
  =cut
  method save () {
@@ -43,7 +60,8 @@ index d5ac42d..fc3ab2f 100644
 -    print $fh $output;
 -    $fh->sync;
 -    close $fh;
-+    $self->config_file_path->copy($self->config_file_path . '.bak');
++    my $config_file_was_empty = ! -s $self->config_file_path;
++    $self->backup unless $config_file_was_empty;
 +    $self->config_file_path->spew($self->output);
      $self->config_file_path->chmod(0600);
 +    # Ensure our changes land on the disk
@@ -51,6 +69,10 @@ index d5ac42d..fc3ab2f 100644
 +    # Ensure changes made by other code (e.g. live-persist) are written
 +    # synchronously on the disk
 +    systemx('chattr', '+S', $self->config_file_path->stringify);
++    # When persistence.conf was initially empty (for example, when
++    # we're initializing a new persistent volume), let's backup the
++    # (probably non-empty) version of it that we've just saved.
++    $self->backup if $config_file_was_empty;
  }
  
  no Moo;
