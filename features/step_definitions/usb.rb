@@ -561,7 +561,7 @@ Then /^all persistence configuration files have safe access rights$/ do
     assert($vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
            "#{mountpoint}/live-persistence.conf does exist, while it should not")
     $vm.execute(
-      "ls -1 #{mountpoint}/persistence.conf #{mountpoint}/live-*.conf"
+      "ls -1 #{mountpoint}/persistence.conf* #{mountpoint}/live-*.conf"
     ).stdout.chomp.split.each do |f|
       file_owner = $vm.execute("stat -c %U '#{f}'").stdout.chomp
       file_group = $vm.execute("stat -c %G '#{f}'").stdout.chomp
