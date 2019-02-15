@@ -11,7 +11,7 @@ index 3433f70..aa5f8a7 100644
  use Function::Parameters;
  use List::MoreUtils qw{all pairwise};
 diff --git a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
-index d5ac42d..b3c94d9 100644
+index d5ac42d..aebff9e 100644
 --- a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
 +++ b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
 @@ -12,9 +12,9 @@ use MooX::late;
@@ -25,7 +25,21 @@ index d5ac42d..b3c94d9 100644
  use Tails::Persistence::Configuration::Line;
  use Types::Path::Tiny qw{AbsPath};
  
-@@ -48,7 +48,7 @@ has 'lines' => (
+@@ -32,6 +32,13 @@ has 'config_file_path' => (
+     required => 1,
+ );
+ 
++has 'backup_config_file_path' => (
++    lazy_build => 1,
++    isa        => AbsPath,
++    is         => 'ro',
++    coerce     => AbsPath->coercion,
++);
++
+ has 'lines' => (
+     lazy_build    => 1,
+     is            => 'rw',
+@@ -48,7 +55,7 @@ has 'lines' => (
  =cut
  
  method BUILD (@args) {
@@ -34,7 +48,17 @@ index d5ac42d..b3c94d9 100644
  }
  
  method _build_lines () {
-@@ -77,6 +77,16 @@ method output () {
+@@ -59,6 +66,9 @@ method _build_lines () {
+     ];
+ }
+ 
++method _build_backup_config_file_path () {
++    $self->config_file_path . '.bak';
++}
+ 
+ =head1 METHODS
+ 
+@@ -77,6 +87,17 @@ method output () {
      return $out;
  }
  
@@ -45,13 +69,14 @@ index d5ac42d..b3c94d9 100644
 +=cut
 +
 +method backup () {
-+    $self->config_file_path->copy($self->config_file_path . '.bak');
++    $self->config_file_path->copy($self->backup_config_file_path);
++    $self->backup_config_file_path->chmod(0600);
 +}
 +
  =head2 save
  
  Save the in-memory configuration to disk.
-@@ -84,12 +94,19 @@ Throw exception on error.
+@@ -84,12 +105,19 @@ Throw exception on error.
  
  =cut
  method save () {
