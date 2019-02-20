@@ -329,6 +329,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
+  // Right-after installing on Chrome, display the "Verify Tails..."
+  if (window.location.hash === "#chrome-installation") {
+    toggleDirectBitTorrent("direct");
+    showVerifyDownload();
+  }
+
   // To debug the display of the different states:
   // showVerificationResult("successful");
   // showVerificationResult("failed");
