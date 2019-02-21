@@ -336,34 +336,7 @@ Additional software packages
 
 The `tails-additional-software` script installs a list of
 additional software packages stored in persistence.
-
-To this aim, the persistent volume root directory may contain
-a `live-additional-software.conf` file that holds the list of packages to install
-(from persistence, since they were cached already).
-
-`live-persist` guarantees that this file, and its parent directory,
-have correct access rights: owned by
-`tails-persistence-setup:tails-persistence-setup`, and not be writable
-by anyone else than the `tails-persistence-setup` user.
-
-First, those additional software packages are installed offline by a systemd
-user unit triggered by desktop.target. It starts a system unit of the same
-name, which itself calls Additional Software Packages installation.
-
-Then, once connected to the network, a NetworkManager dispatcher hook triggers
-a systemd system unit which looks for upgrades if additional software were
-activated (`apt update`, then `apt install` the additional software packages).
-For some packages (e.g.  already running software) the change will only be
-effective at next boot but hopefully a outdated version won't be used too long
-in the meantime. To ensure that the upgrade started by a NetworkManager hook is
-not racy with the installation, systemd unit is ordered after the installation,
-and waits for its state file to appear.
-
-- [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-additional-software-install.service]]
-- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-additional-software-install.service]]
-- [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-additional-software-upgrade.service]]
-- [[!tails_gitweb config/chroot_local-includes/etc/NetworkManager/dispatcher.d/70-upgrade-additional-software.sh]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]
+For details see [[additional_software_packages]].
 
 <a id="security"></a>
 

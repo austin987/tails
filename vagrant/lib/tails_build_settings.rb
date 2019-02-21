@@ -10,7 +10,7 @@ VIRTUAL_MACHINE_HOSTNAME = 'vagrant-stretch'
 VM_MEMORY_BASE = 1024
 
 # Approximate amount of extra space needed for builds
-BUILD_SPACE_REQUIREMENT = 12*1024
+BUILD_SPACE_REQUIREMENT = 12*1024 + 256
 
 # Virtual machine memory size for on-disk builds
 VM_MEMORY_FOR_DISK_BUILDS = VM_MEMORY_BASE
@@ -26,6 +26,6 @@ DISTRIBUTION = "stretch"
 def box_name
   git_root = `git rev-parse --show-toplevel`.chomp
   shortid, date = `git log -1 --date="format:%Y%m%d" --pretty="%h %ad" -- \
-                   #{git_root}/vagrant/definitions/tails-builder/`.chomp.split
+                   #{git_root}/vagrant/`.chomp.split
   return "tails-builder-#{ARCHITECTURE}-#{DISTRIBUTION}-#{date}-#{shortid}"
 end

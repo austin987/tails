@@ -73,8 +73,21 @@ image before building it.
 # Known issues and workarounds
 
 * If Vagrant fails to start the Tails builder VM with an error similar
-  to `Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0`,
-  see [[!tails_ticket 11411]].
+  to:
+
+        Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0
+
+  … then see [[!tails_ticket 11411]].
+
+* If Vagrant fails to start the Tails builder VM with:
+
+        Initialization parameters must be an attributes hash, got NilClass nil (ArgumentError)
+
+  … then restart the libvirtd service:
+
+        sudo systemctl restart libvirtd.service
+
+  Finally, try building again.
 
 * If Vagrant failed to start the Tails builder VM the first time
   (e.g. because of permission issues or the `kvm` module not being
@@ -92,6 +105,15 @@ You can customize the build system using two environment variables:
    build completes; for example:
 
         ARTIFACTS='/path/to/directory'
+
+ * `APT_SNAPSHOTS_SERIALS` can be set to specify which [[time-based APT
+   snapshots|contribute/APT_repository/time-based_snapshots]]
+   repositories will be used as 'latest' during the build, and will set
+   it accordingly in the resulting ISO image if necessary. This can be
+   useful to reproduce an ISO build that did not use tagged APT
+   snapshots. The value must be JSON, for example:
+
+        APT_SNAPSHOTS_SERIALS='{"torproject":"2017120803","debian-security":"2017120902","debian":"2017120903"}'
 
  * To tweak other build settings, use `TAILS_BUILD_OPTIONS`,
    a space-separated list of build options documented below.

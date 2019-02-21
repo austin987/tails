@@ -89,4 +89,27 @@ s{
 
 ' | perl -pi - /etc/apt/sources.list /etc/apt/sources.list.d/*.list
 
+echo "- configuring APT preferences"
+
+echo '
+### Custom APT repository
+
+s{
+   ^
+   (Pin:\s+origin\s+)
+   deb[.]tails[.]boum[.]org
+   $
+}{$1jenw7xbd6tf7vfhp.onion}xms;
+
+### Fix origin for backports
+
+s{
+   ^
+   (Pin:\s+release\s+)
+   o=Debian
+   (,[an]=stretch-backports)
+   $
+}{$1o=Debian Backports$2}xms;
+' | perl -pi - /etc/apt/preferences
+
 find /etc/apt/sources.list* -size 0 -delete

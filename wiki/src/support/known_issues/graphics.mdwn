@@ -121,9 +121,11 @@ Tickets: #11095 #12482
 <tr><th>Name</th><th>ID</th><th>Revision number</th></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Mars XTX [Radeon HD 8790M]</td><td>[1002:6606]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Mars XTX [Radeon HD 8790M]</td><td>[1002:6606]</td><td>(rev ff)</td></tr>
+<tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Seymour LP [Radeon HD 6430M]</td><td>[1002:6761]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Cedar [Radeon HD 5000/6000/7350/8350 Series]</td><td>[1002:68f9]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Broadway PRO [Mobility Radeon HD 5850]</td><td>[1002:68a1]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] RV730/M96 [Mobility Radeon HD 4650/5165]</td><td>[1002:9480]</td><td></td></tr>
+<tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Device [1002:98e4]</td><td>[1002:98e4]</td><td>(rev da)</td></tr>
 </table>
 
 ### Workaround
@@ -162,6 +164,7 @@ Intel
 
 <!--
 Ticket: #12219
+Ticket: #16224
 -->
 
 ### Affected graphics cards
@@ -179,9 +182,14 @@ Various Intel graphics card.
 
 ### Workaround
 
-Adding `xorg-driver=intel` to the
-[[startup options|/doc/first_steps/startup_options#boot_loader_menu]]
-might fix the issue.
+Try adding to the [[startup
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `xorg-driver=intel`
+* `nomodeset`
+* `nomodeset xorg-driver=vesa`
+* `xorg-driver=modesetting`
 
 Otherwise, try starting in the *Troubleshooting Mode*.
 
@@ -204,7 +212,7 @@ Ticket: #11096, Debian #776911
 
 <a id="nvidia-tesla"></a>
 
-NVIDIA Tesla
+Nvidia Tesla
 --------------
 
 <!--
@@ -227,7 +235,7 @@ Try adding `nomodeset` to the
 
 <a id="nvidia-maxwell"></a>
 
-NVIDIA Maxwell
+Nvidia Maxwell
 --------------
 
 <!--
@@ -238,7 +246,7 @@ Ticket: #15116
 
 <table>
 <tr><th>Name</th><th>ID</th><th>Revision number</th></tr>
-<tr><td>NVIDIA Corporation GM107 [GeForce GTX 750 Ti]</td><td>?</td><td></td>a2</tr>
+<tr><td>NVIDIA Corporation GM107 [GeForce GTX 750 Ti]</td><td>?</td><td>a2</td></tr>
 <tr><td>NVIDIA Corporation GM204M [GeForce GTX 970M]</td><td>[10de:13d8]</td><td></td></tr>
 <tr><td>NVIDIA Corporation GM204M [GeForce GTX 970M]</td><td>[10de:1618]</td><td></td></tr>
 </table>
@@ -247,8 +255,7 @@ Ticket: #15116
 
 ### Workaround
 
-This problem has been fixed in Tails 3.2 for some of these graphic
-cards.
+This problem has been fixed for some of these graphic cards.
 
 Otherwise, try adding `nouveau.noaccel=1` or `nouveau.modeset=0` to the
 [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
@@ -257,7 +264,7 @@ We need more test results from users: [[!tails_ticket 15116]]
 
 <a id="nvidia-pascal"></a>
 
-NVIDIA Pascal
+Nvidia Pascal
 -------------
 
 <!--
@@ -277,11 +284,12 @@ Ticket: #15116
 
 ### Workaround
 
-This problem has been fixed in Tails 3.2 for some of these graphic
-cards.
+This problem has been fixed for some of these graphic cards.
 
 Otherwise, try adding `nouveau.noaccel=1` or `nouveau.modeset=0` to the
 [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
+
+We need more test results from users: [[!tails_ticket 15116]]
 
 Other issues
 ============
@@ -341,7 +349,7 @@ to start the GNOME session and keeps returning to [[Tails
 Greeter|doc/first_steps/startup_options#greeter]].
 
 Starting in *Troubleshooting Mode* works, as well as adding the
-`modeprobe.blacklist=nouveau` to the [[startup
+`modprobe.blacklist=nouveau` to the [[startup
 options|doc/first_steps/startup_options#boot_loader_menu]].
 
 <a id="intel-gm965"></a>
@@ -384,5 +392,5 @@ Virtual machines with *VMware*
 ------------------------------
 
 To improve support of Tails running inside a virtual machine with
-*VMware*, [[install|doc/advanced_topics/additional_software]] the
+*VMware*, [[install|doc/first_steps/additional_software]] the
 `open-vm-tools-desktop` software package in Tails.

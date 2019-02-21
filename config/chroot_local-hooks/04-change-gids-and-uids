@@ -2,18 +2,107 @@
 
 set -e
 
-# Free the fixed GIDs and UIDs we're using.
+echo "Set fixed GIDs and UIDs"
 
-echo "Change GIDs and UIDs"
+Debug_gids_and_uids () {
+	for file in passwd group; do
+		diff -Naur "/usr/share/tails/build/${file}" "/etc/${file}" >&2 || :
+		echo >&2
+		echo "Content of '/etc/${file}':" >&2
+		cat "/etc/${file}" >&2
+		echo >&2
+	done
+}
 
-TPS_GROUP_STEALER=$(getent group 122 | awk -F ':' '{print $1}')
-if [ -n "$TPS_GROUP_STEALER" ]; then
-   groupmod --gid 150 "$TPS_GROUP_STEALER"
-   find / -wholename /proc -prune -o \( \! -type l -a -gid 122 -exec chgrp 150 '{}' \; \)
-fi
+Change_uid () {
+	NAME="$1"
+	NEW="$2"
+	OLD="$(getent passwd "$NAME" | awk -F ':' '{print $3}')"
 
-TPS_USER_STEALER=$(getent passwd 115 | awk -F ':' '{print $1}')
-if [ -n "$TPS_USER_STEALER" ]; then
-   usermod --uid 150 "$TPS_USER_STEALER"
-   find / -wholename /proc -prune -o \( \! -type l -a -uid 115 -exec chown 150 '{}' \; \)
-fi
+	if [ -n "$OLD" ]; then
+		echo "Changing UID for $NAME ($OLD -> $NEW)"
+		if ! usermod --uid "$NEW" "$NAME"; then
+			Debug_gids_and_uids
+			exit 1
+		fi
+		# chown(1) and chgrp(1) clear the setuid and setgid bits;
+		# let's preserve them.
+		#
+		# Using "-exec CMD +", find builds command lines incrementally,
+		# before executing chown. Which is why the operation below is
+		# not the "if a file has the setuid bit, then give it the setuid
+		# bit" no-op, but rather "if a file had the setuid bit before
+		# chown was run, then set it back".
+		find / -wholename /proc -prune -o \( \
+				\! -type l -uid "$OLD" \
+				-exec chown "$NEW" '{}' + \
+				\( \
+					   -perm -6000 -exec chmod gu+s '{}' + \
+					-o -perm -4000 -exec chmod u+s  '{}' + \
+					-o -perm -2000 -exec chmod g+s  '{}' + \
+				\) \
+			\)
+	fi
+}
+
+Change_gid () {
+	NAME="$1"
+	NEW="$2"
+	OLD="$(getent group "$NAME" | awk -F ':' '{print $3}')"
+
+	if [ -n "$OLD" ]; then
+		echo "Changing GID for $NAME ($OLD -> $NEW)"
+		if ! groupmod --gid "$NEW" "$NAME"; then
+			Debug_gids_and_uids
+			exit 1
+		fi
+		# See comments in Change_uid().
+		find / -wholename /proc -prune -o \( \
+				\! -type l -gid "$OLD" \
+				-exec chgrp "$NEW" '{}' + \
+				\( \
+					   -perm -6000 -exec chmod gu+s '{}' + \
+					-o -perm -4000 -exec chmod u+s  '{}' + \
+					-o -perm -2000 -exec chmod g+s  '{}' + \
+				\) \
+			\)
+	fi
+}
+
+### Ensure GIDs are stable accross releases
+#   ... otherwise, things such as tor@service are broken
+#   after applying an automatic upgrade (#15695, #15424, #13426, #15407)
+
+# Temporarily give these groups a GID that's out of the way, to avoid collisions
+Change_gid messagebus   1050
+Change_gid ssh          1090
+Change_gid memlockd     1100
+Change_gid ssl-cert     1110
+Change_gid vboxsf       1120
+Change_gid monkeysphere 1130
+Change_gid debian-tor   1140
+Change_gid lpadmin      1150
+Change_gid scanner      1160
+Change_gid colord       1170
+Change_gid saned        1180
+Change_gid pulse        1190
+Change_gid pulse-access 1200
+Change_gid Debian-gdm   1210
+Change_gid kvm          1500
+
+# Finally, give these groups the desired GID
+Change_gid messagebus   105
+Change_gid ssh          109
+Change_gid memlockd     110
+Change_gid ssl-cert     111
+Change_gid vboxsf       112
+Change_gid monkeysphere 113
+Change_gid debian-tor   114
+Change_gid lpadmin      115
+Change_gid scanner      116
+Change_gid colord       117
+Change_gid saned        118
+Change_gid pulse        119
+Change_gid pulse-access 120
+Change_gid Debian-gdm   121
+Change_gid kvm          150

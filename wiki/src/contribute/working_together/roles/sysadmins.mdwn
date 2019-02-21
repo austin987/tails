@@ -119,9 +119,9 @@ They read the <tails-sysadmins@boum.org> encrypted mailing list.
 We use Redmine tickets for public discussion and tasks management:
 
 * [tasks requiring *Sysadmin*
-  work](https://labs.riseup.net/code/projects/tails/issues?query_id=113)
+  work](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=113)
 * [tasks belonging to the *Infrastructure*
-  category](https://labs.riseup.net/code/projects/tails/issues?query_id=140)
+  category](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=140)
 
 <a id="services"></a>
 
@@ -185,6 +185,7 @@ Below, importance level is evaluated based on:
 * access: Tails core developers only
 * tools: [[!debpts bitcoind]]
 * configuration: `bitcoind` class in [[!tails_gitweb_repo puppet-bitcoind]]
+* Vcs-Git: https://git-tails.immerda.ch/bitcoin/ and https://git-tails.immerda.ch/bitcoin_libunivalue/
 * importance: medium
 
 ## BitTorrent
@@ -196,10 +197,29 @@ Below, importance level is evaluated based on:
 * configuration: done by hand ([[!tails_ticket 6926]])
 * importance: low
 
+## DNS
+
+* purpose: authoritative nameserver for the `tails.boum.org` and
+  `amnesia.boum.org` zones
+* access:
+  - anyone can query this nameserver
+  - members of the mirrors team control some of the content of the
+    `dl.amnesia.boum.org` sub-zone
+  - Tails sysadmins can edit the zones with `pdnsutil edit-zone`
+* tools: [[!debpts pdns]] with its MySQL backend
+* configuration:
+  - `tails::pdns` and `tails::pdns::*` resources in
+    [[!tails_gitweb_repo puppet-tails]]
+  - [[!tails_gitweb_repo puppet-powerdns]]
+* importance: critical (most of our other services are not available
+  if this one is not working)
+
 ## Gitolite
 
-* purpose: host Git repositories used by the puppetmaster and other
-  services; mostly useless for humans
+* purpose:
+  - host Git repositories used by the puppetmaster and other services
+  - host the Tails [[main repository|contribute/git#main-repo]]
+    and our website's underlays
 * access: Tails core developers only
 * tools: [[!debpts gitolite]]
 * configuration: `tails::gitolite` class in [[!tails_gitweb_repo
@@ -293,6 +313,16 @@ Below, importance level is evaluated based on:
   - [[sysadmins/automated_tests_in_Jenkins]]
 * importance: critical (as a key component of our development process)
 
+## Mail
+
+* purpose: handle incoming and outgoing email for some of our
+  [[Schleuder lists|sysadmins#schleuder]]
+* access: public MTA listening on `mail.tails.boum.org`
+* tools: [[!debpts postfix]], [[!debpts amavisd-new]], [[!debpts spamassassin]]
+* configuration: `tails::postfix`, `tails::amavisd_new` and
+  `tails::spamassassin` classes in [[!tails_gitweb_repo puppet-tails]]
+* importance: high (at least because WhisperBack bug reports go through this MTA)
+
 <a id="mumble"></a>
 
 ## Mumble
@@ -319,6 +349,17 @@ Below, importance level is evaluated based on:
   - users and credentials are managed with the `tails_secrets_rsync`
     Puppet module
 * importance: critical (needed to release Tails)
+
+<a id="schleuder"></a>
+
+## Schleuder
+
+* purpose: host some of our Schleuder mailing lists
+* access: anyone can send email to these lists
+* tools: [[!debpts schleuder]]
+* configuration: `tails::schleuder` class in [[!tails_gitweb_repo
+  puppet-tails]]
+* importance: high (at least because WhisperBack bug reports go through this service)
 
 ## Tor bridge
 

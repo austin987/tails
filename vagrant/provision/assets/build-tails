@@ -15,6 +15,7 @@ as_root_do() {
 		${ftp_proxy:+ftp_proxy="${ftp_proxy}"} \
 		${no_proxy:+no_proxy="${no_proxy}"} \
 		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS}"} \
+		${APT_SNAPSHOTS_SERIALS:+APT_SNAPSHOTS_SERIALS="${APT_SNAPSHOTS_SERIALS}"} \
                 ${TAILS_MERGE_BASE_BRANCH:+TAILS_MERGE_BASE_BRANCH="${TAILS_MERGE_BASE_BRANCH}"} \
 		${GIT_COMMIT:+GIT_COMMIT="${GIT_COMMIT}"} \
 		${GIT_REF:+GIT_REF="${GIT_REF}"} \
@@ -34,7 +35,7 @@ remove_build_dirs() {
 		tries=0
 		sudo lsof | grep --fixed-strings "${mountpoint}" || true
 		while ! sudo umount -f --verbose "${mountpoint}" && [ $tries -lt 12 ]; do
-			sudo fuser --ismountpoint --mount "${mountpoint}" --kill
+			sudo fuser --ismountpoint --mount "${mountpoint}" --kill || true
 			sleep 5
 			tries=$(expr $tries + 1)
 		done

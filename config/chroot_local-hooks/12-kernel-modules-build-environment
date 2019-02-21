@@ -6,14 +6,14 @@ set -x
 
 echo "Setting up a build environment for kernel modules"
 
-. /usr/share/amnesia/build/variables
+. /usr/share/tails/build/variables
 
 # Import ensure_hook_dependency_is_installed() and
 # install_fake_package()
 . /usr/local/lib/tails-shell-library/build.sh
 
-# Install gcc-6 and fake linux-compiler-gcc-7-x86
-# (linux-headers-4.14+ depends on it, but Stretch hasn't GCC 7)
+# Install gcc-6 and fake linux-compiler-gcc-8-x86
+# (linux-headers-4.19+ depends on it, but Stretch hasn't GCC 8)
 # XXX:Buster: remove this hack.
 ensure_hook_dependency_is_installed gcc-6
 NEWEST_INSTALLED_KERNEL_VERSION="$(
@@ -21,9 +21,9 @@ NEWEST_INSTALLED_KERNEL_VERSION="$(
     | sort --version-sort | tail -n1
 )"
 install_fake_package \
-    linux-compiler-gcc-7-x86 \
+    linux-compiler-gcc-8-x86 \
     "${NEWEST_INSTALLED_KERNEL_VERSION}~0tails1"
-ln -s /usr/bin/gcc-6 /usr/bin/gcc-7
+ln -s /usr/bin/gcc-6 /usr/bin/gcc-8
 
 ensure_hook_dependency_is_installed \
     build-essential \

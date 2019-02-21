@@ -39,7 +39,7 @@ exec_firefox_helper() {
 }
 
 exec_firefox() {
-    exec_firefox_helper firefox "${@}"
+    exec_firefox_helper firefox.real "${@}"
 }
 
 exec_unconfined_firefox() {
@@ -89,8 +89,9 @@ configure_xulrunner_app_locale() {
     profile="${1}"
     locale="${2}"
     mkdir -p "${profile}"/preferences
-    echo "pref(\"general.useragent.locale\", \"${locale}\");" > \
-        "${profile}"/preferences/0000locale.js
+    set_mozilla_pref "${profile}"/prefs.js \
+                     "intl.locale.requested" "\"${locale}\"" \
+                     "user_pref"
 }
 
 configure_best_tor_browser_locale() {
@@ -99,7 +100,7 @@ configure_best_tor_browser_locale() {
     best_locale="$(guess_best_tor_browser_locale)"
     configure_xulrunner_app_locale "${profile}" "${best_locale}"
     cat "/etc/tor-browser/locale-profiles/${best_locale}.js" \
-        >> "${profile}/preferences/0000locale.js"
+        >> "${profile}/prefs.js"
 }
 
 configure_best_tor_launcher_locale() {
@@ -112,4 +113,24 @@ supported_tor_browser_locales() {
     for langpack in "${TBB_EXT}"/langpack-*@firefox.mozilla.org.xpi; do
         basename "${langpack}" | sed 's,^langpack-\([^@]\+\)@.*$,\1,'
     done
+}
+
+set_firefox_content_process_count() {
+    local profile="$1"
+    local count="$2"
+
+        set_mozilla_pref "${profile}/prefs.js" \
+                         "dom.ipc.processCount" "$count" \
+                         user_pref
+}
+
+configure_tor_browser_memory_usage() {
+    local profile="${1}"
+
+    # Unit: KiB
+    system_ram=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)
+
+    if [ "$system_ram" -lt "$((3 * 1024 * 1024))" ]; then
+        set_firefox_content_process_count "$profile" 2
+    fi
 }

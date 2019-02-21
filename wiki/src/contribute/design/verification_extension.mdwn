@@ -18,10 +18,15 @@ elsewhere through HTTPS (and possibly with stronger authentication
 mechanisms such as public key pinning from browser vendors).
 
 We use for that a browser extension, called
-*Tails Verification* which is available for:
+*Tails Verification* which is available for
 
-* Firefox 45+ (and Tor Browser 6+)
-* Chrome 22+
+* Firefox 52+ (and Tor Browser 7+)
+* Chrome 57+
+
+i.e. browsers that support WebAPIs, in particular
+[FileReader](https://developer.mozilla.org/en-US/docs/Web/API/FileReader),
+[Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API), and
+[async/await](https://caniuse.com/#feat=async-functions).
 
 The code of *Tails Verification* is available in `git clone https://git-tails.immerda.ch/verification-extension`.
 
@@ -38,19 +43,22 @@ Scope
 Goals
 -----
 
-Provide a simple, automated, and cross-platform technique to verify the ISO
-image of the current version.
+Provide a simple, automated, and cross-platform technique to verify installable
+Tails images of the current version, in ISO and disk image format.
 
 Non goals
 ---------
 
-  - Verify deprecated ISO images.
-  - Verify ISO images downloaded from nightly.tails.boum.org.
-  - Verify ISO images downloaded through BitTorrent. If we can rely on
+  - Verify deprecated Tails images.
+  - Verify Tails images downloaded from nightly.tails.boum.org.
+  - Verify Tails images downloaded through BitTorrent. If we can rely on
     our website to provide a correct cryptographic description of the
-    ISO image then we can rely on it as well to provide a correct
+    Tails image then we can rely on it as well to provide a correct
     BitTorrent file. Then we rely on the BitTorrent client to verify the integrity of
     the download ([[!tails_ticket 9043]]).
+
+However, any current Tails image (downloaded over BitTorrent, copied from a
+friend, downloaded from one of our mirrors) can be verified by the extension.
 
 <a id="verification"></a>
 
@@ -64,7 +72,7 @@ Threat model
 
 We are considering here an attacker who can:
 
-  - [A] Provide a malicious ISO image to the user for example by
+  - [A] Provide a malicious Tails image to the user for example by
     operating a rogue Tails mirror.
 
   - [H] Operate a website that is loaded in a different tab in the same
@@ -75,21 +83,20 @@ We are not considering an attacker who can:
 
   - [B] Do a man-in-the-middle attack by providing a rogue HTTPS certificate
     for https://tails.boum.org/ signed by a certificate authority
-    trusted by the
-    browser but under the control of the attacker.
+    trusted by the browser but under the control of the attacker.
 
     Since the extension is targeted at new users, a MitM or exploit on
     our website could defeat any verification technique by providing
-    simplified instructions or by faking ISO verification.
+    simplified instructions or by faking Tails image verification.
 
     Note that our website is already in the HSTS preload list of Firefox
     and Chrome which forces HTTPS connections to our website, even for
     first time visitors.
 
   - [C] Insert malicious content on https://tails.boum.org/ through an
-    exploit on our website as this could trick new users to skip the ISO
-    verification all the way. To prevent this kind of attack we should
-    instead:
+    exploit on our website as this could trick new users to skip the Tails
+    image verification all the way. To prevent this kind of attack we
+    should instead:
 
     - Monitor externally the most relevant parts of our website.
     - Work on integrating full upgrades in Tails Upgrader to limit the
@@ -117,13 +124,17 @@ We are not considering an attacker who can:
     - Encourage external documentation (screencasts on YouTube, printed
       forms, etc.). But those would be vulnerable to other kind of
       attacks.
-    - Not rely on the website to perform the ISO verification and rely
+    - Not rely on the website to perform the Tails image verification and rely
       on a native interface accessible from the add-ons menu.
 
     But the cost/benefit of such a technique is not very appealing…
 
   - [I] Provide a malicious extension in the same browser as this would
     have similar effects to attack [F].
+
+  - [J] Provide a malicious copy of our website on a similar looking URL
+    that could pretend that verification has succeeded without actually
+    verifying anything.
 
 <a id="inside_the_browser"></a>
 
@@ -135,7 +146,7 @@ browser (and the proper coding of the extension).
 
 ### Cross-origin communication
 
-The extension uses cross-origin communication to modify the download
+The extension uses cross-origin communication to send messages to the download
 page.
 
 - To ensure that messages from the extension are only sent to pages on
@@ -153,21 +164,31 @@ page.
   See [[!tails_gitweb wiki/src/install/inc/js/download.js
   desc="`receiveMessage()` in *download.js*"]].
 
-- The code of the extension is only injected in tabs on
-  `https://tails.boum.org/` (with a trailing slash). See `permissions`
-  in *manifest.js* and `matches` in *scripts/background/background.js*.
+- The code of the extension is loaded via content scripts and targets only tabs
+  with locations `https://tails.boum.org/install/*` and
+  `https://tails.boum.org/upgrade/*`. See `permissions` in *manifest.json*.
 
-- The communication is unidirectional: only the extension sends messages
-  and the extension does not listen to messages.
+- On Chrome browsers, a background script reloads tabs with matching URL
+  schemes (`https://tails.boum.org/install/*` and
+  `https://tails.boum.org/upgrade/*`) only after the first installation of the
+  extension, in order to make the extension usable right away. This is
+  automatically happening in Firefox based browsers, therefore the background
+  script does not apply.
+
+- The communication is unidirectional: the extension only sends messages
+  but it does not listen to messages.
 
 ### Content Security Policy
 
-Instead of the default Content Security Policy, the extension uses the
-strictest policy: `default-src 'none'`.
+The extension uses a Content Security Policy with `default-src 'none'`
+and `script-src 'self'`. The latter part has been added because
+background scripts are needed by the extension, and require a slightly
+less strict CSP. However, this CSP also applies to the content scripts
+shipped in the extension.
 
 <a id="update"></a>
 
-Updates mechanism
+Update mechanisms
 -----------------
 
 ### Automatic update from browsers
@@ -181,10 +202,10 @@ Updates mechanism
 ### Enforce version check on our download page
 
 On top of this, the HTML code of our download page includes a tag to
-force a version of the extension. For example:
+force a minimum version of the extension. For example:
 
 <pre>
-&lt;div id="extension-version"&gt;1.0&lt;/div&gt;
+&lt;div id="extension-version"&gt;2.0&lt;/div&gt;
 </pre>
 
 *Tails Verification* checks the value of this tag and asks for an
@@ -203,48 +224,85 @@ Extension technology
 
 The extension is written as a *Web Extension* and the same exact code
 works on both Firefox and Chrome.
+
+Future plans include abandoning the extension and integrating the code directly
+into our website, with the aim of supporting more browsers. [[!tails_ticket
+16128]].
+
 <a id="data_source">
 
 Data source
 -----------
 
-Building up on the format specified for [[upgrade description
+Building upon the format specified for [[upgrade description
 files|contribute/design/incremental_upgrades#upgrade-description-files]],
-the verification extension fetches an [[!tails_gitweb wiki/src/install/v1/Tails/i386/stable/latest.yml desc="ISO description file"]] from our
-server to retrieve all the information it needs about the ISO image
-(URL, size, checksum, etc.). As a beginning, this ISO description file
-is not signed using OpenPGP.
+the verification extension fetches an [[!tails_gitweb
+wiki/src/install/v2/Tails/amd64/stable/latest.json desc="image description
+file"]] from our server to retrieve all the information it needs about
+available Tails images (URL, size, checksum, etc.).
 
-### Example of an ISO description file
+The file format allows to publish several target files, and formats, such as
+ISO and IMG.
 
-    ---
-    build-target: i386
-    channel: stable
-    product-name: Tails
-    version: '0.23'
-    target-files:
-    - sha256: 359d104737f1a448375d2030f938dea3d529468b8218485998ab893c1f7509eb
-      size: 939571200
-      url: http://dl.amnesia.boum.org/tails/stable/tails-i386-0.23/tails-i386-0.23.iso
+It currently publishes only information about the current stable supported
+Tails release. A more fine grained approach is planned [[!tails_ticket 16200]].
+
+Currently, this image description file is not signed using OpenPGP.
+
+### Example of an image description file
+
+<pre>
+{
+    "build_target": "amd64",
+    "channel": "stable",
+    "installations": [
+        {
+            "installation-paths": [
+                {
+                    "target-files": [
+                        {
+                            "sha256": "2ffeacab6ad74671a9eb15b560f47bae7d22e1bcbd9735342ee6d7dfe3c5706e",
+                            "size": 1225568256,
+                            "url": "http://dl.amnesia.boum.org/tails/stable/tails-amd64-3.11/tails-amd64-3.11.iso"
+                        }
+                    ],
+                    "type": "iso"
+                },
+                {
+                    "target-files": [
+                        {
+                            "sha256": "cafedeadbeaf67213970783432cafe0dead9beefbd9735342ee6d7dfe3c5706e",
+                            "size": 1225765432,
+                            "url": "http://dl.amnesia.boum.org/tails/stable/tails-amd64-3.11/tails-amd64-3.11.img"
+                        }
+                    ],
+                    "type": "img"
+                }
+            ],
+            "version": "3.11"
+        }
+    ],
+    "product-name": "Tails"
+}
+</pre>
 
 Checksum verification
 ---------------------
 
-When verifying an ISO image, the extension:
+When verifying a Tails image, the extension:
 
-  - Downloads the ISO description document (size, checksum) from:
+  - Downloads the image description document (url, size, checksum) from:
 
-    <https://tails.boum.org/v1/Tails/amd64/stable/latest.yml>
+    <https://tails.boum.org/v2/Tails/amd64/stable/latest.json>
 
-  - Verifies the ISO image against the document (first its size, then
-    its checksum).
+  - Verifies the image downloaded (ISO or IMG) against the document (first its
+    size, then its checksum).
 
 Security properties:
 
-  - This technique would defeat attack [A] (malicious ISO).
+  - This technique would defeat attack [A] (malicious Tails image).
 
-More complex verification mechanisms could be gradually [[built into
-Tails Installer|blueprint/bootstrapping/installer]] where we can
+More complex verification mechanisms could be gradually built in to
 defeat attacks [B], [C], [D], [F], and [G].
 
 Embedded *Forge* library
@@ -257,7 +315,7 @@ checksum. So it embeds the *Forge* library:
 
 <https://github.com/digitalbazaar/forge/>
 
-We choose *Forge* because it was reported as being the fastest in this
+We chose *Forge* because it was reported as being the fastest in this
 benchmark:
 
 <https://github.com/brillout/test-javascript-hash-implementations>
@@ -277,10 +335,6 @@ mechanisms:
   an HTML attribute (`documentElement.dataset.extension`) corresponding
   to some CSS declarations, to indicate whether the extension is
   up-to-date or outdated.
-
-- If the extension gets installed on a page, through a background script
-  that injects the JavaScript of the extension on the page. See commit
-  d80b322.
 
 This decouples the code of the extension from the implementation of the
 display on the HTML page (ids, classes, etc.).
