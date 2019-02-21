@@ -62,8 +62,26 @@ if [ ! -d "${TAILS_GIT_DIR}" ]; then
     # We use --shared as an time/space optimization, and it is safe
     # since our build process doesn't modify any objects (which would
     # fail since the host's .git directory is shared read-only).
-    git clone --shared /amnesia.git/.git "${TAILS_GIT_DIR}"
+    git clone --shared --local /amnesia.git/.git "${TAILS_GIT_DIR}"
+    # When we locally Git clone the main repo over the filesystem
+    # above, it will use the host's local repo as origin, but the
+    # submodules will continue to use their remote repos. A problem
+    # with this, beside unnecessary fetching of the network, is that
+    # any unpublished commits in the host's submodule are
+    # inaccessible, so if we want to build we first have to push those
+    # commits to the submodules remote repo. To avoid this, and in
+    # general try to make sure that the Git state in the builder is
+    # the same as on the host, we just clone the submodules in the
+    # same way we do the main repo.
+    (
+        cd "${TAILS_GIT_DIR}/submodules"
+        for submodule in $(ls -1); do
+            rm -rf "${submodule}"
+            git clone --shared "/amnesia.git/.git/modules/submodules/${submodule}"
+        done
+    )
 fi
+
 cd "${TAILS_GIT_DIR}"
 # Mirror the branches amnesia.git tracks on its "origin" remote as if
 # they were on our own "origin" remote, (i.e. under the origin/$REF
