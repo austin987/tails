@@ -59,7 +59,10 @@ fi
 
 TAILS_GIT_DIR="/home/vagrant/amnesia"
 if [ ! -d "${TAILS_GIT_DIR}" ]; then
-    git clone /amnesia.git/.git "${TAILS_GIT_DIR}"
+    # We use --shared as an time/space optimization, and it is safe
+    # since our build process doesn't modify any objects (which would
+    # fail since the host's .git directory is shared read-only).
+    git clone --shared /amnesia.git/.git "${TAILS_GIT_DIR}"
 fi
 cd "${TAILS_GIT_DIR}"
 # Mirror the branches amnesia.git tracks on its "origin" remote as if
