@@ -70,7 +70,9 @@ cd "${TAILS_GIT_DIR}"
 # branch merge we do (if the 'mergebasebranch'/TAILS_MERGE_BASE_BRANCH
 # option is set) later in auto/build.
 git config remote.origin.fetch +refs/remotes/origin/*:refs/remotes/origin/*
-git fetch --tags
+
+# Ensure we have the same Git state as on the host
+git fetch origin "${GIT_REF}"
 git checkout --force "${GIT_REF}"
 git reset --hard "${GIT_COMMIT}"
 git submodule update --init
