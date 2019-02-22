@@ -94,6 +94,9 @@ git config remote.origin.fetch +refs/remotes/origin/*:refs/remotes/origin/*
 
 # Ensure we have the same Git state as on the host
 git fetch origin "${GIT_REF}"
+if [ "${TAILS_MERGE_BASE_BRANCH}" = 1 ]; then
+    git fetch origin "$(cat config/base_branch)"
+fi
 git checkout --force "${GIT_REF}"
 git reset --hard "${GIT_COMMIT}"
 git submodule update --init
