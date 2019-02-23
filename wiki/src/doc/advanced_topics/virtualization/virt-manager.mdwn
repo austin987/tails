@@ -103,6 +103,51 @@ active</span>", then try to start the default virtual network:
 
 </div>
 
+<a id="usb_image"></a>
+
+Running Tails from a USB image
+========================================
+
+You can also run Tails from the USB image, which allows you to create a
+persistent volume on it.
+
+Before you can run the Tails USB image in a virtual machine, you have to
+increase its size so that Tails can download and apply updates and create
+a persistent volume. You can do this with the following command:
+
+    truncate -s 7200M tails-amd64-*.img
+
+The size has to be *at least* 7200 MiB, else Tails won't boot because the
+device is considered too small.
+
+To run the resulting Tails USB image using *virt-manager*:
+
+  1. Start *virt-manager*.
+  1. Double-click on **localhost (QEMU)** to connect to the *QEMU*
+     system of your host.
+  1. To create a new virtual machine, choose
+     <span class="menuchoice"> <span
+     class="guimenu">File</span>&nbsp;▸ <span
+     class="guimenuitem">New Virtual Machine</span></span>.
+  1. In *step 1*, choose **Import existing disk image**.
+  1. In *step 2*, choose **Browse...**, and **Browse Local** to
+       browse for the USB image that you want to start from.
+     As operating system, choose **Debian Stretch** or **Generic default**.
+  1. In *step 3*, allocate at least 2048 MB of RAM.
+  1. In *step 4*:
+     - Type a name for the new virtual machine.
+     - Choose **Customize configuration before install**
+     - Click **Finish** to open the configuration view.
+  1. In the **configuration view**, choose **VirtIO Disk 1** or **IDE Disk 1**
+     - Expand the **Advanced options** and set **Disk bus** to **USB**.
+     - Click **Apply**.
+     - Check the **Removable** check box which should appear in the same view.
+     - Click **Apply** again.
+     - Click **Begin Installation** in the top left corner to start the virtual machine.
+
+Once you started from the USB image you can [[create a persistent
+volume|first_steps/persistence/configure]] on it.
+
 <a id="usb"></a>
 
 Running Tails from a USB stick
@@ -157,51 +202,6 @@ USB stick once Tails is already installed on it. To do so:
      <span class="guimenuitem">Run</span></span>.
 
 Once you started from the USB device you can [[create a persistent
-volume|first_steps/persistence/configure]] on it.
-
-<a id="virtual_usb"></a>
-
-Running Tails from a virtual USB storage
-========================================
-
-You can also run Tails from a virtual USB storage, saved as a single
-file on the host operating system.
-
-To run Tails from a virtual USB device using *virt-manager*, first
-create a virtual machine running from an ISO image as described
-[[above|virt-manager#iso]].
-
-Then do the following to create a virtual USB storage:
-
-  1. From the virtual machine window, choose
-     <span class="menuchoice">
-     <span class="guimenu">Virtual Machine</span>&nbsp;▸
-     <span class="guisubmenuitem">Shut Down</span>&nbsp;▸
-     <span class="guimenuitem">Force Off</span></span> to shut down the
-     virtual machine.
-  1. Choose
-     <span class="menuchoice">
-     <span class="guimenu">View</span>&nbsp;▸
-     <span class="guimenuitem">Details</span></span> to edit the
-     configuration of the virtual machine.
-  1. Click on the **Add Hardware** button on the bottom of the left
-     pane.
-  1. Select **Storage** in the left pane.
-  1. In the right pane, change the **Bus type** to USB and click
-     **Finish**.
-  1. Select **USB Disk 1** in the left pane.
-  1. In the right pane, select the **Removable** option and click
-     **Apply**.
-
-Then start the virtual machine from the virtual DVD to install Tails
-onto the virtual USB storage using *Tails Installer*. The virtual USB
-storage appears in *Tails Installer* as **QEMU HARDDISK**.
-
-After that you can disconnect the original ISO image and start directly
-from the virtual USB stick [[as described
-in the previous section|virt-manager#disconnect]].
-
-Once you started from the virtual USB device you can [[create a persistent
 volume|first_steps/persistence/configure]] on it.
 
 # Troubleshooting
