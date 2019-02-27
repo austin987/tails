@@ -1,6 +1,6 @@
 Then /^the hostname should not have been leaked on the network$/ do
   begin
-    hostname = $vm.execute("hostname").stdout.chomp
+    hostnames = ["amnesia", $vm.execute("hostname").stdout.chomp]
     packets = PacketFu::PcapFile.new.file_to_array(filename: @sniffer.pcap_file)
     packets.each do |p|
       # if PacketFu::TCPPacket.can_parse?(p)
@@ -12,8 +12,10 @@ Then /^the hostname should not have been leaked on the network$/ do
       else
         raise "Found something in the pcap file that either is non-IP, or cannot be parsed"
       end
-      if payload.match(hostname)
-        raise "Hostname leak detected"
+      hostnames.each do |hostname|
+        if payload.match(hostname)
+          raise "Hostname leak detected: #{hostname}"
+        end
       end
     end
   rescue Exception => e

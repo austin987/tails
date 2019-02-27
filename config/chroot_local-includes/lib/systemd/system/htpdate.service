@@ -11,10 +11,10 @@ Environment=SUCCESS_FILE=/run/htpdate/success
 Environment=LOG=/var/log/htpdate.log
 EnvironmentFile=/etc/default/htpdate.*
 ExecStartPre=/bin/sh -c \
-    '[ -n "${HTTP_USER_AGENT}"  ] && \
-     [ -n "${HTP_POOL_PAL}"     ] && \
-     [ -n "${HTP_POOL_NEUTRAL}" ] && \
-     [ -n "${HTP_POOL_FOE}"     ]'
+    '[ -n "${HTTP_USER_AGENT}" ] && \
+     [ -n "${HTP_POOL_1}"      ] && \
+     [ -n "${HTP_POOL_2}"      ] && \
+     [ -n "${HTP_POOL_3}"      ]'
 ExecStartPre=/bin/rm -f "${DONE_FILE}"
 ExecStartPre=/bin/rm -f "${SUCCESS_FILE}"
 ExecStartPre=/usr/bin/install -o htp -g nogroup -m 0644 /dev/null "${LOG}"
@@ -26,9 +26,9 @@ ExecStart=/usr/local/sbin/htpdate                   \
               --user htp                            \
               --done_file    "${DONE_FILE}"         \
               --success_file "${SUCCESS_FILE}"      \
-              --pal_pool     "${HTP_POOL_PAL}"      \
-              --neutral_pool "${HTP_POOL_NEUTRAL}"  \
-              --foe_pool     "${HTP_POOL_FOE}"      \
+              --pool1        "${HTP_POOL_1}"        \
+              --pool2        "${HTP_POOL_2}"        \
+              --pool3        "${HTP_POOL_3}"        \
               --proxy        127.0.0.1:9062
 RemainAfterExit=yes
 CapabilityBoundingSet=CAP_CHOWN CAP_FOWNER CAP_SETUID CAP_SYS_TIME
