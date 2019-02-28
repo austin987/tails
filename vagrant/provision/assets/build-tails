@@ -92,8 +92,22 @@ cd "${TAILS_GIT_DIR}"
 # option is set) later in auto/build.
 git config remote.origin.fetch +refs/remotes/origin/*:refs/remotes/origin/*
 
-# Ensure we have the same Git state as on the host
-git fetch --tags
+# Ensure we have the Git refs we need:
+git fetch origin "${GIT_REF}"
+# The repo we cloned above (the host's repo) will expose *its* local
+# checkouts of branches. We know that the GIT_REF ref will be
+# up-to-date since it is what is checked out on the host, so we could
+# just fetch it above, but for any other ref (read: branch) the local
+# checkout could be very out-of-date, or worse: it may not even exist,
+# making any attempt at merging the base branch below fail. We work
+# around this by fetching the ref that the host's origin (most likely
+# the official Tails repo) where the base branch refs must exist and
+# be as up-to-date as possible (i.e. since the host's last fetch).
+if [ "${TAILS_MERGE_BASE_BRANCH}" = 1 ]; then
+    git fetch origin "origin/$(cat config/base_branch)"
+fi
+
+# Ensure we have the same Git state as on the host:
 git checkout --force "${GIT_REF}"
 git reset --hard "${GIT_COMMIT}"
 git submodule update --init
