@@ -32,20 +32,25 @@ area:
    virtualization too.
  * As we add more automated tests, and re-enable tests previously
    flagged as fragile, a full test run takes longer and longer.
-   We're now up to 200 minutes / run. We can't make it faster by
+   We're now up to 206 minutes / run (without fragile tests).
+   We can't make it faster by
    adding RAM anymore nor by adding CPUs to ISO testers. But faster
-   CPU cores would fix that: the same test suite only takes 105
-   minutes on a replica of our Jenkins setup, also using nested
-   virtualization, with a poor Internet connection but a faster CPU.
+   CPU cores would fix that. The same test suite only takes:
+   - 160 minutes on a replica of our Jenkins setup, also using nested
+     virtualization, with a poor Internet connection but a faster CPU
+   - 105 minutes on bare metal, with a poor Internet connection but a fast (Intel E2134) CPU;
+     giving the system under test more vCPUs might make it a bit faster
  * Building our website takes a long while (12 minutes on our ISO
    builders i.e. 20% of the entire ISO build time), which makes ISO
    builds take longer than they could. This will get worse as new
    languages are added to our website. This is a single-threaded task,
    so adding more CPU cores or RAM would not help: only faster CPU
-   cores would fix that. For example, the ISO build only takes 38
-   minutes (including 6-7 minutes for building the website) on
-   a replica of our Jenkins setup, also using nested virtualization,
-   with a poor Internet connection but faster CPU cores.
+   cores would fix that. For example, the ISO build only takes:
+   - 38 minutes (including 6-7 minutes for building the website) on
+     a replica of our Jenkins setup, also using nested virtualization,
+     with a poor Internet connection but faster CPU cores
+   - 26 minutes (including 5 minutes for building the website) on bare metal,
+     with a poor Internet connection but a fast (Intel E2134) CPU
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods:
 
