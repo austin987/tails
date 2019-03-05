@@ -101,14 +101,14 @@ end
 When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |version|
   step 'I update APT using apt'
   step 'I install "cowsay" using apt'
-  step "the package \"cowsay\" installed version is \"#{version}\""
+  step "the installed version of package \"cowsay\" is \"#{version}\""
 end
 
 When /^I revert the APT tweaks that made it prefer an old version of cowsay$/ do
   $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
 end
 
-When /^the package "([^"]*)" installed version is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
+When /^the installed version of package "([^"]*)" is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
   if asp
     step 'the Additional Software installation service has started'
   end

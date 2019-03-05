@@ -80,7 +80,7 @@ Feature: Additional software
     # install step, as it was not saved in persistence
     And I configure APT to prefer an old version of cowsay
     And I log in to a new session
-    And the package "cowsay" installed version is "3.03+dfsg2-1" after Additional Software has been started
+    And the installed version of package "cowsay" is "3.03+dfsg2-1" after Additional Software has been started
     And I revert the APT tweaks that made it prefer an old version of cowsay
     # We remove the newest package after it has been downloaded and before
     # it is installed, so that the upgrade process fails
@@ -103,12 +103,12 @@ Feature: Additional software
     # install step, as it was not saved in persistence
     And I configure APT to prefer an old version of cowsay
     And I log in to a new session
-    And the package "cowsay" installed version is "3.03+dfsg2-1" after Additional Software has been started
+    And the installed version of package "cowsay" is "3.03+dfsg2-1" after Additional Software has been started
     And I revert the APT tweaks that made it prefer an old version of cowsay
     And the network is plugged
     And Tor is ready
     Then the Additional Software upgrade service has started
-    And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
+    And the installed version of package "cowsay" is newer than "3.03+dfsg2-1"
 
   # Depends on scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
   Scenario: I am notified when Additional Software fails to install a package
