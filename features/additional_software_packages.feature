@@ -26,8 +26,8 @@ Feature: Additional software
     Given I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login
     And I update APT using apt
     And I install "sslh" using apt
-    Then I am proposed to create an Additional Software persistence for the "sslh" package
-    And I create the Additional Software persistence
+    Then I am proposed to add the "sslh" package to my Additional Software
+    And I create a persistent storage and activate the Additional Software feature
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     And Additional Software is correctly configured for package "sslh"

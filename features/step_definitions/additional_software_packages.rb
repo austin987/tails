@@ -30,12 +30,12 @@ Then /^I am notified that the installation succeeded$/  do
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I am proposed to create an Additional Software persistence for the "([^"]*)" package$/  do |package|
+Then /^I am proposed to add the "([^"]*)" package to my Additional Software$/  do |package|
   title = "Add #{package} to your additional software?"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I create the Additional Software persistence$/  do
+Then /^I create a persistent storage and activate the Additional Software feature$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Create Persistent Storage', roleName: 'push button').click
   step 'I create a persistent partition for Additional Software'
