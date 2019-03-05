@@ -51,7 +51,7 @@ When /^I update APT using apt$/ do
   end
 end
 
-def check_for_installation(package)
+def wait_for_package_installation(package)
   try_for(2*60) do
     $vm.execute_successfully("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'")
   end
@@ -70,12 +70,12 @@ Then /^I install "(.+)" using apt$/ do |package|
                                "sudo -S DEBIAN_PRIORITY=critical apt -y install #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-      check_for_installation(package)
+      wait_for_package_installation(package)
     end
   end
 end
 
-def check_for_removal(package)
+def wait_for_package_removal(package)
   try_for(3*60) do
     # Once purged, a package is removed from the installed package status database
     # and "dpkg -s" returns a non-zero exit code
@@ -88,7 +88,7 @@ Then /^I uninstall "(.+)" using apt$/ do |package|
                                "sudo -S apt -y purge #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
-  check_for_removal(package)
+  wait_for_package_removal(package)
 end
 
 When /^I configure APT to prefer an old version of cowsay$/ do

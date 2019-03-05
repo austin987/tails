@@ -590,12 +590,12 @@ end
 
 Given /^the package "([^"]+)" is( not)? installed( after Additional Software has been started)?$/ do |package, absent, asp|
   if absent
-    check_for_removal(package)
+    wait_for_package_removal(package)
   else
     if asp
       step 'the Additional Software installation service has started'
     end
-    check_for_installation(package)
+    wait_for_package_installation(package)
   end
 end
 
