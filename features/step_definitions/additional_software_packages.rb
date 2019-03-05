@@ -117,12 +117,8 @@ end
 Then /^I can open the Additional Software documentation from the notification$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Documentation', roleName: 'push button').click
-  # For some reason the below two steps fail. Dogtail can not find the Firefox
-  # application.
-  #try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
-  #step '"Install from another Tails" has loaded in the Tor Browser'
-  # So instead let's try to find the title of the page with Sikuli.
-  @screen.wait('ASPDocumentationInstallCloning.png', 120)
+  try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
+  step '"Install from another Tails" has loaded in the Tor Browser'
 end
 
 Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and notices the persistence is locked$/ do |package|
