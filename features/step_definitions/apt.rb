@@ -60,6 +60,8 @@ end
 Then /^I install "(.+)" using apt$/ do |package|
   recovery_proc = Proc.new do
     step 'I kill the process "apt"'
+    # We can't use execute_successfully here: the package might not be
+    # installed at this point, and then "apt purge" would return non-zero.
     $vm.execute("apt purge #{package}")
   end
   retry_tor(recovery_proc) do
@@ -82,7 +84,7 @@ def check_for_removal(package)
 end
 
 Then /^I uninstall "(.+)" using apt$/ do |package|
-  $vm.execute("echo #{@sudo_password} | " +
+  $vm.execute_successfully("echo #{@sudo_password} | " +
                                "sudo -S apt -y purge #{package}",
                                :user => LIVE_USER,
                                :spawn => true)
@@ -105,14 +107,14 @@ When /^I install an old version "([^"]*)" of the cowsay package using apt$/ do |
 end
 
 When /^I revert the APT tweaks that made it prefer an old version of cowsay$/ do
-  $vm.execute('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
+  $vm.execute_successfully('rm -f /etc/apt/sources.list.d/asp-test-upgrade-cowsay.list /etc/apt/preferences.d/asp-test-upgrade-cowsay')
 end
 
 When /^the installed version of package "([^"]*)" is( newer than)? "([^"]*)"( after Additional Software has been started)?$/ do |package, newer_than, version, asp|
   if asp
     step 'the Additional Software installation service has started'
   end
-  current_version = $vm.execute("dpkg-query -W -f='${Version}' #{package}").stdout
+  current_version = $vm.execute_successfully("dpkg-query -W -f='${Version}' #{package}").stdout
   if newer_than
     cmd_helper("dpkg --compare-versions '#{version}' lt '#{current_version}'")
   else
@@ -155,6 +157,8 @@ end
 Then /^I install "(.+)" using Synaptic$/ do |package_name|
   recovery_proc = Proc.new do
     step 'I kill the process "synaptic"'
+    # We can't use execute_successfully here: the package might not be
+    # installed at this point, and then "apt purge" would return non-zero.
     $vm.execute("apt -y purge #{package_name}")
     step "I start Synaptic"
   end

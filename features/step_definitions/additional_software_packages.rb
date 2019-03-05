@@ -107,7 +107,7 @@ DPkg::Pre-Invoke {
 EOF
   $vm.file_overwrite('/etc/apt/apt.conf.d/00failingDPKGhook', failing_dpkg_hook)
   # Tell the upgrade service check step not to run
-  $vm.execute("touch #{ASP_STATE_DIR}/doomed_to_fail")
+  $vm.execute_successfully("touch #{ASP_STATE_DIR}/doomed_to_fail")
 end
 
 When /^I remove the "([^"]*)" deb files from the APT cache$/  do |package|
