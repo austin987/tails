@@ -49,6 +49,8 @@ the scripts snippets found on this page:
 * `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
   *bugfix* Tails release; if the next release is a bugfix release, use
   that one; otherwise, use `${VERSION}.1`
+* `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
+  to the next emergency release if we have to put one out
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
@@ -785,10 +787,17 @@ Prepare upgrade-description files
         ./bin/tails-iuk-generate-upgrade-description-files \
             --build-target amd64 \
             --version "${VERSION:?}" \
-            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
-            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
-            --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
-            --next-version "${VERSION:?}.1" \
+            $( \
+                if [ "${DIST:?}" = stable ]; then
+                    echo \
+                        --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+                        --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
+                        --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
+                        --next-version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}" \
+                else
+                    echo --next-version $(echo ${VERSION:?} | sed -e 's,~.*$,,')
+                fi
+            ) \
             --iso "${ISO_PATH:?}" \
             $( \
                 for version in ${IUK_SOURCE_VERSIONS:?}; do
@@ -800,16 +809,6 @@ Prepare upgrade-description files
             --major-release "${MAJOR_RELEASE:?}" \
             --channel "${DIST:?}"
        )
-
-   Note:
-   * If preparing anything but a final release (e.g. an alpha, beta
-     or RC), drop all `--next-version`
-     arguments, and instead pass
-     `--next-version $(echo ${VERSION:?} | sed -e 's,~.*$,,')`
-   * Adjust `--next-version "${VERSION:?}.1"` so it matches the next
-     potential emergency release. E.g. when releasing 3.7.1,
-     pass `--next-version 3.7.2` and when releasing 3.8, pass
-     `--next-version 3.8.1`.
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
