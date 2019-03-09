@@ -38,7 +38,7 @@ area:
    CPU cores would fix that. The same test suite only takes:
    - 160 minutes on a replica of our Jenkins setup, also using nested
      virtualization, with a poor Internet connection but a faster CPU
-   - 105 minutes on bare metal, with a poor Internet connection but a fast (Intel E2134) CPU;
+   - 105 minutes on bare metal, with a poor Internet connection but a fast (Intel E-2134) CPU;
      giving the system under test more vCPUs might make it a bit faster
  * Building our website takes a long while (12 minutes on our ISO
    builders i.e. 20% of the entire ISO build time), which makes ISO
@@ -50,7 +50,7 @@ area:
      a replica of our Jenkins setup, also using nested virtualization,
      with a poor Internet connection but faster CPU cores
    - 26 minutes (including 5 minutes for building the website) on bare metal,
-     with a poor Internet connection but a fast (Intel E2134) CPU
+     with a poor Internet connection but a fast (Intel E-2134) CPU
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods:
 
@@ -169,12 +169,16 @@ Specs:
    + Jenkins VM + host system + a few accessory VMs  
    = round to 1.5 TB × 2 (RAID-1)
 
+<a id="hacker-option"></a>
+
 ## Custom-built cluster of consumer-grade hardware dedicated to CI, aka. the hacker option
 
 For example, we could stuff 4-6 × Intel NUC or similar
 together in a custom case, with whatever cooling, PoE and network boot
 system this high-density cluster would need. Each of these nodes
 should be able to run 2 Jenkins workers.
+
+### Pros and cons
 
 Pros:
 
@@ -200,7 +204,7 @@ Cons:
      by a Tails developer or sysadmin.
  * On-going cost for hosting this cluster.
 
-Availability:
+### Availability
 
  * Intel: as of 2018-12-01, none of the eighth generation NUC8i7
    support vPro, so the fastest models with vPro remain those, that
@@ -228,11 +232,13 @@ Availability:
 * Supermicro SuperServer E300-9D is very tempting (IPMI) but more
   expensive than a NUC.
 
-Remote management:
+### Remote management
 
  * AMT (vPro) can be a pain as it shares the Ethernet interface
    with the OS. IPMI would be a big plus as it integrates well
    into the colo's existing setup.
+
+<a id="hacker-option-benchmark"></a>
 
 ### Benchmarking results
 
