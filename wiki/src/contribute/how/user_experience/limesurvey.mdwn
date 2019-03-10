@@ -42,6 +42,10 @@ Updating LimeSurvey
 
        sudo -u www-data bash
 
+1. Save a backup of the custom files in the working directory:
+
+        tar zcvf /tmp/limesurvey-$(date +%Y-%m-%d-%H:%M).tgz application/config/config.php upload
+
 1. Fetch the changes from the *updates repo*:
  
        git fetch origin
@@ -56,8 +60,20 @@ Updating LimeSurvey
 
        git merge $TAG
 
+   Remove all untracked files:
+
+       git clean -df
+
+   Restore the custom files:
+
+       tar zxvf /tmp/limesurvey-$(date +%Y-%m-%d-%H:%M).tgz
+
 1. Check the version in the footer of:
 
    <https://survey.tails.boum.org/index.php/admin/index>
 
    While doing so you might be prompted to apply database updates.
+
+1. Remove the backup of the custom files:
+
+       rm /tmp/limesurvey-*.tgz
