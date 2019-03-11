@@ -20,12 +20,14 @@ Feature: Additional software
   # Additional Software from automatically installing packages.
   # This scenario also sets up the "__internal" drive that the following
   # scenarios will reuse.
+  # Note: the "__internal" drive will keep its state across scenarios
+  # and features until one of its snapshots is restored.
   Scenario: I set up Additional Software when installing a package without persistent partition and the package is installed next time I start Tails
     Given I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login
     And I update APT using apt
     And I install "sslh" using apt
-    Then I am proposed to create an Additional Software persistence for the "sslh" package
-    And I create the Additional Software persistence
+    Then I am proposed to add the "sslh" package to my Additional Software
+    And I create a persistent storage and activate the Additional Software feature
     And I shutdown Tails and wait for the computer to power off
     And I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     And Additional Software is correctly configured for package "sslh"
@@ -78,7 +80,7 @@ Feature: Additional software
     # install step, as it was not saved in persistence
     And I configure APT to prefer an old version of cowsay
     And I log in to a new session
-    And the package "cowsay" installed version is "3.03+dfsg2-1" after Additional Software has been started
+    And the installed version of package "cowsay" is "3.03+dfsg2-1" after Additional Software has been started
     And I revert the APT tweaks that made it prefer an old version of cowsay
     # We remove the newest package after it has been downloaded and before
     # it is installed, so that the upgrade process fails
@@ -101,12 +103,12 @@ Feature: Additional software
     # install step, as it was not saved in persistence
     And I configure APT to prefer an old version of cowsay
     And I log in to a new session
-    And the package "cowsay" installed version is "3.03+dfsg2-1" after Additional Software has been started
+    And the installed version of package "cowsay" is "3.03+dfsg2-1" after Additional Software has been started
     And I revert the APT tweaks that made it prefer an old version of cowsay
     And the network is plugged
     And Tor is ready
     Then the Additional Software upgrade service has started
-    And the package "cowsay" installed version is newer than "3.03+dfsg2-1"
+    And the installed version of package "cowsay" is newer than "3.03+dfsg2-1"
 
   # Depends on scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
   Scenario: I am notified when Additional Software fails to install a package

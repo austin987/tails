@@ -30,12 +30,12 @@ Then /^I am notified that the installation succeeded$/  do
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I am proposed to create an Additional Software persistence for the "([^"]*)" package$/  do |package|
+Then /^I am proposed to add the "([^"]*)" package to my Additional Software$/  do |package|
   title = "Add #{package} to your additional software?"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I create the Additional Software persistence$/  do
+Then /^I create a persistent storage and activate the Additional Software feature$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Create Persistent Storage', roleName: 'push button').click
   step 'I create a persistent partition for Additional Software'
@@ -50,8 +50,8 @@ end
 Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |package|
   assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
   step 'all persistence configuration files have safe access rights'
-  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb").success?
-  $vm.execute("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages").success?
+  $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
+  $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages")
   try_for(30) do
     $vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?
   end
@@ -92,7 +92,7 @@ end
 Given /^I remove "([^"]*)" from the list of Additional Software using Additional Software GUI$/  do |package|
   asp_gui = Dogtail::Application.new('tails-additional-software-config')
   installed_package = asp_gui.child(package, roleName: 'label')
-  installed_package.parent.parent.child('Close', roleName: 'push button').click
+  installed_package.parent.parent.child('Remove', roleName: 'push button').click
   asp_gui.child('Question', roleName: 'alert').button('Remove').click
   deal_with_polkit_prompt(@sudo_password)
 end
@@ -107,7 +107,7 @@ DPkg::Pre-Invoke {
 EOF
   $vm.file_overwrite('/etc/apt/apt.conf.d/00failingDPKGhook', failing_dpkg_hook)
   # Tell the upgrade service check step not to run
-  $vm.execute("touch #{ASP_STATE_DIR}/doomed_to_fail")
+  $vm.execute_successfully("touch #{ASP_STATE_DIR}/doomed_to_fail")
 end
 
 When /^I remove the "([^"]*)" deb files from the APT cache$/  do |package|
@@ -117,12 +117,8 @@ end
 Then /^I can open the Additional Software documentation from the notification$/  do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Documentation', roleName: 'push button').click
-  # For some reason the below two steps fail. Dogtail can not find the Firefox
-  # application.
-  #try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
-  #step '"Install from another Tails" has loaded in the Tor Browser'
-  # So instead let's try to find the title of the page with Sikuli.
-  @screen.wait('ASPDocumentationInstallCloning.png', 120)
+  try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }
+  step '"Tails - Install from another Tails" has loaded in the Tor Browser'
 end
 
 Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and notices the persistence is locked$/ do |package|
@@ -141,5 +137,5 @@ end
 Then /^I can open the Additional Software log file from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Show Log', roleName: 'push button').click
-  try_for(60) { gedit = Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
+  try_for(60) { Dogtail::Application.new('gedit').child("log [Read-Only] (#{ASP_STATE_DIR}) - gedit", roleName: 'frame') }
 end
