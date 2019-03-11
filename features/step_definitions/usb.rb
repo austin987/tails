@@ -242,6 +242,10 @@ Given /^I enable all persistence presets$/ do
       debug_log("setting already enabled, skipping")
     end
   end
+  save_and_exit_the_persistence_wizard
+end
+
+def save_and_exit_the_persistence_wizard
   @screen.type(Sikuli::Key.ENTER) # Press the Save button
   @screen.wait('PersistenceWizardDone.png', 60)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
@@ -257,12 +261,16 @@ When /^I disable the first persistence preset$/ do
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
-Given /^I create a persistent partition$/ do
-  step 'I start "Configure persistent volume" via GNOME Activities Overview'
+Given /^I create a persistent partition( for Additional Software)?$/ do |asp|
+  if not asp
+    step 'I start "Configure persistent volume" via GNOME Activities Overview'
+  end
   @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
-  step "I enable all persistence presets"
+  if not asp
+    step "I enable all persistence presets"
+  end
 end
 
 def check_disk_integrity(name, dev, scheme)
@@ -545,8 +553,6 @@ Then /^all persistent filesystems have safe access rights$/ do
 end
 
 Then /^all persistence configuration files have safe access rights$/ do
-  # XXX: #14596
-  next
   persistent_volumes_mountpoints.each do |mountpoint|
     assert($vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
@@ -560,7 +566,12 @@ Then /^all persistence configuration files have safe access rights$/ do
       file_perms = $vm.execute("stat -c %a '#{f}'").stdout.chomp
       assert_equal("tails-persistence-setup", file_owner)
       assert_equal("tails-persistence-setup", file_group)
-      assert_equal("600", file_perms)
+      case f
+      when /.*\/live-additional-software.conf$/
+        assert_equal("644", file_perms)
+      else
+        assert_equal("600", file_perms)
+      end
     end
   end
 end

@@ -115,7 +115,7 @@ When /^I start the computer$/ do
   post_vm_start_hook
 end
 
-Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do |dvd_boot, network_unplugged, do_login|
+Given /^I start Tails( from DVD)?( with network unplugged)?( and genuine APT sources)?( and I login)?$/ do |dvd_boot, network_unplugged, keep_apt_sources, do_login|
   step "the computer is set to boot from the Tails DVD" if dvd_boot
   if network_unplugged
     step "the network is unplugged"
@@ -123,7 +123,11 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
     step "the network is plugged"
   end
   step "I start the computer"
-  step "the computer boots Tails"
+  if keep_apt_sources
+    step "the computer boots Tails with genuine APT sources"
+  else
+    step "the computer boots Tails"
+  end
   if do_login
     step "I log in to a new session"
     if network_unplugged
@@ -136,7 +140,7 @@ Given /^I start Tails( from DVD)?( with network unplugged)?( and I login)?$/ do 
   end
 end
 
-Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on|
+Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I login( with persistence enabled)?( (?:and|with) an administration password)?)?$/ do |drive_type, drive_name, network_unplugged, do_login, persistence_on, admin_password|
   step "the computer is set to boot from #{drive_type} drive \"#{drive_name}\""
   if network_unplugged
     step "the network is unplugged"
@@ -147,7 +151,9 @@ Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I 
   step "the computer boots Tails"
   if do_login
     step "I enable persistence" if persistence_on
+    step "I set an administration password" if admin_password
     step "I log in to a new session"
+    step "the Additional Software installation service has started"
     if network_unplugged
       step "all notifications have disappeared"
     else
@@ -156,6 +162,16 @@ Given /^I start Tails from (.+?) drive "(.+?)"( with network unplugged)?( and I 
       step "available upgrades have been checked"
     end
   end
+end
+
+Given /^I start Tails from a freshly installed USB drive with an administration password and the network is plugged and I login$/ do
+  step "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen"
+  step "I set an administration password"
+  step "I log in to a new session"
+  step "the network is plugged"
+  step "Tor is ready"
+  step "all notifications have disappeared"
+  step "available upgrades have been checked"
 end
 
 When /^I power off the computer$/ do
@@ -247,13 +263,16 @@ Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   end
 end
 
-Given /^the computer (re)?boots Tails$/ do |reboot|
+Given /^the computer (re)?boots Tails( with genuine APT sources)?$/ do |reboot, keep_apt_sources|
   step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
   step 'I configure Tails to use a simulated Tor network'
+  # This is required to use APT in the test suite as explained in
+  # commit e2510fae79870ff724d190677ff3b228b2bf7eac
+  step 'I configure APT to use non-onion sources' if not keep_apt_sources
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
@@ -349,12 +368,17 @@ end
 Given /^Tor is ready$/ do
   step "Tor has built a circuit"
   step "the time has synced"
-  begin
-    try_for(30) { $vm.execute('systemctl is-system-running').success? }
-  rescue Timeout::Error
-    jobs = $vm.execute('systemctl list-jobs').stdout
-    units_status = $vm.execute('systemctl').stdout
-    raise "The system is not fully running yet:\n#{jobs}\n#{units_status}"
+  # When we test for ASP upgrade failure the following tests would fail,
+  # so let's skip them in this case.
+  if !$vm.file_exist?('/run/live-additional-software/doomed_to_fail')
+    step "the Additional Software upgrade service has started"
+    begin
+      try_for(30) { $vm.execute('systemctl is-system-running').success? }
+    rescue Timeout::Error
+      jobs = $vm.execute('systemctl list-jobs').stdout
+      units_status = $vm.execute('systemctl').stdout
+      raise "The system is not fully running yet:\n#{jobs}\n#{units_status}"
+    end
   end
 end
 
@@ -564,9 +588,15 @@ When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
 end
 
-Given /^the package "([^"]+)" is installed$/ do |package|
-  assert($vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
-         "Package '#{package}' is not installed")
+Given /^the package "([^"]+)" is( not)? installed( after Additional Software has been started)?$/ do |package, absent, asp|
+  if absent
+    wait_for_package_removal(package)
+  else
+    if asp
+      step 'the Additional Software installation service has started'
+    end
+    wait_for_package_installation(package)
+  end
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
@@ -1046,4 +1076,9 @@ When /^I upload "([^"]*)" to "([^"]*)"$/ do |source, destination|
       end
     end
   end
+end
+
+When /^I disable the (.*) (system|user) unit$/ do |unit, scope|
+  options = scope == 'system' ? '' : '--global'
+  $vm.execute_successfully("systemctl #{options} disable '#{unit}'")
 end
