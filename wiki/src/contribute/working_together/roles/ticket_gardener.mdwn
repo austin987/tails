@@ -1,20 +1,46 @@
 [[!meta title="Ticket gardener"]]
 
-Every three months, cron asks a ticket gardener to go over all our
-tickets.
+The aim of ticket gardening is to ensure that items tracked on Redmine stay
+relevant and contain helpful information for bringing a task to completion.  To
+achieve this goal contributors and teams need to be made aware of the existence
+of tickets that need their input so they can self-organize and prioritize their
+work. Tickets that are not relevant anymore should be closed.
+
+This work should be done twice per year.
 
 # Tasks
 
-* Go to Redmine, and for each ticket:
-  - Ensure that a correct set of tags is used
-    (and either update tags or ping whoever should do it).
-  - Ensure it is clearly stated what is the next
-    thing to do, and that someone is feeling responsible to make it happen.
-    Otherwise it's a wishlist/patches-welcome/don't-care-that-much/would be great,
-    but *we* don't feel committed to make it happen any time soon.
-  - For "QA Check" (quality assurance) make sure reviews and merges
-    happen.
-  - Add "Starter" tags where relevant according to our [[criteria for *Starter*
-    tasks|criteria_for_starter_tasks]].
-  - For "wait" and "upstream" type of work, check if what was blocking was
-    eventually resolved outside of Tails.
+Use existing Redmine views:
+
+* [Confirmed & Info Needed](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=254):
+  go through each ticket and ensure metadata reflects the current status.
+
+* ["Wait" type of work](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=314):
+  check if what was blocking was eventually resolved outside of Tails.
+  Tickets should either have an assignee, their type of work
+  requalified, be rejected, or stay in this state.
+
+* [WIP without assignee](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=141):
+  identify tickets that have a majority of work completed and could
+  somewhat easily be finished. Create a list of those tickets and send
+  them to the responsible team; if that team cannot handle these tickets,
+  set _Status_ to something else.
+
+## Tasks to be automated
+
+* The [WIP stalled for a while](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=316)
+  view provides an overview to each individual contributor about work that is in
+  progress but seems to be stalled.  An [[!tails_ticket
+  16545 desc="automated email reminder"]] sends everyone on that list a link to this Redmine view, filtered for
+  them, asking them if they think they can realistically come back to it and
+  finish the work in the next 6 months.
+  If yes, a suitable target version and when relevant, a blocking relationship to the relevant "Core work:
+  $team in $quarter"ticket, should be added to the ticket.  If no, contributor should
+  clear the _Assignee_ field and bring it to the attention of the relevant team.
+
+* The [Stalled: unblock other people's
+  work](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=317)
+  view provides to an individual contributor the list of tickets where
+  someone has been waiting for a review or for information from them since
+  a while. An [[!tails_ticket 16545 desc="email reminder"]]
+  regularly suggests contributors to take a look there.
