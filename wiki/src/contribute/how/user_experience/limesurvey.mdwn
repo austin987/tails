@@ -34,13 +34,18 @@ Updating LimeSurvey
 
        ssh 7vz7psas6zqqdszg.onion
 
-1. Update the backup of the database in case things go wrong:
+1. Update the backup of the database:
 
        sudo /usr/sbin/backupninja --now --debug --run /etc/backup.d/10.mysql
 
 1. Login as `www-data`:
 
        sudo -u www-data bash
+       cd ~/limesurvey/
+
+1. Save a backup of the custom files in the working directory:
+
+       tar zcvf /tmp/limesurvey-$(date +%Y-%m-%d-%H:%M).tgz application/config/config.php upload
 
 1. Fetch the changes from the *updates repo*:
  
@@ -56,8 +61,24 @@ Updating LimeSurvey
 
        git merge $TAG
 
+   Remove all untracked files:
+
+       git clean -df
+
+   Restore the custom files:
+
+       tar zxvf /tmp/limesurvey-$(date +%Y-%m-%d)-*.tgz
+
+1. Update the database:
+
+       php application/commands/console.php updatedb
+
 1. Check the version in the footer of:
 
    <https://survey.tails.boum.org/index.php/admin/index>
 
    While doing so you might be prompted to apply database updates.
+
+1. Remove the backup of the custom files:
+
+       rm /tmp/limesurvey-*.tgz
