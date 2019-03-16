@@ -953,8 +953,12 @@ Given /^Tails is fooled to think it is running version (.+)$/ do |version|
   )
 end
 
+def running_tails_version
+  $vm.execute_successfully('tails-version').stdout.split.first
+end
+
 Then /^Tails is running version (.+)$/ do |version|
-  v1 = $vm.execute_successfully('tails-version').stdout.split.first
+  v1 = running_tails_version
   assert_equal(version, v1, "The version doesn't match tails-version's output")
   v2 = $vm.file_content('/etc/os-release')
        .scan(/TAILS_VERSION_ID="(#{version})"/).flatten.first
