@@ -556,10 +556,14 @@ Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     assert($vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
+    if running_tails_version.to_f >= 3.13
+      assert($vm.execute("test -e #{mountpoint}/persistence.conf.bak").success?,
+             "#{mountpoint}/persistence.conf.bak does not exist, while it should")
+    end
     assert($vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
            "#{mountpoint}/live-persistence.conf does exist, while it should not")
     $vm.execute(
-      "ls -1 #{mountpoint}/persistence.conf #{mountpoint}/live-*.conf"
+      "ls -1 #{mountpoint}/persistence.conf* #{mountpoint}/live-*.conf"
     ).stdout.chomp.split.each do |f|
       file_owner = $vm.execute("stat -c %U '#{f}'").stdout.chomp
       file_group = $vm.execute("stat -c %G '#{f}'").stdout.chomp
