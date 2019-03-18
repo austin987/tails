@@ -22,7 +22,6 @@ ensure_hook_dependency_is_installed p7zip imagemagick
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
 LOCALE_PROFILES_DIR="/etc/tor-browser/locale-profiles/"
-NO_SPELLCHECKER_LOCALES="ca da ga id he is ja ko nb nl pl sv tr zh"
 
 # Sanity check that each supported Tor Browser locale has a
 # description for how to localize it further.
@@ -75,12 +74,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION; do
         fi
     done
     if [ -z "${SPELLCHECKER_LOCALE}" ]; then
-        if echo "${NO_SPELLCHECKER_LOCALES}" | grep -qw "${LANG_CODE}"; then
-            SPELLCHECKER_LOCALE="en_US"
-        else
-            echo "No spellchecker found for ${MOZILLA_LOCALE}" >&2
-            exit 1
-        fi
+        SPELLCHECKER_LOCALE="en_US"
     fi
     set_mozilla_pref "${LOCALE_PROFILE_FILE}" \
                           "spellchecker.dictionary" \
