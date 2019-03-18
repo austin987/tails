@@ -451,6 +451,7 @@ Build the almost-final image
 ============================
 
 1. [[Build ISO and USB images|contribute/build]] from the release branch.
+   Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
 2. Carefully read the build logs to make sure nothing bad happened.
 3. Keep the resulting build artifacts until the end of this release process.
 4. Record where the manifest of needed packages is stored:
@@ -521,7 +522,8 @@ SquashFS file order
 1. Install the almost final USB image to a USB stick.
 1. Boot this USB stick **on bare metal**.
 1. Add `profile` to the kernel command-line.
-1. Login.
+1. Login with the default settings in the Greeter (e.g. do not configure
+   an _Administration Password_).
 1. Wait for the "Tor is ready" notification.
 1. Start *Tor Browser*.
 1. A few minutes later, once the `boot-profile` process has been
@@ -571,6 +573,7 @@ suite should be ready, so it is time to:
    avoid that!
 
 1. build the final image!
+   Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
 
 1. Compare the new build manifest with the one from the previous,
    almost final build:
@@ -999,7 +1002,7 @@ and on the live website (even for a release candidate):
 	(
 	   cd "${MASTER_CHECKOUT:?}" && \
 	   git commit wiki/src/inc/trace \
-	      -m "Updating trace file after uploading the ISO for ${VERSION:?}." && \
+	      -m "Updating trace file after uploading the ISO and USB images for ${VERSION:?}." && \
 	   git push origin master
 	)
 
@@ -1420,7 +1423,7 @@ this, and skip what does not make sense for a RC.
      delete it with
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
 1. Remove any remaining RC for the just-published release from
-   the mirrors.
+   `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. Remove IUKs that are more than 9 months old from
    `/{stable,alpha}/iuk` on the rsync server:
    - first check that it's not going to remove anything we want to keep:

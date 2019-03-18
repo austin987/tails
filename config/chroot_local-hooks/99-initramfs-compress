@@ -10,16 +10,14 @@ echo "Configuring compression of the initramfs"
 ensure_hook_dependency_is_installed initramfs-tools xz-utils fatresize
 
 # Compress the initramfs using a more size-wise efficient algorithm.
+# We do this late in the build process because compressing with XZ
+# takes much longer than compressing with the default algorithm
+# and earlier stages of the build generate the initramfs quite a few times.
+# live-build will regenerate it later on anyway, which will apply
+# the settings we configure here.
 
 OPTS_FILE='/etc/initramfs-tools/initramfs.conf'
 
 [ -f "${OPTS_FILE}" ] || exit 11
 
 sed -i'' 's,^COMPRESS=.*,COMPRESS=xz,' "${OPTS_FILE}"
-
-# Force an initramfs update to apply our new compression settings.
-# We're relying on the fact that 1 XZ compression takes less time than
-# 6 * (XZ compression time - default compression time), so that making
-# faster the 6 initramfs updates that we currently go through during
-# the build is worth updating the initramfs a 7th time.
-update-initramfs -u
