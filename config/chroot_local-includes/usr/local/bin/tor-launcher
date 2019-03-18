@@ -2,8 +2,10 @@
 
 set -e
 
-# Import the TOR_LAUNCHER_INSTALL variable, and exec_unconfined_firefox()
-# and configure_best_tor_launcher_locale()
+# Import:
+#  - the TBB_EXT and TOR_LAUNCHER_INSTALL variables;
+#  - the exec_unconfined_firefox() and configure_best_tor_launcher_locale()
+#    functions.
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 unset TOR_CONTROL_PASSWD
@@ -18,8 +20,11 @@ fi
 
 PROFILE="${HOME}/.tor-launcher/profile.default"
 if [ ! -d "${PROFILE}" ]; then
-  mkdir -p "${PROFILE}"
-  configure_best_tor_launcher_locale "${PROFILE}"
+    mkdir -p "${PROFILE}/extensions"
+    for ext in "${TBB_EXT}"/langpack-*.xpi; do
+        ln -s "${ext}" "${PROFILE}/extensions/"
+    done
+    configure_best_tor_launcher_locale "${PROFILE}"
 fi
 
 exec_unconfined_firefox \
