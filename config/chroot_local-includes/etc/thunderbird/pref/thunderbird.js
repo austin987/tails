@@ -47,8 +47,11 @@ pref("toolkit.telemetry.enabled", false);
 // Only allow SSL channels when fetching from the ISP.
 pref("mailnews.auto_config.fetchFromISP.ssl_only", true);
 // Only allow Thunderbird's automatic configuration wizard to use and
-// configure secure (SSL/TLS) protocols. This is the Thunderbird default
-// but let's be extra sure!
+// configure secure (SSL/TLS) protocols.
+pref("mailnews.auto_config.ssl_only_mail_servers", true);
+// Old name for mailnews.auto_config.ssl_only_mail_servers, to make
+// this configuration still work in case we have to revert to a previous
+// version of the #6156 patchset.
 pref("mailnews.auto_config.account_constraints.ssl_only", true);
 // Drop auto-fetched configurations using Oauth2 -- they do not work
 // together with Torbirdy since it disables needed functionality (like
