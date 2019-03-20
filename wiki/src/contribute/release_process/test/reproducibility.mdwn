@@ -217,7 +217,7 @@ Then check that the hashes and sizes match what you have built:
 
     sudo apt install jq && \
     for type in iso usb ; do
-       published_dir="${PUBLISHED_ARTIFACTS:?}/tails-amd64-${VERSION:?}"
+       locally_built_dir="${ISOS:?}/tails-amd64-${VERSION:?}"
        case "$type" in
           iso)
              ext=iso
@@ -226,17 +226,17 @@ Then check that the hashes and sizes match what you have built:
              ext=img
              ;;
        esac
-       published_file="${published_dir}/tails-amd64-${VERSION:?}.$ext"
+       locally_built_file="${locally_built_dir}/tails-amd64-${VERSION:?}.$ext"
        idf_size=$(cat latest.json | jq ".installations[0].\"installation-paths\" | map(select(.type == \"$ext\"))[0].\"target-files\"[0].size")
-       published_size=$(stat --format='%s' "$published_file")
-       if [ "$idf_size" = "$published_size" ]; then
+       locally_built_size=$(stat --format='%s' "$locally_built_file")
+       if [ "$idf_size" = "$locally_built_size" ]; then
           echo "OK: $type size matches"
        else
           echo "FAIL: $type size does not match"
        fi
        idf_sha256=$(cat latest.json | jq --raw-output ".installations[0].\"installation-paths\" | map(select(.type == \"$ext\"))[0].\"target-files\"[0].sha256")
-       published_sha256=$(sha256sum "$published_file" | cut -f 1 -d ' ' | tr -d '\n')
-       if [ "$idf_sha256" = "$published_sha256" ]; then
+       locally_built_sha256=$(sha256sum "$locally_built_file" | cut -f 1 -d ' ' | tr -d '\n')
+       if [ "$idf_sha256" = "$locally_built_sha256" ]; then
           echo "OK: $type sha256 matches"
        else
           echo "FAIL: $type sha256 does not match"
