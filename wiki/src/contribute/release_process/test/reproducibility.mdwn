@@ -189,8 +189,23 @@ the following steps have to be done only after the release has been made public.
 
 ### ISO and USB images
 
-    cd "${PUBLISHED_ARTIFACTS:?}/tails-amd64-${VERSION:?}" && \
-    sha512sum -c "${SHA512SUMS:?}"
+    for type in iso usb ; do
+       case "$type" in
+          iso)
+             ext=iso
+             ;;
+          usb)
+             ext=img
+             ;;
+       esac
+       if cmp --quiet \
+          "${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.$ext" \
+          "${PUBLISHED_ARTIFACTS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.$ext" ; then
+          echo "OK: locally built $type matches the published one"
+       else
+          echo "FAIL: locally built $type does not match the published one"
+       fi
+    done
 
 ### IDF
 
