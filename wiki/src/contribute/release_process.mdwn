@@ -453,6 +453,7 @@ Build the almost-final image
 ============================
 
 1. [[Build ISO and USB images|contribute/build]] from the release branch.
+   Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
 2. Carefully read the build logs to make sure nothing bad happened.
 3. Keep the resulting build artifacts until the end of this release process.
 4. Record where the manifest of needed packages is stored:
@@ -574,6 +575,7 @@ suite should be ready, so it is time to:
    avoid that!
 
 1. build the final image!
+   Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
 
 1. Compare the new build manifest with the one from the previous,
    almost final build:
@@ -890,21 +892,20 @@ Prepare upgrade-description files
           git push origin ${WEBSITE_RELEASE_BRANCH:?} \
         )
 
-1. If preparing anything but a final release (e.g. an alpha, beta
-   or RC), copy the generated UDFs for the previous releases
-   to the *test* channel in `$MASTER_CHECKOUT`, modify their content
-   accordingly, sign them, commit and push:
+1. Copy the generated UDFs for the previous releases to the *test*
+   channel in `$MASTER_CHECKOUT`, modify their content accordingly,
+   sign them, commit and push:
 
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
           git merge origin/master && \
           for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
-            alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
+            release_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
-            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${alpha_udf:?} \
-              | sed -e 's/channel: alpha/channel: test/' > ${test_udf:?} && \
+            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
+              | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
             gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
             mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
             git add ${test_udf:?}* ; \
@@ -912,28 +913,6 @@ Prepare upgrade-description files
           git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
           git push origin master:master \
         )
-
-1. Else, if preparing a final release, copy the generated UDFs for the previous
-   releases to the *test* channel in `$MASTER_CHECKOUT`, modify their content
-   accordingly, sign them, commit and push:
-
-        ( \
-          cd ${MASTER_CHECKOUT:?} && \
-          git fetch && \
-          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
-            stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
-            test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
-            mkdir -p "$(dirname "$test_udf")" && \
-            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${stable_udf:?} \
-              | sed -e 's/channel: stable/channel: test/' > ${test_udf:?} && \
-            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
-            mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
-            git add ${test_udf:?}* ; \
-          done && \
-          git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
-          git push origin master:master \
-        )
-
 
 Prepare the image description file for *Tails Verification*
 -----------------------------------------------------------
@@ -954,8 +933,8 @@ Update the image description file (IDF) used by the browser extension:
 Done with OpenPGP signing
 =========================
 
-By now you are done with Tails signing key, so please make sure it is
-not usable by your system any more.
+Unplug your OpenPGP smartcard and store it away, so you don't plug it
+back semi-mechanically later on.
 
 **Beware!** If your have to plug your OpenPGP smart card or reassemble the
 key again after this point it invalidates *everything* done for
