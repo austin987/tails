@@ -1053,7 +1053,7 @@ If not, list already running Torrents:
 
     ssh bittorrent.lizard transmission-remote --list
 
-… set `$ID` to the oldest one and delete it:
+… set `$ID` to the oldest one and delete it (do this both for the ISO and USB image):
 
     ssh bittorrent.lizard -t "${ID:?}" --remove-and-delete
 
@@ -1435,10 +1435,12 @@ this, and skip what does not make sense for a RC.
    stable release from:
    - our rsync server:
      `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
-   - our Bittorrent seed: get the previous release's _Transmission_ ID
+   - our Bittorrent seed: get the previous release's _Transmission_ IDs
+     (ISO and USB image)
      with `ssh bittorrent.lizard transmission-remote --list` and then
-     delete it with
+     delete them with
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
+	 then re-run `ssh bittorrent.lizard transmission-remote --list` and make sure everything looks good
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. Remove IUKs that are more than 9 months old from
