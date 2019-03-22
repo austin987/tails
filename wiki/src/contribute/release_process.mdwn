@@ -1441,7 +1441,7 @@ this, and skip what does not make sense for a RC.
 1. If you just released a new stable release, remove the previous
    stable release from:
    - our rsync server:
-     `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
      (ISO and USB image)
      with `ssh bittorrent.lizard transmission-remote --list` and then
@@ -1464,7 +1464,7 @@ this, and skip what does not make sense for a RC.
    - then actually delete the files:
 
          ssh rsync.lizard /bin/sh -c \
-             \"find /srv/rsync/tails/tails/alpha  \
+             \"sudo find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -delete \
