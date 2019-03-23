@@ -37,17 +37,28 @@ const Extension = new Lang.Class({
     Name: 'StatusMenuHelper.Extension',
 
     enable: function() {
+        if (this._isEnabled) return;
+        this._isEnabled = true;
+
         this.statusMenu = Main.panel.statusArea['aggregateMenu']._system;
 
         this._createActions();
         this._removeAltSwitcher();
         this._addSeparateButtons();
 
-        Main.sessionMode.connect('updated', Lang.bind(this, this._sessionUpdated));
-        this._sessionUpdated();
-    },
+        this.statusMenu.menu.connect('open-state-changed', (menu, open) => {
+            if (!open)
+                return;
+            this._update();
+        });
+    }
+    ,
 
     disable: function() {
+        // We want to keep the extention enabled on the lock screen
+        if (Main.sessionMode.isLocked) return;
+        this._isEnabled = false;
+
         this._destroyActions();
         this._restoreAltSwitcher();
     },
@@ -144,9 +155,9 @@ const Extension = new Lang.Class({
         Util.spawn(['systemctl', 'suspend'])
     },
 
-    _sessionUpdated: function() {
-        this._lockScreenButton.setSensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
-    },
+    _update: function() {
+        this._lockScreenButton.visible = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
+    }
 
 });
 
