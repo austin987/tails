@@ -21,7 +21,6 @@
    Raphael Freudiger <laser_b@gmx.ch>.
 **/
 const Lang = imports.lang;
-
 const St = imports.gi.St;
 const Main = imports.ui.main;
 const BoxPointer = imports.ui.boxpointer;
@@ -125,20 +124,23 @@ const Extension = new Lang.Class({
     },
 
     _onPowerOffClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Util.spawn(['sudo', '-n', 'poweroff'])
     },
 
     _onRestartClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Util.spawn(['sudo', '-n', 'reboot'])
     },
 
     _onLockClicked: function() {
-	this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Main.overview.hide();
-	Util.spawn(['tails-screen-locker']);
+        Util.spawn(['tails-screen-locker']);
     },
 
     _onSuspendClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Util.spawn(['systemctl', 'suspend'])
     },
 
