@@ -21,14 +21,9 @@
    Raphael Freudiger <laser_b@gmx.ch>.
 **/
 const Lang = imports.lang;
-const Mainloop = imports.mainloop;
 
 const St = imports.gi.St;
-const LoginManager = imports.misc.loginManager;
 const Main = imports.ui.main;
-const StatusSystem = imports.ui.status.system;
-const PopupMenu = imports.ui.popupMenu;
-const ExtensionSystem = imports.ui.extensionSystem;
 const BoxPointer = imports.ui.boxpointer;
 
 const Gettext = imports.gettext.domain('tails');
@@ -49,24 +44,11 @@ const Extension = new Lang.Class({
         this._removeAltSwitcher();
         this._addSeparateButtons();
 
-        this._menuOpenStateChangedId = this.statusMenu.menu.connect('open-state-changed', Lang.bind(this,
-            function(menu, open) {
-                if (!open)
-                    return;
-                this._restartButton.visible = true;
-                this._poweroffButton.visible = true;
-            }));
-
         Main.sessionMode.connect('updated', Lang.bind(this, this._sessionUpdated));
         this._sessionUpdated();
     },
 
     disable: function() {
-        if (this._menuOpenStateChangedId) {
-            this.statusMenu.menu.disconnect(this._menuOpenStateChangedId);
-            this._menuOpenStateChangedId = 0;
-        }
-
         this._destroyActions();
         this._restoreAltSwitcher();
     },
