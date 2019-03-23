@@ -80,6 +80,9 @@ const Extension = new Lang.Class({
 
         this._poweroffButton = this.statusMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
         this._poweroffButtonId = this._poweroffButton.connect('clicked', Lang.bind(this, this._onPowerOffClicked));
+
+        this._suspendButton = this.statusMenu._createActionButton('media-playback-pause-symbolic', _("Suspend"));
+        this._suspendButtonId = this._suspendButton.connect('clicked', Lang.bind(this, this._onSuspendClicked));
     },
 
     _removeAltSwitcher: function() {
@@ -92,6 +95,7 @@ const Extension = new Lang.Class({
 
     _addSeparateButtons: function() {
         this.statusMenu._actionsItem.actor.add(this._lockScreenButton, { expand: true, x_fill: false });
+        this.statusMenu._actionsItem.actor.add(this._suspendButton, { expand: true, x_fill: false });
         this.statusMenu._actionsItem.actor.add(this._restartButton, { expand: true, x_fill: false });
         this.statusMenu._actionsItem.actor.add(this._poweroffButton, { expand: true, x_fill: false });
     },
@@ -112,6 +116,11 @@ const Extension = new Lang.Class({
             this._lockScreenButtonId = 0;
         }
 
+        if (this._suspendButtonId) {
+            this._suspendButton.disconnect(this._suspendButtonId);
+            this._suspendButtonId = 0;
+        }
+
         if (this._restartButton) {
             this._restartButton.destroy();
             this._restartButton = 0;
@@ -125,6 +134,11 @@ const Extension = new Lang.Class({
         if (this._lockScreenButton) {
             this._lockScreenButton.destroy();
             this._lockScreenButton = 0;
+        }
+
+        if (this._suspendButton) {
+            this._suspendButton.destroy();
+            this._suspendButton = 0;
         }
     },
 
@@ -140,6 +154,10 @@ const Extension = new Lang.Class({
 	this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Main.overview.hide();
 	Util.spawn(['tails-screen-locker']);
+    },
+
+    _onSuspendClicked: function() {
+        Util.spawn(['systemctl', 'suspend'])
     },
 
     _sessionUpdated: function() {
