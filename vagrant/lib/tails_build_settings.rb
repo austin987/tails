@@ -10,7 +10,7 @@ VIRTUAL_MACHINE_HOSTNAME = 'vagrant-stretch'
 VM_MEMORY_BASE = 1024
 
 # Approximate amount of extra space needed for builds
-BUILD_SPACE_REQUIREMENT = 12*1024 + 256
+BUILD_SPACE_REQUIREMENT = 12*1024
 
 # Virtual machine memory size for on-disk builds
 VM_MEMORY_FOR_DISK_BUILDS = VM_MEMORY_BASE

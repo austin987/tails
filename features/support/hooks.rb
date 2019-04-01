@@ -16,7 +16,6 @@ AfterConfiguration do |config|
     # space for other reasons:
     'features/untrusted_partitions.feature',
     # Features using temporary snapshots:
-    'features/apt.feature',
     'features/root_access_control.feature',
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
@@ -26,6 +25,9 @@ AfterConfiguration do |config|
     # excluding persistence) and will create yet another disk and
     # install Tails on it. This should be the peak of disk usage.
     'features/usb_install.feature',
+    # This feature uses a few temporary snapshots, a network-enabled
+    # snapshot, and a large disk.
+    'features/additional_software_packages.feature',
     # This feature needs a copy of the ISO and creates a new disk.
     'features/usb_upgrade.feature',
     # This feature needs a very big snapshot (USB install with persistence)

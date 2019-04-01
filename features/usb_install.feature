@@ -58,6 +58,8 @@ Feature: Installing Tails to a USB drive
   Scenario: Re-installing Tails over an existing USB installation with a persistent partition
     # We reach this first checkpoint only to ensure that the ' __internal' disk has reached the state (Tails installed + persistent partition set up) we need before we clone it below.
     # This first part is done without Tails Installer (install from Tails USB image)
+    # Note: the "__internal" disk will keep its state across scenarios
+    # and features until one of its snapshots is restored.
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     Given I have started Tails from DVD without network and logged in
     And I clone USB drive "__internal" to a temporary USB drive "install"
