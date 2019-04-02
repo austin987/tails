@@ -152,7 +152,7 @@ Bootstrap manual testing coordination:
 2. Copy the [[manual test suite|contribute/release_process/test]]
    into it.
 3. Send the pad URL to the usual testers (see `manual_testers.mdwn` in
-   the RM team's Git repository).
+   the RM team's Git repository), end-to-end encrypted.
 
 Update included files
 =====================
@@ -212,7 +212,7 @@ See the dedicated page: [[tor-browser]]
 Upgrade Tor Browser AppArmor profile
 ------------------------------------
 
-See the dedicated page: [[browser-apparmor-patch]]
+See the dedicated page: [[tor-browser_AppArmor_patch]]
 
 Upgrade Thunderbird
 ---------------
@@ -276,9 +276,10 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
-2. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+2. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
    branch, the time-based APT repository snapshots that were used
-   during the freeze.
+   during the freeze. It's fine if that results in a no-op
+   (it depends on how exactly previous operations were performed).
 
 3. Merge `devel` into `feature/buster`, *without* following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
@@ -522,7 +523,9 @@ SquashFS file order
 -------------------
 
 1. Install the almost final USB image to a USB stick.
-1. Boot this USB stick **on bare metal**.
+1. Boot this USB stick a first time to trigger re-partitioning.
+1. Shut down this Tails.
+1. Boot this USB stick **on bare metal** again.
 1. Add `profile` to the kernel command-line.
 1. Login with the default settings in the Greeter (e.g. do not configure
    an _Administration Password_).
@@ -576,6 +579,8 @@ suite should be ready, so it is time to:
 
 1. build the final image!
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
+   Our build system will apply the correct compression settings automatically
+   so don't bother setting it yourself.
 
 1. Compare the new build manifest with the one from the previous,
    almost final build:
@@ -599,15 +604,15 @@ suite should be ready, so it is time to:
        echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
 
    Find the job (probably the last one)
-   and make sure the ISO and USB images built by Jenkins:
-
-   - were built from the correct Git commit
-   - have the same file size as the images you built
-   - have the same hash (in the `.shasum` file) as the images you built
+   and make sure the ISO and USB images built by Jenkins
+   have the same hash (in the `.shasum` file) as the images you built.
 
    Then:
 
    - If all hashes match: yay, we're good to go!
+
+     Set the `$MATCHING_JENKINS_BUILD_ID` environment variable
+     to the ID of this job (an integer).
 
    - If there is a hash mismatch for the image: ouch! Now we are in a
      tricky situation: on the one hand it seems like a poor idea to
@@ -850,7 +855,7 @@ Prepare upgrade-description files
                 fi
             ) \
             $( \
-                for version in ${IUK_SOURCE_VERSIONS:?}; do
+                for version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
                    echo "--previous-version ${version:?}"
                 done \
             ) \
@@ -976,12 +981,6 @@ Upload the ISO and USB image signatures to our rsync server:
 
     scp "${ISO_PATH:?}.sig" "${IMG_PATH:?}.sig" rsync.lizard:
 
-Pick a build from `$RELEASE_BRANCH` that produced identical ISO and USB images
-to the ones you've built locally (`XXX` must be the job ID, i.e.
-an integer):
-
-    MATCHING_JENKINS_BUILD_ID=XXX
-
 Copy the ISO and USB images to our rsync server, verify their signature,
 move them in place with proper ownership and permissions
 and update the time in `project/trace` file on our rsync server
@@ -1042,6 +1041,8 @@ candidate):
 
 ## Announce, seed and test the Torrent
 
+Skip this section if [[!tails_ticket 16378]] is not resolved yet.
+
 Check if there's enough space on our Bittorrent seed to import the new
 ISO and USB images:
 
@@ -1051,7 +1052,7 @@ If not, list already running Torrents:
 
     ssh bittorrent.lizard transmission-remote --list
 
-… set `$ID` to the oldest one and delete it:
+… set `$ID` to the oldest one and delete it (do this both for the ISO and USB image):
 
     ssh bittorrent.lizard -t "${ID:?}" --remove-and-delete
 
@@ -1129,6 +1130,8 @@ Testing
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
+1. If [[!tails_ticket 16378]] is not resolved yet, ensure someone will
+   seed the Torrent.
 
 Update the website and Git repository
 =====================================
@@ -1167,6 +1170,12 @@ Rename, copy, garbage collect and update various files:
     LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_gpg_signature_output.html"
+
+Then, build the website and commit this last set of changes:
+
+	./build-website && \
+	git add wiki/src && \
+	git commit -m "Update various website source files for ${VERSION:?}"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
@@ -1314,8 +1323,15 @@ tracker. For a list of candidates, see:
 * the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
   in Redmine.
 
+Select these issues with the checkboxes in the first column, then
+right click on the list to display the context menu, and finally
+change the _Status_ there. Relationships between tickets will likely
+prevent you from closing all these issues at once, but at least
+you can process them in several smaller batches instead of one by one.
+
 Postpone to next release any remaining open issue for the version
-you've just released.
+you've just released. Use the right-click contextual menu to do so in
+one single batch.
 
 Then, mark the just-released Redmine milestone as done: go to the
 target version page, click *Edit*, and set *Status* to *Closed*.
@@ -1323,9 +1339,10 @@ target version page, click *Edit*, and set *Status* to *Closed*.
 ### Tickets linked from the website
 
 Go through the tickets linked from the documentation and support sections of the
-website and point documentation writers to the tickets that might be resolved in
+website and point our lead technical writer (sajolida) to the tickets that might be resolved in
 this release.
 
+    cd "${MASTER_CHECKOUT:?}" && \
     find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
@@ -1359,7 +1376,7 @@ Check in the comments of the ticket for the release notes if the
 technical writers have prepared a tweet. Otherwise tweet a simple link
 to the release notes:
 
-    Tails x.y is out: https://tails.boum.org/news/version_x.y
+    Tails x.y is out: https://tails.boum.org/news/version_x.y/
 
 Tor blog
 --------
@@ -1413,11 +1430,14 @@ We announce *major* releases on the Tor blog:
 Amnesia news
 ------------
 
-The release announcement are automatically sent to `amnesia-news@`
-(thanks to the `announce` flag) on an hourly basis, but it will be
-stuck in the moderation
-queue. [Log in](https://www.autistici.org/mailman/admindb/amnesia-news) and
-accept it.
+1. [Subscribe](https://www.autistici.org/mailman/listinfo/amnesia-news/)
+   to `amnesia-news@`. It's the only reliable way to check if the next
+   step has worked (the online web archive is not refreshed immediately).
+
+2. [Log in](https://www.autistici.org/mailman/admindb/amnesia-news)
+   and accept the release announcement, that's been automatically sent
+   to `amnesia-news@` on an hourly basis, and is stuck in the
+   moderation queue.
 
 Prepare for the next development cycle
 ======================================
@@ -1428,11 +1448,13 @@ this, and skip what does not make sense for a RC.
 1. If you just released a new stable release, remove the previous
    stable release from:
    - our rsync server:
-     `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
-   - our Bittorrent seed: get the previous release's _Transmission_ ID
+     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+   - our Bittorrent seed: get the previous release's _Transmission_ IDs
+     (ISO and USB image)
      with `ssh bittorrent.lizard transmission-remote --list` and then
-     delete it with
+     delete them with
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
+	 then re-run `ssh bittorrent.lizard transmission-remote --list` and make sure everything looks good
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. Remove IUKs that are more than 9 months old from
@@ -1449,7 +1471,7 @@ this, and skip what does not make sense for a RC.
    - then actually delete the files:
 
          ssh rsync.lizard /bin/sh -c \
-             \"find /srv/rsync/tails/tails/alpha  \
+             \"sudo find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -delete \
@@ -1470,23 +1492,23 @@ this, and skip what does not make sense for a RC.
         git fetch && \
         git submodule update && \
         bare_repo=$(mktemp -d)
-        torsocks git clone --bare --reference "${MASTER_CHECKOUT:?}" \
+        git clone --bare --reference "${MASTER_CHECKOUT:?}" \
            gitolite@d53ykjpeekuikgoq.onion:tails \
            "${bare_repo:?}" && \
         PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
            --repo "${bare_repo:?}" && \
         rm -rf "${bare_repo:?}"
 
-1. On the `stable` and `devel` branches, remove all old versions in
+1. On the `stable` and `devel` branches, remove all old versions
    that were never released from `wiki/src/upgrade/v1/Tails` and
    `debian/changelog`. Explanation: the
    post-release APT repository steps from the previous stable release
    will usually have had us prepare for an emergency release that was
    never made.
-1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based snapshots#freeze-exceptions-post-release]].
+1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
-1. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+1. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
    branch, the time-based APT repository snapshots that were used
    during the freeze. This should generally be a no-op but if there
    was some hiccup earlier it could be needed.
@@ -1495,15 +1517,10 @@ this, and skip what does not make sense for a RC.
    APT repository documentation. This includes some git operations,
    like creating an appropriate _"dummy changelog entry"_ in the
    `debian/changelog` file.
-1. Make sure there are upgrade-description files for any new versions
-   that were added in the `debian/changelog` file since the last
-   release. Background: From time to time the UDF generation/update
-   step isn't perfect and entries might be missing from
-   `wiki/src/upgrade/v1/Tails/<VERSION>/<ARCH>/<CHANNEL>`.
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
-   appropriately (they should expire after the major release _after_
-   the one you're preparing). Look carefully at the output of this command:
+   appropriately (they should expire after the next planned major release date).
+   Look carefully at the output of this command:
 
         cd "${RELEASE_CHECKOUT:?}" && \
         git checkout "${RELEASE_BRANCH:?}" && \
