@@ -1,6 +1,6 @@
 diff -Naur /etc/apparmor.d/abstractions.orig/base /etc/apparmor.d/abstractions/base
---- a/etc/apparmor.d/abstractions.orig/base	2018-11-01 11:52:15.000000000 +0000
-+++ b/etc/apparmor.d/abstractions/base	2019-01-05 11:30:54.808397903 +0000
+--- a/etc/apparmor.d/abstractions/base	2019-03-30 13:23:11.000000000 +0000
++++ b/etc/apparmor.d/abstractions/base	2019-04-02 12:42:39.150779402 +0000
 @@ -26,6 +26,7 @@
    /etc/locale/**                 r,
    /etc/locale.alias              r,
@@ -9,25 +9,21 @@ diff -Naur /etc/apparmor.d/abstractions.orig/base /etc/apparmor.d/abstractions/b
    /etc/writable/localtime        r,
    /usr/share/locale-bundle/**    r,
    /usr/share/locale-langpack/**  r,
-@@ -64,10 +65,12 @@
+@@ -64,9 +65,9 @@
    /opt/*-linux-uclibc/lib/ld-uClibc*so* mr,
  
    # we might as well allow everything to use common libraries
 -  /{usr/,}lib{,32,64}/**                r,
--  /{usr/,}lib{,32,64}/lib*.so*          mr,
--  /{usr/,}lib{,32,64}/**/lib*.so*       mr,
+-  /{usr/,}lib{,32,64}/**.so*       mr,
 -  /{usr/,}lib/@{multiarch}/**            r,
-+  /{usr/,}lib{32,64}/**                r,
-+  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**                r,
-+  /{usr/,}lib{,32,64}/lib*.so*       mr,
-+  /{usr/,}lib{32,64}/**/lib*.so*       mr,
-+  /{usr/,}lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/lib*.so*       mr,
-+  /{usr/,}lib/@{multiarch}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**            r,
-   /{usr/,}lib/@{multiarch}/lib*.so*      mr,
-   /{usr/,}lib/@{multiarch}/**/lib*.so*   mr,
-   /{usr/,}lib/tls/i686/{cmov,nosegneg}/lib*.so*    mr,
++  /{usr/,}lib{,32,64}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**           r,
++  /{usr/,}lib{,32,64}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**.so*       mr,
++  /{usr/,}lib/@{multiarch}/{[^l],l[^i],li[^v],liv[^e],live[^/]}**      r,
+   /{usr/,}lib/@{multiarch}/**.so*   mr,
+   /{usr/,}lib/tls/i686/{cmov,nosegneg}/*.so*    mr,
+   /{usr/,}lib/i386-linux-gnu/tls/i686/{cmov,nosegneg}/*.so*    mr,
 diff -Naur /etc/apparmor.d/abstractions.orig/ubuntu-helpers /etc/apparmor.d/abstractions/ubuntu-helpers
---- a/etc/apparmor.d/abstractions.orig/ubuntu-helpers	2018-11-01 11:52:15.000000000 +0000
+--- a/etc/apparmor.d/abstractions/ubuntu-helpers	2018-11-01 11:52:15.000000000 +0000
 +++ b/etc/apparmor.d/abstractions/ubuntu-helpers	2019-01-05 11:30:54.808397903 +0000
 @@ -65,8 +65,8 @@
    # in limited libraries so glibc's secure execution should be enough to not
