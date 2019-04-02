@@ -35,6 +35,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
   'APT_SNAPSHOTS_SERIALS',
+  'TAILS_ACNG_PROXY',
   'TAILS_BUILD_FAILURE_RESCUE',
   'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
@@ -233,9 +234,13 @@ task :parse_build_options do
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'extproxy'
-    when 'vmproxy'
+    when 'vmproxy', 'vmproxy+extproxy'
       ENV['TAILS_PROXY'] = INTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
+      if opt == 'vmproxy+extproxy'
+        abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+        ENV['TAILS_ACNG_PROXY'] = EXTERNAL_HTTP_PROXY
+      end
     when 'noproxy'
       ENV['TAILS_PROXY'] = nil
       ENV['TAILS_PROXY_TYPE'] = 'noproxy'
