@@ -303,20 +303,20 @@ Alias rules dramatically increase the policy compile time (e.g.
 
 <a id="pre-compiled-AppArmor-policy"></a>
 
-To mitigate that problem, we could ship a cached pre-compiled policy,
+To mitigate that problem, we ship a cached pre-compiled policy,
 that the parser will use as long as it considered it valid, and then
 no policy compilation happens at boot time; if the parser detects that
 the policy is out of date, then it will ignore the cache and compile
 the policy. For instance, this is what was done for the Ubuntu phone.
 To generate a valid binary policy cache at ISO build time:
 
- - we need to call the parser with a `--features-file` value that
+ - we call the parser with a `--features-file` value that
    matches the pinned feature set used at Tails runtime; this comes
-   for free if we run the parser from the build chroot, where this
+   for free since we run the parser from the build chroot, where this
    variable is set in the same `/etc/apparmor/parser.conf` file that
    will be used at runtime;
 
- - we need to use a similar enough version of the parser to the one
+ - we use a similar enough version of the parser to the one
    installed in Tails; here again, this comes for free if we run the
    parser inside the build chroot;
 
@@ -327,7 +327,7 @@ To generate a valid binary policy cache at ISO build time:
    4.18 is still valid and used when booting on Linux 4.19 with the
    same `features-file` setting.
 
-This work is tracked on [[!tails_ticket 16138]].
+This is implemented in [[!tails_gitweb config/chroot_local-hooks/99-cache-AppArmor-policy]].
 
 Resources: `apparmor_parser(8)`, `apparmor_parser --help`,
 examples in `parser/tst/features_files/*`, and `parser.conf`.
