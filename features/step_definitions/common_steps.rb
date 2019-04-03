@@ -704,6 +704,7 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   sleep 1
   # Type the rest of the search query
   @screen.type(app_name[1..-1])
+  sleep 1
   @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
