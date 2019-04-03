@@ -34,7 +34,7 @@ Feature: Tails persistence
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged
     And Tor is ready
-    And I add a current wired DHCP NetworkManager connection called "persistent-con-current"
+    And I add a wired DHCP NetworkManager connection called "persistent-con-current"
     And I shutdown Tails and wait for the computer to power off
     Given I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
     And I capture all network traffic
