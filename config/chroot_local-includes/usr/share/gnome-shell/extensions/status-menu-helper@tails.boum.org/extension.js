@@ -73,23 +73,23 @@ const Extension = new Lang.Class({
 
     _createActions: function() {
         this._lockScreenAction = this._createAction(_("Lock screen"),
-                                               'changes-prevent-symbolic',
+                                                   'changes-prevent-symbolic',
                                                     this._onLockClicked);
 
         this._suspendAction = this._createAction(_("Suspend"),
-                                              'media-playback-pause-symbolic',
-                                                   this._onSuspendClicked);
-
-        this._powerOffAction = this._createAction(_("Power Off"),
-                                               'system-shutdown-symbolic',
-                                                     this._onPowerOffClicked);
+                                                 'media-playback-pause-symbolic',
+                                                 this._onSuspendClicked);
 
         this._restartAction = this._createAction(_("Restart"),
-                                            'view-refresh-symbolic',
+                                                 'view-refresh-symbolic',
                                                  this._onRestartClicked);
 
+        this._powerOffAction = this._createAction(_("Power Off"),
+                                                  'system-shutdown-symbolic',
+                                                  this._onPowerOffClicked);
+
         this._actions = [this._lockScreenAction, this._suspendAction,
-                         this._powerOffAction, this._restartAction];
+                         this._restartAction, this._powerOffAction];
     },
 
     _createAction: function(label, icon, onClickedFunction) {
@@ -127,16 +127,6 @@ const Extension = new Lang.Class({
         }
     },
 
-    _onPowerOffClicked: function() {
-        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
-        Util.spawn(['sudo', '-n', 'poweroff'])
-    },
-
-    _onRestartClicked: function() {
-        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
-        Util.spawn(['sudo', '-n', 'reboot'])
-    },
-
     _onLockClicked: function() {
         this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Main.overview.hide();
@@ -146,6 +136,16 @@ const Extension = new Lang.Class({
     _onSuspendClicked: function() {
         this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Util.spawn(['systemctl', 'suspend'])
+    },
+
+    _onRestartClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        Util.spawn(['sudo', '-n', 'reboot'])
+    },
+
+    _onPowerOffClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        Util.spawn(['sudo', '-n', 'poweroff'])
     },
 
     _update: function() {
