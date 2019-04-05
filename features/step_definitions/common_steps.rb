@@ -454,7 +454,16 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   step 'the Tor Browser shows the "The proxy server is refusing connections" error'
   @screen.type("d", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserBookmarkPrompt.png", 10)
-  @screen.type(url + Sikuli::Key.ENTER)
+  @screen.type(url)
+  # The new default location for bookmarks is "Other Bookmarks", but our test
+  # expects the new entry is available in "Bookmark Menu", that's why we need
+  # to select the location explicitly.
+  @screen.wait_and_click("TorBrowserBookmarkLocation.png", 10)
+  @screen.wait_and_click("TorBrowserBookmarkLocationBookmarksMenu.png", 10)
+  # Need to sleep here, otherwise the changed Bookmark location is not taken
+  # into account and we end up create a bookmark in "Other Bookmark" location.
+  sleep 1
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^the Tor Browser has a bookmark to eff.org$/ do
