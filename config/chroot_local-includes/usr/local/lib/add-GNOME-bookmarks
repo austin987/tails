@@ -5,17 +5,21 @@ set -u
 
 . /usr/local/lib/tails-shell-library/tails-greeter.sh
 
+BOOKMARKS_FILE="${HOME}/.config/gtk-3.0/bookmarks"
+
 add_gtk_bookmark_for() {
    local target
    target=$(echo "$1" | sed 's, ,%20,g')
 
    if [ $# -ge 2 ]; then
       title="$2"
-      echo "file://$target $title" >> "${HOME}/.gtk-bookmarks"
+      echo "file://$target $title" >> "${BOOKMARKS_FILE}"
    else
-       echo "file://$target" >> "${HOME}/.gtk-bookmarks"
+       echo "file://$target" >> "${BOOKMARKS_FILE}"
    fi
 }
+
+mkdir -p $(dirname ${HOME}/.config/gtk-3.0/bookmarks)
 
 add_gtk_bookmark_for "${HOME}/Tor Browser"
 
