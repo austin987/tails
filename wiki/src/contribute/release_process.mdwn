@@ -27,8 +27,33 @@ To release Tails you'll need some packages installed:
 Environment
 ===========
 
-Export the following environment variables to be able to copy'n'paste
-the scripts snippets found on this page:
+To be able to copy'n'paste the code snippets found on this page,
+you need to set a bunch of environment variables.
+
+Unless the release process explicitly instructs you to change the
+value of one such variable, treat it as a constant: else,
+inconsistency will surely arise, which can cause trouble later on.
+
+Version numbers
+---------------
+
+Note:
+
+* Regarding version numbers, what follows supports just fine the case
+  when we do something else than alternating bugfix and major releases
+  consistently. For example, if the next two releases are bugfix ones,
+  do not set `$NEXT_PLANNED_MAJOR_VERSION` to one of these
+  bugfix releases. Instead, set it to the version number of the next
+  major release.
+* The `$NEXT*VERSION` constants are used only for two types of
+  operations: preparing upgrade-description files and adding changelog
+  entries. This two types of operations have to be consistent with
+  each other: for example, if one adds a dummy entry for version X in
+  a changelog, an UDF must exist for version X as well… hence the use
+  of shared constants to encode the values that must be the same on
+  both sides :)
+
+Export the following environment variables:
 
 * version numbers (see [[contribute/release_schedule#versioning]]):
 
@@ -41,7 +66,8 @@ the scripts snippets found on this page:
   *major* Tails release; if you're preparing a RC for a major release,
   use that major release; otherwise, use whatever the next planned
   major release is
-* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: set to the version number of
+* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: if you're preparing the RC
+  for a major release, set this to the version number of
   the second next *major* Tails release; e.g. if preparing the RC for
   the 3.9 major release, then set this to 3.12 (3.9 is the next major
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
@@ -51,6 +77,12 @@ the scripts snippets found on this page:
   that one; otherwise, use `${VERSION}.1`
 * `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
   to the next emergency release if we have to put one out
+
+Other variables
+---------------
+
+Also export the following environment variables:
+
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
@@ -604,11 +636,8 @@ suite should be ready, so it is time to:
        echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
 
    Find the job (probably the last one)
-   and make sure the ISO and USB images built by Jenkins:
-
-   - were built from the correct Git commit
-   - have the same file size as the images you built
-   - have the same hash (in the `.shasum` file) as the images you built
+   and make sure the ISO and USB images built by Jenkins
+   have the same hash (in the `.shasum` file) as the images you built.
 
    Then:
 
@@ -858,7 +887,7 @@ Prepare upgrade-description files
                 fi
             ) \
             $( \
-                for version in ${IUK_SOURCE_VERSIONS:?}; do
+                for version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
                    echo "--previous-version ${version:?}"
                 done \
             ) \
@@ -1044,6 +1073,8 @@ candidate):
 
 ## Announce, seed and test the Torrent
 
+Skip this section if [[!tails_ticket 16378]] is not resolved yet.
+
 Check if there's enough space on our Bittorrent seed to import the new
 ISO and USB images:
 
@@ -1131,6 +1162,8 @@ Testing
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
+1. If [[!tails_ticket 16378]] is not resolved yet, ensure someone will
+   seed the Torrent.
 
 Update the website and Git repository
 =====================================
@@ -1169,6 +1202,12 @@ Rename, copy, garbage collect and update various files:
     LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_gpg_signature_output.html"
+
+Then, build the website and commit this last set of changes:
+
+	./build-website && \
+	git add wiki/src && \
+	git commit -m "Update various website source files for ${VERSION:?}"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
@@ -1441,7 +1480,7 @@ this, and skip what does not make sense for a RC.
 1. If you just released a new stable release, remove the previous
    stable release from:
    - our rsync server:
-     `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
    - our Bittorrent seed: get the previous release's _Transmission_ IDs
      (ISO and USB image)
      with `ssh bittorrent.lizard transmission-remote --list` and then
@@ -1464,7 +1503,7 @@ this, and skip what does not make sense for a RC.
    - then actually delete the files:
 
          ssh rsync.lizard /bin/sh -c \
-             \"find /srv/rsync/tails/tails/alpha  \
+             \"sudo find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -delete \
@@ -1510,11 +1549,6 @@ this, and skip what does not make sense for a RC.
    APT repository documentation. This includes some git operations,
    like creating an appropriate _"dummy changelog entry"_ in the
    `debian/changelog` file.
-1. Make sure there are upgrade-description files for any new versions
-   that were added in the `debian/changelog` file since the last
-   release. Background: From time to time the UDF generation/update
-   step isn't perfect and entries might be missing from
-   `wiki/src/upgrade/v1/Tails/<VERSION>/<ARCH>/<CHANNEL>`.
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
    appropriately (they should expire after the next planned major release date).
