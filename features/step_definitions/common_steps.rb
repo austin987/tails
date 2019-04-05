@@ -198,15 +198,6 @@ def boot_menu_cmdline_image
   end
 end
 
-def boot_menu_tab_msg_image
-  case @os_loader
-  when "UEFI"
-    'TailsBootSplashTabMsgUEFI.png'
-  else
-    'TailsBootSplashTabMsg.png'
-  end
-end
-
 Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   boot_timeout = 3*60
   # Simply looking for the boot splash image is not robust; sometimes
