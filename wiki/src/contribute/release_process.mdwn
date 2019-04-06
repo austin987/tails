@@ -27,8 +27,33 @@ To release Tails you'll need some packages installed:
 Environment
 ===========
 
-Export the following environment variables to be able to copy'n'paste
-the scripts snippets found on this page:
+To be able to copy'n'paste the code snippets found on this page,
+you need to set a bunch of environment variables.
+
+Unless the release process explicitly instructs you to change the
+value of one such variable, treat it as a constant: else,
+inconsistency will surely arise, which can cause trouble later on.
+
+Version numbers
+---------------
+
+Note:
+
+* Regarding version numbers, what follows supports just fine the case
+  when we do something else than alternating bugfix and major releases
+  consistently. For example, if the next two releases are bugfix ones,
+  do not set `$NEXT_PLANNED_MAJOR_VERSION` to one of these
+  bugfix releases. Instead, set it to the version number of the next
+  major release.
+* The `$NEXT*VERSION` constants are used only for two types of
+  operations: preparing upgrade-description files and adding changelog
+  entries. This two types of operations have to be consistent with
+  each other: for example, if one adds a dummy entry for version X in
+  a changelog, an UDF must exist for version X as well… hence the use
+  of shared constants to encode the values that must be the same on
+  both sides :)
+
+Export the following environment variables:
 
 * version numbers (see [[contribute/release_schedule#versioning]]):
 
@@ -41,7 +66,8 @@ the scripts snippets found on this page:
   *major* Tails release; if you're preparing a RC for a major release,
   use that major release; otherwise, use whatever the next planned
   major release is
-* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: set to the version number of
+* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: if you're preparing the RC
+  for a major release, set this to the version number of
   the second next *major* Tails release; e.g. if preparing the RC for
   the 3.9 major release, then set this to 3.12 (3.9 is the next major
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
@@ -51,6 +77,12 @@ the scripts snippets found on this page:
   that one; otherwise, use `${VERSION}.1`
 * `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
   to the next emergency release if we have to put one out
+
+Other variables
+---------------
+
+Also export the following environment variables:
+
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
