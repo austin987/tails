@@ -69,11 +69,19 @@ Change_gid () {
 	fi
 }
 
-### Ensure GIDs are stable accross releases
+### Ensure UIDs and GIDs are stable accross releases
 #   ... otherwise, things such as tor@service are broken
 #   after applying an automatic upgrade (#15695, #15424, #13426, #15407)
 
-# Temporarily give these groups a GID that's out of the way, to avoid collisions
+# Temporarily give these users and groups a UID/GID that's out of the way,
+# to avoid collisions
+Change_uid debian-tor   1070
+Change_uid speech-dispatcher 1080
+Change_uid colord       1090
+Change_uid saned        1100
+Change_uid pulse        1110
+Change_uid hplip        1120
+Change_uid Debian-gdm   1130
 Change_gid messagebus   1050
 Change_gid ssh          1090
 Change_gid memlockd     1100
@@ -89,7 +97,14 @@ Change_gid pulse-access 1200
 Change_gid Debian-gdm   1210
 Change_gid kvm          1500
 
-# Finally, give these groups the desired GID
+# Finally, give these users and groups the desired UID/GID
+Change_uid debian-tor   107
+Change_uid speech-dispatcher 108
+Change_uid colord       109
+Change_uid saned        110
+Change_uid pulse        111
+Change_uid hplip        112
+Change_uid Debian-gdm   113
 Change_gid messagebus   105
 Change_gid ssh          109
 Change_gid memlockd     110
