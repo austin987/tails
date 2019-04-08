@@ -198,7 +198,7 @@ def unifyPoFile(fname: str) -> None:
         poFile.msgcat(modify=True)
 
 
-if __name__ == '__main__':
+def main():
     import argparse
     import os.path
 
@@ -258,3 +258,6 @@ if __name__ == '__main__':
                      .format(fname=err.filename))
         else:
             raise
+
+if __name__ == '__main__':
+    main()
