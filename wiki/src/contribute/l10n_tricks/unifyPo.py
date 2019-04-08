@@ -24,12 +24,25 @@ annotations match, using `mypy` (`apt install mypy`):
 mypy unify_po-headers.py
 """
 
+import argparse
+import contextlib
+import functools
 import glob
+import logging
 import multiprocessing
+import os.path
 import re
+import shutil
 import subprocess
 import sys
-from typing import Dict, List, Pattern
+import tempfile
+
+try:
+    import polib
+except ImportError:
+    sys.exit("You need to install python3-polib to use this program.")
+
+from typing import Dict, List, Tuple
 
 MSGCAT_OPTIONS = ["-w", "79"]  # wrap to 79 width
 
@@ -64,22 +77,8 @@ I18NSPECTOR_ACCEPT = [
 
 
 class PoFile:
-    def regexKey(self, key: str) -> Pattern:
-        """returns a regex to match a key: value pair in po header"""
-        return re.compile(r'^\s*"{key}\s*:\s*(?P<value>(.*\n)*?.*)\\\\n"\s*?$'.format(key=key), flags=re.M)
-
     def __init__(self, fname: str) -> None:
         self.fname = fname
-
-    def __enter__(self) -> 'PoFile':
-        """magic method for with statement. @returns self so it can be used with "as" """
-        self.open()
-        return self
-
-    def __exit__(self, type, value, traceback) -> None:
-        """magic method for with statement"""
-        if type is None and value is None and traceback is None:
-            self.write()
 
     def fixedHeaders(self) -> Dict[str, str]:
         """@returns: a dict of key,value parts that should be fixed within the po file"""
@@ -90,77 +89,82 @@ class PoFile:
                 "Last-Translator": "Tails translators",
                 }
 
-    def open(self) -> None:
-        """read po file content"""
-        with open(self.fname, 'r') as f:
-            self.content = f.read()
-        self.__changed = False
-
     def lang(self) -> str:
         """@returns: language of filename"""
-        exts = self.fname.split(".")
-        if len(exts) < 3:
+        name = os.path.basename(self.fname)
+        m = re.match(r"^.*\.(?P<lang>[A-Za-z_]*)\.po$", name)
+        if not m:
             raise Exception("po file should have a language in his name.", self.fname)
-        return exts[-2]
+        return m.group("lang")
 
     def check(self, key: str, value: str) -> bool:
         """check if there is "key: value\\n" in PO header"""
-        m = self.regexKey(key).search(self.content)
-        if not m:
+        try:
+            return (self.pf.metadata[key] == value)
+        except KeyError:
             return False
-        # Remove po file soft line breaks, as line length is handled outside this
-        fileValue = m.group("value").replace('"\n"', "")
-        return (fileValue == value)
 
     def unifyKey(self, key: str, value: str) -> None:
         """ set value of PO header key to "key: value\\n" """
         if not self.check(key, value):
-            self.content = self.regexKey(key).sub(
-                    '"{key}: {value}\\\\n"'.format(key=key, value=value),
-                    self.content
-            )
+            self.pf.metadata[key] = value
             self.__changed = True
+
+    def open(self) -> None:
+        """read po file content"""
+        self.pf = polib.pofile(self.fname)
+        self.pf.wrapwidth = 79
+        self.__changed = False
 
     def write(self) -> None:
         """write file, if content was changed"""
         if self.__changed:
-            with open(self.fname, 'w') as f:
-                f.write(self.content)
+            _prefix = os.path.basename(self.fname)
+            _dir = os.path.dirname(self.fname)
+            with tempfile.NamedTemporaryFile(prefix=_prefix, dir=_dir, delete=False) as fd:
+                try:
+                    self.pf.save(fd.name)
+                    fd.flush()
+                    os.fdatasync(fd.fileno())
+                except Exception:
+                    os.unlink(fd.name)
+                    raise
+                else:
+                    os.rename(fd.name, self.fname)
 
-    def msgcat(self, modify=False) -> bool:
-        """runs msgcat over file, only the opened copy is modified.
-        @modify: if True, the file content gets updated, otherwise only checked.
+    def msgcat(self) -> bool:
+        """runs msgcat over file.
         @returns: if the content has/needs to be changed
         """
         cmd = ["msgcat"] + MSGCAT_OPTIONS
-        if hasattr(self, "content"):
-            cmd.append("-")  # use stdin as input
-            content = self.content.encode()
+        cmd.append(self.fname)
+        with open(self.fname, 'rb') as f:
+            content = f.read()
+            f.flush()
             process = subprocess.run(
                     cmd,
-                    input=content,
+                    stdin=f,
                     stdout=subprocess.PIPE,
                     check=True)
             if process.stdout != content:
-                if modify:
-                    self.content = process.stdout.decode()
-                    self.__changed = True
+                self.__changed = True
                 return True
             else:
                 return False
 
-        raise Exception("please run obj.open() before using this method.")
-
     def i18nspector(self) -> List[str]:
-        """@returns a list of issues raised by i18nspector removes allowed issues from @I18NINSPECTOR_ALLOWED_ISSUES.
+        """@returns a list of issues raised by i18nspector removes
+                    allowed issues from @I18NINSPECTOR_ACCEPT.
         """
         cmd = ["i18nspector", "-l", self.lang(), self.fname]
         process = subprocess.run(
                 cmd,
                 stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
                 check=True)
         issues = []
-        for line in process.stdout.decode().strip().split("\n"):
+        for line in process.stdout.strip().split("\n"):
             severity, fname, issue, *content = line.split(" ")
             if issue not in I18NSPECTOR_ACCEPT:
                 issues.append(" ".join([severity, issue, *content]))
@@ -168,16 +172,35 @@ class PoFile:
         return issues
 
 
-def checkPoFile(fname: str, extended: bool) -> List[str]:
+@contextlib.contextmanager
+def pofile_readonly(fname: str):
+    pf = PoFile(fname)
+    pf.open()
+    yield pf
+
+
+@contextlib.contextmanager
+def pofile_writable(fname: str):
+    pf = PoFile(fname)
+    pf.open()
+    yield pf
+    pf.write()
+
+
+def checkPoFile(fname: str, extended: bool) -> Tuple[str, List[str]]:
     """check PO file for issues.
     @returns: nothing or a list of errors
     @extended: is used to check the header fields in more detail.
     """
     errors = list()
-    with PoFile(fname) as poFile:
-        issues = poFile.i18nspector()
-        if issues:
-            errors.append("i18nspector is not happy:\n\t"+"\n\t".join(issues))
+    with pofile_readonly(fname) as poFile:
+        try:
+            issues = poFile.i18nspector()
+            if issues:
+                errors.append("i18nspector is not happy:\n\t"+"\n\t".join(issues))
+        except subprocess.CalledProcessError as e:
+            errors.append("i18nspector exited with {e.returncode} - stderr:\n"
+                          "{e.stderr}".format(e=e))
 
         if poFile.msgcat():
             errors.append("Not rewrapped to 79 chars.")
@@ -187,21 +210,18 @@ def checkPoFile(fname: str, extended: bool) -> List[str]:
                 if not poFile.check(key, value):
                     errors.append("{key} is not '{value}'.".format(key=key, value=value))
 
-    return errors
+    return (fname, errors)
 
 
 def unifyPoFile(fname: str) -> None:
     """unify PO header and run msgcat for file named `fname`"""
-    with PoFile(fname) as poFile:
+    with pofile_writable(fname) as poFile:
         for key, value in poFile.fixedHeaders().items():
             poFile.unifyKey(key, value)
-        poFile.msgcat(modify=True)
+        poFile.msgcat()
 
 
-def main():
-    import argparse
-    import os.path
-
+def main(logger) -> None:
     parser = argparse.ArgumentParser(description='Unify PO files')
     parser.add_argument('--modify', dest='modify', action='store_true',
                         help='Modify the PO headers, otherwise only check is done.')
@@ -220,44 +240,47 @@ def main():
     if args.cached:
         # get top level directory of the current git repository
         # git diff returns always relative paths to the top level directory
-        toplevel = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
-        toplevel = toplevel.decode()[:-1]  # get rid of tailing \n
+        toplevel = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], universal_newlines=True).rstrip()
 
         # get a list of changes and added files in stage for the next commit
         output = subprocess.check_output(
-                ["git", "diff", "--name-only", "--cached", "--ignore-submodules", "--diff-filter=d"])
+                ["git", "diff", "--name-only", "--cached", "--ignore-submodules", "--diff-filter=d"],
+                universal_newlines=True)
 
         # add all po files to list to unify
-        args.files += [os.path.join(toplevel, f) for f in output.decode().split("\n") if f.endswith(".po")]
+        args.files += [os.path.join(toplevel, f) for f in output.split("\n") if f.endswith(".po")]
 
     if not args.files:
-        print("WARNING: no file to process :("
-              " You may want to add files to operate on. See --help for further information.")
+        logger.warning("WARNING: no file to process :("
+                      " You may want to add files to operate on. See --help for further information.")
 
-    e = None
-    try:
-        if args.modify:
-            # unify PO headers for a list of files
-            pool = multiprocessing.Pool()
-            list(pool.map(unifyPoFile, args.files))
-        else:
-            fine = True
-            # check only the headers
-            for fname in args.files:
-                issues = checkPoFile(fname, extended=args.extended)
-                if issues:
-                    fine = False
-                    issues = [i.replace("\n", "\n\t") for i in issues]  # indent subissues
-                    print("Issues with {fname}:\n\t{issues}".format(fname=fname, issues="\n\t".join(issues)))
+    for prog in ("i18nspector", "msgcat"):
+        if shutil.which(prog) is None:
+            sys.exit("{prog}: command not found\n"
+                     "You need to install {prog} first. See /contribute/l10n_tricks."
+                     .format(prog=prog))
 
-            if not fine:
-                sys.exit("checked files are not clean.")
-    except FileNotFoundError as err:
-        if err.filename in ("i18nspector", "msgcat"):
-            sys.exit("{fname}: command not found\nYou need to install {fname} first. See /contribute/l10n_tricks."
-                     .format(fname=err.filename))
-        else:
-            raise
+    pool = multiprocessing.Pool()
+    if args.modify:
+        # unify PO headers for a list of files
+        list(pool.map(unifyPoFile, args.files))
+    else:
+        fine = True
+        # check only the headers
+        pool = multiprocessing.Pool()
+        _checkPoFile = functools.partial(checkPoFile, extended=args.extended)
+        for fname, issues in pool.imap_unordered(_checkPoFile, args.files, 10):
+            if issues:
+                fine = False
+                issues = [i.replace("\n", "\n\t") for i in issues]  # indent subissues
+                logger.error("{fname}:\n\t{issues}".format(fname=fname, issues="\n\t".join(issues)))
+            else:
+                logger.debug("{fname} - No issue found.".format(fname=fname))
+
+        if not fine:
+            sys.exit("checked files are not clean.")
+
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    main(logging.getLogger())
