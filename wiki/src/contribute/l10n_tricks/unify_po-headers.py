@@ -31,7 +31,7 @@ import subprocess
 import sys
 from typing import Dict, List, Pattern
 
-MSGCAT_OPTIONS = ["-w", "79"] # wrap to 79 width
+MSGCAT_OPTIONS = ["-w", "79"]  # wrap to 79 width
 
 # i18nspector issues, that we accept
 I18NSPECTOR_ACCEPT = [
@@ -62,10 +62,11 @@ I18NSPECTOR_ACCEPT = [
         "unusual-unused-plural-forms",
         ]
 
+
 class PoFile:
     def regexKey(self, key: str) -> Pattern:
         """returns a regex to match a key: value pair in po header"""
-        return re.compile('^\s*"{key}\s*:\s*(?P<value>(.*\n)*?.*)\\\\n"\s*?$'.format(key=key), flags=re.M)
+        return re.compile(r'^\s*"{key}\s*:\s*(?P<value>(.*\n)*?.*)\\\\n"\s*?$'.format(key=key), flags=re.M)
 
     def __init__(self, fname: str) -> None:
         self.fname = fname
@@ -108,14 +109,15 @@ class PoFile:
         if not m:
             return False
         # Remove po file soft line breaks, as line length is handled outside this
-        fileValue = m.group("value").replace('"\n"',"")
+        fileValue = m.group("value").replace('"\n"', "")
         return (fileValue == value)
 
     def unifyKey(self, key: str, value: str) -> None:
         """ set value of PO header key to "key: value\\n" """
         if not self.check(key, value):
-            self.content = self.regexKey(key).sub('"{key}: {value}\\\\n"'.format(key=key, value=value),
-                   self.content
+            self.content = self.regexKey(key).sub(
+                    '"{key}: {value}\\\\n"'.format(key=key, value=value),
+                    self.content
             )
             self.__changed = True
 
@@ -130,11 +132,12 @@ class PoFile:
         @modify: if True, the file content gets updated, otherwise only checked.
         @returns: if the content has/needs to be changed
         """
-        cmd = ["msgcat",] + MSGCAT_OPTIONS
+        cmd = ["msgcat"] + MSGCAT_OPTIONS
         if hasattr(self, "content"):
-            cmd.append("-") # use stdin as input
+            cmd.append("-")  # use stdin as input
             content = self.content.encode()
-            process = subprocess.run(cmd,
+            process = subprocess.run(
+                    cmd,
                     input=content,
                     stdout=subprocess.PIPE,
                     check=True)
@@ -152,7 +155,8 @@ class PoFile:
         """@returns a list of issues raised by i18nspector removes allowed issues from @I18NINSPECTOR_ALLOWED_ISSUES.
         """
         cmd = ["i18nspector", "-l", self.lang(), self.fname]
-        process = subprocess.run(cmd,
+        process = subprocess.run(
+                cmd,
                 stdout=subprocess.PIPE,
                 check=True)
         issues = []
@@ -162,6 +166,7 @@ class PoFile:
                 issues.append(" ".join([severity, issue, *content]))
 
         return issues
+
 
 def checkPoFile(fname: str, extended: bool) -> List[str]:
     """check PO file for issues.
@@ -184,6 +189,7 @@ def checkPoFile(fname: str, extended: bool) -> List[str]:
 
     return errors
 
+
 def unifyPoFile(fname: str) -> None:
     """unify PO header and run msgcat for file named `fname`"""
     with PoFile(fname) as poFile:
@@ -191,18 +197,21 @@ def unifyPoFile(fname: str) -> None:
             poFile.unifyKey(key, value)
         poFile.msgcat(modify=True)
 
+
 if __name__ == '__main__':
     import argparse
-    import glob
     import os.path
 
     parser = argparse.ArgumentParser(description='Unify PO files')
-    parser.add_argument('--modify', dest='modify', action='store_true',  help='Modify the PO headers, otherwise only check is done.')
-    parser.add_argument('--check-extended', dest='extended', action='store_true',  help='Do extended checks of PO headers.')
+    parser.add_argument('--modify', dest='modify', action='store_true',
+                        help='Modify the PO headers, otherwise only check is done.')
+    parser.add_argument('--check-extended', dest='extended', action='store_true',
+                        help='Do extended checks of PO headers.')
     parser.add_argument('--lang', dest='lang', help='all files of a specific language.')
-    parser.add_argument('--cached', dest='cached', action='store_true', help='all git staged PO files.')
+    parser.add_argument('--cached', dest='cached', action='store_true',
+                        help='all git staged PO files.')
     parser.add_argument('files', metavar='file', type=str, nargs='*',
-        help='list of files to process')
+                        help='list of files to process')
     args = parser.parse_args()
 
     if args.lang:
@@ -212,16 +221,18 @@ if __name__ == '__main__':
         # get top level directory of the current git repository
         # git diff returns always relative paths to the top level directory
         toplevel = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
-        toplevel = toplevel.decode()[:-1] # get rid of tailing \n
+        toplevel = toplevel.decode()[:-1]  # get rid of tailing \n
 
         # get a list of changes and added files in stage for the next commit
-        output = subprocess.check_output(["git", "diff", "--name-only", "--cached", "--ignore-submodules", "--diff-filter=d"])
+        output = subprocess.check_output(
+                ["git", "diff", "--name-only", "--cached", "--ignore-submodules", "--diff-filter=d"])
 
         # add all po files to list to unify
-        args.files += [os.path.join(toplevel,f) for f in output.decode().split("\n") if f.endswith(".po")]
+        args.files += [os.path.join(toplevel, f) for f in output.decode().split("\n") if f.endswith(".po")]
 
     if not args.files:
-        print("WARNING: no file to process :( You may want to add files to operate on. See --help for further information.")
+        print("WARNING: no file to process :("
+              " You may want to add files to operate on. See --help for further information.")
 
     e = None
     try:
@@ -236,13 +247,14 @@ if __name__ == '__main__':
                 issues = checkPoFile(fname, extended=args.extended)
                 if issues:
                     fine = False
-                    issues = [i.replace("\n","\n\t") for i in issues] # indent subissues
+                    issues = [i.replace("\n", "\n\t") for i in issues]  # indent subissues
                     print("Issues with {fname}:\n\t{issues}".format(fname=fname, issues="\n\t".join(issues)))
 
             if not fine:
                 sys.exit("checked files are not clean.")
     except FileNotFoundError as err:
-        if err.filename in ("i18nspector","msgcat"):
-            sys.exit("{fname}: command not found\nYou need to install {fname} first. See /contribute/l10n_tricks.".format(fname=err.filename))
+        if err.filename in ("i18nspector", "msgcat"):
+            sys.exit("{fname}: command not found\nYou need to install {fname} first. See /contribute/l10n_tricks."
+                     .format(fname=err.filename))
         else:
             raise
