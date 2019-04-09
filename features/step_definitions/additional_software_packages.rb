@@ -66,26 +66,31 @@ Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
 end
 
 When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/  do |decision, action, package|
-  gnome_shell = Dogtail::Application.new('gnome-shell')
   case action
   when "adding"
-    title = "Add #{package} to your additional software?"
-    step "I see the \"#{title}\" notification after at most 300 seconds"
+    notification_title = "Add #{package} to your additional software?"
     case decision
     when "accept"
-      gnome_shell.child('Install Every Time', roleName: 'push button').click
+      button_title = 'Install Every Time'
     when "refuse"
-      gnome_shell.child('Install Only Once', roleName: 'push button').click
+      button_title = 'Install Only Once'
     end
   when "removing"
-    title = "Remove #{package} from your additional software?"
-    step "I see the \"#{title}\" notification after at most 300 seconds"
+    notification_title = "Remove #{package} from your additional software?"
     case decision
     when "accept"
-      gnome_shell.child('Remove', roleName: 'push button').click
+      button_title = 'Remove'
     when "refuse"
-      gnome_shell.child('Cancel', roleName: 'push button').click
+      button_title = 'Cancel'
     end
+  end
+  try_for(300) do
+    notification =
+      Dogtail::Application.new('gnome-shell')
+        .children('', roleName: "notification")
+        .find { |notif| notif.child?(notification_title, roleName: 'label') }
+    assert_not_nil(notification)
+    notification.child(button_title, roleName: 'push button').click
   end
 end
 
