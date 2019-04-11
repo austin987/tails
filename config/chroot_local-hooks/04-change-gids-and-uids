@@ -4,6 +4,16 @@
 #   ... otherwise, things such as tor@service are broken
 #   after applying an automatic upgrade (#15695, #15424, #13426, #15407)
 
+# When installing packages apt may variate the order of package installations.
+# That leads to different GID/UID for the created groups and users. This
+# variation of GID/UID leads to problems, when we want to ship diffs for a
+# smoother upgrade process. There are many different solutions flying around to
+# fix this issue, but they were not elaborate for Tails and may have other nasty
+# side-effects, as the maintainer scripts, may react differently, if they are
+# not in charge of creating group/user themselves.
+
+# We may get rid of this script with the switch to overlayfs (#8415, #15689).
+
 set -e
 
 echo "Set fixed GIDs and UIDs"
