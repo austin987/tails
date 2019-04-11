@@ -93,7 +93,7 @@ Echo_message 'including GRUB EFI in the ISO filesystem'
 for platform in $platforms ; do
    echo "I: installing GRUB EFI for $platform"
    efi_fallback_dir="binary/EFI/BOOT"
-   grub_dir="${efi_fallback_dir}/grub/$platform"
+   grub_dir="binary/EFI/debian/grub/$platform"
    efi_name=$(efi_name "$platform")
 
    mkdir -p "$efi_fallback_dir"
@@ -110,7 +110,7 @@ for platform in $platforms ; do
       fi
       echo "I: no signed GRUB or shim for ${efi_name}, generating an unsigned GRUB image"
       Chroot chroot grub-mkimage -O "$platform" \
-	     -o "/tmp/BOOT$efi_name.EFI" -p "/efi/boot/grub" \
+	     -o "/tmp/BOOT$efi_name.EFI" -p "/efi/debian/grub" \
 	     search configfile normal tar fat part_gpt linux \
 	     gzio
       mv "chroot/tmp/BOOT$efi_name.EFI" "${efi_fallback_dir}/BOOT${efi_name}.EFI"
@@ -121,13 +121,3 @@ for platform in $platforms ; do
    mkdir -p "$grub_dir"
    grub_cpmodules "$grub_dir" "$platform"
 done
-
-# Redirect to the correct grub.cfg from /EFI/debian, which is the prefix
-# hard-coded in the Debian-signed GRUB binaries
-mkdir -p binary/EFI/debian
-echo "configfile /efi/boot/grub/grub.cfg" > binary/EFI/debian/grub.cfg
-
-# Copy & adapt the syslinux files needed by grub.cfg's syslinux_configfile
-cp binary/isolinux/* binary/EFI/BOOT/
-mv binary/EFI/BOOT/isolinux.cfg binary/EFI/BOOT/syslinux.cfg
-sed -r -i -e 's,^(menu background splash\.png)$,\#\1,' binary/EFI/BOOT/stdmenu.cfg
