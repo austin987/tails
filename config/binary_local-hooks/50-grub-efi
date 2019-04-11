@@ -1,0 +1,133 @@
+#! /bin/sh
+
+# Some of this file was adapted from the Debian Installer's
+# build/util/efi-image, which is:
+#
+# Copyright (C) 2010, 2011 Canonical Ltd.
+# Author: Colin Watson <cjwatson@ubuntu.com>
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+set -e
+set -x
+
+platforms="x86_64-efi i386-efi"
+
+efi_name () {
+   platform="$1"
+   case "$platform" in
+      i386-efi)
+	 echo IA32
+	 ;;
+      x86_64-efi)
+	 echo X64
+	 ;;
+      *)
+	 echo "E: invalid GRUB platform: $platform" >&2
+	 exit 1
+	 ;;
+   esac
+}
+
+grub_cpmodules () {
+	if [ -z "$1" ] || [ -z "$2" ]; then
+		echo "usage: $0 OUTPUT-DIRECTORY GRUB-PLATFORM"
+		return 1
+	fi
+
+	outdir="$1"
+	platform="$2"
+
+	# Copy over GRUB modules, except for those already built in.
+	cp -a "chroot/usr/lib/grub/$platform"/*.lst "$outdir/"
+	for x in "chroot/usr/lib/grub/$platform"/*.mod; do
+		# Some of these exclusions are based on knowledge of module
+		# dependencies.
+		case $(basename "$x" .mod) in
+			configfile|search|search_fs_file|search_fs_uuid|search_label|tar|part_gpt|linux|gzio)
+			# included in boot image
+			;;
+		    affs|afs|afs_be|befs|befs_be|minix|nilfs2|sfs|zfs|zfsinfo)
+			# unnecessary filesystem modules
+			;;
+		    example_functional_test|functional_test|hello)
+			# other cruft
+			;;
+		    *)
+			cp -a "$x" "$outdir/"
+			;;
+		esac
+	done
+}
+
+# Including common functions
+. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'including GRUB EFI in the ISO filesystem')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/bootstrap config/common config/binary
+Set_defaults
+
+# Safeguards
+[ "${LB_ARCHITECTURE}" = "amd64" ] || exit 0
+
+# Seems like we'll have work to do
+Echo_message 'including GRUB EFI in the ISO filesystem'
+
+for platform in $platforms ; do
+   echo "I: installing GRUB EFI for $platform"
+   efi_fallback_dir="binary/EFI/BOOT"
+   grub_dir="${efi_fallback_dir}/grub/$platform"
+   efi_name=$(efi_name "$platform")
+
+   mkdir -p "$efi_fallback_dir"
+   signed_grub_src="chroot/usr/lib/grub/$platform-signed/grub$(echo "$efi_name" | tr '[:upper:]' '[:lower:]').efi.signed"
+   signed_shim_src="chroot/usr/lib/shim/shim$(echo "$efi_name" | tr '[:upper:]' '[:lower:]').efi.signed"
+   if [ -f "$signed_grub_src" ] && [ -f "$signed_shim_src" ]; then
+      echo "I: copying Debian-signed GRUB and shim EFI binaries for $efi_name"
+      cp "$signed_grub_src" "${efi_fallback_dir}/GRUB${efi_name}.EFI"
+      cp "$signed_shim_src" "${efi_fallback_dir}/BOOT${efi_name}.EFI"
+   else
+      if [ "$platform" = 'x86_64-efi' ]; then
+	 echo "E: no signed GRUB or shim for ${efi_name}, aborting" >&2
+	 exit 1
+      fi
+      echo "I: no signed GRUB or shim for ${efi_name}, generating an unsigned GRUB image"
+      Chroot chroot grub-mkimage -O "$platform" \
+	     -o "/tmp/BOOT$efi_name.EFI" -p "/efi/boot/grub" \
+	     search configfile normal tar fat part_gpt linux \
+	     gzio
+      mv "chroot/tmp/BOOT$efi_name.EFI" "${efi_fallback_dir}/BOOT${efi_name}.EFI"
+   fi
+
+   cp chroot/usr/share/tails/bootx64.png "${efi_fallback_dir}/BOOT${efi_name}.PNG"
+
+   mkdir -p "$grub_dir"
+   grub_cpmodules "$grub_dir" "$platform"
+done
+
+# Redirect to the correct grub.cfg from /EFI/debian, which is the prefix
+# hard-coded in the Debian-signed GRUB binaries
+mkdir -p binary/EFI/debian
+echo "configfile /efi/boot/grub/grub.cfg" > binary/EFI/debian/grub.cfg
+
+# Copy & adapt the syslinux files needed by grub.cfg's syslinux_configfile
+cp binary/isolinux/* binary/EFI/BOOT/
+mv binary/EFI/BOOT/isolinux.cfg binary/EFI/BOOT/syslinux.cfg
+sed -r -i -e 's,^(menu background splash\.png)$,\#\1,' binary/EFI/BOOT/stdmenu.cfg
