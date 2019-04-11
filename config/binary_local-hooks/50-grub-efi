@@ -105,12 +105,12 @@ for platform in $platforms ; do
       cp "$signed_shim_src" "${efi_fallback_dir}/BOOT${efi_name}.EFI"
    else
       if [ "$platform" = 'x86_64-efi' ]; then
-	 echo "E: no signed GRUB or shim for ${efi_name}, aborting" >&2
-	 exit 1
+         echo "E: no signed GRUB or shim for ${efi_name}, aborting" >&2
+         exit 1
       fi
       echo "I: no signed GRUB or shim for ${efi_name}, generating an unsigned GRUB image"
       Chroot chroot grub-mkimage -O "$platform" \
-	     -o "/tmp/BOOT$efi_name.EFI" -p "/efi/debian/grub" \
+             -o "/tmp/BOOT$efi_name.EFI" -p "/efi/debian/grub" \
 	     search configfile normal tar fat part_gpt linux \
 	     gzio
       mv "chroot/tmp/BOOT$efi_name.EFI" "${efi_fallback_dir}/BOOT${efi_name}.EFI"
