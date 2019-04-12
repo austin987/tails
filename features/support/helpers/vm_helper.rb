@@ -703,10 +703,6 @@ EOF
     @display.stop
   end
 
-  def take_screenshot(description)
-    @display.take_screenshot(description)
-  end
-
   def get_remote_shell_port
     domain_xml = REXML::Document.new(@domain.xml_desc)
     domain_xml.elements.each('domain/devices/serial') do |e|
