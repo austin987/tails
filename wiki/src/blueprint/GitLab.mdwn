@@ -1,0 +1,77 @@
+This is about migrating our data and workflow from Redmine to GitLab,
+which is tracked as [[!tails_ticket 15878]].
+
+[[!toc levels=3]]
+
+# Issues tracking
+
+## Private issues
+
+One can make an issue
+[confidential](https://docs.gitlab.com/ce/user/project/issues/confidential_issues.html)
+when creating it; confidentiality can later be toggled on/off at any
+time. A aonfidential issue is visible only by whoever created it and
+by project members with at least
+[Reporter](https://docs.gitlab.com/ce/user/permissions.html#project-members-permissions) access.
+
+Given "Reporter" access is needed for lots of relatively basic
+operations, such as labelling and assigning issues, presumably most
+active Tails contributors would get at least this access level on the
+`tails-team/tails` project, and then in turn access to this project's
+confidential issues. So Tails teams that need to further restrict
+access to their confidential issues will need to track their issues
+under their own `tails-team/$project`.
+
+# Merge requests
+
+The [Protected branch
+flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow)
+is probably the most adequate for regular contributors, since it's the
+least disruptive in terms of workflow and habits and requires less
+work to adjust our Jenkins CI setup:
+
+ - We mark our main branches (`stable`, `testing`, `devel`,
+   `feature/buster`) as "Protected". We give "Maintainer" access to
+   people allowed to push to these branches, i.e. what we previously
+   called "commit access".
+ - The Git workflow remains unchanged for regular developers who are
+   not granted full commit access: they get "Developer" access, can
+   push a topic branch to the canonical Git repository and our CI will
+   pick it up. The only difference is that they are not restricted to
+   pushing to their own `$nickname/*` namespace, which makes things
+   simpler and has other advantages, e.g. they can use the `wip/`
+   prefix (so our Jenkins CI ignores the branch) and collaborate with
+   others on shared branches.
+ - Other contributors get access strictly lower than "Developer".
+   They push topic branches to their own fork of the repository and
+   create merge requests.
+ - Our current Jenkins CI jobs generation process remains unchanged.
+   (Technically, we could adjust it so it generates CI jobs for _any_
+   merge request (based on `refs/merge-requests/*/head`), but this
+   would give arbitrary code execution on our CI to _anyone_.
+   Our infrastructure is not currently equipped to cope with this.)
+
+# Importing data from Redmine
+
+## Specification
+
+### To be triaged
+
+Relevant features — to be triaged as MUST/SHOULD/MAY:
+
+* Preserve issue IDs so `#nnnn` should retain its meaning and links
+  like [[!tails_ticket 15878]] can be easily redirected.
+* Preserve issue private/public status.
+* Convert Textile to Markdown.
+
+## Tools
+
+A number of tools are available online.
+
+These data migration tools come in various shape and some don't
+support GitLab API v4, but generally there's a fork on GitHub that
+fixes the most critical problems. Start there, explore the network
+of forks, and follow the white GitHub rabbit(-hole):
+
+* <https://github.com/redmine-gitlab-migrator/redmine-gitlab-migrator>
+* <https://github.com/ultreia-io/migrate-redmine-to-gitlab>
