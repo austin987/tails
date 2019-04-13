@@ -690,10 +690,10 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   @screen.type(app_name[0])
   # Give search providers some time to start (#13469#note-5) otherwise
   # our search sometimes returns no results at all.
-  sleep 1
+  sleep 2
   # Type the rest of the search query
   @screen.type(app_name[1..-1])
-  sleep 1
+  sleep 2
   @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
