@@ -5,6 +5,8 @@ which is tracked as [[!tails_ticket 15878]].
 
 # Issues tracking
 
+See also the [GitLab doc on issues](https://docs.gitlab.com/ce/user/project/issues/).
+
 ## Private issues
 
 One can make an issue
@@ -21,6 +23,131 @@ active Tails contributors would get at least this access level on the
 confidential issues. So Tails teams that need to further restrict
 access to their confidential issues will need to track their issues
 under their own `tails-team/$project`.
+
+## Relationships
+
+On Redmine we heavily use relationships between fine-grained issues:
+parent/subtasks, Related, Blocks, etc. There's no such thing in
+GitLab FOSS ("CE") edition so we'll need to significantly change
+our workflow here.
+
+Below we describe potential solutions.
+
+### Parent/subtask and Blocks relationship
+ 
+A GitLab issue can have a list of tasks (checklist).
+GitLab displays "X of Y tasks completed" prominently.
+ 
+Describing each subtask in free-form text, directly as an item on this
+list of tasks, should work fine to emulate a set of subtasks that are
+all assigned to the same person. For example, see [[!gnome_gitlab
+nautilus/issues/667]].
+
+For more complex cases, e.g. when non-trivial subtasks are done by
+different people (GitLab CE does not support multiple assignees per
+issue), each subtask could be an item on this list of tasks, that
+links to another issue. The downside is that after resolving one of
+the subtasks, one will also need to mark the corresponding item as
+completed on the task list of the "parent" issue.
+
+This should also replace most of our current usage of the Blocks
+relationship.
+
+Alternatively, one can add a comment with a list of the blocker
+issues. Comments can be updated and links will indicate which of the
+blockers are closed (strike-through).
+
+### Related to
+
+We can write this information directly either in the description of
+one of the issues that are related to each other or in a comment.
+Either way, this adds a message in the Activity stream of the
+referenced issue, with a link to the other issue. Granted, on issues
+with one single long discussion thread, as we're used to on Redmine,
+such messages will be lost, so better cross-reference issues in the
+description of each related issue, or use labels, or get used to
+"Start Discussion" to separate multiple sub-threads that can be marked
+as resolved independently from each other.
+
+### Duplicates
+
+We can close duplicates with a comment that references the duplicated
+issue. It adds a message to the Activity stream of the referenced
+issue, which allows one to find duplicates later on if needed.
+
+## Other issues metadata
+
+- Target version → Milestone
+- Feature branch: GitLab will automatically link a branch that mentions
+  an issue.
+- Category, Affected Tool, Priority, Status, Type of work → use a set
+  of labels for each of them; and maybe simplify a bit
+- Log time → Time tracking
+- Due date → Due date
+- Starter → dedicated label
+- Tracker: drop it (we've never really taken advantage of the fine
+  distinction between describing a problem as a bug vs. describing
+  its solution as a feature)
+- % Done: drop it (we don't use this field enough to provide any value)
+- Estimated time → description
+- Attachments: any issue/MR description or comment can have file
+  attachments
+
+## Project management
+
+Currently we use the Redmine "Deliverable for" custom field.
+A "Deliverable for SponsorX" label should do the job for tracking
+global progress on a grant: then one can use the issues list or an
+issues board to visualize progress.
+
+An issues list can be ordered by due date, milestone due date, etc.,
+which should emulate the most important aspects of the Redmine custom
+queries we use, except naming the query (see "Custom queries" below).
+
+We can track progress on a specific project (be it a grant deliverable
+or not) by adding another label, e.g. "Project XYZ". For example,
+<https://redmine.tails.boum.org/code/projects/tails/issues?query_id=298>
+lists issues that have "Deliverable for" = "SponsorX" and whose parent
+task contains [[!tails_ticket 14568]]. We would have labels
+"Deliverable for SponsorX" and "Project XYZ". And if an additional
+intermediary level of tracking is needed between "this is part of
+SponsorX" and "this is about Additional Software" we can create
+tracking issues that each have list of tasks.
+
+## Personal self-management
+
+For planning, the same solutions as for project management apply,
+modulo adding a filter for the assignee.
+
+And for more lightweight tracking, GitLab's Todos are great. Todos are
+fully orthogonal to "tickets assigned to me"; they are listed on
+a different page and can be marked as done with one single click.
+For example:
+
+ - Every time one mentions me somewhere, I get a Todo item.
+   This allows me to track the questions I've been asked, that is, to
+   replace our usage of "Info Needed", without the need to reassign an
+   issue or to create a subtask.
+
+ - I can click "Add todo" on an issue and it will appear on my list
+   of Todos (regardless of whether I'm the assignee or not).
+
+## Custom queries
+
+We use Redmine custom queries to have easy access to named searches
+and visualizations that we either often need, or that we want to share
+within a team or the overall Tails project.
+
+In GitLab, the closest equivalent to Redmine custom queries is the URL
+of an issues list or issues board filtered by assignee, milestone,
+and/or label. 
+
+We will need ways to share these URLs and ideally, to name them.
+We can do that on parent tracking tickets, on blueprints, on a team's
+page on our website, and possibly in GitLab's own
+[wiki](https://docs.gitlab.com/ce/user/project/wiki/) if we decide to
+use it (either only for this use case or [[!tails_ticket 9174
+desc="for our blueprints"]]).
 
 # Merge requests
 
@@ -51,6 +178,13 @@ work to adjust our Jenkins CI setup:
    would give arbitrary code execution on our CI to _anyone_.
    Our infrastructure is not currently equipped to cope with this.)
 
+# Wiki
+
+It's out of scope for the first iteration but at some point, we might
+want to migrate our blueprints to GitLab's
+[wiki](https://docs.gitlab.com/ce/user/project/wiki/):
+[[!tails_ticket 9174]]).
+
 # Importing data from Redmine
 
 ## Specification
@@ -63,6 +197,11 @@ Relevant features — to be triaged as MUST/SHOULD/MAY:
   like [[!tails_ticket 15878]] can be easily redirected.
 * Preserve issue private/public status.
 * Convert Textile to Markdown.
+* Preserve watchers.
+* Preserve issues relationships.
+* Preserve other issues metadata.
+* Does not require global GitLab administration token.
+* Does not require SSH access to the GitLab machine.
 
 ## Tools
 
