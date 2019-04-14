@@ -75,16 +75,35 @@ We can close duplicates with a comment that references the duplicated
 issue. It adds a message to the Activity stream of the referenced
 issue, which allows one to find duplicates later on if needed.
 
+And to ensure we can list issues that have really been resolved,
+add a "Duplicate" label.
+
 ## Other issues metadata
 
 - Target version → Milestone
 - Feature branch: GitLab will automatically link a branch that mentions
   an issue.
-- Category, Affected Tool, Priority, Status, Type of work → use a set
-  of labels, each with a prefix, for each of them; and maybe simplify a bit.
-  For example Qubes uses "P: $priority", "C: $category", etc.
-  One can set multiple labels so we could perhaps merge "Category"
-  and "Affected Tool".
+- Category, Affected Tool, Priority, Type of work → use a set of
+  labels, each with a prefix, for each of them; and maybe simplify
+  a bit. For example:
+  - Qubes uses "P: $priority", "C: $category", etc.
+  - One can set multiple labels so we could perhaps merge "Category"
+    and "Affected Tool". For example, a ticket about Thunderbird
+    persistence could have the two "C: email" and "C: persistence" labels.
+- Status: use a set of labels, each with a numerical prefix, because
+  it's an ordered flow:
+   - "0. Needs triage" (ideally, have it set automatically on newly
+     created issues; probably requires a webhook; otherwise, can be
+     done in batch regularly on all issues that have no status label
+     set)
+   - "1. Backlog" ("Confirmed")
+   - "2. Working on it" (clearer than the too vague "In progress")
+   - "3. To review" (previously "Ready for QA")
+   - "4. To release" (i.e. closed issue but code not released yet,
+     to replace "Fix committed" which is too often misunderstood)
+- Status = Resolved → closed with neither "Rejected" nor "Duplicate" label
+- Status = Duplicate → closed with "Duplicate" laben
+- Status = Rejected → closed with "Rejected" label
 - Log time → Time tracking
 - Due date → Due date
 - Starter → dedicated label
