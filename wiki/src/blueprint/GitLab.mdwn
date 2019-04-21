@@ -78,6 +78,47 @@ issue, which allows one to find duplicates later on if needed.
 And to ensure we can list issues that have really been resolved,
 add a "Duplicate" label.
 
+## Status
+
+Each open issue must have one of these labels:
+
+ - "1. To do" (previously: "Confirmed")
+ - "2. Doing" ("In progress" was too vague: it could mean anything
+   between "someone did the first 2% of the work 5 years ago" to "this is
+   what I'm focused on today")
+ - "3. To review" (previously "Ready for QA")
+
+… except issues that were just created and need to be triaged by Help
+Desk (previously: "New").
+
+This lends itself to issue boards with 4 columns: "1. To do", "2.
+Doing", "3. To review", and "Closed".
+
+Closing an issue means one of:
+
+ - The fix or feature the issue is about was merged and will be in
+   a future release (previously: "Fix committed" for the next release,
+   "Resolved" for 4.0).
+
+   To list these issues: closed issues whose milestone is a version
+   was not released yet.
+
+ - The fix or feature the issue is about is already available to
+   our users (previously: "Resolved").
+
+   To list these issues: closed issues whose milestone is a version
+   that's been released already.
+
+ - We've rejected it or marked it as a duplicate (previously:
+   "Rejected" and "Duplicate")
+
+   To list these issues: closed issues with respectively the "Rejected"
+   or "Duplicate" label.
+
+Most closed issues will still have the "3. To review" label.
+That should not cause any problem in practice. Worst case this can be
+fixed automatically, either via a webhook or a scheduled batch job.
+
 ## Other issues metadata
 
 - Target version → Milestone
@@ -90,20 +131,6 @@ add a "Duplicate" label.
   - One can set multiple labels so we could perhaps merge "Category"
     and "Affected Tool". For example, a ticket about Thunderbird
     persistence could have the two "C: email" and "C: persistence" labels.
-- Status: use a set of labels, each with a numerical prefix, because
-  it's an ordered flow:
-   - "0. Needs triage" (ideally, have it set automatically on newly
-     created issues; probably requires a webhook; otherwise, can be
-     done in batch regularly on all issues that have no status label
-     set)
-   - "1. Backlog" ("Confirmed")
-   - "2. Working on it" (clearer than the too vague "In progress")
-   - "3. To review" (previously "Ready for QA")
-   - "4. To release" (i.e. closed issue but code not released yet,
-     to replace "Fix committed" which is too often misunderstood)
-- Status = Resolved → closed with neither "Rejected" nor "Duplicate" label
-- Status = Duplicate → closed with "Duplicate" laben
-- Status = Rejected → closed with "Rejected" label
 - Log time → Time tracking
 - Due date → Due date
 - Starter → dedicated label
