@@ -1,0 +1,16 @@
+diff --git a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
+index aebff9e..6fc63eb 100644
+--- a/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
++++ b/usr/share/perl5/Tails/Persistence/Configuration/ConfigFile.pm
+@@ -96,6 +96,11 @@ Copy the on-disk configuration file to a backup file.
+ method backup () {
+     $self->config_file_path->copy($self->backup_config_file_path);
+     $self->backup_config_file_path->chmod(0600);
++    # Ensure our changes land on the disk
++    systemx('sync', $self->backup_config_file_path->stringify);
++    # Ensure changes made elsewhere are written synchronously on the disk
++    # (in case something else ever needs to modify this file)
++    systemx('chattr', '+S', $self->backup_config_file_path->stringify);
+ }
+ 
+ =head2 save
