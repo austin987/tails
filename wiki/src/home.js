@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var message = randomMessages[i]
     if(Math.floor(message.dataset.n * Math.random()) == 0) {
       message.style.display = "block";
+      if(message.id == "donate") {
+        document.documentElement.dataset.hideSidebarDonate = "true";
+      }
     }
   }
 
