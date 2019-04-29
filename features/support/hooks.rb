@@ -259,6 +259,7 @@ After('@product') do |scenario|
     # what the error was.
     sleep 3 if scenario.failed?
     Process.kill("INT", @video_capture_pid)
+    Process.wait(@video_capture_pid)
     save_failure_artifact("Video", @video_path)
   end
   if scenario.failed?
