@@ -1,9 +1,11 @@
 [[!meta title="Git merge policy: review and merge process"]]
 
+<a id="review"></a>
+
 ## Review
 
-- When you start doing a review'n'merge, assign the relevant ticket to
-  you, in order to avoid duplicated work.
+- When you start doing a review'n'merge, assign the relevant ticket
+  and merge request to you, in order to avoid duplicated work.
 - Merge the base branch (the one you're supposed to merge the reviewed
   topic branch into, as specified in `config/base_branch` and in the
   pull request -- they must match) into the topic branch.
@@ -24,6 +26,10 @@
   maintenance includes: polishing the proposed changes to make them fit
   for release; writing and updating the design and end-user
   documentations; fixing bugs.
+- As reviewer, you are allowed to commit trivial fixes on top of the
+  proposed branch to avoid round-trips: for example, fixing typos
+  and improving phrasing of comments and strings.
+  Then, report back about these changes on the ticket.
 - Remember that it's hard to receive negative feedback. Don't forget
   to note the good parts, be constructive and precise in your
   comments, and never use reviews to make personal attacks. You can
@@ -31,7 +37,17 @@
   - [Kate Heddleston: Criticism and ineffective feedback](https://www.kateheddleston.com/blog/criticism-and-ineffective-feedback) (blog post on how to do a good review)
   - [Liane Davey: Maybe you shouldn't give feedback](http://www.3coze.com/2016/07/17/bite-your-tongue/)
 
+<a id="merge"></a>
+
 ## Merge
+
+<div class="note">
+If the proposed change was submitted as a merge request on <a
+href="https://salsa.debian.org/tails-team/tails">Salsa</a>, don't
+click <i>Merge</i> there: while we can use GitLab for reviews, our
+infrastructure is not ready to consume merge operations done there, so
+you need to merge on the command line.
+</div>
 
 Merge the branch with `--no-ff`:
 
