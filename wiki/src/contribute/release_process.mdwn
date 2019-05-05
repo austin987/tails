@@ -279,7 +279,7 @@ If `check_po` complains:
 When preparing an actual release
 ================================
 
-If we're about to prepare an image for a final (non-RC) release, then
+If we're about to prepare the images for a final (non-RC) release, then
 follow these instructions:
 
 Major release
@@ -483,8 +483,8 @@ signatures, like the defaults we set in Tails:
 
     cp config/chroot_local-includes/etc/skel/.gnupg/gpg.conf "${GNUPGHOME:?}"
 
-Build the almost-final image
-============================
+Build the almost-final images
+=============================
 
 1. [[Build ISO and USB images|contribute/build]] from the release branch.
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
@@ -582,8 +582,8 @@ SquashFS file order
 
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
-Build the final image
----------------------
+Build the final images
+----------------------
 
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
@@ -610,7 +610,7 @@ suite should be ready, so it is time to:
    first `git push` then Jenkins won't build from the tag -- please
    avoid that!
 
-1. build the final image!
+1. build the final images!
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
    Our build system will apply the correct compression settings automatically
    so don't bother setting it yourself.
@@ -647,7 +647,7 @@ suite should be ready, so it is time to:
      Set the `$MATCHING_JENKINS_BUILD_ID` environment variable
      to the ID of this job (an integer).
 
-   - If there is a hash mismatch for the image: ouch! Now we are in a
+   - If there is a hash mismatch for one of the images: ouch! Now we are in a
      tricky situation: on the one hand it seems like a poor idea to
      block users from benefiting from this release's security updates,
      but on the other hand the failure might imply that something
@@ -677,7 +677,7 @@ suite should be ready, so it is time to:
        - Otherwise, if the change is definitely harmless:
 
          * If the source of non-determinism is identified quickly and
-           is easy and fast to fix, *and* the QA of the current image
+           is easy and fast to fix, *and* the QA of the current images
            has not gone very far (so at least that time is not wasted),
            then you should consider abandoning the current version, and
            immediately start preparing an emergency release with:
@@ -717,9 +717,9 @@ Generate the OpenPGP signatures and Torrents
 ============================================
 
 Create a directory with a suitable name, go there, move the built
-image to this brand new directory, generate detached OpenPGP
-signatures for the image to be published (in the same directory as the
-image and with a `.sig` extension), then go up to the parent
+images to this brand new directory, generate detached OpenPGP
+signatures for the images to be published (in the same directory as the
+images and with a `.sig` extension), then go up to the parent
 directory, create a `.torrent` file and check the generated `.torrent`
 files metadata:
 
@@ -1085,7 +1085,7 @@ If not, list already running Torrents:
 
     ssh bittorrent.lizard transmission-remote --list
 
-… set `$ID` to the oldest one and delete it (do this both for the ISO and USB image):
+… set `$ID` to the oldest one and delete it (do this both for the ISO and USB images):
 
     ssh bittorrent.lizard -t "${ID:?}" --remove-and-delete
 
