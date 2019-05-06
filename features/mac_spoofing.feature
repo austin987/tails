@@ -3,7 +3,7 @@ Feature: Spoofing MAC addresses
   In order to not reveal information about the physical location
   As a Tails user
   I want to be able to control whether my network devices MAC addresses should be spoofed
-  And I want this feature to fail safe and notify me in case of errors
+  And I want this feature to fail safe
 
   Background:
     Given I have started Tails from DVD without network and stopped at Tails Greeter's login screen
@@ -31,28 +31,18 @@ Feature: Spoofing MAC addresses
     And the 2nd network device has a spoofed MAC address configured
     And no network device leaked the real MAC address
 
-  #10774
-  @fragile
   Scenario: MAC address spoofing fails and macchanger returns false
     Given macchanger will fail by not spoofing and always returns false
     When I log in to a new session
     Then no network interfaces are enabled
     And no network device leaked the real MAC address
-    # XXX: workaround for #11941
-    And I see the "Network card  disabled" notification after at most 60 seconds
 
-  #10774
-  @fragile
   Scenario: MAC address spoofing fails and macchanger returns true
     Given macchanger will fail by not spoofing and always returns true
     When I log in to a new session
     Then no network interfaces are enabled
     And no network device leaked the real MAC address
-    # XXX: workaround for #11941
-    And I see the "Network card  disabled" notification after at most 60 seconds
 
-  #10774
-  @fragile
   Scenario: MAC address spoofing fails and the module is not removed
     Given macchanger will fail by not spoofing and always returns true
     And no network interface modules can be unloaded
@@ -60,7 +50,6 @@ Feature: Spoofing MAC addresses
     Then 1 network interface is enabled
     But the MAC spoofing panic mode disabled networking
     And no network device leaked the real MAC address
-    And I see the "All networking disabled" notification after at most 60 seconds
 
   Scenario: The MAC address is not leaked when booting Tails
     Given a computer
