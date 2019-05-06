@@ -9,7 +9,7 @@ Feature: Tor stream isolation is effective
   Scenario: tails-security-check is using the Tails-specific SocksPort
     When I monitor the network connections of tails-security-check
     And I re-run tails-security-check
-    Then I see that tails-security-check is properly stream isolated
+    Then I see that tails-security-check is properly stream isolated after 10 seconds
 
   Scenario: htpdate is using the Tails-specific SocksPort
     When I monitor the network connections of htpdate
