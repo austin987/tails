@@ -50,25 +50,27 @@ area:
      a replica of our Jenkins setup, also using nested virtualization,
      with a poor Internet connection but faster CPU cores
    - 26 minutes (including 5 minutes for building the website) on bare metal,
-     with a poor Internet connection but a fast (Intel E-2134) CPU
+     with a poor Internet connection but a fast (Intel E-2134) CPU;
+     same in a VM on that machine, i.e. using nested virtualization
+     (only 1 concurrent build).
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods:
 
    - between 2017-06-17 and 2017-12-17:
      - 4% of the test jobs had to wait for more than 1 hour.
-	 - 1% of the test jobs had to wait for more than 2 hours.
-	 - 2% of the ISO build jobs had to wait more than 1 hour.
+     - 1% of the test jobs had to wait for more than 2 hours.
+     - 2% of the ISO build jobs had to wait more than 1 hour.
 
    - between 2018-05-01 and 2018-11-30:
      - We've run 3342 ISO test jobs; median duration: 195 minutes.
      - 7% of the test jobs had to wait for more than 1 hour.
-	 - 3% of the test jobs had to wait for more than 2 hours.
+     - 3% of the test jobs had to wait for more than 2 hours.
      - We've run 3355 ISO successful build jobs; median duration: 60 minutes.
-	 - 7.2% of the ISO build jobs had to wait more than 15 minutes.
-	 - 2% of the ISO build jobs had to wait more than 1 hour.
-	 - We've run 3355 `reproducibly_build_*` jobs; median duration: 70 minutes.
-	 - 10% of the `reproducibly_build_*` jobs had to wait more than 15 minutes.
-	 - 3.2% of the `reproducibly_build_*` jobs had to wait more than 1 hour.
+     - 7.2% of the ISO build jobs had to wait more than 15 minutes.
+     - 2% of the ISO build jobs had to wait more than 1 hour.
+     - We've run 3355 `reproducibly_build_*` jobs; median duration: 70 minutes.
+     - 10% of the `reproducibly_build_*` jobs had to wait more than 15 minutes.
+     - 3.2% of the `reproducibly_build_*` jobs had to wait more than 1 hour.
 
    That's not many jobs of course, but this congestion happens
    precisely when we need results from our CI infra ASAP, be it
@@ -92,15 +94,15 @@ area:
      - [[!tails_ticket 14601 desc="Matomo"]] will require huge amounts
        of resources and put quite some load on the system where we run
        it; it needs to be hosted on hardware we control.
-	 - [[!tails_ticket 9960 desc="Request tracker for help desk"]]):
-	   unknown resources requirements; needs to be hosted on hardware
-	   we control.
+     - [[!tails_ticket 9960 desc="Request tracker for help desk"]]):
+       unknown resources requirements; needs to be hosted on hardware
+       we control.
    - WIP and will need more resources once they reach production
      status or are used more often:
-	 - Weblate is a serious CPU and I/O consumer; besides, part of its
+     - Weblate is a serious CPU and I/O consumer; besides, part of its
        job is to rebuild the website, which is affected by the
        single-threaded task performance limitations described above.
-	 - survey platform
+     - survey platform
  * We're allowing more and more people to use our CI infrastructure.
    This may increase its resources needs eventually.
 
@@ -221,10 +223,10 @@ Cons:
    the high density we need.
    - [Supermicro X11SCL-IF](https://www.supermicro.com/products/motherboard/X11/X11SCL-iF.cfm), $200
      + https://www.intel.com/content/www/us/en/products/processors/xeon/e-processors.html?Intel+Technology=900393 300€
-	 + 2 × 16GB RAM Unbuffered ECC UDIMM, DDR4-2666MHz (e.g. CT16G4WFD8266) $400
-	 + CPU heatsink SNK-P0049A4 $50
-	 + mini-ITX case with power supply (e.g. Antec ISK310-150) 95€
-	 + SSD M.2 PCI-E 3.0 x4 250GB 90€
+     + 2 × 16GB RAM Unbuffered ECC UDIMM, DDR4-2666MHz (e.g. CT16G4WFD8266) $400
+     + CPU heatsink SNK-P0049A4 $50
+     + mini-ITX case with power supply (e.g. Antec ISK310-150) 95€
+     + SSD M.2 PCI-E 3.0 x4 250GB 90€
    - ASRock mini-ITX motherboards with IPMI that support suitable CPUs:
      E3C226D2I, E3C236D4I-44E85, EPC612D4I
    - Supermicro X10SDV series are affordable but support only too slow CPUs
@@ -250,7 +252,7 @@ Cons:
 - Left to benchmark:
   - Higher density: run 2 Jenkins worker VMs on this node (neither our
     build system nor test suite implementation allow running 2 jobs at
-    a time on the same system)
+    a time on the same system) and make them busy at the same time.
 
 ## Run builds and/or tests in the cloud
 
