@@ -21,14 +21,8 @@
    Raphael Freudiger <laser_b@gmx.ch>.
 **/
 const Lang = imports.lang;
-const Mainloop = imports.mainloop;
-
 const St = imports.gi.St;
-const LoginManager = imports.misc.loginManager;
 const Main = imports.ui.main;
-const StatusSystem = imports.ui.status.system;
-const PopupMenu = imports.ui.popupMenu;
-const ExtensionSystem = imports.ui.extensionSystem;
 const BoxPointer = imports.ui.boxpointer;
 
 const Gettext = imports.gettext.domain('tails');
@@ -39,47 +33,69 @@ const Lib = Me.imports.lib;
 
 const Util = imports.misc.util;
 
+var Action = new Lang.Class({
+    Name: 'Action',
+
+    _init: function(button, id) {
+        this.button = button;
+        this.id = id;
+    }
+});
+
 const Extension = new Lang.Class({
     Name: 'StatusMenuHelper.Extension',
 
     enable: function() {
+        if (this._isEnabled) return;
+        this._isEnabled = true;
+
         this.statusMenu = Main.panel.statusArea['aggregateMenu']._system;
 
         this._createActions();
         this._removeAltSwitcher();
         this._addSeparateButtons();
 
-        this._menuOpenStateChangedId = this.statusMenu.menu.connect('open-state-changed', Lang.bind(this,
-            function(menu, open) {
-                if (!open)
-                    return;
-                this._restartButton.visible = true;
-                this._poweroffButton.visible = true;
-            }));
-
-        Main.sessionMode.connect('updated', Lang.bind(this, this._sessionUpdated));
-        this._sessionUpdated();
+        this.statusMenu.menu.connect('open-state-changed', (menu, open) => {
+            if (!open)
+                return;
+            this._update();
+        });
     },
 
     disable: function() {
-        if (this._menuOpenStateChangedId) {
-            this.statusMenu.menu.disconnect(this._menuOpenStateChangedId);
-            this._menuOpenStateChangedId = 0;
-        }
+        // We want to keep the extention enabled on the lock screen
+        if (Main.sessionMode.isLocked) return;
+        this._isEnabled = false;
 
         this._destroyActions();
         this._restoreAltSwitcher();
     },
 
     _createActions: function() {
-        this._restartButton = this.statusMenu._createActionButton('view-refresh-symbolic', _("Restart"));
-        this._restartButtonId = this._restartButton.connect('clicked', Lang.bind(this, this._onRestartClicked));
- 
-        this._lockScreenButton = this.statusMenu._createActionButton('changes-prevent-symbolic', _("Lock screen"));
-        this._lockScreenButtonId = this._lockScreenButton.connect('clicked', Lang.bind(this, this._onLockClicked));
+        this._lockScreenAction = this._createAction(_("Lock screen"),
+                                                   'changes-prevent-symbolic',
+                                                    this._onLockClicked);
 
-        this._poweroffButton = this.statusMenu._createActionButton('system-shutdown-symbolic', _("Power Off"));
-        this._poweroffButtonId = this._poweroffButton.connect('clicked', Lang.bind(this, this._onPowerOffClicked));
+        this._suspendAction = this._createAction(_("Suspend"),
+                                                 'media-playback-pause-symbolic',
+                                                 this._onSuspendClicked);
+
+        this._restartAction = this._createAction(_("Restart"),
+                                                 'view-refresh-symbolic',
+                                                 this._onRestartClicked);
+
+        this._powerOffAction = this._createAction(_("Power Off"),
+                                                  'system-shutdown-symbolic',
+                                                  this._onPowerOffClicked);
+
+        this._actions = [this._lockScreenAction, this._suspendAction,
+                         this._restartAction, this._powerOffAction];
+    },
+
+    _createAction: function(label, icon, onClickedFunction) {
+        let button = this.statusMenu._createActionButton(icon, label);
+        let id = button.connect('clicked', Lang.bind(this, onClickedFunction));
+        return new Action(button, id);
     },
 
     _removeAltSwitcher: function() {
@@ -91,60 +107,50 @@ const Extension = new Lang.Class({
     },
 
     _addSeparateButtons: function() {
-        this.statusMenu._actionsItem.actor.add(this._lockScreenButton, { expand: true, x_fill: false });
-        this.statusMenu._actionsItem.actor.add(this._restartButton, { expand: true, x_fill: false });
-        this.statusMenu._actionsItem.actor.add(this._poweroffButton, { expand: true, x_fill: false });
+        for (let i = 0; i < this._actions.length; i++) {
+            this.statusMenu._actionsItem.actor.add(this._actions[i].button, { expand: true, x_fill: false });
+        }
     },
 
     _destroyActions: function() {
-        if (this._restartButtonId) {
-            this._restartButton.disconnect(this._restartButtonId);
-            this._restartButtonId = 0;
+        for (let i = 0; i < this._actions.length; i++) {
+            let action = this._actions[i];
+            if (action.id) {
+                action.button.disconnect(action.id);
+                action.id = 0;
+            }
+
+            if (action.button) {
+                action.button.destroy();
+                action.button = 0;
+            }
         }
-
-        if (this._poweroffButtonId) {
-            this._poweroffButton.disconnect(this._poweroffButtonId);
-            this._poweroffButtonId = 0;
-        }
-
-        if (this._lockScreenButtonId) {
-            this._lockScreenButton.disconnect(this._lockScreenButtonId);
-            this._lockScreenButtonId = 0;
-        }
-
-        if (this._restartButton) {
-            this._restartButton.destroy();
-            this._restartButton = 0;
-        }
-
-        if (this._poweroffButton) {
-            this._poweroffButton.destroy();
-            this._poweroffButton = 0;
-        }
-
-        if (this._lockScreenButton) {
-            this._lockScreenButton.destroy();
-            this._lockScreenButton = 0;
-        }
-    },
-
-    _onPowerOffClicked: function() {
-        Util.spawn(['sudo', '-n', 'poweroff'])
-    },
-
-    _onRestartClicked: function() {
-        Util.spawn(['sudo', '-n', 'reboot'])
     },
 
     _onLockClicked: function() {
-	this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
         Main.overview.hide();
-	Util.spawn(['tails-screen-locker']);
+        Util.spawn(['tails-screen-locker']);
     },
 
-    _sessionUpdated: function() {
-        this._lockScreenButton.setSensitive = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
+    _onSuspendClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        Util.spawn(['systemctl', 'suspend'])
     },
+
+    _onRestartClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        Util.spawn(['sudo', '-n', 'reboot'])
+    },
+
+    _onPowerOffClicked: function() {
+        this.statusMenu.menu.itemActivated(BoxPointer.PopupAnimation.NONE);
+        Util.spawn(['sudo', '-n', 'poweroff'])
+    },
+
+    _update: function() {
+        this._lockScreenAction.button.visible = !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;
+    }
 
 });
 
@@ -152,4 +158,3 @@ function init(metadata) {
     Lib.initTranslations(Me);
     return new Extension();
 }
-
