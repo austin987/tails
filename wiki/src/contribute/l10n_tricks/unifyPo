@@ -209,9 +209,6 @@ def check_po_file(fname: str, extended: bool) -> Tuple[str, List[str]]:
             errors.append("i18nspector exited with {e.returncode} - stderr:\n"
                           "{e.stderr}".format(e=e))
 
-        if poFile.msgcat():
-            errors.append("Not rewrapped to 79 chars.")
-
         if extended:
             for key, value in poFile.fixedHeaders().items():
                 if not poFile.check(key, value):

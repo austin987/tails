@@ -25,7 +25,7 @@ class TestCheckPo(unittest.TestCase):
                 os.symlink(os.path.abspath(fpath), newPath)
                 path, issues = unifyPo.check_po_file(newPath, extended=False)
                 self.assertEqual(path, newPath)
-                self.assertEqual(issues, expected[name], msg="{name}".format(name=name))
+                self.assertEqual(issues, expected[name], msg=name)
 
     def test_checkPoExtended(self):
         with open(os.path.join(DIRNAME, "checkPoExtended.yml")) as f:
@@ -38,7 +38,7 @@ class TestCheckPo(unittest.TestCase):
                 os.symlink(os.path.abspath(fpath), newPath)
                 path, issues = unifyPo.check_po_file(newPath, extended=True)
                 self.assertEqual(path, newPath)
-                self.assertEqual(issues, expected[name], msg="{name}".format(name=name))
+                self.assertEqual(issues, expected[name], msg=name)
 
     def test_unifyPo(self):
         self.maxDiff = None
