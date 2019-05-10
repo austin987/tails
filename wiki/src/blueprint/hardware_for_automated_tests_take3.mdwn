@@ -32,20 +32,14 @@ area:
    virtualization too.
  * As we add more automated tests, and re-enable tests previously
    flagged as fragile, a full test run takes longer and longer.
-   We're now up to 206 minutes per run without fragile tests,
-   and about 340 minutes per run with fragile tests.
+   We're now up to 206 minutes / run (without fragile tests).
    We can't make it faster by
    adding RAM anymore nor by adding CPUs to ISO testers. But faster
    CPU cores would fix that. The same test suite only takes:
-   - 160 minutes (without fragile tests) on a replica of our Jenkins setup, also using nested
+   - 160 minutes on a replica of our Jenkins setup, also using nested
      virtualization, with a poor Internet connection but a faster CPU
-   - with a poor Internet connection but a fast (Intel E-2134) CPU:
-     - 105 minutes (without fragile tests) on bare metal;
-       giving the system under test more vCPUs saves 2-3 more minutes
-     - XXX minutes for 1 concurrent test suite run in a VM,
-       i.e. using nested virtualization (without fragile tests)
-     - XXX minutes for 2 concurrent test suite runs in VMs
-       (without fragile tests)
+   - 105 minutes on bare metal, with a poor Internet connection but a fast (Intel E-2134) CPU;
+     giving the system under test more vCPUs saves 2-3 more minutes
  * Building our website takes a long while (12 minutes on our ISO
    builders i.e. 20% of the entire ISO build time), which makes ISO
    builds take longer than they could. This will get worse as new
@@ -55,13 +49,10 @@ area:
    - 38 minutes (including 6-7 minutes for building the website) on
      a replica of our Jenkins setup, also using nested virtualization,
      with a poor Internet connection but faster CPU cores
-   - with a poor Internet connection but a fast (Intel E-2134) CPU:
-     - 25 minutes (including 5 minutes for building the website) on bare metal
-     - 25 minutes for 1 concurrent build in a VM, i.e. using nested virtualization
-     - 32-33 minutes (including ~5 minutes for building the website)
-       for 2 concurrent builds in VMs, in the worst case situation (builds
-       started exactly at the same time ⇒ they both need all their vCPUs
-       at the same time)
+   - 26 minutes (including 5 minutes for building the website) on bare metal,
+     with a poor Internet connection but a fast (Intel E-2134) CPU;
+     same in a VM on that machine, i.e. using nested virtualization
+     (only 1 concurrent build).
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods:
 
