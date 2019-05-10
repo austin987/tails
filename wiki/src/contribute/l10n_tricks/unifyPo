@@ -75,6 +75,13 @@ I18NSPECTOR_ACCEPT = [
         "unusual-unused-plural-forms",
         ]
 
+class NoLanguageError(Exception):
+    def __init__(self, fname):
+        self.fname = fname
+
+    def __str__(self):
+        return f"Can't detect expect file suffix .XX.po for '{self.fname}'."
+    pass
 
 class PoFile:
     def __init__(self, fname: str) -> None:
@@ -92,9 +99,9 @@ class PoFile:
     def lang(self) -> str:
         """@returns: language of filename"""
         name = os.path.basename(self.fname)
-        m = re.match(r"^.*\.(?P<lang>[A-Za-z_]*)\.po$", name)
+        m = re.match(r"^[^.].*\.(?P<lang>[A-Za-z_]+)\.po$", name)
         if not m:
-            raise Exception("po file should have a language in his name.", self.fname)
+            raise NoLanguageError(self.fname)
         return m.group("lang")
 
     def check(self, key: str, value: str) -> bool:

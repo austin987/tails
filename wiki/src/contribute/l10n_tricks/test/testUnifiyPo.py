@@ -55,6 +55,27 @@ class TestCheckPo(unittest.TestCase):
                 _, issues = unifyPo.check_po_file(newPath, extended=True)
                 self.assertEqual(issues, [], msg=name)
 
+    def test_lang(self):
+        self.assertEqual(unifyPo.PoFile("index.de.po").lang(), "de")
+        self.assertEqual(unifyPo.PoFile("x/a/a.fb.xx.po").lang(), "xx")
+
+        _p = unifyPo.PoFile(".de.po")
+        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname) as e:
+            _p.lang()
+
+        self.assertEqual(str(e.exception), "Can't detect expect file suffix .XX.po for '.de.po'.")
+
+        _p = unifyPo.PoFile(".a.d.de.po")
+        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname):
+            _p.lang()
+
+        _p = unifyPo.PoFile("a.po")
+        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname):
+            _p.lang()
+
+        _p = unifyPo.PoFile("/a/d/d..po")
+        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname):
+            _p.lang()
 
 
 if __name__ == '__main__':
