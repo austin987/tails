@@ -1,12 +1,15 @@
 #!/usb/bin/env python3
 import glob
+import importlib.machinery
 import os
 import unittest
 import tempfile
 import shutil
 import yaml
 
-import unifyPo
+
+unifyPo = importlib.machinery.SourceFileLoader('unifyPo', 'unifyPo').load_module()
+
 
 DIRNAME = os.path.dirname(__file__)
 
