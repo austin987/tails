@@ -187,7 +187,7 @@ def pofile_writable(fname: str):
     pf.write()
 
 
-def checkPoFile(fname: str, extended: bool) -> Tuple[str, List[str]]:
+def check_po_file(fname: str, extended: bool) -> Tuple[str, List[str]]:
     """check PO file for issues.
     @returns: nothing or a list of errors
     @extended: is used to check the header fields in more detail.
@@ -213,7 +213,7 @@ def checkPoFile(fname: str, extended: bool) -> Tuple[str, List[str]]:
     return (fname, errors)
 
 
-def unifyPoFile(fname: str) -> None:
+def unify_po_file(fname: str) -> None:
     """unify PO header and run msgcat for file named `fname`"""
     with pofile_writable(fname) as poFile:
         for key, value in poFile.fixedHeaders().items():
@@ -263,13 +263,13 @@ def main(logger) -> None:
     pool = multiprocessing.Pool()
     if args.modify:
         # unify PO headers for a list of files
-        list(pool.map(unifyPoFile, args.files))
+        list(pool.map(unify_po_file, args.files))
     else:
         fine = True
         # check only the headers
         pool = multiprocessing.Pool()
-        _checkPoFile = functools.partial(checkPoFile, extended=args.extended)
-        for fname, issues in pool.imap_unordered(_checkPoFile, args.files, 10):
+        _check_po_file = functools.partial(check_po_file, extended=args.extended)
+        for fname, issues in pool.imap_unordered(_check_po_file, args.files, 10):
             if issues:
                 fine = False
                 issues = [i.replace("\n", "\n\t") for i in issues]  # indent subissues

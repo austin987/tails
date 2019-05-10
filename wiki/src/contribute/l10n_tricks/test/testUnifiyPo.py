@@ -23,7 +23,7 @@ class TestCheckPo(unittest.TestCase):
                 name = os.path.basename(fpath)
                 newPath = os.path.join(tmpdir, name + ".en.po")
                 os.symlink(os.path.abspath(fpath), newPath)
-                path, issues = unifyPo.checkPoFile(newPath, extended=False)
+                path, issues = unifyPo.check_po_file(newPath, extended=False)
                 self.assertEqual(path, newPath)
                 self.assertEqual(issues, expected[name], msg="{name}".format(name=name))
 
@@ -36,7 +36,7 @@ class TestCheckPo(unittest.TestCase):
                 name = os.path.basename(fpath)
                 newPath = os.path.join(tmpdir, name + ".en.po")
                 os.symlink(os.path.abspath(fpath), newPath)
-                path, issues = unifyPo.checkPoFile(newPath, extended=True)
+                path, issues = unifyPo.check_po_file(newPath, extended=True)
                 self.assertEqual(path, newPath)
                 self.assertEqual(issues, expected[name], msg="{name}".format(name=name))
 
@@ -49,10 +49,10 @@ class TestCheckPo(unittest.TestCase):
                 name = os.path.basename(fpath)
                 newPath = os.path.join(tmpdir, name + ".en.po")
                 shutil.copy(os.path.join(DIRNAME, "checkPo", name), newPath)
-                unifyPo.unifyPoFile(newPath)
+                unifyPo.unify_po_file(newPath)
                 with open(newPath) as f:
                     self.assertEqual(f.read(), expectedContent, msg=name)
-                _, issues = unifyPo.checkPoFile(newPath, extended=True)
+                _, issues = unifyPo.check_po_file(newPath, extended=True)
                 self.assertEqual(issues, [], msg=name)
 
 
