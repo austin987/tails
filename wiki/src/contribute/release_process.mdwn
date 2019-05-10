@@ -27,8 +27,33 @@ To release Tails you'll need some packages installed:
 Environment
 ===========
 
-Export the following environment variables to be able to copy'n'paste
-the scripts snippets found on this page:
+To be able to copy'n'paste the code snippets found on this page,
+you need to set a bunch of environment variables.
+
+Unless the release process explicitly instructs you to change the
+value of one such variable, treat it as a constant: else,
+inconsistency will surely arise, which can cause trouble later on.
+
+Version numbers
+---------------
+
+Note:
+
+* Regarding version numbers, what follows supports just fine the case
+  when we do something else than alternating bugfix and major releases
+  consistently. For example, if the next two releases are bugfix ones,
+  do not set `$NEXT_PLANNED_MAJOR_VERSION` to one of these
+  bugfix releases. Instead, set it to the version number of the next
+  major release.
+* The `$NEXT*VERSION` constants are used only for two types of
+  operations: preparing upgrade-description files and adding changelog
+  entries. This two types of operations have to be consistent with
+  each other: for example, if one adds a dummy entry for version X in
+  a changelog, an UDF must exist for version X as well… hence the use
+  of shared constants to encode the values that must be the same on
+  both sides :)
+
+Export the following environment variables:
 
 * version numbers (see [[contribute/release_schedule#versioning]]):
 
@@ -41,7 +66,8 @@ the scripts snippets found on this page:
   *major* Tails release; if you're preparing a RC for a major release,
   use that major release; otherwise, use whatever the next planned
   major release is
-* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: set to the version number of
+* `SECOND_NEXT_PLANNED_MAJOR_VERSION`: if you're preparing the RC
+  for a major release, set this to the version number of
   the second next *major* Tails release; e.g. if preparing the RC for
   the 3.9 major release, then set this to 3.12 (3.9 is the next major
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
@@ -49,6 +75,14 @@ the scripts snippets found on this page:
 * `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
   *bugfix* Tails release; if the next release is a bugfix release, use
   that one; otherwise, use `${VERSION}.1`
+* `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
+  to the next emergency release if we have to put one out
+
+Other variables
+---------------
+
+Also export the following environment variables:
+
 * `MAJOR_RELEASE`: set to 1 if preparing a major release or a release
   candidate for a major release, to 0 otherwise
 * `ISOS`: the directory where one stores `tails-amd64-*`
@@ -61,6 +95,7 @@ the scripts snippets found on this page:
 * `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
   repository used to prepare the release (`stable` or `testing`).
 * `TAILS_SIGNATURE_KEY=A490D0F4D311A4153E2BB7CADBB802B258ACD84F`
+* `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}"perl -nE 'say substr($_, -17)')`
 * `IUK_CHECKOUT`: a checkout of the relevant tag of the `iuk`
   Git repository.
 * `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
@@ -150,7 +185,7 @@ Bootstrap manual testing coordination:
 2. Copy the [[manual test suite|contribute/release_process/test]]
    into it.
 3. Send the pad URL to the usual testers (see `manual_testers.mdwn` in
-   the RM team's Git repository).
+   the RM team's Git repository), end-to-end encrypted.
 
 Update included files
 =====================
@@ -210,7 +245,7 @@ See the dedicated page: [[tor-browser]]
 Upgrade Tor Browser AppArmor profile
 ------------------------------------
 
-See the dedicated page: [[browser-apparmor-patch]]
+See the dedicated page: [[tor-browser_AppArmor_patch]]
 
 Upgrade Thunderbird
 ---------------
@@ -244,7 +279,7 @@ If `check_po` complains:
 When preparing an actual release
 ================================
 
-If we're about to prepare an image for a final (non-RC) release, then
+If we're about to prepare the images for a final (non-RC) release, then
 follow these instructions:
 
 Major release
@@ -274,9 +309,10 @@ Update other base branches
 1. Merge the release branch into `devel` following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
 
-2. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+2. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
    branch, the time-based APT repository snapshots that were used
-   during the freeze.
+   during the freeze. It's fine if that results in a no-op
+   (it depends on how exactly previous operations were performed).
 
 3. Merge `devel` into `feature/buster`, *without* following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
@@ -447,10 +483,11 @@ signatures, like the defaults we set in Tails:
 
     cp config/chroot_local-includes/etc/skel/.gnupg/gpg.conf "${GNUPGHOME:?}"
 
-Build the almost-final image
-============================
+Build the almost-final images
+=============================
 
 1. [[Build ISO and USB images|contribute/build]] from the release branch.
+   Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
 2. Carefully read the build logs to make sure nothing bad happened.
 3. Keep the resulting build artifacts until the end of this release process.
 4. Record where the manifest of needed packages is stored:
@@ -519,7 +556,9 @@ SquashFS file order
 -------------------
 
 1. Install the almost final USB image to a USB stick.
-1. Boot this USB stick **on bare metal**.
+1. Boot this USB stick a first time to trigger re-partitioning.
+1. Shut down this Tails.
+1. Boot this USB stick **on bare metal** again.
 1. Add `profile` to the kernel command-line.
 1. Login with the default settings in the Greeter (e.g. do not configure
    an _Administration Password_).
@@ -529,11 +568,22 @@ SquashFS file order
    killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Backup the old sort file: `cp config/binary_rootfs/squashfs.sort{,.old}`
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
-1. Cleanup a bit:
-   - remove `var/log/live/config.pipe`: otherwise the boot is broken
-     or super-slow
-   - remove the bits about `kill-boot-profile` at the end: they're
-     only useful when profiling the boot
+1. Remove runtime-generated files that don't exist in the rootfs,
+   in order to avoid confusing noise in the build output:
+
+           perl -ni -E 'chomp; say unless m{(?:
+                  [.]pyc\s+\d+\z
+               | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
+               | \Alib/live/mount/overlay/etc/fstab\s
+               | \A(?:lib/live/mount/overlay/)?etc/apparmor[.]d/cache/[.]features\s
+               | \A(?:lib/live/mount/overlay/)?etc/(?:group|gshadow|passwd|shadow)-\s
+               | \A(?:lib/live/mount/overlay/)?etc/resolv-over-clearnet[.]conf\s
+               | \Arun/
+               | \Avar/log/live/config[.]pipe\s
+           )}xms' config/binary_rootfs/squashfs.sort
+
+1. Remove the bits about `kill-boot-profile` at the end: they're
+   only useful when profiling the boot.
 1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
@@ -543,8 +593,8 @@ SquashFS file order
 
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
-Build the final image
----------------------
+Build the final images
+----------------------
 
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
@@ -571,7 +621,10 @@ suite should be ready, so it is time to:
    first `git push` then Jenkins won't build from the tag -- please
    avoid that!
 
-1. build the final image!
+1. build the final images!
+   Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
+   Our build system will apply the correct compression settings automatically
+   so don't bother setting it yourself.
 
 1. Compare the new build manifest with the one from the previous,
    almost final build:
@@ -595,17 +648,17 @@ suite should be ready, so it is time to:
        echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
 
    Find the job (probably the last one)
-   and make sure the ISO and USB images built by Jenkins:
-
-   - were built from the correct Git commit
-   - have the same file size as the images you built
-   - have the same hash (in the `.shasum` file) as the images you built
+   and make sure the ISO and USB images built by Jenkins
+   have the same hash (in the `.shasum` file) as the images you built.
 
    Then:
 
    - If all hashes match: yay, we're good to go!
 
-   - If there is a hash mismatch for the image: ouch! Now we are in a
+     Set the `$MATCHING_JENKINS_BUILD_ID` environment variable
+     to the ID of this job (an integer).
+
+   - If there is a hash mismatch for one of the images: ouch! Now we are in a
      tricky situation: on the one hand it seems like a poor idea to
      block users from benefiting from this release's security updates,
      but on the other hand the failure might imply that something
@@ -635,7 +688,7 @@ suite should be ready, so it is time to:
        - Otherwise, if the change is definitely harmless:
 
          * If the source of non-determinism is identified quickly and
-           is easy and fast to fix, *and* the QA of the current image
+           is easy and fast to fix, *and* the QA of the current images
            has not gone very far (so at least that time is not wasted),
            then you should consider abandoning the current version, and
            immediately start preparing an emergency release with:
@@ -675,9 +728,9 @@ Generate the OpenPGP signatures and Torrents
 ============================================
 
 Create a directory with a suitable name, go there, move the built
-image to this brand new directory, generate detached OpenPGP
-signatures for the image to be published (in the same directory as the
-image and with a `.sig` extension), then go up to the parent
+images to this brand new directory, generate detached OpenPGP
+signatures for the images to be published (in the same directory as the
+images and with a `.sig` extension), then go up to the parent
 directory, create a `.torrent` file and check the generated `.torrent`
 files metadata:
 
@@ -769,61 +822,93 @@ Prepare upgrade-description files
 1. Prepare upgrade-description files (see the [[upgrade-description
    files
    specification|contribute/design/incremental_upgrades#upgrade-description-files]]
-   for details). The idea is to:
+   for details).
 
-   * update (create if needed) an upgrade-description file for every
-     *previous* supported release (e.g. N~rc1, N-1, N-1~rc2) that replaces
-     all existing upgrade paths with the path to the version being
-     released;
-   * create a new upgrade-description for the version being released
-     and for the next one, that expresses that *no* upgrade is
-     available for these ones yet.
+   <div class="caution">
+   In <emph>most</emph> cases the example command below is exactly the
+   one you should run. But in order to tell whether you're in one of
+   the exceptional cases when you have to adjust that command, it's
+   important that you understand what follows.
+   </div>
 
-   This is what `tails-iuk-generate-upgrade-description-files` tool
-   does:
+   At this step, we use the
+   `tails-iuk-generate-upgrade-description-files` tool in order to:
+
+   1. Create a new upgrade-description for the version being released
+      and for the next one, that expresses that *no* upgrade is
+      available for these ones yet.
+
+      This is what the `--version` and `--next-version` arguments
+      in the example command below do. You do not need to modify them.
+
+   2. For every previous release listed in `$IUK_SOURCE_VERSIONS`,
+      i.e. those that will have a direct incremental upgrade path to
+      the version being released: create or update its
+      upgrade-description file to advertise this direct incremental
+      upgrade path.
+
+      This is what the `--previous-version` arguments generated by the
+      example command below do. You do not need to modify that part.
+
+   3. For every recently supported previous release that's _not_
+      listed in `$IUK_SOURCE_VERSIONS` (i.e. releases that have no
+      _direct_ incremental upgrade path to the version being
+      released):
+
+       - If there's a _multi-step incremental upgrade path_ from this
+         previous version to the version being released (e.g. by first
+         upgrading to a version that's in `$IUK_SOURCE_VERSIONS`): tell
+         the users of that old version to go through this multi-step
+         incremental upgrade path, i.e. leave its upgrade-description
+         file unmodified (it already advertises the first step of
+         this multi-step path).
+
+         To do so, ensure you do not manually pass this previous
+         release to `--previous-version`. The example command below
+         does the right thing in this respect already, so this
+         constraint only matters if you have other reasons to modify
+         the command.
+
+       - Else, if there's _no incremental upgrade path, be it direct
+         or multi-step_, from this previous version to the version
+         being released (which happens for example when releasing
+         Tails based on a new version of Debian and when we
+         unintentionally broke incremental upgrades recently): tell the users
+         of that old version they need to manually upgrade to the version
+         being released.
+
+         To do so, pass this previous version to `--previous-version`.
+         You need to do this manually as the example command below
+         won't do it automatically.
+
+   Run this command, after adjusting it if needed as explained above:
 
         ( cd ${IUK_CHECKOUT:?} && \
         ./bin/tails-iuk-generate-upgrade-description-files \
             --build-target amd64 \
             --version "${VERSION:?}" \
-            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
-            --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
-            --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
-            --next-version "${VERSION:?}.1" \
+            $( \
+                if [ "${DIST:?}" = stable ]; then
+                    echo \
+                        --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
+                        --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
+                        --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
+                        --next-version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}" \
+                else
+                    echo --next-version $(echo ${VERSION:?} | sed -e 's,~.*$,,')
+                fi
+            ) \
+            $( \
+                for version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
+                   echo "--previous-version ${version:?}"
+                done \
+            ) \
             --iso "${ISO_PATH:?}" \
-            --previous-version "${PREVIOUS_VERSION:?}" \
-            --previous-version "${VERSION:?}~rc1" \
             --iuks "${ISOS:?}" \
             --release-checkout "${RELEASE_CHECKOUT:?}" \
             --major-release "${MAJOR_RELEASE:?}" \
+            --channel "${DIST:?}"
        )
-
-   Note:
-   * The `--iuks` argument must point to the directory where the IUKs
-     generated at the previous step are stored.
-   * At least the last stable release and the previous release
-     candidates for the version being released must be passed to
-     `--previous-version`.
-   * Older versions for which there is no incremental upgrade path to
-     the new release must be passed with `--previous-version`, so that
-     users who skipped a release or two are informed of the new one.
-     Note that multi-steps incremental upgrade paths are valid and
-     supported: e.g. when releasing 1.1.2, 1.1 users should still be
-     able to incrementally upgrade to 1.1.1, and in turn to 1.1.2; to
-     make this work, unless there's a IUK from 1.1 to 1.1.2,
-	 one must _not_ pass `--previous-version 1.1`,
-     that would remove the existing incremental upgrade path from 1.1
-     to 1.1.1.
-   * If preparing anything but a final release (e.g. an alpha, beta
-     or RC), add `--channel alpha`
-   * If preparing anything but a final release (e.g. an alpha, beta
-     or RC), drop all `--next-version`
-     arguments, and instead pass
-     `--next-version $(echo ${VERSION:?} | sed -e 's,~rc.*$,,')`
-   * Adjust `--next-version "${VERSION:?}.1"` so it matches the next
-     potential emergency release. E.g. when releasing 3.7.1,
-     pass `--next-version 3.7.2` and when releasing 3.8, pass
-     `--next-version 3.8.1`.
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -856,21 +941,20 @@ Prepare upgrade-description files
           git push origin ${WEBSITE_RELEASE_BRANCH:?} \
         )
 
-1. If preparing anything but a final release (e.g. an alpha, beta
-   or RC), copy the generated UDFs for the previous releases
-   to the *test* channel in `$MASTER_CHECKOUT`, modify their content
-   accordingly, sign them, commit and push:
+1. Copy the generated UDFs for the previous releases to the *test*
+   channel in `$MASTER_CHECKOUT`, modify their content accordingly,
+   sign them, commit and push:
 
         ( \
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
           git merge origin/master && \
           for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
-            alpha_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/alpha/upgrades.yml" && \
+            release_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
-            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${alpha_udf:?} \
-              | sed -e 's/channel: alpha/channel: test/' > ${test_udf:?} && \
+            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
+              | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
             gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
             mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
             git add ${test_udf:?}* ; \
@@ -878,28 +962,6 @@ Prepare upgrade-description files
           git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
           git push origin master:master \
         )
-
-1. Else, if preparing a final release, copy the generated UDFs for the previous
-   releases to the *test* channel in `$MASTER_CHECKOUT`, modify their content
-   accordingly, sign them, commit and push:
-
-        ( \
-          cd ${MASTER_CHECKOUT:?} && \
-          git fetch && \
-          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
-            stable_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/stable/upgrades.yml" && \
-            test_udf="wiki/src/upgrade/v1/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
-            mkdir -p "$(dirname "$test_udf")" && \
-            git show origin/${WEBSITE_RELEASE_BRANCH:?}:${stable_udf:?} \
-              | sed -e 's/channel: stable/channel: test/' > ${test_udf:?} && \
-            gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
-            mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
-            git add ${test_udf:?}* ; \
-          done && \
-          git commit -m "Add incremental upgrades on the test channel for Tails ${VERSION:?}" && \
-          git push origin master:master \
-        )
-
 
 Prepare the image description file for *Tails Verification*
 -----------------------------------------------------------
@@ -920,8 +982,8 @@ Update the image description file (IDF) used by the browser extension:
 Done with OpenPGP signing
 =========================
 
-By now you are done with Tails signing key, so please make sure it is
-not usable by your system any more.
+Unplug your OpenPGP smartcard and store it away, so you don't plug it
+back semi-mechanically later on.
 
 **Beware!** If your have to plug your OpenPGP smart card or reassemble the
 key again after this point it invalidates *everything* done for
@@ -962,12 +1024,6 @@ While waiting for the IUKs to be uploaded, you can proceed with the next steps.
 Upload the ISO and USB image signatures to our rsync server:
 
     scp "${ISO_PATH:?}.sig" "${IMG_PATH:?}.sig" rsync.lizard:
-
-Pick a build from `$RELEASE_BRANCH` that produced identical ISO and USB images
-to the ones you've built locally (`XXX` must be the job ID, i.e.
-an integer):
-
-    MATCHING_JENKINS_BUILD_ID=XXX
 
 Copy the ISO and USB images to our rsync server, verify their signature,
 move them in place with proper ownership and permissions
@@ -1027,7 +1083,9 @@ candidate):
 	   git push origin master
 	)
 
-## Announce, seed and test the Torrent
+## Announce, seed and test the Torrents
+
+Skip this section if [[!tails_ticket 16378]] is not resolved yet.
 
 Check if there's enough space on our Bittorrent seed to import the new
 ISO and USB images:
@@ -1038,15 +1096,15 @@ If not, list already running Torrents:
 
     ssh bittorrent.lizard transmission-remote --list
 
-… set `$ID` to the oldest one and delete it:
+… set `$ID` to the oldest one and delete it (do this both for the ISO and USB images):
 
-    ssh bittorrent.lizard -t "${ID:?}" --remove-and-delete
+    ssh bittorrent.lizard transmission-remote -t "${ID:?}" --remove-and-delete
 
 … and finally check disk space again:
 
     ssh bittorrent.lizard df -h /var/lib/transmission-daemon/downloads
 
-Now you can announce and seed the Torrent for the release you're preparing:
+Now you can announce and seed the Torrents for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
@@ -1104,7 +1162,7 @@ Testing
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
-   - attach the Torrent
+   - attach the Torrents
    - attach the `.packages` file
 1. Make sure someone is committed to run the automated test suite.
 1. Make sure that enough people are here to run the tests, that they
@@ -1116,6 +1174,8 @@ Testing
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
+1. If [[!tails_ticket 16378]] is not resolved yet, ensure someone will
+   seed the Torrents.
 
 Update the website and Git repository
 =====================================
@@ -1148,12 +1208,20 @@ Rename, copy, garbage collect and update various files:
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html" && \
     gpg --check-trustdb && \
-    LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+    LANG=C TZ=UTC gpg --no-options --keyid-format long --trusted-key "${TAILS_SIGNATURE_KEY_LONG_ID:?}" --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+	   perl -pE 's/\[ultimate\]$/[full]/' | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_gpg_signature_output.html" && \
-    LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
+    LANG=C TZ=UTC gpg --no-options --keyid-format long --trusted-key "${TAILS_SIGNATURE_KEY_LONG_ID:?}" --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
+	   perl -pE 's/\[ultimate\]$/[full]/' | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_gpg_signature_output.html"
+
+Then, build the website and commit this last set of changes:
+
+	./build-website && \
+	git add wiki/src && \
+	git commit -m "Update various website source files for ${VERSION:?}"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
 [[written|contribute/how/documentation/release_notes]] the
@@ -1185,7 +1253,7 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
-Copy the signatures and the Torrent into the website repository:
+Copy the signatures and the Torrents into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \
@@ -1301,8 +1369,15 @@ tracker. For a list of candidates, see:
 * the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
   in Redmine.
 
+Select these issues with the checkboxes in the first column, then
+right click on the list to display the context menu, and finally
+change the _Status_ there. Relationships between tickets will likely
+prevent you from closing all these issues at once, but at least
+you can process them in several smaller batches instead of one by one.
+
 Postpone to next release any remaining open issue for the version
-you've just released.
+you've just released. Use the right-click contextual menu to do so in
+one single batch.
 
 Then, mark the just-released Redmine milestone as done: go to the
 target version page, click *Edit*, and set *Status* to *Closed*.
@@ -1310,9 +1385,10 @@ target version page, click *Edit*, and set *Status* to *Closed*.
 ### Tickets linked from the website
 
 Go through the tickets linked from the documentation and support sections of the
-website and point documentation writers to the tickets that might be resolved in
+website and point our lead technical writer (sajolida) to the tickets that might be resolved in
 this release.
 
+    cd "${MASTER_CHECKOUT:?}" && \
     find wiki/src/{doc,support} -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
@@ -1346,7 +1422,7 @@ Check in the comments of the ticket for the release notes if the
 technical writers have prepared a tweet. Otherwise tweet a simple link
 to the release notes:
 
-    Tails x.y is out: https://tails.boum.org/news/version_x.y
+    Tails x.y is out: https://tails.boum.org/news/version_x.y/
 
 Tor blog
 --------
@@ -1400,11 +1476,14 @@ We announce *major* releases on the Tor blog:
 Amnesia news
 ------------
 
-The release announcement are automatically sent to `amnesia-news@`
-(thanks to the `announce` flag) on an hourly basis, but it will be
-stuck in the moderation
-queue. [Log in](https://www.autistici.org/mailman/admindb/amnesia-news) and
-accept it.
+1. [Subscribe](https://www.autistici.org/mailman/listinfo/amnesia-news/)
+   to `amnesia-news@`. It's the only reliable way to check if the next
+   step has worked (the online web archive is not refreshed immediately).
+
+2. [Log in](https://www.autistici.org/mailman/admindb/amnesia-news)
+   and accept the release announcement, that's been automatically sent
+   to `amnesia-news@` on an hourly basis, and is stuck in the
+   moderation queue.
 
 Prepare for the next development cycle
 ======================================
@@ -1415,11 +1494,13 @@ this, and skip what does not make sense for a RC.
 1. If you just released a new stable release, remove the previous
    stable release from:
    - our rsync server:
-     `ssh rsync.lizard rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
-   - our Bittorrent seed: get the previous release's _Transmission_ ID
+     `ssh rsync.lizard sudo rm -rf /srv/rsync/tails/tails/stable/tails-amd64-${PREVIOUS_VERSION:?}/`
+   - our Bittorrent seed: get the previous release's _Transmission_ IDs
+     (ISO and USB image)
      with `ssh bittorrent.lizard transmission-remote --list` and then
-     delete it with
+     delete them with
      `ssh bittorrent.lizard transmission-remote -t "${PREVIOUS_VERSION_TRANSMISSION_ID:?}" --remove-and-delete`
+	 then re-run `ssh bittorrent.lizard transmission-remote --list` and make sure everything looks good
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. Remove IUKs that are more than 9 months old from
@@ -1436,7 +1517,7 @@ this, and skip what does not make sense for a RC.
    - then actually delete the files:
 
          ssh rsync.lizard /bin/sh -c \
-             \"find /srv/rsync/tails/tails/alpha  \
+             \"sudo find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' -delete \
@@ -1457,23 +1538,23 @@ this, and skip what does not make sense for a RC.
         git fetch && \
         git submodule update && \
         bare_repo=$(mktemp -d)
-        torsocks git clone --bare --reference "${MASTER_CHECKOUT:?}" \
+        git clone --bare --reference "${MASTER_CHECKOUT:?}" \
            gitolite@d53ykjpeekuikgoq.onion:tails \
            "${bare_repo:?}" && \
         PYTHONPATH=lib/python3 ./bin/delete-merged-git-branches \
            --repo "${bare_repo:?}" && \
         rm -rf "${bare_repo:?}"
 
-1. On the `stable` and `devel` branches, remove all old versions in
+1. On the `stable` and `devel` branches, remove all old versions
    that were never released from `wiki/src/upgrade/v1/Tails` and
    `debian/changelog`. Explanation: the
    post-release APT repository steps from the previous stable release
    will usually have had us prepare for an emergency release that was
    never made.
-1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based snapshots#freeze-exceptions-post-release]].
+1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
-1. [[Thaw|APT_repository/time-based snapshots#thaw]], on the devel
+1. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
    branch, the time-based APT repository snapshots that were used
    during the freeze. This should generally be a no-op but if there
    was some hiccup earlier it could be needed.
@@ -1482,15 +1563,10 @@ this, and skip what does not make sense for a RC.
    APT repository documentation. This includes some git operations,
    like creating an appropriate _"dummy changelog entry"_ in the
    `debian/changelog` file.
-1. Make sure there are upgrade-description files for any new versions
-   that were added in the `debian/changelog` file since the last
-   release. Background: From time to time the UDF generation/update
-   step isn't perfect and entries might be missing from
-   `wiki/src/upgrade/v1/Tails/<VERSION>/<ARCH>/<CHANNEL>`.
 1. Verify that the snapshots used in the release branch are ok,
    e.g. they use the correct snapshots, and they were bumped
-   appropriately (they should expire after the major release _after_
-   the one you're preparing). Look carefully at the output of this command:
+   appropriately (they should expire after the next planned major release date).
+   Look carefully at the output of this command:
 
         cd "${RELEASE_CHECKOUT:?}" && \
         git checkout "${RELEASE_BRANCH:?}" && \

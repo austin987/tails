@@ -1,7 +1,139 @@
+tails (3.13.2) unstable; urgency=medium
+
+  * Major changes
+    - Replace all locale-specific fonts and standard X.Org fonts with
+      the Noto fonts collection (Closes: #9956).
+    - Install localization support packages for all tier-1 supported languages,
+      and only those (Closes: #15807). Current tier-1 supported languages are:
+      Arabic, German, English, Spanish, Farsi, French, Italian, Portuguese
+      (Brazil), Russian, Turkish, Simplified Chinese, Hindi, Indonesian.
+    - Disable the TopIcons GNOME Shell extension (Closes: #16608).
+      This extension causes crashes (#11188), does not work on Wayland
+      (#8309, #12213) so long-term, we need to remove it anyway.
+      In order to learn how much our users rely on this extension and
+      on OpenPGP Applet, let's disable this extension for one Tails release.
+      While TopIcons is disabled (by default):
+      · Users can still use OpenPGP Applet via the system tray in the bottom
+        left corner of the desktop.
+      · Users who do need TopIcons for other reasons can enable it again
+        with 1 command line.
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.0.9 (Closes: #16694).
+    - Upgrade to Debian Stretch 9.9 (Closes: #16670).
+    - Upgrade Thunderbird to 60.6.1 (Closes: #16641).
+
+  * Bugfixes
+    - Fix Thunderbird account setup wizard (Closes: #16573).
+    - Display poweroff and reboot buttons even when locked (Closes: #15640).
+    - Disable emergency shutdown during suspend (Closes: #11729).
+    - Provide feedback while starting Onion Circuits (Closes: #16350).
+    - Associate .key files with Seahorse (Closes: #15213).
+      This partially fixes importing OpenPGP keys from GNOME Files.
+    - Don't show spurious notification about "TailsData" while setting
+      up a persistent volume (Closes: #16632).
+
+  * Minor improvements and updates
+    - Add a suspend button to status-menu-helper (Closes: #14556).
+    - status-menu-helper: clean up and refactor.
+    - Drop CSS hacks for the uBlock log window (Closes: #16206).
+    - Polish 04-change-gids-and-uids code style (Closes: #16322).
+    - Create persistence.conf backup in a more robust manner (Closes: #16568).
+    - Make the WhisperBack .desktop file translatable in Transifex
+      (Closes: #6486).
+
+  * Build system
+    - Don't fail the build if Tor Browser supports new locales that we don't ship
+      a spellchecking dictionary for (#15807).
+    - Fix apt-cacher-ng cache shrinking (Closes: #16020).
+    - Remove obsolete usr.bin.onioncircuits AppArmor profile (Closes: #12170).
+      All Tails current branches now install onioncircuits 0.6-0.0tails1,
+      which ships a more current AppArmor profile than the one we
+      have in our own Git tree.
+    - Install Electrum from sid (Closes: #16642).
+    - Avoid new "render" group stealing a GID we have already statically
+      allocated to another group (Closes: #16649).
+
+  * Test suite
+    - Disable tests about notifications in case of MAC spoofing failure:
+      we have a well-known bug here and these tests do nothing but confirm
+      it again and again, which brings no value and has a cost (#10774).
+    - Clarify what WebM scenarios are fragile (#10442).
+    - Avoid zombies by waiting for killed child processes to exit (#14948).
+
+ -- Tails developers <tails@boum.org>  Sun, 05 May 2019 19:32:22 +0000
+
+tails (3.13.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.0.8 (Closes: #16606, MFSA-2019-10).
+    - Upgrade NTFS-3G to 1:2016.2.22AR.1+dfsg-1+deb9u1 (DSA-4413-1).
+
+ -- Tails developers <tails@boum.org>  Fri, 22 Mar 2019 20:54:03 +0000
+
+tails (3.13) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Linux to 4.19.28-1 (Closes: #16390, #16469, #16552).
+    - Upgrade Tor Browser to 8.0.7 (Closes: #16559).
+    - Upgrade Thunderbird to 65.1.0 (Closes: #16422).
+
+  * Security fixes
+    - Upgrade LDB to 2:1.1.27-1+deb9u1 (DSA-4397-1).
+    - Upgrade OpenJPEG to 2.1.2-1.1+deb9u3 (DSA-4405-1).
+    - Upgrade OpenSSL 1.0 to 1.0.2r-1~deb9u1 (DSA-4400-1).
+    - Upgrade OpenSSH to 1:7.4p1-10+deb9u6 (DSA-4387-2).
+
+  * Bugfixes
+    - Upgrade tor to 0.3.5.8-1~d90.stretch+1 (Closes: #16348).
+    - Ensure Additional Software doesn't try to download packages that are
+      in persistent cache (Closes: #15957).
+    - Improve chances of recovering a lost persistence configuration
+      (Closes: #10976).
+    - Tor Launcher: add langpacks to enable localization again
+      (Closes: #16338).
+    - Migrate away from buggy Chinese input method: switch from ibus-pinyin
+      to ibus-libpinyin + ibus-chewing (Closes: #11292).
+    - Fix crash in Whisperback when additional persistent APT repositories
+      are configured (Closes: #16563).
+    - Give visual feedback while starting Whisperback (Closes: #16333).
+
+  * Minor improvements and updates
+    - Add feedback when opening VeraCrypt Mounter (Closes: #16334).
+    - Improve consistency in Additional Software's accessibility
+      (Closes: #16110).
+    - Fix missing accessibility support when opening a browser from a
+      notification (Closes: #16475).
+    - Refresh ublock-origin patch to apply cleanly on top of 1.18.4+dfsg-1
+      (Closes: #16451)
+    - Upgrade intel-microcode to 3.20180807a.2~deb9u1.
+      Fixes CVE-2018-3615, CVE-2018-3620, CVE-2018-3646, CVE-2018-3639,
+      CVE-2018-3640, CVE-2017-5753, CVE-2017-5754.
+
+  * Build system
+    - Lower memory requirements when building Tails by limiting the memory
+      used by mksquashfs to 512M (Closes: #16177).
+    - Remove obsolete check on Thunderbird addons (Closes: #16045).
+    - Update Tails' APT GnuPG key expiration (Closes: #16420).
+    - Optimize Git operations (share resources, fetch only the needed
+      objects).
+    - Clone submodules from the host's local repositories (Closes: #16476).
+    - Drop useless manual initramfs update (Closes: #16452).
+    - Add a sanity check on the size of the initramfs (Closes: #16452).
+
+  * Test suite
+    - Add automated tests for Additional Software GUI (Closes: #14576,
+      #14596).
+    - Add automated tests on the backup persistence configuration
+      (Closes: #16461).
+    - Adjust test for Thunderbird 60.5.1 (Closes: #16555).
+
+ -- Tails developers <tails@boum.org>  Mon, 18 Mar 2019 23:40:50 +0100
+
 tails (3.12.1) unstable; urgency=medium
 
   * Security fixes
-    - Upgrade Tor Browser to 8.0.6 (MFSA-2019-04; Closes: #16437).
+    - Upgrade Tor Browser to 8.0.6 (MFSA-2019-05; Closes: #16437).
     - Upgrade LibreOffice to 1:5.2.7-1+deb9u5 (DSA-4381).
     - Upgrade cURL to 7.52.1-5+deb9u9 (DSA-4386).
     - Upgrade Qt 5 to 5.7.1+dfsg-3+deb9u1 (DSA-4374).

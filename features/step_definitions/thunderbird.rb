@@ -225,8 +225,5 @@ Then /^my Thunderbird inbox is non-empty$/ do
                  .parent.parent
   visible_messages = message_list.children(recursive: false,
                                            roleName: 'table row')
-  # The first element is the column label row, which is not a message,
-  # so let's remove it.
-  visible_messages.shift
   assert(visible_messages.size > 0)
 end
