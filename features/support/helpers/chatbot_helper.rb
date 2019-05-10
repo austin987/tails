@@ -37,6 +37,7 @@ class ChatBot
     @otr_key_file.delete
     begin
       Process.kill("TERM", @pid)
+      Process.wait(@pid)
     rescue
       # noop
     end

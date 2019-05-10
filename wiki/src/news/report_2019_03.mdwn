@@ -1,5 +1,5 @@
 [[!meta  title="Tails report for March, 2019"]]
-[[!meta  date="`date --rfc-2822` eg. Thu, 08 Feb 2018 07:21:15 +0000"]]
+[[!meta  date="Fri, 26 Apr 2019 11:10:06 +0000"]]
 [[!pagetemplate  template="news.tmpl"]]
 
 [[!toc ]]
@@ -7,26 +7,37 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|bugfix|emergency] release).
+* [[Tails 3.13 was released on March 19|news/version_3.13]].
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 3.14 is [[scheduled for May 14|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 3.13:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+- Add support for the Bopomofo input method for Chinese using the
+  *Chewing* library and improve support for the Pinyin input method.
+  ([[!tails_ticket 11292]])
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+- Save a backup of the configuration of the persistent storage every time it is
+  modified. ([[!tails_ticket 16461]])
+
+  This will help us understand and solve why sometimes all the settings of the
+  persistent storage disappear. ([[!tails_ticket 10976]])
+
+- Prevent *Additional Software* from downloading packages that are already
+  saved in the persistent storage. ([[!tails_ticket 15957]])
+
+- Fix the localization of *Tor Launcher*, the application to configure a [[Tor
+  bridge|doc/first_steps/startup_options/bridge_mode]] or a local proxy.
+  ([[!tails_ticket 16338]])
+
+- Fix accessibility when opening *Tor Browser* from a desktop notification.
+  ([[!tails_ticket 16475]])
+
+- Fix *WhisperBack* crashing when additional APT repositories is configured.
+  ([[!tails_ticket 16563]])
 
 Code
 ====
-
-XXX: If you feel like it and developers, foundation team, and RMs don't do it themselves,
-     list important code work that is not covered already by the
-     Release section (for example, the changes being worked on for
-     the next version).
 
 - We agreed on a list of languages that we want to support
   out-of-the-box in Tails and started implementing it. The [[*Additional
@@ -36,12 +47,12 @@ XXX: If you feel like it and developers, foundation team, and RMs don't do it th
   [[!tails_ticket 16095]], [[!tails_ticket 9956]])
 
 - We identified another possible cause for partially applied
-  automatic upgrades ([[!tails_ticket 16603]]).
+  automatic upgrades. ([[!tails_ticket 16603]])
 
-- We coordinated with the Tor Browser team wrt. their upcoming 8.5
+- We coordinated with the Tor Browser team regarding their upcoming 8.5
   major release and its implications for Tails.
 
-- We continued to carry out our plans to deprecate tails-installer from
+- We continued deprecating *Tails Installer* from
   Debian and Ubuntu.
 
 Documentation and website
@@ -52,7 +63,7 @@ Documentation and website
 
 - We documented [[how to run Tails from a USB image in
   `virt-manager`|doc/advanced_topics/virtualization/virt-manager#usb_image]],
-  which is the only virtualization solution that allows you to use a
+  which is the only virtualization solution that allows to use a
   persistent volume in a virtual machine.
 
 User experience
@@ -72,7 +83,7 @@ User experience
     increase again (20% more since September 2019).
   - Both features didn't change much the tech-savviness of our user
     base.
-  - The people who use *VeraCrypt* in Tails almost doubled.
+  - The number of people who use *VeraCrypt* in Tails almost doubled.
 
   Results are good but we expected more. We need to improve how we let
   the world know about new features.
@@ -98,11 +109,9 @@ User experience
 Hot topics on our help desk
 ===========================
 
+1. Partially applied incremental upgrades cause all kinds of trouble ([[!tails_ticket 14754]])
 
-1. there were several users reporting [[!tails_ticket 14754]]
-
-1. and there are still some people affected by [[!tails_ticket 10976]]
-
+1. persistence.conf lost, recoverable by reconfiguring ([[!tails_ticket 10976]])
 
 Infrastructure
 ==============
@@ -112,26 +121,21 @@ Infrastructure
 - We interviewed 2 candidates for our open sysadmin position.
 
 - We made good progress on switching to better maintained Puppet
-  modules ([[!tails_ticket 15510]]).
+  modules. ([[!tails_ticket 15510]])
 
 - We worked on the software configuration of the prototype node for
-  our next-generation CI hardware ([[!tails_ticket 15501]]).
+  our next-generation CI hardware. ([[!tails_ticket 15501]])
 
-- We fixed our LimeSurvey security updates monitoring system
-  ([[!tails_ticket 15466]]).
+- We fixed our LimeSurvey security updates monitoring system.
+  ([[!tails_ticket 15466]])
+
+- We stopped having public monthly meetings in favor of internal stand-up
+  meetings.
 
 Funding
 =======
 
-XXX: The fundraising team should look at the fundraising Git.
-
-       git log --patch --since='1 December' --until='1 January' origin/master
-
-XXX: The fundraising and accounting teams should look at the archives of <tails-fundraising@boum.org> and <tails-accounting@boum.org>.
-
 - We documented how to [[donate in cash|donate]].
-
-- We identified two grants/programs to apply to this year.
 
 - We explained on our donation page [[why we don't accept donations in
   more cryptocurrencies|donate#other-cryptos]].
@@ -142,27 +146,19 @@ XXX: The fundraising and accounting teams should look at the archives of <tails-
 Outreach
 ========
 
-- We stopped having public monthly meetings in favor of internal standup
-  meetings.
-
 Past events
 -----------
 
-- Two Tails developers attended a Debian Bug Squashing Party
-  in Paris.
-
-Upcoming events
----------------
+- 2 of us attended a [Debian Bug Squashing
+  Party](https://wiki.debian.org/BSP/2019/03/fr/Paris) in Paris on March
+  30&ndash;31.
 
 On-going discussions
 ====================
 
-XXX: Link to the thread on <https://lists.autistici.org/list/tails-XXX.html>.
-
-We started a [discussion about possible security implications that would
-arise from shipping the code of the Verification Extension in our
-website
-instead](http://lists.autistici.org/message/20190320.132313.7c24cc99.en.html).
+- We started a [discussion about possible security implications that
+  would arise from shipping the code of the Verification Extension in
+  our website instead](http://lists.autistici.org/message/20190320.132313.7c24cc99.en.html).
 
 Translations
 ============
