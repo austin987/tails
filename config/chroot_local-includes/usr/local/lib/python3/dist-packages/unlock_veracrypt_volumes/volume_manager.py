@@ -161,7 +161,7 @@ class VolumeManager(object):
                               body=_("The file %s does not seem to be a VeraCrypt container.") % path)
         else:
             self.show_warning(title=_("Failed to add container"),
-                              body=_("Could not add file container %s: Timeout while waiting for loop setup."
+                              body=_("Could not add file container %s: Timeout while waiting for loop setup.\n"
                                      "Please try using the <i>Disks</i> application instead.") % path)
 
     def _wait_for_loop_setup(self, path: str) -> Union[Volume, None]:

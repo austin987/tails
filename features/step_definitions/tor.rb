@@ -291,7 +291,8 @@ When /^I monitor the network connections of (.*)$/ do |application|
             "done > #{@process_monitor_log}")
 end
 
-Then /^I see that (.+) is properly stream isolated$/ do |application|
+Then /^I see that (.+) is properly stream isolated(?: after (\d+) seconds)?$/ do |application, delay|
+  sleep delay.to_i if delay
   info = stream_isolation_info(application)
   expected_ports = [info[:socksport]]
   expected_ports << 9051 if info[:controller]
@@ -309,7 +310,8 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
 end
 
 And /^I re-run tails-security-check$/ do
-  $vm.execute_successfully("tails-security-check", :user => LIVE_USER)
+  $vm.execute_successfully("systemctl --user restart tails-security-check.service",
+                           :user => LIVE_USER)
 end
 
 And /^I re-run htpdate$/ do
