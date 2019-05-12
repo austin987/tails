@@ -1,7 +1,7 @@
 @product @check_tor_leaks
 Feature: Tor stream isolation is effective
   As a Tails user
-  I want my Torified sessions to be sensibly isolated from each other to prevent identity correlation
+  I want my Tor streams to be sensibly isolated from each other to prevent identity correlation
 
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
@@ -9,7 +9,7 @@ Feature: Tor stream isolation is effective
   Scenario: tails-security-check is using the Tails-specific SocksPort
     When I monitor the network connections of tails-security-check
     And I re-run tails-security-check
-    Then I see that tails-security-check is properly stream isolated
+    Then I see that tails-security-check is properly stream isolated after 10 seconds
 
   Scenario: htpdate is using the Tails-specific SocksPort
     When I monitor the network connections of htpdate

@@ -2,7 +2,72 @@ tails (3.14) UNRELEASED; urgency=medium
 
   * Dummy entry for next release.
 
- -- intrigeri <intrigeri@debian.org>  Sat, 23 Mar 2019 11:32:54 +0000
+ -- anonym <anonym@riseup.net>  Mon, 06 May 2019 17:14:46 +0200
+
+tails (3.13.2) unstable; urgency=medium
+
+  * Major changes
+    - Replace all locale-specific fonts and standard X.Org fonts with
+      the Noto fonts collection (Closes: #9956).
+    - Install localization support packages for all tier-1 supported languages,
+      and only those (Closes: #15807). Current tier-1 supported languages are:
+      Arabic, German, English, Spanish, Farsi, French, Italian, Portuguese
+      (Brazil), Russian, Turkish, Simplified Chinese, Hindi, Indonesian.
+    - Disable the TopIcons GNOME Shell extension (Closes: #16608).
+      This extension causes crashes (#11188), does not work on Wayland
+      (#8309, #12213) so long-term, we need to remove it anyway.
+      In order to learn how much our users rely on this extension and
+      on OpenPGP Applet, let's disable this extension for one Tails release.
+      While TopIcons is disabled (by default):
+      · Users can still use OpenPGP Applet via the system tray in the bottom
+        left corner of the desktop.
+      · Users who do need TopIcons for other reasons can enable it again
+        with 1 command line.
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.0.9 (Closes: #16694).
+    - Upgrade to Debian Stretch 9.9 (Closes: #16670).
+    - Upgrade Thunderbird to 60.6.1 (Closes: #16641).
+
+  * Bugfixes
+    - Fix Thunderbird account setup wizard (Closes: #16573).
+    - Display poweroff and reboot buttons even when locked (Closes: #15640).
+    - Disable emergency shutdown during suspend (Closes: #11729).
+    - Provide feedback while starting Onion Circuits (Closes: #16350).
+    - Associate .key files with Seahorse (Closes: #15213).
+      This partially fixes importing OpenPGP keys from GNOME Files.
+    - Don't show spurious notification about "TailsData" while setting
+      up a persistent volume (Closes: #16632).
+
+  * Minor improvements and updates
+    - Add a suspend button to status-menu-helper (Closes: #14556).
+    - status-menu-helper: clean up and refactor.
+    - Drop CSS hacks for the uBlock log window (Closes: #16206).
+    - Polish 04-change-gids-and-uids code style (Closes: #16322).
+    - Create persistence.conf backup in a more robust manner (Closes: #16568).
+    - Make the WhisperBack .desktop file translatable in Transifex
+      (Closes: #6486).
+
+  * Build system
+    - Don't fail the build if Tor Browser supports new locales that we don't ship
+      a spellchecking dictionary for (#15807).
+    - Fix apt-cacher-ng cache shrinking (Closes: #16020).
+    - Remove obsolete usr.bin.onioncircuits AppArmor profile (Closes: #12170).
+      All Tails current branches now install onioncircuits 0.6-0.0tails1,
+      which ships a more current AppArmor profile than the one we
+      have in our own Git tree.
+    - Install Electrum from sid (Closes: #16642).
+    - Avoid new "render" group stealing a GID we have already statically
+      allocated to another group (Closes: #16649).
+
+  * Test suite
+    - Disable tests about notifications in case of MAC spoofing failure:
+      we have a well-known bug here and these tests do nothing but confirm
+      it again and again, which brings no value and has a cost (#10774).
+    - Clarify what WebM scenarios are fragile (#10442).
+    - Avoid zombies by waiting for killed child processes to exit (#14948).
+
+ -- Tails developers <tails@boum.org>  Sun, 05 May 2019 19:32:22 +0000
 
 tails (3.13.1) unstable; urgency=medium
 
