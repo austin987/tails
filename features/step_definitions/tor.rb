@@ -262,11 +262,6 @@ def stream_isolation_info(application)
       :socksport => 9150,
       :controller => true,
     }
-  when "Gobby"
-    {
-      :grep_monitor_expr => 'users:(("gobby-0.5"',
-      :socksport => 9050
-    }
   when "SSH"
     {
       :grep_monitor_expr => 'users:(("\(nc\|ssh\)"',
@@ -323,25 +318,6 @@ end
 
 And /^I re-run tails-upgrade-frontend-wrapper$/ do
   $vm.execute_successfully("tails-upgrade-frontend-wrapper", :user => LIVE_USER)
-end
-
-When /^I connect Gobby to "([^"]+)"$/ do |host|
-  gobby = Dogtail::Application.new('gobby-0.5')
-  gobby.child('Welcome to Gobby', roleName: 'label')
-  gobby.button('Close').click
-  # This indicates that Gobby has finished initializing itself
-  # (generating DH parameters, etc.) -- before, the UI is not responsive
-  # and our CTRL-t is lost.
-  gobby.child('Failed to share documents', roleName: 'label')
-  gobby.menu('File').click
-  gobby.menuItem('Connect to Server...').click
-  @screen.type("t", Sikuli::KeyModifier.CTRL)
-  connect_dialog = gobby.dialog('Connect to Server')
-  connect_dialog.child('', roleName: 'text').typeText(host)
-  connect_dialog.button('Connect').click
-  # This looks for the live user's presence entry in the chat, which
-  # will only be shown if the connection succeeded.
-  try_for(60) { gobby.child(LIVE_USER, roleName: 'table cell'); true }
 end
 
 When /^the Tor Launcher autostarts$/ do
