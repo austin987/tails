@@ -32,27 +32,29 @@ area:
    virtualization too.
  * As we add more automated tests, and re-enable tests previously
    flagged as fragile, a full test run takes longer and longer.
-   We're now up to 206 minutes / run (without fragile tests).
-   We can't make it faster by
-   adding RAM anymore nor by adding CPUs to ISO testers. But faster
-   CPU cores would fix that. The same test suite only takes:
-   - 160 minutes on a replica of our Jenkins setup, also using nested
-     virtualization, with a poor Internet connection but a faster CPU
-   - 105 minutes on bare metal, with a poor Internet connection but a fast (Intel E-2134) CPU;
-     giving the system under test more vCPUs saves 2-3 more minutes
- * Building our website takes a long while (12 minutes on our ISO
-   builders i.e. 20% of the entire ISO build time), which makes ISO
-   builds take longer than they could. This will get worse as new
+   We're now up to 230-255 minutes per run (depending on how many
+   concurrent jobs are running) without fragile tests.
+   We can't make it faster by adding RAM anymore nor by adding CPUs to ISO testers.
+   But faster CPU cores would fix that. With a fast (Intel E-2134) CPU
+   and a poor Internet connection, the same test suite (without fragile tests)
+   only takes:
+    - 138 minutes for 1 concurrent test suite run in a VM,
+      i.e. using nested virtualization
+    - 150-153 minutes for 2 concurrent test suite runs in VMs
+ * Building our website takes a long while (11-15 minutes on our ISO
+   builders on lizard, i.e. 20% of the entire ISO build time, which is
+   54-70 minutes on lizard depending on how many concurrent jobs are running),
+   which makes ISO builds take longer than they could. This will get worse as new
    languages are added to our website. This is a single-threaded task,
    so adding more CPU cores or RAM would not help: only faster CPU
-   cores would fix that. For example, the ISO build only takes:
-   - 38 minutes (including 6-7 minutes for building the website) on
-     a replica of our Jenkins setup, also using nested virtualization,
-     with a poor Internet connection but faster CPU cores
-   - 26 minutes (including 5 minutes for building the website) on bare metal,
-     with a poor Internet connection but a fast (Intel E-2134) CPU;
-     same in a VM on that machine, i.e. using nested virtualization
-     (only 1 concurrent build).
+   cores would fix that. For example, with a fast (Intel E-2134) CPU
+   and a poor Internet connection, the ISO build only takes:
+    - 25 minutes (including 5 minutes for building the website) on bare metal
+    - 25 minutes for 1 concurrent build in a VM, i.e. using nested virtualization
+    - 33 minutes (including ~5 minutes for building the website)
+      for 2 concurrent builds in VMs, in the worst case situation (builds
+      started exactly at the same time ⇒ they both need all their vCPUs
+      at the same time)
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods:
 
@@ -186,24 +188,15 @@ Pros:
 
  * Potentially scalable: if there's room left we can add more nodes in
    the future.
- * Probably as fast as server-grade hardware.
+ * As fast, or actually even faster, as server-grade hardware.
+ * We have one such node to play with and benchmark results already.
 
 Cons:
 
  * Lots of initial research and development: casing, cooling, hosting,
    power over Ethernet, network boot, remote administration
- * High initial money investment (given the research and development
-   costs we can't really try this option, either we go for it or we
-   don't).
+ * High initial money investment
  * Hosting this is a hard sell for collocations.
- * We need to buy a node in order to measure how it would perform
-   (as opposed to server-grade hardware that can be rented).
-   OTOH:
-   - We already have data about the Intel NUC NUC6i7KYK so if we
-     pick a similar enough CPU we can reuse that.
-   - If we buy one such machine to try this out and decide not to go
-     for this option, likely this computer can be put to good use
-     by a Tails developer or sysadmin.
  * On-going cost for hosting this cluster.
 
 ### Availability
@@ -244,15 +237,35 @@ Cons:
 
 ### Benchmarking results
 
+Summary:
+
 - Twice faster than lizard with 1 Jenkins executor on the node, that's
   able to run one build or test job at a time, without nested
-  virtualization. For details, see above on this page: look for
-  "E-2134".
+  virtualization.
 
-- Left to benchmark:
-  - Higher density: run 2 Jenkins worker VMs on this node (neither our
-    build system nor test suite implementation allow running 2 jobs at
-    a time on the same system) and make them busy at the same time.
+- With 2 Jenkins executors on the node, each in its own VM that's
+  able to run one build or test job at a time, with nested virtualization:
+  - light load, i.e. only one concurrent build/test: each build + test takes
+    43% less time than on lizard
+  - heavy load, i.e. two concurrent builds/tests: each build + test takes
+    44% less time than on lizard
+
+For detailed numbers, see above on this page: look for "E-2134".
+
+So if we had, say, 4 such boxes in a case, each with 2 Jenkins
+workers, in 24h they would build, reproduce and test ~55 branches.
+While during the same period, the 9 VMs on lizard build, reproduce
+and test ~40 branches. Even adding only 2 such boxes would
+increase the maximum throughput of our CI by 69% and immensely lower
+latency during heavy load times.
+
+This is assuming perfect load distribution, which requires VMs that
+can run both build and test jobs. It works fine in local limited
+testing but this is not what we have set up on lizard at the moment:
+there's a risk that a failed test job leaves the system in a bad shape
+and breaks the following build job as we don't reboot before build
+jobs. We might need to either make test jobs more robust on failure,
+or to start rebooting VMs before build jobs as well.
 
 ## Run builds and/or tests in the cloud
 
@@ -267,7 +280,6 @@ EC2 does not support running KVM inside their VMs yet. Both Azure and
 Google Cloud support it. OpenStack supports it too as long as the
 cloud is run on KVM (e.g.
 [OVH Public Cloud](https://www.openstack.org/marketplace/public-clouds/ovh-group/ovh-public-cloud/),
-and maybe later
 [OSU Open Source Lab](https://osuosl.org/services/hosting/details/)).
 ProfitBricks would likely work too as their cloud is based on KVM.
 
