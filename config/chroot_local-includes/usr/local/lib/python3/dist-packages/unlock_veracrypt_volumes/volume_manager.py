@@ -37,7 +37,7 @@ class VolumeManager(object):
 
         self.window = self.builder.get_object("window")  # type: Gtk.ApplicationWindow
         self.window.set_application(application)
-        self.window.set_title("Unlock VeraCrypt Volumes")
+        self.window.set_title(_("Unlock VeraCrypt Volumes"))
 
         self.container_list = ContainerList()
         self.device_list = DeviceList()
