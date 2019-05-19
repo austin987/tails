@@ -53,20 +53,19 @@ GIT_BASE_BRANCH=$(base_branch) \
 
 if [ "${TAILS_MERGE_BASE_BRANCH:-}" = 1 ] && \
        ! git_on_a_tag && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
-    GIT_BASE_BRANCH_COMMIT=$(git_base_branch_head)
-    [ -n "${GIT_BASE_BRANCH_COMMIT}" ] \
-        || fatal "Base branch's top commit could not be guessed."
+    [ -n "${BASE_BRANCH_GIT_COMMIT}" ] \
+        || fatal "Base branch's top commit is not set."
 
-    echo "Merging base branch origin/${GIT_BASE_BRANCH}"
-    echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
+    echo "Merging base branch ${GIT_BASE_BRANCH}"
+    echo "(at commit ${BASE_BRANCH_GIT_COMMIT})..."
     faketime -f "${SOURCE_DATE_FAKETIME}" \
-        git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
+        git merge --no-edit "${BASE_BRANCH_GIT_COMMIT}" \
 	    || fatal "Failed to merge base branch."
     git submodule update --init
 
     # Adjust BUILD_BASENAME to embed the base branch name and its top commit
     CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
-    GIT_BASE_BRANCH_SHORT_ID=$(git_base_branch_head --short)
+    GIT_BASE_BRANCH_SHORT_ID=$(git rev-parse --verify --short "${BASE_BRANCH_GIT_COMMIT}")
     [ -n "${GIT_BASE_BRANCH_SHORT_ID}" ] \
         || fatal "Base branch's top commit short ID could not be guessed."
     BUILD_BASENAME="${BUILD_BASENAME}+${CLEAN_GIT_BASE_BRANCH}"
