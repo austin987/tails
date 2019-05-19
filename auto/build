@@ -11,6 +11,14 @@ set -x
 
 umask 022
 
+### Clone all output, from this point on, to the log file
+
+BUILD_LOG="${BUILD_BASENAME}.buildlog"
+exec >  >(tee -a "$BUILD_LOG")
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+exec 2> >(tee -a "$BUILD_LOG" >&2)
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+
 ### functions
 
 syslinux_utils_upstream_version () {
@@ -138,14 +146,7 @@ BUILD_ISO_FILENAME="${BUILD_BASENAME}.iso"
 BUILD_MANIFEST="${BUILD_BASENAME}.build-manifest"
 BUILD_APT_SOURCES="${BUILD_BASENAME}.apt-sources"
 BUILD_PACKAGES="${BUILD_BASENAME}.packages"
-BUILD_LOG="${BUILD_BASENAME}.buildlog"
 BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
-
-# Clone all output, from this point on, to the log file
-exec >  >(tee -a "$BUILD_LOG")
-trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
-exec 2> >(tee -a "$BUILD_LOG" >&2)
-trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 
 (
    echo "Mirrors:"
