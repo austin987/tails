@@ -53,8 +53,8 @@ if [ "${TAILS_MERGE_BASE_BRANCH:-}" = 1 ] && \
     [ -n "${BASE_BRANCH_GIT_COMMIT}" ] \
         || fatal "Base branch's top commit is not set."
 
-    echo "Merging base branch ${GIT_BASE_BRANCH}"
-    echo "(at commit ${BASE_BRANCH_GIT_COMMIT})..."
+    echo "I: Merging base branch ${GIT_BASE_BRANCH}" \
+         "(at commit ${BASE_BRANCH_GIT_COMMIT})..."
     faketime -f "${SOURCE_DATE_FAKETIME}" \
         git merge --no-edit "${BASE_BRANCH_GIT_COMMIT}" \
 	    || fatal "Failed to merge base branch."
@@ -95,7 +95,7 @@ $RUN_LB_CONFIG --distribution stretch ${@}
 
 # set up everything for time-based snapshots:
 if [ -n "${APT_SNAPSHOTS_SERIALS:-}" ]; then
-    echo "Fixing 'latest' APT snapshots serials to: '${APT_SNAPSHOTS_SERIALS}'."
+    echo "I: Fixing 'latest' APT snapshots serials to: '${APT_SNAPSHOTS_SERIALS}'."
     apt-snapshots-serials prepare-build "${APT_SNAPSHOTS_SERIALS}"
 else
     apt-snapshots-serials prepare-build
