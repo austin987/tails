@@ -11,7 +11,7 @@ from unlock_veracrypt_volumes import _
 from unlock_veracrypt_volumes.volume_list import ContainerList, DeviceList
 from unlock_veracrypt_volumes.volume import Volume
 from unlock_veracrypt_volumes.exceptions import UdisksObjectNotFoundError, VolumeNotFoundError
-from unlock_veracrypt_volumes.config import APP_NAME, MAIN_UI_FILE
+from unlock_veracrypt_volumes.config import MAIN_UI_FILE, TRANSLATION_DOMAIN
 
 
 WAIT_FOR_LOOP_SETUP_TIMEOUT = 1
@@ -32,12 +32,12 @@ class VolumeManager(object):
         self.mount_op_lock = Lock()
 
         self.builder = Gtk.Builder.new_from_file(MAIN_UI_FILE)
-        self.builder.set_translation_domain(APP_NAME)
+        self.builder.set_translation_domain(TRANSLATION_DOMAIN)
         self.builder.connect_signals(self)
 
         self.window = self.builder.get_object("window")  # type: Gtk.ApplicationWindow
         self.window.set_application(application)
-        self.window.set_title("Unlock VeraCrypt Volumes")
+        self.window.set_title(_("Unlock VeraCrypt Volumes"))
 
         self.container_list = ContainerList()
         self.device_list = DeviceList()
