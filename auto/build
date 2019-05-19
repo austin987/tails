@@ -100,13 +100,9 @@ DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "$DEBOOTSTRAP_GNUPG_HOMEDIR" \
     --no-tty \
     --import config/chroot_sources/tails.chroot.gpg
-if [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg" ]; then
-    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
-elif [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx" ]; then
-    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx"
-else
-   fatal "No debootstrap GnuPG keyring was created."
-fi
+DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx"
+[ -e "$DEBOOTSTRAP_GNUPG_KEYRING" ] \
+   || fatal "No debootstrap GnuPG keyring was created."
 DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_KEYRING"
 
 export DEBOOTSTRAP_OPTIONS
