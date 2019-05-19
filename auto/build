@@ -21,14 +21,6 @@ trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 
 ### functions
 
-syslinux_utils_upstream_version () {
-   dpkg-query -W -f='${Version}\n' syslinux-utils | \
-       # drop epoch
-       sed -e 's,.*:,,' | \
-       # drop +dfsg and everything that follows
-       sed -e 's,\+dfsg.*,,'
-}
-
 print_iso_size () {
    local isofile="$1"
    [ -f "$isofile" ] || return 23
@@ -128,15 +120,6 @@ export MKSQUASHFS_OPTIONS
 case "$LB_BINARY_IMAGES" in
    iso)
       which isohybrid >/dev/null || fatal 'Cannot find isohybrid in $PATH'
-      installed_syslinux_utils_upstream_version="$(syslinux_utils_upstream_version)"
-      if dpkg --compare-versions \
-	   "$installed_syslinux_utils_upstream_version" \
-	   'lt' \
-	   "$REQUIRED_SYSLINUX_UTILS_UPSTREAM_VERSION" ; then
-	  fatal \
-	      "syslinux-utils '${installed_syslinux_utils_upstream_version}' is installed, " \
-	      "while we need at least '${REQUIRED_SYSLINUX_UTILS_UPSTREAM_VERSION}'."
-      fi
       ;;
    *)
       fatal "Image type ${LB_BINARY_IMAGES} is not supported."
