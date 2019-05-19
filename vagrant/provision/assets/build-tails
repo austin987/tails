@@ -88,9 +88,11 @@ cd "${TAILS_GIT_DIR}"
 # they were on our own "origin" remote, (i.e. under the origin/$REF
 # name), even if it's untrue (our own "origin" is amnesia.git and has
 # only one local ref, which is the branch we work on and that it has
-# checked out as a local tracking branch). We need this for the base
-# branch merge we do (if the 'mergebasebranch'/TAILS_MERGE_BASE_BRANCH
-# option is set) later in auto/build.
+# checked out as a local tracking branch). This allows
+# git_base_branch_head(), that's used by Rakefile to set
+# $BASE_BRANCH_GIT_COMMIT, to do its job: without this, it would not
+# have access to the state of the base branch because it would not
+# have any ref for it.
 git config remote.origin.fetch +refs/remotes/origin/*:refs/remotes/origin/*
 
 # Ensure we have the same Git state as on the host
