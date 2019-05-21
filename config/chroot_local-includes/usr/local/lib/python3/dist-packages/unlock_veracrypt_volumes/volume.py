@@ -4,7 +4,7 @@ from typing import Union
 from gi.repository import Gtk, GLib, Gio, UDisks
 
 from unlock_veracrypt_volumes import _
-from unlock_veracrypt_volumes.config import VOLUME_UI_FILE, APP_NAME
+from unlock_veracrypt_volumes.config import TRANSLATION_DOMAIN, VOLUME_UI_FILE
 from unlock_veracrypt_volumes.exceptions import UdisksObjectNotFoundError, AlreadyUnlockedError
 
 logger = getLogger(__name__)
@@ -31,7 +31,7 @@ class Volume(object):
         self.dialog_is_showing = False
 
         self.builder = Gtk.Builder.new_from_file(VOLUME_UI_FILE)
-        self.builder.set_translation_domain(APP_NAME)
+        self.builder.set_translation_domain(TRANSLATION_DOMAIN)
         self.builder.connect_signals(self)
         self.list_box_row = self.builder.get_object("volume_row")       # type: Gtk.ListBoxRow
         self.box = self.builder.get_object("volume_box")                # type: Gtk.Box
