@@ -1,3 +1,50 @@
+tails (3.14) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Linux to 4.19.0-5 from sid (Closes: #16708).
+    - Enable all available mitigations for the Microarchitectural Data
+      Sampling (MDS) attacks and disable SMT on vulnerable CPUs
+      (Closes: #16720).
+    - Upgrade Tor Browser to 8.5 (Closes: #16337, #16706).
+
+  * Bugfixes
+    - Install Electrum 3.2.3-1 from our custom APT repository (Closes: #16708).
+      The version in sid now displays a warning and exits, while 3.2.3-1 is
+      still usable, in the rare cases when it manages to connect to the
+      network, despite being affected by problematic phishing attacks which
+      will only be solved once the package in Debian is updated to a newer
+      upstream version.
+
+  * Build system
+    - Bump APT snapshot of the 'debian' archive to 2019051601, needed for
+      the MDS mitigations.
+    - Don't install the firmware-linux and firmware-linux-nonfree
+      metapackages, as packages they pulled are already listed explicitly
+      and one might run into version-related issues (Closes: #16708).
+
+  * Minor improvements and updates
+    - Remove some packages from the Tails image as their use is not
+      widespread while consuming space for everyone. They can still be
+      installed and upgraded through Additional Software (Closes: #15291).
+      This includes: monkeysphere and msva-perl, gobby, hopenpgp-tools,
+      keyringer, libgfshare-bin, monkeysign, paperkey, pitivi,
+      pdf-redact-tools, pwgen, traverso, and ssss.
+    - Fix missing translations in the Greeter (Closes: #13438).
+    - Fix missing newline in unlock-veracrypt-volumes (Closes: #16696).
+    - Port fillram to Python 3 (Closes: #15845).
+    - Enable localization for new locales introduced in Tor Browser 8.5
+      (Closes: #16637).
+    - Re-introduce TopIcons GNOME Shell extension (Closes: #16709).
+    - Improve internationalization of the Unlock VeraCrypt Volumes
+      component (Closes: #16602).
+
+  * Test suite
+     - Make tails-security-check's SOCKS port test work when there's a live
+       security advisory (Closes: #16701).
+     - Make terminology more consistent.
+
+ -- Tails developers <tails@boum.org>  Mon, 20 May 2019 18:52:04 +0200
+
 tails (3.13.2) unstable; urgency=medium
 
   * Major changes
