@@ -7,6 +7,7 @@ set -o pipefail
 BASE_URL=http://time-based.snapshots.deb.tails.boum.org/
 CONFIG=config/APT_snapshots.d
 SERIAL_ONLY=
+APT_SNAPSHOTS_SERIALS=
 FREEZE_EXCEPTIONS=debian-security
 
 get_latest_serial() {
@@ -29,11 +30,27 @@ else
 		FREEZE_EXCEPTIONS=
 		shift
 	fi
-	if [ $# -eq 0 ]; then
-		ORIGINS="$(cd ${CONFIG}; ls -d *)"
-	else
-		ORIGINS="${@}"
-	fi
+	case "$action" in
+		prepare-build)
+			if [ $# -eq 1 ]; then
+				APT_SNAPSHOTS_SERIALS="${1}"
+				shift
+			fi
+		;;
+		cat-json)
+			if [ $# -eq 1 ]; then
+				CONFIG="${1}"
+				shift
+			fi
+		;;
+		cat|get-latest|freeze|thaw)
+			if [ $# -eq 0 ]; then
+				ORIGINS="$(cd ${CONFIG}; ls -d *)"
+			else
+				ORIGINS="${@}"
+			fi
+		;;
+	esac
 fi
 
 case "$action" in
@@ -42,6 +59,9 @@ case "$action" in
 			[ -z "${SERIAL_ONLY}" ] && echo -n "$origin: "
 			cat "$CONFIG/$origin/serial"
 		done
+	;;
+	cat-json)
+		$(dirname "$0")/apt-snapshots-serials-cat-json "$CONFIG"
 	;;
 	get-latest)
 		for origin in $ORIGINS; do
@@ -77,7 +97,13 @@ case "$action" in
 		rm -rf tmp/APT_snapshots.d
 		mkdir -p tmp
 		cp -r config/APT_snapshots.d tmp/
-		$0 get-latest > tmp/cached_APT_snapshots_serials
+		if [ "${APT_SNAPSHOTS_SERIALS}" ]; then
+			$(dirname "$0")/apt-snapshots-serials-load-json \
+				"$APT_SNAPSHOTS_SERIALS" \
+				> tmp/cached_APT_snapshots_serials
+		else
+			$0 get-latest > tmp/cached_APT_snapshots_serials
+		fi
 		for origin_dir in tmp/APT_snapshots.d/*; do
 			origin=$(basename $origin_dir)
 			if grep -qs '^latest$' $origin_dir/serial; then
@@ -88,7 +114,7 @@ case "$action" in
 		done
 	;;
 	*)
-		printf "unknown action ($action), use either 'cat', 'get-latest', 'prepare-build', 'freeze' or 'thaw'\n" >&2
+		printf "unknown action ($action), use either 'cat', 'cat-json', 'get-latest', 'prepare-build', 'freeze' or 'thaw'\n" >&2
 		exit 1
 	;;
 esac

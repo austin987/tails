@@ -65,20 +65,18 @@ Software installation at startup
 
 The systemd user unit
 [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-additional-software-install.service]]
-is `WantedBy=desktop.target`. It starts the system unit
+is triggered by `desktop.target`. It starts the system unit
 [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-additional-software-install.service]]
 with sudo (see
 [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_tails-additional-software]]).
 
-`tails-additional-software-install.service` starts if the configuration file
-`/live/persistence/TailsData_unlocked/live-additional-software.conf` is not
-empty. It is a oneshot service that executes
+`tails-additional-software-install.service` starts if its configuration exists and executes
 [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]
  `install` then creates `/run/live-additional-software/installed`.
 
 `tails-additional-software install` reads `live-additional-software.conf` which
 contains a package name per line and install these packages with `apt-get`
-(using options prevent questions being asked to the user, see
+(using options that prevent questions being asked to the user, see
 `install_additional_packages` and `_launch_apt_get` in
 [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tails-additional-software]]).
 
@@ -153,7 +151,7 @@ installed or removed.
 
 ### When a package is installed
 
-<img src="https://labs.riseup.net/code/attachments/download/1925/asp-flow-installed.svg" height="auto" />
+<img src="https://redmine.tails.boum.org/code/attachments/download/1925/asp-flow-installed.svg" height="auto" />
 
 #### With persistent storage unlocked:
 
@@ -165,7 +163,7 @@ When *Add To Persistent Storage* is clicked,
 `AdditionalSoftware` preset. The new additional packages are then added
 atomically to the `live-additional-software.conf` configuration file
 (this logic is handled by
-<https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware/config.py>)
+<https://git-tails.immerda.ch/pythonlib/plain/tailslib/additionalsoftware.py>)
 
 #### Without persistent storage
 
@@ -208,7 +206,7 @@ too much.
 
 ### When a package is removed
 
-<img src="https://labs.riseup.net/code/attachments/download/1926/asp-flow-removed.svg" height="auto" />
+<img src="https://redmine.tails.boum.org/code/attachments/download/1926/asp-flow-removed.svg" height="auto" />
 
 <img src="https://git.tails.boum.org/ux/plain/additional software/png/notification - remove.png"/>
 

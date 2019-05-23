@@ -17,6 +17,7 @@ from gi.repository import Gtk, GLib
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 
+from tailslib.adminpassword import is_password_set
 
 _ = gettext.gettext
 gettext.textdomain("tails")
@@ -195,11 +196,6 @@ def get_lock():
     # collected when the function exits
     get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     get_lock._lock_socket.bind('\0' + 'tails-screen-locker')
-
-
-def is_password_set():
-    output = subprocess.check_output(["passwd", "--status"])
-    return output.split()[1] == b"P"
 
 
 def main():

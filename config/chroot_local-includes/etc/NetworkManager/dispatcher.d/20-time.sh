@@ -233,11 +233,6 @@ fi
 
 wait_for_working_tor
 
-# Disable "info" logging workaround from 10-tor.sh
-if [ "$(tails_netconf)" = "obstacle" ]; then
-	tor_control_setconf "Log=\"notice file ${TOR_LOG}\""
-fi
-
 touch $TORDATE_DONE_FILE
 
 log "Restarting htpdate"

@@ -44,13 +44,6 @@ boot_device() {
 
 # First clean the screen, then brutally shutdown the machine.
 do_stop() {
-	# Really make sure that the CD is ejected
-	# FIXME: this might not be necessary with future kernel/udev
-	if [ "${DEV_TYPE}" = "cd" ]; then
-		/usr/bin/eject -i off "${BOOT_DEVICE}" || true
-		/usr/bin/eject -m "${BOOT_DEVICE}" || true
-	fi
-
 	# Kill everything run by amnesia or Debian-gdm, otherwise emergency
 	# shutdown fails for some reason. Incidentally, this also allows
 	# the test suite to look for a known message ("Happy dumping!")

@@ -42,7 +42,9 @@ GIT_DIR = ENV['PWD']
 KEEP_SNAPSHOTS = !ENV['KEEP_SNAPSHOTS'].nil?
 LIVE_USER = cmd_helper(". config/chroot_local-includes/etc/live/config.d/username.conf; echo ${LIVE_USERNAME}").chomp
 TAILS_ISO = ENV['TAILS_ISO']
+TAILS_IMG = TAILS_ISO.sub(/\.iso/, '.img')
 OLD_TAILS_ISO = ENV['OLD_TAILS_ISO'] || TAILS_ISO
+OLD_TAILS_IMG = OLD_TAILS_ISO.sub(/\.iso/, '.img')
 TIME_AT_START = Time.now
 loop do
   ARTIFACTS_DIR = $config['TMPDIR'] + "/run-" +

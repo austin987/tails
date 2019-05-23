@@ -1,17 +1,13 @@
-[[!meta title="Upstream our changes to Tor Browser's AppArmor policy"]]
+[[!meta title="Update Tor Browser's AppArmor policy and upstream our changes"]]
 
 # Preparation (first time)
 
-If you don't have our `torbrowser-launcher` Git repo, clone it:
+If you don't have our `torbrowser-launcher` Git repo, clone it
+and add a remote for upstream and Debian:
 
-    git clone tails@git.tails.boum.org:torbrowser-launcher
-
-and add a remote for Debian, which is our immediate upstream:
-
-    git remote add debian https://anonscm.debian.org/git/pkg-privacy/packages/torbrowser-launcher.git
-
-and add a remote for the final upstream:
-
+    git clone tails@git.tails.boum.org:torbrowser-launcher &&
+    cd torbrowser-launcher && \
+    git remote add salsa https://salsa.debian.org/pkg-privacy-team/torbrowser-launcher.git && \
     git remote add upstream-repo https://github.com/micahflee/torbrowser-launcher
 
 # Make our repo up-to-date
@@ -20,16 +16,41 @@ Fetch:
 
     git checkout master && \
     git pull && \
-    git fetch debian && \
+    git fetch salsa && \
     git fetch upstream-repo
 
-Finally, make our repo up-to-date:
+Compute the last version uploaded to Debian unstable:
 
     LATEST_TAG="$(git tag --list 'debian/*' --sort=version:refname | grep -v -E '_bpo[0-9]' | tail -n1)"
-    git merge --no-ff "${LATEST_TAG}"
 
-Just pay attention that you didn't merge some unwanted version from
+… and make sure it is not an unwanted version from
 Debian experimental!
+
+Then update our own branch:
+
+    git checkout debian/sid && \
+	git reset --hard "${LATEST_TAG}" && \
+	gbp pq drop && \
+	gbp pq import && \
+	git checkout master && \
+    git merge --no-ff patch-queue/debian/sid
+
+If needed, resolve merge conflicts and commit.
+
+Finally, make sure the diff looks OK:
+
+     git diff ORIG_HEAD.. -- apparmor/
+
+# Export the diff to the main Tails Git repository
+
+    git diff \
+        --relative=apparmor \
+        --src-prefix=a/etc/apparmor.d/ \
+        --dst-prefix=b/etc/apparmor.d/ \
+        patch-queue/debian/sid.. \
+        -- \
+        apparmor \
+        > ~/path/to/your/tails/git/config/chroot_local-includes/usr/share/tails/torbrowser-AppArmor-profile.patch
 
 # Prepare a branch for upstream
 

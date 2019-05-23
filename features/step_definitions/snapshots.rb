@@ -64,14 +64,11 @@ def checkpoints
 
     'usb-install-tails-greeter' => {
       :description => "I have started Tails without network from a USB drive without a persistent partition and stopped at Tails Greeter's login screen",
-      :parent_checkpoint => 'no-network-logged-in',
+      :parent_checkpoint => nil,
       :steps => [
         'I create a 7200 MiB disk named "__internal"',
         'I plug USB drive "__internal"',
-        'I install Tails to USB drive "__internal" by cloning',
-        'the running Tails is installed on USB drive "__internal"',
-        'there is no persistence partition on USB drive "__internal"',
-        'I shutdown Tails and wait for the computer to power off',
+        'I write the Tails USB image to disk "__internal"',
         'I start Tails from USB drive "__internal" with network unplugged',
         'the boot device has safe access rights',
         'Tails is running from USB drive "__internal"',
@@ -117,19 +114,6 @@ def checkpoints
       ],
     },
 
-    'usb-install-with-persistence-logged-in-with-administration-password' => {
-      :description => "I have started Tails without network from a USB drive with a persistent partition enabled and logged in with an administration password",
-      :parent_checkpoint => 'usb-install-with-persistence-tails-greeter',
-      :steps => [
-        'I enable persistence',
-        'I set an administration password',
-        'I log in to a new session',
-        'all persistence presets are enabled',
-        'all persistent filesystems have safe access rights',
-        'all persistence configuration files have safe access rights',
-        'all persistent directories have safe access rights',
-      ],
-    },
   }
 end
 

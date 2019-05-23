@@ -34,6 +34,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
+  'APT_SNAPSHOTS_SERIALS',
   'TAILS_BUILD_FAILURE_RESCUE',
   'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
@@ -53,6 +54,8 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
 ENV['ARTIFACTS'] ||= '.'
+
+ENV['APT_SNAPSHOTS_SERIALS'] ||= ''
 
 class CommandError < StandardError
   attr_reader :status, :stderr
@@ -314,7 +317,8 @@ end
 def list_artifacts
   user = vagrant_ssh_config('User')
   stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " +
-                                        "-name 'tails-*.iso*'").first
+                                        "-name 'tails-amd64-*' " +
+                                        "-o -name tails-build-env.list").first
   stdout.split("\n")
 rescue VagrantCommandError
   return Array.new

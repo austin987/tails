@@ -18,6 +18,7 @@ systemctl enable tails-shutdown-on-media-removal.service
 systemctl enable tails-tor-has-bootstrapped.target
 systemctl enable tails-wait-until-tor-has-bootstrapped.service
 systemctl enable tails-tor-has-bootstrapped-flag-file.service
+systemctl enable run-initramfs.mount
 systemctl enable var-tmp.mount
 
 # Enable our own systemd user unit files

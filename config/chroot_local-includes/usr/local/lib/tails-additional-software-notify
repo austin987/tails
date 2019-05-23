@@ -6,6 +6,8 @@ import os.path
 import subprocess
 import sys
 
+from tailslib.gnome import gnome_env_vars
+
 import gi
 
 from gi.repository import GLib
@@ -56,7 +58,9 @@ class ASPNotifier(object):
         elif action == "deny":
             sys.exit(3)
         elif action == "documentation":
-            subprocess.Popen(["tails-documentation", user_data])
+            subprocess.Popen(
+                ["env", *gnome_env_vars(), "tails-documentation", user_data]
+            )
             sys.exit(5)
 
     def cb_notification_closed(self, notification):

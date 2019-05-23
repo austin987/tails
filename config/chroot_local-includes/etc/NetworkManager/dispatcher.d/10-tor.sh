@@ -74,13 +74,6 @@ EOF
     # (below) and the user is done configuring it.
     systemctl restart tor@default.service
 
-    # When using a bridge Tor reports TLS cert lifetime errors
-    # (e.g. when the system clock is way off) with severity "info", but
-    # when no bridge is used the severity is "warn". tordate/20-time.sh
-    # depends on grepping these error messages, so we temporarily
-    # increase Tor's logging severity.
-    tor_control_setconf "Log=\"info file ${TOR_LOG}\""
-
     # Enable the transports we support. We cannot do this in general,
     # when bridge mode is not enabled, since we then use seccomp
     # sandboxing.
