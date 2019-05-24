@@ -39,8 +39,8 @@ GET_UDISKS_OBJECT_TIMEOUT = 2
 # the partition table, reserved sectors, and filesystem metadata.
 SYSTEM_PARTITION_ADDITIONAL_SIZE = 10
 
-SYSLINUX_COM32MODULES_DIR = '/usr/lib/syslinux/modules/bios'
-
+SYSLINUX_COM32MODULES_DIR = 'chroot/usr/lib/syslinux/modules/bios'
+CHROOT_SYSLINUX_BIN='chroot/usr/bin/syslinux'
 
 class ImageCreationError(Exception):
     pass
@@ -269,7 +269,7 @@ class ImageCreator(object):
         # device would cause this issue:
         # https://bugs.chromium.org/p/chromium/issues/detail?id=508713#c8
         execute([
-            'syslinux',
+            CHROOT_SYSLINUX_BIN,
             '--offset', str(self.partition.props.partition.props.offset),
             '--directory', '/syslinux/',
             '--install', self.image
