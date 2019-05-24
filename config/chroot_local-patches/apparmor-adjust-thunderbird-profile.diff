@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.bin.thunderbird	2019-03-17 18:09:51.329155679 +0100
-+++ b/etc/apparmor.d/usr.bin.thunderbird	2019-03-17 18:16:44.264020113 +0100
+--- a/etc/apparmor.d/usr.bin.thunderbird	2019-03-27 17:22:51.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.thunderbird	2019-05-24 12:39:13.790142571 +0000
 @@ -15,7 +15,6 @@
    # TODO: finetune this for required accesses
    #include <abstractions/dbus>
@@ -44,15 +44,18 @@
    owner @{HOME}/.{cache,config}/dconf/user rw,
    owner @{HOME}/.cache/thumbnails/** r,
    owner /run/user/[0-9]*/dconf/user rw,
-@@ -137,6 +126,7 @@
-   deny /.suspended r,
-   deny /boot/initrd.img* r,
-   deny /boot/vmlinuz* r,
-+  deny /etc/machine-id r,
-   deny /var/cache/fontconfig/ w,
+@@ -129,6 +118,10 @@
+   /etc/gre.d/ r,
+   /etc/gre.d/* r,
  
-   # noisy file dialog:
-@@ -263,7 +253,6 @@
++  # needed for GNOME Shell's on-screen keyboard
++  # Tails-specific: needed only because we disable the dbus-session abstraction
++  /etc/machine-id r,
++
+   # noisy
+   deny @{MOZ_LIBDIR}/** w,
+   deny /usr/lib/thunderbird-addons/** w,
+@@ -263,7 +256,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
    /usr/lib/thunderbird/crashreporter ix,
