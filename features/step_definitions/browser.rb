@@ -125,7 +125,7 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
   # is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
-  try_for(60) { @torbrowser.child(reload_action, roleName: 'push button') }
+  try_for(120) { @torbrowser.child(reload_action, roleName: 'push button') }
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
