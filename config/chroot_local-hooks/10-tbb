@@ -155,10 +155,10 @@ apply_extension_code_signing_hacks () {
 diff -Naur a/chrome/toolkit/content/mozapps/extensions/extensions.js b/chrome/toolkit/content/mozapps/extensions/extensions.js
 --- a/chrome/toolkit/content/mozapps/extensions/extensions.js 2000-01-01 00:00:00.000000000 +0000
 +++ b/chrome/toolkit/content/mozapps/extensions/extensions.js 2000-01-01 00:00:00.000000000 +0000
-@@ -282,7 +282,8 @@
+@@ -234,7 +234,8 @@
+   // Add-ons without an "isCorrectlySigned" property are correctly signed as
    // they aren't the correct type for signing.
    if (aAddon.id == "torbutton@torproject.org" ||
-       aAddon.id == "tor-launcher@torproject.org" ||
 -      aAddon.id == "https-everywhere-eff@eff.org") {
 +      aAddon.id == "https-everywhere-eff@eff.org" ||
 +      aAddon.id == "uBlock0@raymondhill.net") {
@@ -168,9 +168,9 @@ diff -Naur a/chrome/toolkit/content/mozapps/extensions/extensions.js b/chrome/to
 diff -Naur a/modules/addons/XPIProvider.jsm b/modules/addons/XPIProvider.jsm
 --- a/modules/addons/XPIProvider.jsm 2000-01-01 00:00:00.000000000 +0000
 +++ b/modules/addons/XPIProvider.jsm 2000-01-01 00:00:00.000000000 +0000
-@@ -749,7 +749,8 @@
+@@ -812,7 +812,8 @@
+   // Ensure that we allow torbutton, https-everywhere, and the meek helper.
    if (aAddon.id == "torbutton@torproject.org" ||
-       aAddon.id == "tor-launcher@torproject.org" ||
        aAddon.id == "https-everywhere-eff@eff.org" ||
 -      aAddon.id == "meek-http-helper@bamsoftware.com") {
 +      aAddon.id == "meek-http-helper@bamsoftware.com" ||
@@ -178,8 +178,8 @@ diff -Naur a/modules/addons/XPIProvider.jsm b/modules/addons/XPIProvider.jsm
      return true;
    }
  
-@@ -3465,6 +3466,7 @@
-             addon.id != "tor-launcher@torproject.org" &&
+@@ -2965,6 +2966,7 @@
+             addon.id != "torbutton@torproject.org" &&
              addon.id != "https-everywhere-eff@eff.org" &&
              addon.id != "meek-http-helper@bamsoftware.com" &&
 +            addon.id != "uBlock0@raymondhill.net" &&
@@ -198,13 +198,13 @@ EOF
         cd "${tmp}"
         7z x -tzip "${tbb_install}/browser/omni.ja"
         patch -p1 <<EOF
-diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
+diff -Naur a/components/nsBrowserGlue.js b/components/nsBrowserGlue.js
 --- a/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
 +++ b/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
-@@ -1137,7 +1137,8 @@
+@@ -1101,7 +1101,8 @@
+           // nevertheless.
            if ((addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) &&
                !(addon.id == "torbutton@torproject.org" ||
-                 addon.id == "tor-launcher@torproject.org" ||
 -                addon.id == "https-everywhere-eff@eff.org")) {
 +                addon.id == "https-everywhere-eff@eff.org" ||
 +                addon.id == "uBlock0@raymondhill.net")) {
