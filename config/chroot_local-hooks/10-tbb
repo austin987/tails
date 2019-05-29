@@ -46,7 +46,7 @@ download_and_verify_files() {
 }
 
 install_tor_browser() {
-    local bundle destination tmp prep torlauncher_xpi_path torlauncher_version
+    local bundle destination tmp prep
     bundle="${1}"
     destination="${2}"
 
@@ -82,33 +82,6 @@ install_tor_browser() {
     # (but Firefox doesn't) and documentation shipped in the TBB.
     rm -r "${prep}"/TorBrowser/Tor "${prep}"/TorBrowser/Docs
 
-    # We don't want tor-launcher to be part of the regular browser
-    # profile but we want to keep it as a standalone application
-    # when Tails is started in "bridge mode".
-    torlauncher_xpi_path="${prep}/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
-    7z x -o"${TOR_LAUNCHER_INSTALL}" "${torlauncher_xpi_path}"
-    torlauncher_version="$(sed -n \
-        's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p' \
-        "${TOR_LAUNCHER_INSTALL}/install.rdf")"
-    SOURCE_DATE_YYYYMMDD=$(date --utc --date="@$SOURCE_DATE_EPOCH" '+%Y%m%d')
-    cat > "${TOR_LAUNCHER_INSTALL}/application.ini" << EOF
-[App]
-Vendor=TorProject
-Name=TorLauncher
-Version=${torlauncher_version}
-BuildID=${SOURCE_DATE_YYYYMMDD}
-ID=tor-launcher@torproject.org
-
-[Gecko]
-MinVersion=$(get_firefox_version "${prep}/application.ini")
-MaxVersion=*.*.*
-
-[Shell]
-Icon=icon.png
-EOF
-    chmod -R a+rX "${TOR_LAUNCHER_INSTALL}"
-    rm "${torlauncher_xpi_path}"
-
     # The Tor Browser will fail, complaining about an incomplete profile,
     # unless there's a readable TorBrowser/Data/Browser/Caches
     # in the directory where the firefox executable is located.
@@ -118,7 +91,52 @@ EOF
     install -d -m 0755 "${prep}"/TorBrowser/UpdateInfo
 
     mv "${prep}" "${destination}"
+    rm -r "${tmp}"
+}
 
+# Install Tor Launcher as a standalone XUL application.
+install_tor_launcher() {
+    local tbb_install destination tmp
+    tbb_install="${1}"
+    destination="${2}"
+
+    tmp="$(mktemp -d)"
+    7z x -o"${tmp}" "${tbb_install}/browser/omni.ja"
+    mv "${tmp}/chrome/torlauncher/" "${destination}"
+    # Tor Launcher is a system add-on but can be converted to
+    # something that works as a XUL standalone application by just
+    # moving things around:
+    for x in content locale skin; do
+        mv "${destination}/${x}" "${destination}/chrome"
+    done
+    mkdir -p "${destination}"/defaults/preferences
+    cp "${tmp}/defaults/preferences/torlauncher-prefs.js" \
+       "${destination}/defaults/preferences/prefs.js"
+    # ... and then we extract only the Tor Launcher parts from the
+    # manifest, and adapt to how we moved files around above:
+    grep torlauncher "${tmp}/chrome//chrome.manifest" \
+        | sed --regexp-extended \
+              -e 's@^(content|locale|skin) (torlauncher.*) torlauncher/(.*)$@\1 \2 chrome/\3@' \
+              -e 's@^(component) (\S+) torlauncher/(.+)$@\1 \2 \3@' \
+              -e 's@^(resource torlauncher) .*$@\1 ./@' \
+        > "${destination}/chrome.manifest"
+    cp "${destination}/chrome/skin/default48.png" "${destination}/icon.png"
+    cat > "${destination}/application.ini" << EOF
+[App]
+Vendor=TorProject
+Name=TorLauncher
+Version=$(get_firefox_version "${tbb_install}/application.ini")
+BuildID=$(date --utc --date="@$SOURCE_DATE_EPOCH" '+%Y%m%d')
+ID=tor-launcher@torproject.org
+
+[Gecko]
+MinVersion=$(get_firefox_version "${tbb_install}/application.ini")
+MaxVersion=*.*.*
+
+[Shell]
+Icon=icon.png
+EOF
+    chmod -R a+rX "${destination}"
     rm -r "${tmp}"
 }
 
@@ -320,6 +338,7 @@ install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+install_tor_launcher "${TBB_INSTALL}" "${TOR_LAUNCHER_INSTALL}"
 
 mkdir -p "${TBB_EXT}"
 if [ "${NIGHTLY_BUILD}" != yes ]; then
