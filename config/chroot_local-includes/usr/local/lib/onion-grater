@@ -566,7 +566,9 @@ class FilteredControlPortProxyHandler(socketserver.StreamRequestHandler):
         ))
 
     def connect_to_real_control_port(self):
-        controller = stem.connection.connect(control_socket=global_args.control_socket_path)
+        controller = None
+        while not controller:
+            controller = stem.connection.connect(control_socket=global_args.control_socket_path)
         stem.connection.authenticate_cookie(controller, cookie_path=global_args.control_cookie_path)
         return controller
 
