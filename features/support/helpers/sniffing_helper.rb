@@ -21,7 +21,7 @@ class Sniffer
     @pcap_file = "#{$config["TMPDIR"]}/#{pcap_name}"
   end
 
-  def capture(filter="not ether src host #{@vmnet.bridge_mac} and not ether proto \\arp and not ether proto \\rarp")
+  def capture
     job = IO.popen(
       [
         "/usr/sbin/tcpdump",
@@ -30,7 +30,6 @@ class Sniffer
         "--immediate-mode",
         "-i", @vmnet.bridge_name,
         "-w", @pcap_file,
-        filter,
         :err => ["/dev/null", "w"]
       ]
     )
