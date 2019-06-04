@@ -77,6 +77,12 @@ class TestCheckPo(unittest.TestCase):
         with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname):
             _p.lang()
 
+    def test_needs_rewrap(self):
+        with unifyPo.pofile_readonly(os.path.join(DIRNAME, "checkPo/length")) as poFile:
+            self.assertEqual(poFile.needs_rewrap(), True)
+        with unifyPo.pofile_readonly(os.path.join(DIRNAME, "unifyPo/length")) as poFile:
+            self.assertEqual(poFile.needs_rewrap(), False)
+
 
 if __name__ == '__main__':
     unittest.main()

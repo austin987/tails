@@ -44,8 +44,6 @@ except ImportError:
 
 from typing import Dict, List, Tuple
 
-MSGCAT_OPTIONS = ["-w", "79"]  # wrap to 79 width
-
 # i18nspector issues, that we accept
 I18NSPECTOR_ACCEPT = [
         "boilerplate-in-date",
@@ -86,6 +84,7 @@ class NoLanguageError(Exception):
 class PoFile:
     def __init__(self, fname: str) -> None:
         self.fname = fname
+        self.wrapwidth = 79
 
     def fixedHeaders(self) -> Dict[str, str]:
         """@returns: a dict of key,value parts that should be fixed within the po file"""
@@ -120,7 +119,7 @@ class PoFile:
     def open(self) -> None:
         """read po file content"""
         self.pf = polib.pofile(self.fname)
-        self.pf.wrapwidth = 79
+        self.pf.wrapwidth = self.wrapwidth
         self.__changed = False
 
     def write(self) -> None:
@@ -139,21 +138,15 @@ class PoFile:
                 else:
                     os.rename(fd.name, self.fname)
 
-    def msgcat(self) -> bool:
-        """runs msgcat over file.
-        @returns: if the content has/needs to be changed
+    def needs_rewrap(self) -> bool:
+        """checks if lines are wrapped propperly.
+        @returns: returns True if content is fine.
         """
-        cmd = ["msgcat"] + MSGCAT_OPTIONS
-        cmd.append(self.fname)
-        with open(self.fname, 'rb') as f:
+        _pf = polib.pofile(self.fname)
+        _pf.wrapwidth = self.wrapwidth
+        with open(self.fname, 'r', encoding='utf-8') as f:
             content = f.read()
-            f.flush()
-            process = subprocess.run(
-                    cmd,
-                    stdin=f,
-                    stdout=subprocess.PIPE,
-                    check=True)
-            if process.stdout != content:
+            if str(_pf) != content:
                 self.__changed = True
                 return True
             else:
@@ -218,11 +211,12 @@ def check_po_file(fname: str, extended: bool) -> Tuple[str, List[str]]:
 
 
 def unify_po_file(fname: str) -> None:
-    """unify PO header and run msgcat for file named `fname`"""
+    """unify PO header and rewrapps file named `fname`"""
     with pofile_writable(fname) as poFile:
         for key, value in poFile.fixedHeaders().items():
             poFile.unifyKey(key, value)
-        poFile.msgcat()
+        poFile.needs_rewrap()    # as sideeffect it updates the store flag,
+                                 # if file is not wrapped properly
 
 
 def main(logger) -> None:
@@ -258,7 +252,7 @@ def main(logger) -> None:
         logger.warning("no file to process :("
                       " You may want to add files to operate on. See --help for further information.")
 
-    for prog in ("i18nspector", "msgcat"):
+    for prog in ("i18nspector",):
         if shutil.which(prog) is None:
             sys.exit("{prog}: command not found\n"
                      "You need to install {prog} first. See /contribute/l10n_tricks."
