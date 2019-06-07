@@ -15,8 +15,19 @@
 - Check the diff e.g. with `git log -p`. Beware of changes introduced
   by merge commits: either add the `--cc` option to `git log`, or use
   `git diff` after reviewing the individual patches.
-- Check the APT suite with 
-  `ssh reprepro@incoming.deb.tails.boum.org reprepro list [bugfix|feature]-<name-with-dashes>`
+- Check the contents of every APT overlay that the branch enables:
+
+  - If you have upload rights to our [[custom APT
+    repository|contribute/APT_repository/custom]]:
+
+        ssh reprepro@incoming.deb.tails.boum.org \
+            reprepro list ${APT_overlay}`
+
+  - Else:
+
+    - <https://deb.tails.boum.org/dists/${APT_overlay}/main/source/Sources>
+    - <https://deb.tails.boum.org/dists/${APT_overlay}/main/binary-amd64/Packages>
+
 - Check the user and design documentation.
 - Check the ticket.
 - Changes proposed by new contributors, or by the patch'n'forget kind,
