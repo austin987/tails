@@ -7,37 +7,50 @@
 Releases
 ========
 
-* [[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|bugfix|emergency] release).
+* [[Tails 3.14 was released on May 21|news/version_3.14]] ([bugfix release).
 
-* Tails VERSION+1 is [[scheduled for MONTH DAY|contribute/calendar]].
+* Tails 3.15 is [[scheduled for July 9|contribute/calendar]].
 
-The following changes were introduced in Tails VERSION:
+The following changes were introduced in Tails 3.14:
 
-XXX: Copy the "Changes" section of the release notes, and compact a bit:
+- Enable all available mitigations for the MDS (Microarchitectural Data Sampling)
+  attacks and disable [[!wikipedia Simultaneous_multithreading desc="SMT"]]
+  (simultaneous multithreading) on all vulnerable processors to fix the
+  [RIDL, Fallout](https://mdsattacks.com/) and
+  [ZombieLoad](https://zombieloadattack.com/) security vulnerabilities.
 
-* Remove lines about software upgrade (that's not Tails itself).
-* Remove screenshots.
-* Remove "New features" and "Upgrades and changes" headlines.
-* Remove line about Changelog.
+- Remove the following applications:
+
+  - Desktop applications
+    - *Gobby*
+    - *Pitivi*
+    - *Traverso*
+
+  - Command-line tools
+    - `hopenpgp-tools`
+    - `keyringer`
+    - `monkeysign`
+    - `monkeysphere`
+    - `msva-perl`
+    - `paperkey`
+    - `pwgen`
+    - `ssss`
+    - `pdf-redact-tools`
+
+  You can install these applications again using the
+  *[[Additional Software|doc/first_steps/additional_software]]* feature.
+
+  Thanks to the removal of these less popular applications in 3.14 and the removal
+  of some language packs in 3.13.2, Tails 3.14 is 39 MB smaller than 3.13.
 
 Code
 ====
-
-XXX: If you feel like it and developers, foundation team, and RMs don't do it themselves,
-     list important code work that is not covered already by the
-     Release section (for example, the changes being worked on for
-     the next version).
 
 - We spent lots of time dealing with the Firefox add-ons fiasco,
   also known as "armagadd-on 2.0". [[!tails_ticket 16694]]
 
 Documentation and website
 =========================
-
-XXX: If you feel like it and technical writers don't do it
-     themselves, explore the Git history:
-
-         git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
 
 - We explained better what are [[captive
   portals|/doc/anonymous_internet/unsafe_browser]].
@@ -61,10 +74,9 @@ The first two weeks, before the release of Tails 3.14, we had users reporting
 
 Then, after the release, the changes on Tor Browser made many users report to us
 
-1. [[!tails_ticket 16746 desc="#16746: document the disappearence of NoScript and HTTPSEverywhere icons from Tor Browser's toolbar" ]] 
+1. [[!tails_ticket 16746 desc="#16746: document the disappearence of NoScript and HTTPSEverywhere icons from Tor Browser's toolbar" ]]
 1. [[!tails_ticket 16762 desc="#16762: Document why NoScript last update is january 2000]]
 1. [[!tails_ticket 16727 desc="#16727: Update doc to Tor Browser 8.5]]
-
 
 Infrastructure
 ==============
@@ -107,39 +119,40 @@ Upcoming events
 - Ulrike and sajolida will be at the [Tor meeting](https://trac.torproject.org/projects/tor/wiki/org/meetings/2019Stockholm)
   on July 11-14 in Stockholm, Sweden.
 
-- XXX: DebConf?
+- intrigeri will attend [DebConf19](https://debconf19.debconf.org)
 
 On-going discussions
 ====================
 
-XXX: Link to the thread on <https://lists.autistici.org/list/tails-XXX.html>.
-
-- We followed up on the conversation regarding the future of Electrum in Tails.
-  XXX: Link to the thread on <https://lists.autistici.org/list/tails-XXX.html>.
-
-Press and testimonials
-======================
-
-XXX: Copy content from press/media_appearances_2019.mdwn
-     This page is continuously updated by tails-press@boum.org, so if
-     it's empty there might be nothing special to report.
+- We followed up on the conversation regarding the [future of Electrum in Tails](http://lists.autistici.org/thread/20190503.105531.755bcd23.en.html#i20190503.105531.755bcd23).
 
 Translations
 ============
 
-XXX: Add the output of (adjust month!):
+## All the website
 
-    sudo apt-get install intltool
-    git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
-    git submodule update --init && \
-    ./wiki/src/contribute/l10n_tricks/language_statistics.sh
+  - de: 44% (2533) strings translated, 9% strings fuzzy, 42% words translated
+  - es: 50% (2867) strings translated, 6% strings fuzzy, 43% words translated
+  - fa: 31% (1778) strings translated, 11% strings fuzzy, 33% words translated
+  - fr: 91% (5228) strings translated, 2% strings fuzzy, 92% words translated
+  - it: 32% (1872) strings translated, 7% strings fuzzy, 29% words translated
+  - pt: 25% (1435) strings translated, 9% strings fuzzy, 21% words translated
+
+Total original words: 60511
+
+## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]
+
+  - de: 68% (1225) strings translated, 13% strings fuzzy, 71% words translated
+  - es: 78% (1387) strings translated, 11% strings fuzzy, 79% words translated
+  - fa: 33% (605) strings translated, 13% strings fuzzy, 32% words translated
+  - fr: 97% (1735) strings translated, 2% strings fuzzy, 97% words translated
+  - it: 61% (1093) strings translated, 17% strings fuzzy, 63% words translated
+  - pt: 44% (789) strings translated, 14% strings fuzzy, 47% words translated
 
 Metrics
 =======
 
-* Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-* SIGS downloads of the OpenPGP signature of a Tails USB image or ISO from our website.
+* Tails has been started more than 791 323 times this month. This makes 25 527 boots a day on average.
+* 9 697 downloads of the OpenPGP signature of a Tails USB image or ISO from our website.
 
 [[How do we know this?|support/faq#boot_statistics]]
-
-XXX: Ask <tails@boum.org> for these numbers.
