@@ -166,6 +166,7 @@ rescue Timeout::Error
   # Save Tor logs before erroring out
     File.open("#{$config["TMPDIR"]}/log.tor", 'w') { |file|
     file.write("#{$vm.execute('journalctl --no-pager -u tor@default.service').stdout}")
+    file.write($vm.file_content('/var/log/tor/log'))
   }
   raise TorBootstrapFailure.new('Tor failed to bootstrap')
 end
