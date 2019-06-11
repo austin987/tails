@@ -10,7 +10,7 @@ Then /^the hostname should not have been leaked on the network$/ do
       elsif PacketFu::IPv6Packet.can_parse?(p)
         payload = PacketFu::IPv6Packet.parse(p).payload
       else
-        raise "Found something in the pcap file that either is non-IP, or cannot be parsed"
+        next
       end
       hostnames.each do |hostname|
         if payload.match(hostname)
