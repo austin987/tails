@@ -584,7 +584,7 @@ order to make users more comfortable with the PELD, and also to
 educate users about specific risks and non-intuitive situations that
 may affect their anonymity on the Internet.
 
-#### 2.6.4.1 Internationalization
+#### 2.6.4.1 Internationalization and localization
 
 The user MUST be able to easily select his or her language of
 preference among a great number of widespread ones. User applications
@@ -737,15 +737,48 @@ kernel security feature than the stock Debian kernel.
 
 See [[doc/about/features]].
 
-## 3.3 Internationalization
+## 3.3 Localization
+
+### 3.3.1 Best supported (Tier-1) languages
+
+The set of best supported languages is the union of:
+
+ - Languages proposed on our website
+ - Languages that make Tails understandable by a majority of the
+   population of the top 10 countries of either
+    - [directly-connecting Tor clients](https://metrics.torproject.org/userstats-relay-table.html)
+	- [Tor clients connecting via bridges](https://metrics.torproject.org/userstats-bridge-table.html)
+
+As of 2019-03-23, the resulting list is:
+
+ - Arabic (ar)
+ - German (de)
+ - English (en)
+ - Spanish (es)
+ - Farsi (fa)
+ - French (fr)
+ - Hindi (hi)
+ - Indonesian (id)
+ - Italian (it)
+ - Portuguese (pt-BR)
+ - Russian (ru)
+ - Turkish (tr)
+ - Simplified Chinese (zh-CN)
+
+### 3.3.2 Locales and spell checking
 
 Tails ships, as is, localization files provided by the installed
-Debian packages. All available Tor Browser localization packages
-are installed. Spell checking software and data is installed for the
-set of best supported languages; it is usable at least is Tor Browser,
-LibreOffice and gedit.
+Debian packages.
 
-### 3.3.1 Input methods
+Additionally, Tails installs by default:
+
+ - All available Tor Browser localization packages
+ - For each Tier-1 language, when available in Debian:
+   - Spell checking dictionaries (usable at least in Tor Browser,
+     LibreOffice and gedit)
+   - Localization packages for LibreOffice and Thunderbird
+
+### 3.3.3 Input methods
 
 Tails ships with IBus and a few engines (Anthy for Japanese, Pinyin
 and Bopomofo for Chinese, and Hangul for Korean).
@@ -1050,7 +1083,7 @@ Thunderbird itself leaks a lot of data and makes DNS requests, for example by
 retrieving mail server configurations from a remote server over an insecure
 channel. This is prevented by the TorBirdy extension as well as by custom
 patches for Thunderbird in Tails, which we are currently in the process of
-upstreaming ([[!tails_ticket 11215]]).
+upstreaming ([[!tails_ticket 6156]]).
 
 Thunderbird generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
@@ -1120,9 +1153,6 @@ GnuPG tools (namely: GPG itself and Seahorse) are configured to use
 the sks-keyservers pool since it's reliable, well-synchronized with
 the other HKP keyservers pools, and reachable over `hkps://`.
 
-Monkeysphere's `hkpms://` support will be used as soon as
-possible in place of the hierarchical X.509 certification model.
-
 GnuPG is configured accordingly to the [OpenPGP Best
 Practices](https://help.riseup.net/en/security/message-security/openpgp/best-practices),
 e.g. to prefer non-outdated digest algorithms from the
@@ -1133,7 +1163,6 @@ disregard the preferred keyserver assigned to specific keys.
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/dirmngr.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults]]
-- hkpms is available in Debian: [[!debpkg msva-perl]]
 
 ### 3.6.17 Persistence feature
 

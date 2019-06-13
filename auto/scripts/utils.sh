@@ -97,7 +97,7 @@ branch_name_to_suite() {
 }
 
 fatal() {
-	echo "$*" >&2
+	echo "E: $*" >&2
 	exit 1
 }
 

@@ -95,6 +95,7 @@ Also export the following environment variables:
 * `RELEASE_CHECKOUT`: a checkout of the branch of the main Tails Git
   repository used to prepare the release (`stable` or `testing`).
 * `TAILS_SIGNATURE_KEY=A490D0F4D311A4153E2BB7CADBB802B258ACD84F`
+* `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}" | perl -nE 'say substr($_, -17)')`
 * `IUK_CHECKOUT`: a checkout of the relevant tag of the `iuk`
   Git repository.
 * `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
@@ -278,7 +279,7 @@ If `check_po` complains:
 When preparing an actual release
 ================================
 
-If we're about to prepare an image for a final (non-RC) release, then
+If we're about to prepare the images for a final (non-RC) release, then
 follow these instructions:
 
 Major release
@@ -482,8 +483,8 @@ signatures, like the defaults we set in Tails:
 
     cp config/chroot_local-includes/etc/skel/.gnupg/gpg.conf "${GNUPGHOME:?}"
 
-Build the almost-final image
-============================
+Build the almost-final images
+=============================
 
 1. [[Build ISO and USB images|contribute/build]] from the release branch.
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
@@ -567,11 +568,22 @@ SquashFS file order
    killed, retrieve the new sort file from `/var/log/boot-profile`.
 1. Backup the old sort file: `cp config/binary_rootfs/squashfs.sort{,.old}`
 1. Copy the new sort file to `config/binary_rootfs/squashfs.sort`.
-1. Cleanup a bit:
-   - remove `var/log/live/config.pipe`: otherwise the boot is broken
-     or super-slow
-   - remove the bits about `kill-boot-profile` at the end: they're
-     only useful when profiling the boot
+1. Remove runtime-generated files that don't exist in the rootfs,
+   in order to avoid confusing noise in the build output:
+
+           perl -ni -E 'chomp; say unless m{(?:
+                  [.]pyc\s+\d+\z
+               | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
+               | \Alib/live/mount/overlay/etc/fstab\s
+               | \A(?:lib/live/mount/overlay/)?etc/apparmor[.]d/cache/[.]features\s
+               | \A(?:lib/live/mount/overlay/)?etc/(?:group|gshadow|passwd|shadow)-\s
+               | \A(?:lib/live/mount/overlay/)?etc/resolv-over-clearnet[.]conf\s
+               | \Arun/
+               | \Avar/log/live/config[.]pipe\s
+           )}xms' config/binary_rootfs/squashfs.sort
+
+1. Remove the bits about `kill-boot-profile` at the end: they're
+   only useful when profiling the boot.
 1. Inspect the Git diff (including diff stat), apply common sense:
 
         diff -NaurB \
@@ -581,8 +593,8 @@ SquashFS file order
 
 1. `git commit -m 'Updating SquashFS sort file' config/binary_rootfs/squashfs.sort`
 
-Build the final image
----------------------
+Build the final images
+----------------------
 
 Then all included files should be up-to-date and the versioned APT
 suite should be ready, so it is time to:
@@ -609,7 +621,7 @@ suite should be ready, so it is time to:
    first `git push` then Jenkins won't build from the tag -- please
    avoid that!
 
-1. build the final image!
+1. build the final images!
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
    Our build system will apply the correct compression settings automatically
    so don't bother setting it yourself.
@@ -646,7 +658,7 @@ suite should be ready, so it is time to:
      Set the `$MATCHING_JENKINS_BUILD_ID` environment variable
      to the ID of this job (an integer).
 
-   - If there is a hash mismatch for the image: ouch! Now we are in a
+   - If there is a hash mismatch for one of the images: ouch! Now we are in a
      tricky situation: on the one hand it seems like a poor idea to
      block users from benefiting from this release's security updates,
      but on the other hand the failure might imply that something
@@ -676,7 +688,7 @@ suite should be ready, so it is time to:
        - Otherwise, if the change is definitely harmless:
 
          * If the source of non-determinism is identified quickly and
-           is easy and fast to fix, *and* the QA of the current image
+           is easy and fast to fix, *and* the QA of the current images
            has not gone very far (so at least that time is not wasted),
            then you should consider abandoning the current version, and
            immediately start preparing an emergency release with:
@@ -716,9 +728,9 @@ Generate the OpenPGP signatures and Torrents
 ============================================
 
 Create a directory with a suitable name, go there, move the built
-image to this brand new directory, generate detached OpenPGP
-signatures for the image to be published (in the same directory as the
-image and with a `.sig` extension), then go up to the parent
+images to this brand new directory, generate detached OpenPGP
+signatures for the images to be published (in the same directory as the
+images and with a `.sig` extension), then go up to the parent
 directory, create a `.torrent` file and check the generated `.torrent`
 files metadata:
 
@@ -1071,7 +1083,7 @@ candidate):
 	   git push origin master
 	)
 
-## Announce, seed and test the Torrent
+## Announce, seed and test the Torrents
 
 Skip this section if [[!tails_ticket 16378]] is not resolved yet.
 
@@ -1084,15 +1096,15 @@ If not, list already running Torrents:
 
     ssh bittorrent.lizard transmission-remote --list
 
-… set `$ID` to the oldest one and delete it (do this both for the ISO and USB image):
+… set `$ID` to the oldest one and delete it (do this both for the ISO and USB images):
 
-    ssh bittorrent.lizard -t "${ID:?}" --remove-and-delete
+    ssh bittorrent.lizard transmission-remote -t "${ID:?}" --remove-and-delete
 
 … and finally check disk space again:
 
     ssh bittorrent.lizard df -h /var/lib/transmission-daemon/downloads
 
-Now you can announce and seed the Torrent for the release you're preparing:
+Now you can announce and seed the Torrents for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
@@ -1150,7 +1162,7 @@ Testing
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
    - make it clear where and how you expect to get feedback
-   - attach the Torrent
+   - attach the Torrents
    - attach the `.packages` file
 1. Make sure someone is committed to run the automated test suite.
 1. Make sure that enough people are here to run the tests, that they
@@ -1163,7 +1175,7 @@ Testing
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
 1. If [[!tails_ticket 16378]] is not resolved yet, ensure someone will
-   seed the Torrent.
+   seed the Torrents.
 
 Update the website and Git repository
 =====================================
@@ -1196,10 +1208,12 @@ Rename, copy, garbage collect and update various files:
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html" && \
     gpg --check-trustdb && \
-    LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+    LANG=C TZ=UTC gpg --no-options --keyid-format long --trusted-key "${TAILS_SIGNATURE_KEY_LONG_ID:?}" --verify "${ISO_PATH:?}.sig" "${ISO_PATH:?}" 2>&1 | \
+	   perl -pE 's/\[ultimate\]$/[full]/' | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_gpg_signature_output.html" && \
-    LANG=C TZ=UTC gpg --no-options --keyid-format long --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
+    LANG=C TZ=UTC gpg --no-options --keyid-format long --trusted-key "${TAILS_SIGNATURE_KEY_LONG_ID:?}" --verify "${IMG_PATH:?}.sig" "${IMG_PATH:?}" 2>&1 | \
+	   perl -pE 's/\[ultimate\]$/[full]/' | \
 	   sed 's/ /\&nbsp;/g;s/</\&lt;/;s/>/\&gt;/;s/$/<br\/>/g' > \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_gpg_signature_output.html"
 
@@ -1239,7 +1253,7 @@ If preparing a release candidate
 
 Skip this part if preparing a final release.
 
-Copy the signatures and the Torrent into the website repository:
+Copy the signatures and the Torrents into the website repository:
 
 	cp "${ISO_PATH:?}.sig" \
 	   "${IMG_PATH:?}.sig" \

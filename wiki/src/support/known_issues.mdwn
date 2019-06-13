@@ -83,8 +83,8 @@ Starting Tails from a Kingston DataTraveler 2000 or DataTraveler 100G3 doesn't w
 Mac
 ---
 
-* Any Mac with 32-bit EFI may not succeed in booting Tails USB stick
-  created by Tails Installer. You can check if a given Mac is 32-bit
+* Any Mac with 32-bit EFI might not start on Tails.
+  You can check if a given Mac is 32-bit
   or 64-bit EFI on that list:
   <https://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
 * MacBook Pro 2016 and 2017: the keyboard, trackpad and Touch Bar do
@@ -96,25 +96,38 @@ Mac
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
 * Mac Pro Tower and MacBook Pro 4,1 (both from early 2008)
-  fails to boot from a USB stick created by
-  Tails Installer.
+  fails to start on Tails.
 
 <a id="pc">
 
 PC
 --
 
+<a id="lockup"></a>
+
+### "Soft lockup" error
+
+On some laptops, Tails starts with the following error:
+
+<p class="pre">soft lockup - CPU#<span class="command-placeholder">N</span> stuck for <span class="command-placeholder">N</span>s</p>
+
+To make Tails start successfully, add the following options to the
+[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]:
+
+    acpi_rev_override=1 nouveau.modeset=0
+
+<a id="sg-black-screen"></a>
+
 ### Acer Travelmate 8573T-254G50M
 
-Booting from DVD works fine, but does not start from USB sticks
-created using Tails Installer.
+Booting from DVD works fine, but does not start from USB sticks.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
 ### Acer Aspire 5315-ICL50 and Acer ES-1-331
 
-Does not start on USB sticks created using Tails Installer.
+Does not start on USB sticks.
 
 ### ASUS VivoBook X202E
 
@@ -145,11 +158,11 @@ to us.
 
 ### Dell Latitude E5250
 
-Does not start on USB sticks created using Tails Installer nor Etcher.
+Does not start on Tails USB sticks.
 
 ### Dell Latitude E6430 and E6230
 
-Does not start on USB sticks created using Tails Installer.
+Does not start on USB sticks.
 
 With BIOS versions A03 06/03/2012 (and A09, A11, and A12)
 
@@ -161,19 +174,12 @@ and it will continue with the boot.
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
-### Dell XPS 15 9560
-
-To make Tails start successfully, add `acpi_rev_override=1
-nouveau.modeset=0` to the [[startup
-options|/doc/first_steps/startup_options/#boot_loader_menu]].
-
 ### Dell XPS L702X/03RG89, Samsung RV520, Samsung Series 7 Chronos
 
-Does not start on USB sticks created using Tails Installer.
+Does not start on USB sticks.
 
 We were reported that the legacy BIOS shipped on these systems doesn't
-know how to deal with the GPT partition scheme installed by Tails
-Installer.
+know how to deal with the GPT partition scheme used in Tails.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
@@ -182,16 +188,16 @@ your test results back to us.
 
 ### Fujitsu Siemens Amilo A 1667G
 
-Does not start on USB sticks created using Tails Installer.
+Does not start on USB sticks.
 
 ### HP Compaq dc5750 Microtower
 
-Does not start Tails 1.2.3 created using Tails Installer.
+Does not start Tails 1.2.3.
 
 ### HP Compaq 615
 
 You need to update the firmware to its latest version in order to start from a
-device installed using Tails Installer.
+USB stick.
 
 ### HP Compaq CQ60-214DX
 
@@ -203,8 +209,7 @@ Tails 3.3 restarts during startup and never starts successfully.
 
 ### HP Pavilion dv7
 
-Since Tails 1.3, gets stuck at the Boot Loader Menu, whether Tails is installed manually or using
-Tails Installer.
+Since Tails 1.3, gets stuck at the Boot Loader Menu.
 
 ### HP ProBook
 
@@ -226,8 +231,8 @@ Goes back continuously to Boot Loader Menu on Tails installed on DVD.
 
 ### Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, T60, E325, and E530
 
-These machines do not start on USB sticks created using Tails
-Installer due to a firmware limitation.
+These machines do not start on USB sticks
+due to a firmware limitation.
 
 A workaround for some of these machines is to use the [[manual
 installation process|install/linux/usb]].
@@ -237,186 +242,11 @@ a persistent volume.
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
-Graphics issues
-===============
+### System76 Oryx Pro
 
-GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
-----------------------------------------------------------------------
-
-Some computers cannot start the GNOME desktop.
-
-After the <span class="application">Tails Greeter</span> they freeze, or
-sometimes fail with the message <span class="error">"Oh no! Something has gone
-wrong. A problem has occurred and the system can't recover. Please contact a
-system administrator"</span>.
-
-This issue has appeared with the following graphic adapters:
-
-- Mars XTX [Radeon HD 8790M]
-- Mars XTX [Radeon HD 8790M] (rev ff)
-- Cedar [Radeon HD 5000/6000 7350/8350 Series]
-- Broadway PRO [Mobility Radeon HD 5850]
-- RV730/M96 [Mobility Radeon HD 4650/5165]
-
-For some models, adding `radeon.modeset=0` to the
-[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
-
-Tails Greeter fails to start with some AMD/ATI Radeon graphic adapters
-----------------------------------------------------------------------
-
-Some computers cannot start Tails Greeter. This issue has appeared
-with the following graphic adapters:
-
-- AMD Radeon R9 390
-
-Adding `radeon.dpm=0` to the
-[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
-fixes the issue.
-
-<a id="nvidia-maxwell"></a>
-
-Tails Greeter fails to start on computers with Nvidia Maxwell graphic cards
----------------------------------------------------------------------------
-
-Some computers cannot start Tails Greeter. This appears with some
-graphic cards in the
-[Nvidia Maxwell family](https://nouveau.freedesktop.org/wiki/CodeNames/#nv110familymaxwell).
-This problem has been fixed in Tails 3.2 for some of these graphic
-cards. If Tails Greeter still does not start for you:
-
-1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-   [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
-2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
-   address so we can contact you to debug the problem.
-   Please reference [[!tails_ticket 15116]] in your bug report.
-
-<a id="nvidia-pascal"></a>
-
-Tails Greeter fails to start on computers with Nvidia Pascal graphic cards
----------------------------------------------------------------------------
-
-Some computers cannot start Tails Greeter. This may appear with the
-[Nvidia Pascal family](https://nouveau.freedesktop.org/wiki/CodeNames/#nv130familypascal)
-of graphic adapters.
-
-If Tails Greeter does not start for you:
-
-1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-   [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
-2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
-   address so we can contact you to debug the problem.
-   Please reference [[!tails_ticket 15116]] in your bug report.
-
-<a id="switchable_graphics_black_screen"></a>
-
-Black screen with switchable graphics computers
------------------------------------------------
-
-Some computers with switchable graphics (such as Optimus) fail to
-choose a video card and end up on a black screen. This has been
-reported for MacBook Pro 6,2, MacBook Pro 10,1 Retina, MacBook Pro
-15-inch (early 2011) and might affect many others.
-
-There are several possible workarounds for this issue:
-
-* Explicitly select one of the two graphics adapters in the BIOS
-  instead of letting the system choose one automatically. If this does
-  not solve the problem, try selecting the other graphics adapter.
-
-* For the Mac computers, it is possible to use a third-party
-  application, <https://gfx.io/>, to force integrated graphics only through OS X.
-  Then restart in that special mode that works with Tails.
-
-* Expert Linux users can also do the following:
-
-  1. Add the `i915.modeset=0 rootpw=pass` option in the
-     [[Boot Loader Menu|doc/first_steps/startup_options#boot_loader_menu]].
-
-  2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
-     following content:
-
-         Section "Device"
-             Identifier "Device0"
-             Driver "nouveau"
-             BusID "1:0:0"
-         EndSection
-
-  4. Restart X with the command:
-
-         service gdm3 restart
-
-  5. After the GNOME session has started, change again the root password with
-     the command:
-
-         sudo passwd
-
-For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken with switchable graphics"]].
-
-<a id=switchable_graphics_segfault></a>
-
-Cannot start GNOME session with switchable graphics computers
--------------------------------------------------------------
-
-On some computers with switchable graphics, Tails 2.10 and later fails
-to start the GNOME session and keeps returning to [[Tails
-Greeter|doc/first_steps/startup_options#greeter]].
-
-Starting in **Troubleshooting Mode** works, as well as adding the
-`modprobe.blacklist=nouveau` to the [[startup
-options|doc/first_steps/startup_options#boot_loader_menu]].
-
-Laptops with Intel 855GM graphic card
--------------------------------------
-
-Laptops with graphic card Intel 855GM (as Dell Inspiron 510M)
-crash after Tails Greeter.
-
-See [[!debbug 776911 desc="relevant bug report"]] for more information.
-
-Laptops with Intel GM965/GL960 graphic card
--------------------------------------------
-
-Laptops with graphic card Intel GM965/GL960 crash while running Tails.
-Add `video=SVIDEO-1:d` on the boot command line to work around this problem.
-
-See [[!linuxbug 187001]] for more information.
-
-<a id="xorg-driver"></a>
-
-Systems with Intel graphic cards
---------------------------------
-
-The graphical interface fails to start on some Intel graphics
-adapters. If this happens to you:
-
-1. Add the `xorg-driver=intel` option in the
-   [[boot menu|doc/first_steps/startup_options#boot_menu]].
-2. If this fixes the problem, report to <tails-support-private@boum.org>
-   the output of the following commands:
-   
-         lspci -v
-         lspci -mn
-   
-   … so we get the identifier of your graphics adapter and can have
-   this fix applied automatically in the next Tails release.
-3. If this does not fix the problem, try Troubleshooting Mode and
-   [[report a bug|doc/first_steps/bug_reporting]]. Include the exact
-   model of your Intel graphics adapter.
-
-Virtual machines with *virt-manager*, *libvirt* and *QEMU*
-----------------------------------------------------------
-
-See the
-[[dedicated troubleshooting documentation|doc/advanced_topics/virtualization/virt-manager#graphics-issues]]
-about graphics issues in Tails running inside a virtual machine
-with *virt-manager*.
-
-Virtual machines with *VMware*
-------------------------------
-
-To improve support of Tails running inside a virtual machine with
-*VMware*, [[install|doc/first_steps/additional_software]] the
-`open-vm-tools-desktop` software package in Tails.
+This machine does not start from a Tails USB stick: the Linux kernel
+included in at least Tails 3.11 to 3.13.1, inclusive, does not support
+the hardware USB controller.
 
 <a id="wi-fi"></a>
 
@@ -487,6 +317,14 @@ supported by the `broadcom-sta-dkms` package on the corresponding
 in the list of supported devices, then it is impossible to use your
 Wi-Fi card in Tails.
 
+## Lenovo Legion Y530
+
+Wi-Fi adapter does not work.
+
+Adding `modprobe.blacklist=ideapad_laptop` to the
+[[startup options|doc/first_steps/startup_options#boot_loader_menu]] fixes the
+issue.
+
 Security issues
 ===============
 
@@ -525,7 +363,7 @@ This issue has been reported on the following hardware:
 
   - Apple when booting from a USB stick:
     - MacBook Air 5,1
-    - MacBook Air 5,2 (using a device installed with Tails Installer)
+    - MacBook Air 5,2
     - MacBook Air 6,2
     - MacBook Pro 7,1 13-inch (mid 2010)
     - MacBook Pro 9,2 13-inch (mid 2012)
@@ -590,12 +428,6 @@ Boot Loader Menu has display issues
 
 Since Tails 1.1, on some hardware (ThinkPad X230, MacBook Pro 8,1),
 the Boot Loader Menu is not displayed properly. Tails starts fine, though.
-
-Connecting to FTP servers is not possible
------------------------------------------
-
-Public FTP servers on the Internet are not reachable using Tails.
-See [[!tails_ticket 6096 desc="Fix FTP support"]] for more details.
 
 Tails fails to connect to certain Wi-Fi networks
 ------------------------------------------------
