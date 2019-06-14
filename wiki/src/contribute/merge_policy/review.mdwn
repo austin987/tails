@@ -15,8 +15,19 @@
 - Check the diff e.g. with `git log -p`. Beware of changes introduced
   by merge commits: either add the `--cc` option to `git log`, or use
   `git diff` after reviewing the individual patches.
-- Check the APT suite with 
-  `ssh reprepro@incoming.deb.tails.boum.org reprepro list [bugfix|feature]-<name-with-dashes>`
+- Check the contents of every APT overlay that the branch enables:
+
+  - If you have upload rights to our [[custom APT
+    repository|contribute/APT_repository/custom]]:
+
+        ssh reprepro@incoming.deb.tails.boum.org \
+            reprepro list ${APT_overlay}`
+
+  - Else:
+
+    - <https://deb.tails.boum.org/dists/${APT_overlay}/main/source/Sources>
+    - <https://deb.tails.boum.org/dists/${APT_overlay}/main/binary-amd64/Packages>
+
 - Check the user and design documentation.
 - Check the ticket.
 - Changes proposed by new contributors, or by the patch'n'forget kind,
@@ -69,10 +80,10 @@ your merge to our main [[Git repository|contribute/Git]]. For example:
 
 ## Book keeping
 
-1. Update the *QA Check* field on the ticket. If there is no remaining
+1. Update the *Status* field on the ticket. If there is no remaining
    tasks listed on the ticket, then change its status to *Fix
    committed* (unless you used the `fix-committed` keyword documented
-   above); else, ask the branch submitter to split the remaining tasks
-   into other tickets.
+   above); else, set it back to *In Progress* and ask the branch submitter
+   to split the remaining tasks into other tickets.
 1. Push the updated branch to the master Git repository.
 1. Reply to the email that requested the review, if any.
