@@ -107,7 +107,7 @@ When /^I prepare the Additional Software upgrade process to fail$/  do
   # before it gets upgraded so that we simulate a failing upgrade.
   failing_dpkg_hook = <<-EOF
 DPkg::Pre-Invoke {
-  "ls -tr1 /var/cache/apt/archives/cowsay*.deb | head -n 1 | xargs rm";
+  "ls -1 -v /var/cache/apt/archives/cowsay*.deb | tail -n 1 | xargs rm";
 };
 EOF
   $vm.file_overwrite('/etc/apt/apt.conf.d/00failingDPKGhook', failing_dpkg_hook)
