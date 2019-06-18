@@ -82,7 +82,7 @@ const TorStatusIndicator = new Lang.Class({
 
     _destroy: function() {
         this._status_file_monitor.disconnect(this._monitor_changed_signal_id);
-        this.parent();
+        this.destroy();
     }
 });
 
@@ -97,6 +97,6 @@ function enable() {
 }
 
 function disable() {
-    tor_status_indicator.destroy();
+    tor_status_indicator._destroy();
 }
 
