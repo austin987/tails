@@ -81,8 +81,10 @@ const TorStatusIndicator = new Lang.Class({
     },
 
     _destroy: function() {
+        global.log("TorStatus: entering _destroy()");
         this._status_file_monitor.disconnect(this._monitor_changed_signal_id);
         this.destroy();
+        global.log("TorStatus: exiting _destroy()");
     }
 });
 
@@ -92,11 +94,14 @@ function init() {
 }
 
 function enable() {
+    global.log("TorStatus: entering enable()");
     tor_status_indicator = new TorStatusIndicator();
     Main.panel.addToStatusArea(TorStatusIndicatorName, tor_status_indicator);
+    global.log("TorStatus: exiting enable()");
 }
 
 function disable() {
+    global.log("TorStatus: entering disable()");
     tor_status_indicator._destroy();
+    global.log("TorStatus: exiting disable()");
 }
-
