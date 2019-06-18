@@ -67,7 +67,7 @@ Feature: System memory erasure on shutdown
     And I drop all kernel caches
     Then patterns cover at least 128 MiB in the guest's memory
     When I trigger shutdown
-    And I wait 40 seconds
+    And I wait 20 seconds
     Then I find very few patterns in the guest's memory
 
   Scenario: Erasure of read and write disk caches of persistent data on shutdown
