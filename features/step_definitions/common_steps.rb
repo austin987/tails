@@ -216,7 +216,7 @@ Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
       domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
       loop do
         domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
-        sleep 0.1
+        sleep 1
       end
     ensure
       virt.close
