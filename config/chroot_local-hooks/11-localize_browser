@@ -83,7 +83,7 @@ while IFS=: read MOZILLA_LOCALE LOCATION; do
     HOMEPAGE="https://tails.boum.org/home/"
     . /etc/os-release # get $TAILS_CHANNEL and $TAILS_DISTRIBUTION
     if [ "${TAILS_DISTRIBUTION}" = UNRELEASED ] \
-          || [ "${TAILS_CHANNEL}" = alpha ]; then
+          || [ "${TAILS_CHANNEL:-stable}" != stable ]; then
        HOMEPAGE="${HOMEPAGE}testing/"
     fi
     if echo "${TAILS_WIKI_SUPPORTED_LANGUAGES}" | grep -qw "${LANG_CODE}"; then
