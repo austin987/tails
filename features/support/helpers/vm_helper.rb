@@ -600,6 +600,7 @@ EOF
   end
 
   def save_snapshot(name)
+    debug_log("Saving snapshot '#{name}'...")
     # If we have no qcow2 disk device, we'll use "memory state"
     # snapshots, and if we have at least one qcow2 disk device, we'll
     # use internal "system checkpoint" (memory + disks) snapshots. We
@@ -639,6 +640,7 @@ EOF
   end
 
   def restore_snapshot(name)
+    debug_log("Restoring snapshot '#{name}'...")
     @domain.destroy if is_running?
     @display.stop if @display and @display.active?
     # See comment in save_snapshot() for details on why we use two
