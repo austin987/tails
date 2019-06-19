@@ -216,34 +216,21 @@ Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
       domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
       loop do
         domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
-        sleep 0.1
+        sleep 1
       end
     ensure
       virt.close
     end
   EOF
-  # Our UEFI firmware (OVMF) has the interesting "feature" that pressing
-  # any button will open its setup menu, so we have to exit the setup,
-  # and to not have the TAB spammer potentially interfering we pause
-  # it meanwhile.
-  dealt_with_uefi_setup = false
   # The below code is not completely reliable, so we might have to
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
       tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
-      if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
-        @screen.wait('UEFIFirmwareSetup.png', 30)
-        Process.kill("TSTP", tab_spammer.pid)
-        @screen.type(Sikuli::Key.ENTER)
-        Process.kill("CONT", tab_spammer.pid)
-        dealt_with_uefi_setup = true
-      end
       @screen.wait(boot_menu_cmdline_image, 15)
     rescue FindFailed => e
       debug_log('We missed the boot menu before we could deal with it, ' +
                 'resetting...')
-      dealt_with_uefi_setup = false
       $vm.reset
       raise e
     ensure
