@@ -4,6 +4,84 @@ tails (3.17) UNRELEASED; urgency=medium
 
  -- intrigeri <intrigeri@debian.org>  Sat, 23 Mar 2019 11:32:48 +0000
 
+tails (3.14.1) UNRELEASED; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.5.2-build1 (Closes: #16824).
+    - Upgrade Thunderbird to 60.7.0 (Closes: #16742).
+    - Upgraded Linux to 4.19.37-4 (Closes: #16823).
+
+  * Bugfixes
+    - Only probe for partitions on the boot device when setting up
+      TailsData. Without arguments partprobe will scan all devices,
+      and if it encounters a device it doesn't support (e.g. fake
+      raid-0 arrays) it will return non-zero, thus aborting Tails'
+      partitioning script, resulting in an unbootable install
+      (Closes: #16389).
+
+  * Minor improvements and updates
+    - Upgrade tor to 0.4.0.5-1~d90.stretch+1, the first stable
+      candidate in the 0.4.0.x series (Closes: #16687).
+    - Completely disable IPv6 except for the loopback interface. We
+      attempt to completely block it on the netfilter level but we
+      have seen ICMPv6 "leaks" any way (related to Router
+      Solicitation, see: #16148) so let's just disable it. We keep
+      enabled on the loopback interface since some services depends on
+      ::1 being up.
+    - create-usb-image-from-iso: Use syslinux from chroot. We used the
+      syslinux from the vagrant box before, which caused issues with
+      when building Tails/Buster with a Stretch vagrant box and then
+      cloning the image via Tails Installer with syslinux from Buster
+      (Closes: #16748).
+    - Set Tor Browser's homepage to https://tails.boum.org/home/testing/
+      if building anything but a stable release. This page explains the
+      dangers of using a non-stable release. (Closes: #12003)
+
+  * Build system
+    - auto/{build,config}:
+      * consistently use fatal() to error out, and prefix its message
+        with "E: " to help distinguish them from the noise produced by
+        tools we call etc.
+      * Similarly, also prefix informational message with "I: ".
+      * drop support for GnuPG 1.x.
+      * clone more build output to the log file.
+      * Drop obsolete check for syslinux version. This version
+        requirement is satisfied by Jessie and it is doubtful Tails
+        would build in anything older.
+      * auto/build: drop a few checks for conditions that are already
+        satisfied in the supported build environments.
+    - Revert "Build system: try to be smart again by fetching only the
+      refs we need." This optimization overrides the trick we have on
+      Jenkins (set_origin_base_branch_head in
+      https://git.tails.boum.org/jenkins-jobs/tree/macros/builders.yaml),
+      that ensures that a reproducibly_build_Tails_ISO_* job builds
+      from the commit used by the first build. (Closes: #16730)
+
+  * Test suite
+    - Fix mistake with execute() vs spawn() when starting the upgrader.
+    - Don't filter during pcap capture, instead let's just apply the
+      same filtering when we are inspecting the pcap files. This way
+      any pcap file saved on failure will include the full capture,
+      and not just the packets sent by the system under testing, which
+      sometimes makes it hard to understand what is going on.
+    - Also include the content of /var/log/tor/log in $scenario.tor
+      when tor failed to bootstrap (refs: #16793)
+    - Don't flood the debug logger with tor@default's journal
+      contents.
+    - Power off system under testing after scenario. Until now we have
+      relied on either one of the generated "snapshot restore" steps
+      or the "[Given] a computer" step to implicitly stop the old VM
+      when we move on to a new scenario. That meant the old VM was
+      still running during the new scenarios @Before@ hooks. If the
+      new scenario is tagged @check_tor_leaks that means we start its
+      sniffer while the old VM is still running, possibly sending
+      packets that then affect the new scenario. That would explain
+      some myserious "Unexpected connections were made" failures we
+      have seen (Closes: #11521).
+    - Only accept IP(v6)/ARP during DHCP check.
+
+ -- Tails developers <tails@boum.org>  Wed, 19 Jun 2019 11:54:29 +0200
+
 tails (3.14) unstable; urgency=medium
 
   * Security fixes

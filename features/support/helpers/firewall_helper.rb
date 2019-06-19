@@ -18,7 +18,9 @@ def pcap_connections_helper(pcap_file, opts = {})
     if PacketFu::EthPacket.can_parse?(p)
       eth_packet = PacketFu::EthPacket.parse(p)
     else
-      raise 'Found something that is not an ethernet packet'
+      raise FirewallAssertionFailedError.new(
+              'Found something that is not an ethernet packet'
+            )
     end
     sport = nil
     dport = nil
@@ -45,7 +47,9 @@ def pcap_connections_helper(pcap_file, opts = {})
       ip_packet = PacketFu::ARPPacket.parse(p)
       protocol = 'arp'
     else
-      raise "Found something that cannot be parsed"
+      raise FirewallAssertionFailedError.new(
+              "Found something that cannot be parsed"
+            )
     end
 
     next if opts[:ignore_dhcp] &&
