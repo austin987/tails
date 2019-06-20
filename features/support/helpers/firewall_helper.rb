@@ -10,13 +10,17 @@ end
 # address/port) in the graph of all network flows.
 def pcap_connections_helper(pcap_file, opts = {})
   opts[:ignore_dhcp] = true unless opts.has_key?(:ignore_dhcp)
+  opts[:ignore_arp] = true unless opts.has_key?(:ignore_arp)
+  opts[:ignore_sources] ||= [$vm.vmnet.bridge_mac]
   connections = Array.new
   packets = PacketFu::PcapFile.new.file_to_array(:filename => pcap_file)
   packets.each do |p|
     if PacketFu::EthPacket.can_parse?(p)
       eth_packet = PacketFu::EthPacket.parse(p)
     else
-      raise 'Found something that is not an ethernet packet'
+      raise FirewallAssertionFailedError.new(
+              'Found something that is not an ethernet packet'
+            )
     end
     sport = nil
     dport = nil
@@ -39,13 +43,20 @@ def pcap_connections_helper(pcap_file, opts = {})
     elsif PacketFu::IPPacket.can_parse?(p)
       ip_packet = PacketFu::IPPacket.parse(p)
       protocol = 'ip'
+    elsif PacketFu::ARPPacket.can_parse?(p)
+      ip_packet = PacketFu::ARPPacket.parse(p)
+      protocol = 'arp'
     else
-      raise "Found something that cannot be parsed"
+      raise FirewallAssertionFailedError.new(
+              "Found something that cannot be parsed"
+            )
     end
 
     next if opts[:ignore_dhcp] &&
             looks_like_dhcp_packet?(eth_packet, protocol,
                                     sport, dport, ip_packet)
+    next if opts[:ignore_arp] && protocol == "arp"
+    next if opts[:ignore_sources].include?(eth_packet.eth_saddr)
 
     packet_info = {
       mac_saddr: eth_packet.eth_saddr,

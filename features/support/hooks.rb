@@ -315,6 +315,11 @@ After('@product') do |scenario|
       FileUtils.rm(@video_path)
     end
   end
+  # If we don't shut down the system under testing it will continue to
+  # run during the next scenario's Before hooks, which we have seen
+  # causing trouble (for instance, packets from the previous scenario
+  # have failed scenarios tagged @check_tor_leaks).
+  $vm.power_off if $vm
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|
