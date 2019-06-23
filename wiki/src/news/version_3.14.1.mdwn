@@ -11,7 +11,11 @@ vulnerabilities|security/Numerous_security_holes_in_3.14]]. You should upgrade a
 
 [[!toc levels=1]]
 
-## Fixed arbitrary code execution in *Tor Browser*
+# Critical security vulnerabilities in *Tor Browser*
+
+## Fixed arbitrary code execution
+
+**This vulnerability is fixed in Tails 3.14.1.**
 
 A [critical vulnerability](https://www.mozilla.org/en-US/security/advisories/mfsa2019-18/)
 was discovered in the JavaScript engine of *Firefox* and *Tor Browser*.
@@ -19,8 +23,8 @@ This vulnerability allowed a malicious website to execute arbitrary
 code, which means possibly taking over your browser and turning it into
 a malicious application.
 
-The Firefox team has reported seeing this vulnerability being abused on
-the Internet but has not disclosed further details.
+This vulnerability has already been used to
+[target employees of the Coinbase cryptocurrency exchange](https://www.zdnet.com/article/firefox-zero-day-was-used-in-attack-against-coinbase-employees-not-its-users/).
 
 People using the *Safer* or *Safest* [[security level of *Tor
 Browser*|doc/anonymous_internet/Tor_Browser#security_level]] are not
@@ -33,15 +37,23 @@ Because *Tor Browser* in Tails is [[confined using
 of this vulnerability in Tails is less than in other operating systems.
 For example, an exploited *Tor Browser* in Tails could have accessed
 your files in the *Tor Browser* and *Persistent/Tor Browser* folders but
-not elsewhere in your persistent storage.
+not anywhere else.
 
-A second security vulnerability (a *sandbox escape*) has been revealed
-on *Firefox* and *Tor Browser*. This second vulnerability could only be
-used by other possible vulnerabilities in *Firefox* or *Tor Browser* as
-a way to do more damage to the operating system. Because in Tails, *Tor
-Browser* is already confined by *AppArmor*, we think that this second
-vulnerability is not severe in Tails. That is why, we are releasing
-3.14.1 today, without waiting for a fix for this second vulnerability.
+## Unfixed sandbox escape
+
+<div class="caution">
+
+<p><strong>This second vulnerability is still affecting Tails 3.14.1 and
+<em>Tor Browser</em> is unsafe to use in most cases.</strong></p>
+
+<p>We will fix it as soon as possible.</p>
+
+</div>
+
+[[!inline pages="news/version_3.14.1/sandbox_escape.inline" raw="yes" sort="age"]]
+
+We might update our analysis or announce an emergency release soon in
+our [[security advisory|security/sandbox_escape_in_tor_browser]].
 
 # Upgrades and changes
 
