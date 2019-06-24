@@ -39,8 +39,12 @@ GET_UDISKS_OBJECT_TIMEOUT = 2
 # the partition table, reserved sectors, and filesystem metadata.
 SYSTEM_PARTITION_ADDITIONAL_SIZE = 10
 
-SYSLINUX_COM32MODULES_DIR = '/usr/lib/syslinux/modules/bios'
-
+# We use the syslinux from the chroot here, because it's the same one
+# that will be available to Tails Installer in the running Tails. Using
+# the same syslinux version here and in Tails Installer is important to
+# prevent issues when upgrading a Tails device via Tails Installer.
+CHROOT_SYSLINUX_COM32MODULES_DIR = 'chroot/usr/lib/syslinux/modules/bios'
+CHROOT_SYSLINUX_BIN='chroot/usr/bin/syslinux'
 
 class ImageCreationError(Exception):
     pass
@@ -252,7 +256,7 @@ class ImageCreator(object):
         com32modules = [f for f in os.listdir(syslinux_dir) if f.endswith('.c32')]
 
         for module in sorted(com32modules):
-            src_path = os.path.join(SYSLINUX_COM32MODULES_DIR, module)
+            src_path = os.path.join(CHROOT_SYSLINUX_COM32MODULES_DIR, module)
             if not os.path.isfile(src_path):
                 raise ImageCreationError("Could not find the '%s' COM32 module" % module)
 
@@ -269,7 +273,7 @@ class ImageCreator(object):
         # device would cause this issue:
         # https://bugs.chromium.org/p/chromium/issues/detail?id=508713#c8
         execute([
-            'syslinux',
+            CHROOT_SYSLINUX_BIN,
             '--offset', str(self.partition.props.partition.props.offset),
             '--directory', '/syslinux/',
             '--install', self.image

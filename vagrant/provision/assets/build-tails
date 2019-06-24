@@ -59,27 +59,28 @@ fi
 
 TAILS_GIT_DIR="/home/vagrant/amnesia"
 if [ ! -d "${TAILS_GIT_DIR}" ]; then
-    # We use --shared as an time/space optimization, and it is safe
-    # since our build process doesn't modify any objects (which would
-    # fail since the host's .git directory is shared read-only).
-    git clone --shared --local /amnesia.git/.git "${TAILS_GIT_DIR}"
-    # When we locally Git clone the main repo over the filesystem
-    # above, it will use the host's local repo as origin, but the
-    # submodules will continue to use their remote repos. A problem
-    # with this, beside unnecessary fetching of the network, is that
-    # any unpublished commits in the host's submodule are
-    # inaccessible, so if we want to build we first have to push those
-    # commits to the submodules remote repo. To avoid this, and in
-    # general try to make sure that the Git state in the builder is
-    # the same as on the host, we just clone the submodules in the
-    # same way we do the main repo.
-    (
-        cd "${TAILS_GIT_DIR}/submodules"
-        for submodule in $(ls -1); do
-            rm -rf "${submodule}"
-            git clone --shared "/amnesia.git/.git/modules/submodules/${submodule}"
-        done
-    )
+	# We use --shared as an time/space optimization, and it is safe
+	# since our build process doesn't modify any objects (which would
+	# fail since the host's .git directory is shared read-only).
+	git clone --shared --local /amnesia.git/.git "${TAILS_GIT_DIR}"
+	# When we locally Git clone the main repo over the filesystem
+	# above, it will use the host's local repo as origin, but the
+	# submodules will continue to use their remote repos. A problem
+	# with this, beside unnecessary fetching of the network, is that
+	# any unpublished commits in the host's submodule are
+	# inaccessible, so if we want to build we first have to push those
+	# commits to the submodules remote repo. To avoid this, and in
+	# general try to make sure that the Git state in the builder is
+	# the same as on the host, we just clone the submodules in the
+	# same way we do the main repo.
+	(
+		cd "${TAILS_GIT_DIR}/submodules"
+		for submodule in $(ls -1); do
+			rm -rf "${submodule}"
+			git clone --shared \
+			    "/amnesia.git/.git/modules/submodules/${submodule}"
+		done
+	)
 fi
 
 cd "${TAILS_GIT_DIR}"
@@ -87,27 +88,15 @@ cd "${TAILS_GIT_DIR}"
 # they were on our own "origin" remote, (i.e. under the origin/$REF
 # name), even if it's untrue (our own "origin" is amnesia.git and has
 # only one local ref, which is the branch we work on and that it has
-# checked out as a local tracking branch). We need this for the base
-# branch merge we do (if the 'mergebasebranch'/TAILS_MERGE_BASE_BRANCH
-# option is set) later in auto/build.
+# checked out as a local tracking branch). This allows
+# git_base_branch_head(), that's used by Rakefile to set
+# $BASE_BRANCH_GIT_COMMIT, to do its job: without this, it would not
+# have access to the state of the base branch because it would not
+# have any ref for it.
 git config remote.origin.fetch +refs/remotes/origin/*:refs/remotes/origin/*
 
-# Ensure we have the Git refs we need:
-git fetch origin "${GIT_REF}"
-# The repo we cloned above (the host's repo) will expose *its* local
-# checkouts of branches. We know that the GIT_REF ref will be
-# up-to-date since it is what is checked out on the host, so we could
-# just fetch it above, but for any other ref (read: branch) the local
-# checkout could be very out-of-date, or worse: it may not even exist,
-# making any attempt at merging the base branch below fail. We work
-# around this by fetching the ref from the host's origin (most likely
-# the official Tails repo) where the base branch refs must exist and
-# be as up-to-date as possible (i.e. since the host's last fetch).
-if [ "${TAILS_MERGE_BASE_BRANCH}" = 1 ]; then
-    git fetch origin "origin/$(cat config/base_branch)"
-fi
-
-# Ensure we have the same Git state as on the host:
+# Ensure we have the same Git state as on the host
+git fetch --tags
 git checkout --force "${GIT_REF}"
 git reset --hard "${GIT_COMMIT}"
 git submodule update --init
@@ -134,16 +123,16 @@ if [ -n "$TAILS_DATE_OFFSET" ]; then
 fi
 
 if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
-    # The apt-cacher-ng cache disk is 15G, so let's ensure at most 10G
-    # of it is used there is 5G before each build, which should be
-    # enough for any build, even if we have to download a complete set
-    # of new packages for a new Debian release.
-    as_root_do /usr/lib/apt-cacher-ng/acngtool shrink 10G -f || \
-        echo "The clean-up of apt-cacher-ng's cache failed: this is" \
-             "not fatal and most likely just means that some disk" \
-             "space could not be reclaimed -- in order to fix that" \
-             "situation you need to manually investigate " \
-             "/var/cache/apt-cacher-ng/apt-cacher-ng-log/main_*.html" >&2
+	# The apt-cacher-ng cache disk is 15G, so let's ensure at most 10G
+	# of it is used there is 5G before each build, which should be
+	# enough for any build, even if we have to download a complete set
+	# of new packages for a new Debian release.
+	as_root_do /usr/lib/apt-cacher-ng/acngtool shrink 10G -f || \
+	echo "The clean-up of apt-cacher-ng's cache failed: this is" \
+	     "not fatal and most likely just means that some disk" \
+	     "space could not be reclaimed -- in order to fix that" \
+	     "situation you need to manually investigate " \
+	     "/var/cache/apt-cacher-ng/apt-cacher-ng-log/main_*.html" >&2
 fi
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
