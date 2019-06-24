@@ -1050,7 +1050,7 @@ and on the live website (even for a release candidate):
     EOF
 
 	TRACE_TIME=$(date +%s) &&
-	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
 	[ -n "${MASTER_CHECKOUT:?}" ] && \
 	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
 	(
@@ -1073,7 +1073,7 @@ candidate):
     EOF
 
 	TRACE_TIME=$(date +%s) &&
-	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
 	[ -n "${MASTER_CHECKOUT:?}" ] && \
 	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
 	(
@@ -1084,8 +1084,6 @@ candidate):
 	)
 
 ## Announce, seed and test the Torrents
-
-Skip this section if [[!tails_ticket 16378]] is not resolved yet.
 
 Check if there's enough space on our Bittorrent seed to import the new
 ISO and USB images:
@@ -1174,8 +1172,6 @@ Testing
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
-1. If [[!tails_ticket 16378]] is not resolved yet, ensure someone will
-   seed the Torrents.
 
 Update the website and Git repository
 =====================================
@@ -1248,6 +1244,10 @@ images to be released were *built*. Including:
 - the list of MFSA fixed by the Tor Browser update:
   <https://www.mozilla.org/security/announce/>
 
+Remove obsolete bits from `wiki/src/home/testing.html`. For example,
+remove any text that's specific to a release candidate we may have
+published for the version you are preparing.
+
 If preparing a release candidate
 --------------------------------
 
@@ -1275,6 +1275,10 @@ Write the announcement for the release in
 
       sed -i 's@#\([0-9]\{4,5\}\)@[[!tails_ticket \1]]@g' \
           wiki/src/news/test_${TAG:?}.mdwn
+
+In `wiki/src/home/testing.html`, add a bullet point with a pointer to
+the call for testing for this release candidate
+(<https://tails.boum.org/news/test_$TAG/>, that you just wrote).
 
 In any case
 -----------
