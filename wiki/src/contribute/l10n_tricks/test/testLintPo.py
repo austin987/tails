@@ -1,6 +1,7 @@
 #!/usb/bin/env python3
 import glob
 import importlib.machinery
+import logging
 import os
 import unittest
 import tempfile
@@ -47,6 +48,35 @@ class TestCheckPo(unittest.TestCase):
                 path, issues = lint_po.check_po_file(newPath, extended=False)
             with self.assertRaises(FileNotFoundError, msg=newPath):
                 path, issues = lint_po.check_po_file(newPath, extended=True)
+
+
+    def test_defaultOption(self):
+        with open(os.path.join(DIRNAME, "checkPo.yml")) as f:
+            expected = yaml.load(f)
+
+        expectedOutput = []
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for fpath in glob.glob(os.path.join(DIRNAME, "checkPo/*")):
+                name = os.path.basename(fpath)
+                newPath = os.path.join(tmpdir, name+ "/" + name + ".en.po")
+                os.mkdir(os.path.join(tmpdir, name))
+                os.symlink(os.path.abspath(fpath), newPath)
+                if not expected[name]:
+                    expectedOutput.append("DEBUG:root:{} - No issue found.".format(name+ "/" + name + ".en.po"))
+                else:
+                    expectedOutput.append("ERROR:root:{}:\n\t{}".format(name+ "/" + name + ".en.po", expected[name][0].replace("\n","\n\t")))
+
+            cwd  = os.getcwd()
+            try:
+                os.chdir(tmpdir)
+                with self.assertRaises(SystemExit) as e:
+                    with self.assertLogs(level='DEBUG') as cm:
+                        lint_po.main(logging.getLogger())
+            finally:
+                os.chdir(cwd)
+
+            self.assertEqual(e.exception.args, ("checked files are not clean.",))
+            self.assertEqual(sorted(cm.output), sorted(expectedOutput))
 
     def test_lint_po(self):
         self.maxDiff = None

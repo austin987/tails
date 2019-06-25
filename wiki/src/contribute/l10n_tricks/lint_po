@@ -8,6 +8,9 @@ Usage:
 Default is check mode where the error are listed but not fixed.
 With --modify the files get changed and unified.
 
+Run for all po files in the working directory (including subdirs):
+./lint_po
+
 Run with a list of files:
 ./lint_po file1.de.po file2.fr.po
 
@@ -249,6 +252,9 @@ def main(logger) -> None:
 
         # add all po files to list to unify
         args.files += [os.path.join(toplevel, f) for f in output.splitlines() if f.endswith(".po")]
+
+    if not args.files and not args.cached and not args.lang:
+        args.files += glob.glob("**/*.po", recursive=True)
 
     if not args.files:
         logger.warning("no file to process :("
