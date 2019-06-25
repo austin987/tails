@@ -40,6 +40,14 @@ class TestCheckPo(unittest.TestCase):
                 self.assertEqual(path, newPath)
                 self.assertEqual(issues, expected[name], msg=name)
 
+    def test_nonexistingPo(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            newPath = os.path.join(tmpdir, "nonexisting.en.po")
+            with self.assertRaises(FileNotFoundError, msg=newPath):
+                path, issues = lint_po.check_po_file(newPath, extended=False)
+            with self.assertRaises(FileNotFoundError, msg=newPath):
+                path, issues = lint_po.check_po_file(newPath, extended=True)
+
     def test_lint_po(self):
         self.maxDiff = None
         with tempfile.TemporaryDirectory() as tmpdir:

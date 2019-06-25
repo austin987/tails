@@ -118,6 +118,8 @@ class PoFile:
 
     def open(self) -> None:
         """read po file content"""
+        if not os.path.exists(self.fname):
+            raise FileNotFoundError(self.fname)
         self.pf = polib.pofile(self.fname)
         self.pf.wrapwidth = self.wrapwidth
         self.__changed = False
