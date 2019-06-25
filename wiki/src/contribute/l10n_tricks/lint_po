@@ -14,14 +14,13 @@ Run for all po files in the working directory (including subdirs):
 Run with a list of files:
 ./lint_po file1.de.po file2.fr.po
 
-or unify all po files that are staged for git commit:
+Run for all po files that are staged for git commit:
 ./lint_po --cached
 
-or unify all po files of one language in the current directory and all
-subdirectories:
+Run for all po files of one language in the current directory (including subdirs):
 ./lint_po --lang de
 
-When modifying unify_po (this script), you should check if the current type
+When modifying lint_po (this script), you should check if the current type
 annotations match, using `mypy` (`apt install mypy`):
 
 mypy lint_po
@@ -234,7 +233,7 @@ def main(logger) -> None:
     parser.add_argument('--cached', dest='cached', action='store_true',
                         help='all git staged PO files.')
     parser.add_argument('files', metavar='file', type=str, nargs='*',
-                        help='list of files to process')
+                        help='list of files to process.')
     args = parser.parse_args()
 
     if args.lang:
