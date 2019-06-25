@@ -6,7 +6,7 @@ Usage:
 ./lint_po --help
 
 Default is check mode where the error are listed but not fixed.
-With --modify the files get changed and unified.
+With --fix the files get changed and unified.
 
 Run for all po files in the working directory (including subdirs):
 ./lint_po
@@ -225,8 +225,8 @@ def unify_po_file(fname: str) -> None:
 
 def main(logger) -> None:
     parser = argparse.ArgumentParser(description='Unify PO files')
-    parser.add_argument('--modify', dest='modify', action='store_true',
-                        help='Modify the PO headers, otherwise only check is done.')
+    parser.add_argument('--fix', dest='fix', action='store_true',
+                        help='Fixes the issues of the PO headers, otherwise only check is done.')
     parser.add_argument('--check-extended', dest='extended', action='store_true',
                         help='Do extended checks of PO headers.')
     parser.add_argument('--lang', dest='lang', help='all files of a specific language.')
@@ -266,7 +266,7 @@ def main(logger) -> None:
                      .format(prog=prog))
 
     pool = multiprocessing.Pool()
-    if args.modify:
+    if args.fix:
         # unify PO headers for a list of files
         list(pool.map(unify_po_file, args.files))
     else:
