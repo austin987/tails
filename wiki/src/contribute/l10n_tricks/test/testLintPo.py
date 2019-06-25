@@ -8,7 +8,7 @@ import shutil
 import yaml
 
 
-unifyPo = importlib.machinery.SourceFileLoader('unifyPo', 'unifyPo').load_module()
+lint_po = importlib.machinery.SourceFileLoader('lint_po', 'lint_po').load_module()
 
 
 DIRNAME = os.path.dirname(__file__)
@@ -23,7 +23,7 @@ class TestCheckPo(unittest.TestCase):
                 name = os.path.basename(fpath)
                 newPath = os.path.join(tmpdir, name + ".en.po")
                 os.symlink(os.path.abspath(fpath), newPath)
-                path, issues = unifyPo.check_po_file(newPath, extended=False)
+                path, issues = lint_po.check_po_file(newPath, extended=False)
                 self.assertEqual(path, newPath)
                 self.assertEqual(issues, expected[name], msg=name)
 
@@ -36,51 +36,51 @@ class TestCheckPo(unittest.TestCase):
                 name = os.path.basename(fpath)
                 newPath = os.path.join(tmpdir, name + ".en.po")
                 os.symlink(os.path.abspath(fpath), newPath)
-                path, issues = unifyPo.check_po_file(newPath, extended=True)
+                path, issues = lint_po.check_po_file(newPath, extended=True)
                 self.assertEqual(path, newPath)
                 self.assertEqual(issues, expected[name], msg=name)
 
-    def test_unifyPo(self):
+    def test_lint_po(self):
         self.maxDiff = None
         with tempfile.TemporaryDirectory() as tmpdir:
-            for fpath in glob.glob(os.path.join(DIRNAME, "unifyPo/*")):
+            for fpath in glob.glob(os.path.join(DIRNAME, "lint_po/*")):
                 with open(fpath) as f:
                     expectedContent = f.read()
                 name = os.path.basename(fpath)
                 newPath = os.path.join(tmpdir, name + ".en.po")
                 shutil.copy(os.path.join(DIRNAME, "checkPo", name), newPath)
-                unifyPo.unify_po_file(newPath)
+                lint_po.unify_po_file(newPath)
                 with open(newPath) as f:
                     self.assertEqual(f.read(), expectedContent, msg=name)
-                _, issues = unifyPo.check_po_file(newPath, extended=True)
+                _, issues = lint_po.check_po_file(newPath, extended=True)
                 self.assertEqual(issues, [], msg=name)
 
     def test_lang(self):
-        self.assertEqual(unifyPo.PoFile("index.de.po").lang(), "de")
-        self.assertEqual(unifyPo.PoFile("x/a/a.fb.xx.po").lang(), "xx")
+        self.assertEqual(lint_po.PoFile("index.de.po").lang(), "de")
+        self.assertEqual(lint_po.PoFile("x/a/a.fb.xx.po").lang(), "xx")
 
-        _p = unifyPo.PoFile(".de.po")
-        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname) as e:
+        _p = lint_po.PoFile(".de.po")
+        with self.assertRaises(lint_po.NoLanguageError, msg=_p.fname) as e:
             _p.lang()
 
         self.assertEqual(str(e.exception), "Can't detect expect file suffix .XX.po for '.de.po'.")
 
-        _p = unifyPo.PoFile(".a.d.de.po")
-        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname):
+        _p = lint_po.PoFile(".a.d.de.po")
+        with self.assertRaises(lint_po.NoLanguageError, msg=_p.fname):
             _p.lang()
 
-        _p = unifyPo.PoFile("a.po")
-        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname):
+        _p = lint_po.PoFile("a.po")
+        with self.assertRaises(lint_po.NoLanguageError, msg=_p.fname):
             _p.lang()
 
-        _p = unifyPo.PoFile("/a/d/d..po")
-        with self.assertRaises(unifyPo.NoLanguageError, msg=_p.fname):
+        _p = lint_po.PoFile("/a/d/d..po")
+        with self.assertRaises(lint_po.NoLanguageError, msg=_p.fname):
             _p.lang()
 
     def test_needs_rewrap(self):
-        with unifyPo.pofile_readonly(os.path.join(DIRNAME, "checkPo/length")) as poFile:
+        with lint_po.pofile_readonly(os.path.join(DIRNAME, "checkPo/length")) as poFile:
             self.assertEqual(poFile.needs_rewrap(), True)
-        with unifyPo.pofile_readonly(os.path.join(DIRNAME, "unifyPo/length")) as poFile:
+        with lint_po.pofile_readonly(os.path.join(DIRNAME, "unifyPo/length")) as poFile:
             self.assertEqual(poFile.needs_rewrap(), False)
 
 
