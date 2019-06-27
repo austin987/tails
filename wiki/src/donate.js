@@ -124,4 +124,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Make sure that a frequency is selected
+  var frequency = false;
+  document.getElementById("donate-paypal-button").onclick = function(e) {
+    frequencies = document.getElementsByName("frequency");
+    for (let i = 0; i < frequencies.length; i++) {
+      if (frequencies[i].checked) frequency = frequencies[i].id;
+    }
+    if (!frequency) {
+      e.preventDefault();
+      console.log(document.getElementById("donate-paypal-button").classList.remove("active"));
+      document.getElementById("frequency-buttons").classList.add("shake");
+    }
+  }
+
 });
