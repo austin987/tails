@@ -5,8 +5,6 @@ Until we have
 we have to maintain a patch series for Thunderbird ourselves, that we apply
 while building Tails images.
 
-The first time you do this requires some additional steps (WARNING!
-this will download almost 2 GiB of data):
 
 1. Create, checkout and push a branch in `tails.git` with the
    `+force-all-tests` suffix (most of `features/thunderbird.feature`
@@ -16,18 +14,23 @@ this will download almost 2 GiB of data):
 
         ./bin/add-APT-overlay
 
-1. Clone [Tails' Thunderbird repo](http://git.tails.boum.org/thunderbird/).
+1. The first time you do this requires some additional steps (WARNING!
+   this will download almost 2 GiB of data):
 
-1. Add a remote for Debian:
+   1. Clone [Tails' Thunderbird repo](http://git.tails.boum.org/thunderbird/).
+
+   1. Add a remote for Debian:
 
         git remote add debian-upstream https://salsa.debian.org/mozilla-team/thunderbird.git
 
-Let's pretend the scenario is that Thunderbird 60.0-3 has just been
-released:
+1. Set environment variables:
 
-    VERSION="60.0-3"
-    TAG="debian/1%$(echo ${VERSION:?} | tr '~' '_')"
-    UPSTREAM_VERSION=$(echo ${VERSION:?} | perl -pi -E 's/-.*//')
+   Let's pretend the scenario is that Thunderbird 60.0-3 has just been
+   released:
+
+        VERSION="60.0-3"
+        TAG="debian/1%$(echo ${VERSION:?} | tr '~' '_')"
+        UPSTREAM_VERSION=$(echo ${VERSION:?} | perl -pi -E 's/-.*//')
 
 1. `git fetch && git fetch debian-upstream`
 
