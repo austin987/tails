@@ -270,9 +270,8 @@ class Volume(object):
                                                                       None)                       # cancellable
                 unmounted_at_least_once = True
             except GLib.Error as e:
-                if "org.freedesktop.UDisks2.Error.NotMounted" in e.message:
-                    if not unmounted_at_least_once:
-                        logger.warning("Failed to unmount volume %s: %s", self.device_file, e.message)
+                # Ignore "not mounted" error if the volume was already unmounted
+                if "org.freedesktop.UDisks2.Error.NotMounted" in e.message and unmounted_at_least_once:
                     return
                 raise
 
@@ -322,8 +321,16 @@ class Volume(object):
             loop.call_set_autoclear_sync(True,
                                          GLib.Variant('a{sv}', {}),  # options
                                          None)                       # cancellable
-        self.unmount()
-        self.backing_volume.lock()
+        try:
+            self.unmount()
+            self.backing_volume.lock()
+        except GLib.Error as e:
+            # Translators: Don't translate {volume_name} or {error_message},
+            # they are placeholder and will be replaced.
+            body = _("Couldn't lock volume {volume_name}:\n{error_message}".format(volume_name=self.name,
+                                                                                   error_message=e.message))
+            self.manager.show_warning(_("Error locking volume"), body)
+            return
 
     def on_unlock_button_clicked(self, button):
         logger.debug("in on_unlock_button_clicked")
