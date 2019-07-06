@@ -33,7 +33,6 @@ the Tails images build process.
 
         VERSION="60.0-3"
         TAG="debian/1%$(echo ${VERSION:?} | tr '~' '_')"
-        UPSTREAM_VERSION=$(echo ${VERSION:?} | perl -pi -E 's/-.*//')
 
 1. `git fetch && git fetch debian-upstream`
 
@@ -52,11 +51,6 @@ the Tails images build process.
 
         git checkout tails/stretch && git merge origin/tails/stretch && \
         git merge --no-edit "${TAG:?}"
-
-   Now you most likely will have to deal with a merge conflict in
-   `debian/changelog` -- just reorder the conflicting entries by
-   version number, `git add` modified files as needed, and ensure
-   a merge commit is created eventually.
 
 1. Let's ensure our patches still apply cleanly:
 
