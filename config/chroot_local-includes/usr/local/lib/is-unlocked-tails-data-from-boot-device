@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+set -u
+
+device="$1"
+sysfs_path="/sys/$2"
+
+[ -b "/dev/$device" ] || exit 3
+
+backing_device=$(ls "$sysfs_path/slaves/" | head -n1)
+lsblk -n -o kname /dev/bilibop | grep -q "^$backing_device$"
