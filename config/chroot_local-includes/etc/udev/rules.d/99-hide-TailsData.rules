@@ -1,10 +1,4 @@
-# We set UDISKS_IGNORE on TailsData partitions to hide them in GNOME apps.
-# This solves two issues:
-#  * It hides TailsData in the Places menu, which, when clicked, would show
-#    an error because it is already mounted.
-#    See 791cab4b6f075ee9753cac08895acb2f008a7e71.
-#    XXX: This commit is very old, let's check if we would still be affected
-#         by this issue if we don't hide the partition.
-#
-#  * It prevents spurious notifications being shown when setting up persistence.
 ENV{ID_FS_LABEL}=="TailsData", ENV{UDISKS_IGNORE}="1"
+# We set UDISKS_IGNORE on the TailsData partition of the live boot
+# device to hide it in GNOME apps. This prevents spurious notifications
+# being shown when setting up persistence.
