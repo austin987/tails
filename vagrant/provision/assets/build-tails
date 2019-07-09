@@ -49,7 +49,8 @@ old_build_dirs() {
 }
 
 ntp_synchronized() {
-	timedatectl status | grep -qs -E '^\s*NTP\s+synchronized:\s+yes$'
+	timedatectl status | grep -qs -E '^\s*NTP\s+service:\s+active$' && \
+	timedatectl status | grep -qs -E '^\s*System\s+clock\s+synchronized:\s+yes$'
 }
 
 if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
