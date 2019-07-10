@@ -1083,7 +1083,12 @@ Thunderbird itself leaks a lot of data and makes DNS requests, for example by
 retrieving mail server configurations from a remote server over an insecure
 channel. This is prevented by the TorBirdy extension as well as by custom
 patches for Thunderbird in Tails, which we are currently in the process of
-upstreaming ([[!tails_ticket 6156]]).
+upstreaming ([[!tails_ticket 6156]]). Until they are upstreamed, we patch
+Thunderbird (from Debian) while building Tails images:
+
+- [[!tails_gitweb_dir config/chroot_local-includes/usr/share/tails/build/thunderbird-patches]]
+- [[!tails_gitweb config/chroot_local-hooks/11-patch-thunderbird]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/tails/build/patch-thunderbird]]
 
 Thunderbird generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
@@ -1118,9 +1123,6 @@ manual configuration.
 OpenPGP support is provided by the Enigmail addon.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.thunderbird]] is copied to
   the user's `$HOME` at boot time
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
