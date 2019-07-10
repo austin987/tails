@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -e
+set -u
+
+OMNI_JA="$1"
+PATCHES_DIRECTORY=$(readlink -f "$2")
+
+[ -r "$OMNI_JA" ] || exit 1
+[ -d "$PATCHES_DIRECTORY" ] || exit 2
+
+tmpdir="$(mktemp -d)"
+
+(
+   cd "${tmpdir}"
+   # due to the weird omni.ja format, 7z will exit with non-zero code,
+   # that we need to override
+   7z x -tzip "$OMNI_JA" || true
+   for patch in $(cat "$PATCHES_DIRECTORY"/series) ; do
+      cat "$PATCHES_DIRECTORY/$patch" \
+	 | perl -p -E 's{^(--- [ab])/comm/mail/components/accountcreation/content/}{$1/chrome/messenger/content/messenger/accountcreation/}' \
+	 | perl -p -E 's{^(--- [ab])/comm/mailnews/}{$1/defaults/pref/}' \
+	 | patch -p1
+   done
+   find . -name *.js -exec touch --date="@$SOURCE_DATE_EPOCH" '{}' \;
+   rm "$OMNI_JA"
+   7z a -mtc=off -tzip "$OMNI_JA" *
+)
+
+rm -r "${tmpdir}"
