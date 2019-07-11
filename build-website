@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e
+set -u
+
+FATAL_SANITY_CHECK=yes
+
+# Parse arguments aimed at this wrapper, and drop them from $@ so we
+# can pass it on to ikiwiki.
+for arg in "${@}"; do
+    shift
+    if [ "${arg}" = --non-fatal-sanity-check ]; then
+        FATAL_SANITY_CHECK=no
+        continue
+    fi
+    set -- "${@}" "${arg}"
+done
+
+git_dir="$(git rev-parse --show-toplevel)"
+if ! "${git_dir}/bin/sanity-check-website" ; then
+    if [ "${FATAL_SANITY_CHECK}" != no ]; then
+        echo "Some pages in our wiki are bad! Please fix them or re-run" \
+             "with the --non-fatal-sanity-check option" >&2
+        exit 1
+    fi
+fi
+
+ikiwiki -setup ikiwiki.setup -refresh "$@"

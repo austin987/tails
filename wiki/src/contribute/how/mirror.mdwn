@@ -1,0 +1,274 @@
+[[!meta title="Set up a Tails mirror"]]
+
+<div id="intro">
+
+<p>Setting up a Tails BitTorrent or HTTPS mirror helps Tails users
+downloading it faster and more reliably.</p>
+
+[[!toc levels=2]]
+
+</div>
+
+BitTorrent
+==========
+
+It's really easy to help Tails users downloading it over BitTorrent...
+especially if you are already a BitTorrent user.
+
+1. Get the latest BitTorrent files
+----------------------------------
+
+Here are the latest available BitTorrent files:
+
+[[!map pages="torrents/files/*.torrent"]]
+
+2. Share Tails images
+---------------------
+
+Feed your preferred BitTorrent client with the `.torrent` files
+downloaded at the previous step. Make sure you open and/or forward the
+needed ports in your router and/or firewall configuration so that you
+are a real seed.
+
+3. Stay tuned!
+--------------
+
+As a contributor to Tails availability over BitTorrent, it is very
+important you share the very latest published version, and only this
+one: users need to be able to quickly download it and upgrade when we
+release security fixes, and there is no need to help propagate
+outdated versions with security flaws.
+
+A way to do this is to configure software to [[automatically download
+and seed Tails over
+BitTorrent|contribute/how/mirror/automatically_download_and_seed_Tails_over_BitTorrent]].
+
+Else, new versions are announced on:
+
+* our [[news list|about/contact#amnesia-news]]
+* our <a href='/torrents/rss/index.rss'>RSS</a> and
+  <a href='/torrents/rss/index.atom'>Atom</a> feeds that announce new available
+  BitTorrent files.
+
+<a id="http"></a>
+<a id="https"></a>
+
+HTTPS
+=====
+
+To efficiently help Tails users downloading it over HTTPS, one needs to
+have sufficiently privileged access to a web server with decent
+bandwidth: a domestic DSL connection won't help; neither will a shared
+web hosting setup that provides FTP access only.
+
+To give you an idea, a few dedicated Mb/s is a must; you must expect
+pushing at least **50-100GB** [[!wikipedia GiB]] (bytes, not bits) on
+a normal day, and twice as much for a short period after each release.
+So, it is a must to be able to push **at least 5 [[!wikipedia TiB]]**
+a month, and **preferably 6 or 8 TiB**.
+
+You will also need **30 GiB** maximum of disk space.
+
+Please provide an unfiltered access to your server (no GeoIP
+blocking, no IP bans, no CAPTCHAs, etc.) as we want people everywhere
+to be able to download Tails.
+
+If you satisfy these practical requirements, please read on!
+Else, please consider seeding Tails images over BitTorrent instead.
+
+Before starting doing any real work on this topic, you may want to get in touch
+(<tails-mirrors@boum.org>, [[OpenPGP key|doc/about/openpgp_keys#mirrors]]) and send us
+your OpenPGP public key, so that any further communication between us
+can be properly encrypted and authenticated.
+
+The big picture
+------------------
+
+All downloads are currently served from a diverse pool of mirrors
+(see the [[design document|contribute/design/mirrors]] for details).
+
+Every HTTPS mirror makes our files available under a fixed URL
+(e.g. `https://42.dl.amnesia.boum.org/tails/` or `https://yourdomain.org/pub/tails/`)
+that contains per-version sub-directories (such as
+`https://42.dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
+
+Alongside our mirror pool redirecting to mirrors using their own domain, we maintain
+a DNS Round Robin pool for the `dl.amnesia.boum.org` host. This pool serves as a
+fallback, we add only a few fast and reliable mirrors to it.
+
+We only accept mirrors that provide a SSL certificate deemed valid by
+Firefox for the exact hostname used.
+
+Pick a hostname for your mirror
+-------------------------------
+
+Your web server needs to answer HTTP and HTTPS requests sent to
+a _dedicated_ hostname that is unique, within our mirror pool.
+Furthermore, your web server should answer requests sent to `dl.amnesia.boum.org`
+(your mirror could be added to our fallback mirror pool at any moment).
+
+There are two ways to pick that dedicated hostname:
+
+1. Use a hostname of your choice, under a domain you control.
+   For example, if you control `example.com`, you can call your Tails
+   mirror `tails.example.com`. This is, by far, our preferred option:
+   * it allows you to maintain that DNS record yourself, e.g. whenever you
+     need to update your mirror's IP address;
+   * it saves us a lot of work :)
+
+2. Use a hostname of our choice, under `dl.amnesia.boum.org` (e.g.
+   you may get `142.dl.amnesia.boum.org`). To do so, at the end of
+   this set of instructions, when it's time to ask us to add your
+   mirror to the pool, also ask us to create a dedicated hostname
+   for you.
+
+Manual set up
+-------------------------
+
+<div class="tip">
+If you are using [[!wikipedia Puppet_(software) desc="Puppet"]] to configure
+your server infrastructure, consider using the available [[HTTP mirror Puppet
+module|mirror#http-puppet]].
+</div>
+
+### 1. Set up your web server
+
+Set up a virtual host for the hostname chosen at the
+previous step. The virtual host will need to
+have indexing enabled.
+
+Files must be served over HTTP and HTTPS. To be helpful in our
+context, this requires a certificate that is considered valid by
+mainstream web browsers; you can get such a certificate free of charge,
+from [Let's Encrypt](https://letsencrypt.org/) for example.
+
+#### Apache configuration example
+
+	<VirtualHost YOUR_WEBSERVER_IP:80>
+	   ServerName yourdomain.org
+	   ServerAlias dl.amnesia.boum.org
+	   ServerAlias *.dl.amnesia.boum.org
+	   RewriteEngine On
+	   RewriteRule ^/?(.*) https://%{SERVER_NAME}/pub/$1 [R=permanent,L]
+	</VirtualHost>
+
+	<VirtualHost YOUR_WEBSERVER_IP:443>
+	   ServerName yourdomain.org
+	   ServerAdmin YOUR_EMAIL
+
+	   SSLEngine on
+	   SSLCertificateFile /etc/apache2/ssl/apache.crt
+	   SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+
+	   DocumentRoot /var/www/YOUR_PATH/
+	   <Directory /var/www/YOUR_PATH/>
+	      Options Indexes
+	      AllowOverride None
+	      IndexIgnore README.html
+	      IndexOptions FancyIndexing FoldersFirst IgnoreCase NameWidth=50
+	      IndexOrderDefault Descending Date
+	   </Directory>
+	</VirtualHost>
+
+<div class="tip">
+You can harden this configuration using the
+<a href="https://mozilla.github.io/server-side-tls/ssl-config-generator/">
+Mozilla SSL Configuration Generator</a>.
+</div>
+
+#### Lighttpd configuration example
+
+	$HTTP["host"] =~ "^(\d+\.)?dl\.amnesia\.boum\.org$" {
+		server.document-root = "/var/www/YOUR_PATH/"
+		server.dir-listing = "enable"
+	}
+
+#### nginx configuration example
+
+	server {
+		server_name dl.amnesia.boum.org *.dl.amnesia.boum.org;
+		root /var/www/YOUR_PATH;
+		location / {
+			autoindex on;
+		}
+	}
+
+### 2. Download the files
+
+Download a snapshot of the current Tails files:
+
+	rsync -rt --delete \
+	         mirrors.rsync.tails.boum.org::amnesia-archive /var/www/YOUR_PATH/
+
+<a id="cron"></a>
+
+### 3. Schedule the pulling of the files
+
+Your mirror should sync every hour + a random time (maximum 40 minutes).
+Use `cron` or equivalent to schedule the same `rsync` command
+as above. For example, you can create a file in `/etc/cron.d/` with
+this content:
+
+    0 * * * * root sleep $(perl -E 'print int(rand(2400))') && flock -n /var/run/lock/tails-mirror-rsync rsync -rt --delete mirrors.rsync.tails.boum.org::amnesia-archive /var/www/YOUR_PATH/
+
+You can now [[ask for your mirror to be added to the pool|mirror#http-pool]].
+
+<a id="http-puppet"></a>
+
+Set up with Puppet
+-----------------
+
+It is assumed that Puppet is already installed and configured to function well
+for your infrastructure.
+
+### 1. Clone the `tails` Puppet module
+
+Clone the module inside the puppet modules' directory of your puppetmaster. On
+Debian, this directory should be `/etc/puppet/modules`.
+
+     git clone https://git-tails.immerda.ch/puppet-tails /etc/puppet/modules/tails
+
+### 2. Use the tails::mirror class
+
+On a node where you wish setup the mirror you should include the class like
+
+     include tails::mirror
+
+If you need to adjust any parameters of the class, you should declare it like
+
+     class { 'tails::mirror':
+       webserver   => 'apache2',
+       server_name => 'tails.example.com',
+       mirror_path => '/srv/tails/mirror',
+     }
+
+#### Configurable parameters
+
+See the documentation on top of
+[the module](https://git-tails.immerda.ch/puppet-tails/tree/manifests/mirror.pp).
+
+<a id="http-pool"></a>
+
+Go wild: ask for your mirror to be added to the pool
+----------------------------------------------------
+
+As soon as your web server is ready, please email us its IP address
+so that we can add it to the Round Robin pool.
+
+Also, if you decided to use a hostname under `dl.amnesia.boum.org`,
+please ask us to create it at the same time.
+
+<div class="note">
+
+We will publish your email address, associated with the URL of your
+mirror, in a file hosted on our website. If you are not comfortable
+with this, give us an email alias that we can publish without
+revealing additional information, such as
+<emph>webmaster@your-mirror.org</emph>.
+
+</div>
+
+# Talk to us
+
+You can subscribe to [[tails-dev@boum.org|about/contact#tails-dev]],
+our development mailing list.

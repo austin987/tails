@@ -1,0 +1,66 @@
+[[!toc levels=2]]
+
+# Rationale
+
+For [[automated testing|todo/automated_builds_and_tests]] purposes, we
+need to use removable USB mass storage devices, e.g. to test USB-only
+features such as the USB installer or persistence.
+
+On a headless test server in a datacenter, one does not want to rely
+on a set of physical USB sticks being plugged in.
+
+Therefore, these USB mass storage devices must be emulated in
+software, and should probably use files as underlying storage.
+
+# Tools
+
+## g-file-storage
+
+* obsoleted by `g-mass-storage`
+* not in Debian kernel as of 3.2.21-3
+
+## g-mass-storage
+
+Works fine with qemu-kvm (1.0+dfsg-11) and libvirt (0.9.12-3):
+
+	modprobe dummy-hcd is_high_speed=1
+	modprobe g_mass_storage file=/tmp/test.usb removable=1
+
+Then I use qemu-kvm + libvirt USB 2.0 passthrough to lend that virtual
+USB mass storage device to a qemu-kvm VM, which I boot from a Tails
+0.12 ISO, that I clone onto the virtual USB device using the Tails
+USB installer.
+
+Then I unplug the virtual CD drive, and boot the same VM from the
+virtual USB mass storage device, onto which I successfully setup
+a Tails persistent volume. Rebooting, enabling the persistent volume
+does work.
+
+### Drawbacks
+
+* **Not in Debian** kernel as of 3.2.21-3, asked in [[!debbug 678731]]
+* **All underlying files must be listed at module load time**; this
+  should not be a problem, but still a limitation to be kept in mind.
+
+## qemu
+
+qemu (1.1.0+dfsg-1) and qemu-kvm (1.0+dfsg-11) know how to emulate
+a USB mass storage device, using `-usbdevice` (deprecated) or
+(roughly) a combination of `-drive file=path_to_test_file.usb,if=none`
+and `-device usb-storage,drive=DRIVE-ID`. At least with qemu-kvm:
+
+* one can boot from such a USB device
+* virt-manager (0.9.1-4) and libvirt (0.9.12-3) allow to add and
+  configure such a device, and plug it into a virtual USB 2.0
+  controller
+
+### Drawbacks
+
+* **removable property**: by default the emulated USB disk is *not*
+  marked as removable; qemu and qemu-kvm from Wheezy support emulating
+  removable USB devices, but libvirt has no way to pass this option.
+  - [upstream ticket](https://bugzilla.redhat.com/show_bug.cgi?id=922495)
+  - The qemu part was [discussed on
+    Launchpad](https://bugs.launchpad.net/qemu/+bug/686613) already.
+  - A patch that adds the missing feature is being upstream'd, see
+    [[contribute/release_process/test/setup]] for details.

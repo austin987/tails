@@ -1,0 +1,411 @@
+[[!meta title="Basing Tails on quarterly snapshots of Debian Testing"]]
+
+Tracking ticket: [[!tails_ticket 12615]]
+
+[[!toc levels=2]]
+
+# The big picture
+
+We've been thinking for a while of being based on quarterly snapshots
+of Debian testing. We've used the "porting Tails to Debian Stretch"
+cycle to evaluate how it would feel like. See the
+[[initial plan & analysis|blueprint/Debian_Stretch/#rolling]].
+
+## Calendar
+
+A two-years Debian release cycle could look like from our perspective,
+if we were based on quarterly snapshots of Debian testing:
+
+1. a new Debian stable is released
+2. 6 months during which Tails is based on Debian stable that was just
+   released, and we can get ready for the next stage
+3. 12 months during which Tails is based on quarterly snapshots of
+   (non-frozen) Debian testing taken at the beginning of each major
+   Tails release cycle
+4. 6 months during which Tails is based on a frozen Debian testing
+5. go back to (1)
+
+We would be based on a moving target half of the time; the remaining
+half of the time we are based on something that doesn't change much.
+
+## Why?
+
+- We'll need to track 2 Debian versions at the same time (and
+  continuously forward-port development that was based on the oldest
+  one) during 6-7 months maximum, compared to 19 months (Jessie cycle)
+  and 10 months (Stretch cycle). We would save lots of time there,
+  that could be re-invested in aspects of this proposal that will
+  require additional work.
+- no need to produce and maintain backports of Debian packages anymore
+- support new hardware better
+- upstream bugfixes trickle down faster and for free to Tails users
+  ⇒ greater incentive for us to fix bugs upstream instead of
+  implementing Tails-specific workarounds
+- we help stabilizing Debian testing
+- the Foundations Team prefers doing the "porting to next Debian" work
+  continuously than as a huge disruptive project every two years
+- no huge change every 2 years confusing users and creating huge burts
+  in the Help Desk and Foundations Team post-release workload
+- new features / modern software
+
+This idea is about doing a different kind of work, and doing it in
+different places than in the past. It probably won't lower the total
+amount of effort we have to do, but it likely will make such efforts
+generate less frustration, more happiness, and a warm feeling of being
+part of a broader community.
+
+# Fears, concerns & problems we need to address or mitigate
+
+- Security
+  * How to keep track of security issues that affect us, and whether
+    their fix has been uploaded and has migrated to testing yet?
+    See e.g. how security support for Debian testing [used to be
+    (briefly) done](http://secure-testing-master.debian.net/), and in
+    particular the
+    [Vulnerable source packages in the testing suite](https://security-tracker.debian.org/tracker/status/release/testing)
+    and the
+    [Candidates for DTSAs](https://security-tracker.debian.org/tracker/status/dtsa-candidates).
+    At first glance it seems totally doable for Foundations Team
+    members to run (e.g. locally) a lightweight fork of Debian's
+    security tracker:
+     - Problem to solve: list security issues that affect Tails
+       (current stable and testing branches) but are fixed in
+       current Debian testing and/or sid
+     - Point it to our relevant APT snapshots (and perhaps current
+       Debian testing or sid instead of Tails devel, to avoid having
+       to resolve the "latest" unfrozen snapshot)
+     - Add our own annotations about issues we decide to
+       ignore/postpone, e.g. using the new
+       [`<ignored>` and `<postponed>` tags](https://security-team.debian.org/security_tracker.html#issues-not-warranting-a-security-advisory)
+     - Filter packages based on some relevant build manifest so we
+       don't ever see packages we don't ship in Tails.
+     - Automatically merge from Debian's repo and report to us in case
+       of merge conflicts.
+  * more freeze exceptions in order to address security issues
+  * need to keep our stable branch in an always releasable state
+    ⇒ the tracking & cherry-picking of security issues must be done
+    continuously, and not only right before a planned freeze or release
+  * when the updated package from Debian testing/sid is not
+    installable on current Tails stable/testing, we'll have to
+    backport security fixes
+
+- Transitions
+  * How to deal with
+    [[!debwiki OngoingTransitions desc="ongoing transitions"]] that
+    block migration of security updates from sid to testing?
+  * How to select the right snapshot we shall take, e.g.
+    during transitions?
+  * Sometimes we'll need to rebuild on testing some packages we want
+    to cherry-pick from sid.
+
+- Consequences for users
+  * too many software regressions and not well tested new features
+  * confused users due to constant incremental changes
+  * bigger upgrades on average: according to research done on
+    [[!tails_ticket 14622]], we should assume ~600MB large IUKs;
+    there will be consequences in terms of:
+     - RAM requirements: XXX
+     - download time: XXX
+     - download reliability ⇒ add a retry/continue mechanism to Tails Upgrader?
+  * our users debug Debian testing on top of debugging Tails
+
+- Drawbacks for contributors & the Tails community
+  * more frequent regressions in ISO reproducibility
+  * harder to extract info from help desk
+  * harder for help desk to deal with user requests: having to
+    re-learn constantly how things work / what's broken
+  * spend too much mental space dealing with always changing software
+  * lack of Debian skills internally at the moment ⇒ we'll need to
+    invest time learning
+  * need to better study the delta between N & N+1 (for help desk,
+    release notes, security audits, etc.)
+
+- Communication
+  * needs new version numbering scheme
+  * feeling of stalled/slower project for users because no big
+    all-at-a-time changes
+  * how do we deal with our (implicit) hardware support promise? i.e.
+    "The hardware you purchase for Tails N.0 will work with N.x"
+  * harder to get press write stuff as we'll lack releases with tons
+    of changes like 2.0 or 3.0
+
+- Additional Software Packages: will they be pulled from current
+  Debian testing or from our snapshot? Can we tell APT to install by
+  default from Debian testing, unless it's impossible or problematic
+  (e.g. would remove tons of packages) and then fall back to
+  installing from our snapshot?
+
+# The plan
+
+**Update**: this was deferred. We'll come back to this in 2018-04 or
+2018-05 and either come up with a new plan, or postpone this entirely.
+
+* From now to the end of 2017-11: the Foundations Team tries to port
+  the code & test suite during sprints. If the work doesn't fit into
+  these sprints then we'll need to draw conclusions.
+* At the end of 2017-11:
+  1. [[!tails_ticket 14578 desc="Decide"]] whether we want to release
+     Tails based on Debian testing
+     in 2018-01, 2018-04, or give up and rather release it mid-2019.
+     The following assumes "in 2018-01" and will need to be adjusted
+     if we decide something else.
+  2. The Foundations Team tells technical writers what needs to be
+     updated ([[!tails_ticket 14579]])
+* November-January: technical writers update the documentation
+* January 16: first Tails release based on Debian testing
+
+# Zooming in on specific problems
+
+<a id="doc-update"></a>
+
+## How can the Foundations Team tell Technical Writers what part of our doc needs to be updated?
+
+The first time we'll have to deal with this problem is
+[[!tails_ticket 14579]], but it will come back every quarter.
+
+Current implementation:
+
+ - [[!tails_gitweb bin/doc-impacted-by]]
+ - [[!tails_gitweb doc-source-relationships.yml]]
+
+We want to automate this as much as we can, but let's be clear:
+automation will not fully solve this problem unless we switch to
+executable documentation (there is research and tools for that but
+we're not there yet). So some amount of manual documentation testing
+will be needed. Let's start with strategies that will limit the amount
+and frequency of the needed manual documentation testing, and further
+below we'll discuss manual testing.
+
+### Changes in our code, test suite, and list of included packages
+
+Whenever we have to adjust our code to keep working on Debian testing,
+it's plausible that the corresponding documentation needs an update as
+well. Developers could either proactively tell technical writers about
+it along the way, or look at `git diff` when requested to sum up what
+part of Tails is impacted by the changes.
+
+Similarly, whenever we have to update the test suite, it's plausible
+that the corresponding documentation needs an update as well.
+Test suite maintainers can then add the updated scenario to a list of
+things the technical writers should check (again: either incrementally
+or upon request).
+
+And finally, developers or technical writers could look at the diff
+between the old and new lists of included packages, to identify what
+part of Tails is impacted by the changes.
+
+All this is fine but it requires someone to keep a mental index of
+what kind of change impacts what part of our documentation. Not only
+this is boring work, but nobody is in a good position to do it, as it
+requires a good knowledge of our code base _and_ of our documentation.
+So I think we should build and maintain this index incrementally, in
+Git instead of in our minds, and use it automatically. Read on :)
+
+### Metadata that encodes the relationship between {source code, test suite, packages} and documentation pages
+
+Whenever we notice that changes in a given file in our source code,
+automated test suite scenario, or package, have an effect on a given
+documentation page, we could encode this information somewhere, in
+a machine-readable format. Then, we could write a program whose input
+would be:
+
+ * this metadata
+ * 2 Git commitish
+ * 2 package lists
+
+This program would output the list of documentation pages that are
+affected by the changes.
+
+This set of metadata shall be built and garbage-collected incrementally.
+
+Remaining questions:
+
+ - Where to store this metadata?
+
+   At least the information about included packages lives nowhere in
+   our Git tree, so encoding it close to the source is impossible
+   (besides, I'd rather not have to extract metadata from comments in
+   source code written in N different programming languages). So we
+   have main options:
+
+   1. Store it in the affected documentation pages themselves,
+      (HTML comments? ikiwiki directives? any other idea?)
+      Advantages:
+      - No work required when renaming pages.
+      - Easier to maintain by tech writers as they can see this info
+        while working on the doc, which increases the chances they keep
+        it up-to-date.
+      - Lightweight: no need to explicitly write the doc page name.
+
+   2. Store it externally, in a dedicated file. Advantages:
+      - Probably nicer format to read and edit, both for humans and
+        computers, than whatever we would embed in doc pages.
+      - Does not affect translators: anything we would put in doc pages
+        will be extracted to PO files; so storing this metadata there
+        would waste translators' time (either because they uselessly
+        translate it, or because they paste the English string to reach
+        100% translation status and keep their dashboard of pages
+        needing attention usable).
+      - Works for encoding which sources files impact screenshots.
+
+   intrigeri & anonym discussed that and were torn. The advantages of
+   the first option are very compelling, but the drawback it has wrt.
+   translators seems to be a deal-breaker. So the second option
+   appears to be the best one.
+
+   XXX: sajolida?
+
+ - Defining sets of sources?
+
+   Tails user-facing features are built from a not-that-small number
+   of source files. It could be useful to express the fact that
+   changes to any of these source files (e.g. the ones that define the
+   "Tor Browser" feature) may affect a given doc page, without having
+   to list them all for every affected page.
+
+ - Defining sets of doc pages?
+
+   Similarly, it might be that some doc sections share most of their
+   dependencies. It could be useful to define named groups of pages.
+
+ - Who shall we optimize the data format for?
+
+   In practice, developers are the ones who know where a given
+   user-visible change comes from, so whenever a needed doc update was
+   missed, most likely the tech writers will ask the Foundations Team
+   either to add the missing metadata, or what exactly caused that
+   user-visible change so they can add it themselves.
+
+   I (intrigeri) am really not sure which of these two situations will
+   be the most common one, so I'm wary of optimizing too much for one
+   of these two groups at this point.
+
+ - Mapping source → doc, or doc → source?
+
+   Update: a format where we define a list of dependencies between
+   X doc pages and Y source files, without explicitly mapping one to
+   the other, would avoid having to choose too early, which would be
+   nice. I'll simply do that.
+
+   Internally, the code that uses this metadata will care about
+   "source → doc", but there's no reason why the data format itself
+   should be optimized for this program. Let's instead optimize it for
+   the humans who will maintain the metadata :)
+
+   "doc → source" expresses a "depends on" / "is affected by"
+   relationship, which is well suited when fixing the metadata after
+   a postmortem analysis of "why was that doc page not updated before
+   the release?". OTOH "source → doc" expresses an "impacts"
+   relationship, which is well suited to proactive adjustments of the
+   metadata, e.g. when a developer realizes their proposed branch will
+   impact the doc. I (intrigeri) am pretty sure that the first
+   situation will be the most common one for a while until we get used
+   to this metadata and the second one slowly takes over.
+
+
+Example (YAML):
+
+	# doc → source oriented
+	- page: doc/first_steps/accessibility
+	  files:
+	    - config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults
+	  packages:
+	    - caribou
+	    - dasher
+	    - orca
+	- page: doc/first_steps/startup_options
+	  package: tails-greeter
+	  files:
+	    - config/binary_local-hooks/*grub*
+	    - config/binary_local-hooks/*syslinux*
+	    - config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults
+	- page: doc/first_steps/startup_options/administration_password
+	  package: tails-greeter
+	- page: doc/first_steps/startup_options/bridge_mode
+	  packages:
+	    - obfs4proxy
+	    - tor
+	  file: config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
+	  tests: tor_bridges.feature
+
+	# "source → doc" oriented
+	- package: gnome-disk-utility
+	  pages:
+	    - doc/first_steps/persistence/change_passphrase
+	    - doc/first_steps/persistence/check_file_system
+	- package: tails-persistence-setup
+	  tests: persistence.feature
+	  pages:
+	    - doc/first_steps/persistence/configure
+	    - doc/first_steps/persistence/delete
+	- package: openpgp-applet
+	  tests: encryption.feature
+	- package: tails-greeter
+      files:
+	    - features/images/TailsGreeter*
+	  pages:
+	    - doc/first_steps/persistence/use
+	    - doc/first_steps/startup_options
+	    - doc/first_steps/startup_options/*
+
+
+### Automated testing
+
+As said above, _changes in_ our automated test suite can already help
+identify the bits of documentation that need an update. To boost this
+capability we could:
+
+ - Add steps to our existing tests to validate the screenshots we have
+   in our documentation. This seems doable but not trivial:
+    - Screenshots embed context, e.g. window placement and elements
+      that change all the time; so we would have to extract the
+      relevant part of each screenshot (for example based on
+      coordinates encoded somewhere).
+    - Credentials used when taking screenshots (e.g. Pidgin) must be
+      the ones used by the isotesters.
+    - Screenshots in our documentation are resized to 66% so we need
+      to resize them back. This is quite easy, but the information
+      lost in the double-resizing process may prevent Sikuli from
+      finding it on the screen.
+ - Add automated tests that specifically check things we document.
+ - Try to make our Gherkin scenarios closer to end-user documentation.
+
+### Manual testing of the documentation
+
+Which part of the documentation shall be tested, when, and by whom?
+
+The sources of information listed above should help focus this effort
+on the relevant parts of our documentation. 
+
+In many cases, a quick look will be enough, and following the entire
+doc page to the letter won't be needed. But likely stricter testing
+will be needed from time to time.
+
+Random ideas:
+
+ - Aim for automation: feed the aforementioned metadata store with
+   information gathered during manual testing, so that we need less
+   and less manual testing as time goes.
+
+ - Prioritize: focus on core pages.
+
+ - Spread the load between different release, i.e. test some pages for
+   some release and some others for another release.
+
+### Dismissed options
+
+#### Manual testing of Tails releases
+
+In theory our manual test suite could also help: some of the manual
+tests could be performed by following our end-user documentation to
+the letter. But I've not been able to find any single candidate test
+case for this, so let's forget it.
+
+#### Users and Help Desk
+
+Users and Help Desk are also in a good position to notice outdated
+bits and report them back, but they can only do so after the fact,
+while ideally we'd rather update the documentation _before_ the
+corresponding changes are released to our users. So if we receive such
+notifications, e.g. at RC time, fine, but let's not count on it
+too much.

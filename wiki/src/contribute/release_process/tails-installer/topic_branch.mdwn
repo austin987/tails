@@ -1,0 +1,53 @@
+[[!meta title="Packaging liveusb-creator topic branches"]]
+
+Let's say you want to build a package for a topic branch called
+`bugfix/12345-blah`. Please read on.
+
+<div class="note">
+
+If your topic branch has been forked off a different branch than
+<code>master</code>, then you need to adjust the following
+instructions a bit: not only do you need to replace occurrences of
+<code>master</code>, but your <code>TARGET_DIST</code> will also
+be different.
+
+</div>
+
+Prepare the environment:
+
+	export TARGET_DIST="tails/master"
+	export TOPIC="bugfix/12345-blah"
+
+Fork the appropriate packaging branch into a new one that's dedicated
+to packaging the work that your topic branch introduces:
+
+	git checkout -b "tails/$TOPIC" "$TARGET_DIST"
+
+Create a patch representing the delta you want to add to the package,
+and import it into the current packaging branch as a quilt patch:
+
+	PATCH="$(mktemp).diff"
+	git diff "master..$TOPIC" > "$PATCH" && \
+	   quilt import "$PATCH"   && \
+	   git add debian/patches/ && \
+	   git commit -m "Import diff for $TOPIC as a quilt patch."
+
+Fill `debian/changelog`:
+
+	gbp dch --auto --snapshot --ignore-branch
+
+Then, insert something like `+bugfix.12345.blah` (with all special
+characters changed to full stops, i.e. ".") between the version last
+packaged in the `$TARGET_DIST` branch, and the gbp snapshot number (that
+looks like `~1.gbpNNNNNN`). In our example, it should look something
+like `4.3+dfsg-0tails1+bugfix.12345.blah~1.gbp4a0c9c` in the end.
+
+Verify the changelog manually.
+
+Commit:
+
+	git commit debian/changelog
+
+Build in a suitable chroot with:
+
+	gbp buildpackage --git-ignore-branch

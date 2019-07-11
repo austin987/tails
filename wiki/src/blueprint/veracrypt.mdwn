@@ -1,0 +1,579 @@
+[[!meta title="VeraCrypt support in GNOME"]]
+
+[[!toc levels=2]]
+
+User research
+=============
+
+Research questions
+------------------
+
+### Success
+
+1. How many people use VeraCrypt in Tails after our work in
+   comparison with before?
+2. How many people who were using VeraCrypt outside of Tails but
+   couldn't use it in Tails use it after our work?
+
+### Scope
+
+1. Which fraction of VeraCrypt volume are encrypted file containers?
+   encrypted partitions?
+2. Are people encrypting their full operating system with VeraCrypt?
+3. Which fraction of users are using hidden volumes?
+4. Which fraction of users are using keyfiles? Why? How?
+5. Which fraction of users are using the old TrueCrypt format?
+   - In VeraCrypt this requires checking the "TrueCrypt mode" check box.
+6. Can we rely on file containers having a .tc or .hc extension?
+
+### Behaviors
+
+1. How do people share files with other people who don't use Tails?
+
+### Technical knowledge
+
+1. How technical are VeraCrypt users? Tails+VeraCrypt users?
+   - For example: Are they used to GNOME Disks?
+
+<a id="survey"></a>
+
+Results of the online survey on *file storage encryption*
+---------------------------------------------------------
+
+NB: By *Tails+VeraCrypt* we mean people who use both Tails and
+VeraCrypt, but not necessarily VeraCrypt in Tails already as this is
+currently for expert users only as it requires going through the command
+line.
+
+### Summary
+
+- Justification of our work:
+
+  - 40% of Tails users are also VeraCrypt users, both inside and outside
+    Tails.
+
+  - 60% of Tails+VeraCrypt users only use VeraCrypt outside of Tails.
+
+  - Most of Tails+VeraCrypt users are regular users of VeraCrypt.
+
+  - VeraCrypt is of more interest to people who are not using Linux as
+    their primary operating system.
+
+  - VeraCrypt is still a reference when people think about encrypting
+    files.
+
+  - Integrating VeraCrypt in Tails will prevent dangerous behaviors:
+
+    *« I need to be able to open TrueCrypt file containers in Tails in
+    order to move files securely between Tails and Windows. Right now, I
+    have to copy my files unencrypted between Tails and Windows and this
+    is quite dangerous. »*
+
+- Definition of the scope of our work:
+
+  - 85% of Tails+VeraCrypt users mostly don't use the .TC or .HC file extension.
+  - 76% of Tails+VeraCrypt users use file containers.
+  - 65% of Tails+VeraCrypt users use partitions.
+  - 65% of Tails+VeraCrypt users use hidden volumes.
+  - 55% of Tails+VeraCrypt users have legacy TrueCrypt volumes.
+  - 42% of Tails+VeraCrypt users use keyfiles.
+
+- Technical knowledge of Tails users:
+
+  - Tails is still quite complicated for Windows users but not *that*
+    hard either.
+  - A majority of our user base is "*basic*".
+
+### Methodology
+
+We advertised an online survey on the homepage of *Tor Browser* in Tails
+between October 17 and December 1.
+
+The survey was not advertised as being about VeraCrypt but as being
+about file storage encryption in general.
+
+The following banner was displayed on *https://tails.boum.org/home* once
+every 20 views:
+
+[[!img contribute/reports/SponsorW/2017_10/survey.png link="no"]]
+
+We got 1011 complete answers (and zero spam!) for a participation rate
+of 1.97% (51431 views in total). We think this is a great success!
+
+The structure of our survey is available as a LimeSurvey Survey
+Structure file: [[survey.lss]].
+
+We limited the mandatory questions to the bare minimum. Except for one
+open-ended question, we used only closed questions with multiple choices
+to maximize the answer rate and make it easier to analyze the results.
+Still, we allowed comments on many of the closed questions.
+
+It was the first time that we asked our users to answer an online survey
+and seeing the high participation it seems to be a very good way of
+learning about our users and their needs. People seem eager to
+contribute to Tails by sharing information about themselves if done with
+their consent.
+
+Here is a summary of our results.
+
+### How many people use VeraCrypt in Tails before our work?
+
+*Q: Do you use VeraCrypt?*
+
+| Question | Answers | Fraction |
+|--|--|--|
+| No | 418 | 41% |
+| Yes, but only outside of Tails | 238 | 24% |
+| I don't know what VeraCrypt is | 193 | 19% |
+| Yes, both inside and outside of Tails | 162 | 16% |
+| *Total answers* | | 1011 |
+
+- **60% of Tails+VeraCrypt users only use VeraCrypt outside of Tails.**
+
+  These people are a first target of our work.
+
+  Unfortunately, our survey didn't allow us to know if they don't use
+  VeraCrypt in Tails because it's too complicated at the moment (it
+  requires using the command line) or because they don't have a use for
+  it. We should have added a another question about this in particular.
+
+- **40% of Tails users are also VeraCrypt users, both inside and outside Tails.**
+
+  This is a big overlap which proves that a lot of people who use Tails
+  also have a need for VeraCrypt.
+
+  After our work:
+
+  - If this number increases, it could mean that integrating VeraCrypt
+    in Tails made Tails useful for more people.
+
+    These people are a second target of our work.
+
+  - If this number decreases, it could mean that our user base expanded
+    to include a bigger fraction of users who don't have a need for
+    VeraCrypt. For example if they only use Tails to browser the
+    Internet anonymously and not to exchange sensitive documents from
+    Tails with other operating systems.
+
+*Q: How many VeraCrypt volumes do you have (not counting the hidden volumes inside them)?*
+
+| Question | Answers | Fraction |
+|--|--|--|
+| 2-5 | 183 | 52% |
+| 1 | 83 | 24% |
+| 6-10 | 45 | 13% |
+| More than 10 | 39 | 11% |
+| *Total answers* | 350 | |
+
+- **Most of Tails+VeraCrypt users are serious and regular users of VeraCrypt**.
+
+  They have more than one VeraCrypt volume and not only curious about
+  VeraCrypt or tried it once.
+
+### Comments on the questions
+
+Our survey allowed people to add comments to some questions. Some people
+described the lack of VeraCrypt support in Tails as part of a workflow
+including Windows, often leading to dangerous practices.  The comments
+were rewritten to prevent stylometry.
+
+- *« **When I move files between Windows and Tails, I have to remove the
+  TrueCrypt encryption and copy the files unencrypted to another USB
+  stick. Then I have to securely delete the files from the USB stick and
+  that takes a lot of time. This is dangerous as an attacker could
+  access my files during the process.** »*
+
+- *« **I need to be able to open TrueCrypt file containers in Tails in
+  order to move files securely between Tails and Windows. Right now, I
+  have to copy my files unencrypted between Tails and Windows and this
+  is quite dangerous.** »*
+
+### Which fraction of VeraCrypt volume are encrypted file containers? Encrypted partitions?
+
+*Q: What type of VeraCrypt volumes are you using?*
+
+| Question | Answers | Fraction |
+|--|--|--|
+| Only encrypted file containers | 117 | 32% |
+| Mostly encrypted file containers, some encrypted partitions | 89 | 24% |
+| Mostly encrypted partitions, some encrypted file containers | 75 | 20% |
+| Only encrypted partitions | 74 | 20% |
+| I don't know the difference between encrypted partitions and encrypted file containers | 13 | 4% |
+| *Total answers* | 368 |
+
+- The difference between encrypted file containers and partition is well
+  understood.
+
+- **76% of Tails+VeraCrypt users use file containers.**
+
+- **65% of Tails+VeraCrypt users use partitions.**
+
+### Are people encrypting their full operating system with VeraCrypt?
+
+*Q: Is your Windows operating system encrypted using VeraCrypt?*
+
+| Question | Answers | Fraction of Tails+Windows users | Fraction of Tails users |
+|--|--|--|--|
+| No | 135 | 72% | 35% |
+| Yes | 49 | 26% | 13% |
+| I don't know | 3 | 2% | 1% |
+| *Total answers* | 187 |
+
+### Which fraction of users are using hidden volumes?
+
+*Q: How often do you create a hidden volume in your VeraCrypt volumes?*
+
+| Question | Answers | Fraction |
+|--|--|--|--|
+| Sometimes | 159 | 44% |
+| Never | 119 | 33% |
+| Always or almost always | 50 | 14% |
+| Most of the time | 27 | 7% |
+| I don't know what a hidden volume is | 7 | 2% |
+| *Total answers* | 362 |
+
+- **65% of Tails+VeraCrypt users use hidden volumes.**
+
+### Which fraction of users are using keyfiles?
+
+*Q: What do you use to protect your VeraCrypt volumes?*
+
+| Question | Answers | Fraction |
+|--|--|--|--|
+| Only passwords | 211 | 58% |
+| Mostly passwords, sometimes keyfiles | 130 | 36% |
+| Mostly keyfiles, sometimes passwords | 18 | 5% |
+| Only keyfiles | 6 | 2% |
+| *Total answers* | 365 |
+
+- **42% of Tails+VeraCrypt users use keyfiles.**
+
+### Which fraction of users are using the old TrueCrypt format?
+
+*Q: How many of your volumes are TrueCrypt volumes and how many are VeraCrypt volumes?*
+
+| Question | Answers | Fraction |
+|--|--|--|--|
+| All my volumes are VeraCrypt volumes | 151 | 45% |
+| All my volumes are TrueCrypt volumes | 92 | 27% |
+| Most of my volumes are VeraCrypt volumes, some are TrueCrypt volumes | 49 | 14% |
+| Most of my volumes are TrueCrypt volumes | 47 | 14% |
+| *Total answers* | 339 |
+
+- **55% of Tails+VeraCrypt users have legacy TrueCrypt volumes.**
+
+  The reasons given for that in the comments to this question include:
+
+  - Not having done the effort of migrating.
+  - Having to migrate too much data to be practical (1TB!).
+  - Not trusting VeraCrypt has it hasn't been audited.
+
+### Can we rely on file containers having a .tc or .hc extension?
+
+*Q: Does the name of your file containers include the .TC or .HC extension?*
+
+| Question | Answers | Fraction |
+|--|--|--|--|
+| Never | 91 | 39% |
+| I don't know what the extension of my file containers is | 72 | 31% |
+| Sometimes | 33 | 14% |
+| Always or almost always | 27 | 12% |
+| Most of the time | 8 | 3% |
+| | 231	|
+
+- **85% of Tails+VeraCrypt users mostly don't use the .TC or .HC file extension.**
+
+<a id="technical"></a>
+
+### How technical are Tails users? Tails+VeraCrypt users?
+
+*Q: Which operating system other than Tails do you use the most?*
+
+| Question | Tails users | Fraction | Tails+VeraCrypt users | Fraction |
+|--|--|--|--|
+| Windows | 456 | 45% | 201 | 52% |
+| Debian or Ubuntu | 355 | 35% | 129 | 34% |
+| macOS | 69 | 7% | 26 | 7% |
+| Arch Linux | 21 | 2% | 9 | 2% |
+| Linux Mint | 16 | 2% | 4 | 1% |
+| openSUSE | 12 | 1% | 6 | 2% |
+| Fedora | 12 | 1% | 3 | 1% |
+| Qubes OS | 10 | 1% | 6 | 2% |
+| *Total answers > 10* | 951 |  | 384 |  |
+
+By OS families:
+
+| Question | Tails users |  | [Global market share](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems#Desktop_and_laptop_computers) | Different in VeraCrypt usage among Tails users |
+|--|--|--|--|--|
+| Windows | 456 | 48% | 91% | +4% |
+| Linux | 426 | 45% | 3% | &minus;4% |
+| macOS | 69 | 7% | 6% |  |
+| Total answers | 951 |  |  |  |
+
+- We suppose that people choose Linux over Windows or macOS because of
+  technical reasons, ethical reasons, or both. Both are also good
+  reasons to use Tails, either because their technical skills make it
+  easier to get started or use Tails or because their ethical motivation
+  aligns with the values of Tails.
+
+  There is a huge difference between the fraction of Tails users and the
+  global market share for Windows (in negative) and Linux (in positive)
+  but at the same time, almost half of Tails users are otherwise mostly
+  Windows users. So it seems like **Tails is still quite complicated for
+  Windows users but not *that* hard either**.
+
+- Tails+Windows users are using VeraCrypt more than Tails users in
+  general (+4%). This confirms that **VeraCrypt is of more interest to
+  people who are not using Linux as their primary operating system**.
+
+  This aligns with our objective of making Tails easier to integrate in
+  workflows involving other operating systems.
+
+*Q: How familiar are you with GNOME Disks?*
+
+| Question | Answers | Fraction |
+|--|--|--|
+| I can use GNOME Disks to do advanced operations | 438 | 43% |
+| I don't know what GNOME Disks is | 410 | 41% |
+| I can use GNOME Disks to do basic operations | 163 | 16% |
+| *Total answers* | 1011 |  |
+
+This seems to mean that:
+
+- **A majority of our user base is "*basic*"**: not well-versed in Linux
+  and GNOME, not skilled enough to manipulate partitions, or not using
+  Tails to manipulate sensitive documents outside of the persistent
+  volume.
+
+- A good share of the rest of our user base is "*advanced*" and more
+  technically skilled and knowledgeable about Linux and GNOME.
+
+*Q: Imagine that you want to share a big video footage with someone else
+who doesn't use Tails. You can meet in person or communicate online. For
+security reasons, you want the exchange to be encrypted. How would you
+do that?*
+
+Due to the huge numbers of answers (626) to this question which was very
+open-ended, it is challenging and very time consuming to extract
+insights from all the answers.
+
+We manually flagged the encryption techniques mentioned in the first 472
+answers (75%) to get an overview of what Tails users would do to
+exchange sensitive information between Tails and another operating
+system.
+
+While flagging the answers, we flagged some techniques that were only
+mentioned implicitly. For example, some people implicitly referred to:
+
+  - LUKS when they proposed to store the footage in the persistent
+    volume of a Tails USB stick and exchange this USB stick in person.
+  - OpenPGP when they proposed to encrypt the file doing
+    *right-click*&nbsp;▸*Encrypt&hellip;* from the file browser.
+
+The answers often included mixed strategies to either:
+
+  - Design both online and offline strategies, as the question made it
+    possible to either meet in person or communicate online.
+  - Combine several encryption techniques, for example to encrypt and
+    send the footage using some techniques and to exchange a password or
+    other credential information using other techniques.
+  - Design several strategies depending on the threat model or technical
+    knowledge of the person they were sharing the footage with.
+
+We cannot know from if people would know how to apply the strategies
+they described. For example, if they already know how to use the
+techniques that they mentioned or if they only heard of them.
+
+| Encryption technique | Mentions | Fraction |
+|--|--|--|
+| OpenPGP | 134 | 28% |
+| - OpenPGP (unspecified) | 79 | 17% |
+| - OpenPGP (asymmetric) | 39 | 8% |
+| - OpenPGP (symmetric) | 16 | 3% |
+| VeraCrypt | 107 | 23% |
+| I don't know | 78 | 17% |
+| LUKS | 49 | 10% |
+| ZIP with password | 49 | 10% |
+| OnionShare | 46 | 10% |
+| Signal, WhatsApp, Telegram | 25 | 5% |
+| *Total answers analyzed* | 472 |  |
+
+- VeraCrypt was the second most frequently mentioned encryption
+  technique.
+
+  **VeraCrypt is still a reference when people think about encrypting
+  files**.
+
+- We were surprised to see OpenPGP as the most frequently mentioned
+  encryption technique. This could either mean that:
+
+  - Tails users are especially knowledgeable about OpenPGP or only heard
+    of it as an encryption technique.
+
+  - Tails users rely a lot <span class="command">seahorse-nautilus</span>
+    which allows to encrypt files from the file browser
+    (*right-click*&nbsp;▸*Encrypt&hellip;*). This allows to use
+    symmetric encryption ("*password encryption*") without the need to
+    master the complex key management of OpenPGP.
+
+- We were also surprised to see OnionShare mentioned almost as
+  frequently as LUKS or ZIP with password. Good news for Micah Lee!
+
+<a id="scope"></a>
+
+Scope of our work
+=================
+
+We structure the scope of our work in four iterations, based on our
+preliminary research work on user needs and technical feasibility.
+
+We will implement and upstream each iteration one after the other and go
+as far as the budget allows.
+
+1. Unlocking partitions ([[!tails_ticket 15214]])
+-----------------------
+
+This iteration is the bare minimum for this project but also the
+foundation work which makes all subsequent iterations possible. It
+covers:
+
+- The unlocking of partitions, which is relevant to 65% of Tails+VeraCrypt
+  users.
+
+- The opening of hidden volumes, which has a very good cost/benefit ratio
+  and will please the users of this very popular feature.
+
+- The opening of legacy TrueCrypt volumes, which will come with almost no
+  UX or backend cost.
+
+- The opening with keyfiles and opening of system partitions, which
+  will also be very cheap to add to the custom dialogs that we will
+  already have to implement for the opening of hidden volumes.
+
+2. Unlocking file containers ([[!tails_ticket 15223]])
+----------------------------
+
+This iteration extends the work done on the unlocking of partitions to
+also unlock file containers.
+
+File containers are very important to support as 76% of Tails+VeraCrypt
+users use file containers. They are also interesting because using a
+single file to store a whole file system is a possibility which is not offered
+by the other encryption techniques in Tails.
+
+But they are more challenging in terms of user interactions and
+integration code:
+
+- It's a new concept for users ("*mounting a file*").
+
+- We cannot rely on file containers having a .TC or .HC extension as
+  discovered during the survey.
+
+- GNOME Files cannot automatically identify and flag file containers as
+  such.
+
+- The integration in the sidebar of GNOME Files of opened file
+  containers will require to patch the GTK library which was not
+  expected initially.
+
+- Displaying the file name of the containers when unlocking it through
+  GVfs will require an additional patch upstream.
+
+3. Creating and modifying partitions and containers ([[!tails_ticket 15227]])
+---------------------------------------------------
+
+Since our main objective for integrating better VeraCrypt in Tails is to
+allow for cross-platform sharing of encrypted files, we consider making
+it possible to create VeraCrypt volumes in Tails as optional since users
+can continue creating volumes from their other operating systems.
+This iteration covers:
+
+- The creation of new partitions, for which we already have a solid UX
+  design.
+
+- The creation of new file containers, which will be harder to discover
+  for users but will almost come for free once we support creating new
+  partitions.
+
+- The modification of existing volumes, which will be very similar to
+  the creation of new volumes.
+
+<a id="veracrypt_mounter"></a>
+
+4. *VeraCrypt Mounter* ([[!tails_ticket 15043]])
+----------------------
+
+*VeraCrypt Mounter* is a very simple application wrapper that we
+designed and tested. It makes it easier for users to learn how to use
+VeraCrypt in Tails and makes it faster to open file containers.
+*VeraCrypt Mounter* would only be available in Tails.
+
+If we cannot create *VeraCrypt Mounter* in time, we will replace it with
+a link to our documentation which should lead to similar success rates
+but a bit less comfort for first time users.
+
+<img src="https://labs.riseup.net/code/attachments/download/1842/veracrypt-mounter.png">
+
+Non goals
+---------
+
+Opening of loop-AES and dm-crypt volumes. Loop-AES and dm-crypt
+volumes are other encryption formats that are indistinguishable from
+VeraCrypt volumes while they are locked (both look like random data).
+Even if some of our work could be make it easier to support Loop-AES
+and dm-crypt, we won't do that because these formats are not popular
+enough.
+
+<a id="ui"></a>
+
+User interface
+==============
+
+### Changes to GNOME Disks
+
+<img src="https://labs.riseup.net/code/attachments/download/1833/disks-format-partition.png">
+
+<img src="https://labs.riseup.net/code/attachments/download/1834/disks-format-partition-password.png">
+
+### Unlock dialog in GVfs
+
+<img src="https://labs.riseup.net/code/attachments/download/1843/gvfs-monitor-unlock-veracrypt-volume.png">
+
+<a id="detection"></a>
+
+Detecting VeraCrypt volumes
+===========================
+
+In contrast to LUKS, VeraCrypt and TrueCrypt volumes do not have a cleartext header, but are completely encrypted (see the [VeraCrypt Volume Format Specification][]). As a result, VeraCrypt/TrueCrypt volumes cannot be distinguished from random data. This means that the best we can do is to indicate to the user that a partition / file seems to be encrypted or random data, and therefore is a candidate for being a VeraCrypt/TrueCrypt volume.
+
+To determine whether data seems to be encrypted or random, we use [Pearson's chi-squared test][]. This test is often used to test for randomness.
+
+When trying to determine whether a *partition* (or whole device) is a VeraCrypt/TrueCrypt volume, we don't want to read more than necessary, to avoid slowing things down too much. Because non-encrypted filesystems usually start with a header, which is very non-random, we only perform the chi-squared test on these first 512 Bytes.
+
+The chi-squared test requires a p-value, for which to reject the hypothesis that the data is random. We choose 1/10.000.000.000 as the p-value, which means that in one of 10 billion cases, the test will issue a false negative, i.e. the test says the data is non-random/non-encrypted, even though it actually is random/encrypted. From this p-value, we derive the following lower and upper limits for the chi-squared value (using the [scipy chi2 module](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html)):
+
+    >>> from scipy.stats import chi2
+    >>> chi2.ppf([0.1**10, 1-0.1**10], 255)
+    array([ 136.49878495,  425.92327131])
+
+We round these values to the closest integer. So for chi-squared values between 136 and 426, we accept the hypothesis that the data is random/encrypted. 
+
+We will not be able to prevent false positives as effectively as false negatives. Since we treat all random-looking partitions as TrueCrypt/VeraCrypt candidates, we will definitely have false positives, because there are other use cases for random looking partitions, for example plain dm-crypt, headerless LUKS, or LoopAES partitions. This cannot be avoided, therefore we have to clearly indicate to the user that a partition is not definitely a TrueCrypt/VeraCrypt partition, but only a candidate.
+
+We don't expect false positives for unencrypted filesystems, because the chi-squared value clearly indicates that they are not encrypted. Some examples for chi-squared values of (more or less) common filesystems, calculated with the above method:
+
+| Filesystem | Chi-squared | 
+|------------|-------------|
+| bfs | 113013 |
+| exfat | 115672 |
+| ext2 | 130560 |
+| ext3 | 130560 |
+| ext4 | 130560 |
+| fat | 56629 |
+| minix | 130560 |
+| ntfs | 61937 |
+| vfat | 56651 |
+
+  [VeraCrypt Volume Format Specification]: https://veracrypt.codeplex.com/wikipage?title=VeraCrypt%20Volume%20Format%20Specification
+  [Pearson's chi-squared test]: https://en.wikipedia.org/wiki/Chi-squared_test
+  [scipy chi2 module]: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html

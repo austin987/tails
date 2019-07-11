@@ -1,0 +1,331 @@
+[[!meta title="Tails February 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in February 2016.
+
+Everything in this report can be made public.
+
+# A. Replace Claws Mail with Icedove
+
+The last few traces of Claws Mail has been purged from Tails
+([[!tails_ticket 10904]]).
+
+- A.1.1 Secure the Icedove autoconfig wizard: [[!tails_ticket 6154]]
+
+  We've successfully built Debian packages and tested our patches in
+  Icedove.
+
+  The proof-of-concept branch that integrates the secured wizard into
+  Tails was delayed again, due to unexpected personal matters that
+  kept one of us away from keyboards. We are confident we can have
+  this feature completed and released by the end of this contract.
+  In March we are reorganizing our team to make this possible, and
+  will submit an updated timeline in our next report.
+
+- A.1.2 Make our improvements maintainable for future versions of Icedove
+
+  We've posted our patches upstream and received some first comments
+  which approve of our concept, and even suggest to force the use SSL
+  for all connections. ([[!tails_ticket 6156]])
+
+- A.1.5. Update Icedove documentation
+
+  The design documentation has been updated to reflect the current
+  state of the Icedove integration into
+  Tails. ([[!tails_ticket 10737]])
+
+# B. Improve our quality assurance process
+
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+In February, **603 ISO images** were automatically built by our Jenkins
+instance.
+
+The code that manages the cleaning of previous builds leftovers on our
+builder VMs is ready and waiting for reviews. ([[!tails_ticket 10772]])
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+In February, **597 ISO images** were automatically tested by our Jenkins
+instance.
+
+- B.2.4. Implement and deploy the best solution from this research: [[!tails_ticket 5288]]
+
+  We decided on a way to collectively check for false positives in our
+  test infrastructure. We have planned a shift per month so that we're sure
+  one of us is taking care of them. ([[!tails_ticket 10993]])
+
+  We still need to check if two minor bugs are around, but they don't seem
+  to prevent our automated tests to be run. ([[!tails_ticket 10725]] and
+  [[!tails_ticket 10601]])
+
+## B.3. Extend the coverage of our test suite
+
+### B.3.10. Write automated tests for the new features in 2016Q1
+
+In February, we postponed most of this work: part of our team was
+focused on improving our existing test cases (B.3.11, see below), and
+unexpected personal matters have been keeping one of us away from
+keyboards in the last few months. Some other developers joined to give
+a hand, and we are confident we can get this work done later this year,
+possibly at the same time as B.3.15 (which is the same deliverable,
+but for features added in 2016Q2).
+
+Still, one recently introduced feature is now covered by automated
+tests:
+
+* Automatically test the Greeter's Disable All Networking option
+  ([[!tails_ticket 10340]])
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+- Reduce peak space requirement for full test suite runs
+
+  Given the snapshot improvements reported about before
+  ([[!tails_ticket 6094]]) our test suite accumulates more and more
+  virtual machine snapshots throughout a full run, and has to keep
+  most of them until the end. These occupy quite a bit of disk space,
+  which in our case translates into RAM since we want everything
+  stored in RAM for performance reasons. By optimizing the order in
+  which our features are run we have managed to reduce the peak space
+  requirement, which allows us to run more tests in parallel on the
+  same hardware. ([[!tails_ticket 10503]])
+
+- Robustness improvements
+
+  Given the rather large amount of robustness issues we experience, we
+  have rethought our strategy and will try more fundamental approaches
+  to attacking them. The vast majority of issues fall into two
+  categories:
+
+  * Transient network issues: the Tor network simply isn't as reliable
+    as our test suite assumes, resulting in tests failing due to
+    unexpectedly long timeouts and similar. So far our approach has
+    been to make our tests retry the failing actions in the specific
+    places where they occur, much like how a user would deal with the
+    situation. However, this does not scale well, since it seems we
+    have to do this everywhere, and the code for this is not always
+    straightforward.
+
+    Instead we will improve the Tor network stability by making our
+    test suite set up its own private Tor network. This
+    should eliminate all network instability introduced by normal Tor
+    usage. ([[!tails_ticket 9521]])
+
+    In the long-term, and certainly outside the scope of this
+    contract, we would like to extend this network simulation so that
+    all network services used in tests are run locally, and the real
+    Internet is not used at all. ([[!tails_ticket 9519]],
+    [[!tails_ticket 9520]])
+
+  * Glitches when interacting with graphical user interfaces:
+    currently we simulate users with a black box approach where
+    we rely on exact images for the elements it interacts
+    with. This has turned out harder than anticipated, since modern
+    desktop environments do not behave as deterministically as one
+    would hope.
+
+    Our new plan is to leverage the interfaces used by assistive
+    technologies (like screen readers) to communicate the
+    structure and layout of graphical user interfaces to sight
+    impaired users. This will allow a more deterministic and reliable
+    approach for our test suite to interact with applications.
+
+  Besides this, the following specific robustness issues were fixed:
+
+  * Test that clicks the roadmap URL in Pidgin is fragile
+    ([[!tails_ticket 10783]])
+
+  * The "I can view and print a PDF file stored in /usr/share"
+    scenario is fragile ([[!tails_ticket 10775]])
+
+- Performance improvements on Jenkins
+
+  We figured we could probably get some nice test suite performance
+  improvements, on our Jenkins environment, by optimizing the platform
+  itself.
+
+  After an initial round of benchmarking conducted in January, our
+  next action was to give our server more RAM in order to give us more
+  flexibility to evaluate different configuration options. This was
+  done in February, and then we went through a few optimization
+  cycles, identifying bottlenecks and addressing them until we were
+  satisfied ([[!tails_ticket 11175]], [[!tails_ticket 11113]],
+  <https://tails.boum.org/blueprint/hardware_for_automated_tests_take2/#benchmarks>).
+
+  As a result, we have improved our test suite runs throughput, in the
+  worst case scenario, from 3.3 to 8 runs per hour. This gives us room
+  to run more automated tests in that environment, and also shortens
+  the feedback loop for developers, since congestion is now less
+  likely to happen. We will keep an eye on metrics to confirm, in one
+  or two months, that real workloads indeed benefit from
+  these changes.
+
+## B.4. Freezable APT repository
+
+This project was still on hold in February, while the developer
+responsible for this project was focusing on other matters; we will
+resume work on it in March. However, we mistakenly scheduled for
+milestone V (April 15) two big projects that have the same developers,
+so we decided to spread them more evenly over the remaining five
+months of this contract; in April we will focus on C.1 (Change in
+depth the infrastructure of our pool of mirrors), and here is the
+updated schedule for the freezable APT repository project.
+
+By the end of March, we want to:
+
+* complete the design and discussion phase, that is "B.4.1.
+  Specify when we want to import foreign packages into which APT
+  suites" ([[!tails_ticket 9488]]), and "B.4.4. Design freezable APT
+  repository" ([[!tails_ticket 9487]]);
+
+* make enough progress on "B.4.2. Implement a mechanism to save the
+  list of packages used at ISO build time" so it can be merged in
+  April, ideally in time for Tails 2.3;
+
+* have a working proof-of-concept for most other essential pieces of
+  infrastructure and code.
+
+Then, after a hiatus in April while we will be focused on our pool of
+HTTP mirrors, in May we want to improve the freezable APT repository
+as needed, aiming at merging code into the main development branch,
+and deploying all pieces of infrastructure in production, by the end
+of the month. Our current goal is to build Tails 2.4 (scheduled on
+June 7th) using our freezable APT repository.
+
+And then, we will still have two months, until the end of the
+contract. This slack might be needed if previous steps take more time
+than expected, and if not it will be time for us to identify remaining
+issues, gather feedback from release managers and developers, and to
+improve tools and documentation as we deem necessary.
+
+# C. Scale our infrastructure
+
+## C.1. Change in depth the infrastructure of our pool of mirrors
+
+* C.1.1. Specify a way of describing the pool of mirrors
+  ([[!tails_ticket 8637]])
+
+  We've designed a file format, encoded it into a JSON schema, created
+  a simple validation script, and published an example configuration
+  file.
+
+  We have discussed with the developers of the Download And
+  Verification Extension (DAVE) for Firefox how it will be able to
+  leverage this configuration file, and the code we are writing for
+  "C.1.2. Write & audit the code that makes the redirection decision
+  from our website", so that DAVE uses our new mirror pool design
+  ([[!tails_ticket 10284]]). This discussion made us confident that
+  what we have been working on so far is compatible with DAVE.
+
+* C.1.3. Design and implement the mirrors pool administration process
+  and tools ([[!tails_ticket 8638]], [[!tails_ticket 11122]])
+
+  Building on top of what was done for C.1.1, a way to convey the
+  mirror pool's configuration to the dispatcher script, based on
+  ikiwiki underlays and Git, was designed and implemented.
+
+Finally, we have organized our team to work on the next steps of this
+project. A dedicated sprint will take place in April, during which we
+want to complete all the needed programming, documentation and setup
+tasks. Actual deployment might require more time, though: depending on
+how fast mirror operators are to adjust to the new setup, we may have
+to postpone the production deployment to May.
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+- C.2.1. Research and decide what monitoring solution to use
+         what tools and abstraction layer to use for configuring it,
+         and where to host it: [[!tails_ticket 8645]]
+
+  We settled on a plan while refining the details of the implementation
+  of Icinga2 in our infrastructure.
+
+  We agreed to use its decentralized feature to isolate our monitored
+  systems from our monitoring one: a VM on the monitored host will be
+  set up as a Icinga2 `satellite`, and will collect the datas from the
+  other monitored systems, to send them back to the monitoring system
+  Icinga2 instance. The later will be the only one responsible for the
+  sending of notifications and will also be the one running the network
+  checks.
+
+  Icinga2 will be the agent we'll use on all systems to collect
+  monitoring datas.
+
+  We've also settled on the way to secure the communication between our
+  systems, and decided not to solely rely on icinga2 SSL certificates,
+  but to harden it using a VPN.
+
+  This was also necessary, because we chose to manage our monitoring
+  system with our current puppetmaster, which is hosted on the monitored
+  host. So both Icinga2 and Puppet take benefits from this VPN.
+  [[!tails_ticket 10760]]
+
+  Still some of the deep details are quite blurry for the reviewer of
+  this design. We'll leave this discussion open, so that we can go on
+  with the deployement, while we'll be able discuss some other questions
+  that may raise later.
+
+- C.2.2. Set up the monitoring software and the underlying infrastructure
+
+  We've deployed the VPN between our systems [[!tails_ticket 11094]],
+  which lead us to finish the install of the OS on the monitoring
+  machine. It's now managed by our puppetmaster as any other of our
+  systems. [[!tails_ticket 8647]]
+
+  We also installed the VM on our monitored host that will serve as the
+  satellite relay to our monitoring system. [[!tails_ticket 10886]]
+
+  We then started writing in our Puppet manifests the recipes we learned
+  from the monitoring prototype tested on a developer machine. We had
+  Icinga2 installed on all of our systems with a basic configuration.
+  Then we configured it on the monitoring system as well as on the VM that
+  will be the satellite so that they are now both interconnected over
+  the VPN. [[!tails_ticket 8648]]
+
+  We still need to connect our Icinga2 agent instances on the rest of
+  our systems to this Icinga2 network. This will be done in the beginning
+  of March, and we'll then be able to implement the various checks we
+  defined in the blueprint, which are part of C.2.4 and C.2.6. Once
+  done, at the end of March we'll configure the notifications (C.2.5) and
+  will release our monitoring setup for the end of milestone V (2016,
+  April 15).
+
+## C.4. Maintain our already existing services
+
+We kept on answering the requests from the community as well as taking
+care of security updates as covered by "C.4.5. Administer our services
+up to milestone V".
+
+We also did some background work to keep our infrastructure
+sustainable on the long term:
+
+* We made plans to upgrade to Debian 8 (Jessie) the small number of
+  Debian 7 (Wheezy) systems we still have ([[!tails_ticket 11178]],
+  [[!tails_ticket 11186]]).
+
+* We modernized a little bit our Puppet setup. Notably, we converted
+  it from the deprecated Config File Environments, to the new
+  Directory Environments.
+
+* We optimized our I/O-bound workloads, by spreading them over
+  multiple drives in a more efficient way.
+
+# D. Migration to Debian Jessie
+
+As reported last month, all remaining deliverables were completed
+in January.
+
+Still, as a follow-up we upgraded our ISO build system to Debian
+Jessie, and then updated our Vagrant basebox and Jenkins ISO builders
+accordingly ([[!tails_ticket 9262]]).
+
+# E. Release management
+
+- [[Tails 2.0.1|news/version_2.0.1]] was released on 2016-02-13 as an
+  emergency response to CVE-2016-1523 affecting Tor Browser:
+
+  * Enable the Tor Browser's font fingerprinting protections.
+  * Upgrade Tor Browser to 5.5.2.
+  * Repair 32-bit UEFI support.

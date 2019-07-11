@@ -1,0 +1,113 @@
+[[!meta title="Tails September 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in September 2016.
+
+Everything in this report is public.
+
+# A. Replace Claws Mail with Icedove
+
+Icedove has been released in Tails and all remaining issues have been
+resolved. With the release of Tails 2.6, we consider this deliverable
+fully completed.
+
+## A.1.1. Secure the Icedove autoconfig wizard
+  
+In August we reported that some account setup issues have been
+discovered with the introduction of our patches which should protect
+the user by forcing the use of secure protocols in Icedove.
+We've managed to fix the OAuth issue ([[!tails_ticket 11536]]) and submitted this
+patch upstream.
+
+This deliverable is now completed.
+
+## A.1.2. Make our improvements maintainable for future versions of Icedove
+
+We've resubmitted all of our modifications upstream. ([[!tails_ticket 6156]]).
+We're waiting for those patches to be reviewed by upstream and to be included in Thunderbird.
+We're confident that it'll happen soon.
+
+This deliverable is now completed.
+
+## A.1.3. Integrate Icedove into Tails
+  
+We've automated the most important bits of the Icedove tests, e.g. using the autoconfiguration wizard to setup a real email account, verifying that the resulting email configuration is secure, and then fetch email (both using POP and IMAP) and send email (SMTP). ([[!tails_ticket 6304]]).
+  
+Until we can use Debian's Icedove packages, we still need to release our own. Thus, we've updated the release documentation which describes  how to maintain and build Icedove with our secure autoconfiguration patches. ([[!tails_ticket 11860]])
+
+We've updated the end-user documentation in order to alert our users that some email providers require
+them to explicitly allow using Icedove and Tor. ([[!tails_ticket 11798]])
+  
+This deliverable is now completed.
+
+# B. Improve our quality assurance process
+
+## B.3. Extend the coverage of our test suite
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+Our automated test suite depends on the fact that Tails is started with a
+special kernel command line option entered in the boot menu. This is
+done by pressing the TAB key before the menu's timeout starts Tails
+with the default options suitable for real use -- otherwise the
+tests will later fail. However, at this stage we can only depend on
+what is shown on the screen and sometimes (presumably when the host
+running the test suite is under heavy load) the software we use to
+find images on the screen is not fast enough, resulting in
+failure. Making this part robust is particularly important since it
+can make *any* test fail.
+
+This lead us to a rather involved workaround essentially emulating a
+user repeatedly pressing the TAB key to ensure that the timeout
+never happens. But if it happens any way, we
+now detects that, reboot, and try again. ([[!tails_ticket 10777]])
+
+### B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
+
+This work has been implemented and is waiting for testing and a code
+review.
+
+### B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
+
+This work has been merged, so this deliverable is now completed.
+
+## B.4. Freezable APT repository
+
+This was completed already, but still we kept on improving things
+based on feedback resulting from actual usage.
+
+We started to look into optimizing how we store and backup tagged APT
+snapshots ([[!tails_ticket 11830]]). Preliminary results
+are encouraging!
+
+# C. Scale our infrastructure
+
+## C.4. Maintain our already existing services
+
+### C.4.6. Administer our services upto milestone VI
+
+We kept on answering the requests from the community and taking care
+of security updates.
+
+We started optimizing I/O settings for virtual machines running on our
+main server ([[!tails_ticket 11817]]). The short-term goal is to get
+better performance out of our current hardware; the mid-term goal is
+to learn more about the capacity of our actual setup so we can specify
+the hardware to purchase in 2017.
+
+We've run some preliminary tests regarding how we can upgrade our
+continuous integration system to Jenkins 2.
+
+We ([[!tails_ticket 11384 desc="designed a plan"]] to migrate our
+infrastructure to Puppet 4.
+
+We started porting our Puppet code to *puppet-concat* 2.2.0+, that
+should help generate files in a more deterministic way
+([[!tails_ticket 11242]]).
+
+We started taking over from Riseup the system that hosts our ticket
+tracker.
+
+We polished a little bit the way our Jenkins build products are presented to
+our core developers.

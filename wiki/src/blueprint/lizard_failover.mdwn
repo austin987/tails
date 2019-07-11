@@ -1,0 +1,58 @@
+This is about [[!tails_ticket 6185]] and friends.
+
+[[!toc levels=2]]
+
+# Scope
+
+The idea is to avoid blocking the release process and normal Tails
+usage if lizard goes down. It's *not* meant to replace lizard for more
+than a few weeks.
+
+# Services
+
+These are the services, among [[those we
+run|contribute/working_together/roles/sysadmins]], that we want
+a failover for. This is inspired by the [[priority list for service
+monitoring|blueprint/monitor_servers#services]].
+
+- APT repository (our own one + the freezable Debian one)
+- bittorrent
+- Gitolite + git-annex for our Tor Browser archive
+- rsync server
+- WhisperBack relay
+
+<a id="system-specs"></a>
+
+# System requirements
+
+This is about [[!tails_ticket 10243]].
+
+The goal is to specify what we'll likely need until end of 2018.
+We also need datacenter-class bandwidth.
+
+- APT repository:
+  * CPU: reprepro can already be hungry
+  * RAM: currently low, but might grow for the same reason as CPU usage
+  * storage: 1.8T
+- bittorrent:
+  * CPU: low
+  * RAM: low
+  * storage: 3 GB
+- Tor Browser archive:
+  * CPU: low
+  * RAM: low
+  * storage: 200G
+- rsync server:
+  * CPU: low
+  * RAM: low
+  * storage: 5 GB (excluding `obsolete`; 20 GB including it)
+- WhisperBack relay:
+  * CPU: low
+  * RAM: low
+  * storage: low
+
+**Total**:
+
+  * CPU: currently low but must be easily upgradable.
+  * RAM: 2 GB should be enough for now, but must be easily upgradable
+  * storage: 2T (preferabily RAID) to cover up until end 2018.

@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# This script is installed by /usr/share/initramfs-tools/hooks/shutdown
+# into the initramfs, as /lib/systemd/system-shutdown/tails. It's run by the
+# copy of systemd-shutdown that runs (as /shutdown) from inside
+# the unpacked initramfs, immediately before executing the requested action
+# (halt/poweroff/reboot).
+
+set -x
+
+### Unmount relevant filesystems
+
+# Debugging
+mount
+
+# Otherwise aufs pseudo-links can't be cleaned and we cannot drop caches.
+# This may also help for tracking remaining mounts.
+mount -o remount,rw /proc
+
+# Otherwise we can't create new mountpoints in /mnt
+mount -o remount,rw /
+
+# Otherwise aufs pseudo-links can't be removed while unmounting /oldroot,
+# and we can't clean up the content of /mnt/live/overlay.
+mount -o remount,rw /oldroot/lib/live/mount/overlay
+
+# Move /oldroot/* mountpoints out of the way
+mkdir -p /mnt/live/overlay
+mount --move \
+      /oldroot/lib/live/mount/overlay \
+      /mnt/live/overlay
+mkdir -p /mnt/live/squashfs
+mount --move \
+      /oldroot/lib/live/mount/rootfs/filesystem.squashfs \
+      /mnt/live/squashfs
+mkdir -p /mnt/live/medium
+mount --move \
+      /oldroot/lib/live/mount/medium \
+      /mnt/live/medium
+
+# Finally, really unmount relevant filesystems
+umount /oldroot
+rm -rf /mnt/live/overlay/.w* /mnt/live/overlay/*
+umount /mnt/live/overlay
+
+# Debugging
+mount
+
+### Ensure any remaining disk cache is erased by Linux' memory poisoning
+echo 3 > /proc/sys/vm/drop_caches
+
+### Pause if the test suite wants us to
+if [ -e /tails_shutdown_debugging ] ; then
+    echo "Going to sleep 2 minutes. Happy dumping!"
+    sleep 120
+fi

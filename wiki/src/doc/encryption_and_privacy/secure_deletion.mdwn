@@ -1,0 +1,173 @@
+[[!meta title="Securely delete files and clean diskspace"]]
+
+[[!toc levels=1]]
+
+<a id="why"></a>
+
+Why use secure deletion?
+========================
+
+**Operating systems do not actually remove the contents of a file when it is
+deleted**, even after emptying the trash or explicitly removing the file, from
+the command line for example.
+
+Instead, they simply remove the file's entry from the file system directory,
+because this requires less work and is therefore faster. The contents of the
+file—the actual data—remain on the storage medium. The data will remain there
+until the operating system reuses the space for new data.
+
+Likewise, reformatting, repartitioning or reimaging a system is not always
+guaranteed to write to every area of the disk, though all will cause the disk to
+appear empty or, in the case of reimaging, empty except for the files present in
+the image, to most software.
+
+Finally, even when the storage medium is overwritten, physical properties of the
+medium may make it possible to recover the previous contents. In most cases
+however, this recovery is not possible by just reading from the storage device
+in the usual way, but requires using laboratory techniques such as disassembling
+the device and directly accessing/reading from its components.
+
+<p class="quoted-from">Quoted from [[!wikipedia Secure_file_deletion
+desc="Wikipedia: %s"]].</p>
+
+<a id="usb_and_ssd"></a>
+
+Warning about USB sticks and solid-state disks
+==============================================
+
+**The methods described below will not work as expected on USB sticks and
+solid-state disks.**
+
+- The existing hard disk-oriented techniques for secure deletion of
+  individual files are not effective.
+- Overwriting twice the entire disk is usually, but not always,
+  sufficient to securely clean the disk.
+
+<div class="caution">
+
+<p>Unfortunately, Tails does not currently allow you to perform this task
+with graphical tools. See [[!tails_ticket 5323]].</p>
+
+</div>
+
+For more details read the corresponding section of the Wikipedia article on
+[[!wikipedia Data_erasure#Limitations desc="Data erasure"]].
+
+Securely delete files
+=====================
+
+In Tails you can securely delete files thanks to an [extension of the
+file browser](http://wipetools.tuxfamily.org/nautilus-wipe.html).
+
+  1. Open the file browser, either
+  from the <span class="guimenu">Places</span> menu or the <span
+  class="guilabel">Home</span> icon on the desktop.
+
+  1. Navigate to the folder containing the files that you want to delete.
+
+  1. Select the files that you want to delete with the mouse.
+
+  1. Right-click on the files and choose <span class="guimenuitem">Wipe</span>.
+
+     [[!img wipe_files.png link=no alt="Right-click&nbsp;▸ Wipe"]]
+
+  1. Confirm.
+
+  1. The deletion will start. It can last from a few seconds to several minutes,
+  according to the size of the files. Be patient…
+
+<div class="caution">
+
+<p>Securely deleting files does not erase the potential backup copies of
+the file (for example LibreOffice creates backup copies that allow
+you to recover your work in case LibreOffice stops responding).</p>
+
+</div>
+
+<a id="empty_trash"></a>
+
+Emptying the trash
+==================
+
+Before considering [[securely cleaning the available space on a
+disk|secure_deletion#clean_disk_space]], make sure to empty the trash.
+
+  1. Open the file browser, either from the <span class="guimenu">Places</span> menu or
+     the <span class="guilabel">Home</span> icon on the desktop.
+
+  1. Click on the disk on which you want to empty the trash in the left
+     pane to navigate to the root of this disk.
+
+  1. In the titlebar, choose
+     <span class="menuchoice">
+        <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link="no"]]</span>&nbsp;▸
+        <span class="guimenuitem">Show hidden files</span></span>
+     to show hidden files.
+
+  1. Delete the <span class="filename">.Trash-1000</span> folder or
+     similar.
+
+<div class="tip">
+
+<p>Apply this technique to the <span class="filename">Persistent</span>
+folder to empty the trash of the persistent volume.</p>
+
+</div>
+
+<a id="clean_disk_space"></a>
+
+Securely clean available disk space
+===================================
+
+In order to clean up the contents of all files that were previously suppressed
+but not securely deleted from a disk, it is also possible to securely clean all 
+the free space on the disk.
+
+<div class="caution">
+
+<p>This method does not work as expected on solid-state disks or USB
+sticks.</p>
+
+</div>
+
+The disk or the folder may or may not contain other files. Those files will not
+be deleted during the operation.
+
+  1. Open the file browser, either from the <span class="guimenu">Places</span> menu or
+  the <span class="guilabel">Home</span> icon on the desktop.
+
+  1. Click on the disk that you want to clean in the left pane to
+     navigate to the root of this disk.
+
+  1. Right-click in empty space in the right pane and choose <span
+     class="guimenuitem">Wipe available diskspace</span>.
+
+     [[!img wipe_available_diskspace.png link=no alt="Right-click&nbsp;▸ Wipe
+     available diskspace"]]
+
+     <div class="tip">
+     <p>On the previous screenshot, the trash in the <span
+     class="filename">.Trash-1000</span> folder is not deleted. See the
+     [[instructions above|secure_deletion#empty_trash]].</p>
+     </div>
+
+  1. Confirm.
+
+  1. The cleaning starts. It can last from a few minutes to a few hours,
+     according to the size of the available diskspace. Be patient…
+
+     Note that a file with a name similar to <span
+     class="filename">tmp.7JwHAyBvA9</span> is created in the
+     folder. It is made as big as possible to use all the available diskspace and
+     then securely deleted.
+
+<div class="caution">
+
+<p>This option does not delete hidden files. Choose
+   <span class="menuchoice">
+      <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class=symbolic link=no]]</span>&nbsp;▸
+      <span class="guimenuitem">Show hidden files</span></span>
+   in the titlebar to show them.
+</p>
+
+</div>

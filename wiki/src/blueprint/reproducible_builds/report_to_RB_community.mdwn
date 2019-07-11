@@ -1,0 +1,266 @@
+So far, everyone who tried reproducing the Tails 3.2~rc1 ISO image
+succeeded. We've received a couple non-reproducibility reports about
+3.2, and they are all explained by a single, one-byte mistake in a
+translation of the wiki we ship inside Tails (we'll add sanity checks
+so we never release something with that type of mistake again):
+<https://labs.riseup.net/code/issues/14767>,
+<https://labs.riseup.net/code/issues/12726>
+
+So we believe released Tails ISO images are now *almost* reproducible,
+and Tails 3.3 should definitely be… until proven otherwise :)
+
+For details about the goals and scope of this project, see our
+blueprint: <https://tails.boum.org/blueprint/reproducible_builds/>.
+
+If you want to try it out yourself, see our build and verification
+instructions:
+<https://tails.boum.org/contribute/build/>
+<https://tails.boum.org/contribute/build/reproducible#verify-iso>
+
+Here's a report about how we did it.
+
+[[!toc levels=2]]
+
+Context
+=======
+
+Inputs
+------
+
+Our inputs are:
+
+1. a Git commit-ish, that encodes how the ISO image shall be built,
+   including which snapshots of a few APT archives shall be used
+
+2. snapshots of a few APT archives, whose content is assumed to be
+   immutable and trusted:
+   - when building from a tag:
+     <https://tails.boum.org/contribute/APT_repository/tagged_snapshots/>
+   - otherwise:
+     <https://tails.boum.org/contribute/APT_repository/time-based_snapshots/>
+
+3. our custom, overlay APT repository, whose content is assumed to be
+   immutable (for a given {package,architecture,version} tuple) and
+   trusted: <https://tails.boum.org/contribute/APT_repository/custom/>
+
+Outputs
+-------
+
+The outputs we've made reproducible are:
+
+ - a (hybrid) ISO image that contains bootloader configuration,
+   a kernel and initramfs, and a SquashFS filesystem that itself
+   contains what will be the Tails root filesystem at runtime;
+
+ - a number of Incremental Upgrade Kits (IUK) used by our automatic
+   incremental upgrade process; these are tar archives that contain
+   other tar archives (don't ask) that also contain bootloader
+   configuration, kernel, initramfs, and a SquashFS delta filesystem
+   meant to be stacked with other ones using aufs:
+   <https://tails.boum.org/contribute/design/incremental_upgrades/>
+
+Build tools
+-----------
+
+Tails ISO images are built with our fork of live-build 2.x:
+<https://git-tails.immerda.ch/live-build/log/?h=tails/debian-old-2.0>
+
+A static copy of the Tails website is included in the ISO image. It is
+built with ikiwiki.
+
+Tails IUKs are built with custom tooling:
+<https://git-tails.immerda.ch/iuk/tree/bin/tails-create-iuk>
+<https://git-tails.immerda.ch/iuk/tree/lib/Tails/IUK.pm>
+
+How we did it
+=============
+
+Strategy
+--------
+
+We have tried to avoid big hammer approaches with side-effects that
+are hard to control, such as `faketime`.
+
+Whenever the cost/benefit ratio was reasonable, we have fixed
+reproducibility problems at the cause, instead of doing so via
+post-processing. We believe this approach to be safer (again, less
+hard to control side-effects) and to benefit everyone building
+operating systems that contain the pieces that are now generated in
+a reproducible manner, instead of Tails only. Still, in some cases when
+post-processing was so much easier we went this way; we document this
+below so that others can reuse (and possibly generalize) our hacks.
+
+We had to optimize diffoscope (<https://diffoscope.org/>) quite a bit
+in order to make it cope with the large input files we wanted to feed
+it with; also, we added support for concatenated CPIO achives:
+<https://bugs.debian.org/820631>
+
+Build environment
+-----------------
+
+In order to eliminate a large number of environmental variations,
+building a Tails ISO image happens in a Vagrant + libvirt/QEMU virtual
+machine that is created as part of the build process. The idea here is
+to create build VMs that are not identical, but similar enough to
+allow building identical ISO images, while avoiding the need to
+publish build VM images: we don't need another large, trusted binary
+blob. Kudos to Ximin Luo for suggesting this approach!
+
+The configuration of this virtual machine is encoded in Git along with
+all other relevant ISO build parameters:
+<https://git-tails.immerda.ch/tails/tree/vagrant>. Among other things,
+it includes the list of snapshots of APT archives that shall be used
+as APT sources inside the build VM:
+<https://git-tails.immerda.ch/tails/tree/vagrant/definitions/tails-builder/config/APT_snapshots.d>.
+
+This is documented more in detail on
+<https://tails.boum.org/blueprint/reproducible_builds/#how>.
+
+ISO filesystem
+--------------
+
+This was easy thanks to Chris Lamb's (<https://chris-lamb.co.uk/>)
+previous work in xorriso and live-build:
+
+ - recent versions of xorriso honor `$SOURCE_DATE_EPOCH`
+   (<https://reproducible-builds.org/specs/source-date-epoch/>) for
+   various ISO image metadata
+ - `$SOURCE_DATE_EPOCH` is passed to xorriso's `--modification-date`
+ - bootloader configuration templating uses `$SOURCE_DATE_EPOCH`
+   anywhere it would write timestamps
+ - we clamp mtimes to `$SOURCE_DATE_EPOCH`
+
+… so we simply backported the relevant commits to our fork of
+live-build and ensured our build system uses a recent xorriso.
+
+We also had to pass a fixed value to `isohybrid --id` and to fix
+reproducibility of initrd images: <https://bugs.debian.org/845034>
+
+SquashFS metadata
+-----------------
+
+Building upon work that Alexander Couzens started earlier, we made
+mksquashfs:
+
+ - honor `$SOURCE_DATE_EPOCH` for various timestamps:
+   <https://github.com/squashfskit/squashfskit/commit/0ab12a8585373be2de5129e14d979c62e7a90d82>
+ - clamp content timestamps to `$SOURCE_DATE_EPOCH`:
+   <https://github.com/squashfskit/squashfskit/commit/32a07d4156a281084c90a4b78affc8b0b32a26fc>
+
+Another source of non-deterministic SquashFS generation was identified
+during the Reproducible Builds summit 2016; Alexander Couzens and Hanno Böck
+debugged and fixed it:
+<https://github.com/squashfskit/squashfskit/commit/afc0c76a170bd17cbd29bbec6ae6d2227e398570>
+
+SquashFS content
+----------------
+
+This is where the bulk of our work happened.
+
+A number of files are simply emptied or excluded when creating the
+SquashFS (some to optimize size, some because they are not needed in
+there so we did not bother generating them in a deterministic manner):
+
+ - <https://git-tails.immerda.ch/tails/tree/config/chroot_local-includes/usr/share/tails/build/mksquashfs-excludes>
+ - <https://git-tails.immerda.ch/tails/tree/config/chroot_local-hooks/99-zzzzzz_reproducible-builds-post-processing>
+
+We considered dropping even more stuff such as the fontconfig cache,
+but we've seen weird results and performance issues when doing so.
+
+Benefiting from previous work by Chris Lamb on live-build, we
+clamp mtimes to `$SOURCE_DATE_EPOCH`.
+
+We contributed a number of patches upstream to generate various files
+in a reproducible manner, mostly caches and indices that are generated
+or updated with dpkg triggers or postinst maintainer scripts:
+
+ - `/etc/kernel/postinst.d/apt-auto-removal`:
+   <https://anonscm.debian.org/cgit/apt/apt.git/commit/?id=a9b56a0>
+ - `/etc/shadow`: <https://github.com/shadow-maint/shadow/pull/71>
+ - fontconfig cache: <https://bugs.debian.org/864082>,
+   <https://bugs.debian.org/863427>
+ - gdk-pixbuf's `loaders.cache`:
+   <https://bugzilla.gnome.org/show_bug.cgi?id=783592>,
+   <https://bugs.debian.org/875704>
+ - `giomodule.cache`: <https://bugzilla.gnome.org/show_bug.cgi?id=786983>
+ - GTK+ `immodules.cache`:
+   <https://bugzilla.gnome.org/show_bug.cgi?id=786528>
+ - `/usr/share/applications/mimeinfo.cache`:
+   <https://bugs.freedesktop.org/show_bug.cgi?id=102320>
+ - `/var/cache/cracklib/src-dicts`: <https://bugs.debian.org/865623>
+
+During the build process we modify ZIP archives shipped in Tor
+Browser,
+and then use strip-nondeterminism to normalize them again, which
+required to first add a new feature to strip-nondeterminism:
+<https://bugs.debian.org/845203>.
+
+This project was the opportunity for us to finally remove GConf from Tails… after
+having contributed a patch upstream to generate
+`/var/lib/gconf/defaults/%gconf-tree-*.xml` reproducibly:
+<https://bugzilla.gnome.org/show_bug.cgi?id=784738>,
+<https://bugs.debian.org/867848>.
+
+GNU gettext's POT, PO and MO files were an interesting challenge.
+Our approach is to ensure we don't update POT files unless it is
+really needed, i.e. if the only change after refreshing them is in the
+POT-Creation-Date field. But that was not enough, and we also had to
+avoid updating PO — and thus MO — files when only comments (e.g.
+line numbers) changed.
+
+For building the copy of our website that's included in the SquashFS,
+we enabled ikiwiki's "deterministic" option, dropped some timestamps
+from the templates and contributed a couple of patches upstream:
+<https://ikiwiki.info/bugs/images_resizing_is_not_deterministic/>,
+<https://ikiwiki.info/bugs/pagestats_output_is_not_deterministic/>
+
+Incremental Upgrade Kits
+------------------------
+
+Here again we're using a version of mksquashfs that honors
+`$SOURCE_DATE_EPOCH`, so passing --sort=name, --clamp-mtime
+and --mtime=@$SOURCE_DATE_EPOCH to GNU tar was enough fix most
+reproducibility problem. But the aufs "Pseudo Link" feature
+was still causing problems, which were resolved by calling
+auplink to flush these pseudo-links.
+
+Future plans
+============
+
+As you can see in the Inputs section, the situation is still not
+ideal; we want the only input to be a specific state of the Tails
+source code, so the other two inputs would have to be eliminated
+somehow:
+
+1. We need to ensure that the "snapshots of a few APT archives" indeed
+   are/were true snapshots of the Debian APT repos (at the specific
+   time) that they claim to be. This could probably be done during
+   each Tails build, before using the snapshot.
+
+1. The same goes for our "custom, overlay APT repository", where we
+   upload our custom software or re-upload packages straight from
+   Debian: they should instead be built (reproducibly!) as part of the
+   Tails ISO build process.
+
+This work is on our roadmap for 2019:
+<https://labs.riseup.net/code/issues/14455>
+
+Conclusions
+===========
+
+The Reproducible Builds community is awesome! While working on this project
+we have greatly benefited from previous work, collaboration on
+improving shared build tools, clever insights and excellent
+hired help.
+
+This probably contributed a lot to our feeling that our goals have
+been achieved more easily than what we anticipated. We hope this
+encourages other projects to build their own operating system images
+in a reproducible manner. :)
+
+We hope that the patches we've contributed upstream as well as the above
+documentation will benefit other projects who use the same build
+tools, include the same bits & pieces in their binary artifacts, and
+want to work on reproducible builds as well.
+
+Questions and feedback are welcome.

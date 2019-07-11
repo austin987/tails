@@ -1,0 +1,26 @@
+---
+- apparmor-profiles:
+    - '/usr/local/lib/tor-browser/firefox-unconfined'
+  users:
+    - 'tor-launcher'
+  commands:
+    SAVECONF:
+      - ''
+    GETINFO:
+      - 'status/bootstrap-phase'
+  confs:
+    UseBridges: ['', '.*']
+    Bridge: ['', '.*']
+    Socks4Proxy: ['', '.*']
+    Socks5Proxy: ['', '.*']
+    HTTPSProxy: ['', '.*']
+    Socks5ProxyUsername: ['', '.*']
+    Socks5ProxyPassword: ['', '.*']
+    HTTPSProxyAuthenticator: ['', '.*']
+    ReachableAddresses: ['', '.*']
+    DisableNetwork: ['0', '1']
+  events:
+    STATUS_CLIENT:
+    NOTICE:
+    WARN:
+    ERR:

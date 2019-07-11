@@ -1,0 +1,196 @@
+[[!meta title="Install from Debian, Ubuntu, or Mint using the command line and GnuPG"]]
+
+[[!meta robots="noindex"]]
+[[!meta stylesheet="inc/stylesheets/assistant" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/steps" rel="stylesheet" title=""]]
+[[!meta stylesheet="inc/stylesheets/expert" rel="stylesheet" title=""]]
+
+Start in Debian, Ubuntu, or Linux Mint.
+
+<h1 id="verify-key">Verify the Tails signing key</h1>
+
+<div class="tip">
+
+<p>If you already certified the Tails signing key with your own key, you
+can skip this step and start [[downloading and verifying the USB
+image|usb#download]].</p>
+
+</div>
+
+In this step, you will download and verify the *Tails signing
+key* which is the OpenPGP key that is used to cryptographically sign
+the Tails USB image.
+
+<div class="note">
+
+<p>To follow these instructions you need to have your own OpenPGP
+key.</p>
+
+<p>To learn how to create yourself an OpenPGP key, see
+<a href="https://help.riseup.net/en/security/message-security/openpgp/gpg-keys">Managing
+OpenPGP Keys</a> by <em>Riseup</em>.</p>
+
+</div>
+
+This verification technique uses the OpenPGP Web of Trust and the
+certification made by official Debian developers on the Tails signing
+key. [[Learn more about the OpenPGP Web of
+Trust|install/download#openpgp]].
+
+1. Import the Tails signing key in your <span class="application">GnuPG</span> keyring:
+
+       wget https://tails.boum.org/tails-signing.key
+       gpg --import < tails-signing.key
+
+1. Install the Debian keyring. It contains the OpenPGP keys of all Debian developers:
+
+       sudo apt install debian-keyring
+
+1. Import the OpenPGP key of [[!wikipedia Stefano_Zacchiroli]], a former
+   Debian Project Leader, from the Debian keyring into your keyring:
+
+       gpg --keyring=/usr/share/keyrings/debian-keyring.gpg --export zack@upsilon.cc | gpg --import
+
+1. Verify the certifications made on the Tails signing key:
+
+       gpg --keyid-format 0xlong --check-sigs A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+   In the output of this command, look for the following line:
+
+       sig! 0x9C31503C6D866396 2015-02-03  Stefano Zacchiroli <zack@upsilon.cc>
+
+   Here, <code>sig!</code>, with an exclamation mark, means that Stefano
+   Zacchiroli verified and certified the Tails signing key with his key.
+
+   It is also possible to verify the certifications made by other
+   people. Their name and email address appear in the list of
+   certification if you have their key in your keyring.
+
+   <div class="caution">
+   <p>If the verification of the certification failed, then you might
+   have downloaded a malicious version of the Tails signing key or our
+   instructions might be outdated.
+   Please [[get in touch with us|support/talk]].</p>
+   </div>
+
+   <div class="tip">
+   <p>The line `175 signatures not checked due to missing keys` or similar
+   refers to the certifications (also called *signatures*) made by other public
+   keys that are not in your keyring. This is not a problem.</p>
+   </div>
+
+1. Certify the Tails signing key with your own key:
+
+   a. To make a non-exportable certification that will never be shared
+      with others:
+
+          gpg --lsign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+   b. To make an exportable certification of the Tails signing
+      key and publish it on the public key servers:
+
+          gpg --sign-key A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+          gpg --send-keys A490D0F4D311A4153E2BB7CADBB802B258ACD84F
+
+      Doing so allows people who verified
+      your key to verify your certification and, as a consequence, build
+      more trust in the Tails signing key.
+
+<a id="download"></a>
+
+<h1 id="download-verify">Download and verify the USB image</h1>
+
+In this step, you will download the latest Tails USB image and verify it
+using the Tails signing key.
+
+1. Download the USB image:
+
+   <p class="pre">wget --continue [[!inline pages="inc/stable_amd64_img_url" raw="yes" sort="age"]]</p>
+
+1. Download the signature of the USB image:
+
+   <p class="pre">wget [[!inline pages="inc/stable_amd64_img_sig_url" raw="yes" sort="age"]]</p>
+
+1. Verify that the USB image is signed by the Tails signing key:
+
+   <p class="pre">[[!inline pages="inc/stable_amd64_img_gpg_verify" raw="yes" sort="age"]]</p>
+
+   The output of this command should be the following:
+
+   <p class="pre">[[!inline pages="inc/stable_amd64_img_gpg_signature_output" raw="yes" sort="age"]]</p>
+
+   Verify in this output that:
+
+     - The date of the signature is the same.
+     - The signature is marked as <code>Good signature</code> since you
+       certified the Tails signing key with your own key.
+
+<a id="dd"></a>
+
+Install Tails using <span class="command">dd</span>
+===================================================
+
+1. Make sure that the USB stick on which you want to install Tails is
+   unplugged.
+
+1. Execute the following command:
+
+   <p class="pre command">ls -1 /dev/sd?</p>
+
+   It returns a list of the storage devices on the system. For example:
+
+   <p class="pre command-output">/dev/sda</p>
+
+1. Plug in the USB stick on which you want to install Tails.
+
+   <div class="caution"><p>All the data on this USB stick will be lost.</p></div>
+
+1. Execute again the same command:
+
+   <p class="pre command">ls -1 /dev/sd?</p>
+
+   Your USB stick appears as a new device in the list.
+
+   <p class="pre command-output">/dev/sda
+   /dev/sdb</p>
+
+1. Take note of the *device name* of your USB stick.
+
+   In this example, the device name of the USB stick is
+   <span class="code">/dev/sdb</span>. Yours might be different.
+
+   <div class="caution">
+   <p>If you are unsure about the device name, you should stop proceeding or
+   <strong>you risk overwriting any hard disk on the system</strong>.</p>
+   </div>
+
+1. Execute the following commands to copy the USB image that you
+   downloaded earlier to the USB stick.
+
+   Replace:
+
+   - <span class="command-placeholder">tails.img</span> with the path to the USB image
+
+   - <span class="command-placeholder">device</span> with the device name found in step 5
+
+   <p class="pre command">dd if=<span class="command-placeholder">tails.img</span> of=<span class="command-placeholder">device</span> bs=16M && sync</p>
+
+   You should get something like this:
+
+   <p class="pre command-example">dd if=/home/user/tails-amd64-3.12.img of=/dev/sdb bs=16M && sync</p>
+
+   If no error message is returned, Tails is being copied on the USB
+   stick. The copy takes some time, generally a few minutes.
+
+   <div class="note">
+   <p>If you get a <span class="guilabel">Permission denied</span> error, try
+   adding <code>sudo</code> at the beginning of the command:</p>
+
+   <p class="pre command">sudo dd if=<span class="command-placeholder">tails.img</span> of=<span class="command-placeholder">device</span> bs=16M && sync</p>
+   </div>
+
+   The installation is complete after the command prompt reappears.
+
+[[!inline pages="install/inc/steps/restart_first_time.inline" raw="yes" sort="age"]]
+
+[[!inline pages="install/inc/steps/create_persistence.inline" raw="yes" sort="age"]]

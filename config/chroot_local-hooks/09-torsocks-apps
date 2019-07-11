@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+
+echo "Wrapping some applications with torsocks"
+
+APPS="openpgp-applet seahorse"
+DBUS_SERVICES="org.gnome.seahorse.Application org.fedoraproject.Config.Printing"
+WRAPPED_DBUS_SERVICES=""
+
+for app in $APPS; do
+   sed -i'' --regexp-extended 's,^Exec=(.*),Exec=torsocks \1,' \
+       "/usr/share/applications/${app}.desktop"
+done
+
+for dbus_service in $DBUS_SERVICES; do
+   sed -i'' --regexp-extended 's,^Exec=(.*),Exec=/usr/bin/torsocks \1,' \
+       "/usr/share/dbus-1/services/${dbus_service}.service"
+done
+
+# Wrapped by both torsocks and a binary in /usr/local
+for dbus_service in $WRAPPED_DBUS_SERVICES; do
+   sed -i'' --regexp-extended 's,^Exec=/usr/(.*),Exec=/usr/bin/torsocks /usr/local/\1,' \
+       "/usr/share/dbus-1/services/${dbus_service}.service"
+done
+
+# Redirect to existing wrapper
+sed -i'' --regexp-extended 's,^Exec=pidgin$,Exec=/usr/local/bin/pidgin,' \
+    "/usr/share/applications/pidgin.desktop"
+sed -i'' --regexp-extended 's,^Exec=/usr/bin/totem(\s+.*)?$,Exec=/usr/local/bin/totem,' \
+    "/usr/share/dbus-1/services/org.gnome.Totem.service"

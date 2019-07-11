@@ -1,0 +1,100 @@
+[[!meta title="Release Manager"]]
+
+# Tasks
+
+## Continuously
+
+Stay on top of email received on the Release Managers mailing list.
+This includes for example analyzing failure notifications for Jenkins jobs
+and filing tickets for the Foundations Team as needed.
+
+## In the beginning of your shift
+
+- Check the Mozilla release calendars:
+  * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
+  * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
+- Send the release schedule to <tails-dev@boum.org> and
+  <tails-l10n@boum.org>.
+  - Ask the core team and contributors for availability at the
+    designated dates for testing the RC and final image.
+  - Ask <tails@boum.org> for a _Trusted Reproducer_ who will reproduce the
+    ISO and USB images for the RC and final release within 72 hours after
+    the RM has unplugged their smartcard. When accepting the offer,
+    the Trusted Reproducer must read the [["Preparation" section of
+    the instructions|contribute/release_process/test/reproducibility#preparation]].
+- Update [[contribute/calendar]] accordingly.
+- Update the due date on [[!tails_roadmap]] accordingly.
+- Make sure you have hardware handy:
+  - DVD burner
+  - at least 2 spare DVD-R or DVD-RW
+- Make sure you have access to the various systems used to do
+  the release:
+  - being subscribed to the <tails-rm@boum.org> mailing list
+  - having your OpenPGP signing subkey hardware and passphrase handy
+  - commit access to the official [[contribute/Git]] repository
+  - upload access to our [[custom APT repository|APT_repository/custom]]
+  - having your GnuPG key in the list of uploaders for
+    our [[custom APT repository|APT_repository/custom]]
+  - <https://jenkins.tails.boum.org/>
+  - SSH access to `rsync.lizard` and being a sudoer and in the `rsync_tails` group there
+  - SSH access to `bittorrent.lizard` and being in the `debian-transmission` group there
+  - SSH access to `reprepro-time-based-snapshots@apt.lizard`
+  - look for `rsync|ssh` in [[APT_repository/custom]],
+    [[APT_repository/time-based_snapshots]] and this very document
+  - access to the RM team's Git repository: install the
+    `git-remote-gcrypt` package, `git clone
+    gcrypt::tails@git.tails.boum.org:rm`, follow instructions in the
+    `README`
+  - follow the instructions in `keyringer/README` in the RM team's Git
+    repository then make sure you can `keyringer tails-rm decrypt credentials`
+  - _Manager_ status on Redmine
+- Check when our OpenPGP signing key expires.
+  If that's before, or soon after, the scheduled date for the release
+  _after_ the one your shift is about, then shout.
+
+## Two weeks after the beginning of your shift
+
+- Ensure you have found a _Trusted Reproducer_ and write who this is
+  in the [[contribute/calendar]].
+
+## The Friday before the release date
+
+We need to coordinate our Tails release with the Tor Browser
+developers to make sure that the Tor Browser we plan to include in our
+release is ready in time for when we build the release image. The
+Friday prior to the release seems like a good candidate, since it's
+around this time they usually release tarballs for testing, and it
+will still give some time for us to improvise according to their
+"delayed" schedule and arrange a contingency plan (e.g. possibly
+delaying our release a day or two). Asking for a status report a day
+or two earlier than Friday *in addition* won't hurt, too.
+
+<div class="note">
+
+Note: the Tor Browser team Cc's tails-dev@boum.org when sending QA
+requests to tor-qa@lists.torproject.org which makes this easier.
+We are also often notified of any last last-minute rebuilds, better
+ask explicitly the Tor Browser team what their plans are.
+
+</div>
+
+See the
+[[Upgrading the Tor Browser|contribute/release_process/tor-browser]]
+page for details.
+
+## At least for the first release of the year
+
+Have a look at scenarios or features added or modified since last time
+this check was done, and check if the ones that depend on the
+documentation have the `@doc` tag.
+
+## Make the release happen
+
+No kidding. See [[contribute/release_process]].
+
+# Shifts
+
+The release manager shifts could be done by a team. They start right after the
+publication of the previous release to the publication and announcement of the
+release they are taking care of, which should be 6 weeks long if everything goes
+fine.

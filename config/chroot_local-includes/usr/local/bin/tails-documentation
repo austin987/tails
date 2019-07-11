@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+import os
+import os.path
+import sys
+
+# Main
+
+try:
+    page = sys.argv[1]
+except IndexError:
+    page = 'doc'
+
+try:
+    anchor = sys.argv[2]
+except IndexError:
+    anchor = None
+
+tails_homepage = 'https://tails.boum.org'
+wiki_path = '/usr/share/doc/tails/website'
+lang_code = os.getenv('LANG', 'en')[0:2]
+
+# If possible, let's hand-off to our website, which should be the most
+# up-to-date option.
+if os.system('/usr/local/sbin/tor-has-bootstrapped') == 0:
+    if os.path.isfile(os.path.join(
+            wiki_path, page + '.' + lang_code + ".html")):
+        uri = tails_homepage + '/' + page + '/index.' + lang_code + '.html'
+    else:
+        uri = tails_homepage + '/' + page
+else:
+    trials = [
+        os.path.join(wiki_path, page + code + ".html")
+        for code in ['.' + lang_code, '.en', '']
+    ]
+    try:
+        uri = 'file://' + next(
+            trial for trial in trials if os.path.isfile(trial)
+        )
+    except StopIteration:
+        sys.exit('error: could not find the requested documentation page')
+
+if anchor is not None:
+    uri = uri + '#' + anchor
+
+os.environ['TOR_BROWSER_SKIP_OFFLINE_WARNING'] = 'yes'
+os.execv('/usr/local/bin/tor-browser',
+         ['/usr/local/bin/tor-browser', '--new-tab', uri])

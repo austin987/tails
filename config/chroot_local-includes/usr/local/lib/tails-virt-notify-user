@@ -1,0 +1,85 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+#man{{{
+
+=head1 NAME
+
+tails-virt-notify-user
+
+=head1 VERSION
+
+Version X.XX
+
+=head1 AUTHOR
+
+Tails dev team <amnesia@boum.org>
+See https://tails.boum.org/.
+
+=cut
+
+#}}}
+
+use Desktop::Notify;
+use English '-no_match_vars';
+use IPC::System::Simple qw{capturex $EXITVAL};
+use Locale::gettext;
+use Net::DBus::Reactor;
+use POSIX;
+
+### initialization
+setlocale(LC_MESSAGES, "");
+textdomain("tails");
+
+### callbacks
+
+sub action_cb {
+    my $reactor = shift;
+    unless (fork) {
+        exec(
+            '/usr/local/bin/tails-documentation',
+            'doc/advanced_topics/virtualization',
+            'security'
+        );
+    }
+    $reactor->shutdown;
+}
+
+### main
+
+# both 0 and 1 are acceptable exit values:
+#  - 0 means that we're running in a virtualized environment
+#  - 1 means that we're not running in a virtualized environment
+#  - anything else means there is a problem, and capturex will throw an exception
+my $vm_name = capturex([0, 1], qw{/usr/bin/systemd-detect-virt --vm});
+exit 0 if $EXITVAL == 1;
+
+my @whitelist = qw(bochs kvm qemu uml virtualbox xen);
+
+my $reactor = Net::DBus::Reactor->main;
+
+my $notify  = Desktop::Notify->new();
+$notify->action_callback(sub { action_cb($reactor, @_) });
+$notify->close_callback(sub { $reactor->shutdown; });
+
+my ($body, $summary);
+
+chomp($vm_name);
+if (grep {$_ eq $vm_name} @whitelist) {
+    $summary = gettext("Warning: virtual machine detected!");
+}
+else {
+    $summary = gettext("Warning: non-free virtual machine detected!");
+}
+
+$body = gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
+
+$notify->create(summary => $summary,
+                body    => $body,
+                actions => { "moreinfo_$PID" => gettext('Learn more'), },
+                hints   => { 'transient' => 1, },
+                timeout => 0)->show();
+
+$reactor->run;

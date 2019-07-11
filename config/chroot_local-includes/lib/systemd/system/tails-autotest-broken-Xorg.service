@@ -1,0 +1,13 @@
+[Unit]
+Description=Break Xorg for Tails test suite
+Documentation=https://tails.boum.org/contribute/release_process/test/automated_tests/
+ConditionKernelCommandLine=autotest_broken_Xorg
+Before=gdm.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'echo "#!/bin/sh\nexit 1" > /usr/bin/Xorg'
+
+[Install]
+WantedBy=multi-user.target

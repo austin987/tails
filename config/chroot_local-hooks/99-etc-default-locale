@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -e
+
+echo "Creating /etc/default/locale"
+
+# /etc/default/locale is not a conffile. It is unowned, but primarily managed
+# by the "locales" package's maintainer scripts. We purge that package
+# in 98-remove_unwanted_packages (because we use locales-all instead),
+# thus /etc/default/locale is removed. Various scripts of ours depend on this
+# file to exist and contain a valid $LANG value.
+#
+# Tails Greeter's PostLogin script will later change this value according to
+# the user's choice.
+
+echo 'LANG=en_US.UTF-8' > /etc/default/locale

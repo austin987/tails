@@ -1,0 +1,121 @@
+[[!meta title="Tails July 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in July 2016.
+
+Everything in this report is public.
+
+# B. Improve our quality assurance process
+
+## B.3. Extend the coverage of our test suite
+
+### B.3.10. Write automated tests for features added in 2016Q1
+
+This deliverable was completed last month.
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+This month again, we made great progress in making our test suite
+more robust.
+
+We implemented retries on transient network failures in several of the
+features of our test suite that were affected. It made these
+tests robust enough for us to re-enable them in our Jenkins setup:
+
+- in the SSH and SFTP feature ([[!tails_ticket 10498]])
+- in the APT feature ([[!tails_ticket 10496]])
+- in the Git feature ([[!tails_ticket 10444]])
+- the Synaptic scenario has a proposed patch that has been widely
+  tested and should be merged for 2.6 ([[!tails_ticket 10441]]).
+  Hopefully it will also workaround
+  [[!tails_ticket 10412 desc="Synaptic segfaults we've seen"]] as well
+  as [[!tails_ticket 10900 desc="another related bug"]].
+
+In July, we tackled the parts of our test suite that rely on emulated
+removable USB mass storage devices, that have historically been
+fragile in our Jenkins setup. Great progress was made, and we
+have good hope to be able to re-enable these tests on production
+branches in August or September:
+
+- Tails Installer [[!tails_ticket 11590 desc="was improved"]] to
+  behave more robustly despite the brittleness of udisks in some situations
+  ([[!tails_ticket 10720]]). This allowed the affected tests to run
+  one step further and in turn to identify another kind of
+  flaky behavior ([[!tails_ticket 11588 desc="seemingly random I/O errors on emulated USB devices"]])
+  that we fixed by tweaking the kind of hardware which is emulated by QEMU.
+- We [[!tails_ticket 11558 desc="identified and fixed"]] a bug in the
+  step checking the existence of the persistent volume.
+- We [[!tails_ticket 10504 desc="identified and fixed"]] a bug in our
+  the handling of USB sticks created without Tails Installer,
+  due to a weirdness caused by hybrid ISO images.
+
+The above work made memory erasure tests more fragile. Thankfully we
+already had [[!tails_ticket 10733 desc="this potential problem"]] in
+mind and we solved it.
+
+While working on tackling the failures of time syncing tests, we
+realized that some of the servers we use for htpdate were
+offline or broken, making the time syncing brittle.
+We [[!tails_ticket 11577 desc="replaced them"]],
+which improves the situation.
+
+Our test suite needs to add kernel command line options when booting the
+Tails VM under test, so that it can run commands inside it. This step
+used to be fragile: it sometimes happened that the Tails VM was booted
+before our test suite had time to type these options.
+We've [[!tails_ticket 10777 desc="implemented a solution"]] that
+should be merged in August.
+
+### B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
+
+We lacked time to work on this, so it is postponed.
+
+### B.3.13. Reorganize the "various checks" feature ([[!tails_ticket 5707]])
+
+This work has been merged, so this deliverable is now completed.
+
+### B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
+
+This is still work in progress. We went through one more iteration,
+and hope to complete it soon.
+
+### B.3.15. Write automated tests for features added in 2016Q2
+
+We [[!tails_ticket 10840 desc="wrote a regression test"]] for the
+persistence "dotfiles" feature. This completes this deliverable.
+
+## B.4. Freezable APT repository
+
+This was delivered already, but still we kept polishing this system:
+
+* We wrote documentation and a helper tool for freeze exceptions
+  ([[!tails_ticket 11448]]).
+
+* We've investigated and fixed the root cause of a weird issue, when
+  a package was not removed from our time-based APT snapshots, while
+  it should have been ([[!tails_ticket 11496]]).
+
+* We have dealt with the consequences that our new APT snapshots system has
+  on our server's `apt-cacher-ng` cache size ([[!tails_ticket 11532]]).
+
+During the Tails 2.5 release process, we've
+[[!tails_ticket 11612 desc="identified a problem"]] in how we handle
+frozen APT repositories for bugfix releases. We want to fix it by the
+end of September.
+
+# C. Scale our infrastructure
+
+## C.4. Maintain our already existing services
+
+- C.4.6. Administer our services upto milestone VI
+
+  We kept on answering the requests from the community and taking care
+  of security updates.
+
+  We started making plans to handle the
+  [[!tails_ticket 11543 desc="migration to Puppet 4"]].
+
+# E. Release management
+
+No releases were put out in July.

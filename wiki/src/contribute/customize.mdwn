@@ -1,0 +1,48 @@
+This page documents a bit how to [[contribute/build]] a custom system
+based on Tails.
+
+<div class="caution">
+
+<strong>The resulting system will effectively be a fork of
+Tails, that only you can support: do not expect any help from us about
+it.<br />
+Please consider [[having your changes merged|contribute/how/code]]
+into Tails instead.
+</strong>
+</div>
+
+
+[[!toc levels=2]]
+
+# Settings specific to Tails
+
+The settings that can be customized can be found in `config/amnesia`;
+e.g. desktop environment.
+
+You'd better never directly edit this file: rather put your custom
+variable assignments in a new `config/amnesia.local` file. The values
+found in the `.local` file will override the ones from the
+upstream one.
+
+These configuration files are actually shell scripts, and are sourced
+by various other scripts.
+
+# Debian Live settings
+
+The Amnesic Incognito Live System is based on Debian Live.
+Nearly everything can thus be customized. To learn how to do so, refer
+to the Debian Live [manual](http://live.debian.net/manual/oldstable/html/live-manual.en.html),
+[website](http://debian-live.alioth.debian.org/) and
+[wiki](https://wiki.debian.org/DebianLive/).
+
+# $HOME
+
+Tails default user's `$HOME` directory is created at runtime from
+`/etc/skel/`. One may want to build an image including a modified
+version of it. There are multiple ways to do so:
+
+1. edit the content of `config/chroot_local-includes/etc/skel/`
+2. dropping shell scripts in `config/chroot_local-hooks/` or
+   `config/chroot_local-includes/lib/live/config/`
+   to modify `/home/amnesia` in a program-driven way
+   (`gconftool`, etc.)

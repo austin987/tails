@@ -1,0 +1,278 @@
+[[!meta title="Tails December 2015 report"]]
+
+[[!toc levels=2]]
+
+This reports covers the activity of Tails in December 2015.
+
+Everything in this report can be made public.
+
+# A. Replace Claws Mail with Icedove
+
+Timing-wised, for this deliverable we are working with a more
+[incremental schedule](https://mailman.boum.org/pipermail/tails-icedove/2015-December/000108.html)
+than what was planned initially. Instead of completing all the work
+for milestone IV (2016, January 15):
+
+ * We released Icedove in Tails way ahead of schedule, as reported two
+   months ago (A.1.3, A.1.5).
+
+ * With respect to securing the Icedove autoconfig wizard (A.1.1), the
+   remaining work will be spread over the next few months: first, we
+   aim at having a proof-of-concept branch, that integrates the
+   secured wizard into Tails, ready by the end of the month; second,
+   we want to release this feature in Tails 2.2 (early March); third,
+   the process of trying to have our patches merged upstream (A.1.2)
+   has started, and will span over the next months.
+
+## A.1.2 Make our improvements maintainable for future versions of Icedove
+
+   We've been following up on upstreaming patches from
+   [tagnaq's paper](https://trac.torproject.org/projects/tor/raw-attachment/wiki/doc/TorifyHOWTO/EMail/Thunderbird/Thunderbird%2BTor.pdf)
+   and are happy to see that two of them were included upstream.
+   ([[!tails_ticket 6150]])
+
+   - `Date` headers are sanitized with a [JS patch in
+     TorBirdy](https://trac.torproject.org/6314).
+   - `Message-ID` headers are fixed with a [C++ patch in Thunderbird
+     45](https://hg.mozilla.org/comm-central/rev/a8573d4c67292962f9dd9b8f51496e9f62bbedb7).
+
+   In order to make our improvements maintainable we've got
+   in touch with the Debian Icedove packaging team and written manual tests for
+   testing Icedove in Tails. ([[!tails_ticket 9493]])
+
+   These still have to be converted to automated tests in our test suite.
+   ([[!tails_ticket 6304]])
+
+## A.1.3 Integrate Icedove into Tails
+
+   Since 1.8 we advertise Icedove to our users as the default email client in
+   Tails. Claws Mail will be removed in the next release of Tails, version 2.0.
+   Users can now use the Icedove persistence feature.
+
+## A.1.4 Provide a migration path for our users from Claws Mail to Icedove
+
+This was completed when Icedove became the default email client.
+
+# B. Improve our quality assurance process
+
+## B.1. Automatically build ISO images for all the branches of our source code that are under active development
+
+In December, **809 ISO images** were automatically built by our Jenkins
+instance.
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+In December, **788 ISO images** were tested by our Jenkins instance.
+
+- B.2.4. Implement and deploy the best solution from this research
+
+  We went on with the effort we started in October, to identify test
+  cases that prove to be fragile in our CI environment, that were
+  blocking us from notifying contributors when tests fail there.
+  And finally, we reached the point when we felt comfortable with the
+  subset of our automated test suite we deem to be robust, and
+  unleashed these notifications to the greater Tails community
+  ([announce](https://mailman.boum.org/pipermail/tails-dev/2015-December/009931.html)).
+  We will now go on working on making as much of our test suite robust enough
+  to be suitable for running in this context (B.3.11, see below).
+  ([[!tails_ticket 10296]] and [[!tails_ticket 10382]])
+
+  Other than that, our testing setup has seen quite some polishing all
+  over the place, that we are going to sum up now.
+
+  As a way to optimize resource usage and to shorten the feedback
+  loop, we have limited the amount of tests we run on ISO images built from
+  documentation branches: we now run only the test cases that depend
+  on the documentation included in the ISO image, instead of the entire test
+  suite. ([[!tails_ticket 10492]], [[!tails_ticket 10706]] and
+  [[!tails_ticket 10707]])
+
+  We excluded early, work-in-progress draft branches from being automatically
+  tested in Jenkins. We want to encourage developers to share work
+  even if it is very rough, not ready to be merged, and it fails to pass
+  the test suite. In such cases, we should not discourage developers
+  with lots of notifications about test failures.
+  ([[!tails_ticket 10389]])
+
+  We verified, after a whole release cycle, that saving
+  the video recording for failing test cases wasn't using too much disk
+  space. ([[!tails_ticket 10354]])
+
+  We fixed a usability issue (for developers) in our test suite setup:
+  immediately after each release, a branch that was not merged yet
+  used to be removed from the list of branches that we automatically
+  build and test, until it was manually updated; this resulted in
+  losing their automatic build and test history, that sometimes is
+  valuable debugging data. ([[!tails_ticket 10123]])
+
+  We identified a concerning, and surprising amount of test suite runs aborted on
+  Jenkins due to timeouts. We investigated the root causes
+  ([[!tails_ticket 10720]]), and mitigated the problem for the time
+  being. ([[!tails_ticket 10717]])
+
+  Finally, we automated the way we compute statistics about our ISO
+  builds and test suite runs in Jenkins. ([[!tails_ticket 10507]])
+
+## B.3. Extend the coverage of our test suite
+
+* B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+  During December,
+
+  - We fixed several fragile scenarios:
+    Seahorse ([[!tails_ticket 10501]] and ([[!tails_ticket 9095]]),
+    whois ([[!tails_ticket 10523]]),
+    Tails Installer ([[!tails_ticket 10718]]).
+
+  - Some fragile scenarios have been worked on and have a proposed fix:
+    Tails OpenPGP keys, by updating the soon to be expired one
+    ([[!tails_ticket 10378]]), and Git ([[!tails_ticket 10444]])).
+
+  - We also identified other scenarios that were fragile in Jenkins:
+    MAC address spoofing ([[!tails_ticket 10774]]),
+    Evince ([[!tails_ticket 10775]]),
+    Memory wipe ([[!tails_ticket 10776]]),
+    Race condition with boot splash ([[!tails_ticket 10777]]), and
+    Opening Tails roadmap URL from pidgin ([[!tails_ticket 10783]]).
+    Due to the `wait_until_tor_is_working` helper being buggy
+    ([[!tails_ticket 10497]]), we marked most network-related scenarios
+    as fragile.
+
+## B.4. Freezable APT repository
+
+This was put aside in December, while the developer responsible for
+this project was focusing on porting Tails to Debian Jessie.
+A little progress was made nevertheless:
+
+- B.4.5. Implement processes and tools for importing and freezing
+  those packages ([[!tails_ticket 10749]], [[!tails_ticket 10748]],
+  [[!tails_ticket 6299]]),
+  B.4.2. Implement a mechanism to save the list of packages used at
+  ISO build time ([[!tails_ticket 6297]])
+
+  Some more code was written and reviewed. A few potential issues were
+  identified and are being discussed within the team.
+
+- B.4.6. Adjust the rest of our ecosystem to the freezable APT
+  repository
+
+  We started an evaluation of the hardware resources required by our
+  draft design ([[!tails_ticket 6295]]).
+
+# C. Scale our infrastructure
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+We had to reschedule our plans on this front, as the Jenkins deliverable
+took some more of our time, as well as the Tails 1.8.1 emergency
+release.
+
+We already started to build a prototype
+setup using Puppet to get an idea of how the chosen solution can be
+deployed, and how compatible it is with our setup.
+
+We plan to go on deploying this prototype by the end of January, as
+well as finishing the installation of the VM that will host this
+service, which means deciding how we'll handle its Puppet
+configuration ([[!tails_ticket 10760]]).
+
+We are now aiming to have this all deployed in production by the end
+of March.
+
+## C.4. Maintain our already existing services
+
+We kept on answering the requests from the community as well as taking
+care of security updates as covered by "C.4.4.  Administer our services
+up to milestone IV" until the end of December.
+
+We also had a sysadmin sprint mid-December. Sadly, we ended up
+spending most of it on the Tails 1.8.1 emergency release.
+
+To save a bit of disk space that we need for future work (e.g the freezable
+APT repo), we reduced the temporary partitions used by our ISO testing
+virtual machines, after evaluating what they really use.
+([[!tails_ticket 10396]])
+
+# D. Migration to Debian Jessie
+
+## D.2. Take advantage of systemd to improve the internals of Tails
+
+We polished code that was previously ported to systemd:
+
+* Fixed `tor-has-bootstrapped` semantics on network reconnect
+  ([[!tails_ticket 10732]]).
+
+## D.3. Update our test suite for Tails Jessie
+
+We have updated most of the test suite for Jessie ([[!tails_ticket 7563]]).
+
+Some new test suite robustness problems are left to be addressed, but
+the current state was good enough to make us feel comfortable
+releasing Tails 2.0~beta1. Besides, we are happy to point out that
+this automated test suite made us discover quite a few bugs in
+Jessie-based Tails development versions, that would otherwise
+have gone noticed until the first beta release. When relevant,
+regression tests will be written for these bugs in the next few months.
+
+Here is the list of relevant tickets that were resolved during the
+reporting period (most of the test suite porting work was done
+directly in Git, without filing tickets for each bit that needed to be
+adjusted, though):
+
+* Dropped an obsolete test case ([[!tails_ticket 10336]]).
+* Disabled screen blanking during the test suite, it breaks some tests ([[!tails_ticket 10403]]).
+* Updated the tests for communication with OpenPGP keyservers ([[!tails_ticket 9791]]).
+* Replaced our previous iptables status regexp-based parser with a new
+  XML-based status analyzer: the previous implementation could not be
+  adjusted to the new ip6tables' output ([[!tails_ticket 9704]]).
+* Updated the "all notifications have disappeared" test suite step for
+  Jessie ([[!tails_ticket 8782]]).
+
+## D.4. Document the changes implied by the move to Jessie on our website
+
+Our technical writers were busy
+[with other matters](https://mailman.boum.org/pipermail/tails-testers/2015-December/000206.html)
+in December, so not much
+progress was made on this front yet, apart of updating the list of
+documentation pages that will need reworking. Some new contributors
+joined the effort, and are working hard together to complete the
+update by the end of January.
+
+## D.5. Release an official version of Tails based on Jessie
+
+On December 22 we published a first beta for the upcoming Tails 2.0,
+based on Debian Jessie: <https://tails.boum.org/news/test_2.0-beta1/>.
+It was very useful so far: we received a lot of feedback, including
+a few bug reports. Most of these bugs were fixed since then, but that
+will be for next report round :)
+
+The first release of Tails based on Debian Jessie is still scheduled
+for January 26. A release candidate will put out meanwhile.
+
+## Various porting to Jessie
+
+A lot of other porting to Jessie work was done, that does not
+fit into any of the above categories:
+
+* Install Electrum 0.2.5.x in Tails/Jessie ([[!tails_ticket 10754]]).
+* Fixed obfs4proxy support ([[!tails_ticket 10724]]).
+* Fixed time synchronization in bridge mode when the clock is way off
+  ([[!tails_ticket 10696]]).
+
+# E. Release management
+
+- [[Tails 1.8|news/version_1.8]] was released on 2015-12-15:
+
+  * Icedove is now the official email client in Tails, replacing
+    Claws Mail.
+  * Electrum is upgraded to 2.5.4.
+  * Tor Browser is upgraded to 5.0.5.
+  * Tor is upgraded to 0.2.7.6.
+  * I2P is upgraded to 0.9.23.
+  * Icedove is upgraded to 38.4.
+  * Enigmail is upgraded to 1.8.2.
+
+- [[Tails 1.8.1|news/version_1.8.1]] was released on 2015-12-19:
+
+  * Tor Browser is upgraded to 5.0.6.
+  * Fixed time synchronization in bridge mode.

@@ -1,0 +1,95 @@
+#!/bin/sh
+
+set -e
+
+export http_proxy="${TAILS_PROXY}"
+export DEBIAN_FRONTEND=noninteractive
+
+if [ ! -f /var/lib/vagrant_box_build_from ]; then
+	echo "${GIT_REF}" > /var/lib/vagrant_box_build_from
+else
+	if [ "$(cat /var/lib/vagrant_box_build_from)" != "${GIT_REF}" ]; then
+		echo "E: The current VM has been created to build $(cat /var/lib/vagrant_box_build_from)."
+		echo "E: Please first use rake vm:destroy before trying to build again."
+		exit 1
+	fi
+fi
+
+latest_serial(){
+	local archive="${1}"
+	(
+		cd /amnesia.git
+		auto/scripts/apt-snapshots-serials get-latest --print-serials-only ${archive}
+        )
+}
+
+if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
+    echo "I: Configuring HTTP proxy..."
+    # Ensure that the apt-cacher-ng cache disk is formated and mounted
+    if [ ! -b /dev/vdb1 ]; then
+        echo '1,,83' | sfdisk /dev/vdb
+        mkfs.ext4 -m 0 /dev/vdb1
+    fi
+
+    if ! mountpoint -q /var/cache/apt-cacher-ng; then
+        e2fsck -f -p /dev/vdb1 || :
+        mount -o relatime,journal_checksum /dev/vdb1 /var/cache/apt-cacher-ng
+        chown -R apt-cacher-ng:apt-cacher-ng /var/cache/apt-cacher-ng
+    fi
+
+    # Install custom configuration for apt-cacher-ng and restart
+    install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
+    [ "${TAILS_OFFLINE_MODE}" = 1 ] || TAILS_OFFLINE_MODE=0
+    echo "Offlinemode: ${TAILS_OFFLINE_MODE}" > /etc/apt-cacher-ng/network.conf
+    systemctl restart apt-cacher-ng.service
+fi
+
+echo "I: Updating debian-security APT source..."
+# Always set the latest serial for debian-security
+stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"
+security_serial="$(latest_serial debian-security)"
+sed -i -e "s/${stable_serial}/${security_serial}/g" /etc/apt/sources.list.d/stretch-security.list
+
+echo "I: Current APT sources are:"
+cat /etc/apt/sources.list /etc/apt/sources.list.d/*
+
+echo "I: Upgrading system..."
+apt-key add /amnesia.git/config/chroot_sources/tails.binary.gpg
+apt-get update
+apt-get -y dist-upgrade
+
+echo "I: Installing build script..."
+install -o root -g root -m 755 /vagrant/provision/assets/build-tails /usr/local/bin
+
+echo "I: Forcing live-build to use the mirrors configured in auto/config..."
+
+disable_live_build_conf()
+{
+	local var="$1"
+
+	[ -e /etc/live/build.conf ] || return 0
+	sed -e "/^[[:space:]]*$var=/d" -i /etc/live/build.conf
+}
+
+for prefix in MIRROR PARENT_MIRROR ; do
+	for target in BOOTSTRAP BINARY CHROOT ; do
+		for archive in '' BACKPORTS SECURITY UPDATES VOLATILE ; do
+			if [ -z "$archive" ] ; then
+				archive_suffix=''
+			else
+				archive_suffix="_${archive}"
+			fi
+			var="LB_${prefix}_${target}${archive_suffix}"
+			disable_live_build_conf "$var"
+		done
+	done
+done
+
+echo "I: Cleaning up..."
+apt-get -y autoremove
+apt-get -y clean
+
+echo "I: Configuring Git..."
+# Necessary so that vagrant can merge the base branch
+git config --global user.name vagrant
+git config --global user.email vagrant@tailsbuilder

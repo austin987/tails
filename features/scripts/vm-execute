@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+begin
+  require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/remote_shell.rb"
+  require "#{`git rev-parse --show-toplevel`.chomp}/features/support/helpers/misc_helpers.rb"
+rescue LoadError => e
+  raise "This script must be run from within Tails' Git directory."
+end
+$config = Hash.new
+
+def debug_log(*args) ; end
+
+class FakeVM
+  def get_remote_shell_port
+    1337
+  end
+end
+
+cmd_opts = {
+  :spawn => false,
+  :user  => "root"
+}
+
+opt_parser = OptionParser.new do |opts|
+  opts.banner = "Usage: features/scripts/vm-execute [opts] COMMAND"
+  opts.separator ""
+  opts.separator "Runs commands in the VM guest being tested. This script " \
+                    "must be run from within Tails' Git directory."
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+
+  opts.on("-u", "--user USER", "Run command as USER") do |user|
+    cmd_opts[:user] = user
+  end
+
+  opts.on("-s", "--spawn",
+          "Run command in non-blocking mode") do |type|
+    cmd_opts[:spawn] = true
+  end
+end
+opt_parser.parse!(ARGV)
+cmd = ARGV.join(" ")
+c = RemoteShell::ShellCommand.new(FakeVM.new, cmd, cmd_opts)
+puts "Return status: #{c.returncode}"
+puts "STDOUT:\n#{c.stdout}"
+puts "STDERR:\n#{c.stderr}"
+exit c.returncode

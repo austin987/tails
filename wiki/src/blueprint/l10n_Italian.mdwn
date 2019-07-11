@@ -1,0 +1,306 @@
+[[!toc levels=2]]
+
+
+# Definizioni 
+
+Warning page = pagina degli avvertimenti/avvisi
+
+Persistence = persistente <https://it.wikipedia.org/wiki/Persistenza_%28informatica%29>
+
+Sensitive = sensibile o riservato o confidenziale
+
+[[Domande aperte sui termini]]
+
+# Info
+
+Qualche informazione sui file po:
+
+<http://tp.linux.it/guida-po/index.html>
+
+# Weblate
+
+IL weblate è raggiungibile qui:
+
+<https://translate.tails.boum.org/languages/it/tails/>
+
+Puoi ordinare i componenti secondo:
+
+* Translated Words Review    
+* Checks     
+* Suggestions
+
+In questo modo puoi trovare i file da revisionare. Conviene cercare quelli che hanno la barra verde più "piena" ed il minor numero di Suggestions/suggerimenti.
+Significa che la pagina arriverà più rapidamente ad essere pubblicata, perchè un requisito per la pubblicazione è che raggiunga la barra verde al 100%.
+(attenzione non esiste più il meccanismo barra blu... sapevatelo!)
+__________
+
+## Alcune cose a cui fare attenzione:
+
+* non sostituire gli spazi con i tre puntini. Ovvero anche se il weblate ti fa vedere che mancano tre puntini rossi, significa che bisogna mettere uno "space".
+
+__________
+
+## Revisioni e sito compilato:
+
+
+Le versioni proposte di una frase tradotta sono in basso, quasi in fondo alla pagina e puoi vederne un link nella colonna di destra. Nella colonna di destra ci sono anche degli avvertimenti in caso di alcuni "test" non passati da quella frase, come.. manca il punto alla fine, o va a capo in modo strano,...
+
+Per revisionare bisogna dare un voto ad un suggerimento di un altr* traduttor*.
+Se abbiam dei dubbi scriviamo in mailinglist.
+Quello che fa fede è sempre l'inglese, come testo di riferimento.
+Il suggerimento deve ricevere due voti per essere approvato e quindi messo in "staging", ovvero la pagina con il sito compilato. E' possibile che il server voglia un po di tempo per farlo, quindi magari non si trova subito la frase modificata. 
+
+Nelle revisioni è importante andare a vedere anche che la pagina funzioni prima di comunicare in lista che è pronta!
+Infatti ci sono parti di html che NON vanno tradotte: come i link, le class="applications", alcune liste con le parentesi quadre, ...
+
+Il wiki compilato per vedere se la pagina funziona si trova qui:
+
+<https://translate.tails.boum.org/staging/>
+
+a questo link ci aggiungi il nome della pagina che vuoi controllare (copiandola dal nome della pagina wiki del weblate), per esempio:
+
+voglio controllare la pagina: 
+<https://translate.tails.boum.org/translate/tails/acknowledgments_and_similar_projects/it/?type=suggestions#suggestions>
+
+aggiungo al link /staging: "/doc/about/acknowledgments_and_similar_projects.*.po"
+
+cambio ".*.po" in ".it.html" e avro':
+
+<https://translate.tails.boum.org/staging/doc/about/acknowledgments_and_similar_projects.it.html>
+
+
+# Aiuto con GIT
+
+
+##mini guida GIT
+
+<https://rogerdudler.github.io/git-guide/index.it.html>
+
+## Repository GIT
+
+E' qui: https://git.lattuga.net/transitails/italian
+
+        git clone http://git.lattuga.net/transitails/italian.git transitails
+
+        cd transitails
+
+	git remote -v
+
+Verifichi di avere origin settato su http://git.lattuga.net/transitails/italian.git
+	 
+Per essere abilitati in scrittura, iscrivetevi a git.lattuga.net e chiedete in lista di accettarvi l'utente.
+
+## Git comandi quotidiani
+
+Tutte le righe che iniziano con $ sono da digitare nel terminale, a volte sotto c'è la risposta del terminale, oppure niente. In generale nei sistemi unix-like se il terminale dopo aver dato un comando non vi risponde niente, vuol dire che tutto è andato bene.
+Il pulsante TAB è vostro amico per completare tutti i percorsi dei file e soprattutto quando usate git add. Le frecce su e giù della tastiera vi danno gli ultimi comandi che avete lanciato, così andate velocissim*. Tutto quello che inizia con [hagfsa] va sostituito con il nome che fa al caso vostro. Se vi trovate ad un certo punto intrappolati nel terminale e c'è ESC in fondo, niente paura, è vim, quindi fate: ESC : q
+E lui vi fa uscire.
+
+Sincronizziamoci al repository remoto, prendendo i file che ci mancano:
+ 
+    $  git pull 
+
+
+Ora controlliamo a che punto  siamo
+
+    $ git status
+
+Ora controlliamo che branch ci sono
+ 
+    $  git branch -a
+
+Se non siamo su quella giusta facciamo 
+
+    $git checkout -b [nome branch] 
+
+Quindi iniziamo ad editare i file in locale usando POEDIT
+    
+Per aggiungere allo stadio "stage" i file modificati.
+
+    $ git add [NAMEFILE]
+
+Per sapere cosa sta per essere committato e cosa no:
+   
+    $ git status
+
+Modifiche fatte localmente, già messe in "stage", che volete passare come "definitive" nel vostro repo locale:
+
+
+    $ git commit -m "DESCRIZIONE DELLE MODIFICHE FATTE"
+
+Se siete sicuri che le modifiche che avete fatto vanno sul repository remoto, spingetele là:
+
+    $ git push origin [nome dalla branch o master]
+
+Se non sapete l'identità con cui è configurato git, fate un controllo prima di mandare le cose in remoto:
+
+
+    $ git config -l
+
+tIn caso di dubbi, vedete un po il vostro status:
+
+    $ git status
+
+
+Verificate che il commit ci sia
+
+     $git log origin [nome dalla branch o master]
+
+## Alcuni utili alias
+
+    git config --global alias.graph 'log --graph --oneline --all --decorate=short'
+    git config --global alias.lg 'log --oneline --graph --decorate=short'
+
+L'alias `graph` mostra un "grafo" della situazione corrente, in modo da riconoscere come sono disposte le varie branch e dove siete voi.
+L'alias `lg` e' simile, ma non mostra TUTTE le branch possibili e immaginabili. Di default mostra solo lo stato corrente (tipo git log, ma piu' stringato). Se fatte tipo `git lg master mia-branch` potete vedere come sta messa la vostra branch rispetto al master. E' in avanti? indietro? ecc.
+
+## mergiare i file PO piu facilmente
+
+Si può usare un *merge driver* specializzato per i `.po`:
+
+* si prende questo file https://github.com/mezis/git-whistles/blob/master/libexec/git-merge-po.sh
+* si verifica che il suo `sha1sum` è `1448725402f5828e8ad4216fc0fe593519066fcd`.
+* lo si mette in /usr/bin/git-merge-po
+* lo si configura come dice qui https://github.com/mezis/git-whistles#user-content-merge-po
+
+A questo punto il merge dei file `.po` dovrebbe andare parecchio meglio.
+
+# Lavoro da affrontare
+
+Attingere nuove pagine da tradurre dando precedenza a queste:
+
+<https://tails.boum.org/contribute/l10n_tricks/core_po_files.txt>
+
+
+#Branch
+
+Le branch sono utili ma devono esistere il più breve tempo possibile. Servono per avere i file non revisionati fuori dal master. Chi revisiona può direttamente pushare nel master.
+
+
+Voglio creare la nuova branch locale italia_about
+
+    $ git branch italian_about
+
+poi controllo che ci sia
+ 
+    $ git branch
+
+mi risponde la lista delle branch esistenti.
+
+Allora vado a lavorarci sopra.
+
+    $ git checkout italian_about
+
+    $ git branch
+
+mi fa rivedere le branch
+
+Se voglio anche le branch remote faccio 
+
+    $git branch -a
+
+Ora modifico i vari file, faccio ADD, poi COMMIT e poi PUSH:
+
+    $ git push [remote-name] [branch-name]
+
+Dove [remote-name] è comunemente "origin", dicono, ma potrebbe essere diverso, dipende come avete impostato i vostri remote. Controllate con 
+
+     $git remote -v
+
+#Generare una copia del wiki in locale
+
+Il sito web https://tails.boum.org/ è costruito usando Ikiwiki dal codice sorgente che è disponibile nel nostro repository Git, così come il resto del codice di Tails.
+
+Tu puoi costruire la tua copia locale del sito sul tuo pc. La generazione del sito web consiste in una collezione di pagine HTML salvate sul tuo sistema operativo, che si possono aprire con un comunissimo browser anche se sei offline. Fare questo è molto utile per chi scrive la documentazione e i traduttori che così vedono applicate le loro modifiche prima di metterle sul sito web in produzione.
+
+Genera il wiki in locale su TAILS
+
+Crea e configura la partizione resistente attivando le seguenti funzionalità (Applicazioni>Tails>Configure persistent volume):
+        Dati personali
+        Pacchetti APT
+        Liste APT
+
+    Riavvia Tails, abilita la persistenza e le configurazioni avanzate, imposta una password di root.
+
+    Aggiorna la lista dei pacchetti disponibili, scrivendo in un terminale:
+
+    sudo apt update
+
+Installa i seguenti pacchetti:
+
+    sudo apt install libyaml-perl libyaml-libyaml-perl po4a \
+     perlmagick libyaml-syck-perl ikiwiki ruby
+
+    Clona il nostro repository Git in una cartella della partizione persistente:
+
+    cd ~/Persistent/
+    git clone https://git-tails.immerda.ch/l10n-italian/tails/ mytails
+
+    Il codice sorgente del sito internet si trova nella cartella wiki/src/ .
+
+    Per accelerare la compilazione, puoi disabilitare alcune lingue nei parametri po_slave_languages delle configurazioni nei file ikiwiki.setup.
+E poi lanciare ikiwiki --changesetup ikiwiki.setu
+
+    Ora puoi visitare questo indirizzo locale dal tuo browser per vedere il sito web generato:
+
+    file:///home/amnesia/Persistent/Tor Browser/tails/index.en.html
+    Genera il sito web:
+
+    cd mytails
+    ./build-website --set destdir="/home/amnesia/Persistent/outtails" "$@"
+
+# Workflow
+
+Come procediamo per fare varie cose?
+
+## Pacchi
+
+In breve:
+
+1. creazione pacchi
+2. assegnazione: ogni pacco ha un traduttore
+3. per ogni pacco:
+   * traduzione!
+   * revisione (non chiaro: quando si sceglie chi revisiona?)
+   * merge dentro master
+ 
+
+Ogni tanto (quando?) si fanno dei pacchi di traduzioni. Un pacco e' un insieme di filename che vanno tradotti. Ogni pacco viene tradotto da una persona. Nell'estate 2017 abbiamo deciso di fare pacchi _piccoli_, in modo da rendere il lavoro più fluido.
+
+### Tradurre
+
+Supponiamo di tradurre la divina commedia, e di fare 3 pacchi: Inferno, Purgatorio e Paradiso. Petrarca si accolla di tradurre l'Inferno, e lo fa in una branch che chiama, appunto "inferno". traduce tutti i file  `wiki/src/inferno/*.po`, (**TODO**: andrebbe anche fatti i check)  quindi fa `git commit -m "inferno translated"`.
+
+Sì, i commit vanno fatti in inglese.
+
+### Revisionare
+
+A questo punto qualcuno deve revisionare la branch. Si fa avanti Laura. Laura manda un'email alla lista dicendo che sta per tradurre la branch  `inferno`: la manda non quando decide che vorrebbe farlo, ma proprio un minuto prima di farlo davvero.
+Laura fa `git fetch origin && git checkout origin/inferno`. Prima guarda le differenze introdotte da Petrarca, con `git log -p origin/inferno`.
+Gli sembrano ok, ma per controllare che si vedano anche bene nel wiki va a vedere il sito [[https://tailsit.degenerazione.xyz/branch.html]] e clicca su `origin/inferno`. Così può vedere il risultato della build. Questo è equivalente a "buildare" il wiki localmente con `./build-website`, ma è più rapido e meno soggetto ad errori. Nota che Petrarca, sbadato, ha fatto alcuni piccoli errori nel markup del wiki che "rompono" delle immagini. Petrarca aveva tradotto la riga:
+
+    [[!immagine \"caronte.png`"]]
+
+con:
+
+    [[immagine \"caronte.png\"`]]
+
+Laura corregge e fa commit sulla stessa branch `git commit wiki/src/inferno/terzocanto.po -m "fix image for caronte" && git push origin inferno`.
+Non trova altri errori, quindi fa
+
+    git checkout master
+    git merge --no-ff inferno
+
+Potrebbe subito fare `git push origin master` ma, per non sbagliare, fa un diff:
+
+    git diff origin/master..master
+
+E controlla se tutto torna. Ci sono conflitti? Quel cambiamento al `!img` c'e' ancora?
+Aspetta qualche minuto e poi torna a guardare il solito [[https://tailsit.degenerazione.xyz/branch.html]] per vedere se si è "preso" il nuovo commit sulla branch inferno. Quando ha fatto (ci può mettere anche 15 minuti a volte) va a guardare se il risultato è anche graficamente corretto. Tutto ok?
+bene, ora possiamo fare
+
+    git push origin master
+
+## Call for translations
+
+Prima di una release, in lista tails-l10n arriva un'email "Call for translations". Come si procede a quel punto?

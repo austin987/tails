@@ -1,0 +1,158 @@
+[[!meta title="Tails August 2016 report"]]
+
+[[!toc levels=2]]
+
+This report covers the activity of Tails in August 2016.
+
+Everything in this report is public.
+
+# A. Replace Claws Mail with Icedove
+
+## A.1.1. Secure the Icedove autoconfig wizard
+
+In June we reported that some account setup issues have been
+discovered with the introduction of our patches which should protect
+the user by forcing the use of secure protocols in Icedove.
+We've managed to fix the intermittently failing TLS connections and
+released this in Tails 2.5 ([[!tails_ticket 11550]],
+[[!tails_ticket 10933]]). The OAuth issue has been identified and
+a fix has been committed ([[!tails_ticket 11536]]). We are currently
+thoroughly testing this patch and as soon as the tests conclude
+positive, we will resubmit this patch upstream.
+
+## A.1.2. Make our improvements maintainable for future versions of Icedove
+
+We've successfully provided an AppArmor profile to Debian's Icedove
+package. It can now also be used by other Debian users and thus it
+profits from their testing, bug reports and patches
+([[!tails_ticket 11058]]).
+
+We've started incorporating this AppArmor profile into Tails in the
+meantime, until our patches get merged and we can start to ship the
+default Debian Icedove package. However, this still needs some small
+adjustments as well as testing ([[!tails_ticket 10750]]).
+
+As for our patches, we've greatly improved them and upstream has now
+even asked us for news, which is good! As soon as we have tested the
+aforementioned OAuth issue, we'll resubmit them upstream
+([[!tails_ticket 6165]]).
+
+As for our Torbirdy patches which had already landed upstream, they've
+now also landed in Debian unstable as well as in jessie-backports.
+
+# B. Improve our quality assurance process
+
+## B.2 Continuously run our test suite on ISO images built by Jenkins
+
+We want to identify which ones, among the flaky automated tests that
+are currently disabled on our continuous integration infrastructure,
+will be fixed simply by porting Tails to Debian 9 (Stretch). So we
+[[!tails_ticket 11752 desc="introduced a way"]] to force running _all_
+tests for a given branch, even the ones flagged as "fragile". In a few
+months we will have enough data to adjust these test flakiness
+annotations, and hopefully to re-allow a number of these tests to run
+on our Jenkins infrastructure.
+
+## B.3. Extend the coverage of our test suite
+
+### B.3.11. Fix newly identified issues to make our test suite more robust and faster
+
+* We started porting Tails to Debian 9 (Stretch). Adjusting our test
+  suite to make it able to provide feedback about our early Tails 3.0
+  ISO images is a critical part of this project. To do so, in the past
+  we had to go through a tedious process of updating the dozens of
+  pictures that we ask Sikuli to recognize; but this time, thanks to
+  the work we [[!tails_ticket 10721 desc="recently did"]] to support
+  Dogtail in our test suite, we are able to _remove_ many such
+  pictures, and replace them with higher-level means of interacting
+  with graphical user interfaces. So far we could remove 31 such
+  images. This change brings two major benefits: it makes our test
+  suite more robust, and it makes our project more sustainable, by
+  decreasing the cost of porting Tails to future versions of Debian.
+
+* As part of porting Tails to Debian 9 (Stretch), we fixed one root
+  cause of flakiness in our test suite by integrating the Florence
+  virtual keyboard more reliably into the GNOME desktop
+  ([[!tails_ticket 11479]], [[!tails_ticket 8312]]).
+
+* Until recently, the parts of our test suite that rely on emulated
+  USB storage devices were fragile on our Jenkins setup.
+  This prevented us from running a number of tests there, e.g.
+  those involving persistence. We kept working on it, as reported last
+  month, both [[!tails_ticket 11590 desc="in Tails Installer itself"]]
+  and in our test suite ([[!tails_ticket 11588]],
+  [[!tails_ticket 11582]]). As a result, we were able to re-enable
+  these tests on production branches in August.
+
+* The branch fixing the Synaptic scenario that was marked as fragile has been
+  merged for Tails 2.6 ([[!tails_ticket 10441]]). This also fixes two other
+  problems regarding this scenario ([[!tails_ticket 10412]] and
+  [[!tails_ticket 10900]]). In the end, all tests about the installation of
+  Debian packages in Tails are back in our test suite.
+
+### B.3.12. Reliably wait for post-Greeter hooks ([[!tails_ticket 5666]])
+
+We plan to complete this by the end of October.
+
+### B.3.14. Write tests for incremental upgrades ([[!tails_ticket 6309]])
+
+We plan to complete this by the end of October.
+
+## B.4. Freezable APT repository
+
+This was completed already, but still we have a couple updates
+about it.
+
+This piece of infrastructure has already proven its great usefulness
+in practice, for a use case that we had not imagined yet: we've just
+had a first one-week sprint to kick-start porting Tails to Debian 9
+(Stretch). Thanks to our Debian archive snapshots, we were able to
+select a known-good state of the Debian archive and use it for the
+entire week, without having to cope with a landscape that would be
+constantly changing under our feet. This way we could focus on the
+task at hand.
+
+We solved a [[!tails_ticket 11612 desc="design problem"]] in how we
+handle frozen APT repositories for bugfix releases, that we had
+identified in July during the Tails 2.5 release process.
+
+# C. Scale our infrastructure
+
+## C.1. Change in depth the infrastructure of our pool of mirrors:
+
+- C.1.2. Write & audit the code that makes the redirection decision from our website ([[!tails_ticket 8639]], [[!tails_ticket 8640]], [[!tails_ticket 11109]])
+
+  * `mirror-dispatcher.js`: we are still waiting for the auditor to do
+    a final security review.
+
+  * Download And Verification Extension (DAVE) for Firefox: no
+    progress was made on this front in August. Improving and testing
+    the code for resuming downloads is among our top priorities
+    in September.
+
+- C.1.6. Adjust download documentation to point to the mirror pool dispatcher's URL ([[!tails_ticket 8642]], [[!tails_ticket 11329]], [[!tails_ticket 10295]])
+
+  This was completed back in May.
+
+- C.1.8. Clean up the remainers of the old mirror pool setup  ([[!tails_ticket 8643]], [[!tails_ticket 11284]])
+
+  This is only blocked by the work that is in progress on DAVE (C.1.2).
+
+## C.4. Maintain our already existing services
+
+### C.4.6. Administer our services upto milestone VI
+
+We kept on answering the requests from the community and taking care
+of security updates.
+
+* We've downgraded the Puppet agent installed in a VM that is running Debian
+  Sid so that it remains compatible with out Puppetmaster. [[!tails_ticket 11543]]
+
+* We tuned the Icinga2 memory check limits on one of our VMs to avoid false
+  positives.
+
+# E. Release management
+
+## E.1.12. Tails 2.5
+
+[[Tails 2.5|news/version_2.5]] was released on August 2.

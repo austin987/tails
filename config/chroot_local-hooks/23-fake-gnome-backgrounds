@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Install a fake gnome-backgrounds package"
+
+# Import install_fake_package
+. /usr/local/lib/tails-shell-library/build.sh
+
+REAL_PKG_VERSION=$(dpkg-query -W -f='${Version}\n' gnome-backgrounds)
+FAKE_PKG_VERSION=${REAL_PKG_VERSION}+tails.fake1
+install_fake_package gnome-backgrounds "${FAKE_PKG_VERSION}" gnome

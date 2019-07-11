@@ -1,0 +1,87 @@
+#! /bin/sh
+
+# Some of this file was adapted from the Debian Installer's
+# build/util/efi-image, which is:
+#
+# Copyright (C) 2010, 2011 Canonical Ltd.
+# Author: Colin Watson <cjwatson@ubuntu.com>
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+set -e
+set -x
+
+platform="i386-efi"
+outdir="binary/EFI/BOOT/grub/$platform"
+efi_name="IA32"
+
+grub_cpmodules () {
+	if [ -z "$1" ] || [ -z "$2" ]; then
+		echo "usage: $0 OUTPUT-DIRECTORY GRUB-PLATFORM"
+		return 1
+	fi
+
+	outdir="$1"
+	platform="$2"
+
+	# Copy over GRUB modules, except for those already built in.
+	cp -a "chroot/usr/lib/grub/$platform"/*.lst "$outdir/"
+	for x in "chroot/usr/lib/grub/$platform"/*.mod; do
+		# Some of these exclusions are based on knowledge of module
+		# dependencies.
+		case $(basename "$x" .mod) in
+			configfile|search|search_fs_file|search_fs_uuid|search_label|tar|part_gpt|linux|gzio)
+			# included in boot image
+			;;
+		    affs|afs|afs_be|befs|befs_be|minix|nilfs2|sfs|zfs|zfsinfo)
+			# unnecessary filesystem modules
+			;;
+		    example_functional_test|functional_test|hello)
+			# other cruft
+			;;
+		    *)
+			cp -a "$x" "$outdir/"
+			;;
+		esac
+	done
+}
+
+# Including common functions
+. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
+
+# Setting static variables
+DESCRIPTION="$(Echo 'including GRUB EFI for ia32 in the ISO filesystem')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/bootstrap config/common config/binary
+Set_defaults
+
+# Safeguards
+[ "${LB_ARCHITECTURE}" = "amd64" ] || exit 0
+
+# Seems like we'll have work to do
+Echo_message 'including GRUB EFI for ia32 in the ISO filesystem'
+
+# Build the core image
+Chroot chroot grub-mkimage -O "$platform" \
+	-o "/tmp/BOOT$efi_name.EFI" -p "/efi/boot/grub" \
+	search configfile normal tar fat part_gpt linux \
+	gzio
+mv "chroot/tmp/BOOT$efi_name.EFI" "binary/EFI/BOOT/BOOT$efi_name.EFI"
+
+mkdir -p "$outdir"
+grub_cpmodules "$outdir" "$platform"

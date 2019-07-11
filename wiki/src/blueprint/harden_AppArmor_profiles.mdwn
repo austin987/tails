@@ -1,0 +1,167 @@
+Corresponding ticket: [[!tails_ticket 9533]]
+
+[[!toc levels=2]]
+
+This is a follow-up on [[blueprint/audit_AppArmor_profiles]], that
+tracks improvements we would like to make.
+
+See also the [[contribute/design/application_isolation]] design
+documentation, that lists ideas that are at the concept stage.
+
+Things to keep in mind
+======================
+
+(and thus, to test one last time before submitting the WIP branch for merging)
+
+Beware not to break:
+
+* assistive technologies (accessibility)
+* Tails with IUKs installed: test `bugfix/8007-AppArmor-hardening` in
+  that context; the changes brought by that branch should not break
+  things in that case, but better safe than sorry
+
+Short-term
+==========
+
+Wide-open access to `$HOME` except blacklist
+--------------------------------------------
+
+Everything was checked in [[blueprint/audit_AppArmor_profiles]],
+potential issues and remaining todo items follow.
+
+### whitelist approach
+
+Evince, Totem and their previewers have read-write access to
+`@{HOME}/**`: perhaps we can make it a bit tighter, e.g.
+using a regexp that doesn't include dotfiles (see the `user-write`
+abstraction), and read-only everywhere except for specific
+directories? Or is the blacklist used by these profiles tight enough?
+=> being discussed on <tails-ux@boum.org>. The current proposal is to
+let Evince and Totem read and write any file if, and only if, *all*
+the following conditions are met:
+
+- the file has a supported extension;
+- the file lives in one of:
+  * at the root of `~/`
+  * anywhere below the Desktop directory
+  * anywhere below `~/Persistent/`, including when accessed directly
+    via `/live/persistence/TailsData_unlocked/Persistent/`
+  * anywhere below `~/Tor Browser/`
+  * at the root of `/tmp/`
+  * at the root of `/var/tmp/`
+  * at the root of `/run/shm/keyringer.amnesia/`, to avoid breaking
+    `keyringer open`
+  * anywhere below `/media/` (removable storage, and internal storage
+    manually mounted by the user)
+  * anywhere below `/usr/`
+  * XXX: anywhere below `/mnt/` too?
+- unless the file lives in `/media/` or `/usr/`, it must be owned by
+  the users who runs the application.
+
+### blacklist approach
+
+If the whitelist approach doesn't work:
+
+- Shall we add stuff to these blacklist? Let's see first if the
+  proposed whitelist approach is acceptable => if so, adding to the
+  blacklist won't be needed.
+- `private-files` and `private-files-strict` are not safe wrt.
+  `/live/persistence/TailsData_unlocked/`; we could quickly fix that
+  with the following patch:
+    
+    	--- /etc/apparmor.d/abstractions/private-files-strict.orig	2015-06-04 15:13:25.426658000 +0000
+    	+++ /etc/apparmor.d/abstractions/private-files-strict	2015-06-04 15:18:02.402658000 +0000
+    	@@ -5,11 +5,11 @@
+    	   #include <abstractions/private-files>
+    	 
+    	   # potentially extremely sensitive files
+    	-  audit deny @{HOME}/.gnupg/** mrwkl,
+    	-  audit deny @{HOME}/.ssh/** mrwkl,
+    	+  audit deny {@{HOME}/.,/live/persistence/TailsData_unlocked/}gnupg/** mrwkl,
+    	+  audit deny {@{HOME}/.ssh,/live/persistence/TailsData_unlocked/openssh-client}/** mrwkl,
+    	   audit deny @{HOME}/.gnome2_private/** mrwkl,
+    	-  audit deny @{HOME}/.gnome2/keyrings/** mrwkl,
+    	-  audit deny @{HOME}/.mozilla/** mrwkl,
+    	+  audit deny {@{HOME}/.gnome2/keyrings,/live/persistence/TailsData_unlocked/gnome-keyrings}/** mrwkl,
+    	+  audit deny @{HOME}/.{mozilla,tor-browser}/** mrwkl,
+    	   audit deny @{HOME}/.config/chromium/** mrwkl,
+    	   audit deny @{HOME}/.{,mozilla-}thunderbird/** mrwkl,
+    	   audit deny @{HOME}/.evolution/** mrwkl,
+    
+
+Long-term
+=========
+
+<a id="microphone"></a>
+
+Access to microphone
+--------------------
+
+In other words: can we easily block that while still allowing
+sound output?
+
+- `abstractions/audio` gives full access to PulseAudio, which
+   no doubt gives access to the microphone; we use that abstraction
+   for Totem, Tor Browser, Evince and Pidgin. The Ubuntu phone
+   mediates access to PulseAudio at the D-Bus level. As of
+   2015-05-04:
+   * this is only done at the AppArmor level. There is WIP to [make
+     PulseAudio a trusted helper for microphone
+     access](https://bugs.launchpad.net/ubuntu/+source/pulseaudio/+bug/1224756).
+     The "trust-store" is a library (external to AppArmor) that
+     services can use. it can prompt, remember the answer, etc.
+     It's currently limited to mir. It can also be preseeded.
+     jdstrand is not sure if there is a CLI for that, but that could
+     be another option. The broader picture is described in
+     <https://wiki.ubuntu.com/SecurityTeam/Specifications/ApplicationConfinement>
+     and in the phone-specific bits at
+     <https://wiki.ubuntu.com/AccountPrivileges>.
+   * AppArmor support for D-Bus mediation has made it into D-Bus
+     upstream, but the kernel bits have not been upstreamed yet.
+- regarding Alsa:
+  * `/dev/snd/pcmC[0-9]D[0-9]c` raw audio devices seem to be capture,
+    while `/dev/snd/pcmC[0-9]D[0-9]p` devices seem to be playback
+    devices
+  * do `/dev/snd/hwC[0-9]D[0-9]` give access to the microphone?
+  * do `/dev/controlC[0-9]` give access to the microphone?
+  * does `/dev/snd/seq` give access to the microphone?
+  * does `/dev/snd/timer` give access to the microphone?
+- The [Oz technical details
+  page](https://github.com/subgraph/oz/wiki/Oz-Technical-Details)
+  reads: "Access to audio and video recording hardware can also be
+  controlled through the Oz policy"; this is implemented with `xpra`'s
+  `--microphone`, `--speaker` and `--pulseaudio` options.
+
+jvoisin's profile hardening
+---------------------------
+
+- Pidgin
+  * drop `bash` abstraction: has been here since the first version
+    of the profile; that abstraction is not too scary, but... what
+    is it useful for?
+  * disable video and audio visualization capabilities: if it
+    doesn't break e.g. accessibility or sound notifications, why not
+- `/usr/bin/evince`
+  * drop `bash` abstraction: same as Pidgin
+  * drop `audio` and `ubuntu-media-players` abstraction:  note that
+    PDF can embed videos; do we care?
+  * drop `ubuntu-console-browsers`, `ubuntu-console-email` and
+    `ubuntu-gnome-terminal` abstractions: I doubt it's useful to
+    anyone in Tails, indeed
+  * disallow `/usr/bin/yelp`: if it breaks displaying Evince help,
+    we don't want that
+  * disallow `/usr/bin/bug-buddy`: Ubuntu-specific, we don't care
+  * disallow `/usr/bin/exo-open` and a bunch of file managers that
+    are not shipped in Tails:  not worth maintaining a delta
+  * disallow `/usr/bin/gedit`: a comment in the profile says it's
+    useful "for text attachments", and given it's inheriting the
+    current profile it's not scary enough to be worth potentially
+    breaking things
+- `/usr/bin/evince-previewer`
+  * same changes as in `/usr/bin/evince` profile, same comments
+  * drop `ubuntu-browsers` abstraction: it doesn't cover Tor Browser
+    anyway, so why not
+  * drop `ubuntu-email` abstraction: do we care about Evince
+    previewer being able to start Claws Mail? What is it useful for?
+  * disallow networking access: the Debian kernel doesn't support
+    such rules anyway, so that would be a no-op

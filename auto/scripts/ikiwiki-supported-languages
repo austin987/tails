@@ -1,0 +1,69 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+ikiwiki-supported-languages - extract languages supported by a given ikwiki
+
+=head1 SYNOPSIS
+
+B<ikiwiki-supported-languages> YAML_IKIWIKI_SETUP_FILE
+
+=head1 USAGE
+
+The ikiwiki setup file passed as an argument must be in YAML format.
+See http://ikiwiki.info/tips/yaml_setup_files/ if you want to convert yours.
+
+The ikiwiki po plugin must be enabled and properly configured.
+
+=head1 AUTHOR
+
+Tails developers <amnesia@boum.org>
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2011 Tails developers <tails@boum.org>
+
+Licensed under the GNU GPL version 3 or any later version.
+
+=cut
+
+use strict;
+use warnings;
+use 5.10.1;
+
+use IkiWiki::Plugin::po;
+use YAML::Syck;
+$YAML::Syck::ImplicitUnicode = 1;
+
+sub usage {
+    "Usage: ikiwiki-supported-languages YAML_IKIWIKI_SETUP_FILE";
+}
+my $setupfile = shift;
+defined $setupfile	|| die(usage());
+$setupfile ne ''	|| die(usage());
+-e $setupfile		|| die "File '$setupfile' does not exist.";
+-f $setupfile		|| die "File '$setupfile' is not a regular file.";
+
+my $config = LoadFile($setupfile);
+ref($config) && ref($config) eq 'HASH'
+    || die "Could not load '$setupfile'. Is it really YAML?";
+
+for (qw{add_plugins po_master_language po_slave_languages}) {
+    exists($config->{$_}) && defined($config->{$_})
+	|| die "$_ is not set";
+}
+
+grep { $_ eq 'po' } $config->{add_plugins}
+    || die "The po plugin is disabled.";
+
+ref($config->{po_slave_languages}) && ref($config->{po_slave_languages}) eq 'ARRAY'
+    || die "Invalid po_slave_languages format.";
+
+my @supported_lang_codes;
+for ($config->{po_master_language}, @{$config->{po_slave_languages}}) {
+    my ($code, $name) = IkiWiki::Plugin::po::splitlangpair($_);
+    defined $code && $code ne '' || die "invalid language format: '$_'";
+    push @supported_lang_codes, $code;
+}
+
+say join(' ', @supported_lang_codes);

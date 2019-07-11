@@ -1,0 +1,138 @@
+Documentación de los traductores al español de Tails
+====================================================
+
+[[!toc levels=2]]
+
+Si quiero traducir al español ¿cómo puedo empezar?
+--------------------------------------------------
+
+1. Suscribirte a la lista de correos: Tenemos la lista de todos los traductores de Tails a todos los idiomas, y la de traducción al español:
+   - <https://www.autistici.org/mailman/listinfo/tails-l10n>
+   - <https://www.autistici.org/mailman/listinfo/tails-l10n-spanish>
+
+2. Puedes traducir con git (un poco más complicado), o hacer una cuenta en la plataforma de traducción en pruebas (Ver abajo)
+
+<a name="decisiones">
+
+Decisiones a tomar
+------------------
+
+Tenemos que aclarar algunas dudas entre todos. Las vamos poniendo
+aquí con la esperanza de ir organizando debates en torno a ellas:
+
+* ¿Computadora, ordenador, computador?
+* ¿Cómo podemos hacer un texto neutral e igualitario con respecto al género?
+  usuarixs, usuari@s, usuarios y usuarias, etc.
+* Cifrar o encriptar?
+
+Si tienes opiniones sobre estos temas, coméntalo en la lista de correos.
+
+Estilo y decisiones anteriores
+------------------------------
+
+* La traducción se realiza en *segunda persona informal*, es decir, tratamos a los usuarios de 'tú'.
+* Intentamos escribir con sencillez y en un español neutro para que nos entiendan en todos los países hispanohablantes.
+* Los nombres de los programas *no se traducen*.
+* Somos respetuosos con la ortografía: acentos, mayúsculas...
+* Los espacios y saltos de línea deben ser mantenidos para que la página se componga bien.
+
+¿Cómo se traduce...?
+--------------------
+
+### Enlaces: [ [ palabra ] ]
+
+Los enlaces de ikiwiki corresponden a URL paths.
+Entonces por ejemplo:
+
+    [ [ Security ] ] --> [ [ Seguridad|Security ] ]
+
+La primera parte antes del **|** es lo que aparece en pantalla, y la segunda es el enlace, que no cambia respecto al original.
+
+### Inlines: [ [ !inline pages="support/talk/languages.inline" raw="yes" sort="age" ] ]
+
+Los inlines tienen a veces su traducción, debes buscarla en el repositorio. Por ejemplo el inline del título se traduce:
+
+    [ [!inline pages="support/talk/languages.inline.es" raw="yes" sort="age"] ]
+
+Y lo puedo verificar porque ese archivo existe en el repositorio de Tails, en la carpeta [wiki/src/support/talk/](https://git-tails.immerda.ch/tails/tree/wiki/src/support/talk)
+
+
+Plataforma de traducción
+------------------------
+
+Estamos testeando una plataforma de traducción del website con weblate, una aplicación web de traducción:
+
+<https://translate.tails.boum.org/>
+
+- El correo o nombre que decidas usar se publicará en el repositorio.
+- Al hacerte una cuenta edita tu perfil:
+  - El idioma al que quieres traducir
+  - Suscríbete al Proyecto Tails en Subscriptions.
+  - En tus Preferencias, puedes seleccionar [Hide completed translations on dashboard] para solo ver lo que falta traducir.
+  - Si añades idiomas secundarios te será fácil ver cómo se han traducido las etiquetas más complicadas. Francés y Alemán son dos idiomas muy completos que puedes elegir para ver cómo se traducen las etiquetas y otras cosas.
+- Lo más importante es traducir las 'core pages'. Están en <https://translate.tails.boum.org/#list-core>
+- Para ver el estado de la traducción al castellano:
+  <https://translate.tails.boum.org/languages/es/tails/>
+- Puedes ir sugiriendo traducciones y otras personas tendrán que votar la traducción para que sea aceptada.
+- También deberías votar las traducciones de otros traductores, intentando que haya la menor cantidad de sugerencias. Si una sugerencia contiene muchos errores, puedes votarla negativamente.
+
+
+Traducir la interfaz como aparece
+---------------------------------
+
+Cuando en el texto se habla de botones o menús, en lugar de traducir **debemos ver cómo salen esos botones en Tails en español**.
+
+Para eso, si hemos arrancado Tails en otro idioma, podemos por ejemplo hacer
+
+    `LANG=es_ES tails-installer`
+
+Para ver el Tails Installer en español.
+
+Teclado en español
+------------------
+
+Puedes cambiarlo el teclado a español ejecutando `setxkbmap es` en la terminal
+
+Traducir con git
+----------------
+
+Recuerda que el repositorio de la plataforma de traducción está en
+
+    git clone https://translate.tails.boum.org/git/tails/index/
+
+Se pueden seguir las instrucciones de 
+<https://tails.boum.org/contribute/how/translate/with_Git/>
+
+Para hacer review de las actualizaciones de la plataforma de traducción puedes hacer esto:
+
+Descarga el repo de Tails:
+
+    git clone https://git-tails.immerda.ch/tails
+
+Añade el repo de la plataforma de traducción
+
+    cd tails
+    git remote add translations https://translate.tails.boum.org/git/tails/index/
+
+Descarga este repo sin hacer merge
+
+    git fetch translations master
+
+Ponte en la branch de tails/master
+
+    git checkout tails/master
+
+Copia las versiones de los archivos en la plataforma de traducción a 
+la branch de tails
+
+    find . -name '*.es.po' -exec git checkout translations/master --  '{}' \;
+
+Quitalos del index de git:
+
+    git reset *
+
+Y así obtendrás todos los cambios que se han hecho en la plataforma. Luego los puedes ir examinando con
+
+    git add -p
+
+Y sólo escoger los que te parezcan importantes.

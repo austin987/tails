@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+# Import export_gnome_env().
+. /usr/local/lib/tails-shell-library/gnome.sh
+
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
+if [ $# -ne 2 ] && [ $# -ne 3 ]; then
+	echo "Usage: $0 SUMMARY BODY [TIMEOUT]" >&2
+	exit 16
+fi
+
+# Notify the desktop user
+summary="$1"
+body="$2"
+
+if [ -n "$3" ]; then
+        timeout_args="--expire-time=$3"
+fi
+(
+        export_gnome_env
+        exec /bin/su -c "notify-send ${timeout_args} \"${summary}\" \"${body}\"" "${LIVE_USERNAME}" &
+)

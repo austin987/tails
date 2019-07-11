@@ -1,0 +1,272 @@
+This is about [[!tails_ticket 11009]] and related tickets.
+For the next iteration, see [[blueprint/hardware_for_automated_tests_take3]].
+
+[[!toc levels=2]]
+
+Rationale
+=========
+
+In [[!tails_ticket 9264]], we're discussing and drafting our needs for more
+isotesters. From some statistics of the number of automated builds per month,
+we concluded we need to be able to run at least 1000 more test suites per
+month.
+
+Note: our workload parallelizes poorly over multiple CPU cores per ISO tester,
+so we need to get more ISO testers and/or ISO testers with faster CPU clock.
+
+Estimates
+=========
+
+As a reminder, one isotester means:
+
+ * at least 20 GiB RAM, preferably 23 GiB
+ * 25G HDD (10G system+data, 15G tmp)
+ * 3 CPU threads
+
+XXX: update this with the results from [[!tails_ticket 11109]].
+
+On [[!tails_ticket 9264]] we concluded that we want to be able to run the test
+suite 1350 times per month. Each of our current isotesters on lizard v2 can run
+it about 120 times a month. We have four such VMs => we can already cope with
+480 times a month => we need to find out how to run it 1350 - 480 = 870 more
+times a month (2.81 times more than what we currently can do).
+
+# Upgrading lizard v2
+
+We are seriously under-using lizard v2's CPU power. Let's try to fix this in
+a way that solves at least part of the performance problems we currently have:
+[[!tails_ticket 9264]] and [[!tails_ticket 10999]].
+
+Experiments conducted on [[!tails_ticket 10996]] showed that we can probably
+run the test suite 25-35% more times on lizard, if we gave it 49 GiB more RAM
+and run 6 isotesters with 23 GiB RAM each. This brings us to something between
+480 * 1.25 = 600 and 480 * 1.35 = 648 runs a month. It might be that we can even
+run 8 isotesters efficiently, given 95 GiB more RAM than we currently have, but
+let's not count on it.
+
+This still covers only about half of our needs. So we'll need a second machine
+to host more ISO testers at some point: see below.
+
+Also, as seen on [[!tails_ticket 10999]], we could make use of more
+ISO builders, and here again, lizard could cope with this workload if we gave it
+18 more GiB of RAM.
+
+So, giving lizard 48+18 = 66 or 95+18 = 113 GiB more RAM would fix part of the
+problems we currently have, use more of our currently available computing power
+(which would be satisfying in itself), and teach us lots of things about how to
+set up and optimize systems to cope with our ISO testing workload.
+
+IMO (intrigeri) this would allow us to more cleverly pick hardware for the
+second ISO testing machine when we come to it. I think we should go with the
+higher option (which means upgrading to 256 GiB of RAM), that gives us more
+flexibility to experiment with various numbers of ISO builders and testers, and
+worst case RAM would always be useful for running more services we're asked to
+set up, and for improving performance thanks to disk caches.
+
+⇒ this was done ([[!tails_ticket 11010]]): lizard now has 256 GB of
+RAM, which allowed us to work on subtasks of [[!tails_ticket 11009]],
+starting with [[!tails_ticket 11113]].
+
+# A second machine
+
+**Note**: IMO (intrigeri) we should experiment on lizard with more RAM
+before we make the final decision here, but this should not block us from
+drafting possible solutions :)
+
+For reference, see [[lizard's specs|blueprint/hardware_for_automated_tests]].
+
+Assuming we have upgraded lizard as explained above, we need a second machine
+able to run the test suite about 700-750 times a month. If each ISO tester on
+that second machine was exactly as fast as those we have on lizard, then we
+would need 6 ISO testers on the new machine. But it's not a given: we can
+probably get faster ISO testers on the new machine; how many ISO testers it will
+run, and how many CPU cores and how much RAM it needs, depends on how fast each
+CPU core is. Economically speaking, faster CPU cores can save money on RAM
+(because we can achieve the same throughput with fewer ISO testers), but they
+cost more in electricity.
+
+The following price estimates are based on <http://interpromicro.com/> ones.
+
+## Candidate options
+
+**Note**: the following selection of candidates is outdated, as it doesn't take
+into account the most recent developments on this topic (see above). E.g. 4-6
+new ISO testers will probably be enough, and in turn we may be instead looking
+for something like:
+
+* 128 GiB of RAM (ideally we would just reuse the 128 GiB we have in lizard v2)
+* 12-18 CPU threads == 6-9 CPU cores
+
+<a id="option_D"></a>
+
+### Option D: 2*6 cores, upgradable by replacing CPUs
+
+This is for 8 VMs with 3 vcpus each.
+
+Specs:
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
+ * 2 x Intel® E5-2643v3, 6C, 3.4GHz, 135                                - $3260
+ * 16 x 8GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                           - $0
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 2 x Heatsink                                                         - $100
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
+
+Total   --- **$4500**
+
+<a id="option_E"></a>
+
+### Option E: 8 cores, Haswell, single socket
+
+Single socket boards that support E5-1600 CPUs and hold 8 DIMMs (up to
+512GB of RAM):
+<http://www.supermicro.com/products/motherboard/Xeon3000/#2011>
+
+XXX: pick a mobo that has 16 DIMM slots, all those have 8 slots; or
+deal with the fact it has 8 slots only.
+
+Specs:
+
+ * 1 x X10SRi-F                                                         - $273.05
+ * 1 x [E5-1680 v3](http://ark.intel.com/products/82767), 8C, 3.2GHz, 140W - $1829.65
+ * 16 x 8GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                           - $0
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 1 x Heatsink                                                         - $50
+ * 1 x case FIXME                                                       - $350
+
+Total --- around **$2900**
+
+### HPE
+
+* HPE ProLiant DL60 Gen9: 1 or 2 * E5-2600 v3, 256GB max. RAM
+* HPE ProLiant DL120 Gen9: 1 * E5-2600 v3 or E5-1600 v3, up to 256 GB RAM
+* HPE ProLiant DL360 Gen9: 1 or 2 * E5-2600 v3, 1.5TB max RAM
+
+## Deprecated options
+
+### Option A: Low voltage CPUs
+
+We actually need less CPU cores.
+
+That's essentially a Lizard clone, minus SSD HDDs.
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
+ * 2 x Intel® E5-2650Lv3-1.8Ghz/12C, 30M, 9.6GT/s, 65W LGA2011 CPU      - $2,860
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 2 x Heatsinks                                                        - $100
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
+
+Total   --- **$6200**
+
+### Option B: Faster CPUs
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
+ * 2 x Intel® E5-2670v3-2.3Ghz/12C, 30M, 9.6GT/s, 120W LGA2011 CPU      - $3,300
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 2 x Heatsinks                                                        - $100
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
+
+Total   --- **$6650**
+
+<a id="option_C"></a>
+
+### Option C: 12 cores, upgradable by adding a CPU
+
+We can't plug one CPU only on a 2-sockets SMP mobo without
+losing functionality.
+
+This is for 8 VMs with 3 vcpus each.
+
+Specs:
+
+ * 1 x Super X10DRi, 2x GB/i350 LAN, 10x SATA3(C612)+R, IPMI, DDR4(1TB) - $390
+ * 1 x Intel® E5-2690v3-2.6Ghz/12C, 30M, 135W LGA2011 CPU               - $2124
+ * 16 x 16GB D4-2133Mhz, ECC/Reg 288-Pin Sdram                          - $2100
+ * 2 x Samsung 850 EVO, 500GB 2.5" SATA3 SSD(3D V-NAMD)                 - $400
+ * 1 x Heatsink                                                         - $50
+ * 1 x Supermicro SC113TQ-600W, 1U RM, WIO, 8x 2.5" SAS/SATA 600W       - $350
+
+Total   --- **$5424**
+
+<a id="benchmarks"></a>
+
+# Benchmarks
+
+This is about [[!tails_ticket 11011]], [[!tails_ticket 11009]] and
+friends. All these tests are run on lizard v2, and all isobuilders we
+have (currently: 2) must be kept busy while tests are running.
+
+The initial set of tests use `ext4` for `/tmp/TailsToaster`, and later
+on we switch to `tmpfs`.
+
+* past baseline: 4 tests in parallel, with 20GB of RAM for each tester
+  - rationale: get an idea of whether giving testers more RAM helped
+  - results: 72 minutes / run, 3.3 runs / hour
+
+* current baseline: 4 tests in parallel, with 23GB of RAM for each tester
+  - rationale: get an idea of whether giving testers more RAM helped;
+    and provide a current baseline to compare other results with
+  - results: 69 minutes / run, 3.5 runs / hour
+  - conclusion: giving more RAM to each isotester seems to help a bit;
+    next benchmarks will all use 23 GB per isotester
+
+* more vcpus per TailsToaster: 4 test suite runs in parallel, with
+  23GB of RAM for each tester, from the experimental branch
+  - rationale: see if [[!tails_ticket 6729]] helps
+  - results: 65 minutes / run, 3.7 runs / hour
+  - conclusion: this hypothesis is worth looking more closely into,
+    so next benchmarks will be run with both 1 and 2 vpcus per
+    TailsToaster
+
+And then, we can work on [[!tails_ticket 11113]]:
+
+* 6 testers: 6 tests (devel branch, 1 vcpu per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+  - results: 3/6 runs fail, 2 of them due to [[!tails_ticket 10777]],
+    another one due to a kernel panic in TailsToaster
+
+* 6 testers: 6 tests (experimental branch, 2 vcpus per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+  - results: 3/6 runs fail
+    * two failures due to a mistake in test/10777-robust-boot-menu,
+      fixed since then in commit 4601cbb
+    * one due to a regression probably brought by
+      test/10777-robust-boot-menu, fixed since then in commit 6a9030a;
+      plus some race condition in the "all notifications have
+      disappeared" step
+
+At this point it seems that I/O load is a problem (it slows down
+things enough to trigger weird test failures), so let's switch to
+mounting a tmpfs on `/tmp/TailsToaster` ([[!tails_ticket 11175]]) for
+all following benchmarks.
+
+* 6 testers: 6 tests (devel branch, 1 vcpu per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+  - results #1: 59 minutes, 6.1 runs / hour;
+    one failure due to [[!tails_ticket 11176]], and another one that
+    I can't quite explain; note that I was setting up VMs with Puppet
+    during this run
+  - results #2: 58.8 minutes / run, 6.1 runs / hour
+
+* 6 testers: 6 tests (experimental branch, 2 vcpus per TailsToaster)
+  in parallel on 6 testers, with 23GB of RAM for each tester
+  - results #1: 49 minutes, 7.3 runs / hour;
+    one failure due to a mistake in test/10777-robust-boot-menu,
+    fixed since then; note that I was installing Debian on 2 VMs
+    during this run
+  - results #2: 75 minutes (?!); one failure due to kernel panic in
+    TailsToaster
+  - results #3: 50.3 minutes / run, 7.2 runs / hour
+
+* 8 testers: 8 tests (devel branch, 1 vcpu per TailsToaster)
+  in parallel on 8 testers, with 23GB of RAM for each tester
+  - results #1: 58.5 minutes / run, 8.2 runs / hour
+  - results #2: 60.2 minutes / run, 7.8 runs / hour
+
+* 8 testers: 8 tests (experimental branch, 2 vcpus per TailsToaster)
+  in parallel on 8 testers, with 23GB of RAM for each tester
+  - results #1: 51 minutes / run, 9.5 runs / hour; 2 failures due to
+    [[!tails_ticket 10777]]
+  - results #2: XXX

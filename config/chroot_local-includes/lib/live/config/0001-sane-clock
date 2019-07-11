@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo "- making sure the system clock is sane"
+
+# If the system clock is before the source date, then we know it's
+# incorrect and set it too the source date. However, to account for
+# potential issues due to timezone differences etc we ignore clocks
+# that are up to 1 day before the source date.
+SOURCE_DATE="$(sed -n -e '1s/^.* - \([0-9]\+\)$/\1/p;q' /etc/amnesia/version)"
+if [ "$(date +%s)" -lt "$(date -d "${SOURCE_DATE} - 1 day" +%s)" ]; then
+    date --set "${SOURCE_DATE}"
+fi

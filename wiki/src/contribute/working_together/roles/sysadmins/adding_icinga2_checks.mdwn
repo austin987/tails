@@ -1,0 +1,87 @@
+[[!meta title="How to add Icinga2 checks in the Tails infrastructure"]]
+
+First, see the
+[[description of our Icinga2 setup|contribute/working_together/roles/sysadmins#icinga2]].
+
+<!-- The [upstream Icinga2 Puppet -->
+<!-- module](https://git.icinga.org/?p=icinga2.git), which may help in -->
+<!-- simplifying our Puppet manifest, requires to use the puppetdb backend to -->
+<!-- support its complex exported resources. In Debian Jessie, exported -->
+<!-- resources are only supported through the Active Records backend, so we -->
+<!-- can't use this Puppet module right now. Until PuppetDB can be -->
+<!-- used (possibly in Stretch), we have to write more Puppet code to add  -->
+<!-- new checks. -->
+
+# Plugins
+
+Icinga2 *plugins* are scripts or software executed by Icinga2 to
+retrieve services data. Icinga2 natively ships a bunch of them. Have a
+look [at the
+documentation](https://icinga.com/docs/icinga2/latest/doc/10-icinga-template-library/#plugin-check-commands)
+if one fits our needs. If not, you'll have to install your custom
+plugin. Example: the `tails::monitoring::plugin::check_torbrowser_archive`
+class in [[!tails_gitweb_repo puppet-tails]].
+
+A plugin class is not included directly: instead, it is
+included from the corresponding *check command* class. See below.
+
+# Check commands
+
+A *check command* tells Icinga2 how to use a plugin. It
+describes the options that can be used, and helps to configure for a
+service how this plugin will be executed. If you intend to use a new
+custom plugin, you also need to install the related check command.
+Example: the `tails::monitoring::checkcommand::torbrowser_archive`
+class in [[!tails_gitweb_repo puppet-tails]].
+
+If you're using a new custom plugin, that's the place where you should
+include its manifest so that it is installed on every system for which a
+service check is using it.
+
+# Services
+
+Once plugins and check commands are implemented, you can define the
+corresponding *service check*.
+
+Have a look at the `tails::monitoring::service::torbrowser_archive`
+manifest in [[!tails_gitweb_repo puppet-tails]] and the corresponding service
+configuration template
+(`templates/monitoring/service/torbrowser_archive.erb` in the same repo).
+It is the place where the corresponding check command class has to be
+included.
+
+There are two types of service checks:
+
+## Remotely executed service
+
+Ran on the master to check a remotely hosted service. The exported
+resources for the service check need to be collected on the Icinga2
+master only. Example: the bits about the
+`tails::monitoring::service::http` check in the
+`tails::monitoring::master` class in [[!tails_gitweb_repo puppet-tails]].
+
+## Locally executed service
+
+It needs to be deployed on every host that will run it. The exported
+resources for the service check need to be collected on the master,
+satellite and any system it should monitor.
+Example: the bits about the `tails::monitoring::service::memory` check
+in the `tails::monitoring::{master,satellite,agent}` classes in
+[[!tails_gitweb_repo puppet-tails]]. Make sure that the `$nodename` and
+`$tag` parameters are set when collecting such exported resources.
+
+# Deploy
+
+Once the plugin, check command and service related manifests are
+written, it's time to enable the service check. Declare it *as an
+exported resource* in the manifest of the node which hosts the service.
+
+Depending on whether the service is locally or remotely executed, the
+Puppet clients may need
+to be run several times on different systems for the service check
+exported resource to be collected and realized correctly.
+
+Once you've verified that the check works fine for one host,
+add it (if relevant) to the
+`tails::monitoring::config::common_services` class in
+[[!tails_gitweb_repo puppet-tails]].

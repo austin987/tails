@@ -1,0 +1,77 @@
+[[!meta title="Upgrading custom packages for VeraCrypt support"]]
+
+Until Tails is based on a Debian version which includes our patches
+We have to maintain our custom packages for the integration of VeraCrypt
+support in GNOME until they are available in Tails via the Debian repos
+(for some that will be Buster, for some Bullseye). This means we need to
+check if new versions of the following source packages have hit Debian
+stretch or stretch-security:
+
+* [udisks2](https://packages.debian.org/source/stable/udisks2) (version in Tails: 2.1.8-1.0tails3)
+* [gnome-disk-utility](https://packages.debian.org/source/stable/gnome-disk-utility) (version in Tails: 3.22.1-1.0tails1)
+* [glib2.0](https://packages.debian.org/source/stable/glib2.0) (version in Tails: 2.50.3-2.0tails3)
+* [gtk+3.0](https://packages.debian.org/source/stable/gtk+3.0) (version in Tails: 3.22.11-1.0tails5)
+* [gvfs](https://packages.debian.org/source/stable/gvfs) (version in Tails: 1.30.4-1.0tails5)
+* [gobject-introspection](https://packages.debian.org/source/stable/gobject-introspection) (version in Tails: 1.50.0-1.0tails2)
+* [gjs](https://packages.debian.org/source/stable/gjs) (version in Tails: 1.46.0-1.0tails2)
+* [gnome-shell](https://packages.debian.org/source/stable/gnome-shell) (version in Tails: 3.22.3-3.0tails6)
+
+If any of these have a new version in stretch or stretch-security:
+
+1. Download our custom package and source package it is was forked off from:
+
+       # Set these variables to the correct values for the package to update
+       PACKAGE_NAME=udisks2
+       # The version currently in Tails
+       OLD_VERSION=2.1.8-1.0tails3
+       # The version of the official Debian package it was forked off from
+       ORIGINAL_VERSION=2.1.8-1
+       # The new version in stretch or stretch-security
+       NEW_VERSION=2.1.8-2
+       # Release the updated package should go in (stable, testing or devel)
+       RELEASE=stable
+       # The topic branch for this update
+       BRANCH=feature/update-udisks
+       SUITE="$(echo "${BRANCH:?}" | sed -e 's,[^.a-z0-9-],-,ig'  | tr '[A-Z]' '[a-z]')"
+
+       sudo tee /etc/apt/sources.list.d/tails.list <<EOF
+       deb-src tor+http://jenw7xbd6tf7vfhp.onion/ ${RELEASE:?} main
+       deb-src [check-valid-until=no] tor+http://snapshot.debian.org/archive/debian/20180904T000000Z/ stretch main
+       EOF
+       sudo apt update
+       apt source --download-only "${PACKAGE_NAME:?}={OLD_VERSION:?}"
+       apt source --download-only "${PACKAGE_NAME:?}={ORIGINAL_VERSION:?}"
+
+1. Get the debdiff of our patches:
+
+       debdiff "${PACKAGE_NAME:?}_${ORIGINAL_VERSION:?}.dsc" "${PACKAGE_NAME:?}_${OLD_VERSION:?}.dsc" > tails.diff
+
+1. Download the new source package:
+
+       apt source "${PACKAGE_NAME:?}=${NEW_VERSION:?}"
+
+1. Apply the debdiff on the new version:
+       debdiff-apply "${PACKAGE_NAME:?}_${NEW_VERSION:?}.dsc" tails.diff
+
+1. Add changelog entry and build a new version of the patched package
+   in a Stretch/amd64 chroot:
+
+       cd "${PACKAGE_NAME:?}"*/
+       debchange -i --distribution="${SUITE:?}" --force-distribution
+       pdebuild
+
+1. Install the newly built package in the build environment and rebuild all
+   custom packages which depend on it. The dependencies are as follows (where
+   `X: Y` means that `X` is dependency of `Y`):
+
+    * `udisks2`: `gnome-disk-utility`
+    * `glib2.0`: `gtk+3.0`, `gvfs`, `gobject-introspection`, `gjs`, `gnome-shell`
+    * `gobject-introspection`: `gjs`
+    * `gjs`: `gnome-shell`
+
+1. Sign and upload updated packages
+
+       debsign "${CHANGES_FILE:?}"
+       dupload --to tails "${CHANGES_FILE:?}"
+
+1. Update the "version in Tails" in this document.

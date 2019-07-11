@@ -1,0 +1,14 @@
+diff --git a/bin/live-medium-cache b/bin/live-medium-cache
+index f85b2b2..fec1496 100755
+--- a/bin/live-medium-cache
++++ b/bin/live-medium-cache
+@@ -74,7 +74,7 @@
+ mount -o remount,ro /lib/live/mount/overlay > /dev/null 2>&1
+ 
+ # Remounting any persistence devices read-only
+-for _MOUNT in $(awk '/\/lib\/live\/mount\/persistence/ { print $2 }' /proc/mounts)
++for _MOUNT in $(awk '/\/(lib\/live\/mount|live)\/persistence/ { print $2 }' /proc/mounts)
+ do
+ 	mount -o remount,ro ${_MOUNT} > /dev/null 2>&1
+ done
+

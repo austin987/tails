@@ -1,0 +1,63 @@
+Authority = Node(
+    tag="auth",
+    authority=1,
+    relay=1,
+    torrc="authority.tmpl"
+)
+
+BridgeAuthority = Node(
+    tag="brauth",
+    authority=1,
+    bridgeauthority=1,
+    relay=1,
+    torrc="bridgeauthority.tmpl"
+)
+
+NonExitRelay = Node(
+    tag="relay",
+    relay=1,
+    torrc="relay-non-exit.tmpl"
+)
+
+ExitRelay = Node(
+    tag="exit",
+    relay=1,
+    exit=1,
+    torrc="relay.tmpl"
+)
+
+Client = Node(
+    tag="client",
+    torrc="client.tmpl"
+)
+
+Bridge = Node(
+    tag="bridge",
+    bridge=1,
+    relay=1,
+    torrc="bridge.tmpl"
+)
+
+BridgeObfs4 = Node(
+    tag="obfs4",
+    bridge=1,
+    relay=1,
+    torrc="bridge-obfs4.tmpl"
+)
+
+OnionService = Node(
+    tag="hs",
+    hs=1,
+    torrc="hs.tmpl"
+)
+
+NODES = Authority.getN(4) + \
+        BridgeAuthority.getN(1) + \
+        NonExitRelay.getN(20) + \
+        ExitRelay.getN(10) + \
+        Bridge.getN(3) + \
+        BridgeObfs4.getN(3) + \
+        OnionService.getN(1) + \
+        Client.getN(1)
+
+ConfigureNodes(NODES)

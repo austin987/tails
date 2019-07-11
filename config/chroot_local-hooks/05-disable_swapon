@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+echo "Disabling swapon"
+
+# Disable swapon to avoid initscripts to setup swap space.
+# Rationale: security-in-depth model.
+
+SWAPON=/sbin/swapon
+
+# Move any /sbin/swapon installed by any package out of the way,
+# now (--rename) as well for any future one (hint: apt-get upgrade...).
+dpkg-divert --rename --add /sbin/swapon
+
+# Install a custom noop swapon executable instead.
+cat > $SWAPON << 'EOF'
+#!/bin/sh
+/bin/true
+EOF
+chmod 755 $SWAPON

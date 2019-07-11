@@ -1,0 +1,166 @@
+[[!meta title="Estimated Timeline"]]
+
+Note: this is subject to change as project develops. Major changes
+will be announced in mailing list and project blog.
+
+[[!toc levels=1]]
+
+# week #0 [last full week of May]
+
+0. create vala code implementing [subset of] GSM's dbus interface for tails-greeter test interactions with real GDM (weather GDM's own tests or full VM)
+0. discuss with developers ways to better implement current items from "options" list - email the ML
+0. look at python implementation of greeter at https://code.launchpad.net/gdm-commmunity-greeter/
+0. try GDM's tests to run a) default greeter b) python implementation
+
+# week #1 [1st week of June]
+
+0. reconsider implementation language e. g. vala vs python
+0. try GDM's tests to run a) default greeter b) python implementation
+0. fix git layout (remove 'upstream', move everything to 'master')
+0. fix project build bia git-buildpackage
+0. sketch-out GDM's panel dbus interface and greeter\panel interactions
+
+# week #2 [2nd week of June]
+
+0. work on university projects - minor fixes and updates only
+0. weekly meeting follow-up - done
+0. review existing python code & glade interfaces - done
+0. file RFP for gtkme - done: [[http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=629199]] - done
+0. pbuilder fix (git-buildpackage works fine with latest 'master' branch) - done
+0. run community-greeter in VM - done with errors uncovered (see report)
+
+# week #3 [3nd week of June]
+
+0. convert tails-greeter to old-style pygtk to remove pygi dependency - done
+0. re-test with squeeze (converted version) and sid (test  gir1.2-gtk-2.0 dependency correctness) - done, with tests failed
+0. check if current localization handling is suitable for tails-greeter - postponed
+0.  make plans for next week - done
+
+# week #4 [4th week of June]
+
+0. fix errors reported by pylint - DONE (some warnings are still reported).
+0. bump version properly (git push --tags; git-dch --git-author) - DONE.
+0. add pylint conf to ignore dbus-related false positives - DONE (might hide real errors too).
+0. fix language selector so it's shown and work properly - DONE (.po translations are incomplete).
+0. check if current localization handling is suitable for tails-greeter - DONE (seems ok if locales are known at the time of package build).
+0. run external (placeholder) program with adequate parameters on language change (locale generation for example) - POSTPONED.
+0. wiki updates (testing instructions and overall status) - DONE.
+0. lintian tails-greeter.deb (using .changes file too) - DONE (no errors reported).
+0. make login possible - DONE.
+0. use dpkg-divert to disable gdm-simple-greeter - DONE.
+0. add .deb into tails repo - IN_PROGRESS.
+0. make .iso build (if packages testing-ready) - BLOCKED by previous item.
+
+# week #5 [last week of June]
+
+0. relocation to another country
+0. fixes\updates\minor items which were postponed for whatever reason
+0. make .iso build (in progress).
+0. specify dbus interface to interact with external locale-gen script - changed to 'subprocess' item (see week #6)
+0. change widget exec order (parallel->sequential) to comply with "localization notes" part of [[todo/TailsGreeter/design]] - postponed.
+
+# week #6 [1st week of July]: language support.
+
+0. [Mon.] change widget exec order (parallel->sequential) to comply with "localization notes" part of [[todo/TailsGreeter/design]] - DONE.
+0. [Mon.] setup squid-deb-proxy - DONE.
+0. [Mon.] make .iso build - DONE.
+0. [Tue.] change widget to fit many more languages: from flag icons to
+   scrollable list - in progress.
+0. [Wed.] (re)generate .po with (dummy) translations (to show that language change is actually working) - DONE.
+0. [Wed.] populate the list of supported languages in the widget from gnome-desktop-data package languages or dpkg-reconfigure locales (see gdm_get_all_language_names function for example) - in progress (with external helper script).
+0. [Thu.] 'subprocess': run external (locale-gen) program with adequate parameters on language change and wait for its completion before allowing logon  - in progress.
+0. update tails-greeter.deb package - in progress.
+0. propose rough plans / estimates for all the remaining weeks - postponed.
+0. GSoC milestone: make mentor happy :)
+
+# week #7 [2nd week of July]: kb layout support.
+
+0. populate language list using list of available locales in /usr/share/i18n/SUPPORTED - DONE.
+0. supply parameter as 'en' (or smth else suitable for locale generation - investigate) to locale-gen - DONE.
+0. Language list should contain language's own name (e. g. 'Русский' for 'Russian')
+instead of current 2-letter code - DONE.
+0. translate language widget too (move lang choice handler from button_clicked to list_choice) - DONE.
+0. Move locale-gen interaction to greeter from widget - DONE.
+0. cleanup commented\old\dead code - DONE.
+0. obtain list of kb layouts available (via python-xklavier)
+0. use existing code/UI from d-i/anaconda/ubuntu installer/ for language chooser if possible - partially done (PyICU utilized).
+0. apply correct layout after it's been chosen (both to present and following greeter widgets and to actual session)
+
+As a result tails-greeter should be ready to be shipped with next tails release.
+
+# week #8 [3rd week of July]
+
+0. document interface to locale-gen - DONE.
+0. make sure it's possible to choose language multiple times before 'forward' button pressed - DONE.
+0. apply chosen language to gnome session - needs testing
+0. borrow ubiquity widgets for keyboard layout if possible - DONE.
+0. create keyboard layout widget - in progress.
+0. update requestor widget to hide password while typing - DONE.
+0. [Convert packages to dh_python2](http://wiki.debian.org/Python/TransitionToDHPython2) because python-support is deprecated -  merge dh_python2 branch - DONE.
+0. pressing 'enter' in password request widget should be equal to button click - DONE.
+0. version tag and update - DONE.
+
+# week #9 [4th week of July]
+
+0. verify that locale is correctly applied to gnome-session and fix if it isn't - DONE.
+0. fix layout widget loading - DONE.
+0. obtain list of kb layouts and variants available (via python-xklavier) - postponed.
+0. populate layout widget with kb variants - postponed.
+0. apply correct layout after it's been chosen (both to present and following greeter widgets and to actual session) - postponed.
+0. verify that layout switching works after login - postponed.
+0. Add option to skip all the greeter screens and immediately login with default settings - DONE.
+0. Convey necessary env. variables to gnome session.(echo "VARIABLE=value" >> /etc/amnesia/environment or via  /etc/gdm3/PostLogin/)
+0. capitalize 1st letter of (latin) language names (e. g. English vs english) - DONE.
+0. version tag and update - DONE.
+
+# week #10 [1st week of August]
+
+0. obtain list of kb layouts and variants available (via python-xklavier) - DONE.
+0. populate layout widget with kb variants - DONE.
+0. merge feature/better_root_access_control branch - DONE.
+0. apply correct layout after it's been chosen (both to present and following greeter widgets and to actual session) - postponed.
+0. verify that layout switching works after login - postponed
+0. version tag and update - DONE.
+
+# week #11 [2nd week of August]
+
+0. write password for config/chroot_local-includes/usr/local/sbin/set-user-password to file - DONE.
+0. alter set-user-password to use password from file - DONE.
+0. merge language and layout widget to single panel - DONE.
+0. write locale name for localedef to file - DONE.
+0. add locale generator which uses data from file - DONE.
+0. fix layout selection for greeter session - DONE.
+0. add double password entry to prevent typos - DONE.
+0. use SelectLayout in GDM - DONE.
+0. add layout selection to panel - DONE.
+0. use separate layouts for greeter and for user session - DONE.
+0. display panel and password widget on the same screen - DONE.
+0. add layout indicator to greeter - DONE.
+0. properly generate list of available layouts - in progress
+0. version tag and update - DONE.
+
+# week #12 [3rd week of August]
+
+0. refactor layout generation code - DONE.
+0. disable admin rights for empty password - DONE.
+0. add layout variant selection - DONE.
+0. use selected variant for greeter and session layout - DONE.
+0. add variant to layout indicator - DONE.
+0. make session layout selection enforce greeter layout selection - DONE.
+0. make session layout variant selection enforce greeter layout variant selection - DONE.
+0. make sure panel width fits the screen - DONE.
+0. pre-select locale based on language - DONE.
+0. correct UI phrasing - DONE.
+0. show country name instead of code (e. g. Russia vs. ru_RU) - DONE.
+0. update translation instructions - DONE.
+0. add ability to use any layout regardless of language\locale choice - postponed
+0. fix entry field width - postponed
+0. fix polkit & sudo configuration - testing required
+0. test with TAILS VM - in progress
+0. document latest design changes - in progress
+0. version tag and update - DONE.
+
+# week #12+ [after-GSoC]
+
+0. fill in forms - GSoC is over!
+0. establish bug-reporting and maintenance routine

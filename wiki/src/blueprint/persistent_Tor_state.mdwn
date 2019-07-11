@@ -1,0 +1,562 @@
+[[!toc levels=3]]
+
+# Big picture
+
+This is about [[!tails_ticket 5462]].
+
+There are a few good reasons for making Tor's data directory
+persistent:
+
+1. Faster and less wasteful (in terms of bandwidth) bootstrap.
+2. Stronger resistance to certain attacks against anonymity via stable
+   Entry Guard(s).
+3. Using stable Entry Guard(s) makes it harder to detect that you're
+   using Tails.
+
+Making `/var/lib/tor` persistent is enough for this. We want to add
+a persistence preset for it.
+
+# Goals, non-goals and threat model
+
+* To start with, we are going to focus on Tails users who have
+  persistence enabled: so far, we have not provided stable Entry
+  Guard(s) to anyone, so adding them for users of persistence will be
+  a great improvement already. Still, we have some ideas regarding
+  what could be done for people who don't use persistence.
+
+* The attacker controls the Wi-Fi access point and the LAN router, and
+  can e.g. change their MAC address, block TCP connections, etc.
+
+* Using persistent Entry Guard(s) [is a problem for mobile
+  users](https://lists.torproject.org/pipermail/tor-talk/2012-October/025975.html),
+  as it gives attackers some bits for AdvGoalTracking (see [[the MAC
+  address spoofing design documentation|contribute/design/MAC_address]]),
+  even if this is less severe than it used to be, thanks
+  to the move to a single Entry Guard. We want to protect users
+  against AdvGoalTracking, including versions thereof where the
+  attacker uses Entry Guard usage information to confirm guesses they
+  can make thanks to information gathered by other means (e.g. who,
+  among N monitored people suspected of attending a given event,
+  indeed made it there). Hence, we need to make the Entry Guard(s)
+  selection process location-dependent.
+
+* We want to limit the chances attackers have to force us to use an
+  Entry Guard of their choosing:
+  - directly: that is, the attacker must not be able to control
+    directly which Entry Guard is picked and used;
+  - indirectly (e.g. by making Entry Guards unreachable until we try
+    one of those the attacker wants us to use): so, we have to limit
+    the amount of Entry Guard churn that the attacker can force
+    upon us.
+
+* As usual, we want to have sane defaults, and avoid asking users to
+  make security decisions in a way that they have great chances to
+  pick the wrong answer given their context. Power-users who want to
+  have fine-grained control over which Entry Guard they use in which
+  specific context already have the means to do so, by configuring
+  whatever Tor bridges they want depending on the context.
+
+* We care about contextual identities separation, including when using
+  a single Tails device for several contextual identities (rebooting
+  to switch identities, as documented). Therefore:
+  - when persistence is enabled: we should actively discourage users
+    from using the same persistence volume for multiple identities
+    (technically, this concern could be solved by requesting user
+    input as discussed below, but we have other good reasons to
+    discourage such practices anyway);
+  - where persistence is disabled: if deterministic Entry Guards are
+    implemented some day in that context, then Entry Guards must not
+    be picked solely based upon information that is constant across
+    contextual identity switches (e.g. location, hardware identifiers,
+    Tails device identifiers). This calls for requesting user input,
+    which we elaborate upon below.
+
+# Existing potential solutions
+
+## Subgraph's [torshiftchange](https://bitbucket.org/mckinney_subgraph/torshiftchange)
+
+It detects network based solely on NetworkManager's connection uuid.
+While that approach will work fine for wireless networks (since they
+always generate a new connection => new uuid), I don't see how we can
+get around treating all wired networks as the same one and hence
+getting the same entry guards for all wired connections.
+
+Hmm. And actually, I guess it would be a problem for eduroam network
+and similar "global" networks where one normally would configure one
+NM connection without a BSSID but only an SSID. OTOH, with eduroam
+specifically one uses a certificate that's unique per user, but I've
+seen other (generally unencrypted) networks of this type, e.g.
+for chains of some company that provide free wifi.
+
+Perhaps they sometimes deliberately use the same BSSID (i.e. spoof the
+AP's MAC address to all be the same) in addition to the same SSID?
+We believe that it's unlikely: doing that has a cost (the default AP's
+configuration needs to be changed) and no practical benefit that we
+were able to think of so far.
+
+## [tordyguards](https://github.com/leewoboo/tordyguards)
+
+It identifies network based on BSSID, so for a wireless network it'd
+be the AP's MAC address. For a wired network there's no BSSID concept,
+so I'm not sure what it means in that case. That seems to be specific
+for wicd; tordyguards is written as a wicd pre-connect script, and
+those are supplied with these positional parameters:
+
+* the connection type (wireless/wired).
+* the ESSID (network name).
+* the BSSID (gateway MAC).
+
+... where the third argument (the BSSID) is the only one used.
+Unfortunately, NetworkManager doesn't provide the BSSID, so add
+support for it one would have to take a detour with `nm-tool` or
+`nmcli` or something to get the BSSID. Also, something we don't like
+about it is that it's designed to also start and stop the Tor service,
+instead of just fixing `/var/lib/tor/state`.
+
+# What to do?
+
+## Location-dependent information
+
+It was already argued here why we need to parameterize the Entry
+Guard(s) selection process with location-dependent information.
+
+The good idea in `tordyguards` is to identify the network based on
+something that is a persistent property of the network itself, like
+its BSSID. The BSSID concept does not mean anything for wired
+networks, but the take home lesson is that we should do something
+based on MAC addresses.
+
+A quickly hacked together PoC that uses the gateway's MAC address (if
+any, otherwise a new Tor state file is used => random entry guards)
+can be found in the
+`feature/5462-PoC-per-network-entry-guards` branch.
+
+Let's dive a bit deeper into the information source for the
+location-dependent information we need.
+
+For Wi-Fi, we have to choose between the access point's MAC address
+(that `iwconfig` always knows, once we're connected) and the default
+gateway's MAC address. For wired networks, our only option seems to be
+the default gateway's MAC address. It's unclear yet how we can learn
+the default gateway's MAC address fast enough (it might not be in the
+local ARP cache when we need it), and without leaving fingerprintable
+traces on the network -- more tests and research are needed.
+
+Now, what part of the location-dependent MAC address shall we use for
+parameterizing the Entry Guard(s) selection process? Let's keep in
+mind that the AP and default gateway can basically force us to trigger
+a new fresh Tor bootstrap, and hence, to try another Entry Guard, by
+changing their MAC address. Let's say we take N bits from the chosen
+MAC address. Then:
+
+* the attacker can force us to explore up to `2^N` unique Entry Guards
+  (a bit less in practice, as picking a guard randomly `2^N` times
+  leads to some duplicates being chosen); so, we want to minimize N;
+* we have up to `2^N` unique location-dependent Tor `state` files; so,
+  we want to maximize N.
+
+Hence, we need to find a sweet spot where N is both large enough to
+make our resistance to AdvGoalTracking worth it, and small enough to
+avoid giving a close network attacker too much control over what
+guards we'll use. Given between 500 and 2000 Tor relays qualifying as
+Entry Guards, N=6 seems to be close enough to this sweet spot, and
+that's what we will use.
+
+Implementation-wise, to not reinvent the wheel and go completely NIH,
+perhaps we should ask the Subgraph people if they want to consider
+switching `torshiftchange` from identifying networks based on the NM
+connection uuid to looking at the gateway MAC address. I suppose we
+should also carefully analyze if there's any problem with that (for
+instance, do "global" network spoof the gateway MAC addresses to be
+the same everywhere? I doubt it, but it's worth considering). Also, we
+need to come up with what to do when multiple NICs are connected at
+the same time (how that works in Tails is a bit messy at the moment,
+and my PoC messes it up a bit more I think).
+
+## Current proposal
+
+### First iteration
+
+Goal: stronger resistance to certain attacks against anonymity via
+stable Entry Guard(s). Also, make Tails usage a little bit
+less fingerprintable.
+
+* Add a persistence setting for Tor state (exact phrasing is TBD, and
+  must take into account that more data will be persisted during the
+  second iteration).
+* Enable this new persistence feature by default for newly created
+  persistent volumes: for the vast majority of use-cases and threat
+  models, the defaults we've picked should be much safer than picking
+  random Entry Guard(s) every time one starts Tails.
+* Actively encourage users of an existing persistent volume to enable
+  this new persistence feature (e.g. by nagging them post-login, and
+  possibly allowing them to check "Do not ask me again" which would be
+  persisted, and possibly proposing to enable this setting for them).
+* Persist the Tor `state` file only (not the consensus etc.)
+* Name of the persistent Tor state file to be used:
+  `hash(per-Tails device secret, N bits of location-based information)`.
+  **FIXME**: shall we truncate the resulting hash? so that there are
+  collisions and the total number of different state file names is
+  caped, which implies that a given Tails persistent media will use
+  a limited amount of different Entry Guards over its lifetime,
+  regardless of the user's movements. But:
+  - does it make it easier to bruteforce the per-Tails device secret?
+  - does it allow to fingerprint a user by changing the MAC address of
+    the AP and observing which ones result in the same Entry Guard
+    being used (due to collisions) -- and then, when the user comes
+    back to the same place, re-playing the MAC addresses that
+    triggered the collision allows the attacker to know that it's the
+    same Tails device, with more certainty than when deducing that
+    from the mere fact that they are re-using the same Entry Guard in
+    the place?
+  - **FIXME** do we want to use a HMAC instead?
+  - We considered adding the ESSID to the value being hashed, in order
+    to make it harder for attackers to force us to reuse a given
+    already saved Tor state, by spoofing only the MAC address of the
+    router: they would also have to spoof the ESSID, which is visible
+    to the user and might be detected as malicious. This was rejected
+    for two reasons: first, it gives the attacker more bits they can
+    use to force us to try new Entry Guards until we pick one they
+    control (see the reasoning about choosing N above); second, it's
+    doubtful that users will worry much about a ESSID being reused:
+    chances are that most of them will just "just click through
+    whatever hoops required to make the WiFi connect again", as
+    Patrick Schleizer put it.
+* `tordate` remains unchanged for now
+* Add a NetworkManager hook that generates a random per-Tails device
+  secret, and stores it into persistence, if the Tor state persistence
+  feature is enabled.
+* Add a NetworkManager hook that copies the relevant
+  location-dependent Tor `state` file in place before starting Tor.
+* Write the corresponding end-user and design documentation.
+
+#### One example attack, one example defense
+
+NetworkManager is happy to roam across APs that have the same ESSID,
+but different BSSIDs (MAC address). This is a pretty useful feature.
+It can also be used by an adversary to perform active attacks against
+the design described above.
+
+Attacker controls Wi-Fi AP in places A and B. In place A, attacker
+switches the AP's MAC address back'n'forth between Mi with i between
+1 and x. They do that during Tails sessions running on laptops
+connected to place A, so for each such laptop they can record x (AP
+MAC address → list of Entry Guards) mappings.
+
+Then, in place B, the attacker also switches the AP's MAC address
+between the same M1 to Mx during Tails sessions. By observing which
+Entry Guard a given Tails laptop connected to place B picks, the
+attacker can then link it to one of the mappings recorded in place A.
+This seems to allow the attacker to track that laptop across places.
+This attack can scale to place C, place D, etc., as long as the
+attacker has the ability to control the Wi-Fi AP's MAC address there
+in real time.
+
+As a possible defense, let's make Tails stick to the Tor state (⇒
+Entry Guard, more or less) it picked the first time, during a given
+session.
+
+Then, if the user starts Tails only once at a given place, what the
+attacker learns is pretty much useless: one single (AP MAC address →
+Entry Guard) mapping essentially conveys only the "Entry Guard being
+used" information, instead of an actual mapping from a AP MAC address
+to an Entry Guard; and many other Tor users are using this same Entry
+Guard. Only learning that with a different MAC address, _the same
+system_ would use a different Entry Guard, gives value to this first
+mapping, and all subsequent ones, together.
+
+Now, let's consider the case when the same Tails device with Tor state
+persistence is started multiple times in the same place, and an
+attacker who can somehow guess that it is probably the same device
+(ignoring Entry Guard choice for now). This makes the defense just as
+strong as it is difficult for the attacker to guess this. For example:
+
+ * Tails started twice in a row: if sessions don't overlap in terms of
+   time, and a Tails starts shortly after "another" one has shut down,
+   then it is maybe quite safe to assume that it's the same system.
+   On the other hand, the user may have restarted on a different
+   Tails, to use another contextual identity.
+
+ * How can the attacker to force Tails to reboot? Just blocking
+   Internet access (after the Entry Guard was picked and the mapping
+   recorded) can plausibly trigger a reboot action from many users,
+   and then we're back to the "Tails started twice in
+   a row" situation.
+
+ * Tails boots every day at about the same time in the same location:
+   an attacker who can observe this can quite safely assume that it is
+   the same Tails, and then the defense we've discussing does not work
+   against this attack.
+
+#### Discussion
+
+##### Passive attacker
+
+ * location tracking:
+   - much better than Tor Browser
+   - slightly worse than Tails without persistent Tor state
+
+ * defenses provided by Entry Guard stability:
+   - We pick Entry Guard among 2^N Tor states so we're worse than Tor
+     Browser.
+   - much better than Tails without persistent Tor state
+
+⇒ looking at passive attacks only, this design seems to be the way
+to go.
+
+##### Active attacker
+
+(Note that the same attacker can still use passive attacks.)
+
+ * location tracking:
+   - worse than Tor Browser because the attacker can get more than one
+     of these (AP's MAC address → Entry Guard) mappings, which leaks
+     more information than "yet another Tor user who has this Entry
+     Guard"
+   - much worse than Tails without persistent state
+
+ * defenses provided by Entry Guard stability:
+   - we allow a maximum of 2^N times more Entry Guards than Tor
+     Browser: for each of 2^N Tor state we can pick, we use the same
+     anti-guard-churn algorithm as Tor Browser ⇒ worse than Tor
+     Browser in this respect
+   - better than Tails without persistent Tor state; how much it is
+     better depends on how sophisticated and powerful the attacker is,
+     and how much they want to target Tails specifically (vs.
+     generally Tor users)
+
+⇒ looking at active attacks only, this design is pretty bad.
+
+Let's now look at combined cost/benefit of passive+active attacks.
+
+In terms of location tracking:
+
+ * it's game over for Tor Browser users as the attacker can passively
+   track them using the laptop's MAC address in most cases, and
+   fallback to the weak Entry Guard information otherwise;
+
+ * with Tails without persistent Tor state: it's game over for the
+   attacker, even if they go active
+
+ * with this design: the attacker needs to become active if they want
+   to track Tails users
+
+In terms of defenses provided by Entry Guard stability:
+
+ * Tor Browser: the attacker needs to be active, and is quickly
+   limited by Tor's protections against Entry Guard churn
+
+ * with Tails without persistent Tor state: a passive attacker can
+   just wait until the Tails users pick an adversary -controlled Entry
+   Guard; an active attacker can make this happen faster
+
+ * with this design: the attacker needs to be active, and we still
+   offer some protection given the limited set of Tor states the
+   attacker can make us cycle through
+
+XXX: look at other designs that don't have this infoleak.
+
+### Second iteration
+
+Goal: make bootstrapping faster and less wasteful (in terms of bandwidth).
+
+Means:
+
+* Extend the Tor state persistence preset to also persist Tor
+  consensus etc., that is actually `/var/lib/tor` (this includes e.g.
+  Hidden Service keys).
+* The NM hook that copies the Tor `state` file around should probably
+  not change much, if at all.
+
+Prerequisites: this can happen only once we don't rely anymore on the
+fact that certain files in `/var/lib/tor` are not persistent.
+More specifically:
+
+* [[!tails_ticket 5774]] needs to be resolved (our time syncing script
+  uses the existence of `cached-descriptors` as a test for whether Tor
+  is working, and a similar assumption is made for the
+  `*-consensus` files;
+* the Unsafe Browser uses `cached-descriptors` in the same way as the
+  time syncing script.
+
+At least "`cached-descriptors` existence checking" can be replaced
+with checking `GETINFO status/circuit-established` via the
+ControlPort. For tordate's `*-consensus` magic `GETINFO
+status/enough-dir-info` seems interesting, but isn't a replacement.
+
+Shell function which is useful for the above:
+
+	tor_control_getinfo() {
+	  COOKIE=/run/tor/control.authcookie
+	  HEXCOOKIE=$(xxd -c 32 -g 0 $COOKIE | cut -d' ' -f2)
+	  echo -e "AUTHENTICATE $HEXCOOKIE\nGETINFO ${1}\nQUIT" | \
+	  nc 127.0.0.1 9051 | grep "^250-${1}=" | sed "s@^250-${1}=@@"
+	}
+
+### Third iteration (low-priority)
+
+Improve things for people who don't use persistence. This is tricky
+as we want stable Entry Guard(s) in some situations, without having
+any mean to save information about them. So, we need to make the Entry
+Guard(s) selection process deterministic.
+
+<div class="caution">
+The following design is an early draft.
+</div>
+
+As said earlier in this document, this deterministic process cannot be
+solely parameterized with information that is constant across
+contextual identity switches. Hence, we have to request user input so
+that different contextual identities don't get the same Entry
+Guard(s). The best option we've found so far is to enable the user to
+enter in the Greeter a (possibly short and human-readable) identifier
+of the contextual identity they intend to use online; we suspect it'll
+be tricky to phrase this. Ideally, the user should enter a string that
+does not reveal to the running Tails system any information that the
+user won't end up typing in anyway: e.g. if they are going to log into
+a webmail, then they can as well type their webmail login into the
+text input area when requested. Let's call this string *contextualId*
+from now on.
+
+We also want to protect against AdvGoalTracking, so the Entry Guard(s)
+selection process must also be location-dependent. Here too, we'll use
+N bits of location-dependent information.
+
+Finally, in order to make things harder for an adversary who wants to
+leverage the location-dependent bits they control for some attack,
+we'll also use a device-dependent secret. The UUID of the filesystem
+on the Tails system partition might be a good candidate (how is it
+generated?); or, we could generate this secret at installation time
+and store it somewhere (which is harder to achieve for DVDs).
+
+Finally, we seed the Tor PRNG with:
+
+	hash(
+	  per-Tails device secret,
+	  N bits of location-based information + contextualId
+	)
+
+Note that Entry Guard(s) selection depends on the current state of the
+Tor network, and not only on how the Tor PRNG has been seeded.
+
+See [[!tor_bug 2653]] for further ideas on this topic.
+
+<a id="drawbacks"></a>
+
+### Drawbacks of persistent Tor state
+
+Parameterizing the Entry Guard(s) selection process with
+location-dependent information in a deterministic way allows us to
+protect against correlating e.g. a user's Tails activity at home, with
+their Tails activity elsewhere, which would give a passive attacker
+pretty good hints about that user's movements (AdvGoalTracking).
+
+However, it is not without drawbacks. Here are a few example ones:
+
+* If the attacker records that someone has been using a given Entry
+  Guard at a given location in the past, and then someone uses the
+  same Entry Guard at the same location, then there are chances that
+  it's the same person who is back to that location. In itself this is
+  pretty much useless... unless the attacker finds out who that person
+  is, during _one_ of their visits to said location. And then, the
+  attacker can passively detect when that person will be back there
+  again in the future. There are special cases of this attack that may
+  matter more than others, e.g. when the aforementioned location is
+  the house of the targeted user.
+
+* If the attacker records what guard a Tails user is using at home,
+  and then configures the routers, in other chosen places, to use the
+  same MAC address. Then, the attacker can confirm whether the user is
+  visiting those places (and starting Tails there), and when.
+
+So, with location-dependent Entry Guard(s) persistence enabled, we'll
+be actually making some specific kinds of location tracking easier.
+This seems to be a reasonable trade-off to make for the vast majority
+of users, in order to get the benefits of persistent Entry Guards.
+
+The only way to avoid that would be to request user input in all
+cases, and parameterize the Guard selection process this way. Sadly,
+this doesn't feel realistic to us (anonym + intrigeri):
+
+* we don't believe that the vast majority of Tails users will bother
+  entering the requested text every time they start Tails;
+* it is hard to explain in few words whatever requirements the
+  requested string must satisfy; a full threat-modeling thought
+  process may actually be needed for users to answer this request in
+  a way that actually improves security, as opposed to making
+  it worse;
+* in the case when Tor state is persistent, we first would have to ask
+  the user if they want to use persistent state (as opposed to a fresh
+  new Tor state), and if yes then we may have to request a string; the
+  resulting UI might end up being seriously confusing, also because it
+  will be different from the UI one sees when persistence is not
+  enabled at all.
+
+To sum up, requesting user input to _all_ users on every boot for
+parameterizing the Entry Guard(s) selection process seems to be
+a risky game, at which most users have as many chances to lose than to
+win. Defaults that suit the vast majority of use-cases feel more
+suitable for Tails' target audience. Still, we want to empower users
+with different needs to avoid becoming less safe "thanks" to this new
+feature, hence:
+
+* the documentation for the Tor state persistence feature must make it
+  clear what the risks and benefits are;
+* perhaps the persistent volume assistant should warn about it too; it
+  feels weird to warn about something that's enabled by default, but
+  maybe there are GUI design patterns to address this problem?
+
+# Discarded ideas
+
+* In order to provide a nicer UX for multiple contextual identities,
+  we have considered supporting multiple persistent volumes on
+  a single Tails device. This was discarded because one can already
+  maintain one device per identity (and "Clone & Upgrade" them to
+  avoid having to download upgrades several times), and it has quite
+  a few drawbacks:
+  - it would complicate quite a bit the persistence user story, the
+    corresponding documentation and the GUI for setting up
+    persistence;
+  - it would encourage users to have sub-optimal security practices:
+    e.g. an attacker that learns identifiers of that single Tails
+    device (e.g. the UUID of the system FS) would be able to correlate
+    these multiple contextual identities; of course, if the same
+    hardware is used for all such identities, we don't protect against
+    this class of attacks much yet (until we go further on the
+    virtualization road), but still, let's not give people bad
+    habits now.
+
+* We have considered requesting user input _once_, both to
+  parameterize Entry Guard selection, and for [[!tails_ticket
+  desc="seeding the entropy pool" 7675]]. This was discarded since the
+  entropy pool seed should ideally contain, well, quite some entropy,
+  while the requested user input for Entry Guard selection should be
+  short, easy to type and to remember.
+
+# Remaining open questions
+
+* How much info does it leak to share a single set of Tor consensus and
+  descriptors files between isolated Tor state files? How much of
+  a problem is that?
+
+* We must discuss the designs proposed on
+  <https://trac.torproject.org/projects/tor/ticket/10969#comment:2>.
+
+* Also see how Windows 10 computes a per-network MAC address: `addr =
+  SHA-256(SSID, macaddr , connId , secret)`; "Here *SSID* is the name
+  of the network, *macaddr* the original MAC address, and *connId*
+  a parameter that changes if the user removes (and re-adds) the
+  network to its preferred network list. The *secret* parameter is
+  a 256-bits cryptographic random number generated during system
+  initialization, unique per interface, and kept the same across
+  reboots [28]. Bits in the most significant byte of *addr* are set so
+  it becomes a locally administered, unicast address. This hash
+  construction is similar to the generation of IPv6 interface
+  identifiers as proposed in RFC 7217. It assures that systems relying
+  on fixed MAC addresses continue to work as expected, e.g., when
+  authentication is performed based on the MAC address. Users can also
+  manually instruct the OS to daily update the per-network address
+  randomly." (source: *Why MAC Address Randomization is not Enough:
+  An Analysis of Wi-Fi Network Discovery Mechanisms*)
+
+* How is this impacted by the changes brought by [[!tor_bug 12600]]?

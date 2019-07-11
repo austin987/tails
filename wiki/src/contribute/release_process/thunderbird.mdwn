@@ -1,0 +1,103 @@
+[[!meta title="Updating Thunderbird patches"]]
+
+Until we have
+[[!tails_ticket 6156 desc="upstreamed our secure autoconfiguration patches"]]
+we have to maintain a patch series for Thunderbird ourselves, that we apply
+while building Tails images.
+
+We need to follow the following instructions whenever the patch series
+we have exported to tails.git does not apply anymore, therefore breaking
+the Tails images build process.
+
+1. Create, checkout and push a branch in `tails.git` with the
+   `+force-all-tests` suffix (most of `features/thunderbird.feature`
+   is tagged `@fragile`).
+
+1. The first time you do this requires some additional steps (WARNING!
+   this will download almost 2 GiB of data):
+
+   1. Clone [Tails' Thunderbird repo](http://git.tails.boum.org/thunderbird/).
+
+   1. Add a remote for Debian:
+
+        git remote add debian-upstream https://salsa.debian.org/mozilla-team/thunderbird.git
+
+1. Set environment variables:
+
+   Let's pretend the scenario is that Thunderbird 60.0-3 has just been
+   released:
+
+        VERSION="60.0-3"
+        TAG="debian/1%$(echo ${VERSION:?} | tr '~' '_')"
+
+1. `git fetch && git fetch debian-upstream`
+
+1. Verify the signed tag:
+
+        git tag -v "${TAG:?}"
+
+   The tag should have been signed with one of the keys that follow;
+   investigate if it's not the case:
+
+    - `8B94 819C 2555 70A3 74B6  2CCD 26E3 C875 A744 20EF`
+    - `B70D FC6F 134F ECFC 011E  62AA 8301 6014 251D 1DB0`
+    - `D343 9DAA 19DC FACD AE87  9CF2 B999 CDB5 8C8D DBD2`
+
+1. Let's update our branch to the new version:
+
+        git checkout tails/stretch && git merge origin/tails/stretch && \
+        git merge --no-edit "${TAG:?}"
+
+1. Let's ensure our patches still apply cleanly:
+
+   1. Check if they do:
+
+          quilt push -a
+
+   2. Regardless of whether our patches applied cleanly, clean up:
+
+          quilt pop -a && rm -rf .pc
+
+   3. If our patches applied cleanly, move on. Otherwise:
+
+      XXX (undocumented as we prefer focusing our efforts on
+      upstreaming our patches than on documenting the current,
+      temporary state of things): after reverse-engineering the state
+      of our Git repository, it seems that one should create a new
+      `secure_account_creation-${VERSION:?}` branch forked of the
+      latest existing one, transplant our commits on top of `${TAG}`
+      with the appropriate `--onto` option, squash our commits into
+      a new `secure_account_creation-${VERSION:?}-squashed` branch,
+      extract updated patches from there into
+      `debian/patches/secure-account-creation/`.
+
+1. Git push:
+
+        git push --follow-tags origin \
+           tails/stretch \
+           upstream-60.x \
+           pristine-tar
+
+   Note: pushing some tags will fail due to [[!tails_ticket 11531]].
+
+1. Set variables according to your local environment:
+
+        TAILS_GIT_CHECKOUT=/path/to/your/tails/git/checkout
+        THUNDERBIRD_GIT_CHECKOUT=/path/to/your/thunderbird/git/checkout
+
+1. Update the patches in tails.git:
+
+        THUNDERBIRD_GIT_COMMIT=$(git --git-dir="$THUNDERBIRD_GIT_CHECKOUT" rev-parse --verify HEAD)
+        TAILS_GIT_PATCHES_DIR="config/chroot_local-includes/usr/share/tails/build/thunderbird-patches"
+		cd "$TAILS_GIT_CHECKOUT" && \
+        git rm -r "$TAILS_GIT_PATCHES_DIR" && \
+		cp -r "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/secure-account-creation \
+		   "$TAILS_GIT_PATCHES_DIR" && \
+		grep -E '^secure-account-creation/' "${THUNDERBIRD_GIT_CHECKOUT}/debian/patches/series" \
+           | perl -pE 's{^secure-account-creation/}{}' \
+           > "${TAILS_GIT_PATCHES_DIR}/series" && \
+        git add "$TAILS_GIT_PATCHES_DIR" && \
+		git commit -m "Update Thunderbird patches from icedove.git at commit ${THUNDERBIRD_GIT_COMMIT}"
+
+1. Ensure the Thunderbird account setup wizard works in an image built
+   from your tails.git branch.

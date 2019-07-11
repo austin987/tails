@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+set -u
+
+# We're a no-op unless running as the default desktop user
+[ "$(/usr/bin/id -u)" = 1000 ] || exit 0
+
+TOR_BROWSER_AMNESIAC_DIR='/home/amnesia/Tor Browser'
+TOR_BROWSER_PERSISTENT_DIR='/home/amnesia/Persistent/Tor Browser'
+
+. /usr/local/lib/tails-shell-library/tails-greeter.sh
+
+install -d -o amnesia -g amnesia -m 0700 "$TOR_BROWSER_AMNESIAC_DIR"
+
+if persistence_is_enabled_for "${HOME}/Persistent" && \
+       persistence_is_enabled_read_write ; then
+    install -d -o amnesia -g amnesia -m 0700 "$TOR_BROWSER_PERSISTENT_DIR"
+fi

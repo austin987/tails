@@ -1,0 +1,136 @@
+Esta página documenta os processos de tradução do Tails para o português.
+
+[[!toc levels=1]]
+
+# Lista de e-mails
+
+A tradução do Tails para português do Brasil é organizada em uma lista de e-mails. Para inscrever-se, acesse [[a página da lista|https://www.autistici.org/mailman/listinfo/tails-l10n-pt-br]].
+
+# Tradução usando Git e Poedit
+
+## Preparação
+
+Antes de seguir o fluxo de trabalho, você precisa fazer o seguinte:
+
+* Instale o `git` e o `poedit`.  
+* Escolha um diretório dentro do qual será armazenada uma cópia do repositório do Tails. Nas instruções a seguir, esse diretório é chamado `diretorio-base/`.  
+* Veja a [[documentação no site do tails sobre como traduzir usando repositórios git|/contribute/how/translate/with_Git/]] *(em inglês - ajude a traduzir!)*. As instruções dadas aqui são um pouco diferentes, principalmente no que se refere é submissão das modificações. Ao invés de utilizar um repositório remoto, nós utilizamos um arquivo com as diferenças e a lista de tradução para essa parte do trabalho.  
+* Se tiver qualquer dúvida, escreva para a lista!  
+
+### Clone o repositório
+
+Copie ou atualize o reposiório do Tails. Nos comandos, substitua `diretorio-base/` pelo caminho para o diretório base escolhido. 
+
+Copie o repositório, caso ainda não possua uma cópia local:  
+
+    cd diretorio-base/
+    git clone git://git.tails.boum.org/tails
+    cd tails/
+
+Configure os meta-dados do git para anonimizacao da traducao  
+
+    git config user.name "Tails developers"
+    git config user.email "tails@boum.org"
+
+## Propondo uma tradução
+
+O fluxo de trabalho para tradução e submissão das alterações usando Git é o seguinte:
+
+
+### Atualize o repositório, caso já possua uma cópia local:  
+
+    cd diretorio-base/tails
+    git checkout master
+    git pull origin master
+
+
+### Crie um ramo de trabalho
+
+Substitua `nome-do-ramo-de-trabalho` por algo significativo relacionado ao que você está traduzindo, por exemplo `atualizacao-da-documentacao`. O nome do ramo de trabalho não pode conter espaços.  
+
+    git checkout -b nome-do-ramo-de-trabalho
+
+### Traduza
+
+Traduza arquivos com a extensão `.pt.po` usando [poedit](https://poedit.net/). Este editor está incluído no Tails por padrão.
+
+### Teste
+
+[[Gere os arquivos estáticos para testar as alterações|/contribute/build/website/]]. Se precisar consertar algo, volte para o ítem anterior.  
+
+### Salve
+
+Congele uma versão do que foi alterado:  
+
+    git commit -a -m "[l10n] [pt-br] succinct description of changes"
+
+### Gerar patch
+
+Gere um arquivo com as diferenças entre o ramo de trabalho e o ramo principal:  
+
+    git format-patch master
+
+O resultado desse comando é o nome de um arquivo que é gerado com as diferenças entre o seu ramo de trabalho e o ramo principal.  
+
+### Envie para a lista
+
+Envie o arquivo gerado para a lista `tails-l10n-pt-br@boum.org` aguarde que as diferenças sejam revisadas e inseridas no ramo principal.  
+
+### Atualize
+
+Atualize o ramo principal, e verifique que suas alterações foram incluídas no ramo principal.  
+
+    git checkout master
+    git pull origin HEAD
+
+[[Gere os arquivos estáticos|/contribute/build/website/]] para verificar que suas alterações foram incluídas no ramo principal.  
+
+Apague o ramo de trabalho. O comando a seguir apaga o ramo de trabalho, só faça depois de ter certeza que as modificações foram incluídas no ramo principal.  
+
+    git branch -D nome-do-ramo-de-trabalho
+
+# Enviando traduções para a lista principal de traduções
+
+Uma vez que traduções tenham sido propostas e revisadas (seja via Weblate ou via Git), elas devem ser enviadas para a lista principal de traduções (`tails-l10n@boum.org`).
+
+Antes de enviar, tenha certeza do seguinte:
+
+- As traduções foram revisadas por uma pessoa diferente da que fez a tradução.
+- Não são inclusas modificações de formatação dos arquivos `.po` (por exemplo, mudanças de limite de caracteres por linha que reorganizam as linhas mas mantém o mesmo conteúdo).
+- Os arquivos .po [[são válidos|https://tails.boum.org/contribute/l10n_tricks/#index5h1]].
+- A wiki pode ser construída com sucesso com as modificações propostas.
+- As modificações têm como base o commit mais novo do repositório principal e não produzem conflitos.
+- A mensagem enviada para a lista principal está assinada com OpenPGP.
+- A mensagem enviada para a lista possui "`[pull]`" no começo do assunto, para indicar que as modificações já foram revisadas e que se trata de um pedido de inclusão no repositório principal.
+
+# Tradução online usando Weblate (experimental!)
+
+Estamos testando uma plataforma de tradução do website do Tails usando [[Weblate|https://weblate.org/pt-br/]], uma ferramenta online de tradução.
+
+A plataforma de tradução pode ser acessada em:
+ <https://translate.tails.boum.org/>
+
+**Atenção: Esta plataforma é experimental e traduções feitas através do Weblate por enquanto não têm garantia de serem incluídas no site principal.**
+
+Algumas informações:
+
+- O nome e endereço de email que você usar para se cadastrar no site será usado para identificar a tradução e ficará registrado no repositório do Tails.
+- Ao criar uma conta, edite o seu perfil para:
+  - Configurar o idioma para o qual quer traduzir.
+  - Inscrever-se no projeto "Tails" para que apareça em sua página principal.
+- Existe uma lista de [[páginas principais|https://translate.tails.boum.org/#list-core]] que devem ser priorizadas para tradução.
+- É possível ver o [[estado atual das traduções para o português|https://translate.tails.boum.org/languages/pt/tails/]]
+- Qualquer pessoa pode se inscrever, sugerir traduções, e votar em traduções sugeridas.
+- Uma tradução é aceita quando consegue 2 votos.
+- Por enquanto, as traduções ainda não são copiadas automaticamente para o site principal do Tails, mas isso está cada vez mais perto de acontecer. :)
+
+## Notas
+
+O repositório remoto do Weblate pode ser adicionado assim:
+
+    git remote add weblate https://translate.tails.boum.org/git/tails/index/
+
+Para puxar as modificações realizadas via Weblate, faça o seguinte:
+
+    git fetch weblate
+    find . -name '*.pt.po' -exec git checkout weblate/master --  '{}' \; && git reset

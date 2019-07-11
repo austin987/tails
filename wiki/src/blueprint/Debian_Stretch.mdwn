@@ -1,0 +1,517 @@
+[[!meta title="Porting Tails to Debian Stretch"]]
+
+This is about the effort to create [Tails
+3.0](https://labs.riseup.net/code/projects/tails/issues?query_id=198),
+based on Debian Stretch.
+
+[[!toc levels=2]]
+
+# Big picture
+
+When porting to Wheezy, our main problem has been that we started the
+work too late, which made us discover Debian bugs too late (after the
+Debian Wheezy freeze, or even after its release), and in the end we
+had to workaround lots of problems on our side.
+
+So we started much earlier the porting work to Jessie, which indeed
+essentially avoided the aforementioned problem. But we didn't allocate
+enough focused resources to this effort, and as a result the total
+duration of the porting to Jessie work has lasted too much (July 2014
+to January 2016, included = 19 months), and we've spent too much time
+just keeping our feature/jessie branch up-to-date wrt. the changes we
+were making in our Wheezy production branches.
+
+For Stretch we would like to avoid both problems. We want to start early,
+in order to fix problems directly in Debian Stretch before it's
+released. And, we want the porting work to fit into a shorter time
+span, so as soon as we start we'll allocate more resources to it, and
+in a better organized, team-based and focused way.
+
+Additionally, we would like to use this process as an opportunity to
+evaluate the idea of basing Tails on snapshots of Debian testing.
+
+<a id="schedule"></a>
+
+# Schedule
+
+* 2016Q1 — Tails 2.0 is out
+* August 2016 — start working on Tails 3.0 (1 week sprint with
+  all involved people) :intrigeri:anonym:
+  - get feature/stretch to build and boot
+  - update the automated test suite to test Tails/Stretch ISO images
+* August 2016 to April 2017 — have one dedicated half-time, 1-week sprint
+  every 6 weeks.
+  - Schedule these sprints in advance, announce them
+    publicly, and invite other contributors (e.g. doc writers).
+  - Most of these sprints will probably be attended remotely, but at
+    least some could happen face-to-face (at least the first sprint;
+    and then, one out of two, i.e. every one every 3 months?).
+  - At the beginning of each Stretch sprint, we import a new snapshot
+    of Debian testing into our freezable APT repository, so that:
+    * during the sprint we update our stuff as required by changes
+      that happened in Debian since the last sprint;
+    * our stuff is not broken by changes in Debian neither during
+      sprints, nor between them;
+    * we get a feeling of how "being based on snapshots of Debian
+      testing" would work.
+* November 14-18th: second sprint (in-person, organized by intrigeri),
+  release Tails 3.0~alpha1
+* December 20-23: third sprint (remotely attended for everybody except
+  a couple of us)
+* January 30 - February 3: fourth sprint (remotely attended); release
+  Tails 3.0~beta1
+* February 2017 to Tails 3.0 release: keep 3.0~beta as up-to-date,
+  wrt. security vulnerabilities, as our 2.x channel is
+* February 5 2017 — Debian Stretch freeze starts
+* March 8: release Tails 3.0~beta2
+* March 17-19th: fifth sprint (in-person, organized by intrigeri),
+  release Tails 3.0~beta3
+* April 19: release Tails 3.0~beta4
+* May 16-19: sixth sprint (remotely attended for everybody except
+  a couple of us), release Tails 3.0~rc1
+* June 2017 — Debian Stretch and Tails 3.0 are released
+
+<a id="rolling"></a>
+
+# Let's go rolling
+
+This material is mostly useful for a historical perspective. The next
+steps and up-to-date information are documented on
+[[blueprint/Debian_testing]] instead.
+
+## Stretch cycle
+
+Let's use this porting cycle to evaluate how being based on snapshots
+of Debian testing would feel like. During the entire cycle:
+
+* Keep the automated test suite up-to-date on feature/stretch
+  - Whenever the porting work feels painful, e.g. because it requires
+    updating images, consider fixing the problem at its root in our
+    current devel branch, e.g. thanks to dogtail
+    ([[!tails_ticket 10721]]).
+
+* Keep the documentation up-to-date on feature/stretch (:sajolida:),
+  or if it is too ambitious:
+  - attend at least one sprint really early in the process, and one
+    quite late
+  - start doing it for real only once Stretch is frozen
+  - before Stretch is frozen, during each Stretch sprint, test the
+    documentation in order to:
+    * find and report bugs while it is still time to fix them in the
+      right place
+    * identify what would have required work if we wanted to keep the
+      documentation up-to-date on feature/stretch, and take notes
+      about it; the goal is here is to gather useful data regarding
+      the need to update the same piece of documentation multiple
+      times over a given Debian release cycle, which will help us make
+      a decision further down the road; it also might help us pinpoint
+      specific parts of our documentation that could be updated to
+      depend less on varying factors, if any
+    * this testing work can be easily joined by newcomers (and we
+      should make this clear)
+
+* Take notes of issues we see from the perspective of "how would it go
+  if we were based on testing already?". E.g.:
+  - How to keep track of security issues that affect us, and whether
+    their fix has been uploaded and has migrated to testing yet?
+    See e.g. how security support for Debian testing [used to be
+    (briefly) done](http://secure-testing-master.debian.net/), and in
+    particular the
+    [Vulnerable source packages in the testing suite](https://security-tracker.debian.org/tracker/status/release/testing)
+    and the
+    [Candidates for DTSAs](https://security-tracker.debian.org/tracker/status/dtsa-candidates).
+  - How to deal with
+    [[!debwiki OngoingTransitions desc="ongoing transitions"]] that
+    block migration of security updates from sid to testing?
+
+* Make testing ISOs available widely with clear explanations of what
+  to test and what *not* to test. This should happen starting around the freeze
+  of Stretch. We could have a message about what to test displayed at bootup of
+  test ISOs.
+
+Note that during half of the cycle, we'll be based on a frozen Debian
+testing, so the changes rate coming from Debian, that impact the
+documentation and test suite work, won't be crazy. Of course there
+will be changes coming from our own porting efforts.
+
+Also, note that the work we will be doing after Stretch is frozen is
+work we would have to do to port Tails to Stretch anyway: so the only
+part of this that is somewhat experimental, and might make us do extra
+work, is limited to 4 months (August to November 2016).
+
+## And after?
+
+And then, once Tails 3.0 is out: we're not lagging behind anymore, and
+are thus in a position to decide whether we want to base Tails on
+snapshots of Debian testing. Chances are that we won't want to be
+based on Debian testing during the 6 months that follow a Debian
+stable release, so we will have time to make up our mind, and to
+prepare the infrastructure and tooling we may need if we decide to
+be based on Debian testing.
+
+To sum up how a ~2 years Debian release cycle could look like from our
+perspective, if we were based on snapshots of Debian testing:
+
+1. a new Debian stable is released
+2. 6 months during which Tails is based on Debian stable that was just
+   released
+3. 12 months during which Tails is based on a non-frozen Debian
+   testing
+4. 6 months during which Tails is based on a frozen Debian testing
+
+Let's now analyze and discuss some consequences of this scenario.
+
+We would be based on a moving target half of the time; the remaining
+half of the time we are based on something that doesn't change much.
+
+We would need to track 2 Debian versions at the same time (and
+continuously forward-port development that was based on the oldest
+one) during the first phase only, that is 6 months, compared to the 19
+months during which we did that in the Jessie cycle. We would save
+lots of time there, that could be re-invested in aspects of this
+proposal that will require more time: essentially this idea is about
+doing a different kind of work, and doing it at different places; it
+won't necessarily lower the total amount of effort we have to do, but
+it likely will make such efforts generate less frustration, more
+happiness, and a warm feeling of being part of a broader community.
+
+Another aspect is that we would essentially stop having to produce and
+maintain backports of Debian packages.
+
+<a id="rolling-stretch-analysis"></a>
+
+## Analysis of the Stretch cycle
+
+### Statistics of Git activity
+
+We have generated
+[statistics and graphs](https://labs.riseup.net/code/attachments/download/1640/gitstats-2.x-to-3.0.tar.bz2)
+of the Git activity between our Jessie-based branch and our
+Stretch-based one. Long story short:
+
+ * We really started this work in 2016-08.
+ * The first peeks of activity are the two first sprints we had in
+   2016-08 and 2016-11. Then quite some work was done every month
+   until the release, with more sustained activity starting in
+   2017-03.
+ * The biggest peaks are:
+   - 2017-03: we had a Stretch + reproducible builds sprint, and the
+     work on reproducible builds is accounted for in these stats (it
+     was based on Stretch).
+   - 2017-05: we had a Stretch sprint and our technical writers were
+     busy updating the doc.
+
+### Code
+
+XXX:anonym, please add whatever input data, feelings and analysis
+you can come up with.
+
+Commits history in the `auto` and `config` directories between our
+Jessie and Stretch -based branches:
+
+ - 2016-01: 17
+ - 2016-02: 1
+ - 2016-03: 0
+ - 2016-04: 0
+ - 2016-05: 14
+ - 2016-06: 0
+ - 2016-07: 16
+ - 2016-08: 59 (in-person sprint)
+ - 2016-09: 2
+ - 2016-10: 0
+ - 2016-11: 88 (in-person sprint)
+ - 2016-12: 35 (remote sprint)
+ - 2017-01: 24 (remote sprint)
+ - 2017-02: 10 (remote sprint)
+ - 2017-03: 108 (in-person sprint + lots of work on reproducible builds)
+ - 2017-04: 27
+ - 2017-05: 97 (in-person sprint)
+ - 2017-06: 42
+
+So about 2/3 of the commits were done during 4 in-person sprints,
+which was the plan. Interestingly, remote sprints were less
+productive, but let's take this metric with a grain of salt.
+
+Clocking data:
+
+ * intrigeri worked 44 days on the Stretch migration. Sadly, this
+   includes some work that's irrelevant here, like:
+      * Some test suite work
+      * Porting to the new Greeter
+      * New memory wipe implementation
+      * Preparing 5 alpha/beta releases, most of which we wouldn't
+        have needed if we had been tracking Debian testing.
+      * Reviewing other contributors' work targeted at Stretch, which
+        would be instead part of RM'ing if we were based on
+        Debian testing.
+ * anonym mostly worked on the test suite, which doesn't count in this
+   section. Let's assume the code work he did somewhat compensates the
+   time erroneously clocked by intrigeri.
+ * A few other people also did some work, which was helpful, but
+   that's negligible vs. the total time spent.
+
+So all in all, we can assume about 44 days of work in this area.
+Dividing this number by the number of 3-months cycles in a Debian
+release cycle (8), that's 5.5 days every 3 months. But of course some
+work would have to be done more than once in two years if we tracked
+Debian testing, so this figure probably reflects an unrealistic best
+case scenario.
+
+Regarding code changes we had to do to adjust for changes in testing:
+Stretch was frozen for half of the experiment, so we haven't much data
+here. After looking closely at the Git log, what I could spot is
+mostly unfuzzying patches, cherry-picking packages from sid when they
+were auto-removed from testing, and rebasing packages we patch on top
+of the current version, i.e. trivial (although somewhat boring) work
+whose amount we could substantially lower on the long term by working
+more closely with upstream projects; the only bigger pieces I could
+spot are the migration to GnuPG v2 and Icedove → Thunderbird, but
+those would have to be made exactly once as well if we were based on
+Debian testing.
+
+Regarding tracking security issues fixed in sid but not in testing:
+
+ * blocked due to the normal transition time from unstable to testing:
+   we didn't pay attention to this when releasing Tails 3.0~, so we
+   have no data here; too bad.
+ * blocked by some ongoing transition: we started providing security
+   support for Tails 3.0~ after Stretch was frozen, so we had no
+   direct experience of this problem; too bad.
+
+### Test suite
+
+XXX:anonym, please add whatever input data, feelings and analysis
+you can come up with.
+
+Non-merge commits in `features/` and `run_test_suite` between our
+Jessie-based branch and our Stretch-based one:
+
+ - 2016-05: 1
+ - 2016-06: 0
+ - 2016-07: 1
+ - 2016-08: 62
+ - 2016-09: 0
+ - 2016-10: 0
+ - 2016-11: 41
+ - 2016-12: 39
+ - 2017-01: 7
+ - 2017-02: 30
+ - 2017-03: 29
+ - 2017-04: 19
+ - 2017-05: 20
+
+Here as well, most of the work was done during a few sprints.
+
+Clocking data:
+
+ * intrigeri didn't clock his test suite work separately from his
+   other Stretch work, but that probably wasn't more than 2-4 days.
+
+ * anonym worked 24 days during sprints + XXX days outside of sprints
+   on the Stretch migration; most of this time was spent on the
+   test suite.
+
+Total diff stat:
+
+ - 258 files changed, 1252 insertions(+), 986 deletions(-)
+ - among those, 200 images changed: 52 removed, 13 added, 135 updated;
+   and among these 200 image changes, at least 50 are orthogonal to
+   what we're analyzing here:
+    * many of the removals are thanks to dotail-ification, so at least
+      those won't need to be updated ever again
+    * 21 due to switching to Tor Browser 7.0
+    * 1 due to the memory wipe system change
+    * 23 due to the new Greeter
+
+Now let's do some stats ignoring the changes that are orthogonal to
+what we're analyzing here, in that we would have to do them once,
+regardless of what version of Debian (stable or testing) we're
+tracking, i.e. the Icedove → Thunderbird rename and the memory erasure
+system replacement:
+
+ - `*.feature`: 19 files changed, 152 insertions(+), 125 deletions(-);
+   most of the changes are still orthogonal to what we're analyzing
+   here (refactoring and a few new regressions tests for bugs that
+   affect Tails 2.x too)
+ - `*.rb`: 21 files changed, 661 insertions(+), 502 deletions(-); many
+   of the changes are still orthogonal to what we're analyzing here
+   (refactoring and porting to the new Greeter and memory erasure
+   system)
+
+In short, by far the biggest part of the porting work was done by
+updating images and dogtail-ifying tests. Only very few other bits had
+to be updated (GnuPG v2, migrating away from obsolete CLI, adjusting
+to new `nmcli`, this kind of things).
+
+Now, of course we can't ignore the dogtail-ification work when we
+think ahead about how test suite maintenance would look like if we
+tracked Debian testing:
+
+ * if we hadn't done this work, we would have lots more images
+   updates, and way fewer image deletions;
+ * it's mostly one-time work, so what's been done is done for good,
+   still we should keep investing in it and dogtail-ify more tests in
+   order to decrease the amount of images we need to maintain. So at
+   least for a few 3-months cycles, this work will be recurring.
+
+Additional data that would be interesting:
+
+ * Did we have to update some tests (e.g. images) more than once due
+   to changes in Debian testing?
+
+### Documentation
+
+- sajolida spent 6.3 days of work on the update to 3.0 in 2017
+  (including amd64, Debian installation, new Greeter, KeePassX, etc.).
+  spriver and cbrownstein combined spent as much time. So let's say 15
+  days in total.
+- Release notes were a big chunk for sajolida (1.3 days).
+- But we (mostly spriver) also took time to go through all the
+  documentation and test it and that's probably ~2 days of work. I don't
+  think that's realistic or worth it to go through this every quarter so
+  we should think about alternatives:
+  * Get help from the Foundations team to spot what's worth testing
+  * based
+    on the underlying Debian packages?
+  * Only test core pages?  Spread the load between different release
+  * (test some pages for some
+    release and some others for another release)?
+- This time we also updated our installation documentation to the new
+  Debian release. If we're based on Stretch we would have to do this at
+  a different time but that shouldn't be a problem.
+
+Note: the following stats ignore PO files, the Icedove → Thunderbird
+renaming, and the `blueprint`, `contribute`, `inc` and `news`
+directories. Sorry I realized too late that I should have taken the
+3.0 release notes into account :/
+
+Non-merge commits in `wiki/src` between our Jessie-based branch and our
+Stretch-based one:
+
+ - 2016-08: 1
+ - 2016-09: 0
+ - 2016-10: 0
+ - 2016-11: 2
+ - 2016-12: 0
+ - 2017-01: 3
+ - 2017-02: 2
+ - 2017-03: 42
+ - 2017-04: 26
+ - 2017-05: 45
+ - 2017-06: 1
+
+So this confirms what we already knew: the bulk of the work was done
+in the last 3 months before the release, and started after Stretch was
+already deeply frozen, so obviously we won't learn much here regarding
+_continuously_ updating our doc to match a moving target.
+
+But at least we can get an idea of the total amount of work this has
+required :)
+
+ - 84 files changed, 417 insertions(+), 355 deletions(-)
+ - Among the 84 changed files: 35 pictures + 49 text files.
+
+Some of these changes are orthogonal to what we're analyzing here, in
+that we would have to do them once regardless of what version of
+Debian (stable or testing) we're tracking:
+
+ - New Greeter: 8 files changed, 151 insertions(+), 21 deletions(-)
+ - Most of the changes in the `install` directory are either about the
+   move to 64-bit, or about supporting installation from Debian
+   Stretch, or about the new Greteer as well:  21 files changed, 81
+   insertions(+), 100 deletions(-)
+ - KeePassX migration: even if we had been tracking testing, this
+   would have had to be done only once:  1 file changed, 64
+   insertions(+), 29 deletions(-)
+
+So very roughly, the changes that would be impacted by the "let's go
+rolling?" decision are closer to 54 files changed (24 pictures and 30
+text files), 121 insertions, 205 deletions.
+
+So, the worst case scenario is that every 3 months we have to:
+
+ * go through changes in the packages list, and identify what doc
+   pages and screenshots need updates; this can be semi-automated;
+ * update about 24 pictures
+ * update 100-200 lines in about 30 text files
+
+Let's keep in mind some other factors that will make reality a bit
+nicer:
+
+ * There's a GNOME release only every 6 months, so a non-negligible
+   part of our doc will have to be updated only twice a year, instead
+   of every 3 months. I bet many of our screenshots are part of
+   this lot.
+ * Our test suite can help identify the doc bits that need an update:
+   either text-based instructions (when our tests use dogtail), or
+   screenshots (when our tests use picture recognition). There are
+   a few ways we could boost this beneficial factor as we go e.g.:
+   - add automated tests specifically about things we document;
+   - add steps to our existing tests to validate the screenshots we
+     have in our documentation.
+
+### Summary
+
+Looking at the data we have, my (intrigeri) general feeling is rather
+positive but I was sold to this idea from the beginning, so let's be
+clear: I'm biased :)
+
+Now, I feel we haven't gathered enough data during the Stretch cycle
+to make a final decision wrt. starting to track Buster in 2018-01 or
+not: particularly in the doc and security support areas, we have very
+little data about _continuously_ adapting to a moving target.
+
+But I think we do have enough data to decide at the summit something
+like "if X happens by the end of November and takes us less than
+Y days, then we'll go ahead and switch to Buster in 2018-01".
+Worst case we'll suffer for a year until Buster is frozen, and then we
+won't try again before fixing some pre-conditions we'll have
+identified during our failed first try.
+
+I think the only way we can gather the missing data, and check if "X
+happens" and whether it takes "less than Y days", is to have sprints
+in 2017-10 or 2017-11, and actually port most of our code, test suite
+and documentation to Buster. We could take some shortcuts though, e.g.
+by estimating the amount work needed instead of doing it, when we feel
+very confident we can come up with a realistic estimate.
+
+It'll be impossible to have all these kinds of work done in parallel
+during one single sprint though; the best process I can think of is to
+serialize the tasks like this:
+
+1. 3 days: make the ISO build and boot (anonym + intrigeri)
+2. 3 days: loop over "port some of the test suite, fix regressions in
+   our code to make the ported tests pass" (anonym + intrigeri)
+3. 1 day: give our technical writers a list of software that has
+   changed in a way that may affect our documentation, so they can
+   update it (anonym + intrigeri)
+4. 3 days: update the doc (sajolida & his amazing tech writing band)
+
+If we eventually decide to postpone our migration to Stretch, some of
+this work will be wasted, and hopefully some won't. To minimize the
+amount of wasted work in the worst case, we should be ready to give up
+in the middle of the afore-described process, if we notice it's going
+to take us more time than "Y days".
+
+While doing this we should carefully gather the data we did not get
+during the Stretch cycle, in particular:
+
+1. How would we address security issues fixed in sid but not in
+   testing? (see the "Stretch cycle" section for details)
+2. How can developers convey to technical writers what changes may
+   affect the documentation? (see ideas in the "Documentation" section
+   above)
+3. Thanks to #2, can we identify what piece of doc needs updating
+   _without_ having to test the entire documentation every
+   three months?
+
+When deciding what X and Y should be, and when analyzing how the
+experiment went, we shall keep in mind that Debian testing changes _a
+lot_ when the gates open after the freeze. It's not exactly the time
+when it's the most reliable, even though there's been big progress in
+this area. And there are lots of library transitions going on, that
+could be painful for us, even though there's been big progress here as
+well. In other words, the delta between Stretch and "Buster in
+October" will be substantially bigger than what will happen during the
+next 3-months cycles, and the porting work will be close to the
+maximum one can expect during these 3-months cycles.

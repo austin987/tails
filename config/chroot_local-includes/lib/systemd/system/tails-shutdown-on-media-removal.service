@@ -1,0 +1,16 @@
+[Unit]
+Description=Wipe memory on live media removal
+Documentation=https://tails.boum.org/contribute/design/memory_erasure/
+After=memlockd.service initramfs-shutdown.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/lib/udev-watchdog-wrapper
+CapabilityBoundingSet=~CAP_SYS_ADMIN
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

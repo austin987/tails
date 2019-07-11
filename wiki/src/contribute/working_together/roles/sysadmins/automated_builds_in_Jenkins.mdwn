@@ -1,0 +1,32 @@
+[[!meta title="Automated ISO builds on Jenkins"]]
+
+We re-use the [[Vagrant-based build system|contribute/build/vagrant-setup]] we
+have created for developers.
+
+This system generates the needed Vagrant basebox before each build
+unless it is already available locally. By default such generated
+baseboxes are cached on each ISO builder forever, which is a waste of
+disk space: in practice only the most recent baseboxes are used. So we
+[take advantage](https://git-tails.immerda.ch/jenkins-jobs/tree/macros/builders.yaml)
+of the garbage collection mechanisms provided by the Tails
+[[!tails_gitweb Rakefile]]:
+
+- We use the `rake basebox:clean_old` task to delete obsolete
+  baseboxes older than some time. Given we switch to a new basebox at
+  least for every major Tails release, we've set this expiration time to 4 months.
+
+- We also use the `rake clean_up_libvirt_volumes` task to remove baseboxes from
+  the libvirt volumes partition. This way we ensure we only host one copy of a
+  given basebox in the `.vagrant.d` directory of the Jenkins user `$HOME`.
+
+The [cleanup_build_job_leftovers](https://git-tails.immerda.ch/puppet-tails/tree/files/jenkins/slaves/isobuilders/cleanup_build_jobs_leftovers)
+script ensures a failed basebox generation process
+does not break the following builds due to leftovers
+such as filesystems temporarily mounted by `vmdebootstrap`.
+
+For security reasons we use nested virtualization:
+Vagrant starts the desired ISO build environment in a virtual
+machine, all this inside a Jenkins "slave" virtual machine.
+
+On lizard we set the Tails [[extproxy|contribute/build]] build option
+and point `http_proxy` to our existing shared `apt-cacher-ng`.

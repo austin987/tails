@@ -1,0 +1,259 @@
+[[!meta title="Automated tests specification"]]
+
+*Ticket*: [[!tails_ticket 8667]]
+
+This blueprint helps to keep track of the discussions and decisions
+about the specification of automated tests ran in Tails' Jenkins on
+the [[automatically build ISOs|autobuild_specs]] ([[!tails_ticket 5288]]).
+
+[[!toc levels=3]]
+
+# Facts
+
+Running the full test suite on 1 isotester hosted on Lizard takes
+around 8 hours.
+We intend to run __4 isotesters__, so at the moment we would be able
+to run __12 full test suites__ per day. ([[!tails_ticket 6094]] will
+save ~25% on the full test suite runtime, but we'll keep on adding
+more tests, so let's stick to the 8 hours estimate for now.)
+
+We have 2 isobuilders on Lizard, that build a total of a bit less than
+__400 ISOs/month__ (that's __an average of 13 ISOs/day__).
+At the moment, we build __from 6 ISOs to 30-40 ISOs a day__, depending
+on the activity.
+
+We usually build the _stable_, _devel_, _experimental_,
+_feature/jessie_ (+ _testing_ sometimes) and a bunch of other
+branches.
+
+This numbers are expected to grow when the automated builds will be
+put in production. It's difficult to guess what would the maximum
+number of builds per day be, but the minimum should be expected to
+raise to in between __10/20 ISOs/day__.
+
+# Things to keep in mind
+
+There will probably be new hardware at the end of the year to deploy
+more isotesters. If a machine is dedicated to that usage, we can throw
+in faster CPUs and run the test suite on bare metal, which would
+speed up the test process. That's [[!tails_ticket 9264]].
+
+So in this discussion, we have to think to a deployment that might
+have two iterations with different computational powers (and thus
+different amounts of tests/day possible), and the defined
+implementation should be modular enough to handle both of them without
+too many changes.
+
+# Questions
+
+<a id="when-to-test-the-builds"></a>
+
+## When to test the builds
+
+It doesn't sound reasonable to run the full test suite on every ISO
+automatically built by Jenkins, at least in the first iteration.
+
+We __need to lessen the number of tests per day__. Probably even in
+the second iteration, with the expected growth of the number of
+automated builds.
+
+At first, we'll try to run the full test suite on all of them. If our
+infra can't cope with that, we have ideas written below to help in that.
+The one that everyone seem to agree on is to run the full test suite for
+base branches and features branches that are in ReadyForQA status in
+Redmine.
+
+We might want to play with job priorities, the same way we'll do with
+the automated builds (see [[!tails_ticket 9760]]). Luckily, configuring
+that for the builds will probably also work by itself for their automated
+tests, as this jobs will be chained together.
+
+### Current proposal
+
+    For branch stable:
+      Must test ISOs built daily and on every Git push;
+        so that we're always ready to put out an emergency release;
+    For the next scheduled release branch (either stable, testing, or devel):
+      Must test ISOs built daily and on every Git push;
+        so that we always know the state of the next release;
+    For other branches:
+      For branches with a `Needs Validation` ticket:
+        Must test ISO built daily and on every Git push;
+      Must test ISOs built on every Git push,
+        with some rate-limiting if necessary;
+
+<a id="how-to-run-the-tests"></a>
+
+## How to run the tests
+
+This section heavily depends on the discussion about the previous one.
+
+To test a specific ISO, the automated test suite MUST have access to:
+
+ * the corresponding build artifacts;
+ * the commit ID of that build;
+ * if applicable, the commit at which the base branch was at, when it
+   was merged into the branch being built;
+ * the ISO of the previous Tails release.
+
+The automated test suite MUST be run in a clean environment, using a
+fresh _--tmpdir_ for each run.
+
+The automated test suite MUST be run on a freshly built ISO,
+corresponding to the commit it tests.
+
+When [[!tails_ticket 9515]] and friends will be resolved and a first
+deployment of the automated test suite will clarify its need, we'll see
+if it should be able to accept a treshold of failures for some features
+before sending notifications. This could help if a scenario fails
+e.g. because of a network congestion.
+
+## Notifications
+
+Email will be the main interface. Use the same settings than for
+automated builds:
+
+* For base branches, notify the RM.
+* For topic branches, notify the author of the last commit.
+
+When notifying Redmine, the use of the ReadyForQA custom field is not so
+semantically correct, and may overlap with the dev usage of it. We will
+probably have to add a new one for Jenkins to decide to test the branch
+if we choose to test only the feature branch that are ready to be
+reviewed.
+
+## What kind of result shall be kept
+
+The test suite produces different kind of artifacts: logfiles, screen
+captures for failing steps, snapshots of the test VM, and also videos of
+the running test session.
+
+We can keep the video captures in the build artifacts, now that
+[[!tails_ticket 10001]] is resolved.
+
+Decision:
+
+ * For green test suite run: keep the test logs (Jenkins natively do
+   that).
+ * For red test suite run: keep the screenshots and video captures, the
+   logs and the pcap files.
+
+In [[!tails_ticket 10155]] we calculated that we can probably keep the
+video captures for a full release cycle. This will be refine is reality
+claims the contrary after an evaluation.
+
+# Scenarios
+
+In the following scenario:
+
+0. topic branches are named branch F
+0. base branches are named branch B
+
+We also assume that the following scenarios expectations only cover
+the test suite artifacts, the ISO one being covered in the automated
+builds specification.
+
+## Scenario 1 : reviewer
+
+    As a reviewer
+    When I'm asked to review branch F into branch B
+    Then I need to know if branch F passes the automated tests
+      once locally merged into branch B and built (fresh results!)
+    And if all the automated tests scenarios suceeded
+      The resulting test logs must be made available to me
+      The Redmine ticket should be notified
+    Otherwise the developer who proposed the merge must be notified
+      And the developer *needs* to see the test logs and screenshots
+      And the ticket should be reassigned to the branch submitter
+      And Status should be set to "In Progress"
+
+## Scenario 2 : developer
+
+    As a developer who has the commit bit
+    When I'm working on branch F
+    Then I need to know if my branch passes the automated tests suite
+      once locally merged in base branch B
+    And I need to know if my branch fails to pass the automated test
+      suite because of an external change possibly weeks after my
+      last commit (by e.g Debian changes, changes in branch B, ...)
+    And if my branch passes the automated test suite
+      The resulting test logs must be made available to me
+      The Redmine ticket should be notified
+    Otherwise I *need* to see the build logs and screenshots
+      And I must be notified
+      And the ticket should be reassigned to me if needed
+      And Status should be set to "In Progress"
+
+
+## Scenario 3 : RM
+
+    As the current RM
+    When working the full dev release cycle
+    Then I need to know if a base branch does not pass the automated
+      test suite
+    And when this happens the build logs and screenshots must be made
+      available to me.
+
+
+# Future ideas
+
+## Cutting the number of run per day
+
+For feature branches, we could run the full test suite only on the daily
+builds or on "Needs Validation" ones, and either only the automated tests
+related to the branch on every git push, and/or a subset of the whole
+test suite.
+
+We can also maybe find more ways to split the automated test suite in
+faster subsets of features depending on the context, define priorities
+for built ISO and/or tests.
+
+The automated test suite could be able to run features in parallel
+for a single automated build ISO. This way, if more than one isotester
+are idle, it can use several of them to test an ISO faster.
+
+The automated suite then should be able when there are more than one ISO
+queued for testing to fairly distribute the parallelizing of their
+features.
+
+The automated test suite also should not allocate all the isotesters for
+one ISO when others are waiting to be tested.
+
+## Scenarios
+
+Folowing is a list of other scenarios that we have also envisaged for
+the second iteration of the automated builds deployment, as they are
+really tightened.
+
+### Scenario 10
+
+    As a Tails developer working on branch B
+    When I upload a package to APT suite B
+    Then I want to know if the automated test suite passes
+
+(same responsiveness as when pushing to git)
+(acceptable workaround: being able to manually trigger a test suite.)
+
+
+### Scenario 11
+
+    As the current RM
+    When I push new tag T on branch B
+    Then I want the APT suite for tag T to be created
+    And I want the APT suite B to be copied into the APT suite T
+    And once this is done, I want the automated test suite to be run
+      on the ISO build from the checkout of tag T
+
+
+### Scenario 12
+
+    As a Tails developer
+    When the test suite is ran on the ISO build from my last commit
+    I want to watch TV and see the test video in HTML5 from the Tor Browser
+
+
+### Scenario 14
+
+    As a Tails developer
+    When I push a new commit or a new Debian package to a base branch
+    I want the affected feature branches ISO to be tested with that change

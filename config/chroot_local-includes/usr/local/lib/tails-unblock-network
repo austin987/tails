@@ -1,0 +1,50 @@
+#!/bin/sh
+
+set -e
+set -u
+set -x
+
+systemctl start tails-unblock-network.service
+
+# Without this, network is sometimes not unblocked, probably due to some
+# race condition between tails-unblock-network.service (that deletes the
+# blacklist file) and udevadm trigger, possibly caused by yet another aufs
+# weirdness (#9012)...
+echo "Sleeping..." >&2
+sleep 5
+echo "slept." >&2
+
+# XXX: add debugging information for #9012 to the Journal
+ls /etc/modprobe.d
+/sbin/lsmod
+ls -l /sys/class/net
+
+# Now we'll load any present network device previously blocked by
+# the blacklist. In particular, the MAC spoofing udev rule should trigger
+# for each network device added.
+echo "Restarting systemd-udev-trigger.service..." >&2
+systemctl restart systemd-udev-trigger.service
+echo "systemd-udev-trigger.service restarted." >&2
+
+# Block until all triggers have been run. NetworkManager is started immediately
+# after, and without the blocking behaviour there's a race between NM
+# and the MAC spoof udev triggers. When NM takes control of some network device,
+# some operations are not possible on the device, like MAC spoofing. Hence,
+# if NM wins, the udev-triggered run of tails-spoof-mac will fail.
+echo "Restarting systemd-udev-settle.service..." >&2
+systemctl restart systemd-udev-settle.service
+echo "systemd-udev-settle.service restarted." >&2
+
+# XXX: add debugging information for #9012 to the Journal
+/sbin/lsmod
+ls -l /sys/class/net
+
+# Enable and start NetworkManager services
+# No need to manually enable NetworkManager-dispatcher.service,
+# as NetworkManager.service has "Also=NetworkManager-dispatcher.service"
+# in its [Install] section.
+# If tails-spoof-mac goes into panic mode but fails to disable the
+# problematic device, the NetworkManager services will be masked.
+systemctl enable NetworkManager.service NetworkManager-wait-online.service || :
+systemctl start NetworkManager.service NetworkManager-dispatcher.service || :
+systemctl --no-block start NetworkManager-wait-online.service || :

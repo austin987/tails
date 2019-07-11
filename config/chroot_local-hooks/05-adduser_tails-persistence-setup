@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+# Create the tails-persistence-setup user.
+#
+# The tails-persistence-setup program may be run as this user.
+# This allows us to give it special privileges (e.g. access via udisk
+# to internal disks and to the boot medium) that we don't want to give
+# to the desktop user.
+
+echo "Creating the tails-persistence-setup user"
+
+# If this fails because UID 115 or GID 122 are already in use,
+# move the "stealer" user/group out of the way in 04-change-gids-and-uids.
+
+addgroup --system --gid 122 tails-persistence-setup
+adduser --system --uid 115 --gid 122 --no-create-home tails-persistence-setup

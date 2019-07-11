@@ -1,0 +1,43 @@
+Since 0.5 up to 0.10.2, every published Tails ISO image has been a hybrid one:
+
+- it can be burnt to a DVD;
+- it also contains a full disk image (including partition table) and
+  can thus be copied (using `dd`) to a USB stick; the USB stick's
+  content is lost in the operation.
+
+Then, we stopped hybrid'ing the ISO images we publish, and started
+again in Tails 1.3.
+
+Nowadays, we pass the `-h 255 -s 63` options to `isohybrid`, as
+advised by the syslinux community for images between 1 GiB and
+4 (?) GiB.
+
+Archives
+========
+
+What follows comes from the Tails 0.10 days.
+
+Successful tests:
+
+* boot the resulting `test.iso` as a normal optical drive in
+  VirtualBox
+* boot the resulting `test.iso` as a KVM hard disk
+* convert the resulting `test.iso`, posing as a HDD image, into the
+  native VirtualBox disk format, using `VBoxManage
+  convertfromraw -format VDI test.iso test.vdi`, then boot the
+  resulting `test.vdi` disk image in VirtualBox
+* `dd` the hybrid `test.iso` to a USB stick and boot it on
+  a USB-boot-enabled computer.
+
+Notes:
+
+* the partition number may need to be 4, in order to be compatible
+  with the BIOSes supporting only USB-Zip;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012380.html)
+* the partition type may need to be `1c`, i.e. hidden FAT32 LBA;
+  [reference](http://syslinux.zytor.com/archives/2009-May/012384.html)
+* boot failures were experienced when testing without the `-entry
+  4 -type 1c` options.
+
+Conclusion: this is a nice way to get bootable USB images for almost
+free.

@@ -1,0 +1,262 @@
+[[!meta title="Building a Tails image"]]
+
+The following instructions will lead you through the process of building
+a Tails ISO image with [Rake], [Vagrant] and [vagrant-libvirt].
+
+[Rake]: http://rake.rubyforge.org/
+[Vagrant]: http://vagrantup.com/
+[vagrant-libvirt]: https://github.com/vagrant-libvirt/vagrant-libvirt/
+
+[[!toc levels=2]]
+
+# Requirements
+
+To build Tails you need:
+
+ * Debian 9 (Stretch) or newer
+ * the KVM virtual machine hypervisor
+ * at least 1 GiB of free RAM
+ * 20 GB of free storage
+
+# Setup the build environment
+
+1. To install everything the Tails build system needs, execute the
+   following command:
+
+       sudo apt install \
+           psmisc \
+           git \
+           rake \
+           libvirt-daemon-system \
+           dnsmasq-base \
+           ebtables \
+           qemu-system-x86 \
+           qemu-utils \
+           vagrant \
+           vagrant-libvirt \
+           vmdebootstrap && \
+       sudo systemctl restart libvirtd
+
+2. Ensure your user can run commands as root with `sudo`.
+
+3. Ensure your user is in the relevant groups:
+
+       for group in kvm libvirt libvirt-qemu ; do
+          sudo adduser "$(whoami)" "$group"
+       done
+
+4. Logout and log back in to apply the new group memberships.
+
+# Build Tails
+
+1. To get the Tails sources and checkout the
+   [[development branch|contribute/git#main-repo]], execute the
+   following commands:
+
+        git clone https://git-tails.immerda.ch/tails && \
+        cd tails && \
+        git checkout devel && \
+        git submodule update --init
+
+2. To build an ISO image, execute the following command:
+
+        rake build && rake vm:halt
+
+   When the build completes, several `tails-*` files
+   will appear in the current directory.
+
+You may also want to [[contribute/customize]] the content of the ISO
+image before building it.
+
+<a id="vagrant-known-issues"></a>
+
+# Known issues and workarounds
+
+* If Vagrant fails to start the Tails builder VM with an error similar
+  to:
+
+        Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0
+
+  … then see [[!tails_ticket 11411]].
+
+* If Vagrant fails to start the Tails builder VM with:
+
+        Initialization parameters must be an attributes hash, got NilClass nil (ArgumentError)
+
+  … then restart the libvirtd service:
+
+        sudo systemctl restart libvirtd.service
+
+  Finally, try building again.
+
+* If Vagrant failed to start the Tails builder VM the first time
+  (e.g. because of permission issues or the `kvm` module not being
+  loaded) it will not automatically run the provisioning script, so
+  you must run `rake vm:provision` yourself before attempting your
+  first `rake build`. If that fails, run `rake vm:destroy`, which
+  removes this half-broken VM, and then start from scratch with
+  `rake build` or similar.
+
+# Build settings
+
+You can customize the build system using two environment variables:
+
+ * `ARTIFACTS` is the path where the ISO image is stored once the
+   build completes; for example:
+
+        ARTIFACTS='/path/to/directory'
+
+ * `APT_SNAPSHOTS_SERIALS` can be set to specify which [[time-based APT
+   snapshots|contribute/APT_repository/time-based_snapshots]]
+   repositories will be used as 'latest' during the build, and will set
+   it accordingly in the resulting ISO image if necessary. This can be
+   useful to reproduce an ISO build that did not use tagged APT
+   snapshots. The value must be JSON, for example:
+
+        APT_SNAPSHOTS_SERIALS='{"torproject":"2017120803","debian-security":"2017120902","debian":"2017120903"}'
+
+ * To tweak other build settings, use `TAILS_BUILD_OPTIONS`,
+   a space-separated list of build options documented below.
+
+   For example, you can speed up the build by setting:
+
+        export TAILS_BUILD_OPTIONS="ram gzipcomp"
+
+   This will force the build to happen in RAM and SquashFS compression
+   will be done using *gzip*.
+
+## SquashFS compression settings
+
+One of the most expensive operations when building Tails is the creation
+of the final SquashFS. It also depends on the compression algorithm used.
+When working on the `stable` or `testing` branch, the image will be made
+using the slow but efficient default. Any other setup will switch to the
+faster *gzip*.
+
+Forcing a specific behaviour can be done using:
+
+ * **gzipcomp**: always use *gzip* to create the SquashFS.
+ * **defaultcomp**: always use the default compression algorithm.
+
+## Memory build settings
+
+Tails builds way faster when everything is done in memory. If your computer
+runs Linux and happens to have enough free memory before you
+start the virtual machine, it will automatically switch to 'build in RAM'
+mode.
+
+To force a specific behaviour please set:
+
+ * **ram**: start the virtual machine with lots of memory, build Tails
+   inside a `tmpfs`. Build fails if the system is not in a proper state to
+   do so.
+ * **noram**: start the virtual machine with the bare minimum needed memory if not already
+   done, build Tails using the virtual machine hard disk.
+
+## Network settings
+
+ * **offline**: This option will make the build system do its best to
+   not depend on the network, e.g. if you use the VM's caching proxy
+   if will *only* use cached APT lists and packages. Use this when you
+   do not have an Internet connection.
+
+## Git settings
+
+You can force the build system to handle the Git tree in a special
+way:
+
+ * **ignorechanges**: allow to make a build that will ignore changes in the Git
+   repository.
+
+   The build system can only work on files that have been *committed* to the Git
+   repository. By default, it will refuse to start a build in presence of
+   uncommitted changes.
+
+ * **mergebasebranch**: if building from a branch (not tag!) this
+   forces a merge of the base branch before the build process starts
+   for real. This is mostly meant for our Jenkins deployment, so use
+   at your own risk.
+
+## Variations useful for testing build reproducibility
+
+These options allow one to vary the build environment in ways that may
+affect reproducibility of the ISO image:
+
+ * **dateoffset=_+n_**, **dateoffset=_-n_**: change the virtual
+   machine system time by _+n_ or _-n_ days.
+
+ * **cpus=_n_**: allocate _n_ CPUs to the virtual machine.
+   Obviously you should not allocate more virtual CPUs than the number
+   of cores available to the host system. When using Linux, the number
+   of CPUs allocated will default to be the same as the host system.
+
+ * **cpumodel=_model_**: type of the CPUs allocated to the virtual
+   machine. See
+   [the corresponding libvirt documentation](https://libvirt.org/formatdomain.html#elementsCPU).
+
+ * **machinetype=_type_**: type of the QEMU machine; see the output of
+   `qemu-system-x86_64 -machine help` for available options.
+
+## Developer convenience settings
+
+ * **keeprunning**: do not clean up the builder VM on build
+   success.
+
+ * **forcecleanup**: ensure a new builder VM is used for `rake build`,
+   and also clean up this VM after the build, no matter if it
+   succeeded or not.
+
+ * **rescue**: implies **keeprunning** and will also not clean up the
+   build directory, which is useful for investigating build failures.
+
+## HTTP proxy settings
+
+Building Tails requires downloading a little bit more than 2 GiB of
+data. By default, the build system will configure and use its own HTTP
+caching proxy in order to speed up the following builds.
+
+We recommend against modifying this behavior, but you can do it with
+the following build options:
+
+ * **extproxy**: use the external proxy configured through the `http_proxy`
+   environment variable. Fail if it is not set.
+
+   <div class="bug">
+
+   <ul>
+
+     <li>An external HTTP proxy does not save any download bandwidth unless
+     configured in a very special and undocumented way.</li>
+
+     <li>At least one step of the build does not honor the external proxy
+     settings, so outgoing Internet connections from the build VM must be
+     allowed to go through anyway.</li>
+
+   </ul>
+
+   </div>
+
+ * **vmproxy**: use the local proxy configured in the virtual machine even
+   if a local HTTP proxy is set.
+
+ * **noproxy**: do not use any HTTP proxy.
+
+Verify if the resulting ISO is reproducible
+===========================================
+
+See [[verification|contribute/build/reproducible#verify-iso]] section.
+
+More information
+================
+
+To know all available Rake tasks, please run `rake -T`.
+
+More documentation about the build process can be found in the [Debian
+Live Manual](http://live.debian.net/manual/oldstable/html/live-manual.en.html).
+
+Details about how this Vagrant build system is setup, see its
+[[design page|build/vagrant-setup]].
+
+Other related pages:
+
+[[!map pages="contribute/build/*"]]

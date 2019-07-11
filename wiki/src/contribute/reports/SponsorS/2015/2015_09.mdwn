@@ -1,0 +1,307 @@
+[[!meta title="Tails September 2015 report"]]
+
+[[!toc levels=2]]
+
+This reports covers the activity of Tails in September 2015.
+
+Everything in this report can be made public.
+
+# A. Replace Claws Mail with Icedove
+
+- A.1.3. Integrate Icedove into Tails
+
+  We amended the strategy we had in mind initially and made it more
+  incremental. If time allows, a first stage will be to include
+  Icedove in Tails 1.7 (2015-11-03), but without the Icedove account
+  setup wizard. During this first stage, Torbirdy's own account setup
+  wizard will be used. And the second stage will be about securing
+  Icedove's wizard ([[!tails_ticket 6154]]). If this works out as we hope, Tails users
+  will be able to start using Icedove two months earlier than what we
+  planned initially, and the transition period from Claws Mail will be
+  longer, and thus smoother, for users.
+
+  We started implementing this plan ([[!tails_ticket 10285]]), set up team coordination
+  tools, and triaged what is a blocker for the first stage, from what is
+  not.
+
+  Then we worked on the "Torbirdy uses Arabic as a default locale"
+  bug, submitted a pull request upstream, that was accepted ([[!tails_ticket 9821]]).
+
+- A.1.4. Provide a migration path for our users from Claws Mail to Icedove
+
+  We decided how long to keep Claws Mails once we have Icedove
+  ([[!tails_ticket 10010]]), and initiated work on the migration for users of Tails
+  persistence feature ([[!tails_ticket 9498]]).
+
+# B. Improve our quality assurance process
+
+## B.2. Continuously run our entire test suite on all those ISO images once they are built
+
+- B.2.1. Adjust our infrastructure to run tests in parallel
+
+  Great progress was made on this front, and more specifically on the
+  last remaining chunk of it: firing up a clean test runner virtual
+  machine before each test suite run. It was tricky to implement this in
+  a way that prevented race conditions, but we now have a working
+  prototype that we are confident fixes the issues we have seen earlier
+  ([[!tails_ticket 9486]], [[!tails_ticket 10215]]). Along the way we encouraged a few Debian developers
+  to take care of a package we rely on (`jenkins-job-builder`), and one
+  of them promptly took it over and updated it to the version we need
+  ([[!tails_ticket 9646]]).
+
+- B.2.2. Decide what kind of ISO images qualify for testing and when,
+  how to process, advertise, and store the results ([[!tails_ticket 8667]])
+
+  Early in September, we reached an agreement on all discussion topics
+  that were left pending in August, such as how to archive videos from
+  test suite runs. As can be seen in the "Help Jenkins integration"
+  section below, our test suite team promptly started adjusting their
+  code to match what we will need on the Jenkins deployment.
+
+  <https://tails.boum.org/blueprint/automated_builds_and_tests/automated_tests_specs/>
+
+- B.2.3. Research and design a solution to generate a set of Jenkins ISO test jobs
+
+  Some research and experiments were done for sending ISO images that
+  shall be tested to the test suite runner virtual machines ([[!tails_ticket 9597]]), and
+  major blockers were removed in the underlying infrastructure.  Some of
+  our Puppet code saw a nice refactoring in this process.  On the same
+  topic, we reached a consensus regarding what "old" ISO image to use
+  for tests that require two images, such as upgrade tests ([[!tails_ticket 10117]]). And
+  here as well, test suite developers promptly implemented what we
+  needed ([[!tails_ticket 10147]]).
+
+  <https://tails.boum.org/blueprint/automated_builds_and_tests/jenkins/>
+
+## B.3 Extend the coverage of our test suite
+
+### General improvements
+
+- Filesystem shares are incompatible with QEMU snapshots: [[!tails_ticket 5571]]
+
+  We have come up with a short-term strategy that will work well with
+  our current workflow. In addition we have our eyes on a long-term
+  technical solution that will require adding a small feature into
+  upstream QEMU. This is, however, out of the scope of this
+  deliverable.
+
+### Help Jenkins integration
+
+These changes, on the test suite side, were prompted by the ongoing
+work on "B.2. Continuously run our entire test suite on all those ISO
+images once they are built".
+
+It should be noted that many of the things mentioned here also greatly
+assist developers when debugging the automated test suite.
+
+- Leverage Cucumber's formatter system for debug logging: [[!tails_ticket 9491]]
+
+  This makes it easier to have clean console logging while still
+  keeping the full debug log in a separate file. Consequently it will
+  be easier to get an overview of how a test is currently running.
+
+- Capture individual videos for failed scenarios only: [[!tails_ticket 10148]]
+
+  This will both make these video artifacts more manageable and useful
+  for the developers (more focused, better granularity), and will save
+  a lot of disk space on our servers by excluding videos of tests that
+  succeeded and hence aren't very interesting.
+
+- Make the old Tails ISO default to the "new" ISO: [[!tails_ticket 10147]]
+
+  This compromise will test 90% of what we want to test, and simplify
+  the Jenkins setup by eliminating the need to share multiple ISO
+  artifacts to the test suite context.
+
+## B.3.6. Fix newly identified issues to make our test suite more robust and faster
+
+### Performance improvements
+
+- Snapshot improvements: [[!tails_ticket 6094]], [[!tails_ticket 8008]]
+
+  The proof-of-concept that was written as part of B.3.4 has matured
+  into a reliable implementation and
+  it is basically done; only fine-tuning and style improvements
+  remain. It is expected to be ready for the Jenkins deployment in
+  Milestone III, and will allow us to run 33% more tests. It will add
+  less overhead for new tests using persistence in the future, and
+  thus complete "B.3.9. Optimize tests that need a persistent volume"
+  three months in advance.
+
+- Use the more efficient x264 encoding when capturing videos: [[!tails_ticket 10001]]
+
+  This will reduce the CPU load on the host running the automated test
+  suite, as well as reduce its runtime with a few percent.
+
+- Optimize IRC test using waitAny: [[!tails_ticket 9653]]
+
+  In case there are connection issues, this may save several minutes
+  per instance by waiting for both the failure and success condition
+  in parallel, instead of serially.
+
+### Robustness improvements
+
+Some of what follows was part of a project we have with
+another sponsor.
+
+- Avoid nested FindFailed exceptions in waitAny()/findAny(): [[!tails_ticket 9633]]
+
+  This works around a race condition due to a bug in Rjb that made
+  these helpers fail with some probability depending on the host
+  hardware.
+
+- Import logging module in otr-bot.py: [[!tails_ticket 9375]]
+
+  Without this fix, the bot may occasionally fail due to it wanting to
+  use the logging facility when it is not in place.
+
+- Force new Tor circuit and reload web site on browser
+  timeouts: [[!tails_ticket 10116]]
+
+  Given the inherent instability of Tor circuits, this will
+  drastically improve the robustness of all Tor Browser tests.
+
+- Pidgin's multi-window GUI sometimes causes unexpected behaviour
+  (e.g. one window covering the window we want to interact with):
+
+  * Focus Pidgin's buddy list before trying to access the tools
+    menu: [[!tails_ticket 10217]]
+
+  * Wait for (and focus if necessary) Pidgin's Certificate windows: [[!tails_ticket 10222]]
+
+- Develop a strategy for dealing with newly discovered fragile tests: [[!tails_ticket 10288]]
+
+  By leveraging our Jenkins instance, following this strategy will
+  isolate individual robustness issues into individual branches while
+  keeping all other branches functional. Consequently it will be
+  easier to track and deal with future robustness issues.
+
+- Escape regexp used to match nick in CTCP replies: [[!tails_ticket 10219]]
+
+  Due to how we randomize the nick name for the default Pidgin
+  accounts, there was a 10% chance to generate one with characters
+  that would have a special meaning when used inside regular
+  expressions, causing failures.
+
+### Writing more automated tests
+
+- B.3.8. Automatically test that udev-watchdog is monitoring the
+  right device: [[!tails_ticket 9890]].
+
+  This was completed and merged almost four months ahead of schedule.
+
+# C. Scale our infrastructure
+
+## C.1. Change in depth the infrastructure of our pool of mirrors
+
+We started working on this project, and decided to handle the
+redirection on the client's side (for the record, the original plan
+was to do it server-side). We quickly put together a very rough
+proof-of-concept, and then moved on to update our plans for the next
+steps, accordingly to our new technological choice.
+
+The big picture is described on the corresponding blueprint:
+<https://tails.boum.org/blueprint/HTTP_mirror_pool/>
+
+- C.1.1. Specify a way of describing the pool of mirrors
+
+  We picked a serialization format (JSON) that matches our
+  implementation choices, and started researching what would be the
+  best naming scheme for mirrors, taking into account future HTTPS
+  hardening we have in mind, and support in various popular web
+  servers ([[!tails_ticket 10294]]).
+
+- C.1.3. Design and implement the mirrors pool administration process and tools
+
+  We settled on ikiwiki overlays for integration into our website, and
+  on using Git and SSH to store and convey the configuration ([[!tails_ticket 8637]]).
+
+- C.1.2. Write & audit the code that makes the redirection decision
+
+  We did some prototyping work ([[!tails_ticket 8639]]), and then started refactoring
+  it so that the code can be reused by other components that will need
+  to implement the same redirection scheme client-side ([[!tails_ticket 10284]]).
+
+## C.2. Be able to detect within hours failures and malfunction on our services
+
+This deliverable is technically due for January 15, but we kept on
+working on it.
+
+- C.2.1. Research and decide what monitoring solution to use: [[!tails_ticket 8645]]
+
+  We completed experiments and comparisons between monitoring systems,
+  and settled on Icinga 2. We started looking for solutions regarding
+  the single requirement of ours that it does not satisfy.
+
+  <https://tails.boum.org/blueprint/monitor_servers/>
+
+- C.2.2. Set up the monitoring software and the underlying
+  infrastructure: [[!tails_ticket 8646]], [[!tails_ticket 8647]]
+
+  We found hosting for our monitoring setup, got access to the
+  machine, and installed an operating system on it.
+
+## C.4. Maintain our already existing services
+
+- C.4.3. Administer our services upto milestone III
+
+  Aside of the usual security updates and taking care of daily requests
+  coming from the Tails development community, we did some resources
+  planning, and updated the system requirements for the VM that will be
+  used as a failover for our critical services ([[!tails_ticket 10243]]) and looked for
+  hosting that would meet our needs ([[!tails_ticket 10244]]). We have an initial
+  agreement with a hosting organization, and will follow-up on
+  this shortly.
+
+# D. Migration to Debian Jessie
+
+## D.1. Adjust to the change of desktop environment to GNOME Shell
+
+- D.1.1. Adjust to the change of desktop environment to GNOME Shell
+
+  We completed the work started on our "Shutdown helper" applet for
+  Jessie ([[!tails_ticket 8302]]): visually impaired users can now use it, and we made
+  sure it is integrated with our translation system.
+
+  We cleaned up the desktop Applications menu ([[!tails_ticket 8505]]).
+
+## D.6. Upgrade Tails-specific tools to Debian Jessie technologies
+
+- D.6.1. Port Tails-specific tools from udisks 1 to udisks 2
+
+  We followed up on the persistent volume assistant's porting to
+  udisks 2, and made sure it does not trigger spurious GNOME
+  notifications that could confuse users ([[!tails_ticket 9280]]).
+
+- D.6.3. Port WhisperBack, our integrated bug reporting tool, to Python 3
+
+  Native SOCKS support was completed, which was the only missing piece
+  to make WhisperBack work great on Jessie and Python 3 ([[!tails_ticket 9412]]).
+
+## Additional improvements that were not planned
+
+- When starting Tails in a virtual machine that runs with non-free
+  technology (and does not hide this fact), users are now warned about
+  the risks ([[!tails_ticket 5315]]).
+
+- Simplify printers administration: it can now be done without having
+  to set an administration password, just like it was back when Tails
+  was based on Debian Squeeze ([[!tails_ticket 8443]]). This removes a usability
+  pain-point, namely the need to restart Tails when one realizes too
+  late they need to print a document, and should have set an
+  administration password. In passing, we noticed that AppArmor
+  blocked adding a printer on Jessie, and fixed it ([[!tails_ticket 10210]]).
+
+# E. Release management
+
+- [[Tails 1.6|news/version_1.6]] was released on 2015-09-22:
+
+  * Upgrade Tor Browser to version 5.0.3 (based on Firefox 38.3.0 ESR).
+  * Upgrade I2P to version 0.9.22 and enable its AppArmor profile.
+  * Fix several issues related to MAC address spoofing:
+    - If MAC address spoofing fails on a network interface and this
+      interface cannot be disabled, then all networking is now
+      completely disabled.
+    - A notification is displayed if MAC address spoofing causes
+      network issues, for example if a network only allows
+      connections from a list of authorized MAC addresses.

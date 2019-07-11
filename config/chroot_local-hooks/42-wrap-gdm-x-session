@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+echo "Wrapping gdm-x-session to limit the number of allowed failures"
+
+dpkg-divert --add --rename --divert \
+            /usr/lib/gdm3/gdm-x-session.real \
+	    /usr/lib/gdm3/gdm-x-session
+
+ln -s /usr/lib/gdm3/gdm-x-session.tails /usr/lib/gdm3/gdm-x-session

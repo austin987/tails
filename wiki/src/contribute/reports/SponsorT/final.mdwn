@@ -1,0 +1,244 @@
+[[!meta title="Tails final report on reproducible builds"]]
+
+[[!toc levels=2]]
+
+This is the final report about making Tails reproducible as part of the
+Mozilla Open Source Support award (MOSS).
+
+# Current status
+
+In March 2017 we first [[reported|news/report_2017_03]] that we had
+finally seen an ISO image build reproducibly on several machines. Since
+then we kept working on this front, and solved one after the other every
+non-deterministic element of the build process.
+
+As of January 2018, Tails ISO images are fully reproducible.
+[[!tails_ticket 14933]] was our last blocker and has been resolved.
+We've released a reproducible Tails ISO image this month (Tails 3.4).
+
+We are also proud to announce that we went even further and managed to
+make our automatic upgrades (IUKs or Incremental Upgrade Kits)
+reproducible as well!
+
+We think that reproducible Tails ISO images preventively improve the
+resilience to backdoors by making it much riskier to either compromise
+our infrastructure or pressure our developers.
+
+# Technical details
+
+## Reproducible website build
+
+As we include a copy of our website, which serves as our documentation for
+users, into our ISO images, we ought to make our website software, ''ikiwiki'',
+as well as the translations of this documentation, build reproducibly.  In
+March 2017 we've made great progress to get the website build reproducibly.
+Later on, we realized that ''ikiwiki'' resized some images of our website which
+sometimes contained timestamped metadata, thus making the ISO image build
+non-reproducibly again. We have worked around this on our side ([[!tails_ticket
+12566]]) and then we have contributed upstream a fix for the root cause of this
+problem in ''ikiwiki'' ([[!tails_ticket 12625]]); this was merged upstream.
+
+We also fixed how ikiwiki handles dates in our blog posts [[!tails_ticket
+12726]] and fixed incorrect metadata in old blog posts and their
+translations ([[!tails_ticket 11966]] – who would have guessed this
+affected build determinism? :)
+
+## Translations
+
+We fixed our script that refreshes the website's translation files so
+that it won't update PO files unless something other than POT-Creation-Date
+has changed ([[!tails_ticket 11967]]). We later encountered and fixed
+more problems with comments in POT files ([[!tails_ticket 12641]]).
+
+## A serious blocker: fontconfig
+
+The cloud which was hiding the blue skies and the sun in the reproducible
+builds solar system for several weeks was ''fontconfig'': We ship a cache for
+fonts in Tails.  However, this cache was not generated in a reproducible
+manner. In March we tried moving its generation out of the ISO, however, it
+makes Tails start slower and resulted in too many unreliable test failures.
+Thus, we decided to move it back into the ISO image and to try and fix the root
+cause of the problem instead. We filed [[!debbug 863427]], but we already know
+that our patch is not yet enough to fix the problem, although it greatly
+reduces the number of differences from 75 to 5 ([[!tails_ticket 12567]]). At
+the beginning of June, we finally solved this last blocker, and are upstreaming
+our patches to Debian, so that other projects may profit from these
+improvements.
+
+## Automatic upgrades
+
+Our automatic upgrades are now reproducible ([[!tails_ticket 12630]]).
+
+When we generate the ISO image using isohybrid, we pass it an ID. We
+tried setting this ID to `$SOURCE_DATE_EPOCH` which resulted in a
+reproducible, but non-hybrid, ISO because `$SOURCE_DATE_EPOCH` is an
+invalid value for that ID. Thus, we decided to pass a fixed and valid ID
+instead: [[!tails_ticket 12453]].
+
+## User documentation
+
+Reproducible builds fill the critical gap between the free source code and the
+distributed binaries. Thus, the political objective of free software to reclaim
+the power to control our software and computing is not limited anymore to the
+minority of people building their own binaries.
+
+For those of our users who want to verify their own ISO builds against ours,
+we documented how to do that ([[!tails_ticket 12630]]).
+
+In November 2017, we published a blog post to explain to our users [[what
+reproducible builds are|news/reproducible_Tails]])
+in a non-technical manner, by using the recipe cooking analogy.
+
+### How does one verify that a self-built ISO image is indeed reproducible?
+
+By making the Tails ISO images build reproducibly, we have achieved our goal to
+improve user security by making it possible to verify the binary that we are
+distributing.
+
+It's pretty simple: With each ISO image we release, and from now on, we'll
+release images that we've already tested upon reproducibility (except
+in rare, exceptional emergency cases and only if the root cause for
+non-reproducibly has been proven to be harmless); we also release
+a PGP signature. Users who build their own ISO images can, from now on, download
+this signature and simply verify it against their own ISO image. It should
+match.
+
+We've published [[the verification procedure in
+detail|contribute/build/reproducible/#verify-iso]].
+
+## Build infrastructure
+
+We planned to describe and publish our build environments in order to make
+our infrastructure and distribution processes more transparent. Thus, the
+possibility of public scrutiny and trust in our software development and
+release process finds itself greatly increased.
+
+After a long discussion, we [[!tails_ticket 12409 desc="decided"]] not
+to publish any Vagrant basebox at all: the key argument in favour of
+this major design change was to remove one huge binary blob from the
+list of trusted inputs needed for building a Tails ISO image.
+This will substantially increase the value of Tails ISO images
+building reproducibly. This decision has a few nice side effects,
+including:
+
+ * the properties of the basebox required to build a given state of our
+   code base are entirely encoded in the corresponding Git commit;
+ * changes in the ISO build box definition don't require building and
+   uploading a new basebox.
+
+Then we made enough progress to migrate our Continuous Integration
+platform to the build system used by developers. This is now running
+in production. For details, see [[!tails_ticket 11972]],
+[[!tails_ticket 11979]], [[!tails_ticket 11980]],
+[[!tails_ticket 11981]], [[!tails_ticket 12017]], and
+[[!tails_ticket 11006]].
+
+Then we had to deal with a number of issues that we were not in
+a position to identify before submitting this brand new system to
+a real-world workload. Most of them were fixed already
+([[!tails_ticket 12530]], [[!tails_ticket 12578]],
+[[!tails_ticket 12565]], [[!tails_ticket 12541]],
+[[!tails_ticket 12529]], [[!tails_ticket 12575]],
+[[!tails_ticket 12606]]). Work is still in progress on some other
+problems: they are our Continuous Integration engineers' top priority,
+and should be fully resolved in the next couple of months.
+
+We documented this and publish a design documentation in October 2017
+[[!tails_ticket 12616]].
+
+Our [[build instructions|contribute/build]] have
+been updated and this will make it easier for people who want to build
+and verify Tails ISO images to do exactly that.
+
+## Test infrastructure
+
+Our QA and testing processes have been greatly improved as the build of our
+development branches is now more deterministic, and the automated tests that we
+perform on these branches as we dvelop new features have been updated to match
+this fact. Because they now include the output of ''diffoscope'', we can always
+verify that no new feature or new software package introduces a regression on
+reproducibility.
+
+In order to test if an ISO image is indeed reproducible, we vary our test
+environment. The build environment variations we've tested include: build
+system clock (last month, next month, next year), number of
+CPU cores, CPU brand and model, building in Vagrant or not.
+
+Our automatic build infrastructure now always builds two ISO images, both from
+the same commit, this means, that both builds use identical input, and then
+compares them using ''diffoscope''.
+
+This way, we ensure that we'll identify build reproducibility issues
+as early as possible in our development process. Furthermore, this
+also makes it possible for
+each developer to build an ISO image locally on their machine and to compare
+this image with the one build either by other developers, or by our
+ISO builders.
+
+Besides these modifications which were necessary, we also worked on improving
+the tools we use for testing and comparing ISOs. For example, we made
+''diffoscope'' *way* faster when comparing SquashFS'es. This work was done
+directly upstream.
+
+Finally, we have [[!tails_ticket 12579 desc="set up"]] automated tests for the
+reproducibility of our ISO image. Obviously, the results of these tests [are
+publicly
+available](https://nightly.tails.boum.org/reproducibly_build_Tails_ISO_devel/builds/).
+
+## How does one read these tests?
+
+Every attempt to reproducibly rebuild an ISO generates a second ISO image, as
+well as a number of files, which help
+identify the build environment and its' variables.  These files are the so
+called "build artifacts". If the two ISO images are not identical, one will find the output
+of diffoscope, a comparison tool, in the build_artifacts. If this file is not
+present, there are not differences detected by our test environment, and thus,
+a build is reproducible. These successful reproduction attempts are [found
+here](https://nightly.tails.boum.org/reproducibly_build_Tails_ISO_devel/builds/lastSuccessfulBuild/).
+
+## Release process documentation
+
+We are still working on documenting how we've modified our release
+process to ensure the ISO images we publish are reproducible
+([[!tails_ticket 12628]], [[!tails_ticket 12629]]). The documentation
+will be published when Tails 3.5 is out (January 2018).
+
+# Working with the broader free software community
+
+## Upstream contributions
+
+All the code that we wrote during this project has either been published in
+our Git tree, or, when improvements were made to upstream software or
+projects, has been upstreamed.  This is the case for our changes in
+''fontconfig'', ''ikiwiki'', ''squashfs'' and ''diffoscope'', for example.
+We certainly hope that this will help other projects to rely on our
+improvements.
+
+For example:
+
+ * APT auto-removal file ([[!tails_ticket 11986]]): patch submitted and accepted
+   upstream, backported in Tails
+ * Switched to the new squashfs-tools upstream, that builds SquashFS
+   in a reproducible manner ([[!tails_ticket 12032]]).
+ * Various non-determinism issues in the mtimes of the files included
+   in our SquashFS, that made not only the SquashFS non-reproducible,
+   but also made the initrd non-reproducible despite the patches we
+   sent upstream for initramfs-tools ([[!tails_ticket 12330]]).
+
+## Explanations for the Reproducible Builds community
+
+In October we also published [[a technical report on how we made Tails
+images
+reproducible|blueprint/reproducible_builds/report_to_RB_community/]]
+and sent it to the [Reproducible Builds general
+mailinglist](https://lists.reproducible-builds.org/pipermail/rb-general/2017-October/000656.html)
+
+During the third Reproducible Builds World summit, which took place in November
+2017 in Berlin, we generalized this report and contributed everything we
+know about making system images reproducible to the [Reproducible Builds
+documentation](https://reproducible-builds.org/docs/system-images/).
+
+# Conclusion
+
+Working on making Tails reproducible was a fun endeavor and we are very
+happy to having been supported by MOSS! Thank you.
