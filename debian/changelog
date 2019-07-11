@@ -4,11 +4,46 @@ tails (3.17) UNRELEASED; urgency=medium
 
  -- intrigeri <intrigeri@debian.org>  Sat, 23 Mar 2019 11:32:48 +0000
 
-tails (3.15) UNRELEASED; urgency=medium
+tails (3.15) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Major changes
+    - Upgrade Tor Browser to 8.5.4 (Closes: #16691).
+    - Upgrade Thunderbird to 60.7.2 (Closes: #16834).
 
- -- anonym <anonym@riseup.net>  Mon, 24 Jun 2019 16:40:22 +0200
+  * Security fixes
+    - Upgrade Expat to 2.2.0-2+deb9u2 (DSA-4472-1).
+    - Upgrade OpenSSL 1.0 to 1.0.2s-1~deb9u1 (DSA-4475-1).
+    - Upgrade OpenSSL to 1.1.0k-1~deb9u1 (DSA-4475-1).
+    - Upgrade Vim to 2:8.0.0197-4+deb9u3 (DSA-4467-1).
+
+  * Bugfixes
+    - Recompute CHS values for the hybrid MBR after first-boot
+      repartitioning (Closes: #16389). Some legacy BIOS systems won't boot
+      otherwise.
+    - Strip debug symbols from the aufs kernel module smaller (refs: #16818).
+      The primary target was getting the initramfs down under 32MB, hoping
+      to repair boot of feature/buster on MacBookPro 8,1. In any cases,
+      the user experience should be improved due to a faster boot for
+      every user, and a shortened “black screen” duration (between the
+      bootloader and the Plymouth splash screen).
+
+  * Minor improvements and updates
+    - Make “Unlock VeraCrypt Volumes” show an error message if locking
+      fails (Closes: #15794).
+    - Add support for booting Tails from a read only sdcard (fromiso),
+      through Heads, allowing for measured boot on some tamper-evident
+      hardware (https://github.com/osresearch/heads/issues/581).
+
+  * Build system
+    - Patch Thunderbird packages from Debian when building Tails images
+      (Closes: #6156).
+    - Improve tooling to maintain and update PO files (Closes: #15403),
+      rewriting some tools and moving code to the jenkins-tools submodule.
+    - Implement preliminary steps needed to make the ikiwiki PO plugin
+      able to update PO files for languages that are disabled on the
+      website (refs: #15355).
+
+ -- Tails developers <tails@boum.org>  Tue, 09 Jul 2019 02:50:09 +0200
 
 tails (3.14.2) unstable; urgency=medium
 
