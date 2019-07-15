@@ -67,6 +67,7 @@ Documentation
 -------------
 
 We have two documentations:
+
 - this one, which presents the current status of our work and all public
   information
 - translate-server.git which contains more technical information,
@@ -106,44 +107,33 @@ You can check out weblate-generated Tails repo with:
 
     git clone https://translate.tails.boum.org/git/tails/index/
 
-Reviewing translation platform output
--------------------------------------
-
-For languages like fr, fa, de, and it - that are part of tails master repo -
-you can get the files to review and submit to tails-l10n:
-
-    git remote add translations https://translate.tails.boum.org/git/tails/index/
-    git checkout tails/master
-    find . -name '*.fa.po' -exec git checkout translations/master --  {} \;
-    git reset *
-
-And you will have all the changes to farsi (*.fa.po) to review. The same goes for the other languages.
-
 Staging website
 ---------------
 
-From this (or a modified clone of this) repository, a version of the
-website with more languages is built [[!tails_ticket 15077]] so
-that users can see how the file they are translating looks:
-<https://staging.tails.boum.org/>.
+The [staging website](https://staging.tails.boum.org/) is built regularly.
+On top of what our production website has, it includes:
+
+ - all languages available on Weblate, even those that are not enabled
+   on our production website yet;
+
+ - all translation suggestions made on Weblate.
+
+This allows:
+
+ - translators to check how the result of their work will look like
+   on our website;
+
+ - reviewers to check how translation suggestions look like on the
+   website, before validating them.
 
 Updating the repo
 -----------------
 
-POT, then PO files for enabled languages are built and updated from the
-*.mdwn files when [[building the wiki|contribute/build/]].
-
-This process is currently done outside of the Weblate instance, and
-merged onto the Weblate repo by hand. As translate.lizard has so many
-languages, if there are many changes this process can take a while.
-
-The changes generated [[while building the wiki|contribute/build/]]
-can be fed back to Weblate by cherry picking.
-
-On the long term, we will automate this process by
-- pulling automatically from tails/master and applying a merge strategy
-  for po [[!tails_ticket ]]
-
+POT and PO files for enabled languages are built and updated from the
+`*.mdwn` files when [[building the wiki|contribute/build/website]].
+Then, our translation platform updates the PO files for additional
+languages (that are enabled on Weblate but not on the production website),
+commits & pushes them, and updates the Weblate database accordingly.
 
 Weblate installation and maintenance - a hybrid approach
 --------------------------------------------------------
