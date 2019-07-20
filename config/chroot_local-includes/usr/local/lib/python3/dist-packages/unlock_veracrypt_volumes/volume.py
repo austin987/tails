@@ -271,7 +271,7 @@ class Volume(object):
                 unmounted_at_least_once = True
             except GLib.Error as e:
                 # Ignore "not mounted" error if the volume was already unmounted
-                if "org.freedesktop.UDisks2.Error.NotMounted" in e.message and unmounted_at_least_once:
+                if e.domain == "udisks-error-quark" and e.code == UDisks.Error.NOT_MOUNTED and unmounted_at_least_once:
                     return
                 raise
 
