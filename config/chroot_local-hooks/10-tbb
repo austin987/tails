@@ -13,7 +13,7 @@ echo "Install the Tor Browser"
 # a new browser profile we can simply copy the profile directory
 # without duplicating all extensions.
 . /usr/local/lib/tails-shell-library/tor-browser.sh
-# Import install_fake_package
+# Import install_fake_package and strip_nondeterminism_wrapper
 . /usr/local/lib/tails-shell-library/build.sh
 
 download_and_verify_files() {
@@ -280,7 +280,7 @@ create_default_profile() {
     tbb_extensions_dir="${2}"
     destination="${3}"
 
-    rsync -a --exclude bookmarks.html --exclude extensions \
+    rsync -a --exclude extensions \
           "${tbb_profile}"/ "${destination}"/
 
     mkdir -p "${destination}"/extensions
