@@ -19,7 +19,7 @@ export LANG
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-while ! /usr/local/sbin/tor-has-bootstrapped; do
+while ! /bin/systemctl --quiet is-active tails-tor-has-bootstrapped.target; do
    sleep 1
 done
 
