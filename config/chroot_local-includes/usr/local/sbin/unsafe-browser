@@ -7,8 +7,8 @@ set -u
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-# Import tor_is_working()
-. /usr/local/lib/tails-shell-library/tor.sh
+# Import tor_has_bootstrapped()
+. /usr/local/lib/tails-shell-library/systemd.sh
 
 # Import the TBB_EXT variable, and guess_best_tor_browser_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
@@ -63,7 +63,7 @@ maybe_restart_tor () {
     # Restart Tor if it's not working (a captive portal may have prevented
     # Tor from bootstrapping, and a restart is the fastest way to get
     # wheels turning)
-    if ! tor_is_working; then
+    if ! tor_has_bootstrapped; then
         echo "* Restarting Tor"
         restart-tor
         if ! systemctl --quiet is-active tor@default.service; then
