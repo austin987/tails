@@ -2,13 +2,165 @@
 
 [[!toc  levels=2]]
 
-We want to allow our users to backup the data they have in their persistent
-volume.
+We want to allow our users to backup the data they have in their
+Persistence. USB sticks are fragile and small, they break and get lost.
+We also had bugs in Tails that led to the (apparent) loss of this data
+([[!tails_ticket 10976]] and broken upgrades).
 
-See the thread on tails-dev:
+We benchmarked [[tons of existing backup solutions in
+Linux|backups#archive]] and the situation is pretty poor.
 
-<https://mailman.boum.org/pipermail/tails-dev/2014-April/005388.html>
+On top of that, the data in Persistence contains both files owned by the
+`amnesia` users but also data that is owned by `root` (eg. the Wi-Fi
+passwords in *nm-system-connections* or the configuration itself in
+*persistence.conf*). This mix of Unix users and permissions make it
+harder to find a solution that work out of the box. See also the *Full*
+goal below.
 
+So, as a start, let's focus on this user scenario and solve it as good
+and cheaply as possible:
+
+<strong>S1: As a Tails user, I want to create another Tails with all my
+data so that I can recover from a lost or broken Tails.</strong>
+
+Other user scenarios are possible for backups but I propose to ignore
+them for now. For example:
+
+- S2: My house burns down and I loose all my devices.
+- S3: I want to cross a border with no data on me.
+- S4: I want to recover file that I had some months ago.
+
+As the bare minimum for S1, I need a backup that is:
+
+- **Fresh**. If backups are tedious and slow to make and update, people
+  will only update them infrequently and won't have fresh backups when
+  they need it. We should make it as integrated and low-effort to update
+  backups.
+
+  Deja Dup is interesting in this regard: as a user, I am notified to
+  update my backups regularly and backups start automatically and in the
+  background as soon as I plug my backup device.
+
+- **Offline**. Online backups can be useful in different scenarios (S2
+  and S3) but they are also slower to restore and more complicated to
+  design as they depend on the kind of cloud or online storage solution
+  the user has access to.
+
+Ideally, the backup for S1 should also be:
+
+- **Fast and simple**. As a user, I might be panicking because I think
+  that seem to have lost all my data and any extra hoop that I will have
+  to jump through can add to that panic.
+
+- **Full**. The data stored in Persistence but that is not owned by the
+  `amnesia` user might not be super critical to loose (eg. Wi-Fi
+  passwords) but providing a full backup that deals with all the data,
+  independently of its Unix user, goes along with the goal of being
+  *Fast and simple*.
+
+Local snapshots using Tails Installer
+=====================================
+
+Backup scenarios have 3 experiences:
+
+- Creation
+- Update
+- Recovery
+
+Recovery
+--------
+
+In the case of S1, being able to use Tails again with all my data after
+my USB stick breaks.
+
+The easiest possible recovery scenario for S1 is to *already* have all
+my data in another Tails, my "backup Tails". If I loose my Tails, I can
+start using my backup Tails right away.
+
+### Better UX
+
+- To prevent people confusing their current Tails with their backup
+  Tails, the backup Tails could be aware that it is a backup Tails and
+  display some warning when first started. Otherwise, changes made on
+  the backup Tails would be overwritten when the backup is updated.
+
+Creation
+--------
+
+The creation experience could be to clone my Tails using *Tails
+Installer* and choose to also clone the Persistence.
+
+If the backup USB stick is new, Tails is installed and the Persistence
+is copied. If the backup USB stick already has Tails installed, both the
+Tails system on it and the backup of my Persistence are updated.
+
+Before the backup Persistence is being created, the user is prompted for
+a passphrase.
+
+Update
+------
+
+The action of updating the backups regularly (and maybe being reminded
+to do so). In the backend it could use rsync to only copy the files that
+have changed.
+
+Before the backup Persistence is being updated, the user is prompted for
+a passphrase.
+
+Updating also updates the system partition of the backup Tails.
+
+The update experience could be improved, like Deja Dup does, by:
+
+- Displaying automatic reminders
+
+- Starting the update automatically when the backup Tails is plugged in.
+
+### Open questions
+
+- Is it fine to copy the content of the current Persistence while it is
+  being used?
+
+Discussion
+----------
+
+### Pros
+
+- Maybe the fastest and simplest recovery experience possible.
+
+- The creation experience is pretty simple as well: all I need is a USB
+  stick that is as big as my current Tails and it will fit all my data.
+  Tails Installer don't have to display more options.
+
+- The same experience can be used to migrate to a bigger or faster USB
+  stick. ([[!tails_ticket #14624]])
+
+### Cons
+
+- It won't solve any of the other scenarios. Building backup logic into
+  Tails Installer might also not be a good investment in case we want to
+  solve the others scenarios later on in the future. For example, the
+  recovery experiences for each of S2, S3, and S4 would be completely
+  different.
+
+### Open questions
+
+- How can we handle the preserve permissions and ownership when doing
+  the backup without having users to set up an administration password
+  to create or update their backup?
+
+- How much can we organize this code to be easier to possibly extend to
+  scenarios S2, S3, and S4 in the future?
+
+Future
+======
+
+Once we have a solid solution for S1, we might able to reuse some of
+it's UX and code to solve scenarios S2, S3, and S4. They would require
+a remote storage and a backup history.
+
+We should keep these in mind while solving S1 and find a sweet spot
+between solving S1 and building foundations to support other backups
+scenarios in the future.
 
 Roadmap
 =======
@@ -56,31 +208,6 @@ And once we take it all into account, then we get a large piece of code to
 maintain all by ourselves, because it was meant only for Tails' needs.
 
 So, we shouldn't try to reinvent this wheel, and use an existing, proven solution instead.
-
-Clone everything
-----------------
-
-We could add to *Tails Installer* an option to **Clone everything**
-(Tails partition and persistent volume). This would clone the original
-USB stick and also backup all the persistent data.
-
-We could encourage people to submit patches for this even if it's not a
-perfect solution. The back end could be quite simple and use rsync
-between the two persistent volumes.
-
-A possible improvement would be to skip the cloning of the Tails
-partition if the destination USB is already a Tails USB stick.
-
-### Pros
-
-* That's a very simple user interface: it's only possible to do full
-  backups. If you loose your data, use the backup USB stick. We don't
-  have to provide an option to restore.
-
-### Cons
-
-* No option to do incremental backups.
-* People need a dedicated USB stick.
 
 User experience
 ===============
