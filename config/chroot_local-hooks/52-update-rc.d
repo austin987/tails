@@ -26,6 +26,7 @@ systemctl --global enable tails-add-GNOME-bookmarks.service
 systemctl --global enable tails-additional-software-install.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
+systemctl --global enable tails-greeter-session-helper.service
 systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
