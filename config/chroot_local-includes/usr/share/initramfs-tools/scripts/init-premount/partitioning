@@ -123,8 +123,9 @@ dd if=/tmp/vbr of="${SYSTEM_PARTITION}" bs=3 count=1
 # Set a random filesystem UUID (aka. FAT "Volume ID" / "serial number")
 MTOOLS_SKIP_CHECK=1 mlabel -i "${SYSTEM_PARTITION}" -n ::Tails
 
-# Set the following attributes on the system partition (we have to
-# set them after running fatresize, because fatresize resets them):
+# Recompute CHS values for the hybrid MBR (see #16389) and set the
+# following attributes on the system partition (we have to set them
+# after running fatresize, because fatresize resets them):
 #   0: system partition
 #   2: legacy BIOS bootable
 #   60: read-only
@@ -136,6 +137,7 @@ sgdisk \
 	--attributes=1:set:60 \
 	--attributes=1:set:62 \
 	--attributes=1:set:63 \
+	--recompute-chs \
 	"${PARENT_DEVICE}"
 
 # Tell the kernel to reload the partition table
