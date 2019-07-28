@@ -39,7 +39,7 @@ if "debug" in cmdline.split():
 
 def log_exc(etype, value, tb):
     for line in traceback.format_exception(etype, value, tb):
-        logging.error(line)
+        print(line, file=sys.stderr)
 
 
 sys.excepthook = log_exc
