@@ -259,6 +259,7 @@ After('@product') do |scenario|
     # what the error was.
     sleep 3 if scenario.failed?
     Process.kill("INT", @video_capture_pid)
+    Process.wait(@video_capture_pid)
     save_failure_artifact("Video", @video_path)
   end
   if scenario.failed?
@@ -314,6 +315,11 @@ After('@product') do |scenario|
       FileUtils.rm(@video_path)
     end
   end
+  # If we don't shut down the system under testing it will continue to
+  # run during the next scenario's Before hooks, which we have seen
+  # causing trouble (for instance, packets from the previous scenario
+  # have failed scenarios tagged @check_tor_leaks).
+  $vm.power_off if $vm
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|

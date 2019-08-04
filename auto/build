@@ -11,21 +11,21 @@ set -x
 
 umask 022
 
-### functions
+### Clone all output, from this point on, to the log file
 
-syslinux_utils_upstream_version () {
-   dpkg-query -W -f='${Version}\n' syslinux-utils | \
-       # drop epoch
-       sed -e 's,.*:,,' | \
-       # drop +dfsg and everything that follows
-       sed -e 's,\+dfsg.*,,'
-}
+BUILD_LOG="${BUILD_BASENAME}.buildlog"
+exec >  >(tee -a "$BUILD_LOG")
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+exec 2> >(tee -a "$BUILD_LOG" >&2)
+trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
+
+### functions
 
 print_iso_size () {
    local isofile="$1"
    [ -f "$isofile" ] || return 23
    size=$(stat --printf='%s' "$isofile")
-   echo "The ISO is ${size} bytes large."
+   echo "I: The ISO is ${size} bytes large."
 }
 
 ### Main
@@ -100,13 +100,9 @@ DEBOOTSTRAP_GNUPG_HOMEDIR=$(mktemp -d)
 gpg --homedir "$DEBOOTSTRAP_GNUPG_HOMEDIR" \
     --no-tty \
     --import config/chroot_sources/tails.chroot.gpg
-if [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg" ]; then
-    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.gpg"
-elif [ -e "$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx" ]; then
-    DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx"
-else
-   fatal "No debootstrap GnuPG keyring was created."
-fi
+DEBOOTSTRAP_GNUPG_KEYRING="$DEBOOTSTRAP_GNUPG_HOMEDIR/pubring.kbx"
+[ -e "$DEBOOTSTRAP_GNUPG_KEYRING" ] \
+   || fatal "No debootstrap GnuPG keyring was created."
 DEBOOTSTRAP_OPTIONS="$DEBOOTSTRAP_OPTIONS --keyring=$DEBOOTSTRAP_GNUPG_KEYRING"
 
 export DEBOOTSTRAP_OPTIONS
@@ -121,35 +117,11 @@ export MKSQUASHFS_OPTIONS
 # refresh translations of our programs
 ./refresh-translations || fatal "refresh-translations failed ($?)."
 
-case "$LB_BINARY_IMAGES" in
-   iso)
-      which isohybrid >/dev/null || fatal 'Cannot find isohybrid in $PATH'
-      installed_syslinux_utils_upstream_version="$(syslinux_utils_upstream_version)"
-      if dpkg --compare-versions \
-	   "$installed_syslinux_utils_upstream_version" \
-	   'lt' \
-	   "$REQUIRED_SYSLINUX_UTILS_UPSTREAM_VERSION" ; then
-	  fatal \
-	      "syslinux-utils '${installed_syslinux_utils_upstream_version}' is installed, " \
-	      "while we need at least '${REQUIRED_SYSLINUX_UTILS_UPSTREAM_VERSION}'."
-      fi
-      ;;
-   *)
-      fatal "Image type ${LB_BINARY_IMAGES} is not supported."
-      ;;
-esac
 BUILD_ISO_FILENAME="${BUILD_BASENAME}.iso"
 BUILD_MANIFEST="${BUILD_BASENAME}.build-manifest"
 BUILD_APT_SOURCES="${BUILD_BASENAME}.apt-sources"
 BUILD_PACKAGES="${BUILD_BASENAME}.packages"
-BUILD_LOG="${BUILD_BASENAME}.buildlog"
 BUILD_USB_IMAGE_FILENAME="${BUILD_BASENAME}.img"
-
-# Clone all output, from this point on, to the log file
-exec >  >(tee -a "$BUILD_LOG")
-trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
-exec 2> >(tee -a "$BUILD_LOG" >&2)
-trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
 
 (
    echo "Mirrors:"
@@ -160,25 +132,25 @@ trap "kill -9 $! 2>/dev/null" EXIT HUP INT QUIT TERM
    cat config/chroot_sources/*.chroot
 ) > "$BUILD_APT_SOURCES"
 
-echo "Building ISO image ${BUILD_ISO_FILENAME}..."
+echo "I: Building ISO image ${BUILD_ISO_FILENAME}..."
 time lb build noauto ${@}
 [ -e binary.iso ] || fatal "lb build failed ($?)."
 
-echo "ISO image was successfully created"
+echo "I: ISO image was successfully created"
 print_iso_size binary.iso
 
-echo "Hybriding it..."
+echo "I: Hybriding it..."
 isohybrid $AMNESIA_ISOHYBRID_OPTS binary.iso || fatal "isohybrid failed"
 print_iso_size binary.iso
 truncate -s %2048 binary.iso
 print_iso_size binary.iso
 
-echo "Renaming generated files..."
+echo "I: Renaming generated files..."
 mv -i binary.iso "${BUILD_ISO_FILENAME}"
 mv -i binary.packages "${BUILD_PACKAGES}"
 
-echo "Generating build manifest..."
+echo "I: Generating build manifest..."
 generate-build-manifest chroot/debootstrap "${BUILD_MANIFEST}"
 
-echo "Creating USB image ${BUILD_USB_IMAGE_FILENAME}..."
+echo "I: Creating USB image ${BUILD_USB_IMAGE_FILENAME}..."
 create-usb-image-from-iso "${BUILD_ISO_FILENAME}"
