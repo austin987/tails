@@ -38,6 +38,8 @@ import tailsgreeter.config                                      # NOQA: E402
 import tailsgreeter.utils                                       # NOQA: E402
 from tailsgreeter.language import TranslatableWindow            # NOQA: E402
 
+from tailsgreeter import TRANSLATION_DOMAIN
+
 UI_FILE = 'greeter.ui'
 CSS_FILE = 'greeter.css'
 ICON_DIR = 'icons/'
@@ -46,8 +48,7 @@ MAIN_WINDOW_PREFERRED_HEIGHT = 470
 ADD_SETTING_DIALOG_PREFERRED_WIDTH = 400
 HELP_WINDOW_PREFERRED_WIDTH = 800
 
-locale.bindtextdomain(tailsgreeter.__appname__,
-                      tailsgreeter.config.locales_path)
+locale.bindtextdomain(TRANSLATION_DOMAIN, tailsgreeter.config.locales_path)
 # Mark translatable strings, but don't actually translate them, as we
 # delegate this to TranslatableWindow that handles on-the-fly language changes
 _ = lambda text: text   # NOQA: E731
@@ -760,7 +761,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
         # Load UI interface definition
         builder = Gtk.Builder()
-        builder.set_translation_domain(tailsgreeter.__appname__)
+        builder.set_translation_domain(TRANSLATION_DOMAIN)
         builder.add_from_file(tailsgreeter.config.data_path + UI_FILE)
         builder.connect_signals(self)
 

@@ -45,6 +45,8 @@ from gi.repository import AccountsService           # NOQA: E402
 
 import tailsgreeter.config                          # NOQA: E402
 
+from tailsgreeter import TRANSLATION_DOMAIN
+
 
 def ln_iso639_tri(ln_CC):
     """get iso639 3-letter code from a language code
@@ -107,7 +109,7 @@ class TranslatableWindow(object):
     def __init__(self, window):
         self.window = window
         self.translation = gettext.translation(
-            tailsgreeter.__appname__,
+            TRANSLATION_DOMAIN,
             tailsgreeter.config.locales_path,
             fallback=True
         )
@@ -195,7 +197,7 @@ class TranslatableWindow(object):
         logging.debug("translating %s to %s" % (self, lang))
         try:
             self.translation = gettext.translation(
-                    tailsgreeter.__appname__,
+                    TRANSLATION_DOMAIN,
                     tailsgreeter.config.locales_path, [str(lang)])
         except IOError:
             self.translation = None

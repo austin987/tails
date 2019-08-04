@@ -26,3 +26,4 @@ __all__ = tailsgreeter.errors
 
 APPLICATION_TITLE = "Welcome to Tails!"
 APPLICATION_ICON_NAME = 'gdm-setup'
+TRANSLATION_DOMAIN = "tails"
