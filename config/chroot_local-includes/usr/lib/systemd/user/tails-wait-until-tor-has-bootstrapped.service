@@ -6,11 +6,11 @@
 [Unit]
 Description=Wait for Tor to Have Bootstrapped
 Documentation=https://tails.boum.org/contribute/design/
+ConditionUser=1000
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c '[ "$(/usr/bin/id -u)" = 1000 ] || exit 0         ; \
-                      while ! [ -e /run/tor-has-bootstrapped/done ] ; do \
+ExecStart=/bin/sh -c 'while ! [ -e /run/tor-has-bootstrapped/done ] ; do \
                          /bin/sleep 1                                  ; \
                       done'
 TimeoutStartSec=0

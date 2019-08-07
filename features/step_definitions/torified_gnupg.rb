@@ -112,7 +112,7 @@ Then /^I enable key synchronization in Seahorse$/ do
   @screen.wait('SeahorsePreferences.png', 20)
   @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
   @screen.type(Sikuli::Key.DOWN) # select HKP server
-  @screen.type("c", Sikuli::KeyModifier.ALT) # Button: "Close"
+  @screen.type(Sikuli::Key.ESC) # no "Close" button
 end
 
 Then /^I synchronize keys in Seahorse$/ do
@@ -201,7 +201,8 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     end
     check_for_seahorse_error
     @screen.click("SeahorseKeyResultWindow.png")
-    @screen.click("SeahorseFoundKeyResult.png")
+    # Use the context menu to import the key:
+    @screen.right_click("SeahorseFoundKeyResult.png")
     @screen.click("SeahorseImport.png")
     try_for(120) do
       change_of_status?(keyid)

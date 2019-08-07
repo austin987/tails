@@ -95,8 +95,8 @@ require 'cucumber/formatter/pretty'
 # written via `puts` after a Scenario has run its last step will be
 # written, instead of delayed to the next Feature/Scenario (if any) or
 # dropped completely (if not).
-# XXX: This can be removed once we stop supporting Debian Jessie
-# around when Debian Stretch is released.
+# XXX: This can be removed once we update to cucumber 2+ on Jenkins'
+# isotesters (#10068).
 if Gem::Version.new(Cucumber::VERSION) < Gem::Version.new('2.0.0.beta.4')
   module Cucumber
     module Formatter
