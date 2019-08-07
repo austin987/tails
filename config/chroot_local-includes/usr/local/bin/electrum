@@ -44,7 +44,7 @@ def electrum_config_is_persistent():
     filesystem = sh.findmnt('--noheadings',
                             '--output', 'SOURCE',
                             '--target', CONF_DIR).stdout.decode().strip()
-    return filesystem in sh.glob('/dev/mapper/TailsData_unlocked[/electrum]')
+    return filesystem == '/dev/mapper/TailsData_unlocked[/electrum]'
 
 
 def verify_start():
@@ -65,6 +65,7 @@ def verify_start():
 
     # results 0 == True; 1 == False; 5 == Timeout
     results = sh.zenity('--question', '--title', '', '--default-cancel',
+                        '--ellipsize',
                         '--ok-label', launch_text,
                         '--cancel-label', exit_text,
                         '--text', dialog_msg,
