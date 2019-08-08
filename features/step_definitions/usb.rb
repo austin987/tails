@@ -827,7 +827,6 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
     assert_equal(success_pic, match)
   end
   @screen.click('TailsUpgraderApplyUpgradeButton.png')
-  @screen.wait('TailsUpgraderApplyingUpgrade.png', 20)
   @screen.wait('TailsUpgraderDone.png', 60)
 end
 

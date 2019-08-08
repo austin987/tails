@@ -295,27 +295,6 @@ def pidgin_otr_keys
   return $vm.file_content("/home/#{LIVE_USER}/.purple/otr.private_key")
 end
 
-Given /^Pidgin has the expected accounts configured with random nicknames$/ do
-  expected = [
-            ["irc.oftc.net", "prpl-irc", "6697"],
-            ["127.0.0.1",    "prpl-irc", "6668"],
-          ]
-  configured_pidgin_accounts.values.each() do |account|
-    assert(account['nickname'] != "XXX_NICK_XXX", "Nickname was no randomised")
-    assert_equal(account['nickname'], account['real_name'],
-                 "Nickname and real name are not identical: " +
-                 account['nickname'] + " vs. " + account['real_name'])
-    assert_equal(account['name'], account['nickname'],
-                 "Account name and nickname are not identical: " +
-                 account['name'] + " vs. " + account['nickname'])
-    candidate = [account['network'], account['protocol'], account['port']]
-    assert(expected.include?(candidate), "Unexpected account: #{candidate}")
-    expected.delete(candidate)
-  end
-  assert(expected.empty?, "These Pidgin accounts are not configured: " +
-         "#{expected}")
-end
-
 When /^I open Pidgin's account manager window$/ do
   @screen.wait_and_click('PidginMenuAccounts.png', 20)
   @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
