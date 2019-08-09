@@ -48,6 +48,10 @@ Given /^a computer$/ do
   $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
+Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
+  $vm.set_ram_size(size, unit)
+end
+
 Given /^the computer is set to boot from the Tails DVD$/ do
   $vm.set_cdrom_boot(TAILS_ISO)
 end
