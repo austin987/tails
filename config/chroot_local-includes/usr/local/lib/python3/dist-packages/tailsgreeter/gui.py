@@ -883,9 +883,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def finish_login(self):
         logging.info("Starting the session")
-        # /usr/lib/systemd/user/tails-greeter-session-helper.service will
-        # restore the cursor to the left pointer state.
-        self.get_root_window().set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))
         self.greeter.login()
         return False
 
