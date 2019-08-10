@@ -45,10 +45,12 @@ Feature: Using Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.purple/otr.private_key"
 
-  #10442
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Watching a WebM video over HTTPS
     Given I have started Tails from DVD and logged in and the network is connected
+    # This is needed because on Jenkins, the hostname that hosts the test video
+    # resolves to a RFC 1918 address (#10442)
+    And I configure tor so it allows connecting to internal addresses
     Then I can watch a WebM video over HTTPs
 
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement

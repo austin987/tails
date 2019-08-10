@@ -32,6 +32,18 @@ When /^I close Totem$/ do
   step 'I kill the process "totem"'
 end
 
+Given /^I configure tor so it allows connecting to internal addresses$/ do
+  client_torrc_lines = [
+    'ClientDNSRejectInternalAddresses 0',
+    'ClientRejectInternalAddresses 0',
+  ]
+  $vm.file_append('/etc/tor/torrc', client_torrc_lines)
+  $vm.execute("systemctl stop tor@default.service")
+  $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
+  $vm.execute("systemctl start tor@default.service")
+  wait_until_tor_is_working
+end
+
 Then /^I can watch a WebM video over HTTPs$/ do
   test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
   recovery_on_failure = Proc.new do
