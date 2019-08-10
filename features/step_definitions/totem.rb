@@ -54,7 +54,7 @@ Given /^I configure the firewall leak checker to allow connecting to (.*):(\d+)$
     addr.class == Resolv::IPv4 && addr.to_s.start_with?('192.168.')
   end
   rfc1918_ips.each do |ip|
-    add_lan_host(ip.to_s, port)
+    add_extra_allowed_host(ip.to_s, port)
   end
 end
 
