@@ -1068,7 +1068,7 @@ The remaining configuration differences can be found in:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/usr/share/tails/tor-browser-prefs.js]]
 - [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
-- [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
+- [[!tails_gitweb config/chroot_local-hooks/15-tor-browser-bookmarks]]
 
 It should also be noted that the global Tor Browser installation is also used
 for the [[Unsafe Browser]], although it is
@@ -1083,7 +1083,12 @@ Thunderbird itself leaks a lot of data and makes DNS requests, for example by
 retrieving mail server configurations from a remote server over an insecure
 channel. This is prevented by the TorBirdy extension as well as by custom
 patches for Thunderbird in Tails, which we are currently in the process of
-upstreaming ([[!tails_ticket 6156]]).
+upstreaming ([[!tails_ticket 6156]]). Until they are upstreamed, we patch
+Thunderbird (from Debian) while building Tails images:
+
+- [[!tails_gitweb_dir config/chroot_local-includes/usr/share/tails/build/thunderbird-patches]]
+- [[!tails_gitweb config/chroot_local-hooks/11-patch-thunderbird]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/tails/build/patch-thunderbird]]
 
 Thunderbird generates `Message-ID` headers using the hostname part of
 the sender's email address, which does not leak usage of the PELD nor
@@ -1118,9 +1123,6 @@ manual configuration.
 OpenPGP support is provided by the Enigmail addon.
 
 - [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.thunderbird]] is copied to
   the user's `$HOME` at boot time
 - [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
@@ -1133,17 +1135,8 @@ status. Only IRC and Jabber/XMPP protocols are left available, to
 avoid the usage of less well audited plugins. The Off-the-record
 plugin is enabled
 to help one-to-one conversations being as private and unrecordable as
-possible. At boot a language confluxer generates a random looking default
-nickname from the 2000 most common U.S. names (according to the U.S. social
-security administration in the 1970's), which results in something Englishesque
-sounding. The nickname is further made to look like a typical IRC nickname by
-prefixing it with ^ or _ with probability 0.05, and changing it to leet speak
-with probability 0.05. When answering to CTCP requests, Pidgin does
-not leak any information apart from PING and VERSION (`Purple IRC`),
-which is deemed acceptable as there are probably other weirdness in
-how the protocol is implemented, that disclose as much.
+possible. 
 
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/2010-pidgin]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
 - [[!tails_gitweb config/chroot_local-hooks/09-remove_unsupported_pidgin_libs]]
 

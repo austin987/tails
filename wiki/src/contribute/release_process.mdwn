@@ -436,10 +436,7 @@ Call for translation
 
 If at freeze time, send a call for translations to tails-l10n, making it clear what
 Git branch the translations must be based on, and what are the
-priorities. Also, add a few words to remember the translation teams
-using Git that they should regularly contact Transifex translators,
-as detailed on the [[documentation for
-translators|contribute/how/translate]].
+priorities.
 
 To get a list of changes on the website:
 
@@ -1050,7 +1047,7 @@ and on the live website (even for a release candidate):
     EOF
 
 	TRACE_TIME=$(date +%s) &&
-	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
 	[ -n "${MASTER_CHECKOUT:?}" ] && \
 	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
 	(
@@ -1073,7 +1070,7 @@ candidate):
     EOF
 
 	TRACE_TIME=$(date +%s) &&
-	echo ${TRACE_TIME:?} | ssh rsync.lizard "cat > /srv/rsync/tails/tails/project/trace" && \
+	ssh rsync.lizard "echo ${TRACE_TIME:?} | sudo tee /srv/rsync/tails/tails/project/trace" && \
 	[ -n "${MASTER_CHECKOUT:?}" ] && \
 	echo ${TRACE_TIME:?} > "${MASTER_CHECKOUT:?}/wiki/src/inc/trace" &&
 	(
@@ -1084,8 +1081,6 @@ candidate):
 	)
 
 ## Announce, seed and test the Torrents
-
-Skip this section if [[!tails_ticket 16378]] is not resolved yet.
 
 Check if there's enough space on our Bittorrent seed to import the new
 ISO and USB images:
@@ -1174,8 +1169,6 @@ Testing
 1. Triage test results, reproduce bugs as needed, decide what the next
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
-1. If [[!tails_ticket 16378]] is not resolved yet, ensure someone will
-   seed the Torrents.
 
 Update the website and Git repository
 =====================================
