@@ -35,7 +35,6 @@ systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 # In practice, on Jessie this means that cupsd is started during
 # the initialization of the GNOME session, which is fine: by then,
 # the persistent /etc/cups has been mounted.
-# XXX: make sure it's the case on Stretch, adjust if not.
 systemctl disable cups.service
 systemctl enable  cups.socket
 
