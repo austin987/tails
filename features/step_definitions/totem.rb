@@ -1,3 +1,5 @@
+require 'resolv'
+
 Given /^I create sample videos$/ do
   @video_dir_on_host = "#{$config["TMPDIR"]}/video_dir"
   FileUtils.mkdir_p(@video_dir_on_host)
@@ -42,6 +44,18 @@ Given /^I configure tor so it allows connecting to internal addresses$/ do
   $vm.execute("systemctl --no-block restart tails-tor-has-bootstrapped.target")
   $vm.execute("systemctl start tor@default.service")
   wait_until_tor_is_working
+end
+
+Given /^I configure the firewall leak checker to allow connecting to (.*):(\d+)$/ do |host, port|
+  resolver = Resolv::DNS.new
+  rfc1918_ips = resolver.getaddresses(host).select do |addr|
+    # This "is it a RFC 1918 IP address?" check is just accurate enough
+    # for our current needs. We'll improve it if/as needed.
+    addr.class == Resolv::IPv4 && addr.to_s.start_with?('192.168.')
+  end
+  rfc1918_ips.each do |ip|
+    add_lan_host(ip.to_s, port)
+  end
 end
 
 Then /^I can watch a WebM video over HTTPs$/ do
