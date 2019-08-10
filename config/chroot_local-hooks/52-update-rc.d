@@ -32,7 +32,7 @@ systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 
 # Use socket activation only, to delay the startup of cupsd.
-# In practice, on Jessie this means that cupsd is started during
+# In practice, this means that cupsd is started during
 # the initialization of the GNOME session, which is fine: by then,
 # the persistent /etc/cups has been mounted.
 systemctl disable cups.service
