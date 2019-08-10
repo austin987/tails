@@ -4,7 +4,7 @@ set -e
 
 ### Tweak systemd unit files
 
-# Workaround for https://bugs.debian.org/714957
+# Workaround for https://bugs.debian.org/934389
 systemctl enable memlockd.service
 
 # Enable our own systemd unit files
