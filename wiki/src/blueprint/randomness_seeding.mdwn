@@ -1,6 +1,6 @@
 # /dev/random and /dev/urandom randomness seeding in Tails
 
-/dev/random and /dev/urandom are special Linux devices that provide
+`/dev/random` and `/dev/urandom` are special Linux devices that provide
 access from user land to the Linux kernel Cryptographically Secure
 Pseudo Random Number Generator (CSPRNG). This generator is used for
 almost every security protocol, like TLS/SSL key generation, choosing
@@ -15,7 +15,7 @@ Because of Tails' feature of being amnesic, and run from different types
 of live devices (from DVDs to USB sticks), special care must be taken to
 ensure the system gets enough entropy and boots with enough randomness.
 This proves to be hard within the Tails context, where the system is
-almost always booting the same way. Even the squashfs file is ordered to
+almost always booting the same way. Even the SquashFS is ordered to
 optimize boot time.
 
 Although these problems have been documented since a long time (see
@@ -34,14 +34,14 @@ Qubes has tickets about this
 
 See the related [[design document|contribute/design/random]]
 
-Tails does not ship /var/lib/urandom/random-seed in the ISO, since it
+Tails does not ship `/var/lib/urandom/random-seed` in the ISO, since it
 means shipping a fixed known value for every Tails installation, which
 in turn means that entropy contribution would be zero. Furthermore, this
 breaks reproducibility of the ISO image.
 
-Without this random seed, systemd-random-seed won't write anything to
-/dev/urandom, so we rely purely on the kernel CSPRNG and current system entropy
-to get /dev/urandom. It's commonly admitted to be quite good, but given the
+Without this random seed, `systemd-random-seed` won't write anything to
+`/dev/urandom`, so we rely purely on the kernel CSPRNG and current system entropy
+to get `/dev/urandom`. It's commonly admitted to be quite good, but given the
 Live nature of Tails, and the fact that good cryptography is a must, we may
 want to add additional measures to ensure any Tails system has enough entropy.
 
