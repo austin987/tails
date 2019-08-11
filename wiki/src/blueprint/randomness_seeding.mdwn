@@ -170,6 +170,8 @@ But this brings questions about how to interact correctly with the users,
 as blocking without notifications would be terrible UX. Also Tails boot time is
 a bit long already, and this may grow it quite a bit more again.
 
+XXX: will enough entropy be gathered on such a blocked, idling system?
+
 XXX: So before going on, we need a bit more data about the state of the entropy when
 Tails boots, especially now that we have several entropy collector daemons. It may
 very well be that this case does not happen anymore. And if it does, we need to know
@@ -183,6 +185,11 @@ checks if the available entropy is high enough, and notifies the user if
 it's not the case. One downside is, that observing the entropy pool costs
 randomness, so this may have to be implemented with care or is worth
 discussing/researching the costs/benefits.
+
+XXX: why does observing the entropy pool cost randomness? Does reading
+`/proc/sys/kernel/random/poolsize` and
+`/proc/sys/kernel/random/entropy_avail` impact the amount of estimated
+entropy available?
 
 # Abandoned solutions
 
