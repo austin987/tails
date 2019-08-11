@@ -57,47 +57,9 @@ worth spending efforts on.
 Tails is used in different ways with different live devices. That requires
 different solutions, depending on how and what the Tails OS is installed.
 
-### DVD
+### USB
 
-This may be the most difficult, since all that the user is running is the plain
-ISO we provide. In there, there's no seed at all, and no way for the users to
-add one.
-
-On the other hand, that's not the installation method we want to support the
-most, and probably not the most used when people want to secure other
-communication types than HTTPS (e.g persistence is very useful for OpenPGP key
-storage and usage, chat account configuration, ...).
-
-So we may eventually just document somewhere to users that they MUST NOT use
-this type of installation if they want to rely on good cryptography for their
-communications and key generation, or that they should wait after having
-interacted a long (but hard to define) time with the system so that it had time
-to collect entropy, and does not rely on the CSPRNG, Haveged and rngd only.
-
-We could also add some kind of notification to users when entropy gets too low,
-or just tell them that the way they use Tails is not compatible with strong
-cryptography.
-
-### Intermediary USB
-
-This type of installation is supposed to be used when people are installing
-Tails from another OS (except Debian and Ubuntu, where they can use the Tails
-installer). In most cases, this means having a bit-by-bit copy of the Tails ISO
-on the USB stick, except for Windows where we ask to use the [Universal USB
-Installer](http://www.pendrivelinux.com/universal-usb-installer-easy-as-1-2-3/)
-
-In this case the situation is pretty much the same than with the DVD one. No
-seed. And adding one is very difficult if not impossible (except with the
-Windows installation where we may ask upstream to implement that in the
-Universal USB Installer, but well...).
-
-That's also not really the way we encourage users to use Tails, so as with DVD
-there's maybe no point to fix the situation here, and the same workaround could
-be applied (document it).
-
-### Final USB
-
-That's supposed to be the standard way to use Tails.
+That's the best supported way to use Tails.
 
 Note that in this case, there are two situations: booting this installation
 with persistence enabled, and without.
@@ -108,13 +70,27 @@ which means creating an encrypted partition. At this step though, there
 is probably very little entropy at this moment, which may weaken the
 LUKS volume encryption.
 
-### Virtual Machines
+### Virtual Machines (ISO image as virtual DVD )
 
-That's a way to use Tails, and one of the worst cases: it is of public
+Tails supports booting virtual machines from ISO images.
+
+Starting Tails from a DVD on bare metal is not supported anymore since
+Tails 3.12 ([[!tails_ticket 15292]]).
+
+This may be the most difficult, since all that the user is running is the plain
+ISO we provide. In there, there's no seed at all. It is of public
 knowledge that entropy in VMs is very poor. It's not really clear how the
-entropy gathering daemons we have would help, but there are mechanisms now in
-libvirt to pass randomness from the host using the Virtio RNG feature (even if
-it may not be enough by itself).
+entropy gathering daemons we have would help.
+
+On the other hand, that's not the installation method we want to support the
+most, and probably not the most used when people want to secure other
+communication types than HTTPS (e.g persistence is very useful for OpenPGP key
+storage and usage, chat account configuration, ...).
+
+To safely use Tails in a virtual machine, one needs to provide randomness
+from the host system to the guest Tails virtual machine, for example
+using the Virtio RNG feature (even if it may not be enough by itself).
+XXX: is this possible with VirtualBox?
 
 ## Proposed solutions
 
