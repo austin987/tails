@@ -48,12 +48,6 @@ Feature: Using Totem
   @check_tor_leaks
   Scenario: Watching a WebM video over HTTPS
     Given I have started Tails from DVD and logged in and the network is connected
-    # The two steps below are needed because on Jenkins, the hostname that hosts
-    # the test video resolves to a RFC 1918 address (#10442), which tor would
-    # not allow connecting to, and the firewall leak checker would make a fuss
-    # of it.
-    And I configure tor so it allows connecting to internal addresses
-    And I configure the firewall leak checker to allow connecting to tails.boum.org:443
     Then I can watch a WebM video over HTTPs
 
   Scenario: Watching MP4 videos stored on the persistent volume should work as expected given our AppArmor confinement
