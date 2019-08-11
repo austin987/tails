@@ -120,14 +120,12 @@ Tails installer could store a seed in the FAT filesystem of the system
 partition. That would workaround this first boot problem not handled by the
 persistence option.
 
-We sadly can't update this seed while running Tails, as read-write mounting the system
-FAT partition during a Tails session does not work. So the question whether updating it
-or not is open.
-
-If we want to do so, we'll have to update it at the system shutdown. This will
-mean remount this partition, write the new random seed, then unmount it and
-start the shutdown of the system. Obviously we can do this only in normal
-shutdown process, and we'll have to avoid it in emergency shutdown mode.
+This seed can be updated both during early boot (initramfs) and during
+regular system shutdown. This means remounting this partition
+read-write, writing the new random seed, then respectively remounting
+it read-only and unmounting it. Obviously we can do this only in
+normal shutdown process, and we'll have to avoid it in emergency
+shutdown mode.
 
 We may alternatively not update it, and use it only when the persistence is not
 enabled. That would still be a unique source of entropy per Tails installation,
