@@ -97,17 +97,6 @@ XXX: is this possible with VirtualBox?
 
 # Proposed solutions
 
-## Persist entropy pool seeds [[!tails_ticket 7675]]
-
-We hope to improve this situation for users who enable the persistent storage
-option by storing a seed from the previous session to help bootstrap
-with some "well" generated randomness.
-
-Storing it in the persistent partition will be implemented using a default
-(hidden to the user) persistence setting. But it does not solve the problem for
-the first time Tails is booted, which is likely when the encrypted persistence
-partition is created.
-
 ##  Use the Tails installer to create a better seed [[!tails_ticket 11897]]
 
 Tails Installer is used from within Tails to:
@@ -178,6 +167,23 @@ checks if the available entropy is high enough, and notifies the user if
 it's not the case. One downside is, that observing the entropy pool costs
 randomness, so this may have to be implemented with care or is worth
 discussing/researching the costs/benefits.
+
+# Abandoned solutions
+
+## Persist entropy pool seeds [[!tails_ticket 7675]]
+
+For users who enable the persistent storage option, we could store
+there a seed from the previous session to help bootstrap with some
+"well" generated randomness.
+
+Storing it in the persistent partition could be implemented using a default
+(hidden to the user) persistence setting. But it does not solve the problem for
+the first time Tails is booted, which is likely when the encrypted persistence
+partition is created.
+
+And meanwhile, we have found ways to get the same benefits for every
+Tails USB stick, with or without persistence (WIP on [[!tails_ticket
+11897]]).
 
 # Related tickets
 
