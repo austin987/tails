@@ -271,7 +271,7 @@ class Volume(object):
                 unmounted_at_least_once = True
             except GLib.Error as e:
                 # Ignore "not mounted" error if the volume was already unmounted
-                if "org.freedesktop.UDisks2.Error.NotMounted" in e.message and unmounted_at_least_once:
+                if e.domain == "udisks-error-quark" and e.code == UDisks.Error.NOT_MOUNTED and unmounted_at_least_once:
                     return
                 raise
 
@@ -325,11 +325,17 @@ class Volume(object):
             self.unmount()
             self.backing_volume.lock()
         except GLib.Error as e:
-            # Translators: Don't translate {volume_name} or {error_message},
-            # they are placeholder and will be replaced.
-            body = _("Couldn't lock volume {volume_name}:\n{error_message}".format(volume_name=self.name,
-                                                                                   error_message=e.message))
-            self.manager.show_warning(_("Error locking volume"), body)
+            # Show a more helpful message for the known error cases
+            if e.domain == "udisks-error-quark" and e.code == UDisks.Error.DEVICE_BUSY:
+                body = _("One or more applications are keeping the volume busy.")
+            # Show a general error message and print the detailed, technical
+            # message in unknown error cases
+            else:
+                # Translators: Don't translate {volume_name} or {error_message},
+                # they are placeholder and will be replaced.
+                body = _("Couldn't lock volume {volume_name}:\n{error_message}".format(volume_name=self.name,
+                                                                                       error_message=e.message))
+            self.manager.show_warning(_("Locking the volume failed"), body)
             return
 
     def on_unlock_button_clicked(self, button):
