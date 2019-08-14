@@ -232,7 +232,7 @@ def all_tor_hosts
 end
 
 def allowed_hosts_under_tor_enforcement
-  all_tor_hosts + @lan_hosts
+  all_tor_hosts + @extra_allowed_hosts
 end
 
 def get_free_space(machine, path)
