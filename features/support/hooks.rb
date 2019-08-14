@@ -146,18 +146,18 @@ rescue Exception => e
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
-# are Tor nodes or located on the LAN. However, when we try
-# to verify that only such hosts are contacted we have a problem --
-# we run all Tor nodes (via Chutney) *and* LAN hosts (used on some
-# tests) on the same host, the one running the test suite. Hence we
-# need to always explicitly track which nodes are LAN or not.
+# are Tor nodes, located on the LAN, or allowed for some operational reason.
+# However, when we try to verify that only such hosts are contacted we have
+# a problem -- we run all Tor nodes (via Chutney) *and* LAN hosts (used on
+# some tests) on the same host, the one running the test suite. Hence we
+# need to always explicitly track which nodes are allowed or not.
 #
 # Warning: when a host is added via this function, it is only added
 # for the current scenario. As such, if this is done before saving a
 # snapshot, it will not remain after the snapshot is loaded.
-def add_lan_host(ipaddr, port)
-  @lan_hosts ||= []
-  @lan_hosts << { address: ipaddr, port: port }
+def add_extra_allowed_host(ipaddr, port)
+  @extra_allowed_hosts ||= []
+  @extra_allowed_hosts << { address: ipaddr, port: port }
 end
 
 BeforeFeature('@product') do |feature|
@@ -242,8 +242,8 @@ Before('@product') do |scenario|
   @os_loader = "MBR"
   @sudo_password = "asdf"
   @persistence_password = "asdf"
-  # See comment for add_lan_host() above.
-  @lan_hosts ||= []
+  # See comment for add_extra_allowed_host() above.
+  @extra_allowed_hosts ||= []
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
