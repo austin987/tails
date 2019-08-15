@@ -10,13 +10,14 @@ ORIG_SESSION_FILE="/usr/share/gnome-session/sessions/gnome-classic.session"
 TAILS_SESSION_FILE="/usr/share/gnome-session/sessions/gdm-tails.session"
 
 create_gdm_shell_tails_desktop_file() {
-    install -D "${ORIG_SHELL_DESKTOP_FILE}" "${TAILS_SHELL_DESKTOP_FILE}"
     if ! grep -q --fixed-strings --line-regexp "Exec=/usr/bin/gnome-shell" \
-            "${TAILS_SHELL_DESKTOP_FILE}"; then
+            "${ORIG_SHELL_DESKTOP_FILE}"; then
         echo "Couldn't find expected exec line in GNOME Shell's .desktop file"
         exit 1
     fi
-    sed -i "s,^Exec=/usr/bin/gnome-shell$,Exec=/usr/bin/gnome-shell --mode=gdm-tails," "${TAILS_SHELL_DESKTOP_FILE}"
+    sed "s,^Exec=/usr/bin/gnome-shell$,Exec=/usr/bin/gnome-shell --mode=gdm-tails," \
+        "${ORIG_SHELL_DESKTOP_FILE}" \
+        > "${TAILS_SHELL_DESKTOP_FILE}"
 }
 
 create_tails_session_file() {
