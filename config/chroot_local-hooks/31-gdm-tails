@@ -16,7 +16,7 @@ create_gdm_shell_tails_desktop_file() {
         echo "(${ORIG_SHELL_DESKTOP_FILE})" >&2
         exit 1
     fi
-    sed "s,^Exec=/usr/bin/gnome-shell$,Exec=/usr/bin/gnome-shell --mode=gdm-tails," \
+    sed -E "s,^Exec=/usr/bin/gnome-shell$,Exec=/usr/bin/gnome-shell --mode=gdm-tails," \
         "${ORIG_SHELL_DESKTOP_FILE}" \
         > "${TAILS_SHELL_DESKTOP_FILE}"
 }
@@ -30,7 +30,8 @@ create_tails_session_file() {
         echo "(${ORIG_SESSION_FILE})" >&2
         exit 1
     fi
-    sed -e "s,^RequiredComponents=org\.gnome\.Shell,RequiredComponents=gdm-shell-tails;tails-greeter," \
+    sed -E \
+        -e "s,^RequiredComponents=org\.gnome\.Shell,RequiredComponents=gdm-shell-tails;tails-greeter," \
         -e "s,^Name=GNOME Classic$,Name=Display Manager," \
         -e "/^Name\[/d" \
         "${ORIG_SESSION_FILE}" \
