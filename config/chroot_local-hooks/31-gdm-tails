@@ -12,8 +12,8 @@ TAILS_SESSION_FILE="/usr/share/gnome-session/sessions/gdm-tails.session"
 create_gdm_shell_tails_desktop_file() {
     if ! grep -q --fixed-strings --line-regexp "Exec=/usr/bin/gnome-shell" \
             "${ORIG_SHELL_DESKTOP_FILE}"; then
-        echo "Couldn't find expected exec line in GNOME Shell's .desktop file:"
-        echo "(${ORIG_SHELL_DESKTOP_FILE})"
+        echo "Couldn't find expected exec line in GNOME Shell's .desktop file:" >&2
+        echo "(${ORIG_SHELL_DESKTOP_FILE})" >&2
         exit 1
     fi
     sed "s,^Exec=/usr/bin/gnome-shell$,Exec=/usr/bin/gnome-shell --mode=gdm-tails," \
@@ -27,8 +27,8 @@ create_tails_session_file() {
             "^RequiredComponents=org\.gnome\.Shell" "${TAILS_SESSION_FILE}" || \
        ! grep -q --fixed-strings --line-regexp \
             "Name=GNOME Classic" "${TAILS_SESSION_FILE}"; then
-        echo "Couldn't find expected exec line in GNOME's session file:"
-        echo "(${TAILS_SESSION_FILE})"
+        echo "Couldn't find expected exec line in GNOME's session file:" >&2
+        echo "(${TAILS_SESSION_FILE})" >&2
         exit 1
     fi
     sed -i "s,^RequiredComponents=org\.gnome\.Shell,RequiredComponents=gdm-shell-tails;tails-greeter," "${TAILS_SESSION_FILE}"
