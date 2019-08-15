@@ -23,7 +23,7 @@ create_gdm_shell_tails_desktop_file() {
 
 create_tails_session_file() {
     if ! grep -q -E \
-            "^RequiredComponents=org\.gnome\.Shell" "${ORIG_SESSION_FILE}" || \
+            "^RequiredComponents=org\.gnome\.Shell;" "${ORIG_SESSION_FILE}" || \
        ! grep -q --fixed-strings --line-regexp \
             "Name=GNOME Classic" "${ORIG_SESSION_FILE}"; then
         echo "Couldn't find expected Name and RequiredComponents lines in GNOME's session file:" >&2
@@ -31,7 +31,7 @@ create_tails_session_file() {
         exit 1
     fi
     sed -E \
-        -e "s,^RequiredComponents=org\.gnome\.Shell,RequiredComponents=gdm-shell-tails;tails-greeter," \
+        -e "s,^RequiredComponents=org\.gnome\.Shell;,RequiredComponents=gdm-shell-tails;tails-greeter;," \
         -e "s,^Name=GNOME Classic$,Name=Display Manager," \
         -e "/^Name\[/d" \
         "${ORIG_SESSION_FILE}" \
