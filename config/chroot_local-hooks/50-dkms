@@ -4,6 +4,16 @@ set -e
 set -u
 set -x
 
+# Disabled as long as it's not very useful and breaks stuff:
+#  - Recent Linux kernel ship the vboxvideo and vboxguest modules.
+#  - The out-of-tree dkms package only adds vboxsf (needed by the
+#    "shared folders" feature).
+#  - The out-of-tree dkms modules regularly FTBFS against recent
+#    Linux kernels and need to be installed from sid, so we decided to keep
+#    VirtualBox guest support on a best effort basis, as long as it's
+#    not too painful/expensive to maintain.
+exit 0
+
 echo "Building VirtualBox guest modules"
 
 . /usr/share/tails/build/variables

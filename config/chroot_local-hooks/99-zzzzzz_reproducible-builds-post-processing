@@ -33,7 +33,9 @@ rm /var/lib/systemd/catalog/database
 : > /etc/machine-id
 
 # Remove logs.
-rm -r /var/lib/dkms/*/*/*/*/log
+if [ -d /var/lib/dkms ]; then
+    rm -r /var/lib/dkms/*/*/*/*/log
+fi
 
 # Post-process /etc/shadow by setting the sp_lstchg field to the number of days
 # since SOURCE_DATE_EPOCH instead of 1st Jan 1970. (#12339)
