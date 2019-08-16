@@ -48,6 +48,10 @@ Given /^a computer$/ do
   $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
+Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
+  $vm.set_ram_size(size, unit)
+end
+
 Given /^the computer is set to boot from the Tails DVD$/ do
   $vm.set_cdrom_boot(TAILS_ISO)
 end
@@ -528,8 +532,7 @@ Given /^I kill the process "([^"]+)"$/ do |process|
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
-  # Timeout bumped from 3 to 10 minutes because of #16312:
-  try_for(10*60) do
+  try_for(3*60) do
     if mode == 'restarts'
       @screen.find('TailsGreeter.png')
       true
