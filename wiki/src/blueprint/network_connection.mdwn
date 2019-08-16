@@ -73,7 +73,52 @@ Open questions
 ==============
 
   - What's left from this configuration process on the desktop after Tor is
-    started? Do we allow changing or visualizing the current settings?
+    started?
+    - What do we do with the NetworkManager in GNOME Shell?
+    - Do we allow changing or visualizing the current settings?
+
+  - What's the best way of asking for bridges, keeping in mind
+    situations where people might be at risk if they don't use them?
+    - Lunar's proposal: Say you're at risk in the Greeter, then configure
+      bridges in the session.
+    - other possibility: Do everything in the session (offline mode and MAC
+      spoofing could still be optional settings in the Greeter), if so how?
+    - if we have persistent network configuration (for example bridges) per
+      local network, then this might conflict (or duplicate) the fact of
+      asking about bridges in the Greeter
+    - bridges might be needed on a given local network but not on
+      another, would it be possible to ask about that *after* selecting
+      the local network?
+
+  - Could we, technically speaking, do something more useful about the failure
+    of MAC spoofing than disabling the interface? in the Greeter? in the session?
+    - Should we ask for confirmation before disabling the interface?
+
+  - How shall we integrate the captive portal browser on the desktop in case we
+    need to get back to it (to log in again, to log out)?
+    - Lunar's proposal: as a detached windows
+    - other possibility: invisible browser by default, can be displayed again somehow
+
+  - Do we want to tell people about entry guards? For example, feedback
+    the entry guard to be selected before connecting? Random entry
+    guards are bad for security but persistent entry guards can ease
+    tracking.
+
+  - Is it OK to be more fingerprintable by checking (without Tor) whether
+    a captive portal is sitting in the way?
+
+  - Is it OK actively try to connect directly (without bridges), then via
+    regular bridges, then via obfuscated PTs, to discover
+    whether bridges/PTs are needed? How do we keep supporting "I need to hide
+    the fact I'm using Tor" if we do so?
+
+  - Related question: how much is Tails fingerprintable _as Tails_ by a network
+    attacker (ISP), as opposed to being fingerprintable as "someone using Tor Browser"?
+
+  - How do we instruct Network Manager not to attempt DHCP on known networks?
+    This particularly matters for the wired interface because this autoconnection
+    would happen even without persistence, and even on network we've never connected to.
+    That's relevant only once we've moved MAC spoofing from global to per-network.
 
   - In the current mockups, to use a wired DHCP connection or a Wi-Fi network saved in persistence with the default
     settings (direct Tor, MAC spoofing), one needs to click twice. While
