@@ -9,7 +9,7 @@ often a team cannot be built easily over a long period of time and a web
 interface could nevertheless help keep translations until a new person
 arrives.
 
-Corresponding ticket: [[!tails_ticket 10034]]
+Corresponding tickets: XXX link to translation platform tickets XXX
 
 Choosing a translation web platform
 ===================================
@@ -76,9 +76,7 @@ We have two documentations:
 Translation web interface
 -------------------------
 
-We are testing a [Weblate instance](https://translate.tails.boum.org/)
-to see if it fits our requirements. Read [[!tails_ticket 11759]] for
-more information.
+We are using a [Weblate instance](https://translate.tails.boum.org/).
 
 There are several languages enabled and users can suggest translations
 in several languages:
@@ -87,25 +85,114 @@ in several languages:
 <img src="https://translate.tails.boum.org/widgets/tails/-/multi-red.svg" alt="Translation status" />
 </a>
 
-What we plan to do is:
+<img src="git_repository_details.svg" />
 
-[Schematics of the different Git repos, ikiwiki instances, and their relationships.](https://labs.riseup.net/code/attachments/download/1922/weblate.svg)
+Repositories
+------------
 
-[Schematics of the infrastructure such as Git hooks.](https://labs.riseup.net/code/attachments/download/1928/weblate_hooks.svg)
-
-Repository
-----------
-
-Currently the repository used by Weblate is built upon the Tails master
+The repository used by Weblate is built upon the Tails master
 repo; the changes generated in translate.lizard are fed back
 to Tails master automatically.
 
 There are several languages enabled, some of them with few or not
-translations.
+translations. As everything is fed back to master repository you can simply
+check out the normal repo:
 
-You can check out weblate-generated Tails repo with:
+    git clone https://git-tails.immerda.ch/tails
+
+If some get stuck in translate.lizard you can check out the repo,
+that Weblate is using, but this should not be needed in normal conditions:
 
     git clone https://translate.tails.boum.org/git/tails/index/
+
+At the server you find the repository at
+
+    ~weblate/repositories/vcs/tails/index
+
+Weblate can commit at any time, that's why we need a safe place at where we can
+merge the new changes done by canonical and changes done by Weblate together.
+This is done in the integration repo:
+
+    ~weblate/repositories/integration
+
+At translate.lizard, there is a third repository that is used for the stating
+website, this is located:
+
+    ~weblate/repositories/vcs/staging
+
+Cron
+----
+
+The main script for our Weblate setup is [`cron.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/cron.sh), as there all integration work between the different repository is done. The script has following steps:
+
+  1. Canonical -> Integration
+  2. lock translations
+  3. trigger Weblate to commit (`manage.py commit_pending`)
+  4. Weblate -> Integration
+  5. Integration -> Canonical
+  6. Weblate -> Integation
+  7. unlock translations
+  8. run `manage.py update_index`
+
+POT and PO files for enabled languages are built and updated from the
+`*.mdwn` files when [[building the wiki|contribute/build/website]].
+Then, our translation platform updates the PO files for additional
+languages (that are enabled on Weblate but not on the production website),
+commits & pushes them, and updates the Weblate database accordingly.
+
+Canonical -> Integration
+========================
+
+If a new commit exists on the Canonical repo, Integration will merge the
+changes into repo. The script [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py) is the merge strategy
+used at this step. It merges changes in po files based on the translation
+units. Every merge conflict (same translation unit is changed by Canonical and
+Integration (change done by Weblate)) is solved by using the Canonical version.
+So we never end up in broken po file, but may loose a translation done by
+Weblate. But we are able to solve broken translation files via the Canonical
+repo.
+After the po files are merged, the script checks if any "additional languages"
+po file needs to be updated. That is checked, by generating pot files out of
+"defaultlang"s po files. If those pot files differ, than every "additional
+language" po file is updated. Also if the "defaultlang"s po file is renamed,
+moved or deleted, than the "additional languages" po files follow this step.
+
+At last step the script will test if the new commit had triggered any change,
+if not the script simply perform a fast-forward.
+
+Canonical -> Weblate
+====================
+
+As we have the loop Canonical <-> Integration, we can assume that every po file
+is up-to-date and don't need to change the po files. That's why we can simply
+try a pull with fast-forward only. If non fast-forward is possible than the
+Canonical <-> Integration loop has something to do and we try again later to
+pull.
+
+If a fast-forward was successful, we need to update the Weblate components to
+the changes, that happened on git site, like updates, removal, renames,
+additions, this is handled by the script [`update_weblate_components.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_components.py). There
+may be other scripts, that may update master branch of Weblate repo than this
+script, that's why the script is using a own git remote named "cron" to keep
+track, what commits need to scanned for Weblate component changes.
+
+Weblate -> Integration
+======================
+
+As Weblate is a non bare repo, Integration is pulling the changes from Weblate
+and merging the po changes into Integration, that is done by the script
+[`merge_weblate_changes.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/merge_weblate_changes.py). Local changes is preferred over the changes from
+remote aka Weblate, in order to be able to fix po files by Canonical. For po
+files merges are done on translation units. The script also makes sure, that
+Weblate is only allowed to touch po files, and set back everything else to the
+version that exists at Canonical.
+
+Integration -> Canonical
+========================
+
+In it self it, this step is a simple push done from translate.lizard.
+
+On Canonical side, gitolite has a special hook [`tails-weblate-update.hook`](https://git-tails.immerda.ch/puppet-tails/tree/files/gitolite/hooks/tails-weblate-update.hook) to make sure, that Weblate is only allowed to push po changes and checks the committer of each commit, that is uploaded.
 
 <a id="staging-website"></a>
 
@@ -128,14 +215,16 @@ This allows:
  - reviewers to check how translation suggestions look like on the
    website, before validating them.
 
-Updating the repo
------------------
+ - check the sanity-check-website report:
 
-POT and PO files for enabled languages are built and updated from the
-`*.mdwn` files when [[building the wiki|contribute/build/website]].
-Then, our translation platform updates the PO files for additional
-languages (that are enabled on Weblate but not on the production website),
-commits & pushes them, and updates the Weblate database accordingly.
+   https://staging.tails.boum.org/last-sanity-errors.txt
+
+What is done behind the scene to generate a new version of the staging website?
+
+[`update-stating-website.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update-stating-website.sh) is run. This will first update staging repo to
+weblate repo. Than every suggestion is extracted and applied to staging repo.
+After that we run ikiwiki with an own `ikiwiki.setup` file to update the stating
+website.
 
 <a id="access-control"></a>
 
