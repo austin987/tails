@@ -132,9 +132,18 @@ First batch
      until they understand that the new behaviour behaves by default, all of
      the time, in they way they had to opt-in for previously).
      → Add a temporary note about the change in Tails Greeter.
-   - Cost: seems rather cheap to implement; only issue may be how to
-     tell Tor Launcher that last settings failed and it needs to
-     prompt for manual config again.
+   - Cost: seems rather cheap to implement
+     - Need to deal with tor's sandbox settings (currently we disable it
+       in bridge mode) or accept losing some security here.
+     - How to tell Tor Launcher that last settings failed and it needs to
+       prompt for manual config again. Does Tor Launcher load previous
+       settings from `torrc` / via the control port, or does it store
+       them somewhere itself?
+     - Test suite needs quite a bit of updating wrt. waiting for Tor
+       to be ready.
+     - Needs new automated tests for the handling of the various failure modes
+       (whether or not we start Tor Launcher again on 2nd and further connections).
+     - Doc probably needs updates.
 
 2. Persistent Tor settings — [[!tails_ticket 5461]]
 
@@ -145,7 +154,15 @@ First batch
        - P (not fully solved as the user still can forget
          to unlock their persistent volume in the Greeter; we could improve
          further via [[!tails_ticket 15573]])
-   - Cost: XXX
+   - Cost:
+      - Needs sync'ing relevant `torrc` settings to a persistent
+        file, and back.
+      - Needs Tor Launcher to load these settings but that should be
+        handled by iteration 1 already.
+      - Needs new automated test scenarios: persisting settings
+        initially, updating persistent settings (in the live
+        environment and in persistent storage), clearing them up.
+      - Doc needs updates.
 
    Shall they be global or per-network? Per-network is vastly harder
    to implement and makes UX more complex. Per-network could be useful
