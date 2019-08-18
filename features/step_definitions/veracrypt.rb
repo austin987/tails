@@ -134,7 +134,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     menu = gnome_shell.menu('Disks')
     menu.click()
     @screen.wait_and_click('GnomeDisksAttachDiskImageMenuEntry.png', 10)
-    # Once we use a more recent Dogtail that can deal with UTF-8 (#12185),
+    # Once we use a more recent Dogtail that can deal with UTF-8 (#16976),
     # we can instead do:
     #   gnome_shell.child('Attach Disk Image…', roleName: 'label').click
     # Otherwise Disks is sometimes minimized, for some reason I don't understand
