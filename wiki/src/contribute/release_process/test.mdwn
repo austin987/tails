@@ -157,27 +157,19 @@ tracked by tickets prefixed with `todo/test_suite:`.
 # Thunderbird
 
 * Check mail over IMAP using:
-  - a hidden service IMAP server (e.g. Riseup, zsolxunfmbfuq7wf.onion on port 993 with SSL).
+  - a hidden service IMAP server (e.g. Riseup, 5gdvpfoh6kb2iqbizb37lzk2ddzrwa47m6rpdueg2m656fovmbhoptqd.onion on port 993 with SSL).
 * Check mail over POP using:
   - a hidden service POP server (see above, on port 995 with SSL).
 * Send an email using:
   - a hidden service SMTP server (see above, on port 465 with SSL).
-
-* Check that the profile works and is torified:
-  1. Send an email using Thunderbird and a non-anonymizing SMTP relay (a
-     SMTP relay that writes the IP address of the client it is
-     relaying email for in the Received header).
-  1. Then check that email's headers once received, especially the
-     `Received:` ones.
 * Also check that the EHLO/HELO SMTP message is not leaking anything
   at the application level:
   1. Start Thunderbird using the GNOME Applications menu.
-  2. Disable SSL/TLS for SMTP in Thunderbird (so take precautions for not
-     leaking your password in plaintext by either changing it
-     temporarily or using a disposable account). Or better, configure
-     StartTLS, since it will send two EHLO/HELO: one before TLS is
-     initiated; one after. The assumption here is that Thunderbird will
-     send the same both times.
+  2. Configure the outgoing SMTP server for an email account
+     so it uses STARTTLS on port 587
+     (Thunderbird will send two EHLO/HELO: one before TLS is
+     initiated; one after; the assumption here is that Thunderbird will
+     send the same both times).
   3. Run `sudo tcpdump -n -i lo -w dump` while sending an email to
      capture the packets before Tor encrypts it, then close
      tcpdump. Note that the packet containing EHLO/HELO will be sent
@@ -190,7 +182,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 # Tor
 
 * The version of Tor should be the latest stable one, which is the highest version number
-  before alpha releases on <http://deb.torproject.org/torproject.org/pool/main/t/tor/>. (automate:
+  before alpha releases on <https://deb.torproject.org/torproject.org/pool/main/t/tor/>. (automate:
   [[!tails_ticket 10259]])
 
 # WhisperBack
@@ -201,7 +193,9 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 # Root access control
 
-* Check you cannot login as root with `/bin/su` neither with the `amnesia` password nor
+1. Start the candidate Tails image.
+2. Do *not* set an administration password.
+3. Check you cannot login as root with `/bin/su` neither with the `amnesia` password nor
   with the `live` one. (automate: [[!tails_ticket 10274]])
 
 # Virtualization support
@@ -252,7 +246,7 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
         sudo sh -c 'sed -i /^TAILS_CHANNEL=/d /etc/os-release &&
                     echo TAILS_CHANNEL=\"test\" >> /etc/os-release' && \
-        tails-upgrade-frontend-wrapper --no-wait
+        systemctl --user restart tails-upgrade-frontend.service
 
   Else, use a local test setup:
 
@@ -284,10 +278,6 @@ tracked by tickets prefixed with `todo/test_suite:`.
         DISABLE_PROXY=1 SSL_NO_VERIFY=1 \
         tails-upgrade-frontend-wrapper --override-baseurl \
         http://192.168.1.4/tails
-
-# Unsafe Web Browser
-
-* Browsing (by IP) a FTP server on the LAN should be possible. (automate: [[!tails_ticket 10252]])
 
 # Tails Verification
 
@@ -321,17 +311,24 @@ tracked by tickets prefixed with `todo/test_suite:`.
 
 `[can't-automate]`
 
-* Boot on bare-metal from USB. Measure the boot time (from the
-  syslinux menu until the GNOME desktop is ready -- quickly press
-  ENTER in the Greeter) and compare with the boot time of the previous
-  Tails version. The new one should not be significantly slower to
-  start.
-* Boot on bare-metal from DVD. Measure the boot time (from the
-  syslinux menu until the GNOME desktop is ready -- quickly press
-  ENTER in the Greeter) and compare with the boot time of the previous
-  Tails version. The new one should not be significantly slower to
-  start (for release candidates we do not always update the squashfs
-  sort file, so then it might be ok if somewhat slower).
+### USB
+
+1. Boot this USB stick on bare-metal a first time to trigger re-partitioning.
+2. Boot this USB stick a second time, measuring the boot time (from the
+   syslinux menu until the GNOME desktop is ready -- quickly press
+   ENTER in the Greeter).
+3. Compare with the boot time of the previous Tails version. The new
+   one should not be significantly slower to start.
+
+### DVD
+
+1. Boot on bare-metal from DVD, measuring the boot time (from the
+   syslinux menu until the GNOME desktop is ready -- quickly press
+   ENTER in the Greeter).
+3. Compare with the boot time of the previous Tails version. The new
+   one should not be significantly slower to start (for release
+   candidates we do not always update the SquashFS sort file, so then
+   it might be OK if somewhat slower).
 
 # Documentation
 
@@ -339,8 +336,10 @@ tracked by tickets prefixed with `todo/test_suite:`.
   [[doc]] page (automate: [[!tails_ticket 8788]]):
   - in one language to which the website is translated
   - in one language to which the website is not translated (=> English)
-* Browse around in the documentation shipped in the image. Internal
-  links should be fine. (automate: [[!tails_ticket 10254]])
+* Browse around in the documentation shipped in the image and check
+  that internal links work fine (automate: [[!tails_ticket 10254]]):
+
+        file:///usr/share/doc/tails/website/index.en.html
 
 # Internationalization
 
@@ -373,11 +372,11 @@ You *really* have to reboot between each language.
 
 ## Spellchecking
 
-To see which among the supported locales there should be no
+To see which among the supported locales there should be a
 spellchecker, run this in a Tails Git checkout of the commit the
 release under testing was built from:
 
-    git grep NO_SPELLCHECKER_LOCALES= config/chroot_local-hooks/11-localize_browser
+    git grep -E '^hunspell' config/chroot_local-packageslists/tails-common.list
 
 Then do the follow in the same Tor Browser session running in the
 `en_US.UTF-8` locale (or whatever locale you are most comfortable
@@ -397,4 +396,4 @@ identifying other language names in):
 
 * Check that all seems well during init: (automate: [[!tails_ticket 10277]])
   - `systemctl --failed --all` should say `0 loaded units listed`
-  - the output of `journalctl` should seem OK.
+  - the output of `sudo journalctl` should seem OK.

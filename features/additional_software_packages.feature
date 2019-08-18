@@ -10,7 +10,17 @@ Feature: Additional software
   # dependencies (which are documented below).
 
   Scenario: I am warned I can not use Additional Software when I start Tails from a DVD and install a package
-    Given I have started Tails from DVD and logged in with an administration password and the network is connected
+    Given a computer
+    And the computer has 2650 MiB of RAM
+    And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
+    And I set an administration password
+    And I log in to a new session
+    And the network is plugged
+    And Tor is ready
+    And all notifications have disappeared
+    And available upgrades have been checked
     And I update APT using apt
     When I install "sslh" using apt
     Then I am notified I can not use Additional Software for "sslh"
@@ -64,7 +74,7 @@ Feature: Additional software
     And I refuse adding "cowsay" to Additional Software
     Then "cowsay" is not in the list of Additional Software
 
-  # Depends on scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
+  # Depends on scenario: My Additional Software list is configurable through a GUI or through notifications when I install or remove packages with APT or Synaptic
   # See https://tails.boum.org/blueprint/additional_software_packages/offline_mode/#incomplete-online-upgrade for high level logic
   Scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
     Given a computer

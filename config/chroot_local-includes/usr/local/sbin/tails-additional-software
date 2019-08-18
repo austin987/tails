@@ -32,8 +32,6 @@ from tailslib.persistence import (
 
 from tailslib.utils import launch_x_application
 
-_ = gettext.gettext
-
 ASP_STATE_DIR = "/run/live-additional-software"
 ASP_STATE_PACKAGES = os.path.join(ASP_STATE_DIR, "packages")
 ASP_STATE_INSTALLER_ASKED = os.path.join(ASP_STATE_DIR, "installer-asked")
@@ -379,8 +377,8 @@ def handle_removed_packages(packages):
 def setup_additional_packages():
     """Enable additional software in persistence."""
     launch_persistence_setup("--no-gui",
-                             "--no-display-finished-message",
-                             "--force-enable-preset", "AdditionalSoftware")
+                             "--no-display_finished_message",
+                             "--force_enable_preset", "AdditionalSoftware")
 
 
 def create_persistence_and_setup_additional_packages(packages):
@@ -393,8 +391,8 @@ def create_persistence_and_setup_additional_packages(packages):
     """
     logging.info("Creating new persistent volume")
     launch_persistence_setup("--step", "bootstrap",
-                             "--no-display-finished-message",
-                             "--force-enable-preset", "AdditionalSoftware")
+                             "--no-display_finished_message",
+                             "--force_enable_preset", "AdditionalSoftware")
     add_additional_packages(packages, search_new_persistence=True)
     # show persistence configuration
     launch_persistence_setup()

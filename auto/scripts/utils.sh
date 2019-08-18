@@ -1,6 +1,6 @@
 # This library is meant to be used in bash, with "set -e" and "set -u".
 
-BASE_BRANCHES="stable testing devel feature/buster"
+BASE_BRANCHES="stable testing devel"
 
 # Returns "" if in undetached head
 git_current_branch() {
@@ -97,7 +97,7 @@ branch_name_to_suite() {
 }
 
 fatal() {
-	echo "$*" >&2
+	echo "E: $*" >&2
 	exit 1
 }
 
