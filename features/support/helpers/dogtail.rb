@@ -188,6 +188,10 @@ module Dogtail
       get_field('roleName')
     end
 
+    def showing
+      get_field('showing') == 'True'
+    end
+
     # Note: this is a global Dogtail action, which should probably live
     # elsewhere than in our Application class, but currently we lack
     # the infrastructure to do that: the Ruby plumbing that generates
