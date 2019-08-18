@@ -170,22 +170,11 @@ Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
   end
 end
 
-When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from an ISO)$/ do |action, name, source|
+When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" by cloning$/ do |action, name|
   step "I start Tails Installer"
   # If the device was plugged *just* before this step, it might not be
   # completely ready (so it's shown) at this stage.
   try_for(10) { tails_installer_is_device_selected?(name) }
-  if source == 'from an ISO'
-    iso_radio = @installer.child('Use a downloaded Tails ISO image',
-                                 roleName: 'radio button')
-    iso_radio.click
-    iso_radio.parent.button('(None)').click
-    file_chooser = @installer.child('Select a File', roleName: 'file chooser')
-    @screen.type("l", Sikuli::KeyModifier.CTRL)
-    # The only visible text element will be the path entry
-    file_chooser.child(roleName: 'text').typeText(@iso_path + '\n')
-    file_chooser.button('Open').click
-  end
   begin
     if action == 'reinstall'
       label = 'Reinstall (delete all data)'
@@ -210,11 +199,6 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by clo
               $vm.file_content(@installer_log_path))
     raise e
   end
-end
-
-Given /^I plug and mount a USB drive containing the Tails ISO$/ do
-  iso_dir = share_host_files(TAILS_ISO)
-  @iso_path = "#{iso_dir}/#{File.basename(TAILS_ISO)}"
 end
 
 Given /^I enable all persistence presets$/ do
@@ -339,14 +323,6 @@ end
 Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
   tails_is_installed_helper(target_name, "/lib/live/mount/medium", loader)
-end
-
-Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
-  iso_root = "/mnt/iso"
-  $vm.execute("mkdir -p #{iso_root}")
-  $vm.execute("mount -o loop #{@iso_path} #{iso_root}")
-  tails_is_installed_helper(target_name, iso_root, "isolinux")
-  $vm.execute("umount #{iso_root}")
 end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
