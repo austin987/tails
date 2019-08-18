@@ -78,10 +78,15 @@ start using my backup Tails right away.
 
 ### Better UX
 
-- To prevent people confusing their current Tails with their backup
-  Tails, the backup Tails could be aware that it is a backup Tails and
-  display some warning when first started. Otherwise, changes made on
-  the backup Tails would be overwritten when the backup is updated.
+To prevent people from confusing their current Tails with their backup
+Tails, the backup Tails could be aware that it is a backup Tails and
+display some warning when first started. Otherwise, changes made on
+the backup Tails would be overwritten when the backup is updated.
+
+Implementation note:
+
+- This could be a flag stored in the backup Persistence and that
+  triggers a warning when opened in Tails Greeter.
 
 Creation
 --------
@@ -94,7 +99,17 @@ is copied. If the backup USB stick already has Tails installed, both the
 Tails system on it and the backup of my Persistence are updated.
 
 Before the backup Persistence is being created, the user is prompted for
-a passphrase.
+a passphrase to create the LUKS volume of the backup Persistence.
+
+Implementation note:
+
+- It might be possible to reuse the same LUKS header to create the
+  backup Persistence without prompting for a passphrase.
+
+  At first glance, cryptsetup luksHeaderBackup/luksHeaderRestore should
+  work to create that backups LUKS volume; and then, to unlock it, one
+  could dump the master key from memory and pass it to cryptsetup open
+  --master-key-file.
 
 Update
 ------
@@ -108,6 +123,20 @@ a passphrase.
 
 Updating also updates the system partition of the backup Tails.
 
+Implementation notes:
+
+- We want to operate at the file system level to speed things up.  We
+  need a tool that allows copying EVERYTHING from the file system (ACL,
+  extended attributes, etc.).
+
+  See [anarcat: rsync oneliner: a study of a complex
+  commandline](https://anarc.at/blog/2019-07-07-rsync-oneliner/) on how
+  to do that with rsync.
+
+- We have to make sure that applications that could be problematic if
+  backed up while running are shut down (eg. Thunderbird) while not
+  bothering the user for others (eg. NetworkManager).
+
 ### Better UX
 
 The update experience could be improved, like Deja Dup does, by:
@@ -115,11 +144,6 @@ The update experience could be improved, like Deja Dup does, by:
 - Displaying automatic reminders
 
 - Starting the update automatically when the backup Tails is plugged in.
-
-### Open questions
-
-- Is it fine to copy the content of the current Persistence while it is
-  being used?
 
 Discussion
 ----------
@@ -142,15 +166,6 @@ Discussion
   solve the others scenarios later on in the future. For example, the
   recovery experiences for each of S2, S3, and S4 would be completely
   different.
-
-### Open questions
-
-- How can we handle the preserve permissions and ownership when doing
-  the backup without having users to set up an administration password
-  to create or update their backup?
-
-- How much can we organize this code to be easier to possibly extend to
-  scenarios S2, S3, and S4 in the future?
 
 Future
 ======
