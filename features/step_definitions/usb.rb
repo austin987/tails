@@ -1,3 +1,4 @@
+# coding: utf-8
 # Returns a hash that for each persistence preset the running Tails is aware of,
 # for each of the corresponding configuration lines,
 # maps the source to the destination.
@@ -199,6 +200,11 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" by clon
               $vm.file_content(@installer_log_path))
     raise e
   end
+end
+
+Given(/^I plug and mount a USB drive containing a Tails USB image$/) do
+  usb_image_dir = share_host_files(TAILS_IMG)
+  @usb_image_path = "#{usb_image_dir}/#{File.basename(TAILS_IMG)}"
 end
 
 Given /^I enable all persistence presets$/ do
@@ -884,4 +890,48 @@ Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
   expected_flags = 0xd000000000000005
   assert(flags == expected_flags.to_s,
          "Got #{flags} as partition flags on #{part_dev} (for #{name}), instead of the expected #{expected_flags}")
+end
+
+
+Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do |size_in_MiB_of_destination_disk|
+  # GNOME Disks displays devices sizes in GB, with 1 decimal digit precision
+  size_in_GB_of_destination_disk = convert_from_bytes(
+    convert_to_bytes(size_in_MiB_of_destination_disk.to_i, 'MiB'),
+    'GB'
+  ).round(1).to_s
+  debug_log("Expected size of destination disk: " +
+            size_in_GB_of_destination_disk)
+
+  step 'I start "Disks" via GNOME Activities Overview'
+  disks = Dogtail::Application.new('gnome-disks')
+  disks.children(roleName: 'table cell').find { |row|
+    /^#{size_in_GB_of_destination_disk} GB Drive/.match(row.name)
+  }.grabFocus
+  disks.child('Menu', roleName: 'toggle button').click
+  # Once we use a more recent Dogtail that can deal with UTF-8 (#16976),
+  # we can instead do:
+  #   disks.child('Restore Disk Image…', roleName: 'menu item').click
+  @screen.wait_and_click('GnomeDisksRestoreDiskImageMenuEntry.png', 10)
+  restore_dialog = disks.child('Restore Disk Image', roleName: 'dialog',
+                               showingOnly: true)
+  # Open the file chooser
+  @screen.type(Sikuli::Key.ENTER)
+  select_disk_image_dialog = disks.child('Select Disk Image to Restore',
+                                         roleName: 'file chooser',
+                                         showingOnly: true)
+  @screen.type(@usb_image_path)
+  sleep 2 # avoid ENTER being eaten by the auto-completion system
+  @screen.type(Sikuli::Key.ENTER)
+  # Once we use a more recent Dogtail that can deal with UTF-8 (#16976),
+  # we can instead do:
+  #   restore_dialog.child('Start Restoring…', roleName: 'push button').click
+  @screen.wait_and_click('GnomeDisksStartRestoringButton.png', 10)
+  disks.child('Information', roleName: 'alert', showingOnly: true)
+    .child('Restore', roleName: 'push button', showingOnly: true)
+    .click
+  # Wait until the restoration job is finished
+  job = disks.child('Job', roleName: 'label', showingOnly: true)
+  try_for(60) do
+    ! job.showing
+  end
 end

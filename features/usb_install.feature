@@ -127,7 +127,7 @@ Feature: Installing Tails to a USB drive
     And I plug and mount a USB drive containing a Tails USB image
     And I create a 7200 MiB disk named "usbimage"
     And I plug USB drive "usbimage"
-    And I install a Tails USB image to USB drive "usbimage" with GNOME Disks
+    And I install a Tails USB image to the 7200 MiB disk with GNOME Disks
 
   # Depends on scenario: Installing Tails with GNOME Disks from a USB image
   Scenario: The system partition is updated when booting from a USB drive where a Tails USB image was copied
