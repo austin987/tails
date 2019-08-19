@@ -908,10 +908,7 @@ Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do
     /^#{size_in_GB_of_destination_disk} GB Drive/.match(row.name)
   }.grabFocus
   disks.child('Menu', roleName: 'toggle button').click
-  # Once we use a more recent Dogtail that can deal with UTF-8 (#16976),
-  # we can instead do:
-  #   disks.child('Restore Disk Image…', roleName: 'menu item').click
-  @screen.wait_and_click('GnomeDisksRestoreDiskImageMenuEntry.png', 10)
+  disks.child('Restore Disk Image…', roleName: 'menu item').click
   restore_dialog = disks.child('Restore Disk Image', roleName: 'dialog',
                                showingOnly: true)
   # Open the file chooser
@@ -922,10 +919,7 @@ Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do
   @screen.type(@usb_image_path)
   sleep 2 # avoid ENTER being eaten by the auto-completion system
   @screen.type(Sikuli::Key.ENTER)
-  # Once we use a more recent Dogtail that can deal with UTF-8 (#16976),
-  # we can instead do:
-  #   restore_dialog.child('Start Restoring…', roleName: 'push button').click
-  @screen.wait_and_click('GnomeDisksStartRestoringButton.png', 10)
+  restore_dialog.child('Start Restoring…', roleName: 'push button').click
   disks.child('Information', roleName: 'alert', showingOnly: true)
     .child('Restore', roleName: 'push button', showingOnly: true)
     .click
