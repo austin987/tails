@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Terminate GDM's GNOME session, in order to free a few hundreds of MB
+# of memory. This script is run by the tails-kill-gdm-session.service
+# under "systemd --user", during the "Applications" phase of the
+# initialization of the amnesia user's GNOME session.
+
+set -e
+set -u
+set -x
+
+# Ensure gdm-session-worker won't start new sessions.
+cp -a /bin/true /usr/lib/gdm3/gdm-session-worker
+
+# Kill GDM's gdm-session-worker: it's the parent process for all
+# Debian-gdm processes, such as gdm-x-session; it would otherwise
+# respawn another gdm-x-session after we've killed the first one.
+pkill -u root --full --exact 'gdm-session-worker \[pam/gdm-launch-environment\]'
+
+# Forcibly kill the Debian-gdm GNOME session,
+# in case the former command was not enough.
+loginctl --signal SIGKILL kill-user Debian-gdm || true
+loginctl terminate-user Debian-gdm || true
