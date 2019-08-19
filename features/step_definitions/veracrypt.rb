@@ -155,7 +155,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   @screen.type(Sikuli::Key.ENTER)
   @screen.waitVanish('VeraCryptUnlockDialog.png', 10)
   try_for(30) do
-      $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
+    $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
   end
 end
 
