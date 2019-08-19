@@ -912,13 +912,13 @@ Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do
   restore_dialog = disks.child('Restore Disk Image', roleName: 'dialog',
                                showingOnly: true)
   # Open the file chooser
-  @screen.type(Sikuli::Key.ENTER)
+  disks.pressKey('Enter')
   select_disk_image_dialog = disks.child('Select Disk Image to Restore',
                                          roleName: 'file chooser',
                                          showingOnly: true)
-  @screen.type(@usb_image_path)
+  disks.typeText(@usb_image_path)
   sleep 2 # avoid ENTER being eaten by the auto-completion system
-  @screen.type(Sikuli::Key.ENTER)
+  disks.pressKey('Enter')
   try_for(10) do
     ! select_disk_image_dialog.showing
   end
