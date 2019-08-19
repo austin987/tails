@@ -919,6 +919,9 @@ Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do
   @screen.type(@usb_image_path)
   sleep 2 # avoid ENTER being eaten by the auto-completion system
   @screen.type(Sikuli::Key.ENTER)
+  try_for(10) do
+    ! select_disk_image_dialog.showing
+  end
   restore_dialog.child('Start Restoring…', roleName: 'push button').click
   disks.child('Information', roleName: 'alert', showingOnly: true)
     .child('Restore', roleName: 'push button', showingOnly: true)
