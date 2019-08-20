@@ -149,6 +149,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   if @veracrypt_needs_pim
     # Go back to the PIM entry text field
     @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT)
+    sleep 1 # Otherwise typing the PIM goes in the void
     @screen.type($veracrypt_pim)
   end
   @screen.click('VeraCryptUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
