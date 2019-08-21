@@ -394,6 +394,16 @@ class VM
     return list
   end
 
+  def set_ram_size(size, unit = "KiB")
+    raise "System memory can only be added to inactive vms" if is_running?
+    domain_xml = REXML::Document.new(@domain.xml_desc)
+    domain_xml.elements['domain/memory'].text = size
+    domain_xml.elements['domain/memory'].attributes['unit'] = unit
+    domain_xml.elements['domain/currentMemory'].text = size
+    domain_xml.elements['domain/currentMemory'].attributes['unit'] = unit
+    update(domain_xml.to_s)
+  end
+
   def set_os_loader(type)
     if is_running?
       raise "boot settings can only be set for inactive vms"
