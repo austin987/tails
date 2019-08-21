@@ -120,12 +120,12 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
     reload_action = 'Reload'
   end
   expected_title = "#{title} - #{browser_name}"
-  try_for(60) { @torbrowser.child(expected_title, roleName: 'frame') }
+  try_for(60) { @torbrowser.child?(expected_title, roleName: 'frame') }
   # The 'Reload' button (graphically shown as a looping arrow)
   # is only shown when a page has loaded, so once we see the
   # expected title *and* this button has appeared, then we can be sure
   # that the page has fully loaded.
-  try_for(120) { @torbrowser.child(reload_action, roleName: 'push button') }
+  try_for(120) { @torbrowser.child?(reload_action, roleName: 'push button') }
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -243,7 +243,7 @@ Then /^I can listen to an Ogg audio track in Tor Browser$/ do
 end
 
 Then /^I can watch a WebM video in Tor Browser$/ do
-  test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
+  test_url = WEBM_VIDEO_URL
   info = xul_application_info('Tor Browser')
   open_test_url = Proc.new do
     step "I open the address \"#{test_url}\" in the Tor Browser"
