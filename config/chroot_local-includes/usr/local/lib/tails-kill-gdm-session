@@ -9,6 +9,35 @@ set -e
 set -u
 set -x
 
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
+# Returns the identifier of the first X11 session of $LIVE_USERNAME.
+# In this context, we know that:
+#   - There is one such session: we're run via desktop.target, which is started
+#     after GDM has logged in $LIVE_USERNAME and pam_systemd has allocated them
+#     a logind session.
+#   - There's no more than one such session: our Greeter/GDM integration code
+#     allows only one graphical login.
+live_user_logind_x_session_id() {
+   # The value of the Sessions property is a space-separated list
+   # of session identifiers
+   for session in $(loginctl --property=Sessions --value show-user "$LIVE_USERNAME"); do
+      if [ "$(loginctl --property=Type --value show-session $session)" = 'x11' ]; then
+         loginctl --property=Id --value show-session "$session"
+         return 0
+      fi
+   done
+   echo "Unexpected error: no X11 session for ${LIVE_USERNAME}" >&2
+   return 1
+}
+
+logind_session_tty_number() {
+   session="$1"
+   loginctl --property=TTY --value show-session "$session" \
+      | sed -E 's,^tty,,'
+}
+
 # Ensure gdm-session-worker won't start new sessions.
 cp -a /bin/true /usr/lib/gdm3/gdm-session-worker
 
@@ -21,3 +50,17 @@ pkill -u root --full --exact 'gdm-session-worker \[pam/gdm-launch-environment\]'
 # in case the former command was not enough.
 loginctl --signal SIGKILL kill-user Debian-gdm || true
 loginctl terminate-user Debian-gdm || true
+
+# Activate the amnesia user's desktop session, in case we've killed
+# the Debian-gdm session before GDM had time to do so; do this
+# repeatedly for about 10 seconds, in case GDM take back control of
+# the seat and switches back to VT1, after we've already activated
+# amnesia's session and switched to VT2, because its own session was killed.
+tries=0
+while [ $tries -lt 10 ]; do
+   LIVE_USER_LOGIND_X_SESSION_ID=$(live_user_logind_x_session_id)
+   chvt "$(logind_session_tty_number $LIVE_USER_LOGIND_X_SESSION_ID)"
+   loginctl activate "$LIVE_USER_LOGIND_X_SESSION_ID"
+   tries=$(expr $tries + 1)
+   sleep 1
+done
