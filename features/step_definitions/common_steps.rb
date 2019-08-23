@@ -272,7 +272,6 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
-  step 'Tails Greeter has applied all settings'
   step 'the Tails desktop is ready'
 end
 
@@ -299,15 +298,6 @@ Given /^I set an administration password$/ do
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.ENTER)
-end
-
-Given /^Tails Greeter has applied all settings$/ do
-  # I.e. it is done with PostLogin, which is ensured to happen before
-  # a logind session is opened for LIVE_USER.
-  try_for(120) {
-    $vm.execute_successfully("loginctl").stdout
-      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s+\S+\s*$/) != nil
-  }
 end
 
 Given /^the Tails desktop is ready$/ do
