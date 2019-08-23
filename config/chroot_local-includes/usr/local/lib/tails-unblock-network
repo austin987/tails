@@ -28,6 +28,16 @@ ls /etc/modprobe.d
 /sbin/lsmod
 ls -l /sys/class/net
 
+# There's a chance that udev won't pick up quickly and automatically
+# changes to /etc/modprobe.d, for example if it monitors that
+# directory via its inode number at the time udev started: the inode
+# number of that directory might have changed since (this is
+# a documented possibility with aufs' noxino mount option).
+# So let's instruct udev to update its knowledge of the world.
+echo "Asking systemd-udevd to reload databases..." >&2
+udevadm control --reload
+echo "systemd-udevd has reloaded its databases." >&2
+
 # Now we'll load any present network device previously blocked by
 # the blacklist. In particular, the MAC spoofing udev rule should trigger
 # for each network device added.
