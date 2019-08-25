@@ -65,16 +65,11 @@ for package in mutt rpcbind tcpd ; do
     fi
 done
 
-### Hotfix for 3.14: procmail is no longer known by apt in tagged
-### snapshots, likely because no longer pulled by monkeysphere:
-if is_package_installed procmail; then
-    packages_to_purge="${packages_to_purge} procmail"
-fi
-
-### Hotfix for 4.0~beta1: similar as for procmail, above.
-for p in gcc-7 libgcc-7-dev; do
-    if is_package_installed "${p}"; then
-        packages_to_purge="${packages_to_purge} ${p}"
+### Remove unwanted packages that might, or might not,
+### have been installed during the build.
+for package in gcc-7 libgcc-7-dev procmail; do
+    if is_package_installed "${package}"; then
+        packages_to_purge="${packages_to_purge} ${package}"
     fi
 done
 
