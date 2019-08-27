@@ -4,20 +4,40 @@ set -e
 set -u
 set -x
 
+CONFIG_FILE=/var/lib/gdm3/tails.physical_security
+NET_MODULES_BLACKLIST=/etc/modprobe.d/all-net-blacklist.conf
+
+# Import the TAILS_NETCONF variable
+. "$CONFIG_FILE"
+
 systemctl start tails-unblock-network.service
 
 # Without this, network is sometimes not unblocked, probably due to some
 # race condition between tails-unblock-network.service (that deletes the
 # blacklist file) and udevadm trigger, possibly caused by yet another aufs
 # weirdness (#9012)...
-echo "Sleeping..." >&2
-sleep 5
-echo "slept." >&2
+if [ "${TAILS_NETCONF}" != "disabled" ]; then
+   echo "Waiting for ${NET_MODULES_BLACKLIST} to be gone..." >&2
+   while [ -e "${NET_MODULES_BLACKLIST}" ]; do
+      sleep 0.5
+   done
+   echo "${NET_MODULES_BLACKLIST} is gone." >&2
+fi
 
 # XXX: add debugging information for #9012 to the Journal
 ls /etc/modprobe.d
 /sbin/lsmod
 ls -l /sys/class/net
+
+# There's a chance that udev won't pick up quickly and automatically
+# changes to /etc/modprobe.d, for example if it monitors that
+# directory via its inode number at the time udev started: the inode
+# number of that directory might have changed since (this is
+# a documented possibility with aufs' noxino mount option).
+# So let's instruct udev to update its knowledge of the world.
+echo "Asking systemd-udevd to reload databases..." >&2
+udevadm control --reload
+echo "systemd-udevd has reloaded its databases." >&2
 
 # Now we'll load any present network device previously blocked by
 # the blacklist. In particular, the MAC spoofing udev rule should trigger
