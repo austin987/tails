@@ -439,6 +439,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
       # command to modify the #{hostname} below.
       '-o', 'StrictHostKeyChecking=no',
       '-o', 'UserKnownHostsFile=/dev/null',
+      # Speed up the copy
+      '-o', 'Compression=no',
     ]
     fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
     fetch_command << ENV['ARTIFACTS']
