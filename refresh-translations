@@ -14,9 +14,13 @@ PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/tails-screen-locker \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
     /usr/local/sbin/tails-additional-software \
+    /usr/local/lib/python3/dist-packages/tailsgreeter/gui.py \
+    /usr/local/lib/python3/dist-packages/tailsgreeter/language.py \
+    /usr/local/lib/python3/dist-packages/tailsgreeter/persistence.py \
+    /usr/local/lib/python3/dist-packages/tailsgreeter/utils.py \
     /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume.py \
     /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_list.py \
-    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_manager.py
+    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_manager.py \
     /usr/local/lib/tails-additional-software-notify \
     /usr/local/sbin/tails-additional-software"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
@@ -29,6 +33,7 @@ JAVASCRIPT_PROGS=" \
     /usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js \
 "
 GLADE_UI="\
+    /usr/share/tails-greeter/greeter.ui \
     /usr/share/tails/additional-software/configuration-window.ui \
 "
 
@@ -60,6 +65,9 @@ prog_potfile () {
             ;;
         /usr/local/lib/*/unlock_veracrypt_volumes/*)
             domain="unlock-veracrypt-volumes-$(basename "$prog")"
+            ;;
+        /usr/local/lib/*/tailsgreeter/*)
+            domain="greeter-$(basename "$prog")"
             ;;
         *)
             domain=$(basename $prog)

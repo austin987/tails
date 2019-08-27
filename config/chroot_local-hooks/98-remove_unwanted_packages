@@ -58,21 +58,18 @@ apt-get --yes purge  \
 packages_to_purge=""
 
 ### Remove packages that can get a different priority in the security
-### archive (see https://bugs.debian.org/867668):
-if is_package_installed mutt; then
-    packages_to_purge="${packages_to_purge} mutt"
-fi
+### archive (see https://bugs.debian.org/867668).
+for package in mutt rpcbind tcpd ; do
+    if is_package_installed "${package}"; then
+        packages_to_purge="${packages_to_purge} ${package}"
+    fi
+done
 
-### Hotfix for 3.14: procmail is no longer known by apt in tagged
-### snapshots, likely because no longer pulled by monkeysphere:
-if is_package_installed procmail; then
-    packages_to_purge="${packages_to_purge} procmail"
-fi
-
-### Hotfix for 4.0~beta1: similar as for procmail, above.
-for p in gcc-6 gcc-7 libgcc-7-dev; do
-    if is_package_installed "${p}"; then
-        packages_to_purge="${packages_to_purge} ${p}"
+### Remove unwanted packages that might, or might not,
+### have been installed during the build.
+for package in gcc-7 libgcc-7-dev procmail; do
+    if is_package_installed "${package}"; then
+        packages_to_purge="${packages_to_purge} ${package}"
     fi
 done
 
@@ -92,6 +89,9 @@ apt-get --yes purge  \
 ### anything when building with partial, tagged APT snapshots.
 if dpkg --get-selections | grep -qs -E '^geoclue'; then
     apt-get --yes purge '^geoclue*'
+fi
+if dpkg --get-selections | grep -qs -E '^exim4'; then
+    apt-get --yes purge '^exim4*'
 fi
 
 ### Deinstall dependencies of the just removed packages.
