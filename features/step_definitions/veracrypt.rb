@@ -3,16 +3,30 @@ require 'expect'
 require 'pty'
 require 'tempfile'
 
-$veracrypt_passphrase = 'asdf'
+$veracrypt_passphrase = 'test'
 $veracrypt_hidden_passphrase = 'fdsa'
 $veracrypt_volume_name = 'veracrypt'
+$veracrypt_pim = '1'
+$veracrypt_basic_container_with_pim = "#{MISC_FILES_DIR}/container_with_pim.hc"
 
-def veracrypt_volume_size_in_GNOME(is_hidden)
-  is_hidden ? '52 MB' : '105 MB'
+def veracrypt_volume_size_in_Nautilus(options = {})
+  options[:isHidden] ?
+    '52 MB'
+  : (
+    options[:needsPim] ?
+      '147 KB'
+    : '105 MB'
+  )
+end
+
+def veracrypt_volume_size_in_GNOME_Disks(options = {})
+  options[:needsPim] ?
+    '410 KB'
+  : '105 MB'
 end
 
 def create_veracrypt_keyfile()
-  keyfile = Tempfile.new('veracrypt-keyfile', $config["TMPDIR"])
+  keyfile = Tempfile.create('veracrypt-keyfile', $config["TMPDIR"])
   keyfile << 'asdf'
   keyfile.close
   return keyfile.path
@@ -78,7 +92,7 @@ def create_veracrypt_volume(type, with_keyfile)
   Dir.mktmpdir('veracrypt-mountpoint', $config["TMPDIR"]) { |mountpoint|
     fatal_system "mount -t vfat '/dev/mapper/veracrypt' '#{mountpoint}'"
     # must match SecretFileOnVeraCryptVolume.png when displayed in GNOME Files
-    FileUtils.cp('/usr/share/common-licenses/GPL-3', "#{mountpoint}/SecretFile")
+    FileUtils.cp('/usr/share/common-licenses/GPL-3', "#{mountpoint}/GPL-3")
     fatal_system "umount '#{mountpoint}'"
   }
   fatal_system "tcplay --unmap=veracrypt"
@@ -91,9 +105,28 @@ When /^I plug a USB drive containing a (.+) VeraCrypt volume( with a keyfile)?$/
   step "I plug USB drive \"#{$veracrypt_volume_name}\""
 end
 
-When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( with a keyfile)?$/ do |type, with_keyfile|
-  create_veracrypt_volume(type, with_keyfile)
-  @veracrypt_shared_dir_in_guest = share_host_files($vm.storage.disk_path($veracrypt_volume_name))
+When /^I plug and mount a USB drive containing a (.+) VeraCrypt file container( with a keyfile| with a PIM)?$/ do |type, with_options|
+  case with_options
+  when ' with a PIM'
+    assert_equal(type, 'basic',
+                 "Only basic containers are supported with PIM.")
+    @veracrypt_needs_pim = true
+    # Instead of creating a container, we use the one we have in Git.
+    @veracrypt_shared_dir_in_guest = share_host_files(
+      $veracrypt_basic_container_with_pim
+    )
+    $vm.execute_successfully(
+      "mv " +
+      "'#{@veracrypt_shared_dir_in_guest}/#{File.basename($veracrypt_basic_container_with_pim)}' " +
+      "'#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
+    )
+  else
+    @veracrypt_needs_pim = false
+    create_veracrypt_volume(type, with_options)
+    @veracrypt_shared_dir_in_guest = share_host_files(
+      $vm.storage.disk_path($veracrypt_volume_name)
+    )
+  end
   $vm.execute_successfully(
     "chown #{LIVE_USER}:#{LIVE_USER} '#{@veracrypt_shared_dir_in_guest}/#{$veracrypt_volume_name}'"
   )
@@ -113,21 +146,31 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   @screen.type(
     @veracrypt_is_hidden ? $veracrypt_hidden_passphrase : $veracrypt_passphrase
   )
+  if @veracrypt_needs_pim
+    # Go back to the PIM entry text field
+    @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT)
+    sleep 1 # Otherwise typing the PIM goes in the void
+    @screen.type($veracrypt_pim)
+  end
   @screen.click('VeraCryptUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
   @screen.type(Sikuli::Key.ENTER)
   @screen.waitVanish('VeraCryptUnlockDialog.png', 10)
   try_for(30) do
-      $vm.execute_successfully('ls /media/amnesia/*/SecretFile')
+    $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
   end
 end
 
 When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disks$/ do |support|
   step 'I start "Disks" via GNOME Activities Overview'
   disks = Dogtail::Application.new('gnome-disks')
+  size = veracrypt_volume_size_in_GNOME_Disks(
+    :isHidden => @veracrypt_is_hidden,
+    :needsPim => @veracrypt_needs_pim
+  )
   case support
   when 'volume'
     disks.children(roleName: 'table cell').find { |row|
-      /^105 MB Drive/.match(row.name)
+      /^#{size} Drive/.match(row.name)
     }.grabFocus
   when 'file container'
     gnome_shell = Dogtail::Application.new('gnome-shell')
@@ -159,7 +202,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     try_for(15) do
       begin
         disks.children(roleName: 'table cell').find { |row|
-          /^105 MB Loop Device/.match(row.name)
+          /^#{size} Loop Device/.match(row.name)
         }.grabFocus
         true
       rescue NoMethodError
@@ -174,6 +217,11 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   passphrase_field.typeText(
     @veracrypt_is_hidden ? $veracrypt_hidden_passphrase : $veracrypt_passphrase
   )
+  if @veracrypt_needs_pim
+    pim_field = unlock_dialog.child('PIM', roleName: 'label').labelee
+    pim_field.grabFocus()
+    pim_field.typeText($veracrypt_pim)
+  end
   if @veracrypt_needs_keyfile
     # not accessible and unreachable with the keyboard (#15952)
     @screen.click('GnomeDisksUnlockDialogKeyfileComboBox.png')
@@ -189,7 +237,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   @screen.type('u', Sikuli::KeyModifier.ALT) # "Unlock" button
   try_for(10, :msg => "Failed to mount the unlocked volume") do
     begin
-      unlocked_volume = disks.child('105 MB VeraCrypt/TrueCrypt', roleName: 'panel', showingOnly: true)
+      unlocked_volume = disks.child("#{size} VeraCrypt/TrueCrypt", roleName: 'panel', showingOnly: true)
       unlocked_volume.click
       # Move the focus down to the "Filesystem\n107 MB FAT" item (that Dogtail
       # is not able to find) using the 'Down' arrow, in order to display
@@ -205,15 +253,18 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       false
     end
   end
-  try_for(10, :msg => "/media/amnesia/*/SecretFile does not exist") do
-    $vm.execute_successfully('ls /media/amnesia/*/SecretFile')
+  try_for(10, :msg => "/media/amnesia/*/GPL-3 does not exist") do
+    $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
   end
 end
 
 When /^I open this VeraCrypt volume in GNOME Files$/ do
   $vm.spawn('nautilus /media/amnesia/*', user: LIVE_USER)
   Dogtail::Application.new('nautilus').window(
-    veracrypt_volume_size_in_GNOME(@veracrypt_is_hidden) + ' Volume'
+    veracrypt_volume_size_in_Nautilus(
+      :isHidden => @veracrypt_is_hidden,
+      :needsPim => @veracrypt_needs_pim
+    ) + ' Volume'
   )
 end
 
@@ -230,6 +281,6 @@ When /^I lock the currently opened VeraCrypt (volume|file container)$/ do |suppo
 end
 
 Then /^the VeraCrypt (volume|file container) has been unmounted and locked$/ do |support|
-  assert(! $vm.execute('ls /media/amnesia/*/SecretFile').success?)
+  assert(! $vm.execute("ls /media/amnesia/*/GPL-3").success?)
   assert(! $vm.execute('ls /dev/mapper/tcrypt-*').success?)
 end
