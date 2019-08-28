@@ -10,7 +10,17 @@ Feature: Additional software
   # dependencies (which are documented below).
 
   Scenario: I am warned I can not use Additional Software when I start Tails from a DVD and install a package
-    Given I have started Tails from DVD and logged in with an administration password and the network is connected
+    Given a computer
+    And the computer has 2650 MiB of RAM
+    And the network is unplugged
+    And I start the computer
+    And the computer boots Tails
+    And I set an administration password
+    And I log in to a new session
+    And the network is plugged
+    And Tor is ready
+    And all notifications have disappeared
+    And available upgrades have been checked
     And I update APT using apt
     When I install "sslh" using apt
     Then I am notified I can not use Additional Software for "sslh"

@@ -1,0 +1,142 @@
+#! /bin/bash
+
+# This script is run as root by GDM after user's login.
+# It must return exit code 0, otherwise it totally breaks the logon process.
+
+# Input
+# =====
+#
+# * /etc/live/config.d/username.conf : $LIVE_USERNAME
+# * /var/lib/gdm3/tails.locale : $TAILS_LOCALE_NAME, $TAILS_XKBMODEL,
+#   $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT, $TAILS_XKBOPTIONS, $CODESET
+# * /var/lib/gdm3/tails.password : $TAILS_USER_PASSWORD
+# * /var/lib/gdm3/tails.physical_security : $TAILS_MACSPOOF_ENABLED
+
+# For whatever reason, /usr/sbin (needed by at least chpasswd)
+# is not in our PATH
+export PATH="/usr/sbin:${PATH}"
+LIVE_PASSWORD=live
+POLKIT=/etc/polkit-1/localauthority.conf.d/52-tails-greeter.conf
+SUDOERS=/etc/sudoers.d/tails-greeter
+NO_PASSWORD_LECTURE=/etc/sudoers.d/tails-greeter-no-password-lecture
+KBDSET=/etc/default/keyboard
+CONSET=/etc/default/console-setup
+LOCALE_CFG=/etc/default/locale
+CODSET="Uni1" # universal codeset to properly display glyphs in localized console
+
+log() {
+    echo "$1" >&2
+}
+
+log_n_exit() {
+    log "$1"
+    log "Leaving PostLogin"
+    exit 0
+}
+
+# enforce value $3 for variable $1 in file $2
+force_set() {
+    sed -i -e "s|^$1=.*$|$1=\"$3\"|" "$2"
+}
+
+# check if variable $1 is in file $2, if not - add with value $3 to file $2
+# $4 enforce adding $3 only (without $1= prefix)
+grep_n_set() {
+    FCHK=yes
+    grep -qs "$1" "$2" || FCHK=no
+    if [ -n "$4" ] ; then
+        if [ "$FCHK" = "no" ] ; then
+	    echo "$3" >> "$2"
+	fi
+    else
+	if [ "$FCHK" = "no" ] ; then
+	    echo "$1=$3" >> "$2"
+	else
+	    force_set "$1" "$2" "$3"
+	fi
+    fi
+}
+
+### Let's go
+
+log "Entering PostLogin"
+
+### Gather general configuration
+
+# Import the name of the live user
+. /etc/live/config.d/username.conf || log_n_exit "Username file not found."
+if [ -z "${LIVE_USERNAME}" ] ; then
+    log_n_exit "Username variable not found."
+fi
+
+### Physical security
+log "Running /usr/local/lib/tails-unblock-network..."
+/usr/local/lib/tails-unblock-network
+log "tails-unblock-network has exited (status=$?)."
+
+### Localization
+
+# Import locale name
+. /var/lib/gdm3/tails.locale || log_n_exit "Locale file not found."
+if [ -z "${TAILS_LOCALE_NAME}" ] ; then
+    log_n_exit "Locale variable not found."
+fi
+
+# Set the keyboard mapping for X11 and the console
+localectl set-x11-keymap "$TAILS_XKBLAYOUT" "$TAILS_XKBMODEL" "$TAILS_XKBVARIANT" "$TAILS_XKBOPTIONS"
+
+# Set the system locale and formats
+localectl set-locale \
+    "LANG=${TAILS_LOCALE_NAME}.UTF-8" \
+    "LC_TIME=${TAILS_FORMATS}.UTF-8" \
+    "LC_NUMERIC=${TAILS_FORMATS}.UTF-8" \
+    "LC_MONETARY=${TAILS_FORMATS}.UTF-8" \
+    "LC_MEASUREMENT=${TAILS_FORMATS}.UTF-8" \
+    "LC_PAPER=${TAILS_FORMATS}.UTF-8" \
+
+# Save keyboard settings so that tails-configure-keyboard can set it
+# in the GNOME session.
+cat > /var/lib/tails-user-session/keyboard <<EOF
+XKBMODEL="$TAILS_XKBMODEL"
+XKBLAYOUT="$TAILS_XKBLAYOUT"
+XKBVARIANT="$TAILS_XKBVARIANT"
+XKBOPTIONS="$TAILS_XKBOPTIONS"
+EOF
+
+### Password
+
+# Import password for superuser access
+if [ -e /var/lib/gdm3/tails.password ] ; then
+    . /var/lib/gdm3/tails.password
+fi
+
+# Remove password file
+rm --interactive=never -f /var/lib/gdm3/tails.password
+
+# Check if password is actually set
+if [ -z "${TAILS_USER_PASSWORD}" ] ; then
+    rm -f "${POLKIT}" "${SUDOERS}"
+    deluser "${LIVE_USERNAME}" sudo
+    passwd -d "${LIVE_USERNAME}"
+    install -o root -g root -m 0440 /dev/null "${NO_PASSWORD_LECTURE}"
+    echo "Defaults:amnesia lecture=always" > "${NO_PASSWORD_LECTURE}"
+    echo "Defaults:amnesia lecture_file=/usr/share/tails-greeter/no-password-lecture.txt" >> "${NO_PASSWORD_LECTURE}"
+    echo "Defaults:amnesia badpass_message=\"The administration password is disabled.\"" >> "${NO_PASSWORD_LECTURE}"
+    log_n_exit "Password variable not found."
+fi
+
+# Sets the password
+echo "${LIVE_USERNAME}:${TAILS_USER_PASSWORD}" | chpasswd
+
+# Add sudoers entry
+echo "${LIVE_USERNAME} ALL = (ALL) ALL" >> "${SUDOERS}"
+chmod 0440 "${SUDOERS}"
+
+# Add PolKit config
+echo "[Configuration]" > "${POLKIT}"
+echo "AdminIdentities=unix-user:${LIVE_USERNAME}" >> "${POLKIT}"
+
+# Configure su-to-root to use sudo
+sudo -u "${LIVE_USERNAME}" sh -c "echo 'SU_TO_ROOT_SU=sudo' >> /home/${LIVE_USERNAME}/.su-to-rootrc"
+
+log "Leaving PostLogin"

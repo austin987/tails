@@ -216,9 +216,10 @@ import translations from Transifex and sanity-check them:
 	"${RELEASE_CHECKOUT:?}"/import-translations && \
 	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
 
-Then, `git rm` the PO files that have issues (alternatively, if you
-feel like it you can fix them but your changes will be overwritten
-next time we import translations from Transifex).
+Then, for every PO file that has issues:
+
+1. Rollback changes to that file: `git checkout po/LL.po`
+2. Run `check_po` again. It should pass this time.
 
 And finally, commit:
 
@@ -229,7 +230,6 @@ Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
 
 * [[tails-installer]]
-* [[tails-greeter]]
 * [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
@@ -314,15 +314,15 @@ Update other base branches
    during the freeze. It's fine if that results in a no-op
    (it depends on how exactly previous operations were performed).
 
-3. Merge `devel` into `feature/buster`, *without* following the instructions for
+3. Merge `devel` into `feature/bullseye` (if it exists), *without* following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
-   (For now `feature/buster` is handled as any other topic branch
+   (For now `feature/bullseye` is handled as any other topic branch
    forked off `devel`: its base branch is set to `devel`.)
    If the merge conflicts don't look like something you feel confident
    resolving properly, abort this merge and let the Foundations
    Team know.
 
-4. Ensure that the release, `devel` and `feature/buster` branches
+4. Ensure that the release, `devel` and `feature/bullseye` (if it exists) branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
@@ -330,7 +330,7 @@ Update other base branches
 
         git push origin                          \
            "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
-           feature/buster:feature/buster       \
+           $(if git describe feature/bullseye >/dev/null 2>&1; then echo feature/bullseye:feature/bullseye ; fi) \
            devel:devel
 
 Update more included files
@@ -363,7 +363,7 @@ Changelog entries can be dispatched into those usual sections:
 
 Then, gather other useful information from:
 
-* every custom bundled package's own Changelog (Greeter, Persistent
+* every custom bundled package's own Changelog (Persistent
   Volume Assistant, etc.);
 * the diff between the previous version's `.packages` file and the one
   from the to-be-released images; look for:
