@@ -19,6 +19,7 @@ module Dogtail
   ]
 
   TREE_API_NODE_SEARCH_FIELDS = [
+    :labelee,
     :parent,
   ]
 
