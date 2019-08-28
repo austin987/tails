@@ -35,6 +35,14 @@ rm /var/lib/systemd/catalog/database
 # Remove logs.
 rm -r /var/lib/dkms/*/*/*/*/log
 
+# Post-process /etc/shadow by setting the sp_lstchg field to the number of days
+# since SOURCE_DATE_EPOCH instead of 1st Jan 1970. (#12339)
+# XXX:Bullseye: drop this as https://bugs.debian.org/917773 is fixed.
+cut -d: -f1 /etc/shadow | \
+    xargs -L1 \
+        chage --lastday \
+            "$(($(date --utc --date "@${SOURCE_DATE_EPOCH}" "+%s") / 86400))"
+
 # A user reported all executable bits of /etc/hostname being set when
 # trying to reproduce Tails 3.1. See #13623 for details.
 chmod u=rw,go=r /etc/hostname
