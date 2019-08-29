@@ -57,6 +57,8 @@ devices on the left side of the screen.
   1. Check that the description of the device on the right side of the screen
   corresponds to your device: its brand, its size, etc.
 
+<a id="format"></a>
+
 Format the device
 -----------------
 
@@ -66,7 +68,7 @@ Format the device
 
   1. In the <span class="guilabel">Format Disk</span> dialog:
 
-     - If you want to erase all data securely, choose to
+     - If you want to securely erase all data on the device, choose to
        <span class="guilabel">Overwrite existing data with zeroes</span> in the
        <span class="guilabel">Erase</span> drop-down list.
 
@@ -90,24 +92,45 @@ device:
   1. Click on the <span class="guimenu">[[!img lib/list-add.png alt="Create partition" class="symbolic" link="no"]]</span>
      button to create a new partition on the device.
 
-  1. In the <span class="guilabel">Create Partition</span> dialog:
+  1. Configure the various settings of your new partition in the
+  partition creation assistant:
 
-     - <span class="guilabel">Partition Size</span>: you can create a partition
-       on the whole device or only on part of it. In this example we are
-       creating a partition of 4.0 GB on a device of 8.1 GB.
+     - In the <span class="guilabel">Create Partition</span> screen:
 
-     - <span class="guilabel">Type</span>: choose
-       <span class="guilabel">Encrypted, compatible with Linux systems (LUKS + Ext4)</span>
-       from the drop-down list.
+       - <span class="guilabel">Partition Size</span>: you can create a partition
+         on the whole device or only on part of it.
 
-     - <span class="guilabel">Name</span>: you can set a name for the partition.
-       This name remains invisible until the partition is open but can help
-       you to identify it during use.
+         In the example below, we are creating a partition of 4.0 GB on a device of 8.1 GB.
 
-     - <span class="guilabel">Passphrase</span>: type a passphrase for the
-       encrypted partition and repeat it to confirm.
+     - In the <span class="guilabel">Format Volume</span> screen:
 
-     Then click <span class="button">Create</span>.
+       - <span class="guilabel">Volume Name</span>: you can give a name to the partition.
+         This name remains invisible until the partition is open but can help
+         you to identify it during use.
+
+       - <span class="guilabel">Erase</span>: you can choose to securely
+         erase all data on the partition.
+
+         <div class="caution">
+         <p>Secure deletion does not work as expected on USB sticks and
+         SSDs (Solid-State Drives). Choose instead to overwrite existing
+         data on the whole device when [[formatting the
+         device|encrypted_volumes#format]].</p>
+         <p>See also our [[warning about secure deletion on USB sticks and
+         SSDs|secure_deletion#usb_and_ssd]].</p>
+         </div>
+
+       - <span class="guilabel">Type</span>: choose
+         <span class="guilabel">Internal disk for use with Linux systems
+         only (Ext4)</span> and <span class="guilabel">Password protect
+         volume (LUKS)</span>.
+
+     - In the <span class="guilabel">Set Password</span> screen:
+
+       - <span class="guilabel">Passphrase</span>: type a passphrase for the
+         encrypted partition and repeat it to confirm.
+
+       Then click <span class="button">Create</span>.
 
   1. Creating the partition takes from a few seconds to a few minutes. After
      that, the new encrypted partition appears in the volumes on the device:
