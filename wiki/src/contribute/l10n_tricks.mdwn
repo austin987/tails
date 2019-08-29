@@ -156,18 +156,23 @@ You can then configure it on your Poedit:
 2. Add the new language to `$weblate_additional_languages` in
    <https://git.tails.boum.org/puppet-tails/tree/manifests/website/params.pp>
    and have a sysadmin review your changes and deploy them to production.
-3. Run this command on the system that runs our translation platform
-   (as weblate user):
+3. To create PO files for the new language and commit them to Git,
+   run this command on the system that runs our translation platform,
+   as the `weblate` user:
 
-           ~/scripts/weblate_status.py
+       ~/scripts/weblate_status.py
 
-   You need to run this script with argument `--modify` to actually create the
-   missing po files and commit those files. The script uses the same lock file like
-   cron.sh, that means that the cronjob is prohibited, while the `weblate_status.py`
-   is running.
-4. After the po files are created, you need to update the Weblate components (as
-   weblate user):
+   Once satisfied, run this command again with the `--modify`
+   argument, so it actually performs the desired changes:
 
-           python3 /usr/local/share/weblate/manage.py loadpo --all --lang <LANG>
+       ~/scripts/weblate_status.py --modify
 
-   `<LANG>` is the newly added 2-letter languagecode.
+   Note that this script must not be run concurrently with
+   [`cron.sh`](https://git.tails.boum.org/puppet-tails/tree/files/weblate/scripts/cron.sh). Hence, they both use a shared lock file.
+4. Finally, to update the Weblate components, run this command as the
+   `weblate` user:
+
+       python3 /usr/local/share/weblate/manage.py \
+                  loadpo --all --lang <LANG>
+
+   … where `<LANG>` is the newly added 2-letter language code.

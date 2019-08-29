@@ -106,10 +106,13 @@ Implementation note:
 - It might be possible to reuse the same LUKS header to create the
   backup Persistence without prompting for a passphrase.
 
-  At first glance, cryptsetup luksHeaderBackup/luksHeaderRestore should
-  work to create that backups LUKS volume; and then, to unlock it, one
-  could dump the master key from memory and pass it to cryptsetup open
-  --master-key-file.
+  At first glance:
+
+  * To create the backup Persistence,
+    <span class="command">cryptsetup luksHeaderBackup/luksHeaderRestore</span> should work.
+  * To unlock the backup Persistence,
+    <span class="command">sudo dmsetup table --showkeys TailsData_unlocked</span> should dump the master key from memory and
+    <span class="command">cryptsetup --master-key-file</span> should unlock with the master key.
 
 Update
 ------
