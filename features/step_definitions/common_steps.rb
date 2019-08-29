@@ -937,12 +937,19 @@ Then /^Tails is running version (.+)$/ do |version|
   assert_equal(version, v2, "The version doesn't match /etc/os-release")
 end
 
-def share_host_files(files)
+def size_of_shared_disk_for(files)
   files = [files] if files.class == String
   assert_equal(Array, files.class)
   disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
   # Let's add some extra space for filesystem overhead etc.
   disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.15).ceil].max
+  return disk_size
+end
+
+def share_host_files(files)
+  files = [files] if files.class == String
+  assert_equal(Array, files.class)
+  disk_size = size_of_shared_disk_for(files)
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
   step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +
