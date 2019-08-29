@@ -29,7 +29,7 @@ error () {
 
 ${@}"
     echo "${cli_text}" >&2
-    sudo -u "${SUDO_USER}" zenity --error --title "" --text "${dialog_text}"
+    sudo -u "${SUDO_USER}" zenity --error --ellipsize --title "" --text "${dialog_text}"
     exit 1
 }
 
@@ -41,7 +41,7 @@ verify_start () {
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"
     if ! sudo -u "${SUDO_USER}" \
-         zenity --question --title "" --text "${dialog_msg}" --default-cancel \
+         zenity --question --ellipsize --title "" --text "${dialog_msg}" --default-cancel \
          --ok-label "${launch}"  --cancel-label "${exit}"; then
         exit 0
     fi

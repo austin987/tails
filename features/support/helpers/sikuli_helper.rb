@@ -146,6 +146,13 @@ def sikuli_screen_proxy.new(*args)
     end
     s.define_singleton_method(method_name) do |*args|
       begin
+        args_desc = ''
+        if args.first.instance_of?(Rjb::Rjb_JavaProxy)
+          args_desc = args.first.toString
+        else
+          args_desc = '"' + args.first.to_s + '"'
+        end
+        debug_log("Sikuli: calling #{method_name}(#{args_desc})...")
         orig_method = s.method("#{method_name}_no_override")
         return orig_method.call(*args)
       rescue Exception => exception

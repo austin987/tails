@@ -8,6 +8,16 @@ set -e
 # This allows us to give it special privileges (e.g. access via udisk
 # to internal disks and to the boot medium) that we don't want to give
 # to the desktop user.
+#
+# The UID and GID for this user and group need to remain the same (respectively:
+# 115 and 122) accross Tails releases: they are encoded numerically in ACLs
+# which allow tails-persistence-setup to update persistence configuration
+# files. If these UID and GID changed:
+#  - when enabling a persistent volume, persistence configuration files
+#    created with older Tails versions would be treated as unsafe and
+#    thus disabled;
+#  - tails-persistence-setup would not be allowed to modify persistence
+#    configuration files created with an older Tails version.
 
 echo "Creating the tails-persistence-setup user"
 

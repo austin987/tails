@@ -74,7 +74,7 @@ MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
    ["cupsd",    "*", "631"],
-   ["dhclient", "*", "68"]
+   ["dhclient", "0.0.0.0", "68"]
   ]
 # OpenDNS
 SOME_DNS_SERVER = "208.67.222.222"
@@ -82,3 +82,4 @@ VM_XML_PATH = "#{Dir.pwd}/features/domains"
 
 TAILS_SIGNING_KEY = cmd_helper(". #{Dir.pwd}/config/amnesia; echo ${AMNESIA_DEV_KEYID}").tr(' ', '').chomp
 TAILS_DEBIAN_REPO_KEY = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+WEBM_VIDEO_URL = 'https://tails.boum.org/lib/test_suite/test.webm'

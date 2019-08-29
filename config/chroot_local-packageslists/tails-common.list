@@ -1,5 +1,4 @@
 ### Self-bla
-tails-greeter
 tails-installer
 tails-iuk
 tails-persistence-setup
@@ -40,20 +39,33 @@ acl
 zenity
 # Needed by tails-htp-notify-user and others
 libdesktop-notify-perl
-# Needed by /lib/live/config/2010-pidgin
-bc
+# Needed by tails-persistence-setup
+libblockdev-crypto2
 # Needed by tails-transform-mirror-url
 nodejs
 # Needed by SSH's ProxyCommand
 netcat-openbsd
+# Needed by config/chroot_local-includes/usr/local/lib/udev-watchdog-wrapper
+eject
 # Needed by Additional Software
 python3-apt
 python3-atomicwrites
+# Needed by the Greeter
+console-setup
+gir1.2-accountsservice-1.0
+gir1.2-gdm-1.0
+gir1.2-glib-2.0
+gir1.2-gnomedesktop-3.0
+gir1.2-gtk-3.0
+gir1.2-webkit2-4.0
+python3-gi
+python3-pycountry
+python3-tz
+ttf-unifont
 
 ### Software
 
 adwaita-qt
-adwaita-qt4
 aircrack-ng
 alsa-utils
 apparmor
@@ -62,10 +74,11 @@ apparmor-profiles-extra
 apt-transport-tor
 audacity
 bilibop-udev
-caribou
+console-data
 cups
 cups-pk-helper
-cryptsetup
+cryptsetup-bin
+deb.torproject.org-keyring
 rsync
 bash-completion
 bookletimposer
@@ -95,19 +108,17 @@ gnome-control-center
 gnome-disk-utility
 gnome-menus
 gnome-power-manager
-gnome-search-tool
 gnome-screenshot
 gnome-session
+gnome-shell
+gnome-shell-extension-desktop-icons
 gnome-shell-extension-top-icons-plus
 gnome-shell-extensions
 gnome-sound-recorder
-# Jessie's gnome-sound-recorder is missing the dependency on gstreamer1.0-pulseaudio (Debian bug #852870)
-# This can be removed once gnome-sound-recorder is >=3.21.92-2
-gstreamer1.0-pulseaudio
 gnome-system-monitor
 gnome-terminal
 gnome-themes-standard
-gnome-user-guide
+gnome-user-docs
 gnupg-agent
 gnupg2
 gobi-loader
@@ -130,19 +141,19 @@ iptables
 # ships isolinux.bin in syslinux 6.x packaging
 isolinux
 ferm
-keepassx
+keepassxc
 memlockd
 less
 laptop-mode-tools
 libgail-common
-libcaribou-gtk-module
 libsane-hpaio
 live-config
 live-config-systemd
 live-tools
+lsb-release
 lvm2
 macchanger
-mat
+mat2
 mesa-utils
 nautilus
 nautilus-wipe
@@ -157,7 +168,6 @@ libreoffice-draw
 libreoffice-gnome
 libreoffice-gtk3
 libreoffice-impress
-libreoffice-math
 libreoffice-writer
 libreoffice-l10n-ar
 libreoffice-l10n-de
@@ -181,17 +191,16 @@ pidgin-guifications
 pidgin-otr
 pinentry-gtk2
 poedit
+powermgmt-base
 ppp
 pppoe
 pulseaudio
 pulseaudio-utils
 p7zip-full
-qt-at-spi
 rng-tools
 rfkill
 sane-utils
 scdaemon
-scribus
 seahorse
 seahorse-daemon
 seahorse-nautilus
@@ -228,6 +237,7 @@ sound-juicer
 totem
 unar
 usbutils
+user-setup
 vim-tiny
 virtualbox-guest-utils
 virtualbox-guest-x11
@@ -249,7 +259,9 @@ firmware-intel-sound
 firmware-ipw2x00
 firmware-iwlwifi
 firmware-libertas
+firmware-linux
 firmware-linux-free
+firmware-linux-nonfree
 firmware-misc-nonfree
 firmware-realtek
 firmware-ti-connectivity
@@ -271,7 +283,6 @@ xserver-xorg-video-amdgpu
 ### Input methods
 ibus-gtk
 ibus-gtk3
-ibus-qt4
 ## Chinese Pinyin and ZhuYin (Bopomofo)
 ibus-libpinyin
 ## Chinese ZhuYin (Bopomofo)
@@ -304,8 +315,8 @@ cdrdao
 ## mouse accessibility enhancements
 mousetweaks
 ## text-to-speech
-gnome-orca
 at-spi2-core
+orca
 speech-dispatcher-espeak-ng
 ## high-contrast theme
 gnome-accessibility-themes
@@ -346,14 +357,8 @@ printer-driver-hpcups
 printer-driver-gutenprint
 printer-driver-postscript-hp
 
-### Make the MAT more powerful
-gir1.2-poppler-0.18
-libimage-exiftool-perl
-python-cairo
-python-mutagen
+### Enable MAT2's Nautilus extension
 python-nautilus
-python-pdfrw
-python-poppler
 
 ### Needed by virtualbox-guest-utils
 pciutils
@@ -371,11 +376,14 @@ crda
 wireless-regdb
 
 ### Automated test suite
-python-dogtail
+python3-dogtail
 python3-serial
 python3-systemd
 xclip
 xdotool
+
+# Enable Electrum's TREZOR support
+python3-trezor
 
 # onion-grater
 python3-psutil
@@ -397,3 +405,6 @@ gir1.2-gudev-1.0
 
 # For partitioning script in initramfs
 fatresize
+
+# For Thunderbolt
+bolt
