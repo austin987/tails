@@ -41,6 +41,9 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
     install -o root -g root -m 644 /vagrant/provision/assets/acng.conf /etc/apt-cacher-ng/acng.conf
     [ "${TAILS_OFFLINE_MODE}" = 1 ] || TAILS_OFFLINE_MODE=0
     echo "Offlinemode: ${TAILS_OFFLINE_MODE}" > /etc/apt-cacher-ng/network.conf
+    if [ -n "${TAILS_ACNG_PROXY:-}" ]; then
+        echo "Proxy: ${TAILS_ACNG_PROXY}" >> /etc/apt-cacher-ng/network.conf
+    fi
     systemctl restart apt-cacher-ng.service
 fi
 

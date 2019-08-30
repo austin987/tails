@@ -169,8 +169,8 @@ Note that we don't call these folders "Downloads", because e.g.
 if someone creates an ODT file and wants to upload it, having to move
 it to a folder called "Downloads" sounds really weird.
 
-Future work
-===========
+Implementation details and caveats, and future work
+===================================================
 
 More confinement profiles
 -------------------------
@@ -195,29 +195,13 @@ be a good way to isolate more types of resources.
 Using alias rules to avoid modifying profiles
 ---------------------------------------------
 
-The most obvious trick to workaround AppArmor's lack of support for
-union filesystems is to use [alias
-rules](http://wiki.apparmor.net/index.php/AppArmor_Core_Policy_Reference#Alias_and_rewrite_rules),
-such as:
-
-      echo 'alias / -> /lib/live/mount/rootfs/filesystem.squashfs/,' \
-      >> /etc/apparmor.d/tunables/alias
-
-However, a number of problems prevent this seemingly simple solution
-from just working in the context of Tails. The following discusses
-these complications, and a few possible solutions.
-
-### Bugs in alias rules implementation
-
-The implementation of alias rules is affected by severe bugs, such as
-<https://bugs.launchpad.net/apparmor/+bug/888077>.
-
-There's preliminary work to fix this at
-<https://code.launchpad.net/~jjohansen/+junk/parser-alias-fix>.
-Note that this code can still revert to the previous behaviour by
-passing the `-O old-alias` option to `apparmor_parser`.
+A number of problems prevent alias rules from just working in the
+context of Tails. The following discusses these complications, and
+a few possible solutions.
 
 ### Overlapping rules
+
+Update: this got implemented as described earlier in this document.
 
 Alias rules can generate rules that overlap (and conflict) with
 existing ones, which can cause the policy to fail to compile.
@@ -248,8 +232,8 @@ rule sets, it only adds new rules. We end up with both:
 
 which causes a conflict between `ix` and `Pix`.
 
-To workaround this problem, we would need to change the
-`/lib{,32,64}/**/ld{,32,64}-*.so mrix,` rule into:
+To workaround this problem, we had to change the
+`/lib{,32,64}/**/ld{,32,64}-*.so mrix,` rule into essentially:
 
     /lib{32,64}/**/ld{,32,64}-*.so     mrix,
     /lib/{[^l],l[^i],li[^v],liv[^e],live[^/]}**/ld{,32,64}-*.so mrix,
@@ -280,7 +264,7 @@ the union.
 
 Fixing such problems one after the other may be doable, but
 regardless: the way alias rules affect the policy as a whole,
-especially once combined with globing, would make our policy harder to
+especially once combined with globing, makes our policy harder to
 understand, reason about, and audit.
 
 ### Persistence
@@ -303,20 +287,20 @@ Alias rules dramatically increase the policy compile time (e.g.
 
 <a id="pre-compiled-AppArmor-policy"></a>
 
-To mitigate that problem, we could ship a cached pre-compiled policy,
+To mitigate that problem, we ship a cached pre-compiled policy,
 that the parser will use as long as it considered it valid, and then
 no policy compilation happens at boot time; if the parser detects that
 the policy is out of date, then it will ignore the cache and compile
 the policy. For instance, this is what was done for the Ubuntu phone.
 To generate a valid binary policy cache at ISO build time:
 
- - we need to call the parser with a `--features-file` value that
+ - we call the parser with a `--features-file` value that
    matches the pinned feature set used at Tails runtime; this comes
-   for free if we run the parser from the build chroot, where this
+   for free since we run the parser from the build chroot, where this
    variable is set in the same `/etc/apparmor/parser.conf` file that
    will be used at runtime;
 
- - we need to use a similar enough version of the parser to the one
+ - we use a similar enough version of the parser to the one
    installed in Tails; here again, this comes for free if we run the
    parser inside the build chroot;
 
@@ -327,7 +311,7 @@ To generate a valid binary policy cache at ISO build time:
    4.18 is still valid and used when booting on Linux 4.19 with the
    same `features-file` setting.
 
-This work is tracked on [[!tails_ticket 16138]].
+This is implemented in [[!tails_gitweb config/chroot_local-hooks/99-cache-AppArmor-policy]].
 
 Resources: `apparmor_parser(8)`, `apparmor_parser --help`,
 examples in `parser/tst/features_files/*`, and `parser.conf`.

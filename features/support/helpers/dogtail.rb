@@ -19,6 +19,7 @@ module Dogtail
   ]
 
   TREE_API_NODE_SEARCH_FIELDS = [
+    :labelee,
     :parent,
   ]
 
@@ -188,7 +189,12 @@ module Dogtail
       get_field('roleName')
     end
 
-    # Note: this is a global Dogtail action, which should probably live
+    def showing
+      get_field('showing') == 'True'
+    end
+
+    # Note: pressKey and typeText are global Dogtail actions,
+    # which should probably live
     # elsewhere than in our Application class, but currently we lack
     # the infrastructure to do that: the Ruby plumbing that generates
     # and runs Python code lives in the Application class.
@@ -196,6 +202,10 @@ module Dogtail
       # Dogtail will prefix the value of key with 'KEY_'
       # and the result must be a valid Gdk key symbol such as Gdk.KEY_Down
       run("dogtail.rawinput.pressKey('#{key}')")
+    end
+
+    def typeText(text)
+      run("dogtail.rawinput.typeText('#{text}')")
     end
 
     TREE_API_APP_SEARCHES.each do |method|

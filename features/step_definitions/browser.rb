@@ -109,9 +109,11 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
 end
 
-# This step is limited to the Tor Browser due to #7502 since dogtail
-# uses the same interface.
-Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
+def page_has_loaded_in_the_Tor_Browser(page_titles, language)
+  if page_titles.class == String
+    page_titles = [ page_titles ]
+  end
+  assert_equal(Array, page_titles.class)
   if @language == 'German'
     browser_name = 'Tor-Browser'
     reload_action = 'Neu laden'
@@ -119,13 +121,24 @@ Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
     browser_name = 'Tor Browser'
     reload_action = 'Reload'
   end
-  expected_title = "#{title} - #{browser_name}"
-  try_for(60) { @torbrowser.child(expected_title, roleName: 'frame') }
-  # The 'Reload' button (graphically shown as a looping arrow)
-  # is only shown when a page has loaded, so once we see the
-  # expected title *and* this button has appeared, then we can be sure
-  # that the page has fully loaded.
-  try_for(60) { @torbrowser.child(reload_action, roleName: 'push button') }
+  try_for(120) {
+    # The 'Reload' button (graphically shown as a looping arrow)
+    # is only shown when a page has loaded, so once we see the
+    # expected title *and* this button has appeared, then we can be sure
+    # that the page has fully loaded.
+    @torbrowser.child(reload_action, roleName: 'push button') and
+    @torbrowser.children(roleName: 'frame').any? { |frame|
+      page_titles
+        .map  { |page_title| "#{page_title} - #{browser_name}" }
+        .any? { |page_title| page_title == frame.name }
+    }
+  }
+end
+
+# This step is limited to the Tor Browser due to #7502 since dogtail
+# uses the same interface.
+Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
+  page_has_loaded_in_the_Tor_Browser(title, @language)
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -218,10 +231,10 @@ Then /^Tails homepage loads in the Unsafe Browser$/ do
 end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
-  page = @torbrowser.child("Problem loading page - Tor Browser", roleName: "frame")
-  headers = page.children(roleName: "heading")
-  found = headers.any? { |heading| heading.text == error }
-  raise "Could not find the '#{error}' error in the Tor Browser" unless found
+  try_for(60) {
+    page = @torbrowser.child("Problem loading page - Tor Browser", roleName: "frame")
+    page.children(roleName: "heading").any? { |heading| heading.text == error }
+  }
 end
 
 Then /^I can listen to an Ogg audio track in Tor Browser$/ do
