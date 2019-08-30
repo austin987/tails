@@ -13,8 +13,7 @@ Feature: Chatting anonymously using Pidgin
     Then I see Pidgin's account manager window
     And Pidgin's D-Bus interface is not available
 
-  #11453
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Chatting with some friend over XMPP
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
@@ -48,8 +47,7 @@ Feature: Chatting anonymously using Pidgin
     And I click on the Tails roadmap URL
     Then the Tor Browser loads the Tails roadmap
 
-  #11453
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
