@@ -26,8 +26,7 @@ Feature: Chatting anonymously using Pidgin
     And I say something to my friend
     Then I receive a response from my friend
 
-  #11414
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Chatting with some friend over XMPP in a multi-user chat
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
@@ -63,8 +62,7 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
-  #11414
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Connecting to the tails multi-user chat with my XMPP account
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
