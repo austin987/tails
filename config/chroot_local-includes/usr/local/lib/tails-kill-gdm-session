@@ -38,8 +38,12 @@ logind_session_tty_number() {
       | sed -E 's,^tty,,'
 }
 
-# Ensure gdm-session-worker won't start new sessions.
-cp -a /bin/true /usr/lib/gdm3/gdm-session-worker
+# Replace gdm-session-worker with a version that won't start new
+# sessions, except for reauthentication, i.e. for unlocking
+# the screen.
+mv /usr/lib/gdm3/gdm-session-worker /usr/lib/gdm3/gdm-session-worker.real
+cp -a /usr/lib/gdm3/gdm-session-worker-only-reauth \
+      /usr/lib/gdm3/gdm-session-worker
 
 # Kill GDM's gdm-session-worker: it's the parent process for all
 # Debian-gdm processes, such as gdm-x-session; it would otherwise
