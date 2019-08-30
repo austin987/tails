@@ -4,8 +4,6 @@ Feature: Browsing the web using the Tor Browser
   when I browse the web using the Tor Browser
   all Internet traffic should flow only through Tor
 
-  #11591
-  @fragile
   Scenario: The Tor Browser cannot access the LAN
     Given I have started Tails from DVD and logged in and the network is connected
     And a web server is running on the LAN
