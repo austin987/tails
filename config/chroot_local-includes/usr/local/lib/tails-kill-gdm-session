@@ -23,7 +23,7 @@ live_user_logind_x_session_id() {
    # The value of the Sessions property is a space-separated list
    # of session identifiers
    for session in $(loginctl --property=Sessions --value show-user "$LIVE_USERNAME"); do
-      if [ "$(loginctl --property=Type --value show-session $session)" = 'x11' ]; then
+      if [ "$(loginctl --property=Type --value show-session "$session")" = 'x11' ]; then
          loginctl --property=Id --value show-session "$session"
          return 0
       fi
@@ -62,9 +62,9 @@ loginctl terminate-user Debian-gdm || true
 # amnesia's session and switched to VT2, because its own session was killed.
 tries=0
 while [ $tries -lt 10 ]; do
-   LIVE_USER_LOGIND_X_SESSION_ID=$(live_user_logind_x_session_id)
-   chvt "$(logind_session_tty_number $LIVE_USER_LOGIND_X_SESSION_ID)"
+   LIVE_USER_LOGIND_X_SESSION_ID="$(live_user_logind_x_session_id)"
+   chvt "$(logind_session_tty_number "$LIVE_USER_LOGIND_X_SESSION_ID")"
    loginctl activate "$LIVE_USER_LOGIND_X_SESSION_ID"
-   tries=$(expr $tries + 1)
+   tries="$(expr "$tries" + 1)"
    sleep 1
 done
