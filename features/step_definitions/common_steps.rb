@@ -294,6 +294,7 @@ end
 Given /^I set an administration password$/ do
   open_greeter_additional_settings()
   @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
+  @screen.wait("TailsGreeterAdminPasswordDialog.png", 10)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
