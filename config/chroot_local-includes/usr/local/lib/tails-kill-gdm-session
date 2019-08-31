@@ -18,7 +18,10 @@ set -x
 #     after GDM has logged in $LIVE_USERNAME and pam_systemd has allocated them
 #     a logind session.
 #   - There's no more than one such session: our Greeter/GDM integration code
-#     allows only one graphical login.
+#     allows only one graphical login. Note that there can be other,
+#     non-graphical sessions: for example, when
+#     tails-virt-notify-user is running at the same time as we are.
+#     That's why we're looking specifically for sessions of type 'x11'.
 live_user_logind_x_session_id() {
    # The value of the Sessions property is a space-separated list
    # of session identifiers
@@ -60,6 +63,10 @@ loginctl terminate-user Debian-gdm || true
 # repeatedly for about 10 seconds, in case GDM take back control of
 # the seat and switches back to VT1, after we've already activated
 # amnesia's session and switched to VT2, because its own session was killed.
+# Note that it may happen that GDM switches to VT1 while
+# "loginctl --property=State --value show-user amnesia" still returns "active":
+# disabling gdm-session-worker makes GDM confuse logind, that believes amnesia's
+# desktop session is still active while we've switched to another VT.
 tries=0
 while [ $tries -lt 10 ]; do
    LIVE_USER_LOGIND_X_SESSION_ID="$(live_user_logind_x_session_id)"
