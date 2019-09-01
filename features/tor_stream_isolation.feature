@@ -1,4 +1,5 @@
-@product @check_tor_leaks
+#17013
+@product @check_tor_leaks @fragile
 Feature: Tor stream isolation is effective
   As a Tails user
   I want my Tor streams to be sensibly isolated from each other to prevent identity correlation
