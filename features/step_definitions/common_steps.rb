@@ -445,10 +445,10 @@ Given /^all notifications have disappeared$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
     @screen.click_point(x, y)
-    unless gnome_shell.child?('No Notifications', roleName: 'label')
+    unless gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
       @screen.click('GnomeCloseAllNotificationsButton.png')
     end
-    gnome_shell.child?('No Notifications', roleName: 'label')
+    gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
   @screen.type(Sikuli::Key.ESC)
 end
