@@ -791,7 +791,10 @@ Include each such version in a white-space separated list called
 and run the following:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
-        if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
+        squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
+        if [ "$squashfs_tools_version" != 1:4.3-3.0tails4 ] && \
+           [ "$squashfs_tools_version" != 1:4.3-8.0tails1 ] && \
+           dpkg --compare-versions "$squashfs_tools_version" lt 1:4.4-1; then
             echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
             break
         fi
