@@ -255,6 +255,9 @@ class VolumeManager(object):
                                    Gtk.ButtonsType.CLOSE,
                                    title)
         dialog.format_secondary_markup(body)
+        # Make the body selectable to allow users to easily copy/paste the error message
+        dialog.get_message_area().get_children()[-1].set_selectable(True)
+
         dialog.run()
         dialog.close()
 
