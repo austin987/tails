@@ -740,7 +740,7 @@ files metadata:
        tmp="$(mktemp -d)" && \
        mkdir -p "${tmp:?}/tails-amd64-${VERSION:?}" && \
        cd "${tmp:?}/tails-amd64-${VERSION:?}" && \
-       for x in "${ISOS:?}/tails-amd64-${VERSION:?}"/.${type:?}*; do
+       for x in "${ISOS:?}/tails-amd64-${VERSION:?}"/*.${type:?}*; do
            ln -s ${x} .
        done && \
        mktorrent \
@@ -749,6 +749,7 @@ files metadata:
           -a 'udp://tracker.coppersurfer.tk:6969' \
           "${tmp:?}/tails-amd64-${VERSION:?}" && \
        transmission-show "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" && \
+       cd - && \
        rm -rf "${tmp:?}"
     done
 
