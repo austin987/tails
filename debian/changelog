@@ -413,11 +413,64 @@ tails (4.0~beta1) unstable; urgency=medium
 
  -- Tails developers <tails@boum.org>  Wed, 07 Aug 2019 20:30:15 +0200
 
-tails (3.17) UNRELEASED; urgency=medium
+tails (3.16) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Major changes
+    - Upgrade Tor Browser to 8.5.5 (Closes: #16692).
 
- -- intrigeri <intrigeri@debian.org>  Sat, 23 Mar 2019 11:32:48 +0000
+  * Security fixes
+    - Install Linux kernel from the Buster security repository (Closes: #16970).
+      The new Spectre v1 swapgs variant (CVE-2019-1125), which was fixed
+      in sid via 5.2.x, which is a too big change for the Tails 3.16 bugfix
+      release. Let's instead track Buster (+ security) for the time being.
+    - Upgrade LibreOffice to 1:5.2.7-1+deb9u10 (DSA-4483-1, DSA-4501-1).
+    - Upgrade Thunderbird to 60.8 (DSA-4482-1).
+    - Upgrade Ghostscript to 9.26a~dfsg-0+deb9u4 (DSA-4499-1).
+    - Upgrade Patch to 2.7.5-1+deb9u2 (DSA-4489-1).
+    - Upgrade nghttp2 library to 1.18.1-1+deb9u1 (DSA-4511-1).
+
+  * Bugfixes
+    - Additional software: Improve/fix support for translations (Closes: #16601).
+    - Rework the implementation for hiding TailsData partitions (Closes: #16789).
+    - Adjust how tordate determines whether the clock is in a valid range,
+      fixing issues with obfs4 (Closes: #16972).
+
+  * Minor improvements and updates
+    - Ship default upstream Tor Browser bookmarks, and remove our predefined
+      bookmarks (Closes: #15895).
+    - Hide the security level button in the unsafe browser (Closes: #16735).
+    - Remove pre-generated Pidgin accounts (Closes: #16744).
+    - Remove LibreOffice Math (Closes: #16911).
+    - Website: Make sandbox page translatable (Closes: #16873).
+    - Website: Only scrub HTML on blueprints (Closes: #16901).
+    - Website: Point history & diff URLs to Salsa.
+
+  * Build system
+    - Bump APT snapshot of the torproject archive to 2019073103, and drop
+      tor-experimental-0.4.0.x-stretch reference (Closes: #16883).
+    - Bump APT snapshot of the Debian archive to 2019080801 to get fixed
+      firmware packages from sid instead of sticking to those from
+      stretch-backports (Closes: #16728).
+    - Enable the buster APT repository and install some packages from there:
+      hunspell-id, hunspell-tr, and fonts-noto-* (See: #16728).
+    - Refresh patch for webext-ublock-origin 1.19.0+dfsg-2, and adjust Tor
+      Browser AppArmor profile accordingly (Closes: #16858).
+    - Refresh Tor Browser AppArmor profile patch for torbrowser-launcher
+      0.3.2-1 (Closes: #16941).
+
+  * Test suite
+    - Ignore RARP packets, since PacketFu cannot parse them (Closes: #16825).
+    - Adjust both locale handling and reference pictures for the Unsafe
+      Browser homepage (Closes: #17004).
+    - Fix "Watching a WebM video over HTTPS" scenario on Jenkins
+      (Closes: #10442).
+    - Tag "Watching a WebM video" as fragile.
+    - Make @check_tor_leaks more verbose (See: #10442).
+    - Remove broken Electrum scenario since Electrum support is currently
+      missing (Closes: #16421).
+
+ -- Tails developers <tails@boum.org>  Tue, 03 Sep 2019 20:30:14 +0200
+>>>>>>> stable
 
 tails (3.15) unstable; urgency=medium
 
