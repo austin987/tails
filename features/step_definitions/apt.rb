@@ -21,6 +21,11 @@ Given /^no proposed-updates APT suite is enabled$/ do
   assert_no_match(/\s\S+-proposed-updates\s/, apt_sources)
 end
 
+Given /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
+  # sdscoq7snqtznauu.onion == deb.torproject.org
+  assert_no_match(/sdscoq7snqtznauu[.]onion.*experimental/, apt_sources)
+end
+
 When /^I configure APT to use non-onion sources$/ do
   script = <<-EOF
   use strict;
