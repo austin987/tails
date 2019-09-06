@@ -1,5 +1,9 @@
+def gedit
+  @gedit ||= Dogtail::Application.new('gedit')
+end
+
 def gedit_text_buffer()
-  Dogtail::Application.new('gedit')
+  gedit
     .child(roleName: 'frame',       showingOnly: true)
     .child(roleName: 'scroll pane', showingOnly: true)
     .child(roleName: 'text',        showingOnly: true)
@@ -61,14 +65,12 @@ end
 
 def gedit_copy_all_text
   gedit_text_buffer.right_click
-  gedit = Dogtail::Application.new('gedit')
   gedit.child('Select All', roleName: 'menu item', showingOnly: true).click
   gedit_text_buffer.right_click
   gedit.child('Copy', roleName: 'menu item', showingOnly: true).click
 end
 
 def gedit_paste_into_a_new_tab
-  gedit = Dogtail::Application.new('gedit')
   gedit.button('New').click
   gedit_text_buffer.right_click
   gedit.child('Paste', roleName: 'menu item', showingOnly: true).click
