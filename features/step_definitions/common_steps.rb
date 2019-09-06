@@ -8,21 +8,6 @@ def post_vm_start_hook
   @screen.click_point(@screen.w - 1, @screen.h/2)
 end
 
-def context_menu_helper(top, bottom, menu_item)
-  try_for(60) do
-    t = @screen.wait(top, 10)
-    b = @screen.wait(bottom, 10)
-    # In Sikuli, lower x == closer to the left, lower y == closer to the top
-    assert(t.y < b.y)
-    center = Sikuli::Location.new(((t.x + t.w) + b.x)/2,
-                                  ((t.y + t.h) + b.y)/2)
-    @screen.right_click(center)
-    @screen.hide_cursor
-    @screen.wait_and_click(menu_item, 10)
-    return
-  end
-end
-
 def post_snapshot_restore_hook
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
