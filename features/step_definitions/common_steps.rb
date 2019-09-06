@@ -373,8 +373,8 @@ When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   step 'I start "Tor Browser" via GNOME Activities Overview'
   if offline
     offline_prompt = Dogtail::Application.new('zenity')
-                     .dialog('Tor is not ready')
-    start_button = offline_prompt.button('Start Tor Browser')
+                     .dialog('Tor is not ready', showingOnly: true)
+    start_button = offline_prompt.button('Start Tor Browser', showingOnly: true)
     start_button.grabFocus
     start_button.click
   end
