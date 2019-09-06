@@ -280,7 +280,7 @@ sikuli_settings.OcrDataPath = $config["TMPDIR"]
 # similarity, so all our current images are adapted to that value.
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
-sikuli_settings.MinSimilarity = 0.9
+sikuli_settings.MinSimilarity = SIKULI_MIN_SIMILARITY
 sikuli_settings.ActionLogs = true
 sikuli_settings.DebugLogs = true
 sikuli_settings.InfoLogs = true
