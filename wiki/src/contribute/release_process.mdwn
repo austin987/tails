@@ -485,9 +485,8 @@ Build the almost-final images
 3. Keep the resulting build artifacts until the end of this release process.
 4. Record where the manifest of needed packages is stored:
 
-        export PACKAGES_MANIFEST=XXX ; \
-        [ -f "${PACKAGES_MANIFEST:?}" ] || echo "ERROR: PACKAGES_MANIFEST is incorrect"
-
+        export BUILD_MANIFEST=XXX ; \
+        [ -f "${BUILD_MANIFEST:?}" ] || echo "ERROR: BUILD_MANIFEST is incorrect"
 
 Tag the release in Git
 ======================
@@ -513,7 +512,7 @@ Prepare the versioned APT suites
 
 * Prepare tagged snapshots of upstream APT repositories:
 
-          ./bin/tag-apt-snapshots "${PACKAGES_MANIFEST:?}" "${TAG:?}"
+          ./bin/tag-apt-snapshots "${BUILD_MANIFEST:?}" "${TAG:?}"
 
   Note:
 
@@ -628,14 +627,14 @@ suite should be ready, so it is time to:
    almost final build:
 
         diff -Naur \
-           "${PACKAGES_MANIFEST:?}" \
+           "${BUILD_MANIFEST:?}" \
            "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
    They should be identical, except that the `debian-security` serial might be higher.
 
 1. To ensure we publish the final build's `.build-manifest`, run:
 
-        export PACKAGES_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
+        export BUILD_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
 
 1. <a id="reproducibility-sanity-check-iso"></a>
