@@ -140,7 +140,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   when 'file container'
     @screen.wait_and_click('UnlockVeraCryptVolumesAddButton.png', 10)
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
-    @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name + Sikuli::Key.ENTER)
+    @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
+    sleep 2 # avoid ENTER being eaten by the auto-completion system
+    @screen.type(Sikuli::Key.ENTER)
   end
   @screen.wait('VeraCryptUnlockDialog.png', 10)
   @screen.type(
