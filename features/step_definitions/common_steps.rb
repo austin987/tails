@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'fileutils'
 
 def post_vm_start_hook
@@ -439,6 +440,15 @@ Given /^all notifications have disappeared$/ do
     gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
   @screen.type(Sikuli::Key.ESC)
+  # Increase the chances that by the time we leave this step, the
+  # notifications menu was closed and the desktop is back to its
+  # normal state. Otherwise, all kinds of trouble may arise: for
+  # example, pressing SUPER to open the Activities Overview sometimes
+  # fails (SUPER has no effect when the notifications menu is still
+  # opened). We sleep here, instead of in "I start […] via GNOME
+  # Activities Overview", because it's our responsibility to return to
+  # a normal desktop state that any following step can rely upon.
+  sleep 1
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
