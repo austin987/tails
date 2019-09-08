@@ -67,6 +67,7 @@ Documentation
 -------------
 
 We have two documentations:
+
 - this one, which presents the current status of our work and all public
   information
 - translate-server.git which contains more technical information,
@@ -82,8 +83,8 @@ more information.
 There are several languages enabled and users can suggest translations
 in several languages:
 
-<a href="http://translate.tails.boum.org/engage/tails/?utm_source=widget">
-<img src="http://translate.tails.boum.org/widgets/tails/-/multi-red.svg" alt="Translation status" />
+<a href="https://translate.tails.boum.org/engage/tails/?utm_source=widget">
+<img src="https://translate.tails.boum.org/widgets/tails/-/multi-red.svg" alt="Translation status" />
 </a>
 
 What we plan to do is:
@@ -96,8 +97,8 @@ Repository
 ----------
 
 Currently the repository used by Weblate is built upon the Tails master
-repo, but the changes generated in translate.lizard are not fed back
-onto Tails master automatically.
+repo; the changes generated in translate.lizard are fed back
+to Tails master automatically.
 
 There are several languages enabled, some of them with few or not
 translations.
@@ -106,53 +107,138 @@ You can check out weblate-generated Tails repo with:
 
     git clone https://translate.tails.boum.org/git/tails/index/
 
-This Tails repository has two main differences with other repos:
-
-- The ikiwiki.setup file has been changed to build more languages.
-  → Ideally, we would create ikiwiki-translationplatform.setup
-- There is a .gitlab.yml file to trigger tests when pushed to gitlab CI
-  enabled repositories. → We can either add this file to tails/master or
-  document this only for people who use gitlab.
-- There are new language files from currently non-active languages on
-  the main website.
-
-Reviewing translation platform output
--------------------------------------
-
-For languages like fr, fa, de, and it - that are part of tails master repo -
-you can get the files to review and submit to tails-l10n:
-
-    git remote add translations https://translate.tails.boum.org/git/tails/index/
-    git checkout tails/master
-    find . -name '*.fa.po' -exec git checkout translations/master --  {} \;
-    git reset *
-
-And you will have all the changes to farsi (*.fa.po) to review. The same goes for the other languages.
+<a id="staging-website"></a>
 
 Staging website
 ---------------
 
-From this (or a modified clone of this) repository, a version of the
-website with more languages will be built [[!tails_ticket 15077]] so
-that users can see how the file they are translating looks.
+The [staging website](https://staging.tails.boum.org/) is built regularly.
+On top of what our production website has, it includes:
+
+ - all languages available on Weblate, even those that are not enabled
+   on our production website yet;
+
+ - all translation suggestions made on Weblate.
+
+This allows:
+
+ - translators to check how the result of their work will look like
+   on our website;
+
+ - reviewers to check how translation suggestions look like on the
+   website, before validating them.
 
 Updating the repo
 -----------------
 
-POT, then PO files for enabled languages are built and updated from the
-*.mdwn files when [[building the wiki|contribute/build/]].
+POT and PO files for enabled languages are built and updated from the
+`*.mdwn` files when [[building the wiki|contribute/build/website]].
+Then, our translation platform updates the PO files for additional
+languages (that are enabled on Weblate but not on the production website),
+commits & pushes them, and updates the Weblate database accordingly.
 
-This process is currently done outside of the Weblate instance, and
-merged onto the Weblate repo by hand. As translate.lizard has so many
-languages, if there are many changes this process can take a while.
+<a id="access-control"></a>
 
-The changes generated [[while building the wiki|contribute/build/]]
-can be fed back to Weblate by cherry picking.
+Access control
+--------------
 
-On the long term, we will automate this process by
-- pulling automatically from tails/master and applying a merge strategy
-  for po [[!tails_ticket ]]
+### Requirements
 
+- Every translation change must be reviewed by another person before
+  it's validated (and thus committed by Weblate and pushed to our
+  production website).
+
+  - This requirement must be enforced via technical means, for
+    translators that are not particularly trusted (e.g. new user
+    accounts). For example, it must be impossible for an attacker to
+    pretend to be that second person and validate their own changes,
+    simply by creating a second user account.
+
+  - It's acceptable that this requirement is enforced only via social
+    rules, and not via technical means, for a set of
+    trusted translators.
+
+- We need to be able to bootstrap a new language and give its
+  translators sufficient access rights so that they can do their job,
+  even without anyone at Tails personally knowing any of them.
+
+- Suggested translations are used to build the [[staging
+  website|translation_platform#staging-website]].
+
+### Currently implemented proposal
+
+- In Weblate lingo, we use the [dedicated
+  reviewers](https://docs.weblate.org/en/latest/workflows.html#dedicated-reviewers)
+  workflow: it's the only one that protects us against an adversary
+  who's ready to create multiple user accounts.
+
+- When not logged in, a visitor is in the `Guests` group and is
+  only allowed to suggest translations.
+
+- Every logged in user is in the `Users` group. Members of this group
+  are allowed to suggest translations but not to accept suggestions
+  nor to directly save new translations of their own.
+
+- A reviewer, i.e. a member of the `@Review` group in Weblate, is
+  allowed to accept suggestions.
+
+  Limitations:
+
+  - Technically, reviewers are also allowed to directly save new
+    translations of their own, edit existing translations, and
+    accept their own suggestions; we will ask them in our
+    documentation to use this privilege sparingly, only to fix
+    important and obvious problems.
+
+	Even if we forbid reviewers to accept their own suggestions,
+    nothing would prevent them from creating another account, making
+    the suggestion from there, and then accepting it with their
+    reviewer account.
+
+  - Reviewer status is global to our Weblate instance, and not
+    per-language, so technically, a reviewer can very well accept
+    suggestions for a language they don't speak. We will ask them in
+    our documentation to _not_ do that, except to fix important and
+    obvious problems that don't require knowledge of that language
+    (for example, broken syntax for ikiwiki directives).
+
+	If this ever causes actual problems, this could be fixed with
+    [group-based access
+    control](https://docs.weblate.org/en/weblate-2.20/admin/access.html#groupacl)
+
+- How one gets reviewer status:
+
+  - We will port to Weblate semantics the pre-existing trust
+    relationship we already have towards translation teams that have
+    been using Git so far: they all become reviewers.
+
+	To this aim, we will ask them to create an account on Weblate
+	and tell us what their user name is.
+
+  - One can request reviewer status to Weblate administrators, who
+    will:
+    1. Accept this request if, and only if, a sufficient amount of
+       work was done by the requesting translator (this can be checked on
+       the user's page, e.g.
+       [intrigeri's](https://translate.tails.boum.org/user/intrigeri/).
+       In other words, we use proof-of-work to increase the cost of attacks.
+    2. Let <tails-l10n@boum.org> and all the other Weblate reviewers
+       know about this status change.
+
+- Bootstrapping a new language
+
+  As a result of this access control setup, translators for a new
+  language can only make suggestions until they have done a sufficient
+  amount of work and two of them are granted reviewer status. In the
+  meantime, they can see the output of their work on the [[staging
+  website|blueprint/translation_platform#staging-website]].
+
+  Pending questions:
+  
+  - Is the resulting UX good enough? Would it help if we allowed them
+    to vote up suggestions, even if this does not result in the
+    suggestion to be accepted as a validated translation?
+    (At the moment, suggestion voting is disabled.)
 
 Weblate installation and maintenance - a hybrid approach
 --------------------------------------------------------

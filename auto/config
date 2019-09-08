@@ -114,6 +114,7 @@ TORPROJECT_MIRROR="$(apt-mirror torproject)"
 perl -pi \
      -E \
        "s|^(deb(?:-src)?\s+)https?://ftp[.]us[.]debian[.]org/debian/?(\s+)|\$1$DEBIAN_MIRROR\$2| ; \
+        s|^(deb(?:-src)?\s+)https?://security[.]debian[.]org/debian-security/?(\s+)|\$1$DEBIAN_SECURITY_MIRROR\$2| ; \
         s|^(deb(?:-src)?\s+)https?://deb[.]torproject[.]org/torproject[.]org/?(\s+)|\$1$TORPROJECT_MIRROR\$2|" \
     config/chroot_sources/*.chroot \
     || fatal "APT mirror substitution failed with exit code $?"
@@ -175,6 +176,7 @@ echo "live-build: `dpkg-query -W -f='${Version}\n' live-build`" \
 cat >> config/chroot_local-includes/etc/os-release <<EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="$AMNESIA_VERSION"
+TAILS_DISTRIBUTION="$TAILS_DISTRIBUTION"
 EOF
 if echo "$AMNESIA_VERSION" | grep -qs -E '~(alpha|beta|rc)[0-9]*$' ; then
     echo 'TAILS_CHANNEL="alpha"' >> config/chroot_local-includes/etc/os-release

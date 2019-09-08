@@ -11,13 +11,8 @@ echo "Localize each supported browser locale"
 # Import language_code_from_locale()
 . /usr/local/lib/tails-shell-library/localization.sh
 
-# Import strip_nondeterminism_wrapper() and ensure_hook_dependency_is_installed()
-. /usr/local/lib/tails-shell-library/build.sh
-
 # Import TAILS_WIKI_SUPPORTED_LANGUAGES
 . /etc/amnesia/environment
-
-ensure_hook_dependency_is_installed p7zip imagemagick
 
 BROWSER_LOCALIZATION_DIR="/usr/share/tails/browser-localization"
 DESCRIPTIONS_FILE="${BROWSER_LOCALIZATION_DIR}/descriptions"
@@ -81,6 +76,11 @@ while IFS=: read MOZILLA_LOCALE LOCATION; do
                           "\"${SPELLCHECKER_LOCALE}\"" \
                            "user_pref"
     HOMEPAGE="https://tails.boum.org/home/"
+    . /etc/os-release # get $TAILS_CHANNEL and $TAILS_DISTRIBUTION
+    if [ "${TAILS_DISTRIBUTION}" = UNRELEASED ] \
+          || [ "${TAILS_CHANNEL:-stable}" != stable ]; then
+       HOMEPAGE="${HOMEPAGE}testing/"
+    fi
     if echo "${TAILS_WIKI_SUPPORTED_LANGUAGES}" | grep -qw "${LANG_CODE}"; then
         HOMEPAGE="${HOMEPAGE}index.${LANG_CODE}.html"
     fi

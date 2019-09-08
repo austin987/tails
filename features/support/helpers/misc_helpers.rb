@@ -164,8 +164,10 @@ def wait_until_tor_is_working
   try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
 rescue Timeout::Error
   # Save Tor logs before erroring out
-    File.open("#{$config["TMPDIR"]}/log.tor", 'w') { |file|
-    file.write("#{$vm.execute('journalctl --no-pager -u tor@default.service').stdout}")
+  File.open("#{$config["TMPDIR"]}/log.tor", 'w') { |file|
+    $vm.execute('journalctl --no-pager -u tor@default.service > /tmp/tor.journal')
+    file.write($vm.file_content('/tmp/tor.journal'))
+    file.write($vm.file_content('/var/log/tor/log'))
   }
   raise TorBootstrapFailure.new('Tor failed to bootstrap')
 end
@@ -231,7 +233,7 @@ def all_tor_hosts
 end
 
 def allowed_hosts_under_tor_enforcement
-  all_tor_hosts + @lan_hosts
+  all_tor_hosts + @extra_allowed_hosts
 end
 
 def get_free_space(machine, path)

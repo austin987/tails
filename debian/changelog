@@ -1,8 +1,196 @@
-tails (3.15) UNRELEASED; urgency=medium
+tails (3.18) UNRELEASED; urgency=medium
 
-  * Dummy changelog entry for next release.
+  * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Thu, 23 May 2019 05:59:19 +0000
+ -- Cyril Brulebois <kibi@debian.org>  Thu, 05 Sep 2019 02:34:40 +0200
+
+tails (3.16) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 8.5.5 (Closes: #16692).
+
+  * Security fixes
+    - Install Linux kernel from the Buster security repository (Closes: #16970).
+      The new Spectre v1 swapgs variant (CVE-2019-1125), which was fixed
+      in sid via 5.2.x, which is a too big change for the Tails 3.16 bugfix
+      release. Let's instead track Buster (+ security) for the time being.
+    - Upgrade LibreOffice to 1:5.2.7-1+deb9u10 (DSA-4483-1, DSA-4501-1).
+    - Upgrade Thunderbird to 60.8 (DSA-4482-1).
+    - Upgrade Ghostscript to 9.26a~dfsg-0+deb9u4 (DSA-4499-1).
+    - Upgrade Patch to 2.7.5-1+deb9u2 (DSA-4489-1).
+    - Upgrade nghttp2 library to 1.18.1-1+deb9u1 (DSA-4511-1).
+
+  * Bugfixes
+    - Additional software: Improve/fix support for translations (Closes: #16601).
+    - Rework the implementation for hiding TailsData partitions (Closes: #16789).
+    - Adjust how tordate determines whether the clock is in a valid range,
+      fixing issues with obfs4 (Closes: #16972).
+
+  * Minor improvements and updates
+    - Ship default upstream Tor Browser bookmarks, and remove our predefined
+      bookmarks (Closes: #15895).
+    - Hide the security level button in the unsafe browser (Closes: #16735).
+    - Remove pre-generated Pidgin accounts (Closes: #16744).
+    - Remove LibreOffice Math (Closes: #16911).
+    - Website: Make sandbox page translatable (Closes: #16873).
+    - Website: Only scrub HTML on blueprints (Closes: #16901).
+    - Website: Point history & diff URLs to Salsa.
+
+  * Build system
+    - Bump APT snapshot of the torproject archive to 2019073103, and drop
+      tor-experimental-0.4.0.x-stretch reference (Closes: #16883).
+    - Bump APT snapshot of the Debian archive to 2019080801 to get fixed
+      firmware packages from sid instead of sticking to those from
+      stretch-backports (Closes: #16728).
+    - Enable the buster APT repository and install some packages from there:
+      hunspell-id, hunspell-tr, and fonts-noto-* (See: #16728).
+    - Refresh patch for webext-ublock-origin 1.19.0+dfsg-2, and adjust Tor
+      Browser AppArmor profile accordingly (Closes: #16858).
+    - Refresh Tor Browser AppArmor profile patch for torbrowser-launcher
+      0.3.2-1 (Closes: #16941).
+
+  * Test suite
+    - Ignore RARP packets, since PacketFu cannot parse them (Closes: #16825).
+    - Adjust both locale handling and reference pictures for the Unsafe
+      Browser homepage (Closes: #17004).
+    - Fix "Watching a WebM video over HTTPS" scenario on Jenkins
+      (Closes: #10442).
+    - Tag "Watching a WebM video" as fragile.
+    - Make @check_tor_leaks more verbose (See: #10442).
+    - Remove broken Electrum scenario since Electrum support is currently
+      missing (Closes: #16421).
+
+ -- Tails developers <tails@boum.org>  Tue, 03 Sep 2019 20:30:14 +0200
+
+tails (3.15) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 8.5.4 (Closes: #16691).
+    - Upgrade Thunderbird to 60.7.2 (Closes: #16834).
+
+  * Security fixes
+    - Upgrade Expat to 2.2.0-2+deb9u2 (DSA-4472-1).
+    - Upgrade OpenSSL 1.0 to 1.0.2s-1~deb9u1 (DSA-4475-1).
+    - Upgrade OpenSSL to 1.1.0k-1~deb9u1 (DSA-4475-1).
+    - Upgrade Vim to 2:8.0.0197-4+deb9u3 (DSA-4467-1).
+
+  * Bugfixes
+    - Recompute CHS values for the hybrid MBR after first-boot
+      repartitioning (Closes: #16389). Some legacy BIOS systems won't boot
+      otherwise.
+    - Strip debug symbols from the aufs kernel module smaller (refs: #16818).
+      The primary target was getting the initramfs down under 32MB, hoping
+      to repair boot of feature/buster on MacBookPro 8,1. In any cases,
+      the user experience should be improved due to a faster boot for
+      every user, and a shortened “black screen” duration (between the
+      bootloader and the Plymouth splash screen).
+
+  * Minor improvements and updates
+    - Make “Unlock VeraCrypt Volumes” show an error message if locking
+      fails (Closes: #15794).
+    - Add support for booting Tails from a read only sdcard (fromiso),
+      through Heads, allowing for measured boot on some tamper-evident
+      hardware (https://github.com/osresearch/heads/issues/581).
+
+  * Build system
+    - Patch Thunderbird packages from Debian when building Tails images
+      (Closes: #6156).
+    - Improve tooling to maintain and update PO files (Closes: #15403),
+      rewriting some tools and moving code to the jenkins-tools submodule.
+    - Implement preliminary steps needed to make the ikiwiki PO plugin
+      able to update PO files for languages that are disabled on the
+      website (refs: #15355).
+
+ -- Tails developers <tails@boum.org>  Tue, 09 Jul 2019 02:50:09 +0200
+
+tails (3.14.2) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.5.3 (Closes: #16835).
+
+  * Bugfixes
+    - tails-screen-locker: Don't use dim-label style class
+      (Closes: #16802).
+
+ -- Tails developers <tails@boum.org>  Sun, 23 Jun 2019 11:52:49 +0200
+
+tails (3.14.1) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 8.5.2-build1 (Closes: #16824).
+    - Upgrade Thunderbird to 60.7.0 (Closes: #16742).
+    - Upgraded Linux to 4.19.37-4 (Closes: #16823).
+
+  * Bugfixes
+    - Only probe for partitions on the boot device when setting up
+      TailsData. Without arguments partprobe will scan all devices,
+      and if it encounters a device it doesn't support (e.g. fake
+      raid-0 arrays) it will return non-zero, thus aborting Tails'
+      partitioning script, resulting in an unbootable install
+      (Details: #16389).
+
+  * Minor improvements and updates
+    - Upgrade tor to 0.4.0.5-1~d90.stretch+1, the first stable
+      candidate in the 0.4.0.x series (Closes: #16687).
+    - Completely disable IPv6 except for the loopback interface. We
+      attempt to completely block it on the netfilter level but we
+      have seen ICMPv6 "leaks" any way (related to Router
+      Solicitation, see: #16148) so let's just disable it. We keep
+      enabled on the loopback interface since some services depends on
+      ::1 being up.
+    - create-usb-image-from-iso: Use syslinux from chroot. We used the
+      syslinux from the vagrant box before, which caused issues with
+      when building Tails/Buster with a Stretch vagrant box and then
+      cloning the image via Tails Installer with syslinux from Buster
+      (Closes: #16748).
+    - Set Tor Browser's homepage to https://tails.boum.org/home/testing/
+      if building anything but a stable release. This page explains the
+      dangers of using a non-stable release. (Closes: #12003)
+
+  * Build system
+    - auto/{build,config}:
+      * consistently use fatal() to error out, and prefix its message
+        with "E: " to help distinguish them from the noise produced by
+        tools we call etc.
+      * Similarly, also prefix informational message with "I: ".
+      * drop support for GnuPG 1.x.
+      * clone more build output to the log file.
+      * Drop obsolete check for syslinux version. This version
+        requirement is satisfied by Jessie and it is doubtful Tails
+        would build in anything older.
+      * auto/build: drop a few checks for conditions that are already
+        satisfied in the supported build environments.
+    - Revert "Build system: try to be smart again by fetching only the
+      refs we need." This optimization overrides the trick we have on
+      Jenkins (set_origin_base_branch_head in
+      https://git.tails.boum.org/jenkins-jobs/tree/macros/builders.yaml),
+      that ensures that a reproducibly_build_Tails_ISO_* job builds
+      from the commit used by the first build. (Closes: #16730)
+
+  * Test suite
+    - Fix mistake with execute() vs spawn() when starting the upgrader.
+    - Don't filter during pcap capture, instead let's just apply the
+      same filtering when we are inspecting the pcap files. This way
+      any pcap file saved on failure will include the full capture,
+      and not just the packets sent by the system under testing, which
+      sometimes makes it hard to understand what is going on.
+    - Also include the content of /var/log/tor/log in $scenario.tor
+      when tor failed to bootstrap (refs: #16793)
+    - Don't flood the debug logger with tor@default's journal
+      contents.
+    - Power off system under testing after scenario. Until now we have
+      relied on either one of the generated "snapshot restore" steps
+      or the "[Given] a computer" step to implicitly stop the old VM
+      when we move on to a new scenario. That meant the old VM was
+      still running during the new scenarios @Before@ hooks. If the
+      new scenario is tagged @check_tor_leaks that means we start its
+      sniffer while the old VM is still running, possibly sending
+      packets that then affect the new scenario. That would explain
+      some myserious "Unexpected connections were made" failures we
+      have seen (Closes: #11521).
+    - Only accept IP(v6)/ARP during DHCP check.
+
+ -- Tails developers <tails@boum.org>  Wed, 19 Jun 2019 15:29:07 +0200
 
 tails (3.14) unstable; urgency=medium
 
