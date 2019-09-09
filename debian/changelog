@@ -1,8 +1,100 @@
-tails (4.0~beta2) UNRELEASED; urgency=medium
+tails (4.0) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+   * Dummy entry for next release.
 
- -- anonym <anonym@riseup.net>  Mon, 12 Aug 2019 12:50:27 +0200
+ -- Tails developers <tails@boum.org>  Thu, 05 Sep 2019 13:53:43 +0000
+
+tails (4.0~beta2) unstable; urgency=medium
+
+  * All changes included in Tails 3.16, see the corresponding changelog entry.
+
+  * Major changes
+    - Upgrade tor to 0.4.1.5 (Closes: #16986).
+
+  * Security fixes
+    - Upgrade the Linux kernel to 5.2.0-2 (Closes: #16942).
+      This mitigates the Spectre v1 swapgs vulnerability (CVE-2019-1125).
+      Accordingly, aufs to aufs5.2 20190805.
+    - Install enigmail from Bullseye (Closes: #16738).
+      This fixes CVE-2019-12269.
+
+  * Bugfixes
+    - tails-unblock-network: only sleep until all-net-blacklist.conf is gone,
+      instead of unconditionally delaying the login process for 5 seconds
+      (Closes: #16805).
+    - Terminate GDM's GNOME session after the amnesia user logs in,
+      to free 200-300 MiB of memory (Closes: #12092).
+      Temporarily enable GDM debug logs so we get enough information to fix
+      any issue this might cause.
+    - Make our KeePassXC wrapper translatable (Closes: #16952).
+    - Adjust boot-time backports APT pinning for Buster.
+    - Ensure we don't install unwanted packages even if they become
+      "Priority: standard" again (Closes: #16949).
+    - Move some GNOME apps to different menu categories (Closes: #16981).
+    - Update HTP pools: replace boum.org (invalid certificate) with puscii.nl,
+      replace www.myspace.com with myspace.com (the former redirects to
+      the latter).
+    - AppArmor: allow OnionShare to open URLs with Tor Browser (Closes: #16914).
+    - Make file transfers with Spice reliable.
+
+  * Minor improvements and updates
+    - Greeter: improve formatting of printed exceptions.
+    - Use the same icon for Tails Documentation in the Applications menu
+      as on te Desktop (Closes: #16800).
+    - Drop migration path from GnuPG persistent configuration created
+      in the Tails 2.x era.
+    - Remove various hacks that we don't need on Buster anymore.
+    - Stop installing libcaribou-gtk3-module (Closes: #16757).
+    - Stop installing python-cairo: mat2 does not use it anymore.
+    - tails-unblock-network: have udev reload the databases it uses.
+      This should avoid our fix for #16805 introducing regressions.
+
+  * Build system
+    - Bump APT snapshot of the 'debian' and 'torproject' archives
+      to 2019090202.
+    - Import the Greeter codebase into tails.git (Closes: #16912).
+    - Explicitly install gnome-shell to make the set of installed packages
+      more deterministic (related to #16947).
+    - Don't try to follow symlinks when normalizing timestamps on source files.
+    - Add missing "set -u" to build-time hook.
+    - Use consistent method to extract translatable strings from Glade files.
+    - Create gdm-tails related files from the original GNOME files
+      (Closes: #12551).
+    - Stop installing libimage-exiftool-perl explicitly: mat2 depends on it
+      already.
+    - Rakefile: disable compression when retrieving artifacts via scp.
+      This makes this build step faster on systems that have SSH compression
+      enabled by default.
+    - import-translations: use tails-misc_release for tails.git's PO files
+      (i.e. the Tails part of #16774).
+    - Use squashfs-tools from sid (Closes: #16637).
+    - Lower VM_MEMORY_BASE to 1536M.
+    - Remove unneeded package cleanup (Closes: #16950).
+
+  * Test suite
+    - New scenario: installing with GNOME Disks from a USB image
+      (Closes: #16004).
+    - New scenarios: VeraCrypt PIM support (Closes: #15946).
+    - Revert timeout bump that's not needed anymore.
+    - Add a showing method on Dogtail objects.
+    - VeraCrypt: ensure the temporary keyfile file is not garbage collected
+      while we still need it.
+    - Remote shell: print traceback to stderr so we can see it.
+    - Install Dogtail from Bullseye and run it with Python 3 (Closes: #16976).
+      This gives us UTF-8 support. Accordingly, drop anonym's "showingOnly"
+      patch that was merged upstream, and port some test suite code to Dogtail,
+      which we could not do before it got UTF-8 support.
+    - Dogtail'ify some steps.
+    - Make "^the Tor Browser shows the "([^"]+)" error$" step more robust
+      (Closes: #11592.
+    - Make the "the support documentation page opens in Tor Browser" step more
+      robust (Closes: #15321)
+    - Remove a bunch of obsolete @fragile tags, update the reasons why
+      the remaining ones are fragile, and add some missing @fragile tags.
+    - Drop useless code based on wrong assumptions (refs: #13470).
+    - Make the "I set an administration password" step more robust.
+
+ -- Tails developers <tails@boum.org>  Mon, 02 Sep 2019 19:55:24 +0000
 
 tails (4.0~beta1) unstable; urgency=medium
 
@@ -413,11 +505,63 @@ tails (4.0~beta1) unstable; urgency=medium
 
  -- Tails developers <tails@boum.org>  Wed, 07 Aug 2019 20:30:15 +0200
 
-tails (3.17) UNRELEASED; urgency=medium
+tails (3.16) unstable; urgency=medium
 
-  * Dummy entry for next release.
+  * Major changes
+    - Upgrade Tor Browser to 8.5.5 (Closes: #16692).
 
- -- intrigeri <intrigeri@debian.org>  Sat, 23 Mar 2019 11:32:48 +0000
+  * Security fixes
+    - Install Linux kernel from the Buster security repository (Closes: #16970).
+      The new Spectre v1 swapgs variant (CVE-2019-1125), which was fixed
+      in sid via 5.2.x, which is a too big change for the Tails 3.16 bugfix
+      release. Let's instead track Buster (+ security) for the time being.
+    - Upgrade LibreOffice to 1:5.2.7-1+deb9u10 (DSA-4483-1, DSA-4501-1).
+    - Upgrade Thunderbird to 60.8 (DSA-4482-1).
+    - Upgrade Ghostscript to 9.26a~dfsg-0+deb9u4 (DSA-4499-1).
+    - Upgrade Patch to 2.7.5-1+deb9u2 (DSA-4489-1).
+    - Upgrade nghttp2 library to 1.18.1-1+deb9u1 (DSA-4511-1).
+
+  * Bugfixes
+    - Additional software: Improve/fix support for translations (Closes: #16601).
+    - Rework the implementation for hiding TailsData partitions (Closes: #16789).
+    - Adjust how tordate determines whether the clock is in a valid range,
+      fixing issues with obfs4 (Closes: #16972).
+
+  * Minor improvements and updates
+    - Ship default upstream Tor Browser bookmarks, and remove our predefined
+      bookmarks (Closes: #15895).
+    - Hide the security level button in the unsafe browser (Closes: #16735).
+    - Remove pre-generated Pidgin accounts (Closes: #16744).
+    - Remove LibreOffice Math (Closes: #16911).
+    - Website: Make sandbox page translatable (Closes: #16873).
+    - Website: Only scrub HTML on blueprints (Closes: #16901).
+    - Website: Point history & diff URLs to Salsa.
+
+  * Build system
+    - Bump APT snapshot of the torproject archive to 2019073103, and drop
+      tor-experimental-0.4.0.x-stretch reference (Closes: #16883).
+    - Bump APT snapshot of the Debian archive to 2019080801 to get fixed
+      firmware packages from sid instead of sticking to those from
+      stretch-backports (Closes: #16728).
+    - Enable the buster APT repository and install some packages from there:
+      hunspell-id, hunspell-tr, and fonts-noto-* (See: #16728).
+    - Refresh patch for webext-ublock-origin 1.19.0+dfsg-2, and adjust Tor
+      Browser AppArmor profile accordingly (Closes: #16858).
+    - Refresh Tor Browser AppArmor profile patch for torbrowser-launcher
+      0.3.2-1 (Closes: #16941).
+
+  * Test suite
+    - Ignore RARP packets, since PacketFu cannot parse them (Closes: #16825).
+    - Adjust both locale handling and reference pictures for the Unsafe
+      Browser homepage (Closes: #17004).
+    - Fix "Watching a WebM video over HTTPS" scenario on Jenkins
+      (Closes: #10442).
+    - Tag "Watching a WebM video" as fragile.
+    - Make @check_tor_leaks more verbose (See: #10442).
+    - Remove broken Electrum scenario since Electrum support is currently
+      missing (Closes: #16421).
+
+ -- Tails developers <tails@boum.org>  Tue, 03 Sep 2019 20:30:14 +0200
 
 tails (3.15) unstable; urgency=medium
 

@@ -47,10 +47,6 @@ Given /^a computer$/ do
   $vm = VM.new($virt, VM_XML_PATH, $vmnet, $vmstorage, DISPLAY)
 end
 
-Given /^the computer has (\d+) ([[:alpha:]]+) of RAM$/ do |size, unit|
-  $vm.set_ram_size(size, unit)
-end
-
 Given /^the computer is set to boot from the Tails DVD$/ do
   $vm.set_cdrom_boot(TAILS_ISO)
 end
@@ -271,7 +267,6 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
-  step 'Tails Greeter has applied all settings'
   step 'the Tails desktop is ready'
 end
 
@@ -294,19 +289,11 @@ end
 Given /^I set an administration password$/ do
   open_greeter_additional_settings()
   @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
+  @screen.wait("TailsGreeterAdminPasswordDialog.png", 10)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.ENTER)
-end
-
-Given /^Tails Greeter has applied all settings$/ do
-  # I.e. it is done with PostLogin, which is ensured to happen before
-  # a logind session is opened for LIVE_USER.
-  try_for(120) {
-    $vm.execute_successfully("loginctl").stdout
-      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s+\S+\s*$/) != nil
-  }
 end
 
 Given /^the Tails desktop is ready$/ do
@@ -457,10 +444,14 @@ Given /^all notifications have disappeared$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
     @screen.click_point(x, y)
-    unless gnome_shell.child?('No Notifications', roleName: 'label')
-      @screen.click('GnomeCloseAllNotificationsButton.png')
+    begin
+      gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
+    rescue
+      # Ignore exceptions: there might be no notification to clear, in
+      # which case there will be a "No Notifications" label instead of
+      # a "Clear All" button.
     end
-    gnome_shell.child?('No Notifications', roleName: 'label')
+    gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
   @screen.type(Sikuli::Key.ESC)
 end

@@ -119,6 +119,7 @@ TORPROJECT_MIRROR="$(apt-mirror torproject)"
 perl -pi \
      -E \
        "s|^(deb(?:-src)?\s+)https?://ftp[.]us[.]debian[.]org/debian/?(\s+)|\$1$DEBIAN_MIRROR\$2| ; \
+        s|^(deb(?:-src)?\s+)https?://security[.]debian[.]org/debian-security/?(\s+)|\$1$DEBIAN_SECURITY_MIRROR\$2| ; \
         s|^(deb(?:-src)?\s+)https?://deb[.]torproject[.]org/torproject[.]org/?(\s+)|\$1$TORPROJECT_MIRROR\$2|" \
     config/chroot_sources/*.chroot \
     || fatal "APT mirror substitution failed with exit code $?"

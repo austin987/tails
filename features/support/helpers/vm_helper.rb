@@ -394,16 +394,6 @@ class VM
     return list
   end
 
-  def set_ram_size(size, unit = "KiB")
-    raise "System memory can only be added to inactive vms" if is_running?
-    domain_xml = REXML::Document.new(@domain.xml_desc)
-    domain_xml.elements['domain/memory'].text = size
-    domain_xml.elements['domain/memory'].attributes['unit'] = unit
-    domain_xml.elements['domain/currentMemory'].text = size
-    domain_xml.elements['domain/currentMemory'].attributes['unit'] = unit
-    update(domain_xml.to_s)
-  end
-
   def set_os_loader(type)
     if is_running?
       raise "boot settings can only be set for inactive vms"
@@ -663,8 +653,8 @@ EOF
       begin
         potential_internal_snapshot = @domain.lookup_snapshot_by_name(name)
         @domain.revert_to_snapshot(potential_internal_snapshot)
-      rescue Libvirt::RetrieveError
-        raise "No such (internal nor external) snapshot #{name}"
+      rescue Guestfs::Error, Libvirt::RetrieveError
+        raise "The (internal nor external) snapshot #{name} may be known by libvirt but it cannot be restored. To investigate, use 'virsh snapshot-list TailsToaster'. To clean up old dangling snapshots, use 'virsh-delete'."
       end
     end
     @display.start

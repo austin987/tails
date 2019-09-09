@@ -4,8 +4,6 @@ Feature: Browsing the web using the Tor Browser
   when I browse the web using the Tor Browser
   all Internet traffic should flow only through Tor
 
-  #11591
-  @fragile
   Scenario: The Tor Browser cannot access the LAN
     Given I have started Tails from DVD and logged in and the network is connected
     And a web server is running on the LAN
@@ -37,14 +35,16 @@ Feature: Browsing the web using the Tor Browser
     When I save the file to the default Tor Browser download directory
     Then the file is saved to the default Tor Browser download directory
 
-  @check_tor_leaks
+  #17007
+  @check_tor_leaks @fragile
   Scenario: Playing an Ogg audio track
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     Then I can listen to an Ogg audio track in Tor Browser
 
-  @check_tor_leaks
+  #17007
+  @check_tor_leaks @fragile
   Scenario: Watching a WebM video
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser

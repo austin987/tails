@@ -29,8 +29,6 @@ Feature: Browsing the web using the Unsafe Browser
     When I open Tails homepage in the Unsafe Browser
     Then Tails homepage loads in the Unsafe Browser
 
-  #11457
-  @fragile
   Scenario: Closing the Unsafe Browser shows a stop notification and properly tears down the chroot.
     Given I have started Tails from DVD and logged in and the network is connected
     When I successfully start the Unsafe Browser
