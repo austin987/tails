@@ -24,8 +24,7 @@ using Tor so we can make Tor usable.
 In short this is how time syncing is performed when Tails starts:
 
 0. Start Tor. If Tor is already working, skip to HTP step.
-0. Let Tor fetch a consensus (wait up to 150 seconds twice, restarting Tor
-   in between).
+0. Let Tor fetch a consensus.
 0. If the time is too badly off, the authority certificate may not be
    valid, so we set the system time to the `valid-after` of the unverified
    consensus Tor fetched for us, which will guarantee that the certificate
@@ -53,7 +52,7 @@ file contains such information:
 	valid-until 2010-12-27 19:00:00
 
 A consensus is valid for three hours. If the system time is in the
-[valid-after, valid-after + 2.5 hours] range, `tordate` exits.
+[valid-after, valid-after + 2 hours + 55 minutes] range, `tordate` exits.
 Else, it sets the system time to the middle of the [valid-after,
 fresh-until] range and restarts Tor.
 
