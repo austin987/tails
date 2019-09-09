@@ -69,7 +69,6 @@ Feature: Chatting anonymously using Pidgin
   @check_tor_leaks @fragile
   Scenario: Connecting to the tails multi-user chat with my XMPP account
     Given I have started Tails from DVD and logged in and the network is connected
-    And Pidgin has the expected accounts configured with random nicknames
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
     Then I see Pidgin's account manager window
     And I create my XMPP account
@@ -101,7 +100,6 @@ Feature: Chatting anonymously using Pidgin
   @check_tor_leaks @fragile
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    And Pidgin has the expected accounts configured with random nicknames
     And the network is plugged
     And Tor is ready
     And available upgrades have been checked

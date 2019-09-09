@@ -740,7 +740,7 @@ files metadata:
        tmp="$(mktemp -d)" && \
        mkdir -p "${tmp:?}/tails-amd64-${VERSION:?}" && \
        cd "${tmp:?}/tails-amd64-${VERSION:?}" && \
-       for x in "${ISOS:?}/tails-amd64-${VERSION:?}"/*; do
+       for x in "${ISOS:?}/tails-amd64-${VERSION:?}"/*.${type:?}*; do
            ln -s ${x} .
        done && \
        mktorrent \
@@ -749,6 +749,7 @@ files metadata:
           -a 'udp://tracker.coppersurfer.tk:6969' \
           "${tmp:?}/tails-amd64-${VERSION:?}" && \
        transmission-show "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" && \
+       cd - && \
        rm -rf "${tmp:?}"
     done
 
@@ -791,7 +792,10 @@ Include each such version in a white-space separated list called
 and run the following:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
-        if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
+        squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
+        if [ "$squashfs_tools_version" != 1:4.3-3.0tails4 ] && \
+           [ "$squashfs_tools_version" != 1:4.3-8.0tails1 ] && \
+           dpkg --compare-versions "$squashfs_tools_version" lt 1:4.4-1; then
             echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
             break
         fi
@@ -897,7 +901,7 @@ Prepare upgrade-description files
                         --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
                         --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
                         --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
-                        --next-version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}" \
+                        --next-version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}"
                 else
                     echo --next-version $(echo ${VERSION:?} | sed -e 's,~.*$,,')
                 fi
@@ -1110,26 +1114,26 @@ Now you can announce and seed the Torrents for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
+    images_dirname="tails-amd64-${VERSION:?}"
+    transmission_dl_version_dir="/var/lib/transmission-daemon/downloads/${images_dirname:?}"
     for type in iso img ; do
        image_filename="tails-amd64-${VERSION:?}.${type:?}"
        scp \
           "${ISOS:?}/${image_filename:?}.torrent" \
-          "${ISOS:?}/${image_filename:?}/${image_filename:?}.sig" \
+          "${ISOS:?}/${images_dirname:?}/${image_filename:?}.sig" \
           bittorrent.lizard: && \
        ssh bittorrent.lizard << EOF
-          mkdir --mode 0755 "${image_filename:?}" && \
-          mv "${image_filename:?}.sig" \
-             "${image_filename:?}/" && \
-          cd "${image_filename:?}" && \
-          wget \
+          install -d -g debian-transmission --mode 0755 \
+             "${transmission_dl_version_dir:?}" && \
+          wget --quiet \
              "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
           gpg --verify ${image_filename:?}{.sig,} && \
-          cd && \
-          chgrp -R debian-transmission "${image_filename:?}" && \
-          chmod -R go+rX,g+w "${image_filename:?}" && \
+          chgrp debian-transmission "${image_filename:?}"* && \
+          chmod go+rX,g+w "${image_filename:?}"* && \
           mv \
              "${image_filename:?}" \
-             /var/lib/transmission-daemon/downloads/ && \
+             "${image_filename:?}.sig" \
+             "${transmission_dl_version_dir:?}" && \
           transmission-remote --add ${image_filename:?}.torrent \
                               --find /var/lib/transmission-daemon/downloads/
     EOF
@@ -1294,7 +1298,8 @@ before putting the release out for real:
 	git add wiki/src && \
 	git commit -m "Releasing version ${VERSION:?}"
 
-Then, send the PO files for the announcements to <tails-l10n@boum.org>
+Then, if you are preparing a final release, send the PO files for the
+announcements to <tails-l10n@boum.org>
 so that they get translated shortly, perhaps even soon enough to
 integrate them before pushing the release out officially.
 
