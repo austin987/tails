@@ -198,15 +198,6 @@ def boot_menu_cmdline_image
   end
 end
 
-def boot_menu_tab_msg_image
-  case @os_loader
-  when "UEFI"
-    'TailsBootSplashTabMsgUEFI.png'
-  else
-    'TailsBootSplashTabMsg.png'
-  end
-end
-
 Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   boot_timeout = 3*60
   # Simply looking for the boot splash image is not robust; sometimes
@@ -225,34 +216,21 @@ Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
       domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
       loop do
         domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
-        sleep 0.1
+        sleep 1
       end
     ensure
       virt.close
     end
   EOF
-  # Our UEFI firmware (OVMF) has the interesting "feature" that pressing
-  # any button will open its setup menu, so we have to exit the setup,
-  # and to not have the TAB spammer potentially interfering we pause
-  # it meanwhile.
-  dealt_with_uefi_setup = false
   # The below code is not completely reliable, so we might have to
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
       tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
-      if not(dealt_with_uefi_setup) && @os_loader == 'UEFI'
-        @screen.wait('UEFIFirmwareSetup.png', 30)
-        Process.kill("TSTP", tab_spammer.pid)
-        @screen.type(Sikuli::Key.ENTER)
-        Process.kill("CONT", tab_spammer.pid)
-        dealt_with_uefi_setup = true
-      end
       @screen.wait(boot_menu_cmdline_image, 15)
     rescue FindFailed => e
       debug_log('We missed the boot menu before we could deal with it, ' +
                 'resetting...')
-      dealt_with_uefi_setup = false
       $vm.reset
       raise e
     ensure
@@ -290,7 +268,6 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   else
     raise "Unsupported language: #{lang}"
   end
-  step 'Tails Greeter has applied all settings'
   step 'the Tails desktop is ready'
 end
 
@@ -313,33 +290,17 @@ end
 Given /^I set an administration password$/ do
   open_greeter_additional_settings()
   @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
+  @screen.wait("TailsGreeterAdminPasswordDialog.png", 10)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.TAB)
   @screen.type(@sudo_password)
   @screen.type(Sikuli::Key.ENTER)
 end
 
-Given /^Tails Greeter has applied all settings$/ do
-  # I.e. it is done with PostLogin, which is ensured to happen before
-  # a logind session is opened for LIVE_USER.
-  try_for(120) {
-    $vm.execute_successfully("loginctl").stdout
-      .match(/^\s*\S+\s+\d+\s+#{LIVE_USER}\s+seat\d+\s+\S+\s*$/) != nil
-  }
-end
-
 Given /^the Tails desktop is ready$/ do
   desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
   @screen.wait(desktop_started_picture, 180)
-  # Workaround #13461 by restarting nautilus-desktop
-  # if Desktop icons are not visible
-  begin
-    @screen.wait("DesktopTailsDocumentation.png", 30)
-  rescue FindFailed
-    step 'I kill the process "nautilus-desktop"'
-    $vm.spawn('nautilus-desktop', user: LIVE_USER)
-    @screen.wait("DesktopTailsDocumentation.png", 30)
-  end
+  @screen.wait("DesktopTailsDocumentation.png", 30)
   # Disable screen blanking since we sometimes need to wait long
   # enough for it to activate, which can mess with Sikuli wait():ing
   # for some image.
@@ -433,15 +394,15 @@ end
 Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails'
+    titles = ['Tails', 'Tails - Trying a testing version of Tails']
   when "Tails homepage"
-    title = 'Tails - Privacy for anyone anywhere'
+    titles = ['Tails - Privacy for anyone anywhere']
   when "Tails roadmap"
-    title = 'Roadmap - Tails - Tails Ticket Tracker'
+    titles = ['Roadmap - Tails - Tails Ticket Tracker']
   else
     raise "Unsupported page: #{page}"
   end
-  step "\"#{title}\" has loaded in the Tor Browser"
+  page_has_loaded_in_the_Tor_Browser(titles, @language)
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -460,7 +421,16 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   step 'the Tor Browser shows the "The proxy server is refusing connections" error'
   @screen.type("d", Sikuli::KeyModifier.CTRL)
   @screen.wait("TorBrowserBookmarkPrompt.png", 10)
-  @screen.type(url + Sikuli::Key.ENTER)
+  @screen.type(url)
+  # The new default location for bookmarks is "Other Bookmarks", but our test
+  # expects the new entry is available in "Bookmark Menu", that's why we need
+  # to select the location explicitly.
+  @screen.wait_and_click("TorBrowserBookmarkLocation.png", 10)
+  @screen.wait_and_click("TorBrowserBookmarkLocationBookmarksMenu.png", 10)
+  # Need to sleep here, otherwise the changed Bookmark location is not taken
+  # into account and we end up create a bookmark in "Other Bookmark" location.
+  sleep 1
+  @screen.type(Sikuli::Key.ENTER)
 end
 
 Given /^the Tor Browser has a bookmark to eff.org$/ do
@@ -475,10 +445,14 @@ Given /^all notifications have disappeared$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
     @screen.click_point(x, y)
-    unless gnome_shell.child?('No Notifications', roleName: 'label')
-      @screen.click('GnomeCloseAllNotificationsButton.png')
+    begin
+      gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
+    rescue
+      # Ignore exceptions: there might be no notification to clear, in
+      # which case there will be a "No Notifications" label instead of
+      # a "Clear All" button.
     end
-    gnome_shell.child?('No Notifications', roleName: 'label')
+    gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
   @screen.type(Sikuli::Key.ESC)
 end
@@ -600,19 +574,7 @@ Given /^the package "([^"]+)" is( not)? installed( after Additional Software has
 end
 
 Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]+)"$/ do |version, con_name|
-  if version and version == '2.x'
-    con_content = <<EOF
-[connection]
-id=#{con_name}
-uuid=b04afa94-c3a1-41bf-aa12-1a743d964162
-interface-name=eth0
-type=ethernet
-EOF
-    con_file = "/etc/NetworkManager/system-connections/#{con_name}"
-    $vm.file_overwrite(con_file, con_content)
-    $vm.execute_successfully("chmod 600 '#{con_file}'")
-    $vm.execute_successfully("nmcli connection load '#{con_file}'")
-  elsif version and version == '3.x'
+  if not version.empty?
     raise "Unsupported version '#{version}'"
   else
     $vm.execute_successfully(
@@ -709,9 +671,10 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   @screen.type(app_name[0])
   # Give search providers some time to start (#13469#note-5) otherwise
   # our search sometimes returns no results at all.
-  sleep 1
+  sleep 2
   # Type the rest of the search query
   @screen.type(app_name[1..-1])
+  sleep 2
   @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
 end
 
@@ -965,12 +928,19 @@ Then /^Tails is running version (.+)$/ do |version|
   assert_equal(version, v2, "The version doesn't match /etc/os-release")
 end
 
-def share_host_files(files)
+def size_of_shared_disk_for(files)
   files = [files] if files.class == String
   assert_equal(Array, files.class)
   disk_size = files.map { |f| File.new(f).size } .inject(0, :+)
   # Let's add some extra space for filesystem overhead etc.
   disk_size += [convert_to_bytes(1, 'MiB'), (disk_size * 0.15).ceil].max
+  return disk_size
+end
+
+def share_host_files(files)
+  files = [files] if files.class == String
+  assert_equal(Array, files.class)
+  disk_size = size_of_shared_disk_for(files)
   disk = random_alpha_string(10)
   step "I temporarily create an #{disk_size} bytes disk named \"#{disk}\""
   step "I create a gpt partition labeled \"#{disk}\" with an ext4 " +

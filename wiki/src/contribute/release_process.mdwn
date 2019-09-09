@@ -16,7 +16,8 @@ To release Tails you'll need some packages installed:
 * `tidy mktorrent transmission-cli`
 * aufs DKMS module for your running kernel.
 * [[!debpts squashfs-tools]] that honors `$SOURCE_DATE_EPOCH`.
-  Install it from our custom `devel` APT suite.
+  If you're running Stretch or Buster, install it from our custom `devel` APT suite.
+  If you're running Bullseye or sid, install it from sid.
 * `tails-iuk` dependencies, including suggested packages (see
   `debian/control` in the `debian` branch of its repo)
 * `tails-perl5lib` dependencies (same trick as `tails-iuk` to get the
@@ -247,11 +248,6 @@ Upgrade Tor Browser AppArmor profile
 
 See the dedicated page: [[tor-browser_AppArmor_patch]]
 
-Upgrade Thunderbird
----------------
-
-See the dedicated page: [[thunderbird]]
-
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
 
@@ -314,15 +310,15 @@ Update other base branches
    during the freeze. It's fine if that results in a no-op
    (it depends on how exactly previous operations were performed).
 
-3. Merge `devel` into `feature/buster`, *without* following the instructions for
+3. Merge `devel` into `feature/bullseye` (if it exists), *without* following the instructions for
    [[merging base branches|APT_repository/custom#workflow-merge-main-branch]].
-   (For now `feature/buster` is handled as any other topic branch
+   (For now `feature/bullseye` is handled as any other topic branch
    forked off `devel`: its base branch is set to `devel`.)
    If the merge conflicts don't look like something you feel confident
    resolving properly, abort this merge and let the Foundations
    Team know.
 
-4. Ensure that the release, `devel` and `feature/buster` branches
+4. Ensure that the release, `devel` and `feature/bullseye` (if it exists) branches
    have the expected content in `config/APT_overlays.d/`: e.g. it must
    not list any overlay APT suite that has been merged already.
 
@@ -330,7 +326,7 @@ Update other base branches
 
         git push origin                          \
            "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}" \
-           feature/buster:feature/buster       \
+           $(if git describe feature/bullseye >/dev/null 2>&1; then echo feature/bullseye:feature/bullseye ; fi) \
            devel:devel
 
 Update more included files

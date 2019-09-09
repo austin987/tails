@@ -35,6 +35,7 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
   'APT_SNAPSHOTS_SERIALS',
+  'TAILS_ACNG_PROXY',
   'TAILS_BUILD_FAILURE_RESCUE',
   'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
@@ -212,7 +213,7 @@ task :parse_build_options do
   options << 'vmproxy'
 
   # Default to fast compression on development branches
-  options << 'gzipcomp' unless is_release?
+  options << 'fastcomp' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
@@ -233,17 +234,21 @@ task :parse_build_options do
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'extproxy'
-    when 'vmproxy'
+    when 'vmproxy', 'vmproxy+extproxy'
       ENV['TAILS_PROXY'] = INTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
+      if opt == 'vmproxy+extproxy'
+        abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+        ENV['TAILS_ACNG_PROXY'] = EXTERNAL_HTTP_PROXY
+      end
     when 'noproxy'
       ENV['TAILS_PROXY'] = nil
       ENV['TAILS_PROXY_TYPE'] = 'noproxy'
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
-    when 'gzipcomp'
-      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip -Xcompression-level 1'
+    when 'fastcomp', 'gzipcomp'
+      ENV['MKSQUASHFS_OPTIONS'] = '-comp xz'
       if is_release?
         raise 'We must use the default compression when building releases!'
       end
@@ -434,6 +439,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
       # command to modify the #{hostname} below.
       '-o', 'StrictHostKeyChecking=no',
       '-o', 'UserKnownHostsFile=/dev/null',
+      # Speed up the copy
+      '-o', 'Compression=no',
     ]
     fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
     fetch_command << ENV['ARTIFACTS']

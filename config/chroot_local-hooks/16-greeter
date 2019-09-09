@@ -1,0 +1,14 @@
+#! /bin/sh
+
+set -e
+set -u
+
+echo "Set up greeter language codes"
+
+# Extract language codes from the supported locales
+perl -n -E 'next unless m{_}xms;        \
+                    next if m{\@}xms;           \
+                    say $1 if m{(.*?) [. ]}xms' \
+           /usr/share/i18n/SUPPORTED     \
+           | uniq                        \
+           > /usr/share/tails-greeter/language_codes

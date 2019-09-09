@@ -16,8 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
-const Lang = imports.lang;
-
 const Gio = imports.gi.Gio;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
@@ -29,21 +27,18 @@ const PopupMenu = imports.ui.popupMenu;
 const Gettext = imports.gettext.domain('tails');
 const _ = Gettext.gettext;
 
-const TorStatusIndicatorName = 'TorStatus'
-const TorStatusIndicatorStatusFile = '/run/tor-has-bootstrapped/done'
+const TorStatusIndicatorName = 'tor-status';
+const TorStatusIndicatorStatusFile = '/run/tor-has-bootstrapped/done';
 
-const TorStatusIndicator = new Lang.Class({
-    Name: TorStatusIndicatorName,
-    Extends: PanelMenu.Button,
-
-    _init: function() {
-        this.parent(0.0, _("Tor"));
+class TorStatusIndicator extends PanelMenu.Button {
+    constructor() {
+        super(0.0, _("Tor Status"));
 
         // Monitor the status file
         let status_file = Gio.File.new_for_path(TorStatusIndicatorStatusFile);
         this._status_file_monitor = status_file.monitor(Gio.FileMonitorFlags.NONE, null);
         this._monitor_changed_signal_id = this._status_file_monitor.connect(
-                'changed', Lang.bind(this, this._onFileChanged));
+            'changed', this._onFileChanged.bind(this));
 
         // Create icon
         this._icon = new St.Icon({ style_class: 'system-status-icon' });
@@ -53,23 +48,23 @@ const TorStatusIndicator = new Lang.Class({
 
         // Create menu
         let menu_item = new PopupMenu.PopupMenuItem(_("Open Onion Circuits"));
-        menu_item.connect('activate', Lang.bind(this, this._openOnionCircuits));
+        menu_item.connect('activate', this._openOnionCircuits.bind(this));
         this.menu.addMenuItem(menu_item);
-    },
+    }
 
-    _updateIcon: function(tor_is_connected) {
+    _updateIcon(tor_is_connected) {
         if (tor_is_connected) {
             this._icon.set_icon_name('tor-connected-symbolic');
         } else {
             this._icon.set_icon_name('tor-disconnected-symbolic');
         }
-    },
+    }
 
-    _openOnionCircuits: function() {
+    _openOnionCircuits() {
         Shell.AppSystem.get_default().lookup_app('onioncircuits.desktop').activate();
-    },
+    }
 
-    _onFileChanged: function(monitor, file, other_file, event_type, user_data) {
+    _onFileChanged(monitor, file, other_file, event_type, user_data) {
         switch (event_type) {
             case Gio.FileMonitorEvent.CREATED:
                 this._updateIcon(true);
@@ -78,13 +73,19 @@ const TorStatusIndicator = new Lang.Class({
                 this._updateIcon(false);
                 break;
         }
-    },
-
-    _destroy: function() {
-        this._status_file_monitor.disconnect(this._monitor_changed_signal_id);
-        this.parent();
     }
-});
+
+    destroy() {
+        log("TorStatus: entering destroy()");
+        if (this._status_file_monitor) {
+            this._status_file_monitor.disconnect(this._monitor_changed_signal_id);
+            this._status_file_monitor = 0;
+        }
+
+        super.destroy();
+        log("TorStatus: exiting destroy()");
+    }
+};
 
 let tor_status_indicator;
 
@@ -92,11 +93,14 @@ function init() {
 }
 
 function enable() {
-    tor_status_indicator = new TorStatusIndicator();
+    log("TorStatus: entering enable()");
+    tor_status_indicator = new TorStatusIndicator;
     Main.panel.addToStatusArea(TorStatusIndicatorName, tor_status_indicator);
+    log("TorStatus: exiting enable()");
 }
 
 function disable() {
+    log("TorStatus: entering disable()");
     tor_status_indicator.destroy();
+    log("TorStatus: exiting disable()");
 }
-
