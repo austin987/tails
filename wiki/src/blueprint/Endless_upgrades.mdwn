@@ -305,23 +305,35 @@ The IUK size is involved in at least four concerns:
     MB = 2442 MB.
   - After the old IUK is purged the disk usage is down to 2442 MB -
     678 MB = 1764 MB.
-* Memory needs: while performing the upgrade, 2x the size of the IUK
-  of memory is needed, so 2*682 MB = 1364 MB. On a system with 2 GB of
-  memory, a fresh boot of Tails 3.5 (without networking to limit the
-  amount of processes autostarting) has 1255 MB of free memory
-  (according to `check_free_memory()`'s calculation in
-  `config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper`)
-  so the upgrade would fail. This is a regression for users with 2 GB
-  memory: for all of 2.x and 3.x, all IUKs have been under 400 MB,
-  which would work fine with 2 GB of memory. If that's a blocker, then
-  we have to solve it by changing the format of the IUKs
-  ([[!tails_ticket 6876]]); we should coordinate this with other changes
-  that will break automated upgrades from Tails N to N+1, such as
-  Tails 4.0 and the migration to overlayfs ([[!tails_ticket 9373]]) .
+* Memory needs:
+  - While performing the upgrade, 2x the size of the IUK
+    of memory is needed, so 2*682 MB = 1364 MB. On a system with 2 GB of
+    memory, a fresh boot of Tails pre-4.0 devel branch, even with
+    [[!tails_ticket 12092]] fixed, has 900 MB of free memory
+    (according to `check_free_memory()`'s calculation in
+    `config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper`)
+    so the upgrade would fail.
+  - In the same conditions, Tails 3.15 has 672 MB of free memory, which
+    allowed to apply every automatic upgrade if, and only if, one never
+    skipped any: most 3.N → 3.N+2 automatic upgrades would fail with
+    2 GB of RAM.
+  - So this is a regression for users with 2 GB memory who never skip
+    any upgrade. Those who already skipped upgrades occasionally
+    already could not upgrade automatically in Tails 3.x, because we
+    started advertising upgrades from N to N+2, to improve UX for
+    those that have enough RAM to apply them directly (no need to
+    apply 2 upgrades in a row when the user has skipped one). As we
+    can see, this move also made UX worse for users with smaller
+    amounts of RAM: they have to do a manual upgrade, which is probably
+    more painful, for most users, than 2 automatic upgrades.
+  - We can solve this regression by changing the format of the IUKs
+    ([[!tails_ticket 6876]]); we should coordinate this with other changes
+    that will break automated upgrades from Tails N to N+1, such as
+    the migration to overlayfs ([[!tails_ticket 9373]]).
 * Bandwidth needs of the RM. Uploading 10 GB of IUKs can be a pain for
-  some of us, but that can easily be solved by making it possible to
+  some of us, but that can be solved by making it possible to
   generate IUKs on lizard (and then compare them with the ones you
-  generated locally. Thanks reproducibility!).
+  generated locally. Thanks reproducibility!): [[!tails_ticket 15297]].
 
 ## Support upgrading very old Tails
 

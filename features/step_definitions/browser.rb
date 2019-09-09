@@ -243,7 +243,7 @@ Then /^I can listen to an Ogg audio track in Tor Browser$/ do
 end
 
 Then /^I can watch a WebM video in Tor Browser$/ do
-  test_url = 'https://tails.boum.org/lib/test_suite/test.webm'
+  test_url = WEBM_VIDEO_URL
   info = xul_application_info('Tor Browser')
   open_test_url = Proc.new do
     step "I open the address \"#{test_url}\" in the Tor Browser"
