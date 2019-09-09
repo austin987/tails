@@ -98,11 +98,14 @@ end
 
 Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" locale)?$/ do |locale|
   case locale
-  # Languages that have a translated version of the Unsafe Browser homepage,
-  # and more specifically of the "You are currently using the Unsafe Browser"
-  # string.
-  when /\A(de|fa|fr|it)/
-    start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
+  # Use localized image for languages that have a translated version
+  # of the Unsafe Browser homepage.
+  when /\A([a-z]+)/
+    if File.exists?("#{SIKULI_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
+      start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
+    else
+      start_page_image = "UnsafeBrowserStartPage.png"
+    end
   else
     start_page_image = "UnsafeBrowserStartPage.png"
   end

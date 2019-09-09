@@ -857,7 +857,7 @@ Given /^a web server is running on the LAN$/ do
   end
   server.start
 EOF
-  add_lan_host(@web_server_ip_addr, @web_server_port)
+  add_extra_allowed_host(@web_server_ip_addr, @web_server_port)
   proc = IO.popen(['ruby', '-e', code])
   try_for(10, :msg => "It seems the LAN web server failed to start") do
     Process.kill(0, proc.pid) == 1
