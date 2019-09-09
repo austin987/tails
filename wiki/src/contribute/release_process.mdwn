@@ -216,9 +216,10 @@ import translations from Transifex and sanity-check them:
 	"${RELEASE_CHECKOUT:?}"/import-translations && \
 	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
 
-Then, `git rm` the PO files that have issues (alternatively, if you
-feel like it you can fix them but your changes will be overwritten
-next time we import translations from Transifex).
+Then, for every PO file that has issues:
+
+1. Rollback changes to that file: `git checkout po/LL.po`
+2. Run `check_po` again. It should pass this time.
 
 And finally, commit:
 
@@ -229,7 +230,6 @@ Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
 
 * [[tails-installer]]
-* [[tails-greeter]]
 * [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
@@ -363,7 +363,7 @@ Changelog entries can be dispatched into those usual sections:
 
 Then, gather other useful information from:
 
-* every custom bundled package's own Changelog (Greeter, Persistent
+* every custom bundled package's own Changelog (Persistent
   Volume Assistant, etc.);
 * the diff between the previous version's `.packages` file and the one
   from the to-be-released images; look for:
@@ -731,26 +731,34 @@ images and with a `.sig` extension), then go up to the parent
 directory, create a `.torrent` file and check the generated `.torrent`
 files metadata:
 
-	for type in iso img ; do
-	   mkdir "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}" && \
-	   cd "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}" && \
-	   mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.${type:?}" . && \
-	   gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *".${type:?}" && \
-	   rename 's,\.asc$,.sig,' *.asc && \
-	   cd .. && \
-	   mktorrent \
-	      -a 'udp://tracker.torrent.eu.org:451'   \
-	      -a 'udp://tracker.coppersurfer.tk:6969' \
-	      "tails-amd64-${VERSION:?}.${type:?}" && \
-	   transmission-show tails-amd64-${VERSION:?}.${type:?}.torrent
-	done
+    mkdir -p "${ISOS:?}/tails-amd64-${VERSION:?}" && \
+    for type in iso img ; do
+       cd "${ISOS:?}/tails-amd64-${VERSION:?}" && \
+       mv "${ARTIFACTS:?}/tails-amd64-${VERSION:?}.${type:?}" . && \
+       gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *".${type:?}" && \
+       rename 's,\.asc$,.sig,' *.asc && \
+       tmp="$(mktemp -d)" && \
+       mkdir -p "${tmp:?}/tails-amd64-${VERSION:?}" && \
+       cd "${tmp:?}/tails-amd64-${VERSION:?}" && \
+       for x in "${ISOS:?}/tails-amd64-${VERSION:?}"/*.${type:?}*; do
+           ln -s ${x} .
+       done && \
+       mktorrent \
+          -o "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" \
+          -a 'udp://tracker.torrent.eu.org:451'   \
+          -a 'udp://tracker.coppersurfer.tk:6969' \
+          "${tmp:?}/tails-amd64-${VERSION:?}" && \
+       transmission-show "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" && \
+       cd - && \
+       rm -rf "${tmp:?}"
+    done
 
 Lastly, let's set some variables to be used later:
 
-    ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}.iso/tails-amd64-${VERSION:?}.iso"
+    ISO_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.iso"
     ISO_SHA256SUM="$(sha256sum "${ISO_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     ISO_SIZE_IN_BYTES="$(stat -c %s "${ISO_PATH:?}")"
-    IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}.img/tails-amd64-${VERSION:?}.img"
+    IMG_PATH="${ISOS:?}/tails-amd64-${VERSION:?}/tails-amd64-${VERSION:?}.img"
     IMG_SHA256SUM="$(sha256sum "${IMG_PATH:?}" | cut -f 1 -d ' ' | tr -d '\n')"
     IMG_SIZE_IN_BYTES="$(stat -c %s "${IMG_PATH:?}")"
 
@@ -784,7 +792,10 @@ Include each such version in a white-space separated list called
 and run the following:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
-        if [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" != 1:4.3-3.0tails4 ]; then
+        squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
+        if [ "$squashfs_tools_version" != 1:4.3-3.0tails4 ] && \
+           [ "$squashfs_tools_version" != 1:4.3-8.0tails1 ] && \
+           dpkg --compare-versions "$squashfs_tools_version" lt 1:4.4-1; then
             echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
             break
         fi
@@ -796,8 +807,8 @@ and run the following:
           PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
             ./bin/tails-create-iuk \
                --squashfs-diff-name \"${VERSION:?}.squashfs\"           \
-               --old-iso \"${ISOS:?}/tails-amd64-${source_version:?}.iso/tails-amd64-${source_version:?}.iso\" \
-               --new-iso \"${ISOS:?}/tails-amd64-${VERSION:?}.iso/tails-amd64-${VERSION:?}.iso\"          \
+               --old-iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
+               --new-iso \"${ISO_PATH:?}\" \
                --outfile \"${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\""
     done
 
@@ -890,7 +901,7 @@ Prepare upgrade-description files
                         --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}" \
                         --next-version "${NEXT_PLANNED_MAJOR_VERSION:?}~rc1" \
                         --next-version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
-                        --next-version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}" \
+                        --next-version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}"
                 else
                     echo --next-version $(echo ${VERSION:?} | sed -e 's,~.*$,,')
                 fi
@@ -1103,26 +1114,26 @@ Now you can announce and seed the Torrents for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
+    images_dirname="tails-amd64-${VERSION:?}"
+    transmission_dl_version_dir="/var/lib/transmission-daemon/downloads/${images_dirname:?}"
     for type in iso img ; do
        image_filename="tails-amd64-${VERSION:?}.${type:?}"
        scp \
           "${ISOS:?}/${image_filename:?}.torrent" \
-          "${ISOS:?}/${image_filename:?}/${image_filename:?}.sig" \
+          "${ISOS:?}/${images_dirname:?}/${image_filename:?}.sig" \
           bittorrent.lizard: && \
        ssh bittorrent.lizard << EOF
-          mkdir --mode 0755 "${image_filename:?}" && \
-          mv "${image_filename:?}.sig" \
-             "${image_filename:?}/" && \
-          cd "${image_filename:?}" && \
-          wget \
+          install -d -g debian-transmission --mode 0755 \
+             "${transmission_dl_version_dir:?}" && \
+          wget --quiet \
              "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
           gpg --verify ${image_filename:?}{.sig,} && \
-          cd && \
-          chgrp -R debian-transmission "${image_filename:?}" && \
-          chmod -R go+rX,g+w "${image_filename:?}" && \
+          chgrp debian-transmission "${image_filename:?}"* && \
+          chmod go+rX,g+w "${image_filename:?}"* && \
           mv \
              "${image_filename:?}" \
-             /var/lib/transmission-daemon/downloads/ && \
+             "${image_filename:?}.sig" \
+             "${transmission_dl_version_dir:?}" && \
           transmission-remote --add ${image_filename:?}.torrent \
                               --find /var/lib/transmission-daemon/downloads/
     EOF
@@ -1287,7 +1298,8 @@ before putting the release out for real:
 	git add wiki/src && \
 	git commit -m "Releasing version ${VERSION:?}"
 
-Then, send the PO files for the announcements to <tails-l10n@boum.org>
+Then, if you are preparing a final release, send the PO files for the
+announcements to <tails-l10n@boum.org>
 so that they get translated shortly, perhaps even soon enough to
 integrate them before pushing the release out officially.
 
