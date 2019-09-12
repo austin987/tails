@@ -17,7 +17,6 @@ class ActiveBranches (Git):
     # These branches are always considered as worthy to be built.
     ALWAYS_ACTIVE_BRANCHES = [
         'devel',
-        'feature/buster',
         'feature/tor-nightly-master',
         'stable',
     ]
@@ -66,7 +65,7 @@ class ActiveBranches (Git):
         ))
         if self.new_revs_in_branch('stable', 'testing'):
             branches.append('testing')
-        return branches
+        return sorted(branches)
 
     def is_base_branch(self, branch):
         return branch in ActiveBranches.BASE_BRANCHES
@@ -89,12 +88,5 @@ class ActiveBranches (Git):
             return 0
 
     def not_merged_into_any_base_branch(self, branch):
-        # XXX: might be faster to iterate over the base branches
-        # and not on the containing branches? (use new_revs_in_branch)
-        for containing_branch in self.git('branch',
-                                          '--no-color',
-                                          '--contains',
-                                          branch).splitlines():
-            if self.is_base_branch(self.clean_branch_name(containing_branch)):
-                return False
-        return True
+        return all(self.new_revs_in_branch(base_branch, branch)
+                   for base_branch in ActiveBranches.BASE_BRANCHES)

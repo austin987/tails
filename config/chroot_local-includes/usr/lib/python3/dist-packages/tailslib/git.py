@@ -24,7 +24,6 @@ class Git:
         'master',
         'stable',
         'testing',
-        'feature/buster',
     ]
 
     def __init__(self, git_repo):
@@ -41,7 +40,7 @@ class Git:
 
     def all_branches(self):
         return [self.clean_branch_name(branch) for branch in
-                self.git('branch', '--no-color').splitlines()]
+                self.git('--no-pager', 'branch', '--no-color').splitlines()]
 
     def new_revs_in_branch(self, oldrev, branch):
         return self.git('rev-list',
