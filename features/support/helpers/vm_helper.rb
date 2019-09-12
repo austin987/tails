@@ -654,7 +654,7 @@ EOF
         potential_internal_snapshot = @domain.lookup_snapshot_by_name(name)
         @domain.revert_to_snapshot(potential_internal_snapshot)
       rescue Guestfs::Error, Libvirt::RetrieveError
-        raise "The (internal nor external) snapshot #{name} may be known by libvirt but it cannot be restored. To investigate, use 'virsh snapshot-list TailsToaster'. To clean up old dangling snapshots, use 'virsh-delete'."
+        raise "The (internal nor external) snapshot #{name} may be known by libvirt but it cannot be restored. To investigate, use 'virsh snapshot-list TailsToaster'. To clean up old dangling snapshots, use 'virsh snapshot-delete'."
       end
     end
     @display.start
