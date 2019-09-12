@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'fileutils'
 
 def post_vm_start_hook
@@ -6,21 +7,6 @@ def post_vm_start_hook
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
   @screen.click_point(@screen.w - 1, @screen.h/2)
-end
-
-def context_menu_helper(top, bottom, menu_item)
-  try_for(60) do
-    t = @screen.wait(top, 10)
-    b = @screen.wait(bottom, 10)
-    # In Sikuli, lower x == closer to the left, lower y == closer to the top
-    assert(t.y < b.y)
-    center = Sikuli::Location.new(((t.x + t.w) + b.x)/2,
-                                  ((t.y + t.h) + b.y)/2)
-    @screen.right_click(center)
-    @screen.hide_cursor
-    @screen.wait_and_click(menu_item, 10)
-    return
-  end
 end
 
 def post_snapshot_restore_hook
@@ -372,10 +358,11 @@ end
 When /^I start the Tor Browser( in offline mode)?$/ do |offline|
   step 'I start "Tor Browser" via GNOME Activities Overview'
   if offline
-    offline_prompt = Dogtail::Application.new('zenity')
-                     .dialog('Tor is not ready')
-    start_button = offline_prompt.button('Start Tor Browser')
-    start_button.grabFocus
+    start_button = Dogtail::Application.new('zenity')
+                       .dialog('Tor is not ready', showingOnly: true)
+                       .button('Start Tor Browser', showingOnly: true)
+    # Sometimes this click is lost. Maybe the dialog is not fully setup yet?
+    sleep 2
     start_button.click
   end
   step "the Tor Browser has started#{offline}"
@@ -455,6 +442,15 @@ Given /^all notifications have disappeared$/ do
     gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
   @screen.type(Sikuli::Key.ESC)
+  # Increase the chances that by the time we leave this step, the
+  # notifications menu was closed and the desktop is back to its
+  # normal state. Otherwise, all kinds of trouble may arise: for
+  # example, pressing SUPER to open the Activities Overview sometimes
+  # fails (SUPER has no effect when the notifications menu is still
+  # opened). We sleep here, instead of in "I start […] via GNOME
+  # Activities Overview", because it's our responsibility to return to
+  # a normal desktop state that any following step can rely upon.
+  sleep 1
 end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
@@ -782,13 +778,19 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
   print_dialog.child('Print to File', 'table cell').click
   print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click()
-  @screen.wait("Gtk3PrintFileDialog.png", 10)
+  # Yes, TorBrowserPrintFileDialog.png != Gtk3PrintFileDialog.png.
+  # If you try to unite them, make sure this does not break the tests
+  # that use either.
+  @screen.wait("TorBrowserPrintFileDialog.png", 10)
   # Only the file's basename is selected when the file selector dialog opens,
   # so we type only the desired file's basename to replace it
   $vm.set_clipboard(output_dir + '/' + output_file.sub(/[.]pdf$/, ''))
   @screen.type('v', Sikuli::KeyModifier.CTRL)
   @screen.type(Sikuli::Key.ENTER)
-  @screen.wait_and_click("Gtk3PrintButton.png", 10)
+  # Yes, TorBrowserPrintButton.png != Gtk3PrintButton.png.
+  # If you try to unite them, make sure this does not break the tests
+  # that use either.
+  @screen.wait_and_click("TorBrowserPrintButton.png", 10)
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }

@@ -92,8 +92,7 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's certificate manager
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
-  #13469
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged

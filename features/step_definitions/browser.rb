@@ -121,17 +121,18 @@ def page_has_loaded_in_the_Tor_Browser(page_titles, language)
     browser_name = 'Tor Browser'
     reload_action = 'Reload'
   end
-  try_for(120) {
+  try_for(180) {
     # The 'Reload' button (graphically shown as a looping arrow)
     # is only shown when a page has loaded, so once we see the
     # expected title *and* this button has appeared, then we can be sure
     # that the page has fully loaded.
-    @torbrowser.child(reload_action, roleName: 'push button') and
     @torbrowser.children(roleName: 'frame').any? { |frame|
       page_titles
         .map  { |page_title| "#{page_title} - #{browser_name}" }
         .any? { |page_title| page_title == frame.name }
-    }
+    } and
+    @torbrowser.child(reload_action, roleName: 'push button',
+                      showingOnly: true)
   }
 end
 

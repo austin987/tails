@@ -1,9 +1,7 @@
 module Dogtail
-  module Mouse
-    LEFT_CLICK = 1
-    MIDDLE_CLICK = 2
-    RIGHT_CLICK = 3
-  end
+  LEFT_CLICK = 1
+  MIDDLE_CLICK = 2
+  RIGHT_CLICK = 3
 
   TREE_API_NODE_SEARCHES = [
     :button,
@@ -249,6 +247,11 @@ module Dogtail
         method_call = "#{method.to_s}(#{args_str})"
         run("#{@var}.#{method_call}")
       end
+    end
+
+    def right_click()
+      method_call = "click(button=#{RIGHT_CLICK})"
+      run("#{@var}.#{method_call}")
     end
 
   end
