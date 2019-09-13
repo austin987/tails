@@ -375,7 +375,7 @@ task :setup_environment => ['validate_git_state'] do
     end
   end
 
-  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('git_base_branch_head')
+  ENV['BASE_BRANCH_GIT_COMMIT'] ||= git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible: " +
@@ -439,6 +439,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
       # command to modify the #{hostname} below.
       '-o', 'StrictHostKeyChecking=no',
       '-o', 'UserKnownHostsFile=/dev/null',
+      # Speed up the copy
+      '-o', 'Compression=no',
     ]
     fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
     fetch_command << ENV['ARTIFACTS']

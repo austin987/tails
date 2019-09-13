@@ -3,9 +3,6 @@ Feature: Installing Tails to a USB drive
   As a Tails user
   I want to install Tails to a suitable USB drive
 
-# XXX: rename to tails_installer.feature and move things that don't use Tails
-# Installer elsewhere?
-
   Scenario: Try installing Tails to a too small USB drive without partition table
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 4500 MiB disk named "too-small-device"
@@ -47,7 +44,7 @@ Feature: Installing Tails to a USB drive
     Then the running Tails is installed on USB drive "install"
     But there is no persistence partition on USB drive "install"
 
-  Scenario: Installing Tails to a pristine USB drive
+  Scenario: Installing Tails with Tails Installer to a pristine USB drive
     Given I have started Tails from DVD without network and logged in
     And I temporarily create a 7200 MiB disk named "install"
     And I plug USB drive "install"
@@ -125,10 +122,16 @@ Feature: Installing Tails to a USB drive
     And the boot device has safe access rights
     And there is no persistence partition on USB drive "isohybrid"
 
+  Scenario: Installing Tails with GNOME Disks from a USB image
+    Given I have started Tails from DVD without network and logged in
+    And I plug and mount a USB drive containing a Tails USB image
+    And I create a 7200 MiB disk named "usbimage"
+    And I plug USB drive "usbimage"
+    And I install a Tails USB image to the 7200 MiB disk with GNOME Disks
+
+  # Depends on scenario: Installing Tails with GNOME Disks from a USB image
   Scenario: The system partition is updated when booting from a USB drive where a Tails USB image was copied
     Given a computer
-    And I temporarily create a 7200 MiB disk named "usbimage"
-    And I write the Tails USB image to disk "usbimage"
     And I start Tails from USB drive "usbimage" with network unplugged and I login
     Then Tails is running from USB drive "usbimage"
     And the label of the system partition on "usbimage" is "Tails"

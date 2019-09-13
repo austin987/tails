@@ -1,10 +1,11 @@
 #!/bin/sh
 
 set -e
+set -u
 
 ### Tweak systemd unit files
 
-# Workaround for https://bugs.debian.org/714957
+# Workaround for https://bugs.debian.org/934389
 systemctl enable memlockd.service
 
 # Enable our own systemd unit files
@@ -26,16 +27,16 @@ systemctl --global enable tails-add-GNOME-bookmarks.service
 systemctl --global enable tails-additional-software-install.service
 systemctl --global enable tails-configure-keyboard.service
 systemctl --global enable tails-create-tor-browser-directories.service
+systemctl --global enable tails-kill-gdm-session.service
 systemctl --global enable tails-security-check.service
 systemctl --global enable tails-upgrade-frontend.service
 systemctl --global enable tails-virt-notify-user.service
 systemctl --global enable tails-wait-until-tor-has-bootstrapped.service
 
 # Use socket activation only, to delay the startup of cupsd.
-# In practice, on Jessie this means that cupsd is started during
+# In practice, this means that cupsd is started during
 # the initialization of the GNOME session, which is fine: by then,
 # the persistent /etc/cups has been mounted.
-# XXX: make sure it's the case on Stretch, adjust if not.
 systemctl disable cups.service
 systemctl enable  cups.socket
 
@@ -50,7 +51,8 @@ systemctl disable NetworkManager.service
 systemctl disable NetworkManager-wait-online.service
 
 # systemd-networkd fallbacks to Google's nameservers when no other nameserver
-# is provided by the network configuration. In Jessie, this service is disabled
+# is provided by the network configuration. As of Debian Buster,
+# this service is disabled
 # by default, but it feels safer to make this explicit. Besides, it might be
 # that systemd-networkd vs. firewall setup ordering is suboptimal in this respect,
 # so let's avoid any risk of DNS leaks here.

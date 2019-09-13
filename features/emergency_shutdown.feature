@@ -1,4 +1,5 @@
-@product
+#13462
+@product @fragile
 Feature: Emergency shutdown
   As a Tails user
   when I unplug my Tails device to trigger emergency shutdown

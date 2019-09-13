@@ -13,7 +13,7 @@ echo "Install the Tor Browser"
 # a new browser profile we can simply copy the profile directory
 # without duplicating all extensions.
 . /usr/local/lib/tails-shell-library/tor-browser.sh
-# Import install_fake_package
+# Import install_fake_package and strip_nondeterminism_wrapper
 . /usr/local/lib/tails-shell-library/build.sh
 
 download_and_verify_files() {
@@ -74,7 +74,7 @@ install_tor_browser() {
     # instead of the system one, whenever ours is too old.
     # For details see projects/firefox/abicheck.cc in
     # https://git.torproject.org/builders/tor-browser-build.git
-    # Tor Browser 8.0a10 requires GLIBCXX_3.4.22, which Stretch has
+    # Tor Browser 8.0a10 requires GLIBCXX_3.4.22, which Buster has
     # so disable this for now.
     # cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
 
@@ -217,6 +217,13 @@ apply_prefs_hacks() {
 	perl -pi -E \
 	    's/^(pref\("browser.uiCustomization.state",.*\\"loop-button\\")/$1,\\"stop-reload-button\\"/' \
 	    defaults/preferences/000-tor-browser.js
+
+	# Hide the security level button in the unsafe browser (#16735)
+	UNSAFE_BROWSER_PREFS=/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js
+	echo "\n// Hide the security level button" >> "${UNSAFE_BROWSER_PREFS}"
+	grep -E '^pref\("browser.uiCustomization.state"' defaults/preferences/000-tor-browser.js | \
+		perl -p -E 's/(.*)\\"security-level-button\\",/user_$1/' >> "${UNSAFE_BROWSER_PREFS}"
+
 	# Append our custom prefs
 	cat /usr/share/tails/tor-browser-prefs.js \
 	    >> defaults/preferences/000-tor-browser.js
@@ -269,7 +276,7 @@ install_debian_extensions() {
     destination="${1}"
     shift
     apt-get install --yes "${@}"
-    ln -s /usr/share/webext/ublock-origin/ \
+    ln -s '/usr/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net' \
           "${destination}"/'uBlock0@raymondhill.net'
     patch -p1 < /usr/share/tails/uBlock-disable-autoUpdate.diff
 }
@@ -280,7 +287,7 @@ create_default_profile() {
     tbb_extensions_dir="${2}"
     destination="${3}"
 
-    rsync -a --exclude bookmarks.html --exclude extensions \
+    rsync -a --exclude extensions \
           "${tbb_profile}"/ "${destination}"/
 
     mkdir -p "${destination}"/extensions

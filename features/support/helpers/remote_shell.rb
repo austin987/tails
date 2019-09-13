@@ -68,7 +68,7 @@ module RemoteShell
       opts[:user] ||= "root"
       opts[:spawn] = false unless opts.has_key?(:spawn)
       type = opts[:spawn] ? "spawn" : "call"
-      debug_log("#{type}ing as #{opts[:user]}: #{cmd}")
+      debug_log("Remote shell: #{type}ing as #{opts[:user]}: #{cmd}")
       ret = RemoteShell.communicate(vm, 'sh_' + type, opts[:user], cmd, **opts)
       debug_log("#{type} returned: #{ret}") if not(opts[:spawn])
       return ret

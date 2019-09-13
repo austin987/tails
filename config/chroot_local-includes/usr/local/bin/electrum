@@ -44,7 +44,7 @@ def electrum_config_is_persistent():
     filesystem = sh.findmnt('--noheadings',
                             '--output', 'SOURCE',
                             '--target', CONF_DIR).stdout.decode().strip()
-    return filesystem in sh.glob('/dev/mapper/TailsData_unlocked[/electrum]')
+    return filesystem == '/dev/mapper/TailsData_unlocked[/electrum]'
 
 
 def verify_start():

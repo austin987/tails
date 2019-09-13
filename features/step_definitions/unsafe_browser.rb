@@ -1,3 +1,4 @@
+# coding: utf-8
 When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do |locale|
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
   @screen.type(Sikuli::Key.TAB + Sikuli::Key.ENTER)
@@ -98,11 +99,14 @@ end
 
 Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" locale)?$/ do |locale|
   case locale
-  # Languages that have a translated version of the Unsafe Browser homepage,
-  # and more specifically of the "You are currently using the Unsafe Browser"
-  # string.
-  when /\A(de|fa|fr|it)/
-    start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
+  # Use localized image for languages that have a translated version
+  # of the Unsafe Browser homepage.
+  when /\A([a-z]+)/
+    if File.exists?("#{SIKULI_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
+      start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
+    else
+      start_page_image = "UnsafeBrowserStartPage.png"
+    end
   else
     start_page_image = "UnsafeBrowserStartPage.png"
   end
@@ -130,6 +134,14 @@ Then /^I open the Unsafe Browser proxy settings dialog$/ do
   @screen.wait('BrowserPreferencesPage.png', 10)
   @screen.type('proxy')
   @screen.wait('BrowserPreferencesProxyHeading.png', 10)
+  # Let the filtering complete, the display stabilize, and the
+  # "Settings" button reach its final position: otherwise, Sikuli
+  # sometimes finds it while it's still further down the page than its
+  # final position, records these coordinates, but by the time Sikuli
+  # clicks there, the "Settings" button has moved to its final
+  # position so the click is lost ⇒ BrowserProxySettingsWindow.png
+  # cannot be found.
+  sleep 2
   @screen.wait_and_click('BrowserPreferencesProxySettingsButton.png', 10)
   @screen.wait('BrowserProxySettingsWindow.png', 10)
 end

@@ -63,6 +63,7 @@ loop do
 end
 SIKULI_CANDIDATES_DIR = "#{ARTIFACTS_DIR}/sikuli_candidates"
 SIKULI_IMAGE_PATH = "#{Dir.pwd}/features/images/"
+SIKULI_MIN_SIMILARITY = 0.9
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'jirk5u4osbsr34t5.onion'
@@ -82,3 +83,4 @@ VM_XML_PATH = "#{Dir.pwd}/features/domains"
 
 TAILS_SIGNING_KEY = cmd_helper(". #{Dir.pwd}/config/amnesia; echo ${AMNESIA_DEV_KEYID}").tr(' ', '').chomp
 TAILS_DEBIAN_REPO_KEY = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+WEBM_VIDEO_URL = 'https://tails.boum.org/lib/test_suite/test.webm'
