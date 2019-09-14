@@ -2,10 +2,20 @@
 
 [[!toc levels=1]]
 
-# Force all scenarios to be tested
+# Full test suite vs. scenarios tagged `@fragile`
 
-Branches whose name ends with the `+force-all-tests` suffix will run
-the full test suite, including scenarios tagged `@fragile`.
+Jenkins generally only runs scenarios that are _not_ tagged `@fragile`
+in Gherkin. But it runs the full test suite, including scenarios that
+are tagged `@fragile`, if the images under test were built:
+
+ - from a branch whose name ends with the `+force-all-tests` suffix
+ - from a tag
+ - from the `devel` branch
+ - from the `testing` branch
+ - from the `feature/tor-nightly-master` branch
+
+Therefore, to ask Jenkins to run the full test suite on your topic
+branch, give it a name that ends `+force-all-tests`.
 
 # Trigger a test suite run without rebuilding images
 
