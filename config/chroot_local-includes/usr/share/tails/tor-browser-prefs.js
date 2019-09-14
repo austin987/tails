@@ -26,9 +26,6 @@ pref("extensions.torbutton.pref_fixup_version", 1);
 pref("extensions.torbutton.lastBrowserVersion", "Tails");
 pref("torbrowser.version", "Tails");
 
-// Other Tails-specific NoScript preferences
-pref("noscript.untrusted", "google-analytics.com");
-
 // Other non-Torbutton, Tails-specific prefs
 pref("browser.download.dir", "/home/amnesia/Tor Browser");
 pref("dom.input.fallbackUploadDir", "/home/amnesia/Tor Browser");
