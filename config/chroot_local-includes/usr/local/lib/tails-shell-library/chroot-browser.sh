@@ -240,8 +240,7 @@ run_browser_in_chroot () {
     chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \
         ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
          export TOR_TRANSPROXY=1 && \
-         exec_firefox -DISPLAY='${DISPLAY}' \
-                      --class='${wm_class}' \
+         exec_firefox --class='${wm_class}' \
                       -profile '${profile}'"
     sudo -u "${local_user}" xhost "-SI:localuser:${chroot_user}"
 }
