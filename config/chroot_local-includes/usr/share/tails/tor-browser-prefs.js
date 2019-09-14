@@ -45,3 +45,9 @@ pref("browser.download.panel.shown", true);
 // open external applications, so let's not offer the option to the user,
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
+
+// Make newly open tabs blank
+// The default about:newtab phones home and makes our test suite brittle.
+// We can remove this once Tor Browser has disabled this pref as well:
+// https://trac.torproject.org/projects/tor/ticket/30662
+pref("browser.newtabpage.enabled", false);
