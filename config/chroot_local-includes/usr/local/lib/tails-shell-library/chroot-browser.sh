@@ -159,8 +159,6 @@ set_chroot_browser_locale () {
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
-# Must be called after configure_chroot_browser_profile(), since it
-# depends on which extensions are installed in the profile.
 set_chroot_browser_name () {
     local chroot="${1}"
     local human_readable_name="${2}"
@@ -170,40 +168,20 @@ set_chroot_browser_name () {
     local ext_dir="${chroot}/${TBB_EXT}"
     local browser_profile_ext_dir="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")/extensions"
 
-    # If Torbutton is installed in the browser profile, it will decide
+    # Torbutton is installed in the browser profile, so it will decide
     # the browser name.
-    if [ -e "${browser_profile_ext_dir}/torbutton@torproject.org" ]; then
-        local torbutton_locale_dir="${ext_dir}/torbutton/chrome/locale/${locale}"
-        if [ ! -d "${torbutton_locale_dir}" ]; then
-            # Surprisingly, the default locale is en, not en-US
-            torbutton_locale_dir="${chroot}/usr/share/xul-ext/torbutton/chrome/locale/en"
-        fi
-        sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
-        # Since Torbutton decides the name, we don't have to mess with
-        # with the browser's own branding, which will save time and
-        # memory.
-        return
-    fi
-
-    local pack top rest
-    if [ "${locale}" != "en-US" ]; then
-        pack="${ext_dir}/langpack-${locale}@firefox.mozilla.org.xpi"
-        top="browser/chrome"
-        rest="${locale}/locale"
-    else
-        pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
-        top="chrome"
-        rest="en-US/locale"
-    fi
+    local pack="${chroot}/${TBB_INSTALL}/omni.ja"
     local tmp="$(mktemp -d)"
-    local branding_dtd="${top}/${rest}/branding/brand.dtd"
-    local branding_properties="${top}/${rest}/branding/brand.properties"
-    7z x -o"${tmp}" "${pack}" "${branding_dtd}" "${branding_properties}"
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${tmp}/${branding_dtd}"
-    perl -pi -E \
-	 's/^(brand(?:Full|Short|Shorter)Name=).*$/$1'"${human_readable_name}/" \
-         "${tmp}/${branding_properties}"
-    (cd ${tmp} ; 7z u -tzip "${pack}" .)
+    (
+       cd "${tmp}"
+       7z x -o"${tmp}" "${pack}" chrome/torbutton/locale
+       local torbutton_locale_dir="chrome/torbutton/locale/${locale}"
+       if [ ! -d "${torbutton_locale_dir}" ]; then
+          torbutton_locale_dir="chrome/torbutton/locale/en-US"
+       fi
+       sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
+       7z u -tzip "${pack}" .
+    )
     chmod a+r "${pack}"
     rm -Rf "${tmp}"
 }
