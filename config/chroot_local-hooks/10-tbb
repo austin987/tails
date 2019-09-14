@@ -243,13 +243,13 @@ apply_prefs_hacks() {
 	sed -i '/extensions\.torlauncher\./d' defaults/preferences/000-tor-browser.js
 	# Display the Stop/Reload button: our test suite currently depends on it
 	perl -pi -E \
-	    's/^(pref\("browser.uiCustomization.state",.*\\"loop-button\\")/$1,\\"stop-reload-button\\"/' \
+	    's/^(pref\("browser\.uiCustomization\.state",.*\\"loop-button\\")/$1,\\"stop-reload-button\\"/' \
 	    defaults/preferences/000-tor-browser.js
 
 	# Hide the security level button in the unsafe browser (#16735)
 	UNSAFE_BROWSER_PREFS=/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js
 	echo "\n// Hide the security level button" >> "${UNSAFE_BROWSER_PREFS}"
-	grep -E '^pref\("browser.uiCustomization.state"' defaults/preferences/000-tor-browser.js | \
+	grep -E '^pref\("browser\.uiCustomization\.state"' defaults/preferences/000-tor-browser.js | \
 		perl -p -E 's/(.*)\\"security-level-button\\",/user_$1/' >> "${UNSAFE_BROWSER_PREFS}"
 
 	# Append our custom prefs
