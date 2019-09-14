@@ -1,4 +1,5 @@
 // Disable proxying in the chroot
+user_pref("extensions.torbutton.use_nontor_proxy", true);
 user_pref("network.proxy.type", 0);
 user_pref("network.proxy.socks_remote_dns", false);
 
