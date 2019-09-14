@@ -183,6 +183,16 @@ diff -Naur a/modules/addons/XPIDatabase.jsm b/modules/addons/XPIDatabase.jsm
      // Ensure that Tor Launcher is never enabled as an add-on. It will be
      // removed inside getInstallState() soon.
      if (aAddon.id == "tor-launcher@torproject.org")
+@@ -2729,7 +2734,8 @@
+       }
+ 
+       unsigned =
+-        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
++        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned
++        && aNewAddon.id !== "uBlock0@raymondhill.net";
+       if (unsigned) {
+         throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
+       }
 diff -Naur a/modules/addons/XPIInstall.jsm b/modules/addons/XPIInstall.jsm
 --- a/modules/addons/XPIInstall.jsm	2019-09-02 15:24:00.000000000 +0200
 +++ b/modules/addons/XPIInstall.jsm	2019-09-08 20:41:07.345467589 +0200
