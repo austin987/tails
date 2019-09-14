@@ -12,3 +12,6 @@ user_pref("browser.download.panel.shown", true);
 // search engine (this could include credentials, e.g. if something
 // like the following is mistyped: ftp://user:password@host).
 user_pref("keyword.enabled", false);
+
+// Use the red theme
+user_pref("extensions.activeThemeID", "{91a24c60-0f27-427c-b9a6-96b71f3984a9}");

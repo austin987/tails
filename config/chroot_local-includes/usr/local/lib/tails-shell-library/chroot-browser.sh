@@ -122,7 +122,11 @@ configure_chroot_browser_profile () {
     local extension
     while [ -n "${*:-}" ]; do
         extension="${1}" ; shift
-        ln -s "${extension}" "${browser_ext}"
+        if [ "$(basename "${extension}")" = 'red-2.0-an+fx.xpi' ]; then
+           ln -s "${extension}" "${browser_ext}"/'{91a24c60-0f27-427c-b9a6-96b71f3984a9}.xpi'
+        else
+           ln -s "${extension}" "${browser_ext}"
+        fi
     done
 
     # Set preferences
@@ -136,9 +140,6 @@ configure_chroot_browser_profile () {
         echo 'user_pref("browser.startup.homepage", "'"${home_page}"'");' >> \
             "${browser_prefs}"
     fi
-
-    # Set an appropriate theme
-    cat "${chroot_browser_config}/${browser_name}/theme.js" >> "${browser_prefs}"
 
     # Customize the GUI.
     local browser_chrome="${browser_profile}/chrome/userChrome.css"
