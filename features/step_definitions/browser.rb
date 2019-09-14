@@ -90,6 +90,8 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     # clipboard, in one go.
     $vm.set_clipboard(address)
     @screen.type('v', Sikuli::KeyModifier.CTRL)
+    # Otherwise the "ENTER" key press is sometimes lost.
+    sleep 2
     @screen.type(Sikuli::Key.ENTER)
   end
   recovery_on_failure = Proc.new do
