@@ -123,8 +123,6 @@ Feature: Browsing the web using the Tor Browser
     And I open the address "https://tails.boum.org/about" in the Tor Browser
     And "Tails - About" has loaded in the Tor Browser
     Then I can save the current page as "index.html" to the persistent Tor Browser directory
-    When I close the Tor Browser
-    And I start the Tor Browser
     And I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
     Then "Tails - About" has loaded in the Tor Browser
     And I can print the current page as "output.pdf" to the persistent Tor Browser directory
