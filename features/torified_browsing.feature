@@ -35,16 +35,14 @@ Feature: Browsing the web using the Tor Browser
     When I save the file to the default Tor Browser download directory
     Then the file is saved to the default Tor Browser download directory
 
-  #17007
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Playing an Ogg audio track
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     Then I can listen to an Ogg audio track in Tor Browser
 
-  #17007
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Watching a WebM video
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
