@@ -63,6 +63,7 @@ loop do
 end
 SIKULI_CANDIDATES_DIR = "#{ARTIFACTS_DIR}/sikuli_candidates"
 SIKULI_IMAGE_PATH = "#{Dir.pwd}/features/images/"
+SIKULI_MIN_SIMILARITY = 0.9
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'jirk5u4osbsr34t5.onion'
