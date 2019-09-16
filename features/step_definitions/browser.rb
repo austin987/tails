@@ -94,7 +94,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     $vm.set_clipboard(address)
     @screen.type('v', Sikuli::KeyModifier.CTRL)
     # Otherwise the "ENTER" key press is sometimes lost.
-    sleep 2
+    sleep 5
     @screen.type(Sikuli::Key.ENTER)
   end
   recovery_on_failure = Proc.new do
