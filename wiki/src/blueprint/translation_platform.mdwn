@@ -60,7 +60,7 @@ MAY
 Setup of our translation platform & integration with our infrastructure
 =======================================================================
 
-We are using a [Weblate instance](https://translate.tails.boum.org/).
+We are using our own [Weblate instance](https://translate.tails.boum.org/).
 
 There are several languages enabled and users can suggest translations
 in several languages:
@@ -69,16 +69,26 @@ in several languages:
 <img src="https://translate.tails.boum.org/widgets/tails/-/multi-red.svg" alt="Translation status" />
 </a>
 
+The work done on the instance is fed back into our canonical Git
+repository automatically and regularly which presents a major challenge:
+indeed, many contributors work on the same code base (ikiwiki + PO
+files) which results in many changes and necessary updates of the
+translation files and a review of the actual committed changes.
+
+In order to integrate Weblate and the work done by translators into this
+process, we have set up this scheme:
+
 <img src="git_repository_details.svg" />
 
 Repositories
 ------------
 
-The repository used by Weblate is built upon the Tails master
-repo; the changes generated in translate.lizard are fed back
-to Tails master automatically.
+The repository used by Weblate is built upon the Tails main repository,
+and its master branch. The changes generated on the VM which hosts the
+Weblate platform are fed back to the Tails main repository, into the
+master branch, automatically.
 
-There are several languages enabled, some of them with few or not
+There are several languages enabled, some of them with few or no
 translations. As everything is fed back to master repository you can simply
 check out the normal repo:
 
