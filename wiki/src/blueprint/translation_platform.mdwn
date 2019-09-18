@@ -225,19 +225,17 @@ This allows:
 
 ### What is done behind the scene to generate a new version of the staging website?
 
-The suggestions are extracted by a script
+The cronjob
+[`update-stating-website.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update-staging-website.sh)
+is run.
+
+This cronjob calls a script that extracts suggestions from Weblate's
+database and applies them to a local clone of Weblate's Git repository,
+after having updated the clone with newer data from Weblate's VCS.
 [`save-suggestions.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/save-suggestions.py)
-and applied to a local clone of Weblate's Git repository, resulting in
 
-  /var/lib/weblate/repositories/vcs/staging
-  from
-  /var/lib/weblate/repositories/vcs/tails/index
-
-The cronjob [`update-stating-website.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update-staging-website.sh) is run. This will first update staging repo to
-weblate repo. Than every suggestion is extracted and applied to staging repo.
-After that we run ikiwiki with an own `ikiwiki.setup` file to update the stating
-website.
-  /var/lib/weblate/repositories/vcs/staging
+After that we run ikiwiki --refresh using an dedicated `ikiwiki.setup`
+file for the staging website.
 
 <a id="access-control"></a>
 
