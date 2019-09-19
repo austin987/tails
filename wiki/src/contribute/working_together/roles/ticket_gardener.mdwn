@@ -8,9 +8,13 @@ work. Tickets that are not relevant anymore should be closed.
 
 This work should be done twice per year.
 
+[[!toc levels=3]]
+
 # Tasks
 
-Use existing Redmine views:
+## Manual tasks
+
+### Go through relevant Redmine views
 
 * ["Wait" type of work](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=314):
   check if what was blocking was eventually resolved outside of Tails.
@@ -23,7 +27,47 @@ Use existing Redmine views:
   them to the responsible team; if that team cannot handle these tickets,
   set _Status_ to something else.
 
-## Tasks to be automated
+### Identify and fix inadequate _Target version_
+
+While we still use Redmine, some tickets are missed by our automated
+setup. These tickets are those which have a target version that's been
+postponed after the N last releases by the Release Manager: every such
+_Target version_ bump counts as an update so there's no chance the ticket will
+ever be identified as stalled. Hence we need to do a manual session of ~2 hours
+twice a year to drop the _Target version_ on some tickets. To select the
+corresponding tickets, we will thus select those that have _Target version_
+set to the next release, and triage them using the following criteria:
+
+Situations when dropping the _Target version_ would be inadequate:
+
+* If the ticket was (re)assigned to the assignee recently.
+* If there's been progress but it's not documented on the ticket.
+* If it's part of a sponsor deliverable.
+  - If the official deadline is in the future, most of the time we don't want
+    to touch the _Target version_.
+
+Whether it's appropriate to drop the _Target version_ depends on:
+
+* When the last action on the ticket by the assignee was performed. For
+  example, if they did not update the ticket since 3 months or more.
+* If the ticket was recently postponed be the RM and not by the assignee
+  themselves — the latter would suggest they have it in mind and are updating
+  their plans.
+* Whether there's an assignee. If there's none but the ticket was postponed a few times, then:
+  - Either it's important and it should be put on the plate of a core team.
+  - Or it's unimportant and the _Target version_ should be dropped: keeping it
+    has little value but forces the RMs to do extra work. If someone wants to track
+    those tickets, there surely are better ways.
+* Whether the ticket is blocked by anything (other tickets or what not) that's
+  out of the hands of the assignee.
+* How safe/privileged is the assignee's position in Tails. For contributors
+  that hold more power than average we can assume they know how to revert our
+  changes.
+
+We have a [[template message|ticket_gardener/inadequate_target_version.textile]]
+that we can use as a basis to explain why we're removing the _Target version_.
+
+## Existing automation
 
 * The [WIP stalled for a while](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=316)
   view provides an overview to each individual contributor about work that is in

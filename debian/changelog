@@ -1,3 +1,102 @@
+tails (3.16) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 8.5.5 (Closes: #16692).
+
+  * Security fixes
+    - Install Linux kernel from the Buster security repository (Closes: #16970).
+      The new Spectre v1 swapgs variant (CVE-2019-1125), which was fixed
+      in sid via 5.2.x, which is a too big change for the Tails 3.16 bugfix
+      release. Let's instead track Buster (+ security) for the time being.
+    - Upgrade LibreOffice to 1:5.2.7-1+deb9u10 (DSA-4483-1, DSA-4501-1).
+    - Upgrade Thunderbird to 60.8 (DSA-4482-1).
+    - Upgrade Ghostscript to 9.26a~dfsg-0+deb9u4 (DSA-4499-1).
+    - Upgrade Patch to 2.7.5-1+deb9u2 (DSA-4489-1).
+    - Upgrade nghttp2 library to 1.18.1-1+deb9u1 (DSA-4511-1).
+
+  * Bugfixes
+    - Additional software: Improve/fix support for translations (Closes: #16601).
+    - Rework the implementation for hiding TailsData partitions (Closes: #16789).
+    - Adjust how tordate determines whether the clock is in a valid range,
+      fixing issues with obfs4 (Closes: #16972).
+
+  * Minor improvements and updates
+    - Ship default upstream Tor Browser bookmarks, and remove our predefined
+      bookmarks (Closes: #15895).
+    - Hide the security level button in the unsafe browser (Closes: #16735).
+    - Remove pre-generated Pidgin accounts (Closes: #16744).
+    - Remove LibreOffice Math (Closes: #16911).
+    - Website: Make sandbox page translatable (Closes: #16873).
+    - Website: Only scrub HTML on blueprints (Closes: #16901).
+    - Website: Point history & diff URLs to Salsa.
+
+  * Build system
+    - Bump APT snapshot of the torproject archive to 2019073103, and drop
+      tor-experimental-0.4.0.x-stretch reference (Closes: #16883).
+    - Bump APT snapshot of the Debian archive to 2019080801 to get fixed
+      firmware packages from sid instead of sticking to those from
+      stretch-backports (Closes: #16728).
+    - Enable the buster APT repository and install some packages from there:
+      hunspell-id, hunspell-tr, and fonts-noto-* (See: #16728).
+    - Refresh patch for webext-ublock-origin 1.19.0+dfsg-2, and adjust Tor
+      Browser AppArmor profile accordingly (Closes: #16858).
+    - Refresh Tor Browser AppArmor profile patch for torbrowser-launcher
+      0.3.2-1 (Closes: #16941).
+
+  * Test suite
+    - Ignore RARP packets, since PacketFu cannot parse them (Closes: #16825).
+    - Adjust both locale handling and reference pictures for the Unsafe
+      Browser homepage (Closes: #17004).
+    - Fix "Watching a WebM video over HTTPS" scenario on Jenkins
+      (Closes: #10442).
+    - Tag "Watching a WebM video" as fragile.
+    - Make @check_tor_leaks more verbose (See: #10442).
+    - Remove broken Electrum scenario since Electrum support is currently
+      missing (Closes: #16421).
+
+ -- Tails developers <tails@boum.org>  Tue, 03 Sep 2019 20:30:14 +0200
+
+tails (3.15) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 8.5.4 (Closes: #16691).
+    - Upgrade Thunderbird to 60.7.2 (Closes: #16834).
+
+  * Security fixes
+    - Upgrade Expat to 2.2.0-2+deb9u2 (DSA-4472-1).
+    - Upgrade OpenSSL 1.0 to 1.0.2s-1~deb9u1 (DSA-4475-1).
+    - Upgrade OpenSSL to 1.1.0k-1~deb9u1 (DSA-4475-1).
+    - Upgrade Vim to 2:8.0.0197-4+deb9u3 (DSA-4467-1).
+
+  * Bugfixes
+    - Recompute CHS values for the hybrid MBR after first-boot
+      repartitioning (Closes: #16389). Some legacy BIOS systems won't boot
+      otherwise.
+    - Strip debug symbols from the aufs kernel module smaller (refs: #16818).
+      The primary target was getting the initramfs down under 32MB, hoping
+      to repair boot of feature/buster on MacBookPro 8,1. In any cases,
+      the user experience should be improved due to a faster boot for
+      every user, and a shortened “black screen” duration (between the
+      bootloader and the Plymouth splash screen).
+
+  * Minor improvements and updates
+    - Make “Unlock VeraCrypt Volumes” show an error message if locking
+      fails (Closes: #15794).
+    - Add support for booting Tails from a read only sdcard (fromiso),
+      through Heads, allowing for measured boot on some tamper-evident
+      hardware (https://github.com/osresearch/heads/issues/581).
+
+  * Build system
+    - Patch Thunderbird packages from Debian when building Tails images
+      (Closes: #6156).
+    - Improve tooling to maintain and update PO files (Closes: #15403),
+      rewriting some tools and moving code to the jenkins-tools submodule.
+    - Implement preliminary steps needed to make the ikiwiki PO plugin
+      able to update PO files for languages that are disabled on the
+      website (refs: #15355).
+
+ -- Tails developers <tails@boum.org>  Tue, 09 Jul 2019 02:50:09 +0200
+
 tails (3.14.2) unstable; urgency=medium
 
   * Security fixes
