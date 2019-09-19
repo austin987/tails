@@ -65,62 +65,92 @@ Setup of our translation platform & integration with our infrastructure
 
 We are using our own [Weblate instance](https://translate.tails.boum.org/).
 
-There are several languages enabled and users can suggest translations
-in several languages:
+Weblate uses a clone of the Tails main Git repository, to which
+translations get committed, once they have been approved by a user with
+reviewer status. Non-approved translations live on Weblate's database
+only, until they get reviewed. A staging website allows translators to
+preview non-reviewed translations in context.
 
-<a href="https://translate.tails.boum.org/engage/tails/?utm_source=widget">
-<img src="https://translate.tails.boum.org/widgets/tails/-/multi-red.svg" alt="Translation status" />
-</a>
+Approved changes are automatically fed back into our canonical Git
+repository. This presents a major challenge, indeed we need to ensure
+that:
 
-The work done on the instance is fed back into our canonical Git
-repository automatically and regularly which presents a major challenge:
-indeed, many contributors work on the same code base (ikiwiki + PO
-files) which results in many changes and necessary updates of the
-translation files and a review of the actual committed changes.
+- no merge conflicts occur.
+- only PO files are committed.
+- the committed PO files comply with our formatting standards.
+- no compromised code is introduced.
 
-In order to integrate Weblate and the work done by translators into this
+In order to integrate Weblate and the work done by translators into our
 process, we have set up this scheme:
 
 <img src="git_repository_details.svg" />
 
+Website and Weblate
+-------------------
+
+Our website uses ikiwiki and its PO plugin. It uses markdown files for
+the English original language and carries a PO file for each translated
+language. Thereby we distinguish languages that are activated on our
+website from languages that have translations but are not yet activated
+on the website because they do not [[cover enough of a portion of
+our core pages|contribute/how/translate/team/new/]] to be considered
+usable.
+
+We have defined [[a list of tier-1
+languages|contribute/how/translate#tier-1-languages]], that we consider
+to be of importance to our user base. No more languages shall be
+activated in Weblate as our main Git repository carries reviewed, and
+thus approved translations of all languages enabled on the Weblate
+platform, while only part of them are active on the website.
+
+We provide a dedicated [[documentation for translators on how to use
+Weblate|contribute/how/translate/with_Weblate]] to contribute
+translations.
+
 Repositories
 ------------
 
-The repository used by Weblate is built upon the Tails main repository,
-and its master branch. The changes generated on the VM which hosts the
-Weblate platform are fed back to the Tails main repository, into the
-master branch, automatically.
+The repository used by Weblate is cloned and updated from the Tails main
+repository, and its master branch. Changes generated on Weblate's copy
+of the Tails main Git repository, located on the VM which hosts the
+Weblate platform, are fed back to the Tails main repository, into the
+master branch, automatically. This happens through a number of scripts,
+checks, and cronjobs that we'll describe below.
 
 There are several languages enabled, some of them with few or no
-translations. As everything is fed back to master repository you can simply
-check out the normal repo:
+translations. As everything is fed back to the Tails canonical
+repository, all files are available when cloning this repository:
 
     git clone https://git-tails.immerda.ch/tails
 
-If some get stuck in translate.lizard you can check out the repo,
-that Weblate is using, but this should not be needed in normal conditions:
+If needed, for exceptional means, Weblate's Git repository can be cloned
+or added as a remote:
 
     git clone https://translate.tails.boum.org/git/tails/index/
 
-At the server you find the repository at
+At the server the repository is located in
 
     ~weblate/repositories/vcs/tails/index
 
-Weblate can commit at any time, that's why we need a safe place at where we can
-merge the new changes done by canonical and changes done by Weblate together.
-This is done in the integration repo:
+Weblate can commit to its local repository at any time, whenever
+translations get approved. Changes done in the canonical repository by
+Tails contributors via Git and changes done in Weblate thus need to be
+merged - in a safe place. This happens in an integration repository:
 
     ~weblate/repositories/integration
 
-At translate.lizard, there is a third repository that is used for the stating
-website, this is located:
+On the VM (translate.lizard), a third repository is used for the staging
+website:
 
     ~weblate/repositories/vcs/staging
 
 Cron
 ----
 
-The main script for our Weblate setup is [`cron.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/cron.sh), as there all integration work between the different repository is done. The script has following steps:
+The main script for our Weblate setup is
+[`cron.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/cron.sh).
+The integration work between the different repositories is executed
+here. The script has following steps:
 
   1. Canonical -> Integration
   2. lock translations
