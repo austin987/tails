@@ -171,21 +171,32 @@ XXX hours. The script
 [`cron.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/cron.sh).
 here has the following steps which we will explain hereafter:
 
-  1. Update the integration repository with changes made on the
+(XXX: Why are steps 4 and 6 the same? And why does step 6 happen after
+step 5?)
+
+(XXX: please also briefly document the missing steps: 2,3,7: why are
+they needed?)
+
+  1. Canonical → Integration:
+     Update the integration repository with changes made on the
      canonical repository (called "main" in the script)
   2. Lock translations on the web platform
      (XXX: It is unclear when this happens from the below steps)
   3. Trigger Weblate to commit pending approved translations (`manage.py
      commit_pending`)
      (XXX: It is unclear when this happens from the below steps)
-  4. Integrate comitted changes from Weblate into the integration repository
-  5. Push up-to-date integration repository to canonical repository
-  6. Merging changes done on Weblate's repository into the integration
+  4. Weblate → Integration:
+     Integrate comitted changes from Weblate into the integration repository
+  5. Integration → Canonical:
+     Push up-to-date integration repository to canonical repository
+  6. Weblate→ Integration:
+     Merging changes done on Weblate's repository into the integration
      repository
   7. Unlock translations for translators
      (XXX: It is unclear when this happens from the below steps)
   8. Run `manage.py update_index`
      (XXX: It is unclear when this happens and what this means)
+  9. Push to canonical Git and production server (XXX: is this correct?)
 
 Whenever a contributor modifies a markdown (`*.mdwn`) file, and pushes
 to master, the corresponding POT and PO files are updated, that is: the
@@ -201,7 +212,9 @@ the canonical Git repository. On top of this we need to update Weblate's
 database accordingly, so that translations can be added for new or
 modified English strings in those files, in all languages.
 
-### Steps 1-4: Update the integration repository with changes made on the canonical repository
+### Step 1: Canonical → Integration
+
+### Update the integration repository with changes made on the canonical repository
 
 The script fetches from the canonical (remote) repository and tries to
 merge changes into the (local) integration repository. The merge
@@ -239,7 +252,9 @@ Finally, the script will test if the new commit has triggered any change,
 clarify?). If it has not, we'll simply perform a fast-forward (XXX:
 please clarify on what this is performed).
 
-### Step XXX: Integrating the changes made in the canonical Git repository into Weblate repository and database
+### Step 4: Weblate → Integration
+
+### Integrating the changes made in the canonical Git repository into Weblate repository and database
 
 After having merged changes from the canonical Git repository into the
 integration Git repository, and integrated changes from Weblate there,
@@ -268,7 +283,9 @@ variable, let's make it clear. I also don't understand what this own Git
 remote is, where does it come from, is it up-to-date?) to keep track of which commits need to
 be scanned (XXX: scanned, really?) for Weblate component changes.
 
-### Step 6: Merging changes from Weblate's Git repository into the integration repository
+### Step 6: Weblate → Integration
+
+### Merging changes from Weblate's Git repository into the integration repository
 
 Weblate's Git repository is not bare. Hence we need to pull changes
 committed to Weblate's Git repository and merge them into the
@@ -285,9 +302,11 @@ Furtheremore, we make sure via the script that Weblate has only modified
 PO files; indeed we automatically reset everything else to the version
 that exists in canonical.
 
-### Step 5: Pushing from the integration repository to our canonical repository, aka "production"
+### Step 9: Integration → Canonical
 
-As a last step, a push done from the VM hosting Weblate is done, using
+### Pushing from the integration repository to our canonical repository, aka "production"
+
+As a last step, a push from the VM hosting Weblate (XXX: to where?) is done, using
 the integration repository that has all changes:
 
 On the side of the canonical Git repository, gitolite has a special
