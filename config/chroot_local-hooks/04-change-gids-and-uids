@@ -95,5 +95,22 @@ Change_gid () {
 	fi
 }
 
-# Free the GID 122, we need for tails-persistence-setup
-Change_gid Debian-gdm 200
+# Temporarily give these users and groups a UID/GID that's out of the way,
+# to avoid collisions
+Change_uid pulse             1070
+Change_uid speech-dispatcher 1080
+Change_uid saned             1090
+Change_uid colord            1100
+Change_uid hplip             1110
+Change_uid Debian-gdm        1120
+Change_uid usbmux            1500
+
+# Finally, give these users and groups the desired UID/GID
+Change_uid pulse             107
+Change_uid speech-dispatcher 108
+Change_uid saned             109
+Change_uid colord            110
+Change_uid hplip             111
+Change_uid Debian-gdm        112
+Change_uid usbmux            150
+Change_gid Debian-gdm        200
