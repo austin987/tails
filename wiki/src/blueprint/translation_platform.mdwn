@@ -14,6 +14,8 @@ Terms used in this document
   website relies on, in scripts often called "main repository" or "main
   Git"
 - Production server: the server that hosts our website
+- translate.lizard: the VM that hosts our Weblate webinterface, the
+  corresponding Git repositories, as well as the staging website.
 
 [Corresponding tickets on Redmine](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=321)
 
@@ -194,7 +196,7 @@ the canonical Git repository. On top of this we need to update Weblate's
 database accordingly, so that translations can be added for new or
 modified English strings in those files, in all languages.
 
-### 1. Update the integration repository with changes made on the canonical repository
+### Update the integration repository with changes made on the canonical repository
 
 The script fetches from the canonical (remote) repository and tries to
 merge changes into the (local) integration repository. The merge
@@ -211,7 +213,7 @@ over Weblate.
 Due to this procedure we never end up with broken PO files, however, we
 may loose a translation done on Weblate.
 
-Until here, only PO files of languages that are actived on our
+Until here, only PO files of languages that are activated on our
 production website will be merged, as the production website, i.e. the
 canonical Git repository does not regenerate those of non activated
 languages.
@@ -231,20 +233,34 @@ Finally, the script will test if the new commit has triggered any change,
 (XXX: I don't understand what "the new commit" is, can you please
 clarify?). If it has not, we'll simply perform a fast-forward.
 
-### Canonical -> Weblate
+### Integrating the changes made in the canonical Git repository into Weblate
 
-As we have the loop Canonical <-> Integration, we can assume that every po file
-is up-to-date and don't need to change the po files. That's why we can simply
-try a pull with fast-forward only. If non fast-forward is possible than the
-Canonical <-> Integration loop has something to do and we try again later to
-pull.
+After having merged changes from the canonical Git repository into the
+integration Git repository, and integrated changes from Weblate there,
+we can assume that every PO file now is up-to-date (in the integration
+repository). Hence we can try to pull (XXX: from the integration to
+Weblate's repository?) using a fast-forward. (XXX: what does it mean "we
+can try?", who or what tries it when?)
 
-If a fast-forward was successful, we need to update the Weblate components to
-the changes, that happened on git site, like updates, removal, renames,
-additions, this is handled by the script [`update_weblate_components.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_components.py). There
-may be other scripts, that may update master branch of Weblate repo than this
-script, that's why the script is using a own git remote named "cron" to keep
-track, what commits need to scanned for Weblate component changes.
+If a fast-forward is not possible then the Canonical <-> Integration
+loop has something to do (XXX: What does this mean "something to do"?
+and how do we know it's not possible?) and we try again later to pull.
+(XXX: What is this triggered by? What does "later" mean in this
+context?)
+
+If the fast-forward was successful, we need to update Weblate's components
+to reflect the modifications that happened on the side of Git, such as
+string and file updates, removals, renames, or additions. This is
+handled by another script:
+[`update_weblate_components.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_components.py).
+
+There may be other scripts (XXX: like what?), that may update the master
+branch of Weblate repo besides our script, that's why the script is
+using an own Git remote named "cron" (XXX: is this information
+up-to-date? I cannot find it in the script. If this is a config
+variable, let's make it clear. I also don't understand what this own Git
+remote is, where does it come from, is it up-to-date?) to keep track of which commits need to
+be scanned (XXX: scanned, really?) for Weblate component changes.
 
 ### Weblate -> Integration
 
@@ -256,11 +272,19 @@ files merges are done on translation units. The script also makes sure, that
 Weblate is only allowed to touch po files, and set back everything else to the
 version that exists at Canonical.
 
-### Integration -> Canonical
+### Pushing from the integration repository to our canonical repository, aka "production"
 
-In it self it, this step is a simple push done from translate.lizard.
+As a last step, a push done from the VM hosting Weblate is done, using
+the integration repository that has all changes:
 
-On Canonical side, gitolite has a special hook [`tails-weblate-update.hook`](https://git-tails.immerda.ch/puppet-tails/tree/files/gitolite/hooks/tails-weblate-update.hook) to make sure, that Weblate is only allowed to push po changes and checks the committer of each commit, that is uploaded.
+On the side of the canonical Git repository, gitolite has a special
+hook,
+[`tails-weblate-update.hook`](https://git-tails.immerda.ch/puppet-tails/tree/files/gitolite/hooks/tails-weblate-update.hook),
+to make sure that Weblate is only allowed to push changes on PO files.
+This hook also checks and verifies the committer of each commit, to make
+sure only translations made on the Weblate platform are automatically
+pushed, and no other changes than those on PO files accepted. Otherwise
+the push is rejected, for security reasons.
 
 <a id="staging-website"></a>
 
