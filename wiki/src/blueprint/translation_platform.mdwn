@@ -174,13 +174,18 @@ here has the following steps which we will explain hereafter:
   1. Update the integration repository with changes made on the
      canonical repository (called "main" in the script)
   2. Lock translations on the web platform
+     (XXX: It is unclear when this happens from the below steps)
   3. Trigger Weblate to commit pending approved translations (`manage.py
      commit_pending`)
-  4. Integrate changes from Weblate into the integration repository
+     (XXX: It is unclear when this happens from the below steps)
+  4. Integrate comitted changes from Weblate into the integration repository
   5. Push up-to-date integration repository to canonical repository
-  6. Weblate -> Integration
+  6. Merging changes done on Weblate's repository into the integration
+     repository
   7. Unlock translations for translators
+     (XXX: It is unclear when this happens from the below steps)
   8. Run `manage.py update_index`
+     (XXX: It is unclear when this happens and what this means)
 
 Whenever a contributor modifies a markdown (`*.mdwn`) file, and pushes
 to master, the corresponding POT and PO files are updated, that is: the
@@ -196,19 +201,19 @@ the canonical Git repository. On top of this we need to update Weblate's
 database accordingly, so that translations can be added for new or
 modified English strings in those files, in all languages.
 
-### Update the integration repository with changes made on the canonical repository
+### Steps 1-4: Update the integration repository with changes made on the canonical repository
 
 The script fetches from the canonical (remote) repository and tries to
 merge changes into the (local) integration repository. The merge
-strategy used for this step is defined in [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py):
+strategy used for this step is defined in [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py): (XXX: Shouldn't this script be called update_integration_git.py according to this documentation?)
 
-It merges changes in po files based on single translation units
-(`msgids`). Merge conflicts occur when the same translation unit has
-been changed in the canonical and the integration repository (in the
-latter case, this would mean that the change has been done via Weblate).
-In such a case, we always prefer the canonical version. This makes sure
-that Tails developers can fix issues in translations and have priority
-over Weblate.
+When this script is called, it merges changes in PO files based on
+single translation units (`msgids`). Merge conflicts occur when the same
+translation unit has been changed in the canonical and the integration
+repository (in the latter case, this would mean that the change has been
+done via Weblate). In such a case, we always prefer the canonical
+version. This makes sure that Tails developers can fix issues in
+translations and have priority over Weblate.
 
 Due to this procedure we never end up with broken PO files, however, we
 may loose a translation done on Weblate.
@@ -230,10 +235,11 @@ have been renamed, moved or deleted, than the PO files of additional
 languages need to follow this step.
 
 Finally, the script will test if the new commit has triggered any change,
-(XXX: I don't understand what "the new commit" is, can you please
-clarify?). If it has not, we'll simply perform a fast-forward.
+(XXX: I don't understand what "the new commit" is here, can you please
+clarify?). If it has not, we'll simply perform a fast-forward (XXX:
+please clarify on what this is performed).
 
-### Integrating the changes made in the canonical Git repository into Weblate
+### Step XXX: Integrating the changes made in the canonical Git repository into Weblate repository and database
 
 After having merged changes from the canonical Git repository into the
 integration Git repository, and integrated changes from Weblate there,
@@ -262,17 +268,24 @@ variable, let's make it clear. I also don't understand what this own Git
 remote is, where does it come from, is it up-to-date?) to keep track of which commits need to
 be scanned (XXX: scanned, really?) for Weblate component changes.
 
-### Weblate -> Integration
+### Step 6: Merging changes from Weblate's Git repository into the integration repository
 
-As Weblate is a non bare repo, Integration is pulling the changes from Weblate
-and merging the po changes into Integration, that is done by the script
-[`merge_weblate_changes.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/merge_weblate_changes.py). Local changes is preferred over the changes from
-remote aka Weblate, in order to be able to fix po files by Canonical. For po
-files merges are done on translation units. The script also makes sure, that
-Weblate is only allowed to touch po files, and set back everything else to the
-version that exists at Canonical.
+Weblate's Git repository is not bare. Hence we need to pull changes
+committed to Weblate's Git repository and merge them into the
+integration repository. This is done by the script
+[`merge_weblate_changes.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/merge_weblate_changes.py).
 
-### Pushing from the integration repository to our canonical repository, aka "production"
+Changes already present in the integration repository are preferred over
+the changes from the remote, Weblate repository. This is to allow fixes
+done to PO files manually, via the canonical Git repository.
+
+Again, PO file merges are done on translation units (`msgids`).
+
+Furtheremore, we make sure via the script that Weblate has only modified
+PO files; indeed we automatically reset everything else to the version
+that exists in canonical.
+
+### Step 5: Pushing from the integration repository to our canonical repository, aka "production"
 
 As a last step, a push done from the VM hosting Weblate is done, using
 the integration repository that has all changes:
