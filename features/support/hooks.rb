@@ -277,10 +277,11 @@ After('@product') do |scenario|
       Dir.glob("#{$config["TMPDIR"]}/*.pcap").each do |pcap_file|
         save_failure_artifact("Network capture", pcap_file)
       end
+    when 'TorBootstrapFailure'
+      save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
     when 'TimeSyncingError'
       save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
     end
-    save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
     chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
     FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
     FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
