@@ -167,8 +167,7 @@ Then, our translation platform updates the PO files for additional
 languages (that are enabled on Weblate but not on the production website),
 commits & pushes them, and updates the Weblate database accordingly.
 
-Canonical -> Integration
-========================
+### Canonical -> Integration
 
 If a new commit exists on the Canonical repo, Integration will merge the
 changes into repo. The script [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py) is the merge strategy
@@ -187,8 +186,7 @@ moved or deleted, than the "additional languages" po files follow this step.
 At last step the script will test if the new commit had triggered any change,
 if not the script simply perform a fast-forward.
 
-Canonical -> Weblate
-====================
+### Canonical -> Weblate
 
 As we have the loop Canonical <-> Integration, we can assume that every po file
 is up-to-date and don't need to change the po files. That's why we can simply
@@ -203,8 +201,7 @@ may be other scripts, that may update master branch of Weblate repo than this
 script, that's why the script is using a own git remote named "cron" to keep
 track, what commits need to scanned for Weblate component changes.
 
-Weblate -> Integration
-======================
+### Weblate -> Integration
 
 As Weblate is a non bare repo, Integration is pulling the changes from Weblate
 and merging the po changes into Integration, that is done by the script
@@ -214,8 +211,7 @@ files merges are done on translation units. The script also makes sure, that
 Weblate is only allowed to touch po files, and set back everything else to the
 version that exists at Canonical.
 
-Integration -> Canonical
-========================
+### Integration -> Canonical
 
 In it self it, this step is a simple push done from translate.lizard.
 
@@ -270,7 +266,7 @@ should not.
 <a id="access-control"></a>
 
 Access control on the Weblate platform
---------------------------------------
+======================================
 
 ### Requirements
 
@@ -295,7 +291,8 @@ Access control on the Weblate platform
 - Suggested translations are used to build the [[staging
   website|translation_platform#staging-website]].
 
-### Currently implemented proposal
+Currently implemented proposal
+------------------------------
 
 - In Weblate lingo, we use the [dedicated
   reviewers](https://docs.weblate.org/en/latest/workflows.html#dedicated-reviewers)
@@ -370,8 +367,11 @@ Access control on the Weblate platform
     suggestion to be accepted as a validated translation?
     (At the moment, suggestion voting is disabled.)
 
-Weblate installation and maintenance - a hybrid approach
---------------------------------------------------------
+Weblate installation and maintenance
+====================================
+
+A hybrid approach
+-----------------
 
 The Tails infrastructure uses Puppet to make it easier to enforce and
 replicate system configuration, and usually relies on Debian packages to
