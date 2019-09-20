@@ -110,8 +110,34 @@ Running GUI applications in containers
 * [GNOME sandboxed
   applications](https://wiki.gnome.org/Projects/SandboxedApps), aka.
   Flatpak (formerly `xdg-app`); their concept of "portals" is very interesting.
+  - To monitor use of portals (e.g. to tell whether they're used at all),
+    use `dbus-monitor`. For example:
+
+          dbus-monitor --session "interface='org.freedesktop.portal.FileChooser'"
+
+  - To force GTK to use Portals for select, supported APIs, even outside of Flatpak:
+
+          export GTK_USE_PORTAL=1
+
+    This works, for example, for the Open/Save file dialogs of Firefox
+    68 and gedit, and for the Print dialog of Evince. But it does not
+    work for the Open/Save file dialogs of GIMP 2.10.8-2+b1 or Evince
+    3.30.2-3.
+
+  - To force Qt to use Portals for select, supported APIs, even
+    outside of Flatpak, my _untested guess_ is that one needs to
+    install [[!debpkg qt5-xdgdesktopportal-platformtheme]] ([upstream
+    source
+    code](https://code.qt.io/cgit/qt/qtbase.git/tree/src/plugins/platformthemes/xdgdesktopportal)) and
+    to set:
+
+          export QT_QPA_PLATFORMTHEME=xdgdesktopportal
+
+  - Ideally we would force usage of Portals for every AppArmor-confined
+    application.
+
   - Flatpak'ing Tor Browser:
-    - AsciiWolf's initial work: <https://github.com/micahflee/torbrowser-launcher/issues/407>
+    - AsciiWolf's initial work: <https://github.com/micahflee/torbrowser-launcher/issues/407>, <https://github.com/flathub/flathub/pull/1135>
     - muelli's initial work: [[!tor_bug 25578]]
   - [GNOME Developer Experience hackfest: xdg-app + Debian](http://smcv.pseudorandom.co.uk/2016/xdg-app/)
   - LWN on [An initial release of Flatpak portals for GNOME](https://lwn.net/Articles/694291/)
@@ -119,6 +145,9 @@ Running GUI applications in containers
   - [The flatpak security model – part 2: Who needs sandboxing anyway?](https://blogs.gnome.org/alexl/2017/01/20/the-flatpak-security-model-part-2-who-needs-sandboxing-anyway/)
   - [The flatpak security model, part 3 – The long game](https://blogs.gnome.org/alexl/2017/01/24/the-flatpak-security-model-part-3-the-long-game/)
 * Ubuntu Snap
+  - Snap seems to be moving towards using Portals. For example,
+    support for snaps was
+    [added to xdg-desktop-portal]https://github.com/flatpak/xdg-desktop-portal/pull/155).
   - LWN on [Snap interfaces for sandboxed applications](https://lwn.net/Articles/694757/),
     comparing them to Flatpack's portals
 * <http://pleonasm.info/blog/2012/10/privilege-separation-with-xpra/>
