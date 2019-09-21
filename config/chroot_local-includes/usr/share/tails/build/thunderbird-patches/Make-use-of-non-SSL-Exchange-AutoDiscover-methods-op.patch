@@ -6,42 +6,37 @@ Subject: [PATCH] Make use of non-SSL Exchange AutoDiscover methods optional.
 If an attacker does a MitM they can presumably modify the Exchange
 server's HTTP response to redirect to an attacker controller Exchange
 server instead. So let's provide protection against this via the
-mailnews.auto_config.ssl_only_config_servers pref.
+mailnews.auto_config.sslOnly pref.
 ---
- .../accountcreation/content/exchangeAutoDiscover.js          | 12 +++++++-----
- comm/mailnews/mailnews.js                                    |  3 ++-
- 2 files changed, 9 insertions(+), 6 deletions(-)
+  .../content/exchangeAutoDiscover.js           | 20 ++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
 --- a/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
 +++ b/comm/mail/components/accountcreation/content/exchangeAutoDiscover.js
-@@ -97,11 +97,13 @@ function fetchConfigFromExchange(domain,
+@@ -127,15 +127,17 @@
    fetch.start();
    call.setAbortable(fetch);
- 
+
 -  call = priority.addCall();
--  fetch3 = new FetchHTTP(url3, callArgs,
--    call.successCallback(), call.errorCallback());
+-  fetch3 = new FetchHTTP(
+-    url3,
+-    callArgs,
+-    call.successCallback(),
+-    call.errorCallback()
+-  );
 -  fetch3.start();
 -  call.setAbortable(fetch3);
-+  if (!Services.prefs.getBoolPref("mailnews.auto_config.ssl_only_config_servers")) {
++  if (!Services.prefs.getBoolPref("mailnews.auto_config.sslOnly")) {
 +    call = priority.addCall();
-+    fetch3 = new FetchHTTP(url3, callArgs,
-+      call.successCallback(), call.errorCallback());
++    fetch3 = new FetchHTTP(
++      url3,
++      callArgs,
++      call.successCallback(),
++      call.errorCallback()
++    );
 +    fetch3.start();
 +    call.setAbortable(fetch3);
 +  }
- 
+
    // url3 is an HTTP URL that will redirect to the real one, usually a HTTPS
    // URL of the hoster. XMLHttpRequest unfortunately loses the call
---- a/comm/mailnews/mailnews.js
-+++ b/comm/mailnews/mailnews.js
-@@ -908,7 +908,8 @@ pref("mailnews.auto_config.fetchFromISP.
- // This also sends the email address and password to the server,
- // which the protocol unfortunately requires in practice.
- pref("mailnews.auto_config.fetchFromExchange.enabled", true);
--// Whether we will only allow SSL channels when fetching.
-+// Whether we will only allow SSL channels when fetching ISP configs
-+// or using the Microsoft Exchange AutoDiscover protocol.
- // When false an active attacker can block non-SSL fetches and then
- // MitM the HTTP fetch, granting the attacker full control over the
- // client configuration.
