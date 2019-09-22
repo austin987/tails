@@ -20,7 +20,7 @@ Terms used in this document
   website relies on, in scripts often called "main repository" or "main
   Git"
 - Production server: the server that hosts our website
-- translate.lizard: the VM that hosts our Weblate webinterface, the
+- translate.lizard: the VM that hosts our Weblate web interface, the
   corresponding Git repositories, as well as the staging website.
 
 [Corresponding tickets on Redmine](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=321)
@@ -77,9 +77,7 @@ thus approved translations of all languages enabled on the Weblate
 platform, while only part of them are active on the website.
 
 Each PO file corresponds to a single component in Weblate, in order to
-appear in the Weblate interface.
-
-For example, the component:
+appear in the Weblate interface. For example, the component:
 
     wiki/src/support.*.po
 
@@ -161,7 +159,7 @@ they needed?)
 
 Whenever a contributor modifies a markdown (`*.mdwn`) file, and pushes
 to master, the corresponding POT and PO files are updated, that is: the
-translateable English strings within those files are updated. This
+translatable English strings within those files are updated. This
 update happens on the production server itself, when [[building the
 wiki|contribute/build/website]] for languages that are enabled on the
 production website.
@@ -205,9 +203,9 @@ we've previously defined as a default language.  If the actual POT file,
 generated on the production server differs from the POT file we've just
 created, then every additional language PO file needs to be updated.
 
-On top of this, if the "defaultlang"s PO file (and its markdown file)
-have been renamed, moved or deleted, than the PO files of additional
-languages need to follow this step.
+On top of this, if the PO file of the default language (that is, its
+markdown file) have been renamed, moved or deleted, than the PO files of
+additional languages need to follow this step.
 
 Finally, the script will test if the new commit has triggered any change,
 (XXX: I don't understand what "the new commit" is here, can you please
@@ -228,7 +226,7 @@ can try?", who or what tries it when?)
 
 If a fast-forward is not possible then the Canonical <-> Integration
 loop has something to do (XXX: What does this mean "something to do"?
-and how do we know it's not possible?) and we try again later to pull.
+And how do we know it's not possible?) and we try again later to pull.
 (XXX: What is this triggered by? What does "later" mean in this
 context?)
 
@@ -241,7 +239,7 @@ handled by another script:
 There may be other scripts (XXX: like what?), that may update the master
 branch of Weblate repo besides our script, that's why the script is
 using an own Git remote named "cron" (XXX: is this information
-up-to-date? I cannot find it in the script. If this is a config
+up-to-date? I cannot find it in the script. If this is a configuration
 variable, let's make it clear. I also don't understand what this own Git
 remote is, where does it come from, is it up-to-date?) to keep track of which commits need to
 be scanned (XXX: scanned, really?) for Weblate component changes.
@@ -262,7 +260,7 @@ done to PO files manually, via the canonical Git repository.
 
 Again, PO file merges are done on translation units (`msgids`).
 
-Furtheremore, we make sure via the script that Weblate has only modified
+Furthermore, we make sure via the script that Weblate has only modified
 PO files; indeed we automatically reset everything else to the version
 that exists in canonical.
 
