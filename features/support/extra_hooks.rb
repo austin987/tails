@@ -1,15 +1,9 @@
-# Make the code below work with cucumber >= 2.0. Once we stop
-# supporting <2.0 we should probably do this differently, but this way
-# we can easily support both at the same time.
+# Now that we stopped supporting Cucumber<2.0, we could probably do
+# this differently.
 
 begin
   if not(Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?))
-    if Gem::Version.new(Cucumber::VERSION) >= Gem::Version.new('2.4.0')
-      require 'cucumber/core/gherkin/tag_expression'
-    else
-      require 'gherkin/tag_expression'
-      Cucumber::Core::Gherkin = Gherkin
-    end
+    require 'cucumber/core/gherkin/tag_expression'
     class Cucumber::Core::Ast::Feature
       # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
       # cucumber-ruby-core 1.1.3, lib/cucumber/core/test/case.rb:~59.
