@@ -94,6 +94,13 @@ localectl set-locale \
     "LC_MEASUREMENT=${TAILS_FORMATS}.UTF-8" \
     "LC_PAPER=${TAILS_FORMATS}.UTF-8" \
 
+# Set the system locale GSetting (#16806)
+cat > /etc/dconf/db/local.d/01_Tails_settings << EOF
+[system/locale]
+region = '${TAILS_FORMATS}.UTF-8'
+EOF
+dconf update
+
 # Save keyboard settings so that tails-configure-keyboard can set it
 # in the GNOME session.
 cat > /var/lib/tails-user-session/keyboard <<EOF
