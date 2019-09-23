@@ -26,12 +26,8 @@ LUSER = 'amnesia'
 # data path
 data_path = '/usr/share/tails-greeter/'
 
-# File where supported language codes (such as en_US) are stored
-# while building the tails-greeter binary package
+# File containing the language codes that are supported by the greeter
 language_codes_path = os.path.join(data_path, 'language_codes')
-
-# File where default language code for languages are stored
-default_langcodes_path = os.path.join(data_path, 'default_langcodes')
 
 # Locales path
 locales_path = '/usr/share/locale/'

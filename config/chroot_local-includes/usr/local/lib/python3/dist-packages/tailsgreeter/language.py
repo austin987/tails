@@ -799,12 +799,8 @@ class LocalisationSettings(object):
             self.__actusermanager.disconnect(self.__actusermanager_loadedid)
 
     def __get_langcodes(self):
-        with open(tailsgreeter.config.default_langcodes_path, 'r') as f:
-            defcodes = [line.rstrip('\n') for line in f.readlines()]
         with open(tailsgreeter.config.language_codes_path, 'r') as f:
-            langcodes = [line.rstrip('\n') for line in f.readlines()]
-        logging.debug('%s languages found', len(langcodes))
-        return defcodes + langcodes
+            return [line.rstrip('\n') for line in f.readlines()]
 
     def __on_usermanager_loaded(self, manager, pspec, data=None):
         logging.debug("Received AccountsManager signal is-loaded")
