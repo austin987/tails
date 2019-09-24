@@ -218,12 +218,6 @@ class FormatsSetting(RegionSetting):
                          greeter.localisationsettings.formats)
 
 
-class TimezoneSetting(RegionSetting):
-    def __init__(self, greeter, builder):
-        super().__init__("tz", greeter, builder,
-                         greeter.localisationsettings.timezone)
-
-
 class AdditionalSetting(GreeterSetting):
     def __init__(self, setting_id, greeter, builder):
         super().__init__(setting_id)
@@ -552,7 +546,6 @@ class GreeterSettingsCollection(object):
         self.text = TextSetting(greeter, builder)
         self.keyboard = KeyboardSetting(greeter, builder)
         self.formats = FormatsSetting(greeter, builder)
-        self.timezone = TimezoneSetting(greeter, builder)
 
         # Additional settings views
         self.admin = AdminSetting(greeter, builder)
@@ -794,7 +787,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 'listboxrow_macspoof',
                 'listboxrow_network',
                 'listboxrow_text',
-                'listboxrow_tz',
                 'toolbutton_settings_add',
                 ])
 

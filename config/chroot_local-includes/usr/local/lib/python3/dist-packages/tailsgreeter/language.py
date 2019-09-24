@@ -718,56 +718,6 @@ class LayoutSetting(RegionSetting):
         settings.set_value('sources', GLib.Variant('a(ss)', [('xkb', layout)]))
 
 
-class TimezoneSetting(RegionSetting):
-
-    def get_tree(self):
-        timezones = self.get_all()
-        treestore = Gtk.TreeStore(GObject.TYPE_STRING,  # id
-                                  GObject.TYPE_STRING)  # name
-        areas = self._timezone_split_area(timezones)
-        for area in sorted(areas.keys()):
-            locations = sorted(
-                    areas[area],
-                    key=lambda x: self._timezone_name(x).lower())
-            treeiter_area = treestore.append(parent=None)
-            # we fill the title with the 1st layout of the group
-            treestore.set(treeiter_area, 0, locations[0])
-            treestore.set(treeiter_area, 1, area)
-            if len(locations) > 1:
-                for location in locations:
-                    treeiter_location = treestore.append(parent=treeiter_area)
-                    treestore.set(treeiter_location, 0, location)
-                    treestore.set(treeiter_location, 1,
-                                  self._timezone_name(location))
-        return treestore
-
-    def get_name(self):
-        return self._timezone_name(self.get_value())
-
-    def get_all(self):
-        """Return a list of all timezones
-
-        """
-        return pytz.common_timezones
-
-    def _timezone_name(self, timezone):
-        if '/' in timezone:
-            area, s, location = timezone.partition('/')
-            return location
-        else:
-            return timezone
-
-    def _timezone_split_area(self, timezones):
-        timezone_areas = {}
-        for timezone in timezones:
-            area, s, v = timezone.partition('/')
-            if area not in timezone_areas:
-                timezone_areas[area] = set([timezone])
-            else:
-                timezone_areas[area].add(timezone)
-        return timezone_areas
-
-
 class LocalisationSettings(object):
     """Controller for localisation settings
 
@@ -792,7 +742,6 @@ class LocalisationSettings(object):
         self.text = TextSetting(self)
         self.formats = FormatSetting(self)
         self.layout = LayoutSetting(self)
-        self.timezone = TimezoneSetting(self)
 
     def __del__(self):
         if self.__actusermanager_loadedid:
