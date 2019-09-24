@@ -422,25 +422,6 @@ class NetworkSetting(AdditionalSetting):
             self.infobar_network.set_visible(False)
 
 
-class CamouflageSetting(AdditionalSetting):
-    def __init__(self, greeter, builder):
-        super().__init__("camouflage", greeter, builder)
-
-    def build_ui(self, builder):
-        super().build_ui(builder)
-        tailsgreeter.utils.import_builder_objects(self, builder, [
-                'label_camouflage_value'])
-
-    def switch_active(self, switch):
-        state = switch.get_active()
-        if state:
-            self.greeter.camouflage.os = 'win8'
-        else:
-            self.greeter.camouflage.os = None
-        self.label_camouflage_value.set_label(
-                tailsgreeter.utils.get_on_off_string(state, default=None))
-
-
 class PersistentStorage(object):
     def __init__(self, greeter, builder):
         self.greeter = greeter
@@ -577,7 +558,6 @@ class GreeterSettingsCollection(object):
         self.admin = AdminSetting(greeter, builder)
         self.macspoof = MACSpoofSetting(greeter, builder)
         self.network = NetworkSetting(greeter, builder)
-        self.camouflage = CamouflageSetting(greeter, builder)
 
     def __getitem__(self, key):
         return self.__getattribute__(key)
@@ -595,13 +575,11 @@ class DialogAddSetting(Gtk.Dialog):
     def build_ui(self, builder):
         tailsgreeter.utils.import_builder_objects(self, builder, [
                 'box_admin_popover',
-                'box_camouflage_popover',
                 'box_macspoof_popover',
                 'box_network_popover',
                 'entry_admin_password',
                 'listbox_add_setting',
                 'listboxrow_admin',
-                'listboxrow_camouflage',
                 'listboxrow_macspoof',
                 'listboxrow_network',
                 ])
@@ -795,7 +773,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
         tailsgreeter.utils.import_builder_objects(self, builder, [
                 'box_admin_popover',
-                'box_camouflage_popover',
                 'box_language',
                 'box_language_header',
                 'box_macspoof_popover',
@@ -820,12 +797,10 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 'listboxrow_formats',
                 'listboxrow_keyboard',
                 'listboxrow_admin',
-                'listboxrow_camouflage',
                 'listboxrow_macspoof',
                 'listboxrow_network',
                 'listboxrow_text',
                 'listboxrow_tz',
-                'switch_camouflage',
                 'toolbutton_settings_add',
                 ])
 
@@ -866,10 +841,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.dialog_add_setting = DialogAddSetting(builder, self.settings)
         self.dialog_add_setting.set_transient_for(self)
         self.store_translations(self.dialog_add_setting)
-
-        # Settings popovers
-        self.switch_camouflage.connect('notify::active',
-                                       self.cb_switch_camouflage_active)
 
     def __set_focus_chain(self):
         self.box_language.set_focus_chain([
@@ -1111,10 +1082,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         else:
             self.settings[setting_id].show_popover()
         return False
-
-    def cb_switch_camouflage_active(self, switch, pspec, user_data=None):
-        self.settings.camouflage.switch_active(switch)
-        self.settings.camouflage.close_popover_if_any()
 
     def cb_toolbutton_settings_add_clicked(self, user_data=None):
         self.setting_add()
