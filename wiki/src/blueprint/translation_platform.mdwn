@@ -11,7 +11,8 @@ This is the technical design documentation of our setup.
 
 We also provide a dedicated [[documentation for translators on how to use
 Weblate|contribute/how/translate/with_Weblate]] to contribute
-translations.
+translations. (This link will work once [[!tails_ticket 11763]] is
+fixed.)
 
 Terms used in this document
 ===========================
@@ -20,61 +21,10 @@ Terms used in this document
   website relies on, in scripts often called "main repository" or "main
   Git"
 - Production server: the server that hosts our website
-- translate.lizard: the VM that hosts our Weblate webinterface, the
+- translate.lizard: the VM that hosts our Weblate web interface, the
   corresponding Git repositories, as well as the staging website.
 
 [Corresponding tickets on Redmine](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=321)
-
-Choosing a translation web platform
-===================================
-
-MUST
-----
-
-* provide a usable easy web interface
-* be usable from Tor Browser
-* automatic pull from main Git repo
-* provide a common glossary for each language, easy to use and improve
-* allow translators to view, in the correct order, all strings that
-  come from the entire page being translated, both in English and in
-  the target language
-* make it easy to view the translations in context i.e. when translating
-  an entire page, all strings to be translated should only come from
-  this page. translators should be able to view the page in context.
-* provide user roles (admin, reviewer, translator)
-
-SHOULD
-------
-
-* be "privacy sensitive", i.e. be operated by a non-profit
-* allow translators to push translations through Git (so that core
-  developers only have to fetch reviewed translations from there)
-* provide support for Git standard development branches (devel, stable,
-  and testing) but we could also agree upon translation only master
-  through this interface
-* provide checks for inconsistent translations
-* provide feature to write/read comments between translators
-
-MAY
----
-
-* allow translating topic branches without confusing translators,
-  causing duplicate/premature work, fragmentation or merge conflicts
-  -- e.g. present only new or updated strings in topic branches;
-  see <https://mailman.boum.org/pipermail/tails-l10n/2015-March/002102.html>
-  for details
-* provide a feature to easily see what is new, what needs updating, what are translation priorities
-* provide possibility to set up new languages easily
-* send email notifications
-  - to reviewers whenever new strings have been translated or updated
-  - to translators whenever a resource is updated
-* respect authorship (different committers?)
-* provide statistics about the percentage of translated and fuzzy strings
-* Letting translators report about problems in original strings, e.g.
-  with a "Report a problem in the original English text" link, that
-  e.g. results in an email being sent to -l10n@ or -support-private@.
-  If we don't have that, then [[contribute/how/translate]] MUST
-  document how to report issues in the original English text.
 
 Setup of our translation platform & integration with our infrastructure
 =======================================================================
@@ -107,7 +57,7 @@ that:
 In order to integrate Weblate and the work done by translators into our
 process, we have set up this scheme:
 
-<img src="git_repository_details.svg" />
+[[!img "lib/design/git_repository_details.svg" link="no"]]
 
 Website and Weblate
 -------------------
@@ -128,9 +78,7 @@ thus approved translations of all languages enabled on the Weblate
 platform, while only part of them are active on the website.
 
 Each PO file corresponds to a single component in Weblate, in order to
-appear in the Weblate interface.
-
-For example, the component:
+appear in the Weblate interface. For example, the component:
 
     wiki/src/support.*.po
 
@@ -212,7 +160,7 @@ they needed?)
 
 Whenever a contributor modifies a markdown (`*.mdwn`) file, and pushes
 to master, the corresponding POT and PO files are updated, that is: the
-translateable English strings within those files are updated. This
+translatable English strings within those files are updated. This
 update happens on the production server itself, when [[building the
 wiki|contribute/build/website]] for languages that are enabled on the
 production website.
@@ -226,7 +174,8 @@ modified English strings in those files, in all languages.
 
 ### Step 1: Canonical → Integration
 
-### Update the integration repository with changes made on the canonical repository
+**Update the integration repository with changes made on the canonical
+repository**
 
 The script fetches from the canonical (remote) repository and tries to
 merge changes into the (local) integration repository. The merge
@@ -255,9 +204,9 @@ we've previously defined as a default language.  If the actual POT file,
 generated on the production server differs from the POT file we've just
 created, then every additional language PO file needs to be updated.
 
-On top of this, if the "defaultlang"s PO file (and its markdown file)
-have been renamed, moved or deleted, than the PO files of additional
-languages need to follow this step.
+On top of this, if the PO file of the default language (that is, its
+markdown file) have been renamed, moved or deleted, than the PO files of
+additional languages need to follow this step.
 
 Finally, the script will test if the new commit has triggered any change,
 (XXX: I don't understand what "the new commit" is here, can you please
@@ -266,7 +215,8 @@ please clarify on what this is performed).
 
 ### Step 4: Weblate → Integration
 
-### Integrating the changes made in the canonical Git repository into Weblate repository and database
+**Integrating the changes made in the canonical Git repository into
+Weblate repository and database**
 
 After having merged changes from the canonical Git repository into the
 integration Git repository, and integrated changes from Weblate there,
@@ -277,7 +227,7 @@ can try?", who or what tries it when?)
 
 If a fast-forward is not possible then the Canonical <-> Integration
 loop has something to do (XXX: What does this mean "something to do"?
-and how do we know it's not possible?) and we try again later to pull.
+And how do we know it's not possible?) and we try again later to pull.
 (XXX: What is this triggered by? What does "later" mean in this
 context?)
 
@@ -290,14 +240,15 @@ handled by another script:
 There may be other scripts (XXX: like what?), that may update the master
 branch of Weblate repo besides our script, that's why the script is
 using an own Git remote named "cron" (XXX: is this information
-up-to-date? I cannot find it in the script. If this is a config
+up-to-date? I cannot find it in the script. If this is a configuration
 variable, let's make it clear. I also don't understand what this own Git
 remote is, where does it come from, is it up-to-date?) to keep track of which commits need to
 be scanned (XXX: scanned, really?) for Weblate component changes.
 
 ### Step 6: Weblate → Integration
 
-### Merging changes from Weblate's Git repository into the integration repository
+**Merging changes from Weblate's Git repository into the integration
+repository**
 
 Weblate's Git repository is not bare. Hence we need to pull changes
 committed to Weblate's Git repository and merge them into the
@@ -310,13 +261,14 @@ done to PO files manually, via the canonical Git repository.
 
 Again, PO file merges are done on translation units (`msgids`).
 
-Furtheremore, we make sure via the script that Weblate has only modified
+Furthermore, we make sure via the script that Weblate has only modified
 PO files; indeed we automatically reset everything else to the version
 that exists in canonical.
 
 ### Step 9: Integration → Canonical
 
-### Pushing from the integration repository to our canonical repository, aka "production"
+**Pushing from the integration repository to our canonical repository,
+aka "production"**
 
 As a last step, a push from the VM hosting Weblate (XXX: to where?) is done, using
 the integration repository that has all changes:
@@ -370,7 +322,7 @@ database and applies them to a local clone of Weblate's Git repository,
 after having updated the clone with newer data from Weblate's VCS.
 [`save-suggestions.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/save-suggestions.py)
 
-After that we run ikiwiki --refresh using an dedicated `ikiwiki.setup`
+After that we run `ikiwiki --refresh` using an dedicated `ikiwiki.setup`
 file for the staging website.
 
 None of the changes on this repository clone are fed back anywhere and they
@@ -480,6 +432,17 @@ Currently implemented proposal
     suggestion to be accepted as a validated translation?
     (At the moment, suggestion voting is disabled.)
 
+Weblate administration
+======================
+
+- [[Enabling a new language|contribute/l10n_tricks#weblate-administration]]
+  Make sure to enable languages only if they are part of our tier-1
+  list or discuss the matter on the l10n-mailing list.
+
+- Sysadmin: This documentation currently still lives in
+  translate-server.git and should be moved somewhere else.
+  [[!tails_ticket 15086]]
+
 Weblate installation and maintenance
 ====================================
 
@@ -529,3 +492,56 @@ Long-term maintenance plan
 This is work in progress. A plan for the future maintenance of our
 Weblate instance will be worked on in November 2019 and laid out here
 before the end of the year.
+
+Choosing a translation web platform
+===================================
+
+These are the requirements that we have defined for our translation web platform.
+
+MUST
+----
+
+* provide a usable easy web interface
+* be usable from Tor Browser
+* automatic pull from main Git repo
+* provide a common glossary for each language, easy to use and improve
+* allow translators to view, in the correct order, all strings that
+  come from the entire page being translated, both in English and in
+  the target language
+* make it easy to view the translations in context i.e. when translating
+  an entire page, all strings to be translated should only come from
+  this page. translators should be able to view the page in context.
+* provide user roles (admin, reviewer, translator)
+
+SHOULD
+------
+
+* be "privacy sensitive", i.e. be operated by a non-profit
+* allow translators to push translations through Git (so that core
+  developers only have to fetch reviewed translations from there)
+* provide support for Git standard development branches (devel, stable,
+  and testing) but we could also agree upon translation only master
+  through this interface
+* provide checks for inconsistent translations
+* provide feature to write/read comments between translators
+
+MAY
+---
+
+* allow translating topic branches without confusing translators,
+  causing duplicate/premature work, fragmentation or merge conflicts
+  -- e.g. present only new or updated strings in topic branches;
+  see <https://mailman.boum.org/pipermail/tails-l10n/2015-March/002102.html>
+  for details
+* provide a feature to easily see what is new, what needs updating, what are translation priorities
+* provide possibility to set up new languages easily
+* send email notifications
+  - to reviewers whenever new strings have been translated or updated
+  - to translators whenever a resource is updated
+* respect authorship (different committers?)
+* provide statistics about the percentage of translated and fuzzy strings
+* Letting translators report about problems in original strings, e.g.
+  with a "Report a problem in the original English text" link, that
+  e.g. results in an email being sent to -l10n@ or -support-private@.
+  If we don't have that, then [[contribute/how/translate]] MUST
+  document how to report issues in the original English text.
