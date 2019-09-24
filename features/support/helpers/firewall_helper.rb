@@ -6,6 +6,13 @@ def looks_like_dhcp_packet?(eth_packet, protocol, sport, dport, ip_packet)
     ip_packet && ip_packet.ip_daddr == "255.255.255.255"
 end
 
+def is_rarp_packet?(p)
+  # Details: https://www.netometer.com/qa/rarp.html#A13
+  p.force_encoding("UTF-8").start_with?(
+    "\xFF\xFF\xFF\xFF\xFF\xFFRT\x00\xAC\xDD\xEE\x805\x00\x01\b\x00\x06"
+  ) && (p[19] == "\x03" || p[19] == "\x04")
+end
+
 # Returns the unique edges (based on protocol, source/destination
 # address/port) in the graph of all network flows.
 def pcap_connections_helper(pcap_file, opts = {})
@@ -18,9 +25,14 @@ def pcap_connections_helper(pcap_file, opts = {})
     if PacketFu::EthPacket.can_parse?(p)
       eth_packet = PacketFu::EthPacket.parse(p)
     else
-      raise FirewallAssertionFailedError.new(
-              'Found something that is not an ethernet packet'
-            )
+      if is_rarp_packet?(p)
+        # packetfu cannot parse RARP, see #16825.
+        next
+      else
+        raise FirewallAssertionFailedError.new(
+                'Found something that is not an ethernet packet'
+              )
+      end
     end
     sport = nil
     dport = nil
