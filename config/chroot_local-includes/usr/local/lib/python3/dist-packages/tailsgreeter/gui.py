@@ -736,12 +736,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         headerbar_sizegroup.add_widget(self.button_start)
         headerbar.pack_end(self.button_start)
 
-        # XXX-future: the button Take a tour is for phase 2
-        # button_tour = Gtk.Button.new_with_label(_("Take a Tour"))
-        # button_tour.connect('clicked', self.cb_button_tour_clicked)
-        # headerbar_sizegroup.add_widget(button_tour)
-        # headerbar.pack_end(button_tour)
-
         headerbar.show_all()
 
         return headerbar
@@ -984,11 +978,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_button_storage_configure_clicked(self, user_data=None):
         self.persistent_storage.configure()
-        return False
-
-    def cb_button_tour_clicked(self, user_data=None):
-        # XXX-future: the button Take a tour is for phase 2
-        raise NotImplementedError
         return False
 
     def cb_button_storage_lock_clicked(self, widget, user_data=None):
