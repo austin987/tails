@@ -24,7 +24,7 @@ LPASSWORD = 'live'
 LUSER = 'amnesia'
 
 # data path
-data_path = '/usr/share/tails-greeter/'
+data_path = '/usr/share/tails/greeter/'
 
 # File containing the language codes that are supported by the greeter
 language_codes_path = os.path.join(data_path, 'language_codes')
