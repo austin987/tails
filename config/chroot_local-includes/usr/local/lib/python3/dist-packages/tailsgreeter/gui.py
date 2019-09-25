@@ -894,6 +894,12 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             setting_id = tailsgreeter.utils.setting_id_from_row(row)
             box = self.__getattribute__("box_{}_popover".format(setting_id))
 
+            # The setting used to be applied by the dialog itself, but there
+            # we don't know the response type in all cases. For example, we
+            # previously didn't apply the admin password in all cases if the
+            # "Add" button was clicked to close the dialog (#13447).
+            self.setting_apply(setting_id)
+
             self.listbox_add_setting.remove(row)
             self.listbox_settings.add(row)
             self.dialog_add_setting.set_visible(False)
@@ -912,21 +918,15 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 self.dialog_add_setting.stack.remove(old_details)
             self.dialog_add_setting.set_visible(False)
 
+    def setting_apply(self, setting_id):
+        if setting_id == "admin":
+            self.settings.admin.apply()
+
     def setting_edit(self, setting_id):
         if self.settings[setting_id].has_popover():
             self.settings[setting_id].listboxrow.emit("activate")
         else:
             self.setting_add(setting_id)
-
-    def setting_admin_check(self):
-        match = self.settings.admin.check()
-        self.dialog_add_setting.button_add.set_sensitive(match)
-
-    def setting_admin_apply(self):
-        if (self.settings.admin.apply() and
-                not self.settings.admin.close_popover_if_any()):
-            # There is no popover, because we are in the add setting dialog
-            self.dialog_add_setting.response(Gtk.ResponseType.YES)
 
     def setting_admin_disable(self):
         self.settings.admin.disable()
@@ -1019,19 +1019,26 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.entry_storage_passphrase.set_visibility(widget.get_active())
 
     def cb_entry_admin_changed(self, editable, user_data=None):
-        self.setting_admin_check()
+        passwords_match = self.settings.admin.check()
+        self.dialog_add_setting.button_add.set_sensitive(passwords_match)
         return False
 
-    def cb_entry_admin_focus_out_event(self, widget, event, user_data=None):
-        self.setting_admin_apply()
-        return False
+    def cb_entry_admin_activate(self, widget, user_data=None):
+        passwords_match = self.settings.admin.check()
+        if not passwords_match:
+            self.dialog_add_setting.button_add.set_sensitive(False)
+            self.entry_admin_verify.grab_focus()
+            return False
 
-    def cb_entry_admin_password_activate(self, widget, user_data=None):
-        self.entry_admin_verify.grab_focus()
-        return False
-
-    def cb_entry_admin_verify_activate(self, widget, user_data=None):
-        self.setting_admin_apply()
+        # The passwords match, so lets close the popover/dialog
+        if self.settings.admin.has_popover():
+            # For the popup we have to apply the password immediately
+            self.settings.admin.apply()
+            # Hide the popup
+            self.settings.admin.popover.set_visible(False)
+        else:
+            # Close the dialog
+            self.dialog_add_setting.response(Gtk.ResponseType.YES)
         return False
 
     def cb_entry_storage_passphrase_activated(self, entry, user_data=None):
