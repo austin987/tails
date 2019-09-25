@@ -393,10 +393,6 @@ class NetworkSetting(AdditionalSetting):
                 'listboxrow_network_off',
                 ])
 
-    def build_popover(self):
-        super().build_popover()
-        self.show_bridge_info_if_needed()
-
     def row_activated(self, row):
         if row == self.listboxrow_network_clear:
             self.netconf = self.greeter.physical_security.NETCONF_DIRECT
@@ -419,8 +415,6 @@ class NetworkSetting(AdditionalSetting):
 
     def apply(self):
         self.greeter.physical_security.netconf = self.netconf
-
-    def show_bridge_info_if_needed(self):
         if (self.greeter.physical_security.netconf ==
                 self.greeter.physical_security.NETCONF_OBSTACLE):
             self.infobar_network.set_visible(True)
