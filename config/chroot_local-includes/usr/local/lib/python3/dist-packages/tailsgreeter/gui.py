@@ -246,6 +246,12 @@ class AdditionalSetting(GreeterSetting):
 
         return self.popover
 
+    def show_popover(self):
+        self.popover.set_visible(True)
+
+    def hide_popover(self):
+        self.popover.set_visible(False)
+
     def close_popover_if_any(self):
         """Closes the popover if it exists
 
@@ -276,12 +282,21 @@ class AdminSetting(AdditionalSetting):
                 'label_admin_value',
                 ])
 
+    def show_popover(self):
+        super().show_popover()
+        self.entry_admin_verify.set_icon_from_icon_name(
+            Gtk.EntryIconPosition.SECONDARY, None)
+
     # XXX-non-blocker: avoid mixing business logic with GUI code?
     # The "check and return a boolean" operation should live in a pure function
     # outside of this file, and a method here should use it to update the GUI
     # accordingly.
     def check(self):
         password = self.entry_admin_password.get_text()
+        # Don't accept an empty password
+        if not password:
+            return False
+
         verify = self.entry_admin_verify.get_text()
         if verify and verify == password:
             icon = 'emblem-ok-symbolic'
@@ -654,9 +669,12 @@ class DialogAddSetting(Gtk.Dialog):
         setting_id = tailsgreeter.utils.setting_id_from_row(row)
         self.stack.add_named(self.settings[setting_id].box, 'setting-details')
         self.stack.set_visible_child_name('setting-details')
-        # XXX: this is an ugly workaround for a buggy default focus
+        # XXX: this is an ugly workaround for setting the default window state
         if setting_id == "admin":
+            self.button_add.set_sensitive(self.settings.admin.check())
             self.entry_admin_password.grab_focus()
+        else:
+            self.button_add.set_sensitive(True)
         self.button_back.set_visible(True)
         self.button_add.set_visible(True)
 
@@ -1088,7 +1106,10 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_listbox_settings_row_activated(self, listbox, row, user_data=None):
         setting_id = tailsgreeter.utils.setting_id_from_row(row)
-        tailsgreeter.utils.popover_toggle(self.settings[setting_id].popover)
+        if self.settings[setting_id].popover.get_visible():
+            self.settings[setting_id].hide_popover()
+        else:
+            self.settings[setting_id].show_popover()
         return False
 
     def cb_switch_camouflage_active(self, switch, pspec, user_data=None):
