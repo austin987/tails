@@ -56,16 +56,21 @@ from gi.repository import Gtk                           # NOQA: F401
 import tailsgreeter                                     # NOQA: F401
 import tailsgreeter.config                              # NOQA: F401
 import tailsgreeter.gdmclient                           # NOQA: F401
-import tailsgreeter.persistence                         # NOQA: F401
-import tailsgreeter.physicalsecurity                    # NOQA: F401
-import tailsgreeter.rootaccess                          # NOQA: F401
 
-from tailsgreeter.language import TranslatableWindow    # NOQA: F401
-from tailsgreeter.gui import GreeterMainWindow          # NOQA: F401
+from tailsgreeter.settings.localization_settings import LocalisationSettings
+from tailsgreeter.settings.persistence import PersistenceSettings
+from tailsgreeter.settings.physicalsecurity import PhysicalSecuritySettings
+from tailsgreeter.settings.rootaccess import RootAccessSettings
+from tailsgreeter.translatable_window import TranslatableWindow
+from tailsgreeter.ui.main_window import GreeterMainWindow          # NOQA: F401
+from tailsgreeter.ui.settings_collection import GreeterSettingsCollection
+from tailsgreeter.ui.region_settings import TextSetting, KeyboardSetting, FormatsSetting
+from tailsgreeter.ui.additional_settings import AdminSetting, MACSpoofSetting, NetworkSetting
 
 gettext.install(tailsgreeter.__appname__, tailsgreeter.config.locales_path)
 locale.bindtextdomain(tailsgreeter.__appname__,
                       tailsgreeter.config.locales_path)
+_ = gettext.gettext
 
 
 class GreeterApplication():
@@ -94,18 +99,27 @@ class GreeterApplication():
         self.gdmclient = tailsgreeter.gdmclient.GdmClient(
             session_opened_cb=self.close_app
         )
-        self.persistence = tailsgreeter.persistence.PersistenceSettings()
-        self.localisationsettings = tailsgreeter.language.LocalisationSettings(
+
+        persistence = PersistenceSettings()
+        self.localisationsettings = LocalisationSettings(
             usermanager_loaded_cb=self.usermanager_loaded,
             locale_selected_cb=self.locale_selected
         )
-        self.rootaccess = \
-            tailsgreeter.rootaccess.RootAccessSettings()
-        self.physical_security = \
-            tailsgreeter.physicalsecurity.PhysicalSecuritySettings()
+        rootaccess = RootAccessSettings()
+        physical_security = PhysicalSecuritySettings()
 
-        # Load views
-        self.mainwindow = GreeterMainWindow(self)
+        # Initialize the settings
+        settings = GreeterSettingsCollection(
+            TextSetting(self.localisationsettings.language),
+            KeyboardSetting(self.localisationsettings.keyboard),
+            FormatsSetting(self.localisationsettings.formats),
+            AdminSetting(rootaccess),
+            MACSpoofSetting(physical_security),
+            NetworkSetting(physical_security),
+        )
+
+        # Initialize main window
+        self.mainwindow = GreeterMainWindow(self, persistence, settings)
 
         # Inhibit the session being marked as idle
         self.inhibit_idle()
@@ -124,7 +138,7 @@ class GreeterApplication():
         """UserManager is ready"""
         logging.debug("Entering usermanager_loaded")
         self.ready = True
-        self.localisationsettings.text.set_value('en_US')
+        self.localisationsettings.language.set_value('en_US')
         logging.info("tails-greeter is ready.")
         self.mainwindow.show()
 
