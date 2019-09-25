@@ -59,6 +59,28 @@ class GreeterSetting(object):
         self.setting_id = setting_id
         self.listbox_container = None
         self.accel_key = None
+        self._popover = None
+
+    # The purpose of this method is that subclasses can override it to
+    # do stuff when the popover is shown
+    def show_popover(self):
+        self._popover.set_visible(True)
+
+    def hide_popover(self):
+        self._popover.set_visible(False)
+
+    def hide_popover_if_any(self):
+        if self._popover:
+            self.hide_popover()
+
+    def toggle_popover(self):
+        if self._popover.get_visible():
+            self.hide_popover()
+        else:
+            self.show_popover()
+
+    def has_popover(self):
+        return self._popover is not None
 
     def cb_popover_closed(self, popover, user_data=None):
         self.listbox_container.unselect_all()
@@ -111,7 +133,7 @@ class RegionSetting(GreeterSetting):
         searchentry = builder.get_object(
                 "searchentry_{}".format(self.setting_id))
 
-        self.popover = GreeterSetting._add_popover(
+        self._popover = GreeterSetting._add_popover(
                 listboxrow, box, closed_cb=self.cb_popover_closed)
 
         GreeterSetting._fill_tree_view("", self.treeview)
@@ -131,7 +153,7 @@ class RegionSetting(GreeterSetting):
             self.treeview.row_activated(Gtk.TreePath.new_from_string("0"),
                                         self.treeview.get_column(0))
         else:
-            self.popover.set_visible(False)
+            self.hide_popover()
 
     def cb_searchentry_search_changed(self, searchentry, user_data=None):
         self.treestore_filtered.refilter()
@@ -149,7 +171,7 @@ class RegionSetting(GreeterSetting):
         name = treemodel.get_value(treemodel.get_iter(path), 1)
 
         self.label_value.set_label(name)
-        self.popover.set_visible(False)
+        self.hide_popover()
 
         self.target.set_value(code)
 
@@ -235,29 +257,8 @@ class AdditionalSetting(GreeterSetting):
                 "box_{}_popover".format(self.setting_id))
 
     def build_popover(self):
-        self.popover = GreeterSetting._add_popover(
+        self._popover = GreeterSetting._add_popover(
                 self.listboxrow, self.box, closed_cb=self.cb_popover_closed)
-
-        return self.popover
-
-    def show_popover(self):
-        self.popover.set_visible(True)
-
-    def hide_popover(self):
-        self.popover.set_visible(False)
-
-    def close_popover_if_any(self):
-        """Closes the popover if it exists
-
-        Returns True if the popover was closed, False if there is no popover"""
-        if self.has_popover():
-            self.popover.set_visible(False)
-            return True
-        else:
-            return False
-
-    def has_popover(self):
-        return hasattr(self, 'popover')
 
     def apply(self):
         pass
@@ -901,10 +902,10 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def setting_admin_disable(self):
         self.settings.admin.disable()
-        self.settings.admin.close_popover_if_any()
+        self.settings.admin.hide_popover_if_any()
 
     def setting_network_close(self, only_if_popover=False):
-        if self.settings.network.close_popover_if_any():
+        if self.settings.network.hide_popover_if_any():
             # we are in the popover
             self.settings.network.show_bridge_info_if_needed()
         elif not only_if_popover:
@@ -1001,7 +1002,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             # For the popup we have to apply the password immediately
             self.settings.admin.apply()
             # Hide the popup
-            self.settings.admin.popover.set_visible(False)
+            self.settings.admin.hide_popover()
         else:
             # Close the dialog
             self.dialog_add_setting.response(Gtk.ResponseType.YES)
@@ -1034,7 +1035,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_listbox_language_row_activated(self, listbox, row, user_data=None):
         setting_id = tailsgreeter.utils.setting_id_from_row(row)
-        tailsgreeter.utils.popover_toggle(self.settings[setting_id].popover)
+        self.settings[setting_id].toggle_popover()
         return False
 
     def cb_listbox_network_button_press(self, widget, event, user_data=None):
@@ -1057,10 +1058,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_listbox_settings_row_activated(self, listbox, row, user_data=None):
         setting_id = tailsgreeter.utils.setting_id_from_row(row)
-        if self.settings[setting_id].popover.get_visible():
-            self.settings[setting_id].hide_popover()
-        else:
-            self.settings[setting_id].show_popover()
+        self.settings[setting_id].toggle_popover()
         return False
 
     def cb_toolbutton_settings_add_clicked(self, user_data=None):

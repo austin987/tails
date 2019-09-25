@@ -28,14 +28,6 @@ from gi.repository import Gtk                                   # NOQA: E402
 _ = lambda text: text   # NOQA: E731
 
 
-def popover_toggle(popover):
-    """Toggle the visibility of popover"""
-    if popover.get_visible():
-        popover.set_visible(False)
-    else:
-        popover.set_visible(True)
-
-
 def get_on_off_string(value, default=None):
     """Return "On"|"Off" [" (default)"] based on value and default"""
     if value == default:
