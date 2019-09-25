@@ -375,6 +375,7 @@ class NetworkSetting(AdditionalSetting):
     def __init__(self, greeter, builder):
         super().__init__("network", greeter, builder)
         self.accel_key = Gdk.KEY_n
+        self.netconf = self.greeter.physical_security.NETCONF_DIRECT
 
     def build_ui(self, builder):
         super().build_ui(builder)
@@ -394,27 +395,27 @@ class NetworkSetting(AdditionalSetting):
         self.show_bridge_info_if_needed()
 
     def row_activated(self, row):
-        netconf = None
         if row == self.listboxrow_network_clear:
-            netconf = self.greeter.physical_security.NETCONF_DIRECT
+            self.netconf = self.greeter.physical_security.NETCONF_DIRECT
             self.image_network_clear.set_visible(True)
             self.image_network_specific.set_visible(False)
             self.image_network_off.set_visible(False)
             self.label_network_value.set_label(_("Direct (default)"))
         elif row == self.listboxrow_network_specific:
-            netconf = self.greeter.physical_security.NETCONF_OBSTACLE
+            self.netconf = self.greeter.physical_security.NETCONF_OBSTACLE
             self.image_network_specific.set_visible(True)
             self.image_network_clear.set_visible(False)
             self.image_network_off.set_visible(False)
             self.label_network_value.set_label(_("Bridge & Proxy"))
         elif row == self.listboxrow_network_off:
-            netconf = self.greeter.physical_security.NETCONF_DISABLED
+            self.netconf = self.greeter.physical_security.NETCONF_DISABLED
             self.image_network_off.set_visible(True)
             self.image_network_specific.set_visible(False)
             self.image_network_clear.set_visible(False)
             self.label_network_value.set_label(_("Offline"))
-        if netconf:
-            self.greeter.physical_security.netconf = netconf
+
+    def apply(self):
+        self.greeter.physical_security.netconf = self.netconf
 
     def show_bridge_info_if_needed(self):
         if (self.greeter.physical_security.netconf ==
@@ -943,6 +944,8 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             self.settings.admin.apply()
         if setting_id == "macspoof":
             self.settings.macspoof.apply()
+        if setting_id == "network":
+            self.settings.network.apply()
 
     def setting_edit(self, setting_id):
         if self.settings[setting_id].has_popover():
@@ -1107,7 +1110,9 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_listbox_network_row_activated(self, listbox, row, user_data=None):
         self.settings.network.row_activated(row)
-        self.setting_network_close(only_if_popover=True)
+        if self.settings.network.has_popover():
+            self.settings.network.apply()
+            self.settings.network.hide_popover()
         return False
 
     def cb_listbox_settings_row_activated(self, listbox, row, user_data=None):
