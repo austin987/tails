@@ -343,6 +343,7 @@ class MACSpoofSetting(AdditionalSetting):
     def __init__(self, greeter, builder):
         super().__init__("macspoof", greeter, builder)
         self.accel_key = Gdk.KEY_m
+        self.spoofing_enabled = True
 
     def build_ui(self, builder):
         super().build_ui(builder)
@@ -355,18 +356,19 @@ class MACSpoofSetting(AdditionalSetting):
                 ])
 
     def row_activated(self, row):
-        macspoof = None
         if row == self.listboxrow_macspoof_on:
-            macspoof = True
+            self.spoofing_enabled = True
             self.image_macspoof_on.set_visible(True)
             self.image_macspoof_off.set_visible(False)
         elif row == self.listboxrow_macspoof_off:
-            macspoof = False
+            self.spoofing_enabled = False
             self.image_macspoof_off.set_visible(True)
             self.image_macspoof_on.set_visible(False)
-        self.greeter.physical_security.macspoof = macspoof
         self.label_macspoof_value.set_label(
-                tailsgreeter.utils.get_on_off_string(macspoof, default=True))
+                tailsgreeter.utils.get_on_off_string(self.spoofing_enabled, default=True))
+
+    def apply(self):
+        self.greeter.physical_security.macspoof = self.spoofing_enabled
 
 
 class NetworkSetting(AdditionalSetting):
@@ -939,6 +941,8 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
     def setting_apply(self, setting_id):
         if setting_id == "admin":
             self.settings.admin.apply()
+        if setting_id == "macspoof":
+            self.settings.macspoof.apply()
 
     def setting_edit(self, setting_id):
         if self.settings[setting_id].has_popover():
@@ -1097,7 +1101,9 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_listbox_macspoof_row_activated(self, listbox, row, user_data=None):
         self.settings.macspoof.row_activated(row)
-        self.settings.macspoof.close_popover_if_any()
+        if self.settings.macspoof.has_popover():
+            self.settings.macspoof.apply()
+            self.settings.macspoof.hide_popover()
 
     def cb_listbox_network_row_activated(self, listbox, row, user_data=None):
         self.settings.network.row_activated(row)
