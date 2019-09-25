@@ -265,6 +265,9 @@ class AdditionalSetting(GreeterSetting):
     def has_popover(self):
         return hasattr(self, 'popover')
 
+    def apply(self):
+        pass
+
 
 class AdminSetting(AdditionalSetting):
     def __init__(self, greeter, builder):
@@ -919,7 +922,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             # we don't know the response type in all cases. For example, we
             # previously didn't apply the admin password in all cases if the
             # "Add" button was clicked to close the dialog (#13447).
-            self.setting_apply(setting_id)
+            self.settings[setting_id].apply()
 
             self.listbox_add_setting.remove(row)
             self.listbox_settings.add(row)
@@ -938,14 +941,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             if old_details:
                 self.dialog_add_setting.stack.remove(old_details)
             self.dialog_add_setting.set_visible(False)
-
-    def setting_apply(self, setting_id):
-        if setting_id == "admin":
-            self.settings.admin.apply()
-        if setting_id == "macspoof":
-            self.settings.macspoof.apply()
-        if setting_id == "network":
-            self.settings.network.apply()
 
     def setting_edit(self, setting_id):
         if self.settings[setting_id].has_popover():
