@@ -1032,7 +1032,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.dialog_add_setting.listbox_row_activated(row)
         return False
 
-    # XXX-refactor: an object could wrap the whole RegionSettings box
     def cb_listbox_language_row_activated(self, listbox, row, user_data=None):
         setting_id = tailsgreeter.utils.setting_id_from_row(row)
         tailsgreeter.utils.popover_toggle(self.settings[setting_id].popover)
