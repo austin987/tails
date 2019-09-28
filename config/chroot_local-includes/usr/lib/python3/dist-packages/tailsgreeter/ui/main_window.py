@@ -19,6 +19,7 @@ import locale
 import logging
 from typing import TYPE_CHECKING
 import gi
+import os
 
 import tailsgreeter                                             # NOQA: E402
 import tailsgreeter.config                                      # NOQA: E402
@@ -59,6 +60,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.greeter = greeter
         self.persistence_setting = persistence_setting
         self.settings = settings
+        self.current_language = "en"
 
         # Set the main_window attribute for the settings. This is required
         # in order to allow the settings to trigger changes in the main
@@ -267,11 +269,31 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         return False
 
     def cb_linkbutton_help_activate(self, linkbutton, user_data=None):
+
+        def localize_page(page: str) -> str:
+            """Try to get a localized version of the page"""
+            if self.current_language == "en":
+                return page
+
+            localized_page = page.replace(".en.", ".%s." % self.current_language)
+
+            # Strip the fragment identifier
+            index = localized_page.find('#')
+            filename = localized_page[:index] if index > 0 else localized_page
+
+            if os.path.isfile("/usr/share/doc/tails/website/" + filename):
+                return localized_page
+            return page
+
         linkbutton.set_sensitive(False)
         # Display progress cursor and update the UI
         self.get_window().set_cursor(Gdk.Cursor.new(Gdk.CursorType.WATCH))
         while Gtk.events_pending():
             Gtk.main_iteration()
+
+        page = linkbutton.get_uri()
+        page = localize_page(page)
+
         # Note that we add the "file://" part here, not in the URI.
         # We're forced to add this
         # callback *in addition* to the standard one (Gtk.show_uri),
@@ -280,7 +302,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         # default browser (iceweasel) in T-G. If pygtk had a mechanism
         # like gtk's g_signal_handler_find() this could be dealt with
         # in a less messy way by just removing the default handler.
-        page = linkbutton.get_uri()
         uri = "file:///usr/share/doc/tails/website/" + page
         logging.debug("Opening help window for {}".format(uri))
         helpwindow = GreeterHelpWindow(uri)

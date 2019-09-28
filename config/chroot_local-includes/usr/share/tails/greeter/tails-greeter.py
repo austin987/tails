@@ -57,6 +57,7 @@ import tailsgreeter                                     # NOQA: F401
 import tailsgreeter.config                              # NOQA: F401
 import tailsgreeter.gdmclient                           # NOQA: F401
 
+from tailsgreeter.settings import localization
 from tailsgreeter.settings.localization_settings import LocalisationSettings
 from tailsgreeter.settings.persistence import PersistenceSettings
 from tailsgreeter.settings.physicalsecurity import PhysicalSecuritySettings
@@ -145,6 +146,7 @@ class GreeterApplication():
     def locale_selected(self, locale_code):
         """Translate to the given locale"""
         self.translate_to(locale_code)
+        self.mainwindow.current_language = localization.language_from_locale(locale_code)
 
     def close_app(self):
         """We're done, quit gtk app"""
