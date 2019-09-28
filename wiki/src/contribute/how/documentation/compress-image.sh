@@ -16,5 +16,5 @@ fi
 for image in "${@}" ; do
     mat2 "${image}"
     trimage -f "${image}"
-    mv "${image%.*}.cleaned.${image#*.}" "${image}"
+    mv "${image%.*}.cleaned.${image##*.}" "${image}"
 done
