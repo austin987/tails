@@ -126,37 +126,28 @@ Automatic merging and pushing
 -----------------------------
 
 The integration work between the different repositories is done by a
-script which is executed on the VM hosting Weblate as a cronjob every
-XXX hours. The script
-[`cron.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/cron.sh).
-here has the following steps which we will explain hereafter:
-
-(XXX: Why are steps 4 and 6 the same? And why does step 6 happen after
-step 5?)
-
-(XXX: please also briefly document the missing steps: 2,3,7: why are
-they needed?)
+script which is executed on the VM hosting Weblate as [a cronjob every
+5 minutes](https://git-tails.immerda.ch/puppet-tails/tree/manifests/weblate.pp). The script
+[`cron.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/cron.sh)
+ has the following steps which we will explain:
 
   1. Canonical → Integration:
      Update the integration repository with changes made on the
-     canonical repository (called "main" in the script)
-  2. Lock translations on the web platform
-     (XXX: It is unclear when this happens from the below steps)
-  3. Trigger Weblate to commit pending approved translations (`manage.py
-     commit_pending`)
-     (XXX: It is unclear when this happens from the below steps)
-  4. Weblate → Integration:
-     Integrate comitted changes from Weblate into the integration repository
-  5. Integration → Canonical:
-     Push up-to-date integration repository to canonical repository
-  6. Weblate→ Integration:
-     Merging changes done on Weblate's repository into the integration
+     canonical repository (called "main" in the script).
+  2. Trigger Weblate to commit pending approved translations ([`manage.py
+     commit_pending`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#commit-pending)).
+     As Weblate tries to reduce commits (called lazy commits), we need to ask
+     Weblate explicitly to commit every component, that wasn't touched for 24h and
+     has outstanding changes.
+  3. Weblate → Integration:
+     Integrate comitted changes from Weblate into the Integration repository
+  4. Integration → Canonical:
+     Push up-to-date integration repository to canonical repository. After this step canonical has everything merged from Weblate.
+  5. Canonical → Weblate:
+     Pull from canonical and update the Weblate components.
      repository
-  7. Unlock translations for translators
-     (XXX: It is unclear when this happens from the below steps)
-  8. Run `manage.py update_index`
-     (XXX: It is unclear when this happens and what this means)
-  9. Push to canonical Git and production server (XXX: is this correct?)
+  6. Run [`manage.py update_index`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#update-index).
+     Updates index for fulltext search, it is recommended to run it every 5 mins.
 
 Whenever a contributor modifies a markdown (`*.mdwn`) file, and pushes
 to master, the corresponding POT and PO files are updated, that is: the
@@ -181,7 +172,7 @@ The script fetches from the canonical (remote) repository and tries to
 merge changes into the (local) integration repository. The merge
 strategy used for this step is defined in [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py): (XXX: Shouldn't this script be called update_integration_git.py according to this documentation?)
 
-When this script is called, it merges changes in PO files based on
+When this script is executed, it merges changes in PO files based on
 single translation units (`msgids`). Merge conflicts occur when the same
 translation unit has been changed in the canonical and the integration
 repository (in the latter case, this would mean that the change has been
@@ -208,44 +199,11 @@ On top of this, if the PO file of the default language (that is, its
 markdown file) have been renamed, moved or deleted, than the PO files of
 additional languages need to follow this step.
 
-Finally, the script will test if the new commit has triggered any change,
-(XXX: I don't understand what "the new commit" is here, can you please
-clarify?). If it has not, we'll simply perform a fast-forward (XXX:
-please clarify on what this is performed).
+Our script actually applies all changes from the default language to the additional languages and afterwards we can look if we actually introduce any change in the PO files.
 
-### Step 4: Weblate → Integration
+The described mechanisms always touching files and changes mtime etc, that's why git would always create a new commit. Often those commits don't change anything on the files. To get rid of those empty not needed commits the script detects, when a fast-forward is possible (the master  branch is updated to HEAD of canonical or integration branch). This is possible, if only Weblate introduce new commits or only the canonical.
 
-**Integrating the changes made in the canonical Git repository into
-Weblate repository and database**
-
-After having merged changes from the canonical Git repository into the
-integration Git repository, and integrated changes from Weblate there,
-we can assume that every PO file now is up-to-date (in the integration
-repository). Hence we can try to pull (XXX: from the integration to
-Weblate's repository?) using a fast-forward. (XXX: what does it mean "we
-can try?", who or what tries it when?)
-
-If a fast-forward is not possible then the Canonical <-> Integration
-loop has something to do (XXX: What does this mean "something to do"?
-And how do we know it's not possible?) and we try again later to pull.
-(XXX: What is this triggered by? What does "later" mean in this
-context?)
-
-If the fast-forward was successful, we need to update Weblate's components
-to reflect the modifications that happened on the side of Git, such as
-string and file updates, removals, renames, or additions. This is
-handled by another script:
-[`update_weblate_components.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_components.py).
-
-There may be other scripts (XXX: like what?), that may update the master
-branch of Weblate repo besides our script, that's why the script is
-using an own Git remote named "cron" (XXX: is this information
-up-to-date? I cannot find it in the script. If this is a configuration
-variable, let's make it clear. I also don't understand what this own Git
-remote is, where does it come from, is it up-to-date?) to keep track of which commits need to
-be scanned (XXX: scanned, really?) for Weblate component changes.
-
-### Step 6: Weblate → Integration
+### Step 3: Weblate → Integration
 
 **Merging changes from Weblate's Git repository into the integration
 repository**
@@ -265,13 +223,14 @@ Furthermore, we make sure via the script that Weblate has only modified
 PO files; indeed we automatically reset everything else to the version
 that exists in canonical.
 
-### Step 9: Integration → Canonical
+### Step 4: Integration → Canonical
 
 **Pushing from the integration repository to our canonical repository,
 aka "production"**
 
-As a last step, a push from the VM hosting Weblate (XXX: to where?) is done, using
-the integration repository that has all changes:
+After updating the Integration repository, we push the changes back to
+Canonical aka puppet-git.lizard. After this the Canonical repository has
+everything integrated from Weblate.
 
 On the side of the canonical Git repository, gitolite has a special
 hook,
@@ -281,6 +240,36 @@ This hook also checks and verifies the committer of each commit, to make
 sure only translations made on the Weblate platform are automatically
 pushed, and no other changes than those on PO files accepted. Otherwise
 the push is rejected, for security reasons.
+
+### Step 5: Canonical → Weblate
+
+**Integrating the changes made in the Canonical Git repository into
+Weblate repository**
+
+After having merged changes from the canonical Git repository into the
+integration Git repository, and integrated changes from Weblate there,
+we can assume that every PO file now is up-to-date (in the Integration
+and Canonical repository). Hence we can try to pull from the Canonical
+repository using a fast-forward only (`git pull --ff-only`). Canonical and the
+Weblate repositories can get new commits everytime, also while the cronjob is
+running. It can happen, that a new commit on one side (Cannonical or Weblate)
+makes it impossible to perform a fast-forward. If we can't fast-forward the git
+repository, the cronjob is run 5min later anyways again, Than step 1,3 and 4 of
+the cronjob fixes the reason why the fast-forward was not possible this time.
+
+If the fast-forward was successful, we need to update Weblate's components
+to reflect the modifications that happened on the side of Git, such as
+string and file updates, removals, renames, or additions. This is
+handled by another script:
+[`update_weblate_components.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_components.py).
+
+We are not the only process touching the Weblate repository, as Weblate itself
+creating commits and updating the master branch That's why the script is using
+an own Git remote named `cron` to keep track of which commits need to look at
+for Weblate component changes. This remote name is set in the
+[weblate.pp](https://git-tails.immerda.ch/puppet-tails/tree/manifests/weblate.pp)
+and used in the cronjob `update_weblate_components.py
+--remoteBranch=cron/master [...]`.
 
 <a id="staging-website"></a>
 
@@ -432,6 +421,35 @@ Currently implemented proposal
     suggestion to be accepted as a validated translation?
     (At the moment, suggestion voting is disabled.)
 
+Machine translation
+===================
+
+This is important because it saves time for the translators, especially
+in cumbersome documents, and helps us to be consistent not only with our
+translations but, for example, with the Debian locales if we feed them
+to the tmserver.
+
+It is a very subtle way of increasing the quality of our translations.
+
+It should give suggestions when you are translating, under the translation
+window, tab 'Machine translation'.
+
+We use tmserver for 'Machine translation'. You find the documentation
+[here](https://docs.weblate.org/en/weblate-2.20/admin/machine.html#tmserver).
+
+In order to update the suggestion we run
+[`update_tm.sh`](templates/weblate/update_tm.sh.erb) via cronjob every month.
+
+The tmserver can be queried like this [(see
+`tmserver.service`)](manifests/weblate.pp):
+
+<pre>
+http://localhost:8080/tmserver/en/de/unit/contribute
+</pre>
+
+It should give suggestions when you are translating, under the translation
+window, tab 'Machine translation'.
+
 Weblate administration
 ======================
 
@@ -439,9 +457,34 @@ Weblate administration
   Make sure to enable languages only if they are part of our tier-1
   list or discuss the matter on the l10n-mailing list.
 
+
 - Sysadmin: This documentation currently still lives in
   translate-server.git and should be moved somewhere else.
   [[!tails_ticket 15086]]
+
+Manually fix issues
+-------------------
+
+We have our weblate codebase at
+
+    /usr/local/share/weblate
+
+If commands have to be run, they should be run as user weblate (sudo -u weblate $COMMAND).
+
+However, this VM is supposed to run smoothly without human
+intervention, so be careful with what you do and please document
+modifications you make so that they can be fed back to puppet.git or other
+places if necessary.
+
+Reload translations from VCS and cleanup orphaned checks and suggestions
+------------------------------------------------------------------------
+
+The following commands mayby run manually if something went wrong:
+
+- Reload all translations from proper folder on disk (eg. in case you
+  did some updates in VCS repository) to components of weblate
+    `sudo -u weblate ./manage.py loadpo --all`
+
 
 Weblate installation and maintenance
 ====================================
