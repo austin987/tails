@@ -457,9 +457,34 @@ Weblate administration
   Make sure to enable languages only if they are part of our tier-1
   list or discuss the matter on the l10n-mailing list.
 
+
 - Sysadmin: This documentation currently still lives in
   translate-server.git and should be moved somewhere else.
   [[!tails_ticket 15086]]
+
+Manually fix issues
+-------------------
+
+We have our weblate codebase at
+
+    /usr/local/share/weblate
+
+If commands have to be run, they should be run as user weblate (sudo -u weblate $COMMAND).
+
+However, this VM is supposed to run smoothly without human
+intervention, so be careful with what you do and please document
+modifications you make so that they can be fed back to puppet.git or other
+places if necessary.
+
+Reload translations from VCS and cleanup orphaned checks and suggestions
+------------------------------------------------------------------------
+
+The following commands mayby run manually if something went wrong:
+
+- Reload all translations from proper folder on disk (eg. in case you
+  did some updates in VCS repository) to components of weblate
+    `sudo -u weblate ./manage.py loadpo --all`
+
 
 Weblate installation and maintenance
 ====================================
