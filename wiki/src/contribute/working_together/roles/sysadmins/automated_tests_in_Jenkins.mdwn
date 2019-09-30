@@ -1,9 +1,47 @@
 [[!meta title="Automated ISO tests on Jenkins"]]
 
-# Force all scenarios to be tested
+[[!toc levels=1]]
 
-Branches whose name ends with the `+force-all-tests` suffix will run
-the full test suite, including scenarios tagged `@fragile@`.
+# Full test suite vs. scenarios tagged `@fragile`
+
+Jenkins generally only runs scenarios that are _not_ tagged `@fragile`
+in Gherkin. But it runs the full test suite, including scenarios that
+are tagged `@fragile`, if the images under test were built:
+
+ - from a branch whose name ends with the `+force-all-tests` suffix
+ - from a tag
+ - from the `devel` branch
+ - from the `testing` branch
+ - from the `feature/tor-nightly-master` branch
+
+Therefore, to ask Jenkins to run the full test suite on your topic
+branch, give it a name that ends `+force-all-tests`.
+
+# Trigger a test suite run without rebuilding images
+
+Every `build_Tails_ISO_*` job run triggers a test suite run
+(`test_Tails_ISO_*`), so most of the time, we don't need
+to manually trigger test suite runs.
+
+However, in some cases, all we want is to run the test suite multiple
+times on a given set of Tails images, that were already built. In such
+cases, it is useless and problematic to trigger a build job, merely to
+get the test suite running eventually:
+
+ - It's a waste of resources: it will keep isobuilders uselessly busy,
+   which makes the feedback loop longer for our other team-mates.
+ - It forces us to wait at least one extra hour before we get the
+   test suite feedback we want.
+
+Thankfully, there is a way to trigger a test suite run without
+having to rebuild images first. To do so, start a "build" of the
+corresponding `wrap_test_Tail_ISO_*` job. This will test the images
+from the last successful corresponding `build_Tail_ISO_*` job.
+
+<div class="caution">
+Do <strong>not</strong> directly start a <code>test_Tail_ISO_*</code> job:
+this is not supported. It would fail most of the time in confusing ways.
+</div>
 
 # Old ISO used in the test suite in Jenkins
 
