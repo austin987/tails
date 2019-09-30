@@ -199,11 +199,11 @@ In summary, our script applies all changes detected on the default
 language to the additional languages.
 
 The described mechanisms always `touch` files and change metadata, such
-as `mtime`. That's why Git would normally always create  a new commit for
+as their `mtime`. That's why Git would always create  a new commit for
 such a change, but often those commits don't change the content of
 files. In order to omit these empty unnecessary commits our script also
 detects when a `fast-forward` is possible (the master branch is updated
-to HEAD of either the canonical or the integration branch). If only
+to HEAD of either the canonical or the integration branch).  If only
 Weblate or only modifications on the canonical repository introduces new
 commits, a fast-forward can be done.
 
@@ -264,12 +264,13 @@ After having merged changes from the canonical Git repository into the
 integration Git repository, and integrated changes from Weblate there,
 we can assume that every PO file now is up-to-date (in the Integration
 and Canonical repository). Hence we can try to pull from the Canonical
-repository using a fast-forward only (`git pull --ff-only`). Canonical and the
-Weblate repositories can get new commits everytime, also while the cronjob is
-running. It can happen, that a new commit on one side (Cannonical or Weblate)
-makes it impossible to perform a fast-forward. If we can't fast-forward the git
-repository, the cronjob is run 5min later anyways again, Than step 1,3 and 4 of
-the cronjob fixes the reason why the fast-forward was not possible this time.
+repository using a fast-forward only (`git pull --ff-only`).  The
+canonical and Weblate repositories may see new commits anytime. This
+means: while our cronjob is running a new commit can be made. Then, a
+new commit on one side (canonical or Weblate), prevents a
+`fast-forward`. When this happens, the cronjob is run 5 minutes later
+anew, and then step 1, 3 and 4 of the cronjob aim at fixing the cause of
+why the fast-forward was not possible this time.
 
 If the fast-forward was successful, we need to update Weblate's components
 to reflect the modifications that happened on the side of Git, such as
