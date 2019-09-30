@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 REGION_SETTINGS_UI_FILE = "region_settings.ui"
 
 
-class RegionSetting(GreeterSetting):
+class LocalizationSettingUI(GreeterSetting):
     def __init__(self, localization_setting: "LocalizationSetting"):
         self._localization_setting = localization_setting
         super().__init__()
@@ -53,7 +53,7 @@ class RegionSetting(GreeterSetting):
         self.treeview.set_model(self.treestore_filtered)
 
     def apply(self):
-        self._localization_setting.set_value(self.selected_code)
+        self._localization_setting.set_value(self.selected_code, chosen_by_user=True)
 
     def cb_searchentry_activate(self, searchentry, user_data=None):
         """Selects the topmost item in the treeview when pressing Enter"""
@@ -82,9 +82,9 @@ class RegionSetting(GreeterSetting):
     def cb_value_changed(self, obj, param):
         logging.debug("refreshing {}".format(self._localization_setting.get_name()))
 
-        def treeview_select_line(model, path, iter, data):
-            if model.get_value(iter, 0) == data:
-                self.treeview.get_selection().select_iter(iter)
+        def treeview_select_line(model, path, iter_, data):
+            if model.get_value(iter_, 0) == data:
+                self.treeview.get_selection().select_iter(iter_)
                 self.treeview.scroll_to_cell(path, use_align=True,
                                              row_align=0.5)
                 return True
@@ -125,10 +125,10 @@ class RegionSetting(GreeterSetting):
         return False
 
 
-class TextSetting(RegionSetting):
+class LanguageSettingUI(LocalizationSettingUI):
     @property
     def id(self) -> str:
-        return "text"
+        return "language"
 
     @property
     def title(self) -> str:
@@ -143,7 +143,7 @@ class TextSetting(RegionSetting):
         return self._localization_setting.get_name()
 
 
-class KeyboardSetting(RegionSetting):
+class KeyboardSettingUI(LocalizationSettingUI):
     @property
     def id(self) -> str:
         return "keyboard"
@@ -161,7 +161,7 @@ class KeyboardSetting(RegionSetting):
         return self._localization_setting.get_name()
 
 
-class FormatsSetting(RegionSetting):
+class FormatsSettingUI(LocalizationSettingUI):
     @property
     def id(self) -> str:
         return "formats"

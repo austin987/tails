@@ -104,7 +104,7 @@ class AddSettingsDialog(Gtk.Dialog, TranslatableWindow):
         self.button_add.set_visible(True)
         setting.on_opened_in_dialog()
 
-    def run(self, id=None) -> int:
+    def run(self, id_=None) -> int:
         # Set the dialog attribute for the additional settings.
         # This is required in order to allow the interactions with the
         # setting's UI elements to change the dialog UI elements, for
@@ -112,8 +112,8 @@ class AddSettingsDialog(Gtk.Dialog, TranslatableWindow):
         for setting in self.settings.additional_settings:
             setting.dialog = self
 
-        if id:
-            row = self.settings[id].listboxrow
+        if id_:
+            row = self.settings[id_].listboxrow
             row.emit("activate")
         else:
             self.stack.set_visible_child_name('setting-type')

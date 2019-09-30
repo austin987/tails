@@ -25,41 +25,28 @@ gi.require_version('GObject', '2.0')
 from gi.repository import GObject
 
 if TYPE_CHECKING:
-    from tailsgreeter.settings.localization_settings import LocalisationSettings
+    from gi.repository import Gtk
 
 
-class LocalizationSetting(GObject.Object):
+class LocalizationSetting(GObject.Object, object):
 
-    value = GObject.property(type=str)
-    is_default = GObject.property(type=bool, default=True)
+    def __init__(self):
+        GObject.Object.__init__(self)
+        self.value = ""
+        self.value_changed_by_user = False
 
-    def __init__(self, settings_object: "LocalisationSettings"):
-        super().__init__()
-        self._settings = settings_object
-
-    def get_value(self):
+    def get_value(self) -> str:
         return self.value
 
-    # is_default will be used by subclasses to register default value
-    def set_value(self, value, is_default=False):
+    def set_value(self, value, chosen_by_user=False):
         self.value = value
-        if not is_default:
-            self.is_default = False
-        self._settings.apply_settings_to_upcoming_session()
+        self.value_changed_by_user = chosen_by_user
 
-    def get_name(self):
+    def get_name(self) -> str:
         raise NotImplementedError
 
-    def get_tree(self):
+    def get_tree(self) -> "Gtk.Treestore":
         raise NotImplementedError
-
-    def set_default(self):
-        raise NotImplementedError
-
-    def set_default_if_needed(self):
-        """Update default value if it was not user choosen"""
-        if self.is_default:
-            self.set_default()
 
 
 def ln_iso639_tri(ln_CC):
@@ -87,12 +74,7 @@ def languages_from_locales(locales):
     """Obtain a language code list from a locale code list
 
     example: [fr_FR, en_GB] -> [fr, en]"""
-    language_codes = []
-    for l in locales:
-        language_code = language_from_locale(l)
-        if language_code not in language_codes:
-            language_codes.append(language_code)
-    return language_codes
+    return list({language_from_locale(l) for l in locales})
 
 
 def country_from_locale(locale):
@@ -102,13 +84,8 @@ def country_from_locale(locale):
     return locale.split('_')[1]
 
 
-def countries_from_locales(locales):
+def countries_from_locales(locales) -> [str]:
     """Obtain a country code list from a locale code list
 
     example: [fr_FR, en_GB] -> [FR, GB]"""
-    country_codes = []
-    for l in locales:
-        country_code = country_from_locale(l)
-        if country_code not in country_codes:
-            country_codes.append(country_code)
-    return country_codes
+    return list({country_from_locale(l) for l in locales})

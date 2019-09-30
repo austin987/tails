@@ -27,19 +27,22 @@ LUSER = 'amnesia'
 data_path = '/usr/share/tails/greeter/'
 
 # File containing the language codes that are supported by the greeter
-language_codes_path = os.path.join(data_path, 'language_codes')
+locales_path = os.path.join(data_path, 'locales')
 
 # Locales path
-locales_path = '/usr/share/locale/'
+system_locale_dir = '/usr/share/locale/'
 
 # File where session locale settings are stored
 locale_output_path = '/var/lib/gdm3/tails.locale'
 
 # File where the session sudo password is stored
-rootpassword_output_path = '/var/lib/gdm3/tails.password'
+admin_password_output_path = '/var/lib/gdm3/tails.password'
 
 # World-readable file where Tails persistence status is stored
 persistence_state_file = '/var/lib/live/config/tails.persistence'
 
-# File where settings related to physical security are stored
-physical_security_settings = '/var/lib/gdm3/tails.physical_security'
+# File where the network setting is stored
+network_setting = '/var/lib/gdm3/tails.network'
+
+# File where the MAC address spoofing setting is stored
+macspoof_setting = '/var/lib/gdm3/tails.macspoof'

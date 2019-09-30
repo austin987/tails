@@ -1,7 +1,7 @@
 import gi
 
 from tailsgreeter.ui.setting import GreeterSetting
-from tailsgreeter.ui.region_settings import RegionSetting
+from tailsgreeter.ui.region_settings import LocalizationSettingUI
 from tailsgreeter.ui.additional_settings import AdditionalSetting
 
 gi.require_version('Gtk', '3.0')
@@ -16,12 +16,12 @@ class GreeterSettingsCollection(object):
             return
 
         self.region_settings = GreeterSettingsCollection(
-            *(s for s in self.settings.values() if isinstance(s, RegionSetting)),
-            no_subclassification = True,
+            *(s for s in self.settings.values() if isinstance(s, LocalizationSettingUI)),
+            no_subclassification=True,
         )
         self.additional_settings = GreeterSettingsCollection(
             *(s for s in self.settings.values() if isinstance(s, AdditionalSetting)),
-            no_subclassification = True,
+            no_subclassification=True,
         )
 
     def __getitem__(self, key) -> GreeterSetting:

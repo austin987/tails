@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright 2012-2016 Tails developers <tails@boum.org>
+# Copyright 2012-2019 Tails developers <tails@boum.org>
 # Copyright 2011 Max <govnototalitarizm@gmail.com>
 # Copyright 2011 Martin Owens
 #
@@ -22,13 +22,21 @@ GDM greeter for Tails project using gtk
 """
 
 import gettext
+import gi
 import locale
-import logging
 import logging.config
 import sys
-import traceback                                        # NOQA: F401
+import traceback
 
+from tailsgreeter.greeter import GreeterApplication
+import tailsgreeter.config
+import tailsgreeter.gdmclient
 
+gi.require_version('GLib', '2.0')
+gi.require_version("Gtk", "3.0")
+from gi.repository import GLib, Gtk
+
+# Logging
 logging.config.fileConfig('tails-logging.conf')
 # Set loglevel if debug is found in kernel command line
 with open('/proc/cmdline') as cmdline_fd:
@@ -46,132 +54,13 @@ def log_exc(etype, value, tb):
 sys.excepthook = log_exc
 
 
-import gi                                               # NOQA: F401
-gi.require_version('GLib', '2.0')
-from gi.repository import GLib                          # NOQA: F401
-from gi.repository import Gio                           # NOQA: F401
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk                           # NOQA: F401
-
-import tailsgreeter                                     # NOQA: F401
-import tailsgreeter.config                              # NOQA: F401
-import tailsgreeter.gdmclient                           # NOQA: F401
-
-from tailsgreeter.settings import localization
-from tailsgreeter.settings.localization_settings import LocalisationSettings
-from tailsgreeter.settings.persistence import PersistenceSettings
-from tailsgreeter.settings.physicalsecurity import PhysicalSecuritySettings
-from tailsgreeter.settings.rootaccess import RootAccessSettings
-from tailsgreeter.translatable_window import TranslatableWindow
-from tailsgreeter.ui.main_window import GreeterMainWindow          # NOQA: F401
-from tailsgreeter.ui.settings_collection import GreeterSettingsCollection
-from tailsgreeter.ui.region_settings import TextSetting, KeyboardSetting, FormatsSetting
-from tailsgreeter.ui.additional_settings import AdminSetting, MACSpoofSetting, NetworkSetting
-
-gettext.install(tailsgreeter.__appname__, tailsgreeter.config.locales_path)
-locale.bindtextdomain(tailsgreeter.__appname__,
-                      tailsgreeter.config.locales_path)
+gettext.install(tailsgreeter.__appname__, tailsgreeter.config.system_locale_dir)
+locale.bindtextdomain(tailsgreeter.__appname__, tailsgreeter.config.system_locale_dir)
 _ = gettext.gettext
-
-
-class GreeterApplication():
-    """Tails greeter main controller
-
-    This class is the greeter dbus service"""
-
-    def __init__(self):
-        self.language = 'en_US.UTF-8'
-        self.session = None
-        self.forced = False
-        self.postponed = False
-        self.postponed_text = None
-        self.ready = False
-        self.translated = False
-
-        self._sessionmanager = Gio.DBusProxy.new_for_bus_sync(
-                Gio.BusType.SESSION,
-                Gio.DBusProxyFlags.NONE,
-                None,
-                "org.gnome.SessionManager",
-                "/org/gnome/SessionManager",
-                "org.gnome.SessionManager")
-
-        # Load models
-        self.gdmclient = tailsgreeter.gdmclient.GdmClient(
-            session_opened_cb=self.close_app
-        )
-
-        persistence = PersistenceSettings()
-        self.localisationsettings = LocalisationSettings(
-            usermanager_loaded_cb=self.usermanager_loaded,
-            locale_selected_cb=self.locale_selected
-        )
-        rootaccess = RootAccessSettings()
-        physical_security = PhysicalSecuritySettings()
-
-        # Initialize the settings
-        settings = GreeterSettingsCollection(
-            TextSetting(self.localisationsettings.language),
-            KeyboardSetting(self.localisationsettings.keyboard),
-            FormatsSetting(self.localisationsettings.formats),
-            AdminSetting(rootaccess),
-            MACSpoofSetting(physical_security),
-            NetworkSetting(physical_security),
-        )
-
-        # Initialize main window
-        self.mainwindow = GreeterMainWindow(self, persistence, settings)
-
-        # Inhibit the session being marked as idle
-        self.inhibit_idle()
-
-    def translate_to(self, lang):
-        """Translate all windows to target language"""
-        TranslatableWindow.translate_all(lang)
-
-    def login(self):
-        """Login GDM to the server"""
-        logging.debug("login called")
-        self.mainwindow.hide()
-        self.gdmclient.do_login()
-
-    def usermanager_loaded(self):
-        """UserManager is ready"""
-        logging.debug("Entering usermanager_loaded")
-        self.ready = True
-        self.localisationsettings.language.set_value('en_US')
-        logging.info("tails-greeter is ready.")
-        self.mainwindow.show()
-
-    def locale_selected(self, locale_code):
-        """Translate to the given locale"""
-        self.translate_to(locale_code)
-        self.mainwindow.current_language = localization.language_from_locale(locale_code)
-
-    def close_app(self):
-        """We're done, quit gtk app"""
-        logging.info("Finished.")
-        Gtk.main_quit()
-
-    def shutdown(self):
-        """Shuts down the computer using GNOME Session Manager"""
-        logging.info("Shutdown")
-        self._sessionmanager.Shutdown()
-
-    def inhibit_idle(self):
-        cookie = self._sessionmanager.Inhibit(
-                "(susu)",
-                "org.boum.tails.Greeter",
-                0,
-                "Greeter session shouldn't idle",
-                8)  # Inhibit the session being marked as idle
-        logging.debug("inhibitor cookie=%i", cookie)
-
 
 if __name__ == "__main__":
     GLib.set_prgname(tailsgreeter.APPLICATION_TITLE)
-    GLib.set_application_name(
-            _(tailsgreeter.APPLICATION_TITLE))          # NOQA: F821
+    GLib.set_application_name(_(tailsgreeter.APPLICATION_TITLE))
     Gtk.init(sys.argv)
     Gtk.Window.set_default_icon_name(tailsgreeter.APPLICATION_ICON_NAME)
 

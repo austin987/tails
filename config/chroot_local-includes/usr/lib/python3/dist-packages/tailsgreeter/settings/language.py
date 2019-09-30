@@ -20,6 +20,7 @@
 import gi
 import logging
 import locale
+from typing import Callable
 
 from tailsgreeter.settings.localization import LocalizationSetting, \
     language_from_locale, languages_from_locales, country_from_locale
@@ -33,16 +34,19 @@ from gi.repository import GLib, GObject, GnomeDesktop, Gtk
 
 class LanguageSetting(LocalizationSetting):
 
-    def __init__(self, settings_object):
-        super().__init__(settings_object)
-        super().set_value('en_US', is_default=True)
+    def __init__(self, locales: [str], language_changed_cb: Callable):
+        super().__init__()
+        self.value = 'en_US'
+        self.locales = locales
+        self.language_changed_cb = language_changed_cb
+        self._user_account = None
+        self.locales_per_language = self._make_language_to_locale_dict(locales)
 
-    def get_tree(self):
+    def get_tree(self) -> Gtk.TreeStore:
         treestore = Gtk.TreeStore(GObject.TYPE_STRING,  # id
                                   GObject.TYPE_STRING)  # name
 
-        lang_codes = languages_from_locales(
-                self._settings.system_locales_list)
+        lang_codes = languages_from_locales(self.locales)
         lang_codes.sort(key=lambda x: self._language_name(x).lower())
         for lang_code in lang_codes:
             language_name = self._language_name(lang_code)
@@ -50,58 +54,45 @@ class LanguageSetting(LocalizationSetting):
                 # Don't display languages without a name
                 continue
             treeiter_language = treestore.append(parent=None)
-            treestore.set(treeiter_language,
-                          0, self.get_default_locale(lang_code))
+            treestore.set(treeiter_language, 0, self.get_default_locale(lang_code))
             treestore.set(treeiter_language, 1, language_name)
-            locale_codes = sorted(
-                    self.get_default_locales(lang_code),
-                    key=lambda x: self._locale_name(x).lower())
-            if len(locale_codes) > 1:
-                for locale_code in locale_codes:
-                    treeiter_locale = treestore.append(
-                            parent=treeiter_language)
+            locales = sorted(self.locales_per_language[lang_code],
+                             key=lambda x: self._locale_name(x).lower())
+            if len(locales) > 1:
+                for locale_code in locales:
+                    treeiter_locale = treestore.append(parent=treeiter_language)
                     treestore.set(treeiter_locale, 0, locale_code)
-                    treestore.set(treeiter_locale, 1,
-                                  self._locale_name(locale_code))
+                    treestore.set(treeiter_locale, 1, self._locale_name(locale_code))
         return treestore
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._locale_name(self.get_value())
 
-    def get_default_locales(self, lang_code):
-        """Return available locales for given language
-
-        """
-        if lang_code in self._settings._system_languages_dict:
-            return self._settings._system_languages_dict[lang_code]
-
-    def get_default_locale(self, lang_code=None):
-        """Return default locale for given language
+    def get_default_locale(self, lang_code: str) -> str:
+        """Try to find a default locale for the given language
 
         Returns the 1st locale among:
             - the locale whose country name matches language name
             - the 1st locale for the language
             - en_US
         """
-        default_locales = self.get_default_locales(lang_code)
-        if default_locales:
-            for locale_code in default_locales:
-                if (country_from_locale(locale_code).lower() ==
-                        language_from_locale(locale_code)):
-                    return locale_code
-            return default_locales[0]
-        else:
+        locales = self.locales_per_language[lang_code]
+        if not locales:
             return 'en_US'
 
-    def set_value(self, locale, is_default=False):
-        super().set_value(locale, is_default)
-        self.__apply_locale()
-        self._settings.formats.set_default_if_needed()  # XXX: notify
-        self._settings.keyboard.set_default_if_needed()   # XXX: notify
-        if self._settings._locale_selected_cb:
-            self._settings._locale_selected_cb(locale)
+        for locale_code in locales:
+            if (country_from_locale(locale_code).lower() ==
+                    language_from_locale(locale_code)):
+                return locale_code
 
-    def _language_name(self, lang_code):
+        return locales[0]
+
+    def set_value(self, locale_code: str, chosen_by_user=False):
+        super().set_value(locale_code, chosen_by_user)
+        self._apply_language(locale_code)
+        self.language_changed_cb(locale_code)
+
+    def _language_name(self, lang_code: str) -> str:
         default_locale = 'C'
         local_locale = self.get_default_locale(lang_code)
         try:
@@ -117,7 +108,8 @@ class LanguageSetting(LocalizationSetting):
             return "{native} ({localized})".format(
                     native=native_name, localized=localized_name)
 
-    def _locale_name(self, locale_code):
+    @staticmethod
+    def _locale_name(locale_code: str) -> str:
         lang_code = language_from_locale(locale_code)
         country_code = country_from_locale(locale_code)
         language_name_locale = GnomeDesktop.get_language_from_code(lang_code)
@@ -142,12 +134,28 @@ class LanguageSetting(LocalizationSetting):
         except AttributeError:
             return locale_code
 
-    def __apply_locale(self):
-        locale_code = locale.normalize(
-            self.get_value() + '.' + locale.getpreferredencoding())
-        logging.debug("Setting session language to %s", locale_code)
-        if self._settings._act_user:
-            GLib.idle_add(
-                lambda: self._settings._act_user.set_language(locale_code))
+    def _apply_language(self, language_code: str):
+        normalized_code = locale.normalize(language_code + '.' + locale.getpreferredencoding())
+        logging.debug("Setting session language to %s", normalized_code)
+        if self._user_account:
+            # For some reason, this produces the following warning, but
+            # the language is actually applied.
+            #     AccountsService-WARNING **: 19:29:39.181: SetLanguage for language de_DE.UTF-8 failed:
+            #     GDBus.Error:org.freedesktop.Accounts.Error.PermissionDenied: Not authorized
+            GLib.idle_add(lambda: self._user_account.set_language(normalized_code))
         else:
             logging.warning("AccountsManager not ready")
+
+    @staticmethod
+    def _make_language_to_locale_dict(locale_codes: [str]) -> {str: str}:
+        """assemble dictionary of language codes to corresponding locales list
+
+        example {en: [en_US, en_GB], ...}"""
+        languages_dict = {}
+        for locale_code in locale_codes:
+            lang_code = language_from_locale(locale_code)
+            if lang_code not in languages_dict:
+                languages_dict[lang_code] = []
+            if locale_code not in languages_dict[lang_code]:
+                languages_dict[lang_code].append(locale_code)
+        return languages_dict

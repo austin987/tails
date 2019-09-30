@@ -30,7 +30,7 @@ from tailsgreeter.ui import _
 from tailsgreeter.ui.add_settings_dialog import AddSettingsDialog
 from tailsgreeter.ui.additional_settings import AdditionalSetting
 from tailsgreeter.ui.help_window import GreeterHelpWindow
-from tailsgreeter.ui.region_settings import RegionSetting, TextSetting
+from tailsgreeter.ui.region_settings import LocalizationSettingUI, LanguageSettingUI
 from tailsgreeter import TRANSLATION_DOMAIN
 from tailsgreeter.ui.persistent_storage import PersistentStorage
 
@@ -50,7 +50,7 @@ ICON_DIR = 'icons/'
 PREFERRED_WIDTH = 620
 PREFERRED_HEIGHT = 470
 
-locale.bindtextdomain(TRANSLATION_DOMAIN, tailsgreeter.config.locales_path)
+locale.bindtextdomain(TRANSLATION_DOMAIN, tailsgreeter.config.system_locale_dir)
 
 
 class GreeterMainWindow(Gtk.Window, TranslatableWindow):
@@ -213,12 +213,12 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.greeter.login()
         return False
 
-    def add_setting(self, id=None):
-        response = self.dialog_add_setting.run(id)
+    def add_setting(self, id_=None):
+        response = self.dialog_add_setting.run(id_)
         if response == Gtk.ResponseType.YES:
             row = self.listbox_add_setting.get_selected_row()
-            id = self.settings.id_from_row(row)
-            setting = self.settings.additional_settings[id]
+            id_ = self.settings.id_from_row(row)
+            setting = self.settings.additional_settings[id_]
 
             # The setting used to be applied by the dialog itself, but there
             # we don't know the response type in all cases. For example, we
@@ -245,11 +245,11 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 self.dialog_add_setting.stack.remove(old_details)
             self.dialog_add_setting.set_visible(False)
 
-    def edit_setting(self, id):
-        if self.settings[id].has_popover():
-            self.settings[id].listboxrow.emit("activate")
+    def edit_setting(self, id_):
+        if self.settings[id_].has_popover():
+            self.settings[id_].listboxrow.emit("activate")
         else:
-            self.add_setting(id)
+            self.add_setting(id_)
 
     def show(self):
         super().show()
@@ -366,7 +366,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             setting.popover.open(self.on_region_setting_popover_closed, setting)
         return False
 
-    def on_region_setting_popover_closed(self, popover: Popover, setting: RegionSetting):
+    def on_region_setting_popover_closed(self, popover: Popover, setting: LocalizationSettingUI):
         # Unselect the listbox row
         self.listbox_region.unselect_all()
 
@@ -378,7 +378,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         # If the language is changed, the values of the other region settings
         # are changed as well, so we have to update the value labels for all
         # region settings in that case.
-        if isinstance(setting, TextSetting):
+        if isinstance(setting, LanguageSettingUI):
             for s in self.settings.region_settings:
                 s.update_value_label()
         else:

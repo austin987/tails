@@ -13,8 +13,9 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gdk, Gtk
 
 if TYPE_CHECKING:
-    from tailsgreeter.settings.rootaccess import RootAccessSettings
-    from tailsgreeter.settings.physicalsecurity import PhysicalSecuritySettings
+    from tailsgreeter.settings.admin import AdminSetting
+    from tailsgreeter.settings.macspoof import MacSpoofSetting
+    from tailsgreeter.settings.network import NetworkSetting
 
 ADDITIONAL_SETTINGS_UI_FILE = "additional_settings.ui"
 
@@ -45,7 +46,7 @@ class AdditionalSetting(GreeterSetting):
         pass
 
 
-class AdminSetting(AdditionalSetting):
+class AdminSettingUI(AdditionalSetting):
     @property
     def id(self) -> str:
         return "admin"
@@ -78,8 +79,8 @@ class AdminSetting(AdditionalSetting):
         self.dialog.button_add.set_sensitive(self.passwords_match())
         self.password_entry.grab_focus()
 
-    def __init__(self, root_access_setting: "RootAccessSettings"):
-        self._root_access_setting = root_access_setting
+    def __init__(self, admin_setting: "AdminSetting"):
+        self._admin_setting = admin_setting
         self.password = None
         super().__init__()
         self.accel_key = Gdk.KEY_a
@@ -116,7 +117,7 @@ class AdminSetting(AdditionalSetting):
     def apply(self):
         # This writes the password to a file from which it will be set
         # as the amnesia password when the greeter is closed.
-        self._root_access_setting.password = self.password
+        self._admin_setting.password = self.password
 
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
@@ -145,7 +146,7 @@ class AdminSetting(AdditionalSetting):
             self.popover.close(Gtk.ResponseType.YES)
 
 
-class MACSpoofSetting(AdditionalSetting):
+class MACSpoofSettingUI(AdditionalSetting):
     @property
     def id(self) -> str:
         return "macspoof"
@@ -162,8 +163,8 @@ class MACSpoofSetting(AdditionalSetting):
     def value_for_display(self) -> str:
         return get_on_off_string(self.spoofing_enabled, default=True)
 
-    def __init__(self, physical_security_settings: "PhysicalSecuritySettings"):
-        self._physical_security_settings = physical_security_settings
+    def __init__(self, macspoof_setting: "MacSpoofSetting"):
+        self._macspoof_setting = macspoof_setting
         self.spoofing_enabled = True
         super().__init__()
         self.accel_key = Gdk.KEY_m
@@ -177,7 +178,7 @@ class MACSpoofSetting(AdditionalSetting):
         self.listboxrow_macspoof_off = self.builder.get_object('listboxrow_macspoof_off')
 
     def apply(self):
-        self._physical_security_settings.macspoof = self.spoofing_enabled
+        self._macspoof_setting.value = self.spoofing_enabled
 
     def cb_listbox_macspoof_row_activated(self, listbox, row, user_data=None):
         self.spoofing_enabled = row == self.listboxrow_macspoof_on
@@ -195,7 +196,7 @@ class MACSpoofSetting(AdditionalSetting):
         return False
 
 
-class NetworkSetting(AdditionalSetting):
+class NetworkSettingUI(AdditionalSetting):
     @property
     def id(self) -> str:
         return "network"
@@ -210,16 +211,16 @@ class NetworkSetting(AdditionalSetting):
 
     @property
     def value_for_display(self) -> str:
-        if self.netconf == self._physical_security_settings.NETCONF_DIRECT:
+        if self.value == self._network_setting.NETCONF_DIRECT:
             return _("Direct (default)")
-        if self.netconf == self._physical_security_settings.NETCONF_OBSTACLE:
+        if self.value == self._network_setting.NETCONF_OBSTACLE:
             return _("Bridge & Proxy")
-        if self.netconf == self._physical_security_settings.NETCONF_DISABLED:
+        if self.value == self._network_setting.NETCONF_DISABLED:
             return _("Offline")
 
-    def __init__(self, physical_security_settings: "PhysicalSecuritySettings"):
-        self._physical_security_settings = physical_security_settings
-        self.netconf = self._physical_security_settings.NETCONF_DIRECT
+    def __init__(self, network_setting: "NetworkSetting"):
+        self._network_setting = network_setting
+        self.value = self._network_setting.NETCONF_DIRECT
         super().__init__()
         self.accel_key = Gdk.KEY_n
         self.icon_network_clear_chosen = self.builder.get_object('image_network_clear')
@@ -233,8 +234,8 @@ class NetworkSetting(AdditionalSetting):
         self.listboxrow_network_off = self.builder.get_object('listboxrow_network_off')
 
     def apply(self):
-        self._physical_security_settings.netconf = self.netconf
-        is_bridge = self.netconf == self._physical_security_settings.NETCONF_OBSTACLE
+        self._network_setting.value = self.value
+        is_bridge = self.value == self._network_setting.NETCONF_OBSTACLE
         self.main_window.set_bridge_infobar_visibility(is_bridge)
 
     def cb_listbox_network_button_press(self, widget, event, user_data=None):
@@ -249,13 +250,13 @@ class NetworkSetting(AdditionalSetting):
         self.icon_network_off_chosen.set_visible(False)
 
         if row == self.listboxrow_network_clear:
-            self.netconf = self._physical_security_settings.NETCONF_DIRECT
+            self.value = self._network_setting.NETCONF_DIRECT
             self.icon_network_clear_chosen.set_visible(True)
         elif row == self.listboxrow_network_specific:
-            self.netconf = self._physical_security_settings.NETCONF_OBSTACLE
+            self.value = self._network_setting.NETCONF_OBSTACLE
             self.icon_network_specific_chosen.set_visible(True)
         elif row == self.listboxrow_network_off:
-            self.netconf = self._physical_security_settings.NETCONF_DISABLED
+            self.value = self._network_setting.NETCONF_DISABLED
             self.icon_network_off_chosen.set_visible(True)
 
         if self.has_popover() and self.popover.is_open():

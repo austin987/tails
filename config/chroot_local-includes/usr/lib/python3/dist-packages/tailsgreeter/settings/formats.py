@@ -1,65 +1,50 @@
 import logging
-from typing import TYPE_CHECKING
 
 import gi
 
-from tailsgreeter.settings.localization import LocalizationSetting, language_from_locale, country_from_locale, \
-    countries_from_locales
+from tailsgreeter.settings.localization import LocalizationSetting, language_from_locale, country_from_locale
 
 gi.require_version('GObject', '2.0')
 gi.require_version('GnomeDesktop', '3.0')
 gi.require_version('Gtk', '3.0')
 from gi.repository import GObject, GnomeDesktop, Gtk
 
-if TYPE_CHECKING:
-    from tailsgreeter.settings.localization_settings import LocalisationSettings
-
 
 class FormatsSetting(LocalizationSetting):
-    def __init__(self, settings_object: "LocalisationSettings"):
-        super().__init__(settings_object)
-        super().set_value('en_US', is_default=True)
+    def __init__(self, language_codes: [str]):
+        super().__init__()
+        self.value = 'en_US'
+        self.locales_per_country = self._make_locales_per_country_dict(language_codes)
 
-    def get_tree(self):
+    def get_tree(self) -> Gtk.TreeStore:
         treestore = Gtk.TreeStore(GObject.TYPE_STRING,  # id
                                   GObject.TYPE_STRING)  # name
 
-        format_codes = countries_from_locales(
-            self._settings.system_locales_list)
-        format_codes.sort(key=lambda x: self._country_name(x).lower())
-        logging.debug("format_codes=%s", format_codes)
-        for format_code in format_codes:
-            format_name = self._country_name(format_code)
-            if not format_name:
+        country_codes = list(self.locales_per_country.keys())
+        country_codes.sort(key=lambda x: self._country_name(x).lower())
+        logging.debug("format_codes=%s", country_codes)
+        for country_code in country_codes:
+            country_name = self._country_name(country_code)
+            if not country_name:
                 # Don't display languages without a name
                 continue
+
             treeiter_format = treestore.append(parent=None)
-            treestore.set(treeiter_format,
-                          0, self.get_default_locale(format_code))
-            treestore.set(treeiter_format, 1, format_name)
-            locale_codes = sorted(
-                    self.get_default_locales(format_code),
-                    key=lambda x: self._locale_name(x).lower())
-            if len(locale_codes) > 1:
-                for locale_code in locale_codes:
-                    treeiter_locale = treestore.append(
-                            parent=treeiter_format)
-                    treestore.set(treeiter_locale, 0, locale_code)
-                    treestore.set(treeiter_locale, 1,
-                                  self._locale_name(locale_code))
+            treestore.set(treeiter_format, 0, self.get_default_locale(country_code))
+            treestore.set(treeiter_format, 1, country_name)
+            locales = sorted(self.locales_per_country[country_code],
+                             key=lambda x: self._locale_name(x).lower())
+            if len(locales) > 1:
+                for locale in locales:
+                    treeiter_locale = treestore.append(parent=treeiter_format)
+                    treestore.set(treeiter_locale, 0, locale)
+                    treestore.set(treeiter_locale, 1, self._locale_name(locale))
         return treestore
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._locale_name(self.get_value())
 
-    def get_default_locales(self, country_code):
-        """Return available locales for given country
-
-        """
-        if country_code in self._settings.system_formats_dict:
-            return self._settings.system_formats_dict[country_code]
-
-    def get_default_locale(self, country_code=None):
+    def get_default_locale(self, country_code=None) -> str:
         """Return default locale for given country
 
         Returns the 1st locale among:
@@ -67,17 +52,18 @@ class FormatsSetting(LocalizationSetting):
             - the 1st locale for the language
             - en_US
         """
-        default_locales = self.get_default_locales(country_code)
-        if default_locales:
-            for locale_code in default_locales:
-                if (country_from_locale(locale_code).lower() ==
-                        language_from_locale(locale_code)):
-                    return locale_code
-            return default_locales[0]
-        else:
+        locales = self.locales_per_country[country_code]
+        if not locales:
             return 'en_US'
 
-    def _country_name(self, country_code):
+        # Get the default locale for the country
+        for locale_code in locales:
+            if country_from_locale(locale_code).lower() == language_from_locale(locale_code):
+                return locale_code
+
+        return locales[0]
+
+    def _country_name(self, country_code) -> str:
         default_locale = 'C'
         local_locale = self.get_default_locale(country_code)
         native_name = GnomeDesktop.get_country_from_code(
@@ -93,7 +79,7 @@ class FormatsSetting(LocalizationSetting):
                 native=native_name, localized=localized_name)
 
     @staticmethod
-    def _locale_name(locale_code):
+    def _locale_name(locale_code) -> str:
         lang_code = language_from_locale(locale_code)
         country_code = country_from_locale(locale_code)
         language_name_locale = GnomeDesktop.get_language_from_code(lang_code)
@@ -118,11 +104,25 @@ class FormatsSetting(LocalizationSetting):
         except AttributeError:
             return locale_code
 
-    def set_default(self):
-        """Set default format for current language
+    @staticmethod
+    def _make_locales_per_country_dict(language_codes: [str]) -> {str: [str]}:
+        """assemble dictionary of country codes to corresponding locales list
 
-        Select the same locale for formats that the language
-        """
-        default_format = self._settings.language.get_value()
-        logging.debug("setting default formats to %s", default_format)
-        self.set_value(default_format, is_default=True)
+        example {FR: [fr_FR, en_FR], ...}"""
+        res = {}
+        for language_code in language_codes:
+            country_code = country_from_locale(language_code)
+            if country_code not in res:
+                res[country_code] = []
+            if language_code not in res[country_code]:
+                res[country_code].append(language_code)
+        return res
+
+    def on_language_changed(self, language_code: str):
+        """Set the formats according to the new language"""
+        # Don't overwrite user chosen values
+        if self.value_changed_by_user:
+            return
+
+        logging.debug("setting formats to %s", language_code)
+        self.set_value(language_code)
