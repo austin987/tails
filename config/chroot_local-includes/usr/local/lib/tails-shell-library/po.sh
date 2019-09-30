@@ -11,10 +11,6 @@ count_msgids () {
     cat | grep -E '^msgid\s+' | wc -l
 }
 
-count_original_words () {
-    cat | grep ^msgid | sed 's/^msgid "//g;s/"$//g' | wc -w
-}
-
 diff_without_pot_creation_date () {
     diff --ignore-matching-lines '^"POT-Creation-Date:' "${@}"
 }
