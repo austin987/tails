@@ -179,23 +179,33 @@ may loose a translation done on Weblate.
 
 Until here, only PO files of languages that are activated on our
 production website will be merged, as the production website, i.e. the
-canonical Git repository does not regenerate those of non activated
+canonical Git repository does not regenerate PO files of non activated
 languages.
 
-Hence, after the activated language PO files are merged, the script
-checks if PO files of additional, non-production activated languages
-need updating. We do this by generating POT files out of a PO file that
-we've previously defined as a default language.  If the actual POT file,
-generated on the production server differs from the POT file we've just
-created, then every additional language PO file needs to be updated.
+Because of this limitation of ikiwiki, once the activated language PO
+files are merged, the script checks if PO files of additional,
+non-production activated languages need updating. We do this by
+generating POT files out of a PO file that we've previously defined as a
+default language. We do this for all componenets. If the actual POT
+file, generated on the production server differs from the POT file we've
+just created, then every additional language PO file needs to be
+updated.
 
 On top of this, if the PO file of the default language (that is, its
 markdown file) have been renamed, moved or deleted, than the PO files of
 additional languages need to follow this step.
 
-Our script actually applies all changes from the default language to the additional languages and afterwards we can look if we actually introduce any change in the PO files.
+In summary, our script applies all changes detected on the default
+language to the additional languages.
 
-The described mechanisms always touching files and changes mtime etc, that's why git would always create a new commit. Often those commits don't change anything on the files. To get rid of those empty not needed commits the script detects, when a fast-forward is possible (the master  branch is updated to HEAD of canonical or integration branch). This is possible, if only Weblate introduce new commits or only the canonical.
+The described mechanisms always `touch` files and change metadata, such
+as `mtime`. That's why Git would normally always create  a new commit for
+such a change, but often those commits don't change the content of
+files. In order to omit these empty unnecessary commits our script also
+detects when a `fast-forward` is possible (the master branch is updated
+to HEAD of either the canonical or the integration branch). If only
+Weblate or only modifications on the canonical repository introduces new
+commits, a fast-forward can be done.
 
 ### Step 2: Trigger commits
 
