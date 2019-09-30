@@ -134,11 +134,7 @@ script which is executed on the VM hosting Weblate as [a cronjob every
   1. Canonical → Integration:
      Update the integration repository with changes made on the
      canonical repository (called "main" in the script).
-  2. Trigger Weblate to commit pending approved translations ([`manage.py
-     commit_pending`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#commit-pending)).
-     As Weblate tries to reduce commits (called lazy commits), we need to ask
-     Weblate explicitly to commit every component, that wasn't touched for 24h and
-     has outstanding changes.
+  2. Make Weblate commit pending approved translations locally
   3. Weblate → Integration:
      Integrate committed changes from Weblate into the Integration repository
   4. Integration → Canonical:
@@ -201,6 +197,16 @@ additional languages need to follow this step.
 Our script actually applies all changes from the default language to the additional languages and afterwards we can look if we actually introduce any change in the PO files.
 
 The described mechanisms always touching files and changes mtime etc, that's why git would always create a new commit. Often those commits don't change anything on the files. To get rid of those empty not needed commits the script detects, when a fast-forward is possible (the master  branch is updated to HEAD of canonical or integration branch). This is possible, if only Weblate introduce new commits or only the canonical.
+
+### Step 2: Trigger commits
+
+Because Weblate tries to reduce the number of commits (aka. "lazy
+commits"), we need to ask Weblate explicitly to commit every component
+which has outstanding changes since more than 24 hours.
+
+This is done by triggering Weblate to commit pending approved
+translations using the internal command ([`manage.py
+commit_pending`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#commit-pending)).
 
 ### Step 3: Weblate → Integration
 
