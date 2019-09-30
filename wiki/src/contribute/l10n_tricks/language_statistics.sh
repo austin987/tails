@@ -10,7 +10,7 @@ LANGUAGES=${@:-de es fa fr it pt}
 
 GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 
-# Import count_msgids()
+# Import count_msgids() and count_translated_strings()
 . "${GIT_TOPLEVEL_DIR}/config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh"
 
 statistics () {
@@ -18,10 +18,7 @@ statistics () {
     msgcat --files-from=$PO_FILES --output=$PO_MESSAGES
     TOTAL=$(msgattrib --no-obsolete $PO_MESSAGES | count_msgids)
     FUZZY=$(msgattrib --only-fuzzy --no-obsolete $PO_MESSAGES | count_msgids)
-    TRANSLATED=$(
-        msgattrib --translated --no-fuzzy --no-obsolete $PO_MESSAGES \
-            | count_msgids
-    )
+    TRANSLATED=$(cat $PO_MESSAGES | count_translated_strings)
     echo "  - $lang: $(($TRANSLATED*100/$TOTAL))% ($TRANSLATED) strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy"
     rm -f $PO_FILES $PO_MESSAGES
 }
