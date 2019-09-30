@@ -136,13 +136,12 @@ script which is executed on the VM hosting Weblate as [a cronjob every
      canonical repository (called "main" in the script).
   2. Make Weblate commit pending approved translations locally
   3. Weblate → Integration:
-     Integrate committed changes from Weblate into the Integration repository
+     Integrate committed changes from Weblate into the integration repository
   4. Integration → Canonical:
      Push up-to-date integration repository to canonical repository.
   5. Canonical → Weblate:
      Pull from canonical and update the Weblate components.
-  6. Run [`manage.py update_index`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#update-index).
-     Updates index for fulltext search, it is recommended by Weblate to run it every 5 mins.
+  6. Update Weblate's index for fulltext search
 
 Whenever a contributor modifies a markdown (`*.mdwn`) file, and pushes
 to master, the corresponding POT and PO files are updated, that is: the
@@ -275,6 +274,13 @@ for Weblate component changes. This remote name is set in the
 [weblate.pp](https://git-tails.immerda.ch/puppet-tails/tree/manifests/weblate.pp)
 and used in the cronjob `update_weblate_components.py
 --remoteBranch=cron/master [...]`.
+
+### Step 6
+
+Run [`manage.py
+update_index`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#update-index).
+This updates Weblate's index for fulltext search. It is recommended by
+Weblate to run it every 5 mins.
 
 <a id="staging-website"></a>
 
