@@ -74,19 +74,17 @@ if [ "$LANG_DOT_PO_LAYOUT" = yes ] ; then
 	find "$TOR_TRANSLATION_DIR" -name '*.po' | while read po_file; do
 		lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
 
-		if ! lang_is_excluded "$lang"; then
-			echo "Importing translation for $lang..."
-			cp "$po_file" "$TAILS_PO_DIR"
-		fi
+		! lang_is_excluded "$lang" || continue
+		echo "Importing translation for $lang..."
+		cp "$po_file" "$TAILS_PO_DIR"
 	done
 else
 	find "$TOR_TRANSLATION_DIR" -name '*.pot' | while read po_file; do
 		lang=$(basename $(dirname "$po_file" | tr - _ | sed 's/\.pot$//'))
 
-		if ! lang_is_excluded "$lang"; then
-			echo "Importing translation for $lang..."
-			cp "$po_file" "$TAILS_PO_DIR/${lang}.po"
-		fi
+		! lang_is_excluded "$lang" || continue
+		echo "Importing translation for $lang..."
+		cp "$po_file" "$TAILS_PO_DIR/${lang}.po"
 	done
 fi
 
