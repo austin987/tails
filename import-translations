@@ -68,6 +68,10 @@ fi
 eval "$GIT_IN_TOR_TRANSLATION_DIR checkout \"$BRANCH\""
 eval "$GIT_IN_TOR_TRANSLATION_DIR reset --hard \"origin/$BRANCH\""
 
+# Ensure we only keep PO files that are still present in the Transifex
+# branch we import from.
+find "$TAILS_PO_DIR" -name '*.po' -delete
+
 # For each completely translated language, merge it,
 # unless it is translated outside Transifex
 if [ "$LANG_DOT_PO_LAYOUT" = yes ] ; then
@@ -75,6 +79,10 @@ if [ "$LANG_DOT_PO_LAYOUT" = yes ] ; then
 		lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
 
 		! lang_is_excluded "$lang" || continue
+		if [ "$(cat "$po_file" | count_translated_strings)" -lt 1 ]; then
+			echo "Skipping $lang, that has no translated strings."
+			continue
+		fi
 		echo "Importing translation for $lang..."
 		cp "$po_file" "$TAILS_PO_DIR"
 	done
@@ -83,6 +91,10 @@ else
 		lang=$(basename $(dirname "$po_file" | tr - _ | sed 's/\.pot$//'))
 
 		! lang_is_excluded "$lang" || continue
+		if [ "$(cat "$po_file" | count_translated_strings)" -lt 1 ]; then
+			echo "Skipping $lang, that has no translated strings."
+			continue
+		fi
 		echo "Importing translation for $lang..."
 		cp "$po_file" "$TAILS_PO_DIR/${lang}.po"
 	done
