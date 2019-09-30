@@ -8,13 +8,10 @@ set -o pipefail
 
 LANGUAGES=${@:-de es fa fr it pt}
 
-count_msgids () {
-    cat | grep -E '^msgid\s+' | wc -l
-}
+GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 
-count_original_words () {
-    cat | grep ^msgid | sed 's/^msgid "//g;s/"$//g' | wc -w
-}
+# Import count_msgids() and count_original_words()
+. "${GIT_TOPLEVEL_DIR}/config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh"
 
 statistics () {
     PO_MESSAGES="$(mktemp -t XXXXXX.$lang.po)"
@@ -38,7 +35,7 @@ statistics () {
 
 intltool_report () {
     rm -rf tmp/pot
-    ./refresh-translations --keep-tmp-pot
+    "${GIT_TOPLEVEL_DIR}/refresh-translations" --keep-tmp-pot
     rm -rf po.orig
     cp -a po po.orig
     (
