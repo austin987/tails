@@ -10,9 +10,8 @@ Git or the command line.
 This is the technical design documentation of our setup.
 
 We also provide a dedicated [[documentation for translators on how to use
-Weblate|contribute/how/translate/with_Weblate]] to contribute
-translations. (This link will work once [[!tails_ticket 11763]] is
-fixed.)
+Weblate|contribute/how/translate/with_translation_platform]] to contribute
+translations.
 
 Terms used in this document
 ===========================
@@ -134,19 +133,14 @@ script which is executed on the VM hosting Weblate as [a cronjob every
   1. Canonical → Integration:
      Update the integration repository with changes made on the
      canonical repository (called "main" in the script).
-  2. Trigger Weblate to commit pending approved translations ([`manage.py
-     commit_pending`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#commit-pending)).
-     As Weblate tries to reduce commits (called lazy commits), we need to ask
-     Weblate explicitly to commit every component, that wasn't touched for 24h and
-     has outstanding changes.
+  2. Make Weblate commit pending approved translations locally
   3. Weblate → Integration:
-     Integrate committed changes from Weblate into the Integration repository
+     Integrate committed changes from Weblate into the integration repository
   4. Integration → Canonical:
      Push up-to-date integration repository to canonical repository.
   5. Canonical → Weblate:
      Pull from canonical and update the Weblate components.
-  6. Run [`manage.py update_index`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#update-index).
-     Updates index for fulltext search, it is recommended by Weblate to run it every 5 mins.
+  6. Update Weblate's index for fulltext search
 
 Whenever a contributor modifies a markdown (`*.mdwn`) file, and pushes
 to master, the corresponding POT and PO files are updated, that is: the
@@ -184,23 +178,43 @@ may loose a translation done on Weblate.
 
 Until here, only PO files of languages that are activated on our
 production website will be merged, as the production website, i.e. the
-canonical Git repository does not regenerate those of non activated
+canonical Git repository does not regenerate PO files of non activated
 languages.
 
-Hence, after the activated language PO files are merged, the script
-checks if PO files of additional, non-production activated languages
-need updating. We do this by generating POT files out of a PO file that
-we've previously defined as a default language.  If the actual POT file,
-generated on the production server differs from the POT file we've just
-created, then every additional language PO file needs to be updated.
+Because of this limitation of ikiwiki, once the activated language PO
+files are merged, the script checks if PO files of additional,
+non-production activated languages need updating. We do this by
+generating POT files out of a PO file that we've previously defined as a
+default language. We do this for all componenets. If the actual POT
+file, generated on the production server differs from the POT file we've
+just created, then every additional language PO file needs to be
+updated.
 
 On top of this, if the PO file of the default language (that is, its
 markdown file) have been renamed, moved or deleted, than the PO files of
 additional languages need to follow this step.
 
-Our script actually applies all changes from the default language to the additional languages and afterwards we can look if we actually introduce any change in the PO files.
+In summary, our script applies all changes detected on the default
+language to the additional languages.
 
-The described mechanisms always touching files and changes mtime etc, that's why git would always create a new commit. Often those commits don't change anything on the files. To get rid of those empty not needed commits the script detects, when a fast-forward is possible (the master  branch is updated to HEAD of canonical or integration branch). This is possible, if only Weblate introduce new commits or only the canonical.
+The described mechanisms always `touch` files and change metadata, such
+as their `mtime`. That's why Git would always create  a new commit for
+such a change, but often those commits don't change the content of
+files. In order to omit these empty unnecessary commits our script also
+detects when a `fast-forward` is possible (the master branch is updated
+to HEAD of either the canonical or the integration branch).  If only
+Weblate or only modifications on the canonical repository introduces new
+commits, a fast-forward can be done.
+
+### Step 2: Trigger commits
+
+Because Weblate tries to reduce the number of commits (aka. "lazy
+commits"), we need to ask Weblate explicitly to commit every component
+which has outstanding changes since more than 24 hours.
+
+This is done by triggering Weblate to commit pending approved
+translations using the internal command ([`manage.py
+commit_pending`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#commit-pending)).
 
 ### Step 3: Weblate → Integration
 
@@ -249,12 +263,13 @@ After having merged changes from the canonical Git repository into the
 integration Git repository, and integrated changes from Weblate there,
 we can assume that every PO file now is up-to-date (in the Integration
 and Canonical repository). Hence we can try to pull from the Canonical
-repository using a fast-forward only (`git pull --ff-only`). Canonical and the
-Weblate repositories can get new commits everytime, also while the cronjob is
-running. It can happen, that a new commit on one side (Cannonical or Weblate)
-makes it impossible to perform a fast-forward. If we can't fast-forward the git
-repository, the cronjob is run 5min later anyways again, Than step 1,3 and 4 of
-the cronjob fixes the reason why the fast-forward was not possible this time.
+repository using a fast-forward only (`git pull --ff-only`).  The
+canonical and Weblate repositories may see new commits anytime. This
+means: while our cronjob is running a new commit can be made. Then, a
+new commit on one side (canonical or Weblate), prevents a
+`fast-forward`. When this happens, the cronjob is run 5 minutes later
+anew, and then step 1, 3 and 4 of the cronjob aim at fixing the cause of
+why the fast-forward was not possible this time.
 
 If the fast-forward was successful, we need to update Weblate's components
 to reflect the modifications that happened on the side of Git, such as
@@ -262,13 +277,21 @@ string and file updates, removals, renames, or additions. This is
 handled by another script:
 [`update_weblate_components.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_components.py).
 
-We are not the only process touching the Weblate repository, as Weblate itself
-creating commits and updating the master branch That's why the script is using
-an own Git remote named `cron` to keep track of which commits need to look at
-for Weblate component changes. This remote name is set in the
+Besides our scripts that modify the Weblate repository, Weblate itself
+keeps creating commits and updates the master branch. That's why the
+script is using an own Git remote named `cron` to keep track of which
+commits need to be looked at for Weblate component changes. This remote
+name is set in
 [weblate.pp](https://git-tails.immerda.ch/puppet-tails/tree/manifests/weblate.pp)
 and used in the cronjob `update_weblate_components.py
 --remoteBranch=cron/master [...]`.
+
+### Step 6
+
+Run [`manage.py
+update_index`](https://docs.weblate.org/en/weblate-2.20/admin/management.html#update-index).
+This updates Weblate's index for fulltext search. It is recommended by
+Weblate upstream authors to run it every 5 mins.
 
 <a id="staging-website"></a>
 
@@ -299,7 +322,7 @@ This allows:
 
    [https://staging.tails.boum.org/last-sanity-errors.txt](https://staging.tails.boum.org/last-sanity-errors.txt)
 
-### What is done behind the scene to generate a new version of the staging website?
+### What is done behind the scenes to generate a new version of the staging website?
 
 The cronjob
 [`update-staging-website.sh`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update-staging-website.sh)
