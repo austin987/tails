@@ -38,7 +38,7 @@ class LocalisationSettings(object):
 
     @staticmethod
     def _get_locales() -> [str]:
-        with open(tailsgreeter.config.locales_path, 'r') as f:
+        with open(tailsgreeter.config.supported_locales_path, 'r') as f:
             return [line.rstrip('\n') for line in f.readlines()]
 
     def __on_usermanager_loaded(self, manager, pspec, data=None):

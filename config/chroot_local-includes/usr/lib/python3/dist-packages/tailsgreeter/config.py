@@ -26,10 +26,10 @@ LUSER = 'amnesia'
 # data path
 data_path = '/usr/share/tails/greeter/'
 
-# File containing the language codes that are supported by the greeter
-locales_path = os.path.join(data_path, 'locales')
+# File containing the locales for the supported languages
+supported_locales_path = os.path.join(data_path, 'supported_locales')
 
-# Locales path
+# System locales directory
 system_locale_dir = '/usr/share/locale/'
 
 # File where session locale settings are stored
