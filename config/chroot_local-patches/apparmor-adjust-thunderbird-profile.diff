@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.bin.thunderbird	2019-03-27 17:22:51.000000000 +0000
-+++ b/etc/apparmor.d/usr.bin.thunderbird	2019-05-24 12:39:13.790142571 +0000
+--- a/etc/apparmor.d/usr.bin.thunderbird	2019-09-12 14:52:34.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.thunderbird	2019-10-03 13:30:05.876482204 +0000
 @@ -15,7 +15,6 @@
    # TODO: finetune this for required accesses
    #include <abstractions/dbus>
@@ -16,12 +16,14 @@
    #include <abstractions/ubuntu-browsers.d/java>
    #include <abstractions/ubuntu-helpers>
  
-@@ -45,26 +43,17 @@
+@@ -45,26 +43,19 @@
  
    # Allow opening attachments
    # TODO: create and use abstractions for opening various file formats
 -  /{usr/local/,usr/,}bin/* Cx -> sanitized_helper,
-+  /{usr/local/,usr/,}bin/{[^gp],g[^p],p[^s],gp[^g]}* Cx -> sanitized_helper,
++  /{usr/,}bin/{[^gp],g[^p],gp[^g],p[^s]}* Cx -> sanitized_helper,
++  /usr/local/bin/{[^t],t[^o],to[^r],tor[^-],tor-[^b],tor-b[^r],tor-br[^o],tor-bro[^w],tor-brow[^s],tor-brows[^e],tor-browse[^r]}* Cx -> sanitized_helper,
++  /usr/local/bin/tor-browser Uxmr,
    /usr/lib/libreoffice/program/soffice Cxr -> sanitized_helper,
  
    # Allow opening links
@@ -44,7 +46,7 @@
    owner @{HOME}/.{cache,config}/dconf/user rw,
    owner @{HOME}/.cache/thumbnails/** r,
    owner /run/user/[0-9]*/dconf/user rw,
-@@ -129,6 +118,10 @@
+@@ -129,6 +120,10 @@
    /etc/gre.d/ r,
    /etc/gre.d/* r,
  
@@ -55,7 +57,7 @@
    # noisy
    deny @{MOZ_LIBDIR}/** w,
    deny /usr/lib/thunderbird-addons/** w,
-@@ -263,7 +256,6 @@
+@@ -263,7 +258,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
    /usr/lib/thunderbird/crashreporter ix,
