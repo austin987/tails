@@ -16,11 +16,11 @@ ensure_hook_dependency_is_installed \
 # aufs build needs fs/mount.h, which is in linux-source-* but not
 # in linux-headers-*, so we'll symlink it.
 tar --directory=/usr/src \
-    -xf "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}.tar."*
+    -xf "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}"*.tar.*
 
 arch=amd64
 ln -s \
-   "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}/fs" \
+   "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}"*/fs \
    "/usr/src/linux-headers-${KERNEL_VERSION}-${arch}/fs"
 (
    cd /usr/src/aufs-standalone
@@ -43,4 +43,4 @@ strip --strip-debug /lib/modules/*/extra/aufs.ko
 
 depmod "${KERNEL_VERSION}-${arch}"
 rm -r /usr/src/aufs-standalone
-rm -r "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}"
+rm -r "/usr/src/linux-source-${KERNEL_SOURCE_VERSION}"*/
