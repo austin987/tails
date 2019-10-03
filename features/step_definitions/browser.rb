@@ -20,9 +20,11 @@ end
 def xul_application_info(application)
   address_bar_image = "BrowserAddressBar.png"
   unused_tbb_libs = ['libnssdbm3.so', "libmozavcodec.so", "libmozavutil.so"]
+  open_url_command = nil
   case application
   when "Tor Browser"
     user = LIVE_USER
+    open_url_command = '/usr/local/bin/tor-browser'
     binary = $vm.execute_successfully(
       'echo ${TBB_INSTALL}/firefox.real', :libs => 'tor-browser'
     ).stdout.chomp
@@ -70,6 +72,7 @@ def xul_application_info(application)
     :address_bar_image => address_bar_image,
     :browser_reload_button_image => browser_reload_button_image,
     :browser_stop_button_image => browser_stop_button_image,
+    :open_url_command => open_url_command,
     :unused_tbb_libs => unused_tbb_libs,
   }
 end
@@ -81,21 +84,34 @@ When /^I open a new tab in the (.*)$/ do |browser|
 end
 
 When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
-  step "I open a new tab in the #{browser}"
   info = xul_application_info(browser)
+  open_url_command = info[:open_url_command]
   open_address = Proc.new do
-    @screen.click(info[:address_bar_image])
-    # This static here since we have no reliable visual indicators
-    # that we can watch to know when typing is "safe".
-    sleep 5
-    # The browser sometimes loses keypresses when suggestions are
-    # shown, which we work around by pasting the address from the
-    # clipboard, in one go.
-    $vm.set_clipboard(address)
-    @screen.type('v', Sikuli::KeyModifier.CTRL)
-    # Otherwise the "ENTER" key press is sometimes lost.
-    sleep 5
-    @screen.type(Sikuli::Key.ENTER)
+    if open_url_command.nil?
+      @screen.click(info[:address_bar_image])
+      # This static here since we have no reliable visual indicators
+      # that we can watch to know when typing is "safe".
+      sleep 5
+      # The browser sometimes loses keypresses when suggestions are
+      # shown, which we work around by pasting the address from the
+      # clipboard, in one go.
+      $vm.set_clipboard(address)
+      @screen.type('v', Sikuli::KeyModifier.CTRL)
+      # Otherwise the "ENTER" key press is sometimes lost.
+      sleep 5
+      @screen.type(Sikuli::Key.ENTER)
+    else
+      # Avoid fragility of opening URLs via the Tor Browser GUI
+      # (#17056): typing "Enter" often produces no visible effect on
+      # slower test systems (be it after typing the URL via Sikuli or
+      # pasting it as we do for other browsers) and "Paste & Go" does
+      # not always appear in the right-click address bar context menu.
+      # There must be some lazy initialization going on, that makes
+      # the functionality we need not fully work when we need it.
+      # So let's fallback on emulating the use case when the user
+      # would click a link in another app.
+      $vm.execute_successfully("#{open_url_command} '#{address}'", :user => LIVE_USER)
+    end
   end
   recovery_on_failure = Proc.new do
     @screen.type(Sikuli::Key.ESC)
