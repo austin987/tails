@@ -381,15 +381,15 @@ end
 Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ do |page|
   case page
   when "startup page"
-    title = 'Tails'
+    titles = ['Tails', 'Tails - Trying a testing version of Tails']
   when "Tails homepage"
-    title = 'Tails - Privacy for anyone anywhere'
+    titles = ['Tails - Privacy for anyone anywhere']
   when "Tails roadmap"
-    title = 'Roadmap - Tails - Tails Ticket Tracker'
+    titles = ['Roadmap - Tails - Tails Ticket Tracker']
   else
     raise "Unsupported page: #{page}"
   end
-  page_has_loaded_in_the_Tor_Browser([title], @language)
+  page_has_loaded_in_the_Tor_Browser(titles, @language)
 end
 
 When /^I request a new identity using Torbutton$/ do
