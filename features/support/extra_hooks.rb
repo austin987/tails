@@ -1,15 +1,9 @@
-# Make the code below work with cucumber >= 2.0. Once we stop
-# supporting <2.0 we should probably do this differently, but this way
-# we can easily support both at the same time.
+# Now that we stopped supporting Cucumber<2.0, we could probably do
+# this differently.
 
 begin
   if not(Cucumber::Core::Ast::Feature.instance_methods.include?(:accept_hook?))
-    if Gem::Version.new(Cucumber::VERSION) >= Gem::Version.new('2.4.0')
-      require 'cucumber/core/gherkin/tag_expression'
-    else
-      require 'gherkin/tag_expression'
-      Cucumber::Core::Gherkin = Gherkin
-    end
+    require 'cucumber/core/gherkin/tag_expression'
     class Cucumber::Core::Ast::Feature
       # Code inspired by Cucumber::Core::Test::Case.match_tags?() in
       # cucumber-ruby-core 1.1.3, lib/cucumber/core/test/case.rb:~59.
@@ -90,26 +84,6 @@ def debug_log(message, options = {})
 end
 
 require 'cucumber/formatter/pretty'
-# Backport part of commit af940a8 from the cucumber-ruby repo. This
-# fixes the "out hook output" for the Pretty formatter so stuff
-# written via `puts` after a Scenario has run its last step will be
-# written, instead of delayed to the next Feature/Scenario (if any) or
-# dropped completely (if not).
-# XXX: This can be removed once we update to cucumber 2+ on Jenkins'
-# isotesters (#10068).
-if Gem::Version.new(Cucumber::VERSION) < Gem::Version.new('2.0.0.beta.4')
-  module Cucumber
-    module Formatter
-      class Pretty
-        def after_feature_element(feature_element)
-          print_messages
-          @io.puts
-          @io.flush
-        end
-      end
-    end
-  end
-end
 
 module ExtraFormatters
   # This is a null formatter in the sense that it doesn't ever output
