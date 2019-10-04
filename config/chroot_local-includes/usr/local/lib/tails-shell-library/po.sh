@@ -7,6 +7,15 @@ po_languages () {
     done
 }
 
+count_msgids () {
+    cat | grep -E '^msgid\s+' | wc -l
+}
+
+count_translated_strings () {
+    cat | msgattrib --translated --no-fuzzy --no-obsolete - \
+        | count_msgids
+}
+
 diff_without_pot_creation_date () {
     diff --ignore-matching-lines '^"POT-Creation-Date:' "${@}"
 }
