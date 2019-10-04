@@ -9,7 +9,10 @@ pref("network.security.ports.banned", "631,6136,4444,4445,6668,7656,7657,7658,76
 pref("extensions.torbutton.show_slider_notification", false);
 
 // Disable the Tor Browser's automatic update checking
-pref("app.update.enabled", false);
+pref("app.update.auto", false);
+pref("app.update.disabledForTesting", true);
+pref("app.update.doorhanger", false);
+pref("app.update.url", "https://non-existent.tails.boum.org/torbrowser/update_3/%CHANNEL%/%BUILD_TARGET%/%VERSION%/%LOCALE%");
 
 // Suppress prompt and always spoof useragent as English
 pref("privacy.spoof_english", 2);
