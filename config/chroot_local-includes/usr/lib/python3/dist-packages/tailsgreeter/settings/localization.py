@@ -70,13 +70,6 @@ def language_from_locale(locale):
     return locale.split('_')[0]
 
 
-def languages_from_locales(locales):
-    """Obtain a language code list from a locale code list
-
-    example: [fr_FR, en_GB] -> [fr, en]"""
-    return list({language_from_locale(l) for l in locales})
-
-
 def country_from_locale(locale):
     """Obtain the country code from a locale code
 
