@@ -88,6 +88,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   open_url_command = info[:open_url_command]
   open_address = Proc.new do
     if open_url_command.nil?
+      step "I open a new tab in the #{browser}"
       @screen.click(info[:address_bar_image])
       # This static here since we have no reliable visual indicators
       # that we can watch to know when typing is "safe".
