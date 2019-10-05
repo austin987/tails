@@ -1,64 +1,74 @@
-[[!meta title="Manually copying your persistent data to a new USB stick"]]
+[[!meta title="Backup your persistent volume"]]
 
-These instructions explain how to manually copy your persistent data to
-a new USB stick. Follow them if you have good reasons to think that your
-persistence settings are corrupted or if you want to be extra careful.
+These instructions explain how to back up your persistent volume to
+another Tails USB stick.
 
-Create a new USB stick
-======================
+[[!toc]]
 
-1. Install the latest Tails onto a new USB stick using the usual
-   [[installing instructions|install]]. Do not use the Tails USB stick
-   that might be corrupted in the process of installing the new one.
+Create a new Tails to store your backup
+=======================================
 
-1. [[Create a persistent volume|configure]] on this new USB stick. We
-   advise you to use a different passphrase to protect this new
-   persistent volume.
+In these instructions, we recommend you to create another Tails to store
+your backup. This way, if your Tails is lost or damaged, you will be
+able to replace it immediately with your backup Tails.
 
-1. Enable again on this new USB stick the persistence features of your
-   choice.
+1. Install Tails on a new USB stick on which you want to create your
+   backup Tails. For detailed instructions, see how to [[install Tails
+   from another Tails|install/clone#install-tails]].
 
-1. Restart on the new USB stick, enable persistence, and [[set up an administration password|startup_options/administration_password]].
+   Make sure that this new USB stick is at least as large as your
+   current Tails USB stick.
 
-Rescue your files from the old Tails USB stick
-==============================================
+1. We recommend making your backup Tails USB stick look different than your
+   current Tails USB stick to avoid using your backup Tails by mistake.
 
-Mount the old persistent volume
--------------------------------
+1. Shutdown and unplug your current Tails USB stick.
 
-1. Plug in the old Tails USB stick from which you want to rescue your data.
+1. Restart on your backup Tails and create a persistent volume on it.
+   For detailed instructions, see how to [[create & configure the
+   persistent volume|doc/first_steps/persistence/configure]].
+
+   <div class="tip">
+   <p>We recommend using the same passphrase as your current Tails
+   so that the passphrase is easier to remember.</p>
+   </div>
+
+1. When the persistent volume configuration shows a list of the possible
+   persistence features, click <span class="button">Save</span> and
+   exit.
+
+   The backup process described below overrides the configuration of the
+   persistent volume. So, it does not matter which features are enabled
+   when you create the persistent volume.
+
+1. Shutdown and unplug your backup Tails USB stick.
+
+Create or update your backup
+============================
+
+1. Start on your current Tails and set up an [[administration
+   password|doc/first_steps/startup_options/administration_password]].
 
 1. Choose
    <span class="menuchoice">
      <span class="guimenu">Applications</span>&nbsp;▸
-     <span class="guisubmenu">Utilities</span>&nbsp;▸
-     <span class="guimenuitem">Disks</span>
-   </span>
-   to open <span class="application">GNOME Disks</span>.
+     <span class="guisubmenu">Accessories</span>&nbsp;▸
+     <span class="guimenuitem">Files</span></span>
+   to open the <span class="application">Files</span> browser.
 
-1. In the left pane, click on the USB stick corresponding to the old Tails
-   USB stick.
+1. Plug in your backup Tails USB stick.
 
-1. In the right pane, click on the partition labeled as
-   <span class="guilabel">LUKS</span>. The
-   name of the partition must be
-   <span class="guilabel">TailsData</span>.
+1. If your backup Tails is outdated, you can upgrade it by cloning your
+   current Tails using <span class="application">Tails Installer</span>.
+   For detailed instructions, see how to [[manually upgrade from another
+   Tails|upgrade/clone#upgrade]].
 
-1. Click on the <span class="guimenu">[[!img lib/unlock.png alt="Unlock" class="symbolic" link="no"]]</span> button
-   to unlock the old persistent volume.
-   Enter the passphrase of the old persistent
-   volume and click <span class="button">Unlock</span>.
+1. A new encrypted volume appears in the sidebar of the
+   <span class="application">Files</span> browser. Click on it and enter
+   the passphrase of your backup Tails to unlock it.
 
-1. Click on the <span class="guilabel">TailsData</span> partition that
-   appears below the <span class="guilabel">LUKS</span>
-   partition.
-
-1. Click on the <span class="guimenu">[[!img lib/media-playback-start.png alt="Mount" class="symbolic" link="no"]]</span> button. The old
-   persistent volume is now mounted as
-   <span class="filename">/media/amnesia/TailsData</span>.
-
-Copy your old files to the new persistent volume
-------------------------------------------------
+   Your backup now appears as the
+   <span class="guilabel">TailsData</span> volume in the sidebar.
 
 1. Choose
    <span class="menuchoice">
@@ -68,96 +78,26 @@ Copy your old files to the new persistent volume
    </span>
    to open a terminal with administration rights.
 
-1. Execute the <span class="code">nautilus</span> command to open the
-   file browser with administration rights.
+1. Execute the following command to backup your persistent volume:
 
-1. In the left pane, click on <span class="guilabel">Other Locations</span>.
+<!-- <li> are limited to 45em so I'm breaking the list here to prevent wrapping the long command line. -->
 
-1. In the right pane, navigate to
-   <span class="guilabel">Computer</span>&nbsp;▸
-   <span class="guilabel">media</span>&nbsp;▸
-   <span class="guilabel">amnesia</span>&nbsp;▸
-   <span class="guilabel">TailsData</span>
-   to open the old persistent volume.
+<p class="pre command root">rsync -PaSHAX --del /live/persistence/TailsData_unlocked/ /media/amnesia/TailsData/</p>
 
-1. In the titlebar, choose
-   <span class="menuchoice">
-     <span class="guimenu">[[!img lib/open-menu.png alt="Menu" class="symbolic" link="no"]]</span>&nbsp;▸
-     <span class="guimenuitem">[[!img lib/tab-new.png alt="New tab" class="symbolic" link="no"]]</span>
-   </span>
-   to open a new tab.
+When the command finishes, it displays a summary of the data that was
+copied. For example:
 
-1. In the left pane, click on <span class="guilabel">Other Locations</span>.
+<pre>
+sent 32.32M bytes  received 1.69K bytes  21.55M bytes/sec
+total size is 32.30M  speedup is 1.00
+</pre>
 
-1. In the right pane, navigate to
-   <span class="guilabel">Computer</span>&nbsp;▸
-   <span class="guilabel">live</span>&nbsp;▸
-   <span class="guilabel">persistence</span>&nbsp;▸
-   <span class="guilabel">TailsData_unlocked</span>
-   to open the new persistent volume.
+<div class="note">
 
-1. Click on the <span class="guilabel">TailsData</span> tab.
+<p>Each time you update your backup, only the files that have changed
+are copied.</p>
 
-1. To copy a folder containing persistent data from the old persistent
-   volume to the new one, drag and drop that folder from the
-   <span class="guilabel">TailsData</span> onto the
-   <span class="guilabel">TailsData_unlocked</span> tab.
+</div>
 
-   When copying a folder, select the
-   <span class="guilabel"> Apply this action to all files</span> option and
-   click <span class="button">Merge</span> to apply to all subfolders.
-   Then you might have to select again the
-   <span class="guilabel"> Apply this action to all files</span> option and
-   click <span class="button">Replace</span> to apply to all files.
-
-   Do not copy a folder if you do not know what it is used for.
-
-   <a id="feature_files"></a>
-
-    - The <span class="filename">apt</span> folder and the
-      <span class="filename">live-additional-software.conf</span> file correspond to the
-      <span class="guilabel">[[Additional Software|configure#additional_software]]</span>
-      persistence feature. But they require administration rights to be
-      imported and this goes beyond the scope of these instructions.
-      Note that this folder does not contain personal data.
-    - The <span class="filename">bookmarks</span> folder corresponds to the
-      <span class="guilabel">[[Browser Bookmarks|configure#browser_bookmarks]]</span>
-      persistence feature.
-    - The <span class="filename">cups-configuration</span> folder corresponds to the
-      <span class="guilabel">[[Printers|configure#printers]]</span>
-      persistence feature.
-    - The <span class="filename">dotfiles</span> folder corresponds to the
-      <span class="guilabel">[[Dotfiles|configure#dotfiles]]</span>
-      persistence feature.
-    - The <span class="filename">electrum</span> folder corresponds to the
-      <span class="guilabel">[[Bitcoin Client|configure#bitcoin]]</span>
-      persistence feature.
-    - The <span class="filename">gnupg</span> folder corresponds to the
-      <span class="guilabel">[[GnuPG|configure#gnupg]]</span>
-      persistence feature.
-    - The <span class="filename">thunderbird</span> folder corresponds to the
-      <span class="guilabel">[[Thunderbird|configure#thunderbird]]</span>
-      persistence feature.
-    - The <span class="filename">nm-connections</span> folder corresponds to the
-      <span class="guilabel">[[Network Connections|configure#network_connections]]</span>
-      persistence feature.
-    - The <span class="filename">openssh-client</span> folder corresponds to the
-      <span class="guilabel">[[SSH Client|configure#ssh_client]]</span>
-      persistence feature.
-    - The <span class="filename">Persistent</span> folder corresponds to the
-      <span class="guilabel">[[Personal Data|configure#personal_data]]</span>
-      persistence feature.
-    - The <span class="filename">pidgin</span> folder corresponds to the
-      <span class="guilabel">[[Pidgin|configure#pidgin]]</span>
-      persistence feature.
-
-1. After doing the copy, close the file browser.
-
-1. In the terminal,
-   execute the following command to fix the ownership of your personal files:
-
-<style>
-pre { max-width: 100%; }
-</style>
-
-       find /live/persistence/TailsData_unlocked/ -uid 1000 -exec chown -R 1000:1000 '{}' \;
+You can now eject the <span class="guilabel">TailsData</span> volume in the
+<span class="application">Files</span> browser and unplug your backup Tails.

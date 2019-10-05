@@ -740,8 +740,8 @@ files metadata:
        gpg --armor --default-key "${TAILS_SIGNATURE_KEY:?}" --detach-sign *".${type:?}" && \
        rename 's,\.asc$,.sig,' *.asc && \
        tmp="$(mktemp -d)" && \
-       mkdir -p "${tmp:?}/tails-amd64-${VERSION:?}" && \
-       cd "${tmp:?}/tails-amd64-${VERSION:?}" && \
+       mkdir -p "${tmp:?}/tails-amd64-${VERSION:?}-${type:?}" && \
+       cd "${tmp:?}/tails-amd64-${VERSION:?}-${type:?}" && \
        for x in "${ISOS:?}/tails-amd64-${VERSION:?}"/*.${type:?}*; do
            ln -s ${x} .
        done && \
@@ -749,7 +749,7 @@ files metadata:
           -o "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" \
           -a 'udp://tracker.torrent.eu.org:451'   \
           -a 'udp://tracker.coppersurfer.tk:6969' \
-          "${tmp:?}/tails-amd64-${VERSION:?}" && \
+          "${tmp:?}/tails-amd64-${VERSION:?}-${type:?}" && \
        transmission-show "${ISOS:?}/tails-amd64-${VERSION:?}.${type:?}.torrent" && \
        cd - && \
        rm -rf "${tmp:?}"
@@ -1116,26 +1116,26 @@ Now you can announce and seed the Torrents for the release you're preparing:
 
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh bittorrent.lizard gpg --import
-    images_dirname="tails-amd64-${VERSION:?}"
-    transmission_dl_version_dir="/var/lib/transmission-daemon/downloads/${images_dirname:?}"
     for type in iso img ; do
        image_filename="tails-amd64-${VERSION:?}.${type:?}"
+       torrent_dirname="tails-amd64-${VERSION:?}-${type:?}"
        scp \
           "${ISOS:?}/${image_filename:?}.torrent" \
-          "${ISOS:?}/${images_dirname:?}/${image_filename:?}.sig" \
+          "${ISOS:?}/tails-amd64-${VERSION:?}/${image_filename:?}.sig" \
           bittorrent.lizard: && \
        ssh bittorrent.lizard << EOF
-          install -d -g debian-transmission --mode 0755 \
-             "${transmission_dl_version_dir:?}" && \
-          wget --quiet \
+          mkdir --mode 0755 "${torrent_dirname:?}" && \
+          cd "${torrent_dirname:?}" && \
+          mv "../${image_filename:?}.sig" . && \
+          wget \
              "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
           gpg --verify ${image_filename:?}{.sig,} && \
-          chgrp debian-transmission "${image_filename:?}"* && \
-          chmod go+rX,g+w "${image_filename:?}"* && \
+          cd && \
+          chgrp -R debian-transmission "${torrent_dirname:?}" && \
+          chmod -R go+rX,g+w "${torrent_dirname:?}" && \
           mv \
-             "${image_filename:?}" \
-             "${image_filename:?}.sig" \
-             "${transmission_dl_version_dir:?}" && \
+             "${torrent_dirname:?}" \
+             /var/lib/transmission-daemon/downloads/ && \
           transmission-remote --add ${image_filename:?}.torrent \
                               --find /var/lib/transmission-daemon/downloads/
     EOF
