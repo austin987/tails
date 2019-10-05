@@ -77,7 +77,8 @@ class PersistenceSettings(object):
             logging.exception(e)
             return False
 
-    def list_containers(self):
+    @staticmethod
+    def list_containers():
         """Returns a list of persistence containers we might want to unlock."""
         args = [
             "/usr/bin/sudo", "-n", "/usr/local/sbin/live-persist",
@@ -143,7 +144,8 @@ class PersistenceSettings(object):
                                 "{stdout}\n{stderr}")
                 )
 
-    def setup_persistence(self, cleartext_device, readonly):
+    @staticmethod
+    def setup_persistence(cleartext_device, readonly):
         args = ["/usr/bin/sudo", "-n", "/usr/local/sbin/live-persist"]
         if readonly:
             args.append('--read-only')
