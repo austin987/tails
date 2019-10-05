@@ -16,6 +16,7 @@ goodcrypto.com converted from bash to python and added basic tests.
 
 import os
 import sys
+import subprocess
 from gettext import gettext
 
 import sh
@@ -31,6 +32,10 @@ def main(*args):
         if not verify_start():
             return
 
+    # Disable update checking for all users (even those who made their config
+    # persistent before we changed this value in the default config), because
+    # users can't easily update to a new version anyway if it's not in Debian.
+    subprocess.run(['/usr/bin/electrum', 'setconfig', 'check_updates', 'false'], check=True, stdout=subprocess.DEVNULL)
     os.execv('/usr/bin/electrum', ['/usr/bin/electrum'] + list(args))
 
 
@@ -56,7 +61,7 @@ def verify_start():
 
     disabled_text = gettext('Persistence is disabled for Electrum')
     warning_text = gettext(
-        "When you reboot Tails, all of Electrum's data will be lost, including your Bitcoin wallet. It is strongly recommended to only run Electrum when its persistence feature is activated.")
+        "When you reboot Tails, all of Electrum's data will be lost, including your Bitcoin wallet.\nIt is strongly recommended to only run Electrum when its persistence feature is activated.")
     question_text = gettext('Do you want to start Electrum anyway?')
     dialog_msg = ('<b><big>{}</big></b>\n\n{}\n\n{}\n'.
                   format(disabled_text, warning_text, question_text))
