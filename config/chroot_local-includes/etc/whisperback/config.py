@@ -110,7 +110,7 @@ from_address = "devnull@tails.boum.org"
 # This section defines the SMTP server parameters
 #
 # The SMTP server to use to send the mail
-smtp_host = "4mvq3pnvid3awjln.onion"
+smtp_host = "xgvhluz6szspb2od6yi37cs4tdm27hgjunbig23yc5hxececcax5wlyd.onion"
 # The port to connect to on that SMTP server
 smtp_port = 25
 
