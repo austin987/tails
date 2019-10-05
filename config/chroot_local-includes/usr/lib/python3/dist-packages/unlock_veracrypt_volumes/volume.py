@@ -1,3 +1,5 @@
+import gi
+
 from logging import getLogger
 from typing import Union
 
