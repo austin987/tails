@@ -44,7 +44,7 @@ elif [ -f 'po/tails-perl5lib.pot' ]; then
 	AFTER_IMPORT='make -C po pot && make -C po update-po'
 elif [ -f 'po/tails-installer.pot' ]; then
 	BRANCH='liveusb-creator_completed'
-	AFTER_IMPORT='./setup.py build && cd po && for po in *.po ; do msgmerge --update "$po" tails-installer.pot ; done'
+	AFTER_IMPORT='./setup.py build && ( cd po && for po in *.po ; do msgmerge --update "$po" tails-installer.pot ; done )'
 elif [ -f 'po/tails-persistence-setup.pot' ]; then
 	BRANCH='tails-persistence-setup_completed'
 	AFTER_IMPORT='make -C po pot && make -C po update-po'
@@ -68,25 +68,35 @@ fi
 eval "$GIT_IN_TOR_TRANSLATION_DIR checkout \"$BRANCH\""
 eval "$GIT_IN_TOR_TRANSLATION_DIR reset --hard \"origin/$BRANCH\""
 
+# Ensure we only keep PO files that are still present in the Transifex
+# branch we import from.
+find "$TAILS_PO_DIR" -name '*.po' -delete
+
 # For each completely translated language, merge it,
 # unless it is translated outside Transifex
 if [ "$LANG_DOT_PO_LAYOUT" = yes ] ; then
 	find "$TOR_TRANSLATION_DIR" -name '*.po' | while read po_file; do
 		lang=$(basename "$po_file" | tr - _ | sed 's/\.po$//')
 
-		if ! lang_is_excluded "$lang"; then
-			echo "Importing translation for $lang..."
-			cp "$po_file" "$TAILS_PO_DIR"
+		! lang_is_excluded "$lang" || continue
+		if [ "$(cat "$po_file" | count_translated_strings)" -lt 1 ]; then
+			echo "Skipping $lang, that has no translated strings."
+			continue
 		fi
+		echo "Importing translation for $lang..."
+		cp "$po_file" "$TAILS_PO_DIR"
 	done
 else
 	find "$TOR_TRANSLATION_DIR" -name '*.pot' | while read po_file; do
 		lang=$(basename $(dirname "$po_file" | tr - _ | sed 's/\.pot$//'))
 
-		if ! lang_is_excluded "$lang"; then
-			echo "Importing translation for $lang..."
-			cp "$po_file" "$TAILS_PO_DIR/${lang}.po"
+		! lang_is_excluded "$lang" || continue
+		if [ "$(cat "$po_file" | count_translated_strings)" -lt 1 ]; then
+			echo "Skipping $lang, that has no translated strings."
+			continue
 		fi
+		echo "Importing translation for $lang..."
+		cp "$po_file" "$TAILS_PO_DIR/${lang}.po"
 	done
 fi
 

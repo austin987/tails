@@ -4,6 +4,8 @@ import os
 import os.path
 import sys
 
+from tailslib.systemd import tor_has_bootstrapped
+
 # Main
 
 try:
@@ -22,7 +24,7 @@ lang_code = os.getenv('LANG', 'en')[0:2]
 
 # If possible, let's hand-off to our website, which should be the most
 # up-to-date option.
-if os.system('/usr/local/sbin/tor-has-bootstrapped') == 0:
+if tor_has_bootstrapped():
     if os.path.isfile(os.path.join(
             wiki_path, page + '.' + lang_code + ".html")):
         uri = tails_homepage + '/' + page + '/index.' + lang_code + '.html'
