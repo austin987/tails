@@ -135,6 +135,10 @@ configure_chroot_browser_profile () {
     cat "${chroot_browser_config}/common/prefs.js" \
         "${chroot_browser_config}/${browser_name}/prefs.js" > "${browser_prefs}"
 
+    # Install addonStartup.json.lz4. This is required to enable the red theme.
+    cp "${chroot_browser_config}/${browser_name}/addonStartup.json.lz4" \
+        "${browser_profile}"
+
     # Set browser home page to something that explains what's going on
     if [ -n "${home_page:-}" ]; then
         echo 'user_pref("browser.startup.homepage", "'"${home_page}"'");' >> \

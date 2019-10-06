@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Prepare the Unsafe Browser"
+
+# Compress the addonStartup.json with Mozilla's jsonlz4
+INPUT="/usr/share/tails/chroot-browsers/unsafe-browser/addonStartup.json"
+OUTPUT="${INPUT}.lz4"
+/usr/local/bin/jsonlz4 -c < "${INPUT}" > "${OUTPUT}"
