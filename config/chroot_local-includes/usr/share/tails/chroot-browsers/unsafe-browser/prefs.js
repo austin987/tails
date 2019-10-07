@@ -1,5 +1,3 @@
-user_pref("extensions.torbutton.inserted_button", true);
-user_pref("extensions.torbutton.inserted_security_level", true);
 // Disable proxying in the chroot
 user_pref("extensions.torbutton.use_nontor_proxy", true);
 user_pref("network.proxy.type", 0);
@@ -17,6 +15,10 @@ user_pref("keyword.enabled", false);
 
 // Use the red theme
 user_pref("extensions.activeThemeID", "{91a24c60-0f27-427c-b9a6-96b71f3984a9}");
+
+// Required to hide the security level button
+user_pref("extensions.torbutton.inserted_button", true);
+user_pref("extensions.torbutton.inserted_security_level", true);
 
 // temporary fix
 user_pref("extensions.webextensions.uuids", "{\"{91a24c60-0f27-427c-b9a6-96b71f3984a9}\":\"5df1b656-8c68-4696-aca5-682bd09bb455\"}");
