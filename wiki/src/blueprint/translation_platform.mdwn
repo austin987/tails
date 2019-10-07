@@ -170,7 +170,7 @@ repository**
 
 The script fetches from the canonical (remote) repository and tries to
 merge changes into the (local) integration repository. The merge
-strategy used for this step is defined in [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py): (XXX: Shouldn't this script be called update_integration_git.py according to this documentation?)
+strategy used for this step is defined in [`update_weblate_git.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/update_weblate_git.py):
 
 When this script is executed, it merges changes in PO files based on
 single translation units (`msgids`). A merge conflict occurs when the same
@@ -204,14 +204,15 @@ additional languages need to be accordingly renamed, moved, or deleted.
 In summary, our script applies all changes detected on the default
 language to the additional languages.
 
-The described mechanisms always `touch` files and change metadata, such
-as their `mtime`. That's why Git would always create  a new commit for
-such a change, but often those commits don't change the content of
-files. In order to omit these empty unnecessary commits our script also
-detects when a `fast-forward` is possible (the master branch is updated
-to HEAD of either the canonical or the integration branch).  If only
-Weblate or only modifications on the canonical repository introduces new
-commits, a fast-forward can be done.
+With `python-git` creating a diff against working directory against the index
+is very error-prone. But a diff between two commits works fine. That's why we
+always create a new commit within the described script, but often those commits
+don't change the content of any file. In order to omit these empty unnecessary
+commits our script also detects when a `fast-forward` is possible (the master
+branch is updated to HEAD of either the canonical or the integration branch).
+If only Weblate or only modifications on the canonical repository introduces
+new commits and the merge commit is empty, a fast-forward can be done, by a
+force reset to the desired HEAD.
 
 ### Step 2: Trigger commits
 
@@ -227,10 +228,9 @@ translations using the internal command ([`manage.py commit_pending`](https://do
 **Merging changes from Weblate's Git repository into the integration
 repository**
 
-Weblate's Git repository is not bare. Hence we need to pull changes
-committed to Weblate's Git repository and merge them into the
-integration repository. This is done by the script
-[`merge_weblate_changes.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/merge_weblate_changes.py).
+The script fetches from the Weblate (remote) Git repository and tries to
+merge changes into the (local) integration repository. The merge
+strategy used for this step is defined in [`merge_weblate_changes.py`](https://git-tails.immerda.ch/puppet-tails/tree/files/weblate/scripts/merge_weblate_changes.py).
 
 Changes already present in the integration repository are preferred over
 the changes from the remote, Weblate repository. This makes fixes
