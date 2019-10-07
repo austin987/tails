@@ -160,7 +160,7 @@ class TorBootstrapFailure < StandardError
 end
 
 def wait_until_tor_is_working
-  try_for(270) { $vm.execute('/usr/local/sbin/tor-has-bootstrapped').success? }
+  try_for(270) { $vm.execute('/bin/systemctl --quiet is-active tails-tor-has-bootstrapped.target').success? }
 rescue Timeout::Error
   # Save Tor logs before erroring out
   File.open("#{$config["TMPDIR"]}/log.tor", 'w') { |file|

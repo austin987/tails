@@ -1,11 +1,17 @@
+import gi
+
 from logging import getLogger
 from typing import Union
-
-from gi.repository import Gtk, GLib, Gio, UDisks
 
 from unlock_veracrypt_volumes import _
 from unlock_veracrypt_volumes.config import TRANSLATION_DOMAIN, VOLUME_UI_FILE
 from unlock_veracrypt_volumes.exceptions import UdisksObjectNotFoundError, AlreadyUnlockedError
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('GLib', '2.0')
+gi.require_version('Gio', '2.0')
+from gi.repository import Gtk, GLib, Gio, UDisks
+
 
 logger = getLogger(__name__)
 

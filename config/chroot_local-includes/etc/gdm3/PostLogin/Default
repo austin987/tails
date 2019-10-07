@@ -10,7 +10,6 @@
 # * /var/lib/gdm3/tails.locale : $TAILS_LOCALE_NAME, $TAILS_XKBMODEL,
 #   $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT, $TAILS_XKBOPTIONS, $CODESET
 # * /var/lib/gdm3/tails.password : $TAILS_USER_PASSWORD
-# * /var/lib/gdm3/tails.physical_security : $TAILS_MACSPOOF_ENABLED
 
 # For whatever reason, /usr/sbin (needed by at least chpasswd)
 # is not in our PATH
@@ -94,6 +93,13 @@ localectl set-locale \
     "LC_MEASUREMENT=${TAILS_FORMATS}.UTF-8" \
     "LC_PAPER=${TAILS_FORMATS}.UTF-8" \
 
+# Set the system locale GSetting (#16806)
+cat > /etc/dconf/db/local.d/01_Tails_settings << EOF
+[system/locale]
+region = '${TAILS_FORMATS}.UTF-8'
+EOF
+dconf update
+
 # Save keyboard settings so that tails-configure-keyboard can set it
 # in the GNOME session.
 cat > /var/lib/tails-user-session/keyboard <<EOF
@@ -120,7 +126,7 @@ if [ -z "${TAILS_USER_PASSWORD}" ] ; then
     passwd -d "${LIVE_USERNAME}"
     install -o root -g root -m 0440 /dev/null "${NO_PASSWORD_LECTURE}"
     echo "Defaults:amnesia lecture=always" > "${NO_PASSWORD_LECTURE}"
-    echo "Defaults:amnesia lecture_file=/usr/share/tails-greeter/no-password-lecture.txt" >> "${NO_PASSWORD_LECTURE}"
+    echo "Defaults:amnesia lecture_file=/usr/share/tails/greeter/no-password-lecture.txt" >> "${NO_PASSWORD_LECTURE}"
     echo "Defaults:amnesia badpass_message=\"The administration password is disabled.\"" >> "${NO_PASSWORD_LECTURE}"
     log_n_exit "Password variable not found."
 fi

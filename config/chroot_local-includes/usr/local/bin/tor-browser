@@ -22,6 +22,9 @@ PROFILE="${HOME}/.tor-browser/profile.default"
 # Get LIVE_USERNAME
 . /etc/live/config.d/username.conf
 
+# Import tor_has_bootstrapped()
+. /usr/local/lib/tails-shell-library/systemd.sh
+
 # Allow Torbutton access to the control port filter (for new identity).
 # Setting a password is required, otherwise Torbutton attempts to
 # read the authentication cookie file instead, which fails.
@@ -68,7 +71,7 @@ start_browser() {
 }
 
 
-if /usr/local/sbin/tor-has-bootstrapped || ask_for_confirmation; then
+if tor_has_bootstrapped || ask_for_confirmation; then
     # Torbutton 1.5.1+ uses those environment variables
     export TOR_SOCKS_HOST='127.0.0.1'
     export TOR_SOCKS_PORT='9150'

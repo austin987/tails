@@ -18,43 +18,6 @@
 import logging
 import subprocess
 
-import gi
-
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk                                   # NOQA: E402
-
-# Mark translatable strings, but don't actually translate them, as we
-# delegate this to TranslatableWindow that handles on-the-fly language changes
-_ = lambda text: text   # NOQA: E731
-
-
-def popover_toggle(popover):
-    """Toggle the visibility of popover"""
-    if popover.get_visible():
-        popover.set_visible(False)
-    else:
-        popover.set_visible(True)
-
-
-def get_on_off_string(value, default=None):
-    """Return "On"|"Off" [" (default)"] based on value and default"""
-    if value == default:
-        if value:
-            return _("On (default)")
-        else:
-            return _("Off (default)")
-    else:
-        if value:
-            return _("On")
-        else:
-            return _("Off")
-
-
-def import_builder_objects(cls, builder, names):
-    """Import Gtk.Builder objects with names as attributes of cls"""
-    for name in names:
-        setattr(cls, name, builder.get_object(name))
-
 
 def check_output_and_error(args, exception, error_message, stdin=None):
     """Launch a process checking its output and raising exception if needed
@@ -80,15 +43,3 @@ def check_output_and_error(args, exception, error_message, stdin=None):
                 returncode=proc.returncode, stdout=out, stderr=err)
             )
     return out
-
-
-def setting_id_from_row(row):
-    """Return a setting id from a Gtk.ListRow
-
-    The Gtk.ListRow should be named listboxrow_settings_<setting_id>.
-    """
-    if not row:
-        return None
-    else:
-        row_id = Gtk.Buildable.get_name(row)
-        return row_id.replace("listboxrow_", "")
