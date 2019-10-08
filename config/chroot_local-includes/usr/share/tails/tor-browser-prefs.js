@@ -12,7 +12,7 @@ pref("extensions.torbutton.show_slider_notification", false);
 pref("app.update.auto", false);
 pref("app.update.disabledForTesting", true);
 pref("app.update.doorhanger", false);
-pref("app.update.url", "https://non-existent.tails.boum.org/torbrowser/update_3/%CHANNEL%/%BUILD_TARGET%/%VERSION%/%LOCALE%");
+pref("app.update.url", "https://127.0.0.1/dev/null");
 
 // Suppress prompt and always spoof useragent as English
 pref("privacy.spoof_english", 2);
