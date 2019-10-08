@@ -139,7 +139,7 @@ Feature: Browsing the web using the Tor Browser
     And all persistent directories have safe access rights
     When I start the Tor Browser in offline mode
     And I add a bookmark to eff.org in the Tor Browser
-    And I warm reboot the computer
+    And I cold reboot the computer
     And the computer reboots Tails
     And I enable persistence
     And I log in to a new session
