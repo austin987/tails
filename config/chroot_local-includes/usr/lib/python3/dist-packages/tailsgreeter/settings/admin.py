@@ -1,8 +1,8 @@
-
 import os
 import os.path
 import logging
 import pipes
+import subprocess
 
 import tailsgreeter.config
 from tailsgreeter.settings.utils import read_settings, write_settings
@@ -17,8 +17,16 @@ class AdminSetting(object):
 
     def apply_to_upcoming_session(self):
         if self.password:
+            proc = subprocess.run(
+                ["mkpasswd", "-s", "--method=sha512crypt"],
+                input=pipes.quote(self.password).encode(),
+                capture_output=True,
+                check=True,
+            )
+            hashed_and_salted_pw = proc.stdout.decode().strip()
+
             write_settings(self.settings_file, {
-                'TAILS_USER_PASSWORD': pipes.quote(self.password),
+                'TAILS_USER_PASSWORD': pipes.quote(hashed_and_salted_pw),
             })
             logging.debug('password written to %s', self.settings_file)
             return
