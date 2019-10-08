@@ -14,7 +14,7 @@ class AdminSetting(object):
         self.password = None
 
     def apply_to_upcoming_session(self):
-        setting_file = tailsgreeter.config.admin_password_output_path
+        setting_file = tailsgreeter.config.admin_password_path
 
         if self.password:
             with open(setting_file, 'w') as f:

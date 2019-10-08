@@ -16,7 +16,7 @@ class NetworkSetting(object):
         self.value = self.NETCONF_DIRECT
 
     def apply_to_upcoming_session(self):
-        setting_file = tailsgreeter.config.network_setting
+        setting_file = tailsgreeter.config.network_setting_path
         with open(setting_file, 'w') as f:
             os.chmod(setting_file, 0o600)
             f.write("TAILS_NETCONF=%s\n" % pipes.quote(self.value))

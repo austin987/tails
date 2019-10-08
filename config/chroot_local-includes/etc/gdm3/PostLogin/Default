@@ -7,9 +7,9 @@
 # =====
 #
 # * /etc/live/config.d/username.conf : $LIVE_USERNAME
-# * /var/lib/gdm3/tails.locale : $TAILS_LOCALE_NAME, $TAILS_XKBMODEL,
+# * /var/lib/gdm3/settings/tails.locale : $TAILS_LOCALE_NAME, $TAILS_XKBMODEL,
 #   $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT, $TAILS_XKBOPTIONS, $CODESET
-# * /var/lib/gdm3/tails.password : $TAILS_USER_PASSWORD
+# * /var/lib/gdm3/settings/tails.password : $TAILS_USER_PASSWORD
 
 # For whatever reason, /usr/sbin (needed by at least chpasswd)
 # is not in our PATH
@@ -76,7 +76,7 @@ log "tails-unblock-network has exited (status=$?)."
 ### Localization
 
 # Import locale name
-. /var/lib/gdm3/tails.locale || log_n_exit "Locale file not found."
+. /var/lib/gdm3/settings/tails.locale || log_n_exit "Locale file not found."
 if [ -z "${TAILS_LOCALE_NAME}" ] ; then
     log_n_exit "Locale variable not found."
 fi
@@ -112,12 +112,12 @@ EOF
 ### Password
 
 # Import password for superuser access
-if [ -e /var/lib/gdm3/tails.password ] ; then
-    . /var/lib/gdm3/tails.password
+if [ -e /var/lib/gdm3/settings/tails.password ] ; then
+    . /var/lib/gdm3/settings/tails.password
 fi
 
 # Remove password file
-rm --interactive=never -f /var/lib/gdm3/tails.password
+rm --interactive=never -f /var/lib/gdm3/settings/tails.password
 
 # Check if password is actually set
 if [ -z "${TAILS_USER_PASSWORD}" ] ; then

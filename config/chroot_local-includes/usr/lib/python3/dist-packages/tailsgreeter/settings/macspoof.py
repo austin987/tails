@@ -12,7 +12,7 @@ class MacSpoofSetting(object):
         self.value = True
 
     def apply_to_upcoming_session(self):
-        setting_file = tailsgreeter.config.macspoof_setting
+        setting_file = tailsgreeter.config.macspoof_setting_path
         with open(setting_file, 'w') as f:
             os.chmod(setting_file, 0o600)
             f.write("TAILS_MACSPOOF_ENABLED=%s\n" % pipes.quote(str(self.value)).lower())

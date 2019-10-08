@@ -20,7 +20,9 @@
 
 import gi
 import logging
+import os
 
+from tailsgreeter.config import settings_dir
 from tailsgreeter.gdmclient import GdmClient
 from tailsgreeter.settings import localization
 from tailsgreeter.settings.admin import AdminSetting
@@ -59,6 +61,9 @@ class GreeterApplication(object):
                 "org.gnome.SessionManager",
                 "/org/gnome/SessionManager",
                 "org.gnome.SessionManager")
+
+        # Create the settings directory
+        os.makedirs(settings_dir, mode=0o700, exist_ok=True)
 
         # Load models
         self.gdmclient = GdmClient(session_opened_cb=self.close_app)

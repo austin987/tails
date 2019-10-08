@@ -32,17 +32,20 @@ supported_locales_path = os.path.join(data_path, 'supported_locales')
 # System locales directory
 system_locale_dir = '/usr/share/locale/'
 
+# Directory where the Greeter settings are stored
+settings_dir = '/var/lib/gdm3/settings'
+
 # File where session locale settings are stored
-locale_output_path = '/var/lib/gdm3/tails.locale'
+locale_setting_path = os.path.join(settings_dir, 'tails.locale')
 
 # File where the session sudo password is stored
-admin_password_output_path = '/var/lib/gdm3/tails.password'
+admin_password_path = os.path.join(settings_dir, 'tails.password')
+
+# File where the network setting is stored
+network_setting_path = os.path.join(settings_dir, 'tails.network')
+
+# File where the MAC address spoofing setting is stored
+macspoof_setting_path = os.path.join(settings_dir, 'tails.macspoof')
 
 # World-readable file where Tails persistence status is stored
 persistence_state_file = '/var/lib/live/config/tails.persistence'
-
-# File where the network setting is stored
-network_setting = '/var/lib/gdm3/tails.network'
-
-# File where the MAC address spoofing setting is stored
-macspoof_setting = '/var/lib/gdm3/tails.macspoof'

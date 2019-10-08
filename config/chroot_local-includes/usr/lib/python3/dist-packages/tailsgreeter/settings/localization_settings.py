@@ -53,8 +53,8 @@ class LocalisationSettings(object):
             self._usermanager_loaded_cb()
 
     def apply_to_upcoming_session(self):
-        with open(tailsgreeter.config.locale_output_path, 'w') as f:
-            os.chmod(tailsgreeter.config.locale_output_path, 0o600)
+        with open(tailsgreeter.config.locale_setting_path, 'w') as f:
+            os.chmod(tailsgreeter.config.locale_setting_path, 0o600)
 
             f.write('TAILS_LOCALE_NAME=%s\n' % self.language.get_value())
             f.write('TAILS_FORMATS=%s\n' % self.formats.get_value())
