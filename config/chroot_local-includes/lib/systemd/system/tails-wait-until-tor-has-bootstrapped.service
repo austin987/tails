@@ -2,10 +2,11 @@
 Description=Wait for Tor to Have Bootstrapped
 Documentation=https://tails.boum.org/contribute/design/
 After=tor@default.service
-Before=tails-tor-has-bootstrapped.target
+BindsTo=tor@default.service
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 User=debian-tor
 ExecStart=/bin/sh -c '. /usr/local/lib/tails-shell-library/tor.sh ; \
                       while ! tor_is_working ; do                   \
@@ -19,4 +20,4 @@ ProtectHome=yes
 ProtectSystem=full
 
 [Install]
-WantedBy=tails-tor-has-bootstrapped.target
+WantedBy=tor@default.service

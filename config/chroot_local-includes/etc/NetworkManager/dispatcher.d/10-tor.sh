@@ -30,10 +30,6 @@ systemctl stop tor@default.service
 # tordate/20-time.sh), so deleting it seems like a Good Thing(TM).
 rm -f "${TOR_LOG}"
 
-# Let the rest of the system know that Tor is not working at the moment.
-# This matters e.g. if we have already bootstrapped.
-systemctl --no-block restart tails-tor-has-bootstrapped.target
-
 # The Tor syscall sandbox is not compatible with managed proxies.
 # We could possibly detect whether the user has configured any such
 # thing via Tor Launcher later (e.g. in 60-tor-ready.sh),
