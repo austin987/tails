@@ -48,3 +48,6 @@ pref("browser.download.panel.shown", true);
 // open external applications, so let's not offer the option to the user,
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
+
+// Disable the Pocket service integration
+pref("extensions.pocket.enabled", false);
