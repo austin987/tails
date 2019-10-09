@@ -7,7 +7,7 @@ if [ "$(whoami)" != "root" ]; then
     exit 1
 fi
 
-# Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, and
+# Import the TBB_INSTALL and TBB_EXT variables, and
 # configure_xulrunner_app_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
