@@ -51,3 +51,8 @@ pref("browser.download.forbid_open_with", true);
 
 // Disable the Pocket service integration
 pref("extensions.pocket.enabled", false);
+
+// Disable the Quantum Bar. In #17121 we found that it can cause the
+// URL bar to misbehave (the suggestion pop-up with bookmarks/history/...
+// doesn't show up, and pressing Enter doesn't visit the URL).
+pref("browser.urlbar.quantumbar", false);
