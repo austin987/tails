@@ -414,7 +414,7 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   @screen.wait_and_click("TorBrowserBookmarkLocation.png", 10)
   @screen.wait_and_click("TorBrowserBookmarkLocationBookmarksMenu.png", 10)
   # Need to sleep here, otherwise the changed Bookmark location is not taken
-  # into account and we end up create a bookmark in "Other Bookmark" location.
+  # into account and we end up creating a bookmark in "Other Bookmark" location.
   sleep 1
   @screen.type(Sikuli::Key.ENTER)
 end

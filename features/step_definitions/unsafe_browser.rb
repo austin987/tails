@@ -60,35 +60,26 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
 
   def check_bookmarks_helper(a)
     mozilla_uris_counter = 0
-    places_uris_counter = 0
     a.each do |h|
       h.each_pair do |k, v|
         if k == "children"
-          m, p = check_bookmarks_helper(v)
-          mozilla_uris_counter += m
-          places_uris_counter += p
+          mozilla_uris_counter += check_bookmarks_helper(v)
         elsif k == "uri"
           uri = v
           if uri.match("^https://(?:support|www)\.mozilla\.org/")
             mozilla_uris_counter += 1
-          elsif uri.match("^place:(sort|folder|type)=")
-            places_uris_counter += 1
           else
             raise "Unexpected Unsafe Browser bookmark for '#{uri}'"
           end
         end
       end
     end
-    return [mozilla_uris_counter, places_uris_counter]
+    return mozilla_uris_counter
   end
 
-  mozilla_uris_counter, places_uris_counter =
-    check_bookmarks_helper(dump["children"])
+  mozilla_uris_counter = check_bookmarks_helper(dump["children"])
   assert_equal(5, mozilla_uris_counter,
                "Unexpected number (#{mozilla_uris_counter}) of mozilla " \
-               "bookmarks")
-  assert_equal(2, places_uris_counter,
-               "Unexpected number (#{places_uris_counter}) of places " \
                "bookmarks")
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
