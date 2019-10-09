@@ -173,7 +173,7 @@ set_chroot_browser_name () {
     local ext_dir="${chroot}/${TBB_EXT}"
     local browser_profile_ext_dir="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")/extensions"
 
-    # Torbutton is installed in the browser profile, so it will decide
+    # Torbutton is installed in the browser's omni.ja and it decides
     # the browser name.
     local pack="${chroot}/${TBB_INSTALL}/omni.ja"
     local tmp="$(mktemp -d)"
