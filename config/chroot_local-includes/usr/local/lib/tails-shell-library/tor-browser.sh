@@ -27,6 +27,13 @@ exec_firefox_helper() {
     export FONTCONFIG_FILE="fonts.conf"
     export GNOME_ACCESSIBILITY=1
 
+    # Since Tor Browser 9.0 it has become integrated into the browser,
+    # so let's make it the responsibility of callers to explicitly set
+    # this variable to 0 if they want to enable Tor Launcher.
+    if [ -z "${TOR_SKIP_LAUNCH:-}" ]; then
+        export TOR_SKIP_LAUNCH=1
+    fi
+
     # The Tor Browser often assumes that the current directory is
     # where the browser lives, e.g. for the fixed set of fonts set by
     # fontconfig above.

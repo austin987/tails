@@ -10,6 +10,9 @@ When /^I successfully start the Unsafe Browser$/ do
   step "the Unsafe Browser has started"
 end
 
+# This step works reliably only when there's no more than one tab:
+# otherwise, browser.tabs.warnOnClose will block this with a
+# "Quit and close tabs?" dialog.
 When /^I close the (?:Tor|Unsafe) Browser$/ do
   @screen.type("q", Sikuli::KeyModifier.CTRL)
 end
@@ -126,7 +129,7 @@ def page_has_loaded_in_the_Tor_Browser(page_titles, language)
     # is only shown when a page has loaded, so once we see the
     # expected title *and* this button has appeared, then we can be sure
     # that the page has fully loaded.
-    @torbrowser.children(roleName: 'frame').any? { |frame|
+    @torbrowser.children(roleName: 'frame', showingOnly: true).any? { |frame|
       page_titles
         .map  { |page_title| "#{page_title} - #{browser_name}" }
         .any? { |page_title| page_title == frame.name }

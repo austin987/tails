@@ -123,8 +123,6 @@ Feature: Browsing the web using the Tor Browser
     And I open the address "https://tails.boum.org/about" in the Tor Browser
     And "Tails - About" has loaded in the Tor Browser
     Then I can save the current page as "index.html" to the persistent Tor Browser directory
-    When I close the Tor Browser
-    And I start the Tor Browser
     And I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
     Then "Tails - About" has loaded in the Tor Browser
     And I can print the current page as "output.pdf" to the persistent Tor Browser directory
@@ -139,7 +137,7 @@ Feature: Browsing the web using the Tor Browser
     And all persistent directories have safe access rights
     When I start the Tor Browser in offline mode
     And I add a bookmark to eff.org in the Tor Browser
-    And I warm reboot the computer
+    And I cold reboot the computer
     And the computer reboots Tails
     And I enable persistence
     And I log in to a new session
