@@ -55,45 +55,15 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
 end
 
 Given /^I prepare Tails for memory erasure tests$/ do
-  @detected_ram_m = detected_ram_in_MiB
-
-  # Free some more memory by dropping the caches etc.
-  step "I drop all kernel caches"
-
   # Have our initramfs-pre-shutdown-hook sleep for a while
   $vm.execute_successfully("touch /run/initramfs/tails_shutdown_debugging")
-
-  # The (guest) kernel may freeze when approaching full memory without
-  # adjusting the OOM killer and memory overcommitment limitations.
-  kernel_mem_reserved_k = 64*1024
-  kernel_mem_reserved_m = convert_to_MiB(kernel_mem_reserved_k, 'k')
-  admin_mem_reserved_k = 128*1024
-  admin_mem_reserved_m = convert_to_MiB(admin_mem_reserved_k, 'k')
-  kernel_mem_settings = [
-    # Let's avoid killing other random processes, and instead focus on
-    # the hoggers, which will be our fillram instances.
-    ["vm.oom_kill_allocating_task", 0],
-    # Let's not print stuff to the terminal.
-    ["vm.oom_dump_tasks", 0],
-    # From tests the 'guess' heuristic seems to allow us to safely
-    # (i.e. no kernel freezes) fill the maximum amount of RAM.
-    ["vm.overcommit_memory", 0],
-    # Make sure the kernel doesn't starve...
-    ["vm.min_free_kbytes", kernel_mem_reserved_k],
-    # ... and also some core privileged processes, e.g. the remote
-    # shell.
-    ["vm.admin_reserve_kbytes", admin_mem_reserved_k],
-  ]
-  kernel_mem_settings.each do |key, val|
-    $vm.execute_successfully("sysctl #{key}=#{val}")
-  end
 
   # We exclude the memory we reserve for the kernel and admin
   # processes above from the free memory since fillram will be run by
   # an unprivileged user in user-space.
+  detected_ram_m = detected_ram_in_MiB
   used_mem_before_fill_m = used_ram_in_MiB
-  free_mem_before_fill_m = @detected_ram_m - used_mem_before_fill_m -
-                          kernel_mem_reserved_m - admin_mem_reserved_m
+  free_mem_before_fill_m = detected_ram_m - used_mem_before_fill_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 
   ['initramfs-shutdown', 'memlockd', 'tails-shutdown-on-media-removal'].each do |srv|
