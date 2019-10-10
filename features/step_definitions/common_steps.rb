@@ -166,7 +166,7 @@ When /^I power off the computer$/ do
 end
 
 When /^I cold reboot the computer$/ do
-  step "I power off the computer"
+  step "I shutdown Tails and wait for the computer to power off"
   step "I start the computer"
 end
 
