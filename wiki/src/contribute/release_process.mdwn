@@ -572,10 +572,12 @@ SquashFS file order
                   [.]pyc\s+\d+\z
                | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
                | \Alib/live/mount/overlay/etc/fstab\s
+               | \Alib/live/mount/overlay/etc/console-setup/cached_setup_
                | \A(?:lib/live/mount/overlay/)?etc/apparmor[.]d/cache/[.]features\s
                | \A(?:lib/live/mount/overlay/)?etc/(?:group|gshadow|passwd|shadow)-\s
                | \A(?:lib/live/mount/overlay/)?etc/resolv-over-clearnet[.]conf\s
                | \Arun/
+               | \Avar/lib/AccountsService/users/Debian-gdm\s
                | \Avar/log/live/config[.]pipe\s
            )}xms' config/binary_rootfs/squashfs.sort
 
@@ -1041,7 +1043,7 @@ and on the live website (even for a release candidate):
     cat "${RELEASE_CHECKOUT:?}/wiki/src/tails-signing.key" \
        | ssh rsync.lizard gpg --import
     ssh rsync.lizard << EOF
-       wget \
+       wget --quiet \
           "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
           "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
@@ -1361,13 +1363,6 @@ website:
     )
 
 The release is now public! Woo!
-
-Check translation are correct
------------------------------
-
-Once the push is over and the live website is build, check that each
-`news/version_${VERSION}` HTML pages looks OK in all supported
-languages.
 
 Bug tracker
 -----------
