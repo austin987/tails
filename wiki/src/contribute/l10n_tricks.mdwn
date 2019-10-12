@@ -145,39 +145,3 @@ You can then configure it on your Poedit:
 1. *Edit* → *Preferences* → *TM*
 2. *Learn from files*
 3. Select your newly created file (`allspanish.po` in this case)
-
-<a id="weblate-administration"></a>
-
-# Weblate administration
-
-## Enable a new language
-
-Make sure to read the [[blueprint|blueprint/translation_platform/]],
-future [[design documentation|design/translation_platform/]] before doing this.
-
-1. Add the new language code to the `exclude` setting in
-   [[!tails_gitweb ikiwiki.setup]] and [[!tails_gitweb ikiwiki-cgi.setup]]
-   and have this change reviewed and merged into our `master` branch.
-2. Add the new language to `$weblate_additional_languages` in
-   <https://git.tails.boum.org/puppet-tails/tree/manifests/website/params.pp>
-   and have a sysadmin review your changes and deploy them to production.
-3. To create PO files for the new language and commit them to Git,
-   run this command on the system that runs our translation platform,
-   as the `weblate` user:
-
-       ~/scripts/weblate_status.py
-
-   Once satisfied, run this command again with the `--modify`
-   argument, so it actually performs the desired changes:
-
-       ~/scripts/weblate_status.py --modify
-
-   Note that this script must not be run concurrently with
-   [`cron.sh`](https://git.tails.boum.org/puppet-tails/tree/files/weblate/scripts/cron.sh). Hence, they both use a shared lock file.
-4. Finally, to update the Weblate components, run this command as the
-   `weblate` user:
-
-       python3 /usr/local/share/weblate/manage.py \
-                  loadpo --all --lang <LANG>
-
-   … where `<LANG>` is the newly added 2-letter language code.
