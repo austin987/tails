@@ -472,6 +472,7 @@ class VM
       execute_successfully("echo '#{msg}'").stdout.chomp == msg
     end
   rescue StandardError
+    debug_log("The remote shell failed to respond within 3 seconds")
     false
   end
 
