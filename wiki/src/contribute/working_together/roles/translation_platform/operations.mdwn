@@ -1,0 +1,61 @@
+[[!meta title="Translation platform: operations documentation"]]
+
+**Note**: there is more such documentation in `translate-server.git`;
+it might be moved somewhere else in the future ([[!tails_ticket 15086]]).
+
+[[!toc levels=1]]
+
+Enable a new language
+=====================
+
+If the language you're planning to enable is part of our [[(Tier-1)
+languages|contribute/how/translate#tier-1-languages]], you may proceed.
+Else, propose this on the [[tails-l10n mailing list|about/contact#tails-l10n]].
+
+1. Add the new language code to the `exclude` setting in
+   [[!tails_gitweb ikiwiki.setup]] and [[!tails_gitweb ikiwiki-cgi.setup]]
+   and have this change reviewed and merged into our `master` branch.
+2. Add the new language to `$weblate_additional_languages` in
+   <https://git.tails.boum.org/puppet-tails/tree/manifests/website/params.pp>
+   and have a sysadmin review your changes and deploy them to production.
+3. To create PO files for the new language and commit them to Git,
+   run this command on the system that runs our translation platform,
+   as the `weblate` user:
+
+       ~/scripts/weblate_status.py
+
+   Once satisfied, run this command again with the `--modify`
+   argument, so it actually performs the desired changes:
+
+       ~/scripts/weblate_status.py --modify
+
+   Note that this script must not be run concurrently with
+   [`cron.sh`](https://git.tails.boum.org/puppet-tails/tree/files/weblate/scripts/cron.sh). Hence, they both use a shared lock file.
+4. Finally, to update the Weblate components, run this command as the
+   `weblate` user:
+
+       python3 /usr/local/share/weblate/manage.py \
+                  loadpo --all --lang <LANG>
+
+   … where `<LANG>` is the newly added 2-letter language code.
+
+Manually fix issues
+===================
+
+Our Weblate codebase is stored in `/usr/local/share/weblate`.
+
+If commands have to be run, they should be run as the `weblate` user;
+for example, with `sudo -u weblate COMMAND`.
+
+However, this VM is supposed to run smoothly without human
+intervention, so be careful with what you do and please document
+modifications you make so that they can be fed back to a more
+appropriate place, such as our Puppet code or this document.
+
+Reload translations from Git and cleanup orphaned checks and suggestions
+========================================================================
+
+If something went wrong, we may need to ask Weblate to reload all
+translations from Git, using the following command:
+
+	sudo -u weblate ./manage.py loadpo --all
