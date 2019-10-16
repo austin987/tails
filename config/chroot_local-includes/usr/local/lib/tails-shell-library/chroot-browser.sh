@@ -211,6 +211,16 @@ delete_chroot_browser_searchplugins() {
     chmod a+r "${pack}"
 }
 
+# Delete the Tor Browser icons. This prevents a Tor Browser icon being
+# shown in the tab of a "New Tab" page.
+delete_chroot_browser_icons() {
+    local chroot="${1}"
+    local ext_dir="${chroot}/${TBB_EXT}"
+
+    pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+    7z d -tzip "${pack}" "chrome/browser/content/branding/icon*.png"
+}
+
 configure_chroot_browser () {
     local chroot="${1}" ; shift
     local browser_user="${1}" ; shift
@@ -228,6 +238,7 @@ configure_chroot_browser () {
     set_chroot_browser_name "${chroot}" "${human_readable_name}"  \
         "${browser_name}" "${browser_user}" "${best_locale}"
     delete_chroot_browser_searchplugins "${chroot}"
+    delete_chroot_browser_icons "${chroot}"
     set_chroot_browser_permissions "${chroot}" "${browser_name}" \
         "${browser_user}"
 }
