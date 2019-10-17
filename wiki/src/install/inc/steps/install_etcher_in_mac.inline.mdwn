@@ -1,0 +1,147 @@
+<div class="hidden-step-1"></div>
+
+These instructions require:
+
+  - macOS 10.10 (Yosemite) or later
+
+<div class="step-image">[[!img install/inc/infography/os-mac.png link="no" alt=""]]</div>
+
+<p class="start">Start in macOS.</p>
+
+<h1 class="usb">Install Tails using <span class="application">Etcher</span></h1>
+<h1 class="upgrade">Install an intermediary Tails using <span class="application">Etcher</span></h1>
+
+<p class="upgrade">In this step, you will install an intermediary Tails using the Tails USB
+image that you downloaded earlier.</p>
+
+Install Etcher
+--------------
+
+1. Click on the following link to download <span class="application">Etcher</span>:
+
+   <a href='https://tails.boum.org/etcher/Etcher.dmg'>Download Etcher for macOS</a>
+
+1. Open the <span class="application">Etcher</span> download (DMG disk image).
+
+   [[!img install/inc/screenshots/install_etcher_in_mac.png link="no" alt=""]]
+
+1. To install <span class="application">Etcher</span>, drag the
+   <span class="application">Etcher</span> icon onto the
+   <span class="guilabel">Applications</span> icon.
+
+1. Close the installation window of
+   <span class="application">Etcher</span>.
+
+   Optionally, eject the <span class="application">Etcher</span> disk image
+   from the desktop.
+
+   [[!img install/inc/screenshots/eject_etcher_dmg.png link="no" alt=""]]
+
+Instead of installing <span class="application">Etcher</span>, you can
+also [[!toggle id="dd" text="install Tails using `dd` on the command
+line"]].
+
+[[!toggleable id="dd" text="""
+
+1. Make sure that your USB stick is unplugged.
+
+1. Open <span class="application">Terminal</span> from
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Utilities</span>&nbsp;▸
+     <span class="guimenuitem">Terminal.app</span></span>.
+
+1. Execute the following command:
+
+   <p class="pre command">diskutil list</p>
+
+   It returns a list of the storage devices on the system. For example:
+
+   <p class="pre command-output">/dev/disk0
+    #:                     TYPE NAME         SIZE      IDENTIFIER
+    0:    GUID_partition_scheme             *500.1 GB  disk0
+    1:                      EFI              209.7 MB  disk0s1
+    2:                Apple_HFS MacDrive     250.0 GB  disk0s2
+    3:                      EFI              134.1 GB  disk0s3
+    4:     Microsoft Basic Data BOOTCAMP     115.5 GB  disk0s4</p>
+
+1. Plug your USB stick in the computer.
+
+1. Execute again the same command:
+
+   <p class="pre command">diskutil list</p>
+
+   Your USB stick appears as a new device in the list. Check
+   that its size corresponds to the size of your USB stick.
+
+   <p class="pre command-output">/dev/disk0
+    #:                     TYPE NAME         SIZE      IDENTIFIER
+    0:    GUID_partition_scheme             &lowast;500.1 GB  disk0
+    1:                      EFI              209.7 MB  disk0s1
+    2:                Apple_HFS MacDrive     250.0 GB  disk0s2
+    3:                      EFI              134.1 GB  disk0s3
+    4:     Microsoft Basic Data BOOTCAMP     115.5 GB  disk0s4
+  /dev/disk1
+    #:                     TYPE NAME         SIZE      IDENTIFIER
+    0:   FDisk_partition_scheme             *8.0 GB    disk1
+    1:                Apple_HFS Untitled 1   8.0 GB    disk1s1</p>
+
+1. Take note of the *device name* of your USB stick.
+   In this example, the USB stick is 8.0 GB and its device name is <span class="code">/dev/disk1</span>.
+   Yours might be different.
+
+   <div class="caution">
+   <p>If you are unsure about the device name, you should stop proceeding or
+   <strong>you risk overwriting any hard disk on the system</strong>.</p>
+   </div>
+
+1. Execute the following commands to copy the USB image that you
+   downloaded earlier to the USB stick.
+
+   Replace:
+
+   - <span class="command-placeholder">tails.img</span> with the path to the USB image
+
+     <div class="tip">
+     <p>If you are unsure about the path to the USB image, you can insert the
+     correct path by dragging and dropping the icon of the USB image from
+     <span class="application">Finder</span> onto <span class="application">
+     Terminal</span>.</p>
+     </div>
+
+   - <span class="command-placeholder">device</span> with the device name found in step 6
+
+     <div class="tip">
+     <p>You can try adding <span class="code">r</span> before <span class="code">disk</span> to make the installation faster.</p>
+     </div>
+
+   <p class="pre command">diskutil unmountDisk <span class="command-placeholder">device</span></p>
+
+   <p class="pre command">dd if=<span class="command-placeholder">tails.img</span> of=<span class="command-placeholder">device</span> bs=16m && sync</p>
+
+   You should get something like this:
+
+   <p class="pre command-example">dd if=/Users/me/tails-amd64-3.12.img of=/dev/rdisk9 bs=16m && sync</p>
+
+   If no error message is returned, Tails is being copied on the USB
+   stick. The copy takes some time, generally a few minutes.
+
+   <div class="note">
+   <p>If you get a <span class="guilabel">Permission denied</span> error, try
+   adding <code>sudo</code> at the beginning of the command:</p>
+
+   <p class="pre command">sudo dd if=<span class="command-placeholder">tails.img</span> of=<span class="command-placeholder">device</span> bs=16m && sync</p>
+
+   <p>If you get an <span class="guilabel">invalid number ‘16m’</span> error, try
+   using <code>16M</code> instead:</p>
+
+   <p class="pre command">dd if=<span class="command-placeholder">tails.img</span> of=<span class="command-placeholder">device</span> bs=16M && sync</p>
+
+   </div>
+
+   The installation is complete once the command prompt reappeared.
+
+"""]]
+
+Install <span class="upgrade"> the intermediary</span> Tails
+------------------------------------------------------------
