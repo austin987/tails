@@ -20,7 +20,6 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no plugins installed
     And the Unsafe Browser has no add-ons installed
     And the Unsafe Browser has only Firefox's default bookmarks configured
-    And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
   Scenario: The Unsafe Browser can load a web page
