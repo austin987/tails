@@ -59,3 +59,85 @@ If something went wrong, we may need to ask Weblate to reload all
 translations from Git, using the following command:
 
 	sudo -u weblate ./manage.py loadpo --all
+
+Cronjobs
+========
+
+Make sure that cronjobs are enabled:
+
+    sudo -u weblate crontab -l
+
+Post-upgrade
+============
+
+So, after - lets say - pulling a new Weblate version, from the directory
+/usr/local/share/weblate you need run, as weblate user:
+
+	sudo -u weblate python3 ./manage.py makemigrations
+
+Then django will create a set of mysql commands in a file at
+`/usr/local/share/weblate/weblate/trans/migrations/`.
+
+and then you can run:
+
+	sudo -u weblate python3 ./manage.py migrate
+
+In oder to update all checks after an upgrade:
+
+	sudo -u weblate python3 manage.py updatechecks --all
+
+Fix broken `commit_pending`
+===========================
+
+Occasionally, Weblate's `manage.py commit_pending`, that's run by cron,
+will get stuck on a specific file.
+
+To fix that, one can delete the translation change that breaks stuff.
+
+1. Run the `commit_pending` thing by hand. If it gets stuck on
+   "committing $FILE", then read on. Otherwise you're probably
+   experiencing a different problem.
+
+2. Find the ID of the affected subproject (i.e. translation file)
+   in the `trans_subprojet` table. For example:
+
+        select id from trans_subproject where name = 'wiki/src/install/mac/usb.*.po';
+
+3. Find the ID of the broken translation, for example:
+
+        select id from trans_translation where subproject_id = 1889 and language_code = 'fr';
+
+4. List recent changes on this translation, for example:
+
+        select * from trans_change where translation_id = 9734;
+
+5. Delete the last translation change, for example:
+
+        delete from trans_change where id = XYZ;
+
+6. Run the `commit_pending` thing by hand. This time it should
+   complete rather quickly.
+
+7. If `commit_pending` still does not complete, or if you can't make
+   change in the Weblate web interface to the component that was
+   broken, then you need to do more than this (#16995) ⇒ read on.
+   Else, you can stop here.
+
+8. Delete all translation history for the broken resource (`translation_id`);
+   for example:
+   
+        delete from trans_change where translation_id = 9734;
+
+9. Make Weblate forget the broken component, then re-add it.
+   To do so:
+
+   1. Log in as the `weblate` user.
+   2. `cd ~/scripts/`.
+   3. Start `ipython3`.
+   4. Run code based on this example, line by line:
+
+          import tailsWeblate
+          fpath = 'wiki/src/install/mac/usb.es.po'
+          sp = tailsWeblate.subProject(fpath)
+          sp.delete()
+          sp = tailsWeblate.addComponent(fpath)
