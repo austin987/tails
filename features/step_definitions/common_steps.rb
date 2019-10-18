@@ -7,6 +7,17 @@ def post_vm_start_hook
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
   @screen.click_point(@screen.w - 1, @screen.h/2)
+  # Increase the chances that by the time we leave this function, if
+  # the above click has opened the Applications menu (which sometimes
+  # happens, go figure), that menu was closed and the desktop is back
+  # to its normal state. Otherwise, all kinds of trouble may arise:
+  # for example, pressing SUPER to open the Activities Overview would
+  # fail (SUPER has no effect when the Applications menu is still
+  # opened). We sleep here, instead of in "I start […] via GNOME
+  # Activities Overview", because it's our responsibility to return to
+  # a normal desktop state that any following step can rely upon.
+  @screen.type(Sikuli::Key.ESC)
+  sleep 1
 end
 
 def post_snapshot_restore_hook
