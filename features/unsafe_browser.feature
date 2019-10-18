@@ -20,7 +20,6 @@ Feature: Browsing the web using the Unsafe Browser
     And the Unsafe Browser has no plugins installed
     And the Unsafe Browser has no add-ons installed
     And the Unsafe Browser has only Firefox's default bookmarks configured
-    And the Unsafe Browser has no proxy configured
     And the Unsafe Browser uses all expected TBB shared libraries
 
   Scenario: The Unsafe Browser can load a web page
@@ -47,10 +46,12 @@ Feature: Browsing the web using the Unsafe Browser
     And I start the Unsafe Browser
     Then I see a warning about another instance already running
 
-  Scenario: The Unsafe Browser cannot be configured to use Tor and other local proxies.
+  Scenario: The Unsafe Browser is not allowed to use a local proxy
     Given I have started Tails from DVD and logged in and the network is connected
-    When I successfully start the Unsafe Browser
-    Then I cannot configure the Unsafe Browser to use any local proxies
+    When I configure the Unsafe Browser to use a local proxy
+    And I successfully start the Unsafe Browser
+    And I open Tails homepage in the Unsafe Browser
+    Then I see "BrowserProxyRefused.png" after at most 60 seconds
 
   Scenario: The Unsafe Browser will not make any connections to the Internet which are not user initiated
     Given I have started Tails from DVD and logged in and the network is connected
