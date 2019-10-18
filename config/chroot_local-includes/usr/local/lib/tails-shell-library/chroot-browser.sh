@@ -219,6 +219,7 @@ delete_chroot_browser_icons() {
 
     pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
     7z d -tzip "${pack}" "chrome/browser/content/branding/icon*.png"
+    chmod a+r "${pack}"
 }
 
 configure_chroot_browser () {
