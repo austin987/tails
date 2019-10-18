@@ -201,7 +201,7 @@ delete_chroot_browser_searchplugins() {
     local tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z d -tzip "${pack}" "${searchplugins_dir}"/*/manifest.json
+        7z d -tzip "${pack}" "${searchplugins_dir}/*/manifest.json"
         mkdir -p "${searchplugins_dir}"
         echo '{"default": {"visibleDefaultEngines": []}, "experimental-hidden": {"visibleDefaultEngines": []}}' \
              > "${searchplugins_list}"
