@@ -203,13 +203,24 @@ delete_chroot_browser_searchplugins() {
     local tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z x -tzip "${pack}" "${searchplugins_dir}"
-        ls -d "${searchplugins_dir}"/*/manifest.json | xargs 7z d -tzip "${pack}"
+        7z d -tzip "${pack}" "${searchplugins_dir}/*/manifest.json"
+        mkdir -p "${searchplugins_dir}"
         echo '{"default": {"visibleDefaultEngines": []}, "experimental-hidden": {"visibleDefaultEngines": []}}' \
              > "${searchplugins_list}"
         7z u -tzip "${pack}" "${searchplugins_list}"
     )
     rm -r "${tmp}"
+    chmod a+r "${pack}"
+}
+
+# Delete the Tor Browser icons. This prevents a Tor Browser icon being
+# shown in the tab of a "New Tab" page.
+delete_chroot_browser_icons() {
+    local chroot="${1}"
+    local ext_dir="${chroot}/${TBB_EXT}"
+
+    pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+    7z d -tzip "${pack}" "chrome/browser/content/branding/icon*.png"
     chmod a+r "${pack}"
 }
 
@@ -230,6 +241,7 @@ configure_chroot_browser () {
     set_chroot_browser_name "${chroot}" "${human_readable_name}"  \
         "${browser_name}" "${browser_user}" "${best_locale}"
     delete_chroot_browser_searchplugins "${chroot}"
+    delete_chroot_browser_icons "${chroot}"
     set_chroot_browser_permissions "${chroot}" "${browser_name}" \
         "${browser_user}"
 }

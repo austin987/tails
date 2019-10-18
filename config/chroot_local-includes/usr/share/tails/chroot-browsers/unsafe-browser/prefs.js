@@ -19,3 +19,6 @@ user_pref("extensions.activeThemeID", "{91a24c60-0f27-427c-b9a6-96b71f3984a9}");
 // Required to hide the security level button
 user_pref("extensions.torbutton.inserted_button", true);
 user_pref("extensions.torbutton.inserted_security_level", true);
+
+// Don't enable private browsing mode by default
+user_pref("browser.privatebrowsing.autostart", false);
