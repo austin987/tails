@@ -11,9 +11,8 @@ ROOT="$1"
 
 mv "${ROOT}/etc/resolv.conf" "${ROOT}/etc/resolv.conf.orig"
 cp --dereference /etc/resolv.conf "${ROOT}/etc/resolv.conf"
-cp "${CURDIR}/postinstall.sh" "${ROOT}/postinstall.sh"
+install --mode=0755 "${CURDIR}/postinstall.sh" "${ROOT}/postinstall.sh"
 cp "${CURDIR}/../../../config/chroot_sources/tails.binary.gpg" "${ROOT}/tmp/"
-chmod +x "${ROOT}/postinstall.sh"
 
 trap "umount ${ROOT}/proc" EXIT HUP INT QUIT TERM
 chroot "${ROOT}" mount -t proc proc /proc
