@@ -1,5 +1,4 @@
-#14770
-@product @check_tor_leaks @fragile
+@product @check_tor_leaks
 Feature: Keyserver interaction with GnuPG
   As a Tails user
   when I interact with keyservers using various GnuPG tools

@@ -66,7 +66,7 @@ SIKULI_IMAGE_PATH = "#{Dir.pwd}/features/images/"
 SIKULI_MIN_SIMILARITY = 0.9
 
 # Constants that are statically initialized.
-CONFIGURED_KEYSERVER_HOSTNAME = 'jirk5u4osbsr34t5.onion'
+CONFIGURED_KEYSERVER_HOSTNAME = 'zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion'
 LIBVIRT_DOMAIN_NAME = "TailsToaster"
 LIBVIRT_DOMAIN_UUID = "203552d5-819c-41f3-800e-2c8ef2545404"
 LIBVIRT_NETWORK_NAME = "TailsToasterNet"

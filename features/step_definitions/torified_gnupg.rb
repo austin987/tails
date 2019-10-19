@@ -47,7 +47,7 @@ end
 
 def setup_onion_keyserver
   resolver = Resolv::DNS.new
-  keyservers = resolver.getaddresses('pool.sks-keyservers.net').select do |addr|
+  keyservers = resolver.getaddresses('keys.openpgp.org').select do |addr|
     addr.class == Resolv::IPv4
   end
   onion_keyserver_address = keyservers.sample
