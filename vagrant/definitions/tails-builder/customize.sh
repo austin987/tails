@@ -22,6 +22,8 @@ exit 101
 EOF
 chmod a+x "${ROOT}/usr/sbin/policy-rc.d"
 
+trap "umount ${ROOT}/proc" EXIT HUP INT QUIT TERM
+chroot "${ROOT}" mount -t proc proc /proc
 chroot "${ROOT}" "/postinstall.sh"
 
 rm "${ROOT}/usr/sbin/policy-rc.d"
