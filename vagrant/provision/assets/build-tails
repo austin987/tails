@@ -48,8 +48,12 @@ old_build_dirs() {
 	perl -ni -E 'say $mountpoint if (($mountpoint) = ($_ =~ m{^(?:aufs|tmpfs|devpts-live|proc-live|sysfs-live) on (/tmp/tails-build(?:-tmpfs)?\.[/[:alnum:]]+)}))'
 }
 
+ntp_enabled() {
+	timedatectl status | grep -qs -E '^\s*NTP\s+service:\s+active$'
+}
+
 ntp_synchronized() {
-	timedatectl status | grep -qs -E '^\s*NTP\s+service:\s+active$' && \
+	ntp_enabled && \
 	timedatectl status | grep -qs -E '^\s*System\s+clock\s+synchronized:\s+yes$'
 }
 
