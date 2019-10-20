@@ -8,7 +8,7 @@ Feature: Keyserver interaction with GnuPG
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
     And the "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6" OpenPGP key is not in the live user's public keyring
-    And GnuPG is configured to use Chutney's onion keyserver
+    And GnuPG is configured to use a non-Onion keyserver
     And Seahorse is configured to use Chutney's onion keyserver
 
   Scenario: Fetching OpenPGP keys using GnuPG should work and be done over Tor.
@@ -17,16 +17,22 @@ Feature: Keyserver interaction with GnuPG
     Then the "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6" key is in the live user's public keyring
     And GnuPG's dirmngr uses the configured keyserver
 
+  #14770
+  @fragile
   Scenario: Fetching OpenPGP keys using Seahorse should work and be done over Tor.
     When I fetch the "9038E5C6" OpenPGP key using Seahorse
     And the Seahorse operation is successful
     Then the "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6" key is in the live user's public keyring
 
+  #14770
+  @fragile
   Scenario: Fetching OpenPGP keys using Seahorse via the OpenPGP Applet should work and be done over Tor.
     When I fetch the "9038E5C6" OpenPGP key using Seahorse via the OpenPGP Applet
     And the Seahorse operation is successful
     Then the "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6" key is in the live user's public keyring
 
+  #14770
+  @fragile
   Scenario: Syncing OpenPGP keys using Seahorse should work and be done over Tor.
     Given I fetch the "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6" OpenPGP key using the GnuPG CLI
     And the GnuPG fetch is successful
@@ -41,6 +47,8 @@ Feature: Keyserver interaction with GnuPG
     And the Seahorse operation is successful
     Then the key "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6" has at least 3 subkeys
 
+  #14770
+  @fragile
   Scenario: Syncing OpenPGP keys using Seahorse started from the OpenPGP Applet should work and be done over Tor.
     Given I fetch the "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6" OpenPGP key using the GnuPG CLI
     And the GnuPG fetch is successful
