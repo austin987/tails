@@ -172,13 +172,6 @@ start_vnc_viewer() {
     xtigervncviewer -nojpeg -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
 }
 
-capture_session() {
-    check_dependencies libvpx1
-    echo "Capturing guest display into ${CAPTURE_FILE}"
-    avconv -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
-        -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
-}
-
 # main script
 
 # Unset all environment variables used by this script to pass options
