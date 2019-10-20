@@ -17,21 +17,17 @@ Feature: Keyserver interaction with GnuPG
     Then the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" key is in the live user's public keyring
     And GnuPG's dirmngr uses the configured keyserver
 
-  #14770
-  @fragile
   Scenario: Fetching OpenPGP keys using Seahorse should work and be done over Tor.
     When I fetch the "30F80A2C" OpenPGP key using Seahorse
     And the Seahorse operation is successful
     Then the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" key is in the live user's public keyring
 
-  #14770
-  @fragile
   Scenario: Fetching OpenPGP keys using Seahorse via the OpenPGP Applet should work and be done over Tor.
     When I fetch the "30F80A2C" OpenPGP key using Seahorse via the OpenPGP Applet
     And the Seahorse operation is successful
     Then the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" key is in the live user's public keyring
 
-  #14770
+  #14770, #17169
   @fragile
   Scenario: Syncing OpenPGP keys using Seahorse should work and be done over Tor.
     Given I fetch the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" OpenPGP key using the GnuPG CLI
@@ -47,7 +43,7 @@ Feature: Keyserver interaction with GnuPG
     And the Seahorse operation is successful
     Then the key "DF841752B55CD97FDA4879B29E5B04F430F80A2C" has at least 1 subkey
 
-  #14770
+  #14770, #17169
   @fragile
   Scenario: Syncing OpenPGP keys using Seahorse started from the OpenPGP Applet should work and be done over Tor.
     Given I fetch the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" OpenPGP key using the GnuPG CLI
