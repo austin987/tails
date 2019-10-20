@@ -220,7 +220,7 @@ Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |ap
     server = /keyserver\s+(\S+)$/.match($vm.file_content("/home/#{LIVE_USER}/.gnupg/dirmngr.conf"))[1]
     assert_equal(
       "hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}", server,
-      "GnuPG's dirmngr does not use the correct keyserver"
+      "GnuPG's dirmngr is not configured to use the correct keyserver"
     )
     # ... before replacing it
     $vm.execute_successfully(
@@ -239,7 +239,7 @@ Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |ap
                  'Seahorse should only have one keyserver configured.')
     assert_equal(
       'hkp://' + CONFIGURED_KEYSERVER_HOSTNAME, @gnome_keyservers[0],
-      "GnuPG's dirmngr does not use the correct keyserver"
+      "Seahorse is not configured to use the correct keyserver"
     )
     # ... before replacing it
     $vm.execute_successfully(
