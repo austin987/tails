@@ -248,6 +248,18 @@ Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |ap
       user: LIVE_USER
     )
   end
+  # When dirmngr connects to the Onion service run by Chutney, the
+  # isotester redirects the connection to keys.openpgp.org:11371 over
+  # IPv4 (see setup_onion_keyserver), and then keys.openpgp.org
+  # redirects us to https://keys.openpgp.org, that is resolved by
+  # dirmngr. By default we would get an IPv6 address here, which works
+  # just fine in a normal Tails, but here we exit from Chutney's Tor
+  # network that runs on our CI infrastructure, which is IPv4-only, so
+  # that would fail. Therefore, let's ensure dirmngr only picks IPv4
+  # addresses for keys.openpgp.org.
+  if $vm.execute("grep -F --line-regexp disable-ipv6 '#{dirmngr_conf}'").failure?
+    $vm.file_append(dirmngr_conf, "disable-ipv6\n")
+  end
 end
 
 Then /^GnuPG's dirmngr uses the configured keyserver$/ do
