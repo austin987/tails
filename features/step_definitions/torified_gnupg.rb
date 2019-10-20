@@ -260,6 +260,9 @@ Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |ap
   if $vm.execute("grep -F --line-regexp disable-ipv6 '#{dirmngr_conf}'").failure?
     $vm.file_append(dirmngr_conf, "disable-ipv6\n")
   end
+  # Ensure dirmngr picks up the changes we made to its configuration
+  $vm.execute_successfully("systemctl --user restart dirmngr.service",
+                           :user => LIVE_USER)
 end
 
 Then /^GnuPG's dirmngr uses the configured keyserver$/ do
