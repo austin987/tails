@@ -137,10 +137,6 @@ When /^I configure Tails to use a simulated Tor network$/ do
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)
 end
 
-When /^Tails is using the real Tor network$/ do
-  assert($vm.execute('grep "TestingTorNetwork 1" /etc/torrc').failure?)
-end
-
 def chutney_onionservice_info
   hs_hostname_file_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/hidden_service/hostname"
