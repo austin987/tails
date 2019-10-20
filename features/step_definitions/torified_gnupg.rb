@@ -255,11 +255,8 @@ Then /^GnuPG's dirmngr uses the configured keyserver$/ do
     'gpg-connect-agent --dirmngr "keyserver --hosttable" /bye', user: LIVE_USER
   )
   server = dirmngr_request.stdout.chomp.lines[1].split[4]
-  server = /keyserver\s+(\S+)$/.match(
-    $vm.file_content("/home/#{LIVE_USER}/.gnupg/dirmngr.conf")
-  )[1]
   assert_equal(
-    "hkp://#{onion_keyserver_address}:5858", server,
+    onion_keyserver_address, server,
     "GnuPG's dirmngr does not use the correct keyserver"
   )
 end
