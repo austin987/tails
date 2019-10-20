@@ -31,7 +31,12 @@ def start_or_restart_seahorse
   step 'Seahorse has opened'
 end
 
-Then /^the key "([^"]+)" has (strictly less than|at least) (\d+) subkeys$/ do |key, qualifier, num|
+Then /^the key "([^"]+)" has no subkeys?$/ do |key|
+  count = count_gpg_subkeys(key)
+  assert_equal(0, count, "Expected no subkey but found #{count}")
+end
+
+Then /^the key "([^"]+)" has (strictly less than|at least) (\d+) subkeys?$/ do |key, qualifier, num|
   count = count_gpg_subkeys(key)
   case qualifier
   when 'strictly less than'
