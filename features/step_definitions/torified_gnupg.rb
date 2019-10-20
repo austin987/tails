@@ -214,10 +214,11 @@ end
 Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |app|
   setup_onion_keyserver unless @onion_keyserver_job
   _, _, onion_address, onion_port = chutney_onionservice_info
+  dirmngr_conf = "/home/#{LIVE_USER}/.gnupg/dirmngr.conf"
   case app
   when 'GnuPG'
     # Validate the shipped configuration ...
-    server = /keyserver\s+(\S+)$/.match($vm.file_content("/home/#{LIVE_USER}/.gnupg/dirmngr.conf"))[1]
+    server = /keyserver\s+(\S+)$/.match($vm.file_content(dirmngr_conf))[1]
     assert_equal(
       "hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}", server,
       "GnuPG's dirmngr is not configured to use the correct keyserver"
@@ -225,7 +226,7 @@ Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |ap
     # ... before replacing it
     $vm.execute_successfully(
       "sed -i 's/#{CONFIGURED_KEYSERVER_HOSTNAME}/#{onion_address}:#{onion_port}/' " +
-      "'/home/#{LIVE_USER}/.gnupg/dirmngr.conf'"
+      "'#{dirmngr_conf}'"
     )
   when 'Seahorse'
     # Validate the shipped configuration ...
