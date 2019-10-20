@@ -135,14 +135,6 @@ end
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = Proc.new do
     setup_onion_keyserver
-    # The version of Seahorse in Jessie will abort with a
-    # segmentation fault whenever there's any sort of network error while
-    # syncing keys. This will usually happens after clicking away the error
-    # message. This does not appear to be a problem in Stretch.
-    #
-    # We'll kill the Seahorse process to avoid waiting for the inevitable
-    # segfault. We'll also make sure the process is still running (=  hasn't
-    # yet segfaulted) before terminating it.
     if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
       step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
       debug_log('Restarting Seahorse.')
