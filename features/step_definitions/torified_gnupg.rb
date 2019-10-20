@@ -3,10 +3,10 @@ require 'resolv'
 class OpenPGPKeyserverCommunicationError < StandardError
 end
 
-def count_gpg_signatures(key)
-  output = $vm.execute_successfully("gpg --batch --list-sigs #{key}",
+def count_gpg_subkeys(key)
+  output = $vm.execute_successfully("gpg --batch --list-keys #{key}",
                                     :user => LIVE_USER).stdout
-  output.scan(/^sig/).count
+  output.scan(/^sub/).count
 end
 
 def check_for_seahorse_error
@@ -27,13 +27,13 @@ def start_or_restart_seahorse
   step 'Seahorse has opened'
 end
 
-Then /^the key "([^"]+)" has (less|more) than (\d+) signatures$/ do |key, qualifier, num|
-  count = count_gpg_signatures(key)
+Then /^the key "([^"]+)" has (strictly less than|at least) (\d+) subkeys$/ do |key, qualifier, num|
+  count = count_gpg_subkeys(key)
   case qualifier
-  when 'less'
-    assert(count < num.to_i, "Expected less than #{num} signatures but found #{count}")
-  when 'more'
-    assert(count > num.to_i, "Expected more than #{num} signatures but found #{count}")
+  when 'strictly less than'
+    assert(count < num.to_i, "Expected strictly less than #{num} subkeys but found #{count}")
+  when 'at least'
+    assert(count >= num.to_i, "Expected at least #{num} subkeys but found #{count}")
   else
     raise "Unknown operator #{qualifier} passed"
   end
@@ -57,18 +57,13 @@ def setup_onion_keyserver
   )
 end
 
-When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
+When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
   # Make keyid an instance variable so we can reference it in the Seahorse
   # keysyncing step.
   @fetched_openpgp_keyid = keyid
-  if without
-    importopts = '--keyserver-options import-clean'
-  else
-    importopts = ''
-  end
   retry_tor(Proc.new { setup_onion_keyserver }) do
     @gnupg_recv_key_res = $vm.execute_successfully(
-      "timeout 120 gpg --batch #{importopts} --recv-key '#{@fetched_openpgp_keyid}'",
+      "timeout 120 gpg --batch --recv-key '#{@fetched_openpgp_keyid}'",
       :user => LIVE_USER)
     if @gnupg_recv_key_res.failure?
       raise "Fetching keys with the GnuPG CLI failed with:\n" +
@@ -94,6 +89,11 @@ When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (
     $vm.execute("gpg --batch --list-keys '#{keyid}'",
                 :user => LIVE_USER).success?
   }
+end
+
+Given /^I delete the "([^"]+)" subkey from the live user's public keyring$/ do |subkeyid|
+    $vm.execute("gpg --batch --delete-keys '#{subkeyid}!'",
+                :user => LIVE_USER).success?
 end
 
 When /^I start Seahorse( via the OpenPGP Applet)?$/ do |withgpgapplet|
@@ -137,7 +137,7 @@ Then /^I synchronize keys in Seahorse$/ do
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
-    if count_gpg_signatures(@fetched_openpgp_keyid) > 42 || \
+    if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
       @screen.exists('GnomeCloseButton.png')  || \
       !$vm.has_process?('seahorse')
         true
