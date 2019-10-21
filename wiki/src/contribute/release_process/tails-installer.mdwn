@@ -9,29 +9,11 @@ Upstream
 --------
 
 For this package, "upstream" means, from a Debian packaging
-point-of-view, the state of our upstream branches. Let's not pretend we
-have not forked liveusb-creator, and admit we are now upstream for our
-own version. Thus, from version 4.x on, our fork has been renamed to
-tails-installer.
+point-of-view, the state of our upstream branches.  Tails developers are
+the upstream for this forked version of liveusb-creator, which, from
+version 4.x on, has been renamed to tails-installer.
 
-The `master` branch must always be the one that targets current Tails
-and possibly *also* earlier Debian releases. At the moment it supports
-Debian Stretch, Buster and Sid.
-
-But that's not enough, since we also need to put releases out with code
-that works on current Debian testing/unstable. Thus, we maintain several upstream
-release branches in parallel, each with their own major version number:
-
- * for work and releases that target Stretch (and, as long
-   as compatible, that target Debian testing/unstable as well):
-   * branch = `master`
-   * version = `5.*`
-   * tag = `tails-installer_5.*`
-
-Once we can't support both Stretch and Debian testing/unstable
-with the same codebase anymore, we'll fork a new upstream release
-branch that targets Debian testing, it'll be called
-`feature/$codename`, use version `6.*`, etc.
+The `master` branch must always be the one that targets current Tails.
 
 Packaging
 ---------
@@ -43,17 +25,6 @@ targeted at current Tails, as said above. More specifically:
 * The `pristine-tar` branch contains the binary delta between DFSG-freed
   tarballs and the corresponding tag. It's automatically maintained by
   `gbp import-orig`.
-* The `debian/sid` branch is used to build the package that we upload to
-  Debian unstable. The tags on this branch are called `debian/$package_version`,
-  which is the default when creating them with
-  `gbp buildpackage --git-sign-tags --git-tag-only`;
-  in practice this is something like `debian/5.3+dfsg-1`.
-* The `debian/$codename-backports` branch is used to prepare packages
-  that we upload to the official backports repository for Debian `$codename`.
-  E.g. here we want to have `debian/stretch-backports` soon after the initially
-  uploaded package reaches Debian testing. The tags on this branch are
-  also called `debian/$package_version`. In practice this is something
-  like `debian/5.3+dfsg-1~bpo8+1`.
 * The `tails/master` branch is used to prepare packages that we upload
   to the Tails APT repo for Tails stable releases, but not to Debian.
 * The `tails/$codename` branch is used to prepare packages that we upload
@@ -64,10 +35,16 @@ targeted at current Tails, as said above. More specifically:
 * The `upstream/4.x+dfsg`, `upstream/5.x+dfsg`, etc. branches are what
   we tell `gbp` to use as its "upstream" branch. Make sure to check
   them out when setting up the repository for the first time.
-* For Ubuntu, we want to support the current Ubuntu version, the
-  upcoming version, and the current LTS: [[!wikipedia Ubuntu version history]].
-  We do not maintain any Git branches related to Ubuntu releases, as
-  simply the changelog entries are modified.
+
+Branches that are not used anymore because the package was dropped from
+Debian, but stay in the packaging repository for reference:
+
+* The `debian/sid` branch was used to build the package that we uploaded to
+  Debian unstable. The tags on this branch were called `debian/$package_version`.
+* The `debian/$codename-backports` branch was used to prepare packages
+  that were upload to the official backports repository for Debian `$codename`.
+* We did not maintain any Git branches related to Ubuntu releases, as
+  simply the changelog entries are modified and the releases tagged.
 
 Topic branches
 --------------
