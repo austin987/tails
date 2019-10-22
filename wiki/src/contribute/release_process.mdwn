@@ -1191,8 +1191,8 @@ Testing
    step is and make sure it happens: add to known issues? file ticket?
    release blocker? improve the test description (steps, expected outcome)?
 
-Update the website and Git repository
-=====================================
+Prepare announcements and blog posts
+====================================
 
 What follows in this section happens on the `$WEBSITE_RELEASE_BRANCH`
 branch in `${RELEASE_CHECKOUT:?}`:
@@ -1318,6 +1318,48 @@ Then, if you are preparing a final release, email
  … so that these pages get translated shortly, perhaps even soon
 enough to merge the translations before you publish the release.
 
+Draft the Tor blog post
+-----------------------
+
+Skip this if you are preparing anything but a final, major release.
+
+* Generate a Tor Blog-friendly post; please go through it manually,
+  and look at the previews, to make sure it looks sane!
+
+      ikiwiki --setup ikiwiki.setup \
+              --render wiki/src/news/version_${VERSION:?}.mdwn | \
+          tidy --wrap 99999 | \
+          sed '0,/^<div id="content" role="main">$/d' | \
+          sed '/^<div id="footer" class="pagefooter" role="contentinfo">$/,$d' | \
+          sed '/^<div class="toc">$/,+7d' | \
+          sed '/^<p><img [^<>]*\/><\/p>$/d' | \
+          sed '/^<\/div>$/d' | \
+          sed 's@<a name[^<>]*></a>@@g' | \
+          sed 's@href="\.\./@href="https://tails.boum.org/@g' | \
+          sed 's@src="\./@src="https://tails.boum.org/news/@g' | \
+          sed 's@\(\.en\)\?.html@/@g' \
+          > /tmp/tor-blog-post.html
+          cat >> /tmp/tor-blog-post.html <<EOF
+      <h1>Support and feedback</h1>
+      <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
+      EOF
+
+- [login to the Tor blog](https://blog.torproject.org/user)
+- click *Content* → *Add content* → *Blog Post*
+- add these tags:
+  * tails
+  * anonymous operating system
+  * tails releases
+- set *Title* to "New Release: Tails $VERSION"
+- choose *Filtered HTML* as the *Text format* in the blog post editor
+- copy the text you have prepared into the *Post Body* textarea of the
+  blog post editor
+- open *Comment Settings* and verify that comments are *Closed*
+- open *Promotion Options* and check *Promoted to front page*
+- click *Preview* and ensure everything is OK
+- uncheck the *Publish* checkbox
+- click *Save* to save the draft; XXX: is it *Save and keep unpublished* instead?
+
 Go wild!
 ========
 
@@ -1340,9 +1382,6 @@ Sanity checks
 * Check the outcome of the "Testing" section above.
 * Wait for the Mozilla security advisory
   [to be published](https://www.mozilla.org/en-US/security/advisories/).
-* While waiting, if preparing a major release, you can drop the post for Tor blog:
-  see the "Tor blog" section below. If you do that, uncheck the *Publish*
-  checkbox and click *Save* to save the draft.
 * Verify once more that the Tor Browser we ship is still the most recent (see
   above).
 
@@ -1445,54 +1484,13 @@ to the release notes:
 
     Tails x.y is out: https://tails.boum.org/news/version_x.y/
 
-Tor blog
---------
+Publish the Tor blog post
+-------------------------
 
-XXX: move most of this to the list of things that can be done while
-waiting for manual test results, replace "Save and publish" there with
-"Save and keep unpublished", and keep only the "Save and publish" step
-here (+ adjust *Authoring Information* → *Authored on* since the date
-of the draft creation won't be correct). I didn't do this yet as it
-would conflict with the changes I've done for [[!tails_ticket 12629]]
-in painful ways.
-
-We announce *major* releases on the Tor blog:
-
-* Generate a Tor Blog-friendly post; please go through it manually,
-  and look at the previews, to make sure it looks sane!
-
-      ikiwiki --setup ikiwiki.setup \
-              --render wiki/src/news/version_${VERSION:?}.mdwn | \
-          tidy --wrap 99999 | \
-          sed '0,/^<div id="content" role="main">$/d' | \
-          sed '/^<div id="footer" class="pagefooter" role="contentinfo">$/,$d' | \
-          sed '/^<div class="toc">$/,+7d' | \
-          sed '/^<p><img [^<>]*\/><\/p>$/d' | \
-          sed '/^<\/div>$/d' | \
-          sed 's@<a name[^<>]*></a>@@g' | \
-          sed 's@href="\.\./@href="https://tails.boum.org/@g' | \
-          sed 's@src="\./@src="https://tails.boum.org/news/@g' | \
-          sed 's@\(\.en\)\?.html@/@g' \
-          > /tmp/tor-blog-post.html
-          cat >> /tmp/tor-blog-post.html <<EOF
-      <h1>Support and feedback</h1>
-      <p>For support and feedback, visit the <a href="https://tails.boum.org/support/">Support section</a> on the Tails website.</p>
-      EOF
-
-- [login to the Tor blog](https://blog.torproject.org/user)
-- click *Content* → *Add content* → *Blog Post*
-- add these tags:
-  * tails
-  * anonymous operating system
-  * tails releases
-- set *Title* to "New Release: Tails $VERSION"
-- choose *Filtered HTML* as the *Text format* in the blog post editor
-- copy the text you have prepared into the *Post Body* textarea of the
-  blog post editor
-- open *Comment Settings* and verify that comments are *Closed*
-- open *Promotion Options* and check *Promoted to front page*
-- click *Preview* and ensure everything is OK
-- click *Save and publish*
+1. Open the draft Tor blog post you have prepared earlier
+1. Adjust *Authoring Information* → *Authored on* to make the
+   publication date correct
+1. Click *Save and publish*
 
 Amnesia news
 ------------
