@@ -48,11 +48,11 @@ Then /^The Additional Software persistence option is enabled$/  do
 end
 
 Then /^Additional Software is correctly configured for package "([^"]*)"$/ do |package|
-  assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
-  step 'all persistence configuration files have safe access rights'
-  $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
-  $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages")
   try_for(30) do
+    assert($vm.file_exist?(ASP_CONF), "ASP configuration file not found")
+    step 'all persistence configuration files have safe access rights'
+    $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
+    $vm.execute_successfully("ls /live/persistence/TailsData_unlocked/apt/lists/*_Packages")
     $vm.execute("grep --line-regexp --fixed-strings #{package} #{ASP_CONF}").success?
   end
 end
@@ -66,26 +66,31 @@ Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
 end
 
 When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/  do |decision, action, package|
-  gnome_shell = Dogtail::Application.new('gnome-shell')
   case action
   when "adding"
-    title = "Add #{package} to your additional software?"
-    step "I see the \"#{title}\" notification after at most 300 seconds"
+    notification_title = "Add #{package} to your additional software?"
     case decision
     when "accept"
-      gnome_shell.child('Install Every Time', roleName: 'push button').click
+      button_title = 'Install Every Time'
     when "refuse"
-      gnome_shell.child('Install Only Once', roleName: 'push button').click
+      button_title = 'Install Only Once'
     end
   when "removing"
-    title = "Remove #{package} from your additional software?"
-    step "I see the \"#{title}\" notification after at most 300 seconds"
+    notification_title = "Remove #{package} from your additional software?"
     case decision
     when "accept"
-      gnome_shell.child('Remove', roleName: 'push button').click
+      button_title = 'Remove'
     when "refuse"
-      gnome_shell.child('Cancel', roleName: 'push button').click
+      button_title = 'Cancel'
     end
+  end
+  try_for(300) do
+    notification =
+      Dogtail::Application.new('gnome-shell')
+        .children('', roleName: "notification")
+        .find { |notif| notif.child?(notification_title, roleName: 'label') }
+    assert_not_nil(notification)
+    notification.child(button_title, roleName: 'push button').click
   end
 end
 
@@ -102,7 +107,7 @@ When /^I prepare the Additional Software upgrade process to fail$/  do
   # before it gets upgraded so that we simulate a failing upgrade.
   failing_dpkg_hook = <<-EOF
 DPkg::Pre-Invoke {
-  "ls -tr1 /var/cache/apt/archives/cowsay*.deb | head -n 1 | xargs rm";
+  "ls -1 -v /var/cache/apt/archives/cowsay*.deb | tail -n 1 | xargs rm";
 };
 EOF
   $vm.file_overwrite('/etc/apt/apt.conf.d/00failingDPKGhook', failing_dpkg_hook)
@@ -124,7 +129,7 @@ end
 Then /^the Additional Software dpkg hook has been run for package "([^"]*)" and notices the persistence is locked$/ do |package|
   asp_logs = "#{ASP_STATE_DIR}/log"
   assert(!$vm.file_empty?(asp_logs))
-  try_for(60) { $vm.execute("grep -E '^.*New\spackages\smanually\sinstalled:\s.*#{package}.*$' #{asp_logs}").success? }
+  try_for(120) {$vm.execute("grep -E '^.*New\spackages\smanually\sinstalled:\s.*#{package}.*$' #{asp_logs}").success?}
   try_for(60) { $vm.file_content(asp_logs).include?('Warning: persistence storage is locked') }
 end
 

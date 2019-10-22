@@ -13,8 +13,7 @@ Feature: Chatting anonymously using Pidgin
     Then I see Pidgin's account manager window
     And Pidgin's D-Bus interface is not available
 
-  #11453
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Chatting with some friend over XMPP
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
@@ -27,8 +26,7 @@ Feature: Chatting anonymously using Pidgin
     And I say something to my friend
     Then I receive a response from my friend
 
-  #11414
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Chatting with some friend over XMPP in a multi-user chat
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
@@ -48,8 +46,7 @@ Feature: Chatting anonymously using Pidgin
     And I click on the Tails roadmap URL
     Then the Tor Browser loads the Tails roadmap
 
-  #11453
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Chatting with some friend over XMPP and with OTR
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
@@ -65,8 +62,7 @@ Feature: Chatting anonymously using Pidgin
     When I say something to my friend
     Then I receive a response from my friend
 
-  #11414
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Connecting to the tails multi-user chat with my XMPP account
     Given I have started Tails from DVD and logged in and the network is connected
     When I start "Pidgin Internet Messenger" via GNOME Activities Overview
@@ -96,8 +92,7 @@ Feature: Chatting anonymously using Pidgin
     And I close Pidgin's certificate manager
     Then I cannot add a certificate from the "/live/overlay/home/amnesia/.gnupg" directory to Pidgin
 
-  #11584
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Using a persistent Pidgin configuration
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And the network is plugged

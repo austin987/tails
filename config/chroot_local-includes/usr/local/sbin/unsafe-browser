@@ -7,19 +7,16 @@ set -u
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-# Import tor_is_working()
-. /usr/local/lib/tails-shell-library/tor.sh
+# Import tor_has_bootstrapped()
+. /usr/local/lib/tails-shell-library/systemd.sh
 
-# Import the TBB_EXT variable, and guess_best_tor_browser_locale().
+# Import the TBB_EXT variable.
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
 # Import localized_tails_doc_page().
 . /usr/local/lib/tails-shell-library/localization.sh
 
-# Import try_cleanup_browser_chroot(), setup_browser_chroot(),
-# configure_chroot_dns_servers(), configure_chroot_browser(),
-# configure_chroot_browser(), set_chroot_browser_locale()
-# set_chroot_browser_name(), set_chroot_browser_permissions()
+# Import setup_chroot_for_browser(), configure_chroot_browser(),
 # and run_browser_in_chroot().
 . /usr/local/lib/tails-shell-library/chroot-browser.sh
 
@@ -29,7 +26,7 @@ error () {
 
 ${@}"
     echo "${cli_text}" >&2
-    sudo -u "${SUDO_USER}" zenity --error --title "" --text "${dialog_text}"
+    sudo -u "${SUDO_USER}" zenity --error --ellipsize --title "" --text "${dialog_text}"
     exit 1
 }
 
@@ -41,7 +38,7 @@ verify_start () {
     local launch="`gettext \"_Launch\"`"
     local exit="`gettext \"_Exit\"`"
     if ! sudo -u "${SUDO_USER}" \
-         zenity --question --title "" --text "${dialog_msg}" --default-cancel \
+         zenity --question --ellipsize --title "" --text "${dialog_msg}" --default-cancel \
          --ok-label "${launch}"  --cancel-label "${exit}"; then
         exit 0
     fi
@@ -63,7 +60,7 @@ maybe_restart_tor () {
     # Restart Tor if it's not working (a captive portal may have prevented
     # Tor from bootstrapping, and a restart is the fastest way to get
     # wheels turning)
-    if ! tor_is_working; then
+    if ! tor_has_bootstrapped; then
         echo "* Restarting Tor"
         restart-tor
         if ! systemctl --quiet is-active tor@default.service; then
@@ -100,7 +97,9 @@ setup_chroot_for_browser "${CHROOT}" "${COW}" "${BROWSER_USER}" || \
 
 echo "* Configuring chroot"
 configure_chroot_browser "${CHROOT}" "${BROWSER_USER}" "${BROWSER_NAME}" \
-    "${HUMAN_READABLE_NAME}" "${HOME_PAGE}" "${TBB_EXT}"/langpack-*.xpi || \
+    "${HUMAN_READABLE_NAME}" "${HOME_PAGE}" \
+    "${TBB_EXT}"/langpack-*.xpi \
+    /usr/share/tails/chroot-browsers/unsafe-browser/extensions/*.xpi || \
         error "`gettext \"Failed to configure browser.\"`"
 # If /etc/resolv-over-clearnet.conf file is empty or doesn't exist, we
 # have no clearnet DNS server.
