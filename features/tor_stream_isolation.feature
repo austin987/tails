@@ -1,4 +1,5 @@
-@product @check_tor_leaks
+#17013
+@product @check_tor_leaks @fragile
 Feature: Tor stream isolation is effective
   As a Tails user
   I want my Tor streams to be sensibly isolated from each other to prevent identity correlation
@@ -21,8 +22,6 @@ Feature: Tor stream isolation is effective
     And I re-run tails-upgrade-frontend-wrapper
     Then I see that tails-upgrade-frontend-wrapper is properly stream isolated
 
-  #11592
-  @fragile
   Scenario: The Tor Browser is using the web browser-specific SocksPort
     When I monitor the network connections of Tor Browser
     And I start the Tor Browser
@@ -31,8 +30,7 @@ Feature: Tor stream isolation is effective
 
   Scenario: SSH is using the default SocksPort
     When I monitor the network connections of SSH
-    And I run "ssh lizard.tails.boum.org" in GNOME Terminal
-    And I see "SSHAuthVerification.png" after at most 60 seconds
+    And I connect to an SSH server on the Internet
     Then I see that SSH is properly stream isolated
 
   Scenario: whois lookups use the default SocksPort

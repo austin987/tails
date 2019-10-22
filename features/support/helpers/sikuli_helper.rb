@@ -61,37 +61,40 @@ end
 def findfailed_hook(proxy, orig_method, args)
   picture = args.first
   candidate_path = "#{SIKULI_CANDIDATES_DIR}/#{picture}"
-  if ! File.exist?(candidate_path)
-    [0.80, 0.70, 0.60, 0.50, 0.40].each do |similarity|
-      pattern = Sikuli::Pattern.new(picture)
-      pattern.similar(similarity)
-      match = proxy._invoke('exists', 'Ljava.lang.Object;', pattern)
-      if match
-        capture = proxy._invoke('capture', 'Lorg.sikuli.script.Region;', match)
-        capture_path = capture.getFilename
-        # Let's verify that our screen capture actually matches
-        # with the default similarity
-        if proxy._invoke('exists', 'Ljava.lang.Object;', capture_path)
-          debug_log("Found fuzzy candidate picture for #{picture} with " +
-                    "similarity #{similarity}")
-          FileUtils.mkdir_p(SIKULI_CANDIDATES_DIR)
-          FileUtils.mv(capture_path, candidate_path)
-          break
-        else
-          FileUtils.rm(capture_path)
+  if $config['SIKULI_FUZZY_IMAGE_MATCHING']
+    if ! File.exist?(candidate_path)
+      [0.80, 0.70, 0.60, 0.50, 0.40].each do |similarity|
+        pattern = Sikuli::Pattern.new(picture)
+        pattern.similar(similarity)
+        match = proxy._invoke('exists', 'Ljava.lang.Object;', pattern)
+        if match
+          capture = proxy._invoke('capture', 'Lorg.sikuli.script.Region;', match)
+          capture_path = capture.getFilename
+          # Let's verify that our screen capture actually matches
+          # with the default similarity
+          if proxy._invoke('exists', 'Ljava.lang.Object;', capture_path)
+            debug_log("Found fuzzy candidate picture for #{picture} with " +
+                      "similarity #{similarity}")
+            FileUtils.mkdir_p(SIKULI_CANDIDATES_DIR)
+            FileUtils.mv(capture_path, candidate_path)
+            break
+          else
+            FileUtils.rm(capture_path)
+          end
         end
       end
+      if ! File.exist?(candidate_path)
+        debug_log("Failed to find fuzzy candidate picture for #{picture}")
+      end
     end
-    if ! File.exist?(candidate_path)
-      debug_log("Failed to find fuzzy candidate picture for #{picture}")
-    end
-  end
 
-  if $config['SIKULI_FUZZY_IMAGE_MATCHING'] && File.exist?(candidate_path)
-    debug_log("Using fuzzy candidate picture for #{picture}")
-    args_with_candidate = [candidate_path] + args.drop(1)
-    return orig_method.call(*args_with_candidate)
-  end
+    if File.exist?(candidate_path)
+      debug_log("Using fuzzy candidate picture for #{picture}")
+      args_with_candidate = [candidate_path] + args.drop(1)
+      return orig_method.call(*args_with_candidate)
+    end
+
+  end  # if $config['SIKULI_FUZZY_IMAGE_MATCHING']
 
   if $config["SIKULI_RETRY_FINDFAILED"]
     pause("FindFailed for: '#{picture}'")
@@ -146,6 +149,13 @@ def sikuli_screen_proxy.new(*args)
     end
     s.define_singleton_method(method_name) do |*args|
       begin
+        args_desc = ''
+        if args.first.instance_of?(Rjb::Rjb_JavaProxy)
+          args_desc = args.first.toString
+        else
+          args_desc = '"' + args.first.to_s + '"'
+        end
+        debug_log("Sikuli: calling #{method_name}(#{args_desc})...")
         orig_method = s.method("#{method_name}_no_override")
         return orig_method.call(*args)
       rescue Exception => exception
@@ -273,7 +283,7 @@ sikuli_settings.OcrDataPath = $config["TMPDIR"]
 # similarity, so all our current images are adapted to that value.
 # Also, Sikuli's default of 0.7 is simply too low (many false
 # positives).
-sikuli_settings.MinSimilarity = 0.9
+sikuli_settings.MinSimilarity = SIKULI_MIN_SIMILARITY
 sikuli_settings.ActionLogs = true
 sikuli_settings.DebugLogs = true
 sikuli_settings.InfoLogs = true

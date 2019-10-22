@@ -10,6 +10,9 @@ if [ "$2" != "up" ]; then
    exit 0
 fi
 
+# Import tor_has_bootstrapped()
+. /usr/local/lib/tails-shell-library/systemd.sh
+
 # Get LANG
 . /etc/default/locale
 export LANG
@@ -19,7 +22,7 @@ export LANG
 TEXTDOMAIN="tails"
 export TEXTDOMAIN
 
-while ! /usr/local/sbin/tor-has-bootstrapped; do
+while ! tor_has_bootstrapped; do
    sleep 1
 done
 
