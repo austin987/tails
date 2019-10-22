@@ -46,7 +46,7 @@ download_and_verify_files() {
 }
 
 install_tor_browser() {
-    local bundle destination tmp prep torlauncher_xpi_path torlauncher_version
+    local bundle destination tmp prep
     bundle="${1}"
     destination="${2}"
 
@@ -65,7 +65,7 @@ install_tor_browser() {
     # Enable our myspell/hunspell dictionaries. TBB only provides the
     # one for en-US, but Debian's seems more comprehensive, so we'll
     # only use Debian's dictionaries.
-    rm -f "${prep}"/dictionaries/*
+    mkdir "${prep}"/dictionaries
     for f in /usr/share/hunspell/*.aff /usr/share/hunspell/*.dic; do
         ln -s "${f}" "${prep}"/dictionaries/
     done
@@ -74,40 +74,13 @@ install_tor_browser() {
     # instead of the system one, whenever ours is too old.
     # For details see projects/firefox/abicheck.cc in
     # https://git.torproject.org/builders/tor-browser-build.git
-    # Tor Browser 8.0a10 requires GLIBCXX_3.4.22, which Buster has
+    # Tor Browser 9.0a7 requires GLIBCXX_3.4.25, which Buster has,
     # so disable this for now.
-    # cp "${prep}"/TorBrowser/Tor/libstdc++.so.6 "${prep}"
+    # cp "${prep}"/TorBrowser/Tor/libstdc++/libstdc++.so.6 "${prep}"
 
     # We don't need the Tor binary, the shared libraries Tor needs
     # (but Firefox doesn't) and documentation shipped in the TBB.
     rm -r "${prep}"/TorBrowser/Tor "${prep}"/TorBrowser/Docs
-
-    # We don't want tor-launcher to be part of the regular browser
-    # profile but we want to keep it as a standalone application
-    # when Tails is started in "bridge mode".
-    torlauncher_xpi_path="${prep}/TorBrowser/Data/Browser/profile.default/extensions/tor-launcher@torproject.org.xpi"
-    7z x -o"${TOR_LAUNCHER_INSTALL}" "${torlauncher_xpi_path}"
-    torlauncher_version="$(sed -n \
-        's,^        <em:version>\([0-9\.]\+\)</em:version>,\1,p' \
-        "${TOR_LAUNCHER_INSTALL}/install.rdf")"
-    SOURCE_DATE_YYYYMMDD=$(date --utc --date="@$SOURCE_DATE_EPOCH" '+%Y%m%d')
-    cat > "${TOR_LAUNCHER_INSTALL}/application.ini" << EOF
-[App]
-Vendor=TorProject
-Name=TorLauncher
-Version=${torlauncher_version}
-BuildID=${SOURCE_DATE_YYYYMMDD}
-ID=tor-launcher@torproject.org
-
-[Gecko]
-MinVersion=$(get_firefox_version "${prep}/application.ini")
-MaxVersion=*.*.*
-
-[Shell]
-Icon=icon.png
-EOF
-    chmod -R a+rX "${TOR_LAUNCHER_INSTALL}"
-    rm "${torlauncher_xpi_path}"
 
     # The Tor Browser will fail, complaining about an incomplete profile,
     # unless there's a readable TorBrowser/Data/Browser/Caches
@@ -118,12 +91,59 @@ EOF
     install -d -m 0755 "${prep}"/TorBrowser/UpdateInfo
 
     mv "${prep}" "${destination}"
+    rm -r "${tmp}"
+}
 
+# Install Tor Launcher as a standalone XUL application.
+install_tor_launcher() {
+    local tbb_install destination tmp
+    tbb_install="${1}"
+    destination="${2}"
+
+    tmp="$(mktemp -d)"
+    7z x -o"${tmp}" "${tbb_install}/browser/omni.ja"
+    mv "${tmp}/chrome/torlauncher/" "${destination}"
+    # Tor Launcher is a system add-on but can be converted to
+    # something that works as a XUL standalone application by just
+    # moving things around:
+    mkdir "${destination}/chrome"
+    for x in content locale skin; do
+        mv "${destination}/${x}" "${destination}/chrome/"
+    done
+    mkdir -p "${destination}"/defaults/preferences
+    cp "${tmp}/defaults/preferences/torlauncher-prefs.js" \
+       "${destination}/defaults/preferences/prefs.js"
+    # ... and then we extract only the Tor Launcher parts from the
+    # manifest, and adapt to how we moved files around above:
+    grep torlauncher "${tmp}/chrome//chrome.manifest" \
+        | sed --regexp-extended \
+              -e 's@^(content|locale|skin) (torlauncher.*) torlauncher/(.*)$@\1 \2 chrome/\3@' \
+              -e 's@^(component) (\S+) torlauncher/(.+)$@\1 \2 \3@' \
+              -e 's@^(resource torlauncher) .*$@\1 ./@' \
+        > "${destination}/chrome.manifest"
+    cp "${destination}/chrome/skin/default48.png" "${destination}/icon.png"
+    cat > "${destination}/application.ini" << EOF
+[App]
+Vendor=TorProject
+Name=TorLauncher
+Version=$(get_firefox_version "${tbb_install}/application.ini")
+BuildID=$(date --utc --date="@$SOURCE_DATE_EPOCH" '+%Y%m%d')
+ID=tor-launcher@torproject.org
+
+[Gecko]
+MinVersion=$(get_firefox_version "${tbb_install}/application.ini")
+MaxVersion=*.*.*
+
+[Shell]
+Icon=icon.png
+EOF
+    chmod -R a+rX "${destination}"
     rm -r "${tmp}"
 }
 
 # TBB works around the lack of code signing for its extensions by
 # hacking in exceptions. We do the same!
+# Improving this is tracked on #12571.
 apply_extension_code_signing_hacks () {
     local tbb_install tbb_timestamp
     tbb_install="${1}"
@@ -134,43 +154,61 @@ apply_extension_code_signing_hacks () {
         cd "${tmp}"
         7z x -tzip "${tbb_install}/omni.ja"
         patch -p1 <<EOF
-diff -Naur a/chrome/toolkit/content/mozapps/extensions/extensions.js b/chrome/toolkit/content/mozapps/extensions/extensions.js
---- a/chrome/toolkit/content/mozapps/extensions/extensions.js 2000-01-01 00:00:00.000000000 +0000
-+++ b/chrome/toolkit/content/mozapps/extensions/extensions.js 2000-01-01 00:00:00.000000000 +0000
-@@ -282,7 +282,8 @@
-   // they aren't the correct type for signing.
-   if (aAddon.id == "torbutton@torproject.org" ||
-       aAddon.id == "tor-launcher@torproject.org" ||
--      aAddon.id == "https-everywhere-eff@eff.org") {
-+      aAddon.id == "https-everywhere-eff@eff.org" ||
-+      aAddon.id == "uBlock0@raymondhill.net") {
+diff -Naur a/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js b/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js
+--- a/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2019-09-02 15:24:00.000000000 +0200
++++ b/chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js	2019-09-08 20:42:24.198382292 +0200
+@@ -195,6 +195,10 @@
+   if (addon.id == "https-everywhere-eff@eff.org") {
      return true;
    }
-   return aAddon.isCorrectlySigned !== false;
-diff -Naur a/modules/addons/XPIProvider.jsm b/modules/addons/XPIProvider.jsm
---- a/modules/addons/XPIProvider.jsm 2000-01-01 00:00:00.000000000 +0000
-+++ b/modules/addons/XPIProvider.jsm 2000-01-01 00:00:00.000000000 +0000
-@@ -749,7 +749,8 @@
-   if (aAddon.id == "torbutton@torproject.org" ||
-       aAddon.id == "tor-launcher@torproject.org" ||
-       aAddon.id == "https-everywhere-eff@eff.org" ||
--      aAddon.id == "meek-http-helper@bamsoftware.com") {
-+      aAddon.id == "meek-http-helper@bamsoftware.com" ||
-+      aAddon.id == "uBlock0@raymondhill.net") {
-     return true;
-   }
++  // Allow uBlock installed from Debian (Tails#12571)
++  if (addon.id == "uBlock0@raymondhill.net") {
++    return true;
++  }
+   return addon.isCorrectlySigned !== false;
+ }
  
-@@ -3465,6 +3466,7 @@
-             addon.id != "tor-launcher@torproject.org" &&
-             addon.id != "https-everywhere-eff@eff.org" &&
-             addon.id != "meek-http-helper@bamsoftware.com" &&
-+            addon.id != "uBlock0@raymondhill.net" &&
-             addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-           logger.warn("Refusing to install staged add-on " + id + " with signed state " + addon.signedState);
-           seenFiles.push(stageDirEntry.leafName);
+diff -Naur a/modules/addons/XPIDatabase.jsm b/modules/addons/XPIDatabase.jsm
+--- a/modules/addons/XPIDatabase.jsm	2019-09-02 15:24:00.000000000 +0200
++++ b/modules/addons/XPIDatabase.jsm	2019-09-08 20:40:29.469007744 +0200
+@@ -2126,6 +2126,11 @@
+       return true;
+     }
+ 
++    // Ensure that we allow uBlock installed from Debian (Tails#12571)
++    if (aAddon.id == "uBlock0@raymondhill.net") {
++      return true;
++    }
++
+     // Ensure that Tor Launcher is never enabled as an add-on. It will be
+     // removed inside getInstallState() soon.
+     if (aAddon.id == "tor-launcher@torproject.org")
+@@ -2729,7 +2734,8 @@
+       }
+ 
+       unsigned =
+-        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
++        XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned
++        && aNewAddon.id !== "uBlock0@raymondhill.net";
+       if (unsigned) {
+         throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
+       }
+diff -Naur a/modules/addons/XPIInstall.jsm b/modules/addons/XPIInstall.jsm
+--- a/modules/addons/XPIInstall.jsm	2019-09-02 15:24:00.000000000 +0200
++++ b/modules/addons/XPIInstall.jsm	2019-09-08 20:41:07.345467589 +0200
+@@ -3826,6 +3826,7 @@
+     if (
+       XPIDatabase.mustSign(addon.type) &&
+       addon.id !== "https-everywhere-eff@eff.org" &&
++      addon.id !== "uBlock0@raymondhill.net" &&
+       addon.signedState <= AddonManager.SIGNEDSTATE_MISSING
+     ) {
+       throw new Error(
 EOF
-        touch --date="@${tbb_timestamp}" modules/addons/XPIProvider.jsm \
-              chrome/toolkit/content/mozapps/extensions/extensions.js
+        touch --date="@${tbb_timestamp}" \
+              chrome/toolkit/content/mozapps/extensions/aboutaddonsCommon.js \
+              modules/addons/XPIDatabase.jsm \
+              modules/addons/XPIInstall.jsm
         rm "${tbb_install}/omni.ja"
         7z a -mtc=off -tzip "${tbb_install}/omni.ja" *
     )
@@ -180,21 +218,21 @@ EOF
         cd "${tmp}"
         7z x -tzip "${tbb_install}/browser/omni.ja"
         patch -p1 <<EOF
-diff -Naur x/components/nsBrowserGlue.js y/components/nsBrowserGlue.js
---- a/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
-+++ b/components/nsBrowserGlue.js 2000-01-01 00:00:00.000000000 +0000
-@@ -1137,7 +1137,8 @@
+diff -Naur a/modules/BrowserGlue.jsm b/modules/BrowserGlue.jsm
+--- a/modules/BrowserGlue.jsm	2019-09-02 15:24:00.000000000 +0200
++++ b/modules/BrowserGlue.jsm	2019-09-08 20:45:59.323681266 +0200
+@@ -1926,7 +1926,8 @@
+           // disabled. Even if they lack Mozilla's blessing they are enabled
+           // nevertheless.
            if ((addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) &&
-               !(addon.id == "torbutton@torproject.org" ||
-                 addon.id == "tor-launcher@torproject.org" ||
--                addon.id == "https-everywhere-eff@eff.org")) {
-+                addon.id == "https-everywhere-eff@eff.org" ||
-+                addon.id == "uBlock0@raymondhill.net")) {
+-              (addon.id !== "https-everywhere-eff@eff.org")) {
++              (addon.id !== "https-everywhere-eff@eff.org") &&
++              (addon.id !== "uBlock0@raymondhill.net")) {
              this._notifyUnsignedAddonsDisabled();
              break;
            }
 EOF
-        touch --date="@${tbb_timestamp}" components/nsBrowserGlue.js
+        touch --date="@${tbb_timestamp}" modules/BrowserGlue.jsm
         rm "${tbb_install}/browser/omni.ja"
         7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
     )
@@ -211,25 +249,19 @@ apply_prefs_hacks() {
         cd "${tmp}"
         7z x -tzip "${tbb_install}/browser/omni.ja"
         # Remove TBB's Tor Launcher settings since we don't enable it in
-	# our Tor Browser.
-	sed -i '/extensions\.torlauncher\./d' defaults/preferences/000-tor-browser.js
-	# Display the Stop/Reload button: our test suite currently depends on it
-	perl -pi -E \
-	    's/^(pref\("browser.uiCustomization.state",.*\\"loop-button\\")/$1,\\"stop-reload-button\\"/' \
-	    defaults/preferences/000-tor-browser.js
+        # our Tor Browser.
+        sed -i '/extensions\.torlauncher\./d' defaults/preferences/000-tor-browser.js
+        # Display the Stop/Reload button: our test suite currently depends on it
+        perl -pi -E \
+            's/^(pref\("browser\.uiCustomization\.state",.*\\"loop-button\\")/$1,\\"stop-reload-button\\"/' \
+            defaults/preferences/000-tor-browser.js
 
-	# Hide the security level button in the unsafe browser (#16735)
-	UNSAFE_BROWSER_PREFS=/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js
-	echo "\n// Hide the security level button" >> "${UNSAFE_BROWSER_PREFS}"
-	grep -E '^pref\("browser.uiCustomization.state"' defaults/preferences/000-tor-browser.js | \
-		perl -p -E 's/(.*)\\"security-level-button\\",/user_$1/' >> "${UNSAFE_BROWSER_PREFS}"
-
-	# Append our custom prefs
-	cat /usr/share/tails/tor-browser-prefs.js \
-	    >> defaults/preferences/000-tor-browser.js
-	touch --date="@${tbb_timestamp}" defaults/preferences/000-tor-browser.js
-        rm "${tbb_install}/browser/omni.ja"
-        7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
+        # Append our custom prefs
+        cat /usr/share/tails/tor-browser-prefs.js \
+            >> defaults/preferences/000-tor-browser.js
+        touch --date="@${tbb_timestamp}" defaults/preferences/000-tor-browser.js
+            rm "${tbb_install}/browser/omni.ja"
+            7z a -mtc=off -tzip "${tbb_install}/browser/omni.ja" *
     )
     rm -r "${tmp}"
 }
@@ -327,6 +359,7 @@ install_tor_browser "${TMP}/${MAIN_TARBALL}" "${TBB_INSTALL}"
 apply_extension_code_signing_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 apply_prefs_hacks "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
 strip_nondeterminism "${TBB_INSTALL}" "${TBB_TIMESTAMP}"
+install_tor_launcher "${TBB_INSTALL}" "${TOR_LAUNCHER_INSTALL}"
 
 mkdir -p "${TBB_EXT}"
 if [ "${NIGHTLY_BUILD}" != yes ]; then

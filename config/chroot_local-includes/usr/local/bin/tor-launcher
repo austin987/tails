@@ -27,6 +27,9 @@ if [ ! -d "${PROFILE}" ]; then
     configure_best_tor_launcher_locale "${PROFILE}"
 fi
 
+# Make sure Tor Launcher is not disabled.
+export TOR_SKIP_LAUNCH=0
+
 exec_unconfined_firefox \
     -app "${TOR_LAUNCHER_INSTALL}/application.ini" \
     -profile "${PROFILE}"

@@ -1,8 +1,178 @@
-tails (4.0) UNRELEASED; urgency=medium
+tails (4.1) UNRELEASED; urgency=medium
 
-   * Dummy entry for next release.
+  * Dummy entry for next release.
 
- -- Tails developers <tails@boum.org>  Thu, 05 Sep 2019 13:53:43 +0000
+ -- intrigeri <intrigeri@debian.org>  Tue, 22 Oct 2019 15:23:42 +0000
+
+tails (4.0) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 9.0-build2, based on Firefox ESR 68.2.
+
+  * Security fixes
+    - Upgrade IBus to 1.5.19-4+deb10u1.0tails1 (Closes: #17144)
+    - Upgrade sudo to 1.8.27-1+deb10u1
+
+  * Bugfixes
+    - Fix regressions brought by the integration of Tor Browser 9.0:
+      · Fix non-English spellchecking (Closes: #17150)
+      · Unsafe Browser: don't enable private browsing mode, don't display
+        Tor Browser icons, hide the new "New identity" toolbar button
+        (Closes: #17142)
+      · Hide all Tor connection-related settings in about:preferences
+        (Closes: #17157)
+    - Fix Stealth Onion services in OnionShare (Closes: #17162)
+    - Upgrade OpenSSL to 1.1.1d-0+deb10u2
+
+  * Minor improvements and updates
+    - Don't include the locales package (Closes: #17132)
+    - Update htpdate's User-Agent to match Tor Browser 9.0's
+
+  * Test suite
+    - Only partially fill memory for userspace processes (Closes: #17104)
+    - Drop the "Unsafe Browser has no proxy configured" step, that's hard
+      to update and adds little value
+    - Various updates for Tor Browser 9.0 final
+    - Make the "SSH is using the default SocksPort" scenario more robust
+      (Closes: #17163)
+
+ -- Tails developers <tails@boum.org>  Mon, 21 Oct 2019 10:24:56 +0000
+
+tails (4.0~rc1) unstable; urgency=medium
+
+  * Major changes
+    - Update Tor Browser to 9.0a7, based on Firefox ESR 68 (#16356).
+    - Include a working version of Electrum: 3.3.8-0.1 (Closes: #16421).
+      Accordingly:
+      · Remove the obsolete "coin_chooser: Privacy" option (Closes: #15483).
+      · Disable the update check (Closes: #15483).
+    - Curate the list of languages in Tails Greeter (Closes: #16095).
+      Only include languages which meet one of these conditions:
+      · Have a PO file in tails.git (i.e. have at least one translated
+        and reviewed string)
+      · Are on our list of tier-1 supported languages.
+    - Update Linux to 5.3.2-1~exp1 from Debian experimental (Closes: #17117).
+    - Bump APT snapshots of the 'debian' and 'torproject' archives
+      to 2019100904. This includes the update to the Buster 10.1
+      point-release.
+
+  * Security fixes
+    - Drop NoScript customization that makes our web fingerprint diverge
+      from Tor Browser's (related to #5362).
+    - Enable Buster security APT sources (Closes: #17119).
+    - Upgrade CUPS to 2.2.10-6+deb10u1 (CVE-2019-8696, CVE-2019-8675,
+      and more security fixes).
+    - Update GnuPG to 2.2.12-1+deb10u1, which mitigates the certificates
+      flooding attack.
+    - Update e2fsprogs to 1.44.5-1+deb10u2 (DSA-4535-1).
+    - Update ghostscript to 9.27~dfsg-2+deb10u2 (DSA-4518-1, DSA-4499-1).
+    - Update WebKitGTK to 2.24.4-1~deb10u1 (DSA-4515-1).
+    - Update Pango to 1.42.4-7~deb10u1 (DSA-4496-1).
+    - Update ffmpeg to 7:4.1.4-1~deb10u1 (DSA-4502-1).
+    - Update expat to 2.2.6-2+deb10u1 (DSA-4530-1).
+    - Update GLib to 2.58.3-2+deb10u1 (CVE-2019-13012).
+    - Update libmariadb3 to 1:10.3.17-0+deb10u1 (various vulnerabilities).
+    - Update NSS to 2:3.42.1-1+deb10u1 (CVE-2019-11719, CVE-2019-11727,
+      CVE-2019-11729).
+    - Update LibreOffice to 1:6.1.5-3+deb10u4 (DSA-4519-1, DSA-4501-1,
+      DSA-4483-1, and CVE-2019-9848).
+    - Update Samba to 2:4.9.5+dfsg-5+deb10u1 (DSA-4513-1).
+    - Update OpenSSL to 1.1.1d-0+deb10u1 (DSA-4539-1).
+    - Update libxslt to 1.1.32-2.1~deb10u1 (CVE-2019-11068, CVE-2019-13117,
+      CVE-2019-13118).
+    - Update zeromq3 to 4.3.1-4+deb10u1 (DSA-4477-1).
+    - Update patch to 2.7.6-3+deb10u1 (DSA-4489-1).
+    - Update Thunderbird to 1:60.9.0-1~deb10u1 (DSA-4523-1, DSA-4482-1).
+    - Update wpasupplicant to 2:2.7+git20190128+0c1e29f-6+deb10u1 (DSA-4538-1).
+
+  * Bugfixes
+    - Ensure that tor-has-bootstrapped systemd units are stopped
+      if tor@default.service stops; replace the tor-has-bootstrapped
+      script with a tor_has_bootstrapped() function that checks the status
+      of tails-tor-has-bootstrapped.target (Closes: #16664).
+    - Fix MIME info data build reproducibility (Closes: #17023).
+    - Fix missing GNOME bookmarks, by adding them earlier in the session
+      login process (Closes: #17030).
+    - Increase left dock width in GIMP's sessionrc (Closes: #16807).
+    - Use hardware defaults for the touchpad click method (Closes: #17045).
+    - Fix image thumbnails in GNOME Files (Closes: #17062).
+    - Use the "intel" X.Org driver for Intel Iris Plus Graphics 640
+      (Closes: #17060).
+    - Fix sdhci-pci support.
+    - Honor the "Formats" settings chosen in the Greeter (Closes: #16806).
+    - Fix administration password not being applied in some cases
+      (Closes: #13447).
+    - Fix Greeter settings being applied when clicking "Cancel"
+      (Closes: #17087).
+    - Fix bridge information not always shown when the user selects
+      bridge mode in the Greeter.
+    - Fix path in whisperback's debugging info (Closes: #17109).
+    - Fix Tor Browser functionality that was broken when it was started
+      by clicking a link in Thunderbird (Closes: #17105).
+    - Fix WhisperBack that was broken due to an expired X.509 certificate:
+      stop using TLS (we already have end-to-end encryption via OpenPGP,
+      plus end-to-end encryption and remote peer authentication via
+      Tor hidden services). Also, switch to a v3 Onion service (Closes #17110).
+    - Install Stretch's po4a (0.47-2) from our custom APT repository:
+      the upgrade to Buster's version will need more work and coordination
+      (Closes: #17127).
+    - Fix hiding of the Add-ons manager in the Unsafe Browser hamburger menu.
+      Regression introduced when we upgraded to Tor Browser based on Firefox
+      ESR 60.
+    - Mention USB images as a valid installation technique when trying
+      to create a persistent volume on a device that can't have one
+      (Closes: #17025).
+
+  * Minor improvements and updates
+    - Add iPhone USB tethering support (Closes: #16180).
+    - Install Enigmail from Buster (Closes: #16978).
+    - Disable GDM debug logs (Closes: #17011).
+    - Hide less common keyboard layouts in the Greeter (Closes: #17084).
+    - Major refactoring and cleanup of Tails Greeter (Closes: #17098).
+    - Use a localized page for the Greeter help window, if available
+      (Closes: #17101).
+    - Separate Chinese into simplified and traditional scripts
+      in the Greeter (Closes: #16094).
+    - Allow the user to show the passphrase they're typing when creating
+      a new persistent volume (Closes: #15102).
+    - When saving persistence.conf or its backup, also run sync(1)
+      on its parent directory (might help fix #10976).
+    - Improve Tails Installer wording (Closes: #15564).
+    - Update tor to 0.4.1.6-1~d10.buster+1.
+    - Update VirtualBox guest drivers and tools to 6.0.12-dfsg-1.
+
+  * Build system
+    - SquashFS sort file: remove more noise.
+    - Improve lint_po's UX (refs: #16864).
+    - Import our pythonlib, previously included as a submodule (Closes: #16935).
+    - Use a consistent, standard Python packages directory (Closes: #17082).
+
+  * Test suite
+    - Make various steps more robust:
+      · "all notifications are disappeared" (Closes: #17012)
+      · "Additional Software is correctly configured for package"
+      · "I unlock and mount this VeraCrypt file container
+        with Unlock VeraCrypt Volumes"
+      · "I open the Unsafe Browser proxy settings dialog"
+      · starting apps via the GNOME Activities Overview (Closes: #13469)
+      · "I start the Tor Browser in offline mode"
+    - Handle Guestfs::Error exceptions.
+    - Provide guidance to fix problematic situation.
+    - Update various reference images for Buster.
+    - Don't attempt to find fuzzy matches with Sikuli unless fuzzy image
+      matching is enabled (Closes: #17029).
+    - Dogtail'ify all interactions with gedit (Closes: #17028).
+    - New test: ensure that no experimental APT suite is enabled
+      for deb.torproject.org (Closes: #16931).
+    - Remove dead IRC-related code and dependencies.
+    - Take into account that Evince and Tor Browser's print-to-file dialogs
+      are rendered in a subtly different manner.
+    - Drop fragile tag for actual Tails bugs (#17007).
+    - Drop compatibility code for Cucumber < 2.4.0 (Closes: #17083).
+    - Fix regression in the Persistent browser bookmarks scenario
+      (Closes: #17125).
+
+ -- Tails developers <tails@boum.org>  Thu, 10 Oct 2019 11:23:53 +0000
 
 tails (4.0~beta2) unstable; urgency=medium
 
