@@ -60,35 +60,26 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
 
   def check_bookmarks_helper(a)
     mozilla_uris_counter = 0
-    places_uris_counter = 0
     a.each do |h|
       h.each_pair do |k, v|
         if k == "children"
-          m, p = check_bookmarks_helper(v)
-          mozilla_uris_counter += m
-          places_uris_counter += p
+          mozilla_uris_counter += check_bookmarks_helper(v)
         elsif k == "uri"
           uri = v
           if uri.match("^https://(?:support|www)\.mozilla\.org/")
             mozilla_uris_counter += 1
-          elsif uri.match("^place:(sort|folder|type)=")
-            places_uris_counter += 1
           else
             raise "Unexpected Unsafe Browser bookmark for '#{uri}'"
           end
         end
       end
     end
-    return [mozilla_uris_counter, places_uris_counter]
+    return mozilla_uris_counter
   end
 
-  mozilla_uris_counter, places_uris_counter =
-    check_bookmarks_helper(dump["children"])
+  mozilla_uris_counter = check_bookmarks_helper(dump["children"])
   assert_equal(5, mozilla_uris_counter,
                "Unexpected number (#{mozilla_uris_counter}) of mozilla " \
-               "bookmarks")
-  assert_equal(2, places_uris_counter,
-               "Unexpected number (#{places_uris_counter}) of places " \
                "bookmarks")
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
@@ -129,56 +120,23 @@ Then /^I can start the Unsafe Browser again$/ do
   step "I start the Unsafe Browser"
 end
 
-Then /^I open the Unsafe Browser proxy settings dialog$/ do
-  step "I open the address \"about:preferences\" in the Unsafe Browser"
-  @screen.wait('BrowserPreferencesPage.png', 10)
-  @screen.type('proxy')
-  @screen.wait('BrowserPreferencesProxyHeading.png', 10)
-  # Let the filtering complete, the display stabilize, and the
-  # "Settings" button reach its final position: otherwise, Sikuli
-  # sometimes finds it while it's still further down the page than its
-  # final position, records these coordinates, but by the time Sikuli
-  # clicks there, the "Settings" button has moved to its final
-  # position so the click is lost ⇒ BrowserProxySettingsWindow.png
-  # cannot be found.
-  sleep 2
-  @screen.wait_and_click('BrowserPreferencesProxySettingsButton.png', 10)
-  @screen.wait('BrowserProxySettingsWindow.png', 10)
-end
-
-Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
-  socks_proxy = 'C' # Alt+Shift+c for socks proxy
+When /^I configure the Unsafe Browser to use a local proxy$/ do
   socksport_lines =
     $vm.execute_successfully('grep -w "^SocksPort" /etc/tor/torrc').stdout
   assert(socksport_lines.size >= 4, "We got fewer than four Tor SocksPorts")
-  socksports = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/)
-  proxies = socksports.map { |host, port| [socks_proxy, host, port] }
+  proxy = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/).sample
+  proxy_host = proxy[0]
+  proxy_port = proxy[1]
 
-  proxies.each do |proxy_type, proxy_host, proxy_port|
-    @screen.hide_cursor
+  debug_log("Configuring the Unsafe Browser to use a Tor SOCKS proxy (host=#{proxy_host}, port=#{proxy_port})")
 
-    step "I open the Unsafe Browser proxy settings dialog"
+  prefs = '/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js'
+  $vm.file_append(prefs, 'user_pref("network.proxy.type", 1);' + "\n")
+  $vm.file_append(prefs, "user_pref(\"network.proxy.socks\", \"#{proxy_host})\";\n")
+  $vm.file_append(prefs, "user_pref(\"network.proxy.socks_port\", #{proxy_port});\n")
 
-    # Ensure the desired proxy configuration
-    @screen.type("M", Sikuli::KeyModifier.ALT)
-    @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
-    @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port)
-
-    # Close settings
-    @screen.type(Sikuli::Key.ENTER)
-    @screen.waitVanish('BrowserProxySettingsWindow.png', 10)
-
-    # Test that the proxy settings work as they should
-    step 'I open Tails homepage in the Unsafe Browser'
-    @screen.wait('BrowserProxyRefused.png', 60)
-  end
-end
-
-Then /^the Unsafe Browser has no proxy configured$/ do
-  step "I open the Unsafe Browser proxy settings dialog"
-  @screen.wait('BrowserNoProxySelected.png', 10)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
-  @screen.type(Sikuli::Key.ESC)
+  lib = '/usr/local/lib/tails-shell-library/chroot-browser.sh'
+  $vm.execute_successfully("sed -i -E '/^\s*export TOR_TRANSPROXY=1/d' #{lib}")
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do

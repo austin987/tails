@@ -229,7 +229,8 @@ at the application level:
 # Incremental upgrades
 
 * List the versions from which an upgrade path to this one is described.
-  On the `master` branch:
+  On the up-to-date `master` branch in a local
+  [[clone of the Tails Git repository|contribute/git#main-repo]]:
 
       git grep -E -l "  version: '?0.23'?" \
           wiki/src/upgrade/v1/Tails/*/*/test/upgrades.yml
@@ -325,6 +326,9 @@ at the application level:
 
 `[can't-automate]`
 
+Note that for release candidates, we do not always optimize the ordering
+of files in the SquashFS, which might make them boot somewhat slower.
+
 ### USB
 
 1. Boot this USB stick on bare-metal a first time to trigger re-partitioning.
@@ -340,16 +344,15 @@ at the application level:
    syslinux menu until the GNOME desktop is ready -- quickly press
    ENTER in the Greeter).
 3. Compare with the boot time of the previous Tails version. The new
-   one should not be significantly slower to start (for release
-   candidates we do not always update the SquashFS sort file, so then
-   it might be OK if somewhat slower).
+   one should not be significantly slower to start.
 
 # Documentation
 
 * The "Tails documentation" desktop launcher should open the
   [[doc]] page (automate: [[!tails_ticket 8788]]):
   - in one language to which the website is translated
-  - in one language to which the website is not translated (=> English)
+  - in one language to which the website is not translated: this
+    should open the page in English
 * Browse around in the documentation shipped in the image and check
   that internal links work fine (automate: [[!tails_ticket 10254]]):
 
@@ -357,19 +360,8 @@ at the application level:
 
 # Internationalization
 
-Boot and check basic functionality is working for these languages:
-
- - Arabic - Egypt
- - Chinese - China
- - Deutsch - Deutschland
- - English - USA
- - Español - España
- - Français - France
- - Italiano - Italia
- - Persian - Iran
- - Português - Brasil
- - Russian - Russian Federation
- - Tiếng Việt - Vietnam
+Boot and check basic functionality is working for our [[best supported
+(Tier-1) languages|contribute/how/translate#tier-1-languages]].
 
 You *really* have to reboot between each language.
 

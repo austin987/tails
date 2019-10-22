@@ -9,6 +9,12 @@ OUTFILE="/usr/share/tails/greeter/supported_locales"
 LANGUAGES_FILE="/usr/share/tails/greeter/supported_languages"
 DEFAULT_LOCALES="$(cat /usr/share/tails/greeter/default_locales)"
 
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+# Install locales, which installs /usr/share/i18n/SUPPORTED
+ensure_hook_dependency_is_installed locales
+
 # Ensure that the output file is empty
 rm -f "${OUTFILE}"
 

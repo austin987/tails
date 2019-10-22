@@ -30,8 +30,7 @@ Feature: Tor stream isolation is effective
 
   Scenario: SSH is using the default SocksPort
     When I monitor the network connections of SSH
-    And I run "ssh lizard.tails.boum.org" in GNOME Terminal
-    And I see "SSHAuthVerification.png" after at most 60 seconds
+    And I connect to an SSH server on the Internet
     Then I see that SSH is properly stream isolated
 
   Scenario: whois lookups use the default SocksPort

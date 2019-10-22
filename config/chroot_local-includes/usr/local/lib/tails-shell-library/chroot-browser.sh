@@ -7,7 +7,7 @@ if [ "$(whoami)" != "root" ]; then
     exit 1
 fi
 
-# Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, and
+# Import the TBB_INSTALL and TBB_EXT variables, and
 # configure_xulrunner_app_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
@@ -122,7 +122,11 @@ configure_chroot_browser_profile () {
     local extension
     while [ -n "${*:-}" ]; do
         extension="${1}" ; shift
-        ln -s "${extension}" "${browser_ext}"
+        if [ "$(basename "${extension}")" = 'red-2.0-an+fx.xpi' ]; then
+           ln -s "${extension}" "${browser_ext}"/'{91a24c60-0f27-427c-b9a6-96b71f3984a9}.xpi'
+        else
+           ln -s "${extension}" "${browser_ext}"
+        fi
     done
 
     # Set preferences
@@ -131,21 +135,24 @@ configure_chroot_browser_profile () {
     cat "${chroot_browser_config}/common/prefs.js" \
         "${chroot_browser_config}/${browser_name}/prefs.js" > "${browser_prefs}"
 
+    # Install addonStartup.json.lz4. This is required to enable the red theme.
+    cp "${chroot_browser_config}/${browser_name}/addonStartup.json.lz4" \
+        "${browser_profile}"
+
     # Set browser home page to something that explains what's going on
     if [ -n "${home_page:-}" ]; then
         echo 'user_pref("browser.startup.homepage", "'"${home_page}"'");' >> \
             "${browser_prefs}"
     fi
 
-    # Set an appropriate theme
-    cat "${chroot_browser_config}/${browser_name}/theme.js" >> "${browser_prefs}"
-
     # Customize the GUI.
-    local browser_chrome="${browser_profile}/chrome/userChrome.css"
-    mkdir -p "$(dirname "${browser_chrome}")"
-    cat "${chroot_browser_config}/common/userChrome.css" \
-        "${chroot_browser_config}/${browser_name}/userChrome.css" >> \
-            "${browser_chrome}"
+    for css in userChrome.css userContent.css ; do
+        local browser_css="${browser_profile}/chrome/${css}"
+        mkdir -p "$(dirname "${browser_css}")"
+        cat "${chroot_browser_config}/common/${css}" \
+            "${chroot_browser_config}/${browser_name}/${css}" >> \
+            "${browser_css}"
+    done
 
     set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
 }
@@ -159,8 +166,6 @@ set_chroot_browser_locale () {
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
-# Must be called after configure_chroot_browser_profile(), since it
-# depends on which extensions are installed in the profile.
 set_chroot_browser_name () {
     local chroot="${1}"
     local human_readable_name="${2}"
@@ -170,70 +175,52 @@ set_chroot_browser_name () {
     local ext_dir="${chroot}/${TBB_EXT}"
     local browser_profile_ext_dir="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")/extensions"
 
-    # If Torbutton is installed in the browser profile, it will decide
+    # Torbutton is installed in the browser's omni.ja and it decides
     # the browser name.
-    if [ -e "${browser_profile_ext_dir}/torbutton@torproject.org" ]; then
-        local torbutton_locale_dir="${ext_dir}/torbutton/chrome/locale/${locale}"
-        if [ ! -d "${torbutton_locale_dir}" ]; then
-            # Surprisingly, the default locale is en, not en-US
-            torbutton_locale_dir="${chroot}/usr/share/xul-ext/torbutton/chrome/locale/en"
-        fi
-        sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
-        # Since Torbutton decides the name, we don't have to mess with
-        # with the browser's own branding, which will save time and
-        # memory.
-        return
-    fi
-
-    local pack top rest
-    if [ "${locale}" != "en-US" ]; then
-        pack="${ext_dir}/langpack-${locale}@firefox.mozilla.org.xpi"
-        top="browser/chrome"
-        rest="${locale}/locale"
-    else
-        pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
-        top="chrome"
-        rest="en-US/locale"
-    fi
+    local pack="${chroot}/${TBB_INSTALL}/omni.ja"
     local tmp="$(mktemp -d)"
-    local branding_dtd="${top}/${rest}/branding/brand.dtd"
-    local branding_properties="${top}/${rest}/branding/brand.properties"
-    7z x -o"${tmp}" "${pack}" "${branding_dtd}" "${branding_properties}"
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${tmp}/${branding_dtd}"
-    perl -pi -E \
-	 's/^(brand(?:Full|Short|Shorter)Name=).*$/$1'"${human_readable_name}/" \
-         "${tmp}/${branding_properties}"
-    (cd ${tmp} ; 7z u -tzip "${pack}" .)
+    (
+       cd "${tmp}"
+       7z x -o"${tmp}" "${pack}" chrome/torbutton/locale
+       local torbutton_locale_dir="chrome/torbutton/locale/${locale}"
+       if [ ! -d "${torbutton_locale_dir}" ]; then
+          torbutton_locale_dir="chrome/torbutton/locale/en-US"
+       fi
+       sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
+       7z u -tzip "${pack}" .
+    )
     chmod a+r "${pack}"
     rm -Rf "${tmp}"
 }
 
 delete_chroot_browser_searchplugins() {
     local chroot="${1}"
-    local locale="${2}"
     local ext_dir="${chroot}/${TBB_EXT}"
 
-    if [ "${locale}" != "en-US" ]; then
-        pack="${ext_dir}/langpack-${locale}@firefox.mozilla.org.xpi"
-        top="browser/chrome"
-        rest="${locale}/locale"
-    else
-        pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
-        top="chrome"
-        rest="en-US/locale"
-    fi
-    local searchplugins_dir="${top}/${rest}/browser/searchplugins"
+    pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+    local searchplugins_dir="chrome/browser/search-extensions"
     local searchplugins_list="${searchplugins_dir}/list.json"
     local tmp="$(mktemp -d)"
     (
         cd "${tmp}"
-        7z x -tzip "${pack}" "${searchplugins_dir}"
-        ls "${searchplugins_dir}"/*.xml | xargs 7z d -tzip "${pack}"
+        7z d -tzip "${pack}" "${searchplugins_dir}/*/manifest.json"
+        mkdir -p "${searchplugins_dir}"
         echo '{"default": {"visibleDefaultEngines": []}, "experimental-hidden": {"visibleDefaultEngines": []}}' \
              > "${searchplugins_list}"
         7z u -tzip "${pack}" "${searchplugins_list}"
     )
     rm -r "${tmp}"
+    chmod a+r "${pack}"
+}
+
+# Delete the Tor Browser icons. This prevents a Tor Browser icon being
+# shown in the tab of a "New Tab" page.
+delete_chroot_browser_icons() {
+    local chroot="${1}"
+    local ext_dir="${chroot}/${TBB_EXT}"
+
+    pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+    7z d -tzip "${pack}" "chrome/browser/content/branding/icon*.png"
     chmod a+r "${pack}"
 }
 
@@ -253,7 +240,8 @@ configure_chroot_browser () {
         "${best_locale}"
     set_chroot_browser_name "${chroot}" "${human_readable_name}"  \
         "${browser_name}" "${browser_user}" "${best_locale}"
-    delete_chroot_browser_searchplugins "${chroot}" "${best_locale}"
+    delete_chroot_browser_searchplugins "${chroot}"
+    delete_chroot_browser_icons "${chroot}"
     set_chroot_browser_permissions "${chroot}" "${browser_name}" \
         "${browser_user}"
 }
@@ -270,8 +258,8 @@ run_browser_in_chroot () {
     sudo -u "${local_user}" xhost "+SI:localuser:${chroot_user}"
     chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \
         ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
-         exec_firefox -DISPLAY='${DISPLAY}' \
-                      --class='${wm_class}' \
+         export TOR_TRANSPROXY=1 && \
+         exec_firefox --class='${wm_class}' \
                       -profile '${profile}'"
     sudo -u "${local_user}" xhost "-SI:localuser:${chroot_user}"
 }

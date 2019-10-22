@@ -13,7 +13,9 @@ Feature: System memory erasure on shutdown
   Scenario: Erasure of memory freed by killed userspace processes
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
-    When I fill the guest's memory with a known pattern and the allocating processes get killed
+    When I start a process allocating 128 MiB of memory with a known pattern
+    Then patterns cover at least 128 MiB in the guest's memory
+    When I kill the allocating process
     Then I find very few patterns in the guest's memory
 
   Scenario: Erasure of tmpfs data on unmount

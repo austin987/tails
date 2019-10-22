@@ -9,14 +9,12 @@ Upstream
 --------
 
 For this package, "upstream" means, from a Debian packaging
-point-of-view, the state of our upstream branches. Let's not pretend we
-have not forked liveusb-creator, and admit we are now upstream for our
-own version. Thus, from version 4.x on, our fork has been renamed to
-tails-installer.
+point-of-view, the state of our upstream branches.  Tails developers are
+the upstream for this forked version of liveusb-creator, which, from
+version 4.x on, has been renamed to tails-installer.
 
-The `master` branch must always be the one that targets current Tails
-and possibly *also* earlier Debian releases. At the moment it supports
-Debian Stretch, Buster and Sid.
+The `master` branch must always be the one that targets current Tails.
+At the moment it supports Tails based on Debian Stretch, Buster and Sid.
 
 But that's not enough, since we also need to put releases out with code
 that works on current Debian testing/unstable. Thus, we maintain several upstream
@@ -31,7 +29,8 @@ release branches in parallel, each with their own major version number:
 Once we can't support both Stretch and Debian testing/unstable
 with the same codebase anymore, we'll fork a new upstream release
 branch that targets Debian testing, it'll be called
-`feature/$codename`, use version `6.*`, etc.
+`feature/$codename` (i.e. feature/bullseye), use version `6.*`, etc.
+
 
 Packaging
 ---------
@@ -43,17 +42,6 @@ targeted at current Tails, as said above. More specifically:
 * The `pristine-tar` branch contains the binary delta between DFSG-freed
   tarballs and the corresponding tag. It's automatically maintained by
   `gbp import-orig`.
-* The `debian/sid` branch is used to build the package that we upload to
-  Debian unstable. The tags on this branch are called `debian/$package_version`,
-  which is the default when creating them with
-  `gbp buildpackage --git-sign-tags --git-tag-only`;
-  in practice this is something like `debian/5.3+dfsg-1`.
-* The `debian/$codename-backports` branch is used to prepare packages
-  that we upload to the official backports repository for Debian `$codename`.
-  E.g. here we want to have `debian/stretch-backports` soon after the initially
-  uploaded package reaches Debian testing. The tags on this branch are
-  also called `debian/$package_version`. In practice this is something
-  like `debian/5.3+dfsg-1~bpo8+1`.
 * The `tails/master` branch is used to prepare packages that we upload
   to the Tails APT repo for Tails stable releases, but not to Debian.
 * The `tails/$codename` branch is used to prepare packages that we upload
@@ -64,10 +52,16 @@ targeted at current Tails, as said above. More specifically:
 * The `upstream/4.x+dfsg`, `upstream/5.x+dfsg`, etc. branches are what
   we tell `gbp` to use as its "upstream" branch. Make sure to check
   them out when setting up the repository for the first time.
-* For Ubuntu, we want to support the current Ubuntu version, the
-  upcoming version, and the current LTS: [[!wikipedia Ubuntu version history]].
-  We do not maintain any Git branches related to Ubuntu releases, as
-  simply the changelog entries are modified.
+
+Branches that are not used anymore because the package was dropped from
+Debian, but stay in the packaging repository for reference:
+
+* The `debian/sid` branch was used to build the package that we uploaded to
+  Debian unstable. The tags on this branch were called `debian/$package_version`.
+* The `debian/$codename-backports` branch was used to prepare packages
+  that were upload to the official backports repository for Debian `$codename`.
+* We did not maintain any Git branches related to Ubuntu releases, as
+  simply the changelog entries are modified and the releases tagged.
 
 Topic branches
 --------------
@@ -172,10 +166,10 @@ imported the current DFSG-free upstream tarball into the
 	   -C ../tarballs \
 	   --version "$NEW_UPSTREAM_VERSION+dfsg" \
 	   --copy \
-	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}.tar.gz && \
+	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}.tar.* && \
 	gbp import-orig \
 	   --upstream-vcs-tag="${PKG_NAME}_$NEW_UPSTREAM_VERSION" \
-	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}+dfsg.orig.tar.gz
+	   ../tarballs/${PKG_NAME}_${NEW_UPSTREAM_VERSION}+dfsg.orig.tar.*
 
 Update `debian/changelog`:
 
@@ -218,24 +212,6 @@ Add a signed tag to the Git repository and push the changes:
                     "$PACKAGING_BRANCH" \
                     pristine-tar
 
-If you are a member of the Debian pkg-privacy team
---------------------------------------------------
-
-Add the remote:
-
-    git remote | grep -qs -x debian || \
-       git remote add debian git@salsa.debian.org:pkg-privacy-team/tails-installer.git
-
-Then push:
-
-    git push --tags debian "$UPSTREAM_BRANCH" \
-                    "$PACKAGING_BRANCH" \
-                    pristine-tar
-
-Never force push! If `git push` fails you may have to merge back in
-e.g. `debian/pristine-tar` into your local `pristine-tar` and push
-again. Also push it to `origin`, in that case.
-
 Add the Debian package to Tails
 -------------------------------
 
@@ -246,88 +222,3 @@ Sign the package:
 Upload:
 
     dupload --to tails $CHANGES_FILE
-
-Update the Debian package
--------------------------
-
-This assumes that the latest upstream release has been imported into
-the `tails/master` branch already.
-
-And then, a maintainer of `tails-installer` in Debian updates the
-package in sid accordingly, for example:
-
-* check out the `debian/sid` branch
-* merge the `tails/master` branch
-* bump version to `5.3+dfsg-1`
-* build, test and upload to sid
-* have gbp create a `debian/5.3+dfsg-1` tag
-* push the Debian packaging branch (`debian/sid`) and the new tag
-
-Example for a backport to Stretch:
-
-* check out the `debian/stretch-backports` branch
-* merge the `debian/sid` branch
-* `dch --bpo` to bump version to `5.3+dfsg-1~bpo9+1`
-* build, test and upload to stretch-backports
-* have gbp create a `debian/5.3+dfsg-1_bpo9+1` tag
-* push the Debian packaging branch (`debian/stretch-backports`) and the new tag
-
-Upload a package to our Ubuntu PPA
-----------------------------------
-
-Team members are allowed to upload a package to our Ubuntu PPA:
-<https://launchpad.net/~tails-team/+archive/ubuntu/tails-installer>
-
-You'll need to configure the dput tool to upload to the PPA and put into
-`$HOME/.dput.cf` (adjust to use your Launchpad ID):
-
-    [ppa-tails-installer]
-    fqdn = ppa.launchpad.net
-    method = ftp
-    incoming = ~tails-team/ubuntu/tails-installer/
-    login = your_launchpad_id
-    allow_unsigned_uploads = 0
-
-* checkout the `debian/sid` branch
-  to build a package for the next Ubuntu release or checkout the
-  `debian/stretch-backports` branch to build a package for the
-  current Ubuntu version or current LTS.
-* bump version to `5.3+dfsg-0ubuntu1~$codename` using `dch -i`
-  where `$codename` is the name of the target Ubuntu distribution.
-* if it does not exist, rebuild the .orig.tar.gz of the latest version
-  from pristine-tar (use the latest git log entry to find the version):
-  `pristine-tar checkout ../tails-installer_5.3+dfsg.orig.tar.gz`
-* build a source only package using `debuild -i -uc -us -sa -S`
-  Once the package has been built, a `.changes` file will be created in
-  pbuilder's configured destination directory.
-* test the package (piuparts, Lintian, etc.)
-* sign the corresponding source.changes file
-  `debsign ../tails-installer_$NEW_UPSTREAM_RELEASE-xxx_source.changes`
-  Replace "xxx" with the correct version information.
-  The signature should be made with a key which is registered
-  at Launchpad as being part of the Tails team.
-* Upload to the PPA:
-  `dput ppa-tails-installer ../tails-installer_$NEW_UPSTREAM_RELEASE+xxx_source.changes`
-
-You will receive an email informing you if the upload was really successful
-or if it contained any errors. On success, you should now revert your changes on the
-Debian branch using `git reset HEAD --hard`.
-
-Quality assurance for Debian and Ubuntu packages
-------------------------------------------------
-
-    Scenario: Installing Tails to a pristine USB drive
-      Given I have started Debian
-      And I have a Tails ISO image
-      When I install the tails-installer package
-      And I plug USB drive "install"
-      And I ask Tails Installer to install my Tails ISO image to USB drive "install"
-      Then my Tails ISO image is installed on USB drive "install"
-
-    Scenario: Upgrading an old Tails USB installation from an ISO image
-      Given I have started Debian
-      And I have a Tails ISO image
-      When I install the tails-installer package
-      And I plug USB drive "upgrade" that has an old Tails installed
-      And I ask Tails installer to upgrade USB drive "upgrade" with my Tails ISO image
-      Then my Tails ISO image is installed on USB drive "upgrade"
