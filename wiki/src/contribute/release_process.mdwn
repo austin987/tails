@@ -1301,17 +1301,23 @@ the call for testing for this release candidate
 In any case
 -----------
 
-Generate PO files for the announcements and record the last commit
-before putting the release out for real:
+Generate PO files for the announcements and publish them
+on `$WEBSITE_RELEASE_BRANCH`:
 
 	./build-website && \
 	git add wiki/src && \
-	git commit -m "Releasing version ${VERSION:?}"
+	git commit -m "Releasing version ${VERSION:?}" && \
+	git push origin "${WEBSITE_RELEASE_BRANCH:?}"
 
-Then, if you are preparing a final release, send the PO files for the
-announcements to <tails-l10n@boum.org>
-so that they get translated shortly, perhaps even soon enough to
-integrate them before pushing the release out officially.
+Then, if you are preparing a final release, email
+<tails-l10n@boum.org>, pointing them to:
+
+ - the `$WEBSITE_RELEASE_BRANCH` branch
+ - the PO files for the release notes
+ - the PO files for the security announcement
+
+ … so that these pages get translated shortly, perhaps even soon
+enough to merge the translations before you publish the release.
 
 Go wild!
 ========
