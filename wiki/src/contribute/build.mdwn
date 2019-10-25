@@ -120,10 +120,10 @@ You can customize the build system using two environment variables:
 
    For example, you can speed up the build by setting:
 
-        export TAILS_BUILD_OPTIONS="ram gzipcomp"
+        export TAILS_BUILD_OPTIONS="ram fastcomp"
 
    This will force the build to happen in RAM and SquashFS compression
-   will be done using *gzip*.
+   will be done using faster, though less efficient size-wise, settings.
 
 ## SquashFS compression settings
 
@@ -131,12 +131,12 @@ One of the most expensive operations when building Tails is the creation
 of the final SquashFS. It also depends on the compression algorithm used.
 When working on the `stable` or `testing` branch, the image will be made
 using the slow but efficient default. Any other setup will switch to the
-faster *gzip*.
+faster *fastcomp*.
 
 Forcing a specific behaviour can be done using:
 
- * **gzipcomp**: always use *gzip* to create the SquashFS.
- * **defaultcomp**: always use the default compression algorithm.
+ * **fastcomp**: always use fast compression settings to create the SquashFS.
+ * **defaultcomp**: always use the default compression settings.
 
 ## Memory build settings
 
@@ -238,6 +238,9 @@ the following build options:
 
  * **vmproxy**: use the local proxy configured in the virtual machine even
    if a local HTTP proxy is set.
+
+ * **vmproxy+extproxy**: use the local proxy configured in the virtual
+   machine but make it use the local HTTP proxy.
 
  * **noproxy**: do not use any HTTP proxy.
 

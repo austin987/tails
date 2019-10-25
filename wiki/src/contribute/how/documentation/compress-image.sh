@@ -13,13 +13,14 @@ if [ ! -x /usr/bin/advdef ]; then
     exit 1
 fi
 
-if [ ! -x /usr/bin/mat ]; then
-    echo "Please install the \"mat\" package." >&2
+if [ ! -x /usr/bin/mat2 ]; then
+    echo "Please install the \"mat2\" package." >&2
     exit 1
 fi
 
 for image in "${@}" ; do
     optipng -o6 "${image}"
     advdef -z3 "${image}"
-    mat "${image}"
+    mat2 "${image}"
+    mv "${image%.*}.cleaned.${image#*.}" "${image}"
 done

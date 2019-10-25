@@ -1,11 +1,14 @@
 require 'uri'
 
+def apt_sources
+  $vm.execute_successfully(
+    "cat /etc/apt/sources.list /etc/apt/sources.list.d/*"
+  ).stdout
+end
+
 Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   hosts = hosts_str.split(',')
-  apt_sources = $vm.execute_successfully(
-    "cat /etc/apt/sources.list /etc/apt/sources.list.d/*"
-  ).stdout.chomp
-  apt_sources.each_line do |line|
+  apt_sources.chomp.each_line do |line|
     next if ! line.start_with? "deb"
     source_host = URI(line.split[1]).host
     if !hosts.include?(source_host)
@@ -15,10 +18,12 @@ Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
 end
 
 Given /^no proposed-updates APT suite is enabled$/ do
-  apt_sources = $vm.execute_successfully(
-    'cat /etc/apt/sources.list /etc/apt/sources.list.d/*'
-  ).stdout
   assert_no_match(/\s\S+-proposed-updates\s/, apt_sources)
+end
+
+Given /^no experimental APT suite is enabled for deb[.]torproject[.]org$/ do
+  # sdscoq7snqtznauu.onion == deb.torproject.org
+  assert_no_match(/sdscoq7snqtznauu[.]onion.*experimental/, apt_sources)
 end
 
 When /^I configure APT to use non-onion sources$/ do

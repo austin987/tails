@@ -1,5 +1,5 @@
 diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index f782f35..a80365d 100644
+index f782f35..426f7c8 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,11 +1,12 @@
@@ -93,11 +93,11 @@ index f782f35..a80365d 100644
  
    # parent Firefox process when restarting after upgrade, Web Content processes
 -  owner @{torbrowser_firefox_executable} ixmr -> torbrowser_firefox,
-+  @{torbrowser_firefox_executable} ixmr -> torbrowser_firefox,
++  @{torbrowser_firefox_executable} pxmr -> torbrowser_firefox,
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -97,12 +100,6 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -97,14 +100,9 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -109,15 +109,14 @@ index f782f35..a80365d 100644
 -
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
++  owner /dev/shm/org.mozilla.ipc.[0-9]*.[0-9]* rw, # for Chromium IPC
  
-@@ -116,6 +113,29 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+   # Deny access to DRM nodes, that's granted by the X abstraction, which is
+   # sourced by the gnome abstraction, that we include.
+@@ -116,6 +114,25 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
-+  deny @{HOME}/.mozilla/firefox/bookmarks/ r,
-+  deny @{PROC}/@{pid}/net/route r,
-+  deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
-+  deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
 +  deny /usr/local/lib/tor-browser/update.test/ rw,
 +
 +  # Grant access to assistive technologies
@@ -140,7 +139,7 @@ index f782f35..a80365d 100644
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -132,5 +152,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -132,5 +149,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  

@@ -9,7 +9,10 @@ pref("network.security.ports.banned", "631,6136,4444,4445,6668,7656,7657,7658,76
 pref("extensions.torbutton.show_slider_notification", false);
 
 // Disable the Tor Browser's automatic update checking
-pref("app.update.enabled", false);
+pref("app.update.auto", false);
+pref("app.update.disabledForTesting", true);
+pref("app.update.doorhanger", false);
+pref("app.update.url", "https://127.0.0.1/dev/null");
 
 // Suppress prompt and always spoof useragent as English
 pref("privacy.spoof_english", 2);
@@ -25,9 +28,6 @@ pref("extensions.torbutton.pref_fixup_version", 1);
 // flashing its upgrade notification.
 pref("extensions.torbutton.lastBrowserVersion", "Tails");
 pref("torbrowser.version", "Tails");
-
-// Other Tails-specific NoScript preferences
-pref("noscript.untrusted", "google-analytics.com");
 
 // Other non-Torbutton, Tails-specific prefs
 pref("browser.download.dir", "/home/amnesia/Tor Browser");
@@ -48,3 +48,15 @@ pref("browser.download.panel.shown", true);
 // open external applications, so let's not offer the option to the user,
 // and instead only propose them to save downloaded files.
 pref("browser.download.forbid_open_with", true);
+
+// Disable the Pocket service integration
+pref("extensions.pocket.enabled", false);
+
+// Disable the Quantum Bar. In #17121 we found that it can cause the
+// URL bar to misbehave (the suggestion pop-up with bookmarks/history/...
+// doesn't show up, and pressing Enter doesn't visit the URL).
+pref("browser.urlbar.quantumbar", false);
+
+// Set the hunspell directory. This shouldn't be required anymore in
+// Tor Browser based on Firefox 68
+pref("spellchecker.dictionary_path", "/usr/share/hunspell");

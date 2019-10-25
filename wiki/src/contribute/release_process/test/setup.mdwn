@@ -8,63 +8,82 @@ Once you have a working environment, see [[test/usage]].
 
 [[!toc levels=2]]
 
+Operating system
+================
+
+If you usually run another operating system than Debian Stretch,
+then you need to:
+
+1. Enable nested virtualization on your host system.
+
+   For example, if the host system has an Intel CPU:
+
+         if [ "$(cat /sys/module/kvm_intel/parameters/nested)" != Y ]; then
+            echo "options kvm_intel nested=Y" \
+                 >> /etc/modprobe.d/kvm.conf
+         fi
+
+2. Prepare a Stretch virtual machine.
+
+3. And then, every step below applies to this Stretch virtual machine,
+   instead of to the host system.
+
 Install dependencies
 ====================
 
-First of all, one needs a Debian Stretch system with:
+To install the dependencies on our test suite:
 
- * the `non-free` APT component enabled.
+1. Enable the `non-free` APT component.
 
-The following packages are necessary on Debian Stretch:
+2. Install the following packages:
 
-    sudo apt update && \
-    sudo apt install \
-        cucumber \
-        devscripts \
-        dnsmasq-base \
-        gawk \
-        git \
-        i18nspector \
-        libav-tools \
-        libcap2-bin \
-        libsikulixapi-java \
-        libvirt-clients \
-        libvirt-daemon-system \
-        libvirt-dev \
-        libvirt0 \
-        obfs4proxy \
-        openssh-server \
-        ovmf \
-        pry \
-        python-jabberbot \
-        python-potr \
-        qemu-kvm \
-        qemu-system-common \
-        qemu-system-x86 \
-        qemu-utils \
-        redir \
-        ruby-guestfs \
-        ruby-json \
-        ruby-libvirt \
-        ruby-net-irc \
-        ruby-packetfu \
-        ruby-rb-inotify \
-        ruby-rjb \
-        ruby-rspec \
-        ruby-test-unit \
-        seabios \
-        tcpdump \
-        tcplay \
-        tor \
-        unclutter \
-        virt-viewer \
-        x11vnc \
-        tigervnc-viewer \
-        x264 \
-        xvfb \
-        && \
-    sudo service libvirtd restart
-        
+        sudo apt update && \
+        sudo apt install \
+            cucumber \
+            devscripts \
+            dnsmasq-base \
+            gawk \
+            git \
+            i18nspector \
+            libav-tools \
+            libcap2-bin \
+            libsikulixapi-java \
+            libvirt-clients \
+            libvirt-daemon-system \
+            libvirt-dev \
+            libvirt0 \
+            obfs4proxy \
+            openssh-server \
+            ovmf \
+            pry \
+            python-jabberbot \
+            python-potr \
+            qemu-kvm \
+            qemu-system-common \
+            qemu-system-x86 \
+            qemu-utils \
+            redir \
+            ruby-guestfs \
+            ruby-json \
+            ruby-libvirt \
+            ruby-packetfu \
+            ruby-rb-inotify \
+            ruby-rjb \
+            ruby-rspec \
+            ruby-test-unit \
+            seabios \
+            tcpdump \
+            tcplay \
+            tor \
+            unclutter \
+            virt-viewer \
+            x11vnc \
+            tigervnc-viewer \
+            x264 \
+            xvfb \
+            && \
+        sudo service libvirtd restart
+
 Other requirements
 ==================
 
@@ -96,12 +115,10 @@ If you have AppArmor enabled:
   If you use a custom `TMPDIR` to run the test suite,
   replace `/tmp/TailsToaster` with the value of that `$TMPDIR`.
 
-Known issues
-============
+Patched QEMU
+------------
 
-## System under test freezes when creating a persistent volume
-
-If the host system runs Debian Stretch, due to [[!tails_ticket 12142]]
+Due to [[!tails_ticket 12142]]
 aka. [[!debbug 851694]], any test scenario that creates a persistent
 volume will fail. To work around this problem, rebuild [[!debpts
 qemu]] locally with the upstream fix applied. For example, the `qemu`
@@ -110,7 +127,8 @@ source package in this APT suite has the fix:
         deb-src http://deb.tails.boum.org/ isotester-stretch main
 
 This problem does not affect host systems that run Debian Buster
-or newer.
+or newer, but those cannot run our test suite at all due to
+[[!tails_ticket 15460]].
 
 Special use cases
 =================

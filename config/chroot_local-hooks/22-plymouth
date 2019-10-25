@@ -6,7 +6,9 @@ set -e
 # console-common in, which plymouth conflicts with, so we have to deal
 # with that at this stage.)
 
-echo "Installing Plymouth"
+echo "Installing and configuring Plymouth"
 
 apt-get --yes purge console-common
 apt-get --yes install plymouth
+
+patch -p1 < /usr/share/tails/build/plymouth-theme.diff

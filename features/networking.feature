@@ -20,8 +20,6 @@ Feature: Networking
     And I wait 10 seconds
     Then no network interfaces are enabled
 
-  #11463
-  @fragile
   Scenario: The "Tor is ready" notification is shown when Tor has bootstrapped
     Given I have started Tails from DVD without network and logged in
     And the network is plugged
