@@ -1,3 +1,4 @@
+# coding: utf-8
 # Returns a hash that for each persistence preset the running Tails is aware of,
 # for each of the corresponding configuration lines,
 # maps the source to the destination.
@@ -170,22 +171,11 @@ Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
   end
 end
 
-When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from an ISO)$/ do |action, name, source|
+When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" by cloning$/ do |action, name|
   step "I start Tails Installer"
   # If the device was plugged *just* before this step, it might not be
   # completely ready (so it's shown) at this stage.
   try_for(10) { tails_installer_is_device_selected?(name) }
-  if source == 'from an ISO'
-    iso_radio = @installer.child('Use a downloaded Tails ISO image',
-                                 roleName: 'radio button')
-    iso_radio.click
-    iso_radio.parent.button('(None)').click
-    file_chooser = @installer.child('Select a File', roleName: 'file chooser')
-    @screen.type("l", Sikuli::KeyModifier.CTRL)
-    # The only visible text element will be the path entry
-    file_chooser.child(roleName: 'text').typeText(@iso_path + '\n')
-    file_chooser.button('Open').click
-  end
   begin
     if action == 'reinstall'
       label = 'Reinstall (delete all data)'
@@ -212,9 +202,9 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by clo
   end
 end
 
-Given /^I plug and mount a USB drive containing the Tails ISO$/ do
-  iso_dir = share_host_files(TAILS_ISO)
-  @iso_path = "#{iso_dir}/#{File.basename(TAILS_ISO)}"
+Given(/^I plug and mount a USB drive containing a Tails USB image$/) do
+  usb_image_dir = share_host_files(TAILS_IMG)
+  @usb_image_path = "#{usb_image_dir}/#{File.basename(TAILS_IMG)}"
 end
 
 Given /^I enable all persistence presets$/ do
@@ -339,14 +329,6 @@ end
 Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
   tails_is_installed_helper(target_name, "/lib/live/mount/medium", loader)
-end
-
-Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
-  iso_root = "/mnt/iso"
-  $vm.execute("mkdir -p #{iso_root}")
-  $vm.execute("mount -o loop #{@iso_path} #{iso_root}")
-  tails_is_installed_helper(target_name, iso_root, "isolinux")
-  $vm.execute("umount #{iso_root}")
 end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
@@ -555,10 +537,8 @@ Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     assert($vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
-    if running_tails_version.to_f >= 3.13
-      assert($vm.execute("test -e #{mountpoint}/persistence.conf.bak").success?,
-             "#{mountpoint}/persistence.conf.bak does not exist, while it should")
-    end
+    assert($vm.execute("test -e #{mountpoint}/persistence.conf.bak").success?,
+           "#{mountpoint}/persistence.conf.bak does not exist, while it should")
     assert($vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
            "#{mountpoint}/live-persistence.conf does exist, while it should not")
     $vm.execute(
@@ -827,7 +807,6 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
     assert_equal(success_pic, match)
   end
   @screen.click('TailsUpgraderApplyUpgradeButton.png')
-  @screen.wait('TailsUpgraderApplyingUpgrade.png', 20)
   @screen.wait('TailsUpgraderDone.png', 60)
 end
 
@@ -909,4 +888,45 @@ Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
   expected_flags = 0xd000000000000005
   assert(flags == expected_flags.to_s,
          "Got #{flags} as partition flags on #{part_dev} (for #{name}), instead of the expected #{expected_flags}")
+end
+
+
+Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do |size_in_MiB_of_destination_disk|
+  # GNOME Disks displays devices sizes in GB, with 1 decimal digit precision
+  size_in_GB_of_destination_disk = convert_from_bytes(
+    convert_to_bytes(size_in_MiB_of_destination_disk.to_i, 'MiB'),
+    'GB'
+  ).round(1).to_s
+  debug_log("Expected size of destination disk: " +
+            size_in_GB_of_destination_disk)
+
+  step 'I start "Disks" via GNOME Activities Overview'
+  disks = Dogtail::Application.new('gnome-disks')
+  disks.children(roleName: 'table cell').find { |row|
+    /^#{size_in_GB_of_destination_disk} GB Drive/.match(row.name)
+  }.grabFocus
+  disks.child('Menu', roleName: 'toggle button').click
+  disks.child('Restore Disk Image…', roleName: 'menu item').click
+  restore_dialog = disks.child('Restore Disk Image', roleName: 'dialog',
+                               showingOnly: true)
+  # Open the file chooser
+  disks.pressKey('Enter')
+  select_disk_image_dialog = disks.child('Select Disk Image to Restore',
+                                         roleName: 'file chooser',
+                                         showingOnly: true)
+  disks.typeText(@usb_image_path)
+  sleep 2 # avoid ENTER being eaten by the auto-completion system
+  disks.pressKey('Enter')
+  try_for(10) do
+    ! select_disk_image_dialog.showing
+  end
+  restore_dialog.child('Start Restoring…', roleName: 'push button').click
+  disks.child('Information', roleName: 'alert', showingOnly: true)
+    .child('Restore', roleName: 'push button', showingOnly: true)
+    .click
+  # Wait until the restoration job is finished
+  job = disks.child('Job', roleName: 'label', showingOnly: true)
+  try_for(60) do
+    ! job.showing
+  end
 end

@@ -13,11 +13,14 @@ and filing tickets for the Foundations Team as needed.
 - Check the Mozilla release calendars:
   * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
   * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
-- Send the release schedule to <tails-dev@boum.org> and
-  <tails-l10n@boum.org>.
-  - Bcc the usual testers (see `manual_testers.mdwn` in the RM team's
+- Reply to the email sent to <tails-dev@boum.org> and
+  <tails-l10n@boum.org> by the RM for the previous release,
+  to provide any information they could not, such as:
+  - Code freeze date
+  - If this will be a major release: the release schedule for its RC.
+    Bcc the usual testers (see `manual_testers.mdwn` in the RM team's
     Git repository), asking them for availability at the designated
-    dates for testing the RC and final image.
+    dates for testing the RC.
 - Ask <tails@boum.org> for a _Trusted Reproducer_ who will reproduce the
   ISO and USB images for the RC and final release within 72 hours after
   the RM has unplugged their smartcard. When accepting the offer,
@@ -59,6 +62,27 @@ and filing tickets for the Foundations Team as needed.
 - Ensure you have found a _Trusted Reproducer_ and write who this is
   in the [[contribute/calendar]].
 
+## The week before the release date
+
+If updating the Changelog is a particularly painful part of the
+release process for you, then you can do it in smaller chunks,
+starting ahead of the pre-release Monday.
+
+The first time you run our `./release` script to seed the changelog
+entry from Git commits:
+
+1. Take note of which commit you're at.
+2. Run it exactly as documented in the [[contribute/release_process]].
+
+The next times you run our `./release` script:
+
+1. Take note of which commit you're at.
+2. Pass, as a second argument to `./release`, the commit you took note
+   of last time you updated the Changelog.
+
+XXX: fix `./release` so that there's a way to have it simply run `gbp
+dch --auto`, which will avoid the need to take note of commits.
+
 ## The Friday before the release date
 
 We need to coordinate our Tails release with the Tor Browser
@@ -80,7 +104,9 @@ ask explicitly the Tor Browser team what their plans are.
 
 </div>
 
-See the
+As soon as the new *Tor Browser* tarballs are ready, you may import
+them in a topic branch and trigger CI runs, which will save you
+some precious time on pre-release Monday. See the
 [[Upgrading the Tor Browser|contribute/release_process/tor-browser]]
 page for details.
 
@@ -98,5 +124,4 @@ No kidding. See [[contribute/release_process]].
 
 The release manager shifts could be done by a team. They start right after the
 publication of the previous release to the publication and announcement of the
-release they are taking care of, which should be 6 weeks long if everything goes
-fine.
+release they are taking care of.

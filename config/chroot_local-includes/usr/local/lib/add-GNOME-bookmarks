@@ -3,10 +3,9 @@
 set -e
 set -u
 
-# We're a no-op unless running as the default desktop user
-[ "$(/usr/bin/id -u)" = 1000 ] || exit 0
-
 . /usr/local/lib/tails-shell-library/tails-greeter.sh
+
+BOOKMARKS_FILE="${HOME}/.config/gtk-3.0/bookmarks"
 
 add_gtk_bookmark_for() {
    local target
@@ -14,11 +13,13 @@ add_gtk_bookmark_for() {
 
    if [ $# -ge 2 ]; then
       title="$2"
-      echo "file://$target $title" >> "${HOME}/.gtk-bookmarks"
+      echo "file://$target $title" >> "${BOOKMARKS_FILE}"
    else
-       echo "file://$target" >> "${HOME}/.gtk-bookmarks"
+       echo "file://$target" >> "${BOOKMARKS_FILE}"
    fi
 }
+
+mkdir -p $(dirname "${BOOKMARKS_FILE}")
 
 add_gtk_bookmark_for "${HOME}/Tor Browser"
 
@@ -32,5 +33,5 @@ if persistence_is_enabled_for "${HOME}/Persistent" ; then
 fi
 
 for launcher in Report_an_error tails-documentation ; do
-    gio set "${HOME}/Desktop/${launcher}.desktop" metadata::trusted yes
+    gio set "${HOME}/Desktop/${launcher}.desktop" metadata::trusted true
 done

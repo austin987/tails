@@ -168,6 +168,12 @@ end
 checkpoints.each do |name, desc|
   step_regex = Regexp.new("^#{Regexp.escape(desc[:description])}$")
   Given step_regex do
-    reach_checkpoint(name)
+    begin
+      reach_checkpoint(name)
+    rescue Exception => e
+      debug_log("    Generated snapshot step failed with exception:\n" +
+                "      #{e.class}: #{e}\n", color: :red, timestamp: false)
+      raise e
+    end
   end
 end

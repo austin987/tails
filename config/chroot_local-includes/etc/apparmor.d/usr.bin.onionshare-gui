@@ -1,6 +1,7 @@
 #include <tunables/global>
 
 /usr/bin/onionshare-gui {
+  #include <abstractions/dbus-session-strict>
   #include <abstractions/gnome>
   #include <abstractions/ibus>
   #include <abstractions/onionshare>
@@ -9,6 +10,14 @@
   /usr/bin/onionshare-gui r,
   /proc/*/cmdline r,
 
+  # Required to open URLs in Tor Browser
+  /{usr/,}bin/{e,}grep rix,
+  /{usr/,}bin/gio rix,
+  /{usr/,}bin/which rix,
+  /usr/bin/xdg-open rmix,
+  /usr/lib/@{multiarch}/glib-[0-9]*/gio-launch-desktop ix,
+  /usr/local/bin/tor-browser rmUx,
+
   # The freedesktop.org abstraction doesn't allow `k`
   /usr/share/icons/*/index.theme k,
 
@@ -16,9 +25,6 @@
   owner @{HOME}/.config/ibus/bus/ rw,
   owner @{HOME}/.config/ibus/bus/* rw,
   deny @{HOME}/.ICEauthority r,
-
-  deny /etc/machine-id r,
-  deny /var/lib/dbus/machine-id.* rw,
 
   # Accessibility support
   owner /{,var/}run/user/*/at-spi2-*/ rw,

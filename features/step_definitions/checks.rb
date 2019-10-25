@@ -108,12 +108,12 @@ Then /^the support documentation page opens in Tor Browser$/ do
    else
      browser_name = 'Tor Browser'
    end
-   headings = @torbrowser
-              .child(expected_title + " - #{browser_name}", roleName: 'frame')
-              .children(roleName: 'heading')
-   assert(
-     headings.any? { |heading| heading.text == expected_heading }
-   )
+   try_for(60) {
+     @torbrowser
+       .child(expected_title + " - #{browser_name}", roleName: 'frame')
+       .children(roleName: 'heading')
+       .any? { |heading| heading.text == expected_heading }
+   }
  end
 
 Given /^I plug and mount a USB drive containing a sample PNG$/ do
@@ -124,21 +124,22 @@ Then /^MAT can clean some sample PNG file$/ do
   for png_on_host in Dir.glob("#{MISC_FILES_DIR}/*.png") do
     png_name = File.basename(png_on_host)
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
+    cleaned_png_on_guest = "/home/#{LIVE_USER}/#{png_name}".sub(/[.]png$/, '.cleaned.png')
     step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
     raw_check_cmd = "grep --quiet --fixed-strings --text " +
-                    "'Created with GIMP' '#{png_on_guest}'"
-    assert($vm.execute(raw_check_cmd, user: LIVE_USER).success?,
+                    "'Created with GIMP'"
+    assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'", user: LIVE_USER).success?,
            'The comment is not present in the PNG')
-    check_before = $vm.execute_successfully("mat --check '#{png_on_guest}'",
+    check_before = $vm.execute_successfully("mat2 --show '#{png_on_guest}'",
                                             :user => LIVE_USER).stdout
-    assert(check_before.include?("#{png_on_guest} is not clean"),
+    assert(check_before.include?("Metadata for #{png_on_guest}"),
            "MAT failed to see that '#{png_on_host}' is dirty")
-    $vm.execute_successfully("mat '#{png_on_guest}'", :user => LIVE_USER)
-    check_after = $vm.execute_successfully("mat --check '#{png_on_guest}'",
+    $vm.execute_successfully("mat2 '#{png_on_guest}'", :user => LIVE_USER)
+    check_after = $vm.execute_successfully("mat2 --show '#{cleaned_png_on_guest}'",
                                            :user => LIVE_USER).stdout
-    assert(check_after.include?("#{png_on_guest} is clean"),
+    assert(check_after.include?("No metadata found"),
            "MAT failed to clean '#{png_on_host}'")
-    assert($vm.execute(raw_check_cmd, user: LIVE_USER).failure?,
+    assert($vm.execute(raw_check_cmd + " '#{cleaned_png_on_guest}'", user: LIVE_USER).failure?,
            'The comment is still present in the PNG')
     $vm.execute_successfully("rm '#{png_on_guest}'")
   end

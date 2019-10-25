@@ -20,7 +20,7 @@
 <TMPL_IF LOCAL_CSS>
 <link rel="stylesheet" href="<TMPL_VAR BASEURL><TMPL_VAR LOCAL_CSS>" type="text/css" />
 <TMPL_ELSE>
-<link rel="stylesheet" href="<TMPL_VAR BASEURL>local.css?reload20180211" type="text/css" />
+<link rel="stylesheet" href="<TMPL_VAR BASEURL>local.css?reload-2019-09-20" type="text/css" />
 </TMPL_IF>
 
 <script src="<TMPL_VAR BASEURL>lib/js/mirror-dispatcher.js" type="text/javascript"></script>
@@ -65,6 +65,44 @@
     <span class="slogan">The Amnesic Incognito Live System</span>
   </a>
 </div>
+
+<a id="donate-banner" href="https://tails.boum.org/donate/index.<TMPL_VAR HTML_LANG_CODE>.html?r=banner">
+  <div class="donate-en">
+    <span class="first">Tails helps thousands of people stay safe online every day. And it's free.</span>
+    <span class="second">Donate today to protect and sustain Tails!</span>
+  </div>
+
+  <div class="donate-es">
+    <span class="first">Tails ayuda a miles de personas a navegar con seguridad cada día y es gratis.</span>
+    <span class="second">¡Dona hoy para apoyar y proteger Tails!</span>
+  </div>
+
+  <div class="donate-de">
+    <span class="first">Tails hilft täglich tausenden Menschen sicher im Netz zu sein, und das unentgeltlich.</span>
+    <span class="second">Spende heute, um Tails am Leben zu halten!</span>
+  </div>
+
+  <div class="donate-fa">
+    <span class="first">Tails helps thousands of people stay safe online every day. And it's free.</span>
+    <span class="second">Donate today to protect and sustain Tails!</span>
+  </div>
+
+  <div class="donate-fr">
+    <span class="first">Chaque jour, Tails protège gratuitement des milliers de personnes sur le net.</span>
+    <span class="second">Donnez aujourd'hui pour soutenir et protéger Tails&nbsp;!</span>
+  </div>
+
+  <div class="donate-it">
+    <span class="first">Tails helps thousands of people stay safe online every day. And it's free.</span>
+    <span class="second">Donate today to protect and sustain Tails!</span>
+  </div>
+
+  <div class="donate-pt">
+    <span class="first">Tails ajuda milhares de pessoas a se protegerem na Internet todos os dias, e é gratuito.</span>
+    <!-- Faça uma doação para ajudar o Tails a continuar a existir! -->
+    <span class="second">Donate today to protect and sustain Tails!</span>
+  </div>
+</a>
 
 <TMPL_IF HTML5><article class="page"><TMPL_ELSE><div class="page"></TMPL_IF>
 
@@ -266,7 +304,8 @@ License: <TMPL_VAR LICENSE>
 
 <script type="text/javascript">
   var linkelements = document.querySelectorAll('.use-mirror-pool');
-  if(linkelements.length > 0) {
+  // Avoid a traceback if mirror-dispatcher.js is not available.
+  if (typeof replaceUrlPrefixWithRandomMirror !== "undefined" && linkelements.length > 0) {
     replaceUrlPrefixWithRandomMirror(linkelements);
   }
 </script>
