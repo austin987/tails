@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -e
+set -u
+
+. gettext.sh
+TEXTDOMAIN="tails"
+export TEXTDOMAIN
+
+PERSISTENT_DATA_DIR="${HOME}/Persistent"
+NEW_DB="${PERSISTENT_DATA_DIR}/keepassx.kdbx"
+
+prompt_for_database_renaming() {
+    local filename="${1}"
+    local dialog_msg="`eval_gettext \"<b><big>Do you want to rename your <i>KeePassXC</i> database?</big></b>
+
+You have a <i>KeePassXC</i> database in your <i>Persistent</i> folder:
+
+<i>\\\${filename}</i>
+
+Renaming it to <i>keepassx.kdbx</i> would allow <i>KeePassXC</i> to open it automatically in the future.\"`
+"
+    local rename="`gettext \"Rename\"`"
+    local open="`gettext \"Keep current name\"`"
+    zenity --question --ellipsize --title "" --text "${dialog_msg}" --default-cancel \
+           --ok-label "${rename}" --cancel-label "${open}"
+}
+
+# Database file is not named keepassx.kdbx, prompt for renaming it.
+if mountpoint -q "$PERSISTENT_DATA_DIR" && \
+    ! [ -e "${NEW_DB}" ] && \
+    [ "$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ]; then
+    user_db="$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
+    if ! [ -e "${PERSISTENT_DATA_DIR}/.no_keepassx_db_renaming" ] \
+    && prompt_for_database_renaming "${user_db}"; then
+        mv "${user_db}" "${NEW_DB}"
+        exec /usr/bin/keepassxc "${NEW_DB}"
+    else
+        touch "${PERSISTENT_DATA_DIR}/.no_keepassx_db_renaming"
+        exec /usr/bin/keepassxc
+    fi
+
+# Default case:
+else
+    exec /usr/bin/keepassxc "$@"
+fi
