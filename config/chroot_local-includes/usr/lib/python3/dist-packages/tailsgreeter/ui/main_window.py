@@ -319,10 +319,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.check_and_login()
         return False
 
-    def cb_button_storage_lock_clicked(self, widget, user_data=None):
-        self.persistent_storage.lock()
-        return False
-
     def cb_button_storage_unlock_clicked(self, widget, user_data=None):
         self.persistent_storage.unlock()
         return False

@@ -20,7 +20,6 @@ class PersistentStorage(object):
         self.box_storage = builder.get_object('box_storage')
         self.box_storage_unlock = builder.get_object('box_storage_unlock')
         self.box_storage_unlocked = builder.get_object('box_storage_unlocked')
-        self.button_storage_lock = builder.get_object('button_storage_lock')
         self.button_storage_unlock = builder.get_object('button_storage_unlock')
         self.checkbutton_storage_show_passphrase = builder.get_object('checkbutton_storage_show_passphrase')
         self.entry_storage_passphrase = builder.get_object('entry_storage_passphrase')
@@ -47,24 +46,6 @@ class PersistentStorage(object):
             # but nothing is implemented to do so currently. So let's
             # hide the whole thing for now.
             self.box_storage.set_visible(False)
-
-    def lock(self):
-        if self.persistence_setting.lock():
-            self.button_storage_lock.set_visible(False)
-            self.box_storage_unlock.set_visible(True)
-            self.checkbutton_storage_show_passphrase.set_visible(True)
-            self.image_storage_state.set_visible(True)
-            self.image_storage_state.set_from_icon_name(
-                    'tails-locked', Gtk.IconSize.BUTTON)
-            self.entry_storage_passphrase.set_visible(True)
-            self.entry_storage_passphrase.set_sensitive(True)
-            self.button_storage_unlock.set_visible(True)
-            self.button_storage_unlock.set_sensitive(True)
-            self.button_storage_unlock.set_label(_("Unlock"))
-        else:
-            self.label_infobar_persistence.set_label(
-                    _("Failed to relock persistent storage."))
-            self.infobar_persistence.set_visible(True)
 
     @staticmethod
     def passphrase_changed(editable):
