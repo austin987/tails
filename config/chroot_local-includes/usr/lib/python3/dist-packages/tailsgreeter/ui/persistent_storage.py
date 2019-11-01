@@ -23,15 +23,25 @@ class PersistentStorage(object):
         self.button_storage_configure = builder.get_object('button_storage_configure')
         self.button_storage_lock = builder.get_object('button_storage_lock')
         self.button_storage_unlock = builder.get_object('button_storage_unlock')
+        self.checkbutton_storage_show_passphrase = builder.get_object('checkbutton_storage_show_passphrase')
         self.entry_storage_passphrase = builder.get_object('entry_storage_passphrase')
         self.image_storage_state = builder.get_object('image_storage_state')
         self.infobar_persistence = builder.get_object('infobar_persistence')
         self.label_infobar_persistence = builder.get_object('label_infobar_persistence')
         self.spinner_storage_unlock = builder.get_object('spinner_storage_unlock')
 
+        self.checkbutton_storage_show_passphrase.connect('toggled', self.cb_checkbutton_storage_show_passphrase_toggled)
+
+        self.box_storage.set_focus_chain([
+            self.box_storage_unlock,
+            self.box_storage_unlocked,
+            self.button_storage_configure,
+            self.checkbutton_storage_show_passphrase])
+
         if self.persistence_setting.has_persistence():
             self.button_storage_configure.set_visible(False)
             self.box_storage_unlock.set_visible(True)
+            self.checkbutton_storage_show_passphrase.set_visible(True)
             self.image_storage_state.set_visible(True)
             self.entry_storage_passphrase.set_visible(True)
             self.spinner_storage_unlock.set_visible(False)
@@ -50,6 +60,7 @@ class PersistentStorage(object):
         if self.persistence_setting.lock():
             self.button_storage_lock.set_visible(False)
             self.box_storage_unlock.set_visible(True)
+            self.checkbutton_storage_show_passphrase.set_visible(True)
             self.image_storage_state.set_visible(True)
             self.image_storage_state.set_from_icon_name(
                     'tails-locked', Gtk.IconSize.BUTTON)
@@ -77,6 +88,7 @@ class PersistentStorage(object):
         self.entry_storage_passphrase.set_sensitive(False)
         self.button_storage_unlock.set_sensitive(False)
         self.button_storage_unlock.set_label(_("Unlocking…"))
+        self.checkbutton_storage_show_passphrase.set_visible(False)
         self.image_storage_state.set_visible(False)
         self.spinner_storage_unlock.set_visible(True)
 
@@ -105,6 +117,7 @@ class PersistentStorage(object):
         self.entry_storage_passphrase.set_sensitive(True)
         self.button_storage_unlock.set_sensitive(True)
         self.button_storage_unlock.set_label(_("Unlock"))
+        self.checkbutton_storage_show_passphrase.set_visible(True)
         self.image_storage_state.set_visible(True)
         self.spinner_storage_unlock.set_visible(False)
         self.label_infobar_persistence.set_label(
@@ -126,3 +139,6 @@ class PersistentStorage(object):
                                                     Gtk.IconSize.BUTTON)
         self.image_storage_state.set_visible(True)
         self.box_storage_unlocked.set_visible(True)
+
+    def cb_checkbutton_storage_show_passphrase_toggled(self, widget):
+        self.entry_storage_passphrase.set_visibility(widget.get_active())

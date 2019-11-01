@@ -189,10 +189,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.box_language.set_focus_chain([
                 self.frame_language,
                 self.box_language_header])
-        self.box_storage.set_focus_chain([
-                self.box_storage_unlock,
-                self.box_storage_unlocked,
-                self.button_storage_configure])
         self.box_settings.set_focus_chain([
                 self.box_settings_values,
                 self.box_settings_header])
