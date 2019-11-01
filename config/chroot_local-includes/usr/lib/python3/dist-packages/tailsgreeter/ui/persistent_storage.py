@@ -20,7 +20,6 @@ class PersistentStorage(object):
         self.box_storage = builder.get_object('box_storage')
         self.box_storage_unlock = builder.get_object('box_storage_unlock')
         self.box_storage_unlocked = builder.get_object('box_storage_unlocked')
-        self.button_storage_configure = builder.get_object('button_storage_configure')
         self.button_storage_lock = builder.get_object('button_storage_lock')
         self.button_storage_unlock = builder.get_object('button_storage_unlock')
         self.checkbutton_storage_show_passphrase = builder.get_object('checkbutton_storage_show_passphrase')
@@ -35,11 +34,9 @@ class PersistentStorage(object):
         self.box_storage.set_focus_chain([
             self.box_storage_unlock,
             self.box_storage_unlocked,
-            self.button_storage_configure,
             self.checkbutton_storage_show_passphrase])
 
         if self.persistence_setting.has_persistence():
-            self.button_storage_configure.set_visible(False)
             self.box_storage_unlock.set_visible(True)
             self.checkbutton_storage_show_passphrase.set_visible(True)
             self.image_storage_state.set_visible(True)
@@ -50,11 +47,6 @@ class PersistentStorage(object):
             # but nothing is implemented to do so currently. So let's
             # hide the whole thing for now.
             self.box_storage.set_visible(False)
-
-    def configure(self):
-        # XXX-future: this should launch the configuration of the persistence.
-        logging.warning("User would be able to set up an encrypted storage.")
-        raise NotImplementedError
 
     def lock(self):
         if self.persistence_setting.lock():
