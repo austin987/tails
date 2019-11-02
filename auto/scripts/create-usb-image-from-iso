@@ -44,7 +44,6 @@ SYSTEM_PARTITION_ADDITIONAL_SIZE = 10
 # the same syslinux version here and in Tails Installer is important to
 # prevent issues when upgrading a Tails device via Tails Installer.
 CHROOT_SYSLINUX_COM32MODULES_DIR = 'chroot/usr/lib/syslinux/modules/bios'
-CHROOT_SYSLINUX_BIN='chroot/usr/bin/syslinux'
 
 class ImageCreationError(Exception):
     pass
@@ -272,12 +271,20 @@ class ImageCreator(object):
         # We install syslinux directly on the image. Installing it on the loop
         # device would cause this issue:
         # https://bugs.chromium.org/p/chromium/issues/detail?id=508713#c8
+
+        execute(['mount', '--types', 'proc', '/proc', 'chroot/proc'])
+        execute(['mkdir', '-p', 'chroot%s' % os.path.dirname(self.image)])
+        execute(['touch', 'chroot%s' % self.image])
+        execute(['mount', '--bind', self.image, 'chroot%s' % self.image])
         execute([
-            CHROOT_SYSLINUX_BIN,
+            'chroot', 'chroot',
+            '/usr/bin/syslinux',
             '--offset', str(self.partition.props.partition.props.offset),
             '--directory', '/syslinux/',
             '--install', self.image
         ])
+        execute(['umount', 'chroot/proc'])
+        execute(['umount', 'chroot%s' % self.image])
 
     def set_guids(self):
         logger.info("Setting disk and partition GUID")
