@@ -20,9 +20,7 @@ Type=oneshot
 # watch_for_coldplug_completion will set up a watcher and return before
 # there's any place where plymouthd can create a seat to display its
 # splash and messages on. So we tell plymouthd to ignore udev which makes
-# it create a fallback seat.
-# XXX:Buster: check if plymouth.ignore-udev is still necessary (this code path
-# has changed in plymouth 0.9.3)
+# it create a fallback seat. The removal of this hack is tracked on #16964.
 ExecStart=/bin/sh -c \
     '/sbin/plymouthd --mode=shutdown --tty=tty5 \
         --kernel-command-line="plymouth.ignore-udev $(cat /proc/cmdline)"'

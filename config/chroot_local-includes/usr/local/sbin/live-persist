@@ -434,31 +434,6 @@ activate_volumes ()
 	fi
 	rm -f ${custom_mounts} 2> /dev/null
 
-	# Update persistent GnuPG configuration for Stretch
-	if mountpoint --quiet /home/amnesia/.gnupg ; then
-		# Install current dirmngr.conf if there is no persistent one
-		if [ ! -e /home/amnesia/.gnupg/dirmngr.conf ]
-		then
-			install --owner amnesia --group amnesia --mode 0600 \
-			        /etc/skel/.gnupg/dirmngr.conf \
-			        /home/amnesia/.gnupg/dirmngr.conf \
-			|| warning "Could not install dirmngr.conf"
-		fi
-		# Disable gpg.conf settings that either are obsolete,
-		# or would break communication with keyservers
-		if [ -e /home/amnesia/.gnupg/gpg.conf ]
-		then
-			obsolete_keyserver_options_str='http-proxy|ca-cert-file'
-			obsolete_keyserver_options_bool='no-try-dns-srv|no-honor-keyserver-url'
-			sed -i --regexp-extended \
-			    "s/^(keyserver\s+)/#\1/ ; \
-			     s/^(keyserver-options\s+($obsolete_keyserver_options_str)=)/\#\\1/ ; \
-			     s/^(keyserver-options\s+($obsolete_keyserver_options_bool))\$/\#\\1/" \
-			    /home/amnesia/.gnupg/gpg.conf \
-			|| warning "Could not update gpg.conf"
-		fi
-	fi
-
 	# Get rid of any Enigmail configuredVersion that we previously used
 	# to set in a way that would persistently override the value maintained
 	# by Enigmail itself (#12680, #15693). We stopped writing this pref

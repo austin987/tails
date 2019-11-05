@@ -1,6 +1,9 @@
 [Unit]
 Description=Add GTK bookmarks to some directories
 Documentation=https://tails.boum.org/contribute/design/application_isolation/
+ConditionUser=1000
+After=create-tor-browser-directories.service gvfs-metadata.service
+Requires=create-tor-browser-directories.service gvfs-metadata.service
 
 [Service]
 Type=oneshot
@@ -8,4 +11,4 @@ ExecStart=/usr/local/lib/add-GNOME-bookmarks
 RemainAfterExit=yes
 
 [Install]
-WantedBy=basic.target
+WantedBy=gnome-early-initialization.target

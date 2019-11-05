@@ -52,7 +52,7 @@ const Extension = new Lang.Class({
         this.statusMenu = Main.panel.statusArea['aggregateMenu']._system;
 
         this._createActions();
-        this._removeAltSwitcher();
+        this._removeOrigActions();
         this._addSeparateButtons();
 
         this.statusMenu.menu.connect('open-state-changed', (menu, open) => {
@@ -68,7 +68,7 @@ const Extension = new Lang.Class({
         this._isEnabled = false;
 
         this._destroyActions();
-        this._restoreAltSwitcher();
+        this._restoreOrigActions();
     },
 
     _createActions: function() {
@@ -98,12 +98,14 @@ const Extension = new Lang.Class({
         return new Action(button, id);
     },
 
-    _removeAltSwitcher: function() {
+    _removeOrigActions: function() {
         this.statusMenu._actionsItem.actor.remove_child(this.statusMenu._altSwitcher.actor);
+        this.statusMenu._actionsItem.actor.remove_child(this.statusMenu._lockScreenAction);
     },
 
-    _restoreAltSwitcher: function() {
+    _restoreOrigActions: function() {
         this.statusMenu._actionsItem.actor.add(this.statusMenu._altSwitcher.actor, { expand: true, x_fill: false });
+        this.statusMenu._actionsItem.actor.add(this.statusMenu._lockScreenAction, { expand: true, x_fill: false });
     },
 
     _addSeparateButtons: function() {
