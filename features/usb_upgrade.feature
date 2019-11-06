@@ -21,6 +21,10 @@ Feature: Upgrading an old Tails USB installation
   # Installation method inspired by the usb-install-tails-greeter
   # checkpoint, variations are using the old Tails USB image and a
   # different device name ("old" instead of "__internal")
+  #
+  # Boot the system to make sure resizing has happened, and to check
+  # the system is sane (safe access rights, no persistence, etc.); end
+  # with unplugging to get both a clean state and a stopped machine.
   Scenario: Installing an old version of Tails to a pristine USB drive
     Given a computer
     And I create a 7200 MiB disk named "old"
@@ -32,7 +36,7 @@ Feature: Upgrading an old Tails USB installation
     And there is no persistence partition on USB drive "old"
     And process "udev-watchdog" is running
     And udev-watchdog is monitoring the correct device
-    And I shutdown Tails and wait for the computer to power off
+    And I unplug USB drive "old"
 
   # Depends on scenario: Installing an old version of Tails to a pristine USB drive
   Scenario: Creating a persistent partition with the old Tails USB installation

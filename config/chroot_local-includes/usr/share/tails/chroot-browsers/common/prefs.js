@@ -18,3 +18,6 @@ user_pref("print.postscript.cups.enabled", false);
 
 // Hide "Get Addons" in Add-ons manager
 user_pref("extensions.getAddons.showPane", false);
+
+// Disable Pocket service integration
+pref("extensions.pocket.enabled", false);

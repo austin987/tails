@@ -8,37 +8,24 @@ set -o pipefail
 
 LANGUAGES=${@:-de es fa fr it pt}
 
-count_msgids () {
-    cat | grep -E '^msgid\s+' | wc -l
-}
+GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 
-count_original_words () {
-    cat | grep ^msgid | sed 's/^msgid "//g;s/"$//g' | wc -w
-}
+# Import count_msgids() and count_translated_strings()
+. "${GIT_TOPLEVEL_DIR}/config/chroot_local-includes/usr/local/lib/tails-shell-library/po.sh"
 
 statistics () {
     PO_MESSAGES="$(mktemp -t XXXXXX.$lang.po)"
     msgcat --files-from=$PO_FILES --output=$PO_MESSAGES
     TOTAL=$(msgattrib --no-obsolete $PO_MESSAGES | count_msgids)
-    TOTAL_WC=$(
-        msgattrib --no-obsolete --no-wrap $PO_MESSAGES | count_original_words
-    )
     FUZZY=$(msgattrib --only-fuzzy --no-obsolete $PO_MESSAGES | count_msgids)
-    TRANSLATED=$(
-        msgattrib --translated --no-fuzzy --no-obsolete $PO_MESSAGES \
-            | count_msgids
-    )
-    TRANSLATED_WC=$(
-        msgattrib --translated --no-fuzzy --no-obsolete --no-wrap $PO_MESSAGES \
-        | count_original_words
-    )
-    echo "  - $lang: $(($TRANSLATED*100/$TOTAL))% ($TRANSLATED) strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy, $(($TRANSLATED_WC*100/$TOTAL_WC))% words translated"
+    TRANSLATED=$(cat $PO_MESSAGES | count_translated_strings)
+    echo "  - $lang: $(($TRANSLATED*100/$TOTAL))% ($TRANSLATED) strings translated, $(($FUZZY*100/$TOTAL))% strings fuzzy"
     rm -f $PO_FILES $PO_MESSAGES
 }
 
 intltool_report () {
     rm -rf tmp/pot
-    ./refresh-translations --keep-tmp-pot
+    "${GIT_TOPLEVEL_DIR}/refresh-translations" --keep-tmp-pot
     rm -rf po.orig
     cp -a po po.orig
     (
@@ -78,9 +65,6 @@ for lang in $LANGUAGES ; do
     statistics $PO_FILES
 done
 
-echo ""
-echo "Total original words: $TOTAL_WC"
-
 # core PO files
 echo ""
 echo "## [[Core pages of the website|contribute/l10n_tricks/core_po_files.txt]]"
@@ -94,6 +78,3 @@ for lang in $LANGUAGES ; do
         > $PO_FILES
     statistics $PO_FILES
 done
-
-echo ""
-echo "Total original words: $TOTAL_WC"

@@ -1,3 +1,674 @@
+tails (4.0) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 9.0-build2, based on Firefox ESR 68.2.
+
+  * Security fixes
+    - Upgrade IBus to 1.5.19-4+deb10u1.0tails1 (Closes: #17144)
+    - Upgrade sudo to 1.8.27-1+deb10u1
+
+  * Bugfixes
+    - Fix regressions brought by the integration of Tor Browser 9.0:
+      · Fix non-English spellchecking (Closes: #17150)
+      · Unsafe Browser: don't enable private browsing mode, don't display
+        Tor Browser icons, hide the new "New identity" toolbar button
+        (Closes: #17142)
+      · Hide all Tor connection-related settings in about:preferences
+        (Closes: #17157)
+    - Fix Stealth Onion services in OnionShare (Closes: #17162)
+    - Upgrade OpenSSL to 1.1.1d-0+deb10u2
+
+  * Minor improvements and updates
+    - Don't include the locales package (Closes: #17132)
+    - Update htpdate's User-Agent to match Tor Browser 9.0's
+
+  * Test suite
+    - Only partially fill memory for userspace processes (Closes: #17104)
+    - Drop the "Unsafe Browser has no proxy configured" step, that's hard
+      to update and adds little value
+    - Various updates for Tor Browser 9.0 final
+    - Make the "SSH is using the default SocksPort" scenario more robust
+      (Closes: #17163)
+
+ -- Tails developers <tails@boum.org>  Mon, 21 Oct 2019 10:24:56 +0000
+
+tails (4.0~rc1) unstable; urgency=medium
+
+  * Major changes
+    - Update Tor Browser to 9.0a7, based on Firefox ESR 68 (#16356).
+    - Include a working version of Electrum: 3.3.8-0.1 (Closes: #16421).
+      Accordingly:
+      · Remove the obsolete "coin_chooser: Privacy" option (Closes: #15483).
+      · Disable the update check (Closes: #15483).
+    - Curate the list of languages in Tails Greeter (Closes: #16095).
+      Only include languages which meet one of these conditions:
+      · Have a PO file in tails.git (i.e. have at least one translated
+        and reviewed string)
+      · Are on our list of tier-1 supported languages.
+    - Update Linux to 5.3.2-1~exp1 from Debian experimental (Closes: #17117).
+    - Bump APT snapshots of the 'debian' and 'torproject' archives
+      to 2019100904. This includes the update to the Buster 10.1
+      point-release.
+
+  * Security fixes
+    - Drop NoScript customization that makes our web fingerprint diverge
+      from Tor Browser's (related to #5362).
+    - Enable Buster security APT sources (Closes: #17119).
+    - Upgrade CUPS to 2.2.10-6+deb10u1 (CVE-2019-8696, CVE-2019-8675,
+      and more security fixes).
+    - Update GnuPG to 2.2.12-1+deb10u1, which mitigates the certificates
+      flooding attack.
+    - Update e2fsprogs to 1.44.5-1+deb10u2 (DSA-4535-1).
+    - Update ghostscript to 9.27~dfsg-2+deb10u2 (DSA-4518-1, DSA-4499-1).
+    - Update WebKitGTK to 2.24.4-1~deb10u1 (DSA-4515-1).
+    - Update Pango to 1.42.4-7~deb10u1 (DSA-4496-1).
+    - Update ffmpeg to 7:4.1.4-1~deb10u1 (DSA-4502-1).
+    - Update expat to 2.2.6-2+deb10u1 (DSA-4530-1).
+    - Update GLib to 2.58.3-2+deb10u1 (CVE-2019-13012).
+    - Update libmariadb3 to 1:10.3.17-0+deb10u1 (various vulnerabilities).
+    - Update NSS to 2:3.42.1-1+deb10u1 (CVE-2019-11719, CVE-2019-11727,
+      CVE-2019-11729).
+    - Update LibreOffice to 1:6.1.5-3+deb10u4 (DSA-4519-1, DSA-4501-1,
+      DSA-4483-1, and CVE-2019-9848).
+    - Update Samba to 2:4.9.5+dfsg-5+deb10u1 (DSA-4513-1).
+    - Update OpenSSL to 1.1.1d-0+deb10u1 (DSA-4539-1).
+    - Update libxslt to 1.1.32-2.1~deb10u1 (CVE-2019-11068, CVE-2019-13117,
+      CVE-2019-13118).
+    - Update zeromq3 to 4.3.1-4+deb10u1 (DSA-4477-1).
+    - Update patch to 2.7.6-3+deb10u1 (DSA-4489-1).
+    - Update Thunderbird to 1:60.9.0-1~deb10u1 (DSA-4523-1, DSA-4482-1).
+    - Update wpasupplicant to 2:2.7+git20190128+0c1e29f-6+deb10u1 (DSA-4538-1).
+
+  * Bugfixes
+    - Ensure that tor-has-bootstrapped systemd units are stopped
+      if tor@default.service stops; replace the tor-has-bootstrapped
+      script with a tor_has_bootstrapped() function that checks the status
+      of tails-tor-has-bootstrapped.target (Closes: #16664).
+    - Fix MIME info data build reproducibility (Closes: #17023).
+    - Fix missing GNOME bookmarks, by adding them earlier in the session
+      login process (Closes: #17030).
+    - Increase left dock width in GIMP's sessionrc (Closes: #16807).
+    - Use hardware defaults for the touchpad click method (Closes: #17045).
+    - Fix image thumbnails in GNOME Files (Closes: #17062).
+    - Use the "intel" X.Org driver for Intel Iris Plus Graphics 640
+      (Closes: #17060).
+    - Fix sdhci-pci support.
+    - Honor the "Formats" settings chosen in the Greeter (Closes: #16806).
+    - Fix administration password not being applied in some cases
+      (Closes: #13447).
+    - Fix Greeter settings being applied when clicking "Cancel"
+      (Closes: #17087).
+    - Fix bridge information not always shown when the user selects
+      bridge mode in the Greeter.
+    - Fix path in whisperback's debugging info (Closes: #17109).
+    - Fix Tor Browser functionality that was broken when it was started
+      by clicking a link in Thunderbird (Closes: #17105).
+    - Fix WhisperBack that was broken due to an expired X.509 certificate:
+      stop using TLS (we already have end-to-end encryption via OpenPGP,
+      plus end-to-end encryption and remote peer authentication via
+      Tor hidden services). Also, switch to a v3 Onion service (Closes #17110).
+    - Install Stretch's po4a (0.47-2) from our custom APT repository:
+      the upgrade to Buster's version will need more work and coordination
+      (Closes: #17127).
+    - Fix hiding of the Add-ons manager in the Unsafe Browser hamburger menu.
+      Regression introduced when we upgraded to Tor Browser based on Firefox
+      ESR 60.
+    - Mention USB images as a valid installation technique when trying
+      to create a persistent volume on a device that can't have one
+      (Closes: #17025).
+
+  * Minor improvements and updates
+    - Add iPhone USB tethering support (Closes: #16180).
+    - Install Enigmail from Buster (Closes: #16978).
+    - Disable GDM debug logs (Closes: #17011).
+    - Hide less common keyboard layouts in the Greeter (Closes: #17084).
+    - Major refactoring and cleanup of Tails Greeter (Closes: #17098).
+    - Use a localized page for the Greeter help window, if available
+      (Closes: #17101).
+    - Separate Chinese into simplified and traditional scripts
+      in the Greeter (Closes: #16094).
+    - Allow the user to show the passphrase they're typing when creating
+      a new persistent volume (Closes: #15102).
+    - When saving persistence.conf or its backup, also run sync(1)
+      on its parent directory (might help fix #10976).
+    - Improve Tails Installer wording (Closes: #15564).
+    - Update tor to 0.4.1.6-1~d10.buster+1.
+    - Update VirtualBox guest drivers and tools to 6.0.12-dfsg-1.
+
+  * Build system
+    - SquashFS sort file: remove more noise.
+    - Improve lint_po's UX (refs: #16864).
+    - Import our pythonlib, previously included as a submodule (Closes: #16935).
+    - Use a consistent, standard Python packages directory (Closes: #17082).
+
+  * Test suite
+    - Make various steps more robust:
+      · "all notifications are disappeared" (Closes: #17012)
+      · "Additional Software is correctly configured for package"
+      · "I unlock and mount this VeraCrypt file container
+        with Unlock VeraCrypt Volumes"
+      · "I open the Unsafe Browser proxy settings dialog"
+      · starting apps via the GNOME Activities Overview (Closes: #13469)
+      · "I start the Tor Browser in offline mode"
+    - Handle Guestfs::Error exceptions.
+    - Provide guidance to fix problematic situation.
+    - Update various reference images for Buster.
+    - Don't attempt to find fuzzy matches with Sikuli unless fuzzy image
+      matching is enabled (Closes: #17029).
+    - Dogtail'ify all interactions with gedit (Closes: #17028).
+    - New test: ensure that no experimental APT suite is enabled
+      for deb.torproject.org (Closes: #16931).
+    - Remove dead IRC-related code and dependencies.
+    - Take into account that Evince and Tor Browser's print-to-file dialogs
+      are rendered in a subtly different manner.
+    - Drop fragile tag for actual Tails bugs (#17007).
+    - Drop compatibility code for Cucumber < 2.4.0 (Closes: #17083).
+    - Fix regression in the Persistent browser bookmarks scenario
+      (Closes: #17125).
+
+ -- Tails developers <tails@boum.org>  Thu, 10 Oct 2019 11:23:53 +0000
+
+tails (4.0~beta2) unstable; urgency=medium
+
+  * All changes included in Tails 3.16, see the corresponding changelog entry.
+
+  * Major changes
+    - Upgrade tor to 0.4.1.5 (Closes: #16986).
+
+  * Security fixes
+    - Upgrade the Linux kernel to 5.2.0-2 (Closes: #16942).
+      This mitigates the Spectre v1 swapgs vulnerability (CVE-2019-1125).
+      Accordingly, aufs to aufs5.2 20190805.
+    - Install enigmail from Bullseye (Closes: #16738).
+      This fixes CVE-2019-12269.
+
+  * Bugfixes
+    - tails-unblock-network: only sleep until all-net-blacklist.conf is gone,
+      instead of unconditionally delaying the login process for 5 seconds
+      (Closes: #16805).
+    - Terminate GDM's GNOME session after the amnesia user logs in,
+      to free 200-300 MiB of memory (Closes: #12092).
+      Temporarily enable GDM debug logs so we get enough information to fix
+      any issue this might cause.
+    - Make our KeePassXC wrapper translatable (Closes: #16952).
+    - Adjust boot-time backports APT pinning for Buster.
+    - Ensure we don't install unwanted packages even if they become
+      "Priority: standard" again (Closes: #16949).
+    - Move some GNOME apps to different menu categories (Closes: #16981).
+    - Update HTP pools: replace boum.org (invalid certificate) with puscii.nl,
+      replace www.myspace.com with myspace.com (the former redirects to
+      the latter).
+    - AppArmor: allow OnionShare to open URLs with Tor Browser (Closes: #16914).
+    - Make file transfers with Spice reliable.
+
+  * Minor improvements and updates
+    - Greeter: improve formatting of printed exceptions.
+    - Use the same icon for Tails Documentation in the Applications menu
+      as on te Desktop (Closes: #16800).
+    - Drop migration path from GnuPG persistent configuration created
+      in the Tails 2.x era.
+    - Remove various hacks that we don't need on Buster anymore.
+    - Stop installing libcaribou-gtk3-module (Closes: #16757).
+    - Stop installing python-cairo: mat2 does not use it anymore.
+    - tails-unblock-network: have udev reload the databases it uses.
+      This should avoid our fix for #16805 introducing regressions.
+
+  * Build system
+    - Bump APT snapshot of the 'debian' and 'torproject' archives
+      to 2019090202.
+    - Import the Greeter codebase into tails.git (Closes: #16912).
+    - Explicitly install gnome-shell to make the set of installed packages
+      more deterministic (related to #16947).
+    - Don't try to follow symlinks when normalizing timestamps on source files.
+    - Add missing "set -u" to build-time hook.
+    - Use consistent method to extract translatable strings from Glade files.
+    - Create gdm-tails related files from the original GNOME files
+      (Closes: #12551).
+    - Stop installing libimage-exiftool-perl explicitly: mat2 depends on it
+      already.
+    - Rakefile: disable compression when retrieving artifacts via scp.
+      This makes this build step faster on systems that have SSH compression
+      enabled by default.
+    - import-translations: use tails-misc_release for tails.git's PO files
+      (i.e. the Tails part of #16774).
+    - Use squashfs-tools from sid (Closes: #16637).
+    - Lower VM_MEMORY_BASE to 1536M.
+    - Remove unneeded package cleanup (Closes: #16950).
+
+  * Test suite
+    - New scenario: installing with GNOME Disks from a USB image
+      (Closes: #16004).
+    - New scenarios: VeraCrypt PIM support (Closes: #15946).
+    - Revert timeout bump that's not needed anymore.
+    - Add a showing method on Dogtail objects.
+    - VeraCrypt: ensure the temporary keyfile file is not garbage collected
+      while we still need it.
+    - Remote shell: print traceback to stderr so we can see it.
+    - Install Dogtail from Bullseye and run it with Python 3 (Closes: #16976).
+      This gives us UTF-8 support. Accordingly, drop anonym's "showingOnly"
+      patch that was merged upstream, and port some test suite code to Dogtail,
+      which we could not do before it got UTF-8 support.
+    - Dogtail'ify some steps.
+    - Make "^the Tor Browser shows the "([^"]+)" error$" step more robust
+      (Closes: #11592.
+    - Make the "the support documentation page opens in Tor Browser" step more
+      robust (Closes: #15321)
+    - Remove a bunch of obsolete @fragile tags, update the reasons why
+      the remaining ones are fragile, and add some missing @fragile tags.
+    - Drop useless code based on wrong assumptions (refs: #13470).
+    - Make the "I set an administration password" step more robust.
+
+ -- Tails developers <tails@boum.org>  Mon, 02 Sep 2019 19:55:24 +0000
+
+tails (4.0~beta1) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade to a snapshot of Debian 10 (Buster) from 2018-08-06.
+
+  * Removed features
+    - Remove scribus completely (refs: 16290).
+    - Remove LibreOffice Math (#16911).
+
+  * Bugfixes
+    - Fix Electrum wrapper's persistence check (Closes: #16821).
+    - Remove pre-generated Pidgin accounts (Closes: #16744).
+    - Hide the security level button in the unsafe browser (Closes:
+      #16735).
+    - Only hide unlocked TailsData partitions from the boot device
+      (Closes: #16789).
+
+  * Minor improvements and updates
+    - Remove KeePassX and replace it with KeePassXC (Closes:
+      #15297). As KeePassX was used around for a longer time, we don't
+      need automatic upgrading cappability from old KeePass file
+      format (Tails 2 times). The user can still import those old
+      files, if they want to access it.
+    - Ship a pre-compiled AppArmor policy to make boot faster (Closes:
+      #16138).
+    - Change the splash screen for Tails 4.0 (#16837). Add SVG source
+      while we're at it!
+    - Remove our predefined bookmarks and ship default upstream Tor
+      Browser bookmarks instead (Closes: #15895).
+    - Install bolt for improved Thunderbolt support (Closes: #5463).
+    - Don't display the Home launcher on the desktop (Closes: #16799).
+      Since the switch to the desktop-icons GNOME Shell extension, the
+      nicer XDG-blah name ("Home" in English, translated in many
+      languages) is not used to label this launcher anymore: instead,
+      the name of the directory is displayed, in this case: "amnesia",
+      which makes no sense to our users. Our other options to fix that
+      are more costly and we've decided a while ago, when I proposed
+      to remove the desktop icons, to keep them until they were too
+      expensive to support. So this one goes: we have the Places menu
+      already.
+    - Add Files to favorite apps (Closes: #16799). This gives another
+      entry point to the home folder, which partially mitigates any UX
+      regression that might be caused by the previous changelog entry.
+    - Explicitly install imagemagick. We ship it on purpose (see
+      [[contribute/meetings/201707]]).
+    - MAT:
+      * Drop obsolete optional MAT dependencies it isn't using any
+        more.
+      * Stop explicitly installing MAT dependencies. The package
+        depends on those so we don't need to pull them ourselves.
+    - Move translations from root-terminal.desktop.in into own PO
+      files (Closes: #15335).
+    - Drop obsolete live-boot patch: the bug it workarounds only
+      happens with CONFIG_AUFS_DEBUG enabled. We disable
+      CONFIG_AUFS_DEBUG in config/chroot_local-hooks/13-aufs and the
+      Debian package did it as well (Refs: Debian#886329).
+    - Rename /usr/share/amnesia to /usr/share/tails.
+    - Drop APT pinning for non-existing live.debian.net, that we
+      haven't used since 2010.
+    - Don't install the cryptsetup initramfs integration and startup
+      scripts (Closes: #16264). We probably only need the binaries.
+      Not installing the initramfs integration will get rid of some
+      noise
+    - Don't install full-blown cryptsetup, take 2 (refs: #15690). We've
+      stopped installing it (#16264) but this branch independently
+      reintroduced it.
+    - Disable live-tools.service (Closes: #16324). This service is only
+      useful to display the "Please remove the live-medium, close the
+      tray (if any) and press ENTER to continue:" prompt on shutdown,
+      that we don't want to display in Tails: shutdown and memory
+      erasure should not require a confirmation once the user has
+      triggered it. In Stretch this code was broken and we were
+      relying on this. But the Buster upgrade of this code has
+      repaired it, so I sometimes see that prompt. This might also
+      explain some issues such as #16312.
+    - AppArmor: allow cups-brf, driverless, and gutenprint53+usb
+      printer backends (Closes: #15030). Technically, cups-brf and
+      driverless are not third-party and should be confined more
+      strictly with "ixr", under the cupsd profile. But I don't know
+      how to to test these backends and confining them more strictly
+      may break them.  Anyway, that's an upstream matter: the purpose
+      of our Tails-specific patch is to replace the third party
+      backends /usr/lib/cups/backend/* catch all rule, that doesn't
+      work for us, and not to keep the list of backends which come
+      with CUPS up-to-date.
+    - Make export_gnome_env() exit early if gnome-shell isn't running.
+      Without this e.g. the automated test suite, which will call
+      export_gnome_env() before gnome-shell is running, will have its
+      journal polluted with errors about this. This is not the first
+      time I see this and get worried and waste minutes investigating,
+      so let's just fix it.
+
+  * Build system
+    - Bump VM_MEMORY_BASE to 2048M. With the previous 1024M setting,
+      the squashfs preparation gets OOM-killed.
+    - Limit the memory used by mksquashfs to 512M (Closes: #16177). By
+      default mksquashfs will use 25% of the physical memory. So when
+      we use the "ram" build option, build in a VM with 13GB of RAM,
+      of which up to 12G is supposed to be used by the build tmpfs,
+      mksquashfs will try using 13/4 = 3.25G of memory. And then it
+      will get reaped by the OOM killer more or less occasionally
+      depending on how much space is really used in the build tmpfs
+      and how much memory the rest of the system is using. So let's
+      limit the memory used by mksquashfs to 50% of the memory we
+      allocate to the build VM, excluding the part of it that we
+      expect tmpfs data to fill. In passing, the fact mksquashfs does
+      not get killed every time suggests that our current
+      BUILD_SPACE_REQUIREMENT value exceeds the real needs of a build:
+      a value around 10 or 11G should be enough. But that will be for
+      another commit.
+    - Use xz with default settings to compress non-release SquashFS
+      (refs: #16177). squashfs-tools 1:4.3-11, used to build
+      feature/buster, does not consistently honor the value passed to
+      -mem: the xz compressor does but at least the gzip and lzo ones
+      don't. This makes the build often fail because mksquashfs gets
+      reaped by the OOM-killer. Our only other option is currently to
+      bump the build VM memory a lot, which is going to be painful on
+      developers' systems and might not be an option on Jenkins. So
+      let's fall back to xz with default settings (not the crazy slow
+      but efficient we use at release time) when building non-release
+      images.
+    - Rename the "gzipcomp" build option to "fastcomp". What matters
+      in the "user" interface is not the exact algorithm that's used,
+      it's the fact it's supposed to be faster than the compression
+      settings we use to build releases. We may have to changes these
+      fast(er) settings occasionally, possibly to use a non-gzip
+      algorithm. So let's keep supporting "gzipcomp" for backward
+      compatibility but stop documenting it. Instead, support and
+      document "fastcomp".
+    - Add the vmproxy+extproxy build option. When enabled, use the
+      vmproxy but configure it to in turn use the exproxy set via the
+      http_proxy environment variable.
+    - Support the case when we don't ship a custom AppArmor feature
+      set. Let's keep this sanity check for the times when we do ship
+      a custom feature set, but building an ISO without a custom one
+      should remain supported. (Closes: #15149)
+    - Don't remove packages whose deinstallation removes most of the
+      system; don't explicitly remove packages that are taken care of
+      by "apt-get autoremove" already. On Buster, removing dpkg-dev
+      or make deinstalls python3, gnome-shell and more.
+    - Install all "Priority: standard" packages via an explicit
+      packages list instead of via --tasks (Closes: #15690). This will
+      make it easier to remove some of these packages from the list of
+      those that should be installed in the first place, as opposed to
+      letting them be installed by tasksel only to uninstall them
+      later. I've seeded tails-000-standard.list with the output of:
+      tasksel --task-packages standard | sort … run on a clean Buster
+      system. Also:
+       * live-build forcibly translates --packages-lists="standard"
+         into "tasksel install standard", so to make this change
+         effective we also need to switch to "--packages-lists
+         minimal" or "--packages-lists none". The former has
+         problematic side-effects so let's use the latter.
+       * Add to tails-common.list some of the packages that were
+         previously installed automatically, e.g. via live-build's
+         lists/standard → lists/minimal.
+
+  * Test suite
+    - Tons of tiny updates for the Stretch → Buster transition, mainly
+      updated reference images, but also a few other trivial changes
+      (e.g. close with Alt+F4 instead of menu, or vice versa) due to
+      changes in applications.
+    - Drop test case about migrating from a Jessie-area persistent
+      volume. If our code happens to support Tails 2.x → 4.x upgrades
+      without going through 3.x, fine. But let's not spend cycles in
+      our CI to guarantee this.
+    - Revert "Test suite: add backward compatibility with redir <
+      3.0." We don't support running the test suite on Jessie anymore.
+    - Adjust dhclient listening address for Buster.
+    - Bump timeout for poweroff from 3 to 10 minutes (Refs: #16312).
+    - Adjust dogtail patterns for gobby test (Closes: #16335). With the
+      gobby upgrade from 0.5.0 to 0.6.0 pre-series, the case changed a
+      little for a menu item and the window it leads to.
+    - Update key shortcut to close seahorse's Preferences window
+      (Closes: #16341). The “Close” button is gone from the
+      Preferences window in the buster version of the seahorse
+      package, making it impossible to close that window. Switch to
+      sending ESC instead of Alt-C.
+    - Update MAT test case for MAT2 (Closes: #16623).
+    - Add debug logging for when we call Sikuli. When following a
+      (debug) log live (through `--format debug`) I find this change
+      useful to know what is going on *right now* since Sikuli only
+      reports what it has done after it is done.
+    - Be more careful when finding ASP notifications. For some reason
+      both the label and button has a "weird" invisible (despite
+      `showingOnly`) twin located just below the Applications
+      menu. So let's make some extra effort to actually find the real
+      notification, and then look for the label and button among its
+      children.
+    - Remove obsolete method. Display::take_screenshot() hasn't
+      existed for years.
+    - Remove workaround "Desktop icons are sometimes not shown" (Refs:
+      #13461)
+    - Wait longer between search steps in the GNOME Overview. On
+      jenkins.lizard — which was under high load at that time — I've
+      seen failures while starting GNOME Terminal from the Overview,
+      where:
+       - The debug log claims we did type "c", waited 1 second, then
+         typed "ommandline", then slept another 1 second, then pressed
+         Enter. I.e. just as the code says.
+       - The video shows that GNOME Shell did pick up "c", which
+         selected the first search result ("Configure Persistent
+         Volume"), but then there's no trace of typing "ommandline".
+         So I suspect that "ommandline" was lost because GNOME Shell
+         was still busy, somehow. Let's sleep a bit longer before
+         these steps, to give GNOME Shell a better chance to recover
+         and notice keyboard input.
+    - Log exceptions thrown in generated (i.e. snapshot) steps (Refs:
+      #16747). Hopefully this will help us track down these elusive
+      exceptions.
+    - Extend waiting time for additional software to be installed.
+    - Sometimes we need more more time to load a page over tor.
+    - Remove useless TailsUpgraderApplyingUpgrade.png. The "progress
+      prompt" it was used for just flashes by and can easily be
+      missed. There is no reason at all to wait for it since the only
+      two final outcomes are success or failure, which we already look
+      for.
+    - debug_log() when we save/restore snapshots. These actions can
+      take a long time (especially saving snapshots on a system under
+      load) and can make it appear like if the test suite has gotten
+      stuck for those following the debug log.
+    - Don't rely on mtimes from Debian packages we download, to
+      indicate which one has the biggest version (Closes: #16819).
+      These mtimes are copied from the HTTP server where APT downloads
+      packages from, which contradicts our assumption that the newest
+      file must be the one with the biggest version. Instead we use ls
+      to sort by version number, to pick the biggest version.
+    - Only send TAB every second to get the syslinux kernel
+      command-line (Closes: #16820). Our syslinux has a timeout of 5s so
+      sending TAB every second should be enough to guarantee we do
+      open the kernel command line. As anonym reported, "the spammer
+      makes the splash show for significantly longer: I've seen >10x,
+      so the boot splash never managed to appear, which is worrying".
+    - Drop workaround to make the TAB spammer compatible with the UEFI
+      firmware (Closes: #16820). As reported by anonym on #16820, and
+      confirmed by my testing, pressing TAB doesn't seem to open the
+      UEFI configuration, so the very reason why we had this
+      workaround is gone.
+
+  * Adjustments for Debian 10 (Buster) with no or very little user-visible impact
+    - Adjust APT sources and pinning for Buster.
+    - Refresh and unfuzzy patches for Buster.
+    - Pass --ellipsize to zenity (refs: #16286). This fixes dialog
+      width and height on Buster.
+    - Update expected /etc/passwd and /etc/group for Buster.
+    - Display TopIcons systray on the left of the system menu (Refs:
+      #14796).
+    - Remove apparmor-adjust-freedesktop-abstraction.diff patch,
+      merged upstream in apparmor. The
+      9d8b6f4dbd8a04470490ae2bfd52044906abd7f6 commit (first appeared
+      upstream in apparmor v2.13.1) implements this change in a
+      generic way.
+    - Adjust hook to the fact the Dovecot AppArmor profiles are not
+      shipped in /etc anymore.
+    - Import iuk.git's feature/buster branch at commit 919335e
+      (Closes: #16286).
+    - Enable desktop-icons gnome-shell extension (Closes: #16283).
+    - Add autostart script to have gnome-shell trust desktop icons
+      (Closes: #16283). Various conditions must be met for gnome-shell
+      to make desktop icons launchable, including file
+      permissions. But the GIO metadata::trusted setting is also
+      needed, and can apparently only be set from an opened session,
+      so let's set the right things with an autostart script.
+    - Drop code that sets the cursor to "WATCH" (hourglass) after
+      logging in (Closes: #16305) This fixes "GDM's GNOME Shell floods
+      the Journal with XFIXES/cursor issues on Buster" by importing
+      the relevant bits of greeter:feature/buster's commit abad17b6.
+    - Remove 8 development packages that are not part of Tails 3.11 so
+      we probably don't need to ship them in Tails 4.0 either (Closes:
+      #16272).
+    - Completely get rid of Qt4 (Closes: #15182).
+    - SSH client: remove obsolete CompressionLevel setting (Closes:
+      #16320).
+    - Removing /usr/share/live/config/xserver-xorg/intel.ids (Closes:
+      #14991). Let's hope the graphics hardware issues we fixed via
+      that file is fixed no.
+    - Adjust Onion Grater and AppArmor configuration for OnionShare
+      1.3 (Closes: #16306).
+    - Have OnionShare 1.3 connect to the system Tor via Onion Grater
+      for the control port (Closes: #16306). By default, OnionShare
+      1.3 will start its own tor process, which can't possibly work on
+      Tails.
+    - Don't install binutils-* (Closes: #16272). It wasn't in Tails 3.x
+      and we have no reason to ship it in 4.0.
+    - Install mat2 instead of the transitional mat package.
+    - Don't suspend automatically (Closes: #16624)
+    - tails-additional-software: Adjust arguments to
+      tails-persistence-setup (Closes: #16622). It seems like the perl
+      library which previously nicely handled the tps command-line
+      arguments now doesn't support taking dashes instead of
+      underscores anymore.
+    - Start tails-unblock-network in a blocking way (Closes: #16620)
+      This reverts commit 59e99c51f15ab9e756e287acb03b4d3a91ca1dd2 in
+      greeter.git. NetworkManager starting at the same time as GNOME
+      Shell makes things racy: the Wi-Fi password prompt is sometimes
+      not displayed (unreproduce on Debian Buster Live).
+    - Patch ibus to fix an issue that prevented the on-screen keyboard
+      from displaying in Tails Greeter (Closes: #16291).
+    - oniongrater: give onioncircuits empty STATUS_SERVER events.
+      Connection to STATUS_SERVER events is required by stem 1.7
+      connect() function, but we actually don't need them, so let's
+      suppress them (Closes: #16626).
+    - Fix GNOME bookmarks file for Buster (Closes: #16629).
+    - Build VeraCrypt packages with our patches applied for Buster
+      (Closes: #16634).
+    - Avoid new "render" group stealing a GID we have already
+      statically allocated to another group (Closes: #16649) With the
+      systemd 241-1~bpo9+1 → 241-3~bpo9+1 upgrade, udev.postinst now
+      creates a "render" system group, which shifts GIDs and makes our
+      devel branch FTBFS.
+    - update-acng-config: add support for 4.x and 5.x, drop 2.x. We
+      won't build 2.x releases anymore but we'll start building 4.x
+      from this branch soon.
+    - Restore Plymouth theme to "text" (Closes: #16743). The default
+      theme in Buster ("futureprototype") is Debian-branded and thus
+      unsuitable for Tails. Let's revert to the one we use in Tails
+      3.x.
+    - Stop installing caribou and libcaribou*: they're not used by
+      GNOME Shell in Buster anymore (Closes: #16628)
+    - Allow read access to /etc/machine-id in the AppArmor profile for
+      Thunderbird (Closes: #16756). It breaks access to the D-Bus
+      service where the GNOME on-screen keyboard listens on Buster.
+    - Fix screen locker not working in Buster (Closes: #16763).
+    - Hide lstopo in the Applications menu (Closes: #16797). It's
+      pulled as a dependency by aircrack-ng but is probably not useful
+      to the vast majority of Tails users.
+    - Hide nm-connection-editor in the Applications menu (Closes:
+      #16798). We still need the network-manager-gnome package that
+      installs this .desktop file (for details, see
+      commit:40290be3651eaa6f08346231aef80eddd8b33c64), but there's no
+      reason to expose it directly to users.
+    - TorStatus: call our custom destructor to avoid a use-after-free
+      crashing GNOME Shell (Closes: #16791). It was ported to an ES6
+      class in the process.
+    - Copy dmidecode to initramfs (Closes: #16857). On Buster,
+      partprobe complains if dmidecode is missing. It's not clear what
+      the consequences are, at least it doesn't cause partprobe to
+      exit with an error status code - but it's cheap to just copy
+      dmidecode to the initramfs.
+    - Adjust path for webext-ublock-origin 1.19.0+dfsg-2 (Closes:
+      #16858).
+    - Update Tor Browser AppArmor profile to take into account new
+      uBlock installation path (Closes: #16858).
+    - Disable the uBlock logger sidebar. This  brings back
+      the hack we had before we removed it in #16206. Without this,
+      the uBlock logger sidebar is displayed.
+    - Reintroduce the same APT pinning as we use in 3.x for uBlock.
+      Granted, the version from Buster should probably be sufficient
+      right now, but it probably won't be once Tor Browser gets
+      updated to a future major Firefox ESR. And in the meantime,
+      this pinning discrepancy between devel and feature/buster makes
+      it harder to maintain our patch against
+      /usr/share/webext/ublock-origin/js/background.js.
+    - Drop obsolete libdesktop-notify-perl patches: they were merged
+      upstream.
+    - Use X.Org in amnesia's GNOME session (Closes: #12213). Since a
+      few months gdm3 defaults to Wayland in Debian testing/sid, just
+      like upstream. But we're not ready yet.
+    - Adjust Greeter's gdm-tails.session for Buster (Closes:
+      #12551). This should ultimately be applied in greeter.git, but
+      let's deal with it as a patch for now to avoid having to
+      maintain two parallel branches of the Greeter.
+    - Patch udisks2 and libblockdev and fix Tails Installer to repair
+      USB boot on Buster (Closes: #14809).
+    - Install gnome-user-docs directly instead of the gnome-user-guide
+      transitional package.
+    - Install the "crypto" libblockdev plugin (Closes: #14816). It's
+      needed by recent udisks to do crypto operations.
+    - Use ConditionUser=1000 instead of manually testing the output of
+      `id -u' in some of our systemd services.
+    - Have debootstrap install gnupg when setting up the chroot.
+      Otherwise the build fails after debootstrap has done its job and
+      live-build tries to use apt-key.
+    - Don't try to install the obsolete gnome-search-tool package.
+      It's been removed from testing/sid by its maintainers:
+      https://bugs.debian.org/885975
+    - Don't try to retrieve syslinux.exe from the syslinux source
+      package. Since syslinux 3:6.03+dfsg1-1 this file is (rightfully)
+      not included anymore in the Debian source package.  This commit
+      is meant to fix the feature/buster ISO build. We of course need
+      to find a proper solution, which is what #15178 is about.
+    - Drop our pinned AppArmor feature set (Closes: #15149). On current
+      Buster the AppArmor package pins to the Linux 4.14.13-1 feature
+      set and I expect it'll keep pinning something that should work
+      with the policy shipped in Buster.
+    - Drop Stretch-specific workaround. This essentially workarounds
+      4f8b50afb10a1ce1faf7645971bc020d2eb5d7dd,
+      3e2d8a6a025b86f8191d125783ad507c57171bad and
+      d56633a3089e5b177e07c2888442745557772f42.
+    - Disable the usr.bin.man AppArmor profile. On Buster it breaks
+      apparmor.service due to "profile has merged rule with
+      conflicting x modifiers" that's most likely caused by the "/**
+      mrixwlk" rule vs. our tweaks for aufs support.
+    - Import files (from gksu 2.0.2-9+b1) needed for the Root Terminal
+      into Git instead of fetching the package and extracting them at
+      build time.
+    - Use orca's current package name instead of pre-Buster
+      transitional one.
+    - Stop explicitly installing gstreamer1.0-pulseaudio. This was
+      needed on Jessie due to Debian#852870 which was fixed in
+      Stretch.
+    - Drop adwaita-qt4: it was removed from Debian sid and won't be in
+      Buster.
+    - Disable man-db.timer on Buster (Closes: #16631)
+    - Fix invalid seq range in update-acng-config so we geberate proper
+      rules for Tails 4.x and 5.x.
+
+ -- Tails developers <tails@boum.org>  Wed, 07 Aug 2019 20:30:15 +0200
+
 tails (3.16) unstable; urgency=medium
 
   * Major changes

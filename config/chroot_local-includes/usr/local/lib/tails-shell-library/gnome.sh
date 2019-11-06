@@ -9,6 +9,9 @@ export_gnome_env() {
     # Get LIVE_USERNAME
     . /etc/live/config.d/username.conf
     local gnome_shell_pid="$(pgrep --newest --euid ${LIVE_USERNAME} gnome-shell)"
+    if [ -z "${gnome_shell_pid}" ]; then
+        return
+    fi
     local tmp_env_file="$(tempfile)"
     local vars="($(echo ${GNOME_ENV_VARS} | tr ' ' '|'))"
     tr '\0' '\n' < "/proc/${gnome_shell_pid}/environ" | \
