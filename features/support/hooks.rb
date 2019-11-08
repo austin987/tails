@@ -279,15 +279,15 @@ After('@product') do |scenario|
       end
     when 'TorBootstrapFailure'
       save_failure_artifact("Tor logs", "#{$config["TMPDIR"]}/log.tor")
+      chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
+      FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
+      FileUtils.rm(Dir.glob("#{$config["TMPDIR"]}/chutney-data/**/control"))
+      FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
+      info_log
+      info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
     when 'TimeSyncingError'
       save_failure_artifact("Htpdate logs", "#{$config["TMPDIR"]}/log.htpdate")
     end
-    chutney_logs = sanitize_filename("#{elapsed}_#{scenario.name}_chutney-data")
-    FileUtils.mkdir("#{ARTIFACTS_DIR}/#{chutney_logs}")
-    FileUtils.rm(Dir.glob("#{$config["TMPDIR"]}/chutney-data/**/control"))
-    FileUtils.copy_entry("#{$config["TMPDIR"]}/chutney-data", "#{ARTIFACTS_DIR}/#{chutney_logs}")
-    info_log
-    info_log_artifact_location("Chutney logs", "#{ARTIFACTS_DIR}/#{chutney_logs}")
     # Note that the remote shell isn't necessarily running at all
     # times a scenario can fail (and a scenario failure could very
     # well cause the remote shell to not respond any more, e.g. when
