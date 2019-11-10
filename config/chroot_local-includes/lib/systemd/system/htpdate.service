@@ -11,8 +11,7 @@ Environment=SUCCESS_FILE=/run/htpdate/success
 Environment=LOG=/var/log/htpdate.log
 EnvironmentFile=/etc/default/htpdate.*
 ExecStartPre=/bin/sh -c \
-    '[ -n "${HTTP_USER_AGENT}" ] && \
-     [ -n "${HTP_POOL_1}"      ] && \
+    '[ -n "${HTP_POOL_1}"      ] && \
      [ -n "${HTP_POOL_2}"      ] && \
      [ -n "${HTP_POOL_3}"      ]'
 ExecStartPre=/bin/rm -f "${DONE_FILE}"
@@ -21,7 +20,6 @@ ExecStartPre=/usr/bin/install -o htp -g nogroup -m 0644 /dev/null "${LOG}"
 ExecStart=/usr/local/sbin/htpdate                   \
               --debug                               \
               --log_file "${LOG}"                   \
-              --user_agent "${HTTP_USER_AGENT}"     \
               --allowed_per_pool_failure_ratio 0.34 \
               --user htp                            \
               --done_file    "${DONE_FILE}"         \
