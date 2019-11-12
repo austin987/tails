@@ -137,10 +137,6 @@ When /^I configure Tails to use a simulated Tor network$/ do
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)
 end
 
-When /^Tails is using the real Tor network$/ do
-  assert($vm.execute('grep "TestingTorNetwork 1" /etc/torrc').failure?)
-end
-
 def chutney_onionservice_info
   hs_hostname_file_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/hidden_service/hostname"
@@ -159,21 +155,28 @@ def chutney_onionservice_info
 end
 
 def chutney_onionservice_redir(remote_address, remote_port)
+  redir_unit_name = 'tails-test-suite-redir.service'
   kill_redir = Proc.new do
     begin
-      Process.kill("TERM", $chutney_onionservice_job.pid)
+      if system('/bin/systemctl', '--quiet', 'is-active', redir_unit_name)
+        system('/bin/systemctl', 'stop', redir_unit_name)
+      end
     rescue
       # noop
     end
   end
-  if $chutney_onionservice_job
-    kill_redir.call
-  end
+  kill_redir.call
   local_address, local_port, _ = chutney_onionservice_info
-  $chutney_onionservice_job = IO.popen(
-    ['/usr/bin/redir',
-     "#{local_address}:#{local_port}",
-     "#{remote_address}:#{remote_port}"]
+  $chutney_onionservice_job = fatal_system(
+    '/usr/bin/systemd-run',
+    "--unit=#{redir_unit_name}",
+    '--service-type=forking',
+    '--quiet',
+    # XXX: enable this once we require Buster or newer for running our test suite
+    # '--collect',
+    '/usr/bin/redir',
+    "#{local_address}:#{local_port}",
+    "#{remote_address}:#{remote_port}",
   )
   add_after_scenario_hook { kill_redir.call }
   return $chutney_onionservice_job
