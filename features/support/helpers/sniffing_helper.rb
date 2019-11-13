@@ -5,7 +5,7 @@
 # can be accessed as an array through its `packets` method.
 #
 # Use of more rubyish internal ways to sniff a network like with pcap-able gems
-# is waaay to much resource consumming, not much reliable and soooo slow. Let's
+# is waaay to much resource consuming, not much reliable and soooo slow. Let's
 # not bother too much with that. :)
 #
 # Should put all that in a Module.
