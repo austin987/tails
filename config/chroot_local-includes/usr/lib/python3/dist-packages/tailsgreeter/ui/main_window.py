@@ -104,7 +104,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.box_storage = builder.get_object('box_storage')
         self.box_storage_unlock = builder.get_object('box_storage_unlock')
         self.box_storage_unlocked = builder.get_object('box_storage_unlocked')
-        self.button_storage_configure = builder.get_object('button_storage_configure')
         self.entry_storage_passphrase = builder.get_object('entry_storage_passphrase')
         self.frame_language = builder.get_object('frame_language')
         self.infobar_network = builder.get_object('infobar_network')
@@ -189,10 +188,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.box_language.set_focus_chain([
                 self.frame_language,
                 self.box_language_header])
-        self.box_storage.set_focus_chain([
-                self.box_storage_unlock,
-                self.box_storage_unlocked,
-                self.button_storage_configure])
         self.box_settings.set_focus_chain([
                 self.box_settings_values,
                 self.box_settings_header])
@@ -322,14 +317,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_button_start_clicked(self, widget, user_data=None):
         self.check_and_login()
-        return False
-
-    def cb_button_storage_configure_clicked(self, user_data=None):
-        self.persistent_storage.configure()
-        return False
-
-    def cb_button_storage_lock_clicked(self, widget, user_data=None):
-        self.persistent_storage.lock()
         return False
 
     def cb_button_storage_unlock_clicked(self, widget, user_data=None):
