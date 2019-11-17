@@ -135,7 +135,7 @@ and tasks management:
 Below, importance level is evaluated based on:
 
 * users' needs: e.g. if the APT repository is down, then the
-  "Additional Software Packages" persistence feature is broken;
+  _Additional Software_ feature is broken;
 * developers' needs: e.g. if the ISO build fails, then developers
   cannot work;
 * the release process' needs: we want to be able to do an emergency
@@ -230,7 +230,7 @@ Below, importance level is evaluated based on:
   - host the Tails [[main repository|contribute/git#main-repo]]
     and our website's underlays
 * access: Tails core developers only
-* tools: [[!debpts gitolite]]
+* tools: [[!debpts gitolite3]]
 * configuration: `tails::gitolite` class in [[!tails_gitweb_repo
   puppet-tails]]
 * importance: high (needed to release Tails)
@@ -333,6 +333,21 @@ Below, importance level is evaluated based on:
   `tails::spamassassin` classes in [[!tails_gitweb_repo puppet-tails]]
 * importance: high (at least because WhisperBack bug reports go through this MTA)
 
+<a id="meeting-reminder"></a>
+
+## Meeting reminder
+
+* purpose: send email reminders, for example about upcoming meetings
+* access: not applicable
+* configuration:
+  - to add a new reminder, or modify an existing one:
+    - `tails::meeting::reminders` in [[!tails_gitweb_repo puppet-tails]]
+    - templates are in `files/meeting/`
+  - implementation (in [[!tails_gitweb_repo puppet-tails]]):
+    `tails::meeting`, `tails::meeting::reminder`, and
+    `files/meeting/meeting.py`
+* importance: to be defined
+
 <a id="mumble"></a>
 
 ## Mumble
@@ -412,11 +427,13 @@ Below, importance level is evaluated based on:
 
 * URL: <https://translate.tails.boum.org/>
 * purpose: web interface for translators
-* admins: emmapeel, spriver
+* [[design documentation|contribute/design/translation_platform]]
+* [[usage documentation|contribute/how/translate/with_translation_platform]]
+* admins: to be defined ([[!tails_ticket 17050]])
 * tools: [Weblate](https://weblate.org/)
 * configuration:
   - `tails::weblate` class in [[!tails_gitweb_repo puppet-tails]]
-* importance: low (not in production yet)
+* importance: to be defined
 
 ## WhisperBack relay
 
