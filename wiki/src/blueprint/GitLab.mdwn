@@ -274,19 +274,31 @@ Tails community.
 
 ### MUST
 
-* For every existing Redmine issue, the meaning of `#NNNN` MUST be
-  preserved unambiguously. (This probably implies that we can't have
-  a GitLab issue with the same ID.)
+* For every existing Redmine issue, the meaning of its `#NNNN` ID MUST
+  be preserved unambiguously. This implies that we can't reuse
+  existing Redmine issue IDs in our main GitLab project, where most
+  issues will live.)
 
 * [[!tails_ticket NNNN]] and
   <https://redmine.tails.boum.org/code/issues/NNNN> links MUST point
-  or — possibly transitively, via a placeholder issue — redirect to the
-  relevant GitLab issue.
+  or — possibly transitively — redirect to the relevant GitLab issue.
+
+  Implementation idea: start with a static web redirector, and then:
+
+   - This is sufficient to solve the problem for issues imported into
+     our main GitLab project, if they have the same ID as they used to.
+
+   - For issues imported into another GitLab project, we either need
+     extra redirection rules based on a mapping from Redmine issue IDs
+     to GitLab (project, issue ID) tuples, or placeholder issues on
+     GitLab that handle a second redirection step (GitLab might handle
+     the redirection iself when an issue is moved from one project to
+     another)
 
 * Preserve issue private/public status. Given GitLab's permissions
   model, this implies that some issues MUST be migrated to another
-  GitLab sub-project than the default one; for details, see the
-  "Private issues" section above.
+  GitLab project than the default one where most of our issues will
+  live; for details, see the "Private issues" section above.
 
   Example: [[!tails_ticket 10346]]
 
