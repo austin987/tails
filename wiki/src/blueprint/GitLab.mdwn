@@ -481,29 +481,39 @@ XXX: check what part of this is in the scope of this project
 
 ## Git repository → various mirrors
 
+Our Git repository keeps a number of mirrors up-to-date:
+
  - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_remotes.sh>
  - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_hooks.sh>
 
-## Git repository → website
+## Git repositories → website
 
-XXX
+A refresh of our website is triggered by:
 
-ping website so it gets refreshed
+ - pushing to the master branch of our Git repository
+ - pushing to a few "underlay" repositories
 
-update website when an underlay is updated
+Current implementation:
 
  - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_hooks.sh>
- - <>
+ - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/hooks/www_website_ping-post-update.hook>
+ - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/hooks/www_website_underlays-post-update.hook>
+ - <https://git.tails.boum.org/puppet-tails/tree/templates/website/update-underlays.erb>
 
 ## Git repository → Jenkins
 
-XXX
+Pushing to our Git repository pings Jenkins so it can run jobs as needed:
+<https://git.tails.boum.org/puppet-tails/tree/templates/gitolite/hooks/tails-post-receive.erb>
 
 ## Jenkins → Redmine
 
-* "Needs Validation": XXX
+Tails images build reproducibility is tested if the corresponding
+ticket has "Needs Validation" status:
+<https://git.tails.boum.org/puppet-tails/tree/files/jenkins/slaves/isobuilders/decide_if_reproduce>
 
-XXX: more?
+(Currently disabled:) Email notifications are sent on job status
+change if the ticket has "Needs Validation" status:
+<https://git.tails.boum.org/puppet-tails/tree/files/jenkins/slaves/isobuilders/output_ISO_builds_and_tests_notifications>
 
 ## Ticket triaging → Redmine
 
@@ -524,7 +534,10 @@ Current implementation:
 
 ## Translation platform → Git
 
-XXX
+A hook ensures that Weblate only pushes changes to our main Git
+repository that meet certain conditions:
+
+<https://git.tails.boum.org/puppet-tails/tree/files/gitolite/hooks/tails-weblate-update.hook>
 
 # Issues and merge requests triaging
 
