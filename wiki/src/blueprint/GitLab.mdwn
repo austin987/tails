@@ -132,7 +132,8 @@ fixed automatically, either via a webhook or a scheduled batch job.
   - One can set multiple labels so we could perhaps merge "Category"
     and "Affected Tool". For example, a ticket about Thunderbird
     persistence could have the two "C: email" and "C: persistence" labels.
-- Log time → Time tracking
+- Log time: was enabled as an experiment, not actively used anymore;
+  contributors can use GitLab's Time tracking if they wish so.
 - Due date → Due date
 - Starter → dedicated label
 - Tracker: drop it (we've never really taken advantage of the fine
@@ -203,7 +204,7 @@ within a team or the overall Tails project.
 
 In GitLab, the closest equivalent to Redmine custom queries is the URL
 of an issues list or issues board filtered by assignee, milestone,
-and/or label. 
+and/or label.
 
 We will need ways to share these URLs and ideally, to name them.
 We can do that on the GitLab project's description (home page),
@@ -258,17 +259,99 @@ want to migrate our blueprints to GitLab's
 
 ## Specification
 
+Note: some of what follows still needs to be negotiated with the
+Tails community.
+
+### Scope
+
+* issues in the [Tails Redmine
+  project](https://redmine.tails.boum.org/code/projects/tails/issues);
+  data from other projects does not matter to us
+
+### MUST
+
+* For every existing Redmine issue, the meaning of `#NNNN` MUST be
+  preserved unambiguously. (This probably implies that we can't have
+  a GitLab issue with the same ID.)
+
+* [[!tails_ticket NNNN]] and
+  <https://redmine.tails.boum.org/code/issues/NNNN> links MUST point
+  or — possibly transitively, via a placeholder issue — redirect to the
+  relevant GitLab issue.
+
+* Preserve issue private/public status. Given GitLab's permissions
+  model, this implies that some issues MUST be migrated to another
+  GitLab sub-project than the default one; for details, see the
+  "Private issues" section above.
+
+* Preserve parent/subtask relationship in a way that GitLab will
+  enforce, i.e. prevent closing the GitLab issue corresponding to the
+  Redmine parent issue, as long as one of its subtasks is
+  not completed.
+
+  Implementation idea: a GitLab issue imported from a Redmine issue
+  that has subtasks could have a list of tasks (checklist), with each
+  subtask being an item on that list; ideally, the status of each such
+  Redmine subtask (closed or open) should be reflected as the status
+  of the corresponding GitLab checklist item (completed or not).
+
+* Preserve the "Blocks" and "Related to" information.
+
+  It's OK if the "Blocks" semantics from Redmine (if X blocks Y, one
+  cannot close Y until X is resolved) is not enforced by GitLab.
+
+  Implementation idea: add the "X blocks Y" information in the
+  description of issues X and Y and/or as comments on X and Y.
+
+* Preserve the "Related to" relationship.
+
+* Preserve issue status:
+
+  - "Confirmed" → open, "1. To do" label
+  - "In Progress" → open, "2. Doing" label
+  - "Needs Validation" → open, "3. Needs Validation" label
+  - "New" → open
+  - "Duplicates" → closed, "Duplicate" label
+  - "Rejected" → closed, "Rejected" label
+  - "Fix committed": assume this status does not exist on Redmine anymore
+
+* Preserve "Target version" → Milestone
+
+* Preserve the  "Feature branch" information.
+
+  Adding this information as-is in a comment would be good enough.
+
+* Preserve Category, Affected Tool, Priority, Type of work: XXX
+  (probably with labels, see "Other issues metadata" section above)
+
+* Preserve any true "Starter" boolean value.
+
+  Implementation idea: dedicated label.
+
+* Preserve attachments
+
+### SHOULD
+
+* Convert Textile to Markdown.
+* Preserve watchers → participants.
+
+### Information that can be lost during the migration
+
+See "Other issues metadata" section above for some discussion about why.
+
+* Log time
+* Due date
+* Tracker
+* % Done
+* Estimated time
+
 ### To be triaged
 
 Relevant features — to be triaged as MUST/SHOULD/MAY:
 
-* Preserve issue IDs so `#nnnn` should retain its meaning and links
-  like [[!tails_ticket 15878]] can be easily redirected.
-* Preserve issue private/public status.
-* Convert Textile to Markdown.
-* Preserve watchers.
+* Private comments.
 * Preserve issues relationships.
-* Preserve other issues metadata.
+* Preserve other issues metadata: XXX see list above
 * Does not require global GitLab administration token.
 * Does not require SSH access to the GitLab machine.
 
