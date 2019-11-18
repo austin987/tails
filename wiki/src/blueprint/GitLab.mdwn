@@ -289,10 +289,14 @@ Tails community.
   GitLab sub-project than the default one; for details, see the
   "Private issues" section above.
 
+  Example: [[!tails_ticket 10346]]
+
 * Preserve parent/subtask relationship in a way that GitLab will
   enforce, i.e. prevent closing the GitLab issue corresponding to the
   Redmine parent issue, as long as one of its subtasks is
   not completed.
+
+  Examples: [[!tails_ticket 15878]], [[!tails_ticket 12213]]
 
   Implementation idea: a GitLab issue imported from a Redmine issue
   that has subtasks could have a list of tasks (checklist), with each
@@ -305,10 +309,10 @@ Tails community.
   It's OK if the "Blocks" semantics from Redmine (if X blocks Y, one
   cannot close Y until X is resolved) is not enforced by GitLab.
 
+  Examples: [[!tails_ticket 15878]], [[!tails_ticket 12213]]
+
   Implementation idea: add the "X blocks Y" information in the
   description of issues X and Y and/or as comments on X and Y.
-
-* Preserve the "Related to" relationship.
 
 * Preserve issue status:
 
@@ -326,8 +330,11 @@ Tails community.
 
   Adding this information as-is in a comment would be good enough.
 
-* Preserve Category, Affected Tool, Priority, Type of work: XXX
-  (probably with labels, see "Other issues metadata" section above)
+  Example: [[!tails_ticket 16173]]
+
+* Preserve Category, Affected Tool, Priority, Type of work… somehow.
+
+  Implementation idea: with labels, see the "Other issues metadata" section above.
 
 * Preserve any true "Starter" boolean value.
 
@@ -339,9 +346,10 @@ Tails community.
 
 * Preserve attachments
 
+  Example: [[!tails_ticket 7763]]
+
 * Convert Textile issue description and comments to Markdown
-  (pandoc can do most of the work see <https://pandoc.org/try/?from=textile&to=markdown>)
-  ([[!tails_ticket 17241 desc="examples"]]):
+  (pandoc can do most of the work see <https://pandoc.org/try/?from=textile&to=markdown>):
   - `commit:c6f4d0fd`
   - bold
   - italic
@@ -350,11 +358,15 @@ Tails community.
   - `@code@`
   - bullet lists, including nested ones
 
+  Examples: [[!tails_ticket 17241]]
+
 * Convert public notes to GitLab comments.
 
 * Private comments (notes): migrate their contents somewhere,
   and make it accessible from the corresponding issue,
   in the right place in the discussion.
+
+  Example: [[!tails_ticket 16875#note-3]]
 
   It looks like GitLab does not support private comments.
 
@@ -368,7 +380,11 @@ Tails community.
   - h1 and h2 headings
   - `source:some/file`
 
+  Examples: [[!tails_ticket 17241]]
+
 * Preserve watchers → participants.
+
+  Example: [[!tails_ticket 16875]]
 
 ### Information that can be lost during the migration
 
@@ -384,6 +400,8 @@ See "Other issues metadata" section above for some discussion about why.
 
 Relevant features — to be triaged as MUST/SHOULD/MAY:
 
+* Metadata changes in issue notes that also have free-form text.
+* Issue notes that only change metadata.
 * Does not require global GitLab administration token.
 * Does not require SSH access to the GitLab machine.
 
