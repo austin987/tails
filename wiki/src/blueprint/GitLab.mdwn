@@ -22,7 +22,8 @@ active Tails contributors would get at least this access level on the
 `tails-team/tails` project, and then in turn access to this project's
 confidential issues. So Tails teams that need to further restrict
 access to their confidential issues will need to track their issues
-under their own `tails-team/$project`.
+under their own `tails-team/$project`. See "Particularly sensitive data"
+in the "Permissions" section.
 
 ## Relationships
 
@@ -213,18 +214,101 @@ page on our website, and possibly in GitLab's own
 use it (either only for this use case or [[!tails_ticket 9174
 desc="for our blueprints"]]).
 
-# Merge requests
+# Permissions
+
+## Objects
+
+ - _Canonical Git repo_: the authoritative `tails.git` repository
+   hosted on GitLab
+
+- _Major branches_: `master`, `stable`, `testing`, `devel`,
+   and possibly `feature/bullseye`
+
+ - _Release tags_: a signed Git tag that identifies the source code
+   used to build a specific Tails release; currently all tags
+   in the authoritative `tails.git` repository are release tags;
+   the tag name is a version number, with '~' replaced by '-'.
+
+ - _Particularly sensitive data_: confidential data that specific teams
+   like Fundraising and Accounting need to handle, but that other
+   contributors generally don't need direct access to. This definitely
+   include issues; this might include Git repositories at some point.
+
+   Note that as of 2019-11-20, it is undefined:
+
+    - What subset of this data can go to a web-based issue tracker or not.<br/>
+      This is already a problem with Redmine.<br/>
+      Fixing this will require discussions between various stakeholders.
+
+    - What subset of this data could live in a cleartext Git
+      repository hosted here or there, as opposed to requiring
+      end-to-end encryption between members of these teams.
+      This is a hypothetical problem for now.
+
+## Roles
+
+ - An _admin_ can do anything that other roles can, and:
+   - can delete issues
+   - can edit team membership
+   - MUST comply with our "Level 3" security policy
+   - can view issues that contain particularly sensitive data
+
+ - A _committer_:
+   - can push and force-push to any ref in the canonical Git repo,
+     including major branches and release tags;<br/>
+     incidentally, this ensures the following requirement is met:
+   - their branches are picked up by Jenkins; it follows that they
+     MUST comply with our "Infrastructure" security policy
+   - can merge MRs into major branches
+   - can modify issues metadata
+   - MAY be allowed to view confidential issues in the main GitLab
+     project; if it's the case, then particularly sensitive data MUST
+     live somewhere else with stricter access control
+   - can edit other users' comments
+   - MAY be allowed to add new team members
+   - MUST comply with our "Level 3" security policy
+
+ - A _regular, particularly trusted contributor_:
+   - can push and force-push to a subset of refs in the canonical Git repo;
+     this subset MUST NOT include any major branch nor release tag;<br/>
+     this is required to ensure the following requirement is met:
+   - their branches are picked up by Jenkins; it follows that they
+     MUST comply with our "Infrastructure" security policy
+   - can modify issues metadata
+   - MAY be allowed to view confidential issues in the main GitLab
+     project; if it's the case, then particularly sensitive data MUST
+     live somewhere else with stricter access control
+
+ - A _regular contributor_:
+   - can fork the Git repositories and push changes to their own fork
+   - can modify issues metadata
+   - MAY be allowed to view confidential issues in the main GitLab
+     project; if it's the case, then particularly sensitive data MUST
+     live somewhere else with stricter access control
+
+ - _Anybody with a GitLab account_ on the instance we use:
+   - can submit issues
+   - can submit MRs
+
+## Implementation
+
+### Relevant GitLab doc
+
+ - [Permissions](https://docs.gitlab.com/ee/user/permissions.html)
+ - [Authorization for Merge requests](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html)
+ - [Protected Branches](https://docs.gitlab.com/ce/user/project/protected_branches.html)
+ - [Groups](https://docs.gitlab.com/ee/user/group/) and [Subgroups](https://docs.gitlab.com/ee/user/group/subgroups/)
+
+### Idea: Protected branch flow
 
 The [Protected branch
 flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow)
-is probably the most adequate for regular contributors, since it's the
-least disruptive in terms of workflow and habits and requires less
+may be the most adequate for regular contributors, since it's the
+least disruptive in terms of workflow and habits and requires no
 work to adjust our Jenkins CI setup:
 
- - We mark our main branches (`stable`, `testing`, `devel`,
-   `feature/buster`) as "Protected". We give "Maintainer" access to
-   people allowed to push to these branches, i.e. what we previously
-   called "commit access".
+ - We mark our major branches and release tags as "Protected".
+ - Committers get "Maintainer" access.
  - The Git workflow remains unchanged for regular developers who are
    not granted full commit access: they get "Developer" access, can
    push a topic branch to the canonical Git repository and our CI will
@@ -249,10 +333,6 @@ want to migrate our blueprints to GitLab's
 [wiki](https://docs.gitlab.com/ce/user/project/wiki/):
 [[!tails_ticket 9174]]).
 
-
-# Other specification
-
-* guest accounts?
 
 # Importing data from Redmine
 
@@ -505,6 +585,46 @@ Current implementation:
 Pushing to our Git repository pings Jenkins so it can run jobs as needed:
 <https://git.tails.boum.org/puppet-tails/tree/templates/gitolite/hooks/tails-post-receive.erb>
 
+<a id="interfaces-jenkins-git"></a>
+
+## Jenkins → Git
+
+Jenkins jobs are generated on `jenkins.lizard`, from the list of
+branches in our main Git repository. For details and pointers to the
+corresponding code, see the corresponding
+[[blueprint|blueprint/automated_builds_and_tests/jenkins]].
+
+Here are the kinds of jobs relevant in this discussion:
+
+ - `check_PO_master` runs the `check_po` script on all PO files
+
+    - this script comes from a Git submodule referenced by
+      `tails.git`'s master branch (`tails::tester::check_po`)
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `build_website_master` runs `./build-website`
+
+    - from `tails.git`'s master branch
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `build_Tails_ISO_*` and `reproducibly_build_Tails_ISO_*` run
+   `rake build`
+
+    - from the corresponding `tails.git` branch
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `test_Tails_ISO_*` run `./run_test_suite`
+
+    - from the corresponding `tails.git` branch
+    - in a Jenkins isotester
+    - as root via sudo
+
+Wrt. who can push to which branch in `tails.git`, see the "Permissions"
+section.
+
 ## Jenkins → Redmine
 
 Tails images build reproducibility is tested if the corresponding
@@ -544,6 +664,12 @@ repository that meet certain conditions:
 * One can define policies (YAML) and have them applied automatically.
   - <https://gitlab.com/gitlab-org/quality/triage-ops>
   - <https://gitlab.com/gitlab-org/gitlab-triage>
+
+
+# GitLab hosting options
+
+See https://salsa.debian.org/tails-team/gitlab-migration/wikis/hosting/comparison
+(tables in pure Markdown are too tedious for me -- intrigeri).
 
 # Resources
 
