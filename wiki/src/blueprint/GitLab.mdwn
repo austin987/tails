@@ -585,6 +585,43 @@ Current implementation:
 Pushing to our Git repository pings Jenkins so it can run jobs as needed:
 <https://git.tails.boum.org/puppet-tails/tree/templates/gitolite/hooks/tails-post-receive.erb>
 
+<a id="interfaces-jenkins-git"></a>
+
+## Jenkins → Git
+
+Jenkins jobs are generated on `jenkins.lizard`, from the list of
+branches in our main Git repository. For details and pointers to the
+corresponding code, see the corresponding
+[[blueprint|blueprint/automated_builds_and_tests/jenkins]].
+
+Here are the kinds of jobs relevant in this discussion:
+
+ - `check_PO_master` runs the `check_po` script on all PO files
+
+    - this script comes from a Git submodule referenced by
+      `tails.git`'s master branch (`tails::tester::check_po`)
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `build_website_master` runs `./build-website`
+
+    - from `tails.git`'s master branch
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `build_Tails_ISO_*` and `reproducibly_build_Tails_ISO_*` run
+   `rake build`
+
+    - from the corresponding `tails.git` branch
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `test_Tails_ISO_*` run `./run_test_suite`
+
+    - from the corresponding `tails.git` branch
+    - in a Jenkins isotester
+    - as root via sudo
+
 ## Jenkins → Redmine
 
 Tails images build reproducibility is tested if the corresponding
