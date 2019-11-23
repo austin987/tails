@@ -63,7 +63,7 @@ setup_chroot_for_browser () {
 
     # But our copy-on-write dir must be at the very top.
 
-    mkdir "${cow}" "${chroot}"
+    mkdir -p "${cow}" "${chroot}"
     mount -t tmpfs tmpfs "${cow}" && \
     mkdir "${cow}/rw" "${cow}/work" && \
     mount -t overlay -o "noatime,lowerdir=${lowerdirs},upperdir=${cow}/rw,workdir=${cow}/work" overlay "${chroot}" && \
