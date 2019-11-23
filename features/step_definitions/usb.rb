@@ -702,7 +702,7 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
 end
 
 Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|
-  assert_equal('1.1~test', version)
+  assert_equal('1.1~testoverlayfs', version)
   upgrade_applied = not_present.nil?
   chroot_browser = "#{chroot_browser.downcase}-browser" if chroot_browser
   changes = [
