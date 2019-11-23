@@ -258,14 +258,9 @@ def stream_isolation_info(application)
     }
   when "Tor Browser"
     {
-      :grep_monitor_expr => 'users:(("firefox"',
+      :grep_monitor_expr => 'users:(("firefox\.real"',
       :socksport => 9150,
       :controller => true,
-    }
-  when "Gobby"
-    {
-      :grep_monitor_expr => 'users:(("gobby-0.5"',
-      :socksport => 9050
     }
   when "SSH"
     {
@@ -291,7 +286,8 @@ When /^I monitor the network connections of (.*)$/ do |application|
             "done > #{@process_monitor_log}")
 end
 
-Then /^I see that (.+) is properly stream isolated$/ do |application|
+Then /^I see that (.+) is properly stream isolated(?: after (\d+) seconds)?$/ do |application, delay|
+  sleep delay.to_i if delay
   info = stream_isolation_info(application)
   expected_ports = [info[:socksport]]
   expected_ports << 9051 if info[:controller]
@@ -309,7 +305,8 @@ Then /^I see that (.+) is properly stream isolated$/ do |application|
 end
 
 And /^I re-run tails-security-check$/ do
-  $vm.execute_successfully("tails-security-check", :user => LIVE_USER)
+  $vm.execute_successfully("systemctl --user restart tails-security-check.service",
+                           :user => LIVE_USER)
 end
 
 And /^I re-run htpdate$/ do
@@ -323,34 +320,13 @@ And /^I re-run tails-upgrade-frontend-wrapper$/ do
   $vm.execute_successfully("tails-upgrade-frontend-wrapper", :user => LIVE_USER)
 end
 
-When /^I connect Gobby to "([^"]+)"$/ do |host|
-  gobby = Dogtail::Application.new('gobby-0.5')
-  gobby.child('Welcome to Gobby', roleName: 'label')
-  gobby.button('Close').click
-  # This indicates that Gobby has finished initializing itself
-  # (generating DH parameters, etc.) -- before, the UI is not responsive
-  # and our CTRL-t is lost.
-  gobby.child('Failed to share documents', roleName: 'label')
-  gobby.menu('File').click
-  gobby.menuItem('Connect to Server...').click
-  @screen.type("t", Sikuli::KeyModifier.CTRL)
-  connect_dialog = gobby.dialog('Connect to Server')
-  connect_dialog.child('', roleName: 'text').typeText(host)
-  connect_dialog.button('Connect').click
-  # This looks for the live user's presence entry in the chat, which
-  # will only be shown if the connection succeeded.
-  try_for(60) { gobby.child(LIVE_USER, roleName: 'table cell'); true }
-end
-
 When /^the Tor Launcher autostarts$/ do
   @screen.wait('TorLauncherWindow.png', 60)
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
   @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
-  @screen.wait('TorLauncherBridgePrompt.png', 10)
-  @screen.wait_and_click('TorLauncherYesRadioOption.png', 10)
-  @screen.wait_and_click('TorLauncherNextButton.png', 10)
+  @screen.wait_and_click('TorLauncherBridgeCheckbox.png', 10)
   @screen.wait_and_click('TorLauncherBridgeList.png', 10)
   @bridge_hosts = []
   chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
@@ -390,7 +366,6 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
     @screen.type(bridge_line + Sikuli::Key.ENTER)
   end
-  @screen.wait_and_click('TorLauncherNextButton.png', 10)
   @screen.hide_cursor
   @screen.wait_and_click('TorLauncherFinishButton.png', 10)
   @screen.wait('TorLauncherConnectingWindow.png', 10)

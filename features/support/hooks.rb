@@ -16,7 +16,6 @@ AfterConfiguration do |config|
     # space for other reasons:
     'features/untrusted_partitions.feature',
     # Features using temporary snapshots:
-    'features/apt.feature',
     'features/root_access_control.feature',
     'features/time_syncing.feature',
     'features/tor_bridges.feature',
@@ -26,6 +25,9 @@ AfterConfiguration do |config|
     # excluding persistence) and will create yet another disk and
     # install Tails on it. This should be the peak of disk usage.
     'features/usb_install.feature',
+    # This feature uses a few temporary snapshots, a network-enabled
+    # snapshot, and a large disk.
+    'features/additional_software_packages.feature',
     # This feature needs a copy of the ISO and creates a new disk.
     'features/usb_upgrade.feature',
     # This feature needs a very big snapshot (USB install with persistence)
@@ -144,44 +146,50 @@ rescue Exception => e
 end
 
 # Due to Tails' Tor enforcement, we only allow contacting hosts that
-# are Tor nodes or located on the LAN. However, when we try
-# to verify that only such hosts are contacted we have a problem --
-# we run all Tor nodes (via Chutney) *and* LAN hosts (used on some
-# tests) on the same host, the one running the test suite. Hence we
-# need to always explicitly track which nodes are LAN or not.
+# are Tor nodes, located on the LAN, or allowed for some operational reason.
+# However, when we try to verify that only such hosts are contacted we have
+# a problem -- we run all Tor nodes (via Chutney) *and* LAN hosts (used on
+# some tests) on the same host, the one running the test suite. Hence we
+# need to always explicitly track which nodes are allowed or not.
 #
 # Warning: when a host is added via this function, it is only added
 # for the current scenario. As such, if this is done before saving a
 # snapshot, it will not remain after the snapshot is loaded.
-def add_lan_host(ipaddr, port)
-  @lan_hosts ||= []
-  @lan_hosts << { address: ipaddr, port: port }
+def add_extra_allowed_host(ipaddr, port)
+  @extra_allowed_hosts ||= []
+  @extra_allowed_hosts << { address: ipaddr, port: port }
 end
 
 BeforeFeature('@product') do |feature|
-  if TAILS_ISO.nil?
-    raise "No Tails ISO image specified, and none could be found in the " +
-          "current directory"
-  end
-  if File.exist?(TAILS_ISO)
-    # Workaround: when libvirt takes ownership of the ISO image it may
-    # become unreadable for the live user inside the guest in the
-    # host-to-guest share used for some tests.
-
-    if !File.world_readable?(TAILS_ISO)
-      if File.owned?(TAILS_ISO)
-        File.chmod(0644, TAILS_ISO)
-      else
-        raise "warning: the Tails ISO image must be world readable or be " +
-              "owned by the current user to be available inside the guest " +
-              "VM via host-to-guest shares, which is required by some tests"
-      end
+  images = {'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG}
+  images.each { |type, path|
+    if path.nil?
+      raise "No Tails #{type} image specified, and none could be found in the " +
+            "current directory"
     end
-  else
-    raise "The specified Tails ISO image '#{TAILS_ISO}' does not exist"
-  end
+    if File.exist?(path)
+      # Workaround: when libvirt takes ownership of the ISO/IMG image it may
+      # become unreadable for the live user inside the guest in the
+      # host-to-guest share used for some tests.
+
+      if !File.world_readable?(path)
+        if File.owned?(path)
+          File.chmod(0644, path)
+        else
+          raise "warning: the Tails #{type} image must be world readable or be " +
+                "owned by the current user to be available inside the guest " +
+                "VM via host-to-guest shares, which is required by some tests"
+        end
+      end
+    else
+      raise "The specified Tails #{type} image '#{path}' does not exist"
+    end
+  }
   if !File.exist?(OLD_TAILS_ISO)
     raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
+  end
+  if !File.exist?(OLD_TAILS_IMG)
+    raise "The specified old Tails IMG image '#{OLD_TAILS_IMG}' does not exist"
   end
   if not($started_first_product_feature)
     $virt = Libvirt::open("qemu:///system")
@@ -234,8 +242,8 @@ Before('@product') do |scenario|
   @os_loader = "MBR"
   @sudo_password = "asdf"
   @persistence_password = "asdf"
-  # See comment for add_lan_host() above.
-  @lan_hosts ||= []
+  # See comment for add_extra_allowed_host() above.
+  @extra_allowed_hosts ||= []
 end
 
 # Cucumber After hooks are executed in the *reverse* order they are
@@ -251,6 +259,7 @@ After('@product') do |scenario|
     # what the error was.
     sleep 3 if scenario.failed?
     Process.kill("INT", @video_capture_pid)
+    Process.wait(@video_capture_pid)
     save_failure_artifact("Video", @video_path)
   end
   if scenario.failed?
@@ -306,6 +315,11 @@ After('@product') do |scenario|
       FileUtils.rm(@video_path)
     end
   end
+  # If we don't shut down the system under testing it will continue to
+  # run during the next scenario's Before hooks, which we have seen
+  # causing trouble (for instance, packets from the previous scenario
+  # have failed scenarios tagged @check_tor_leaks).
+  $vm.power_off if $vm
 end
 
 Before('@product', '@check_tor_leaks') do |scenario|

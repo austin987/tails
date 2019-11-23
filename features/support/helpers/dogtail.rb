@@ -1,9 +1,7 @@
 module Dogtail
-  module Mouse
-    LEFT_CLICK = 1
-    MIDDLE_CLICK = 2
-    RIGHT_CLICK = 3
-  end
+  LEFT_CLICK = 1
+  MIDDLE_CLICK = 2
+  RIGHT_CLICK = 3
 
   TREE_API_NODE_SEARCHES = [
     :button,
@@ -13,11 +11,13 @@ module Dogtail
     :dialog,
     :menu,
     :menuItem,
+    :panel,
     :tab,
     :textentry,
   ]
 
   TREE_API_NODE_SEARCH_FIELDS = [
+    :labelee,
     :parent,
   ]
 
@@ -61,6 +61,7 @@ module Dogtail
         "import dogtail.config",
         "import dogtail.tree",
         "import dogtail.predicate",
+        "import dogtail.rawinput",
         "dogtail.config.logDebugToFile = False",
         "dogtail.config.logDebugToStdOut = False",
         "dogtail.config.blinkOnActions = True",
@@ -186,6 +187,25 @@ module Dogtail
       get_field('roleName')
     end
 
+    def showing
+      get_field('showing') == 'True'
+    end
+
+    # Note: pressKey and typeText are global Dogtail actions,
+    # which should probably live
+    # elsewhere than in our Application class, but currently we lack
+    # the infrastructure to do that: the Ruby plumbing that generates
+    # and runs Python code lives in the Application class.
+    def pressKey(key)
+      # Dogtail will prefix the value of key with 'KEY_'
+      # and the result must be a valid Gdk key symbol such as Gdk.KEY_Down
+      run("dogtail.rawinput.pressKey('#{key}')")
+    end
+
+    def typeText(text)
+      run("dogtail.rawinput.typeText('#{text}')")
+    end
+
     TREE_API_APP_SEARCHES.each do |method|
       define_method(method) do |*args|
         args_str = self.class.args_to_s(args)
@@ -227,6 +247,11 @@ module Dogtail
         method_call = "#{method.to_s}(#{args_str})"
         run("#{@var}.#{method_call}")
       end
+    end
+
+    def right_click()
+      method_call = "click(button=#{RIGHT_CLICK})"
+      run("#{@var}.#{method_call}")
     end
 
   end

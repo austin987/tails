@@ -1,0 +1,37 @@
+From d333d5a79b41809798d692b22ae0a2fc85723c0f Mon Sep 17 00:00:00 2001
+From: anonym <anonym@riseup.net>
+Date: Wed, 27 Feb 2019 09:45:04 +0100
+Subject: [PATCH] Prefer fetched configurations using SSL over plaintext.
+
+---
+ comm/mail/components/accountcreation/content/readFromXML.js | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+--- a/comm/mail/components/accountcreation/content/readFromXML.js
++++ b/comm/mail/components/accountcreation/content/readFromXML.js
+@@ -77,7 +77,11 @@ function readFromXML(clientConfigXML)
+         try {
+           iO.socketType = sanitize.translate(iXsocketType,
+               { plain : 1, SSL: 2, STARTTLS: 3 });
+-          break; // take first that we support
++
++          if (iO.socketType != 1) {
++            // pick first non-plaintext protocol, if available
++            break;
++          }
+         } catch (e) { exception = e; }
+       }
+       if (!iO.socketType)
+@@ -152,7 +156,11 @@ function readFromXML(clientConfigXML)
+         try {
+           oO.socketType = sanitize.translate(oXsocketType,
+               { plain : 1, SSL: 2, STARTTLS: 3 });
+-          break; // take first that we support
++
++          if (oO.socketType != 1) {
++            // pick first non-plaintext protocol, if available
++            break;
++          }
+         } catch (e) { exception = e; }
+       }
+       if (!oO.socketType)

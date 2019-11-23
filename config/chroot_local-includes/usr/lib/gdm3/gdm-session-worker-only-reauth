@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# tails-kill-gdm-session renames this script to /usr/lib/gdm3/gdm-session-worker
+# before it kills Debian-gdm's GNOME session. And then, whenever GDM tries
+# to start a new session worker, this script will only allow it to do so if
+# that's for reauthentication purposes, i.e. to unlock the screen.
+# Otherwise, we return exit code 0, so that GDM does not start a full-blown
+# GNOME session that would uselessly eat hundreds of MB of memory.
+
+# No "set -e" because we need to capture the exit status of gdm-session-worker.real.
+# No "set -u" because we need to check an environment variable that may
+# not be set: $GDM_SESSION_FOR_REAUTH.
+
+if [ "$GDM_SESSION_FOR_REAUTH" = 1 ]; then
+   # Use "exec" so that real worker gets the same PID as this script,
+   # otherwise GDM's find_conversation_by_pid will fail to find the
+   # corresponding conversation, log "GdmSession: New worker
+   # connection is from unknown source", ignore the worker's query,
+   # and as a result unlocking the script will fail.
+   exec /usr/lib/gdm3/gdm-session-worker.real "$@"
+else
+   exit 0
+fi

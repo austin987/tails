@@ -121,7 +121,7 @@ time_is_in_valid_tor_range() {
 	local curdate="$1"
 	local vstart="$2"
 
-	vendcons=$(date -ud "${vstart} -0230" +'%F %T')
+	vendcons=$(date -ud "${vstart} -0255" +'%F %T')
 	order="${vstart}
 ${curdate}
 ${vendcons}"
@@ -232,11 +232,6 @@ else
 fi
 
 wait_for_working_tor
-
-# Disable "info" logging workaround from 10-tor.sh
-if [ "$(tails_netconf)" = "obstacle" ]; then
-	tor_control_setconf "Log=\"notice file ${TOR_LOG}\""
-fi
 
 touch $TORDATE_DONE_FILE
 

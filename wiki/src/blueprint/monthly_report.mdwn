@@ -16,31 +16,33 @@ The month in the list corresponds to the month to be reported about. For
 example, the report about April in the list will be written at the
 beginning of May.
 
-  - January 2017: u
-  - February 2017:emmapeel
-  - March 2017: intrigeri
-  - April 2017: spriver
-  - May 2017: u
-  - June 2017: intrigeri
-  - July 2017: sajolida
-  - August 2017: spriver
-  - September 2017: emmapeel
-  - October 2017: sajolida
-  - November 2017:muri
-  - December 2017: muri
+  - January 2019: emmapeel
+  - February 2019: intrigeri
+  - March 2019: sajolida
+  - April 2019: TheNerdyAnarchist & emmapeel
+  - May 2019: u
+  - June 2019: sajolida
+  - July 2019: muri
+  - August 2019: intrigeri
+  - September 2019: muri
+  - October 2019: muri
+  - November 2019: sajolida
+  - December 2019: intrigeri
+
+### 2018
 
   - January 2018: sajolida
   - February 2018: u
   - March 2018: intrigeri
-  - April 2018:
-  - May 2018:
+  - April 2018: emmapeel
+  - May 2018: spriver
   - June 2018: sajolida
-  - July 2018:
-  - August 2018:
-  - September 2018:
-  - October 2018:
-  - November 2018: sajolida
-  - December 2018:
+  - July 2018: pablonatalino & emmapeel
+  - August 2018: intrigeri
+  - September 2018: sajolida
+  - October 2018: u
+  - November 2018: muri
+  - December 2018: spriver
 
 Checklist
 =========
@@ -61,18 +63,23 @@ Publishing
 - If you have the commit bit on our main repo, you can do the
   publication:
 
-  - Set the `meta date=` directive to today's date in RFC 2822 format
+  - Ensure the `meta date=` directive is set to today's date in RFC 2822 format
     (e.g. `date --rfc-2822`).
   - Move report to `news/report_YEAR_MO.mdwn`.
-  - Commit and push.
+  - Commit.
+  - Build the website locally and check that it builds fine and the
+    report renders well (e.g. no broken links that worked earlier only
+    because the report was under `blueprints/`).
+  - Push.
   - Tweet about the report:
        - "In MONTH we worked on [...] and more: https://tails.boum.org/news/report_YEAR_MO."
        - If you don't have access to our Twitter account send your text
          for the tweet along with your merge request for the report.
-  - Email the link to the report:
+  - Email the link to the report (and if you have time+energy, the
+    full text after adjusting its formatting for email):
 
           To: tails-project@boum.org
-          Cc: tor-reports@lists.torproject.org
+          Cc: tor-project@lists.torproject.org
           Subject: Tails report for XXXXXXXX YYYY
           Reply-to: tails-project@boum.org
 
@@ -84,14 +91,15 @@ Template
 ========
 
     \[[!meta title="Tails report for MONTH, YEAR"]]
-    \[[!meta date="RFC 2822 DATE (eg. Tue, 08 Aug 2018 12:34:56 +0000)"]]
+    \[[!meta date="`date --rfc-2822` eg. Thu, 08 Feb 2018 07:21:15 +0000"]]
+    \[[!pagetemplate template="news.tmpl"]]
 
     \[[!toc]]
 
     Releases
     ========
 
-    * \[[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|minor] release).
+    * \[[Tails VERSION was released on MONTH DAY|news/version_VERSION]] ([major|bugfix|emergency] release).
 
     * Tails VERSION+1 is \[[scheduled for MONTH DAY|contribute/calendar]].
 
@@ -118,14 +126,14 @@ Template
     XXX: If you feel like it and technical writers don't do it
          themselves, explore the Git history:
 
-             git log --patch --since='1 October' --until='1 November' origin/master -- "*.*m*"
+             git log --patch --since='1 October' --until='1 November' origin/master -- "doc**.*m*" "about**.*m*" "support**.*m*" "install**.*m*" "upgrade**.*m*"
 
     User experience
     ===============
 
     XXX: If you feel like it and the UX team does not do it
          themselves, check the archives of tails-ux:
-         <https://mailman.boum.org/pipermail/tails-ux/>
+         <https://lists.autistici.org/list/tails-XXX.html>
 
     Hot topics on our help desk
     ===========================
@@ -140,15 +148,6 @@ Template
 
     Infrastructure
     ==============
-
-    XXX: Count the number of tests in /features at the beginning of next month
-
-             git checkout `git rev-list -n 1 --before="June 1" origin/devel`
-             git grep --extended-regexp '^\s*Scenario:' -- features/*.feature | wc -l
-
-    XXX: Report only if more scenarios have been written and add the diff from the previous month, for example:
-
-           - Our test suite covers SCENARIOS scenarios, DIFF more that in May.
 
     Funding
     =======
@@ -171,21 +170,21 @@ Template
     On-going discussions
     ====================
 
-    XXX: Link to the thread on <https://mailman.boum.org/pipermail/tails-XXX/>.
+    XXX: Link to the thread on <https://lists.autistici.org/list/tails-XXX.html>.
 
     Press and testimonials
     ======================
 
-    XXX: Copy content from press/media_appearances_2016.mdwn
+    XXX: Copy content from press/media_appearances_2019.mdwn
          This page is continuously updated by tails-press@boum.org, so if
          it's empty there might be nothing special to report.
 
-    Translation
-    ===========
+    Translations
+    ============
 
-    XXX: Add the output of `contribute/l10n_tricks/language_statistics.sh`
     XXX: Add the output of (adjust month!):
 
+        sudo apt-get install intltool
         git checkout $(git rev-list -n 1 --before="September 1" origin/master) && \
         git submodule update --init && \
         ./wiki/src/contribute/l10n_tricks/language_statistics.sh
@@ -194,9 +193,7 @@ Template
     =======
 
     * Tails has been started more than BOOTS/MONTH times this month. This makes BOOTS/DAY boots a day on average.
-    * SIGS downloads of the OpenPGP signature of Tails ISO from our website.
-    * WHISPERBACK bug reports were received through WhisperBack.
 
     \[[How do we know this?|support/faq#boot_statistics]]
 
-    XXX: Ask <tails@boum.org> for these numbers.
+    XXX: Ask <tails@boum.org> for this number.

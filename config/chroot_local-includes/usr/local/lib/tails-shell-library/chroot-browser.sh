@@ -7,7 +7,7 @@ if [ "$(whoami)" != "root" ]; then
     exit 1
 fi
 
-# Import the TBB_INSTALL, TBB_PROFILE and TBB_EXT variables, and
+# Import the TBB_INSTALL and TBB_EXT variables, and
 # configure_xulrunner_app_locale().
 . /usr/local/lib/tails-shell-library/tor-browser.sh
 
@@ -21,7 +21,13 @@ try_cleanup_browser_chroot () {
     local user="${3}"
     try_for 10 "pkill -u ${user} 1>/dev/null 2>&1" 0.1 || \
         pkill -9 -u "${user}" || :
-    for mnt in "${chroot}/dev" "${chroot}/proc" "${chroot}" "${cow}"; do
+    # findmnt sorts submounts so we just have to revert the list to
+    # have the proper umount order. We use `tail` to suppress the
+    # "TARGET" column header.
+    local chroot_mounts="$(
+        findmnt --output TARGET --list --submounts "${chroot}" | tail -n+2 | tac
+    )"
+    for mnt in ${chroot_mounts} "${cow}"; do
         try_for 10 "umount ${mnt} 2>/dev/null" 0.1
     done
     rmdir "${cow}" "${chroot}"
@@ -59,7 +65,8 @@ setup_chroot_for_browser () {
     mount -t tmpfs tmpfs "${cow}" && \
     mount -t aufs -o "noatime,noxino,dirs=${aufs_dirs}" aufs "${chroot}" && \
     mount -t proc proc "${chroot}/proc" && \
-    mount --bind "/dev" "${chroot}/dev" || \
+    mount --bind "/dev" "${chroot}/dev" && \
+    mount -t tmpfs -o rw,nosuid,nodev tmpfs "${chroot}/dev/shm" || \
         return 1
 
     # Workaround for #6110
@@ -85,18 +92,6 @@ chroot_browser_conf_dir () {
 chroot_browser_profile_dir () {
     local conf_dir="$(chroot_browser_conf_dir "${@}")"
     echo "${conf_dir}/profile.default"
-}
-
-# Set the chroot's DNS servers (IPv4 only)
-configure_chroot_dns_servers () {
-    local chroot="${1}" ; shift
-    local ip4_nameservers="${@}"
-
-    rm -f "${chroot}/etc/resolv.conf"
-    for ns in ${ip4_nameservers}; do
-        echo "nameserver ${ns}" >> "${chroot}/etc/resolv.conf"
-    done
-    chmod a+r "${chroot}/etc/resolv.conf"
 }
 
 set_chroot_browser_permissions () {
@@ -127,27 +122,28 @@ configure_chroot_browser_profile () {
     local extension
     while [ -n "${*:-}" ]; do
         extension="${1}" ; shift
-        ln -s "${extension}" "${browser_ext}"
+        if [ "$(basename "${extension}")" = 'red-2.0-an+fx.xpi' ]; then
+           ln -s "${extension}" "${browser_ext}"/'{91a24c60-0f27-427c-b9a6-96b71f3984a9}.xpi'
+        else
+           ln -s "${extension}" "${browser_ext}"
+        fi
     done
 
     # Set preferences
-    local browser_prefs="${browser_profile}/preferences/prefs.js"
+    local browser_prefs="${browser_profile}/user.js"
     local chroot_browser_config="/usr/share/tails/chroot-browsers"
-    mkdir -p "$(dirname "${browser_prefs}")"
     cat "${chroot_browser_config}/common/prefs.js" \
         "${chroot_browser_config}/${browser_name}/prefs.js" > "${browser_prefs}"
+
+    # Install addonStartup.json.lz4. This is required to enable the red theme.
+    cp "${chroot_browser_config}/${browser_name}/addonStartup.json.lz4" \
+        "${browser_profile}"
 
     # Set browser home page to something that explains what's going on
     if [ -n "${home_page:-}" ]; then
         echo 'user_pref("browser.startup.homepage", "'"${home_page}"'");' >> \
             "${browser_prefs}"
     fi
-
-    # Remove all bookmarks
-    rm "${chroot}/${TBB_PROFILE}/bookmarks.html"
-
-    # Set an appropriate theme
-    cat "${chroot_browser_config}/${browser_name}/theme.js" >> "${browser_prefs}"
 
     # Customize the GUI.
     local browser_chrome="${browser_profile}/chrome/userChrome.css"
@@ -168,8 +164,6 @@ set_chroot_browser_locale () {
     configure_xulrunner_app_locale "${browser_profile}" "${locale}"
 }
 
-# Must be called after configure_chroot_browser_profile(), since it
-# depends on which extensions are installed in the profile.
 set_chroot_browser_name () {
     local chroot="${1}"
     local human_readable_name="${2}"
@@ -179,38 +173,53 @@ set_chroot_browser_name () {
     local ext_dir="${chroot}/${TBB_EXT}"
     local browser_profile_ext_dir="$(chroot_browser_profile_dir "${chroot}" "${browser_name}" "${browser_user}")/extensions"
 
-    # If Torbutton is installed in the browser profile, it will decide
+    # Torbutton is installed in the browser's omni.ja and it decides
     # the browser name.
-    if [ -e "${browser_profile_ext_dir}/torbutton@torproject.org" ]; then
-        local torbutton_locale_dir="${ext_dir}/torbutton/chrome/locale/${locale}"
-        if [ ! -d "${torbutton_locale_dir}" ]; then
-            # Surprisingly, the default locale is en, not en-US
-            torbutton_locale_dir="${chroot}/usr/share/xul-ext/torbutton/chrome/locale/en"
-        fi
-        sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
-        # Since Torbutton decides the name, we don't have to mess with
-        # with the browser's own branding, which will save time and
-        # memory.
-        return
-    fi
-
-    local pack top rest
-    if [ "${locale}" != "en-US" ]; then
-        pack="${ext_dir}/langpack-${locale}@firefox.mozilla.org.xpi"
-        top="browser/chrome"
-        rest="${locale}/locale"
-    else
-        pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
-        top="chrome"
-        rest="en-US/locale"
-    fi
+    local pack="${chroot}/${TBB_INSTALL}/omni.ja"
     local tmp="$(mktemp -d)"
-    local branding="${top}/${rest}/branding/brand.dtd"
-    7z x -o"${tmp}" "${pack}" "${branding}"
-    sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${tmp}/${branding}"
-    (cd ${tmp} ; 7z u -tzip "${pack}" .)
+    (
+       cd "${tmp}"
+       7z x -o"${tmp}" "${pack}" chrome/torbutton/locale
+       local torbutton_locale_dir="chrome/torbutton/locale/${locale}"
+       if [ ! -d "${torbutton_locale_dir}" ]; then
+          torbutton_locale_dir="chrome/torbutton/locale/en-US"
+       fi
+       sed -i "s/<"'!'"ENTITY\s\+brand\(Full\|Short\|Shorter\)Name.*$/<"'!'"ENTITY brand\1Name \"${human_readable_name}\">/" "${torbutton_locale_dir}/brand.dtd"
+       7z u -tzip "${pack}" .
+    )
     chmod a+r "${pack}"
     rm -Rf "${tmp}"
+}
+
+delete_chroot_browser_searchplugins() {
+    local chroot="${1}"
+    local ext_dir="${chroot}/${TBB_EXT}"
+
+    pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+    local searchplugins_dir="chrome/browser/search-extensions"
+    local searchplugins_list="${searchplugins_dir}/list.json"
+    local tmp="$(mktemp -d)"
+    (
+        cd "${tmp}"
+        7z d -tzip "${pack}" "${searchplugins_dir}/*/manifest.json"
+        mkdir -p "${searchplugins_dir}"
+        echo '{"default": {"visibleDefaultEngines": []}, "experimental-hidden": {"visibleDefaultEngines": []}}' \
+             > "${searchplugins_list}"
+        7z u -tzip "${pack}" "${searchplugins_list}"
+    )
+    rm -r "${tmp}"
+    chmod a+r "${pack}"
+}
+
+# Delete the Tor Browser icons. This prevents a Tor Browser icon being
+# shown in the tab of a "New Tab" page.
+delete_chroot_browser_icons() {
+    local chroot="${1}"
+    local ext_dir="${chroot}/${TBB_EXT}"
+
+    pack="${chroot}/${TBB_INSTALL}/browser/omni.ja"
+    7z d -tzip "${pack}" "chrome/browser/content/branding/icon*.png"
+    chmod a+r "${pack}"
 }
 
 configure_chroot_browser () {
@@ -219,18 +228,18 @@ configure_chroot_browser () {
     local browser_name="${1}" ; shift
     local human_readable_name="${1}" ; shift
     local home_page="${1}" ; shift
-    local dns_servers="${1}" ; shift
     # Now $@ is a list of paths (that must be valid after chrooting)
     # to extensions to enable.
     local best_locale="$(guess_best_tor_browser_locale)"
 
-    configure_chroot_dns_servers "${chroot}" "${dns_servers}"
     configure_chroot_browser_profile "${chroot}" "${browser_name}" \
         "${browser_user}" "${home_page}" "${@}"
     set_chroot_browser_locale "${chroot}" "${browser_name}" "${browser_user}" \
         "${best_locale}"
     set_chroot_browser_name "${chroot}" "${human_readable_name}"  \
         "${browser_name}" "${browser_user}" "${best_locale}"
+    delete_chroot_browser_searchplugins "${chroot}"
+    delete_chroot_browser_icons "${chroot}"
     set_chroot_browser_permissions "${chroot}" "${browser_name}" \
         "${browser_user}"
 }
@@ -241,12 +250,14 @@ run_browser_in_chroot () {
     local browser_name="${2}"
     local chroot_user="${3}"
     local local_user="${4}"
+    local wm_class="${5}"
     local profile="$(browser_profile_dir ${browser_name} ${chroot_user})"
 
     sudo -u "${local_user}" xhost "+SI:localuser:${chroot_user}"
     chroot "${chroot}" sudo -u "${chroot_user}" /bin/sh -c \
         ". /usr/local/lib/tails-shell-library/tor-browser.sh && \
-         exec_firefox -DISPLAY='${DISPLAY}' \
+         export TOR_TRANSPROXY=1 && \
+         exec_firefox --class='${wm_class}' \
                       -profile '${profile}'"
     sudo -u "${local_user}" xhost "-SI:localuser:${chroot_user}"
 }

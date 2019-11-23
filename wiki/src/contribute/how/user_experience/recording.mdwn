@@ -1,0 +1,139 @@
+[[!meta title="Recording usability testing"]]
+
+[[!toc levels=2]]
+
+<a id="camera"></a>
+
+Recording with a camera using <span class="application">VLC</span>
+==================================================================
+
+Recording the screen with an external camera has the following
+advantages over recording with a screencast:
+
+- Recording a whole session, even if the user restarts Tails.
+- Saving the video directly to your computer and not relying on the
+  computer used for the tests.
+
+You can use a document camera. The [Ziggi-HD Plus by
+IPEVO](https://www.ipevo.com/) works fine from Tails.
+
+1. Move the <span class="guilabel">AF</span> switch of the camera to <span class="guilabel">C</span> to have continuous autofocus.
+
+1. Install <span class="application">VLC</span>:
+
+   <p class="pre command">apt install vlc</p>
+
+### Prepare the camera for recording
+
+1. In <span class="application">VLC</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Media</span>&nbsp;▸
+     <span class="guimenuitem">Open Capture Device...</span></span>.
+
+1. In the <span class="guilabel">Capture Device</span> tab, select:
+
+   - <span class="guilabel">Video device name</span>: /dev/video1
+   - <span class="guilabel">Audio device name</span>: hw:1,0
+
+1. Click the <span class="button">Play</span> button.
+
+1. Make sure that the microphone of the camera is captured as well.
+
+1. Adjust the orientation of the camera to capture as much of the screen as
+   possible while not obfuscating the light of sight of the participant.
+
+### Start recording
+
+1. In <span class="application">VLC</span>, choose
+   <span class="menuchoice">
+     <span class="guimenu">Media</span>&nbsp;▸
+     <span class="guimenuitem">Convert / Save...</span></span>.
+
+1. In the <span class="guilabel">Capture Device</span> tab, select:
+
+   - <span class="guilabel">Video device name</span>: /dev/video1
+   - <span class="guilabel">Audio device name</span>: hw:1,0
+
+1. Click the <span class="button">Convert / Save</span> button.
+
+1. In the <span class="guilabel">Convert</span> dialog:
+
+   - Select the
+     <span class="guilabel">Video - H.264 + MP3 (MP4)</span> profile.
+
+   - Specify a destination file under
+     <span class="filename">~/Persistent/</span>.
+
+<a id="screencast"></a>
+
+Recording a screencast
+======================
+
+Recording the screen with a screencast has the following advantages over
+recording with an external camera:
+
+- Better image quality
+- Lighter setup
+
+Using <span class="application">Kazam</span>
+--------------------------------------------
+
+You can use [*Kazam*](http://recordmydesktop.sourceforge.net/) from Tails:
+
+1. Install *Kazam*:
+
+   <p class="pre command">apt install kazam</span>
+
+1. Start *Kazam* and edit the *Kazam* preferences:
+
+   - In the **General** tab:
+
+     - Adjust the capture microphone
+
+   - In the **Screencast** tag:
+
+     - Lower the framerate to 10 to avoid data loss.
+
+     - Change the file format to WEBM.
+
+     - Enable **Automatic file saving**.
+
+     <div class="bug">
+     <p>The directory preferences is reset to <em>~/Videos</em> every time by <em>Kazam</em>.</p>
+     </div>
+
+### To autosave the recordings in persistence
+
+1. Create a *Persistent/Videos* directory.
+
+1. Then, either:
+
+   - Temporarily, mount the *Videos* directory on *Persistent/Videos*.
+
+     To do so, execute the following command:
+
+     <p class="pre command">sudo mount --bind ~/Persistent/Videos ~/Videos</p>
+
+   - Permanently, map the *Videos* directory to *Persistent/Videos* in your
+     persistence settings.
+
+     To do so, add the following line to your */live/persistence/TailsData_unlocked/persistence.conf*:
+
+     <p class="pre">/home/amnesia/Videos        source=Persistent/Videos</p>
+
+Using GNOME Shell
+-----------------
+
+Press <span class="keycap">Ctrl+Alt+Shift+R</span> in GNOME to start or stop
+capturing a screencast.
+
+The video is saved to <span class="filename">~/Videos/</span>.
+
+<div class="bug">
+
+<p>The screencast stops after 30 seconds. See [[!tails_ticket
+12723]].</p>
+
+<p>The screencast has no sound.</p>
+
+</div>

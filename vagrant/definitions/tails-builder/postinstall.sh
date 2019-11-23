@@ -9,12 +9,12 @@ echo "$(date)" > /var/lib/vagrant_box_build_time
 
 export DEBIAN_FRONTEND="noninteractive"
 
-echo "I: Add sudo permissions to user vagrant..."
+echo "I: Adding sudo permissions to user vagrant..."
 cat > /etc/sudoers.d/vagrant << EOF
 vagrant         ALL=(ALL) NOPASSWD: ALL
 EOF
 
-echo "I: Add pubkey for vagrant..."
+echo "I: Adding pubkey for vagrant..."
 mkdir -p /home/vagrant/.ssh
 cat > /home/vagrant/.ssh/authorized_keys << EOF
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key
@@ -30,19 +30,26 @@ EOF
 cat > /etc/apt/apt.conf.d/99retries << EOF
 APT::Acquire::Retries "20";
 EOF
+# This effectively disables apt-daily*.{timer,service}, which might
+# interfere with an ongoing build. We run apt-get
+# {update,dist-upgrade,clean} ourselves in setup-tails-builder.
+cat > /etc/apt/apt.conf.d/99periodic << EOF
+APT::Periodic::Enable "0";
+EOF
 
-echo "I: Install Tails APT repo signing key."
+echo "I: Installing Tails APT repo signing key..."
+apt-get -y install gnupg
 apt-key add /tmp/tails.binary.gpg
 
-echo "I: Add standard APT suites."
+echo "I: Adding standard APT suites..."
 cat "/etc/apt/sources.list" | \
-	sed -e 's/stretch/stretch-updates/' \
-	> "/etc/apt/sources.list.d/stretch-updates.list"
+	sed -e 's/buster/buster-updates/' \
+	> "/etc/apt/sources.list.d/buster-updates.list"
 
-echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ stretch/updates main" \
-	> "/etc/apt/sources.list.d/stretch-security.list"
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ buster/updates main" \
+	> "/etc/apt/sources.list.d/buster-security.list"
 
-echo "I: Adding our builder-jessie suite with live-build, pin it low."
+echo "I: Adding our builder-jessie suite with live-build and po4a..."
 echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
@@ -54,10 +61,16 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Pin: release o=Tails,n=builder-jessie
 	Pin-Priority: 999
 EOF
+# Install po4a 0.47 for now (#17005)
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/po4a <<EOF
+	Package: po4a
+	Pin: release o=Tails,n=builder-jessie
+	Pin-Priority: 999
+EOF
 
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/stretch-backports << EOF
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/buster-backports << EOF
 	Package: *
-	Pin: release n=stretch-backports
+	Pin: release n=buster-backports
 	Pin-Priority: 100
 EOF
 
@@ -69,13 +82,16 @@ apt-get -y install ca-certificates curl grub2 openssh-server wget
 echo "I: Configuring GRUB..."
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
 
-echo "I: Installing Tails build dependencies."
+echo "I: Installing Tails build dependencies..."
 apt-get -y install \
         debootstrap \
+        dosfstools \
         dpkg-dev \
         eatmydata \
         faketime \
+        gdisk \
         gettext \
+        gir1.2-udisks-2.0 \
         git \
         ikiwiki \
         intltool \
@@ -93,12 +109,17 @@ apt-get -y install \
         libyaml-syck-perl \
         live-build \
         lsof \
+        mtools \
         perlmagick \
         psmisc \
+        python3-gi \
         rsync \
         ruby \
+        syslinux \
+        syslinux-common \
         syslinux-utils \
         time \
+        udisks2 \
         whois
 
 # Ensure we can use timedatectl
@@ -142,6 +163,12 @@ apt-get -y install localepurge
 localepurge
 apt-get -y remove localepurge
 rm -f "${TEMPFILE}"
+
+echo "I: Disabling irrelevant timers"
+# By default we reboot the system between each build, which makes this
+# timer useless. Besides, it is started 15 minutes after boot, which
+# has potential to interfere with an ongoing build.
+systemctl mask systemd-tmpfiles-clean.timer
 
 echo "I: Cleaning up..."
 apt-get -y autoremove
