@@ -1529,7 +1529,9 @@ this, and skip what does not make sense for a RC.
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
-                    -not -name '*~test_*~test.iuk' -ls \
+                    -not -name '*~test_*~test.iuk' \
+                    -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                    -ls \
              \"
 
    - then actually delete the files:
@@ -1538,7 +1540,9 @@ this, and skip what does not make sense for a RC.
              \"sudo find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
-                    -not -name '*~test_*~test.iuk' -delete \
+                    -not -name '*~test_*~test.iuk' \
+                    -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                    -delete \
              \"
 
 1. Check how much space our mirrors need:
