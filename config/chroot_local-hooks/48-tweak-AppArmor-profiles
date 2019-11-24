@@ -12,6 +12,8 @@ find /etc/apparmor.d/ -maxdepth 1 -type f \
 find /etc/apparmor.d/ -maxdepth 1 -type f \
      -exec perl -pi -E 's|flags=[(]complain[)]\s+[{]|flags=(complain,attach_disconnected) {|' '{}' \;
 
-# Also pass the attach_disconnected flag to the Tor Browser profile,
-# because the above regex doesn't match that one.
-perl -pi -E 's,(profile.*\s+)[{],$1flags=(attach_disconnected) {,' /etc/apparmor.d/torbrowser.Browser.firefox
+# Also pass the attach_disconnected flag to the Thunderbird and Tor Browser
+# profiles, because the above regexps don't match these ones.
+perl -pi -E 's,(profile.*[}]\s+)[{],$1flags=(attach_disconnected) {,' \
+     /etc/apparmor.d/torbrowser.Browser.firefox \
+     /etc/apparmor.d/usr.bin.thunderbird
