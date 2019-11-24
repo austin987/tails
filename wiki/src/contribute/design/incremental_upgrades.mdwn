@@ -110,20 +110,19 @@ pushing the release Git branch live to master.
 
 ## Upgrade paths
 
-To ease implementation, only upgrades to the next closest step
-are supported.
+To ease implementation, we only support upgrades from Tails versions
+that have a recent enough Upgrader.
 
 E.g. say one has installed Tails 0.11 a while ago, and forgets
 about it. We then release Tails 0.11.1, and publish a `0.11_to_0.11.1`
 IUK, advertised by the upgrade-description file for 0.11 users. We then
-release Tails 0.11.2, and publish a `0.11.1_to_0.11.2` IUK, advertised
-by the upgrade-description file for 0.11.1 users. If the user starts
-their Tails 0.11, the upgrade system proposes upgrading to 0.11.1.
-Say the user accepts, the upgrade is performed, the user reboots, and
-the upgrade system now proposes upgrading to 0.11.2.
+release Tails 0.11.2, and publish:
 
-Allowing to run these two steps in a row, without rebooting, is
-mainly a GUI problem, and is postponed.
+* a `0.11_to_0.11.2` IUK advertised by the upgrade-description file
+  for users who initially installed 0.11, regardless of whether they
+  already upgraded to 0.11.1 or not;
+* a `0.11.1_to_0.11.2` IUK, advertised by the upgrade-description file
+  for users who initially installed 0.11.1.
 
 ## Infrastructure
 
@@ -190,7 +189,8 @@ set up does leave room for such future extension.
 ### Upgrade-description files
 
 We want the client to get an answer to questions such as "I run
-version N of product P on architecture A, what stable release upgrade
+version N+2 of product P on architecture A, on a device initially
+installed as version N and then upgraded to N+2, what stable release upgrade
 is available?". To allow us changing the way the answer is computed in
 the future, the amount of work done on the client's side should be
 kept to a minimum. So, let's insert a level of indirection, and
@@ -206,8 +206,8 @@ of upgrade-description file files.
   to start with.
 * product name (e.g. *Tails*, but some day we may have *TailsServer*,
   *TailsHandheld* or whatever)
-* product version -- the currently running version to upgrade from,
-  e.g. *0.11* or *0.11.1*
+* initial install version -- the version initially installed on the
+  device to upgrade, e.g. *0.11* or *0.11.1*
 * build-target (e.g. *amd64*)
 * channel (e.g. *stable* or *beta*)
 * `upgrade.yml`
@@ -223,7 +223,9 @@ An upgrade-description file contains a YAML associative array with the
 following top-level keys:
 
 * `product-name`
-* `product-version`
+* `initial-install-version`
+* `product-version` (for backwards compatibility with older version of
+   the Upgrader)
 * `build-target`
 * `channel`
 * `upgrades`: a list of upgrade elements.
@@ -266,6 +268,7 @@ Example that would be found at
 <https://tails.boum.org/upgrade/v1/Tails/0.11.1/amd64/stable/upgrades.yml>:
 
 	product-name: Tails
+	initial-install-version: 0.11.1
 	product-version: 0.11.1
 	channel: stable
 	build-target: amd64
@@ -304,8 +307,8 @@ followed by the `.iuk` suffix:
 
 * product name (e.g. *Tails*)
 * build-target (e.g. *amd64*)
-* product version -- the currently running version to upgrade from,
-  e.g. *0.11* or *0.11.1*
+* initial install version -- the version initially installed on the device to
+  upgrade, e.g. *0.11* or *0.11.1*
 * `to`
 * the version of this upgrade, that is the version of the running
   product after the upgrade is completed and the system restarted (e.g.
@@ -339,7 +342,7 @@ upgrade-description file.
 * Fetch the upgrade-description file and its signature at these URIs.
 * Verify the cryptographic signature of the upgrade-description file.
 * Check that content of the upgrade-description file matches the
-  currently running system (in terms of product name, product
+  currently running system (in terms of product name, initial install
   version, build-target and channel).
 * Once all these steps have been successfully performed, the content
   of the upgrade-description file is trusted to be legit, and is
