@@ -138,40 +138,21 @@ We have a `tails-create-iuk` program that takes two Tails full images as input, 
 
 #### IUK format
 
-An IUK is a tar archive, compatible with GNU tar, that contains the
-following files:
+An IUK is a SquashFS archive that contains the following files:
 
-* `FORMAT`: contains the version of the IUK format (that is *1*), as
-  a positive integer encoded in ASCII.
+* `FORMAT`: contains the version of the IUK format, as
+  a positive integer encoded in ASCII (currently it is *2*).
 * `control.yml`: YAML associative array with the following keys:
-  - `delete_files`: a list of files to delete from the
-    system partition.
-* zero, one or more `*.tar[.bz2]`: tar archives, compatible with GNU tar, optionally
-  compressed with bzip2, that contain the set of files to add to, or
-  upgrade in the system partition: kernel(s), initrd(s), bootloader
-  configuration, `*.squashfs` (the SquashFS "diff" that must be
-  stacked on top of the older SquashFS filesystem(s)), etc.
-
-File paths, both in `*.tar[.bz2]` and in the `delete_files` list, are
-relative to the Tails system partition root, and must be compatible
-with a FAT32 filesystem.
-
-Tarballs contained in the IUK are meant to be extracted, one after the
-other, sorted by ASCII order.
-
-#### Initial implementation details
-
-(This section is not a specification.)
-
-The initial IUK generator will ship those files in every IUK:
-
-* `system.tar` contains files that are already compressed
-  (e.g. kernel, initrd, `*.squashfs`)
-* `boot.tar.bz2` contains files that are not compressed yet
-  (that is: syslinux configuration, modules and utilities)
-
-These are implementation details the IUK installer software must not
-rely upon.
+  - `delete_files`: a list of file paths to delete from the system
+    partition. These paths are relative to the Tails system partition
+    root, and must be compatible with a FAT32 filesystem.
+* `overlay`: optional directory whose contents will be extracted onto
+  the system partition root, overwriting existing files: kernel(s),
+  initrd(s), bootloader configuration, `live/*.squashfs` (the SquashFS
+  "diff" that must be stacked on top of the SquashFS filesystem from
+  the initial version of Tails that was manually installed to the
+  device), etc. All these files target a FAT32 filesystem, so its
+  limitations apply (e.g. on filename, file size, permissions).
 
 ### Mirrors infrastructure
 
@@ -425,13 +406,17 @@ medium read-write.
 
 * Verify the IUK is in a supported format.
 * Remount the boot-medium read-write.
-* Extract the IUK archive.
-* Move stacked squashfs found in the IUK in place.
-* Extract tarballs (`*.tar[.bz2]`) contained in the IUK, one after the
-  other, sorted by ASCII order.
+* Mount the IUK archive.
+* If the `overlay` directory exists in the IUK, copy its contents
+  onto the system partition root, overwriting existing files.
+* If a new SquashFS diff file (`live/*.squashfs`) was provided
+  in the `overlay` directory:
+  * ensure `live/Tails.module` contains:
+    - one line that says `filesystem.squashfs`
+    - one line that contains the filename of that new SquashFS diff
+  * remove any old SquashFS diff file that is not referenced
+    by `live/Tails.module` anymore.
 * Delete files that are listed in the `delete_files` control field.
-* Append the new SquashFS diff file name to the `live/Tails.module`
-  file, in the Tails system partition.
 * Upgrade syslinux with the binary found in `utils/linux/syslinux` on
   the Tails system partition. Likewise, upgrade the boot device's MBR
   with the one found in `utils/mbr/mbr.bin` on the Tails system
