@@ -55,6 +55,8 @@ Feature: Browsing the web using the Tor Browser
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/.gnupg/synaptic.html" as user "amnesia"
     And I copy "/usr/share/synaptic/html/index.html" to "/tmp/synaptic.html" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/synaptic.html" exists
+    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" exists
+    And the file "/live/overlay/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/tmp/synaptic.html" exists
     Given I start monitoring the AppArmor log of "torbrowser_firefox"
     When I start the Tor Browser
