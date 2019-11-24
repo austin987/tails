@@ -1,0 +1,78 @@
+From 619c17e0dc3d1cbfdf3859b18c9e71ec00694f9c Mon Sep 17 00:00:00 2001
+From: anonym <anonym@riseup.net>
+Date: Wed, 27 Feb 2019 10:59:33 +0100
+Subject: [PATCH] Add pref for whether to accept plaintext protocols during
+ autoconfiguration.
+
+Let's make it possible for security-focused distributions (and
+extensions like TorBirdy) to prevent insecure configurations to ever
+be displayed to users; for other users there is a warning explaining
+the consequences of accepting a non-SSL configuration.
+
+--- a/comm/mail/components/accountcreation/content/guessConfig.js
++++ b/comm/mail/components/accountcreation/content/guessConfig.js
+@@ -412,6 +412,7 @@ HostDetector.prototype =
+         { "imap" : IMAP, "pop3" : POP, "smtp" : SMTP }, UNKNOWN);
+     if (!port)
+       port = UNKNOWN;
++    var ssl_only = Services.prefs.getBoolPref("mailnews.auto_config.ssl_only_mail_servers");
+     var ssl = ConvertSocketTypeToSSL(socketType);
+     this._cancel = false;
+     this._log.info("doing auto detect for protocol " + protocol +
+@@ -435,6 +436,8 @@ HostDetector.prototype =
+       for (let j = 0; j < hostEntries.length; j++)
+       {
+         let hostTry = hostEntries[j]; // from getHostEntry()
++        if (ssl_only && hostTry.ssl == NONE)
++          continue;
+         hostTry.hostname = hostname;
+         hostTry.status = kNotTried;
+         hostTry.desc = hostTry.hostname + ":" + hostTry.port +
+--- a/comm/mail/components/accountcreation/content/readFromXML.js
++++ b/comm/mail/components/accountcreation/content/readFromXML.js
+@@ -29,6 +29,8 @@ function readFromXML(clientConfigXML)
+   }
+   var allow_oauth2 =
+     Services.prefs.getBoolPref("mailnews.auto_config.account_constraints.allow_oauth2");
++  var ssl_only =
++    Services.prefs.getBoolPref("mailnews.auto_config.ssl_only_mail_servers");
+   var exception;
+   if (typeof(clientConfigXML) != "object" ||
+       !("clientConfig" in clientConfigXML) ||
+@@ -92,6 +94,10 @@ function readFromXML(clientConfigXML)
+         throw exception ? exception : "need proper <socketType> in XML";
+       exception = null;
+ 
++      if (ssl_only && iO.socketType == 1) {
++        continue;
++      }
++
+       for (let iXauth of array_or_undef(iX.$authentication))
+       {
+         try {
+@@ -177,6 +183,10 @@ function readFromXML(clientConfigXML)
+         throw exception ? exception : "need proper <socketType> in XML";
+       exception = null;
+ 
++      if (ssl_only && oO.socketType == 1) {
++        continue;
++      }
++
+       for (let oXauth of array_or_undef(oX.$authentication))
+       {
+         try {
+--- a/comm/mailnews/mailnews.js
++++ b/comm/mailnews/mailnews.js
+@@ -922,6 +922,12 @@ pref("mailnews.auto_config.guess.enabled
+ pref("mailnews.auto_config.guess.timeout", 10);
+ // Whether we allow fetched configurations using OAuth2.
+ pref("mailnews.auto_config.account_constraints.allow_oauth2", true);
++// Whether we allow fetched account configurations that employs
++// non-SSL/TLS protocols. With this option set, insecure
++// configurations are never presented to the user; with this option
++// unset, users picking an insecure configuration will get a warning
++// and have to opt-in.
++pref("mailnews.auto_config.ssl_only_mail_servers", false);
+ // Work around bug 1454325 by disabling mimetype mungling in XmlHttpRequest
+ pref("dom.xhr.standard_content_type_normalization", false);
+ 

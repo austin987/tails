@@ -34,6 +34,8 @@ STABLE_BRANCH_NAMES = ['stable', 'testing']
 
 EXPORTED_VARIABLES = [
   'MKSQUASHFS_OPTIONS',
+  'APT_SNAPSHOTS_SERIALS',
+  'TAILS_ACNG_PROXY',
   'TAILS_BUILD_FAILURE_RESCUE',
   'TAILS_DATE_OFFSET',
   'TAILS_MERGE_BASE_BRANCH',
@@ -53,6 +55,8 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 INTERNAL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
 ENV['ARTIFACTS'] ||= '.'
+
+ENV['APT_SNAPSHOTS_SERIALS'] ||= ''
 
 class CommandError < StandardError
   attr_reader :status, :stderr
@@ -209,7 +213,7 @@ task :parse_build_options do
   options << 'vmproxy'
 
   # Default to fast compression on development branches
-  options << 'gzipcomp' unless is_release?
+  options << 'fastcomp' unless is_release?
 
   # Default to the number of system CPUs when we can figure it out
   cpus = system_cpus
@@ -230,17 +234,21 @@ task :parse_build_options do
       abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY'] = EXTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'extproxy'
-    when 'vmproxy'
+    when 'vmproxy', 'vmproxy+extproxy'
       ENV['TAILS_PROXY'] = INTERNAL_HTTP_PROXY
       ENV['TAILS_PROXY_TYPE'] = 'vmproxy'
+      if opt == 'vmproxy+extproxy'
+        abort "No HTTP proxy set, but one is required by TAILS_BUILD_OPTIONS. Aborting." unless EXTERNAL_HTTP_PROXY
+        ENV['TAILS_ACNG_PROXY'] = EXTERNAL_HTTP_PROXY
+      end
     when 'noproxy'
       ENV['TAILS_PROXY'] = nil
       ENV['TAILS_PROXY_TYPE'] = 'noproxy'
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     # SquashFS compression settings
-    when 'gzipcomp'
-      ENV['MKSQUASHFS_OPTIONS'] = '-comp gzip -Xcompression-level 1'
+    when 'fastcomp', 'gzipcomp'
+      ENV['MKSQUASHFS_OPTIONS'] = '-comp xz'
       if is_release?
         raise 'We must use the default compression when building releases!'
       end
@@ -314,7 +322,8 @@ end
 def list_artifacts
   user = vagrant_ssh_config('User')
   stdout = capture_vagrant_ssh("find '/home/#{user}/amnesia/' -maxdepth 1 " +
-                                        "-name 'tails-*.iso*'").first
+                                        "-name 'tails-amd64-*' " +
+                                        "-o -name tails-build-env.list").first
   stdout.split("\n")
 rescue VagrantCommandError
   return Array.new
@@ -366,7 +375,7 @@ task :setup_environment => ['validate_git_state'] do
     end
   end
 
-  ENV['BASE_BRANCH_GIT_COMMIT'] = git_helper('git_base_branch_head')
+  ENV['BASE_BRANCH_GIT_COMMIT'] ||= git_helper('git_base_branch_head')
   ['GIT_COMMIT', 'GIT_REF', 'BASE_BRANCH_GIT_COMMIT'].each do |var|
     if ENV[var].empty?
       raise "Variable '#{var}' is empty, which should not be possible: " +
@@ -430,6 +439,8 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
       # command to modify the #{hostname} below.
       '-o', 'StrictHostKeyChecking=no',
       '-o', 'UserKnownHostsFile=/dev/null',
+      # Speed up the copy
+      '-o', 'Compression=no',
     ]
     fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
     fetch_command << ENV['ARTIFACTS']
@@ -647,7 +658,7 @@ namespace :basebox do
     boxes.sort! { |a, b| basebox_date(a) <=> basebox_date(b) }
     boxes.pop
     boxes.each do |box|
-      if basebox_date(box) < Date.today - 365.0/3.0
+      if basebox_date(box) < Date.today - 365.0/2.0
         clean_up_basebox(box)
       end
     end

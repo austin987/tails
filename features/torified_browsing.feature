@@ -4,8 +4,6 @@ Feature: Browsing the web using the Tor Browser
   when I browse the web using the Tor Browser
   all Internet traffic should flow only through Tor
 
-  #11591, #11592
-  @fragile
   Scenario: The Tor Browser cannot access the LAN
     Given I have started Tails from DVD and logged in and the network is connected
     And a web server is running on the LAN
@@ -16,8 +14,7 @@ Feature: Browsing the web using the Tor Browser
     Then the Tor Browser shows the "Unable to connect" error
     And no traffic was sent to the web server on the LAN
 
-  #11592
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: The Tor Browser directory is usable
     Given I have started Tails from DVD and logged in and the network is connected
     Then the amnesiac Tor Browser directory exists
@@ -28,8 +25,7 @@ Feature: Browsing the web using the Tor Browser
     Then I can save the current page as "index.html" to the default downloads directory
     And I can print the current page as "output.pdf" to the default downloads directory
 
-  #11592
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Downloading files with the Tor Browser
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
@@ -39,28 +35,20 @@ Feature: Browsing the web using the Tor Browser
     When I save the file to the default Tor Browser download directory
     Then the file is saved to the default Tor Browser download directory
 
-  #11592
-  @check_tor_leaks @fragile
-  Scenario: Playing HTML5 audio
+  @check_tor_leaks
+  Scenario: Playing an Ogg audio track
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
-    And no application is playing audio
-    And I open the address "http://www.terrillthompson.com/tests/html5-audio.html" in the Tor Browser
-    And I click the HTML5 play button
-    And 1 application is playing audio after 10 seconds
+    Then I can listen to an Ogg audio track in Tor Browser
 
-  #10442
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Watching a WebM video
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
-    And I open the address "https://tails.boum.org/lib/test_suite/test.webm" in the Tor Browser
-    Then I see "TorBrowserSampleRemoteWebMVideoFrame.png" after at most 180 seconds
+    Then I can watch a WebM video in Tor Browser
 
-  #11592
-  @fragile
   Scenario: I can view a file stored in "~/Tor Browser" but not in ~/.gnupg
     Given I have started Tails from DVD and logged in and the network is connected
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/Tor Browser/synaptic.html" as user "amnesia"
@@ -70,26 +58,26 @@ Feature: Browsing the web using the Tor Browser
     And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/live/overlay/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/tmp/synaptic.html" exists
-    Given I start monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    Given I start monitoring the AppArmor log of "torbrowser_firefox"
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And I open the address "file:///home/amnesia/Tor Browser/synaptic.html" in the Tor Browser
     Then I see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has not denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/Tor Browser/synaptic.html"
-    Given I restart monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    And AppArmor has not denied "torbrowser_firefox" from opening "/home/amnesia/Tor Browser/synaptic.html"
+    Given I restart monitoring the AppArmor log of "torbrowser_firefox"
     When I open the address "file:///home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
-    Given I restart monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    And AppArmor has denied "torbrowser_firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
+    Given I restart monitoring the AppArmor log of "torbrowser_firefox"
     When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
-    Given I restart monitoring the AppArmor log of "/usr/local/lib/tor-browser/firefox"
+    And AppArmor has denied "torbrowser_firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
+    Given I restart monitoring the AppArmor log of "torbrowser_firefox"
     When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     # Due to our AppArmor aliases, /live/overlay will be treated
     # as /lib/live/mount/overlay.
-    And AppArmor has denied "/usr/local/lib/tor-browser/firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
+    And AppArmor has denied "torbrowser_firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
     # We do not get any AppArmor log for when access to files in /tmp is denied
     # since we explictly override (commit 51c0060) the rules (from the user-tmp
     # abstration) that would otherwise allow it, and we do so with "deny", which
@@ -104,27 +92,24 @@ Feature: Browsing the web using the Tor Browser
     When I start the Tor Browser
     Then the Tor Browser uses all expected TBB shared libraries
 
-  #11592
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: The Tor Browser's "New identity" feature works as expected
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     And I open Tails homepage in the Tor Browser
-    Then Tails homepage loads in the Tor Browser
+    Then the Tor Browser loads the Tails homepage
     When I request a new identity using Torbutton
     And I acknowledge Torbutton's New Identity confirmation prompt
     Then the Tor Browser loads the startup page
 
-  #11592
-  @fragile
   Scenario: The Tor Browser should not have any plugins enabled
     Given I have started Tails from DVD and logged in and the network is connected
     When I start the Tor Browser
     And the Tor Browser loads the startup page
     Then the Tor Browser has no plugins installed
 
-  #11592
+  #15336
   @fragile
   Scenario: The persistent Tor Browser directory is usable
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
@@ -135,10 +120,11 @@ Feature: Browsing the web using the Tor Browser
     Then the persistent Tor Browser directory exists
     And there is a GNOME bookmark for the persistent Tor Browser directory
     When I start the Tor Browser
-    And the Tor Browser loads the startup page
-    And I can save the current page as "index.html" to the persistent Tor Browser directory
-    When I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
-    Then I see "TorBrowserSavedStartupPage.png" after at most 10 seconds
+    And I open the address "https://tails.boum.org/about" in the Tor Browser
+    And "Tails - About" has loaded in the Tor Browser
+    Then I can save the current page as "index.html" to the persistent Tor Browser directory
+    And I open the address "file:///home/amnesia/Persistent/Tor Browser/index.html" in the Tor Browser
+    Then "Tails - About" has loaded in the Tor Browser
     And I can print the current page as "output.pdf" to the persistent Tor Browser directory
 
   #11585
@@ -151,7 +137,7 @@ Feature: Browsing the web using the Tor Browser
     And all persistent directories have safe access rights
     When I start the Tor Browser in offline mode
     And I add a bookmark to eff.org in the Tor Browser
-    And I warm reboot the computer
+    And I cold reboot the computer
     And the computer reboots Tails
     And I enable persistence
     And I log in to a new session

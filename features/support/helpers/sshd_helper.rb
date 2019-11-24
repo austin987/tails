@@ -46,6 +46,7 @@ EOF
     File.delete("#{$config['TMPDIR']}/ssh.pid")
     begin
       Process.kill("TERM", @pid)
+      Process.wait(@pid)
     rescue
       # noop
     end

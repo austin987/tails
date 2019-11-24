@@ -55,45 +55,15 @@ def pattern_coverage_in_guest_ram(reference_memory_b)
 end
 
 Given /^I prepare Tails for memory erasure tests$/ do
-  @detected_ram_m = detected_ram_in_MiB
-
-  # Free some more memory by dropping the caches etc.
-  step "I drop all kernel caches"
-
   # Have our initramfs-pre-shutdown-hook sleep for a while
   $vm.execute_successfully("touch /run/initramfs/tails_shutdown_debugging")
-
-  # The (guest) kernel may freeze when approaching full memory without
-  # adjusting the OOM killer and memory overcommitment limitations.
-  kernel_mem_reserved_k = 64*1024
-  kernel_mem_reserved_m = convert_to_MiB(kernel_mem_reserved_k, 'k')
-  admin_mem_reserved_k = 128*1024
-  admin_mem_reserved_m = convert_to_MiB(admin_mem_reserved_k, 'k')
-  kernel_mem_settings = [
-    # Let's avoid killing other random processes, and instead focus on
-    # the hoggers, which will be our fillram instances.
-    ["vm.oom_kill_allocating_task", 0],
-    # Let's not print stuff to the terminal.
-    ["vm.oom_dump_tasks", 0],
-    # From tests the 'guess' heuristic seems to allow us to safely
-    # (i.e. no kernel freezes) fill the maximum amount of RAM.
-    ["vm.overcommit_memory", 0],
-    # Make sure the kernel doesn't starve...
-    ["vm.min_free_kbytes", kernel_mem_reserved_k],
-    # ... and also some core privileged processes, e.g. the remote
-    # shell.
-    ["vm.admin_reserve_kbytes", admin_mem_reserved_k],
-  ]
-  kernel_mem_settings.each do |key, val|
-    $vm.execute_successfully("sysctl #{key}=#{val}")
-  end
 
   # We exclude the memory we reserve for the kernel and admin
   # processes above from the free memory since fillram will be run by
   # an unprivileged user in user-space.
+  detected_ram_m = detected_ram_in_MiB
   used_mem_before_fill_m = used_ram_in_MiB
-  free_mem_before_fill_m = @detected_ram_m - used_mem_before_fill_m -
-                          kernel_mem_reserved_m - admin_mem_reserved_m
+  free_mem_before_fill_m = detected_ram_m - used_mem_before_fill_m
   @free_mem_before_fill_b = convert_to_bytes(free_mem_before_fill_m, 'MiB')
 
   ['initramfs-shutdown', 'memlockd', 'tails-shutdown-on-media-removal'].each do |srv|
@@ -101,40 +71,32 @@ Given /^I prepare Tails for memory erasure tests$/ do
   end
 end
 
-Given /^I fill the guest's memory with a known pattern and the allocating processes get killed$/ do
-  # To be sure that we fill all memory we run one fillram instance for
-  # each GiB of detected memory, rounded up. To maintain stability we
-  # prioritize the fillram instances to be OOM killed. We also kill
-  # all instances after the first one has finished, i.e. when the
-  # memory is full, since the others otherwise may continue re-filling
-  # the same memory unnecessarily. Note that we leave the `killall`
-  # call outside of the OOM adjusted shell so it will not be OOM
-  # killed too.
-  nr_instances = (@detected_ram_m.to_f/(2**10)).ceil
-  nr_instances.times do
-    oom_adjusted_fillram_cmd =
-      "echo 1000 > /proc/$$/oom_score_adj && exec /usr/local/sbin/fillram"
-    $vm.spawn("sh -c '#{oom_adjusted_fillram_cmd}'; killall fillram",
-              :user => LIVE_USER)
+When /^I start a process allocating (\d+) ([[:alpha:]]+) of memory with a known pattern$/ do |size, unit|
+  fillram_script_path = "/tmp/fillram"
+  @fillram_cmd = "python3 #{fillram_script_path}"
+  fillram_done_path = fillram_script_path + "_done"
+  fillram_script = <<-EOF
+import math
+import time
+pattern = "wipe_didnt_work\\n"
+buffer = ""
+for x in range(math.ceil(#{convert_to_bytes(size.to_i, unit)} / len(pattern))):
+  buffer += pattern
+with open("#{fillram_done_path}", "w") as f:
+  f.write("done")
+time.sleep(365*24*60*60)
+print(buffer)
+  EOF
+  $vm.file_overwrite(fillram_script_path, fillram_script)
+  $vm.spawn(@fillram_cmd)
+  try_for(60) { $vm.file_exist?(fillram_done_path) }
+end
+
+When /^I kill the allocating process$/ do
+  $vm.execute_successfully("pkill --full '^#{@fillram_cmd}'")
+  try_for(10) do
+    $vm.execute("pgrep --full '^#{@fillram_cmd}'").failure?
   end
-  # We make sure that all fillram processes have started...
-  try_for(10, :msg => "all fillram processes didn't start", :delay => 0.1) do
-    nr_fillram_procs = $vm.pidof("fillram").size
-    nr_instances == nr_fillram_procs
-  end
-  prev_used_ram_ratio = -1
-  # ... and that it finishes
-  try_for(nr_instances*2*60, { :msg => "fillram didn't complete, probably the VM crashed" }) do
-    used_ram_ratio = (used_ram_in_MiB.to_f/@detected_ram_m)*100
-    # Round down to closest multiple of 10 to limit the logging a bit.
-    used_ram_ratio = (used_ram_ratio/10).round*10
-    if used_ram_ratio - prev_used_ram_ratio >= 10
-      debug_log("Memory fill progress: %3d%%" % used_ram_ratio)
-      prev_used_ram_ratio = used_ram_ratio
-    end
-    ! $vm.has_process?("fillram")
-  end
-  debug_log("Memory fill progress: finished")
 end
 
 def avail_space_in_mountpoint_kB(mountpoint)

@@ -1,0 +1,311 @@
+This is about migrating our data and workflow from Redmine to GitLab,
+which is tracked as [[!tails_ticket 15878]].
+
+[[!toc levels=3]]
+
+# Issues tracking
+
+See also the [GitLab doc on issues](https://docs.gitlab.com/ce/user/project/issues/).
+
+## Private issues
+
+One can make an issue
+[confidential](https://docs.gitlab.com/ce/user/project/issues/confidential_issues.html)
+when creating it; confidentiality can later be toggled on/off at any
+time. A confidential issue is visible only by whoever created it and
+by project members with at least
+[Reporter](https://docs.gitlab.com/ce/user/permissions.html#project-members-permissions) access.
+
+Given "Reporter" access is needed for lots of relatively basic
+operations, such as labelling and assigning issues, presumably most
+active Tails contributors would get at least this access level on the
+`tails-team/tails` project, and then in turn access to this project's
+confidential issues. So Tails teams that need to further restrict
+access to their confidential issues will need to track their issues
+under their own `tails-team/$project`.
+
+## Relationships
+
+On Redmine we heavily use relationships between fine-grained issues:
+parent/subtasks, Related, Blocks, etc. There's no such thing in
+GitLab FOSS ("CE") edition ([feature
+request](https://gitlab.com/gitlab-org/gitlab-foss/issues/64186)) so
+we'll need to significantly change our workflow here.
+
+Below we describe potential solutions.
+
+### Parent/subtask and Blocks relationship
+ 
+A GitLab issue can have a list of tasks (checklist).
+GitLab displays "X of Y tasks completed" prominently.
+ 
+Describing each subtask in free-form text, directly as an item on this
+list of tasks, should work fine to emulate a set of subtasks that are
+all assigned to the same person. For example, see [[!gnome_gitlab
+nautilus/issues/667]].
+
+For more complex cases, e.g. when non-trivial subtasks are done by
+different people (GitLab CE does not support multiple assignees per
+issue), each subtask could be an item on this list of tasks, that
+links to another issue. The downside is that after resolving one of
+the subtasks, one will also need to mark the corresponding item as
+completed on the task list of the "parent" issue.
+
+This should also replace most of our current usage of the Blocks
+relationship.
+
+Alternatively, one can add a comment with a list of the blocker
+issues. Comments can be updated and links will indicate which of the
+blockers are closed (strike-through).
+
+### Related to
+
+We can write this information directly either in the description of
+one of the issues that are related to each other or in a comment.
+Either way, this adds a message in the Activity stream of the
+referenced issue, with a link to the other issue. Granted, on issues
+with one single long discussion thread, as we're used to on Redmine,
+such messages will be lost, so better cross-reference issues in the
+description of each related issue, or use labels, or get used to
+"Start Discussion" to separate multiple sub-threads that can be marked
+as resolved independently from each other.
+
+### Duplicates
+
+We can close duplicates with a comment that references the duplicated
+issue. It adds a message to the Activity stream of the referenced
+issue, which allows one to find duplicates later on if needed.
+
+And to ensure we can list issues that have really been resolved,
+add a "Duplicate" label.
+
+## Status
+
+Each open issue must have one of these labels:
+
+ - "1. To do" (previously: "Confirmed")
+ - "2. Doing" ("In progress" was too vague: it could mean anything
+   between "someone did the first 2% of the work 5 years ago" to "this is
+   what I'm focused on today")
+ - "3. Needs Validation"
+
+… except issues that were just created and need to be triaged
+(previously: "New").
+
+This lends itself to issue boards with 4 columns: "1. To do", "2.
+Doing", "3. To review", and "Closed".
+
+Closing an issue means one of:
+
+ - The fix or feature the issue is about was merged and will be in
+   a future release (previously: "Fix committed" for the next release,
+   "Resolved" for 4.0).
+
+   To list these issues: closed issues whose milestone is a version
+   was not released yet.
+
+ - The fix or feature the issue is about is already available to
+   our users (previously: "Resolved").
+
+   To list these issues: closed issues whose milestone is a version
+   that's been released already.
+
+ - We've rejected it or marked it as a duplicate (previously:
+   "Rejected" and "Duplicate")
+
+   To list these issues: closed issues with respectively the "Rejected"
+   or "Duplicate" label.
+
+Most closed issues will still have the "3. To review" label.
+That should not cause any problem in practice. Worst case this can be
+fixed automatically, either via a webhook or a scheduled batch job.
+
+## Other issues metadata
+
+- Target version → Milestone
+- Feature branch: GitLab will automatically link a branch that mentions
+  an issue.
+- Category, Affected Tool, Priority, Type of work → use a set of
+  labels, each with a prefix, for each of them; and maybe simplify
+  a bit. For example:
+  - Qubes uses "P: $priority", "C: $category", etc.
+  - One can set multiple labels so we could perhaps merge "Category"
+    and "Affected Tool". For example, a ticket about Thunderbird
+    persistence could have the two "C: email" and "C: persistence" labels.
+- Log time → Time tracking
+- Due date → Due date
+- Starter → dedicated label
+- Tracker: drop it (we've never really taken advantage of the fine
+  distinction between describing a problem as a bug vs. describing
+  its solution as a feature)
+- % Done: drop it (we don't use this field enough to provide any value)
+- Estimated time → description
+- Attachments: any issue/MR description or comment can have file
+  attachments
+
+## Project management
+
+Currently we use the Redmine "Deliverable for" custom field.
+A "Deliverable for SponsorX" label should do the job for tracking
+global progress on a grant: then one can use the issues list or an
+issues board to visualize progress (despite the doc saying otherwise
+while I'm writing this, one can now have
+[multiple issue boards](https://docs.gitlab.com/ee/user/project/issue_board.html#multiple-issue-boards-starter)
+in the community edition of GitLab).
+
+An issues list can be ordered by due date, milestone due date, etc.,
+which should emulate the most important aspects of the Redmine custom
+queries we use, except naming the query (see "Custom queries" below).
+
+We can track progress on a specific project (be it a grant deliverable
+or not) by adding another label, e.g. "Project XYZ". For example,
+<https://redmine.tails.boum.org/code/projects/tails/issues?query_id=298>
+lists issues that have "Deliverable for" = "SponsorX" and whose parent
+task contains [[!tails_ticket 14568]]. We would have labels
+"Deliverable for SponsorX" and "Project XYZ". And if an additional
+intermediary level of tracking is needed between "this is part of
+SponsorX" and "this is about Additional Software" we can create
+tracking issues that each have list of tasks.
+
+## Personal self-management
+
+For planning, the same solutions as for project management apply,
+modulo adding a filter for the assignee.
+
+And for more lightweight tracking, GitLab's Todos are great. Todos are
+fully orthogonal to "tickets assigned to me"; they are listed on
+a different page and can be marked as done with one single click.
+For example:
+
+ - Every time one mentions me somewhere, I get a Todo item.
+   This allows me to track the questions I've been asked, that is, to
+   replace our past usage of "Info Needed" and current usage of
+   `@nick` "mentions", without the need to reassign an issue nor to
+   create a subtask. As a bonus, for many of us, a list of Todos
+   made prominent by GitLab will be easier to keep track of than
+   mere email notifications.
+
+ - I can click "Add todo" on an issue and it will appear on my list
+   of Todos (regardless of whether I'm the assignee or not).
+
+## Core team (self-)management
+
+XXX: how to replace e.g.
+<https://redmine.tails.boum.org/code/projects/tails/issues?query_id=307>?
+
+Use a dedicated set of labels?
+
+## Custom queries
+
+We use Redmine custom queries to have easy access to named searches
+and visualizations that we either often need, or that we want to share
+within a team or the overall Tails project.
+
+In GitLab, the closest equivalent to Redmine custom queries is the URL
+of an issues list or issues board filtered by assignee, milestone,
+and/or label. 
+
+We will need ways to share these URLs and ideally, to name them.
+We can do that on the GitLab project's description (home page),
+on parent tracking tickets, on blueprints, on a team's
+page on our website, and possibly in GitLab's own
+[wiki](https://docs.gitlab.com/ce/user/project/wiki/) if we decide to
+use it (either only for this use case or [[!tails_ticket 9174
+desc="for our blueprints"]]).
+
+# Merge requests
+
+The [Protected branch
+flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow)
+is probably the most adequate for regular contributors, since it's the
+least disruptive in terms of workflow and habits and requires less
+work to adjust our Jenkins CI setup:
+
+ - We mark our main branches (`stable`, `testing`, `devel`,
+   `feature/buster`) as "Protected". We give "Maintainer" access to
+   people allowed to push to these branches, i.e. what we previously
+   called "commit access".
+ - The Git workflow remains unchanged for regular developers who are
+   not granted full commit access: they get "Developer" access, can
+   push a topic branch to the canonical Git repository and our CI will
+   pick it up. The only difference is that they are not restricted to
+   pushing to their own `$nickname/*` namespace, which makes things
+   simpler and has other advantages, e.g. they can use the `wip/`
+   prefix (so our Jenkins CI ignores the branch) and collaborate with
+   others on shared branches.
+ - Other contributors get access strictly lower than "Developer".
+   They push topic branches to their own fork of the repository and
+   create merge requests.
+ - Our current Jenkins CI jobs generation process remains unchanged.
+   (Technically, we could adjust it so it generates CI jobs for _any_
+   merge request (based on `refs/merge-requests/*/head`), but this
+   would give arbitrary code execution on our CI to _anyone_.
+   Our infrastructure is not currently equipped to cope with this.)
+
+# Wiki
+
+It's out of scope for the first iteration but at some point, we might
+want to migrate our blueprints to GitLab's
+[wiki](https://docs.gitlab.com/ce/user/project/wiki/):
+[[!tails_ticket 9174]]).
+
+
+# Other specification
+
+* guest accounts?
+
+# Importing data from Redmine
+
+## Specification
+
+### To be triaged
+
+Relevant features — to be triaged as MUST/SHOULD/MAY:
+
+* Preserve issue IDs so `#nnnn` should retain its meaning and links
+  like [[!tails_ticket 15878]] can be easily redirected.
+* Preserve issue private/public status.
+* Convert Textile to Markdown.
+* Preserve watchers.
+* Preserve issues relationships.
+* Preserve other issues metadata.
+* Does not require global GitLab administration token.
+* Does not require SSH access to the GitLab machine.
+
+## Tools
+
+A number of tools are available online.
+
+These data migration tools come in various shape and some don't
+support GitLab API v4, but generally there's a fork on GitHub that
+fixes the most critical problems. Start there, explore the network
+of forks, and follow the white GitHub rabbit(-hole):
+
+* <https://github.com/redmine-gitlab-migrator/redmine-gitlab-migrator>
+* <https://github.com/ultreia-io/migrate-redmine-to-gitlab>
+
+# Issues and merge requests triaging
+
+* One can define policies (YAML) and have them applied automatically.
+  - <https://gitlab.com/gitlab-org/quality/triage-ops>
+  - <https://gitlab.com/gitlab-org/gitlab-triage>
+
+# Resources
+
+* Tor's [migration plan](https://nc.riseup.net/s/SnQy3yMJewRBwA7)
+  from Trac to GitLab.
+  - Rough timeline defined on 2019-10-15:
+    1. Have a full migration into legacy in Mid November
+    2. Ask people to find errors the last two weeks of November
+    3. Migration early december
+  - They are considering using GitLab EE Ultimate, which includes
+    proprietary components.
+  - Meetings:
+    - [agenda and notes](https://pad.riseup.net/p/e-q1GP43W4gsY_tYUNxf)
+    - 2019-10-15 meeting
+      [logs](http://meetbot.debian.net/tor-meeting/2019/tor-meeting.2019-10-15-17.01.html)
+    - 2019-10-01 meeting
+      [logs](http://meetbot.debian.net/tor-meeting/2019/tor-meeting.2019-10-01-18.00.html)
+* KDE migration to Gitlab:
+  - <https://gitlab.com/gitlab-org/gitlab-foss/issues/57338/designs>
+  - <https://gitlab.com/gitlab-org/gitlab/issues/24900>

@@ -1,11 +1,7 @@
+# coding: utf-8
 When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do |locale|
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  if ['ar_EG.utf8', 'fa_IR'].include?(locale)
-    # Take into account button ordering in RTL languages
-    @screen.type(Sikuli::Key.LEFT + Sikuli::Key.ENTER)
-  else
-    @screen.type(Sikuli::Key.RIGHT + Sikuli::Key.ENTER)
-  end
+  @screen.type(Sikuli::Key.TAB + Sikuli::Key.ENTER)
 end
 
 def supported_torbrowser_languages
@@ -33,7 +29,7 @@ Then /^the Unsafe Browser works in all supported languages$/ do
   supported_torbrowser_languages.sample(3).each do |lang|
     step "I start the Unsafe Browser in the \"#{lang}\" locale"
     begin
-      step "the Unsafe Browser has started"
+      step "the Unsafe Browser has started in the \"#{lang}\" locale"
     rescue RuntimeError
       failed << lang
       next
@@ -64,35 +60,26 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
 
   def check_bookmarks_helper(a)
     mozilla_uris_counter = 0
-    places_uris_counter = 0
     a.each do |h|
       h.each_pair do |k, v|
         if k == "children"
-          m, p = check_bookmarks_helper(v)
-          mozilla_uris_counter += m
-          places_uris_counter += p
+          mozilla_uris_counter += check_bookmarks_helper(v)
         elsif k == "uri"
           uri = v
-          if uri.match("^https://www\.mozilla\.org/")
+          if uri.match("^https://(?:support|www)\.mozilla\.org/")
             mozilla_uris_counter += 1
-          elsif uri.match("^place:(sort|folder|type)=")
-            places_uris_counter += 1
           else
             raise "Unexpected Unsafe Browser bookmark for '#{uri}'"
           end
         end
       end
     end
-    return [mozilla_uris_counter, places_uris_counter]
+    return mozilla_uris_counter
   end
 
-  mozilla_uris_counter, places_uris_counter =
-    check_bookmarks_helper(dump["children"])
+  mozilla_uris_counter = check_bookmarks_helper(dump["children"])
   assert_equal(5, mozilla_uris_counter,
                "Unexpected number (#{mozilla_uris_counter}) of mozilla " \
-               "bookmarks")
-  assert_equal(2, places_uris_counter,
-               "Unexpected number (#{places_uris_counter}) of places " \
                "bookmarks")
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
@@ -101,12 +88,28 @@ Then /^the Unsafe Browser has a red theme$/ do
   @screen.wait("UnsafeBrowserRedTheme.png", 10)
 end
 
-Then /^the Unsafe Browser shows a warning as its start page$/ do
-  @screen.wait("UnsafeBrowserStartPage.png", 30)
+Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" locale)?$/ do |locale|
+  case locale
+  # Use localized image for languages that have a translated version
+  # of the Unsafe Browser homepage.
+  when /\A([a-z]+)/
+    if File.exists?("#{SIKULI_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
+      start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
+    else
+      start_page_image = "UnsafeBrowserStartPage.png"
+    end
+  else
+    start_page_image = "UnsafeBrowserStartPage.png"
+  end
+  @screen.wait(start_page_image, 60)
 end
 
-Then /^the Unsafe Browser has started$/ do
-  step 'the Unsafe Browser shows a warning as its start page'
+Then /^the Unsafe Browser has started(?: in the "([^"]+)" locale)?$/ do |locale|
+  if locale
+    step "the Unsafe Browser shows a warning as its start page in the \"#{locale}\" locale"
+  else
+    step "the Unsafe Browser shows a warning as its start page"
+  end
 end
 
 Then /^I see a warning about another instance already running$/ do
@@ -117,63 +120,23 @@ Then /^I can start the Unsafe Browser again$/ do
   step "I start the Unsafe Browser"
 end
 
-Then /^I cannot configure the Unsafe Browser to use any local proxies$/ do
-  socks_proxy = 'C' # Alt+Shift+c for socks proxy
-  no_proxy    = 'y' # Alt+y for no proxy
-  proxies = [[no_proxy, nil, nil]]
+When /^I configure the Unsafe Browser to use a local proxy$/ do
   socksport_lines =
     $vm.execute_successfully('grep -w "^SocksPort" /etc/tor/torrc').stdout
   assert(socksport_lines.size >= 4, "We got fewer than four Tor SocksPorts")
-  socksports = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/)
-  proxies += socksports.map { |host, port| [socks_proxy, host, port] }
+  proxy = socksport_lines.scan(/^SocksPort\s([^:]+):(\d+)/).sample
+  proxy_host = proxy[0]
+  proxy_port = proxy[1]
 
-  proxies.each do |proxy_type, proxy_host, proxy_port|
-    @screen.hide_cursor
+  debug_log("Configuring the Unsafe Browser to use a Tor SOCKS proxy (host=#{proxy_host}, port=#{proxy_port})")
 
-    # Open proxy settings
-    @screen.click('UnsafeBrowserMenuButton.png')
-    @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-    @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
-    hit, _ = @screen.waitAny(['UnsafeBrowserNetworkTabAlreadySelected.png',
-                              'UnsafeBrowserNetworkTab.png'], 10)
-    @screen.click(hit) if hit == 'UnsafeBrowserNetworkTab.png'
-    @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
-    @screen.wait_and_click('UnsafeBrowserProxySettingsWindow.png', 10)
+  prefs = '/usr/share/tails/chroot-browsers/unsafe-browser/prefs.js'
+  $vm.file_append(prefs, 'user_pref("network.proxy.type", 1);' + "\n")
+  $vm.file_append(prefs, "user_pref(\"network.proxy.socks\", \"#{proxy_host})\";\n")
+  $vm.file_append(prefs, "user_pref(\"network.proxy.socks_port\", #{proxy_port});\n")
 
-    # Ensure the desired proxy configuration
-    if proxy_type == no_proxy
-      @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
-      @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
-    else
-      @screen.type("M", Sikuli::KeyModifier.ALT)
-      @screen.type(proxy_type, Sikuli::KeyModifier.ALT)
-      @screen.type(proxy_host + Sikuli::Key.TAB + proxy_port)
-    end
-
-    # Close settings
-    @screen.click('UnsafeBrowserProxySettingsOkButton.png')
-    @screen.waitVanish('UnsafeBrowserProxySettingsWindow.png', 10)
-
-    # Test that the proxy settings work as they should
-    step 'I open Tails homepage in the Unsafe Browser'
-    if proxy_type == no_proxy
-      step 'Tails homepage loads in the Unsafe Browser'
-    else
-      @screen.wait('UnsafeBrowserProxyRefused.png', 60)
-    end
-  end
-end
-
-Then /^the Unsafe Browser has no proxy configured$/ do
-  @screen.click('UnsafeBrowserMenuButton.png')
-  @screen.wait_and_click('UnsafeBrowserPreferencesButton.png', 10)
-  @screen.wait_and_click('UnsafeBrowserAdvancedSettingsButton.png', 10)
-  @screen.wait_and_click('UnsafeBrowserNetworkTab.png', 10)
-  @screen.wait_and_click('UnsafeBrowserNetworkTabSettingsButton.png', 10)
-  @screen.wait('UnsafeBrowserProxySettingsWindow.png', 10)
-  @screen.wait('UnsafeBrowserNoProxySelected.png', 10)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
-  @screen.type("w", Sikuli::KeyModifier.CTRL)
+  lib = '/usr/local/lib/tails-shell-library/chroot-browser.sh'
+  $vm.execute_successfully("sed -i -E '/^\s*export TOR_TRANSPROXY=1/d' #{lib}")
 end
 
 Then /^the Unsafe Browser complains that no DNS server is configured$/ do

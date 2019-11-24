@@ -498,6 +498,8 @@ This iteration covers:
 - The modification of existing volumes, which will be very similar to
   the creation of new volumes.
 
+<a id="veracrypt_mounter"></a>
+
 4. *VeraCrypt Mounter* ([[!tails_ticket 15043]])
 ----------------------
 
@@ -509,6 +511,8 @@ VeraCrypt in Tails and makes it faster to open file containers.
 If we cannot create *VeraCrypt Mounter* in time, we will replace it with
 a link to our documentation which should lead to similar success rates
 but a bit less comfort for first time users.
+
+<img src="https://labs.riseup.net/code/attachments/download/1842/veracrypt-mounter.png">
 
 Non goals
 ---------
@@ -535,10 +539,7 @@ User interface
 
 <img src="https://labs.riseup.net/code/attachments/download/1843/gvfs-monitor-unlock-veracrypt-volume.png">
 
-### *VeraCrypt Mounter* (optional)
-
-<img src="https://labs.riseup.net/code/attachments/download/1842/veracrypt-mounter.png">
-
+<a id="detection"></a>
 
 Detecting VeraCrypt volumes
 ===========================
@@ -549,7 +550,7 @@ To determine whether data seems to be encrypted or random, we use [Pearson's chi
 
 When trying to determine whether a *partition* (or whole device) is a VeraCrypt/TrueCrypt volume, we don't want to read more than necessary, to avoid slowing things down too much. Because non-encrypted filesystems usually start with a header, which is very non-random, we only perform the chi-squared test on these first 512 Bytes.
 
-The chi-squared test requires a p-value, for which to reject the hypothesis that the data is random. We choose 1/10.000.000.000 as the p-value, which means that in one of 10 billion cases, the test will issue a false negative, i.e. that the data is non-random/non-encrypted even though it actually is random/encrypted. Using the [scipy chi2 module][], we derive the following upper and lower limits for the  From this p-value, we get the follwing lower and upper limits for the chi-squared value:
+The chi-squared test requires a p-value, for which to reject the hypothesis that the data is random. We choose 1/10.000.000.000 as the p-value, which means that in one of 10 billion cases, the test will issue a false negative, i.e. the test says the data is non-random/non-encrypted, even though it actually is random/encrypted. From this p-value, we derive the following lower and upper limits for the chi-squared value (using the [scipy chi2 module](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html)):
 
     >>> from scipy.stats import chi2
     >>> chi2.ppf([0.1**10, 1-0.1**10], 255)

@@ -5,7 +5,7 @@ set -e
 echo "Removing unwanted files"
 
 # Get POTFILES_DOT_IN
-. /usr/share/amnesia/build/variables
+. /usr/share/tails/build/variables
 
 find /usr/share/doc -type f -name changelog.gz        -delete
 find /usr/share/doc -type f -name changelog.Debian.gz -delete
@@ -33,5 +33,6 @@ update-ca-certificates
 # otherwise just occupy disk space.
 rm -f /boot/*.map /boot/*.map-*
 
-# Remove text dump of uBlock settings file
-rm -rf /usr/share/tails/ublock-origin/
+# Files needed at build time for preparing the Unsafe Browser
+rm /usr/local/bin/jsonlz4
+rm /usr/share/tails/chroot-browsers/unsafe-browser/addonStartup.json

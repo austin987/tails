@@ -1,5 +1,9 @@
 [[!meta title="Known issues"]]
 
+- For issues with graphics cards, see our [[know issues with graphics cards|known_issues/graphics]].
+- To learn what you can do with Tails, refer to our [[documentation|doc]].
+- For more general questions about Tails, refer to our [[FAQ|support/faq]].
+
 [[!toc levels=3]]
 
 Problems starting Tails
@@ -14,46 +18,46 @@ start|doc/first_steps/bug_reporting#does_not_start]].
 Problematic USB sticks
 ----------------------
 
-<a id="sandisk"></a>
-
-### SanDisk
-
-Many SanDisk USB sticks are configured by the
-manufacturer as a fixed disk, and not as a removable disk. As a consequence,
-they require removing the `live-media=removable` boot parameter. See troubleshooting section about
-Tails not starting entirely on [[PC|install/debian/usb#start-tails]] or
-[[Mac|install/mac/usb#start-intermediary]].
-
-* SanDisk Cruzer Edge 8GB
-* SanDisk Cruzer Extreme USB 3.0 16GB, 32GB and 64GB
-* SanDisk Cruzer Fit USB 2.0 8GB, 16GB, and 32G
-* SanDisk Cruzer Force 8GB
-* SanDisk Cruzer Glide 4GB, 8GB and 16GB
-* SanDisk Cruzer Switch USB 2.0 8GB and 32GB
-* SanDisk Cruzer USB 3.0 64GB
-* SanDisk Cruzer Blade 4GB, 8GB, and 32GB
-* SanDisk Cruzer Facet
-* SanDisk Cruzer Orbiter 32GB (hangs at installation time but boots fine afterwards)
-* SanDisk Ultra 16GB, 32GB
-
-SanDisk had begun the production of flash drives configured as fixed disk in
-2012 to meet new requirements for Windows 8 Certification, and ended it in mid-2014. The flash drives that
-comply with this certification will have the Windows 8 logo on their packaging.
-If a flash drive does not have the Windows 8 logo on its packaging, then that
-drive will function as a removable disk and should work with Tails.
-
-See also [[!tails_ticket 6397]].
-
 <a id="pny"></a>
 
 ### PNY
+
+<!--
+Last updated: 2014-08-02
+
+I asked help desk about it.
+
+PNY is quite popular among WB reporters:
+
+    436 SanDisk
+    187 Kingston
+    119 USB
+     88 Generic
+     82 Lexar
+     79 Intenso
+     57 Verbatim
+     56 TOSHIBA
+     50 PNY
+
+If it was still problematic on all PNY USB sticks, this issue would
+still be loud on help desk. Is it?
+-->
 
 When installing Tails, PNY USB sticks have problems with the constant write load
 and are prone to failure.
 
 <a id="aegis"></a>
 
-### Aegis
+### Aegis Secure Key
+
+<!--
+Last updated: 2015-04-10
+
+wb://bf7230b2d53d28cfb7f063d897221b60 is from someone who was able to boot
+from an Aegis Secure Key USB 3.0 and proposes to help us document it.
+
+I asked the reported about it.
+-->
 
 * Aegis Secure Key USB 2.0
 
@@ -63,50 +67,128 @@ During the boot process, USB is briefly powered off, that causes Aegis hardware-
 
 This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working for that hardware.
 
-### Other vendors
+<a id="datatraveler-2000"></a>
+<a id="datatraveler-100-g3"></a>
 
-* Staples Relay USB 2.0 16GB, suffers from the same problem as [[some SanDisk USB sticks|known_issues#sandisk]].
+### Kingston DataTraveler 2000, Kingston DataTraveler 100 G3
+
+<!--
+Last updated: 2018-09-18
+-->
+
+Starting Tails from a Kingston DataTraveler 2000 or DataTraveler 100G3 doesn't work.
 
 <a id="mac"></a>
 
 Mac
 ---
 
-* Any Mac with 32-bit EFI may not succeed in booting Tails USB stick
-  created by Tails Installer. You can check if a given Mac is 32-bit
+<!--
+Last updated:
+- MacBook Air 3,2: 2014-06-27
+- MacBook Pro 5,1: 2015-06-19
+- MacBook Pro 4,1: 2014-08-15
+- MacBook Air Retina 2019: 2019-11-01
+- MacBook Pro 8,3: 2019-11-01
+-->
+
+* Any Mac with 32-bit EFI might not start on Tails.
+  You can check if a given Mac is 32-bit
   or 64-bit EFI on that list:
-  <http://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
-* MacBook Pro 2016 and 2017: the keyboard, trackpad and Touch Bar do
-  not work.
-* MacBook Pro 5,5 does not boot with Tails in UEFI mode.
-* MacBook Pro 5,1 17" (Nvidia GeForce 9400M): one must add the
-  `nouveau.noaccel=1` boot parameter so that the display
-  works properly.
+  <https://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
+
+* MacBook Air Retina 2019
+
+  To start Tails successfully, [[add the following boot option when
+  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+      modprobe.blacklist=thunderbolt
+
+  Still, the trackpad and keyboard may not work. You may use an external
+  mouse and keyboard.
+
+* MacBook Pro 2016 and 2017: the keyboard, trackpad and Touch Bar may
+  not work. If they do, please let us know so we can update this page.
+
+* MacBook Pro 8,3 17" (AMD Radeon HD6770M and Intel HD Graphics 3000)
+
+  If Tails fails to start, [[add the following boot option when
+  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+      radeon.modeset=0
+
+* MacBook Pro 5,1 17" (Nvidia GeForce 9400M)
+
+  To make the display work properly, [[add the following boot option when
+  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+      nouveau.noaccel=1
+
 * MacBook Air 3,2 (A1369 EMC 2392) freezes when booting Tails in
   UEFI mode.
-* MacBook Pro (early 2011) fails to boot from DVD since Tails 1.1.
+
 * Mac Pro Tower and MacBook Pro 4,1 (both from early 2008)
-  fails to boot from a USB stick created by
-  Tails Installer.
+  fail to start on Tails.
 
 <a id="pc">
 
 PC
 --
 
+<a id="lockup"></a>
+
+### "Soft lockup" error
+
+<!--
+Last updated: 2019-05-20
+-->
+
+On some laptops, Tails starts with the following error:
+
+<p class="pre">soft lockup - CPU#<span class="command-placeholder">N</span> stuck for <span class="command-placeholder">N</span>s</p>
+
+To start Tails successfully, [[add the following boot option when starting
+Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+    acpi_rev_override=1 nouveau.modeset=0
+
+<a id="sg-black-screen"></a>
+
 ### Acer Travelmate 8573T-254G50M
 
-Booting from DVD works fine, but does not start from USB sticks
-created using Tails Installer.
+<!--
+Last updated: 2013-08-08
+-->
+
+Booting from DVD works fine, but does not start from USB sticks.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
-### Acer Aspire 5315-ICL50 and Acer ES-1-331
+### Acer Aspire 5315-ICL50
 
-Does not start on USB sticks created using Tails Installer.
+<!--
+Last updated: 2015-04-10
+-->
+
+Does not start on USB sticks.
+
+### AMD Ryzen with Vega graphics cards
+
+<!--
+Last updated: 2019-11-01
+-->
+
+To start Tails successfully, [[add the following boot option when starting
+Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+    iommu=soft
 
 ### ASUS VivoBook X202E
+
+<!--
+Last updated: 2013-07-20
+-->
 
 Legacy support needs to be enabled in order to start Tails. To enable
 legacy boot support, enable 'Launch CSM' under boot (menu).
@@ -114,20 +196,32 @@ legacy boot support, enable 'Launch CSM' under boot (menu).
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
-### Compaq 615
-
-You need to update the firmware to its latest version in order to start from a
-device installed using Tails Installer.
-
 ### Dell Chromebook LULU
 
-You need to add `nomodeset` to the
-[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
-to make Tails start successfully.
+<!--
+Last updated: 2018-01-10
+-->
 
-### Dell Inc. Latitude E6430 and E6230
+To start Tails successfully, [[add the following boot option when starting
+Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
 
-Does not start on USB sticks created using Tails Installer.
+    nomodeset
+
+### Dell Latitude E5250
+
+<!--
+Last updated: 2019-04-05
+-->
+
+Does not start on Tails USB sticks.
+
+### Dell Latitude E6430 and E6230
+
+<!--
+Last updated: 2018-06-14 (wb://7653aff4f415e996567233d8c088da08)
+-->
+
+Does not start on USB sticks.
 
 With BIOS versions A03 06/03/2012 (and A09, A11, and A12)
 
@@ -136,54 +230,67 @@ Error message: `Invalid partition table!`
 Workaround (at least with BIOS versions A09, A11, and A12): just hit enter
 and it will continue with the boot.
 
-This problem might be corrected in Tails 1.1 and newer: please report
-your test results back to us.
-
 ### Dell XPS L702X/03RG89, Samsung RV520, Samsung Series 7 Chronos
 
-Does not start on USB sticks created using Tails Installer.
+<!--
+Last updated:
+- Dell XPS L702X/03RG89: 2012-08-22
+- Samsung RV520: 2012-12-21
+- Samsung Series 7 Chronos: 2014-02-28
+-->
+
+Does not start on USB sticks.
 
 We were reported that the legacy BIOS shipped on these systems doesn't
-know how to deal with the GPT partition scheme installed by Tails
-Installer.
+know how to deal with the GPT partition scheme used in Tails.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
-<http://en.community.dell.com/support-forums/laptop/f/3518/p/19392884/20010995.aspx>
-
-### Dell Inspiron 8100
-
-The display panel will have the wrong resolution unless `video=LVDS-1:1600x1200
-nouveau.noaccel=1` is added to the boot command line. This problem might be
-corrected in Tails 1.1 and newer: please report your test results back
-to us.
-
-### Dell Dimension 2400
-
-Does not start neither from USB nor from DVD. System crashes with a blank
-screen and locked up keyboard. This problem might be corrected in
-newer versions: please report your test results back to us.
-
-### Fujitsu Siemens Amilo A 1667G
-
-Does not start on USB sticks created using Tails Installer.
+<https://www.dell.com/community/Laptops-General-Read-Only/GPT-Bootable-Bios-Optimus-Switch-Are-Necessary-For-L502x-L702x/m-p/3699920>
 
 ### HP Compaq dc5750 Microtower
 
-Does not start Tails 1.2.3 created using Tails Installer.
+<!--
+Last updated: 2015-02-10
+Specs: https://support.hp.com/us-en/document/c01110206
+-->
+
+Does not start Tails 1.2.3.
+
+### HP Compaq 615
+
+<!--
+Last updated: 2013-11-05
+Specs: https://support.hp.com/gb-en/document/c01768616
+-->
+
+You need to update the firmware to its latest version in order to start from a
+USB stick.
+
+### HP Compaq CQ60-214DX
+
+<!--
+Last updated: 2018-02-16
+Specs: https://www.cnet.com/products/hp-compaq-presario-cq60-615dx/specs/
+-->
+
+Tails 3.3 does not start.
 
 ### HP Pavilion 15-ab277ca
 
-Tails 3.3 restarts during startup and never starts successfully
-([[!tails_ticket 15152]]).
+<!--
+Last updated: 2018-01-15
+Worked in 3.0 (wb://b485a1cfa7f7cc1073a70b31f428097c)
+-->
 
-### HP Pavilion dv7
-
-Since Tails 1.3, gets stuck at the Boot Loader Menu, whether Tails is installed manually or using
-Tails Installer.
+Tails 3.3 restarts during startup and never starts successfully.
 
 ### HP ProBook
+
+<!--
+Last updated: 2016-05-14
+-->
 
 With UEFI enabled, when choosing a boot device, select `Boot From EFI File` and
 then `Filesystem Tails` and `EFI/BOOT/BOOTX64.EFI`.
@@ -195,216 +302,128 @@ That workaround applied to, at least, the following HP ProBook:
 
 ### Lenovo IdeaPad Y410p
 
+<!--
+Last updated: 2014-08-03
+Specs: https://www.lenovo.com/us/en/laptops/lenovo/y-series/y410p/
+-->
+
 Does not start Tails 1.1 from USB installed manually in Linux.
 
 ### Lenovo IdeaPad z585
 
+<!--
+Last updated: 2014-08-05
+Specs: https://www.cnet.com/products/lenovo-ideapad-z585-15-6-a8-4500m-6-gb-ram-750-gb-hdd/
+-->
+
 Goes back continuously to Boot Loader Menu on Tails installed on DVD.
 
-### Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, E325, and E530
+### Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, T60, E325, and E530
 
-These machines do not start on USB sticks created using Tails
-Installer due to a firmware limitation.
+<!--
+Last updated:
+- Clevo W258CU: 2014-03-29
+- ThinkPad X121e: 2014-02-10
+  Specs: https://www.cnet.com/products/lenovo-thinkpad-x121e-3045-11-6-core-i3-2367m-windows-7-pro-64-bit-4-gb-ram-320-gb-hdd-series/
+- ThinkPad T420i: 2014-06-06
+  Specs: https://www.cnet.com/products/lenovo-thinkpad-t420i-4178-14-core-i3-2310m-windows-7-pro-64-bit-4-gb-ram-320-gb-hdd-series/
+- ThinkPad T520: 2012-10-11
+  Specs: https://www.cnet.com/products/lenovo-thinkpad-t520/
+- ThinkPad W520: 2014-02-17
+  Specs: https://www.cnet.com/products/lenovo-thinkpad-w520/
+- ThinkPad T60: 2018-04-30
+  Specs: https://www.cnet.com/products/lenovo-thinkpad-t60/specs/
+- ThinkPad E325: 2013-02-28
+  Specs: https://www.cnet.com/products/lenovo-thinkpad-edge-e325-1297-13-3-e-350-windows-7-pro-64-bit-4-gb-ram-320-gb-hdd-series/
+- ThinkPad E530: 2014-03-17
+  Specs: https://www.cnet.com/products/lenovo-thinkpad-edge-e530/
+-->
 
-A workaround for some of these machines is to use the [[manual
-installation process|install/linux/usb]].
-Note, however, that this technique does not allow you to set up
-a persistent volume.
+These machines do not start on USB sticks
+due to a firmware limitation.
 
 This problem might be corrected in Tails 1.1 and newer: please report
 your test results back to us.
 
-Graphics issues
-===============
+### System76 Oryx Pro
 
-GNOME desktop fails to start with some AMD/ATI Radeon graphic adapters
-----------------------------------------------------------------------
+<!--
+Last updated: 2019-05-02
+Specs: https://system76.com/laptops/oryx
+-->
 
-Some computers [[!tails_ticket 11095 desc="cannot start the GNOME
-desktop"]].
-
-After the <span class="application">Tails Greeter</span> they freeze, or
-sometimes fail with the message <span class="error">"Oh no! Something has gone
-wrong. A problem has occurred and the system can't recover. Please contact a
-system administrator"</span>.
-
-This issue has appeared with the following graphic adapters:
-
-- Mars XTX [Radeon HD 8790M]
-- Mars XTX [Radeon HD 8790M] (rev ff)
-- Cedar [Radeon HD 5000/6000 7350/8350 Series]
-- Broadway PRO [Mobility Radeon HD 5850]
-- RV730/M96 [Mobility Radeon HD 4650/5165]
-
-For some models, adding `radeon.modeset=0` to the
-[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
-
-Tails Greeter fails to start with some AMD/ATI Radeon graphic adapters
-----------------------------------------------------------------------
-
-Some computers cannot start Tails Greeter. This issue has appeared
-with the following graphic adapters:
-
-- AMD Radeon R9 390
-
-Adding `radeon.dpm=0` to the
-[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]]
-fixes the issue.
-
-<a id="nvidia-maxwell"></a>
-
-Tails Greeter fails to start on computers with NVIDIA Maxwell graphic cards
----------------------------------------------------------------------------
-
-Some computers cannot start Tails Greeter. This appears with some
-graphic cards in the
-[NVIDIA Maxwell family](https://nouveau.freedesktop.org/wiki/CodeNames/#nv110familymaxwell).
-This problem has been fixed in Tails 3.2 for some of these graphic
-cards. If Tails Greeter still does not start for you:
-
-1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-   [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
-2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
-   address so we can contact you to debug the problem.
-   Please reference [[!tails_ticket 15116]] in your bug report.
-
-<a id="nvidia-pascal"></a>
-
-Tails Greeter fails to start on computers with NVIDIA Pascal graphic cards
----------------------------------------------------------------------------
-
-Some computers cannot start Tails Greeter. This may appear with the
-[NVIDIA Pascal family](https://nouveau.freedesktop.org/wiki/CodeNames/#nv130familypascal)
-of graphic adapters.
-
-If Tails Greeter does not start for you:
-
-1. Add `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-   [[startup options|doc/first_steps/startup_options#boot_loader_menu]].
-2. [[Report a bug|doc/first_steps/bug_reporting]], giving us an email
-   address so we can contact you to debug the problem.
-   Please reference [[!tails_ticket 15116]] in your bug report.
-
-<a id="switchable_graphics_black_screen"></a>
-
-Black screen with switchable graphics computers
------------------------------------------------
-
-Some computers with switchable graphics (such as Optimus) fail to
-choose a video card and end up on a black screen. This has been
-reported for MacBook Pro 6,2, MacBook Pro 10,1 Retina, MacBook Pro
-15-inch (early 2011) and might affect many others.
-
-There are several possible workarounds for this issue:
-
-* Explicitly select one of the two graphics adapters in the BIOS
-  instead of letting the system choose one automatically. If this does
-  not solve the problem, try selecting the other graphics adapter.
-
-* For the Mac computers, it is possible to use a third-party
-  application, <http://gfx.io/>, to force integrated graphics only through OS X.
-  Then restart in that special mode that works with Tails.
-
-* Expert Linux users can also do the following:
-
-  1. Add the `i915.modeset=0 rootpw=pass` option in the
-     [[Boot Loader Menu|doc/first_steps/startup_options#boot_loader_menu]].
-
-  2. Create a file `/etc/X11/xorg.conf.d/switchable.conf` with the
-     following content:
-
-         Section "Device"
-             Identifier "Device0"
-             Driver "nouveau"
-             BusID "1:0:0"
-         EndSection
-
-  4. Restart X with the command:
-
-         service gdm3 restart
-
-  5. After the GNOME session has started, change again the root password with
-     the command:
-
-         sudo passwd
-
-For more details, see our ticket on [[!tails_ticket 7505 desc="Video is broken with switchable graphics"]].
-
-<a id=switchable_graphics_segfault></a>
-
-Cannot start GNOME session with switchable graphics computers
--------------------------------------------------------------
-
-On some computers with switchable graphics, Tails 2.10 and later fails
-to start the GNOME session and keeps returning to [[Tails
-Greeter|doc/first_steps/startup_options#greeter]].
-
-Starting in **Troubleshooting Mode** works, as well as adding the
-`modeprobe.blacklist=nouveau` to the [[startup
-options|doc/first_steps/startup_options#boot_loader_menu]].
-
-Laptops with Intel 855GM graphic card
--------------------------------------
-
-Laptops with graphic card Intel 855GM (as Dell Inspiron 510M)
-crash after Tails Greeter.
-
-See [[!debbug 776911 desc="relevant bug report"]] for more information.
-
-Laptops with Intel GM965/GL960 graphic card
--------------------------------------------
-
-Laptops with graphic card Intel GM965/GL960 crash while running Tails.
-Add `video=SVIDEO-1:d` on the boot command line to work around this problem.
-
-See [[!linuxbug 187001]] for more information.
-
-<a id="xorg-driver"></a>
-
-Systems with Intel graphic cards
---------------------------------
-
-The graphical interface fails to start on some Intel graphics
-adapters. If this happens to you:
-
-1. Add the `xorg-driver=intel` option in the
-   [[boot menu|doc/first_steps/startup_options#boot_menu]].
-2. If this fixes the problem, report to <tails-support-private@boum.org>
-   the output of the following commands:
-   
-         lspci -v
-         lspci -mn
-   
-   … so we get the identifier of your graphics adapter and can have
-   this fix applied automatically in the next Tails release.
-3. If this does not fix the problem, try Troubleshooting Mode and
-   [[report a bug|doc/first_steps/bug_reporting]]. Include the exact
-   model of your Intel graphics adapter.
-
-Virtual machines with *virt-manager*, *libvirt* and *QEMU*
-----------------------------------------------------------
-
-See the
-[[dedicated troubleshooting documentation|doc/advanced_topics/virtualization/virt-manager#graphics-issues]]
-about graphics issues in Tails running inside a virtual machine
-with *virt-manager*.
-
-Virtual machines with *VMware*
-------------------------------
-
-To improve support of Tails running inside a virtual machine with
-*VMware*, [[install|doc/advanced_topics/additional_software]] the
-`open-vm-tools-desktop` software package in Tails.
+This machine does not start from a Tails USB stick: the Linux kernel
+included in at least Tails 3.11 to 3.13.1, inclusive, does not support
+the hardware USB controller.
 
 <a id="wi-fi"></a>
 
 Wi-Fi issues
 ============
 
+[[!inline pages="doc/anonymous_internet/networkmanager/no-wifi.inline" raw="yes" sort="age"]]
+
+* Check in the following sections
+  if there is a workaround to get your Wi-Fi interface work in Tails.
+
+<a id="wi-fi-workarounds"></a>
+
+Knowing the model of your Wi-Fi interface
+-----------------------------------------
+
+1. Open <span class="application">Terminal</span> and execute the following command:
+
+       lspci -v | grep "Network controller"
+
+88W8897 [AVASTAR] 802.11ac Wireless
+-----------------------------------
+
+<!--
+Last updated: 2018-09-19
+-->
+
+On some computers with a Marvell Avastar 88W8897 Wi-Fi adapter, such
+as some Microsoft Surface Pro models, Tails fails to connect to
+Wi-Fi networks.
+
+If you experience this problem, you can try to [[disable MAC address
+spoofing|doc/first_steps/startup_options/mac_spoofing]] that sometimes
+fixes it.
+
+RTL8723BE PCIe Wireless Network Adapter
+---------------------------------------
+
+<!--
+Last updated: 2017-12-24
+-->
+
+On some computers with a RTL8723be Wi-Fi adapter, Tails might fail to discover
+Wi-Fi networks, provide unreliable Wi-Fi connections, or have poor Wi-Fi
+performance.
+
+You can to [[add the following boot options when starting
+Tails|doc/first_steps/startup_options/#boot_loader_menu]] until you find a
+combination that works for you. The exact combination of options that works
+depends on the computer:
+
+- <span class="command">rtl8723be.fwlps=0 rtl8723be.ips=0</span>
+
+- <span class="command">rtl8723be.ant_sel=1</span>
+
+- <span class="command">rtl8723be.ant_sel=2</span>
+
+- <span class="command">rtl8723be.ant_sel=1 rtl8723be.fwlps=0 rtl8723be.ips=0</span>
+
+- <span class="command">rtl8723be.ant_sel=2 rtl8723be.fwlps=0 rtl8723be.ips=0</span>
+
 <a id="broadcom-sta-dkms"></a>
 
 Broadcom Wi-Fi network interface needing `broadcom-sta-dkms`
 ------------------------------------------------------------
+
+<!--
+Last updated: 2019-01-29
+-->
 
 Some Broadcom Wi-Fi interfaces require the
 [`wl`](https://wiki.debian.org/wl) driver, provided by the
@@ -412,46 +431,24 @@ Some Broadcom Wi-Fi interfaces require the
 
 The `wl` driver is not included in Tails because it is proprietary.
 
-To find out if your Wi-Fi interface requires the `wl` driver:
+You device requires the `wl` driver if it is in the list of devices
+supported by the `broadcom-sta-dkms` package on the corresponding
+[Debian wiki page](https://wiki.debian.org/wl). If you find your device
+in the list of supported devices, then it is impossible to use your
+Wi-Fi card in Tails.
 
-1. Execute the following command in a [[terminal|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#terminal]]:
+## Lenovo Legion Y530
 
-       lspci -nn | grep Network
+<!--
+Last updated: 2019-05-10
+-->
 
-2. Verify if your device is in the list of devices supported by the `broadcom-sta-dkms`
-package on the corresponding [Debian wiki page](https://wiki.debian.org/wl).
-If you find your device in the list of supported devices, then it is
-impossible to use your Wi-Fi card in Tails.
+Wi-Fi adapter does not work.
 
-<a id="cherry-trail"></a>
+To fix this issue, [[add the following boot option when
+starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
 
-Intel Atom Cherry Trail tablets
--------------------------------
-
-Tails can be started on tablets with an Intel Atom Cherry Trail system
-on chip (SoC) but the Wi-Fi interface and sound card doesn't work.
-
-Systems with RTL8723be Wi-Fi adapter
-------------------------------------
-
-On some computers with a RTL8723be Wi-Fi adapter, Tails may fail to discover
-Wi-Fi networks, may provide unreliable Wi-Fi connections, or may provide poor
-Wi-Fi performance.
-
-Most such problems can be solved by adding
-[[startup options|/doc/first_steps/startup_options/#boot_loader_menu]].
-
-The exact combination of options that will work depends on the
-computer, so try the following instructions until you find
-a combination that works for you:
-
-1. Add `rtl8723be.fwlps=0 rtl8723be.ips=0` to the startup options.
-2. Add `rtl8723be.ant_sel=1` to the startup options.
-3. Add `rtl8723be.ant_sel=2` to the startup options.
-4. Add `rtl8723be.ant_sel=1 rtl8723be.fwlps=0 rtl8723be.ips=0`
-   to the startup options.
-5. Add `rtl8723be.ant_sel=2 rtl8723be.fwlps=0 rtl8723be.ips=0`
-   to the startup options.
+    modprobe.blacklist=ideapad_laptop
 
 Security issues
 ===============
@@ -461,96 +458,58 @@ Security issues
 Tails does not erase video memory
 ---------------------------------
 
-Tails doesn't erase the [[!wikipedia VRAM desc="video memory"]] yet.
+Tails doesn't erase the [[!wikipedia Video_RAM_(dual-ported_DRAM) desc="video memory"]] yet.
 When one uses Tails, then restarts the computer into another operating
-system, that other operating system can see what has been displayed on
-the screen within Tails.
+system, that other operating system might, for a moment, display the last
+screen that was displayed in Tails.
 
 Shutting down the computer completely, instead of restarting it,
 might allow the video memory to empty itself.
 
 See [[!tails_ticket 5356 desc="Erase video memory on shutdown"]].
 
-Tails DVD eject failure
------------------------
+<!--
 
-Pressing the DVD eject button does not trigger emergency shutdown.
-Also, the "normal" (non-emergency) shutdown procedure does not eject
-the DVD anymore.
-
-See [[!tails_ticket 5447 desc="Fix DVD eject at shutdown"]].
+Note: If we enable again this section in the future, we should link to
+it from /doc/about/fingerprint.mdwn.
 
 <a id="fingerprint"></a>
 
 Browser fingerprint
 ===================
 
-There are currently no known differences between the fingerprints of
-<span class="application">Tor Browser</span> inside and outside of
-Tails.
-
-<!--
-
-OR
-
 There are known differences between the fingerprints of <span
 class="application">Tor Browser</span> inside and outside of Tails:
+
+For more detail, see our [[documentation on the Tails
+fingerprint|doc/about/fingerprint]].
 
 -->
 
 Other issues
 ============
 
-<a id="chainloading"></a>
-
-Chainloading Tails from GRUB
-----------------------------
-
-To workaround problems in booting Tails on laptops with UEFI support, it is
-possible to chainload the syslinux on the ISO image from another boot loader
-that is already working on the laptop, like GRUB. Be careful not to modify at
-all the options of syslinux in the process.
-
-The following commands, run from the GRUB shell, might be helpful:
-
-    set root=(hd1)
-    chainloader +1
-    boot
-
 Boot Loader Menu has display issues
 -----------------------------------
 
+<!--
+Last updated: 2014-06-27
+
+I asked some ThinkPad X230 users to confirm.
+-->
+
 Since Tails 1.1, on some hardware (ThinkPad X230, MacBook Pro 8,1),
 the Boot Loader Menu is not displayed properly. Tails starts fine, though.
-
-Connecting to FTP servers is not possible
------------------------------------------
-
-Public FTP servers on the Internet are not reachable using Tails.
-See [[!tails_ticket 6096 desc="Fix FTP support"]] for more details.
-
-Tails fails to connect to certain Wi-Fi networks
-------------------------------------------------
-
-This might be related to the introduction of wireless regulation support
-in Tails 0.13.
-
-The desktop crashes when run with the default QEMU emulated processor
----------------------------------------------------------------------
-
-Due to a [bug in llvmpipe](https://freedesktop.org/patch/34445/), when
-Tails runs in a QEMU virtual machine with the default emulated CPU,
-the GNOME desktop crashes after login.
-
-To workaround this problem, pass @-cpu host@ on the QEMU command-line.
-If you use <span class="application">libvirt</span>, choose <span
-class="guilabel">Copy host CPU configuration</span> in <span
-class="application">virt-manager</span>'s processor configuration screen.
 
 Touchpad configurations
 -----------------------
 
 ### Acer TravelMate B113 - ETPS/2 Elantech Touchpad
+
+<!--
+Last updated: 2013-08-15
+Specs: https://www.cnet.com/products/acer-travelmate-b113-e-2419-11-6-celeron-1017u-4-gb-ram-320-gb-hdd/
+-->
 
     synclient FingerPress=256;
     synclient TapButton3=0;
@@ -561,6 +520,10 @@ Touchpad configurations
 
 ### Acer C720 - Cypress APA Touchpad
 
+<!--
+Last updated: 2016-08-20
+-->
+
     synclient FingerLow=5;
     synclient FingerHigh=5;
 
@@ -569,37 +532,61 @@ Bluetooth devices don't work
 
 Bluetooth is not enabled in Tails for security reasons.
 
-<a id="browser_languages"></a>
-
-Tor Browser is translated in a limited number of languages
-----------------------------------------------------------
-
-Since Tails 1.2, the web browser is based on Tor Browser which is
-translated in less languages than before. You can see the list of
-languages available in Tor Browser from the [Tor Browser
-homepage](https://www.torproject.org/projects/torbrowser.html.en).
-
-Playing WebM videos in the Tor Browser fails on old hardware
-------------------------------------------------------------
-
-On systems that only have one CPU code, WebM videos may fail to play
-in the Tor Browser, and show the error message: "Video can't be played
-because the file is corrupt". You can work around this by downloading
-the video and watching it in the Totem video player.
-
 <a id="automatic_upgrade_fails"></a>
+<a id="partial-upgrade"></a>
 
-Tails does not boot after automatic upgrade
--------------------------------------------
+Tails fails to start or behaves weirdly after an automatic upgrade
+------------------------------------------------------------------
 
-Sometimes, after an automatic upgrade, Tails
-gets blocked when booting, often after the message
-'Loading, please wait...'.
+<!--
+Last updated: 2019-07-31
+-->
+
+Sometimes, after an automatic upgrade, your Tails might either:
+
+- Fail to start. Often after the message:
+
+  <pre>Loading, please wait...</pre>
+
+- Behave weirdly. For example, your keyboard does not work or you cannot
+  connect to a network.
 
 To fix this problem, you can [[update your Tails
-manually|doc/first_steps/upgrade/#manual]].
+manually|doc/upgrade/#manual]].
 
 Note that your Persistent Volume will be safely preserved.
+
+<a id="persistence-disappears"></a>
+
+Persistent folder disappears and persistent feature configurations do not load
+------------------------------------------------------------------------------
+
+Sometimes, the <span class="filename">Persistent</span> folder is missing and
+the configurations for persistent features do not load.
+
+Most likely this means that the <span class="filename">persistence.conf</span>
+file has disappeared. However, the files in the
+<span class="filename">Persistent</span> folder and the persistent feature
+configurations should still be saved.
+
+If you encounter this problem:
+
+1. Enable your encrypted persistent storage in
+   <span class="application">Tails Greeter</span> when you start Tails.
+
+1. Choose
+   <span class="menuchoice">
+     <span class="guimenu">Applications</span>&nbsp;▸
+     <span class="guisubmenu">Tails</span>&nbsp;▸
+     <span class="guimenuitem">Configure persistent volume</span></span>.
+
+1. If you are asked to enter a passphrase, enter the same passphrase that you
+   used to unlock your persistent storage.
+
+1. Click <span class="button">Save</span>, then restart Tails.
+
+Your <span class="filename">Persistent</span> folder and persistent feature
+configurations should be restored.
 
 <a id="restart-shell"></a>
 
@@ -619,6 +606,10 @@ See [[!tails_ticket 10576]] for more details.
 Some languages do not have the correct keyboard layout set by default
 ---------------------------------------------------------------------
 
+<!--
+Last updated: 2017-08-07
+-->
+
 When selecting some languages in the Tails Greeter, the default associated
 keyboard layout fallbacks to US.
 
@@ -632,12 +623,18 @@ Affected language codes are `AYC`, `BHB`, `BRX`, `CMN`, `HAK`, `HNE`, `LIJ`,
 
 ## The OpenPGP passphrase prompt steals the keyboard and mouse focus
 
+<!--
+Last updated: 2018-01-15
+-->
+
 This happens when one has enabled the GnuPG persistence feature before
 Tails 2.3. To fix this problem, execute the following command in
 a
 [[terminal|doc/first_steps/introduction_to_gnome_and_the_tails_desktop#terminal]]:
 
 	echo "no-grab" >> ~/.gnupg/gpg-agent.conf
+
+<a id="utc"></a>
 
 ## Problems when the system clock goes backwards
 
@@ -648,13 +645,66 @@ in UTC to the hardware clock of the computer. But, Windows instead
 writes time expressed in the local timezone to the hardware clock of
 the computer. So, if you are east of the United Kingdom (which is in the UTC timezone) on
 a computer that also runs Windows, Tails will make the system clock go
-backwards during startup. Unfortunately, this may trigger software
+backwards during startup. Unfortunately, this might trigger software
 errors in Tails.
 
-For example, when this happened in Tails 3.4 the <span
-class="guimenu">Applications</span> menu sometimes stops working.
+For example, when the system clock goes backwards:
+
+<ul>
+<li>The <span class="guimenu">Applications</span> menu might stop
+working.</li>
+<li>[[Connecting to Tor using `obfs4` bridges|doc/first_steps/startup_options/bridge_mode]]
+might be impossible and <span class="application">Tor Launcher</span>
+might get stuck on <span class="guilabel">Loading Network
+Consensus</span>.</li>
+</ul>
 
 To solve this problem permanently on a Windows computer,
-[set the hardware clock of the computer to UTC](https://wiki.archlinux.org/index.php/Time#UTC_in_Windows).
+[set the hardware clock of the computer to UTC](https://wiki.archlinux.org/index.php/System_time#UTC_in_Windows).
 
-See [[!tails_ticket 14250]] and [[!tails_ticket 15168]] for more details.
+## Lenovo ThinkPad 11e
+
+<!--
+Last updated: 2018-03-22
+Specs: https://www.cnet.com/products/lenovo-thinkpad-11e/specs/
+-->
+
+Tails may be unstable and stop working regularly on some Lenovo
+ThinkPad 11e laptops, such as the 2015 model.
+
+To fix this problem, [[add the following boot option when
+starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+    intel_idle.max_cstate=1
+
+## Electrum is outdated and cannot connect to servers
+
+[[!inline pages="doc/anonymous_internet/electrum/phishing.inline" raw="yes" sort="age"]]
+
+<a id="usb-gigabyte"></a>
+
+## USB devices are not working on some [GIGABYTE](https://www.gigabyte.com/) motherboards
+
+<!--
+Last updated: 2019-06-02
+-->
+
+To workaround this issue, you can try to:
+
+- Use other USB ports. For example, use USB 2 ports instead of USB 3
+  ports and vice versa.
+
+- Enable these 3 options in the BIOS
+
+  - xHCI handoff
+  - EHCI handoff
+  - IOMMU controller
+
+- [[Add the following boot option when
+  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+      amd_iommu=on iommu=pt
+
+- Disable IOMMU in the BIOS then enable it again.
+
+Some of these workarounds may disable some of the USB ports.

@@ -1,6 +1,6 @@
 --- a/etc/apparmor.d/system_tor	2016-06-01 21:34:23.000000000 +0000
 +++ b/etc/apparmor.d/system_tor	2016-06-10 11:09:09.249017739 +0000
-@@ -4,6 +4,15 @@
+@@ -4,6 +4,18 @@
  profile system_tor flags=(attach_disconnected) {
    #include <abstractions/tor>
  
@@ -12,6 +12,9 @@
 +  # at least when using bridges as torrc is owned by debian-tor:debian-tor
 +  # with permissions 0600 once it's been saved by Tor Launcher.
 +  capability dac_read_search,
++
++  # Used by Tor to do clearnet DNS lookups while in bridge mode (#8775).
++  /etc/resolv-over-clearnet.conf r,
 +
    owner /var/lib/tor/** rwk,
    owner /var/lib/tor/ r,
