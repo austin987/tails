@@ -70,9 +70,6 @@ setup_chroot_for_browser () {
     mount --bind "/dev" "${chroot}/dev" && \
     mount -t tmpfs -o rw,nosuid,nodev tmpfs "${chroot}/dev/shm" || \
         return 1
-
-    # Workaround for #6110
-    chmod -t "${cow}"
 }
 
 browser_conf_dir () {
