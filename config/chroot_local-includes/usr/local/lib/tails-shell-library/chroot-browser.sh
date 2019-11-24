@@ -61,19 +61,15 @@ setup_chroot_for_browser () {
     # Remove the trailing colon
     lowerdirs=${lowerdirs%?}
 
-    # But our copy-on-write dir must be at the very top.
-
-    mkdir -p "${cow}" "${chroot}"
+    mkdir -p "${cow}" "${chroot}" && \
     mount -t tmpfs tmpfs "${cow}" && \
     mkdir "${cow}/rw" "${cow}/work" && \
     mount -t overlay -o "noatime,lowerdir=${lowerdirs},upperdir=${cow}/rw,workdir=${cow}/work" overlay "${chroot}" && \
+    chmod 755 "${chroot}" && \
     mount -t proc proc "${chroot}/proc" && \
     mount --bind "/dev" "${chroot}/dev" && \
     mount -t tmpfs -o rw,nosuid,nodev tmpfs "${chroot}/dev/shm" || \
         return 1
-
-    # Workaround for #6110
-    chmod -t "${cow}"
 }
 
 browser_conf_dir () {
