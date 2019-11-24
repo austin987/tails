@@ -835,7 +835,7 @@ def installed_squashes
   return listed_squashes
 end
 
-Given /^Tails is fooled to think a (.+) squashfs delta is installed$/ do |version|
+Given /^Tails is fooled to think a (.+) SquashFS delta is installed$/ do |version|
   old_squashes = installed_squashes
   medium = '/lib/live/mount/medium'
   live = "#{medium}/live"
@@ -859,7 +859,7 @@ Given /^Tails is fooled to think a (.+) squashfs delta is installed$/ do |versio
   )
 end
 
-Then /^(?:no|only the (.+)) squashfs delta is installed$/ do |version|
+Then /^(?:no|only the (.+)) SquashFS delta is installed$/ do |version|
   expected_squashes = [default_squash]
   expected_squashes << "#{version}.squashfs" if version
   assert_equal(
