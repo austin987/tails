@@ -23,6 +23,12 @@
 set -e
 set -x
 
+# Include common functions
+. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
+
+# Import AMNESIA_APPEND
+Read_conffiles config/amnesia
+
 platforms="x86_64-efi i386-efi"
 
 efi_name () {
@@ -129,3 +135,6 @@ cp "chroot/boot/grub/unicode.pf2" "${grub_dir}"
 
 # Copy grub background image
 cp "binary/isolinux/splash.png" "${grub_dir}"
+
+# Append our custom kernel command-line parameters
+sed -i -E "s#AMNESIA_APPEND#${AMNESIA_APPEND}#g" "binary/EFI/debian/grub.cfg"
