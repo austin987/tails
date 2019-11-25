@@ -25,8 +25,8 @@ Feature: Using Evince
     Given I have started Tails from DVD without network and logged in
     And I copy "/usr/share/cups/data/default-testpage.pdf" to "/home/amnesia/.gnupg" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/default-testpage.pdf" exists
-    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
-    And the file "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists
+    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists after at most 10 seconds
+    And the file "/live/overlay/home/amnesia/.gnupg/default-testpage.pdf" exists after at most 10 seconds
     Given I start monitoring the AppArmor log of "/usr/bin/evince"
     When I try to open "/home/amnesia/.gnupg/default-testpage.pdf" with Evince
     Then I see "EvinceUnableToOpen.png" after at most 10 seconds
