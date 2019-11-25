@@ -90,10 +90,12 @@ Set_defaults
 # Seems like we'll have work to do
 Echo_message 'including GRUB EFI in the ISO filesystem'
 
+grub_dir="binary/EFI/debian/grub"
+
 for platform in $platforms ; do
    echo "I: installing GRUB EFI for $platform"
    efi_fallback_dir="binary/EFI/BOOT"
-   grub_dir="binary/EFI/debian/grub/$platform"
+   grub_module_dir="$grub_dir/$platform"
    efi_name=$(efi_name "$platform")
 
    mkdir -p "$efi_fallback_dir"
@@ -118,6 +120,12 @@ for platform in $platforms ; do
 
    cp chroot/usr/share/tails/bootx64.png "${efi_fallback_dir}/BOOT${efi_name}.PNG"
 
-   mkdir -p "$grub_dir"
-   grub_cpmodules "$grub_dir" "$platform"
+   mkdir -p "$grub_module_dir"
+   grub_cpmodules "$grub_module_dir" "$platform"
 done
+
+# Copy unicode fonts
+cp "chroot/boot/grub/unicode.pf2" "${grub_dir}"
+
+# Copy grub background image
+cp "binary/isolinux/splash.png" "${grub_dir}"
