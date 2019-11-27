@@ -1,0 +1,441 @@
+diff --git a/usr/share/perl5/Tails.pm b/usr/share/perl5/Tails.pm
+index 1a0cded..ccffef1 100644
+--- a/usr/share/perl5/Tails.pm
++++ b/usr/share/perl5/Tails.pm
+@@ -11,8 +11,7 @@ Version
+ package Tails;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use namespace::clean;
+diff --git a/usr/share/perl5/Tails/Constants.pm b/usr/share/perl5/Tails/Constants.pm
+index f2a326f..de5f14e 100644
+--- a/usr/share/perl5/Tails/Constants.pm
++++ b/usr/share/perl5/Tails/Constants.pm
+@@ -1,12 +1,12 @@
+ package Tails::Constants;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use Function::Parameters;
+ 
++no Moo::sification;
+ use Moo;
+ use MooX::late;
+ use namespace::clean;
+diff --git a/usr/share/perl5/Tails/Download/HTTPS.pm b/usr/share/perl5/Tails/Download/HTTPS.pm
+index ffc976d..9cb6246 100644
+--- a/usr/share/perl5/Tails/Download/HTTPS.pm
++++ b/usr/share/perl5/Tails/Download/HTTPS.pm
+@@ -6,38 +6,42 @@ Tails::Download::HTTPS - download content over HTTPS
+ 
+ package Tails::Download::HTTPS;
+ 
+-use Moose;
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
++no Moo::sification;
++use Moo;
+ 
+ use 5.10.1;
+-use namespace::autoclean;
+-use warnings FATAL => 'all';
++use strictures 2;
+ 
+ use autodie qw(:all);
+ use Carp;
+ use Carp::Assert;
+-use Carp::Assert::More;
+-use English qw{-no_match_vars};
++use Function::Parameters;
++use Types::Standard qw{HashRef Int Str};
+ use WWW::Curl::Easy;
+ 
++use namespace::clean;
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'max_download_size' => lazy_build ro Int;
+-has 'curl_opts' => lazy_build ro 'HashRef';
++has 'max_download_size' => (
++    is   => 'lazy',
++    isa  => Int,
++);
++has 'curl_opts' => (
++    is  => 'lazy',
++    isa => HashRef
++);
+ 
+ 
+ =head1 CONSTRUCTORS AND BUILDERS
+ 
+ =cut
+ 
+-method _build_max_download_size { 8 * 2**10 }
++method _build_max_download_size () { 8 * 2**10 }
+ 
+-method _build_curl_opts {
++method _build_curl_opts () {
+     my @opts = (
+         CURLOPT_NOPROGRESS,      1,
+         # This does *not* prevent curl from downloading more data this in the end.
+@@ -78,7 +82,7 @@ Throws an exception on detected failure.
+ 
+ =cut
+ 
+-method get_url ($url) {
++method get_url (Str $url) {
+     my $curl  = WWW::Curl::Easy->new;
+     $curl->setopt(CURLOPT_URL, $url);
+     while (my ($k, $v) = each(%{$self->curl_opts})) {
+@@ -116,5 +120,5 @@ method get_url ($url) {
+     return $response_body;
+ }
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/MirrorPool.pm b/usr/share/perl5/Tails/MirrorPool.pm
+index b9065fa..c9b09cc 100644
+--- a/usr/share/perl5/Tails/MirrorPool.pm
++++ b/usr/share/perl5/Tails/MirrorPool.pm
+@@ -6,65 +6,67 @@ Tails::MirrorPool - class that represents the Tails HTTP download mirror pool
+ 
+ package Tails::MirrorPool;
+ 
+-use Moose;
+-use Moose::Util::TypeConstraints qw{class_type};
+-use MooseX::Method::Signatures;
+-use MooseX::Types::Moose qw( :all );
+-use MooseX::Has::Sugar::Saccharin;
++no Moo::sification;
++use Moo;
+ 
+ use 5.10.1;
+-use namespace::autoclean;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use Carp;
+ use Carp::Assert;
+ use Carp::Assert::More;
+-
++use Function::Parameters;
+ use IPC::System::Simple qw{capturex};
+ use Tails::Download::HTTPS;
++use Types::Standard qw{InstanceOf Str};
+ 
+ use Locale::gettext;
+ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-perl5lib");
+ 
+-
+-
+-=head1 TYPES
+-
+-=cut
+-
+-class_type 'Tails::Download::HTTPS';
+-
++use namespace::clean;
+ 
+ =head1 ATTRIBUTES
+ 
+ =cut
+ 
+-has 'baseurl' => required ro Str;
++has 'baseurl' => (
++    required => 1,
++    is       => 'ro',
++    isa      => Str,
++);
+ 
+-has 'fallback_prefix' => lazy_build ro Str;
++has 'fallback_prefix' => (
++    is  => 'lazy',
++    isa => Str,
++);
+ 
+-has 'downloader' =>
+-    lazy_build ro 'Tails::Download::HTTPS';
++has 'downloader' => (
++    is  => 'lazy',
++    isa => InstanceOf['Tails::Download::HTTPS'],
++);
+ 
+-has 'filename' => lazy_build ro Str;
++has 'filename' => (
++    is  => 'lazy',
++    isa => Str,
++);
+ 
+ 
+ =head1 CONSTRUCTORS AND BUILDERS
+ 
+ =cut
+ 
+-method _build_fallback_prefix {
++method _build_fallback_prefix () {
+     q{http://dl.amnesia.boum.org/tails'}
+ }
+ 
+-method _build_downloader {
++method _build_downloader () {
+     Tails::Download::HTTPS->new();
+ }
+ 
+-method _build_filename {
++method _build_filename () {
+     q{mirrors.json}
+ }
+ 
+@@ -87,5 +89,5 @@ method transformURL (Str $url) {
+     return $url;
+ }
+ 
+-no Moose;
++no Moo;
+ 1;
+diff --git a/usr/share/perl5/Tails/Role/DisplayError/Gtk2.pm b/usr/share/perl5/Tails/Role/DisplayError/Gtk2.pm
+deleted file mode 100644
+index 5dfcdc0..0000000
+--- a/usr/share/perl5/Tails/Role/DisplayError/Gtk2.pm
++++ /dev/null
+@@ -1,32 +0,0 @@
+-package Tails::Role::DisplayError::Gtk2;
+-use Moose::Role;
+-
+-use 5.10.1;
+-use namespace::autoclean;
+-use warnings FATAL => 'all';
+-use autodie qw(:all);
+-
+-use Carp::Assert::More;
+-
+-sub display_error {
+-    my $self        = shift;
+-    my $main_window = shift;
+-    my $title       = shift;
+-    my $mesg        = shift;
+-    assert_isa($main_window, 'Gtk2::Window');
+-    assert_defined($title);
+-    assert_defined($mesg);
+-
+-    say STDERR "$title: $mesg";
+-
+-    my $dialog = Gtk2::MessageDialog->new(
+-        $main_window, 'destroy-with-parent', 'error', 'ok',
+-        $title
+-    );
+-    $dialog->format_secondary_text($mesg);
+-    $dialog->set_position('center');
+-    $dialog->run;
+-}
+-
+-no Moose::Role;
+-1; # End of Tails::Role::DisplayError::Gtk2
+diff --git a/usr/share/perl5/Tails/Role/DisplayError/Gtk3.pm b/usr/share/perl5/Tails/Role/DisplayError/Gtk3.pm
+index fea73c5..bb67303 100644
+--- a/usr/share/perl5/Tails/Role/DisplayError/Gtk3.pm
++++ b/usr/share/perl5/Tails/Role/DisplayError/Gtk3.pm
+@@ -1,10 +1,8 @@
+ package Tails::Role::DisplayError::Gtk3;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+-use Carp::Assert::More;
+ use Function::Parameters;
+ use Types::Standard qw(InstanceOf Str);
+ 
+diff --git a/usr/share/perl5/Tails/Role/HasCodeset.pm b/usr/share/perl5/Tails/Role/HasCodeset.pm
+index 1a05107..396df9e 100644
+--- a/usr/share/perl5/Tails/Role/HasCodeset.pm
++++ b/usr/share/perl5/Tails/Role/HasCodeset.pm
+@@ -7,8 +7,7 @@ Tails::Role::HasCodeset - role to get the codeset being used
+ package Tails::Role::HasCodeset;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use Function::Parameters;
+diff --git a/usr/share/perl5/Tails/Role/HasDBus/System.pm b/usr/share/perl5/Tails/Role/HasDBus/System.pm
+index 185c249..3089508 100644
+--- a/usr/share/perl5/Tails/Role/HasDBus/System.pm
++++ b/usr/share/perl5/Tails/Role/HasDBus/System.pm
+@@ -7,8 +7,7 @@ Tails::HasDBus::System - role providing a connection to the system DBus
+ package Tails::Role::HasDBus::System;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use Carp::Assert::More;
+diff --git a/usr/share/perl5/Tails/Role/HasEncoding.pm b/usr/share/perl5/Tails/Role/HasEncoding.pm
+index 25150e1..43952c6 100644
+--- a/usr/share/perl5/Tails/Role/HasEncoding.pm
++++ b/usr/share/perl5/Tails/Role/HasEncoding.pm
+@@ -17,13 +17,13 @@ Tails::Role::HasEncoding - role to provide an Encode::Encoding objet for the cod
+ package Tails::Role::HasEncoding;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use Encode qw{find_encoding};
+ use Function::Parameters;
+ 
++no Moo::sification;
+ use Moo::Role; # Moo::Role exports all methods declared after it's "use"'d
+ use MooX::late;
+ 
+diff --git a/usr/share/perl5/Tails/RunningSystem.pm b/usr/share/perl5/Tails/RunningSystem.pm
+index 94db975..eda68ce 100644
+--- a/usr/share/perl5/Tails/RunningSystem.pm
++++ b/usr/share/perl5/Tails/RunningSystem.pm
+@@ -7,20 +7,18 @@ Tails::RunningSystem - class that represents the running Tails system
+ package Tails::RunningSystem;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use Carp;
+ use Carp::Assert::More;
+-use Data::Dumper;
+ use Function::Parameters;
+ use Path::Tiny;
+ use Sys::Statistics::Linux::MemStats;
+ use Tails::Constants;
+ use Tails::UDisks;
+ use Try::Tiny;
+-use Types::Path::Tiny qw{Dir};
++use Types::Path::Tiny qw{AbsDir AbsFile AbsPath};
+ use Types::Standard qw(Str);
+ 
+ use Locale::gettext;
+@@ -28,6 +26,7 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-perl5lib");
+ 
++no Moo::sification;
+ use Moo;
+ use MooX::late;
+ 
+@@ -54,9 +53,21 @@ has "$_" => (
+ ) for (
+         qw{baseurl product_name product_version build_target channel},
+         qw{upgrade_description_file_url upgrade_description_sig_url},
+-        qw{dev_dir os_release_file proc_dir run_dir},
+     );
+ 
++has os_release_file => (
++    isa        => AbsFile,
++    coerce     => AbsFile->coercion,
++    is         => 'ro',
++    lazy_build => 1,
++);
++
++has "$_" => (
++    isa        => AbsDir,
++    is         => 'ro',
++    lazy_build => 1,
++) for (qw{dev_dir proc_dir run_dir});
++
+ has 'udisks' => (
+     lazy_build => 1,
+     is         => 'ro',
+@@ -68,10 +79,10 @@ has 'udisks' => (
+ );
+ 
+ has 'liveos_mountpoint' => (
+-    isa        => Dir,
++    isa        => AbsDir,
+     is         => 'rw',
+     lazy_build => 1,
+-    coerce     => Dir->coercion,
++    coerce     => AbsDir->coercion,
+     documentation => q{Mountpoint of the Tails system image.},
+ );
+ 
+@@ -92,7 +103,8 @@ has 'boot_block_device' => (
+ has 'boot_device_file' => (
+     lazy_build    => 1,
+     is            => 'rw',
+-    isa           => 'Str',
++    isa           => AbsPath,
++    coerce        => AbsPath->coercion,
+     documentation => q{The path of the physical drive where Tails is installed, e.g. /dev/sdb.},
+ );
+ 
+@@ -106,7 +118,8 @@ has 'system_partition' => (
+ has 'system_partition_file' => (
+     lazy_build    => 1,
+     is            => 'rw',
+-    isa           => 'Str',
++    isa           => AbsPath,
++    coerce        => AbsPath->coercion,
+     documentation => q{The path of the partition where Tails is installed, e.g. /dev/sdb1.},
+ );
+ 
+@@ -137,10 +150,10 @@ foreach (qw{boot_drive_vendor boot_drive_model
+ =cut
+ 
+ method _build_upgrade_description_url_schema_version () { 1 }
+-method _build_dev_dir () { '/dev' }
+-method _build_os_release_file () { '/etc/os-release' }
+-method _build_proc_dir () { '/proc' }
+-method _build_run_dir () { '/var/run' }
++method _build_dev_dir () { path('/dev') }
++method _build_os_release_file () { path('/etc/os-release') }
++method _build_proc_dir () { path('/proc') }
++method _build_run_dir () { path('/var/run') }
+ method _build_product_name () { $self->os_release_get('TAILS_PRODUCT_NAME') }
+ method _build_product_version () { $self->os_release_get('TAILS_VERSION_ID') }
+ method _build_baseurl () { 'https://tails.boum.org' }
+diff --git a/usr/share/perl5/Tails/UDisks.pm b/usr/share/perl5/Tails/UDisks.pm
+index 8eb2535..555a060 100644
+--- a/usr/share/perl5/Tails/UDisks.pm
++++ b/usr/share/perl5/Tails/UDisks.pm
+@@ -7,8 +7,7 @@ Tails::UDisks - role providing a connection to UDisks via DBus
+ package Tails::UDisks;
+ 
+ use 5.10.1;
+-use strict;
+-use warnings FATAL => 'all';
++use strictures 2;
+ use autodie qw(:all);
+ 
+ use Carp::Assert::More;
+@@ -27,6 +26,7 @@ use POSIX;
+ setlocale(LC_MESSAGES, "");
+ textdomain("tails-perl-lib");
+ 
++no Moo::sification;
+ use Moo;
+ use MooX::late;
+ use namespace::clean;
