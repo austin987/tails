@@ -5,6 +5,201 @@ This page is about ideas that are not implemented (yet?).
 
 [[!toc levels=2]]
 
+<a id="maintainers-responsibilities"></a>
+
+# Responsibilities of the _Translation platform maintainers_
+
+Here we dump ideas that could be useful when defining [[this
+job|contribute/working_together/roles/translation_platform]]
+as part of [[!tails_ticket 17050]].
+
+## In scope
+
+- Upgrade Weblate to new upstream releases.
+- Weblate crashes.
+- Removing stuff from the Weblate database because the webapp got mad.
+
+## Out of scope
+
+- Work that requires sysadmin privileges or belongs to "sysadmins
+  provide an OS with the required packages and system services", e.g.
+  MariaDB is crashing
+
+<a id="ux"></a>
+
+UX for new translators
+======================
+
+[[!tails_ticket 16974]] tracks progress on this front.
+
+Weblate
+-------
+
+This list of problems was built thanks to usability testing at
+MozFest 2019. The "users" referred to below are all people who tried
+to use Weblate for the first time. All these users were rather
+technical. They were using a broad variety of devices (about half
+smartphones and half laptops) and browsers (a couple Tor Browser, some
+Firefox, some the default browser of their mobile OS).
+
+The initial set of hypotheses and proposals below are intrigeri's.
+
+- The _Suggested translations (10)_ link in the top bar is confusing:
+  Several users thought it was about suggestions of translations for
+  specific strings, that should be reviewed. It took them a while to
+  realize that this was not the case. But then it was still not clear
+  what this link is about, nor how to actually list the translation
+  suggestions that need to be reviewed.
+
+- Nobody understood what the numbers next to the links in the top bar
+  meant. After asking them what they thought it could be, some
+  ventured hypothesis: total number of strings, number of untranslated
+  strings, number of languages.
+
+  And regarding the _Suggested translations (10)_ link, several users
+  assumed that 10 was the number of translation suggestions that
+  should be reviewed, which is incorrect.
+
+- Several users found it hard to find what needs work and what they
+  should focus on first. Some specific issues in this area:
+
+  - Nobody clicked on the "core pages" link.
+
+    Hypothesis: the fact that link is in the middle of 8 other links
+    may not help.
+
+    Proposal: remove the "anonymous internet", "first steps", "Install
+    & upgrade", and "persistence" links from the top bar. It's not
+    clear to me whether these component lists are maintained (e.g.
+    lots of the install and upgrade stuff has moved in the last year;
+    are the new components listed there?).
+
+  - One user wondered what to translate first once core pages
+    are done.
+
+  - On the page that gives an overview of a component for a given
+    language, such as [this
+    one](https://translate.tails.boum.org/projects/tails/anonymous_internet/fr/),
+    there's a _Translate_ button, even when the component is fully
+    translated already. One user found it confusing to click
+    _Translate_ and land on a string that is already translated.
+
+- One user would have liked to be able to give feedback on suggested
+  translations, e.g. via a comment, even though they were not
+  a reviewer and thus could not approve the suggestion.
+
+- All users but one found the _Register_ button without needing help.
+  The other user, after reading the prominent "Please get in touch to
+  start translating Tails website:
+  https://tails.boum.org/contribute/how/translate/" message on the
+  Weblate homepage, clicked on that link and then got totally lost.
+
+  Proposal: instead directly point to [[a more focused doc
+  page|contribute/how/translate/with_translation_platform]], remove
+  "Please get in touch", and rephrase this message.
+
+- Several users did not manage to register an account because Weblate
+  told them "too many registration attempts" on their first attempt.
+  Some were using Tor, some their mobile data, some the shared Wi-Fi
+  provided by the event.
+
+  Hypothesis: the root cause of this problem looks like a sysadmin or
+  Weblate bug rather than a UX design problem. Maybe Weblate has
+  a rate limiting mechanism to protect against too many account
+  registration attempts in a given time span, regardless of what
+  device/IP is used?
+
+- During the account registration process, one user commented that the
+  arithmetic CAPTCHA they were facing (7×8) felt too hard.
+  They managed to solve it eventually.
+
+  Hypothesis: even if the user can fallback to using a calculator,
+  having to do so can be damaging for their self-confidence and desire
+  to continue. The message we're sending here is even worse than that,
+  given the skills required to solve this CAPTCHA are entirely foreign
+  to the skills one needs to translate Tails.
+
+  Proposal: whatever blocks spammers is good enough. Can we configure
+  the difficulty of this CAPTCHA? For example, maybe basic addition
+  and subtraction between numbers up to 5 might be an OK trade-off.
+
+- One user found it hard to discover the hamburger menu on
+  a smartphone.
+
+- A UX designer who attended the session gave feedback and
+  recommendations about the [account registration
+  page](https://translate.tails.boum.org/accounts/register/).
+  What follows was freely transcribed and interpreted by intrigeri
+  from very rough notes and memory.
+
+  It's all about the first sentence ("By registering you agree to use
+  your name and email in version control system commits and provide
+  your contribution under license defined by each translated
+  project"), which has several problems:
+
+  - It uses technical jargon ("version control system commits") and
+    vague terms and conditions ("under license defined by each
+    translated project", that is?) ⇒ it may not be clear to the user
+    what they are agreeing with exactly. That's not a good way to ask
+    if they consent.
+
+  - It's outside of the main form so it's easy to skip. If we really
+    need users to explicitly agree with these conditions, then this
+    should be a checkbox right on top of the _Register_ button.
+
+  - It does not encourage new translators to continue.
+
+    Recommendation: add an introduction text that briefly explains why
+    registering is useful, thanks the visitor, and encourages them
+    to continue.
+
+Documentation for translators
+-----------------------------
+
+This is feedback and recommendations from a UX designer about our
+[[documentation for translators|contribute/how/translate]], freely
+transcribed and interpreted by intrigeri from rough notes.
+Proposals are intrigeri's, recommendations are this UX designer's.
+
+- The list of teams makes the whole page longer than it could be.
+  It's not clear if the list of teams is up-to-date: it does not match
+  the languages that are enabled in Weblate.
+
+  Proposal: ask on -l10n@ what these pages are still useful for in the
+  Weblate era.
+
+- It's not clear what translators should do with the information found
+  in the "Tier-1 languages" section.
+
+- A new translator first needs to skip the "For native English
+  speakers" section, that presumably is of little interest to the vast
+  majority of folks who landed on this page.
+
+  Recommendation: move this section further down the page.
+  Implemented in [[!tails_gitweb_commit 3317eea94a]].
+
+- To be more encouraging, we should start by thanking new translators.
+
+  Implemented in [[!tails_gitweb_commit b2a0d9c495]].
+
+- The page lacks structure which makes it harder to find the
+  information a new translator needs.
+
+  Hopefully fixed in [[!tails_gitweb_commit eb17bf9da4]]
+
+- The "Translate this website" section has a number of problems:
+
+  - It's long and it's hard to find _the_ link most readers will need,
+    i.e. "on the translation platform", because there are 3 links in
+    the paragraph where it lives.
+
+    Hopefully fixed in [[!tails_gitweb_commit 20090cdd20]] and [[!tails_gitweb_commit 77bbbb2c42]].
+
+  - It contains obsolete information: "you need to get into contact
+    with a language team if you want to participate".
+
+    Hopefully fixed in [[!tails_gitweb_commit 69702d9faa]].
+
 A hybrid approach
 =================
 
