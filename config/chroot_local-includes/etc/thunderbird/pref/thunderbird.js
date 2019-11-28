@@ -315,14 +315,6 @@ pref("extensions.enigmail.agentAdditionalParam", "--no-emit-version --no-comment
 pref("extensions.enigmail.keyserver", "hkp://jirk5u4osbsr34t5.onion");
 // Force GnuPG to use SHA512.
 pref("extensions.enigmail.mimeHashAlgorithm", 5);
-// Use encrypted email headers in Enigmail (Memory Hole standard)
-// See https://bugs.torproject.org/21880 for the discussion as to why we are
-// setting this in TorBirdy.  This preference is enabled by default but can
-// be turned off (disabled) in TorBirdy's preferences if desired.
-// XXX: In Thunderbird's about:config on Tails 4.0, this setting is set to
-//      false, but I don't understand why.
-pref("extensions.enigmail.protectHeaders", true);
-pref("extensions.enigmail.protectedSubjectText", "Encrypted Message");
 
 /*
 Chat and Calendar
