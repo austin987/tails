@@ -337,6 +337,9 @@ The IUK size is involved in at least four concerns:
 
 ## Support upgrading very old Tails
 
+XXX: It seems that we do want to support skipping more than one Tails
+release. See the discussion on [[!tails_ticket 17069]].
+
 We probably do not want to support upgrading very old (e.g. from six
 months ago) Tails installations because our signing key might have
 been updated in the meantime, and/or some critical update to Tails
@@ -410,3 +413,103 @@ Total: 7853 MB
     260M    Tails_amd64_3.2_to_3.3.iuk
     177M    Tails_amd64_3.3_to_3.4.iuk
     213M    Tails_amd64_3.4_to_3.5.iuk
+
+<a id="single-squashfs-diff-deployment"></a>
+
+## Deployment
+
+Assume we first ship in Tails version N~ the new Upgrader that supports
+[[!tails_ticket 15281 desc="Endless automatic upgrades"]]. The initial
+plan is N = 4.2.
+
+When we release Tails version N:
+
+ - We publish the following UDFs:
+
+   - `/upgrade/v1/Tails/OLD` for every OLD = 4.x << N~,
+     which advertise full and incremental upgrades to version N.
+
+   - `/upgrade/v2/Tails/OLD` for every OLD = 4.x << N,
+     which advertise full and incremental upgrades to version N.
+     This includes `/upgrade/v2/Tails/N~*`.
+
+   - `/upgrade/v2/Tails/N` and `/upgrade/v2/Tails/N+1`,
+     which say there is no upgrade available.
+
+ - We publish IUKs v1 that allow upgrading OLD = 4.x << N~
+   to version N.
+
+ - Tails version OLD << N~ uses the old Upgrader, so it fetches its UDF
+   from `/upgrade/v1/Tails/OLD` and learns about the full and incremental
+   upgrades to version N.
+
+ - Tails version N~ and N uses the new Upgrader.
+   We can distinguish 2 cases:
+
+   - Either initial-install-version << N: the Upgrader fetches the
+     `/upgrade/v2/Tails/X` UDF, with X = initial-install-version << N,
+     that advertises an upgrade to version N.
+
+     Then, either Tails is running version N already, and then the
+     Upgrader concludes Tails is up-to-date. Or Tails is running N~*,
+     and it can be automatically upgraded to N.
+
+     XXX: ensure this logic is implemented, i.e.
+     the Upgrader won't try to "upgrade" an already up-to-date Tails.
+
+   - Or initial-install-version >= N: the Upgrader fetches the
+     `/upgrade/v2/Tails/X` UDF, with X >= N, that says there is no
+     upgrade available.
+
+When we release Tails version N+1:
+
+ - We publish the following UDFs:
+
+   - `/upgrade/v1/Tails/OLD`, for every OLD = 4.x << N, are updated to
+     advertise the full upgrade to N+1 instead of to N.
+
+     On top of that, UX will tell RMs whether we should also keep
+     advertising the incremental upgrade to N, so that users can
+     automatically upgrade to N, reboot, and from there automatically
+     upgrade to N+1. This boils down to: does one single full upgrade
+     provide better UX than two automatic upgrades in a row?
+
+   - `/upgrade/v2/Tails/OLD` for every OLD == initial-install-version << N,
+     which advertise full and incremental upgrades to version N+1.
+     This includes `/upgrade/v2/Tails/N~*`.
+
+   - `/upgrade/v2/Tails/N`, which advertises the incremental and full
+     upgrades to N+1.
+
+   - `/upgrade/v2/Tails/N+1`, which says there is no
+     upgrade available.
+
+ - We publish IUKs v2 that can upgrade to N+1 any device where any 4.x
+   was initially installed, as long as it was already upgraded to N
+   (and thus has the new Upgrader).
+
+   For example, if N = 4.2, we publish IUKs from 4.0, 4.1, and 4.2
+   to N+1 = 4.3.
+
+ - We publish no IUK v1: users of Tails << N~ must first automatically
+   upgrade to version N, before they can automatically upgrade to N+1
+   and newer. Alternatively, they can do a manual (full) upgrade
+   to N+1.
+
+ - Tails version OLD << N~ uses the old Upgrader, so it fetches its UDF
+   from `/upgrade/v1/Tails/OLD` and learns about the full upgrade to
+   version N+1 (and possibly the incremental upgrade to version N).
+
+ - Tails versions N~* and N use the new Upgrader. Depending on
+   initial-install-version, it fetches `/upgrade/v2/Tails/X` with
+   X <= N. All such UDFs advertise the incremental and full upgrades to N+1.
+
+ - Tails version N+1 uses the new Upgrader, so:
+
+   - If initial-install-version << N+1, the Upgrader fetches
+     `/upgrade/v2/Tails/X` with X <= N. All such UDFs advertise an
+     "upgrade" to version N+1; given Tails is running version N+1
+     already, the Upgrader concludes Tails is up-to-date.
+
+   - If initial-install-version = N+1, the Upgrader fetches
+     `/upgrade/v2/Tails/N+1`, which says there is no upgrade available.
