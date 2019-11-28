@@ -74,6 +74,9 @@ pref("mail.server.default.enableAutocrypt", false);
 // Reference: https://www.thunderbird.net/en-US/thunderbird/52.9.1/releasenotes/
 pref("mailnews.p7m_subparts_external", true);
 
+// Sanitize mime headers
+pref("mail.mime.avoid_fingerprinting", true);
+
 
 /*
   Network settings adopted from TorBirdy
