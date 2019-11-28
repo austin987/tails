@@ -60,10 +60,6 @@ pref("mailnews.auto_config.account_constraints.allow_oauth2", false);
 // The timeout (in seconds) for each guess
 pref("mailnews.auto_config.guess.timeout", 30);
 
-// We disable Memory Hole for encrypted email until support is more
-// mature and widely spread (#15201).
-pref("extensions.enigmail.protectedHeaders", 0);
-
 // Disable Autocrypt by default for new accounts (#16222).
 // This does not change anything for accounts that were created before.
 pref("mail.server.default.enableAutocrypt", false);
@@ -290,31 +286,6 @@ pref("dom.event.highrestimestamp.enabled", true);
 
 // https://bugs.torproject.org/11817
 pref("extensions.getAddons.cache.enabled", false);
-
-/*
-Enigmail
-*/
-
-// We hope the user has Enigmail and if so, we believe these improve security.
-
-// Disable X-Enigmail headers.
-// We don't want to obviously disclose that we're using Enigmail as it may
-// add privacy destroying headers
-pref("extensions.enigmail.addHeaders", false);
-// Use GnuPG's default comment for signed messages.
-pref("extensions.enigmail.useDefaultComment", true);
-
-// We need to pass some more parameters to GPG.
-//   --no-emit-version: Don't disclose the version
-//   --no-comment: Don't add additional comments (may leak language, etc)
-//   --display-charset utf-8: We want to force UTF-8 everywhere
-//   --keyserver-options no-auto-key-retrieve: Set additional keyserver options
-pref("extensions.enigmail.agentAdditionalParam", "--no-emit-version --no-comments --display-charset utf-8 --keyserver-options no-auto-key-retrieve");
-
-// The default key server should be a hidden service; use the Tor OnionBalance hidden service pool (https://sks-keyservers.net/overview-of-pools.php#pool_tor)
-pref("extensions.enigmail.keyserver", "hkp://jirk5u4osbsr34t5.onion");
-// Force GnuPG to use SHA512.
-pref("extensions.enigmail.mimeHashAlgorithm", 5);
 
 /*
 Chat and Calendar
