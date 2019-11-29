@@ -70,10 +70,10 @@ Then /^I click the extensions tab$/ do
   @thunderbird_addons.child('Extensions', roleName: 'list item').click
 end
 
-Then /^I see that only the (.+) addons are enabled in Thunderbird$/ do |addons|
+Then /^I see that only the (.+) addon(?:s are| is) enabled in Thunderbird$/ do |addons|
   expected_addons = addons.split(/, | and /)
   actual_addons =
-    @thunderbird_addons.child('TorBirdy', roleName: 'label')
+    @thunderbird_addons.child('Enigmail', roleName: 'label')
     .parent.parent.children(roleName: 'list item', recursive: false)
     .map { |item| item.name }
   expected_addons.each do |addon|

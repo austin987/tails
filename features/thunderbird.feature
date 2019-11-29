@@ -13,7 +13,7 @@ Feature: Thunderbird email client
     Given I cancel setting up an email account
     When I open Thunderbird's Add-ons Manager
     And I click the extensions tab
-    Then I see that only the Enigmail and TorBirdy addons are enabled in Thunderbird
+    Then I see that only the Enigmail addon is enabled in Thunderbird
 
   Scenario: Torbirdy is configured to use Tor
     Given I cancel setting up an email account
