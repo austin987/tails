@@ -107,14 +107,7 @@ Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server 
   )
 end
 
-When /^I fetch my email$/ do
-  account = thunderbird_main.child($config['Icedove']['address'],
-                               roleName: 'table row')
-  account.click
-  thunderbird_frame = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
-
-  thunderbird_frame.child('Mail Toolbar', roleName: 'tool bar')
-    .button('Get Messages').click
+def wait_for_thunderbird_progress_bar_to_vanish (thunderbird_frame)
   try_for(120) do
     begin
       thunderbird_frame.child(roleName: 'status bar', retry: false)
@@ -124,6 +117,17 @@ When /^I fetch my email$/ do
       true
     end
   end
+end
+
+When /^I fetch my email$/ do
+  account = thunderbird_main.child($config['Icedove']['address'],
+                               roleName: 'table row')
+  account.click
+  thunderbird_frame = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
+
+  thunderbird_frame.child('Mail Toolbar', roleName: 'tool bar')
+    .button('Get Messages').click
+  wait_for_thunderbird_progress_bar_to_vanish(thunderbird_frame)
 end
 
 When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
@@ -144,8 +148,12 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
   # The account isn't fully created before we fetch our mail. For
   # instance, if we'd try to send an email before this, yet another
   # wizard will start, indicating (incorrectly) that we do not have an
-  # account set up yet.
-  step 'I fetch my email'
+  # account set up yet. Normally we disable automatic fetching of email,
+  # and thus here we would need to call "step 'I fetch my email'",
+  # but Thunderbird 68 will fetch email immediately for a newly created
+  # account despite our prefs (#17222), so here we only wait for this
+  # operation to complete.
+  wait_for_thunderbird_progress_bar_to_vanish(thunderbird_main)
 end
 
 When /^I select the autoconfiguration wizard's (IMAP|POP3) choice$/ do |protocol|
