@@ -73,6 +73,8 @@ pref("mailnews.p7m_subparts_external", true);
 // Sanitize mime headers
 pref("mail.mime.avoid_fingerprinting", true);
 
+// Make all system-wide dictionaries available
+pref("spellchecker.dictionary_path", "/usr/share/hunspell");
 
 /*
   Network settings adopted from TorBirdy
