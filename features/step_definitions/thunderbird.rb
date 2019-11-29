@@ -98,9 +98,12 @@ end
 
 Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server is secure (.+)$/ do |type, protocol|
   type = type.capitalize + ':'
-  assert_not_nil(
-    thunderbird_wizard.child(type, roleName: 'entry').text
-      .match(/^#{protocol},[^,]+, (SSL|STARTTLS)$/)
+  section = thunderbird_wizard.child(type, roleName: 'section')
+  assert_not_nil(section.child(protocol, roleName: 'label'))
+  assert(
+    section.children(roleName: 'label').any? { |label|
+      label.text == 'SSL' or label.text == 'STARTTLS'
+    }
   )
 end
 
