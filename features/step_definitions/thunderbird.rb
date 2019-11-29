@@ -211,11 +211,9 @@ end
 
 Then /^my Thunderbird inbox is non-empty$/ do
   thunderbird_inbox.click
-  # The button is located on the first row in the message list, the
-  # one that shows the column labels (Subject, From, ...).
-  message_list = thunderbird_main.child('Select columns to display',
-                                    roleName: 'push button')
-                 .parent.parent
+  message_list = thunderbird_main.child('Filter these messages <Ctrl+Shift+K>',
+                                        roleName: 'entry')
+                   .parent.parent.child(roleName: 'table')
   visible_messages = message_list.children(recursive: false,
                                            roleName: 'table row')
   assert(visible_messages.size > 0)
