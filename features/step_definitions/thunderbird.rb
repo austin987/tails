@@ -154,24 +154,6 @@ When /^I select the autoconfiguration wizard's (IMAP|POP3) choice$/ do |protocol
   thunderbird_wizard.child(choice, roleName: 'radio button').click
 end
 
-When /^I select manual configuration$/ do
-  thunderbird_wizard.button('Manual config').click
-end
-
-When /^I alter the email configuration to use (.*) over a hidden services$/ do |protocol|
-  case protocol.upcase
-  when 'IMAP', 'POP3'
-    entry_name = 'Incoming:'
-  when 'SMTP'
-    entry_name = 'Outgoing:'
-  else
-    raise "Unknown mail protocol '#{protocol}'"
-  end
-  entry = thunderbird_wizard.child(entry_name, roleName: 'entry')
-  entry.text = ''
-  entry.typeText($config['Icedove']["#{protocol.downcase}_hidden_service"])
-end
-
 When /^I send an email to myself$/ do
   thunderbird_main.child('Mail Toolbar', roleName: 'tool bar').button('Write').click
   compose_window = thunderbird_app.child('Write: (no subject) - Thunderbird')
