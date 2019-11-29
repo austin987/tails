@@ -1,4 +1,3 @@
-#11465
 @product @check_tor_leaks
 Feature: Thunderbird email client
   As a Tails user
