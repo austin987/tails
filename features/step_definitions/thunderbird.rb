@@ -111,13 +111,13 @@ When /^I fetch my email$/ do
   account = thunderbird_main.child($config['Icedove']['address'],
                                roleName: 'table row')
   account.click
-  thunderbird_main = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
+  thunderbird_frame = thunderbird_app.child("#{$config['Icedove']['address']} - Mozilla Thunderbird", roleName: 'frame')
 
-  thunderbird_main.child('Mail Toolbar', roleName: 'tool bar')
+  thunderbird_frame.child('Mail Toolbar', roleName: 'tool bar')
     .button('Get Messages').click
   try_for(120) do
     begin
-      thunderbird_main.child(roleName: 'status bar', retry: false)
+      thunderbird_frame.child(roleName: 'status bar', retry: false)
         .child(roleName: 'progress bar', retry: false)
       false
     rescue
