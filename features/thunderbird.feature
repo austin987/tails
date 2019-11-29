@@ -15,10 +15,6 @@ Feature: Thunderbird email client
     And I click the extensions tab
     Then I see that only the Enigmail addon is enabled in Thunderbird
 
-  Scenario: Torbirdy is configured to use Tor
-    Given I cancel setting up an email account
-    Then I see that Torbirdy is configured to use Tor
-
   Scenario: Thunderbird's autoconfiguration wizard defaults to IMAP and secure protocols
     When I enter my email credentials into the autoconfiguration wizard
     Then the autoconfiguration wizard's choice for the incoming server is secure IMAP

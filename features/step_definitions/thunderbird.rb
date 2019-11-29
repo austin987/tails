@@ -84,11 +84,6 @@ Then /^I see that only the (.+) addon(?:s are| is) enabled in Thunderbird$/ do |
   assert_equal(0, actual_addons.size)
 end
 
-Then /^I see that Torbirdy is configured to use Tor$/ do
-  thunderbird_main.child(roleName: 'status bar')
-    .child('TorBirdy Enabled:    Tor', roleName: 'label')
-end
-
 When /^I enter my email credentials into the autoconfiguration wizard$/ do
   address = $config['Icedove']['address']
   name = address.split('@').first
