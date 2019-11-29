@@ -145,6 +145,14 @@ When /^I accept the (?:autoconfiguration wizard's|manual) configuration$/ do
     end
     true
   end
+
+  # Workaround #17272
+  if @protocol == 'POP3'
+    thunderbird_app
+      .child("Error with account #{$config['Icedove']['address']}")
+      .button('OK').click
+  end
+
   # The account isn't fully created before we fetch our mail. For
   # instance, if we'd try to send an email before this, yet another
   # wizard will start, indicating (incorrectly) that we do not have an
@@ -163,6 +171,7 @@ When /^I select the autoconfiguration wizard's (IMAP|POP3) choice$/ do |protocol
     choice = 'POP3 (keep mail on your computer)'
   end
   thunderbird_wizard.child(choice, roleName: 'radio button').click
+  @protocol = protocol
 end
 
 When /^I send an email to myself$/ do
