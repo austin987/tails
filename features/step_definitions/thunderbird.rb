@@ -3,11 +3,7 @@ def thunderbird_app
 end
 
 def thunderbird_main
-  # Thunderbird has an empty, unnamed frame; so use a search on all
-  # children and match whatever frame has a non-empty name:
-  thunderbird_app.children(roleName: 'frame', recursive: false).find do |e|
-    e.name.match(/^(.+)$/)
-  end
+  thunderbird_app.child(roleName: 'frame', recursive: false)
 end
 
 def thunderbird_wizard
