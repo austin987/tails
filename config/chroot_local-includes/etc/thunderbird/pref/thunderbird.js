@@ -54,8 +54,8 @@ pref("mailnews.auto_config.ssl_only_mail_servers", true);
 // version of the #6156 patchset.
 pref("mailnews.auto_config.account_constraints.ssl_only", true);
 // Drop auto-fetched configurations using Oauth2 -- they do not work
-// together with Torbirdy since it disables needed functionality (like
-// JavaScript and cookies) in the embedded browser.
+// since we disable needed functionality (like JavaScript and cookies)
+// in the embedded browser.
 pref("mailnews.auto_config.account_constraints.allow_oauth2", false);
 // The timeout (in seconds) for each guess
 pref("mailnews.auto_config.guess.timeout", 30);
