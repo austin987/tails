@@ -32,7 +32,7 @@ When /^I start Thunderbird$/ do
   try_for(60) { thunderbird_main }
 end
 
-When /^I have not configured an email account$/ do
+When /^I have not configured an email account yet$/ do
   conf_path = "/home/#{LIVE_USER}/.thunderbird/profile.default/prefs.js"
   if $vm.file_exist?(conf_path)
     thunderbird_prefs = $vm.file_content(conf_path).chomp

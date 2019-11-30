@@ -5,7 +5,7 @@ Feature: Thunderbird email client
 
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
-    And I have not configured an email account
+    And I have not configured an email account yet
     When I start Thunderbird
     Then I am prompted to setup an email account
 
