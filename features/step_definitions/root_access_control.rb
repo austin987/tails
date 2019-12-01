@@ -36,6 +36,6 @@ Then /^I should not be able to run a command as root with pkexec and the standar
   ['', 'live', 'amnesia'].each do |password|
     deal_with_polkit_prompt(password, expect_success: false)
   end
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
   @screen.wait('PolicyKitAuthCompleteFailure.png', 20)
 end

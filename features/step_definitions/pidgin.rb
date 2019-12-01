@@ -122,9 +122,8 @@ When /^I start a conversation with my friend$/ do
   # friend, given it's the only subscribed user that's online, which
   # we assume.
   r = @screen.find("PidginFriendOnline.png")
-  bottom_left = r.getBottomLeft()
-  x = bottom_left.getX + r.getW/2
-  y = bottom_left.getY
+  x = r.x + r.w/2
+  y = r.y + r.h
   @screen.doubleClick_point(x, y)
   # Since Pidgin sets the window name to the contact, we have no good
   # way to identify the conversation window. Let's just look for the
@@ -134,14 +133,13 @@ end
 
 And /^I say (.*) to my friend( in the multi-user chat)?$/ do |msg, multi_chat|
   msg = "ping" if msg == "something"
-  msg = msg + Sikuli::Key.ENTER
   if multi_chat
     $vm.focus_window(@chat_room_jid.split("@").first)
     msg = @friend_name + ": " + msg
   else
     $vm.focus_window(@friend_name)
   end
-  @screen.type(msg)
+  @screen.type(msg, ["Return"])
 end
 
 Then /^I receive a response from my friend( in the multi-user chat)?$/ do |multi_chat|
@@ -196,8 +194,8 @@ When /^I join some empty multi-user chat$/ do
 
   # We will need the conference server later, when starting the bot.
   @screen.click_mid_right_edge("PidginJoinChatServerLabel.png")
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  @screen.type("c", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "a")
+  @screen.press("ctrl", "c")
   conference_server =
     $vm.execute_successfully("xclip -o", :user => LIVE_USER).stdout.chomp
   @chat_room_jid = chat_room + "@" + conference_server
@@ -304,13 +302,13 @@ end
 
 When /^I close Pidgin$/ do
   $vm.focus_window('Buddy List')
-  @screen.type("q", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "q")
   @screen.waitVanish('PidginAvailableStatus.png', 10)
 end
 
 When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   @screen.click("PidginAccount_#{account}.png")
-  @screen.type(Sikuli::Key.LEFT + Sikuli::Key.SPACE)
+  @screen.type(["Left"], ["space"])
   if deactivate
     @screen.waitVanish('PidginAccountEnabledCheckbox.png', 5)
   else
@@ -377,7 +375,7 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
       # If the channel tab can't be found it could be because there were
       # multiple connection attempts and the channel tab we want is off the
       # screen. We'll try closing tabs until the one we want can be found.
-      @screen.type("w", Sikuli::KeyModifier.CTRL)
+      @screen.press("ctrl", "w")
       raise e
     end
   end
@@ -425,14 +423,14 @@ def pidgin_add_certificate_from (cert_file)
     # do anything. Hence, this noop exception handler.
   end
   @screen.wait_and_click('GtkFileTypeFileNameButton.png', 10)
-  @screen.type("l", Sikuli::KeyModifier.ALT) # "Location" field
-  @screen.type(cert_file + Sikuli::Key.ENTER)
+  @screen.press("alt", "l") # "Location" field
+  @screen.type(cert_file, ["Return"])
 end
 
 Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
   wait_and_focus('PidginCertificateAddHostnameDialog.png', 10, 'Certificate Import')
-  @screen.type("XXX test XXX" + Sikuli::Key.ENTER)
+  @screen.type("XXX test XXX", ["Return"])
   wait_and_focus('PidginCertificateTestItem.png', 10, 'Certificate Manager')
 end
 
@@ -443,13 +441,13 @@ end
 
 When /^I close Pidgin's certificate manager$/ do
   wait_and_focus('PidginCertificateManagerDialog.png', 10, 'Certificate Manager')
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
   # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
   @screen.waitVanish('PidginCertificateManagerDialog.png', 10)
 end
 
 When /^I close Pidgin's certificate import failure dialog$/ do
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
   # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
   @screen.waitVanish('PidginCertificateImportFailed.png', 10)
 end
@@ -462,7 +460,7 @@ When /^I see the Tails roadmap URL$/ do
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
-      @screen.type(Sikuli::Key.PAGE_UP)
+      @screen.press("Page_Up")
       raise e
     end
   end

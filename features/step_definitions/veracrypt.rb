@@ -142,7 +142,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
     sleep 2 # avoid ENTER being eaten by the auto-completion system
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.press("Return")
   end
   @screen.wait('VeraCryptUnlockDialog.png', 10)
   @screen.type(
@@ -150,12 +150,12 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   )
   if @veracrypt_needs_pim
     # Go back to the PIM entry text field
-    @screen.type(Sikuli::Key.TAB, Sikuli::KeyModifier.SHIFT)
+    @screen.press("shift", "Tab")
     sleep 1 # Otherwise typing the PIM goes in the void
     @screen.type($veracrypt_pim)
   end
   @screen.click('VeraCryptUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("Return")
   @screen.waitVanish('VeraCryptUnlockDialog.png', 10)
   try_for(30) do
     $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
@@ -197,7 +197,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     end
     @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
     sleep 2 # avoid ENTER being eaten by the auto-completion system
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.press("Return")
     try_for(15) do
       begin
         disks.children(roleName: 'table cell').find { |row|
@@ -226,14 +226,14 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.click('GnomeDisksUnlockDialogKeyfileComboBox.png')
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     $vm.file_overwrite('/tmp/keyfile', 'asdf')
-    @screen.type('/tmp/keyfile' + Sikuli::Key.ENTER)
+    @screen.type('/tmp/keyfile', ['Return'])
     @screen.waitVanish('Gtk3FileChooserDesktopButton.png', 10)
   end
   @screen.wait_and_click('GnomeDisksUnlockDialogHiddenVolumeLabel.png', 10) if @veracrypt_is_hidden
   # Clicking is robust neither with Dogtail (no visible effect) nor with Sikuli
   # (that sometimes clicks just a little bit outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)
-  @screen.type('u', Sikuli::KeyModifier.ALT) # "Unlock" button
+  @screen.press("alt", 'u') # "Unlock" button
   try_for(10, :msg => "Failed to mount the unlocked volume") do
     begin
       unlocked_volume = disks.child("#{size} VeraCrypt/TrueCrypt", roleName: 'panel', showingOnly: true)

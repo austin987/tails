@@ -54,7 +54,7 @@ Then /^I open Thunderbird's Add-ons Manager$/ do
   thunderbird_main.button('AppMenu')
   # ... then use keyboard shortcuts, with a little delay between both
   # so that the menu has a chance to pop up:
-  @screen.type('t', Sikuli::KeyModifier.ALT)
+  @screen.press("alt", 't')
   sleep(1)
   @screen.type('a')
   @thunderbird_addons = thunderbird_app.child(

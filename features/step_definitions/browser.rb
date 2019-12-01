@@ -14,7 +14,7 @@ end
 # otherwise, browser.tabs.warnOnClose will block this with a
 # "Quit and close tabs?" dialog.
 When /^I close the (?:Tor|Unsafe) Browser$/ do
-  @screen.type("q", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "q")
 end
 
 def xul_application_info(application)
@@ -92,11 +92,11 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     # shown, which we work around by pasting the address from the
     # clipboard, in one go.
     $vm.set_clipboard(address)
-    @screen.type('v', Sikuli::KeyModifier.CTRL)
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.press("ctrl", 'v')
+    @screen.press("Return")
   end
   recovery_on_failure = Proc.new do
-    @screen.type(Sikuli::Key.ESC)
+    @screen.press("Escape")
     @screen.waitVanish(info[:browser_stop_button_image], 3)
     open_address.call
   end
@@ -217,7 +217,7 @@ end
 When /^I save the file to the default Tor Browser download directory$/ do
   @screen.click('BrowserDownloadDialogSaveAsButton.png')
   @screen.wait('Gtk3SaveFileDialog.png', 10)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("Return")
 end
 
 Then /^the file is saved to the default Tor Browser download directory$/ do
@@ -248,7 +248,7 @@ Then /^I can listen to an Ogg audio track in Tor Browser$/ do
     step "I open the address \"#{test_url}\" in the Tor Browser"
   end
   recovery_on_failure = Proc.new do
-    @screen.type(Sikuli::Key.ESC)
+    @screen.press("Escape")
     @screen.waitVanish(info[:browser_stop_button_image], 3)
     open_test_url.call
   end
@@ -266,7 +266,7 @@ Then /^I can watch a WebM video in Tor Browser$/ do
     step "I open the address \"#{test_url}\" in the Tor Browser"
   end
   recovery_on_failure = Proc.new do
-    @screen.type(Sikuli::Key.ESC)
+    @screen.press("Escape")
     @screen.waitVanish(info[:browser_stop_button_image], 3)
     open_test_url.call
   end

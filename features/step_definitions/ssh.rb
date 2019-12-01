@@ -61,7 +61,7 @@ end
 Given /^I (?:am prompted to )?verify the SSH fingerprint for the (?:Git|SSH) (?:repository|server)$/ do
   @screen.wait("SSHFingerprint.png", 60)
   sleep 1 # brief pause to ensure that the following keystrokes do not get lost
-  @screen.type('yes' + Sikuli::Key.ENTER)
+  @screen.type('yes', ["Return"])
 end
 
 def get_free_tcp_port
@@ -145,8 +145,7 @@ Then /^I verify the SSH fingerprint for the SFTP server$/ do
   end
   # Here we'd like to click on the button using Dogtail, but something
   # is buggy so let's just use the keyboard.
-  @screen.type(Sikuli::Key.TAB)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(["Tab"], ["Return"])
 end
 
 Then /^I successfully connect to the SFTP server$/ do

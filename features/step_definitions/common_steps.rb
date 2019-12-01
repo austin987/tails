@@ -16,7 +16,7 @@ def post_vm_start_hook
   # opened). We sleep here, instead of in "I start […] via GNOME
   # Activities Overview", because it's our responsibility to return to
   # a normal desktop state that any following step can rely upon.
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
   sleep 1
 end
 
@@ -239,8 +239,8 @@ end
 
 Given /^the computer (re)?boots Tails( with genuine APT sources)?$/ do |reboot, keep_apt_sources|
   step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
-  @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
-               Sikuli::Key.ENTER)
+  @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}",
+               ["Return"])
   @screen.wait('TailsGreeter.png', 5*60)
   $vm.wait_until_remote_shell_is_up
   step 'I configure Tails to use a simulated Tor network'
@@ -257,7 +257,7 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
     @screen.wait('TailsGreeterLanguagePopover.png', 10)
     @screen.type(@language)
     sleep(2) # Gtk needs some time to filter the results
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.press("Return")
     @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
   when ''
     @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
@@ -268,7 +268,7 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
 end
 
 def open_greeter_additional_settings
-  @screen.click('TailsGreeterAddMoreOptions.png')
+  @screen.wait_and_click('TailsGreeterAddMoreOptions.png', 10)
   @screen.wait('TailsGreeterAdditionalSettingsDialog.png', 10)
 end
 
@@ -288,9 +288,9 @@ Given /^I set an administration password$/ do
   @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
   @screen.wait("TailsGreeterAdminPasswordDialog.png", 10)
   @screen.type(@sudo_password)
-  @screen.type(Sikuli::Key.TAB)
+  @screen.press("Tab")
   @screen.type(@sudo_password)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("Return")
 end
 
 Given /^the Tails desktop is ready$/ do
@@ -416,7 +416,7 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   url = "https://www.eff.org"
   step "I open the address \"#{url}\" in the Tor Browser"
   step 'the Tor Browser shows the "The proxy server is refusing connections" error'
-  @screen.type("d", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "d")
   @screen.wait("TorBrowserBookmarkPrompt.png", 10)
   @screen.type(url)
   # The new default location for bookmarks is "Other Bookmarks", but our test
@@ -427,11 +427,11 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   # Need to sleep here, otherwise the changed Bookmark location is not taken
   # into account and we end up creating a bookmark in "Other Bookmark" location.
   sleep 1
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("Return")
 end
 
 Given /^the Tor Browser has a bookmark to eff.org$/ do
-  @screen.type("b", Sikuli::KeyModifier.ALT)
+  @screen.press("alt", "b")
   @screen.wait("TorBrowserEFFBookmark.png", 10)
 end
 
@@ -440,7 +440,7 @@ Given /^all notifications have disappeared$/ do
   # bar, which when clicked opens the calendar.
   x, y = 512, 10
   gnome_shell = Dogtail::Application.new('gnome-shell')
-  retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
+  retry_action(10, recovery_proc: Proc.new { @screen.press("Escape") }) do
     @screen.click_point(x, y)
     begin
       gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
@@ -451,7 +451,7 @@ Given /^all notifications have disappeared$/ do
     end
     gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
   # Increase the chances that by the time we leave this step, the
   # notifications menu was closed and the desktop is back to its
   # normal state. Otherwise, all kinds of trouble may arise: for
@@ -486,8 +486,7 @@ def deal_with_polkit_prompt(password, opts = {})
   opts[:expect_success] ||= true
   image = 'PolicyKitAuthPrompt.png'
   @screen.wait(image, 60)
-  @screen.type(password)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(password, ["Return"])
   if opts[:expect_success]
     @screen.waitVanish(image, 20)
   else
@@ -612,7 +611,7 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   else
     @screen.wait_and_click('GnomeTerminalWindow.png', 20)
   end
-  @screen.type(command + Sikuli::Key.ENTER)
+  @screen.type(command, ["Return"])
 end
 
 When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
@@ -681,7 +680,7 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   # Type the rest of the search query
   @screen.type(app_name[1..-1])
   sleep 2
-  @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "Return")
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -690,7 +689,7 @@ end
 
 When /^I press the "([^"]+)" key$/ do |key|
   begin
-    @screen.type(eval("Sikuli::Key.#{key}"))
+    @screen.press(key)
   rescue RuntimeError
     raise "unsupported key #{key}"
   end
@@ -715,14 +714,15 @@ Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser direc
   end
   @screen.wait_and_click('GnomePlaces.png', 10)
   @screen.wait(bookmark_image, 40)
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
 end
 
 Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
   try_for(65) do
     @screen.wait_and_click('GnomePlaces.png', 10)
     @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 10)
-    @screen.type(Sikuli::Key.ESC)
+    @screen.press("Escape")
+    true
   end
 end
 
@@ -750,7 +750,7 @@ end
 
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   should_work = should_work == 'can' ? true : false
-  @screen.type("s", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "s")
   @screen.wait("Gtk3SaveFileDialog.png", 10)
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
@@ -758,7 +758,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
     @screen.wait("GtkTorBrowserPersistentBookmarkSelected.png", 10)
     # The output filename (without its extension) is already selected,
     # let's use the keyboard shortcut to focus its field
-    @screen.type("n", Sikuli::KeyModifier.ALT)
+    @screen.press("alt", "n")
     @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
   elsif output_dir == "default downloads"
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
@@ -767,8 +767,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   end
   # Only the part of the filename before the .html extension can be easily replaced
   # so we have to remove it before typing it into the arget filename entry widget.
-  @screen.type(output_file.sub(/[.]html$/, ''))
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(output_file.sub(/[.]html$/, ''), ["Return"])
   if should_work
     try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
       $vm.file_exist?("#{output_dir}/#{output_file}")
@@ -784,7 +783,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   else
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
-  @screen.type("p", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "p")
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
   print_dialog.child('Print to File', 'table cell').click
   print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click()
@@ -795,8 +794,8 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # Only the file's basename is selected when the file selector dialog opens,
   # so we type only the desired file's basename to replace it
   $vm.set_clipboard(output_dir + '/' + output_file.sub(/[.]pdf$/, ''))
-  @screen.type('v', Sikuli::KeyModifier.CTRL)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("ctrl", 'v')
+  @screen.press("Return")
   # Yes, TorBrowserPrintButton.png != Gtk3PrintButton.png.
   # If you try to unite them, make sure this does not break the tests
   # that use either.

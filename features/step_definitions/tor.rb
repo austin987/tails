@@ -364,7 +364,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     @bridge_hosts << { address: address, port: port.to_i }
     bridge_line = bridge_type + " " + address + ":" + port
     [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
-    @screen.type(bridge_line + Sikuli::Key.ENTER)
+    @screen.type(bridge_line, ["Return"])
   end
   @screen.hide_cursor
   @screen.wait_and_click('TorLauncherFinishButton.png', 10)

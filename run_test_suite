@@ -16,7 +16,6 @@ i18nspector
 imagemagick
 libav-tools
 libcap2-bin
-libsikulixapi-java
 libvirt-clients
 libvirt-daemon-system
 libvirt-dev
@@ -35,7 +34,6 @@ ruby-json
 ruby-libvirt
 ruby-packetfu
 ruby-rb-inotify
-ruby-rjb
 ruby-rspec
 ruby-test-unit
 seabios
@@ -43,6 +41,7 @@ tcpdump
 tor
 unclutter
 virt-viewer
+xdotool
 xvfb
 "
 
@@ -75,12 +74,6 @@ Options for '@product' features:
   --keep-snapshots   Don't ever delete any snapshots (including ones marked as
                      temporary). This can be a big time saver when debugging new
                      features.
-  --retry-find       Print a warning whenever Sikuli fails to find an image
-                     and allow *one* retry after pressing ENTER. This is useful
-                     for updating outdated images.
-  --fuzzy-image-matching
-                     When Sikuli fails to find an image, let it retry with more
-                     fuzziness (or \"lower similarity factor\" in Sikuli terms).
   --tmpdir           Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
@@ -192,12 +185,10 @@ VNC_VIEWER=
 VNC_SERVER=
 INTERACTIVE_DEBUGGING=
 KEEP_SNAPSHOTS=
-SIKULI_RETRY_FINDFAILED=
-SIKULI_FUZZY_IMAGE_MATCHING=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,fuzzy-image-matching,iso:,old-iso:,interactive-debugging"
+LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,iso:,old-iso:,interactive-debugging"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -228,12 +219,6 @@ while [ $# -gt 0 ]; do
             ;;
         --keep-snapshots)
             export KEEP_SNAPSHOTS="yes"
-            ;;
-        --retry-find)
-            export SIKULI_RETRY_FINDFAILED="yes"
-            ;;
-        --fuzzy-image-matching)
-            export SIKULI_FUZZY_IMAGE_MATCHING="yes"
             ;;
         --tmpdir)
             shift
@@ -274,7 +259,6 @@ if [ -n "${VNC_VIEWER:-}" ]; then
     start_vnc_viewer
 fi
 
-export SIKULI_HOME="/usr/share/java"
 export DISPLAY=${TARGET_DISPLAY}
 
 cucumber ${@}

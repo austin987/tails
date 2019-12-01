@@ -221,12 +221,12 @@ Given /^I enable all persistence presets$/ do
     debug_log("typing TAB #{tabs_to_select_switch} times to select the switch")
     tabs_to_select_switch.times do
       debug_log("typing TAB")
-      @screen.type(Sikuli::Key.TAB)
+      @screen.press("Tab")
     end
     # Activate the switch
     if ! setting['enabled']
       debug_log("pressing space")
-      @screen.type(Sikuli::Key.SPACE)
+      @screen.press("space")
     else
       debug_log("setting already enabled, skipping")
     end
@@ -235,19 +235,17 @@ Given /^I enable all persistence presets$/ do
 end
 
 def save_and_exit_the_persistence_wizard
-  @screen.type(Sikuli::Key.ENTER) # Press the Save button
+  @screen.press("Return") # Press the Save button
   @screen.wait('PersistenceWizardDone.png', 60)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  @screen.press("alt", "F4")
 end
 
 When /^I disable the first persistence preset$/ do
   step 'I start "Configure persistent volume" via GNOME Activities Overview'
   @screen.wait('PersistenceWizardPresets.png', 300)
-  @screen.type(Sikuli::Key.TAB)
-  @screen.type(Sikuli::Key.SPACE)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(["Tab"], ["space"], ["Return"])
   @screen.wait('PersistenceWizardDone.png', 30)
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  @screen.press("alt", "F4")
 end
 
 Given /^I create a persistent partition( for Additional Software)?$/ do |asp|
@@ -255,7 +253,9 @@ Given /^I create a persistent partition( for Additional Software)?$/ do |asp|
     step 'I start "Configure persistent volume" via GNOME Activities Overview'
   end
   @screen.wait('PersistenceWizardStart.png', 60)
-  @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
+  @screen.type(@persistence_password)
+  @screen.press("Tab")
+  @screen.type(@persistence_password, ["Return"])
   @screen.wait('PersistenceWizardPresets.png', 300)
   if not asp
     step "I enable all persistence presets"
@@ -380,7 +380,7 @@ end
 
 Given /^I enable persistence$/ do
   @screen.wait_and_click('TailsGreeterPersistencePassphrase.png', 60)
-  @screen.type(@persistence_password + Sikuli::Key.ENTER)
+  @screen.type(@persistence_password, ["Return"])
   @screen.wait('TailsGreeterPersistenceUnlocked.png', 30)
 end
 
@@ -688,7 +688,7 @@ end
 When /^I delete the persistent partition$/ do
   step 'I start "Delete persistent volume" via GNOME Activities Overview'
   @screen.wait("PersistenceWizardDeletionStart.png", 120)
-  @screen.type(" ")
+  @screen.press("space")
   @screen.wait("PersistenceWizardDone.png", 120)
 end
 

@@ -56,7 +56,8 @@ def maybe_deal_with_pinentry
     # miss keystrokes by typing too soon. This sleep prevents this problem from
     # coming up.
     sleep 5
-    @screen.type(@passphrase + Sikuli::Key.ENTER)
+    @screen.type(@passphrase)
+    @screen.press("Return")
   rescue FindFailed
     # The passphrase was cached or we wasn't prompted at all (e.g. when
     # only encrypting to a public key)
@@ -98,7 +99,9 @@ end
 
 When /^I encrypt the message using my OpenPGP key$/ do
   encrypt_sign_helper do
-    @screen.type(@key_name + Sikuli::Key.ENTER + Sikuli::Key.ENTER)
+    @screen.type(@key_name)
+    @screen.press("Return")
+    @screen.press("Return")
   end
 end
 
@@ -109,7 +112,9 @@ end
 
 When /^I sign the message using my OpenPGP key$/ do
   encrypt_sign_helper do
-    @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
+    @screen.press("Tab")
+    @screen.press("Down")
+    @screen.press("Return")
   end
 end
 
@@ -121,10 +126,12 @@ end
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
   encrypt_sign_helper do
     @screen.wait_and_click('GpgAppletEncryptionKey.png', 20)
-    @screen.type(Sikuli::Key.SPACE)
+    @screen.press("space")
     @screen.wait('GpgAppletKeySelected.png', 10)
-    @screen.type(Sikuli::Key.TAB + Sikuli::Key.DOWN + Sikuli::Key.ENTER)
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.press("Tab")
+    @screen.press("Down")
+    @screen.press("Return")
+    @screen.press("Return")
   end
 end
 
