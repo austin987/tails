@@ -483,7 +483,7 @@ Given /^I enter the sudo password in the pkexec prompt$/ do
 end
 
 def deal_with_polkit_prompt(password, opts = {})
-  opts[:expect_success] ||= true
+  opts[:expect_success] = true if opts[:expect_success].nil?
   image = 'PolicyKitAuthPrompt.png'
   @screen.wait(image, 60)
   @screen.type(password, ["Return"])
