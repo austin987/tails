@@ -45,4 +45,12 @@ class Display
     start
   end
 
+  def screenshot(target)
+    FileUtils.rm_f(target)
+    p = IO.popen(['import', '-quality', '100%', '-window', 'root', target])
+    p.close
+    assert($?.success?)
+    assert(File.exists?(target))
+  end
+
 end
