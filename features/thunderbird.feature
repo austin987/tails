@@ -1,4 +1,3 @@
-#11465
 @product @check_tor_leaks
 Feature: Thunderbird email client
   As a Tails user
@@ -6,19 +5,15 @@ Feature: Thunderbird email client
 
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
-    And I have not configured an email account
+    And I have not configured an email account yet
     When I start Thunderbird
     Then I am prompted to setup an email account
 
-  Scenario: Only the expected addons are installed
+  Scenario: Only the expected add-ons are installed
     Given I cancel setting up an email account
     When I open Thunderbird's Add-ons Manager
     And I click the extensions tab
-    Then I see that only the Enigmail and TorBirdy addons are enabled in Thunderbird
-
-  Scenario: Torbirdy is configured to use Tor
-    Given I cancel setting up an email account
-    Then I see that Torbirdy is configured to use Tor
+    Then I see that only the Enigmail add-on is enabled in Thunderbird
 
   Scenario: Thunderbird's autoconfiguration wizard defaults to IMAP and secure protocols
     When I enter my email credentials into the autoconfiguration wizard
