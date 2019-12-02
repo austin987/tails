@@ -380,7 +380,7 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
     end
   end
   @screen.hide_cursor
-  @screen.wait(          chan_image(account, channel, 'welcome'), 10)
+  @screen.wait(chan_image(account, channel, 'welcome'), 10)
 end
 
 Then /^I take note of the configured Pidgin accounts$/ do
