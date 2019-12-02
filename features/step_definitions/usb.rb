@@ -379,7 +379,7 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 end
 
 Given /^I enable persistence$/ do
-  @screen.wait_and_click('TailsGreeterPersistencePassphrase.png', 60)
+  @screen.wait('TailsGreeterPersistencePassphrase.png', 60).click
   @screen.type(@persistence_password, ["Return"])
   @screen.wait('TailsGreeterPersistenceUnlocked.png', 30)
 end

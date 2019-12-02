@@ -136,9 +136,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   step 'I start "Unlock VeraCrypt Volumes" via GNOME Activities Overview'
   case support
   when 'volume'
-    @screen.wait_and_click('Gtk3UnlockButton.png', 10)
+    @screen.wait('Gtk3UnlockButton.png', 10).click
   when 'file container'
-    @screen.wait_and_click('UnlockVeraCryptVolumesAddButton.png', 10)
+    @screen.wait('UnlockVeraCryptVolumesAddButton.png', 10).click
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     @screen.type(@veracrypt_shared_dir_in_guest + '/' + $veracrypt_volume_name)
     sleep 2 # avoid ENTER being eaten by the auto-completion system
@@ -229,7 +229,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.type('/tmp/keyfile', ['Return'])
     @screen.waitVanish('Gtk3FileChooserDesktopButton.png', 10)
   end
-  @screen.wait_and_click('GnomeDisksUnlockDialogHiddenVolumeLabel.png', 10) if @veracrypt_is_hidden
+  @screen.wait('GnomeDisksUnlockDialogHiddenVolumeLabel.png', 10).click if @veracrypt_is_hidden
   # Clicking is robust neither with Dogtail (no visible effect) nor with Sikuli
   # (that sometimes clicks just a little bit outside of the button)
   @screen.wait('Gtk3UnlockButton.png', 10)

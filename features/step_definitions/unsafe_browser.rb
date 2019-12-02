@@ -49,8 +49,8 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
   info = xul_application_info("Unsafe Browser")
   # "Show all bookmarks"
   @screen.press("shift", "ctrl", "o")
-  @screen.wait_and_click("UnsafeBrowserExportBookmarksButton.png", 20)
-  @screen.wait_and_click("UnsafeBrowserExportBookmarksMenuEntry.png", 20)
+  @screen.wait("UnsafeBrowserExportBookmarksButton.png", 20).click
+  @screen.wait("UnsafeBrowserExportBookmarksMenuEntry.png", 20).click
   @screen.wait("UnsafeBrowserExportBookmarksSavePrompt.png", 20)
   path = "/home/#{info[:user]}/bookmarks"
   @screen.type(path, ["Return"])

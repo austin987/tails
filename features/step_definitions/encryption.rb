@@ -13,8 +13,8 @@ def seahorse_menu_click_helper(main, sub, verify = nil)
   try_for(60) do
     step "process \"#{verify}\" is running" if verify
     @screen.hide_cursor
-    @screen.wait_and_click(main, 10)
-    @screen.wait_and_click(sub, 10)
+    @screen.wait(main, 10).click
+    @screen.wait(sub, 10).click
     return
   end
 end
@@ -51,7 +51,7 @@ end
 
 def maybe_deal_with_pinentry
   begin
-    @screen.wait_and_click("PinEntryPrompt.png", 10)
+    @screen.wait("PinEntryPrompt.png", 10).click
     # Without this sleep here (and reliable visual indicators) we can sometimes
     # miss keystrokes by typing too soon. This sleep prevents this problem from
     # coming up.
@@ -80,7 +80,7 @@ end
 def encrypt_sign_helper
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletSignEncrypt.png')
-  @screen.wait_and_click("GpgAppletChooseKeyWindow.png", 30)
+  @screen.wait("GpgAppletChooseKeyWindow.png", 30).click
   # We don't have a good visual indicator for when we can continue without
   # keystrokes being lost.
   sleep 5
@@ -125,7 +125,7 @@ end
 
 When /^I both encrypt and sign the message using my OpenPGP key$/ do
   encrypt_sign_helper do
-    @screen.wait_and_click('GpgAppletEncryptionKey.png', 20)
+    @screen.wait('GpgAppletEncryptionKey.png', 20).click
     @screen.press("space")
     @screen.wait('GpgAppletKeySelected.png', 10)
     @screen.press("Tab")

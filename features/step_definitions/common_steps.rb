@@ -260,14 +260,14 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   case lang
   when 'German'
     @language = "German"
-    @screen.wait_and_click('TailsGreeterLanguage.png', 10)
+    @screen.wait('TailsGreeterLanguage.png', 10).click
     @screen.wait('TailsGreeterLanguagePopover.png', 10)
     @screen.type(@language)
     sleep(2) # Gtk needs some time to filter the results
     @screen.press("Return")
-    @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
+    @screen.wait("TailsGreeterLoginButton#{@language}.png", 10).click
   when ''
-    @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+    @screen.wait('TailsGreeterLoginButton.png', 10).click
   else
     raise "Unsupported language: #{lang}"
   end
@@ -275,7 +275,7 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
 end
 
 def open_greeter_additional_settings
-  @screen.wait_and_click('TailsGreeterAddMoreOptions.png', 10)
+  @screen.wait('TailsGreeterAddMoreOptions.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsDialog.png', 10)
 end
 
@@ -285,14 +285,14 @@ end
 
 Given /^I enable the specific Tor configuration option$/ do
   open_greeter_additional_settings()
-  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
-  @screen.wait_and_click("TailsGreeterSpecificTorConfiguration.png", 10)
-  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
+  @screen.wait('TailsGreeterNetworkConnection.png', 30).click
+  @screen.wait("TailsGreeterSpecificTorConfiguration.png", 10).click
+  @screen.wait("TailsGreeterAdditionalSettingsAdd.png", 10).click
 end
 
 Given /^I set an administration password$/ do
   open_greeter_additional_settings()
-  @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
+  @screen.wait("TailsGreeterAdminPassword.png", 20).click
   @screen.wait("TailsGreeterAdminPasswordDialog.png", 10)
   @screen.type(@sudo_password)
   @screen.press("Tab")
@@ -429,8 +429,8 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   # The new default location for bookmarks is "Other Bookmarks", but our test
   # expects the new entry is available in "Bookmark Menu", that's why we need
   # to select the location explicitly.
-  @screen.wait_and_click("TorBrowserBookmarkLocation.png", 10)
-  @screen.wait_and_click("TorBrowserBookmarkLocationBookmarksMenu.png", 10)
+  @screen.wait("TorBrowserBookmarkLocation.png", 10).click
+  @screen.wait("TorBrowserBookmarkLocationBookmarksMenu.png", 10).click
   # Need to sleep here, otherwise the changed Bookmark location is not taken
   # into account and we end up creating a bookmark in "Other Bookmark" location.
   sleep 1
@@ -552,13 +552,13 @@ end
 
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
-  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  @screen.wait('TailsEmergencyShutdownButton.png', 10).click
   # Sometimes the next button too fast, before the menu has settled
   # down to its final size and the icon we want to click is in its
   # final position. dogtail might allow us to fix that, but given how
   # rare this problem is, it's not worth the effort.
   step 'I wait 5 seconds'
-  @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
+  @screen.wait('TailsEmergencyShutdownHalt.png', 10).click
 end
 
 When /^I warm reboot the computer$/ do
@@ -567,11 +567,11 @@ end
 
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
-  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  @screen.wait('TailsEmergencyShutdownButton.png', 10).click
   # See comment on /^I request a shutdown using the emergency shutdown applet$/
   # that explains why we need to wait.
   step 'I wait 5 seconds'
-  @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
+  @screen.wait('TailsEmergencyShutdownReboot.png', 10).click
 end
 
 Given /^the package "([^"]+)" is( not)? installed( after Additional Software has been started)?$/ do |package, absent, asp|
@@ -616,7 +616,7 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   if !$vm.has_process?("gnome-terminal-server")
     step "I start and focus GNOME Terminal"
   else
-    @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+    @screen.wait('GnomeTerminalWindow.png', 20).click
   end
   @screen.type(command, ["Return"])
 end
@@ -719,14 +719,14 @@ Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser direc
   when "persistent"
     bookmark_image = 'TorBrowserPersistentFilesBookmark.png'
   end
-  @screen.wait_and_click('GnomePlaces.png', 10)
+  @screen.wait('GnomePlaces.png', 10).click
   @screen.wait(bookmark_image, 40)
   @screen.press("Escape")
 end
 
 Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
   try_for(65) do
-    @screen.wait_and_click('GnomePlaces.png', 10)
+    @screen.wait('GnomePlaces.png', 10).click
     @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 10)
     @screen.press("Escape")
     true
@@ -750,7 +750,7 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
   info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
-    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    @screen.wait(image, 10).click(double: true) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
     step 'the Tor Browser has started'
   end
 end
@@ -761,7 +761,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   @screen.wait("Gtk3SaveFileDialog.png", 10)
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
-    @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
+    @screen.wait("GtkTorBrowserPersistentBookmark.png", 10).click
     @screen.wait("GtkTorBrowserPersistentBookmarkSelected.png", 10)
     # The output filename (without its extension) is already selected,
     # let's use the keyboard shortcut to focus its field
@@ -806,7 +806,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # Yes, TorBrowserPrintButton.png != Gtk3PrintButton.png.
   # If you try to unite them, make sure this does not break the tests
   # that use either.
-  @screen.wait_and_click("TorBrowserPrintButton.png", 10)
+  @screen.wait("TorBrowserPrintButton.png", 10).click
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }

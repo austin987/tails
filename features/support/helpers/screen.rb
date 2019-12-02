@@ -5,8 +5,9 @@ class Match
 
   attr_reader :w, :h, :x, :y, :image
 
-  def initialize(image, x, y, w, h)
+  def initialize(image, screen, x, y, w, h)
     @image = image
+    @screen = screen
     @x = x
     @y = y
     @w = w
@@ -15,6 +16,14 @@ class Match
 
   def middle
     [@x + @w/2, @y + @h/2]
+  end
+
+  def hover(**opts)
+    @screen.hover(*middle, **opts)
+  end
+
+  def click(**opts)
+    @screen.click(*middle, **opts)
   end
 
 end
@@ -52,7 +61,7 @@ class Screen
       if p.nil?
         raise FindFailed.new("cannot find #{image} on the screen")
       else
-        m = Match.new(image, *p)
+        m = Match.new(image, self, *p)
         debug_log("Screen: found #{image} at (#{m.middle.join(', ')})")
         return m
       end
@@ -190,22 +199,6 @@ class Screen
     debug_log("Mouse: #{action} #{button} button at (#{x}, #{y})") if opts[:log]
     xdotool('click', '--repeat', opts[:repeat], opts[:button])
     return [x, y]
-  end
-
-  def wait_and_click(pattern, time, **opts)
-    click(wait(pattern, time, **opts))
-  end
-
-  def wait_and_double_click(pattern, time, **opts)
-    doubleClick(wait(pattern, time, **opts))
-  end
-
-  def wait_and_right_click(pattern, time, **opts)
-    rightClick(wait(pattern, time, **opts))
-  end
-
-  def wait_and_hover(pattern, time, **opts)
-    hover(wait(pattern, time, **opts), **opts)
   end
 
   def click_mid_right_edge(pattern, **opts)

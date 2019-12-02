@@ -165,7 +165,7 @@ end
 
 Then /^Pidgin automatically generates an OTR key$/ do
   @screen.wait("PidginOTRKeyGenPrompt.png", 30)
-  @screen.wait_and_click("PidginOTRKeyGenPromptDoneButton.png", 30)
+  @screen.wait("PidginOTRKeyGenPromptDoneButton.png", 30).click
 end
 
 Then /^an OTR session was successfully started with my friend$/ do
@@ -179,8 +179,8 @@ end
 When /^I join some empty multi-user chat$/ do
   $vm.focus_window('Buddy List')
   @screen.click("PidginBuddiesMenu.png")
-  @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
-  @screen.wait_and_click("PidginJoinChatWindow.png", 10)
+  @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
+  @screen.wait("PidginJoinChatWindow.png", 10).click
   @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
   account = xmpp_account("Tails_account")
   if account.has_key?("chat_room") && \
@@ -220,7 +220,7 @@ end
 When /^I clear the multi-user chat's scrollback$/ do
   $vm.focus_window(@chat_room_jid)
   @screen.click("PidginConversationMenu.png")
-  @screen.wait_and_click("PidginConversationMenuClearScrollback.png", 10)
+  @screen.wait("PidginConversationMenuClearScrollback.png", 10).click
 end
 
 Then /^I can see that my friend joined the multi-user chat$/ do
@@ -287,8 +287,8 @@ def pidgin_otr_keys
 end
 
 When /^I open Pidgin's account manager window$/ do
-  @screen.wait_and_click('PidginMenuAccounts.png', 20)
-  @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
+  @screen.wait('PidginMenuAccounts.png', 20).click
+  @screen.wait('PidginMenuManageAccounts.png', 20).click
   step "I see Pidgin's account manager window"
 end
 
@@ -297,7 +297,7 @@ When /^I see Pidgin's account manager window$/ do
 end
 
 When /^I close Pidgin's account manager window$/ do
-  @screen.wait_and_click("PidginDialogCloseButton.png", 10)
+  @screen.wait("PidginDialogCloseButton.png", 10).click
 end
 
 When /^I close Pidgin$/ do
@@ -359,9 +359,9 @@ end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   $vm.focus_window('Buddy List')
-  @screen.wait_and_click("PidginBuddiesMenu.png", 20)
-  @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
-  @screen.wait_and_click("PidginJoinChatWindow.png", 10)
+  @screen.wait("PidginBuddiesMenu.png", 20).click
+  @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
+  @screen.wait("PidginJoinChatWindow.png", 10).click
   @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
   @screen.type(channel)
   @screen.click("PidginJoinChatButton.png")
@@ -370,7 +370,7 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   @screen.hide_cursor
   try_for(60) do
     begin
-      @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 5)
+      @screen.wait(chan_image(account, channel, 'conversation_tab'), 5).click
     rescue FindFailed => e
       # If the channel tab can't be found it could be because there were
       # multiple connection attempts and the channel tab we want is off the
@@ -409,12 +409,12 @@ def pidgin_add_certificate_from (cert_file)
   step "I copy \"/usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_EV_Root_CA.crt\" to \"#{cert_file}\" as user \"amnesia\""
 
   $vm.focus_window('Buddy List')
-  @screen.wait_and_click('PidginToolsMenu.png', 10)
-  @screen.wait_and_click('PidginCertificatesMenuItem.png', 10)
+  @screen.wait('PidginToolsMenu.png', 10).click
+  @screen.wait('PidginCertificatesMenuItem.png', 10).click
   @screen.wait('PidginCertificateManagerDialog.png', 10)
-  @screen.wait_and_click('PidginCertificateAddButton.png', 10)
+  @screen.wait('PidginCertificateAddButton.png', 10).click
   begin
-    @screen.wait_and_click('GtkFileChooserDesktopButton.png', 10)
+    @screen.wait('GtkFileChooserDesktopButton.png', 10).click
   rescue FindFailed
     # The first time we're run, the file chooser opens in the Recent
     # view, so we have to browse a directory before we can use the
@@ -422,7 +422,7 @@ def pidgin_add_certificate_from (cert_file)
     # chooser is already in the Desktop directory, so we don't need to
     # do anything. Hence, this noop exception handler.
   end
-  @screen.wait_and_click('GtkFileTypeFileNameButton.png', 10)
+  @screen.wait('GtkFileTypeFileNameButton.png', 10).click
   @screen.press("alt", "l") # "Location" field
   @screen.type(cert_file, ["Return"])
 end
@@ -442,13 +442,13 @@ end
 When /^I close Pidgin's certificate manager$/ do
   wait_and_focus('PidginCertificateManagerDialog.png', 10, 'Certificate Manager')
   @screen.press("Escape")
-  # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
+  # @screen.wait('PidginCertificateManagerClose.png', 10).click
   @screen.waitVanish('PidginCertificateManagerDialog.png', 10)
 end
 
 When /^I close Pidgin's certificate import failure dialog$/ do
   @screen.press("Escape")
-  # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
+  # @screen.wait('PidginCertificateManagerClose.png', 10).click
   @screen.waitVanish('PidginCertificateImportFailed.png', 10)
 end
 

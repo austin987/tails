@@ -325,9 +325,9 @@ When /^the Tor Launcher autostarts$/ do
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
-  @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
-  @screen.wait_and_click('TorLauncherBridgeCheckbox.png', 10)
-  @screen.wait_and_click('TorLauncherBridgeList.png', 10)
+  @screen.wait('TorLauncherConfigureButton.png', 10).click
+  @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
+  @screen.wait('TorLauncherBridgeList.png', 10).click
   @bridge_hosts = []
   chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
   bridge_dirs = Dir.glob(
@@ -367,7 +367,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     @screen.type(bridge_line, ["Return"])
   end
   @screen.hide_cursor
-  @screen.wait_and_click('TorLauncherFinishButton.png', 10)
+  @screen.wait('TorLauncherFinishButton.png', 10).click
   @screen.wait('TorLauncherConnectingWindow.png', 10)
   @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
 end

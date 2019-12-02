@@ -124,7 +124,7 @@ end
 
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
-  @screen.wait_and_click("SeahorseWindow.png", 10)
+  @screen.wait("SeahorseWindow.png", 10).click
   seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait('SeahorsePreferences.png', 20)
   @screen.press("alt", "p") # Option: "Publish keys to...".
@@ -154,7 +154,7 @@ Then /^I synchronize keys in Seahorse$/ do
   end
 
   retry_tor(recovery_proc) do
-    @screen.wait_and_click("SeahorseWindow.png", 10)
+    @screen.wait("SeahorseWindow.png", 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuSync.png',
                                'seahorse')
@@ -190,7 +190,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     @screen.press("ctrl", "w")
   end
   retry_tor(recovery_proc) do
-    @screen.wait_and_click("SeahorseWindow.png", 10)
+    @screen.wait("SeahorseWindow.png", 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuFind.png',
                                'seahorse')
