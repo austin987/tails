@@ -1,8 +1,77 @@
 tails (4.1) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Major changes
+    - Upgrade Tor Browser to 9.0.2-build2, based on Firefox ESR 68.3.
+    - Upgrade Thunderbird to 68 (Closes: #16771, #17220, #17222, #17267).
 
- -- intrigeri <intrigeri@debian.org>  Tue, 22 Oct 2019 15:23:42 +0000
+  * Security fixes
+    - Upgrade Linux to 5.3.9-2 from sid (Closes: #17124).
+    - Disable unprivileged userfaultfd syscall (Closes: #17196).
+
+  * Bugfixes
+    - Remove TorBirdy (Closes: #17219, #17269).
+    - Use keys.openpgp.org's Onion service as the default keyserver
+      (Closes: #12689, #14770).
+    - Fix ordering of GTK bookmarks setup vs. Tor Browser directories
+      creation (Closes: #17206).
+    - Bring back the "Show Passphrase" button in the Greeter
+      (Closes: #17177).
+    - Bring back "Open in Terminal" entry in the GNOME Files context menu
+      (Closes: #17186).
+    - Revert "Browsers: disable the Quantum Bar." (Closes: #17143).
+    - Revert "Hide all Tor connection-related settings in
+      about:preferences in all browsers" (Closes: #17214).
+    - Wait until Tor has bootstrapped before we try to upgrade Additional
+      Software (Closes: #17203).
+    - Fix the "GDM failed to start" splash screen functionality
+      (Closes: #17200).
+
+  * Minor improvements and updates
+    - htpdate: stop sending User-Agent that fakes Tor Browser
+      (Closes: #12023).
+    - HTP: replace encrypted.google.com with www.google.com.
+    - Remove signal handler from Greeter UI file (Closes: #17240).
+
+  * Build system
+    - Update Vagrant box to Buster (Closes: #16868).
+    - Adjust to timedatectl's output on Buster.
+    - Adjust to Buster's debootstrap.
+    - Vagrant: ensure the chroot has a /proc filesystem while running
+      postinstall.sh
+    - Vagrant: install po4a from Stretch in the basebox.
+    - build-tails: wait for NTP to be disabled before setting the desired
+      date.
+    - Bump APT snapshot of the Debian archive to 2019111801, including the
+      10.2 point release of Buster (Closes: #17124, #17021).
+    - Install virtualbox 6.0.12-dfsg-1 from our custom APT repository
+      (Closes: #17161).
+
+  * Test suite
+    - Ensure we don't break tests by opening the Applications menu in
+      post_vm_start_hook (Closes: #17164).
+    - Improve GnuPG testing (Closes: #12689):
+      · Switch to using sajolida's key.
+      · Start adjusting for keys.openpgp.org.
+      · Make the "GnuPG's dirmngr uses the configured keyserver" step
+        actually test what it is meant to.
+      · Make error strings better reflect what failure they are about.
+      · Ensure dirmngr uses IPv4 since our CI runs on an IPv4-only
+        infrastructure.
+    - Ensure dirmngr picks up the changes we make to its configuration.
+    - Switch backend keyservers (Closes: #14770).
+    - Don't leave redir(1) processes behind (Closes: #14948).
+    - Update image for Buster (Closes: #14770).
+    - Update fragility status of Seahorse scenarios.
+    - Avoid multiple instances of tcpdump writing to the same file,
+      resulting in an unparsable network capture (Closes: #17102).
+    - Update for Thunderbird 68 (Closes: #17269).
+
+  * Documentation:
+    - Remove or adapt mentions to Tails Installer as only installation
+      method (Closes: #17204).
+
+
+ -- Tails developers <tails@boum.org>  Mon, 02 Dec 2019 14:47:34 +0100
 
 tails (4.0) unstable; urgency=medium
 
