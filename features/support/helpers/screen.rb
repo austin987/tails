@@ -167,10 +167,6 @@ class Screen
     return [x, y]
   end
 
-  def hover_point(x, y)
-    hover(x, y)
-  end
-
   def hide_cursor
     hover(@w - 1, @h/2)
   end
@@ -194,24 +190,6 @@ class Screen
     debug_log("Mouse: #{action} #{button} button at (#{x}, #{y})") if opts[:log]
     xdotool('click', '--repeat', opts[:repeat], opts[:button])
     return [x, y]
-  end
-
-  def click_point(*args)
-    click(*args)
-  end
-
-  def doubleClick(*args, **opts)
-    opts[:repeat] = 2
-    click(*args, **opts)
-  end
-
-  def doubleClick_point(*args)
-    doubleClick(*args)
-  end
-
-  def rightClick(*args, **opts)
-    opts[:button] = 3
-    click(*args, **opts)
   end
 
   def wait_and_click(pattern, time, **opts)

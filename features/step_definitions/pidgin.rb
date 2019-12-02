@@ -124,7 +124,7 @@ When /^I start a conversation with my friend$/ do
   r = @screen.find("PidginFriendOnline.png")
   x = r.x + r.w/2
   y = r.y + r.h
-  @screen.doubleClick_point(x, y)
+  @screen.click(x, y, double: true)
   # Since Pidgin sets the window name to the contact, we have no good
   # way to identify the conversation window. Let's just look for the
   # expected menu bar.

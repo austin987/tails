@@ -6,7 +6,7 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click_point(@screen.w - 1, @screen.h/2)
+  @screen.click(@screen.w - 1, @screen.h/2)
   # Increase the chances that by the time we leave this function, if
   # the above click has opened the Applications menu (which sometimes
   # happens, go figure), that menu was closed and the desktop is back
@@ -448,7 +448,7 @@ Given /^all notifications have disappeared$/ do
   x, y = 512, 10
   gnome_shell = Dogtail::Application.new('gnome-shell')
   retry_action(10, recovery_proc: Proc.new { @screen.press("Escape") }) do
-    @screen.click_point(x, y)
+    @screen.click(x, y)
     begin
       gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
     rescue
