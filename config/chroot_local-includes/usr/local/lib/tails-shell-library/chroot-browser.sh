@@ -146,13 +146,11 @@ configure_chroot_browser_profile () {
     fi
 
     # Customize the GUI.
-    for css in userChrome.css userContent.css ; do
-        local browser_css="${browser_profile}/chrome/${css}"
-        mkdir -p "$(dirname "${browser_css}")"
-        cat "${chroot_browser_config}/common/${css}" \
-            "${chroot_browser_config}/${browser_name}/${css}" >> \
-            "${browser_css}"
-    done
+    local browser_chrome="${browser_profile}/chrome/userChrome.css"
+    mkdir -p "$(dirname "${browser_chrome}")"
+    cat "${chroot_browser_config}/common/userChrome.css" \
+        "${chroot_browser_config}/${browser_name}/userChrome.css" >> \
+            "${browser_chrome}"
 
     set_chroot_browser_permissions "${chroot}" "${browser_name}" "${browser_user}"
 }
