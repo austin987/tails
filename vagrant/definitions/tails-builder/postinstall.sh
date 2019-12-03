@@ -38,17 +38,18 @@ APT::Periodic::Enable "0";
 EOF
 
 echo "I: Installing Tails APT repo signing key..."
+apt-get -y install gnupg
 apt-key add /tmp/tails.binary.gpg
 
 echo "I: Adding standard APT suites..."
 cat "/etc/apt/sources.list" | \
-	sed -e 's/stretch/stretch-updates/' \
-	> "/etc/apt/sources.list.d/stretch-updates.list"
+	sed -e 's/buster/buster-updates/' \
+	> "/etc/apt/sources.list.d/buster-updates.list"
 
-echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ stretch/updates main" \
-	> "/etc/apt/sources.list.d/stretch-security.list"
+echo "deb http://time-based.snapshots.deb.tails.boum.org/debian-security/${DEBIAN_SECURITY_SERIAL}/ buster/updates main" \
+	> "/etc/apt/sources.list.d/buster-security.list"
 
-echo "I: Adding our builder-jessie suite with live-build and pinning it low..."
+echo "I: Adding our builder-jessie suite with live-build and po4a..."
 echo "deb http://time-based.snapshots.deb.tails.boum.org/tails/${TAILS_SERIAL}/ builder-jessie main" > "/etc/apt/sources.list.d/tails.list"
 sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/tails <<EOF
 	Package: *
@@ -60,28 +61,17 @@ sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/live-build <<EOF
 	Pin: release o=Tails,n=builder-jessie
 	Pin-Priority: 999
 EOF
-
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/stretch-backports << EOF
-	Package: *
-	Pin: release n=stretch-backports
-	Pin-Priority: 100
-EOF
-
-# XXX: remove once the Vagrant build VM has mtools >= 4.0.18-2.1 (Buster)
-echo "I: Adding Debian Buster APT suite..."
-echo " deb http://time-based.snapshots.deb.tails.boum.org/debian/${DEBIAN_SERIAL}/ buster main"\
-	> "/etc/apt/sources.list.d/buster.list"
-echo "I: Adding APT pinning for Buster..."
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/buster << EOF
-	Package: *
-	Pin: release n=buster
-	Pin-Priority: -1
-EOF
-echo "I: Adding APT pinning for mtools..."
-sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/mtools << EOF
-	Package: mtools
-	Pin: release n=buster
+# Install po4a 0.47 for now (#17005)
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/po4a <<EOF
+	Package: po4a
+	Pin: release o=Tails,n=builder-jessie
 	Pin-Priority: 999
+EOF
+
+sed -e 's/^[[:blank:]]*//' > /etc/apt/preferences.d/buster-backports << EOF
+	Package: *
+	Pin: release n=buster-backports
+	Pin-Priority: 100
 EOF
 
 apt-get update
