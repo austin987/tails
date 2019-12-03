@@ -1,5 +1,7 @@
 // As suggested in TBB's start-tor-browser script for system-wide Tor
-// instances
+// instances.
+// Warning: when updating this, also update
+// config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js
 pref("network.security.ports.banned", "631,6136,4444,4445,6668,7656,7657,7658,7659,7660,8998,9040,9050,9062,9150,9051");
 
 // Tails-specific configuration below
@@ -51,11 +53,6 @@ pref("browser.download.forbid_open_with", true);
 
 // Disable the Pocket service integration
 pref("extensions.pocket.enabled", false);
-
-// Disable the Quantum Bar. In #17121 we found that it can cause the
-// URL bar to misbehave (the suggestion pop-up with bookmarks/history/...
-// doesn't show up, and pressing Enter doesn't visit the URL).
-pref("browser.urlbar.quantumbar", false);
 
 // Set the hunspell directory. This shouldn't be required anymore in
 // Tor Browser based on Firefox 68

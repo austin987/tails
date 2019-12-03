@@ -3,10 +3,10 @@ require 'resolv'
 class OpenPGPKeyserverCommunicationError < StandardError
 end
 
-def count_gpg_signatures(key)
-  output = $vm.execute_successfully("gpg --batch --list-sigs #{key}",
+def count_gpg_subkeys(key)
+  output = $vm.execute_successfully("gpg --batch --list-keys #{key}",
                                     :user => LIVE_USER).stdout
-  output.scan(/^sig/).count
+  output.scan(/^sub/).count
 end
 
 def check_for_seahorse_error
@@ -15,6 +15,10 @@ def check_for_seahorse_error
       "Found GnomeCloseButton.png' on the screen"
     )
   end
+end
+
+def dirmngr_conf
+  "/home/#{LIVE_USER}/.gnupg/dirmngr.conf"
 end
 
 def start_or_restart_seahorse
@@ -27,13 +31,18 @@ def start_or_restart_seahorse
   step 'Seahorse has opened'
 end
 
-Then /^the key "([^"]+)" has (less|more) than (\d+) signatures$/ do |key, qualifier, num|
-  count = count_gpg_signatures(key)
+Then /^the key "([^"]+)" has no subkeys?$/ do |key|
+  count = count_gpg_subkeys(key)
+  assert_equal(0, count, "Expected no subkey but found #{count}")
+end
+
+Then /^the key "([^"]+)" has (strictly less than|at least) (\d+) subkeys?$/ do |key, qualifier, num|
+  count = count_gpg_subkeys(key)
   case qualifier
-  when 'less'
-    assert(count < num.to_i, "Expected less than #{num} signatures but found #{count}")
-  when 'more'
-    assert(count > num.to_i, "Expected more than #{num} signatures but found #{count}")
+  when 'strictly less than'
+    assert(count < num.to_i, "Expected strictly less than #{num} subkeys but found #{count}")
+  when 'at least'
+    assert(count >= num.to_i, "Expected at least #{num} subkeys but found #{count}")
   else
     raise "Unknown operator #{qualifier} passed"
   end
@@ -47,7 +56,15 @@ end
 
 def setup_onion_keyserver
   resolver = Resolv::DNS.new
-  keyservers = resolver.getaddresses('pool.sks-keyservers.net').select do |addr|
+  # Requirements for the target keyserver:
+  #  - It must not redirect to HTTPS, as Seahorse does not support this.
+  #  - It must respond to HKP queries regardless of the HTTP "Host" header
+  #    sent by the client, as Seahorse will be configured to connect
+  #    to an Onion service run by Chutney, and will send
+  #    "Host: $onion_address" in the HTTP query.
+  #    So we cannot use a web server whose default virtual host is not
+  #    a keyserver, but for example, the default Apache homepage.
+  keyservers = resolver.getaddresses('keys.mayfirst.org').select do |addr|
     addr.class == Resolv::IPv4
   end
   onion_keyserver_address = keyservers.sample
@@ -57,18 +74,13 @@ def setup_onion_keyserver
   )
 end
 
-When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI( without any signatures)?$/ do |keyid, without|
+When /^I fetch the "([^"]+)" OpenPGP key using the GnuPG CLI$/ do |keyid|
   # Make keyid an instance variable so we can reference it in the Seahorse
   # keysyncing step.
   @fetched_openpgp_keyid = keyid
-  if without
-    importopts = '--keyserver-options import-clean'
-  else
-    importopts = ''
-  end
-  retry_tor(Proc.new { setup_onion_keyserver }) do
+  retry_tor do
     @gnupg_recv_key_res = $vm.execute_successfully(
-      "timeout 120 gpg --batch #{importopts} --recv-key '#{@fetched_openpgp_keyid}'",
+      "timeout 120 gpg --batch --recv-key '#{@fetched_openpgp_keyid}'",
       :user => LIVE_USER)
     if @gnupg_recv_key_res.failure?
       raise "Fetching keys with the GnuPG CLI failed with:\n" +
@@ -96,6 +108,11 @@ When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (
   }
 end
 
+Given /^I delete the "([^"]+)" subkey from the live user's public keyring$/ do |subkeyid|
+    $vm.execute("gpg --batch --delete-keys '#{subkeyid}!'",
+                :user => LIVE_USER).success?
+end
+
 When /^I start Seahorse( via the OpenPGP Applet)?$/ do |withgpgapplet|
   @withgpgapplet = !!withgpgapplet
   start_or_restart_seahorse
@@ -118,14 +135,6 @@ end
 Then /^I synchronize keys in Seahorse$/ do
   recovery_proc = Proc.new do
     setup_onion_keyserver
-    # The version of Seahorse in Jessie will abort with a
-    # segmentation fault whenever there's any sort of network error while
-    # syncing keys. This will usually happens after clicking away the error
-    # message. This does not appear to be a problem in Stretch.
-    #
-    # We'll kill the Seahorse process to avoid waiting for the inevitable
-    # segfault. We'll also make sure the process is still running (=  hasn't
-    # yet segfaulted) before terminating it.
     if @screen.exists('GnomeCloseButton.png') || !$vm.has_process?('seahorse')
       step 'I kill the process "seahorse"' if $vm.has_process?('seahorse')
       debug_log('Restarting Seahorse.')
@@ -137,7 +146,7 @@ Then /^I synchronize keys in Seahorse$/ do
     # Due to a lack of visual feedback in Seahorse we'll break out of the
     # try_for loop below by returning "true" when there's something we can act
     # upon.
-    if count_gpg_signatures(@fetched_openpgp_keyid) > 42 || \
+    if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
       @screen.exists('GnomeCloseButton.png')  || \
       !$vm.has_process?('seahorse')
         true
@@ -211,55 +220,73 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
   end
 end
 
-Given /^(GnuPG|Seahorse) is configured to use Chutney's onion keyserver$/ do |app|
-  setup_onion_keyserver unless @onion_keyserver_job
-  _, _, onion_address, onion_port = chutney_onionservice_info
-  case app
-  when 'GnuPG'
-    # Validate the shipped configuration ...
-    server = /keyserver\s+(\S+)$/.match($vm.file_content("/home/#{LIVE_USER}/.gnupg/dirmngr.conf"))[1]
-    assert_equal(
-      "hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}", server,
-      "GnuPG's dirmngr does not use the correct keyserver"
-    )
-    # ... before replacing it
-    $vm.execute_successfully(
-      "sed -i 's/#{CONFIGURED_KEYSERVER_HOSTNAME}/#{onion_address}:#{onion_port}/' " +
-      "'/home/#{LIVE_USER}/.gnupg/dirmngr.conf'"
-    )
-  when 'Seahorse'
-    # Validate the shipped configuration ...
-    @gnome_keyservers = YAML.load(
-      $vm.execute_successfully(
-        'gsettings get org.gnome.crypto.pgp keyservers',
-        user: LIVE_USER
-      ).stdout
-    )
-    assert_equal(1, @gnome_keyservers.count,
-                 'Seahorse should only have one keyserver configured.')
-    assert_equal(
-      'hkp://' + CONFIGURED_KEYSERVER_HOSTNAME, @gnome_keyservers[0],
-      "GnuPG's dirmngr does not use the correct keyserver"
-    )
-    # ... before replacing it
-    $vm.execute_successfully(
-      "gsettings set org.gnome.crypto.pgp keyservers \"['hkp://#{onion_address}:#{onion_port}']\"",
-      user: LIVE_USER
-    )
+def disable_IPv6_for_dirmngr
+  # When dirmngr connects to the Onion service run by Chutney, the
+  # isotester redirects the connection to keys.openpgp.org:11371 over
+  # IPv4 (see setup_onion_keyserver), and then keys.openpgp.org
+  # redirects us to https://keys.openpgp.org, that is resolved by
+  # dirmngr. By default we would get an IPv6 address here, which works
+  # just fine in a normal Tails, but here we exit from Chutney's Tor
+  # network that runs on our CI infrastructure, which is IPv4-only, so
+  # that would fail. Therefore, let's ensure dirmngr only picks IPv4
+  # addresses for keys.openpgp.org.
+  if $vm.execute("grep -F --line-regexp disable-ipv6 '#{dirmngr_conf}'").failure?
+    $vm.file_append(dirmngr_conf, "disable-ipv6\n")
   end
 end
 
+def restart_dirmngr
+  $vm.execute_successfully("systemctl --user restart dirmngr.service",
+                           :user => LIVE_USER)
+end
+
+Given /^GnuPG is configured to use a non-Onion keyserver$/ do
+  # Validate the shipped configuration ...
+  server = /keyserver\s+(\S+)$/.match($vm.file_content(dirmngr_conf))[1]
+  assert_equal(
+    "hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}", server,
+    "GnuPG's dirmngr is not configured to use the correct keyserver"
+  )
+  # ... before replacing it
+  $vm.execute_successfully(
+    "sed -i 's|hkp://#{CONFIGURED_KEYSERVER_HOSTNAME}|hkps://#{TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME}|' " +
+    "'#{dirmngr_conf}'"
+  )
+  disable_IPv6_for_dirmngr
+  # Ensure dirmngr picks up the changes we made to its configuration
+  restart_dirmngr
+end
+
+Given /^Seahorse is configured to use Chutney's onion keyserver$/ do
+  setup_onion_keyserver unless @onion_keyserver_job
+  _, _, onion_address, onion_port = chutney_onionservice_info
+  # Validate the shipped configuration ...
+  @gnome_keyservers = YAML.load(
+    $vm.execute_successfully(
+      'gsettings get org.gnome.crypto.pgp keyservers',
+      user: LIVE_USER
+    ).stdout
+  )
+  assert_equal(1, @gnome_keyservers.count,
+               'Seahorse should only have one keyserver configured.')
+  assert_equal(
+    'hkp://' + CONFIGURED_KEYSERVER_HOSTNAME, @gnome_keyservers[0],
+    "Seahorse is not configured to use the correct keyserver"
+  )
+  # ... before replacing it
+  $vm.execute_successfully(
+    "gsettings set org.gnome.crypto.pgp keyservers \"['hkp://#{onion_address}:#{onion_port}']\"",
+    user: LIVE_USER
+  )
+end
+
 Then /^GnuPG's dirmngr uses the configured keyserver$/ do
-  _, _, onion_keyserver_address, _ = chutney_onionservice_info
   dirmngr_request = $vm.execute_successfully(
     'gpg-connect-agent --dirmngr "keyserver --hosttable" /bye', user: LIVE_USER
   )
   server = dirmngr_request.stdout.chomp.lines[1].split[4]
-  server = /keyserver\s+(\S+)$/.match(
-    $vm.file_content("/home/#{LIVE_USER}/.gnupg/dirmngr.conf")
-  )[1]
   assert_equal(
-    "hkp://#{onion_keyserver_address}:5858", server,
+    TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME, server,
     "GnuPG's dirmngr does not use the correct keyserver"
   )
 end
