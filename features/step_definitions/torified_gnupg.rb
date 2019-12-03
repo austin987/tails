@@ -199,7 +199,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     # (https://gitlab.gnome.org/GNOME/seahorse/issues/177)
     @screen.type(keyid, ["Return"])
     begin
-      @screen.waitAny(['SeahorseFoundKeyResult.png',
+      @screen.wait_any(['SeahorseFoundKeyResult.png',
                        'GnomeCloseButton.png'], 120)
     rescue FindFailed
       # We may end up here if Seahorse appears to be "frozen".

@@ -156,7 +156,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with Unlock Ver
   end
   @screen.click('VeraCryptUnlockDialogHiddenVolumeLabel.png') if @veracrypt_is_hidden
   @screen.press("Return")
-  @screen.waitVanish('VeraCryptUnlockDialog.png', 10)
+  @screen.wait_vanish('VeraCryptUnlockDialog.png', 10)
   try_for(30) do
     $vm.execute_successfully("ls /media/amnesia/*/GPL-3")
   end
@@ -227,7 +227,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.wait('Gtk3FileChooserDesktopButton.png', 10)
     $vm.file_overwrite('/tmp/keyfile', 'asdf')
     @screen.type('/tmp/keyfile', ['Return'])
-    @screen.waitVanish('Gtk3FileChooserDesktopButton.png', 10)
+    @screen.wait_vanish('Gtk3FileChooserDesktopButton.png', 10)
   end
   @screen.wait('GnomeDisksUnlockDialogHiddenVolumeLabel.png', 10).click if @veracrypt_is_hidden
   # Clicking is robust neither with Dogtail (no visible effect) nor with Sikuli

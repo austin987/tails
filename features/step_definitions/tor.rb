@@ -369,7 +369,7 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   @screen.hide_cursor
   @screen.wait('TorLauncherFinishButton.png', 10).click
   @screen.wait('TorLauncherConnectingWindow.png', 10)
-  @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
+  @screen.wait_vanish('TorLauncherConnectingWindow.png', 120)
 end
 
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do

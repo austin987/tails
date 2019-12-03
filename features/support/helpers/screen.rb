@@ -88,7 +88,7 @@ class Screen
     raise FindFailed.new("cannot find #{pattern} on the screen")
   end
 
-  def waitVanish(pattern, timeout, **opts)
+  def wait_vanish(pattern, timeout, **opts)
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for #{pattern} to vanish") if opts[:log]
     try_for(timeout, delay: 0) do
@@ -100,7 +100,7 @@ class Screen
     raise FindFailed.new("can still find #{pattern} on the screen")
   end
 
-  def findAny(patterns, **opts)
+  def find_any(patterns, **opts)
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: trying to find any of #{patterns.join(', ')}") if opts[:log]
     patterns.each do |pattern|
@@ -116,17 +116,17 @@ class Screen
                         "on the screen")
   end
 
-  def existsAny(*args, **opts)
-    return !!findAny(*args, **opts)
+  def exists_any(*args, **opts)
+    return !!find_any(*args, **opts)
   rescue
     false
   end
 
-  def waitAny(patterns, time, **opts)
+  def wait_any(patterns, time, **opts)
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for any of #{patterns.join(', ')}") if opts[:log]
     try_for(time) do
-        return self.findAny(patterns, **opts.clone.update(log: false))
+        return self.find_any(patterns, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
     raise FindFailed.new("can not find any of the patterns #{patterns} " +

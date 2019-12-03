@@ -206,7 +206,7 @@ When /^I join some empty multi-user chat$/ do
   # Room" prompt that Pidgin shows for some server configurations.
   images = ["PidginCreateNewRoomPrompt.png",
             "PidginChat1UserInRoom.png"]
-  image_found, _ = @screen.waitAny(images, 30)
+  image_found, _ = @screen.wait_any(images, 30)
   if image_found == "PidginCreateNewRoomPrompt.png"
     @screen.click("PidginCreateNewRoomAcceptDefaultsButton.png")
   end
@@ -303,19 +303,19 @@ end
 When /^I close Pidgin$/ do
   $vm.focus_window('Buddy List')
   @screen.press("ctrl", "q")
-  @screen.waitVanish('PidginAvailableStatus.png', 10)
+  @screen.wait_vanish('PidginAvailableStatus.png', 10)
 end
 
 When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   @screen.click("PidginAccount_#{account}.png")
   @screen.type(["Left"], ["space"])
   if deactivate
-    @screen.waitVanish('PidginAccountEnabledCheckbox.png', 5)
+    @screen.wait_vanish('PidginAccountEnabledCheckbox.png', 5)
   else
     # wait for the Pidgin to be connecting, otherwise sometimes the step
     # that closes the account management dialog happens before the account
     # is actually enabled
-    @screen.waitAny(['PidginConnecting.png', 'PidginAvailableStatus.png'], 5)
+    @screen.wait_any(['PidginConnecting.png', 'PidginAvailableStatus.png'], 5)
   end
 end
 
@@ -350,7 +350,7 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       # conversation window. At worst, the test will still fail...
       close_pidgin_conversation_window(account)
     end
-    on_screen, _ = @screen.waitAny([expected_channel_entry, reconnect_button], 60)
+    on_screen, _ = @screen.wait_any([expected_channel_entry, reconnect_button], 60)
     unless on_screen == expected_channel_entry
       raise "Connecting to account #{account} failed."
     end
@@ -443,13 +443,13 @@ When /^I close Pidgin's certificate manager$/ do
   wait_and_focus('PidginCertificateManagerDialog.png', 10, 'Certificate Manager')
   @screen.press("Escape")
   # @screen.wait('PidginCertificateManagerClose.png', 10).click
-  @screen.waitVanish('PidginCertificateManagerDialog.png', 10)
+  @screen.wait_vanish('PidginCertificateManagerDialog.png', 10)
 end
 
 When /^I close Pidgin's certificate import failure dialog$/ do
   @screen.press("Escape")
   # @screen.wait('PidginCertificateManagerClose.png', 10).click
-  @screen.waitVanish('PidginCertificateImportFailed.png', 10)
+  @screen.wait_vanish('PidginCertificateImportFailed.png', 10)
 end
 
 When /^I see the Tails roadmap URL$/ do

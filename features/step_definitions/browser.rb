@@ -97,7 +97,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   recovery_on_failure = Proc.new do
     @screen.press("Escape")
-    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_address.call
   end
   if browser == "Tor Browser"
@@ -107,7 +107,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   open_address.call
   retry_method.call(recovery_on_failure) do
-    @screen.waitVanish(info[:browser_stop_button_image], 120)
+    @screen.wait_vanish(info[:browser_stop_button_image], 120)
     @screen.wait(info[:browser_reload_button_image], 120)
   end
 end
@@ -249,7 +249,7 @@ Then /^I can listen to an Ogg audio track in Tor Browser$/ do
   end
   recovery_on_failure = Proc.new do
     @screen.press("Escape")
-    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_test_url.call
   end
   step "no application is playing audio"
@@ -267,7 +267,7 @@ Then /^I can watch a WebM video in Tor Browser$/ do
   end
   recovery_on_failure = Proc.new do
     @screen.press("Escape")
-    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_test_url.call
   end
   open_test_url.call

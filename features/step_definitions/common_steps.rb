@@ -472,7 +472,7 @@ end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
   if negation
-    @screen.waitVanish(image, time.to_i)
+    @screen.wait_vanish(image, time.to_i)
   else
     @screen.wait(image, time.to_i)
   end
@@ -495,7 +495,7 @@ def deal_with_polkit_prompt(password, opts = {})
   @screen.wait(image, 60)
   @screen.type(password, ["Return"])
   if opts[:expect_success]
-    @screen.waitVanish(image, 20)
+    @screen.wait_vanish(image, 20)
   else
     @screen.wait('PolicyKitAuthFailure.png', 20)
   end
