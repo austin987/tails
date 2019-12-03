@@ -66,26 +66,31 @@ def pidgin_account_connected?(account, prpl_protocol)
   pidgin_force_allowed_dbus_call('PurpleAccountIsConnected', account_id) == 1
 end
 
+def click_mid_right_edge(pattern, **opts)
+  m = @screen.find(pattern, **opts)
+  @screen.click(m.x + m.w, m.y + m.h/2)
+end
+
 When /^I create my XMPP account$/ do
   account = xmpp_account("Tails_account")
   @screen.click("PidginAccountManagerAddButton.png")
   @screen.wait("PidginAddAccountWindow.png", 20)
-  @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
+  click_mid_right_edge("PidginAddAccountProtocolLabel.png")
   @screen.click("PidginAddAccountProtocolXMPP.png")
   # We first wait for some field that is shown for XMPP but not the
   # default (IRC) since we otherwise may decide where we click before
   # the GUI has updated after switching protocol.
   @screen.wait("PidginAddAccountXMPPDomain.png", 5)
-  @screen.click_mid_right_edge("PidginAddAccountXMPPUsername.png")
+  click_mid_right_edge("PidginAddAccountXMPPUsername.png")
   @screen.type(account["username"])
-  @screen.click_mid_right_edge("PidginAddAccountXMPPDomain.png")
+  click_mid_right_edge("PidginAddAccountXMPPDomain.png")
   @screen.type(account["domain"])
-  @screen.click_mid_right_edge("PidginAddAccountXMPPPassword.png")
+  click_mid_right_edge("PidginAddAccountXMPPPassword.png")
   @screen.type(account["password"])
   @screen.click("PidginAddAccountXMPPRememberPassword.png")
   if account["connect_server"]
     @screen.click("PidginAddAccountXMPPAdvancedTab.png")
-    @screen.click_mid_right_edge("PidginAddAccountXMPPConnectServer.png")
+    click_mid_right_edge("PidginAddAccountXMPPConnectServer.png")
     @screen.type(account["connect_server"])
   end
   @screen.click("PidginAddAccountXMPPAddButton.png")
@@ -181,7 +186,7 @@ When /^I join some empty multi-user chat$/ do
   @screen.click("PidginBuddiesMenu.png")
   @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
   @screen.wait("PidginJoinChatWindow.png", 10).click
-  @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  click_mid_right_edge("PidginJoinChatRoomLabel.png")
   account = xmpp_account("Tails_account")
   if account.has_key?("chat_room") && \
      !account["chat_room"].nil? && \
@@ -193,7 +198,7 @@ When /^I join some empty multi-user chat$/ do
   @screen.type(chat_room)
 
   # We will need the conference server later, when starting the bot.
-  @screen.click_mid_right_edge("PidginJoinChatServerLabel.png")
+  click_mid_right_edge("PidginJoinChatServerLabel.png")
   @screen.press("ctrl", "a")
   @screen.press("ctrl", "c")
   conference_server =
@@ -362,7 +367,7 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   @screen.wait("PidginBuddiesMenu.png", 20).click
   @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
   @screen.wait("PidginJoinChatWindow.png", 10).click
-  @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  click_mid_right_edge("PidginJoinChatRoomLabel.png")
   @screen.type(channel)
   @screen.click("PidginJoinChatButton.png")
   @chat_room_jid = channel + "@" + account

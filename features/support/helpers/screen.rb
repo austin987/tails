@@ -201,9 +201,4 @@ class Screen
     return [x, y]
   end
 
-  def click_mid_right_edge(pattern, **opts)
-    m = find(pattern, **opts)
-    click(m.x + m.w, m.y + m.h/2)
-  end
-
 end
