@@ -149,7 +149,7 @@ class Screen
     args.each do |arg|
       if arg.instance_of?(String)
         debug_log("Keyboard: typing: #{arg}")
-        xdotool('type', '--clearmodifiers', arg)
+        xdotool('type', '--clearmodifiers', '--delay=60', arg)
       elsif arg.instance_of?(Array)
         press(*arg)
       else
