@@ -4,11 +4,107 @@ tails (4.5) UNRELEASED; urgency=medium
 
  -- intrigeri <intrigeri@debian.org>  Tue, 22 Oct 2019 15:23:33 +0000
 
-tails (4.1) UNRELEASED; urgency=medium
+tails (4.2) UNRELEASED; urgency=medium
 
   * Dummy entry for next release.
 
- -- intrigeri <intrigeri@debian.org>  Tue, 22 Oct 2019 15:23:42 +0000
+ -- anonym <anonym@riseup.net>  Tue, 03 Dec 2019 21:49:39 +0100
+
+tails (4.1) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 9.0.2-build2, based on Firefox ESR 68.3
+      (MFSA-2019-37).
+    - Upgrade Thunderbird to 68.2.2 (Closes: #16771, #17220, #17222, #17267).
+    - Upgrade Enigmail to 2:2.1.3+ds1-4~deb10u2 accordingly.
+
+  * Security fixes
+    - Upgrade Linux to 5.3.9-2 from sid (Closes: #17124).
+    - Disable unprivileged userfaultfd syscall (Closes: #17196).
+    - Upgrade file to 1:5.35-4+deb10u1 (DSA-4550-1).
+    - Upgrade FriBidi to 1.0.5-3.1+deb10u1 (DSA-4561-1).
+    - Upgrade Ghostscript to 9.27~dfsg-2+deb10u3 (DSA-4569-1)
+    - Upgrade Intel microcode to 3.20191112.1~deb10u1 (DSA-4565-1,
+      CVE-2019-0117).
+    - Upgrade libarchive to 3.3.3-4+deb10u1 (DSA-4557-1).
+    - Upgrade libvpx to 1.7.0-3+deb10u1 (DSA-4578-1).
+    - Upgrade libxslt to 1.1.32-2.2~deb10u1 (CVE-2019-18197).
+    - Upgrade ncurses to 6.1+20181013-2+deb10u2 (CVE-2019-17594,
+      CVE-2019-17595).
+    - Upgrade Python 2.7 to 2.7.16-2+deb10u1 (CVE-2018-20852,
+      CVE-2019-10160, CVE-2019-16056, CVE-2019-16935, CVE-2019-9740,
+      CVE-2019-9947).
+    - Upgrade Qt to 5.11.3+dfsg1-1+deb10u1 (DSA-4556-1).
+    - Upgrade tcpdump to 4.9.3-1~deb10u1 (DSA-4547-1).
+    - Upgrade WebKitGTK to 2.26.2-1~deb10+1 (DSA-4558-1, DSA-4563-1).
+
+  * Bugfixes
+    - Remove TorBirdy (Closes: #17219, #17269).
+    - Use keys.openpgp.org's Onion service as the default keyserver
+      (Closes: #12689, #14770).
+    - Fix ordering of GTK bookmarks setup vs. Tor Browser directories
+      creation (Closes: #17206).
+    - Bring back the "Show Passphrase" button in the Greeter
+      (Closes: #17177).
+    - Bring back "Open in Terminal" entry in the GNOME Files context menu
+      (Closes: #17186).
+    - Revert "Browsers: disable the Quantum Bar." (Closes: #17143).
+    - Revert "Hide all Tor connection-related settings in
+      about:preferences in all browsers" (Closes: #17214).
+    - Wait until Tor has bootstrapped before we try to upgrade Additional
+      Software (Closes: #17203).
+    - Fix the "GDM failed to start" splash screen functionality
+      (Closes: #17200).
+
+  * Minor improvements and updates
+    - htpdate: stop sending User-Agent that fakes Tor Browser
+      (Closes: #12023).
+    - HTP: replace encrypted.google.com with www.google.com.
+    - Remove signal handler from Greeter UI file (Closes: #17240).
+    - Upgrade AMD microcode to 3.20191021.1.
+    - Upgrade fonts-noto-cjk to 1:20170601+repack1-3+deb10u1
+      (Debian#907999).
+
+  * Build system
+    - Update Vagrant box to Buster (Closes: #16868).
+    - Adjust to timedatectl's output on Buster.
+    - Adjust to Buster's debootstrap.
+    - Vagrant: ensure the chroot has a /proc filesystem while running
+      postinstall.sh
+    - Vagrant: install po4a from Stretch in the basebox.
+    - build-tails: wait for NTP to be disabled before setting the desired
+      date.
+    - Bump APT snapshot of the Debian archive to 2019111801, including the
+      10.2 point release of Buster (Closes: #17124, #17021).
+    - Install virtualbox 6.0.12-dfsg-1 from our custom APT repository
+      (Closes: #17161).
+
+  * Test suite
+    - Ensure we don't break tests by opening the Applications menu in
+      post_vm_start_hook (Closes: #17164).
+    - Improve GnuPG testing (Closes: #12689):
+      · Switch to using sajolida's key.
+      · Start adjusting for keys.openpgp.org.
+      · Make the "GnuPG's dirmngr uses the configured keyserver" step
+        actually test what it is meant to.
+      · Make error strings better reflect what failure they are about.
+      · Ensure dirmngr uses IPv4 since our CI runs on an IPv4-only
+        infrastructure.
+    - Ensure dirmngr picks up the changes we make to its configuration.
+    - Switch backend keyservers (Closes: #14770).
+    - Don't leave redir(1) processes behind (Closes: #14948).
+    - Update image for Buster (Closes: #14770).
+    - Update fragility status of Seahorse scenarios.
+    - Avoid multiple instances of tcpdump writing to the same file,
+      resulting in an unparsable network capture (Closes: #17102).
+    - Update for Thunderbird 68 (Closes: #17269).
+
+  * Documentation:
+    - Remove or adapt mentions to Tails Installer as only installation
+      method (Closes: #17204).
+    - Add a warning about which Tails to run rsync from (Closes: #17197).
+
+ -- Tails developers <tails@boum.org>  Mon, 02 Dec 2019 22:23:35 +0100
 
 tails (4.0) unstable; urgency=medium
 
