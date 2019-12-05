@@ -741,6 +741,11 @@ TAILS_VERSION_ID="#{version}"
       status: :removed
     },
     {
+      filesystem: :rootfs,
+      path: 'usr/share/doc/tor',
+      status: :removed
+    },
+    {
       filesystem: :medium,
       path: 'utils/linux/syslinux',
       status: :removed
