@@ -162,10 +162,15 @@ end
 
 def chutney_onionservice_redir(remote_address, remote_port)
   redir_unit_name = 'tails-test-suite-redir.service'
+  if ENV['USER'] == 'root'
+    bus = '--system'
+  else
+    bus = '--user'
+  end
   kill_redir = Proc.new do
     begin
-      if system('/bin/systemctl', '--quiet', 'is-active', redir_unit_name)
-        system('/bin/systemctl', 'stop', redir_unit_name)
+      if system('/bin/systemctl', bus, '--quiet', 'is-active', redir_unit_name)
+        system('/bin/systemctl', bus, 'stop', redir_unit_name)
       end
     rescue
       # noop
@@ -175,6 +180,7 @@ def chutney_onionservice_redir(remote_address, remote_port)
   local_address, local_port, _ = chutney_onionservice_info
   $chutney_onionservice_job = fatal_system(
     '/usr/bin/systemd-run',
+    bus,
     "--unit=#{redir_unit_name}",
     '--service-type=forking',
     '--quiet',
