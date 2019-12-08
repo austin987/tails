@@ -22,7 +22,8 @@ active Tails contributors would get at least this access level on the
 `tails-team/tails` project, and then in turn access to this project's
 confidential issues. So Tails teams that need to further restrict
 access to their confidential issues will need to track their issues
-under their own `tails-team/$project`.
+under their own `tails-team/$project`. See "Particularly sensitive data"
+in the "Access control" section.
 
 ## Relationships
 
@@ -35,10 +36,10 @@ we'll need to significantly change our workflow here.
 Below we describe potential solutions.
 
 ### Parent/subtask and Blocks relationship
- 
+
 A GitLab issue can have a list of tasks (checklist).
 GitLab displays "X of Y tasks completed" prominently.
- 
+
 Describing each subtask in free-form text, directly as an item on this
 list of tasks, should work fine to emulate a set of subtasks that are
 all assigned to the same person. For example, see [[!gnome_gitlab
@@ -98,8 +99,7 @@ Doing", "3. To review", and "Closed".
 Closing an issue means one of:
 
  - The fix or feature the issue is about was merged and will be in
-   a future release (previously: "Fix committed" for the next release,
-   "Resolved" for 4.0).
+   a future release.
 
    To list these issues: closed issues whose milestone is a version
    was not released yet.
@@ -132,7 +132,8 @@ fixed automatically, either via a webhook or a scheduled batch job.
   - One can set multiple labels so we could perhaps merge "Category"
     and "Affected Tool". For example, a ticket about Thunderbird
     persistence could have the two "C: email" and "C: persistence" labels.
-- Log time → Time tracking
+- Log time: was enabled as an experiment, not actively used anymore;
+  contributors can use GitLab's Time tracking if they wish so.
 - Due date → Due date
 - Starter → dedicated label
 - Tracker: drop it (we've never really taken advantage of the fine
@@ -203,7 +204,7 @@ within a team or the overall Tails project.
 
 In GitLab, the closest equivalent to Redmine custom queries is the URL
 of an issues list or issues board filtered by assignee, milestone,
-and/or label. 
+and/or label.
 
 We will need ways to share these URLs and ideally, to name them.
 We can do that on the GitLab project's description (home page),
@@ -213,18 +214,101 @@ page on our website, and possibly in GitLab's own
 use it (either only for this use case or [[!tails_ticket 9174
 desc="for our blueprints"]]).
 
-# Merge requests
+# Access control
+
+## Objects
+
+ - _Canonical Git repo_: the authoritative `tails.git` repository
+   hosted on GitLab
+
+- _Major branches_: `master`, `stable`, `testing`, `devel`,
+   and possibly `feature/bullseye`
+
+ - _Release tags_: a signed Git tag that identifies the source code
+   used to build a specific Tails release; currently all tags
+   in the authoritative `tails.git` repository are release tags;
+   the tag name is a version number, with '~' replaced by '-'.
+
+ - _Particularly sensitive data_: confidential data that specific teams
+   like Fundraising and Accounting need to handle, but that other
+   contributors generally don't need direct access to. This definitely
+   include issues; this might include Git repositories at some point.
+
+   Note that as of 2019-11-20, it is undefined:
+
+    - What subset of this data can go to a web-based issue tracker or not.<br/>
+      This is already a problem with Redmine.<br/>
+      Fixing this will require discussions between various stakeholders.
+
+    - What subset of this data could live in a cleartext Git
+      repository hosted here or there, as opposed to requiring
+      end-to-end encryption between members of these teams.
+      This is a hypothetical problem for now.
+
+## Subjects
+
+ - An _admin_ can do anything that other roles can, and:
+   - can delete issues
+   - can edit team membership
+   - MUST comply with our "Level 3" security policy
+   - can view issues that contain particularly sensitive data
+
+ - A _committer_:
+   - can push and force-push to any ref in the canonical Git repo,
+     including major branches and release tags;<br/>
+     incidentally, this ensures the following requirement is met:
+   - their branches are picked up by Jenkins; it follows that they
+     MUST comply with our "Infrastructure" security policy
+   - can merge MRs into major branches
+   - can modify issues metadata
+   - MAY be allowed to view confidential issues in the main GitLab
+     project; if it's the case, then particularly sensitive data MUST
+     live somewhere else with stricter access control
+   - can edit other users' comments
+   - MAY be allowed to add new team members
+   - MUST comply with our "Level 3" security policy
+
+ - A _regular, particularly trusted contributor_:
+   - can push and force-push to a subset of refs in the canonical Git repo;
+     this subset MUST NOT include any major branch nor release tag;<br/>
+     this is required to ensure the following requirement is met:
+   - their branches are picked up by Jenkins; it follows that they
+     MUST comply with our "Infrastructure" security policy
+   - can modify issues metadata
+   - MAY be allowed to view confidential issues in the main GitLab
+     project; if it's the case, then particularly sensitive data MUST
+     live somewhere else with stricter access control
+
+ - A _regular contributor_:
+   - can fork the Git repositories and push changes to their own fork
+   - can modify issues metadata
+   - MAY be allowed to view confidential issues in the main GitLab
+     project; if it's the case, then particularly sensitive data MUST
+     live somewhere else with stricter access control
+
+ - _Anybody with a GitLab account_ on the instance we use:
+   - can submit issues
+   - can submit MRs
+
+## Implementation
+
+### Relevant GitLab doc
+
+ - [Permissions](https://docs.gitlab.com/ee/user/permissions.html)
+ - [Authorization for Merge requests](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html)
+ - [Protected Branches](https://docs.gitlab.com/ce/user/project/protected_branches.html)
+ - [Groups](https://docs.gitlab.com/ee/user/group/) and [Subgroups](https://docs.gitlab.com/ee/user/group/subgroups/)
+
+### Idea: Protected branch flow
 
 The [Protected branch
 flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow)
-is probably the most adequate for regular contributors, since it's the
-least disruptive in terms of workflow and habits and requires less
+may be the most adequate for regular contributors, since it's the
+least disruptive in terms of workflow and habits and requires no
 work to adjust our Jenkins CI setup:
 
- - We mark our main branches (`stable`, `testing`, `devel`,
-   `feature/buster`) as "Protected". We give "Maintainer" access to
-   people allowed to push to these branches, i.e. what we previously
-   called "commit access".
+ - We mark our major branches and release tags as "Protected".
+ - Committers get "Maintainer" access.
  - The Git workflow remains unchanged for regular developers who are
    not granted full commit access: they get "Developer" access, can
    push a topic branch to the canonical Git repository and our CI will
@@ -250,27 +334,232 @@ want to migrate our blueprints to GitLab's
 [[!tails_ticket 9174]]).
 
 
-# Other specification
-
-* guest accounts?
-
 # Importing data from Redmine
 
 ## Specification
+
+Note: some of what follows still needs to be negotiated with the
+Tails community.
+
+### Scope
+
+* issues in the [Tails Redmine
+  project](https://redmine.tails.boum.org/code/projects/tails/issues);
+  data from other projects does not matter to us
+* target versions (milestones)
+
+### Out of scope
+
+* Redmine wiki: we don't use it
+
+### MUST
+
+* For every existing Redmine issue, the meaning of its `#NNNN` ID MUST
+  be preserved unambiguously. This implies that we can't reuse
+  existing Redmine issue IDs in our main GitLab project, where most
+  issues will live.)
+
+* [[!tails_ticket NNNN]] and
+  <https://redmine.tails.boum.org/code/issues/NNNN> links MUST point
+  or — possibly transitively — redirect to the relevant GitLab issue.
+
+  Implementation idea: start with a static web redirector, and then:
+
+   - This is sufficient to solve the problem for issues imported into
+     our main GitLab project, if they have the same ID as they used to.
+
+   - For issues imported into another GitLab project, we either need
+     extra redirection rules based on a mapping from Redmine issue IDs
+     to GitLab (project, issue ID) tuples, or placeholder issues on
+     GitLab that handle a second redirection step (GitLab might handle
+     the redirection itself when an issue is moved from one project to
+     another)
+
+* Preserve issue private/public status. Given GitLab's permissions
+  model, this implies that some issues MUST be migrated to another
+  GitLab project than the default one where most of our issues will
+  live; for details, see the "Private issues" section above.
+
+  Example: [[!tails_ticket 10346]]
+
+* Preserve parent/subtask relationship in a way that GitLab will
+  enforce, i.e. prevent closing the GitLab issue corresponding to the
+  Redmine parent issue, as long as one of its subtasks is
+  not completed.
+
+  Examples: [[!tails_ticket 15878]], [[!tails_ticket 12213]]
+
+  Implementation idea: a GitLab issue imported from a Redmine issue
+  that has subtasks could have a list of tasks (checklist), with each
+  subtask being an item on that list; ideally, the status of each such
+  Redmine subtask (closed or open) should be reflected as the status
+  of the corresponding GitLab checklist item (completed or not).
+
+* Preserve the "Blocks" and "Related to" information.
+
+  It's OK if the "Blocks" semantics from Redmine (if X blocks Y, one
+  cannot close Y until X is resolved) is not enforced by GitLab.
+
+  XXX: some of these relationships should be dropped on GitLab.
+  see the "Core team (self-)management" section.
+
+  Examples: [[!tails_ticket 15878]], [[!tails_ticket 12213]]
+
+  Implementation idea: add the "X blocks Y" information in the
+  description of issues X and Y and/or as comments on X and Y.
+
+* Preserve issue status:
+
+  - "New" → open
+  - "Confirmed" → open, "1. To do" label
+  - "In Progress" → open, "2. Doing" label
+  - "Needs Validation" → open, "3. Needs Validation" label
+  - "Duplicates" → closed, "Duplicate" label
+  - "Rejected" → closed, "Rejected" label
+  - "Resolved" → closed
+
+* Preserve "Target version" → Milestone
+
+* Preserve the  "Feature branch" information.
+
+  Adding this information as-is in a comment would be good enough.
+
+  Example: [[!tails_ticket 16173]]
+
+* Preserve Category, Affected Tool, Priority, Type of work… somehow.
+
+  Implementation idea: with labels, see the "Other issues metadata" section above.
+
+* Preserve any true "Starter" boolean value.
+
+  Implementation idea: dedicated label.
+
+* Preserve "Deliverable for" values for open issues.
+
+  Implementation idea: "Deliverable for SponsorXYZ" label.
+
+* Preserve attachments
+
+  Example: [[!tails_ticket 7763]]
+
+* Convert Textile issue description and comments to Markdown
+  (pandoc can do most of the work see <https://pandoc.org/try/?from=textile&to=markdown>):
+  - `commit:c6f4d0fd`
+  - bold
+  - italic
+  - strike-through
+  - `<pre>` blocks
+  - `@code@`
+  - bullet lists, including nested ones
+
+  Examples: [[!tails_ticket 17241]]
+
+  Textile: <https://www.redmine.org/projects/redmine/wiki/RedmineTextFormatting>
+  GitLab Flavored Markdown (GFM): <https://docs.gitlab.com/ee/user/markdown.html>
+
+* Convert public notes to GitLab comments.
+
+  Example: [[!tails_ticket 17121]]
+
+* Private comments (notes): migrate their contents somewhere,
+  and make it accessible from the corresponding issue,
+  in the right place in the discussion.
+
+  Example: [[!tails_ticket 16875#note-3]]
+
+  It looks like GitLab does not support private comments.
+
+  XXX (intrigeri): check if it's OK to publicly leak the fact that
+  someone (unspecified) posted a private note on an issue, along with
+  the corresponding timestamp. To list all private notes, grouped by
+  user:
+
+        ./redlab discuss --verbose -C config.py --private-notes
+
+  - 2019-11-20: asked the 10 affected users if they consent with leaking
+    this information publicly.
+
+  If folks don't consent to this infoleak, we'll add a link from the
+  GitLab issue description to the privately archived Redmine, and to
+  follow an old discussion, one may want to systematically follow this
+  link to ensure they did not miss a private note.
+
+* Preserve issue assignee
+
+  It is acceptable to require assignees to manually create their
+  GitLab user account themselves before the final migration.
+
+* Existing issues assigned to a group must remain trackable, somehow.
+
+  This feature is not intensively used. We can leave it up to the
+  teams who use it to decide how they want to track these tickets on
+  GitLab. A temporary label to not lose track of these tickets would
+  be good enough as far as the migration is concerned.
+
+  We have two such groups:
+  - _Help Desk_: recently created, not used yet
+  - _Sysadmins_: 15 tickets as of 2019-11-18
+
+* Preserve the value of the _Blueprint_ custom field
+
+  Adding this information to the issue description is good enough.
+
+* Preserve metadata changes
+
+  It's good enough to:
+
+   - Link to a static mirror of Redmine that has all the historical info.
+     We need 2 mirrors: a public one and a private one (accessible only
+     by people who had access to the private issues on Redmine).
+   - Add this information as free form text as comments.
+
+* Preserve attribution (authorship) of actions, e.g. which user
+  created an issue, wrote a note, or modified the metadata of an issue
+
+  It's good enough to add this as free-form text in the corresponding
+  issue or note, like e.g.
+  <https://gitlab.gnome.org/GNOME/gnome-shell-extensions/issues/22>,
+
+### SHOULD
+
+* Convert more Textile issue description and comments to Markdown
+  ([[!tails_ticket 17241 desc="examples"]]):
+  - links to an issue note: `#124-6`, or `#124#note-6`
+  - links with specific text: `"Redmine web site":http://www.redmine.org`
+  - tables, if supported by GitLab
+  - h1 and h2 headings
+  - `source:some/file`
+
+  Examples: [[!tails_ticket 17241]]
+
+* Preserve watchers (as "participants") for open tickets.
+
+  Example: [[!tails_ticket 16875]]
+
+  It is acceptable to give Redmine users a data file + script to run
+  in order for them to re-subscribe to the issues they were watching.
+
+### Information that can be lost during the migration
+
+See "Other issues metadata" section above for some discussion about why.
+
+* Log time
+* Start date
+* Due date
+* Tracker
+* % Done
+* Estimated time
+* Code syntax highlighting
+* List of commits that referenced an issue
 
 ### To be triaged
 
 Relevant features — to be triaged as MUST/SHOULD/MAY:
 
-* Preserve issue IDs so `#nnnn` should retain its meaning and links
-  like [[!tails_ticket 15878]] can be easily redirected.
-* Preserve issue private/public status.
-* Convert Textile to Markdown.
-* Preserve watchers.
-* Preserve issues relationships.
-* Preserve other issues metadata.
 * Does not require global GitLab administration token.
 * Does not require SSH access to the GitLab machine.
+* Existing user accounts
+* Description history
 
 ## Tools
 
@@ -284,22 +573,133 @@ of forks, and follow the white GitHub rabbit(-hole):
 * <https://github.com/redmine-gitlab-migrator/redmine-gitlab-migrator>
 * <https://github.com/ultreia-io/migrate-redmine-to-gitlab>
 
+# Interfaces that will need adjustments
+
+XXX: check what part of this is in the scope of this project
+
+## Git repository → various mirrors
+
+Our Git repository keeps a number of mirrors up-to-date:
+
+ - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_remotes.sh>
+ - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_hooks.sh>
+
+## Git repositories → website
+
+A refresh of our website is triggered by:
+
+ - pushing to the master branch of our Git repository
+ - pushing to a few "underlay" repositories
+
+Current implementation:
+
+ - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_hooks.sh>
+ - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/hooks/www_website_ping-post-update.hook>
+ - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/hooks/www_website_underlays-post-update.hook>
+ - <https://git.tails.boum.org/puppet-tails/tree/templates/website/update-underlays.erb>
+
+## Git repository → Jenkins
+
+Pushing to our Git repository pings Jenkins so it can run jobs as needed:
+<https://git.tails.boum.org/puppet-tails/tree/templates/gitolite/hooks/tails-post-receive.erb>
+
+<a id="interfaces-jenkins-git"></a>
+
+## Jenkins → Git
+
+Jenkins jobs are generated on `jenkins.lizard`, from the list of
+branches in our main Git repository. For details and pointers to the
+corresponding code, see the corresponding
+[[blueprint|blueprint/automated_builds_and_tests/jenkins]].
+
+Here are the kinds of jobs relevant in this discussion:
+
+ - `check_PO_master` runs the `check_po` script on all PO files
+
+    - this script comes from a Git submodule referenced by
+      `tails.git`'s master branch (`tails::tester::check_po`)
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `build_website_master` runs `./build-website`
+
+    - from `tails.git`'s master branch
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `build_Tails_ISO_*` and `reproducibly_build_Tails_ISO_*` run
+   `rake build`
+
+    - from the corresponding `tails.git` branch
+    - in a Jenkins isobuilder
+    - as a sudoer user
+
+ - `test_Tails_ISO_*` run `./run_test_suite`
+
+    - from the corresponding `tails.git` branch
+    - in a Jenkins isotester
+    - as root via sudo
+
+Wrt. who can push to which branch in `tails.git`, see the "Access control"
+section.
+
+## Jenkins → Redmine
+
+Tails images build reproducibility is tested if the corresponding
+ticket has "Needs Validation" status:
+<https://git.tails.boum.org/puppet-tails/tree/files/jenkins/slaves/isobuilders/decide_if_reproduce>
+
+(Currently disabled:) Email notifications are sent on job status
+change if the ticket has "Needs Validation" status:
+<https://git.tails.boum.org/puppet-tails/tree/files/jenkins/slaves/isobuilders/output_ISO_builds_and_tests_notifications>
+
+## Ticket triaging → Redmine
+
+Our Redmine email reminder sends email to users who have at least one
+ticket assigned to them, that satisfies at least one of these criteria:
+
+ - "Stalled work-in-progress": status "In Progress", that were
+   not updated since more than 6 months
+
+ - "Reviews waiting for a long time": not been updated since 45 days
+   or more
+
+Current implementation:
+
+ - <https://git.tails.boum.org/puppet-tails/tree/files/redmine/reminder/redmine-remind>
+ - <https://git.tails.boum.org/puppet-tails/tree/files/redmine/reminder/email_body>
+ - <https://git.tails.boum.org/puppet-tails/tree/manifests/redmine/reminder.pp>
+
+## Translation platform → Git
+
+A hook ensures that Weblate only pushes changes to our main Git
+repository that meet certain conditions:
+
+<https://git.tails.boum.org/puppet-tails/tree/files/gitolite/hooks/tails-weblate-update.hook>
+
 # Issues and merge requests triaging
 
 * One can define policies (YAML) and have them applied automatically.
   - <https://gitlab.com/gitlab-org/quality/triage-ops>
   - <https://gitlab.com/gitlab-org/gitlab-triage>
 
+
+# GitLab hosting options
+
+See <https://salsa.debian.org/tails-team/gitlab-migration/wikis/hosting/comparison>
+(tables in pure Markdown are too tedious for me -- intrigeri).
+
 # Resources
 
 * Tor's [migration plan](https://nc.riseup.net/s/SnQy3yMJewRBwA7)
   from Trac to GitLab.
+  - Their instance is <https://dip.torproject.org/>.
+  - Converted issues: <https://dip.torproject.org/ahf-admin/legacy-20/issues/>
+  - Migration problems: <https://pad.riseup.net/p/gitlab-migration-problems>
   - Rough timeline defined on 2019-10-15:
     1. Have a full migration into legacy in Mid November
     2. Ask people to find errors the last two weeks of November
     3. Migration early december
-  - They are considering using GitLab EE Ultimate, which includes
-    proprietary components.
   - Meetings:
     - [agenda and notes](https://pad.riseup.net/p/e-q1GP43W4gsY_tYUNxf)
     - 2019-10-15 meeting
@@ -309,3 +709,10 @@ of forks, and follow the white GitHub rabbit(-hole):
 * KDE migration to Gitlab:
   - <https://gitlab.com/gitlab-org/gitlab-foss/issues/57338/designs>
   - <https://gitlab.com/gitlab-org/gitlab/issues/24900>
+* Project
+  [import/export](https://docs.gitlab.com/ee/user/project/settings/import_export.html):
+  successfully tested from Salsa to 0xacab (code, MRs, no issues).
+  Notes are authored by the user who performs the import,
+  but attributed in the comment itself to their original author.
+  Commits are authored by the original author.
+  Example: <https://0xacab.org/tails/test-import/>
