@@ -15,9 +15,10 @@ To release Tails you'll need some packages installed:
 
 * `tidy mktorrent transmission-cli`
 * aufs DKMS module for your running kernel.
-* [[!debpts squashfs-tools]] that honors `$SOURCE_DATE_EPOCH`.
-  If you're running Stretch or Buster, install it from our custom `devel` APT suite.
-  If you're running Bullseye or sid, install it from sid.
+* [[!debpts squashfs-tools]]:
+  - If you're running Stretch or Buster, ensure you have the latest version
+    from our custom `iukbuilder-stretch` APT suite.
+  - If you're running Bullseye or sid, install it from sid.
 * `tails-iuk` dependencies, including suggested packages (see
   `debian/control` in the `debian` branch of its repo)
 * `tails-perl5lib` dependencies (same trick as `tails-iuk` to get the
@@ -802,10 +803,8 @@ and run the following:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
         squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
-        if [ "$squashfs_tools_version" != 1:4.3-3.0tails4 ] && \
-           [ "$squashfs_tools_version" != 1:4.3-8.0tails1 ] && \
-           dpkg --compare-versions "$squashfs_tools_version" lt 1:4.4-1; then
-            echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
+        if dpkg --compare-versions "$squashfs_tools_version" lt '1:4.4-1~'; then
+            echo 'ERROR! Your squashfs-tools is too old so any generated IUKs will *not* be reproducible!'
             break
         fi
         echo "Generating IUK file from ${source_version:?} to ${VERSION:?}"
