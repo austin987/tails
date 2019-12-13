@@ -333,39 +333,41 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
   bridge_dirs = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*#{bridge_type}/"
   )
-  bridge_dir = bridge_dirs.sample
-  address = $vmnet.bridge_ip_addr
-  port = nil
-  fingerprint = nil
-  extra = nil
-  if bridge_type == 'bridge'
-    open(bridge_dir + "/torrc") do |f|
-      port = f.grep(/^OrPort\b/).first.split.last
-    end
-  else
-    # This is the pluggable transport case. While we could set a
-    # static port via ServerTransportListenAddr we instead let it be
-    # picked randomly so an already used port is not picked --
-    # Chutney already has issues with that for OrPort selection.
-    pt_re = /Registered server transport '#{bridge_type}' at '[^']*:(\d+)'/
-    open(bridge_dir + "/notice.log") do |f|
-      pt_lines = f.grep(pt_re)
-      port = pt_lines.last.match(pt_re)[1]
-    end
-    if bridge_type == 'obfs4'
-      open(bridge_dir + "/pt_state/obfs4_bridgeline.txt") do |f|
-        extra = f.readlines.last.chomp.sub(/^.* cert=/, 'cert=')
+  bridge_dirs.each do |bridge_dir|
+    address = $vmnet.bridge_ip_addr
+    port = nil
+    fingerprint = nil
+    extra = nil
+    if bridge_type == 'bridge'
+      open(bridge_dir + "/torrc") do |f|
+        port = f.grep(/^OrPort\b/).first.split.last
+      end
+    else
+      # This is the pluggable transport case. While we could set a
+      # static port via ServerTransportListenAddr we instead let it be
+      # picked randomly so an already used port is not picked --
+      # Chutney already has issues with that for OrPort selection.
+      pt_re = /Registered server transport '#{bridge_type}' at '[^']*:(\d+)'/
+      open(bridge_dir + "/notice.log") do |f|
+        pt_lines = f.grep(pt_re)
+        port = pt_lines.last.match(pt_re)[1]
+      end
+      if bridge_type == 'obfs4'
+        open(bridge_dir + "/pt_state/obfs4_bridgeline.txt") do |f|
+          extra = f.readlines.last.chomp.sub(/^.* cert=/, 'cert=')
+        end
       end
     end
+    open(bridge_dir + "/fingerprint") do |f|
+      fingerprint = f.read.chomp.split.last
+    end
+    @bridge_hosts << { address: address, port: port.to_i }
+    bridge_line = bridge_type + " " + address + ":" + port
+    [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
+    @screen.type(bridge_line + Sikuli::Key.ENTER)
   end
-  open(bridge_dir + "/fingerprint") do |f|
-    fingerprint = f.read.chomp.split.last
-  end
-  @bridge_hosts << { address: address, port: port.to_i }
-  bridge_line = bridge_type + " " + address + ":" + port
-  [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
-  @screen.type(bridge_line + Sikuli::Key.ENTER)
   @screen.hide_cursor
+  @screen.wait_and_click('TorLauncherFinishButton.png', 10)
   @screen.wait('TorLauncherConnectingWindow.png', 10)
   @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
 end

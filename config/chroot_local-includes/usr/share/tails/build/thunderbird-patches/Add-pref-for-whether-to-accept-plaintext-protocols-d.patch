@@ -9,61 +9,49 @@ extensions like TorBirdy) to prevent insecure configurations to ever
 be displayed to users; for other users there is a warning explaining
 the consequences of accepting a non-SSL configuration.
 
---- a/comm/mail/components/accountcreation/content/guessConfig.js
-+++ b/comm/mail/components/accountcreation/content/guessConfig.js
-@@ -412,6 +412,7 @@ HostDetector.prototype =
-         { "imap" : IMAP, "pop3" : POP, "smtp" : SMTP }, UNKNOWN);
-     if (!port)
-       port = UNKNOWN;
-+    var ssl_only = Services.prefs.getBoolPref("mailnews.auto_config.ssl_only_mail_servers");
-     var ssl = ConvertSocketTypeToSSL(socketType);
-     this._cancel = false;
-     this._log.info("doing auto detect for protocol " + protocol +
-@@ -435,6 +436,8 @@ HostDetector.prototype =
-       for (let j = 0; j < hostEntries.length; j++)
-       {
-         let hostTry = hostEntries[j]; // from getHostEntry()
-+        if (ssl_only && hostTry.ssl == NONE)
-+          continue;
-         hostTry.hostname = hostname;
-         hostTry.status = kNotTried;
-         hostTry.desc = hostTry.hostname + ":" + hostTry.port +
+---
+ .../components/accountcreation/content/readFromXML.js  | 10 ++++++++++
+ comm/mailnews/mailnews.js                              |  6 ++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/comm/mail/components/accountcreation/content/readFromXML.js b/comm/mail/components/accountcreation/content/readFromXML.js
 --- a/comm/mail/components/accountcreation/content/readFromXML.js
 +++ b/comm/mail/components/accountcreation/content/readFromXML.js
-@@ -29,6 +29,8 @@ function readFromXML(clientConfigXML)
+@@ -34,6 +34,8 @@ function readFromXML(clientConfigXML) {
    }
    var allow_oauth2 =
      Services.prefs.getBoolPref("mailnews.auto_config.account_constraints.allow_oauth2");
 +  var ssl_only =
-+    Services.prefs.getBoolPref("mailnews.auto_config.ssl_only_mail_servers");
++    Services.prefs.getBoolPref("mailnews.auto_config.sslOnly");
    var exception;
-   if (typeof(clientConfigXML) != "object" ||
-       !("clientConfig" in clientConfigXML) ||
-@@ -92,6 +94,10 @@ function readFromXML(clientConfigXML)
-         throw exception ? exception : "need proper <socketType> in XML";
+   if (
+     typeof clientConfigXML != "object" ||
+@@ -113,6 +115,10 @@ function readFromXML(clientConfigXML) {
+       }
        exception = null;
- 
+
 +      if (ssl_only && iO.socketType == 1) {
 +        continue;
 +      }
 +
-       for (let iXauth of array_or_undef(iX.$authentication))
-       {
+       for (let iXauth of array_or_undef(iX.$authentication)) {
          try {
-@@ -177,6 +183,10 @@ function readFromXML(clientConfigXML)
-         throw exception ? exception : "need proper <socketType> in XML";
+           iO.auth = sanitize.translate(iXauth, {
+@@ -255,6 +261,10 @@ function readFromXML(clientConfigXML) {
+       }
        exception = null;
- 
+
 +      if (ssl_only && oO.socketType == 1) {
 +        continue;
 +      }
 +
-       for (let oXauth of array_or_undef(oX.$authentication))
-       {
+       for (let oXauth of array_or_undef(oX.$authentication)) {
          try {
+           oO.auth = sanitize.translate(oXauth, {
+diff --git a/comm/mailnews/mailnews.js b/comm/mailnews/mailnews.js
 --- a/comm/mailnews/mailnews.js
 +++ b/comm/mailnews/mailnews.js
-@@ -922,6 +922,12 @@ pref("mailnews.auto_config.guess.enabled
+@@ -962,6 +962,12 @@ pref("mailnews.auto_config.guess.sslOnly", false);
  pref("mailnews.auto_config.guess.timeout", 10);
  // Whether we allow fetched configurations using OAuth2.
  pref("mailnews.auto_config.account_constraints.allow_oauth2", true);
@@ -72,7 +60,6 @@ the consequences of accepting a non-SSL configuration.
 +// configurations are never presented to the user; with this option
 +// unset, users picking an insecure configuration will get a warning
 +// and have to opt-in.
-+pref("mailnews.auto_config.ssl_only_mail_servers", false);
++pref("mailnews.auto_config.sslOnly", false);
  // Work around bug 1454325 by disabling mimetype mungling in XmlHttpRequest
  pref("dom.xhr.standard_content_type_normalization", false);
- 
