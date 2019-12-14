@@ -88,6 +88,8 @@ Last updated:
 - MacBook Air 3,2: 2014-06-27
 - MacBook Pro 5,1: 2015-06-19
 - MacBook Pro 4,1: 2014-08-15
+- MacBook Air Retina 2019: 2019-11-01
+- MacBook Pro 8,3: 2019-11-01
 -->
 
 * Any Mac with 32-bit EFI might not start on Tails.
@@ -95,8 +97,25 @@ Last updated:
   or 64-bit EFI on that list:
   <https://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
 
-* MacBook Pro 2016 and 2017: the keyboard, trackpad and Touch Bar do
-  not work.
+* MacBook Air Retina 2019
+
+  To start Tails successfully, [[add the following boot option when
+  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+      modprobe.blacklist=thunderbolt
+
+  Still, the trackpad and keyboard may not work. You may use an external
+  mouse and keyboard.
+
+* MacBook Pro 2016 and 2017: the keyboard, trackpad and Touch Bar may
+  not work. If they do, please let us know so we can update this page.
+
+* MacBook Pro 8,3 17" (AMD Radeon HD6770M and Intel HD Graphics 3000)
+
+  If Tails fails to start, [[add the following boot option when
+  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+      radeon.modeset=0
 
 * MacBook Pro 5,1 17" (Nvidia GeForce 9400M)
 
@@ -153,6 +172,17 @@ Last updated: 2015-04-10
 -->
 
 Does not start on USB sticks.
+
+### AMD Ryzen with Vega graphics cards
+
+<!--
+Last updated: 2019-11-01
+-->
+
+To start Tails successfully, [[add the following boot option when starting
+Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+    iommu=soft
 
 ### ASUS VivoBook X202E
 
@@ -430,8 +460,8 @@ Tails does not erase video memory
 
 Tails doesn't erase the [[!wikipedia Video_RAM_(dual-ported_DRAM) desc="video memory"]] yet.
 When one uses Tails, then restarts the computer into another operating
-system, that other operating system can see what has been displayed on
-the screen within Tails.
+system, that other operating system might, for a moment, display the last
+screen that was displayed in Tails.
 
 Shutting down the computer completely, instead of restarting it,
 might allow the video memory to empty itself.
