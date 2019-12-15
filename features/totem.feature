@@ -45,8 +45,7 @@ Feature: Using Totem
     Then I see "TotemUnableToOpen.png" after at most 10 seconds
     And AppArmor has denied "/usr/bin/totem" from opening "/home/amnesia/.purple/otr.private_key"
 
-  #10442
-  @check_tor_leaks @fragile
+  @check_tor_leaks
   Scenario: Watching a WebM video over HTTPS
     Given I have started Tails from DVD and logged in and the network is connected
     Then I can watch a WebM video over HTTPs

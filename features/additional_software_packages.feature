@@ -64,7 +64,7 @@ Feature: Additional software
     And I refuse adding "cowsay" to Additional Software
     Then "cowsay" is not in the list of Additional Software
 
-  # Depends on scenario: Packages I remove from Additional Software through the GUI are not in the Additional Software list anymore
+  # Depends on scenario: My Additional Software list is configurable through a GUI or through notifications when I install or remove packages with APT or Synaptic
   # See https://tails.boum.org/blueprint/additional_software_packages/offline_mode/#incomplete-online-upgrade for high level logic
   Scenario: Recovering in offline mode after Additional Software previously failed to upgrade and then succeed to upgrade when online
     Given a computer

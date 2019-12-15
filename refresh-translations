@@ -14,13 +14,19 @@ PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/tails-screen-locker \
     /usr/local/bin/tails-upgrade-frontend-wrapper \
     /usr/local/sbin/tails-additional-software \
-    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume.py \
-    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_list.py \
-    /usr/local/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_manager.py
+    /usr/lib/python3/dist-packages/tailsgreeter/settings/persistence.py \
+    /usr/lib/python3/dist-packages/tailsgreeter/ui/add_settings_dialog.py \
+    /usr/lib/python3/dist-packages/tailsgreeter/ui/additional_settings.py \
+    /usr/lib/python3/dist-packages/tailsgreeter/ui/main_window.py \
+    /usr/lib/python3/dist-packages/tailsgreeter/ui/persistent_storage.py \
+    /usr/lib/python3/dist-packages/tailsgreeter/ui/region_settings.py \
+    /usr/lib/python3/dist-packages/unlock_veracrypt_volumes/volume.py \
+    /usr/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_list.py \
+    /usr/lib/python3/dist-packages/unlock_veracrypt_volumes/volume_manager.py \
     /usr/local/lib/tails-additional-software-notify \
     /usr/local/sbin/tails-additional-software"
 SHELL_PROGS="/etc/NetworkManager/dispatcher.d/60-tor-ready.sh \
-    /usr/local/bin/keepassx \
+    /usr/local/bin/keepassxc \
     /usr/local/lib/tails-spoof-mac \
     /usr/local/bin/tor-browser \
     /usr/local/sbin/unsafe-browser"
@@ -58,8 +64,11 @@ prog_potfile () {
 	/usr/share/gnome-shell/extensions/torstatus@tails.boum.org/extension.js)
             domain=torstatus-extension.js
             ;;
-        /usr/local/lib/*/unlock_veracrypt_volumes/*)
+        /usr/lib/python3/dist-packages/unlock_veracrypt_volumes/*)
             domain="unlock-veracrypt-volumes-$(basename "$prog")"
+            ;;
+        /usr/lib/python3/dist-packages/tailsgreeter/*)
+            domain="greeter-$(basename "$prog")"
             ;;
         *)
             domain=$(basename $prog)

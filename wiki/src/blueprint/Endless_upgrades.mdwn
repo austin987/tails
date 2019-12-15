@@ -305,25 +305,40 @@ The IUK size is involved in at least four concerns:
     MB = 2442 MB.
   - After the old IUK is purged the disk usage is down to 2442 MB -
     678 MB = 1764 MB.
-* Memory needs: while performing the upgrade, 2x the size of the IUK
-  of memory is needed, so 2*682 MB = 1364 MB. On a system with 2 GB of
-  memory, a fresh boot of Tails 3.5 (without networking to limit the
-  amount of processes autostarting) has 1255 MB of free memory
-  (according to `check_free_memory()`'s calculation in
-  `config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper`)
-  so the upgrade would fail. This is a regression for users with 2 GB
-  memory: for all of 2.x and 3.x, all IUKs have been under 400 MB,
-  which would work fine with 2 GB of memory. If that's a blocker, then
-  we have to solve it by changing the format of the IUKs
-  ([[!tails_ticket 6876]]); we should coordinate this with other changes
-  that will break automated upgrades from Tails N to N+1, such as
-  Tails 4.0 and the migration to overlayfs ([[!tails_ticket 9373]]) .
+* Memory needs:
+  - While performing the upgrade, 2x the size of the IUK
+    of memory is needed, so 2*682 MB = 1364 MB. On a system with 2 GB of
+    memory, a fresh boot of Tails pre-4.0 devel branch, even with
+    [[!tails_ticket 12092]] fixed, has 900 MB of free memory
+    (according to `check_free_memory()`'s calculation in
+    `config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper`)
+    so the upgrade would fail.
+  - In the same conditions, Tails 3.15 has 672 MB of free memory, which
+    allowed to apply every automatic upgrade if, and only if, one never
+    skipped any: most 3.N → 3.N+2 automatic upgrades would fail with
+    2 GB of RAM.
+  - So this is a regression for users with 2 GB memory who never skip
+    any upgrade. Those who already skipped upgrades occasionally
+    already could not upgrade automatically in Tails 3.x, because we
+    started advertising upgrades from N to N+2, to improve UX for
+    those that have enough RAM to apply them directly (no need to
+    apply 2 upgrades in a row when the user has skipped one). As we
+    can see, this move also made UX worse for users with smaller
+    amounts of RAM: they have to do a manual upgrade, which is probably
+    more painful, for most users, than 2 automatic upgrades.
+  - We can solve this regression by changing the format of the IUKs
+    ([[!tails_ticket 6876]]); we should coordinate this with other changes
+    that will break automated upgrades from Tails N to N+1, such as
+    the migration to overlayfs ([[!tails_ticket 9373]]).
 * Bandwidth needs of the RM. Uploading 10 GB of IUKs can be a pain for
-  some of us, but that can easily be solved by making it possible to
+  some of us, but that can be solved by making it possible to
   generate IUKs on lizard (and then compare them with the ones you
-  generated locally. Thanks reproducibility!).
+  generated locally. Thanks reproducibility!): [[!tails_ticket 15297]].
 
 ## Support upgrading very old Tails
+
+XXX: It seems that we do want to support skipping more than one Tails
+release. See the discussion on [[!tails_ticket 17069]].
 
 We probably do not want to support upgrading very old (e.g. from six
 months ago) Tails installations because our signing key might have
@@ -398,3 +413,103 @@ Total: 7853 MB
     260M    Tails_amd64_3.2_to_3.3.iuk
     177M    Tails_amd64_3.3_to_3.4.iuk
     213M    Tails_amd64_3.4_to_3.5.iuk
+
+<a id="single-squashfs-diff-deployment"></a>
+
+## Deployment
+
+Assume we first ship in Tails version N~ the new Upgrader that supports
+[[!tails_ticket 15281 desc="Endless automatic upgrades"]]. The initial
+plan is N = 4.2.
+
+When we release Tails version N:
+
+ - We publish the following UDFs:
+
+   - `/upgrade/v1/Tails/OLD` for every OLD = 4.x << N~,
+     which advertise full and incremental upgrades to version N.
+
+   - `/upgrade/v2/Tails/OLD` for every OLD = 4.x << N,
+     which advertise full and incremental upgrades to version N.
+     This includes `/upgrade/v2/Tails/N~*`.
+
+   - `/upgrade/v2/Tails/N` and `/upgrade/v2/Tails/N+1`,
+     which say there is no upgrade available.
+
+ - We publish IUKs v1 that allow upgrading OLD = 4.x << N~
+   to version N.
+
+ - Tails version OLD << N~ uses the old Upgrader, so it fetches its UDF
+   from `/upgrade/v1/Tails/OLD` and learns about the full and incremental
+   upgrades to version N.
+
+ - Tails version N~ and N uses the new Upgrader.
+   We can distinguish 2 cases:
+
+   - Either initial-install-version << N: the Upgrader fetches the
+     `/upgrade/v2/Tails/X` UDF, with X = initial-install-version << N,
+     that advertises an upgrade to version N.
+
+     Then, either Tails is running version N already, and then the
+     Upgrader concludes Tails is up-to-date. Or Tails is running N~*,
+     and it can be automatically upgraded to N.
+
+     XXX: ensure this logic is implemented, i.e.
+     the Upgrader won't try to "upgrade" an already up-to-date Tails.
+
+   - Or initial-install-version >= N: the Upgrader fetches the
+     `/upgrade/v2/Tails/X` UDF, with X >= N, that says there is no
+     upgrade available.
+
+When we release Tails version N+1:
+
+ - We publish the following UDFs:
+
+   - `/upgrade/v1/Tails/OLD`, for every OLD = 4.x << N, are updated to
+     advertise the full upgrade to N+1 instead of to N.
+
+     On top of that, UX will tell RMs whether we should also keep
+     advertising the incremental upgrade to N, so that users can
+     automatically upgrade to N, reboot, and from there automatically
+     upgrade to N+1. This boils down to: does one single full upgrade
+     provide better UX than two automatic upgrades in a row?
+
+   - `/upgrade/v2/Tails/OLD` for every OLD == initial-install-version << N,
+     which advertise full and incremental upgrades to version N+1.
+     This includes `/upgrade/v2/Tails/N~*`.
+
+   - `/upgrade/v2/Tails/N`, which advertises the incremental and full
+     upgrades to N+1.
+
+   - `/upgrade/v2/Tails/N+1`, which says there is no
+     upgrade available.
+
+ - We publish IUKs v2 that can upgrade to N+1 any device where any 4.x
+   was initially installed, as long as it was already upgraded to N
+   (and thus has the new Upgrader).
+
+   For example, if N = 4.2, we publish IUKs from 4.0, 4.1, and 4.2
+   to N+1 = 4.3.
+
+ - We publish no IUK v1: users of Tails << N~ must first automatically
+   upgrade to version N, before they can automatically upgrade to N+1
+   and newer. Alternatively, they can do a manual (full) upgrade
+   to N+1.
+
+ - Tails version OLD << N~ uses the old Upgrader, so it fetches its UDF
+   from `/upgrade/v1/Tails/OLD` and learns about the full upgrade to
+   version N+1 (and possibly the incremental upgrade to version N).
+
+ - Tails versions N~* and N use the new Upgrader. Depending on
+   initial-install-version, it fetches `/upgrade/v2/Tails/X` with
+   X <= N. All such UDFs advertise the incremental and full upgrades to N+1.
+
+ - Tails version N+1 uses the new Upgrader, so:
+
+   - If initial-install-version << N+1, the Upgrader fetches
+     `/upgrade/v2/Tails/X` with X <= N. All such UDFs advertise an
+     "upgrade" to version N+1; given Tails is running version N+1
+     already, the Upgrader concludes Tails is up-to-date.
+
+   - If initial-install-version = N+1, the Upgrader fetches
+     `/upgrade/v2/Tails/N+1`, which says there is no upgrade available.

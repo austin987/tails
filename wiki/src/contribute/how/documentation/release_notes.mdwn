@@ -1,17 +1,18 @@
 [[!meta title="Checklist for release notes"]]
 
-  - Create a branch based on the development branch for this release
-    - `web/nnnnn-x.y-release-notes`
+  - Fetch and checkout the `web/release-x.y` branch that was pushed
+    by the Release Manager
     - Copy template from `contribute/how/documentation/release_notes/template.mdwn` to `news/version_x.y.mdwn`
     - Replace placeholders in template
   - Gather information about changes
     - Tails changelog
-      - <https://git-tails.immerda.ch/tails/tree/debian/changelog?h=stable>
-      - <https://git-tails.immerda.ch/tails/tree/debian/changelog?h=testing>
+      - <https://salsa.debian.org/tails-team/tails/blob/stable/debian/changelog>
+      - <https://salsa.debian.org/tails-team/tails/blob/testing/debian/changelog>
         - If the changelog of the final release has not been written
           yet, either book some time to update the release notes on the
-          day of the release or go through the tickets marked as "Ready
-          for QA" and "Fix committed" on Redmine.
+          day of the release or go through the tickets:
+           - marked as "Needs Validation" on Redmine
+           - [fixed for the upcoming release](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=327)
     - If a release candidate was announced, read the call for testing
     - Analyze the diff of packages
       - in testing for a major release: `wget http://nightly.tails.boum.org/build_Tails_ISO_testing/lastSuccessful/archive/latest.packages`
@@ -24,13 +25,16 @@
       - Firefox: <https://www.mozilla.org/en-US/firefox/52.0/releasenotes/>
       - Thunderbird: <https://www.mozilla.org/en-US/thunderbird/notes/>
       - Electrum: <https://github.com/spesmilo/electrum/blob/master/RELEASE-NOTES>
-      - TorBirdy: <https://gitweb.torproject.org/torbirdy.git/tree/ChangeLog>
       - obfs4proxy: <https://anonscm.debian.org/cgit/pkg-privacy/packages/obfs4proxy.git/tree/ChangeLog>
       - Enigmail: <https://enigmail.net/index.php/en/download/changelog>
       - VirtualBox: <https://www.virtualbox.org/wiki/Changelog>
     - Add [[screenshots|contribute/how/documentation/guidelines#screenshot]] of
       - Cool stuff, to show off!
       - Known issues, if that makes them easier to understand.
+    - Add HTML anchors `<a id="$anchor"></a>` where our help desk might
+      need to point people to, for example:
+      - Known issues
+      - Major changes that might confuse users
     - Document manual steps that persistence users may need to go
       through, taking into account that we support automatic updates
       from the two last releases (not mentioning manual updates).
@@ -77,5 +81,23 @@
     - Put the period before ticket number
       - "Bla bla. ([!tails_ticket 1234])"
   - Prepare a tweet with highlights:
-    - Tails x.y is out: https://tails.boum.org/news/version_x.y/, bla bla bla, and more.
+    - Tails x.y is out: https://tails.boum.org/news/version_x.y/
+
+      It bla bla bla, and more.
     - Add it as a comment to the ticket for the release notes.
+  - If we release new major features ("New features" section),
+    schedule tweets in the future to let the world know about it, even
+    months after we release them.
+    - Write a Tweet, for example:
+      - Did you know?
+        You can xxx in Tails, since $MON (Tails $VERSION).
+      - Link to our documentation about the feature.
+      - Add a picture, for example a screenshot from the release notes
+        or the documentation.
+    - Schedule tweets using [TweetDeck](https://tweetdeck.twitter.com/).
+      - For example, tweet 3-4 times every 2-4 weeks on different days.
+      - Hours that might give a good coverage in Europe, the US (East
+        and West coast), and a bit of South-East Asia are 12:00 and
+        18:00 UTC.
+      - My understanding is that TweetDeck displays the time as it is on
+        your computer, so UTC if you are in Tails.

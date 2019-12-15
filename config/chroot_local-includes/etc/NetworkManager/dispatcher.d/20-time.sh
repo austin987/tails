@@ -121,7 +121,7 @@ time_is_in_valid_tor_range() {
 	local curdate="$1"
 	local vstart="$2"
 
-	vendcons=$(date -ud "${vstart} -0230" +'%F %T')
+	vendcons=$(date -ud "${vstart} -0255" +'%F %T')
 	order="${vstart}
 ${curdate}
 ${vendcons}"

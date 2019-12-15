@@ -27,13 +27,6 @@ def wait_and_focus(img, time = 10, window)
   end
 end
 
-def focus_pidgin_irc_conversation_window(account)
-  account = account.sub(/^irc\./, '')
-  try_for(20) do
-    $vm.focus_window(".*#{Regexp.escape(account)}$")
-  end
-end
-
 # This method should always fail (except with the option
 # `return_shellcommand: true`) since we block Pidgin's D-Bus interface
 # (#14612) ...
@@ -295,27 +288,6 @@ def pidgin_otr_keys
   return $vm.file_content("/home/#{LIVE_USER}/.purple/otr.private_key")
 end
 
-Given /^Pidgin has the expected accounts configured with random nicknames$/ do
-  expected = [
-            ["irc.oftc.net", "prpl-irc", "6697"],
-            ["127.0.0.1",    "prpl-irc", "6668"],
-          ]
-  configured_pidgin_accounts.values.each() do |account|
-    assert(account['nickname'] != "XXX_NICK_XXX", "Nickname was no randomised")
-    assert_equal(account['nickname'], account['real_name'],
-                 "Nickname and real name are not identical: " +
-                 account['nickname'] + " vs. " + account['real_name'])
-    assert_equal(account['name'], account['nickname'],
-                 "Account name and nickname are not identical: " +
-                 account['name'] + " vs. " + account['nickname'])
-    candidate = [account['network'], account['protocol'], account['port']]
-    assert(expected.include?(candidate), "Unexpected account: #{candidate}")
-    expected.delete(candidate)
-  end
-  assert(expected.empty?, "These Pidgin accounts are not configured: " +
-         "#{expected}")
-end
-
 When /^I open Pidgin's account manager window$/ do
   @screen.wait_and_click('PidginMenuAccounts.png', 20)
   @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
@@ -387,36 +359,16 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
   end
 end
 
-Then /^the "([^"]*)" account only responds to PING and VERSION CTCP requests$/ do |irc_server|
-  ctcp_cmds = [
-    "CLIENTINFO", "DATE", "ERRMSG", "FINGER", "PING", "SOURCE", "TIME",
-    "USERINFO", "VERSION"
-  ]
-  expected_ctcp_replies = {
-    "PING" => /^\d+$/,
-    "VERSION" => /^Purple IRC$/
-  }
-  spam_target = configured_pidgin_accounts[irc_server]["nickname"]
-  ctcp_check = CtcpChecker.new(irc_server, 6667, spam_target, ctcp_cmds,
-                               expected_ctcp_replies)
-  ctcp_check.verify_ctcp_responses
-end
-
-Then /^I can join the( pre-configured)? "([^"]+)" channel on "([^"]+)"$/ do |preconfigured, channel, account|
-  if preconfigured
-    @screen.doubleClick(chan_image(account, channel, 'roster'))
-    focus_pidgin_irc_conversation_window(account)
-  else
-    $vm.focus_window('Buddy List')
-    @screen.wait_and_click("PidginBuddiesMenu.png", 20)
-    @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
-    @screen.wait_and_click("PidginJoinChatWindow.png", 10)
-    @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
-    @screen.type(channel)
-    @screen.click("PidginJoinChatButton.png")
-    @chat_room_jid = channel + "@" + account
-    $vm.focus_window(@chat_room_jid)
-  end
+Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
+  $vm.focus_window('Buddy List')
+  @screen.wait_and_click("PidginBuddiesMenu.png", 20)
+  @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
+  @screen.wait_and_click("PidginJoinChatWindow.png", 10)
+  @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  @screen.type(channel)
+  @screen.click("PidginJoinChatButton.png")
+  @chat_room_jid = channel + "@" + account
+  $vm.focus_window(@chat_room_jid)
   @screen.hide_cursor
   try_for(60) do
     begin

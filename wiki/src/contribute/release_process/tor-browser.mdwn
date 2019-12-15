@@ -15,7 +15,7 @@ config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt]].
 
 Once released officially, Tor Browser tarballs can be found in
 a [permanent (?)
-location](http://archive.torproject.org/tor-package-archive/torbrowser/).
+location](https://archive.torproject.org/tor-package-archive/torbrowser/).
 However, when upgrading Tor Browser for an imminent Tails release, we
 generally have to use Tor Browser tarballs that are under QA and not
 officially released yet. So, we have to retrieve them from another,
@@ -39,12 +39,12 @@ Upgrade Tor Browser in Tails
 
 Have a look at
 
-* <https://archive.torproject.org/tor-package-archive/torbrowser/>
-* <https://www.torproject.org/dist/torbrowser/>
-* <https://people.torproject.org/~mikeperry/builds/>
-* <https://people.torproject.org/~gk/builds/>
-* <https://people.torproject.org/~boklm/builds/>
-* <https://people.torproject.org/~linus/builds/>
+* <https://archive.torproject.org/tor-package-archive/torbrowser/?C=M;O=D>
+* <https://www.torproject.org/dist/torbrowser/?C=M;O=D>
+* <https://people.torproject.org/~mikeperry/builds/?C=M;O=D>
+* <https://people.torproject.org/~gk/builds/?C=M;O=D>
+* <https://people.torproject.org/~boklm/builds/?C=M;O=D>
+* <https://people.torproject.org/~linus/builds/?C=M;O=D>
 
 and see if the desired version is available. Set `TBB_DIST_URL` to the
 chosen URL, and set `TBB_VERSION` to the desired Tor Browser version, for
@@ -164,7 +164,7 @@ Set up environment variables
 4. Make `TBB_IMPORT_BRANCH` point to the branch where you want to
    import the new Tor Browser's metadata, for example:
 
-        TBB_IMPORT_BRANCH=feature/123456-torbrowser-42.3.4
+        TBB_IMPORT_BRANCH=feature/123456-torbrowser-42.3.4+force-all-tests
 
 Import a new set of Tor Browser tarballs
 ----------------------------------------
@@ -242,23 +242,3 @@ Clean up
 	cd "$TBB_ARCHIVE" && \
 	git annex drop -- "${TBB_VERSION}" && \
     rm -rf "$DL_DIR"
-
-Update the htpdate User Agent
-=============================
-
-We want to use the same user agent in our htpdate script (see the
-[[Time syncing design|contribute/design/Time_syncing]]
-for more info on that) as in Tor Browser.
-
-To find out the User Agent of the new Tor Browser:
-
-1. Start Tor Browser (outside of Tails, if there is no ISO with the new
-   Tor Browser yet).
-2. Open the _Network_ tab in the _Developer Tools_ (Ctrl+Shift+E).
-3. Load a website (e.g. <https://tails.boum.org>).
-4. Select one of the GET requests in the _Developer Tools_.
-5. Scroll down to `User-Agent` in the _Request headers_ section.
-
-Finally, replace the value of `$HTTP_USER_AGENT` in
-`config/chroot_local-includes/etc/default/htpdate.user-agent` with the
-one you found above.

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Prepare the Unsafe Browser"
+
+# Import ensure_hook_dependency_is_installed()
+. /usr/local/lib/tails-shell-library/build.sh
+
+# Install python3-lz4 (required by jsonlz4)
+ensure_hook_dependency_is_installed python3-lz4
+
+# Compress the addonStartup.json with Mozilla's jsonlz4
+INPUT="/usr/share/tails/chroot-browsers/unsafe-browser/addonStartup.json"
+OUTPUT="${INPUT}.lz4"
+/usr/local/bin/jsonlz4 -c < "${INPUT}" > "${OUTPUT}"

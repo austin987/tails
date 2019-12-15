@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+set -u
+
+echo "Patching the Thunderbird account setup wizard"
+
+# Import strip_nondeterminism_wrapper
+. /usr/local/lib/tails-shell-library/build.sh
+
+OMNI_JA=/usr/share/thunderbird/omni.ja
+
+/usr/share/tails/build/patch-thunderbird \
+   "$OMNI_JA" \
+   /usr/share/tails/build/thunderbird-patches
+
+strip_nondeterminism_wrapper \
+   --type zip \
+   --timestamp "$SOURCE_DATE_EPOCH" \
+   "$OMNI_JA" 2>/dev/null

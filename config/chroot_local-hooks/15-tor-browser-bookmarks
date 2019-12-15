@@ -4,18 +4,9 @@ set -e
 
 echo "Set up Tor Browser bookmarks"
 
-# Import ensure_hook_dependency_is_installed()
-. /usr/local/lib/tails-shell-library/build.sh
-
-ensure_hook_dependency_is_installed sqlite3
-
 # Create a symlink to places.sqlite in browser profile from a
 # dedicated "bookmarks" directory, so that it can be easily made
 # persistent
+mkdir -p /etc/skel/.mozilla/firefox/bookmarks
 ln -s /home/amnesia/.mozilla/firefox/bookmarks/places.sqlite \
    /etc/skel/.tor-browser/profile.default/places.sqlite
-
-# Create the bookmarks database
-sqlite3 /etc/skel/.mozilla/firefox/bookmarks/places.sqlite \
-        < /etc/skel/.mozilla/firefox/bookmarks/places.sqlite.in
-rm /etc/skel/.mozilla/firefox/bookmarks/places.sqlite.in

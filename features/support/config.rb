@@ -63,9 +63,11 @@ loop do
 end
 SIKULI_CANDIDATES_DIR = "#{ARTIFACTS_DIR}/sikuli_candidates"
 SIKULI_IMAGE_PATH = "#{Dir.pwd}/features/images/"
+SIKULI_MIN_SIMILARITY = 0.9
 
 # Constants that are statically initialized.
-CONFIGURED_KEYSERVER_HOSTNAME = 'jirk5u4osbsr34t5.onion'
+CONFIGURED_KEYSERVER_HOSTNAME = 'zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion'
+TEST_SUITE_DIRMNGR_KEYSERVER_HOSTNAME = 'keys.openpgp.org'
 LIBVIRT_DOMAIN_NAME = "TailsToaster"
 LIBVIRT_DOMAIN_UUID = "203552d5-819c-41f3-800e-2c8ef2545404"
 LIBVIRT_NETWORK_NAME = "TailsToasterNet"
@@ -74,7 +76,7 @@ MISC_FILES_DIR = "#{Dir.pwd}/features/misc_files"
 SERVICES_EXPECTED_ON_ALL_IFACES =
   [
    ["cupsd",    "*", "631"],
-   ["dhclient", "*", "68"]
+   ["dhclient", "0.0.0.0", "68"]
   ]
 # OpenDNS
 SOME_DNS_SERVER = "208.67.222.222"
@@ -82,3 +84,4 @@ VM_XML_PATH = "#{Dir.pwd}/features/domains"
 
 TAILS_SIGNING_KEY = cmd_helper(". #{Dir.pwd}/config/amnesia; echo ${AMNESIA_DEV_KEYID}").tr(' ', '').chomp
 TAILS_DEBIAN_REPO_KEY = "221F9A3C6FA3E09E182E060BC7988EA7A358D82E"
+WEBM_VIDEO_URL = 'https://tails.boum.org/lib/test_suite/test.webm'

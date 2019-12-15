@@ -1,5 +1,5 @@
---- a/etc/apparmor.d/usr.bin.thunderbird	2019-03-17 18:09:51.329155679 +0100
-+++ b/etc/apparmor.d/usr.bin.thunderbird	2019-03-17 18:16:44.264020113 +0100
+--- a/etc/apparmor.d/usr.bin.thunderbird	2019-09-12 14:52:34.000000000 +0000
++++ b/etc/apparmor.d/usr.bin.thunderbird	2019-10-03 13:30:05.876482204 +0000
 @@ -15,7 +15,6 @@
    # TODO: finetune this for required accesses
    #include <abstractions/dbus>
@@ -16,12 +16,14 @@
    #include <abstractions/ubuntu-browsers.d/java>
    #include <abstractions/ubuntu-helpers>
  
-@@ -45,26 +43,17 @@
+@@ -45,26 +43,19 @@
  
    # Allow opening attachments
    # TODO: create and use abstractions for opening various file formats
 -  /{usr/local/,usr/,}bin/* Cx -> sanitized_helper,
-+  /{usr/local/,usr/,}bin/{[^gp],g[^p],p[^s],gp[^g]}* Cx -> sanitized_helper,
++  /{usr/,}bin/{[^gp],g[^p],gp[^g],p[^s]}* Cx -> sanitized_helper,
++  /usr/local/bin/{[^t],t[^o],to[^r],tor[^-],tor-[^b],tor-b[^r],tor-br[^o],tor-bro[^w],tor-brow[^s],tor-brows[^e],tor-browse[^r]}* Cx -> sanitized_helper,
++  /usr/local/bin/tor-browser Uxmr,
    /usr/lib/libreoffice/program/soffice Cxr -> sanitized_helper,
  
    # Allow opening links
@@ -29,7 +31,7 @@
  
 -  # For Xubuntu to launch the browser
 -  /usr/bin/exo-open ixr,
--  /usr/lib/@{multiarch}/xfce4/exo-1/exo-helper-1 ixr,
+-  /usr/lib/@{multiarch}/xfce4/exo-[1-9]/exo-helper-[1-9] ixr,
 -  /etc/xdg/xdg-xubuntu/xfce4/helpers.rc r,
 -  /etc/xdg/xfce4/helpers.rc r,
 -
@@ -44,19 +46,21 @@
    owner @{HOME}/.{cache,config}/dconf/user rw,
    owner @{HOME}/.cache/thumbnails/** r,
    owner /run/user/[0-9]*/dconf/user rw,
-@@ -137,6 +126,7 @@
-   deny /.suspended r,
-   deny /boot/initrd.img* r,
+@@ -140,6 +131,10 @@
    deny /boot/vmlinuz* r,
-+  deny /etc/machine-id r,
    deny /var/cache/fontconfig/ w,
  
++  # needed for GNOME Shell's on-screen keyboard
++  # Tails-specific: needed only because we disable the dbus-session abstraction
++  /etc/machine-id r,
++
    # noisy file dialog:
-@@ -263,7 +253,6 @@
+   #
+   # TODO: remove these rules when file dialogs becomes "trusted helpers" that can
+@@ -264,7 +259,6 @@
    /etc/lsb-release r,
    /etc/ssl/openssl.cnf r,
    /usr/lib/thunderbird/crashreporter ix,
 -  /usr/bin/expr ix,
    /sys/devices/system/cpu/ r,
    /sys/devices/system/cpu/** r,
- 

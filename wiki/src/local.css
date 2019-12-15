@@ -32,10 +32,15 @@ Table of Content:
   - Trail
   - Special Cases
   - Partners
+  - Chart
+
 */
 
 /* Load RTL stylesheet */
 @import url("local.rtl.css");
+
+/* Load stylesheet for donation campaign */
+@import url("donate-banner.css");
 
 /* Fonts */
 
@@ -82,8 +87,12 @@ body {
 
 /* The bottom margin of all elements is fixed to a multiple of λ so that they
  * don't brake the rythm when they overlap. We set all top margin to 0. */
-p, table {
+p {
     margin: 0 0 1.5em 0; /* 14×1.5=21px=λ */
+}
+
+table {
+    margin: 1.5em 0;
 }
 
 h1, h2, h3, .sidebar {
@@ -114,7 +123,7 @@ h3 {
 }
 
 /* avoid super-long lines */
-#content #donate-button,
+.donate-button,
 p, ul, ol, h1, h2, h3, h4, h5, h6 {
     max-width: 45em;
 }
@@ -179,8 +188,13 @@ img.img { /* overwrite style.css */
   margin: 0em;
 }
 
-img.margin { /* overwrite style.css */
-  margin: 2em 4em 2em 0em;
+img.top-margin { /* overwrite style.css */
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+img.right-margin { /* overwrite style.css */
+  margin-right: 4em;
 }
 
 /* Images with caption */
@@ -394,7 +408,7 @@ div.header span.date {
     line-height: 1em;
 }
 
-.sidebar .download .download {
+.sidebar .download .install {
     font-size: 1.571em; /* 14×1.571=22px */
 }
 
@@ -406,6 +420,14 @@ div.header span.date {
 .sidebar .download .date {
     font-size: 1.143em; /* 14×1.143=16px */
     font-style: italic;
+}
+
+.sidebar .download a {
+    height: 6.5em;
+}
+
+#tor_check {
+    display: none;
 }
 
 .sidebar .links {
@@ -464,6 +486,18 @@ div.header span.date {
     line-height: 1em;
 }
 
+html[data-hide-sidebar-donate="true"] .sidebar .donate {
+  display: none;
+}
+
+.sidebar .new a {
+  background: url('lib/new.png') no-repeat scroll 95%;
+}
+
+.sidebar .new a:hover {
+  background: #f5f5f5 url('lib/new.png') no-repeat scroll 95% !important;
+}
+
 /* Links */
 
 a {
@@ -501,7 +535,10 @@ div.inlinepage {
 
 .inlinepage .inlineheader .header {
     font-size:36px;
-    top:5px
+    top:5px;
+    line-height: 1.5em;
+    display: block;
+    margin-bottom: 0.5em;
 }
 
 .inlinepage h1 {
@@ -676,25 +713,6 @@ input#searchbox {
     padding-right: 0;
 }
 
-#pagebody span.definition a {
-    color: black;
-    background: none;
-    padding-right: 0;
-}
-
-#pagebody span.definition a:hover {
-    color: #53b351;
-}
-
-#pagebody span.definition a:after {
-    content: '+';
-    font-size: 10px;
-    font-weight: normal;
-    color: #53b351;
-    position: relative;
-    top: -6px;
-}
-
 .acronym {
 }
 
@@ -819,7 +837,7 @@ div.blocks img {
     background: #f3edf9;
     border-top: solid 5px black;
     border-bottom: solid 5px black;
-    padding: 15px 2em 63px;
+    padding: 15px 2em;
     margin: 2em 0;
 }
 
@@ -1114,8 +1132,8 @@ div.bug, div.caution, div.next, div.note, div.tip, div.trophy {
   background-repeat: no-repeat;
   min-height: 48px;
   padding-left: 66px;
-  margin: 0 0 1.5em 0;
-  max-width: 38em;
+  margin: 1.5em 0;
+  max-width: 45em;
 }
 div.bug {
   background-image: url(lib/admon-bug.png);
@@ -1142,15 +1160,6 @@ div.bug pre, div.caution pre, div.next pre, div.note pre, div.tip pre, div.troph
 
 /* Command lines */
 
-p.command, p.command-example, p.command-output {
-    margin: 0px;
-    margin-bottom: 1.5em;
-}
-
-p.command::before, p.command-example::before {
-    content: '$ ';
-}
-
 p.command-example, p.command-output {
     white-space: pre;
     -webkit-user-select: none;
@@ -1167,12 +1176,11 @@ span.command-placeholder {
 
 /* Inlined icons */
 
-img.symbolic, img.symbolic-22 {
+img.symbolic {
   display: inline-block;
   position: relative;
+  top: 4px;
 }
-img.symbolic { top: 1px; } /* Default: 16 × 16 px */
-img.symbolic-22 { top: 4px; } /* 22 × 22 px */
 
 /* Trail */
 
@@ -1223,44 +1231,6 @@ pre.list-key {
   width: 60em;
 }
 
-/* "Are you using Tor?" link on /news */
-
-@media all and (min-width: 600px) {
-    #tor_check {
-        position: absolute;
-        z-index: 10;
-        right: 2em;
-    }
-}
-
-#tor_check a {
-    background: #53b351 !important;
-    -moz-border-radius: 0.5em;
-    -webkit-border-radius: 0.5em;
-    border-radius: 0.5em;
-    display: inline-block;
-    padding: 0.5em 1em 0.5em 0.5em;
-    width: 18em; /* sidebar - padding */
-}
-
-#tor_check a img {
-    float: left;
-}
-
-#tor_check a span {
-    font-family: "Century Gothic", "Avant Garde", Avenir, TeXGyreAdventorRegular, "Heiti SC", "Heiti TC", AppleGothic, sans-serif;
-    font-weight: normal;
-    color: black;
-    text-align: left;
-    font-size: 2.29em;
-    line-height: 2.1em;
-    margin-left: 0.5em;
-}
-
-#tor_check a span.twolines {
-    font-size: 1.59em;
-}
-
 /* Contribute section */
 
 div.sidebar-intro {
@@ -1308,9 +1278,9 @@ div#highlight p {
   margin: 0.5em 0;
 }
 
-/* Donation button */
+/* Donate buttons outside of sidebar */
 
-#donate-button a {
+.donate-button a {
   border-bottom: none;
   width: 100%;
   display: block;
@@ -1326,7 +1296,7 @@ div#highlight p {
   padding-left: 70px;
   line-height: 1em;
   font-weight: normal;
-  color: black;
+  color: black !important;
 }
 
 /* Partners page */
@@ -1337,17 +1307,10 @@ div#highlight p {
     font-weight: bold;
     color: #bbb;
     overflow: hidden;
-    width: 100px;
     text-align: left;
-    clear: left;
     line-height: 1.4em;
     margin-right: 2em;
     margin-top: 1em;
-    float: left;
-}
-
-#pagebody .currentpartner {
-    margin-left: 120px;
 }
 
 #pagebody .pastpartner {
@@ -1379,10 +1342,9 @@ div#highlight p {
     -moz-transition-duration: 0.6s;
     -webkit-transition-duration: 0.6s;
     transition-duration: 0.6s;
-    height: 85px;
-    width: auto;
+    max-width: 100%;
+    height: auto;
 }
-
 #pagebody .partner:hover img {
     opacity: 0.8;
 }
@@ -1401,3 +1363,72 @@ div#highlight p {
     filter: none;
     opacity: 1;
 }
+@media all and (min-width: 600px) {
+    #pagebody .amount-range {
+        float: left;
+        clear: left;
+        width: 120px;
+    }
+    #pagebody .currentpartner {
+        margin-left: 120px;
+    }
+}
+
+/* Chart */
+
+.chart {
+  display: flex !important;
+  flex-direction: column;
+}
+@media (min-width: 640px) {
+  .chart {
+    flex-direction: row;
+  }
+}
+.chart-content,
+.chart-key {
+  flex: 1;
+  padding-left: 15px;
+  padding-right: 15px;
+  align-self: center;
+}
+.chart-content svg {
+  height: auto;
+}
+.chart-key-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chart-key-list li {
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 14px;
+}
+.chart-key-list li div {
+  display: inline-block;
+}
+.key-label:before {
+  content: " ";
+  display: inline-block;
+  vertical-align: top;
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  position: relative;
+  margin-left: -18px;
+  left: -12px;
+}
+.key-label {
+  margin-right: 8px;
+}
+.key-label, .key-percent {
+  font-weight: bold;
+}
+.blue .key-label:before { background-color: #5da5da; }
+.orange .key-label:before { background-color: #faa43a; }
+.green .key-label:before { background-color: #60bd68; }
+.pink .key-label:before { background-color: #f17cb0; }
+.brown .key-label:before { background-color: #b2912f; }
+.purple .key-label:before { background-color: #b276b2; }
+.yellow .key-label:before { background-color: #decf3f; }

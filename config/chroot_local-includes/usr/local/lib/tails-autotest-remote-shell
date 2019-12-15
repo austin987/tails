@@ -46,8 +46,7 @@ def get_user_env(user):
 
 
 # Dogtail does not seem to support the root user interacting with
-# other users' applications, and it does not support Python 3 (which
-# this script is written in) so let's wrap around an interactive
+# other users' applications, so let's wrap around an interactive
 # Python shell started as a subprocess.
 class PythonSession:
     def __init__(self, user = None):
@@ -63,7 +62,7 @@ class PythonSession:
         env = get_user_env(user)
         cwd = env['HOME']
         self.process = subprocess.Popen(
-            ["python2", "-u", "-c", interactive_shell_code],
+            ["python3", "-u", "-c", interactive_shell_code],
             bufsize = 0,
             shell=False,
             stdin=subprocess.PIPE,
@@ -74,7 +73,7 @@ class PythonSession:
             preexec_fn=mk_switch_user_fn(user)
         )
         init_code = """
-            import cStringIO
+            import io
             import json
             import sys
             orig_stdout = sys.stdout
@@ -87,8 +86,8 @@ class PythonSession:
         # This wrapping ensures that we can run almost any reasonable
         # code and capture what it does.
         wrapper = """
-            fake_stdout = cStringIO.StringIO()
-            fake_stderr = cStringIO.StringIO()
+            fake_stdout = io.StringIO()
+            fake_stderr = io.StringIO()
             sys.stdout = fake_stdout
             sys.stderr = fake_stderr
             exc = None
@@ -110,7 +109,7 @@ class PythonSession:
         wrapped_code = wrapper.format(code=indented_code)
         self.process.stdin.write(wrapped_code.encode())
         self.process.stdin.flush()
-        return str(self.process.stdout.readline().strip(), 'utf-8')
+        return self.process.stdout.readline().strip()
 
 
 def run_cmd_as_user(cmd, user):
@@ -179,7 +178,7 @@ def main():
             print("Error caught while processing line:", file=sys.stderr)
             print("    " + line, file=sys.stderr)
             print("The error was:", file=sys.stderr)
-            traceback.print_exc(file=sys.stdout)
+            traceback.print_exc(file=sys.stderr)
             print("-----", file=sys.stderr)
             sys.stderr.flush()
             exc_str = '{}: {}'.format(type(e).__name__, str(e))

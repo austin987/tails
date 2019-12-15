@@ -2,60 +2,242 @@
 
 [[!toc  levels=2]]
 
-We want to allow our users to backup the data they have in their persistent
-volume.
+We want to allow our users to backup the data they have in their
+Persistence. USB sticks are fragile and small, they break and get lost.
+We also had bugs in Tails that led to the (apparent) loss of this data
+([[!tails_ticket 10976]] and broken upgrades).
 
-See the thread on tails-dev:
+We benchmarked [[tons of existing backup solutions in
+Linux|backups#archive]] and the situation is pretty poor.
 
-<https://mailman.boum.org/pipermail/tails-dev/2014-April/005388.html>
+On top of that, the data in Persistence contains both files owned by the
+`amnesia` users but also data that is owned by `root` (eg. the Wi-Fi
+passwords in *nm-system-connections* or the configuration itself in
+*persistence.conf*). This mix of Unix users and permissions make it
+harder to find a solution that work out of the box. See also the *Full*
+goal below.
 
+So, as a start, let's focus on this user scenario and solve it as good
+and cheaply as possible:
 
-Roadmap
-=======
+<strong>S1: As a Tails user, I want to create another Tails with all my
+data so that I can recover from a lost or broken Tails.</strong>
 
-- Research which requirements are really needed by our users
-- Evaluate existing tools based on these requirements 
-- Implement the missing features, integrate into Tails 
-- Write end-user documentation
-- Write automated tests
-- Evaluate UX
+Other user scenarios are possible for backups but I propose to ignore
+them for now. For example:
 
+- S2: My house burns down and I loose all my devices.
+- S3: I want to cross a border with no data on me.
+- S4: I want to recover file that I had some months ago.
 
-Requirements
-============
+As the bare minimum for S1, I need a backup that is:
 
-MUST
-----
+- **Fresh**. If backups are tedious and slow to make and update, people
+  will only update them infrequently and won't have fresh backups when
+  they need it. We should make it as easy as possible to update backups.
 
-- Allow backup of Persistent folder
-- Allow backup on Local storage
-- Encrypt backups
-- Preserve permissions and ownership
-- Understandable error messages
-- Require administrator password when hitting a file not readable by amnesia
-  (eg. private key of onion services).
+  Deja Dup is interesting in this regard: as a user, I am notified to
+  update my backups regularly and backups start automatically and in the
+  background as soon as I plug my backup device.
 
-SHOULD
+- **Offline**. Online backups can be useful in different scenarios (S2
+  and S3) but they are also slower to restore and more complicated to
+  design as they depend on the kind of cloud or online storage solution
+  the user has access to.
+
+Ideally, the backup for S1 should also be:
+
+- **Fast and simple**. As a user, I might be panicking because I think
+  that seem to have lost all my data and any extra hoop that I will have
+  to jump through can add to that panic.
+
+- **Full**. The data stored in Persistence but that is not owned by the
+  `amnesia` user might not be super critical to loose (eg. Wi-Fi
+  passwords) but providing a full backup that deals with all the data,
+  independently of its Unix user, goes along with the goal of being
+  *Fast and simple*.
+
+Clone Persistence in Tails Installer
+====================================
+
+Backup scenarios have 3 experiences:
+
+- Creation
+- Update
+- Recovery
+
+Recovery
+--------
+
+In the case of S1, being able to use Tails again with all my data after
+my USB stick breaks.
+
+The easiest possible recovery scenario for S1 is to *already* have all
+my data in another Tails, my "backup Tails". If I loose my Tails, I can
+start using my backup Tails right away.
+
+### Better UX
+
+To prevent people from confusing their current Tails with their backup
+Tails, the backup Tails could be aware that it is a backup Tails and
+display some warning when first started. Otherwise, changes made on
+the backup Tails would be overwritten when the backup is updated.
+
+Implementation note:
+
+- This could be a flag stored in the backup Persistence and that
+  triggers a warning when opened in Tails Greeter.
+
+Creation
+--------
+
+The creation experience could be to clone my Tails using *Tails
+Installer* and choose to also clone the Persistence.
+
+If the backup USB stick is new, Tails is installed and the Persistence
+is copied. If the backup USB stick already has Tails installed, both the
+Tails system on it and the backup of my Persistence are updated.
+
+Before the backup Persistence is being created, the user is prompted for
+a passphrase to create the LUKS volume of the backup Persistence.
+
+Implementation note:
+
+- It might be possible to reuse the same LUKS header to create the
+  backup Persistence without prompting for a passphrase.
+
+  At first glance:
+
+  * To create the backup Persistence,
+    <span class="command">cryptsetup luksHeaderBackup/luksHeaderRestore</span> should work.
+  * To unlock the backup Persistence,
+    <span class="command">sudo dmsetup table --showkeys TailsData_unlocked</span> should dump the master key from memory and
+    <span class="command">cryptsetup --master-key-file</span> should unlock with the master key.
+
+Update
 ------
 
-- Allow backup on a remote storage
-  - ownCloud
-- Feature a backup history
-- Backing up everything in persistence (eg APT)
-- Only send the delta from previous backup (i.e incremental update)
-- Automated reminder
-- Include, exclude lists
+The action of updating the backups regularly (and maybe being reminded
+to do so). In the backend it could use rsync to only copy the files that
+have changed.
 
+Before the backup Persistence is being updated, the user is prompted for
+a passphrase.
 
-Backup techniques
-=================
+Updating also updates the system partition of the backup Tails.
 
-We shouldn't maintain yet another shiny new piece of code to do that. Or we
-might hit tons of corner cases to handle, that one initially does not think of.
-And once we take it all into account, then we get a large piece of code to
-maintain all by ourselves, because it was meant only for Tails' needs.
+Implementation notes:
 
-So, we shouldn't try to reinvent this wheel, and use an existing, proven solution instead.
+- We want to operate at the file system level to speed things up.  We
+  need a tool that allows copying EVERYTHING from the file system (ACL,
+  extended attributes, etc.).
+
+  See [anarcat: rsync oneliner: a study of a complex
+  commandline](https://anarc.at/blog/2019-07-07-rsync-oneliner/) on how
+  to do that with rsync.
+
+- We have to make sure that applications that could be problematic if
+  backed up while running are shut down (eg. Thunderbird) while not
+  bothering the user for others (eg. NetworkManager).
+
+### Better UX
+
+The update experience could be improved, like Deja Dup does, by:
+
+- Displaying automatic reminders
+
+- Starting the update automatically when the backup Tails is plugged in.
+
+Discussion
+----------
+
+### Pros
+
+- Maybe the fastest and simplest recovery experience possible.
+
+- The creation experience is pretty simple as well: all I need is a USB
+  stick that is as big as my current Tails and it will fit all my data.
+  Tails Installer don't have to display more options.
+
+- The same experience can be used to migrate to a bigger or faster USB
+  stick. ([[!tails_ticket #14624]])
+
+### Cons
+
+- It won't solve any of the other scenarios. Building backup logic into
+  Tails Installer might also not be a good investment in case we want to
+  solve the others scenarios later on in the future. For example, the
+  recovery experiences for each of S2, S3, and S4 would be completely
+  different.
+
+Future
+======
+
+Once we have a solid solution for S1, we might able to reuse some of
+it's UX and code to solve scenarios S2, S3, and S4.
+
+They would require:
+
+- Remote storage
+- Backup history
+- Include and exclude lists
+
+We should keep these in mind while solving S1 and find a sweet spot
+between solving S1 and building foundations to support other backups
+scenarios in the future.
+
+User research
+=============
+
+Vietnam
+-------
+
+From [Understanding Internet Freedom: Vietnam's Digital
+Activists](http://internetfreedom.secondmuse.com/wp-content/uploads/2015/08/if_vietnam_v1.1.pdf)
+by *SecondMuse*:
+
+- Bloggers are more focused on mitigating risk around the storage of
+  data rather than the transmission of that data. All of the bloggers
+  have experienced harassment or arrest by police and security
+  officials, and many of them have had their devices taken away as a
+  result. They view the confiscation of devices as the highest point of
+  risk associated with their work.
+
+- Tool security design must assume the likelihood of a device being
+  confiscated by authorities as an essential part of the threat model.
+  Physical devices are commonly confiscated by authorities, and bloggers
+  have widely cited the risks posed by confiscation due to the
+  information they keep on their devices. Carefully consider this aspect
+  of the threat model when designing security features for a tool.
+
+- Protection of devices and hardware: The bloggers were unanimously
+  concerned about the possibility that arrest might result in the
+  confiscation of their computers or mobile devices, making any
+  information saved on those devices vulnerable.  Notwithstanding, only
+  a few bloggers mentioned behaviors addressing this potential
+  vulnerability, including [...]. Just one blogger discussed putting
+  sensitive information on an encrypted hard disk that he stored in a
+  safe place.
+
+From [Understanding Internet Freedom: Tunisia's Journalists and
+Bloggers](http://internetfreedom.secondmuse.com/wp-content/uploads/2015/03/if_tunis_low-Final.pdf):
+
+- Backing up documents to protect the data and themselves: Preventing
+  data loss was one primary motivation for backing up information, and
+  particularly sensitive documents. One group of journalists also
+  highlighted the practice of making physical copies of sensitive
+  documents and keeping them in many different places. In presenting
+  their security strategy for a blogger releasing sensitive information,
+  that group emphasized “contacting other acquaintances to [let them]
+  know that if anything happens to the blogger, they will be publishing
+  [the information] all over the internet and making a big scandal.”
+
+Archive of the tests of existing backup solutions
+=================================================
+
+[[!toggle id="archive" text="Archive the tests of existing backup solutions done until 2019"]]
+
+[[!toggleable id="archive" text="""
 
 GNOME Backups (Deja Dup)
 ------------------------
@@ -231,31 +413,6 @@ It is not clear where the tools differ and it would be nice to have a comparison
 
 [Packages](https://packages.debian.org/search?suite=all&section=all&arch=i386&searchon=names&keywords=restic) are for restic are in Strech.
 
-Clone everything
-----------------
-
-We could add to *Tails Installer* an option to **Clone everything**
-(Tails partition and persistent volume). This would clone the original
-USB stick and also backup all the persistent data.
-
-We could encourage people to submit patches for this even if it's not a
-perfect solution. The back end could be quite simple and use rsync
-between the two persistent volumes.
-
-A possible improvement would be to skip the cloning of the Tails
-partition if the destination USB is already a Tails USB stick.
-
-### Pros
-
-* That's a very simple user interface: it's only possible to do full
-  backups. If you loose your data, use the backup USB stick. We don't
-  have to provide an option to restore.
-
-### Cons
-
-* No option to do incremental backups.
-* People need a dedicated USB stick.
-
 Duplicati
 ---------
 
@@ -276,6 +433,19 @@ Duplicati
   Duplicati is calling back home in several ways: checking for update
   and reporting usage stats.
 
+spideroak
+---------
+
+[SpiderOak](https://spideroak.com/) is a commercial online encrypted
+backup service. Reading their website might be useful for the user
+research part of this project.
+
+Script by a2
+------------
+
+- [[Duplicate.desktop]]
+- [[duplicate.bash]]
+
 Other solutions
 ---------------
 
@@ -289,94 +459,4 @@ Other solutions
     GNOME frontend. It does snapshots with hardlinks to reduce space.
     Can do local and SSH as remote.
 
-spideroak
----------
-
-[SpiderOak](https://spideroak.com/) is a commercial online encrypted
-backup service. Reading their website might be useful for the user
-research part of this project.
-
-User experience
-===============
-
-- The user should be prompted about where to save the backup as this will most
-  probably end up directly on a storage device and not go through RAM.
-
-- Ask the user which folders of the persistence setup to backup. But maybe
-  that's not needed for a first prototype, as we might assume that the info in
-  persistence is kept to the minimum.
-
-- The restore step would do the current delete partition steps (if there was
-  already a persistence partition found), then most of the current steps to
-  create a partition, but instead of asking the user what they want to use their
-  new partition for, it would instead ask the user to pick a backup and would
-  restore it.  
-
-- There could be a single menu entry called "Backup and restore persistent
-  volume". Combining both actions in a single menu entry makes it clear that
-  they are directly related, and limits the number of menu entries.
-
-- There should be a graphical way to restore backups. It is important let
-  non-techy users restore their backups if necessary.
-
-Implementation
-==============
-
-- Avoid running the GUI as root and rather run the GUI as amnesia or a dedicated
-  user and execute precise actions through policykit (execute a command with
-  pkexec or implement a dbus service)
-
-- Write the code in GTK3 for Tails 1.1 which will be the next major release,
-  based on Debian Wheezy.
-
-Script by a2
-============
-
-- [[Duplicate.desktop]]
-- [[duplicate.bash]]
-
-User research
-=============
-
-Vietnam
--------
-
-From [Understanding Internet Freedom: Vietnam's Digital
-Activists](http://internetfreedom.secondmuse.com/wp-content/uploads/2015/08/if_vietnam_v1.1.pdf)
-by *SecondMuse*:
-
-- Bloggers are more focused on mitigating risk around the storage of
-  data rather than the transmission of that data. All of the bloggers
-  have experienced harassment or arrest by police and security
-  officials, and many of them have had their devices taken away as a
-  result. They view the confiscation of devices as the highest point of
-  risk associated with their work.
-
-- Tool security design must assume the likelihood of a device being
-  confiscated by authorities as an essential part of the threat model.
-  Physical devices are commonly confiscated by authorities, and bloggers
-  have widely cited the risks posed by confiscation due to the
-  information they keep on their devices. Carefully consider this aspect
-  of the threat model when designing security features for a tool.
-
-- Protection of devices and hardware: The bloggers were unanimously
-  concerned about the possibility that arrest might result in the
-  confiscation of their computers or mobile devices, making any
-  information saved on those devices vulnerable.  Notwithstanding, only
-  a few bloggers mentioned behaviors addressing this potential
-  vulnerability, including [...]. Just one blogger discussed putting
-  sensitive information on an encrypted hard disk that he stored in a
-  safe place.
-
-From [Understanding Internet Freedom: Tunisia's Journalists and
-Bloggers](http://internetfreedom.secondmuse.com/wp-content/uploads/2015/03/if_tunis_low-Final.pdf):
-
-- Backing up documents to protect the data and themselves: Preventing
-  data loss was one primary motivation for backing up information, and
-  particularly sensitive documents. One group of journalists also
-  highlighted the practice of making physical copies of sensitive
-  documents and keeping them in many different places. In presenting
-  their security strategy for a blogger releasing sensitive information,
-  that group emphasized “contacting other acquaintances to [let them]
-  know that if anything happens to the blogger, they will be publishing
-  [the information] all over the internet and making a big scandal.”
+"""]]

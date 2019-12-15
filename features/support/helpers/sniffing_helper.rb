@@ -1,11 +1,11 @@
 #
-# Sniffer is a very dumb wrapper to start and stop tcpdumps instances, possibly
+# Sniffer is a very dumb wrapper to start and stop tcpdump instances, possibly
 # with customized filters. Captured traffic is stored in files whose name
-# depends on the sniffer name. The resulting captured packets for each sniffers
+# depends on the sniffer name. The resulting captured packets for each sniffer
 # can be accessed as an array through its `packets` method.
 #
 # Use of more rubyish internal ways to sniff a network like with pcap-able gems
-# is waaay to much resource consumming, notmuch reliable and soooo slow. Let's
+# is waaay to much resource consuming, not much reliable and soooo slow. Let's
 # not bother too much with that. :)
 #
 # Should put all that in a Module.
@@ -21,7 +21,7 @@ class Sniffer
     @pcap_file = "#{$config["TMPDIR"]}/#{pcap_name}"
   end
 
-  def capture(filter="not ether src host #{@vmnet.bridge_mac} and not ether proto \\arp and not ether proto \\rarp")
+  def capture
     job = IO.popen(
       [
         "/usr/sbin/tcpdump",
@@ -30,7 +30,6 @@ class Sniffer
         "--immediate-mode",
         "-i", @vmnet.bridge_name,
         "-w", @pcap_file,
-        filter,
         :err => ["/dev/null", "w"]
       ]
     )

@@ -76,7 +76,7 @@ Given /^an SSH server is running on the LAN$/ do
   @sshd_server_host = $vmnet.bridge_ip_addr
   sshd = SSHServer.new(@sshd_server_host, @sshd_server_port)
   sshd.start
-  add_lan_host(@sshd_server_host, @sshd_server_port)
+  add_extra_allowed_host(@sshd_server_host, @sshd_server_port)
   add_after_scenario_hook { sshd.stop }
 end
 
@@ -145,6 +145,7 @@ Then /^I verify the SSH fingerprint for the SFTP server$/ do
   end
   # Here we'd like to click on the button using Dogtail, but something
   # is buggy so let's just use the keyboard.
+  @screen.type(Sikuli::Key.TAB)
   @screen.type(Sikuli::Key.ENTER)
 end
 

@@ -741,29 +741,7 @@ See [[doc/about/features]].
 
 ### 3.3.1 Best supported (Tier-1) languages
 
-The set of best supported languages is the union of:
-
- - Languages proposed on our website
- - Languages that make Tails understandable by a majority of the
-   population of the top 10 countries of either
-    - [directly-connecting Tor clients](https://metrics.torproject.org/userstats-relay-table.html)
-	- [Tor clients connecting via bridges](https://metrics.torproject.org/userstats-bridge-table.html)
-
-As of 2019-03-23, the resulting list is:
-
- - Arabic (ar)
- - German (de)
- - English (en)
- - Spanish (es)
- - Farsi (fa)
- - French (fr)
- - Hindi (hi)
- - Indonesian (id)
- - Italian (it)
- - Portuguese (pt-BR)
- - Russian (ru)
- - Turkish (tr)
- - Simplified Chinese (zh-CN)
+See [[contribute/how/translate#tier-1-languages]].
 
 ### 3.3.2 Locales and spell checking
 
@@ -832,7 +810,7 @@ list|about/contact#tails-support-private]].
 A dedicated application called *WhisperBack*
 is also available in every running Tails copy. WhisperBack allows
 users to send anonymous or pseudonymous feedback via OpenPGP-encrypted
-email. It is configured in Tails to use a Tor hidden service run by
+email. It is configured in Tails to use a Tor onion service run by
 Tails developers as the outgoing SMTP server. WhiperBack only sends
 email over a STARTTLS session after carefully verifying the remote
 SMTP SSL certificate. Some minimal information about the system is
@@ -858,7 +836,7 @@ The Tor software is currently configured as a client only (onion
 proxy). The client listens for control connections on port 9052 (using
 cookie authentication) which is non-standard (see about the "control
 port filter" below), as a transparent proxy on port 9040 (only used
-for remapped hidden services) and as a DNS server on port 8853.
+for remapped onion services) and as a DNS server on port 8853.
 
 The client listens on a few SOCKS ports (the rationale being detailed
 on the [[Tor stream isolation design
@@ -1057,7 +1035,6 @@ browser anyway:
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-wait-until-tor-has-bootstrapped.service]]
 - [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-wait-until-tor-has-bootstrapped.service]]
 - [[!tails_gitweb config/chroot_local-includes/lib/systemd/system/tails-tor-has-bootstrapped-flag-file.service]]
-- [[!tails_gitweb config/chroot_local-includes/usr/local/sbin/tor-has-bootstrapped]]
 
 Once Tor is ready to be used, the user is informed they can now use
 the Internet:
@@ -1068,7 +1045,7 @@ The remaining configuration differences can be found in:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/usr/share/tails/tor-browser-prefs.js]]
 - [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
-- [[!tails_gitweb config/chroot_local-hooks/15-symlink-places.sqlite]]
+- [[!tails_gitweb config/chroot_local-hooks/15-tor-browser-bookmarks]]
 
 It should also be noted that the global Tor Browser installation is also used
 for the [[Unsafe Browser]], although it is
@@ -1077,31 +1054,45 @@ configuration.
 
 ### 3.6.14 Thunderbird
 
-Thunderbird, in combination with TorBirdy, sends email through Tor.
+Thunderbird sends email through Tor.
 
-Thunderbird itself leaks a lot of data and makes DNS requests, for example by
-retrieving mail server configurations from a remote server over an insecure
-channel. This is prevented by the TorBirdy extension as well as by custom
-patches for Thunderbird in Tails, which we are currently in the process of
-upstreaming ([[!tails_ticket 11215]]).
+Thunderbird leaks a lot of information by default. This is mitigated
+in Tails by a set of preferences, that were initially inherited from
+the now defunct *TorBirdy* add-on. For example:
 
-Thunderbird generates `Message-ID` headers using the hostname part of
-the sender's email address, which does not leak usage of the PELD nor
-any user location information.
+ - Thunderbird is configured to say `EHLO[127.0.0.1]` to the SMTP
+   server instead of disclosing the real IP address and hostname.
 
-It also always says `EHLO[127.0.0.1]` to the SMTP server instead of
-disclosing the real IP address and hostname.
+ - We disable HTML email and inline attachments in order to get rid of
+   a whole class of privacy concerns.
 
-Torbirdy disables HTML email and inline attachments
-in order to get rid of a whole class of privacy concerns.
-Furthermore, when setting up an IMAP account, the drafts folder, instead
-of being remote, is set to `~$HOME/.thunderbird/Local Folders`.
+ - When setting up an IMAP account, the drafts folder, instead
+   of being remote, is set to `~$HOME/.thunderbird/Local Folders`.
 
-The original TorBirdy extension disables automatic email configuration
-through Thunderbird's email configuration wizard. This wizard is enabled in
-Tails. This is possible because our patches allow using only secure protocols
-for the domain and ISPDB lookups as well as for the actual mail account
-configuration. In detail this means:
+Implementation:
+
+- [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/thunderbird/thunderbird.cfg]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
+
+OpenPGP support is provided by the Enigmail add-on.
+
+Thunderbird's email configuration wizard has security issues in its
+default configuration. For example, it trusts the result of DNS
+requests and may retrieve mail server configurations from a remote
+server over an insecure channel. So in Tails, we patch Thunderbird to
+solve these security problems. We are in the process of
+([[!tails_ticket 6156 desc="upstreaming these patches"]]). Until they
+are all upstreamed, we apply these patches, on top of Debian's
+Thunderbird, while building Tails images:
+
+- [[!tails_gitweb_dir config/chroot_local-includes/usr/share/tails/build/thunderbird-patches]]
+- [[!tails_gitweb config/chroot_local-hooks/11-patch-thunderbird]]
+- [[!tails_gitweb config/chroot_local-includes/usr/share/tails/build/patch-thunderbird]]
+
+These account configuration wizard patches allow using only secure
+protocols for the domain and ISPDB lookups as well as for the actual
+mail account configuration. In detail this means:
 
 1. we prevent all testing of plaintext protocols when guessing configurations.
 2. we make autoconfiguration skip database lookups if `mailnews.auto_config_url`
@@ -1115,16 +1106,6 @@ us prefer secure options if available.
 This setting can be disabled (opt-out by the user). This also applies to
 manual configuration.
 
-OpenPGP support is provided by the Enigmail addon.
-
-- [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0001-secure-autoconfig-compat.diff]]
-- [[!tails_gitweb config/chroot_local-patches/torbirdy-0002-secure-autoconfig-POP-defaults.diff]]
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.thunderbird]] is copied to
-  the user's `$HOME` at boot time
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
-
 ### 3.6.15 Pidgin
 
 Pidgin is configured in Tails to not log anything as well as not to reveal too
@@ -1133,28 +1114,15 @@ status. Only IRC and Jabber/XMPP protocols are left available, to
 avoid the usage of less well audited plugins. The Off-the-record
 plugin is enabled
 to help one-to-one conversations being as private and unrecordable as
-possible. At boot a language confluxer generates a random looking default
-nickname from the 2000 most common U.S. names (according to the U.S. social
-security administration in the 1970's), which results in something Englishesque
-sounding. The nickname is further made to look like a typical IRC nickname by
-prefixing it with ^ or _ with probability 0.05, and changing it to leet speak
-with probability 0.05. When answering to CTCP requests, Pidgin does
-not leak any information apart from PING and VERSION (`Purple IRC`),
-which is deemed acceptable as there are probably other weirdness in
-how the protocol is implemented, that disclose as much.
+possible. 
 
-- [[!tails_gitweb config/chroot_local-includes/lib/live/config/2010-pidgin]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.purple]]
 - [[!tails_gitweb config/chroot_local-hooks/09-remove_unsupported_pidgin_libs]]
 
 ### 3.6.16 GnuPG
 
 GnuPG tools (namely: GPG itself and Seahorse) are configured to use
-the sks-keyservers pool since it's reliable, well-synchronized with
-the other HKP keyservers pools, and reachable over `hkps://`.
-
-Monkeysphere's `hkpms://` support will be used as soon as
-possible in place of the hierarchical X.509 certification model.
+<https://keys.opengpg.org> via its Onion service, since it's reliable.
 
 GnuPG is configured accordingly to the [OpenPGP Best
 Practices](https://help.riseup.net/en/security/message-security/openpgp/best-practices),
@@ -1166,7 +1134,6 @@ disregard the preferred keyserver assigned to specific keys.
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/gpg.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/skel/.gnupg/dirmngr.conf]]
 - [[!tails_gitweb config/chroot_local-includes/etc/dconf/db/local.d/00_Tails_defaults]]
-- hkpms is available in Debian: [[!debpkg msva-perl]]
 
 ### 3.6.17 Persistence feature
 
@@ -1344,7 +1311,7 @@ implemented by shipping a [QEMU](http://www.qemu.org/) or
 
 ### 3.8.1 Build tools
 
-The [Debian Live](http://live.debian.net/) is a toolkit to build Live
+The [Debian Live](https://www.debian.org/devel/debian-live/) is a toolkit to build Live
 systems based on Debian, such as Tails. Debian Live is designed to
 automate the build process of the target distribution, which eases
 Tails development and maintenance. As an added bonus, Debian Live
