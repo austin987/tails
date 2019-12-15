@@ -15,9 +15,8 @@ To release Tails you'll need some packages installed:
 
 * `tidy mktorrent transmission-cli`
 * aufs DKMS module for your running kernel.
-* [[!debpts squashfs-tools]] that honors `$SOURCE_DATE_EPOCH`.
-  If you're running Stretch or Buster, install it from our custom `devel` APT suite.
-  If you're running Bullseye or sid, install it from sid.
+* [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
+  from our custom `iukbuilder-stretch` APT suite.
 * `tails-iuk` dependencies, including suggested packages (see
   `debian/control` in the `debian` branch of its repo)
 * `tails-perl5lib` dependencies (same trick as `tails-iuk` to get the
@@ -369,8 +368,7 @@ Then, gather other useful information from:
   - new upstream releases of applications mentioned in [[doc/about/features]]
   - new upstream releases of other important components such as the
     Linux kernel
-* the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
-  in Redmine.
+* the [*Completed for the next release*](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=327) Redmine view.
 
 Finally, sanity check the version and commit:
 
@@ -573,15 +571,15 @@ SquashFS file order
            perl -ni -E 'chomp; say unless m{(?:
                   [.]pyc\s+\d+\z
                | \Alib/live/mount/medium/live/(?:filesystem[.]squashfs|initrd[.]img)\s
-               | \Alib/live/mount/overlay/etc/fstab\s
-               | \Alib/live/mount/overlay/etc/console-setup/cached_\S+[.](?:gz|sh)\s
-               | \Alib/live/mount/overlay/etc/machine-id\s
-               | \Alib/live/mount/overlay/etc/network/interfaces\s
-               | \Alib/live/mount/overlay/var/log/wtmp\s
-               | \A(?:lib/live/mount/overlay/)?etc/apparmor[.]d/cache/[.]features\s
-               | \A(?:lib/live/mount/overlay/)?etc/(?:group|gshadow|passwd|shadow)-\s
-               | \A(?:lib/live/mount/overlay/)?etc/resolv-over-clearnet[.]conf\s
-               | \A(?:lib/live/mount/overlay/)?etc/skel/[.]config/autostart/end-profile[.]desktop\s
+               | \Alib/live/mount/overlay/rw/etc/fstab\s
+               | \Alib/live/mount/overlay/rw/etc/console-setup/cached_\S+[.](?:gz|sh)\s
+               | \Alib/live/mount/overlay/rw/etc/machine-id\s
+               | \Alib/live/mount/overlay/rw/etc/network/interfaces\s
+               | \Alib/live/mount/overlay/rw/var/log/wtmp\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/apparmor[.]d/cache/[.]features\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/(?:group|gshadow|passwd|shadow)-\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/resolv-over-clearnet[.]conf\s
+               | \A(?:lib/live/mount/overlay/rw/)?etc/skel/[.]config/autostart/end-profile[.]desktop\s
                | \Arun/
                | \Avar/lib/AccountsService/users/Debian-gdm\s
                | \Avar/lib/gdm3/[#]\d+\s
@@ -803,10 +801,8 @@ and run the following:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
         squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
-        if [ "$squashfs_tools_version" != 1:4.3-3.0tails4 ] && \
-           [ "$squashfs_tools_version" != 1:4.3-8.0tails1 ] && \
-           dpkg --compare-versions "$squashfs_tools_version" lt 1:4.4-1; then
-            echo 'ERROR! Your squashfs-tools probably does not honor SOURCE_DATE_EPOCH so any generated IUKs will *not* be reproducible!'
+        if [ "$squashfs_tools_version" != '1:4.4-1+0.tails1' ]; then
+            echo "ERROR! Your squashfs-tools is not the required version, so any generated IUKs will *not* be reproducible!"
             break
         fi
         echo "Generating IUK file from ${source_version:?} to ${VERSION:?}"
@@ -1431,19 +1427,9 @@ Bug tracker
 
 Skip this part if preparing a release candidate.
 
-Mark all issues fixed in this release as `Status: Resolved` in our bug
-tracker. For a list of candidates, see:
-
-* the [issues in *Fix committed*
-  status](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=111);
-* the "Fix committed" section on the *Release Manager View for ${VERSION:?}*
-  in Redmine.
-
-Select these issues with the checkboxes in the first column, then
-right click on the list to display the context menu, and finally
-change the _Status_ there. Relationships between tickets will likely
-prevent you from closing all these issues at once, but at least
-you can process them in several smaller batches instead of one by one.
+Edit the [*Completed for the next
+release*](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=327)
+Redmine view: set the _Target version_ filter to the next scheduled release.
 
 Postpone to next release any remaining open issue for the version
 you've just released. Use the right-click contextual menu to do so in
@@ -1540,7 +1526,9 @@ this, and skip what does not make sense for a RC.
              \"find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
-                    -not -name '*~test_*~test.iuk' -ls \
+                    -not -name '*~test_*~test.iuk' \
+                    -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                    -ls \
              \"
 
    - then actually delete the files:
@@ -1549,7 +1537,9 @@ this, and skip what does not make sense for a RC.
              \"sudo find /srv/rsync/tails/tails/alpha  \
                     /srv/rsync/tails/tails/stable \
                     -type f -name '*.iuk' -mtime '+270' \
-                    -not -name '*~test_*~test.iuk' -delete \
+                    -not -name '*~test_*~test.iuk' \
+                    -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
+                    -delete \
              \"
 
 1. Check how much space our mirrors need:

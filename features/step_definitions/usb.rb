@@ -733,11 +733,17 @@ live-config: 4.0.4-1
       new_content: <<-EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="#{version}"
+TAILS_DISTRIBUTION="UNRELEASED"
       EOF
     },
     {
       filesystem: :rootfs,
       path: 'usr/share/common-licenses/BSD',
+      status: :removed
+    },
+    {
+      filesystem: :rootfs,
+      path: 'usr/share/doc/tor',
       status: :removed
     },
     {

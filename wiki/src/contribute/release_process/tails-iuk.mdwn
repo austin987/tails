@@ -67,7 +67,18 @@ Run the upstream test suite:
     # run the tests in closer to real conditions
     umask 077
     
-    # Run the test suite
+… with aufs:
+
+    export UNION_TYPE=aufs
+    NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
+    PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
+       RELEASE_TESTING=1 \
+       LC_ALL=C \
+       dzil test
+
+… and with overlayfs:
+
+    export UNION_TYPE=overlayfs
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
        RELEASE_TESTING=1 \
