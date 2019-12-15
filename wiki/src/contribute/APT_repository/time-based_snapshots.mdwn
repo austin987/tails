@@ -181,13 +181,13 @@ reproducibility verification.
    APT snapshots.
 
 4. In the directory for each repository (e.g. `debian`, `torproject`),
-   adjust `s=jessie` to match the codename of the distribution you
+   replace `jessie` to match the codename of the distribution you
    want to remove in the following command and run it:
 
         reprepro --delete clearvanished && \
         reprepro export && \
         reprepro dumpreferences \
-          | grep -E '^s=jessie' \
+          | grep -E '^s=(tor-nightly-master-)?jessie' \
           | awk '{print $1}' \
           | sort -u \
           | xargs -n 1 reprepro _removereferences && \
