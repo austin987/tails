@@ -1054,36 +1054,45 @@ configuration.
 
 ### 3.6.14 Thunderbird
 
-Thunderbird, in combination with TorBirdy, sends email through Tor.
+Thunderbird sends email through Tor.
 
-Thunderbird itself leaks a lot of data and makes DNS requests, for example by
-retrieving mail server configurations from a remote server over an insecure
-channel. This is prevented by the TorBirdy extension as well as by custom
-patches for Thunderbird in Tails, which we are currently in the process of
-upstreaming ([[!tails_ticket 6156]]). Until they are upstreamed, we patch
-Thunderbird (from Debian) while building Tails images:
+Thunderbird leaks a lot of information by default. This is mitigated
+in Tails by a set of preferences, that were initially inherited from
+the now defunct *TorBirdy* add-on. For example:
+
+ - Thunderbird is configured to say `EHLO[127.0.0.1]` to the SMTP
+   server instead of disclosing the real IP address and hostname.
+
+ - We disable HTML email and inline attachments in order to get rid of
+   a whole class of privacy concerns.
+
+ - When setting up an IMAP account, the drafts folder, instead
+   of being remote, is set to `~$HOME/.thunderbird/Local Folders`.
+
+Implementation:
+
+- [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
+- [[!tails_gitweb config/chroot_local-includes/usr/lib/thunderbird/thunderbird.cfg]]
+- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
+
+OpenPGP support is provided by the Enigmail add-on.
+
+Thunderbird's email configuration wizard has security issues in its
+default configuration. For example, it trusts the result of DNS
+requests and may retrieve mail server configurations from a remote
+server over an insecure channel. So in Tails, we patch Thunderbird to
+solve these security problems. We are in the process of
+([[!tails_ticket 6156 desc="upstreaming these patches"]]). Until they
+are all upstreamed, we apply these patches, on top of Debian's
+Thunderbird, while building Tails images:
 
 - [[!tails_gitweb_dir config/chroot_local-includes/usr/share/tails/build/thunderbird-patches]]
 - [[!tails_gitweb config/chroot_local-hooks/11-patch-thunderbird]]
 - [[!tails_gitweb config/chroot_local-includes/usr/share/tails/build/patch-thunderbird]]
 
-Thunderbird generates `Message-ID` headers using the hostname part of
-the sender's email address, which does not leak usage of the PELD nor
-any user location information.
-
-It also always says `EHLO[127.0.0.1]` to the SMTP server instead of
-disclosing the real IP address and hostname.
-
-Torbirdy disables HTML email and inline attachments
-in order to get rid of a whole class of privacy concerns.
-Furthermore, when setting up an IMAP account, the drafts folder, instead
-of being remote, is set to `~$HOME/.thunderbird/Local Folders`.
-
-The original TorBirdy extension disables automatic email configuration
-through Thunderbird's email configuration wizard. This wizard is enabled in
-Tails. This is possible because our patches allow using only secure protocols
-for the domain and ISPDB lookups as well as for the actual mail account
-configuration. In detail this means:
+These account configuration wizard patches allow using only secure
+protocols for the domain and ISPDB lookups as well as for the actual
+mail account configuration. In detail this means:
 
 1. we prevent all testing of plaintext protocols when guessing configurations.
 2. we make autoconfiguration skip database lookups if `mailnews.auto_config_url`
@@ -1096,13 +1105,6 @@ In addition, even when plaintext protocols are allowed, the patches make
 us prefer secure options if available.
 This setting can be disabled (opt-out by the user). This also applies to
 manual configuration.
-
-OpenPGP support is provided by the Enigmail addon.
-
-- [[!tails_gitweb config/chroot_local-includes/etc/thunderbird/pref/thunderbird.js]]
-- [[!tails_gitweb_dir config/chroot_local-includes/etc/skel/.thunderbird]] is copied to
-  the user's `$HOME` at boot time
-- [[!tails_gitweb config/chroot_local-includes/usr/local/bin/thunderbird]]
 
 ### 3.6.15 Pidgin
 
@@ -1309,7 +1311,7 @@ implemented by shipping a [QEMU](http://www.qemu.org/) or
 
 ### 3.8.1 Build tools
 
-The [Debian Live](http://live.debian.net/) is a toolkit to build Live
+The [Debian Live](https://www.debian.org/devel/debian-live/) is a toolkit to build Live
 systems based on Debian, such as Tails. Debian Live is designed to
 automate the build process of the target distribution, which eases
 Tails development and maintenance. As an added bonus, Debian Live

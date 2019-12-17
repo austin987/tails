@@ -162,6 +162,14 @@ e.g. after we release Tails based on a new Debian, we need to stop
 including it in new snapshots, and to remove all corresponding
 time-based snapshots and the packages that are not referenced anymore.
 
+<div class="caution">
+Make sure the distribution you want to stop tracking is not used for
+building the last published Tails release (taking into account
+building the corresponding Vagrant box from scratch): if it is, then
+cleaning up that distribution would prevent independent build
+reproducibility verification.
+</div>
+
 1. In `puppet-tails`, remove the bits about the distribution you want to
    stop tracking from the reprepro configuration templates:
    `templates/reprepro/snapshots/time_based/*/*`.
@@ -173,13 +181,13 @@ time-based snapshots and the packages that are not referenced anymore.
    APT snapshots.
 
 4. In the directory for each repository (e.g. `debian`, `torproject`),
-   adjust `s=jessie` to match the codename of the distribution you
+   replace `jessie` to match the codename of the distribution you
    want to remove in the following command and run it:
 
         reprepro --delete clearvanished && \
         reprepro export && \
         reprepro dumpreferences \
-          | grep -E '^s=jessie' \
+          | grep -E '^s=(tor-nightly-master-)?jessie' \
           | awk '{print $1}' \
           | sort -u \
           | xargs -n 1 reprepro _removereferences && \

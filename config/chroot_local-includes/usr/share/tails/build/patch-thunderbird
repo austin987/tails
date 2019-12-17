@@ -19,6 +19,8 @@ tmpdir="$(mktemp -d)"
    for patch in $(cat "$PATCHES_DIRECTORY"/series) ; do
       cat "$PATCHES_DIRECTORY/$patch" \
 	 | perl -p -E 's{^(--- [ab])/comm/mail/components/accountcreation/content/}{$1/chrome/messenger/content/messenger/accountcreation/}' \
+	 | perl -p -E 's{^(--- [ab])/comm/mail/components/compose/content/}{$1/chrome/messenger/content/messenger/messengercompose/}' \
+	 | perl -p -E 's{^(--- [ab])/comm/mailnews/mime/}{$1/modules/}' \
 	 | perl -p -E 's{^(--- [ab])/comm/mailnews/}{$1/defaults/pref/}' \
 	 | patch -p1
    done

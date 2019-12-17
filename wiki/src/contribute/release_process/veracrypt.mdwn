@@ -2,15 +2,14 @@
 
 Until Tails is based on a Debian version which includes our patches
 We have to maintain our custom packages for the integration of VeraCrypt
-support in GNOME until they are available in Tails via the Debian repos
-(for some that will be Buster, for some Bullseye). This means we need to
-check if new versions of the following source packages have hit Debian
-stretch or stretch-security:
+support in GNOME until they are available in Tails via the Debian repos.
+This means we need to check if new versions of the following source
+packages have hit Debian buster or buster-security:
 
 * [gtk+3.0](https://packages.debian.org/source/stable/gtk+3.0) (version in Tails: 3.24.5-1.0tails1)
 * [gvfs](https://packages.debian.org/source/stable/gvfs) (version in Tails: 1.38.1-5.0tails1)
 * [gjs](https://packages.debian.org/source/stable/gjs) (version in Tails: 1.54.3-1.0tails1)
-* [gnome-shell](https://packages.debian.org/source/stable/gnome-shell) (version in Tails: 3.30.2-9.0tails1)
+* [gnome-shell](https://packages.debian.org/source/stable/gnome-shell) (version in Tails: 3.30.2-11~deb10u1.0tails1)
 
 If any of these have a new version in buster or buster-security:
 
@@ -35,8 +34,8 @@ If any of these have a new version in buster or buster-security:
        deb-src [check-valid-until=no] tor+http://snapshot.debian.org/archive/debian/20180904T000000Z/ buster main
        EOF
        sudo apt update
-       apt source --download-only "${PACKAGE_NAME:?}={OLD_VERSION:?}"
-       apt source --download-only "${PACKAGE_NAME:?}={ORIGINAL_VERSION:?}"
+       apt source --download-only "${PACKAGE_NAME:?}=${OLD_VERSION:?}"
+       apt source --download-only "${PACKAGE_NAME:?}=${ORIGINAL_VERSION:?}"
 
 1. Get the debdiff of our patches:
 
@@ -47,22 +46,20 @@ If any of these have a new version in buster or buster-security:
        apt source "${PACKAGE_NAME:?}=${NEW_VERSION:?}"
 
 1. Apply the debdiff on the new version:
+
        debdiff-apply "${PACKAGE_NAME:?}_${NEW_VERSION:?}.dsc" tails.diff
 
 1. Add changelog entry and build a new version of the patched package
    in a Buster/amd64 chroot:
 
        cd "${PACKAGE_NAME:?}"*/
-       debchange -i --distribution="${SUITE:?}" --force-distribution
+       debchange --newversion="${NEW_VERSION:?}.0tails1" --distribution="${SUITE:?}" --force-distribution
        pdebuild
 
 1. Install the newly built package in the build environment and rebuild all
    custom packages which depend on it. The dependencies are as follows (where
    `X: Y` means that `X` is dependency of `Y`):
 
-    * `udisks2`: `gnome-disk-utility`
-    * `glib2.0`: `gtk+3.0`, `gvfs`, `gobject-introspection`, `gjs`, `gnome-shell`
-    * `gobject-introspection`: `gjs`
     * `gjs`: `gnome-shell`
 
 1. Sign and upload updated packages

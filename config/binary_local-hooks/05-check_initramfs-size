@@ -17,9 +17,9 @@ Set_defaults
 Echo_message "checking the size of the initramfs"
 
 INITRAMFS=$(readlink --canonicalize binary/live/initrd.img)
-MAX_SIZE=$((35 * 1024 * 1024)) # in bytes
+MAX_SIZE=$((32 * 1024 * 1024)) # in bytes
 ACTUAL_SIZE=$(stat --format='%s' "$INITRAMFS")
-if [ "$ACTUAL_SIZE" -gt "$MAX_SIZE" ]; then
+if [ "$ACTUAL_SIZE" -ge "$MAX_SIZE" ]; then
    echo "E: initramfs is larger ($ACTUAL_SIZE bytes) than the maximum allowed ($MAX_SIZE)" >&2
    exit 1
 fi
