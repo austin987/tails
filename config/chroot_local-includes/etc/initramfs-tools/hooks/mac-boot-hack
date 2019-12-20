@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# Remove all net drivers from the initramfs to make some room and try to
+# drop back below 32 MiB which might be a magic number (= hard limit) on
+# Mac hardware (#17320).
+
+set -e
+set -x
+
+. /usr/share/initramfs-tools/hook-functions
+
+find "$DESTDIR/usr$MODULESDIR/kernel/drivers/net" -name '*.ko' -print -delete >&2
