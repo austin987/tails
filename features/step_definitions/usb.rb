@@ -822,10 +822,7 @@ def installed_squashes
     listed_squashes.first,
     "Tails.module does not list #{default_squash} on the first line"
   )
-  # XXX: make pretty with $vm.file_glob() from #14572's branch
-  present_squashes = $vm.execute(
-    "find #{live} -maxdepth 1 -name '*.squashfs' -printf '%f\\0'"
-  ).stdout.chomp.split("\0")
+  present_squashes = $vm.file_glob("#{live}/*.squashfs").stdout.chomp.split("\0")
   # Sanity check
   assert_equal(
     listed_squashes,
