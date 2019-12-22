@@ -24,7 +24,7 @@ use Types::Standard qw{InstanceOf Str};
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("tails-perl5lib");
+textdomain("tails");
 
 use namespace::clean;
 

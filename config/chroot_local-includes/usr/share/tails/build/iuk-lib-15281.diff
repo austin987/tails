@@ -1,5 +1,5 @@
 diff --git a/usr/share/perl5/Tails/IUK.pm b/usr/share/perl5/Tails/IUK.pm
-index aa94d16..d30a579 100644
+index aa94d16..a6e6427 100644
 --- a/usr/share/perl5/Tails/IUK.pm
 +++ b/usr/share/perl5/Tails/IUK.pm
 @@ -6,19 +6,12 @@ Tails::IUK - Incremental Upgrade Kit class
@@ -26,7 +26,7 @@ index aa94d16..d30a579 100644
  
  use autodie qw(:all);
  use Carp;
-@@ -30,46 +23,86 @@ use Device::Cdio::ISO9660;
+@@ -30,46 +23,82 @@ use Device::Cdio::ISO9660;
  use Device::Cdio::ISO9660::IFS;
  use English qw{-no_match_vars};
  use File::Basename;
@@ -34,11 +34,13 @@ index aa94d16..d30a579 100644
  use File::Spec::Functions;
 -use File::Temp qw{tempdir tempfile};
 -use Path::Class;
+-use Tails::IUK::Utils qw{extract_file_from_iso extract_here_file_from_iso run_as_root};
 +use Function::Parameters;
++use IPC::Run;
 +use Path::Tiny;
- use Tails::IUK::Utils qw{extract_file_from_iso extract_here_file_from_iso run_as_root};
++use Tails::IUK::Utils qw{extract_file_from_iso extract_here_file_from_iso run_as_root stdout_as_root};
 +use Types::Path::Tiny qw{AbsDir AbsFile AbsPath File};
-+use Types::Standard qw(ArrayRef Str);
++use Types::Standard qw(ArrayRef Enum Str);
  use Try::Tiny;
  use YAML::Any;
  
@@ -59,8 +61,8 @@ index aa94d16..d30a579 100644
 +option "$_" => (
 +    required => 1,
 +    is       => 'ro',
-+    isa      => File,
-+    coerce   => File->coercion,
++    isa      => AbsFile,
++    coerce   => AbsFile->coercion,
 +    format   => 's',
 +) for (qw{old_iso new_iso});
 +
@@ -83,47 +85,45 @@ index aa94d16..d30a579 100644
 -has 'format_version' => lazy_build ro Str, metaclass => 'NoGetopt';
 -has 'squashfs_diff'  =>
 -    coerce lazy_build ro 'Path::Class::File',
-+
-+has 'format_version' =>
-+    is  => 'lazy',
-+    isa => Str;
-+
-+option 'squashfs_diff' =>
-+    is            => 'lazy',
-+    isa           => AbsPath,
-+    coerce        => AbsPath->coercion,
-+    format        => 's',
-     documentation => q{Internal, for test suite only};
+-    documentation => q{Internal, for test suite only};
 -has 'delete_files'   => lazy_build ro 'ArrayRef[Str]', metaclass => 'NoGetopt';
 -has 'new_kernels' => lazy_build ro 'ArrayRef[Str]', metaclass => 'NoGetopt';
 -has 'tarballs' => lazy_build ro 'ArrayRef[Str]', documentation => q{Internal, for test suite only};
 -has 'tempdir' => lazy_build ro 'Path::Class::Dir', metaclass => 'NoGetopt';
+-has 'tar_options' =>
+-    lazy_build ro 'ArrayRef[Str]',
+-    traits => ['Array'],
+-    metaclass => 'NoGetopt',
+-    handles => {
+-        list_tar_options => 'elements',
++
++option 'union_type' =>
++    is            => 'lazy',
++    isa           => Enum[qw{aufs overlayfs}],
++    coerce        => Enum->coercion,
++    format        => 's',
++    documentation => q{aufs or overlayfs};
++
++has 'format_version' =>
++    is  => 'lazy',
++    isa => Str;
 +
 +has "$_" =>
 +    is  => 'lazy',
 +    isa => ArrayRef
 +for (qw{delete_files new_kernels});
 +
-+option 'tarballs' =>
-+    is            => 'lazy',
-+    isa           => ArrayRef,
-+    format        => 's@',
-+    documentation => q{Internal, for test suite only};
-+
-+has 'tempdir' =>
++has "$_" =>
 +    is  => 'lazy',
-+    isa => AbsDir;
++    isa => AbsDir
++for (qw{tempdir overlay_dir squashfs_src_dir});
 +
- has 'tar_options' =>
--    lazy_build ro 'ArrayRef[Str]',
--    traits => ['Array'],
--    metaclass => 'NoGetopt',
--    handles => {
++has 'mksquashfs_options' =>
 +    is          => 'lazy',
 +    isa         => ArrayRef,
 +    handles_via => 'Array',
 +    handles     => {
-         list_tar_options => 'elements',
++        list_mksquashfs_options => 'elements',
      };
 -has 'ignore_if_same_content' =>
 -    lazy_build ro 'ArrayRef[Str]',
@@ -137,7 +137,7 @@ index aa94d16..d30a579 100644
      documentation => q{Do not include this file in the SquashFS if its content}.
                       q{has not changed. Globs are supported.};
  
-@@ -90,15 +123,9 @@ Some was adapted from File::DirCompare:
+@@ -90,15 +119,9 @@ Some was adapted from File::DirCompare:
      under the same terms as Perl itself.
  
  =cut
@@ -156,7 +156,7 @@ index aa94d16..d30a579 100644
          map {
              Device::Cdio::ISO9660::name_translate($_->{filename});
          } $iso_obj->readdir($dir);
-@@ -139,22 +166,12 @@ Some was adapted from File::DirCompare:
+@@ -139,22 +162,12 @@ Some was adapted from File::DirCompare:
      under the same terms as Perl itself.
  
  =cut
@@ -184,7 +184,7 @@ index aa94d16..d30a579 100644
          assert(defined($iso_obj));
          my @wanted_files;
          my @files_in_dir;
-@@ -205,12 +222,12 @@ sub upgraded_or_new_files_in_isos {
+@@ -205,12 +218,12 @@ sub upgraded_or_new_files_in_isos {
          croak "File $f in $iso2 is a directory." if $stat2->{is_dir};
  
          push @res, $f if
@@ -200,7 +200,7 @@ index aa94d16..d30a579 100644
  }
  
  
-@@ -218,34 +235,34 @@ sub upgraded_or_new_files_in_isos {
+@@ -218,219 +231,224 @@ sub upgraded_or_new_files_in_isos {
  
  =cut
  
@@ -208,16 +208,55 @@ index aa94d16..d30a579 100644
 -method _build_tempdir { dir(tempdir()); }
 -method _build_format_version { "1"; }
 -method _build_tar_options { [
+-    qw{--numeric-owner --owner=root --group=root},
+-    qw{--sort=name --clamp-mtime}, "--mtime=\@$ENV{SOURCE_DATE_EPOCH}",
+-]; }
+-method _build_squashfs_diff  {
+-    my $tempdir = $self->tempdir;
 +method _build_ignore_if_same_content () { []; }
 +method _build_tempdir () { Path::Tiny->tempdir; }
-+method _build_format_version () { "1"; }
-+method _build_tar_options () { [
-     qw{--numeric-owner --owner=root --group=root},
-     qw{--sort=name --clamp-mtime}, "--mtime=\@$ENV{SOURCE_DATE_EPOCH}",
- ]; }
--method _build_squashfs_diff  {
-+method _build_squashfs_diff () {
-     my $tempdir = $self->tempdir;
++method _build_squashfs_src_dir () {
++    my $squashfs_src_dir = $self->tempdir->child('squashfs_src');
++    $squashfs_src_dir->mkpath;
++    return $squashfs_src_dir;
++}
++method _build_overlay_dir () {
++    my $overlay_dir = $self->squashfs_src_dir->child('overlay');
++    $overlay_dir->mkpath;
++    return $overlay_dir;
++}
++method _build_format_version () { "2"; }
++method _build_mksquashfs_options () { [
++    qw{-no-progress -noappend},
++    qw{-all-root},
++    qw{-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K},
++]}
++method _build_union_type () { "aufs"; }
++
++method _build_delete_files () {
++    my $old_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->old_iso->stringify);
++    my $new_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->new_iso->stringify);
++    my @delete_files;
++    for (qw{EFI isolinux live syslinux tails utils}) {
++        push @delete_files,
++            missing_files_in_isos($self->old_iso, $self->new_iso, $_);
++    }
++    return \@delete_files;
++}
++
++method _build_new_kernels () {
++    my @new_kernels =
++        upgraded_or_new_files_in_isos(
++            $self->old_iso,
++            $self->new_iso,
++            'live',
++            [
++                qr{^ vmlinuz [[:digit:]]* $}xms,
++                qr{^ initrd  [[:digit:]]* [.] img $}xms,
++            ],
++        );
++    return \@new_kernels;
++}
  
 -    my $old_iso_mount      = dir($tempdir, 'old_iso');
 -    my $new_iso_mount      = dir($tempdir, 'new_iso');
@@ -225,15 +264,32 @@ index aa94d16..d30a579 100644
 -    my $new_squashfs_mount = dir($tempdir, 'new_squashfs');
 -    my $tmpfs              = dir($tempdir, 'tmpfs');
 -    my $union              = dir($tempdir, 'union');
++method create_squashfs_diff () {
++    my $tempdir = $self->tempdir;
+ 
+-    for my $dir ($old_iso_mount, $new_iso_mount, $old_squashfs_mount, $new_squashfs_mount, $tmpfs, $union) {
+-        mkdir $dir;
 +    my $old_iso_mount      = $tempdir->child('old_iso');
 +    my $new_iso_mount      = $tempdir->child('new_iso');
 +    my $old_squashfs_mount = $tempdir->child('old_squashfs');
 +    my $new_squashfs_mount = $tempdir->child('new_squashfs');
-+    my $tmpfs              = $tempdir->child('tmpfs');
-+    my $union              = $tempdir->child('union');
- 
-     for my $dir ($old_iso_mount, $new_iso_mount, $old_squashfs_mount, $new_squashfs_mount, $tmpfs, $union) {
--        mkdir $dir;
++    my $tmpfs;
++    # overlayfs requires:
++    # + a workdir to become mounted
++    # + workdir and upperdir to reside under the same mount
++    # + workdir and upperdir to be in separate directories
++    my $union_basedir      = $tempdir->child('union');
++    my $union_mount        = $union_basedir->child('mount');
++    my $union_workdir      = $union_basedir->child('work');
++    my $union_upperdir     = $union_basedir->child('rw');
++
++    for my $dir (
++        $old_iso_mount, $new_iso_mount, $old_squashfs_mount,
++        $new_squashfs_mount, $union_basedir ) {
++        $dir->mkpath;
++    }
++    run_as_root(qw{mount -t tmpfs tmpfs}, $union_basedir);
++    for my $dir ($union_mount, $union_workdir, $union_upperdir) {
 +        $dir->mkpath;
      }
  
@@ -249,86 +305,169 @@ index aa94d16..d30a579 100644
      croak "SquashFS '$new_squashfs' not found in '$new_iso_mount'" unless -e $new_squashfs;
      run_as_root(qw{mount -t squashfs -o loop}, $new_squashfs, $new_squashfs_mount);
  
-@@ -260,13 +277,13 @@ method _build_squashfs_diff  {
+-    run_as_root(qw{mount -t tmpfs tmpfs}, $tmpfs);
+-
+-    run_as_root(
+-        qw{mount -t aufs},
+-        "-o", sprintf("br=%s=rw:%s=ro", $tmpfs, $old_squashfs_mount),
+-        "none", $union
+-    );
++    if ($self->union_type eq 'aufs') {
++        run_as_root(
++            qw{mount -t aufs},
++            "-o", sprintf("br=%s=rw:%s=ro", $union_upperdir, $old_squashfs_mount),
++            "none", $union_mount
++        );
++    } else {
++        run_as_root(
++            qw{mount -t overlay},
++            "-o", sprintf("lowerdir=%s,upperdir=%s,workdir=%s",
++                          $old_squashfs_mount, $union_upperdir, $union_workdir),
++            "overlay", $union_mount
++        );
++    }
+ 
      run_as_root(
          "rsync", "--archive", "--quiet", "--delete-after", "--acls",
-         "--checksum",
+-        "--checksum",
 -        sprintf("%s/", dir($new_squashfs_mount)),
 -        sprintf("%s/", dir($union)),
++        "--xattrs", "--checksum",
 +        sprintf("%s/", $new_squashfs_mount),
-+        sprintf("%s/", $union),
++        sprintf("%s/", $union_mount),
      );
  
      for my $glob (@{$self->ignore_if_same_content}) {
          my @candidates_for_removal = map {
 -            file($_)
+-        } grep { -e } glob("$tmpfs/$glob");
 +            path($_)
-         } grep { -e } glob("$tmpfs/$glob");
++        } grep { -e } glob("$union_upperdir/$glob");
  
          map {
-@@ -275,20 +292,20 @@ method _build_squashfs_diff  {
+             unlink $_;
+         } grep {
              my $candidate     = $_;
              my $candidate_rel = "$candidate";
-             $candidate_rel    =~ s{^$tmpfs/}{}xms;
+-            $candidate_rel    =~ s{^$tmpfs/}{}xms;
 -            my $candidate_old = $old_squashfs_mount->file($candidate_rel);
++            $candidate_rel    =~ s{^$union_upperdir/}{}xms;
 +            my $candidate_old = $old_squashfs_mount->child($candidate_rel);
              -e $candidate_old && $candidate_old->slurp eq $candidate->slurp;
          } @candidates_for_removal;
      }
  
-     run_as_root('auplink', $union, 'flush');
+-    run_as_root('auplink', $union, 'flush');
++    if ($self->union_type eq 'aufs') {
++        run_as_root('auplink', $union_mount, 'flush');
++    }
++
++    run_as_root("umount", $union_mount);
  
 -    my ($squashfs_diff_fh, $squashfs_diff_filename) = tempfile(DIR => $tempdir);
-+    my $squashfs_diff_file = Path::Tiny->tempfile(DIR => $tempdir);
++    # Remove trusted.overlay.* xattrs
++    if ($self->union_type eq 'overlayfs') {
++        my @xattrs_dump = stdout_as_root(
++            qw{getfattr --dump --recursive --no-dereference --absolute-names},
++            q{--match=^trusted\.overlay\.},
++            $union_upperdir->stringify,
++        );
++        my %xattrs;
++        my $current_filename;
++        foreach (@xattrs_dump) {
++            defined || last;
++            chomp;
++            if (! length($_)) {
++                $current_filename = undef;
++                next;
++            } elsif (my ($filename) = ($_ =~ m{\A [#] \s+ file: \s+ (.*) \z}xms)) {
++                $current_filename = $filename;
++            } elsif (my ($xattr, $value) = ($_ =~ m{\A(trusted[.]overlay[.][^=]+)=(.*)\z}xms)) {
++                push @{$xattrs{$xattr}}, $current_filename;
++            } else {
++                croak "Unrecognized line, aborting: '$_'";
++            }
++        }
++        while (my ($xattr, $files) = each %xattrs) {
++            my $stdin = join(chr(0), @$files);
++            my ($stdout, $stderr);
++            IPC::Run::run [
++                qw{sudo xargs --null --no-run-if-empty},
++                'setfattr', '--remove=' . $xattr,
++                '--no-dereference',
++                '--'
++            ], \$stdin or croak "xargs failed: $?";
++        }
++    }
  
      run_as_root(
          "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
          qw{mksquashfs},
-         $tmpfs,
+-        $tmpfs,
 -        $squashfs_diff_filename,
-+        $squashfs_diff_file,
-         qw{-no-progress -noappend -comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K}
+-        qw{-no-progress -noappend -comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K}
++        $union_upperdir,
++        $self->overlay_dir->child('live', $self->squashfs_diff_name),
++        $self->list_mksquashfs_options
      );
  
-@@ -297,12 +314,12 @@ method _build_squashfs_diff  {
+-    foreach ($union, $tmpfs, $new_squashfs_mount, $new_iso_mount,
++    foreach ($union_basedir,
++             $new_squashfs_mount, $new_iso_mount,
+              $old_squashfs_mount, $old_iso_mount) {
          run_as_root("umount", $_);
      }
  
 -    return file($squashfs_diff_filename);
-+    return $squashfs_diff_file;
++    return;
  }
  
 -method _build_delete_files {
 -    my $old_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->old_iso);
 -    my $new_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->new_iso);
-+method _build_delete_files () {
-+    my $old_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->old_iso->stringify);
-+    my $new_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->new_iso->stringify);
-     my @delete_files;
-     for (qw{EFI isolinux live syslinux tails utils}) {
-         push @delete_files,
-@@ -311,7 +328,7 @@ method _build_delete_files {
-     return \@delete_files;
- }
+-    my @delete_files;
+-    for (qw{EFI isolinux live syslinux tails utils}) {
+-        push @delete_files,
+-            missing_files_in_isos($self->old_iso, $self->new_iso, $_);
+-    }
+-    return \@delete_files;
+-}
++method prepare_overlay_dir () {
++    $self->overlay_dir->child('live')->mkpath;
  
 -method _build_new_kernels {
-+method _build_new_kernels () {
-     my @new_kernels =
-         upgraded_or_new_files_in_isos(
-             $self->old_iso,
-@@ -325,9 +342,9 @@ method _build_new_kernels {
-     return \@new_kernels;
- }
- 
+-    my @new_kernels =
+-        upgraded_or_new_files_in_isos(
+-            $self->old_iso,
+-            $self->new_iso,
+-            'live',
+-            [
+-                qr{^ vmlinuz [[:digit:]]* $}xms,
+-                qr{^ initrd  [[:digit:]]* [.] img $}xms,
+-            ],
+-        );
+-    return \@new_kernels;
+-}
+-
 -method write_boot_tarball {
-+method write_boot_tarball () {
-     my $orig_cwd = getcwd;
+-    my $orig_cwd = getcwd;
 -    my $boot_files_tempdir = tempdir(CLEANUP => 1);
-+    my $boot_files_tempdir = Path::Tiny->tempdir(CLEANUP => 1);
++    $self->create_squashfs_diff;
  
-     chdir $boot_files_tempdir;
+-    chdir $boot_files_tempdir;
++    chdir $self->overlay_dir;
++    for my $new_kernel (@{$self->new_kernels}) {
++        extract_here_file_from_iso(path('live', $new_kernel), $self->new_iso);
++    }
      extract_here_file_from_iso('EFI',      $self->new_iso);
-@@ -341,17 +358,12 @@ method write_boot_tarball {
+     extract_here_file_from_iso('isolinux', $self->new_iso);
+     extract_here_file_from_iso('utils',    $self->new_iso);
+-
+-    chmod(0755, 'isolinux');
+-    chmod(0644, glob('isolinux/*'));
++    run_as_root(qw{chmod -R go+rX .});
+ 
+     rename 'isolinux', 'syslinux';
      rename 'syslinux/isolinux.cfg', 'syslinux/syslinux.cfg';
  
      foreach my $file (glob('syslinux/*')) {
@@ -338,106 +477,106 @@ index aa94d16..d30a579 100644
 -        print $temp_fh $content;
 -        close $temp_fh;
 -        rename $temp_filename, $file;
-+        path($file)->edit_lines(sub { s{/isolinux/}{/syslinux/}gxms });
-     }
- 
-     system(
-         qw{tar -cj}, $self->list_tar_options,
+-    }
+-
+-    system(
+-        qw{tar -cj}, $self->list_tar_options,
 -        '-f', file($self->tempdir, 'boot.tar.bz2'), 'EFI', 'syslinux', 'utils',
-+        '-f', path($self->tempdir, 'boot.tar.bz2'), 'EFI', 'syslinux', 'utils',
-     );
- 
-     chdir $orig_cwd;
-@@ -359,30 +371,29 @@ method write_boot_tarball {
-     return;
- }
- 
+-    );
+-
+-    chdir $orig_cwd;
+-
+-    return;
+-}
+-
 -method write_system_tarball {
 -    my $tarball = file($self->tempdir, 'system.tar');
-+method write_system_tarball () {
-+    my $tarball = path($self->tempdir, 'system.tar');
- 
+-
 -    chdir $self->squashfs_diff->dir;
 -    my $destname = file('live', $self->squashfs_diff_name);
 -    my $destdir  = file($destname)->dir;
 -    $destdir->mkpath;
 -    -d $destdir or croak(sprintf("Could not make directory '%s': $!"), $destdir);
 -    copy($self->squashfs_diff->basename, $destname)
-+    chdir $self->squashfs_diff->parent;
-+    my $destpath = path('live', $self->squashfs_diff_name);
-+    $destpath->parent->mkpath;
-+    $destpath->parent->is_dir or croak(sprintf("Could not make directory '%s': $!"), $destpath->parent);
-+    $destpath = $self->squashfs_diff->copy($destpath)
-         or croak(
-             sprintf(
-                 "Could not copy '%s' to '%s': $!",
+-        or croak(
+-            sprintf(
+-                "Could not copy '%s' to '%s': $!",
 -                $self->squashfs_diff->basename, $destname
-+                $self->squashfs_diff->basename, $destpath
-             )
-         );
+-            )
+-        );
 -    system(qw{tar --create}, $self->list_tar_options, '-f', $tarball, $destname);
 -    unlink $destname;
-+    system(qw{tar --create}, $self->list_tar_options, '-f', $tarball, $destpath);
-+    $destpath->remove;
- 
+-
 -    my $new_kernels_tempdir = tempdir(CLEANUP => 1);
-+    my $new_kernels_tempdir = Path::Tiny->tempdir(CLEANUP => 1);
-     chdir $new_kernels_tempdir;
-     for my $new_kernel (@{$self->new_kernels}) {
+-    chdir $new_kernels_tempdir;
+-    for my $new_kernel (@{$self->new_kernels}) {
 -        my $new_kernel_rel = file('live', $new_kernel);
 -        my $new_kernel_abs = file($new_kernels_tempdir, $new_kernel_rel);
 -        $new_kernel_abs->dir->mkpath;
-+        my $new_kernel_rel = path('live', $new_kernel);
-+        my $new_kernel_abs = $new_kernels_tempdir->child($new_kernel_rel);
-+        $new_kernel_abs->parent->mkpath;
-         extract_here_file_from_iso($new_kernel_rel, $self->new_iso);
-         system(
-             qw{tar --append}, $self->list_tar_options, '-f', $tarball,
-@@ -395,7 +406,7 @@ method write_system_tarball {
-     return;
+-        extract_here_file_from_iso($new_kernel_rel, $self->new_iso);
+-        system(
+-            qw{tar --append}, $self->list_tar_options, '-f', $tarball,
+-            $new_kernel_rel
+-        );
++        path($file)->edit_lines(sub { s{/isolinux/}{/syslinux/}gxms });
+     }
+ 
+     chdir $self->tempdir;  # allow temp dirs cleanup
+-
+-    return;
+-}
+-
+-method _build_tarballs {
+-    $self->write_boot_tarball;
+-    $self->write_system_tarball;
+-    return [ qw{boot.tar.bz2 system.tar} ];
  }
  
--method _build_tarballs {
-+method _build_tarballs () {
-     $self->write_boot_tarball;
-     $self->write_system_tarball;
-     return [ qw{boot.tar.bz2 system.tar} ];
-@@ -403,18 +414,13 @@ method _build_tarballs {
- 
  method saveas ($outfile_name) {
-     my $orig_cwd = getcwd;
+-    my $orig_cwd = getcwd;
 -    my $fh;
-     chdir $self->tempdir;
+-    chdir $self->tempdir;
++    $self->squashfs_src_dir->child('FORMAT')->spew($self->format_version);
  
 -    $fh = file('FORMAT')->openw;
 -    print $fh $self->format_version;
 -    close $fh;
-+    path('FORMAT')->spew($self->format_version);
- 
+-
 -    $fh = file('control.yml')->openw;
 -    print $fh YAML::Any::Dump({
-+    path('control.yml')->spew(YAML::Any::Dump({
++    $self->squashfs_src_dir->child('control.yml')->spew(YAML::Any::Dump({
          delete_files => $self->delete_files,
 -    });
 -    close $fh;
+-
+-    chdir $self->tempdir;
+-    system(
+-        qw{tar --create}, $self->list_tar_options, '-f', $outfile_name,
+-        qw{FORMAT control.yml}
+-    );
 +    }));
  
-     chdir $self->tempdir;
-     system(
-@@ -423,10 +429,10 @@ method saveas ($outfile_name) {
-     );
- 
-     for (@{$self->tarballs}) {
+-    for (@{$self->tarballs}) {
 -        chdir file($_)->dir;
-+        chdir path($_)->parent;
-         system(
-             qw{tar --append}, $self->list_tar_options, '-f', $outfile_name,
+-        system(
+-            qw{tar --append}, $self->list_tar_options, '-f', $outfile_name,
 -            file($_)->basename
-+            path($_)->basename
-         );
-     }
+-        );
+-    }
++    $self->prepare_overlay_dir;
  
-@@ -449,5 +455,5 @@ method run () {
+-    chdir $orig_cwd;  # allow temp dirs cleanup
++    run_as_root(
++        "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
++        qw{mksquashfs},
++        $self->squashfs_src_dir,
++        $outfile_name,
++        $self->list_mksquashfs_options
++    );
+ 
+     return;
+ }
+@@ -449,5 +467,5 @@ method run () {
      $self->save;
  }
  
@@ -445,177 +584,206 @@ index aa94d16..d30a579 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/IUK/Archive/Tar.pm b/usr/share/perl5/Tails/IUK/Archive/Tar.pm
-index 9c0f880..68be062 100644
+deleted file mode 100644
+index 9c0f880..0000000
 --- a/usr/share/perl5/Tails/IUK/Archive/Tar.pm
-+++ b/usr/share/perl5/Tails/IUK/Archive/Tar.pm
-@@ -6,33 +6,24 @@ Tails::IUK::Archive::Tar - wrap, and add to Archive::Tar::Wrapper for Incrementa
- 
- package Tails::IUK::Archive::Tar;
- 
++++ /dev/null
+@@ -1,103 +0,0 @@
+-=head1 NAME
+-
+-Tails::IUK::Archive::Tar - wrap, and add to Archive::Tar::Wrapper for Incremental Upgrade Kit files
+-
+-=cut
+-
+-package Tails::IUK::Archive::Tar;
+-
 -use Moose;
 -use Moose::Util::TypeConstraints qw{class_type};
 -use MooseX::Method::Signatures;
 -use MooseX::Types::Moose qw( :all );
 -use MooseX::Types::Path::Class qw{Dir File};
 -use MooseX::Has::Sugar::Saccharin;
-+no Moo::sification;
-+use Moo;
- 
+-
 -
 -
 -use 5.10.0;
 -use namespace::autoclean;
 -use warnings;
-+use 5.10.1;
-+use strictures 2;
- 
- use autodie qw(:all);
- use Tails::IUK::Archive::Tar::Wrapper;
- use Carp;
+-
+-use autodie qw(:all);
+-use Tails::IUK::Archive::Tar::Wrapper;
+-use Carp;
 -use File::Temp qw{tempdir};
-+use File::Temp;
- use File::Which;
+-use File::Which;
 -use Path::Class qw{dir file};
-+use Function::Parameters;
-+use Path::Tiny;
- use Tails::IUK::Utils qw{run_as_root};
-+use Types::Path::Tiny qw{AbsDir AbsFile};
-+use Types::Standard qw{Bool InstanceOf Str};
- 
+-use Tails::IUK::Utils qw{run_as_root};
+-
 -
 -=head1 TYPES
 -
 -=cut
 -
 -class_type('Tails::IUK::Archive::Tar::Wrapper');
-+use namespace::clean;
- 
- 
- =head1 ATTRIBUTES
-@@ -41,16 +32,29 @@ class_type('Tails::IUK::Archive::Tar::Wrapper');
- 
- has 'filename' => (
-     is       => 'ro',
+-
+-
+-=head1 ATTRIBUTES
+-
+-=cut
+-
+-has 'filename' => (
+-    is       => 'ro',
 -    isa      => File,
-+    isa      => AbsFile,
-     required => 1,
+-    required => 1,
 -    coerce   => 1,
-+    coerce   => AbsFile->coercion,
- );
- 
+-);
+-
 -has 'sudo'        => lazy_build ro Bool;
 -has 'tar_exe'     => coerce lazy_build ro File;
 -has 'tempdir'     => coerce lazy_build ro Dir, predicate 'has_tempdir';
-+has 'sudo' =>
-+    is  => 'lazy',
-+    isa => Bool;
-+
-+has 'tar_exe' =>
-+    is     => 'lazy',
-+    isa    => AbsFile,
-+    coerce => AbsFile->coercion;
-+
-+has 'tempdir' =>
-+    is     => 'lazy',
-+    isa    => AbsDir,
-+    coerce => AbsDir->coercion,
-+    predicate => 1;
- 
+-
 -has 'tar_wrapper' => lazy_build ro 'Tails::IUK::Archive::Tar::Wrapper',
-+has 'tar_wrapper' =>
-+    is      => 'lazy',
-+    isa     => InstanceOf['Tails::IUK::Archive::Tar::Wrapper'],
-     handles => [ qw{list_all locate} ];
- 
- 
-@@ -58,46 +62,46 @@ has 'tar_wrapper' => lazy_build ro 'Tails::IUK::Archive::Tar::Wrapper',
- 
- =cut
- 
+-    handles => [ qw{list_all locate} ];
+-
+-
+-=head1 METHODS
+-
+-=cut
+-
 -method BUILD {
-+method BUILD (@arg) {
-     $self->read_from($self->filename);
- }
- 
+-    $self->read_from($self->filename);
+-}
+-
 -method _build_sudo    { 0 }
 -method _build_tar_exe { $self->sudo ? which('sudo-tar') : which('tar') }
 -method _build_tempdir { dir(tempdir(CLEANUP => 1), 'tar') }
-+method _build_sudo ()    { 0 }
-+method _build_tar_exe () { $self->sudo ? which('sudo-tar') : which('tar') }
-+method _build_tempdir () { path(File::Temp::tempdir(CLEANUP => 1), 'tar') }
- 
+-
 -method _build_tar_wrapper {
-+method _build_tar_wrapper () {
-     my $tar_wrapper = Tails::IUK::Archive::Tar::Wrapper->new(
-         tar                  => $self->tar_exe->stringify,
-         tar_gnu_read_options => [ qw{--no-same-permissions --no-same-owner} ],
+-    my $tar_wrapper = Tails::IUK::Archive::Tar::Wrapper->new(
+-        tar                  => $self->tar_exe->stringify,
+-        tar_gnu_read_options => [ qw{--no-same-permissions --no-same-owner} ],
 -        tmpdir               => $self->tempdir,
-+        tmpdir               => $self->tempdir->stringify,
-         tmpdir_is_complete   => 1,
-     );
-     return $tar_wrapper;
- }
- 
+-        tmpdir_is_complete   => 1,
+-    );
+-    return $tar_wrapper;
+-}
+-
 -method read_from ($file) {
-+method read_from (AbsFile $file) {
-     my $filename = $file->stringify;
-     $self->tar_wrapper->read($filename) or confess("Error reading $filename");
-     run_as_root(qw{chmod -R go+rX}, $self->tempdir);
- }
- 
+-    my $filename = $file->stringify;
+-    $self->tar_wrapper->read($filename) or confess("Error reading $filename");
+-    run_as_root(qw{chmod -R go+rX}, $self->tempdir);
+-}
+-
 -method files {
-+method files () {
-     sort map { $_->[0] } @{$self->list_all()};
- }
- 
+-    sort map { $_->[0] } @{$self->list_all()};
+-}
+-
 -method get_content ($filename) {
 -    scalar(file($self->locate($filename))->slurp);
-+method get_content (Str $filename) {
-+    scalar(path($self->locate($filename))->slurp);
- }
- 
+-}
+-
 -method clean {
-+method clean () {
-     run_as_root(qw{rm --recursive --force --preserve-root}, $self->tempdir)
-         if $self->has_tempdir;
- }
- 
+-    run_as_root(qw{rm --recursive --force --preserve-root}, $self->tempdir)
+-        if $self->has_tempdir;
+-}
+-
 -method DEMOLISH {
-+method DEMOLISH (@args) {
-     $self->clean;
- }
- 
+-    $self->clean;
+-}
+-
 -no Moose;
-+no Moo;
- 1;
+-1;
 diff --git a/usr/share/perl5/Tails/IUK/Archive/Tar/Wrapper.pm b/usr/share/perl5/Tails/IUK/Archive/Tar/Wrapper.pm
-index 27d525e..688271c 100644
+deleted file mode 100644
+index 27d525e..0000000
 --- a/usr/share/perl5/Tails/IUK/Archive/Tar/Wrapper.pm
-+++ b/usr/share/perl5/Tails/IUK/Archive/Tar/Wrapper.pm
-@@ -6,8 +6,7 @@ Tails::IUK::Archive::Tar::Wrapper - custom subclass of Archive::Tar::Wrapper for
- 
- package Tails::IUK::Archive::Tar::Wrapper;
- 
++++ /dev/null
+@@ -1,81 +0,0 @@
+-=head1 NAME
+-
+-Tails::IUK::Archive::Tar::Wrapper - custom subclass of Archive::Tar::Wrapper for Incremental Upgrade Kit files
+-
+-=cut
+-
+-package Tails::IUK::Archive::Tar::Wrapper;
+-
 -use strict;
 -use warnings;
-+use strictures 2;
- 
- use parent 'Archive::Tar::Wrapper';
- 
-@@ -35,6 +34,8 @@ sub new {
-         dirs                  => 0,
-         max_cmd_line_args     => 512,
-         ramdisk               => undef,
-+        _os_names             => { openbsd => 'openbsd', mswin => 'MSWin32' },
-+        osname                => 'Linux',
-         gzip_regex            => qr/\.t? # an optional t for matching tgz
-                                     gz$ # ending with gz, which means compressed by gzip
-                                     /ix,
+-
+-use parent 'Archive::Tar::Wrapper';
+-
+-use File::Temp qw(tempdir);
+-use Log::Log4perl qw(:easy);
+-use File::Spec::Functions;
+-use File::Spec;
+-use File::Path;
+-use Tails::IUK::Utils qw{run_as_root};
+-
+-###########################################
+-sub new {
+-###########################################
+-    my($class, %options) = @_;
+-
+-    my $self = {
+-        tar                   => undef,
+-        tmpdir                => undef,
+-        tmpdir_is_complete    => undef,
+-        tar_error_msg         => undef,
+-        tar_read_options      => '',
+-        tar_write_options     => '',
+-        tar_gnu_read_options  => [],
+-        tar_gnu_write_options => [],
+-        dirs                  => 0,
+-        max_cmd_line_args     => 512,
+-        ramdisk               => undef,
+-        gzip_regex            => qr/\.t? # an optional t for matching tgz
+-                                    gz$ # ending with gz, which means compressed by gzip
+-                                    /ix,
+-        bzip2_regex           => qr/\.bz2$/ix,
+-        %options,
+-    };
+-
+-    bless $self, $class;
+-
+-    $self->{tar} = bin_find("tar") unless defined $self->{tar};
+-    $self->{tar} = bin_find("gtar") unless defined $self->{tar};
+-
+-    if( ! defined $self->{tar} ) {
+-        LOGDIE "tar not found in PATH, please specify location";
+-    }
+-
+-    if(defined $self->{ramdisk}) {
+-        my $rc = $self->ramdisk_mount( %{ $self->{ramdisk} } );
+-        if(!$rc) {
+-            LOGDIE "Mounting ramdisk failed";
+-        }
+-        $self->{tmpdir} = $self->{ramdisk}->{tmpdir};
+-    } else {
+-        if ($self->{tmpdir}) {
+-            if (! $self->{tmpdir_is_complete}) {
+-                $self->{tmpdir} = tempdir(DIR => $self->{tmpdir});
+-            }
+-        }
+-        else {
+-            $self->{tmpdir} = tempdir();
+-        }
+-    }
+-
+-    $self->{tardir} = File::Spec->catfile($self->{tmpdir}, "tar");
+-    run_as_root('mkdir', '--parents', $self->{tardir});
+-    -d $self->{tardir} or LOGDIE "Cannot make $self->{tardir} ($!)";
+-    run_as_root(qw{chmod -R go+rX}, $self->{tardir});
+-
+-    $self->{objdir} = tempdir();
+-
+-    return $self;
+-}
+-
+-1;
 diff --git a/usr/share/perl5/Tails/IUK/Frontend.pm b/usr/share/perl5/Tails/IUK/Frontend.pm
-index 62a2ac4..6bb482f 100644
+index 6c8ad15..791370d 100644
 --- a/usr/share/perl5/Tails/IUK/Frontend.pm
 +++ b/usr/share/perl5/Tails/IUK/Frontend.pm
-@@ -6,79 +6,100 @@ Tails::IUK::Frontend - lead Tails user through the process of upgrading the syst
+@@ -6,79 +6,107 @@ Tails::IUK::Frontend - lead Tails user through the process of upgrading the syst
  
  package Tails::IUK::Frontend;
  
@@ -697,6 +865,13 @@ index 62a2ac4..6bb482f 100644
 +    predicate => 1,
 +) for (qw{baseurl build_target trusted_gnupg_homedir});
 +
++option override_initial_install_os_release_file =>
++    is        => 'lazy',
++    isa       => AbsFile,
++    coerce    => AbsFile->coercion,
++    format    => 's',
++    predicate => 1;
++
 +option override_os_release_file =>
 +    is        => 'lazy',
 +    isa       => AbsFile,
@@ -730,7 +905,8 @@ index 62a2ac4..6bb482f 100644
 +    isa     => InstanceOf['Tails::RunningSystem'],
      handles => [
          qw{upgrade_description_file_url upgrade_description_sig_url},
-         qw{product_name product_version build_target channel}
+-        qw{product_name product_version build_target channel}
++        qw{product_name initial_install_version build_target channel}
      ];
  
  has 'free_space' =>
@@ -750,7 +926,7 @@ index 62a2ac4..6bb482f 100644
      documentation => q{Internal, for test suite only};
  
  
-@@ -86,9 +107,9 @@ has 'override_free_space' =>
+@@ -86,11 +114,12 @@ has 'override_free_space' =>
  
  =cut
  
@@ -760,9 +936,13 @@ index 62a2ac4..6bb482f 100644
 -method _build_running_system {
 +method _build_running_system () {
      my @args;
-     for (qw{baseurl build_target dev_dir liveos_mountpoint os_release_file},
+-    for (qw{baseurl build_target dev_dir liveos_mountpoint os_release_file},
++    for (qw{baseurl build_target dev_dir liveos_mountpoint},
++         qw{os_release_file initial_install_os_release_file},
           qw{proc_dir run_dir}) {
-@@ -107,10 +128,10 @@ method _build_running_system {
+         my $attribute = "override_$_";
+         my $predicate = "has_$attribute";
+@@ -107,10 +136,10 @@ method _build_running_system {
      Tails::RunningSystem->new(@args);
  }
  
@@ -775,7 +955,7 @@ index 62a2ac4..6bb482f 100644
  }
  
  
-@@ -127,7 +148,7 @@ method info (Str $msg) {
+@@ -127,7 +156,7 @@ method info (Str $msg) {
      say $self->encoding->encode($msg);
  }
  
@@ -784,7 +964,7 @@ index 62a2ac4..6bb482f 100644
      my @cmd       = @{$cmd};
  
      if (defined $as && ! $ENV{HARNESS_ACTIVE}) {
-@@ -137,7 +158,7 @@ method fatal_run_cmd (Str :$error_msg!, ArrayRef :$cmd!, Str :$as?, Str :$error_
+@@ -137,7 +166,7 @@ method fatal_run_cmd (Str :$error_msg!, ArrayRef :$cmd!, Str :$as?, Str :$error_
      my ($stdout, $stderr);
      my $success = 1;
      my $exit_code;
@@ -793,7 +973,7 @@ index 62a2ac4..6bb482f 100644
      $exit_code = $?;
      $success or $self->fatal(
          errf("<b>%{error_msg}s</b>\n\n%{details}s",
-@@ -160,9 +181,8 @@ method fatal_run_cmd (Str :$error_msg!, ArrayRef :$cmd!, Str :$as?, Str :$error_
+@@ -160,9 +189,8 @@ method fatal_run_cmd (Str :$error_msg!, ArrayRef :$cmd!, Str :$as?, Str :$error_
      return ($stdout, $stderr, $success, $exit_code);
  }
  
@@ -805,7 +985,7 @@ index 62a2ac4..6bb482f 100644
      if ($type ne 'question' && $type ne 'info') {
          assert_undefined($ok_label);
      }
-@@ -190,11 +210,11 @@ method dialog (Str $question,
+@@ -190,26 +218,26 @@ method dialog (Str $question,
  }
  
  method upgrader_run_dir () {
@@ -819,7 +999,9 @@ index 62a2ac4..6bb482f 100644
  }
  
  method get_upgrade_description () {
-@@ -203,13 +223,13 @@ method get_upgrade_description () {
+     my @args;
+-    for (qw{baseurl build_target os_release_file}) {
++    for (qw{baseurl build_target os_release_file initial_install_os_release_file}) {
          my $attribute = "override_$_";
          my $predicate = "has_$attribute";
          if ($self->$predicate) {
@@ -835,7 +1017,7 @@ index 62a2ac4..6bb482f 100644
          );
      }
      my ($stdout, $stderr, $success, $exit_code) = $self->fatal_run_cmd(
-@@ -416,17 +436,11 @@ method run () {
+@@ -416,17 +444,11 @@ method run () {
      }
  }
  
@@ -856,27 +1038,67 @@ index 62a2ac4..6bb482f 100644
          push @target_files,
              {
                  %{$target_file},
-@@ -444,9 +458,7 @@ the incremental upgrade described in the upgrade path passed
+@@ -444,11 +466,23 @@ the incremental upgrade described in the upgrade path passed
  as argument.
  
  =cut
 -sub memory_needed {
 -    my $upgrade_path = shift;
 -    assert_defined($upgrade_path);
+-    my $mem_factor = 2;
+-    $mem_factor * $upgrade_path->{'total-size'};
 +fun memory_needed (HashRef $upgrade_path) {
-     my $mem_factor = 2;
-     $mem_factor * $upgrade_path->{'total-size'};
++    # We need:
++    #  - The size of the target file, because tails-iuk-get-target-file
++    #    will download in a temporary directory stored in the root filesystem's
++    #    union upper branch, that is in a tmpfs, that is in memory.
++    #  - Enough memory to run the tails-iuk-get-target-file process.
++    #  - Enough memory to run the tails-install-iuk process.
++    #  - Some margin, e.g. for the squashfs kernel module to decompress
++    #    the IUK when we copy its content to the system partition.
++    my $get_target_file_process_memory = 60 * 1024 * 1024;
++    my $install_iuk_process_memory = 90 * 1024 * 1024;
++    my $margin = 64 * 1024 * 1024;
++
++    $upgrade_path->{'total-size'}
++        + $get_target_file_process_memory
++        + $install_iuk_process_memory
++        + $margin;
  }
-@@ -458,22 +470,20 @@ partition to download and install the incremental upgrade described in
+ 
+ =head2 space_needed
+@@ -458,22 +492,40 @@ partition to download and install the incremental upgrade described in
  the upgrade path passed as argument.
  
  =cut
 -sub space_needed {
 -    my $upgrade_path = shift;
 -    assert_defined($upgrade_path);
+-    my $space_factor = 3.0;
+-    $space_factor * $upgrade_path->{'total-size'};
 +fun space_needed (HashRef $upgrade_path) {
-     my $space_factor = 3.0;
-     $space_factor * $upgrade_path->{'total-size'};
++    # At this point, we only know the size of the target file,
++    # which is an IUK, i.e. a (compressed) SquashFS, whose content
++    # will be copied to the system partition: vmlinuz, initrd; EFI,
++    # isolinux, and utils directories; SquashFS diff.
++    #
++    # So the question basically boils down to: how well is the IUK
++    # compressed?
++    #
++    # In practice, in most cases the total size of the IUK content is
++    # dominated by the size of the SquashFS diff and the initrd, which
++    # are already heavily compressed and won't be compressed further
++    # in the IUK. So in most cases, we only need to leave room for
++    # a tiny bit of margin, hence a $space_factor not much bigger
++    # than 1 should do the job.
++    #
++    # Still, let's give ourselves a bit of margin, in the form or an
++    # additional constant, just in case, for whatever reason, we ever
++    # generate an IUK whose content is mostly uncompressed data,
++    # and our $space_factor is not sufficient in itself.
++    my $space_factor = 1.2;
++    my $space_margin = 64 * 1024;
++    $space_factor * $upgrade_path->{'total-size'} + $space_margin;
  }
  
 -method get_target_files ($upgrade_path, $url_transform, $destdir) {
@@ -894,7 +1116,7 @@ index 62a2ac4..6bb482f 100644
          }
      ));
      $self->info($info);
-@@ -482,10 +492,10 @@ method get_target_files ($upgrade_path, $url_transform, $destdir) {
+@@ -482,10 +534,10 @@ method get_target_files ($upgrade_path, $url_transform, $destdir) {
          my @cmd = (
              'tails-iuk-get-target-file',
              '--uri',         $url_transform->($target_file->{url}),
@@ -908,7 +1130,7 @@ index 62a2ac4..6bb482f 100644
          );
          if (! $ENV{HARNESS_ACTIVE}) {
              @cmd = ('sudo', '-n', '-u', 'tails-iuk-get-target-file', @cmd);
-@@ -494,11 +504,11 @@ method get_target_files ($upgrade_path, $url_transform, $destdir) {
+@@ -494,11 +546,11 @@ method get_target_files ($upgrade_path, $url_transform, $destdir) {
          my $success = 1;
  
          if ($self->batch) {
@@ -922,7 +1144,7 @@ index 62a2ac4..6bb482f 100644
                  '|', [qw{zenity --progress --percentage=0 --auto-close
                           --no-cancel}, '--title', $title, '--text', $info]
                  or $success = 0;
-@@ -551,7 +561,7 @@ method get_target_files ($upgrade_path, $url_transform, $destdir) {
+@@ -551,7 +603,7 @@ method get_target_files ($upgrade_path, $url_transform, $destdir) {
      }
  }
  
@@ -931,7 +1153,7 @@ index 62a2ac4..6bb482f 100644
      my ($stdout, $stderr, $success, $exit_code);
  
      my ($target_files_tempdir) = $self->fatal_run_cmd(
-@@ -598,7 +608,7 @@ method do_incremental_upgrade ($upgrade_path) {
+@@ -598,7 +650,7 @@ method do_incremental_upgrade ($upgrade_path) {
      };
  
      $self->get_target_files(
@@ -940,7 +1162,7 @@ index 62a2ac4..6bb482f 100644
      );
  
      $self->dialog(
-@@ -614,7 +624,7 @@ method do_incremental_upgrade ($upgrade_path) {
+@@ -614,7 +666,7 @@ method do_incremental_upgrade ($upgrade_path) {
          ok_label => $self->encoding->decode(gettext(q{Apply upgrade})),
      );
  
@@ -949,7 +1171,7 @@ index 62a2ac4..6bb482f 100644
  
      $self->dialog(
          $self->encoding->decode(gettext(
-@@ -631,7 +641,7 @@ method do_incremental_upgrade ($upgrade_path) {
+@@ -631,7 +683,7 @@ method do_incremental_upgrade ($upgrade_path) {
      exit(0);
  }
  
@@ -958,7 +1180,7 @@ index 62a2ac4..6bb482f 100644
      $self->info("Restarting the system");
      $self->fatal_run_cmd(
          cmd       => ['/sbin/reboot'],
-@@ -645,11 +655,11 @@ method restart_system {
+@@ -645,11 +697,11 @@ method restart_system {
      ) unless $ENV{HARNESS_ACTIVE};
  }
  
@@ -972,7 +1194,7 @@ index 62a2ac4..6bb482f 100644
      $self->info("Shutting down network connection");
      $self->fatal_run_cmd(
          cmd       => ['tails-shutdown-network'],
-@@ -663,10 +673,7 @@ method shutdown_network {
+@@ -663,10 +715,7 @@ method shutdown_network {
      ) unless $ENV{HARNESS_ACTIVE};
  }
  
@@ -984,7 +1206,7 @@ index 62a2ac4..6bb482f 100644
      my $title = $self->encoding->decode(gettext("Upgrading the system"));
      my $info = $self->encoding->decode(gettext(
          "<b>Your Tails device is being upgraded...</b>\n\n".
-@@ -681,7 +688,7 @@ method install_iuk ($upgrade_path, $target_files_tempdir) {
+@@ -681,7 +730,7 @@ method install_iuk ($upgrade_path, $target_files_tempdir) {
  
      my @args;
      push @args, (
@@ -993,7 +1215,7 @@ index 62a2ac4..6bb482f 100644
      ) if $self->has_override_liveos_mountpoint;
  
      my @cmd = ('tails-install-iuk', @args, $target_files[0]->{output_file});
-@@ -692,9 +699,9 @@ method install_iuk ($upgrade_path, $target_files_tempdir) {
+@@ -692,9 +741,9 @@ method install_iuk ($upgrade_path, $target_files_tempdir) {
      my ($exit_code, $stdout, $stderr, $zenity_h);
      my $success = 1;
  
@@ -1005,7 +1227,7 @@ index 62a2ac4..6bb482f 100644
      $exit_code = $?;
      $zenity_h->kill_kill unless $self->batch;
  
-@@ -723,5 +730,5 @@ method install_iuk ($upgrade_path, $target_files_tempdir) {
+@@ -723,5 +772,5 @@ method install_iuk ($upgrade_path, $target_files_tempdir) {
      );
  }
  
@@ -1013,7 +1235,7 @@ index 62a2ac4..6bb482f 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/IUK/Install.pm b/usr/share/perl5/Tails/IUK/Install.pm
-index 4976530..050bd3b 100644
+index 4976530..27e0af5 100644
 --- a/usr/share/perl5/Tails/IUK/Install.pm
 +++ b/usr/share/perl5/Tails/IUK/Install.pm
 @@ -6,20 +6,12 @@ Tails::IUK::Install - install an Incremental Upgrade Kit
@@ -1088,8 +1310,8 @@ index 4976530..050bd3b 100644
 +    is      => 'lazy',
 +    isa     => InstanceOf['Tails::IUK::Read'],
 +    handles => [
-+        qw{list_archives file delete_files delete_files_count locate},
-+        qw{space_needed squashfs_in_archive} ];
++        qw{file delete_files delete_files_count},
++        qw{space_needed squashfs_in_overlay} ];
 +
 +option 'override_liveos_mountpoint' =>
 +    is        => 'lazy',
@@ -1200,7 +1422,7 @@ index 4976530..050bd3b 100644
      $self->clean;
  }
  
-@@ -143,14 +166,14 @@ method fatal (@msg) {
+@@ -143,41 +166,53 @@ method fatal (@msg) {
      );
  }
  
@@ -1211,28 +1433,58 @@ index 4976530..050bd3b 100644
  }
  
 -method upgrade_modules_file {
-+method upgrade_modules_file () {
-     my @installed_squashfs = $self->all_installed_squashfs;
+-    my @installed_squashfs = $self->all_installed_squashfs;
++method delete_obsolete_squashfs_diffs () {
++    my @keep = (
++        $self->liveos_mountpoint->child('live', 'filesystem.squashfs'),
++        (map {path($self->liveos_mountpoint, 'live', $_)}
++             $self->all_installed_squashfs),
++    );
  
 -    my $append_str = join("\n", map { file($_)->basename } @installed_squashfs);
-+    my $append_str = join("\n", map { path($_)->basename } @installed_squashfs);
-     if (length($append_str)) {
-         my ($temp_fh, $temp_file) = tempfile;
-         copy($self->modules_file->stringify, $temp_fh)
-@@ -160,7 +183,7 @@ method upgrade_modules_file {
-             ));
-         close $temp_fh;
- 
+-    if (length($append_str)) {
+-        my ($temp_fh, $temp_file) = tempfile;
+-        copy($self->modules_file->stringify, $temp_fh)
+-            or $self->fatal(sprintf(
+-                "Could not copy modules file ('%s') to temporary file ('%s')",
+-                $self->modules_file, $temp_file,
+-            ));
+-        close $temp_fh;
+-
 -        $temp_fh = file($temp_file)->open('a');
-+        $temp_fh = path($temp_file)->opena;
-         say $temp_fh $append_str;
-         close $temp_fh;
-         system('sync');
-@@ -169,15 +192,15 @@ method upgrade_modules_file {
+-        say $temp_fh $append_str;
+-        close $temp_fh;
+-        system('sync');
+-
+-        run_as_root('nocache', '/bin/cp', '--force', $temp_file, $self->modules_file);
++    for my $candidate ($self->liveos_mountpoint->path('live')->children) {
++        next if "$candidate" !~ m{[.] squashfs\z}xms;
++        next if grep { "$candidate" eq "$_" } @keep;
++        run_as_root('rm', '--force', "$candidate");
      }
  }
  
 -method remount_liveos_rw {
++method upgrade_modules_file () {
++    my @installed_squashfs = $self->all_installed_squashfs;
++
++    my $new_squashfs_str = join("\n", map { path($_)->basename } @installed_squashfs);
++    my ($temp_fh, $temp_file) = tempfile;
++    copy($self->modules_file->stringify, $temp_fh)
++        or $self->fatal(sprintf(
++            "Could not copy modules file ('%s') to temporary file ('%s')",
++            $self->modules_file, $temp_file,
++        ));
++    close $temp_fh;
++
++    $temp_fh = path($temp_file)->openw;
++    say $temp_fh 'filesystem.squashfs', "\n", $new_squashfs_str;
++    close $temp_fh;
++    system('sync');
++
++    run_as_root('nocache', '/bin/cp', '--force', $temp_file, $self->modules_file);
++}
++
 +method remount_liveos_rw () {
      run_as_root(qw{mount -o}, "remount,rw", $self->liveos_mountpoint);
  }
@@ -1247,16 +1499,37 @@ index 4976530..050bd3b 100644
      unless ($self->space_available > $self->space_needed) {
          $self->fatal(
              "There is too little available space on Tails system partition, aborting"
-@@ -196,7 +219,7 @@ method run {
-                     '-f', $self->locate($archive_filename));
+@@ -186,25 +221,24 @@ method run {
  
-         $self->record_installed_squashfs($self->squashfs_in_archive(
+     $self->remount_liveos_rw;
+ 
+-    my $orig_cwd = getcwd;
+-    foreach (sort $self->list_archives) {
+-        my $archive_filename = $_;
+-
+-        chdir $self->liveos_mountpoint;
+-        # In a real Tails, /lib/live/mount/medium is not writable by non-root.
+-        run_as_root('tar', '-x', '--no-same-owner', '--no-same-permissions',
+-                    '-f', $self->locate($archive_filename));
++    # In a real Tails, /lib/live/mount/medium is not writable by non-root.
++    run_as_root(
++        'rsync',
++        '--recursive',
++        '--links',
++        '--perms',
++        '--times',
++        '--chown=root:root',
++        $self->reader->overlay_dir . '/',
++        $self->liveos_mountpoint . '/'
++    );
+ 
+-        $self->record_installed_squashfs($self->squashfs_in_archive(
 -            $self->locate($archive_filename)
-+            path($self->locate($archive_filename))
-         ));
-     }
-     chdir $orig_cwd;
-@@ -204,7 +227,7 @@ method run {
+-        ));
+-    }
+-    chdir $orig_cwd;
++    $self->record_installed_squashfs($self->squashfs_in_overlay);
+ 
      if ($self->delete_files_count) {
          run_as_root(
              'rm', '--recursive', '--force',
@@ -1265,9 +1538,12 @@ index 4976530..050bd3b 100644
          );
      }
  
-@@ -213,14 +236,14 @@ method run {
+@@ -212,15 +246,17 @@ method run {
+ 
      $self->upgrade_modules_file;
  
++    $self->delete_obsolete_squashfs_diffs;
++
      # upgrade syslinux' ldlinux.sys
 -    my $syslinux = file($self->liveos_mountpoint, qw{utils linux syslinux});
 +    my $syslinux = path($self->liveos_mountpoint, qw{utils linux syslinux});
@@ -1283,7 +1559,7 @@ index 4976530..050bd3b 100644
      ) if -e $mbr;
  
      system('sync');
-@@ -228,5 +251,5 @@ method run {
+@@ -228,5 +264,5 @@ method run {
      $self->clean;
  }
  
@@ -1305,10 +1581,10 @@ index d6e598a..4da3ddd 100644
  
  use parent 'LWP::UserAgent';
 diff --git a/usr/share/perl5/Tails/IUK/Read.pm b/usr/share/perl5/Tails/IUK/Read.pm
-index e52e0a8..2aee127 100644
+index e52e0a8..d134cfb 100644
 --- a/usr/share/perl5/Tails/IUK/Read.pm
 +++ b/usr/share/perl5/Tails/IUK/Read.pm
-@@ -6,38 +6,30 @@ Tails::IUK::Read - read Incremental Upgrade Kit files
+@@ -6,38 +6,29 @@ Tails::IUK::Read - read Incremental Upgrade Kit files
  
  package Tails::IUK::Read;
  
@@ -1343,12 +1619,13 @@ index e52e0a8..2aee127 100644
 +use Path::Tiny;
  use Try::Tiny;
  use YAML::Any;
--
- use Tails::IUK::Archive::Tar;
- use Tails::IUK::Utils qw{run_as_root unpacked_size};
-+use Types::Path::Tiny qw{AbsDir AbsFile};
++use Tails::IUK::Utils qw{directory_size run_as_root};
++use Types::Path::Tiny qw{AbsDir AbsFile Path};
 +use Types::Standard qw{ArrayRef ClassName HashRef InstanceOf Str};
  
+-use Tails::IUK::Archive::Tar;
+-use Tails::IUK::Utils qw{run_as_root unpacked_size};
+-
 -=head1 TYPES
 -
 -=cut
@@ -1358,7 +1635,7 @@ index e52e0a8..2aee127 100644
  
  
  =head1 ATTRIBUTES
-@@ -45,36 +37,52 @@ class_type('Tails::IUK::Archive::Tar');
+@@ -45,69 +36,81 @@ class_type('Tails::IUK::Archive::Tar');
  =cut
  
  has 'file' => (
@@ -1390,54 +1667,63 @@ index e52e0a8..2aee127 100644
          delete_files_count => "count",
      };
  
- has 'archive' => (
+-has 'archive' => (
 -    isa => 'Tails::IUK::Archive::Tar',
 -    is => 'ro',
 -    lazy_build => 1,
-+    isa     => InstanceOf['Tails::IUK::Archive::Tar'],
-+    is      => 'lazy',
-     handles => [ qw{get_content locate} ],
- );
+-    handles => [ qw{get_content locate} ],
+-);
++has 'files' =>
++    is  => 'lazy',
++    isa => ArrayRef;
  
 -has 'files' => lazy_build ro 'ArrayRef[Str]';
 -has 'archives' => lazy_build ro 'ArrayRef[Path::Class::File]';
 -has 'tempdir'  => lazy_build ro 'Path::Class::Dir', predicate 'has_tempdir';
-+has 'files' =>
-+    is  => 'lazy',
-+    isa => ArrayRef;
-+
 +has 'archives' =>
 +    is  => 'lazy',
 +    isa => ArrayRef;
-+
+ 
 +has 'tempdir' =>
 +    is        => 'lazy',
 +    isa       => AbsDir,
 +    predicate => 1;
- 
++
++has 'mountpoint' =>
++    is        => 'lazy',
++    isa       => AbsDir,
++    predicate => 1;
  
  =head1 METHODS
  
  =cut
  
 -method _build_format_version {
++method _build_mountpoint () {
++    my $mountpoint = path(File::Temp::tempdir(CLEANUP => 0));
++    run_as_root('mount', $self->file, $mountpoint);
++    return $mountpoint;
++}
++
 +method _build_format_version () {
      my $format_version;
      try {
-         $format_version = $self->get_content('FORMAT');
-@@ -84,7 +92,7 @@ method _build_format_version {
+-        $format_version = $self->get_content('FORMAT');
++        $format_version = $self->get_content(path('FORMAT'));
+     } catch {
+         croak "The format version cannot be determined:\n$_";
+     };
      return $format_version;
  }
  
 -method _build_archive {
-+method _build_archive () {
-     Tails::IUK::Archive::Tar->new(
-         filename => $self->file->stringify,
-         sudo     => 1,
-@@ -92,22 +100,22 @@ method _build_archive {
-     );
- }
- 
+-    Tails::IUK::Archive::Tar->new(
+-        filename => $self->file->stringify,
+-        sudo     => 1,
+-        tempdir  => $self->tempdir,
+-    );
+-}
+-
 -method _build_delete_files {
 +method _build_delete_files () {
      my $delete_files = $self->control->{delete_files};
@@ -1446,8 +1732,9 @@ index e52e0a8..2aee127 100644
  }
  
 -method _build_control {
+-    my $control = YAML::Any::Load($self->get_content('control.yml'));
 +method _build_control () {
-     my $control = YAML::Any::Load($self->get_content('control.yml'));
++    my $control = YAML::Any::Load($self->get_content(path('control.yml')));
      $control = {} unless defined $control;
      return $control;
  }
@@ -1462,7 +1749,7 @@ index e52e0a8..2aee127 100644
          $_ =~ m{
                     [.] tar       # literal .tar
                     (?: [.] bz2 )? # possibly followed by literal .bz2
-@@ -116,9 +124,9 @@ method _build_archives {
+@@ -116,65 +119,69 @@ method _build_archives {
      } $self->list_files ];
  }
  
@@ -1474,7 +1761,11 @@ index e52e0a8..2aee127 100644
      my $format_version;
      try {
          $format_version = $self->format_version();
-@@ -129,38 +137,35 @@ method BUILD {
+     } catch {
+         croak "The format version cannot be determined:\n$_";
+     };
+-    $format_version eq '1'
++    $format_version eq '2'
          or croak(sprintf("Unsupported format: %s", $format_version));
  }
  
@@ -1495,6 +1786,7 @@ index e52e0a8..2aee127 100644
 +method clean () {
      run_as_root(qw{rm --recursive --force --preserve-root}, $self->tempdir)
          if $self->has_tempdir;
++    run_as_root('umount', $self->mountpoint) if $self->has_mountpoint;
  }
  
 -method DEMOLISH {
@@ -1503,37 +1795,63 @@ index e52e0a8..2aee127 100644
  }
  
 -method list_files { @{$self->files} }
-+method list_files () { @{$self->files} }
- 
+-
 -method space_needed {
 -    sum(0, map { unpacked_size($self->locate($_)) } $self->list_archives);
-+method space_needed () {
-+    sum(0, map { unpacked_size(path($self->locate($_))) } $self->list_archives);
++method get_content (Path $filename) {
++    $self->mountpoint->child($filename)->slurp;
  }
  
 -method contains_file ($filename) {
-+method contains_file (Str $filename) {
-     1 == grep { $_ eq $filename } $self->list_files;
+-    1 == grep { $_ eq $filename } $self->list_files;
++method list_files () {
++    my @files;
++    my $iter = $self->mountpoint->iterator({ recurse => 1 });
++    while (my $path = $iter->()) {
++        push @files, $path->relative($self->mountpoint);
++    }
++    return @files;
  }
  
 -method squashfs_in_archive ($archive_filename) {
 -    my $tempdir = $self->tempdir->subdir(
 -        file($archive_filename)->basename . "_tempdir"
-+method squashfs_in_archive (AbsFile $archive_filename) {
-+    my $tempdir = $self->tempdir->child(
-+        path($archive_filename)->basename . "_tempdir"
-     );
-     run_as_root('mkdir', '--parents', '--mode=0755', $tempdir);
-     -d $tempdir or croak "Could not make '$tempdir' directory: $!";
-@@ -176,5 +181,5 @@ method squashfs_in_archive ($archive_filename) {
+-    );
+-    run_as_root('mkdir', '--parents', '--mode=0755', $tempdir);
+-    -d $tempdir or croak "Could not make '$tempdir' directory: $!";
++method overlay_dir () {
++    $self->mountpoint->child('overlay');
++}
  
- method list_archives () { @{$self->archives} }
+-    my $archive = Tails::IUK::Archive::Tar->new(
+-        filename => $archive_filename,
+-        tempdir  => $tempdir,
+-        sudo     => 1,
+-    );
++method space_needed () {
++    $self->overlay_dir->exists ? directory_size($self->overlay_dir) : 0;
++}
+ 
+-    grep { m{[.] squashfs \z}xms } $archive->files;
++method contains_file (Path $filename) {
++    1 == grep { $_ eq $filename } $self->list_files;
+ }
+ 
+-method list_archives () { @{$self->archives} }
++method squashfs_in_overlay () {
++    return unless $self->overlay_dir->child('live')->exists;
++    map {
++        $_->basename
++    } grep {
++        -f $_
++    } $self->overlay_dir->child('live')->children(qr/[.]squashfs\z/);
++}
  
 -no Moose;
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/IUK/TargetFile/Download.pm b/usr/share/perl5/Tails/IUK/TargetFile/Download.pm
-index c0068aa..cb00438 100644
+index c0068aa..3bd67c9 100644
 --- a/usr/share/perl5/Tails/IUK/TargetFile/Download.pm
 +++ b/usr/share/perl5/Tails/IUK/TargetFile/Download.pm
 @@ -6,56 +6,64 @@ Tails::IUK::TargetFile::Download - download and verify a target file
@@ -1644,7 +1962,35 @@ index c0068aa..cb00438 100644
      $space_available >= $space_needed or $self->fatal(errf(
          "Downloading this incremental upgrade requires %{space_needed}s ".
          "of free space in %{target_dir}s, but only %{space_available}s is available.",
-@@ -147,5 +155,5 @@ method run () {
+@@ -84,7 +92,7 @@ method check_available_space () {
+ method run () {
+     $self->check_available_space;
+ 
+-    my $ua  = Tails::IUK::LWP::UserAgent::WithProgress->new(ssl_opts => {
++    my $ua = Tails::IUK::LWP::UserAgent::WithProgress->new(ssl_opts => {
+         verify_hostname => 0,
+         SSL_verify_mode => 0,
+     });
+@@ -131,10 +139,15 @@ method run () {
+ 
+     my $sha = Digest::SHA->new(256);
+     $sha->addfile($temp_filename);
+-    $sha->hexdigest eq $self->hash_value or clean_fatal(
++    my $actual_hash = $sha->hexdigest;
++    $actual_hash eq $self->hash_value or clean_fatal(
+         $self, $temp_filename, sprintf(
+-            "The file '%s' was downloaded but its hash is not correct",
+-        $self->uri,
++            "The file '%s' was downloaded but its hash is not correct:\n"
++                . "  - expected: %s\n"
++                . "  - actual:   %s",
++            $self->uri,
++            $self->hash_value,
++            $actual_hash,
+     ));
+ 
+     rename($temp_filename, $self->output_file);
+@@ -147,5 +160,5 @@ method run () {
      return 1;
  }
  
@@ -1652,7 +1998,7 @@ index c0068aa..cb00438 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile.pm b/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile.pm
-index 0139fc1..040f478 100644
+index 0139fc1..11aa604 100644
 --- a/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile.pm
 +++ b/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile.pm
 @@ -6,15 +6,12 @@ Tails::IUK::UpgradeDescriptionFile - describe and manipulate a Tails upgrade-des
@@ -1701,7 +2047,7 @@ index 0139fc1..040f478 100644
 +    is        => 'ro',
 +    isa       => Str,
 +    predicate => 1,
-+) for (qw{product_name product_version build_target channel});
++) for (qw{product_name initial_install_version build_target channel});
  
  has upgrades =>
 -    lazy_build ro ArrayRef,
@@ -1742,6 +2088,15 @@ index 0139fc1..040f478 100644
      my @upgrade_paths;
      foreach my $upgrade ($self->all_upgrades) {
          exists $upgrade->{'upgrade-paths'} or $upgrade->{'upgrade-paths'} = [];
+@@ -87,7 +95,7 @@ sub new_from_text {
+     my $data = YAML::Any::Load($text);
+ 
+     my %args;
+-    foreach my $key (qw{product-name product-version channel build-target upgrades}) {
++    foreach my $key (qw{product-name initial-install-version channel build-target upgrades}) {
+         next unless exists $data->{$key};
+         my $attribute = $key; $attribute =~ s{-}{_}xmsg;
+         $args{$attribute} = $data->{$key};
 @@ -100,7 +108,7 @@ sub new_from_file {
      my $class    = shift;
      my $filename = shift;
@@ -1751,6 +2106,15 @@ index 0139fc1..040f478 100644
      assert_nonblank($content);
  
      $class->new_from_text($content);
+@@ -142,7 +150,7 @@ method full_upgrade_path () {
+ method stringify () {
+     my %data;
+ 
+-    foreach my $attribute (qw{product_name product_version channel build_target upgrades}) {
++    foreach my $attribute (qw{product_name initial_install_version channel build_target upgrades}) {
+         my $predicate = "has_$attribute";
+         next unless $self->$predicate;
+         my $key = $attribute; $key =~ s{_}{-}xmsg;
 @@ -157,8 +165,7 @@ method stringify () {
  
  =cut
@@ -1769,7 +2133,7 @@ index 0139fc1..040f478 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Download.pm b/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Download.pm
-index 2459f6a..8ad2d2e 100644
+index 2459f6a..80fb52d 100644
 --- a/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Download.pm
 +++ b/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Download.pm
 @@ -6,17 +6,12 @@ Tails::IUK::UpgradeDescriptionFile::Download - download and verify an upgrade de
@@ -1794,7 +2158,7 @@ index 2459f6a..8ad2d2e 100644
  
  extends 'Tails::Download::HTTPS';
  
-@@ -24,45 +19,58 @@ use autodie qw(:all);
+@@ -24,47 +19,61 @@ use autodie qw(:all);
  use Carp;
  use Carp::Assert;
  use Carp::Assert::More;
@@ -1831,7 +2195,8 @@ index 2459f6a..8ad2d2e 100644
 +    format     => 's',
 +    isa        => Str,
 +    predicate  => 1,
-+) for (qw{override_baseurl override_build_target override_os_release_file});
++) for (qw{override_baseurl override_build_target override_os_release_file
++          override_initial_install_os_release_file});
 +
 +option trusted_gnupg_homedir => (
 +    is         => 'lazy',
@@ -1846,8 +2211,9 @@ index 2459f6a..8ad2d2e 100644
 +    isa     => InstanceOf['Tails::RunningSystem'],
      handles => [
          qw{upgrade_description_file_url upgrade_description_sig_url},
-         qw{product_name product_version build_target channel}
+-        qw{product_name product_version build_target channel}
 -    ];
++        qw{product_name initial_install_version build_target channel}
 +    ],
 +);
  
@@ -1867,9 +2233,12 @@ index 2459f6a..8ad2d2e 100644
 -method _build_running_system {
 +method _build_running_system () {
      my @args;
-     for (qw{baseurl build_target os_release_file}) {
+-    for (qw{baseurl build_target os_release_file}) {
++    for (qw{baseurl build_target os_release_file initial_install_os_release_file}) {
          my $attribute = "override_$_";
-@@ -79,8 +87,7 @@ method _build_running_system {
+         my $predicate = "has_$attribute";
+         if ($self->$predicate) {
+@@ -79,16 +88,18 @@ method _build_running_system {
  
  =cut
  
@@ -1878,8 +2247,21 @@ index 2459f6a..8ad2d2e 100644
 +method matches_running_system (Str $description_str) {
      my $description = YAML::Any::Load($description_str);
      assert_hashref($description);
-     foreach (qw{product_name product_version build_target channel}) {
-@@ -105,5 +112,5 @@ method run () {
+-    foreach (qw{product_name product_version build_target channel}) {
++    foreach (qw{product_name initial_install_version build_target channel}) {
+         my $accessor = my $field = $_;
+         $field =~ s{_}{-}gxms;
+         exists  $description->{$field}             or return;
+         defined $description->{$field}             or return;
+-        $description->{$field} eq $self->$accessor or return;
++        if ($description->{$field} ne $self->$accessor) {
++            warn "Expected for field $field: ", $self->$accessor, ", got: ", $description->{$field};
++            return;
++        }
+     }
+     return 1;
+ }
+@@ -105,5 +116,5 @@ method run () {
      return;
  }
  
@@ -1887,7 +2269,7 @@ index 2459f6a..8ad2d2e 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Generate.pm b/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Generate.pm
-index d4be264..f6b814e 100644
+index d4be264..207e7db 100644
 --- a/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Generate.pm
 +++ b/usr/share/perl5/Tails/IUK/UpgradeDescriptionFile/Generate.pm
 @@ -6,18 +6,11 @@ Tails::IUK::UpgradeDescriptionFile::Generate - create and update upgrade-descrip
@@ -2012,18 +2394,65 @@ index d4be264..f6b814e 100644
      for my $channel (qw{alpha stable}) {
          say STDERR q{* Creating upgrade-description files for new release },
              '(', $self->version, "), ", $channel, " channel: \n  ",
-@@ -182,9 +211,8 @@ method upgrade_paths_from_previous_release ($previous_version) {
+@@ -95,10 +124,10 @@ method run {
+ 
+ method create_udf_for_new_release ($channel) {
+     my $description = Tails::IUK::UpgradeDescriptionFile->new(
+-        product_name    => $self->product_name,
+-        product_version => $self->version,
+-        build_target    => $self->build_target,
+-        channel         => $channel,
++        product_name            => $self->product_name,
++        initial_install_version => $self->version,
++        build_target            => $self->build_target,
++        channel                 => $channel,
+     );
+     $self->udf_for_new_release($channel)->parent->mkpath;
+     $self->udf_for_new_release($channel)->spew(
+@@ -110,10 +139,10 @@ method create_udf_for_next_release ($version, $channel) {
+     my $udf = $self->udf_for($version, channel => $channel);
+ 
+     my $description = Tails::IUK::UpgradeDescriptionFile->new(
+-        product_name    => $self->product_name,
+-        product_version => $version,
+-        build_target    => $self->build_target,
+-        channel         => $channel,
++        product_name            => $self->product_name,
++        initial_install_version => $version,
++        build_target            => $self->build_target,
++        channel                 => $channel,
+     );
+     $udf->parent->mkpath;
+     $udf->spew($description->stringify);
+@@ -128,10 +157,10 @@ method update_udf_for_previous_release ($previous_version) {
+     }
+     else {
+         $description = Tails::IUK::UpgradeDescriptionFile->new(
+-            product_name    => $self->product_name,
+-            product_version => $previous_version,
+-            build_target    => $self->build_target,
+-            channel         => $self->channel,
++            product_name            => $self->product_name,
++            initial_install_version => $previous_version,
++            build_target            => $self->build_target,
++            channel                 => $self->channel,
+         );
+         $udf->parent->mkpath;
+     }
+@@ -182,10 +211,9 @@ method upgrade_paths_from_previous_release ($previous_version) {
      return @paths;
  }
  
 -method udf_for ($version, :$channel?) {
 -    defined($channel) or $channel = $self->channel;
 -    file(
+-        $self->release_checkout, qw{wiki src upgrade v1}, $self->product_name,
 +method udf_for ($version, :$channel = $self->channel) {
 +    path(
-         $self->release_checkout, qw{wiki src upgrade v1}, $self->product_name,
++        $self->release_checkout, qw{wiki src upgrade v2}, $self->product_name,
          $version, $self->build_target, $channel, 'upgrades.yml'
      );
+ }
 @@ -194,7 +222,7 @@ method udf_for_new_release ($channel) {
      $self->udf_for($self->version, channel => $channel)
  }
@@ -2078,10 +2507,10 @@ index d4be264..f6b814e 100644
 +no Moo;
  1;
 diff --git a/usr/share/perl5/Tails/IUK/Utils.pm b/usr/share/perl5/Tails/IUK/Utils.pm
-index 1b3d030..5116081 100644
+index 1b3d030..40d7ef4 100644
 --- a/usr/share/perl5/Tails/IUK/Utils.pm
 +++ b/usr/share/perl5/Tails/IUK/Utils.pm
-@@ -6,8 +6,7 @@ Tails::IUK::Utils - utilities for Tails IUK
+@@ -6,43 +6,38 @@ Tails::IUK::Utils - utilities for Tails IUK
  
  package Tails::IUK::Utils;
  
@@ -2090,27 +2519,39 @@ index 1b3d030..5116081 100644
 +use strictures 2;
  use 5.10.1;
  
- 
-@@ -17,7 +16,7 @@ our @ISA = qw{Exporter};
+-
+-
+ use Exporter;
+ our @ISA = qw{Exporter};
  our @EXPORT = (
++    qw{directory_size},
      qw{extract_file_from_iso extract_here_file_from_iso fatal},
-     qw{get_temp_dir make_archive_with_files_called make_iuk_with_files},
+-    qw{get_temp_dir make_archive_with_files_called make_iuk_with_files},
 -    qw{run_as_root space_available stdout_as_root unpacked_size},
-+    qw{run_as_root space_available_in stdout_as_root unpacked_size},
++    qw{run_as_root space_available_in stdout_as_root},
      qw{verify_signature}
  );
  
-@@ -32,17 +31,18 @@ use English qw{-no_match_vars};
- use File::Temp qw{tempdir tempfile};
+ use autodie qw(:all);
+-use Archive::Tar;
+ use Carp;
+ use Carp::Assert;
+ use Carp::Assert::More;
+-use Cwd;
+ use Data::Dumper;
+ use English qw{-no_match_vars};
+-use File::Temp qw{tempdir tempfile};
++use File::Temp qw{tempfile};
  use GnuPG::Interface;
  use Filesys::Df;
-+use Function::Parameters;
- use IPC::System::Simple qw{capturex};
- use List::Util qw{sum};
+-use IPC::System::Simple qw{capturex};
+-use List::Util qw{sum};
 -use Method::Signatures::Simple;
 -use Path::Class;
++use Function::Parameters;
++use IPC::System::Simple qw{capturex systemx};
 +use Path::Tiny;
-+use Types::Path::Tiny qw{AbsDir AbsFile AbsPath Path};
++use Types::Path::Tiny qw{AbsDir AbsFile Path};
  
  
  =head1 FUNCTIONS
@@ -2122,7 +2563,7 @@ index 1b3d030..5116081 100644
      my @cmd = qw{bsdtar -x --no-same-permissions --to-stdout --fast-read};
      push @cmd, ('--file', $iso, $file);
      open(my $cmd, '-|', @cmd);
-@@ -52,7 +52,7 @@ func extract_file_from_iso($file, $iso) {
+@@ -52,7 +47,7 @@ func extract_file_from_iso($file, $iso) {
      return $output;
  }
  
@@ -2131,7 +2572,7 @@ index 1b3d030..5116081 100644
      my @cmd = qw{bsdtar -x --no-same-permissions};
      push @cmd, ('--file', $iso, $dir);
      system(@cmd);
-@@ -60,19 +60,19 @@ func extract_here_file_from_iso($dir, $iso) {
+@@ -60,19 +55,15 @@ func extract_here_file_from_iso($dir, $iso) {
      return;
  }
  
@@ -2147,16 +2588,14 @@ index 1b3d030..5116081 100644
  
 -sub get_temp_dir {
 -    dir(tempdir(CLEANUP => 0));
-+fun get_temp_dir () {
-+    path(tempdir(CLEANUP => 0));
- }
- 
+-}
+-
 -func fatal (%args) {
 +fun fatal (%args) {
      assert(exists $args{msg});
      assert_isa($args{msg}, 'ARRAY');
  
-@@ -86,7 +86,7 @@ func fatal (%args) {
+@@ -86,7 +77,7 @@ func fatal (%args) {
          }
          else {
              foreach my $dir (@{$args{rmtree}}) {
@@ -2165,68 +2604,80 @@ index 1b3d030..5116081 100644
              }
          }
      }
-@@ -94,9 +94,7 @@ func fatal (%args) {
+@@ -94,94 +85,27 @@ func fatal (%args) {
      croak(@{$args{msg}});
  }
  
 -func unpacked_size ($archive_file) {
 -    assert(-e $archive_file);
 -
-+fun unpacked_size (AbsFile $archive_file) {
-     sum(0,
-         map {
-             my $ret = 0;
-@@ -118,23 +116,23 @@ func unpacked_size ($archive_file) {
-     );
- }
- 
+-    sum(0,
+-        map {
+-            my $ret = 0;
+-            if (my ($size) = (m{
+-                                   \A           # at the beginning of the string
+-                                   [-a-z]+      # permissions
+-                                   [[:space:]]+
+-                                   [[:digit:]]+ # owner
+-                                   /
+-                                   \d+          # group
+-                                   [[:space:]]+
+-                                   (\d+)        # size
+-                                   [[:space:]]+
+-                           }xms)) {
+-                $ret = $size;
+-            }
+-            $ret;
+-        } split(/\n/, `tar tv --numeric-owner -f $archive_file`)
+-    );
+-}
+-
 -func make_archive_with_files_called ($archive_file, %args) {
-+fun make_archive_with_files_called (AbsPath $archive_file, %args) {
-     assert(exists $args{filenames});
-     assert_isa($args{filenames}, 'ARRAY');
-     assert_is(scalar(grep { exists $args{$_} } qw{size content}), 1);
- 
-     my $archive = Archive::Tar->new();
-     my $orig_cwd = getcwd;
+-    assert(exists $args{filenames});
+-    assert_isa($args{filenames}, 'ARRAY');
+-    assert_is(scalar(grep { exists $args{$_} } qw{size content}), 1);
+-
+-    my $archive = Archive::Tar->new();
+-    my $orig_cwd = getcwd;
 -    chdir $archive_file->dir;
-+    chdir $archive_file->parent;
-     foreach (@{$args{filenames}}) {
+-    foreach (@{$args{filenames}}) {
 -        file($_)->dir->mkpath;
-+        path($_)->parent->mkpath;
-         if (exists $args{content}) {
+-        if (exists $args{content}) {
 -            my $fh = file($_)->openw;
-+            my $fh = path($_)->openw;
-             print $fh $args{content};
-             close $fh;
-         }
-         elsif (exists $args{size}) {
+-            print $fh $args{content};
+-            close $fh;
+-        }
+-        elsif (exists $args{size}) {
 -            system("dd", "if=/dev/zero", "of=$_", "bs=1M", "count=".$args{size});
-+            system("dd", 'status=none', "if=/dev/zero", "of=$_", "bs=1M", "count=".$args{size});
-             ${^CHILD_ERROR_NATIVE} == 0 or croak("Failed to create ", $args{size}, "MB file '$_'.");
-         }
-         $archive->add_files($_);
-@@ -144,16 +142,16 @@ func make_archive_with_files_called ($archive_file, %args) {
-     chdir $orig_cwd;
- }
- 
+-            ${^CHILD_ERROR_NATIVE} == 0 or croak("Failed to create ", $args{size}, "MB file '$_'.");
+-        }
+-        $archive->add_files($_);
+-    }
+-    $archive->write($archive_file)
+-        or croak("Failed to write '$archive_file':\n", $archive->error);
+-    chdir $orig_cwd;
+-}
+-
 -func make_iuk_with_files ($iuk_filename, $tempdir, @files) {
-+fun make_iuk_with_files (AbsPath $iuk_filename, AbsDir $tempdir, @files) {
-     my $orig_cwd = getcwd;
- 
-     my $iuk = Archive::Tar->new();
-     chdir $tempdir;
- 
+-    my $orig_cwd = getcwd;
+-
+-    my $iuk = Archive::Tar->new();
+-    chdir $tempdir;
+-
 -    my $fh = file('FORMAT')->openw; print $fh 1; close $fh;
-+    path('FORMAT')->spew(1);
-     $iuk->add_files('FORMAT');
-     unless (grep { $_ eq 'control.yml' } @files) {
+-    $iuk->add_files('FORMAT');
+-    unless (grep { $_ eq 'control.yml' } @files) {
 -        file('control.yml')->touch;
-+        path('control.yml')->touch;
-         $iuk->add_files('control.yml');
-     }
-     map { $iuk->add_files($_) or croak("Could not add file '$_'", $iuk->error) } @files;
-@@ -163,25 +161,22 @@ func make_iuk_with_files ($iuk_filename, $tempdir, @files) {
-     $res or croak("Could not write IUK '$iuk_filename':\n", $iuk->error);
+-        $iuk->add_files('control.yml');
+-    }
+-    map { $iuk->add_files($_) or croak("Could not add file '$_'", $iuk->error) } @files;
+-
+-    my $res = $iuk->write($iuk_filename);
+-    chdir $orig_cwd;
+-    $res or croak("Could not write IUK '$iuk_filename':\n", $iuk->error);
++fun directory_size (AbsDir $dir) {
++    my @du = split(/\s/, capturex(qw{/bin/du --block-size=1 --summarize}, $dir));
++    return $du[0];
  }
  
 -=head2 space_available

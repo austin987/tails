@@ -19,8 +19,7 @@ To release Tails you'll need some packages installed:
   from our custom `iukbuilder-stretch` APT suite.
 * `tails-iuk` dependencies, including suggested packages (see
   `debian/control` in the `debian` branch of its repo)
-* `tails-perl5lib` dependencies (same trick as `tails-iuk` to get the
-  list)
+* `perl5lib` [[dependencies|contribute/release_process/perl5lib]]
 * `po4a` _from Stretch_: the version in testing/sid extracts Markdown headings
    in a different way, which makes tons of strings fuzzy.
 
@@ -98,8 +97,6 @@ Also export the following environment variables:
 * `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}" | perl -nE 'say substr($_, -17)')`
 * `IUK_CHECKOUT`: a checkout of the relevant tag of the `iuk`
   Git repository.
-* `PERL5LIB_CHECKOUT`: a checkout of the relevant tag of the
-  `perl5lib` Git repository.
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 
@@ -242,7 +239,6 @@ Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
 
 * [[tails-installer]]
-* [[perl5lib]]
 * [[persistence-setup]]
 * [[tails-iuk]]
 * whisperback:
@@ -810,7 +806,7 @@ and run the following:
           SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
           TMPDIR=\"${TMPDIR:-/tmp}\" \
-          PERL5LIB=\"${PERL5LIB_CHECKOUT:?}/lib\" \
+          PERL5LIB=\"${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/perl5lib/lib\" \
             ./bin/tails-create-iuk \
                --squashfs_diff_name \"${VERSION:?}.squashfs\"           \
                --old_iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \

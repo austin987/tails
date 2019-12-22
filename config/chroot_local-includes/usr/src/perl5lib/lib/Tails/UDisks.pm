@@ -24,7 +24,7 @@ use Unix::Mknod qw(:all);
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("tails-perl-lib");
+textdomain("tails");
 
 no Moo::sification;
 use Moo;
