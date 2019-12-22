@@ -61,11 +61,6 @@ has 'files' =>
     is  => 'lazy',
     isa => ArrayRef;
 
-has 'tempdir' =>
-    is        => 'lazy',
-    isa       => AbsDir,
-    predicate => 1;
-
 has 'mountpoint' =>
     is        => 'lazy',
     isa       => AbsDir,
@@ -105,8 +100,6 @@ method _build_control () {
 
 method _build_files () { [ $self->archive->files ] }
 
-method _build_tempdir () { path(File::Temp::tempdir(CLEANUP => 0)) };
-
 method BUILD (@args) {
     my $format_version;
     try {
@@ -126,8 +119,6 @@ fun new_from_file (ClassName $class, AbsFile $filename, @rest) {
 }
 
 method clean () {
-    run_as_root(qw{rm --recursive --force --preserve-root}, $self->tempdir)
-        if $self->has_tempdir;
     run_as_root('umount', $self->mountpoint) if $self->has_mountpoint;
 }
 

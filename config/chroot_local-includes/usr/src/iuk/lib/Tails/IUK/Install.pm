@@ -19,7 +19,7 @@ use Carp::Assert::More;
 use Cwd;
 use Data::Dumper;
 use File::Copy;
-use File::Temp qw{tempdir tempfile};
+use File::Temp qw{tempfile};
 use Function::Parameters;
 use Path::Tiny;
 use Try::Tiny;
@@ -66,11 +66,6 @@ option 'override_boot_device_file' =>
     format    => 's',
     predicate => 1;
 
-has 'tempdir' =>
-    is        => 'lazy',
-    isa       => AbsDir,
-    predicate => 1;
-
 has 'modules_file' =>
     is  => 'lazy',
     isa => AbsFile;
@@ -100,25 +95,6 @@ has 'running_system' =>
 
 =cut
 
-method _build_tempdir () {
-    $self->remount_liveos_rw;
-
-    my $base_live_tmp_dir = $self->liveos_mountpoint->child('tmp')->stringify;
-
-    # --parents is used to avoid error if existing, not to create parents.
-    run_as_root('mkdir', '--parents', $base_live_tmp_dir);
-    -d $base_live_tmp_dir or $self->fatal("Could not make '$base_live_tmp_dir' directory: $!");
-
-    my $tempdir = `sudo -n mktemp --directory --tmpdir=$base_live_tmp_dir`;
-    chomp $tempdir;
-    -d $tempdir or $self->fatal("Could not make '$tempdir' temporary directory: $!");
-
-    # This is useless in Tails, but useful for testing.
-    run_as_root(qw{chmod -R go+rX}, $base_live_tmp_dir);
-
-    path($tempdir);
-}
-
 method _build_installed_squashfs () { [] }
 
 method _build_modules_file () {
@@ -126,15 +102,7 @@ method _build_modules_file () {
 }
 
 method _build_reader () {
-    Tails::IUK::Read->new_from_file(
-        $self->from_file,
-        tempdir => $self->tempdir,
-    );
-}
-
-method clean () {
-    run_as_root(qw{rm --recursive --force --preserve-root}, $self->tempdir)
-        if $self->has_tempdir;
+    Tails::IUK::Read->new_from_file($self->from_file);
 }
 
 method _build_running_system () {
@@ -149,10 +117,6 @@ method _build_running_system () {
     Tails::RunningSystem->new(@args);
 }
 
-method DEMOLISH (@args) {
-    $self->clean;
-}
-
 
 =head1 METHODS
 
@@ -160,9 +124,7 @@ method DEMOLISH (@args) {
 
 method fatal (@msg) {
     Tails::IUK::Utils::fatal(
-        msg               => \@msg,
-        rmtree            => $self->has_tempdir ? [ $self->tempdir ] : [],
-        rmtree_as_root    => 1,
+        msg => \@msg,
     );
 }
 
@@ -260,8 +222,6 @@ method run () {
     ) if -e $mbr;
 
     system('sync');
-
-    $self->clean;
 }
 
 no Moo;
