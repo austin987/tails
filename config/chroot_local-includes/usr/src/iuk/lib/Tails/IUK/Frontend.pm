@@ -31,7 +31,7 @@ use Types::Standard qw(ArrayRef Bool CodeRef Defined HashRef InstanceOf Int Mayb
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("tails-iuk");
+textdomain("tails");
 
 no Moo::sification;
 use Moo;

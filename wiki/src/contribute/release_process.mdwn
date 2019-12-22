@@ -17,8 +17,7 @@ To release Tails you'll need some packages installed:
 * aufs DKMS module for your running kernel.
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
-* `tails-iuk` dependencies, including suggested packages (see
-  `debian/control` in the `debian` branch of its repo)
+* `iuk` [[dependencies|contribute/release_process/iuk]]
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib]]
 * `po4a` _from Stretch_: the version in testing/sid extracts Markdown headings
    in a different way, which makes tons of strings fuzzy.
@@ -95,8 +94,6 @@ Also export the following environment variables:
   repository used to prepare the release (`stable` or `testing`).
 * `TAILS_SIGNATURE_KEY=A490D0F4D311A4153E2BB7CADBB802B258ACD84F`
 * `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}" | perl -nE 'say substr($_, -17)')`
-* `IUK_CHECKOUT`: a checkout of the relevant tag of the `iuk`
-  Git repository.
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 
@@ -240,7 +237,6 @@ the release branch's custom APT suite:
 
 * [[tails-installer]]
 * [[persistence-setup]]
-* [[tails-iuk]]
 * whisperback:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
   * build a Debian package
@@ -812,12 +808,12 @@ Build the Incremental Upgrade Kits
             break
         fi
         echo "Generating IUK file from ${source_version:?} to ${VERSION:?}"
-        sudo su -c "cd ${IUK_CHECKOUT:?} && \
-          SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
+        sudo su -c
+         "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
           TMPDIR=\"${TMPDIR:-/tmp}\" \
           PERL5LIB=\"${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/perl5lib/lib\" \
-            ./bin/tails-create-iuk \
+          ${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/iuk/bin/tails-create-iuk \
                --squashfs_diff_name \"${VERSION:?}.squashfs\"           \
                --old_iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
                --new_iso \"${ISO_PATH:?}\" \
@@ -872,8 +868,7 @@ Prepare upgrade-description files
 
    Run this command, after adjusting it if needed as explained above:
 
-        ( cd ${IUK_CHECKOUT:?} && \
-        ./bin/tails-iuk-generate-upgrade-description-files \
+        ${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/iuk/bin/tails-iuk-generate-upgrade-description-files \
             --version "${VERSION:?}" \
             $( \
                 if [ "${DIST:?}" = stable ]; then
@@ -896,7 +891,6 @@ Prepare upgrade-description files
             --release_checkout "${RELEASE_CHECKOUT:?}" \
             --major_release "${MAJOR_RELEASE:?}" \
             --channel "${DIST:?}"
-       )
 
 1. Create an armoured detached signature for each created or modified
    upgrade-description file.
@@ -912,10 +906,8 @@ Prepare upgrade-description files
                        && break
                    done
                    mv --force "${udf:?}.asc" "${udf:?}.pgp"
-                   ( \
-                     cd ${IUK_CHECKOUT:?} && \
-                     ./bin/tails-iuk-check-upgrade-description-file "${udf:?}" \
-                   ) || break
+                   ${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/iuk/bin/tails-iuk-check-upgrade-description-file "${udf:?}" \
+                      || break
                fi
            done
 

@@ -7,7 +7,6 @@ set -x
 VERSIONS="2.0~test 2.2~test 2.3~test"
 export SOURCE_DATE_EPOCH=$(date --utc '+%s')
 
-[ -d "$IUK_CHECKOUT" ] || exit 1
 [ -d "$TAILS_CHECKOUT" ] || exit 2
 
 WORKDIR=$(mktemp -d)
@@ -65,12 +64,12 @@ done
 
 for dest_version in 2.2~test 2.3~test; do
    echo "Generating IUK file from 2.0~test to $dest_version"
-   sudo su -c "cd ${IUK_CHECKOUT:?} && \
-          SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
+   sudo su -c \
+         "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
           TMPDIR=\"${TMPDIR:-/tmp}\" \
           PERL5LIB=\"${TAILS_CHECKOUT:?}/config/chroot_local-includes/usr/src/perl5lib/lib\" \
-            ./bin/tails-create-iuk \
+          ${TAILS_CHECKOUT:?}/config/chroot_local-includes/usr/src/iuk/bin/tails-create-iuk \
                --squashfs_diff_name \"${dest_version}.squashfs\"           \
                --old_iso \"$WORKDIR/2.0~test.iso\" \
                --new_iso \"$WORKDIR/${dest_version}.iso\" \
