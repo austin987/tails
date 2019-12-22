@@ -21,11 +21,6 @@ use IPC::System::Simple qw{capturex};
 use Tails::Download::HTTPS;
 use Types::Standard qw{InstanceOf Str};
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
-
 use namespace::clean;
 
 =head1 ATTRIBUTES

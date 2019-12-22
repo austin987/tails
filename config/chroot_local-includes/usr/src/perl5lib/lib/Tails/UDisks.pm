@@ -21,11 +21,6 @@ use Types::Standard qw{ArrayRef Defined Str};
 use Types::Path::Tiny qw{Path};
 use Unix::Mknod qw(:all);
 
-use Locale::gettext;
-use POSIX;
-setlocale(LC_MESSAGES, "");
-textdomain("tails");
-
 no Moo::sification;
 use Moo;
 use MooX::late;
