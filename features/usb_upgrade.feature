@@ -107,7 +107,25 @@ Feature: Upgrading an old Tails USB installation
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And no SquashFS delta is installed
     And Tails is fooled to think that version 2.0~test was initially installed
+    And the file system changes introduced in version 2.2~test are not present
     And the file system changes introduced in version 2.3~test are not present
+    When the network is plugged
+    And Tor is ready
+    And all notifications have disappeared
+    Then I am proposed to install an incremental upgrade to version 2.2~test
+    And I can successfully install the incremental upgrade to version 2.2~test
+    Given I shutdown Tails and wait for the computer to power off
+    When I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
+    Then Tails is running version 2.2~test
+    And all persistence presets are enabled
+    And the file system changes introduced in version 2.2~test are present
+    And only the 2.2~test SquashFS delta is installed
+    # Our IUK sets a release date that can make Tor bootstrapping impossible
+    Given Tails system time is magically synchronized
+    # We'll really install Tails_amd64_2.0~test_to_2.3~test.iuk
+    # but we need some way to force upgrading a second time in a row
+    # even if only the initially installed version is considered
+    And Tails is fooled to think that version 2.1~test was initially installed
     When the network is plugged
     And Tor is ready
     And all notifications have disappeared
@@ -119,33 +137,10 @@ Feature: Upgrading an old Tails USB installation
     And all persistence presets are enabled
     And the file system changes introduced in version 2.3~test are present
     And only the 2.3~test SquashFS delta is installed
-    # Our IUK sets a release date that can make Tor bootstrapping impossible
-    Given Tails system time is magically synchronized
-    And Tails is fooled to think that version 2.0~test was initially installed
-    When the network is plugged
-    And Tor is ready
-    And all notifications have disappeared
     # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
     And I successfully start the Unsafe Browser
     Then the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
 
-  # XXX: test that any SquashsFS delta is deleted after installing a new one
-  # (after shut down, because while we're using them we can merely
-  # unlink them but we cannot be sure they have really been deleted)
-  Scenario: Upgrading a Tails that has one SquashFS delta present with an incremental upgrade
-    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    And Tails is fooled to think that version 2.0~test was initially installed
-    And Tails is fooled to think a 2.1~test SquashFS delta is installed
-    When the network is plugged
-    And Tor is ready
-    And all notifications have disappeared
-    Then I am proposed to install an incremental upgrade to version 2.3~test
-    And I can successfully install the incremental upgrade to version 2.3~test
-    Then only the 2.3~test SquashFS delta is installed
-
-  # XXX: test that any SquashsFS delta is deleted after installing a new one
-  # (after shut down, because while we're using them we can merely
-  # unlink them but we cannot be sure they have really been deleted)
   Scenario: Upgrading a Tails that has several SquashFS deltas present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed

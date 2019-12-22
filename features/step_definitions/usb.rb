@@ -701,10 +701,7 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   $vm.storage.disk_mklabel(name, type)
 end
 
-Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|
-  assert_equal('2.3~test', version)
-  upgrade_applied = not_present.nil?
-  chroot_browser = "#{chroot_browser.downcase}-browser" if chroot_browser
+def iuk_changes(version)
   changes = [
     {
       filesystem: :rootfs,
@@ -746,6 +743,41 @@ TAILS_VERSION_ID="#{version}"
       status: :removed
     },
   ]
+
+  case version
+  when '2.2~test'
+    changes
+  when '2.3~test'
+    changes + [
+      {
+        filesystem: :rootfs,
+        path: 'some_new_file_2.3',
+        status: :added,
+        new_content: <<-EOF
+Some content 2.3
+      EOF
+      },
+      {
+        filesystem: :rootfs,
+        path: 'usr/share/common-licenses/MPL-1.1',
+        status: :removed
+      },
+      {
+        filesystem: :medium,
+        path: 'utils/mbr/mbr.bin',
+        status: :removed
+      },
+    ]
+  else
+    raise "Test suite implementation error: unsupported version #{version}"
+  end
+end
+
+Given /^the file system changes introduced in version (.+) are (not )?present(?: in the (\S+) Browser's chroot)?$/ do |version, not_present, chroot_browser|
+  assert(['2.2~test', '2.3~test'].include? version)
+  upgrade_applied = not_present.nil?
+  chroot_browser = "#{chroot_browser.downcase}-browser" if chroot_browser
+  changes = iuk_changes(version)
   changes.each do |change|
     case change[:filesystem]
     when :rootfs
