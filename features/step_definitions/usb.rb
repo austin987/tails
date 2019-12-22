@@ -701,6 +701,10 @@ Given /^I create a ([[:alpha:]]+) label on disk "([^"]+)"$/ do |type, name|
   $vm.storage.disk_mklabel(name, type)
 end
 
+# The (crude) bin/create-test-iuks script can be used to generate the IUKs,
+# meant to apply these exact changes, that are used by the test suite.
+# It's nice to keep that script updated when updating the list of expected
+# changes here and uploading new test IUKs.
 def iuk_changes(version)
   changes = [
     {
