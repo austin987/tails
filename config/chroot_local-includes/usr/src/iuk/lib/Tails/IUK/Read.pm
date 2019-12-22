@@ -61,10 +61,6 @@ has 'files' =>
     is  => 'lazy',
     isa => ArrayRef;
 
-has 'archives' =>
-    is  => 'lazy',
-    isa => ArrayRef;
-
 has 'tempdir' =>
     is        => 'lazy',
     isa       => AbsDir,
@@ -108,16 +104,6 @@ method _build_control () {
 }
 
 method _build_files () { [ $self->archive->files ] }
-
-method _build_archives () {
-    return [ map { path($_) } grep {
-        $_ =~ m{
-                   [.] tar       # literal .tar
-                   (?: [.] bz2 )? # possibly followed by literal .bz2
-                   \z            # at the end of the string
-           }xms;
-    } $self->list_files ];
-}
 
 method _build_tempdir () { path(File::Temp::tempdir(CLEANUP => 0)) };
 
