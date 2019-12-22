@@ -129,6 +129,9 @@ Feature: Upgrading an old Tails USB installation
     Then the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
     And only the 2.3~test SquashFS delta is installed
 
+  # XXX: test that any SquashsFS delta is deleted after installing a new one
+  # (after shut down, because while we're using them we can merely
+  # unlink them but we cannot be sure they have really been deleted)
   Scenario: Upgrading a Tails that has one SquashFS delta present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed
@@ -140,6 +143,9 @@ Feature: Upgrading an old Tails USB installation
     And I can successfully install the incremental upgrade to version 2.3~test
     Then only the 2.3~test SquashFS delta is installed
 
+  # XXX: test that any SquashsFS delta is deleted after installing a new one
+  # (after shut down, because while we're using them we can merely
+  # unlink them but we cannot be sure they have really been deleted)
   Scenario: Upgrading a Tails that has several SquashFS deltas present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed
