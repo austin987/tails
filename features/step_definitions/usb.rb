@@ -755,7 +755,7 @@ TAILS_VERSION_ID="#{version}"
     when :medium
       path = '/lib/live/mount/medium/' + change[:path]
     else
-      raise "Unknown filesysten '#{change[:filesystem]}'"
+      raise "Unknown filesystem '#{change[:filesystem]}'"
     end
     case change[:status]
     when :removed
