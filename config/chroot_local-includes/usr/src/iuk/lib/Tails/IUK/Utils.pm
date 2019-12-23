@@ -31,6 +31,7 @@ use Function::Parameters;
 use IPC::System::Simple qw{capturex};
 use Path::Tiny;
 use Types::Path::Tiny qw{AbsDir AbsFile Path};
+use Types::Standard qw{Str};
 
 
 =head1 FUNCTIONS
@@ -103,8 +104,9 @@ fun space_available_in (AbsDir $dir) {
     return $df->{bavail};
 }
 
-fun verify_signature ($txt, $signature_txt, AbsDir $trusted_gnupg_homedir) {
-    assert_defined($txt);
+fun verify_signature (Str $txt,
+                      Str $signature_txt,
+                      AbsDir $trusted_gnupg_homedir) {
     assert_nonblank($signature_txt);
 
     my $gnupg = GnuPG::Interface->new();
