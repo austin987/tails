@@ -18,7 +18,7 @@ for version in $VERSIONS; do
    done
    SQUASHFS_SRC="$WORKDIR/$version"/squashfs_src
    mkdir -p "$SQUASHFS_SRC"
-   mkdir -p "$SQUASHFS_SRC"/etc "$SQUASHFS_SRC"/usr/share
+   mkdir -p "$SQUASHFS_SRC"/etc/amnesia "$SQUASHFS_SRC"/usr/share
 
    cp -a /usr/share/common-licenses "$SQUASHFS_SRC"/usr/share/
    if [ "$version" != '2.0~test' ]; then
@@ -29,14 +29,14 @@ for version in $VERSIONS; do
       echo "Some content 2.3" > "$SQUASHFS_SRC"/some_new_file_2.3
       rm "$SQUASHFS_SRC"/usr/share/common-licenses/MPL-1.1
    fi
-   echo > "$SQUASHFS_SRC"/etc/amnesia <<EOF
+   cat > "$SQUASHFS_SRC"/etc/amnesia/version <<EOF
 $version - 20380119
 ffffffffffffffffffffffffffffffffffffffff
 live-build: 3.0.5+really+is+2.0.12-0.tails2
 live-boot: 4.0.2-1
 live-config: 4.0.4-1
 EOF
-   echo > "$SQUASHFS_SRC"/etc/os-release <<EOF
+   cat > "$SQUASHFS_SRC"/etc/os-release <<EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="$version"
 EOF
