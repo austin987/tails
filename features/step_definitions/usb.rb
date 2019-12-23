@@ -894,6 +894,29 @@ Given /^Tails is fooled to think a (.+) SquashFS delta is installed$/ do |versio
   )
 end
 
+def upgrader_trusted_signing_subkeys
+  $vm.execute_successfully(
+    "sudo -u tails-upgrade-frontend gpg --batch --list-keys --with-colons '#{TAILS_SIGNING_KEY}'",
+  ).stdout.split("\n")
+    .select { |line| /^sub:/.match(line) }
+    .map { |line| line[/^sub:.:\d+:\d+:(?<subkeyid>[A-F0-9]+):/, 'subkeyid'] }
+end
+
+Given /^the signing key used by the Upgrader is outdated$/ do
+  upgrader_trusted_signing_subkeys.each { |subkeyid|
+    $vm.execute_successfully(
+      "sudo -u tails-upgrade-frontend gpg --batch --yes --delete-keys '#{subkeyid}!'"
+    )
+  }
+  assert_equal(0, upgrader_trusted_signing_subkeys.length)
+end
+
+Given /^a current signing key is available on our website$/ do
+  # We already check this via features/keys.feature so let's not bother here
+  # ⇒ this step is only here to improve the Gherkin scenario.
+  true
+end
+
 Then /^(?:no|only the (.+)) SquashFS delta is installed$/ do |version|
   expected_squashes = [default_squash]
   expected_squashes << "#{version}.squashfs" if version

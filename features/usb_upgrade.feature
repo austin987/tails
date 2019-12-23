@@ -154,3 +154,14 @@ Feature: Upgrading an old Tails USB installation
     Then I am proposed to install an incremental upgrade to version 2.2~test
     And I can successfully install the incremental upgrade to version 2.2~test
     Then only the 2.2~test SquashFS delta is installed
+
+  @automatic_upgrade
+  Scenario: Upgrading a Tails whose signing key is outdated
+    Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
+    And Tails is fooled to think that version 2.0~test was initially installed
+    And the signing key used by the Upgrader is outdated
+    But a current signing key is available on our website
+    When the network is plugged
+    And Tor is ready
+    And all notifications have disappeared
+    Then I am proposed to install an incremental upgrade to version 2.2~test

@@ -20,6 +20,7 @@ use IPC::Run;
 use Number::Format qw(:subs);
 use Path::Tiny;
 use String::Errf qw{errf};
+use Tails::Download::HTTPS;
 use Tails::RunningSystem;
 use Tails::IUK::UpgradeDescriptionFile;
 use Tails::IUK::Utils qw{space_available_in};
@@ -225,6 +226,37 @@ method checked_upgrades_file () {
     $self->upgrader_run_dir->child('checked_upgrades');
 }
 
+method refresh_signing_key () {
+    my $new_key_content = Tails::Download::HTTPS->new(
+        max_download_size => 128 * 2**10,
+    )->get_url(
+        $self->running_system->baseurl . '/tails-signing-minimal.key'
+    );
+    my ($stdout, $stderr, $exit_code);
+    my $success = 1;
+    IPC::Run::run ['gpg', '--import'],
+          '<', \$new_key_content, '>', \$stdout, '2>', \$stderr
+          or $success = 0;
+    $exit_code = $?;
+    $success or $self->fatal(
+        $self->encoding->decode(gettext(
+            q{<b>An error occured while updating the signing key.</b>\n\n}.
+            q{<b>This prevents determining whether an upgrade is available from our website.</b>\n\n}.
+            q{Check your network connection, and restart Tails to try upgrading again.\n\n}.
+            q{If the problem persists, go to file:///usr/share/doc/tails/website/doc/upgrade/error/check.en.html},
+        )),
+        title => $self->encoding->decode(gettext(
+            q{Error while updating the signing key}
+        )),
+        debugging_info => $self->encoding->decode(errf(
+            "exit code: %{exit_code}i\n\n".
+            "stdout:\n%{stdout}s\n\n".
+            "stderr:\n%{stderr}s",
+            { exit_code => $exit_code, stdout => $stdout, stderr => $stderr }
+        )),
+    );
+}
+
 method get_upgrade_description () {
     my @args;
     for (qw{baseurl build_target os_release_file initial_install_os_release_file}) {
@@ -299,6 +331,7 @@ method no_incremental_explanation (Str $no_incremental_reason) {
 }
 
 method run () {
+    $self->refresh_signing_key;
     my ($upgrade_description_text) = $self->get_upgrade_description;
     my $upgrade_description = Tails::IUK::UpgradeDescriptionFile->new_from_text(
         $upgrade_description_text
