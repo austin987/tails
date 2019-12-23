@@ -28,7 +28,7 @@ use File::Temp qw{tempfile};
 use GnuPG::Interface;
 use Filesys::Df;
 use Function::Parameters;
-use IPC::System::Simple qw{capturex systemx};
+use IPC::System::Simple qw{capturex};
 use Path::Tiny;
 use Types::Path::Tiny qw{AbsDir AbsFile Path};
 
