@@ -146,11 +146,11 @@ Feature: Upgrading an old Tails USB installation
   Scenario: Upgrading a Tails that has several SquashFS deltas present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed
+    And Tails is fooled to think a 2.0.1~test SquashFS delta is installed
     And Tails is fooled to think a 2.1~test SquashFS delta is installed
-    And Tails is fooled to think a 2.2~test SquashFS delta is installed
     When the network is plugged
     And Tor is ready
     And all notifications have disappeared
-    Then I am proposed to install an incremental upgrade to version 2.3~test
-    And I can successfully install the incremental upgrade to version 2.3~test
-    Then only the 2.3~test SquashFS delta is installed
+    Then I am proposed to install an incremental upgrade to version 2.2~test
+    And I can successfully install the incremental upgrade to version 2.2~test
+    Then only the 2.2~test SquashFS delta is installed
