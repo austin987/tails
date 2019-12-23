@@ -66,7 +66,7 @@ has 'running_system' => (
 =cut
 
 method _build_trusted_gnupg_homedir () {
-    my $trusted_gnupg_homedir = path('/usr/share/tails-iuk/trusted_gnupg_homedir');
+    my $trusted_gnupg_homedir = path('/var/lib/tails-upgrade-frontend/.gnupg');
     assert(-d $trusted_gnupg_homedir);
     return $trusted_gnupg_homedir;
 }
