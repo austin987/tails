@@ -858,11 +858,13 @@ def installed_squashes
     listed_squashes.first,
     "Tails.module does not list #{default_squash} on the first line"
   )
-  present_squashes = $vm.file_glob("#{live}/*.squashfs").stdout.chomp.split("\0")
+  present_squashes = $vm.file_glob("#{live}/*.squashfs").map { |f|
+    f.sub('/lib/live/mount/medium/live/', '')
+  }
   # Sanity check
   assert_equal(
-    listed_squashes,
-    present_squashes,
+    listed_squashes.sort,
+    present_squashes.sort,
     'Tails.module does not match the present .squashfs files'
   )
   return listed_squashes
