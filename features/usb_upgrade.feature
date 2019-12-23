@@ -103,6 +103,7 @@ Feature: Upgrading an old Tails USB installation
     And the expected persistent files created with the old Tails version are present in the filesystem
     And all persistent directories from the old Tails version have safe access rights
 
+  @automatic_upgrade
   Scenario: Upgrading an initial Tails installation with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And no SquashFS delta is installed
@@ -141,6 +142,7 @@ Feature: Upgrading an old Tails USB installation
     And I successfully start the Unsafe Browser
     Then the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
 
+  @automatic_upgrade
   Scenario: Upgrading a Tails that has several SquashFS deltas present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And Tails is fooled to think that version 2.0~test was initially installed
