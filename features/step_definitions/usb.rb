@@ -904,14 +904,6 @@ Then /^(?:no|only the (.+)) SquashFS delta is installed$/ do |version|
   )
 end
 
-Given /^Tails is fooled to think it is running version (.+)$/ do |version|
-  $vm.execute_successfully(
-    "sed -i " +
-    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
-    "/etc/os-release"
-  )
-end
-
 Then /^the label of the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
   assert($vm.is_running?)
   disk_dev = $vm.disk_dev(name)
