@@ -826,6 +826,9 @@ Then /^I am proposed to install an incremental upgrade to version (.+)$/ do |ver
 end
 
 When /^I agree to install the incremental upgrade$/ do
+  @orig_syslinux_cfg = $vm.file_content(
+    '/lib/live/mount/medium/syslinux/syslinux.cfg'
+  )
   @screen.click('TailsUpgraderUpgradeNowButton.png')
 end
 
@@ -844,6 +847,12 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
   end
   @screen.click('TailsUpgraderApplyUpgradeButton.png')
   @screen.wait('TailsUpgraderDone.png', 60)
+  # Restore syslinux.cfg: our test IUKs replace it with something
+  # that would break the next boot
+  $vm.file_overwrite(
+    '/lib/live/mount/medium/syslinux/syslinux.cfg',
+    @orig_syslinux_cfg
+  )
 end
 
 def default_squash
