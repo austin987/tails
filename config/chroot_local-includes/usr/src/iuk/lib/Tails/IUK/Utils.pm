@@ -87,7 +87,7 @@ fun fatal (%args) {
 }
 
 fun directory_size (AbsDir $dir) {
-    my @du = split(/\s/, capturex(qw{/bin/du --block-size=1 --summarize}, $dir));
+    my @du = split(/\s/, capturex(qw{/usr/bin/du --block-size=1 --summarize}, $dir));
     return $du[0];
 }
 
