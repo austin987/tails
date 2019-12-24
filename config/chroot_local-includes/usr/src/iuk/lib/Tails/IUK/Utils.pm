@@ -30,6 +30,7 @@ use Filesys::Df;
 use Function::Parameters;
 use IPC::System::Simple qw{capturex};
 use Path::Tiny;
+use String::Errf qw{errf};
 use Types::Path::Tiny qw{AbsDir AbsFile Path};
 use Types::Standard qw{Str};
 
@@ -138,6 +139,18 @@ fun verify_signature (Str $txt,
         command_args => [ $signature_file, $txt_file ],
     );
     waitpid $pid, 0;
+
+    $CHILD_ERROR == 0 or say STDERR errf(
+        "GnuPG signature verification failed:\n".
+        "exit code: %{exit_code}i\n\n".
+        "stdout:\n%{stdout}s\n\n".
+        "stderr:\n%{stderr}s",
+        {
+            exit_code => $CHILD_ERROR,
+            stdout    => join('', $stdout->getlines),
+            stderr    => join('', $stderr->getlines),
+        }
+    );
 
     return $CHILD_ERROR == 0;
 }
