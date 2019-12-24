@@ -138,9 +138,13 @@ Feature: Upgrading an old Tails USB installation
     And all persistence presets are enabled
     And the file system changes introduced in version 2.3~test are present
     And only the 2.3~test SquashFS delta is installed
+    # Our IUK sets a release date that can make Tor bootstrapping impossible
+    Given Tails system time is magically synchronized
     # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
-    And I successfully start the Unsafe Browser
-    Then the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
+    When the network is plugged
+    And Tor is ready
+    Then I successfully start the Unsafe Browser
+    And the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
 
   @automatic_upgrade
   Scenario: Upgrading a Tails that has several SquashFS deltas present with an incremental upgrade
