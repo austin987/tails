@@ -149,6 +149,7 @@ method _build_free_space () {
 =cut
 
 method fatal (Str $msg, Str :$title, Str :$debugging_info) {
+    say STDERR $self->encoding->encode("$title\n$msg\n$debugging_info");
     $self->dialog($msg, type => 'error', title => $title) unless $self->batch;
     croak($self->encoding->encode("$title\n$msg\n$debugging_info"));
 }
