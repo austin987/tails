@@ -112,7 +112,6 @@ Feature: Upgrading an old Tails USB installation
     And the file system changes introduced in version 2.3~test are not present
     When the network is plugged
     And Tor is ready
-    And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 2.2~test
     And I can successfully install the incremental upgrade to version 2.2~test
     Given I shutdown Tails and wait for the computer to power off
@@ -129,7 +128,6 @@ Feature: Upgrading an old Tails USB installation
     And Tails is fooled to think that version 2.1~test was initially installed
     When the network is plugged
     And Tor is ready
-    And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 2.3~test
     And I can successfully install the incremental upgrade to version 2.3~test
     Given I shutdown Tails and wait for the computer to power off
@@ -154,7 +152,6 @@ Feature: Upgrading an old Tails USB installation
     And Tails is fooled to think a 2.1~test SquashFS delta is installed
     When the network is plugged
     And Tor is ready
-    And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 2.2~test
     And I can successfully install the incremental upgrade to version 2.2~test
     Then only the 2.2~test SquashFS delta is installed
@@ -167,5 +164,4 @@ Feature: Upgrading an old Tails USB installation
     But a current signing key is available on our website
     When the network is plugged
     And Tor is ready
-    And all notifications have disappeared
     Then I am proposed to install an incremental upgrade to version 2.2~test
