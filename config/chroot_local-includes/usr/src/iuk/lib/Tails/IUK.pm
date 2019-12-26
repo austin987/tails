@@ -332,9 +332,10 @@ method create_squashfs_diff () {
         );
     }
 
+    my @rsync_options = qw{--archive --quiet --delete-after --acls --checksum};
+    push @rsync_options, "--xattrs" if $self->union_type eq 'overlayfs';
     run_as_root(
-        "rsync", "--archive", "--quiet", "--delete-after", "--acls",
-        "--xattrs", "--checksum",
+        "rsync", @rsync_options,
         sprintf("%s/", $new_squashfs_mount),
         sprintf("%s/", $union_mount),
     );
