@@ -51,7 +51,8 @@ this is not supported. It would fail most of the time in confusing ways.
 ## Old ISO used in the test suite in Jenkins
 
 Some tests like upgrading Tails are done against a Tails installation made from
-the previously released ISO.
+the previously released ISO and USB images. Those images are retrieved
+using wget from <https://iso-history.tails.boum.org>.
 
 In some cases (e.g when the _Tails Installer_ interface has changed), we need to
 temporarily change this behaviour to make tests work. To have Jenkins
@@ -81,23 +82,6 @@ use the ISO being tested instead of the last released one:
 
 2. File a ticket to ensure this temporarily change gets reverted
    in due time.
-
-## Retrieving the ISOs for the test
-
-We'll need a way to retrieve the different ISO needed for the test.
-
-For the ISO related to the upstream build job, this shouln't be a
-problem with #9597. We can get it with either wget, or a python script
-using python-jenkins. That was the point of this ticket.
-
-For the last release ISO, we have several means:
-
-* Using wget to get them from http://iso-history.tails.boum.org. This
-  website is password protected, but we could set up another private
-  vhost for the isotesters.
-* Using the git-annex repo directly.
-
-We'll use the first one, as it's easier to implement.
 
 ## Restarting slave VMs between jobs
 
