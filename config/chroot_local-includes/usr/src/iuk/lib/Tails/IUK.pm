@@ -462,6 +462,11 @@ method save () {
     $self->saveas($self->outfile);
 }
 
+method delete_tempdir () {
+    chdir '/';
+    run_as_root(qw{rm -rf}, $self->tempdir);
+}
+
 method run () {
     assert_exists(
         \%ENV, 'SOURCE_DATE_EPOCH', q{SOURCE_DATE_EPOCH is in the environment}
@@ -470,6 +475,7 @@ method run () {
         $ENV{SOURCE_DATE_EPOCH}, q{SOURCE_DATE_EPOCH variable is not empty}
     );
     $self->save;
+    $self->delete_tempdir;
 }
 
 no Moo;
