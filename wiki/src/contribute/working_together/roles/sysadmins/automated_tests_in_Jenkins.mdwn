@@ -123,3 +123,13 @@ For more details, see the heavily commented implementation in
  - `macros/test_Tails_ISO.yaml`
  - `macros/keep_node_busy_during_cleanup.yaml`
  - `macros/reboot_node.yaml`
+
+## Executors on the Jenkins master
+
+We need to ensure the Jenkins master has enough executors configured
+so it can run as many `reboot_job` concurrent builds as necessary.
+
+This job can't run in parallel for a given `test_Tails_ISO_*` build,
+so what we strictly need is: as many executors on the master as we
+have nodes allowed to run `test_Tails_ISO_*`. This currently means: as
+many executors on the master as we have isotesters.
