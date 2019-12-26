@@ -27,10 +27,10 @@ Renaming it to <i>keepassx.kdbx</i> would allow <i>KeePassXC</i> to open it auto
 }
 
 # Database file is not named keepassx.kdbx, prompt for renaming it.
-if mountpoint -q "$PERSISTENT_DATA_DIR" && \
+if [ -z "$@" ] && mountpoint -q "$PERSISTENT_DATA_DIR" && \
     ! [ -e "${NEW_DB}" ] && \
-    [ "$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null | wc -l)" = "1" ]; then
-    user_db="$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' 2>/dev/null)"
+    [ "$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' ! -name '*.old.kdbx' 2>/dev/null | wc -l)" = "1" ]; then
+    user_db="$(find "$PERSISTENT_DATA_DIR" -maxdepth 1 -name '*.kdbx' ! -name '*.old.kdbx' 2>/dev/null)"
     if ! [ -e "${PERSISTENT_DATA_DIR}/.no_keepassx_db_renaming" ] \
     && prompt_for_database_renaming "${user_db}"; then
         mv "${user_db}" "${NEW_DB}"
