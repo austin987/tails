@@ -46,6 +46,8 @@ Do <strong>not</strong> directly start a <code>test_Tail_ISO_*</code> job:
 this is not supported. It would fail most of the time in confusing ways.
 </div>
 
+# For sysadmins
+
 ## Old ISO used in the test suite in Jenkins
 
 Some tests like upgrading Tails are done against a Tails installation made from
@@ -79,3 +81,67 @@ use the ISO being tested instead of the last released one:
 
 2. File a ticket to ensure this temporarily change gets reverted
    in due time.
+
+## Retrieving the ISOs for the test
+
+We'll need a way to retrieve the different ISO needed for the test.
+
+For the ISO related to the upstream build job, this shouln't be a
+problem with #9597. We can get it with either wget, or a python script
+using python-jenkins. That was the point of this ticket.
+
+For the last release ISO, we have several means:
+
+* Using wget to get them from http://iso-history.tails.boum.org. This
+  website is password protected, but we could set up another private
+  vhost for the isotesters.
+* Using the git-annex repo directly.
+
+We'll use the first one, as it's easier to implement.
+
+## Restarting slave VMs between jobs
+
+This question is tracked in [[!tails_ticket 9486]].
+
+For [[!tails_ticket 5288]] to be robust enough, if the test suite doesn't
+_always_ clean between itself properly (e.g. when tests simply hang
+and timeout), we might want to restart `isotesterN.lizard` between
+each each ISO testing job.
+
+If such VMs are Jenkins slave, then we can't do it as part of the job
+itself, but workarounds are possible, such as having a job restart and
+wait for the VM, that triggers another job that actually starts the
+tests. Or, instead of running `jenkins-slave` on those VMs, running
+one instance thereof somewhere else (in a Docker container on
+`jenkins.lizard`?) and then have "restart the testing VM and wait for
+it to come up" be part of the testing job.
+
+This was discussed at least there:
+
+* <http://jenkins-ci.361315.n4.nabble.com/How-to-reboot-a-slave-during-a-build-td4628820.html>
+* <https://stackoverflow.com/questions/5543413/reconfigure-and-reboot-a-hudson-jenkins-slave-as-part-of-a-build>
+
+We achieve this VM reboot by using 3 chained jobs:
+
+* First one is a wrapper and trigger 2 other jobs. It is executed on the
+  isotester the test job is supposed to be assigned to. It puts the
+  isotester in offline mode and starts the second job, blocking while
+  waiting for it to complete. This way this isotester is left reserved
+  while the second job run, and the isotester name can be passed as a build
+  parameter to the second job. This job is low prio so it waits for
+  other second and third type of jobs to be completed before starting its
+  own.
+* The second job is executed on the master (which has 4 build
+  executors). This job ssh into the said isotester and issue the
+  reboot. It needs to wait a reasonable amount of time for the Jenkins
+  slave to be stopped by the shutdown process so that no jobs gets assigned
+  to this isotester meanwhile. Stoping this Jenkins slave daemon usually
+  takes a few seconds. During testing, 5 seconds proved to be enough of
+  a delay for that, and more would mean unnecessary lagging time. It then
+  put the node back online again.  This job is higher prio so that it is
+  not lagging behind other wrapper jobs in the queue.
+* The third job is the test job, run on the freshly started isotester.
+  This one is high prio too to get executed before any other wrapper
+  jobs. These jobs are set to run concurrently, so that if a first one is
+  already running, a more recent one triggered by a new build will still
+  be able to run and not be blocked by the first running one.
