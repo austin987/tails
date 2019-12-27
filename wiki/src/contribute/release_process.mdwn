@@ -1495,15 +1495,16 @@ this, and skip what does not make sense for a RC.
 	 then re-run `ssh bittorrent.lizard transmission-remote --list` and make sure everything looks good
 1. Remove any remaining RC for the just-published release from
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
-1. Remove IUKs that are more than 9 months old from
-   `/{stable,alpha}/iuk` on the rsync server:
+1. If you've published a final release, remove IUKs that upgrade to an
+   older version as they were superseded by this release:
 
    - first check that it's not going to remove anything we want to keep:
 
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
                     /srv/rsync/tails/tails/stable/iuk/v2 \
-                    -type f -name '*.iuk' -mtime '+270' \
+                    -type f -name '*.iuk' \
+                    -not -name "*_to_${VERSION:?}.iuk" \
                     -not -name '*~test_*~test.iuk' \
                     -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
                     -ls \
@@ -1514,7 +1515,8 @@ this, and skip what does not make sense for a RC.
          ssh rsync.lizard /bin/sh -c \
              \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
                     /srv/rsync/tails/tails/stable/iuk/v2 \
-                    -type f -name '*.iuk' -mtime '+270' \
+                    -type f -name '*.iuk' \
+                    -not -name "*_to_${VERSION:?}.iuk" \
                     -not -name '*~test_*~test.iuk' \
                     -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
                     -delete \
