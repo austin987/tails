@@ -254,7 +254,7 @@ method iuk_filename ($previous_version) {
 method iuk_url ($previous_version) {
     'http://dl.amnesia.boum.org/tails/'
         . $self->channel
-        . '/iuk/'
+        . '/iuk/v2/'
         . $self->iuk_filename($previous_version);
 }
 

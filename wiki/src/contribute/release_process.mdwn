@@ -1065,7 +1065,7 @@ candidate):
       sudo chown root:rsync_tails Tails_amd64_*_to_${VERSION:?}.iuk && \
       sudo chmod u=rwX,go=rX Tails_amd64_*_to_${VERSION:?}.iuk && \
       sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
-              /srv/rsync/tails/tails/${DIST:?}/iuk/
+              /srv/rsync/tails/tails/${DIST:?}/iuk/v2/
     EOF
 
 	TRACE_TIME=$(date +%s) &&
@@ -1497,11 +1497,12 @@ this, and skip what does not make sense for a RC.
    `rsync.lizard:/srv/rsync/tails/tails/alpha/`
 1. Remove IUKs that are more than 9 months old from
    `/{stable,alpha}/iuk` on the rsync server:
+
    - first check that it's not going to remove anything we want to keep:
 
          ssh rsync.lizard /bin/sh -c \
-             \"find /srv/rsync/tails/tails/alpha  \
-                    /srv/rsync/tails/tails/stable \
+             \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
+                    /srv/rsync/tails/tails/stable/iuk/v2 \
                     -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' \
                     -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \
@@ -1511,8 +1512,8 @@ this, and skip what does not make sense for a RC.
    - then actually delete the files:
 
          ssh rsync.lizard /bin/sh -c \
-             \"sudo find /srv/rsync/tails/tails/alpha  \
-                    /srv/rsync/tails/tails/stable \
+             \"find /srv/rsync/tails/tails/alpha/iuk/v2  \
+                    /srv/rsync/tails/tails/stable/iuk/v2 \
                     -type f -name '*.iuk' -mtime '+270' \
                     -not -name '*~test_*~test.iuk' \
                     -not -name '*~testoverlayfs_*~testoverlayfs.iuk' \

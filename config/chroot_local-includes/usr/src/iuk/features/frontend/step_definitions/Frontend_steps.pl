@@ -290,7 +290,7 @@ EOF
         $desc->append(<<EOF
       - type: incremental
         target-files:
-          - url: https://127.0.0.1:$port/tails/stable/iuk/Tails_s390x_0.11_to_0.12.1.iuk
+          - url: https://127.0.0.1:$port/tails/stable/iuk/v2/Tails_s390x_0.11_to_0.12.1.iuk
             size: 4096
             sha256: 09ded037840f60aae20e639ee285f54974f919a9d08f1669f807ced456f50af3
 EOF
