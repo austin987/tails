@@ -225,6 +225,13 @@ Given qr{^a HTTPS server with a valid SSL certificate$}, fun ($c) {
         port     => $port,
         outfile  => path($webroot, 'mirrors.json'),
     });
+
+    path($webroot, 'tails-signing-minimal.key')->spew(
+        capturex(
+            'gpg', '--homedir', $c->{stash}->{scenario}->{trusted_gnupg_homedir},
+                   '--armor', '--export'
+        )
+    );
 };
 
 fun generate_mirrors_json($args) {
