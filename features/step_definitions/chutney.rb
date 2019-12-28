@@ -178,7 +178,8 @@ def chutney_onionservice_redir(remote_address, remote_port)
     "--unit=#{redir_unit_name}",
     '--service-type=forking',
     '--quiet',
-    # XXX: enable this once we require Buster or newer for running our test suite
+    # XXX: enable this once we require systemd v236 or newer
+    # for running our test suite
     # '--collect',
     '/usr/bin/redir',
     "#{local_address}:#{local_port}",
