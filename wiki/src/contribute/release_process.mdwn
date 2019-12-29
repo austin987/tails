@@ -96,6 +96,7 @@ Also export the following environment variables:
 * `TAILS_SIGNATURE_KEY_LONG_ID=$(echo "${TAILS_SIGNATURE_KEY:?}" | perl -nE 'say substr($_, -17)')`
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
+* `export IUKS_DIR="${ISOS:?}/iuks/v2"`
 
 Pre-freeze
 ==========
@@ -812,6 +813,7 @@ Compute the list of initial version install to build IUKs for:
 Build the Incremental Upgrade Kits
 ----------------------------------
 
+    mkdir -p "${IUKS_DIR:?}" && \
     for source_version in ${IUK_SOURCE_VERSIONS:?}; do
         squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
         if [ "$squashfs_tools_version" != '1:4.4-1+0.tails1' ]; then
@@ -828,7 +830,7 @@ Build the Incremental Upgrade Kits
                --squashfs_diff_name \"${VERSION:?}.squashfs\"           \
                --old_iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
                --new_iso \"${ISO_PATH:?}\" \
-               --outfile \"${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\""
+               --outfile \"${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\""
     done
 
 <a id="reproducibility-sanity-check-iuk"></a>
@@ -1006,7 +1008,7 @@ Upload the IUKs to our rsync server:
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
        rsync --partial --inplace --progress -v \
-          "${ISOS:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk" \
+          "${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk" \
           rsync.lizard:
     done
 
