@@ -97,6 +97,7 @@ Also export the following environment variables:
 * `DIST`: either 'alpha' (for RC:s) or 'stable' (for actual releases)
 * `export WEBSITE_RELEASE_BRANCH="web/release-${TAG:?}"`
 * `export IUKS_DIR="${ISOS:?}/iuks/v2"`
+* `export IUKS_HASHES="${IUKS_DIR:?}/to_${VERSION}.sha256sum"`
 
 Pre-freeze
 ==========
@@ -815,8 +816,8 @@ Compute the list of initial version install to build IUKs for:
     cd "${RELEASE_CHECKOUT:?}" && \
 	export IUK_SOURCE_VERSIONS=$(./bin/iuk-source-versions ${VERSION:?})
 
-Build the Incremental Upgrade Kits
-----------------------------------
+Build the Incremental Upgrade Kits locally
+------------------------------------------
 
     mkdir -p "${IUKS_DIR:?}" && \
     for source_version in ${IUK_SOURCE_VERSIONS:?}; do
@@ -825,7 +826,9 @@ Build the Incremental Upgrade Kits
             echo "ERROR! Your squashfs-tools is not the required version, so any generated IUKs will *not* be reproducible!"
             break
         fi
-        echo "Generating IUK file from ${source_version:?} to ${VERSION:?}"
+        IUK=\"${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\"
+        echo "Generating IUK file from ${source_version:?} to ${VERSION:?}:"
+        echo "  ${IUK:?}"
         sudo su -c
          "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
@@ -835,13 +838,81 @@ Build the Incremental Upgrade Kits
                --squashfs_diff_name \"${VERSION:?}.squashfs\"           \
                --old_iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
                --new_iso \"${ISO_PATH:?}\" \
-               --outfile \"${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\""
+               --outfile \"${IUK:?}\"" && \
+        sudo chown "$(id --user):$(id --group)" "${IUK:?}" && \
+        (cd "$(dirname "${IUK:?}")" && sha256sum "${IUK:?}" >> "${IUKS_HASHES:?}")
     done
+
+This command can take a long time. In parallel, while it is running,
+you can build the Incremental Upgrade Kits on Jenkins:
+
+<a id="build-iuks-on-jenkins"></a>
+
+Build the Incremental Upgrade Kits on Jenkins
+------------------------------------------
+
+1. On <https://jenkins.tails.boum.org/job/build_IUKs/build?delay=0sec>,
+   fill the form with these values:
+
+    - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
+    - `SOURCE_DATE_EPOCH`: the value of `SOURCE_DATE_EPOCH` in your
+      release environment
+    - `SOURCE_VERSIONS`: the value of `$IUK_SOURCE_VERSIONS` in your
+      release environment
+    - `NEW_VERSION`: the value of `$VERSION` in your release environment
+    - `EXTRA_ARGS`: leave it blank
+
+2. Click the _Build_ button
+
+3. After a few seconds, a new build appears on top of the _Build
+   History_ sidebar. Click on the progress bar of this new build.
+
+4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable
+   to the ID of this job (an integer).
+
+5. Wait until this *build_IUKs* job completes successfully.
+   It should take about 10-15 minutes for each member of
+   the `$IUK_SOURCE_VERSIONS` list.
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
-Note that we do not yet build IUKs on Jenkins, otherwise here would be
-a great point to compare its IUKs with yours.
+Verify that Jenkins reproduced your IUKs
+----------------------------------------
+
+    "${RELEASE_CHECKOUT:?}"/bin/copy-iuks-to-rsync-server-and-verify \
+       --hashes-file "${IUKS_HASHES:?}" \
+       --jenkins-build-id "${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}"
+
+If this verification succeeds, move on to the next section.
+
+Else, if this verification fails, then:
+
+1. Visit the web page whose URL is printed by the following command:
+
+        echo "https://jenkins.tails.boum.org/job/build_IUKs/${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}/parameters/"
+
+   It tells you which parameters you've passed to the Jenkins job.
+
+2. Double-check that you've passed the correct parameters.
+
+   If you notice you made a mistake, [[build the IUKs on Jenkins
+   again|release_process#build-iuks-on-jenkins]], and do the
+   verification again.
+
+   Else, if the parameters where correct, then follow the next steps.
+
+3. File a ticket about this problem.
+
+   Specify:
+
+    - Which set of parameters you've passed to the *build_IUKs*
+      job, so that the person who'll investigate the problem
+      can reproduce it.
+    - The ID of the build that failed to reproduce your
+      locally-built IUKs.
+
+4. Later on, after you're done with OpenPGP signing,
+   you will upload the IUKs you've built locally.
 
 <a id="prepare-upgrade-description-files"></a>
 
@@ -1009,7 +1080,9 @@ above).
 Publish the ISO, IMG, and IUKs over HTTP
 ----------------------------------------
 
-Upload the IUKs to our rsync server:
+If the IUKs reproducibility check you did earlier has failed,
+then upload the IUKs you've built to our rsync server
+(we trust your machine more than our Jenkins):
 
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
        rsync --partial --inplace --progress -v \
@@ -1058,7 +1131,7 @@ and on the live website (even for a release candidate):
 	   git push origin master
 	)
 
-Once the IUKs are uploaded, move them IUKs in place with proper
+Move the IUKs in place with proper
 ownership and permissions and update the time in `project/trace` file
 on our rsync server and on the live website (even for a release
 candidate):
