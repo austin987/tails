@@ -722,6 +722,12 @@ to verify that Jenkins reproduced your images:
 Initialize the website release branch
 -------------------------------------
 
+From now on, we don't want to push new commits on `$RELEASE_BRANCH`
+until the new release is out. Otherwise, this would break its build
+and the build of every branch based on it, which would effectively
+block other development work. So the final steps towards publishing
+the release will be done in a new, dedicated branch.
+
 If preparing anything but a final release (e.g. an alpha, beta
 or RC):
 
@@ -732,11 +738,6 @@ Else, if preparing a final release:
 
         git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" "${TAG:?}" && \
         git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
-
-(as soon as a new commit is created on `$RELEASE_BRANCH`, its
-build will start failing until a new changelog entry is created,
-which we don't want to do on `$RELEASE_BRANCH` before it's merged
-into `master` at release time)
 
 Generate the OpenPGP signatures and Torrents
 ============================================
