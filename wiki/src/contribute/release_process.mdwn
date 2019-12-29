@@ -664,7 +664,7 @@ suite should be ready, so it is time to:
    - If the ISO and USB images hashes match: yay, we're good to go!
      The `.build-manifest` may differ — that's OK.
 
-     Set the `$MATCHING_JENKINS_BUILD_ID` environment variable
+     Set the `$MATCHING_JENKINS_IMAGES_BUILD_ID` environment variable
      to the ID of this job (an integer).
 
    - If there is a hash mismatch for one of the images: ouch! Now we are in a
@@ -1030,8 +1030,8 @@ and on the live website (even for a release candidate):
        | ssh rsync.lizard gpg --import
     ssh rsync.lizard << EOF
        wget --quiet \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
-          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.iso" \
+          "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/tails-amd64-${VERSION:?}.img" && \
        gpg --verify tails-amd64-${VERSION:?}.iso{.sig,} && \
        gpg --verify tails-amd64-${VERSION:?}.img{.sig,}
     EOF
@@ -1114,7 +1114,7 @@ Now you can announce and seed the Torrents for the release you're preparing:
           cd "${torrent_dirname:?}" && \
           mv "../${image_filename:?}.sig" . && \
           wget --quiet \
-             "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
+             "https://nightly.tails.boum.org/build_Tails_ISO_${RELEASE_BRANCH:?}/builds/${MATCHING_JENKINS_IMAGES_BUILD_ID:?}/archive/build-artifacts/${image_filename:?}" && \
           gpg --verify ${image_filename:?}{.sig,} && \
           cd && \
           chgrp -R debian-transmission "${torrent_dirname:?}" && \
