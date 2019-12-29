@@ -648,19 +648,22 @@ suite should be ready, so it is time to:
 
         export BUILD_MANIFEST="${ARTIFACTS:?}/tails-amd64-${VERSION:?}.build-manifest"
 
+<a id="reproducibility-sanity-check-iso"></a>
 
-1. <a id="reproducibility-sanity-check-iso"></a>
-   Let's sanity check that Jenkins reproduced your images.
+Verify that Jenkins reproduced your images
+------------------------------------------
 
-   Visit the URL printed by this command:
+to verify that Jenkins reproduced your images:
+
+1. Visit the URL printed by this command:
 
        echo "https://jenkins.tails.boum.org/job/build_Tails_ISO_${RELEASE_BRANCH}/"
 
-   Find the job (probably the last one)
+2. Find the job (probably the last one)
    and make sure the ISO and USB images built by Jenkins
    have the same hash (in the `.shasum` file) as the images you built.
 
-   Then:
+3. Then:
 
    - If the ISO and USB images hashes match: yay, we're good to go!
      The `.build-manifest` may differ — that's OK.
@@ -716,23 +719,24 @@ suite should be ready, so it is time to:
            the nature of the reproducibility failure is clearly
            described.
 
-1. check out a new branch:
+Initialize the website release branch
+-------------------------------------
 
-   If preparing anything but a final release (e.g. an alpha, beta
-   or RC):
+If preparing anything but a final release (e.g. an alpha, beta
+or RC):
 
         git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" origin/master && \
         git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
 
-   Else, if preparing a final release:
+Else, if preparing a final release:
 
         git checkout -b "${WEBSITE_RELEASE_BRANCH:?}" "${TAG:?}" && \
         git push -u origin "${WEBSITE_RELEASE_BRANCH:?}"
 
-   (as soon as a new commit is created on `$RELEASE_BRANCH`, its
-   build will start failing until a new changelog entry is created,
-   which we don't want to do on `$RELEASE_BRANCH` before it's merged
-   into `master` at release time)
+(as soon as a new commit is created on `$RELEASE_BRANCH`, its
+build will start failing until a new changelog entry is created,
+which we don't want to do on `$RELEASE_BRANCH` before it's merged
+into `master` at release time)
 
 Generate the OpenPGP signatures and Torrents
 ============================================
