@@ -198,6 +198,8 @@ Cons:
  * High initial money investment
  * Hosting this is a hard sell for collocations.
  * On-going cost for hosting this cluster.
+ * Needs some development work to fully benefit from the performance
+   improvements.
 
 ### Availability
 
@@ -259,14 +261,17 @@ and test ~40 branches. Even adding only 2 such boxes would
 increase the maximum throughput of our CI by 69% and immensely lower
 latency during heavy load times.
 
-This is assuming perfect load distribution, which requires VMs that
+### Required development work
+
+The above benchmarks assume perfect load distribution, which requires
+Jenkins slaves that
 can run both build and test jobs. It works fine in local limited
 testing but this is not what we have set up on lizard at the moment:
 there's a risk that a failed test job leaves the system in a bad shape
-and breaks the following build job as we don't reboot before build
+and breaks the following build job as we don't reboot after build
 jobs. We might need to either make test jobs more robust on failure
 ([[!tails_ticket 17216]]),
-or to start rebooting VMs before build jobs as well.
+or to start rebooting the Jenkins slaves after build jobs as well.
 
 ## Run builds and/or tests in the cloud
 
