@@ -273,6 +273,25 @@ jobs. We might need to either make test jobs more robust on failure
 ([[!tails_ticket 17216]]),
 or to start rebooting the Jenkins slaves after build jobs as well.
 
+To utilize more fully such nodes, we may need to raise the number of
+vCPUs allocated to TailsToaster. For example, assuming 8 hyperthreads
+per box, and 2 VMs per box, with our current settings (2 vCPUs
+allocated to TailsToaster and Cucumber eats another vCPU core):
+
+ - when running 1 single test suite job,
+   up to 3 hyperthreads out of 8 are used;
+
+ - when running 2 concurrent test suite jobs,
+   up to 2×3=6 hyperthreads out of 8 are used.
+
+Raising this number may make the test suite run faster at least when
+there's only 1 test suite job running. It might even make it faster,
+in most scenarios, when 2 concurrent test suite jobs are running: they
+generally won't be using that much CPU power at the same time. OTOH it
+could introduce some test fragility.
+
+We should first measure if it's worth the effort.
+
 ## Run builds and/or tests in the cloud
 
 <div class="caution">
