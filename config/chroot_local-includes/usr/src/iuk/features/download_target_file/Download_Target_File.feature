@@ -76,8 +76,7 @@ Feature: download and verify a target file
     Given a HTTP server that serves "<file>" in "<webdir>" with size "<size>" and hash "<sha256>"
     When I download "<file>" (of expected size <expected_size>) from "<webdir>", and check its hash is "<sha256>"
     Then it should fail
-    And I should be told "The file '[^']*<file>' was downloaded but its size .* should be .*"
-    And the downloaded content should be not be much bigger than <expected_size>
+    And I should be told "Could not download .*[(]Client-Aborted[)]: max_size"
     Examples:
       | file           | webdir   |    size | expected_size | sha256                                                           |
       | whatever1.file | /        | 1234567 |             1 | ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad |

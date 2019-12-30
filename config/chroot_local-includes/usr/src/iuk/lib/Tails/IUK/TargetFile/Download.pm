@@ -120,11 +120,13 @@ method run () {
         $self->uri, $temp_filename,
     ));
 
-    my $died_header = $res->header('X-Died');
-    ! defined $died_header or clean_fatal($self, $temp_filename, sprintf(
-        "Could not download '%s' to '%s', callback died:\n%s",
-        $self->uri, $temp_filename, $died_header,
-    ));
+    for my $lwp_failure_header (qw{Client-Aborted X-Died}) {
+        my $header = $res->header($lwp_failure_header);
+        ! defined $header or clean_fatal($self, $temp_filename, sprintf(
+            "Could not download '%s' to '%s' (%s): %s",
+            $self->uri, $temp_filename, $lwp_failure_header, $header,
+        ));
+    }
 
     $res->is_success or clean_fatal($self, $temp_filename, sprintf(
         "Could not download '%s' to '%s', request failed:\n%s\n",

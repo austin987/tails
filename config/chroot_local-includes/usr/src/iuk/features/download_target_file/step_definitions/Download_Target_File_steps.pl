@@ -233,19 +233,6 @@ Then qr{^the SHA-256 of the downloaded file should be "([^"]+)"$}, fun ($c) {
     is($expected_hash, $hash_words[0]);
 };
 
-Then qr{^the downloaded content should be not be much bigger than (\d+)$}, fun ($c) {
-    my $expected_size = $c->matches->[0];
-
-    my $not_much_bigger_base   = 4096;
-    my $not_much_bigger_factor = 1.20;
-
-    my ($downloaded_size) =
-        ( $c->{stash}->{scenario}->{output} =~
-              m{was downloaded but its size \((\d+)\) should be} );
-    assert(defined($downloaded_size));
-    ok($downloaded_size < $not_much_bigger_base + $expected_size * $not_much_bigger_factor );
-};
-
 Then qr{^the downloaded file should be world-readable$}, fun ($c) {
     my $output_filename = $c->{stash}->{scenario}->{output_filename};
     assert(-e $output_filename);
