@@ -240,3 +240,9 @@ Then qr{^the downloaded file should be world-readable$}, fun ($c) {
     my $other_read = $mode & S_IROTH;
     ok($other_read);
 };
+
+After fun ($c) {
+    if (defined $c->{stash}->{scenario}->{server}->{http_pid}) {
+        kill $c->{stash}->{scenario}->{server}->{http_pid};
+    }
+};
