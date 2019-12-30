@@ -81,6 +81,9 @@ apt-get -y install ca-certificates curl grub2 openssh-server wget
 
 echo "I: Configuring GRUB..."
 sed -i 's,^GRUB_TIMEOUT=5,GRUB_TIMEOUT=1,g' /etc/default/grub
+perl -pi -E \
+   's/^GRUB_CMDLINE_LINUX_DEFAULT="([^"]*)"$/GRUB_CMDLINE_LINUX_DEFAULT="$1 mitigations=off"/' \
+   /etc/default/grub
 
 echo "I: Installing Tails build dependencies..."
 apt-get -y install \
