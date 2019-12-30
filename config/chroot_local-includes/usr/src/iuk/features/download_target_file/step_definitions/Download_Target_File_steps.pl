@@ -12,7 +12,6 @@ use Data::Dumper;
 use English qw{-no_match_vars};
 use Fcntl ':mode';
 use Function::Parameters;
-use HTTP::Server::Simple;
 use Test::More;
 use Test::BDD::Cucumber::StepFile;
 
