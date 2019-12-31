@@ -112,8 +112,7 @@ apt-get -y install \
         syslinux-common \
         syslinux-utils \
         time \
-        udisks2 \
-        whois
+        udisks2
 
 # Ensure we can use timedatectl
 apt-get -y install dbus
