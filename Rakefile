@@ -589,7 +589,7 @@ namespace :vm do
       clean_up_builder_vms
     end
     begin
-      run_vagrant('up')
+      run_vagrant('up', '--provision')
     rescue VagrantCommandError => e
       clean_up_builder_vms if $force_cleanup
       raise e
