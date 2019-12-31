@@ -99,7 +99,6 @@ apt-get -y install \
         liblist-moreutils-perl \
         libtimedate-perl \
         po4a \
-        libyaml-perl \
         libyaml-syck-perl \
         live-build \
         lsof \
