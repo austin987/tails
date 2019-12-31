@@ -87,7 +87,6 @@ apt-get -y install \
         debootstrap \
         dosfstools \
         dpkg-dev \
-        eatmydata \
         faketime \
         gdisk \
         gettext \
