@@ -96,8 +96,6 @@ apt-get -y install \
         ikiwiki \
         intltool \
         libfile-slurp-perl \
-        libhtml-scrubber-perl \
-        libhtml-template-perl \
         liblist-moreutils-perl \
         libtimedate-perl \
         liburi-perl libhtml-parser-perl \
