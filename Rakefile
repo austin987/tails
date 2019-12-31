@@ -248,7 +248,12 @@ task :parse_build_options do
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
     when 'cachewebsite'
-      ENV['TAILS_WEBSITE_CACHE'] = '1'
+      if is_release?
+        $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
+        ENV['TAILS_WEBSITE_CACHE'] = '0'
+      else
+        ENV['TAILS_WEBSITE_CACHE'] = '1'
+      end
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
       if is_release?
@@ -296,10 +301,6 @@ task :parse_build_options do
   end
 
   if ENV['TAILS_WEBSITE_CACHE'] == '1'
-    if is_release?
-      $stderr.puts "Building a release ⇒ ignoring cachewebsite build option"
-      ENV['TAILS_WEBSITE_CACHE'] = '0'
-    end
     if ENV['TAILS_PROXY_TYPE'] != 'vmproxy'
       abort "Website caching is only supported together with the 'vmproxy' option"
     end
