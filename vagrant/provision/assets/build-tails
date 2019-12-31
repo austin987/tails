@@ -156,14 +156,14 @@ as_root_do rsync -a "${TAILS_GIT_DIR}"/ "${BUILD_DIR}"/
 
 cd "${BUILD_DIR}"
 
-if [ "${TAILS_WIKI_CACHE}" = 1 ]; then
-    WIKI_CACHE_SRC_DIR="/var/cache/apt-cacher-ng/wiki-cache"
-    WIKI_CACHE_TARGETS="
+if [ "${TAILS_WEBSITE_CACHE}" = 1 ]; then
+    WEBSITE_CACHE_SRC_DIR="/var/cache/apt-cacher-ng/website-cache"
+    WEBSITE_CACHE_TARGETS="
         wiki
         config/chroot_local-includes/usr/share/doc/tails/website
     "
-    for target in ${WIKI_CACHE_TARGETS}; do
-        source="${WIKI_CACHE_SRC_DIR}"/"$(basename "${target}")"
+    for target in ${WEBSITE_CACHE_TARGETS}; do
+        source="${WEBSITE_CACHE_SRC_DIR}"/"$(basename "${target}")"
         if [ -d "${source}" ]; then
             mkdir -p "${target}"
             rm -rf "${target}"
@@ -172,9 +172,9 @@ if [ "${TAILS_WIKI_CACHE}" = 1 ]; then
         fi
     done
     ./build-website
-    as_root_do rm -rf "${WIKI_CACHE_SRC_DIR}"
-    as_root_do mkdir -p "${WIKI_CACHE_SRC_DIR}"
-    as_root_do cp -a ${WIKI_CACHE_TARGETS} "${WIKI_CACHE_SRC_DIR}"
+    as_root_do rm -rf "${WEBSITE_CACHE_SRC_DIR}"
+    as_root_do mkdir -p "${WEBSITE_CACHE_SRC_DIR}"
+    as_root_do cp -a ${WEBSITE_CACHE_TARGETS} "${WEBSITE_CACHE_SRC_DIR}"
 fi
 
 as_root_do lb config --cache false

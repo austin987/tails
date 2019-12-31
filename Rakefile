@@ -43,7 +43,7 @@ EXPORTED_VARIABLES = [
   'TAILS_PROXY',
   'TAILS_PROXY_TYPE',
   'TAILS_RAM_BUILD',
-  'TAILS_WIKI_CACHE',
+  'TAILS_WEBSITE_CACHE',
   'GIT_COMMIT',
   'GIT_REF',
   'BASE_BRANCH_GIT_COMMIT',
@@ -247,8 +247,8 @@ task :parse_build_options do
       ENV['TAILS_PROXY_TYPE'] = 'noproxy'
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
-    when 'cachewiki'
-      ENV['TAILS_WIKI_CACHE'] = '1'
+    when 'cachewebsite'
+      ENV['TAILS_WEBSITE_CACHE'] = '1'
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
       ENV['MKSQUASHFS_OPTIONS'] = '-comp xz'
@@ -293,12 +293,12 @@ task :parse_build_options do
     end
   end
 
-  if ENV['TAILS_WIKI_CACHE'] == '1'
+  if ENV['TAILS_WEBSITE_CACHE'] == '1'
     if is_release?
-      abort "Wiki caching is a crime when preparing a release!"
+      abort "Website caching is a crime when preparing a release!"
     end
     if ENV['TAILS_PROXY_TYPE'] != 'vmproxy'
-      abort "Wiki caching is only supported together with the 'vmproxy' option"
+      abort "Website caching is only supported together with the 'vmproxy' option"
     end
   end
 end
