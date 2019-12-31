@@ -99,7 +99,6 @@ apt-get -y install \
         libhtml-scrubber-perl \
         libhtml-template-perl \
         liblist-moreutils-perl \
-        libtext-multimarkdown-perl \
         libtimedate-perl \
         liburi-perl libhtml-parser-perl \
         libxml-simple-perl \
