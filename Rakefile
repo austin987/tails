@@ -251,7 +251,7 @@ task :parse_build_options do
       ENV['TAILS_WEBSITE_CACHE'] = '1'
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
-      ENV['MKSQUASHFS_OPTIONS'] = '-comp xz'
+      ENV['MKSQUASHFS_OPTIONS'] = '-comp xz -no-exports'
       if is_release?
         raise 'We must use the default compression when building releases!'
       end
