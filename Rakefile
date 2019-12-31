@@ -299,12 +299,6 @@ task :parse_build_options do
       abort "You must use a caching proxy when building offline"
     end
   end
-
-  if ENV['TAILS_WEBSITE_CACHE'] == '1'
-    if ENV['TAILS_PROXY_TYPE'] != 'vmproxy'
-      abort "Website caching is only supported together with the 'vmproxy' option"
-    end
-  end
 end
 
 task :ensure_clean_repository do
@@ -504,6 +498,14 @@ def clean_up_builder_vms
       run_vagrant_ssh("sudo umount /var/cache/apt-cacher-ng")
       run_vagrant_ssh("sudo sync")
     end
+    begin
+      run_vagrant_ssh("mountpoint -q /var/cache/tails-website")
+    rescue VagrantCommandError
+    # Nothing to unmount.
+    else
+      run_vagrant_ssh("sudo umount /var/cache/tails-website")
+      run_vagrant_ssh("sudo sync")
+    end
   end
   clean_up_domain.call(previous_domain)
 
@@ -609,7 +611,7 @@ namespace :vm do
     run_vagrant('provision')
   end
 
-  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data)"
+  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data and the website cache)"
   task :destroy do
     clean_up_builder_vms
   end

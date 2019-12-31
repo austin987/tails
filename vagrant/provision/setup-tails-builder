@@ -47,6 +47,28 @@ if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
     systemctl restart apt-cacher-ng.service
 fi
 
+if [ "$TAILS_WEBSITE_CACHE" = 1 ]; then
+    echo "I: Configuring website cache directory..."
+    if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
+       WEBSITE_CACHE_DISK=/dev/vdc
+    else
+       WEBSITE_CACHE_DISK=/dev/vdb
+    fi
+    WEBSITE_CACHE_PARTITION="${WEBSITE_CACHE_DISK}1"
+    WEBSITE_CACHE_MOUNTPOINT=/var/cache/tails-website
+    mkdir -p "$WEBSITE_CACHE_MOUNTPOINT"
+    if [ ! -b "$WEBSITE_CACHE_PARTITION" ]; then
+        echo '1,,83' | sfdisk "$WEBSITE_CACHE_DISK"
+        mkfs.ext4 -m 0 "$WEBSITE_CACHE_PARTITION"
+    fi
+    if ! mountpoint -q "$WEBSITE_CACHE_MOUNTPOINT"; then
+        e2fsck -f -p "$WEBSITE_CACHE_PARTITION" || :
+        mount -o relatime,journal_checksum \
+             "$WEBSITE_CACHE_PARTITION" "$WEBSITE_CACHE_MOUNTPOINT"
+        chown -R vagrant:vagrant "$WEBSITE_CACHE_MOUNTPOINT"
+    fi
+fi
+
 echo "I: Updating debian-security APT source..."
 # Always set the latest serial for debian-security
 stable_serial="$(grep -Po '\d{10}' /etc/apt/sources.list)"

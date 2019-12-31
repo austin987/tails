@@ -7,6 +7,10 @@ if [ -n "${TAILS_PROXY:-}" ]; then
 	export http_proxy="${TAILS_PROXY}"
 fi
 
+if [ "${TAILS_WEBSITE_CACHE}" = 1 ]; then
+	export WEBSITE_CACHE_BASEDIR=/var/cache/tails-website
+fi
+
 as_root_do() {
 	sudo \
 		${RSYNC_PROXY:+RSYNC_PROXY="${RSYNC_PROXY}"} \
@@ -16,6 +20,8 @@ as_root_do() {
 		${no_proxy:+no_proxy="${no_proxy}"} \
 		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS}"} \
 		${APT_SNAPSHOTS_SERIALS:+APT_SNAPSHOTS_SERIALS="${APT_SNAPSHOTS_SERIALS}"} \
+                ${TAILS_WEBSITE_CACHE:+TAILS_WEBSITE_CACHE="${TAILS_WEBSITE_CACHE}"} \
+                ${WEBSITE_CACHE_BASEDIR:+WEBSITE_CACHE_BASEDIR="${WEBSITE_CACHE_BASEDIR}"} \
                 ${TAILS_MERGE_BASE_BRANCH:+TAILS_MERGE_BASE_BRANCH="${TAILS_MERGE_BASE_BRANCH}"} \
 		${GIT_COMMIT:+GIT_COMMIT="${GIT_COMMIT}"} \
 		${GIT_REF:+GIT_REF="${GIT_REF}"} \
@@ -155,27 +161,6 @@ fi
 as_root_do rsync -a "${TAILS_GIT_DIR}"/ "${BUILD_DIR}"/
 
 cd "${BUILD_DIR}"
-
-if [ "${TAILS_WEBSITE_CACHE}" = 1 ]; then
-    WEBSITE_CACHE_SRC_DIR="/var/cache/apt-cacher-ng/website-cache"
-    WEBSITE_CACHE_TARGETS="
-        wiki
-        config/chroot_local-includes/usr/share/doc/tails/website
-    "
-    for target in ${WEBSITE_CACHE_TARGETS}; do
-        source="${WEBSITE_CACHE_SRC_DIR}"/"$(basename "${target}")"
-        if [ -d "${source}" ]; then
-            mkdir -p "${target}"
-            rm -rf "${target}"
-            as_root_do mv "${source}" "${target}"
-            as_root_do chown -R vagrant:vagrant "${target}"
-        fi
-    done
-    ./build-website
-    as_root_do rm -rf "${WEBSITE_CACHE_SRC_DIR}"
-    as_root_do mkdir -p "${WEBSITE_CACHE_SRC_DIR}"
-    as_root_do cp -a ${WEBSITE_CACHE_TARGETS} "${WEBSITE_CACHE_SRC_DIR}"
-fi
 
 as_root_do lb config --cache false
 as_root_do lb build
