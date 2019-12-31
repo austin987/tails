@@ -12,6 +12,8 @@ use Data::Dumper;
 use English qw{-no_match_vars};
 use Fcntl ':mode';
 use Function::Parameters;
+use IPC::System::Simple qw{systemx};
+use LWP::UserAgent;
 use Test::More;
 use Test::BDD::Cucumber::StepFile;
 
@@ -22,6 +24,7 @@ use Test::WebServer::RedirectToHTTPS;
 use Test::WebServer::Static;
 use Test::WebServer::Static::SSL;
 use Types::Path::Tiny qw{AbsPath};
+use Types::Standard qw{Int};
 
 my $bindir = path(__FILE__)->parent->parent->parent->parent->child('bin')->absolute;
 
@@ -77,21 +80,74 @@ fun prepare_webroot (AbsPath $webroot, $filename, $present, $webdir, $spec_type,
     }
 }
 
-Given qr{^a HTTP server that(| does not) serve[s]? "([^"]+)" in "([^"]+)"(?: with (content|size) "?([^"]*)"?)?}, fun ($c) {
-    my $present    = $c->matches->[0] ? 0 : 1;
-    my $filename   = $c->matches->[1];
-    my $webdir     = $c->matches->[2];
-    my $spec_type  = $c->matches->[3];
-    my $spec_value = $c->matches->[4];
+fun generate_nginx_conf (
+    AbsPath :$pid_file,
+    AbsPath :$conf_file,
+    AbsPath :$webroot,
+    Int :$port
+  ) {
+    $conf_file->spew(
+        <<EOTEMPLATE
+pid $pid_file;
+error_log stderr;
+events { }
+http {
+    server {
+        listen $port;
+        root   $webroot;
+        access_log /dev/null;
+        autoindex on;
+    }
+}
+EOTEMPLATE
+    );
+}
+
+Given qr{^a HTTP server that( supports Range requests and)?(| does not) serve[s]? "([^"]+)" in "([^"]+)"(?: with (content|size) "?([^"]*)"?)?}, fun ($c) {
+    my $range_req  = $c->matches->[0];
+    my $present    = $c->matches->[1] ? 0 : 1;
+    my $filename   = $c->matches->[2];
+    my $webdir     = $c->matches->[3];
+    my $spec_type  = $c->matches->[4];
+    my $spec_value = $c->matches->[5];
 
     my $webroot = path($c->{stash}->{scenario}->{tempdir}, 'webroot');
     prepare_webroot($webroot, $filename, $present, $webdir, $spec_type, $spec_value);
-
     my $port  = $c->{stash}->{scenario}->{server}->{port};
-    my $s     = Test::WebServer::Static->new({webroot => $webroot}, $port);
-    is($s->port(), $port, "Constructor set port correctly");
-    my $pid   = $c->{stash}->{scenario}->{server}->{http_pid}  = $s->background();
-    like($pid, '/^-?\d+$/', 'PID is numeric');
+
+    if ($range_req) {
+        my $nginx_unit = 'test-tails-iuk-nginx.service';
+        # Clean up leftovers from a previous test suite run that
+        # failed badly enough that the After hook did not trigger.
+        `systemctl --user stop '$nginx_unit' 2>&1`;
+        my $nginx_conf_file = Path::Tiny->tempfile;
+        my $nginx_pid_file = Path::Tiny->tempfile;
+        generate_nginx_conf(
+            conf_file => $nginx_conf_file,
+            pid_file  => $nginx_pid_file,
+            webroot   => $webroot,
+            port      => $port,
+        );
+        push @{$c->{stash}->{scenario}->{systemd_transient_units}}, $nginx_unit;
+        systemx(
+            'systemd-run',
+            '--user',
+            "--unit=${nginx_unit}",
+            '--service-type=forking',
+            '--quiet',
+            '--collect',
+            '/usr/sbin/nginx', '-c', $nginx_conf_file,
+        );
+        for (1..16) {
+            last if LWP::UserAgent->new->get("http://127.0.0.1:$port/")->is_success;
+            sleep $_;
+        }
+    } else {
+        my $s     = Test::WebServer::Static->new({webroot => $webroot}, $port);
+        is($s->port(), $port, "Constructor set port correctly");
+        my $pid   = $c->{stash}->{scenario}->{server}->{http_pid}  = $s->background();
+        like($pid, '/^-?\d+$/', 'PID is numeric');
+    }
 };
 
 Given qr{^a HTTP server that redirects to ([^ ]+) over HTTPS$}, fun ($c) {
@@ -154,19 +210,17 @@ Given qr{^a HTTPS server (?:|on ([^ ]+)) that(| does not) serve[s]? "([^"]+)" in
     like($pid, '/^-?\d+$/', 'PID is numeric');
 };
 
-When qr{^I download "([^"]+)" \(of expected size (\d+)\) from "([^"]+)", and check its hash is "([^"]+)"$}, fun ($c) {
+When qr{^I download "([^"]+)" \(of expected size (\d+)\) from "([^"]+)", (?:failing (\d+) times?, )?and check its hash is "([^"]+)"$}, fun ($c) {
     my $filename      = $c->matches->[0];
     my $expected_size = $c->matches->[1];
     my $webdir        = $c->matches->[2];
-    my $expected_hash = $c->matches->[3];
+    my $failures      = defined $c->matches->[3] ? $c->matches->[3] : 0;
+    my $expected_hash = $c->matches->[4];
 
-    my $uri = sprintf("%s:%d/%s/%s",
+    my $uri = sprintf("http://%s:%d%s",
                       "127.0.0.1",
                       $c->{stash}->{scenario}->{server}->{port},
-                      $webdir,
-                      $filename);
-    $uri =~ s{//}{/}gxms;
-    $uri = "http://$uri";
+                      path($webdir, $filename));
 
     my $output_filename
         = $c->{stash}->{scenario}->{output_filename}
@@ -174,12 +228,25 @@ When qr{^I download "([^"]+)" \(of expected size (\d+)\) from "([^"]+)", and che
 
     my $cmdline =
         path($bindir, "tails-iuk-get-target-file") .
-        ' --uri "'         . $uri             . '"' .
-        ' --hash_type "'   . 'sha256'         . '"' .
-        ' --hash_value "'  . $expected_hash   . '"' .
-        ' --output_file "' . $output_filename . '"' .
-        ' --size "'        . $expected_size   . '"'
+        ' --uri "'          . $uri             . '"' .
+        ' --fallback_uri "' . $uri             . '"' .
+        ' --hash_type "'    . 'sha256'         . '"' .
+        ' --hash_value "'   . $expected_hash   . '"' .
+        ' --output_file "'  . $output_filename . '"' .
+        ' --size "'         . $expected_size   . '"' .
+        # Speed things up
+        ' --exponential_backoff 0'
     ;
+
+    if ($failures > 0) {
+        my $dl_file = path($c->{stash}->{scenario}->{tempdir}, 'webroot', $webdir, $filename);
+        if ($dl_file->is_file) {
+            my ($first_byte) = unpack('H*', $dl_file->openr_raw->getc);
+            $cmdline .= " --first_byte $first_byte";
+            $cmdline .= " --fail_n_times $failures";
+        }
+    }
+
     $c->{stash}->{scenario}->{output} = `umask 077 && $cmdline 2>&1`;
     $c->{stash}->{scenario}->{exit_code} = ${^CHILD_ERROR_NATIVE};
 };
@@ -210,6 +277,11 @@ Then qr{^it should fail$}, fun ($c) {
 Then qr{^I should be told "([^"]+)"$}, fun ($c) {
     my $expected_err = $c->matches->[0];
     like($c->{stash}->{scenario}->{output}, qr{$expected_err});
+};
+
+Then qr{^I should not be told "([^"]+)"$}, fun ($c) {
+    my $expected_err = $c->matches->[0];
+    unlike($c->{stash}->{scenario}->{output}, qr{$expected_err});
 };
 
 Then qr{^I should(| not) see the downloaded file in the temporary directory$}, fun ($c) {
@@ -244,5 +316,8 @@ Then qr{^the downloaded file should be world-readable$}, fun ($c) {
 After fun ($c) {
     if (defined $c->{stash}->{scenario}->{server}->{http_pid}) {
         kill $c->{stash}->{scenario}->{server}->{http_pid};
+    }
+    for (@{$c->{stash}->{scenario}->{systemd_transient_units}}) {
+        systemx('systemctl', '--user', 'stop', $_);
     }
 };

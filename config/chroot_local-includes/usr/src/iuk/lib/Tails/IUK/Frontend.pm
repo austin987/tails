@@ -598,11 +598,12 @@ method get_target_files (HashRef $upgrade_path, CodeRef $url_transform, AbsDir $
     foreach my $target_file (target_files($upgrade_path, $destdir)) {
         my @cmd = (
             'tails-iuk-get-target-file',
-            '--uri',         $url_transform->($target_file->{url}),
-            '--hash_type',   'sha256',
-            '--hash_value',  $target_file->{sha256},
-            '--size',        $target_file->{size},
-            '--output_file', $target_file->{output_file},
+            '--uri',          $url_transform->($target_file->{url}),
+            '--fallback_uri', $target_file->{url},
+            '--hash_type',    'sha256',
+            '--hash_value',   $target_file->{sha256},
+            '--size',         $target_file->{size},
+            '--output_file',  $target_file->{output_file},
         );
         if (! $ENV{HARNESS_ACTIVE}) {
             @cmd = ('sudo', '-n', '-u', 'tails-iuk-get-target-file', @cmd);
