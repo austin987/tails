@@ -98,7 +98,7 @@ apt-get -y install \
         libfile-slurp-perl \
         liblist-moreutils-perl \
         libtimedate-perl \
-        libyaml-libyaml-perl po4a \
+        po4a \
         libyaml-perl \
         libyaml-syck-perl \
         live-build \
