@@ -295,7 +295,8 @@ task :parse_build_options do
 
   if ENV['TAILS_WEBSITE_CACHE'] == '1'
     if is_release?
-      abort "Website caching is a crime when preparing a release!"
+      $stderr.puts "Building a release ⇒ ignoring cachewebsite build option"
+      ENV['TAILS_WEBSITE_CACHE'] = '0'
     end
     if ENV['TAILS_PROXY_TYPE'] != 'vmproxy'
       abort "Website caching is only supported together with the 'vmproxy' option"
