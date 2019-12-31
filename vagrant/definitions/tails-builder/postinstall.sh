@@ -95,7 +95,6 @@ apt-get -y install \
         git \
         ikiwiki \
         intltool \
-        libfile-chdir-perl \
         libfile-slurp-perl \
         libhtml-scrubber-perl \
         libhtml-template-perl \
