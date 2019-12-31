@@ -69,14 +69,12 @@ my ($body, $summary);
 chomp($vm_name);
 if (grep {$_ eq $vm_name} @whitelist) {
     $summary = gettext("Warning: virtual machine detected!");
-    $body    =
-        gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails.");
 }
 else {
     $summary = gettext("Warning: non-free virtual machine detected!");
-    $body    =
-        gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
 }
+
+$body = gettext("Both the host operating system and the virtualization software are able to monitor what you are doing in Tails. Only free software can be considered trustworthy, for both the host operating system and the virtualization software.");
 
 $notify->create(summary => $summary,
                 body    => $body,

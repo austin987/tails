@@ -7,12 +7,6 @@ set -x
 
 . "$(dirname $0)/scripts/utils.sh"
 
-# we require building from git
-if ! git rev-parse --is-inside-work-tree; then
-    echo "${PWD} is not a Git tree. Exiting."
-    exit 1
-fi
-
 . config/amnesia
 if [ -e config/amnesia.local ] ; then
    . config/amnesia.local
@@ -21,12 +15,10 @@ fi
 if [ -n "${SOURCE_DATE_EPOCH}" ]; then
     CURRENT_EPOCH="$(date --utc +%s)"
     if [ "${SOURCE_DATE_EPOCH}" -gt "${CURRENT_EPOCH}" ]; then
-        echo "SOURCE_DATE_EPOCH is set before the current time. Exiting."
-        exit 1
+        fatal "SOURCE_DATE_EPOCH is set before the current time. Exiting."
     fi
 else
-    echo "SOURCE_DATE_EPOCH is not set. Exiting."
-    exit 1
+    fatal "SOURCE_DATE_EPOCH is not set. Exiting."
 fi
 
 # get git branch or tag so we can set the basename appropriately, i.e.:
@@ -53,20 +45,19 @@ GIT_BASE_BRANCH=$(base_branch) \
 
 if [ "${TAILS_MERGE_BASE_BRANCH:-}" = 1 ] && \
        ! git_on_a_tag && [ "$GIT_BRANCH" != "$GIT_BASE_BRANCH" ] ; then
-    GIT_BASE_BRANCH_COMMIT=$(git_base_branch_head)
-    [ -n "${GIT_BASE_BRANCH_COMMIT}" ] \
-        || fatal "Base branch's top commit could not be guessed."
+    [ -n "${BASE_BRANCH_GIT_COMMIT}" ] \
+        || fatal "Base branch's top commit is not set."
 
-    echo "Merging base branch origin/${GIT_BASE_BRANCH}"
-    echo "(at commit ${GIT_BASE_BRANCH_COMMIT})..."
+    echo "I: Merging base branch ${GIT_BASE_BRANCH}" \
+         "(at commit ${BASE_BRANCH_GIT_COMMIT})..."
     faketime -f "${SOURCE_DATE_FAKETIME}" \
-        git merge --no-edit "origin/${GIT_BASE_BRANCH}" \
+        git merge --no-edit "${BASE_BRANCH_GIT_COMMIT}" \
 	    || fatal "Failed to merge base branch."
     git submodule update --init
 
     # Adjust BUILD_BASENAME to embed the base branch name and its top commit
     CLEAN_GIT_BASE_BRANCH=$(echo "$GIT_BASE_BRANCH" | sed 's,/,_,g')
-    GIT_BASE_BRANCH_SHORT_ID=$(git_base_branch_head --short)
+    GIT_BASE_BRANCH_SHORT_ID=$(git rev-parse --verify --short "${BASE_BRANCH_GIT_COMMIT}")
     [ -n "${GIT_BASE_BRANCH_SHORT_ID}" ] \
         || fatal "Base branch's top commit short ID could not be guessed."
     BUILD_BASENAME="${BUILD_BASENAME}+${CLEAN_GIT_BASE_BRANCH}"
@@ -79,44 +70,59 @@ echo "BUILD_BASENAME='${BUILD_BASENAME}'" > tmp/build_environment
 
 # sanity checks
 if grep -qs -E '^Pin:\s+release\s+.*a=' config/chroot_apt/preferences ; then
-    echo "Found unsupported a= syntax in config/chroot_apt/preferences,"
-    echo "use n= instead. Exiting."
-    exit 1
+    fatal "Found unsupported a= syntax in config/chroot_apt/preferences," \
+          "use n= instead. Exiting."
 fi
 if grep -qs -E '^Pin:\s+release\s+.*o=Debian Backports' \
 	config/chroot_apt/preferences ; then
-    echo "Found unsupported 'o=Debian Backports' syntax,"
-    echo "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
-    exit 1
+    fatal "Found unsupported 'o=Debian Backports' syntax," \
+          "in config/chroot_apt/preferences. Use o=Debian instead. Exiting."
 fi
 if [ $(dpkg --print-architecture) != amd64 ] ; then
-    echo "Only amd64 build systems are supported"
-    exit 1
+    fatal "Only amd64 build systems are supported"
 fi
+
+
+# space-separated list of additional packages debootstrap installs
+#  - gnupg: needed by apt-key, not installed by default anymore on Buster
+export LB_BOOTSTRAP_INCLUDE="gnupg"
 
 # init variables
 RUN_LB_CONFIG="lb config noauto"
 
 # init config/ with defaults for the target distribution
-$RUN_LB_CONFIG --distribution stretch ${@}
+$RUN_LB_CONFIG --distribution buster ${@}
 
 # set up everything for time-based snapshots:
-apt-snapshots-serials prepare-build
+if [ -n "${APT_SNAPSHOTS_SERIALS:-}" ]; then
+    echo "I: Fixing 'latest' APT snapshots serials to: '${APT_SNAPSHOTS_SERIALS}'."
+    apt-snapshots-serials prepare-build "${APT_SNAPSHOTS_SERIALS}"
+else
+    apt-snapshots-serials prepare-build
+fi
+# record what APT snapshots this build is going to use, so that one
+# can try to reproduce it more reliably
+JENKINS_ENV_PROPERTIES=tails-build-env.list
+echo "# This file is in Java property file format"   >> "$JENKINS_ENV_PROPERTIES"
+echo "# (https://en.wikipedia.org/wiki/.properties)" >> "$JENKINS_ENV_PROPERTIES"
+echo "APT_SNAPSHOTS_SERIALS = $(apt-snapshots-serials cat-json tmp/APT_snapshots.d)" \
+   >> "$JENKINS_ENV_PROPERTIES"
 
 DEBIAN_MIRROR="$(apt-mirror debian)"
 DEBIAN_SECURITY_MIRROR="$(apt-mirror debian-security)"
 TORPROJECT_MIRROR="$(apt-mirror torproject)"
 
-[ -n "$DEBIAN_MIRROR" ]          || exit 1
-[ -n "$DEBIAN_SECURITY_MIRROR" ] || exit 1
-[ -n "$TORPROJECT_MIRROR" ]      || exit 1
+[ -n "$DEBIAN_MIRROR" ]          || fatal "\$DEBIAN_MIRROR is empty"
+[ -n "$DEBIAN_SECURITY_MIRROR" ] || fatal "\$DEBIAN_SECURITY_MIRROR is empty"
+[ -n "$TORPROJECT_MIRROR" ]      || fatal "\$TORPROJECT_MIRROR is empty"
 
 perl -pi \
      -E \
        "s|^(deb(?:-src)?\s+)https?://ftp[.]us[.]debian[.]org/debian/?(\s+)|\$1$DEBIAN_MIRROR\$2| ; \
+        s|^(deb(?:-src)?\s+)https?://security[.]debian[.]org/debian-security/?(\s+)|\$1$DEBIAN_SECURITY_MIRROR\$2| ; \
         s|^(deb(?:-src)?\s+)https?://deb[.]torproject[.]org/torproject[.]org/?(\s+)|\$1$TORPROJECT_MIRROR\$2|" \
     config/chroot_sources/*.chroot \
-    || exit 1
+    || fatal "APT mirror substitution failed with exit code $?"
 
 # set Amnesia's general options
 $RUN_LB_CONFIG \
@@ -133,7 +139,7 @@ $RUN_LB_CONFIG \
    --checksums none \
    --bootappend-live "${AMNESIA_APPEND}" \
    --bootstrap debootstrap \
-   --bootstrap-config tails-build-jessie \
+   --bootstrap-config buster \
    --archive-areas "main contrib non-free" \
    --includes none \
    --iso-application="The Amnesic Incognito Live System" \
@@ -146,8 +152,8 @@ $RUN_LB_CONFIG \
    --mirror-chroot              "$DEBIAN_MIRROR" \
    --mirror-binary-security     "$DEBIAN_SECURITY_MIRROR" \
    --mirror-chroot-security     "$DEBIAN_SECURITY_MIRROR" \
-   --packages-lists="standard" \
-   --tasks="standard" \
+   --packages-lists none \
+   --tasks none \
    --linux-packages="linux-image-${KERNEL_VERSION}" \
    --syslinux-menu vesamenu \
    --syslinux-splash data/splash.png \
@@ -159,7 +165,8 @@ install -d config/chroot_local-includes/etc/amnesia/
 
 # environment
 TAILS_WIKI_SUPPORTED_LANGUAGES="$(ikiwiki-supported-languages ikiwiki.setup)"
-[ -n "$TAILS_WIKI_SUPPORTED_LANGUAGES" ] || exit 16
+[ -n "$TAILS_WIKI_SUPPORTED_LANGUAGES" ] \
+   || fatal "\$TAILS_WIKI_SUPPORTED_LANGUAGES is empty"
 echo "TAILS_WIKI_SUPPORTED_LANGUAGES='${TAILS_WIKI_SUPPORTED_LANGUAGES}'" \
    >> config/chroot_local-includes/etc/amnesia/environment
 
@@ -174,6 +181,7 @@ echo "live-build: `dpkg-query -W -f='${Version}\n' live-build`" \
 cat >> config/chroot_local-includes/etc/os-release <<EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="$AMNESIA_VERSION"
+TAILS_DISTRIBUTION="$TAILS_DISTRIBUTION"
 EOF
 if echo "$AMNESIA_VERSION" | grep -qs -E '~(alpha|beta|rc)[0-9]*$' ; then
     echo 'TAILS_CHANNEL="alpha"' >> config/chroot_local-includes/etc/os-release
@@ -181,15 +189,6 @@ fi
 
 # changelog
 cp debian/changelog config/chroot_local-includes/usr/share/doc/amnesia/Changelog
-
-# create readahead-list from squashfs.sort
-if [ -e config/binary_rootfs/squashfs.sort ]; then
-    mkdir -p config/chroot_local-includes/usr/share/amnesia
-    sort -k2 -n -r config/binary_rootfs/squashfs.sort | \
-        cut -d' ' -f1 | \
-        grep --invert-match --extended-regexp "$READAHEAD_EXCLUDE_PATTERN" \
-        > config/chroot_local-includes/usr/share/amnesia/readahead-list
-fi
 
 # custom APT sources
 tails-custom-apt-sources > config/chroot_sources/tails.chroot \
@@ -204,18 +203,23 @@ install -m 0755 \
    submodules/mirror-pool-dispatcher/lib/js/mirror-dispatcher.js \
    config/chroot_local-includes/usr/local/lib/nodejs/
 
-# aufs4-standalone
-rm -rf config/chroot_local-includes/usr/src/aufs4-standalone
-cp -a submodules/aufs4-standalone config/chroot_local-includes/usr/src/
+# aufs-standalone
+rm -rf config/chroot_local-includes/usr/src/aufs-standalone
+cp -a submodules/aufs-standalone config/chroot_local-includes/usr/src/
 
-# custom debootstrap script, setting some APT magic to log downloads:
+# save the original file, shipped by the debootstrap package,
+# so we can always apply our debian-common.patch to the original
+# version
+if ! [ -e /usr/share/debootstrap/scripts/debian-common.bak ]; then
+   cp -a /usr/share/debootstrap/scripts/debian-common \
+         /usr/share/debootstrap/scripts/debian-common.bak
+fi
+# customize debootstrap with some APT magic to log downloads
 patch \
-    --follow-symlinks \
-    --output=/usr/share/debootstrap/scripts/tails-build-jessie \
-    /usr/share/debootstrap/scripts/jessie \
-    data/debootstrap/scripts/jessie.patch
-sed -i "s,%%topdir%%,$(pwd)," /usr/share/debootstrap/scripts/tails-build-jessie
+    --output=/usr/share/debootstrap/scripts/debian-common \
+    /usr/share/debootstrap/scripts/debian-common.bak \
+    data/debootstrap/scripts/debian-common.patch
+sed -i "s,%%topdir%%,$(pwd)," /usr/share/debootstrap/scripts/debian-common
 
 # Make the python library available in Tails
 install -d -m 2777 config/chroot_local-includes/tmp/
-cp -r submodules/pythonlib config/chroot_local-includes/tmp/

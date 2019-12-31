@@ -7,8 +7,6 @@ Feature: Cloning a Git repository
   Background:
     Given I have started Tails from DVD and logged in and the network is connected
 
-  #11563
-  @fragile
   Scenario: Cloning a Git repository anonymously over HTTPS
     When I clone the Git repository "https://git-tails.immerda.ch/myprivatekeyispublic/testing" in GNOME Terminal
     Then the Git repository "testing" has been cloned successfully

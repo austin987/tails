@@ -5,29 +5,47 @@
 ## Continuously
 
 Stay on top of email received on the Release Managers mailing list.
-This includes for example failure notifications for Jenkins jobs.
+This includes for example analyzing failure notifications for Jenkins jobs
+and filing tickets for the Foundations Team as needed.
 
 ## In the beginning of your shift
 
 - Check the Mozilla release calendars:
   * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
-  * [Release schedule](https://wiki.mozilla.org/RapidRelease/Calendar)
-- Send the release schedule to <tails-dev@boum.org> and
-  <tails-l10n@boum.org>.
-  - Ask the core team and contributors for availability at the
-    designated dates for testing the RC and final image.
-  - Ask `tails@` for a _Trusted Reproducer_ who will reproduce the
-    ISOs and IUKs for the RC and final release within 72 hours after
-    the RM has unplugged their smartcard. When accepting the offer,
-    the Trusted Reproducer must read the [["Preparation" section of
-    the instructions|test/reproducibility/verification/#preparation]].
-
+  * [Release schedule](https://wiki.mozilla.org/Release_Management/Calendar)
+- Reply to the email sent to <tails-dev@boum.org> and
+  <tails-l10n@boum.org> by the RM for the previous release,
+  to provide any information they could not, such as:
+  - Code freeze date
+  - If this will be a major release: the release schedule for its RC.
+- Ask <tails@boum.org> and <tails-foundations@boum.org> for a _Trusted Reproducer_ who will reproduce the
+  ISO and USB images for the RC and final release within 72 hours after
+  the RM has unplugged their smartcard. When accepting the offer,
+  the Trusted Reproducer must read the [["Preparation" section of
+  the instructions|contribute/release_process/test/reproducibility#preparation]].
 - Update [[contribute/calendar]] accordingly.
 - Update the due date on [[!tails_roadmap]] accordingly.
-- Ask to be added to the `rsync_tails` group on `rsync.lizard`,
-  if needed.
 - Make sure you have access to the various systems used to do
-  the release.
+  the release:
+  - being subscribed to the <tails-rm@boum.org> mailing list
+  - having your OpenPGP signing subkey hardware and passphrase handy
+  - commit access to the official [[contribute/Git]] repository
+  - upload access to our [[custom APT repository|APT_repository/custom]]
+  - having your GnuPG key in the list of uploaders for
+    our [[custom APT repository|APT_repository/custom]]
+  - <https://jenkins.tails.boum.org/>
+  - SSH access to `rsync.lizard` and being a sudoer and in the `rsync_tails` group there
+  - SSH access to `bittorrent.lizard` and being in the `debian-transmission` group there
+  - SSH access to `reprepro-time-based-snapshots@apt.lizard`
+  - look for `rsync|ssh` in [[APT_repository/custom]],
+    [[APT_repository/time-based_snapshots]] and this very document
+  - access to the RM team's Git repository: install the
+    `git-remote-gcrypt` package, `git clone
+    gcrypt::tails@git.tails.boum.org:rm`, follow instructions in the
+    `README`
+  - follow the instructions in `keyringer/README` in the RM team's Git
+    repository then make sure you can `keyringer tails-rm decrypt credentials`
+  - _Manager_ status on Redmine
 - Check when our OpenPGP signing key expires.
   If that's before, or soon after, the scheduled date for the release
   _after_ the one your shift is about, then shout.
@@ -36,6 +54,31 @@ This includes for example failure notifications for Jenkins jobs.
 
 - Ensure you have found a _Trusted Reproducer_ and write who this is
   in the [[contribute/calendar]].
+- Create a Foundations Team ticket about upgrading Tor Browser
+  in the release your shift is about.
+- Check if you have enough manual testers registered.
+  If not, ping the usual testers.
+
+## The week before the release date
+
+If updating the Changelog is a particularly painful part of the
+release process for you, then you can do it in smaller chunks,
+starting ahead of the pre-release Monday.
+
+The first time you run our `./release` script to seed the changelog
+entry from Git commits:
+
+1. Take note of which commit you're at.
+2. Run it exactly as documented in the [[contribute/release_process]].
+
+The next times you run our `./release` script:
+
+1. Take note of which commit you're at.
+2. Pass, as a second argument to `./release`, the commit you took note
+   of last time you updated the Changelog.
+
+XXX: fix `./release` so that there's a way to have it simply run `gbp
+dch --auto`, which will avoid the need to take note of commits.
 
 ## The Friday before the release date
 
@@ -51,14 +94,16 @@ or two earlier than Friday *in addition* won't hurt, too.
 
 <div class="note">
 
-Note: Georg Koppen, a Tor Browser developer, has promised to try to Cc
-tails-dev@boum.org when sending QA requests to tor-qa@lists.torproject.org
-which should make this easier. We should also be notified of any last
-last-minute rebuilds that we otherwise probably would miss out on.
+Note: the Tor Browser team Cc's tails-dev@boum.org when sending QA
+requests to tor-qa@lists.torproject.org which makes this easier.
+We are also often notified of any last last-minute rebuilds, better
+ask explicitly the Tor Browser team what their plans are.
 
 </div>
 
-See the
+As soon as the new *Tor Browser* tarballs are ready, you may import
+them in a topic branch and trigger CI runs, which will save you
+some precious time on pre-release Monday. See the
 [[Upgrading the Tor Browser|contribute/release_process/tor-browser]]
 page for details.
 
@@ -76,5 +121,4 @@ No kidding. See [[contribute/release_process]].
 
 The release manager shifts could be done by a team. They start right after the
 publication of the previous release to the publication and announcement of the
-release they are taking care of, which should be 6 weeks long if everything goes
-fine.
+release they are taking care of.

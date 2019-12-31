@@ -1,24 +1,28 @@
-# Returns a hash that for each preset the running Tails is aware of
+# coding: utf-8
+# Returns a hash that for each persistence preset the running Tails is aware of,
+# for each of the corresponding configuration lines,
 # maps the source to the destination.
-def get_persistence_presets(skip_links = false)
-  # Perl script that prints all persistence presets (one per line) on
-  # the form: <mount_point>:<comma-separated-list-of-options>
+def get_persistence_presets_config(skip_links = false)
+  # Perl script that prints all persistence configuration lines (one per line)
+  # in the form: <mount_point>:<comma-separated-list-of-options>
   script = <<-EOF
   use strict;
   use warnings FATAL => "all";
   use Tails::Persistence::Configuration::Presets;
-  foreach my $preset (Tails::Persistence::Configuration::Presets->new()->all) {
-    say $preset->destination, ":", join(",", @{$preset->options});
+  foreach my $atom (Tails::Persistence::Configuration::Presets->new()->atoms) {
+    say $atom->destination, ":", join(",", @{$atom->options});
   }
 EOF
   # VMCommand:s cannot handle newlines, and they're irrelevant in the
   # above perl script any way
   script.delete!("\n")
-  presets = $vm.execute_successfully("perl -E '#{script}'").stdout.chomp.split("\n")
-  assert presets.size >= 10, "Got #{presets.size} persistence presets, " +
-                             "which is too few"
+  presets_configs = $vm.execute_successfully("perl -E '#{script}'")
+                       .stdout.chomp.split("\n")
+  assert presets_configs.size >= 10,
+         "Got #{presets_configs.size} persistence preset configuration lines, " +
+         "which is too few"
   persistence_mapping = Hash.new
-  for line in presets
+  for line in presets_configs
     destination, options_str = line.split(":")
     options = options_str.split(",")
     is_link = options.include? "link"
@@ -37,23 +41,64 @@ EOF
 end
 
 def persistent_dirs
-  get_persistence_presets
+  get_persistence_presets_config
 end
 
 def persistent_mounts
-  get_persistence_presets(true)
+  get_persistence_presets_config(true)
 end
 
 def persistent_volumes_mountpoints
   $vm.execute("ls -1 -d /live/persistence/*_unlocked/").stdout.chomp.split
 end
 
+# Returns an array that for each persistence preset the running Tails is aware of,
+# contains a hash with the following keys: id, enabled, has_configuration_button.
+def persistent_presets_ui_settings
+  # Perl script that prints all persistence presets
+  # in the form: <id>:<enabled>:<has_configuration_button>
+  script = <<-EOF
+  use strict;
+  use warnings FATAL => "all";
+  use Tails::Persistence::Configuration::Presets;
+  foreach my $preset (Tails::Persistence::Configuration::Presets->new()->all) {
+    say(sprintf(
+      "%s:%s:%s",
+      $preset->{id},
+      ($preset->{enabled} ? 1 : 0),
+      (exists($preset->{configuration_app_desktop_id}) && defined($preset->{configuration_app_desktop_id})
+         ? 1
+         : 0
+      ),
+    ));
+  }
+EOF
+  # VMCommand:s cannot handle newlines, and they're irrelevant in the
+  # above perl script any way
+  script.delete!("\n")
+  presets = $vm.execute_successfully("perl -E '#{script}'")
+               .stdout.chomp.split("\n")
+  assert presets.size >= 10,
+         "Got #{presets.size} persistence presets, " +
+         "which is too few"
+  presets_ui_settings = Array.new
+  for line in presets
+    id, enabled, has_configuration_button = line.split(":")
+    presets_ui_settings += [{
+      'id'                       => id,
+      'enabled'                  => (enabled == '1'),
+      'has_configuration_button' => (has_configuration_button == '1'),
+    }]
+  end
+  return presets_ui_settings
+end
+
+
 def recover_from_upgrader_failure
-    $vm.execute('killall tails-upgrade-frontend tails-upgrade-frontend-wrapper zenity')
-    # Remove unnecessary sleep for retry
-    $vm.execute_successfully('sed -i "/^sleep 30$/d" ' +
-                             '/usr/local/bin/tails-upgrade-frontend-wrapper')
-    $vm.spawn('tails-upgrade-frontend-wrapper', user: LIVE_USER)
+  $vm.execute('pkill --full tails-upgrade-frontend-wrapper')
+  $vm.execute('killall tails-upgrade-frontend zenity')
+  # Do not sleep when retrying
+  $vm.spawn('tails-upgrade-frontend-wrapper --no-wait', user: LIVE_USER)
 end
 
 Given /^I clone USB drive "([^"]+)" to a (new|temporary) USB drive "([^"]+)"$/ do |from, mode, to|
@@ -126,22 +171,11 @@ Then /^(no|the "([^"]+)") USB drive is selected$/ do |mode, name|
   end
 end
 
-When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by cloning|from an ISO)$/ do |action, name, source|
+When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" by cloning$/ do |action, name|
   step "I start Tails Installer"
   # If the device was plugged *just* before this step, it might not be
   # completely ready (so it's shown) at this stage.
   try_for(10) { tails_installer_is_device_selected?(name) }
-  if source == 'from an ISO'
-    iso_radio = @installer.child('Use a downloaded Tails ISO image',
-                                 roleName: 'radio button')
-    iso_radio.click
-    iso_radio.parent.button('(None)').click
-    file_chooser = @installer.child('Select a File', roleName: 'file chooser')
-    @screen.type("l", Sikuli::KeyModifier.CTRL)
-    # The only visible text element will be the path entry
-    file_chooser.child(roleName: 'text').typeText(@iso_path + '\n')
-    file_chooser.button('Open').click
-  end
   begin
     if action == 'reinstall'
       label = 'Reinstall (delete all data)'
@@ -149,8 +183,13 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by clo
       label = action.capitalize
     end
     @installer.button(label).click
-    @installer.child('Question', roleName: 'alert').button('Yes').click
-    try_for(30*60) do
+    if action == 'upgrade'
+      confirmation_label = 'Upgrade'
+    else
+      confirmation_label = 'Install'
+    end
+    @installer.child('Question', roleName: 'alert').button(confirmation_label).click
+    try_for(15*60, { :delay => 10 }) do
       @installer
         .child('Information', roleName: 'alert')
         .child('Installation complete!', roleName: 'label')
@@ -163,21 +202,40 @@ When /^I (install|reinstall|upgrade) Tails (?:to|on) USB drive "([^"]+)" (by clo
   end
 end
 
-Given /^I plug and mount a USB drive containing the Tails ISO$/ do
-  iso_dir = share_host_files(TAILS_ISO)
-  @iso_path = "#{iso_dir}/#{File.basename(TAILS_ISO)}"
+Given(/^I plug and mount a USB drive containing a Tails USB image$/) do
+  usb_image_dir = share_host_files(TAILS_IMG)
+  @usb_image_path = "#{usb_image_dir}/#{File.basename(TAILS_IMG)}"
 end
 
 Given /^I enable all persistence presets$/ do
   @screen.wait('PersistenceWizardPresets.png', 20)
-  # Select the "Persistent" folder preset, which is checked by default.
-  @screen.type(Sikuli::Key.TAB)
-  # Check all non-default persistence presets, i.e. all *after* the
-  # "Persistent" folder, which are unchecked by default.
-  (persistent_dirs.size - 1).times do
-    @screen.type(Sikuli::Key.TAB + Sikuli::Key.SPACE)
+  presets = persistent_presets_ui_settings
+  presets[0]['is_first'] = true
+  debug_log("presets: #{presets}")
+  for setting in presets
+    debug_log("on preset: #{setting}")
+    tabs_to_select_switch  = 3 # previous switch -> separator -> row -> switch
+    tabs_to_select_switch -= 1 if setting['is_first']
+    tabs_to_select_switch += 1 if setting['has_configuration_button']
+    # Select the switch
+    debug_log("typing TAB #{tabs_to_select_switch} times to select the switch")
+    tabs_to_select_switch.times do
+      debug_log("typing TAB")
+      @screen.type(Sikuli::Key.TAB)
+    end
+    # Activate the switch
+    if ! setting['enabled']
+      debug_log("pressing space")
+      @screen.type(Sikuli::Key.SPACE)
+    else
+      debug_log("setting already enabled, skipping")
+    end
   end
-  @screen.wait_and_click('PersistenceWizardSave.png', 10)
+  save_and_exit_the_persistence_wizard
+end
+
+def save_and_exit_the_persistence_wizard
+  @screen.type(Sikuli::Key.ENTER) # Press the Save button
   @screen.wait('PersistenceWizardDone.png', 60)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
@@ -185,18 +243,23 @@ end
 When /^I disable the first persistence preset$/ do
   step 'I start "Configure persistent volume" via GNOME Activities Overview'
   @screen.wait('PersistenceWizardPresets.png', 300)
+  @screen.type(Sikuli::Key.TAB)
   @screen.type(Sikuli::Key.SPACE)
-  @screen.wait_and_click('PersistenceWizardSave.png', 10)
+  @screen.type(Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardDone.png', 30)
   @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
 end
 
-Given /^I create a persistent partition$/ do
-  step 'I start "Configure persistent volume" via GNOME Activities Overview'
+Given /^I create a persistent partition( for Additional Software)?$/ do |asp|
+  if not asp
+    step 'I start "Configure persistent volume" via GNOME Activities Overview'
+  end
   @screen.wait('PersistenceWizardStart.png', 60)
   @screen.type(@persistence_password + "\t" + @persistence_password + Sikuli::Key.ENTER)
   @screen.wait('PersistenceWizardPresets.png', 300)
-  step "I enable all persistence presets"
+  if not asp
+    step "I enable all persistence presets"
+  end
 end
 
 def check_disk_integrity(name, dev, scheme)
@@ -208,7 +271,7 @@ def check_disk_integrity(name, dev, scheme)
          "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
 end
 
-def check_part_integrity(name, dev, usage, fs_type, part_label, part_type = nil)
+def check_part_integrity(name, dev, usage, fs_type, part_label = nil, part_type = nil)
   info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.Partition:\n")
   dev_info = info_split[0]
@@ -217,8 +280,10 @@ def check_part_integrity(name, dev, usage, fs_type, part_label, part_type = nil)
          "Unexpected device field 'usage' on USB drive '#{name}', '#{dev}'")
   assert(dev_info.match("^    IdType: +#{fs_type}$"),
          "Unexpected device field 'IdType' on USB drive '#{name}', '#{dev}'")
-  assert(part_info.match("^    Name: +#{part_label}$"),
-         "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+  if part_label
+    assert(part_info.match("^    Name: +#{part_label}$"),
+           "Unexpected partition label on USB drive '#{name}', '#{dev}'")
+  end
   if part_type
     assert(part_info.match("^    Type: +#{part_type}$"),
            "Unexpected partition type on USB drive '#{name}', '#{dev}'")
@@ -264,14 +329,6 @@ end
 Then /^the running Tails is installed on USB drive "([^"]+)"$/ do |target_name|
   loader = boot_device_type == "usb" ? "syslinux" : "isolinux"
   tails_is_installed_helper(target_name, "/lib/live/mount/medium", loader)
-end
-
-Then /^the ISO's Tails is installed on USB drive "([^"]+)"$/ do |target_name|
-  iso_root = "/mnt/iso"
-  $vm.execute("mkdir -p #{iso_root}")
-  $vm.execute("mount -o loop #{@iso_path} #{iso_root}")
-  tails_is_installed_helper(target_name, iso_root, "isolinux")
-  $vm.execute("umount #{iso_root}")
 end
 
 Then /^there is no persistence partition on USB drive "([^"]+)"$/ do |name|
@@ -322,7 +379,7 @@ Then /^a Tails persistence partition exists on USB drive "([^"]+)"$/ do |name|
 end
 
 Given /^I enable persistence$/ do
-  @screen.wait_and_click('TailsGreeterPersistencePassphrase.png', 10)
+  @screen.wait_and_click('TailsGreeterPersistencePassphrase.png', 60)
   @screen.type(@persistence_password + Sikuli::Key.ENTER)
   @screen.wait('TailsGreeterPersistenceUnlocked.png', 30)
 end
@@ -385,6 +442,32 @@ end
 
 def boot_device_type
   device_info(boot_device)['ID_BUS']
+end
+
+# Turn udisksctl info output into something more manipulable:
+def parse_udisksctl_info(input)
+  tree = {}
+  section = nil
+  key = nil
+  input.chomp.split("\n").each { |line|
+    case line
+    when /^\/org\/freedesktop\/UDisks2\/block_devices\//
+      # no-op, ignore first line = device
+    when /^  (org\.freedesktop\.UDisks2\..+):$/
+      section = $1
+      tree[section] = {}
+    when /^\s+(.+?):\s+(.+)$/
+      key = $1
+      value = $2
+      tree[section][key] = value
+    else
+      # XXX: Best effort = consider this a continuation from previous
+      # line (e.g. Symlinks), and add the whole line, without
+      # stripping anything (e.g. leading whitespaces)
+      tree[section][key] += line
+    end
+  }
+  return tree
 end
 
 Then /^Tails is running from (.*) drive "([^"]+)"$/ do |bus, name|
@@ -454,17 +537,24 @@ Then /^all persistence configuration files have safe access rights$/ do
   persistent_volumes_mountpoints.each do |mountpoint|
     assert($vm.execute("test -e #{mountpoint}/persistence.conf").success?,
            "#{mountpoint}/persistence.conf does not exist, while it should")
+    assert($vm.execute("test -e #{mountpoint}/persistence.conf.bak").success?,
+           "#{mountpoint}/persistence.conf.bak does not exist, while it should")
     assert($vm.execute("test ! -e #{mountpoint}/live-persistence.conf").success?,
            "#{mountpoint}/live-persistence.conf does exist, while it should not")
     $vm.execute(
-      "ls -1 #{mountpoint}/persistence.conf #{mountpoint}/live-*.conf"
+      "ls -1 #{mountpoint}/persistence.conf* #{mountpoint}/live-*.conf"
     ).stdout.chomp.split.each do |f|
       file_owner = $vm.execute("stat -c %U '#{f}'").stdout.chomp
       file_group = $vm.execute("stat -c %G '#{f}'").stdout.chomp
       file_perms = $vm.execute("stat -c %a '#{f}'").stdout.chomp
       assert_equal("tails-persistence-setup", file_owner)
       assert_equal("tails-persistence-setup", file_group)
-      assert_equal("600", file_perms)
+      case f
+      when /.*\/live-additional-software.conf$/
+        assert_equal("644", file_perms)
+      else
+        assert_equal("600", file_perms)
+      end
     end
   end
 end
@@ -711,9 +801,132 @@ Then /^I can successfully install the incremental upgrade to version (.+)$/ do |
     step 'I agree to install the incremental upgrade'
   end
   failure_pic = 'TailsUpgraderFailure.png'
-  success_pic = "TailsUpgraderDone.png"
+  success_pic = 'TailsUpgraderDownloadComplete.png'
   retry_tor(recovery_proc) do
     match, _ = @screen.waitAny([success_pic, failure_pic], 2*60)
     assert_equal(success_pic, match)
+  end
+  @screen.click('TailsUpgraderApplyUpgradeButton.png')
+  @screen.wait('TailsUpgraderDone.png', 60)
+end
+
+Then /^the label of the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
+  assert($vm.is_running?)
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+  check_disk_integrity(name, disk_dev, "gpt")
+  check_part_integrity(name, part_dev, "filesystem", "vfat", label)
+end
+
+Then /^the system partition on "([^"]+)" is an EFI system partition$/ do |name|
+  assert($vm.is_running?)
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+  check_disk_integrity(name, disk_dev, "gpt")
+  check_part_integrity(name, part_dev, "filesystem", "vfat", nil,
+                       # EFI System Partition
+                       'c12a7328-f81f-11d2-ba4b-00a0c93ec93b')
+end
+
+Then /^the FAT filesystem on the system partition on "([^"]+)" is at least (\d+)(.+) large$/ do |name, size, unit|
+  # Let's use bytes all the way:
+  wanted_size = convert_to_bytes(size.to_i, unit)
+
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  partition_size = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Partition']['Size'].to_i
+
+  # Partition size:
+  assert(partition_size >= wanted_size,
+         "FAT partition is too small: #{partition_size} is less than #{wanted_size}")
+
+  # -B 1 forces size to be expressed in bytes rather than (1K) blocks:
+  fs_size = $vm.execute_successfully(
+    "df --output=size -B 1 '/lib/live/mount/medium'"
+  ).stdout.split("\n")[1].to_i
+  assert(fs_size >= wanted_size,
+         "FAT filesystem is too small: #{fs_size} is less than #{wanted_size}")
+end
+
+Then /^the UUID of the FAT filesystem on the system partition on "([^"]+)" was randomized$/ do |name|
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+
+  # Get the UUID from the block area:
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  fs_uuid = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Block']['IdUUID']
+
+  static_uuid = 'A690-20D2'
+  assert(fs_uuid != static_uuid,
+         "FS UUID on #{name} wasn't randomized, it's still: #{fs_uuid}")
+end
+
+Then /^the label of the FAT filesystem on the system partition on "([^"]+)" is "([^"]+)"$/ do |name, label|
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+
+  # Get FS label from the block area:
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  fs_label = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Block']['IdLabel']
+
+  assert(label == fs_label,
+         "FS label on #{part_dev} is #{fs_label} instead of the expected #{label}")
+end
+
+Then /^the system partition on "([^"]+)" has the expected flags$/ do |name|
+  disk_dev = $vm.disk_dev(name)
+  part_dev = disk_dev + "1"
+
+  # Look at the flags from the partition area:
+  udisks_info = $vm.execute_successfully("udisksctl info --block-device #{part_dev}").stdout
+  flags = parse_udisksctl_info(udisks_info)['org.freedesktop.UDisks2.Partition']['Flags']
+
+  # See SYSTEM_PARTITION_FLAGS in create-usb-image-from-iso: 0xd000000000000005,
+  # displayed in decimal (14987979559889010693) in udisksctl's output:
+  expected_flags = 0xd000000000000005
+  assert(flags == expected_flags.to_s,
+         "Got #{flags} as partition flags on #{part_dev} (for #{name}), instead of the expected #{expected_flags}")
+end
+
+
+Given(/^I install a Tails USB image to the (\d+) MiB disk with GNOME Disks$/) do |size_in_MiB_of_destination_disk|
+  # GNOME Disks displays devices sizes in GB, with 1 decimal digit precision
+  size_in_GB_of_destination_disk = convert_from_bytes(
+    convert_to_bytes(size_in_MiB_of_destination_disk.to_i, 'MiB'),
+    'GB'
+  ).round(1).to_s
+  debug_log("Expected size of destination disk: " +
+            size_in_GB_of_destination_disk)
+
+  step 'I start "Disks" via GNOME Activities Overview'
+  disks = Dogtail::Application.new('gnome-disks')
+  disks.children(roleName: 'table cell').find { |row|
+    /^#{size_in_GB_of_destination_disk} GB Drive/.match(row.name)
+  }.grabFocus
+  disks.child('Menu', roleName: 'toggle button').click
+  disks.child('Restore Disk Image…', roleName: 'menu item').click
+  restore_dialog = disks.child('Restore Disk Image', roleName: 'dialog',
+                               showingOnly: true)
+  # Open the file chooser
+  disks.pressKey('Enter')
+  select_disk_image_dialog = disks.child('Select Disk Image to Restore',
+                                         roleName: 'file chooser',
+                                         showingOnly: true)
+  disks.typeText(@usb_image_path)
+  sleep 2 # avoid ENTER being eaten by the auto-completion system
+  disks.pressKey('Enter')
+  try_for(10) do
+    ! select_disk_image_dialog.showing
+  end
+  restore_dialog.child('Start Restoring…', roleName: 'push button').click
+  disks.child('Information', roleName: 'alert', showingOnly: true)
+    .child('Restore', roleName: 'push button', showingOnly: true)
+    .click
+  # Wait until the restoration job is finished
+  job = disks.child('Job', roleName: 'label', showingOnly: true)
+  try_for(60) do
+    ! job.showing
   end
 end

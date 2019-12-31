@@ -3,11 +3,11 @@
 # vi: set ft=ruby :
 
 # Hostname of the virtual machine (must be in /etc/hosts)
-VIRTUAL_MACHINE_HOSTNAME = 'vagrant-stretch'
+VIRTUAL_MACHINE_HOSTNAME = 'vagrant-buster'
 
 # Approximate amount of RAM needed to run the builder's base system
 # and perform a build
-VM_MEMORY_BASE = 1024
+VM_MEMORY_BASE = 1.5*1024
 
 # Approximate amount of extra space needed for builds
 BUILD_SPACE_REQUIREMENT = 12*1024
@@ -20,12 +20,12 @@ VM_MEMORY_FOR_RAM_BUILDS = VM_MEMORY_BASE + BUILD_SPACE_REQUIREMENT
 
 # The builder VM's platform
 ARCHITECTURE = "amd64"
-DISTRIBUTION = "stretch"
+DISTRIBUTION = "buster"
 
 # The name of the Vagrant box
 def box_name
   git_root = `git rev-parse --show-toplevel`.chomp
   shortid, date = `git log -1 --date="format:%Y%m%d" --pretty="%h %ad" -- \
-                   #{git_root}/vagrant/definitions/tails-builder/`.chomp.split
+                   #{git_root}/vagrant/`.chomp.split
   return "tails-builder-#{ARCHITECTURE}-#{DISTRIBUTION}-#{date}-#{shortid}"
 end

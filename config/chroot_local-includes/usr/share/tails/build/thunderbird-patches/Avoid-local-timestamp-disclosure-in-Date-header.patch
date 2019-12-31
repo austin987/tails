@@ -1,0 +1,104 @@
+# This patch is based on the patch "Bug 902573 - Avoid local timestamp disclosure in Date header".
+# Link to the original patch: https://bug902573.bmoattachments.org/attachment.cgi?id=8684089
+# The original author is Arthur Edelstein <arthuredelstein@gmail.com>.
+# It is licensed under Mozilla Public License Version 2.0:
+# https://www.mozilla.org/en-US/MPL/
+
+From 611d58eb2ee6a67a6c1c112eebbc04551d98065b Mon Sep 17 00:00:00 2001
+From: segfault <segfault@riseup.net>
+Date: Wed, 27 Nov 2019 16:47:24 +0100
+Subject: [PATCH] Bug 902573 - Avoid local timestamp disclosure in Date header
+
+---
+ comm/mailnews/mailnews.js                     |  7 ++++
+ comm/mailnews/mime/jsmime/jsmime.js           | 42 +++++++++++++++----
+
+diff --git a/comm/mailnews/mailnews.js b/comm/mailnews/mailnews.js
+index 270cef339f8..3418ad12b65 100644
+--- a/comm/mailnews/mailnews.js
++++ b/comm/mailnews/mailnews.js
+@@ -1022,3 +1022,10 @@ pref("mail.imap.qos", 0);
+ 
+ // PgpMime Addon
+ pref("mail.pgpmime.addon_url", "https://addons.mozilla.org/addon/enigmail/");
++
++// When the following pref is enabled, the Date header in
++// new messages is rounded down to the most recent whole
++// minute, and is expressed in GMT regardless of the user's
++// local time zone. These measures are taken to make tracking
++// the user across accounts more difficult.
++pref("mail.mime.avoid_fingerprinting", false);
+diff --git a/comm/mailnews/mime/jsmime/jsmime.js b/comm/mailnews/mime/jsmime/jsmime.js
+index 75ee0c8d773..74183b885bf 100644
+--- a/comm/mailnews/mime/jsmime/jsmime.js
++++ b/comm/mailnews/mime/jsmime/jsmime.js
+@@ -3450,9 +3450,34 @@
+         throw new Error("Cannot encode an invalid date");
+       }
+ 
++      let fullYear, month, dayOfMonth, dayOfWeek, hours, minutes, seconds,
++        tzOffset;
++
++      if (Services.prefs.getBoolPref("mail.mime.avoid_fingerprinting")) {
++        fullYear = date.getUTCFullYear();
++        month = date.getUTCMonth();
++        dayOfMonth = date.getUTCDate();
++        dayOfWeek = date.getUTCDay();
++        hours = date.getUTCHours();
++        minutes = date.getUTCMinutes();
++        // To reduce the chance of fingerprinting the clock offset,
++        // round the time down to the nearest minute.
++        seconds = 0;
++        tzOffset = 0;
++      } else {
++        fullYear = date.getFullYear();
++        month = date.getMonth();
++        dayOfMonth = date.getDate();
++        dayOfWeek = date.getDay();
++        hours = date.getHours();
++        minutes = date.getMinutes();
++        seconds = date.getSeconds();
++        tzOffset = date.getTimezoneOffset();
++      }
++
+       // RFC 5322 says years can't be before 1900. The after 9999 is a bit that
+       // derives from the specification saying that years have 4 digits.
+-      if (date.getFullYear() < 1900 || date.getFullYear() > 9999) {
++      if (fullYear < 1900 || fullYear > 9999) {
+         throw new Error("Date year is out of encodable range");
+       }
+ 
+@@ -3460,7 +3485,6 @@
+       // the the 0-padding is done by hand. Note that the tzoffset we output is in
+       // the form ±hhmm, so we need to separate the offset (in minutes) into an hour
+       // and minute pair.
+-      let tzOffset = date.getTimezoneOffset();
+       let tzOffHours = Math.abs(Math.trunc(tzOffset / 60));
+       let tzOffMinutes = Math.abs(tzOffset) % 60;
+       let tzOffsetStr =
+@@ -3471,15 +3495,15 @@
+       // Convert the day-time figure into a single value to avoid unwanted line
+       // breaks in the middle.
+       let dayTime = [
+-        kDaysOfWeek[date.getDay()] + ",",
+-        date.getDate(),
+-        mimeutils.kMonthNames[date.getMonth()],
+-        date.getFullYear(),
+-        padTo2Digits(date.getHours()) +
++        kDaysOfWeek[dayOfWeek] + ",",
++        dayOfMonth,
++        mimeutils.kMonthNames[month],
++        fullYear,
++        padTo2Digits(hours) +
+           ":" +
+-          padTo2Digits(date.getMinutes()) +
++          padTo2Digits(minutes) +
+           ":" +
+-          padTo2Digits(date.getSeconds()),
++          padTo2Digits(seconds),
+         tzOffsetStr,
+       ].join(" ");
+       this.addText(dayTime, false);
+-- 
+2.24.0
+

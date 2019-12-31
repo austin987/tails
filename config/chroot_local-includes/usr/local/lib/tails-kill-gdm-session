@@ -1,0 +1,77 @@
+#!/bin/sh
+
+# Terminate GDM's GNOME session, in order to free a few hundreds of MB
+# of memory. This script is run by the tails-kill-gdm-session.service
+# under "systemd --user", during the "Applications" phase of the
+# initialization of the amnesia user's GNOME session.
+
+set -e
+set -u
+set -x
+
+# Get LIVE_USERNAME
+. /etc/live/config.d/username.conf
+
+# Returns the identifier of the first X11 session of $LIVE_USERNAME.
+# In this context, we know that:
+#   - There is one such session: we're run via desktop.target, which is started
+#     after GDM has logged in $LIVE_USERNAME and pam_systemd has allocated them
+#     a logind session.
+#   - There's no more than one such session: our Greeter/GDM integration code
+#     allows only one graphical login. Note that there can be other,
+#     non-graphical sessions: for example, when
+#     tails-virt-notify-user is running at the same time as we are.
+#     That's why we're looking specifically for sessions of type 'x11'.
+live_user_logind_x_session_id() {
+   # The value of the Sessions property is a space-separated list
+   # of session identifiers
+   for session in $(loginctl --property=Sessions --value show-user "$LIVE_USERNAME"); do
+      if [ "$(loginctl --property=Type --value show-session "$session")" = 'x11' ]; then
+         loginctl --property=Id --value show-session "$session"
+         return 0
+      fi
+   done
+   echo "Unexpected error: no X11 session for ${LIVE_USERNAME}" >&2
+   return 1
+}
+
+logind_session_tty_number() {
+   session="$1"
+   loginctl --property=TTY --value show-session "$session" \
+      | sed -E 's,^tty,,'
+}
+
+# Replace gdm-session-worker with a version that won't start new
+# sessions, except for reauthentication, i.e. for unlocking
+# the screen.
+mv /usr/lib/gdm3/gdm-session-worker /usr/lib/gdm3/gdm-session-worker.real
+cp -a /usr/lib/gdm3/gdm-session-worker-only-reauth \
+      /usr/lib/gdm3/gdm-session-worker
+
+# Kill GDM's gdm-session-worker: it's the parent process for all
+# Debian-gdm processes, such as gdm-x-session; it would otherwise
+# respawn another gdm-x-session after we've killed the first one.
+pkill -u root --full --exact 'gdm-session-worker \[pam/gdm-launch-environment\]'
+
+# Forcibly kill the Debian-gdm GNOME session,
+# in case the former command was not enough.
+loginctl --signal SIGKILL kill-user Debian-gdm || true
+loginctl terminate-user Debian-gdm || true
+
+# Activate the amnesia user's desktop session, in case we've killed
+# the Debian-gdm session before GDM had time to do so; do this
+# repeatedly for about 10 seconds, in case GDM take back control of
+# the seat and switches back to VT1, after we've already activated
+# amnesia's session and switched to VT2, because its own session was killed.
+# Note that it may happen that GDM switches to VT1 while
+# "loginctl --property=State --value show-user amnesia" still returns "active":
+# disabling gdm-session-worker makes GDM confuse logind, that believes amnesia's
+# desktop session is still active while we've switched to another VT.
+tries=0
+while [ $tries -lt 10 ]; do
+   LIVE_USER_LOGIND_X_SESSION_ID="$(live_user_logind_x_session_id)"
+   chvt "$(logind_session_tty_number "$LIVE_USER_LOGIND_X_SESSION_ID")"
+   loginctl activate "$LIVE_USER_LOGIND_X_SESSION_ID"
+   tries="$(expr "$tries" + 1)"
+   sleep 1
+done

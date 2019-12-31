@@ -1,5 +1,4 @@
 ### Self-bla
-tails-greeter
 tails-installer
 tails-iuk
 tails-persistence-setup
@@ -8,8 +7,6 @@ whisperback
 python3-pyinotify
 # contains mkpasswd, needed in chroot_local-hooks/01-password
 whois
-# needed by getTorBrowserUserAgent
-unzip
 # needed in chroot_local-includes/etc/NetworkManager/dispatcher.d/50-htp.sh
 bind9-host
 # needed by tails-security-check
@@ -28,8 +25,6 @@ libdatetime-format-dateparse-perl
 libgetopt-long-descriptive-perl
 # needed by htpdate and tails-security-check
 libtry-tiny-perl
-# needed by readahead
-pv
 # needed by our chroot_local-hooks
 live-build
 # needed by tordate
@@ -44,17 +39,33 @@ acl
 zenity
 # Needed by tails-htp-notify-user and others
 libdesktop-notify-perl
-# Needed by /lib/live/config/2010-pidgin
-bc
+# Needed by tails-persistence-setup
+libblockdev-crypto2
 # Needed by tails-transform-mirror-url
 nodejs
 # Needed by SSH's ProxyCommand
 netcat-openbsd
+# Needed by config/chroot_local-includes/usr/local/lib/udev-watchdog-wrapper
+eject
+# Needed by Additional Software
+python3-apt
+python3-atomicwrites
+# Needed by the Greeter
+console-setup
+gir1.2-accountsservice-1.0
+gir1.2-gdm-1.0
+gir1.2-glib-2.0
+gir1.2-gnomedesktop-3.0
+gir1.2-gtk-3.0
+gir1.2-webkit2-4.0
+python3-gi
+python3-pycountry
+python3-tz
+ttf-unifont
 
 ### Software
 
 adwaita-qt
-adwaita-qt4
 aircrack-ng
 alsa-utils
 apparmor
@@ -63,10 +74,11 @@ apparmor-profiles-extra
 apt-transport-tor
 audacity
 bilibop-udev
-caribou
+console-data
 cups
 cups-pk-helper
-cryptsetup
+cryptsetup-bin
+deb.torproject.org-keyring
 rsync
 bash-completion
 bookletimposer
@@ -96,23 +108,20 @@ gnome-control-center
 gnome-disk-utility
 gnome-menus
 gnome-power-manager
-gnome-search-tool
 gnome-screenshot
 gnome-session
+gnome-shell
+gnome-shell-extension-desktop-icons
 gnome-shell-extension-top-icons-plus
 gnome-shell-extensions
 gnome-sound-recorder
-# Jessie's gnome-sound-recorder is missing the dependency on gstreamer1.0-pulseaudio (Debian bug #852870)
-# This can be removed once gnome-sound-recorder is >=3.21.92-2
-gstreamer1.0-pulseaudio
 gnome-system-monitor
 gnome-terminal
 gnome-themes-standard
-gnome-user-guide
+gnome-user-docs
 gnupg-agent
 gnupg2
 gobi-loader
-gobby
 ## breaks lb because of desktop-base.postinst (see Debian bug #467620)
 #if ARCHITECTURE amd64
 # grub
@@ -127,34 +136,28 @@ hardlink
 haveged
 # needed by laptop-mode-tools to spin-down hard drives
 hdparm
-hopenpgp-tools
 inkscape
 iptables
 # ships isolinux.bin in syslinux 6.x packaging
 isolinux
 ferm
-keepassx
-keyringer
+keepassxc
 memlockd
 less
 laptop-mode-tools
 libgail-common
-libgfshare-bin
-libcaribou-gtk-module
+libgdk-pixbuf2.0-bin
 libsane-hpaio
-liferea
 live-config
 live-config-systemd
 live-tools
+lsb-release
 lvm2
 macchanger
-mat
-pdf-redact-tools
+mat2
 mesa-utils
-monkeysign
-monkeysphere
-msva-perl
 nautilus
+nautilus-extension-gnome-terminal
 nautilus-wipe
 nautilus-gtkhash
 network-manager
@@ -167,42 +170,39 @@ libreoffice-draw
 libreoffice-gnome
 libreoffice-gtk3
 libreoffice-impress
-libreoffice-math
 libreoffice-writer
 libreoffice-l10n-ar
 libreoffice-l10n-de
 libreoffice-l10n-es
 libreoffice-l10n-fa
 libreoffice-l10n-fr
+libreoffice-l10n-hi
+libreoffice-l10n-id
 libreoffice-l10n-it
 libreoffice-l10n-pt
 libreoffice-l10n-ru
-libreoffice-l10n-vi
+libreoffice-l10n-tr
 libreoffice-l10n-zh-cn
 onioncircuits
 openpgp-applet
 openssh-client
-paperkey
 parted
 patch
 pidgin
 pidgin-guifications
 pidgin-otr
 pinentry-gtk2
-pitivi
 poedit
+powermgmt-base
 ppp
 pppoe
 pulseaudio
 pulseaudio-utils
-pwgen
 p7zip-full
-qt-at-spi
 rng-tools
 rfkill
 sane-utils
 scdaemon
-scribus
 seahorse
 seahorse-daemon
 seahorse-nautilus
@@ -219,26 +219,33 @@ system-config-printer-common
 synaptic
 torsocks
 totem-plugins
-traverso
 ttf-dejavu
 tcpdump
 tcpflow
 thunderbird
-thunderbird-l10n-all
+thunderbird-l10n-ar
+thunderbird-l10n-de
+thunderbird-l10n-es-es
+thunderbird-l10n-fr
+thunderbird-l10n-id
+thunderbird-l10n-it
+thunderbird-l10n-pt-br
+thunderbird-l10n-ru
+thunderbird-l10n-tr
+thunderbird-l10n-zh-cn
 tor
 tor-geoipdb
 sound-juicer
-ssss
 totem
 unar
 usbutils
+user-setup
 vim-tiny
 virtualbox-guest-utils
 virtualbox-guest-x11
 wireless-tools
 xdg-user-dirs-gtk
 xsel
-xul-ext-torbirdy
 xz-utils
 
 #if ARCHITECTURE amd64
@@ -277,9 +284,10 @@ xserver-xorg-video-amdgpu
 ### Input methods
 ibus-gtk
 ibus-gtk3
-ibus-qt4
-## Chinese
-ibus-pinyin
+## Chinese Pinyin and ZhuYin (Bopomofo)
+ibus-libpinyin
+## Chinese ZhuYin (Bopomofo)
+ibus-chewing
 ## Japanese
 ibus-anthy
 ## Korean
@@ -290,34 +298,15 @@ ibus-unikey
 ### l10n, i18n
 ## precompiled locales
 locales-all
-## arabic fonts
-fonts-kacst
-fonts-farsiweb
-## chinese fonts
-xfonts-intl-chinese
-fonts-arphic-ukai
-fonts-arphic-uming
-fonts-wqy-microhei
-fonts-wqy-zenhei
 ## Hebrew support
 culmus
 libfribidi0
-## indic fonts
-fonts-indic
-## Khmer language, used in Cambodia
-fonts-khmeros
-## Korean fonts
-fonts-unfonts-core
-## Lao fonts
-fonts-lao
-## russian fonts
-xfonts-bolkhov-koi8r-75dpi
-xfonts-bolkhov-koi8r-misc
-xfonts-cronyx-koi8r-100dpi
-## Sinhala fonts
-fonts-lklug-sinhala
-## Thai fonts
-fonts-thai-tlwg
+## Noto fonts
+fonts-noto-core
+fonts-noto-cjk
+fonts-noto-mono
+fonts-noto-ui-core
+fonts-noto-unhinted
 
 ### CD burning
 brasero
@@ -327,8 +316,8 @@ cdrdao
 ## mouse accessibility enhancements
 mousetweaks
 ## text-to-speech
-gnome-orca
 at-spi2-core
+orca
 speech-dispatcher-espeak-ng
 ## high-contrast theme
 gnome-accessibility-themes
@@ -346,21 +335,18 @@ hunspell-en-us
 hunspell-es
 myspell-fa
 hunspell-fr
+hunspell-hi
+hunspell-id
 hunspell-it
 hunspell-pt-br
 hunspell-ru
-hunspell-vi
+hunspell-tr
 
 ### Mobile broadband devices support (GSM, 3G...)
 mobile-broadband-provider-info
 modemmanager
 usb-modeswitch
 usb-modeswitch-data
-
-### Monkeysign dependencies for qrcodes scanning
-python-qrencode
-python-zbar
-python-zbarpygtk
 
 ### Printing support
 foomatic-db
@@ -372,14 +358,8 @@ printer-driver-hpcups
 printer-driver-gutenprint
 printer-driver-postscript-hp
 
-### Make the MAT more powerful
-gir1.2-poppler-0.18
-libimage-exiftool-perl
-python-cairo
-python-mutagen
+### Enable MAT2's Nautilus extension
 python-nautilus
-python-pdfrw
-python-poppler
 
 ### Needed by virtualbox-guest-utils
 pciutils
@@ -397,15 +377,14 @@ crda
 wireless-regdb
 
 ### Automated test suite
-python-dogtail
+python3-dogtail
 python3-serial
 python3-systemd
 xclip
 xdotool
 
-# Enable Electrum's Qt GUI & TREZOR support
-python-qt4
-python-trezor
+# Enable Electrum's TREZOR support
+python3-trezor
 
 # onion-grater
 python3-psutil
@@ -421,3 +400,22 @@ python3-pydbus
 
 # For our python "shell" scripting support
 python3-sh
+
+# For Unlock VeraCrypt Volumes
+gir1.2-gudev-1.0
+
+# For partitioning script in initramfs
+fatresize
+
+# For Thunderbolt
+bolt
+
+# IPhone tethering support
+ipheth-utils
+libimobiledevice-utils
+usbmuxd
+
+# Requested by SecureDrop for their air-gapped machines (#17178)
+pdf-redact-tools
+tesseract-ocr
+ffmpeg

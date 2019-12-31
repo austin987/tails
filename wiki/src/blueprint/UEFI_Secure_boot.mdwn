@@ -11,7 +11,13 @@ enabled, without the user having to do _anything_ special about it.
 Means: use the shim signed by Microsoft + GRUB2.
 
 We don't support booting on a custom built kernel, so that should be
-relatively easy.
+relatively easy. Except:
+
+* The kernel won't allow loading an unsigned `aufs` module so we need
+  to migrate to `overlayfs` ([[!tails_ticket 8415]]).
+* `overlayfs` does not allow stacking enough layers for our current
+  upgrade system, so we need to [[!tails_ticket 15281 desc="stack one
+  single SquashFS diff when upgrading"]].
 
 Resources
 =========
@@ -46,5 +52,16 @@ Resources
   by Greg Kroah-Hartman
 * Linux Foundation's
   [Making UEFI Secure Boot Work With Open Platforms](http://linuxfoundation.org/publications/making-uefi-secure-boot-work-with-open-platforms)
+
+Automated testing
+=================
+
+* The hard(est) part seems to be about how to enroll the signing keys
+  into the nvram file. One option is to use `EnrollDefaultKeys.efi`
+  from OVMF.
 * [Automating Secure Boot Testing](https://www.youtube.com/watch?v=qtyRR-KbXYQ):
   how Red Hat does CI for Secure Boot (FOSDEM 2018)
+* <https://wiki.ubuntu.com/UEFI/SecureBoot/Testing>
+* <https://en.opensuse.org/openSUSE:UEFI_Secure_boot_using_qemu-kvm>
+* <https://fedoraproject.org/wiki/Using_UEFI_with_QEMU#Testing_Secureboot_in_a_VM>
+* <https://github.com/puiterwijk/qemu-ovmf-secureboot>

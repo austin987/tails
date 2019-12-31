@@ -41,6 +41,7 @@ sed -i -e "s/Boot menu//" "${CFG_FILE}"
 sed -i -e "s/menu label Live/menu label Tails/" "${SYSLINUX_PATH}"/live*.cfg
 sed -i -r -e 's/(menu label .* )\(failsafe\)/\1(Troubleshooting Mode)/' \
     "${SYSLINUX_PATH}"/live*.cfg
+sed -i -r -e 's/(append .*)/\1\n\tsysappend 0x40000/g' "${SYSLINUX_PATH}"/live*.cfg
 
 cat > "${SYSLINUX_PATH}/tails.cfg" << EOF
 menu color sel      *           #ffffffff   #55555555   *

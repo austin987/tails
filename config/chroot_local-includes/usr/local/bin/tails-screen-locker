@@ -17,6 +17,7 @@ from gi.repository import Gtk, GLib
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 
+from tailslib.adminpassword import is_password_set
 
 _ = gettext.gettext
 gettext.textdomain("tails")
@@ -59,7 +60,7 @@ class PasswordDialog(object):
         if not pw1 == pw2:
             return
 
-        self.pw = pw1.encode('ascii')
+        self.pw = pw1.encode('utf8')
 
         bus = SystemBus()
         object_path = bus.get("org.freedesktop.Accounts").FindUserById(os.getuid())
@@ -129,19 +130,6 @@ class PasswordDialog(object):
         label_subtitle = Gtk.Label(
             label=_("Set up a password to unlock the screen."),
         )
-        label_subtitle.get_style_context().add_class("dim-label")
-
-        label1 = Gtk.Label(
-            label=_("Password"),
-            xalign=1
-        )
-        label1.get_style_context().add_class("dim-label")
-
-        label2 = Gtk.Label(
-            label=_("Confirm"),
-            xalign=1
-        )
-        label2.get_style_context().add_class("dim-label")
 
         self.entry1 = Gtk.Entry(
             can_focus=True,
@@ -158,8 +146,8 @@ class PasswordDialog(object):
         self.entry2.connect("changed", self.on_entry_changed)
 
         grid = Gtk.Grid(row_spacing=2, column_spacing=10)
-        grid.attach(label1, 0, 0, 1, 1)
-        grid.attach(label2, 0, 1, 1, 1)
+        grid.attach(Gtk.Label(label=_("Password"), xalign=1), 0, 0, 1, 1)
+        grid.attach(Gtk.Label(label=_("Confirm"), xalign=1), 0, 1, 1, 1)
         grid.attach(self.entry1, 1, 0, 1, 1)
         grid.attach(self.entry2, 1, 1, 1, 1)
 
@@ -195,11 +183,6 @@ def get_lock():
     # collected when the function exits
     get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
     get_lock._lock_socket.bind('\0' + 'tails-screen-locker')
-
-
-def is_password_set():
-    output = subprocess.check_output(["passwd", "--status"])
-    return output.split()[1] == b"P"
 
 
 def main():

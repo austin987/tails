@@ -16,7 +16,10 @@ def ensure_chutney_is_running
     network_definition = "#{GIT_DIR}/features/chutney/test-network"
     env = {
       'CHUTNEY_LISTEN_ADDRESS' => chutney_listen_address,
-      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data/"
+      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data/",
+      # The default value (60s) is too short for "chutney wait_for_bootstrap"
+      # to succeed reliably.
+      'CHUTNEY_START_TIME' => '600',
     }
 
     chutney_data_dir_cleanup = Proc.new do
@@ -51,6 +54,9 @@ def ensure_chutney_is_running
       chutney_cmd.call('configure')
       chutney_cmd.call('start')
     end
+
+    # Documentation: submodules/chutney/README, "Waiting for the network" section
+    chutney_cmd.call('wait_for_bootstrap')
 
     at_exit do
       chutney_cmd.call('stop')
@@ -137,10 +143,6 @@ When /^I configure Tails to use a simulated Tor network$/ do
   $vm.file_append('/etc/tor/torrc', client_torrc_lines)
 end
 
-When /^Tails is using the real Tor network$/ do
-  assert($vm.execute('grep "TestingTorNetwork 1" /etc/torrc').failure?)
-end
-
 def chutney_onionservice_info
   hs_hostname_file_path = Dir.glob(
     "#{$config['TMPDIR']}/chutney-data/nodes/*hs/hidden_service/hostname"
@@ -159,35 +161,30 @@ def chutney_onionservice_info
 end
 
 def chutney_onionservice_redir(remote_address, remote_port)
+  redir_unit_name = 'tails-test-suite-redir.service'
   kill_redir = Proc.new do
     begin
-      Process.kill("TERM", $chutney_onionservice_job.pid)
+      if system('/bin/systemctl', '--quiet', 'is-active', redir_unit_name)
+        system('/bin/systemctl', 'stop', redir_unit_name)
+      end
     rescue
       # noop
     end
   end
-  if $chutney_onionservice_job
-    kill_redir.call
-  end
+  kill_redir.call
   local_address, local_port, _ = chutney_onionservice_info
-  # XXX:Stretch: revert the commit introducing this command once we
-  # stop supporting the test suite on Debian Jessie.
-  redir_cmd = ['/usr/bin/redir']
-  redir_version = Gem::Version.new(cmd_helper(redir_cmd + ['--version']))
-  if redir_version < Gem::Version.new('3.0')
-    redir_cmd += [
-      "--laddr", local_address,
-      "--lport", local_port,
-      "--caddr", remote_address,
-      "--cport", remote_port,
-    ]
-  else
-    redir_cmd += [
-      "#{local_address}:#{local_port}",
-      "#{remote_address}:#{remote_port}",
-    ]
-  end
-  $chutney_onionservice_job = IO.popen(redir_cmd)
+  $chutney_onionservice_job = fatal_system(
+    '/usr/bin/systemd-run',
+    "--unit=#{redir_unit_name}",
+    '--service-type=forking',
+    '--quiet',
+    # XXX: enable this once we require systemd v236 or newer
+    # for running our test suite
+    # '--collect',
+    '/usr/bin/redir',
+    "#{local_address}:#{local_port}",
+    "#{remote_address}:#{remote_port}",
+  )
   add_after_scenario_hook { kill_redir.call }
   return $chutney_onionservice_job
 end

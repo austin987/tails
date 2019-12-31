@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Copy this hook to .git/hooks/pre-commit
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+
+set -e
+set -u
+
+path=$(git rev-parse --show-toplevel)
+
+# If we try to commit po files, check that they do not contain errors.
+if ! "${path}/submodules/jenkins-tools/slaves/lint_po" --cached; then
+	echo
+	echo "The po files you're trying to commit contain errors. Please fix them and try again."
+	echo
+	exit 1
+fi

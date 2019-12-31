@@ -94,26 +94,27 @@ Then /^the VirtualBox guest modules are available$/ do
          "The vboxguest module is not available.")
 end
 
-Then /^the documentation viewer opens the "(Support|Getting started)" page$/ do |page|
-  if @language == 'German'
-    expected_title = 'Tails-Dokumentation'
-    if page == 'Support'
-      expected_heading = 'Die Dokumentation durchsuchen'
-    else
-      expected_heading = 'Einen Fehler gefunden?'
-    end
-  else
-    expected_title = 'Tails documentation'
-    if page == 'Support'
-      expected_heading = 'Search the documentation'
-    else
-      expected_heading = 'Found a bug?'
-    end
-  end
-  app = Dogtail::Application.new('tails-documentation')
-  app.child(expected_title, roleName: 'frame', recursive: false)
-  app.child(expected_heading, roleName: 'heading')
-end
+Then /^the support documentation page opens in Tor Browser$/ do
+   if @language == 'German'
+     expected_title = 'Tails - Hilfe & Support'
+     expected_heading = 'Die Dokumentation durchsuchen'
+   else
+     expected_title = 'Tails - Support'
+     expected_heading = 'Search the documentation'
+   end
+   step "\"#{expected_title}\" has loaded in the Tor Browser"
+   if @language == 'German'
+     browser_name = 'Tor-Browser'
+   else
+     browser_name = 'Tor Browser'
+   end
+   try_for(60) {
+     @torbrowser
+       .child(expected_title + " - #{browser_name}", roleName: 'frame')
+       .children(roleName: 'heading')
+       .any? { |heading| heading.text == expected_heading }
+   }
+ end
 
 Given /^I plug and mount a USB drive containing a sample PNG$/ do
   @png_dir = share_host_files(Dir.glob("#{MISC_FILES_DIR}/*.png"))
@@ -123,21 +124,22 @@ Then /^MAT can clean some sample PNG file$/ do
   for png_on_host in Dir.glob("#{MISC_FILES_DIR}/*.png") do
     png_name = File.basename(png_on_host)
     png_on_guest = "/home/#{LIVE_USER}/#{png_name}"
+    cleaned_png_on_guest = "/home/#{LIVE_USER}/#{png_name}".sub(/[.]png$/, '.cleaned.png')
     step "I copy \"#{@png_dir}/#{png_name}\" to \"#{png_on_guest}\" as user \"#{LIVE_USER}\""
     raw_check_cmd = "grep --quiet --fixed-strings --text " +
-                    "'Created with GIMP' '#{png_on_guest}'"
-    assert($vm.execute(raw_check_cmd, user: LIVE_USER).success?,
+                    "'Created with GIMP'"
+    assert($vm.execute(raw_check_cmd + " '#{png_on_guest}'", user: LIVE_USER).success?,
            'The comment is not present in the PNG')
-    check_before = $vm.execute_successfully("mat --check '#{png_on_guest}'",
+    check_before = $vm.execute_successfully("mat2 --show '#{png_on_guest}'",
                                             :user => LIVE_USER).stdout
-    assert(check_before.include?("#{png_on_guest} is not clean"),
+    assert(check_before.include?("Metadata for #{png_on_guest}"),
            "MAT failed to see that '#{png_on_host}' is dirty")
-    $vm.execute_successfully("mat '#{png_on_guest}'", :user => LIVE_USER)
-    check_after = $vm.execute_successfully("mat --check '#{png_on_guest}'",
+    $vm.execute_successfully("mat2 '#{png_on_guest}'", :user => LIVE_USER)
+    check_after = $vm.execute_successfully("mat2 --show '#{cleaned_png_on_guest}'",
                                            :user => LIVE_USER).stdout
-    assert(check_after.include?("#{png_on_guest} is clean"),
+    assert(check_after.include?("No metadata found"),
            "MAT failed to clean '#{png_on_host}'")
-    assert($vm.execute(raw_check_cmd, user: LIVE_USER).failure?,
+    assert($vm.execute(raw_check_cmd + " '#{cleaned_png_on_guest}'", user: LIVE_USER).failure?,
            'The comment is still present in the PNG')
     $vm.execute_successfully("rm '#{png_on_guest}'")
   end
@@ -186,38 +188,6 @@ Then /^the running process "(.+)" is confined with Seccomp in (filter|strict) mo
     assert_equal(2, status, "#{process} not confined with Seccomp in filter mode")
   else
     raise "Unsupported mode #{mode} passed"
-  end
-end
-
-Then /^tails-debugging-info is not susceptible to symlink attacks$/ do
-  secret_file = '/secret'
-  secret_contents = 'T0P S3Cr1t -- 3yEs oN1y'
-  $vm.file_append(secret_file, secret_contents)
-  $vm.execute_successfully("chmod u=rw,go= #{secret_file}")
-  $vm.execute_successfully("chown root:root #{secret_file}")
-  script_path = '/usr/local/sbin/tails-debugging-info'
-  script_lines = $vm.file_content(script_path).split("\n")
-  script_lines.grep(/^debug_file\s+/).each do |line|
-    _, user, debug_file = line.split
-    # root can always mount symlink attacks
-    next if user == 'root'
-    # Remove quoting around the file
-    debug_file.gsub!(/["']/, '')
-    # Skip files that do not exist, or cannot be removed (e.g. the
-    # ones in /proc).
-    next if not($vm.execute("rm #{debug_file}").success?)
-    # Check what would happen *if* the amnesia user managed to replace
-    # the debugging file with a symlink to the secret.
-    $vm.execute_successfully("ln -s #{secret_file} #{debug_file}")
-    $vm.execute_successfully("chown --no-dereference #{LIVE_USER}:#{LIVE_USER} #{debug_file}")
-    if $vm.execute("sudo /usr/local/sbin/tails-debugging-info | " +
-                   "grep '#{secret_contents}'",
-                   :user => LIVE_USER).success?
-      raise "The secret was leaked by tails-debugging-info via '#{debug_file}'"
-    end
-    # Remove the secret so it cannot possibly interfere with the
-    # following iterations (even though it should not).
-    $vm.execute_successfully("echo > #{debug_file}")
   end
 end
 

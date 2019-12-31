@@ -1,3 +1,14 @@
+def gedit
+  @gedit ||= Dogtail::Application.new('gedit')
+end
+
+def gedit_text_buffer()
+  gedit
+    .child(roleName: 'frame',       showingOnly: true)
+    .child(roleName: 'scroll pane', showingOnly: true)
+    .child(roleName: 'text',        showingOnly: true)
+end
+
 def seahorse_menu_click_helper(main, sub, verify = nil)
   try_for(60) do
     step "process \"#{verify}\" is running" if verify
@@ -33,12 +44,9 @@ end
 
 When /^I type a message into gedit$/ do
   step 'I start "gedit" via GNOME Activities Overview'
-  @screen.wait_and_click("GeditWindow.png", 20)
-  # We don't have a good visual indicator for when we can continue. Without the
-  # sleep we may start typing in the gedit window far too soon, causing
-  # keystrokes to go missing.
-  sleep 5
-  @screen.type("ATTACK AT DAWN")
+  text_buffer = gedit_text_buffer
+  text_buffer.grabFocus
+  text_buffer.typeText("ATTACK AT DAWN")
 end
 
 def maybe_deal_with_pinentry
@@ -56,13 +64,16 @@ def maybe_deal_with_pinentry
 end
 
 def gedit_copy_all_text
-  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditSelectAll.png')
-  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditCopy.png')
+  gedit_text_buffer.right_click
+  gedit.child('Select All', roleName: 'menu item', showingOnly: true).click
+  gedit_text_buffer.right_click
+  gedit.child('Copy', roleName: 'menu item', showingOnly: true).click
 end
 
 def gedit_paste_into_a_new_tab
-  @screen.wait_and_click("GeditNewTab.png", 20)
-  context_menu_helper('GeditWindow.png', 'GeditStatusBar.png', 'GeditPaste.png')
+  gedit.button('New').click
+  gedit_text_buffer.right_click
+  gedit.child('Paste', roleName: 'menu item', showingOnly: true).click
 end
 
 def encrypt_sign_helper
