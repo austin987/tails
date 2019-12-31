@@ -103,7 +103,7 @@ apt-get -y install \
         live-build \
         lsof \
         mtools \
-        perlmagick \
+        libimage-magick-perl \
         psmisc \
         python3-gi \
         rsync \
