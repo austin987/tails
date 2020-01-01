@@ -399,8 +399,13 @@ task :maybe_clean_up_builder_vms do
   clean_up_builder_vms if $force_cleanup
 end
 
+task :ensure_correct_permissions do
+  FileUtils.chmod('go+x', '.')
+  FileUtils.chmod_R('go+rX', ['.git', 'submodules', 'vagrant'])
+end
+
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'vm:up', 'ensure_clean_home_directory'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'ensure_correct_permissions', 'vm:up', 'ensure_clean_home_directory'] do
 
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
