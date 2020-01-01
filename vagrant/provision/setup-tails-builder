@@ -1,4 +1,5 @@
 #!/bin/sh
+# -*- mode: sh; sh-basic-offset: 4; indent-tabs-mode:nil; -*-
 
 set -e
 
@@ -6,21 +7,21 @@ export http_proxy="${TAILS_PROXY}"
 export DEBIAN_FRONTEND=noninteractive
 
 if [ ! -f /var/lib/vagrant_box_build_from ]; then
-	echo "${GIT_REF}" > /var/lib/vagrant_box_build_from
+    echo "${GIT_REF}" > /var/lib/vagrant_box_build_from
 else
-	if [ "$(cat /var/lib/vagrant_box_build_from)" != "${GIT_REF}" ]; then
-		echo "E: The current VM has been created to build $(cat /var/lib/vagrant_box_build_from)."
-		echo "E: Please first use rake vm:destroy before trying to build again."
-		exit 1
-	fi
+    if [ "$(cat /var/lib/vagrant_box_build_from)" != "${GIT_REF}" ]; then
+        echo "E: The current VM has been created to build $(cat /var/lib/vagrant_box_build_from)."
+	echo "E: Please first use rake vm:destroy before trying to build again."
+	exit 1
+    fi
 fi
 
 latest_serial(){
-	local archive="${1}"
-	(
-		cd /amnesia.git
-		auto/scripts/apt-snapshots-serials get-latest --print-serials-only ${archive}
-        )
+    local archive="${1}"
+    (
+        cd /amnesia.git
+	auto/scripts/apt-snapshots-serials get-latest --print-serials-only ${archive}
+    )
 }
 
 already_provisioned() {
@@ -55,9 +56,9 @@ fi
 if [ "$TAILS_WEBSITE_CACHE" = 1 ]; then
     echo "I: Configuring website cache directory..."
     if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
-       WEBSITE_CACHE_DISK=/dev/vdc
+        WEBSITE_CACHE_DISK=/dev/vdc
     else
-       WEBSITE_CACHE_DISK=/dev/vdb
+        WEBSITE_CACHE_DISK=/dev/vdb
     fi
     WEBSITE_CACHE_PARTITION="${WEBSITE_CACHE_DISK}1"
     WEBSITE_CACHE_MOUNTPOINT=/var/cache/tails-website
@@ -69,7 +70,7 @@ if [ "$TAILS_WEBSITE_CACHE" = 1 ]; then
     if ! mountpoint -q "$WEBSITE_CACHE_MOUNTPOINT"; then
         e2fsck -f -p "$WEBSITE_CACHE_PARTITION" || :
         mount -o relatime,journal_checksum \
-             "$WEBSITE_CACHE_PARTITION" "$WEBSITE_CACHE_MOUNTPOINT"
+              "$WEBSITE_CACHE_PARTITION" "$WEBSITE_CACHE_MOUNTPOINT"
         chown -R vagrant:vagrant "$WEBSITE_CACHE_MOUNTPOINT"
     fi
 fi
