@@ -429,36 +429,55 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
 
     exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                    collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-    run_vagrant_ssh("#{exported_env} build-tails")
 
-    artifacts = list_artifacts
-    raise 'No build artifacts were found!' if artifacts.empty?
-    user     = vagrant_ssh_config('User')
-    hostname = vagrant_ssh_config('HostName')
-    key_file = vagrant_ssh_config('IdentityFile')
-    $stderr.puts "Retrieving artifacts from Vagrant build box."
-    run_vagrant_ssh(
-      "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
-    )
-    fetch_command = [
-      'scp',
-      '-i', key_file,
-      # We need this since the user will not necessarily have a
-      # known_hosts entry. It is safe since an attacker must
-      # compromise libvirt's network config or the user running the
-      # command to modify the #{hostname} below.
-      '-o', 'StrictHostKeyChecking=no',
-      '-o', 'UserKnownHostsFile=/dev/null',
-      # Speed up the copy
-      '-o', 'Compression=no',
-    ]
-    fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
-    fetch_command << ENV['ARTIFACTS']
-    run_command(*fetch_command)
-    clean_up_builder_vms unless $keep_running
+    begin
+      retrieved_artifacts = false
+      run_vagrant_ssh("#{exported_env} build-tails")
+    rescue VagrantCommandError
+      retrieve_artifacts(:missing_ok => true)
+      retrieved_artifacts = true
+    ensure
+      retrieve_artifacts(:missing_ok => false) unless retrieved_artifacts
+      clean_up_builder_vms unless $keep_running
+    end
   ensure
     clean_up_builder_vms if $force_cleanup
   end
+end
+
+def retrieve_artifacts(missing_ok: false)
+  artifacts = list_artifacts
+  if artifacts.empty?
+    msg = 'No build artifacts were found!'
+    if missing_ok
+      $stderr.puts msg
+      return
+    else
+      raise msg
+    end
+  end
+  user     = vagrant_ssh_config('User')
+  hostname = vagrant_ssh_config('HostName')
+  key_file = vagrant_ssh_config('IdentityFile')
+  $stderr.puts "Retrieving artifacts from Vagrant build box."
+  run_vagrant_ssh(
+    "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
+  )
+  fetch_command = [
+    'scp',
+    '-i', key_file,
+    # We need this since the user will not necessarily have a
+    # known_hosts entry. It is safe since an attacker must
+    # compromise libvirt's network config or the user running the
+    # command to modify the #{hostname} below.
+    '-o', 'StrictHostKeyChecking=no',
+    '-o', 'UserKnownHostsFile=/dev/null',
+    # Speed up the copy
+    '-o', 'Compression=no',
+  ]
+  fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
+  fetch_command << ENV['ARTIFACTS']
+  run_command(*fetch_command)
 end
 
 def has_box?
