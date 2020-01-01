@@ -472,6 +472,11 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
   end
 end
 
+desc "Retrieve build artifacts from the Vagrant box"
+task :retrieve_artifacts do
+  retrieve_artifacts
+end
+
 def retrieve_artifacts(missing_ok: false)
   artifacts = list_artifacts
   if artifacts.empty?
