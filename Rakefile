@@ -119,7 +119,7 @@ rescue CommandError => e
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
-# returns [stdout, stderr, Preocess:Status].
+# returns [stdout, stderr, Process::Status].
 def capture_vagrant(*args)
   capture_command('vagrant', *args, :chdir => './vagrant')
 rescue CommandError => e
