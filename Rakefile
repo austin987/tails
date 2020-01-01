@@ -402,6 +402,28 @@ end
 task :ensure_correct_permissions do
   FileUtils.chmod('go+x', '.')
   FileUtils.chmod_R('go+rX', ['.git', 'submodules', 'vagrant'])
+
+  # Changing permissions outside of the working copy, in particular on
+  # parent directories such as $HOME, feels too blunt and can have
+  # problematic security consequences, so we don't forcibly do that.
+  # Instead, when the permissions are not OK, display a nicer error
+  # message than "Virtio-9p Failed to initialize fs-driver […]"
+  begin
+    capture_command('sudo', '-u', 'libvirt-qemu', 'stat', '.git')
+  rescue CommandError
+    abort <<-END_OF_MESSAGE.gsub(/^      /, '')
+
+      Incorrect permissions: the libvirt-qemu user needs to be allowed
+      to traverse the filesystem up to #{ENV['PWD']}.
+
+      To fix this, you can for example run the following command
+      on every parent directory of #{ENV['PWD']} up to #{ENV['HOME']}
+      (inclusive):
+
+        chmod g+x DIR && setfacl -m user:libvirt-qemu:x DIR
+
+    END_OF_MESSAGE
+  end
 end
 
 desc 'Build Tails'
