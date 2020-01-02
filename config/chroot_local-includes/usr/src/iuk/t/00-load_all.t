@@ -1,7 +1,6 @@
 use Test::Most;
 
 use Module::Pluggable::Object;
-eval { require Win32; };
 
 # libs
 my @needsX;
