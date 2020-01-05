@@ -19,8 +19,8 @@ def main():
         description="Copy IUKs from Jenkins to our rsync server \
         and verify that they match those built locally"
     )
-    parser.add_argument("--hashes-file", type=str, action="store")
-    parser.add_argument("--jenkins-build-id", type=int, action="store")
+    parser.add_argument("--hashes-file", type=str, action="store", required=True)
+    parser.add_argument("--jenkins-build-id", type=int, action="store", required=True)
     parser.add_argument("-q", "--quiet", action="store_true",
                         help="quiet output")
     parser.add_argument("--debug", action="store_true", help="debug output")
@@ -31,22 +31,11 @@ def main():
     args = parser.parse_args()
 
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG, stream=sys.stderr,
-                            format=LOG_FORMAT)
+        logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
     elif args.quiet:
-        logging.basicConfig(level=logging.WARN, stream=sys.stderr,
-                            format=LOG_FORMAT)
+        logging.basicConfig(level=logging.WARN, format=LOG_FORMAT)
     else:
-        logging.basicConfig(level=logging.INFO, stream=sys.stderr,
-                            format=LOG_FORMAT)
-
-    if args.hashes_file is None:
-        log.error("Please pass --hashes-file")
-        sys.exit(1)
-
-    if args.jenkins_build_id is None:
-        log.error("Please pass --jenkins-build-id")
-        sys.exit(1)
+        logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
     if not Path(args.hashes_file).exists():
         log.error("%s does not exist" % (args.hashes_file))
@@ -127,8 +116,4 @@ def verify_iuks(desthost: str, hashes_file: str) -> None:
 
 
 if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except Exception as e:
-        print(e, file=sys.stderr)
-        sys.exit(1)
+    main()
