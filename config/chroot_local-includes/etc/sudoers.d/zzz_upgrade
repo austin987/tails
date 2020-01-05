@@ -1,15 +1,15 @@
-Cmnd_Alias INSTALL_IUK = /bin/chmod, /bin/dd, /bin/mkdir, /bin/mktemp, /bin/mount, /bin/rm, /bin/tar, /lib/live/mount/medium/utils/linux/syslinux, /usr/bin/nocache /bin/cp *
-Cmnd_Alias IUK_GET_TARGET_FILE = /usr/bin/tails-iuk-get-target-file
-Cmnd_Alias UPGRADE_FRONTEND = /usr/bin/tails-upgrade-frontend ""
+Cmnd_Alias INSTALL_IUK = /bin/dd, /bin/mount, /bin/umount, /bin/rm, /lib/live/mount/medium/utils/linux/syslinux, /usr/bin/rsync, /usr/bin/nocache /bin/cp *
+Cmnd_Alias IUK_GET_TARGET_FILE = /usr/local/bin/tails-iuk-get-target-file
+Cmnd_Alias UPGRADE_FRONTEND = /usr/local/bin/tails-upgrade-frontend ""
 
 Defaults!IUK_GET_TARGET_FILE env_keep+="HARNESS_ACTIVE DISABLE_PROXY"
 Defaults!UPGRADE_FRONTEND env_keep+="DISABLE_PROXY SSL_NO_VERIFY"
 
 amnesia                ALL = (tails-upgrade-frontend)    NOPASSWD: UPGRADE_FRONTEND
-tails-upgrade-frontend ALL =                             NOPASSWD: /usr/bin/tails-shutdown-network ""
-tails-upgrade-frontend ALL = (tails-install-iuk)         NOPASSWD: /usr/bin/tails-install-iuk
+tails-upgrade-frontend ALL =                             NOPASSWD: /usr/local/bin/tails-shutdown-network ""
+tails-upgrade-frontend ALL = (tails-install-iuk)         NOPASSWD: /usr/local/bin/tails-install-iuk
 tails-upgrade-frontend ALL = (tails-iuk-get-target-file) NOPASSWD: IUK_GET_TARGET_FILE
-tails-upgrade-frontend ALL = (tails-iuk-get-target-file) NOPASSWD: /usr/bin/tails-iuk-mktemp-get-target-file ""
+tails-upgrade-frontend ALL = (tails-iuk-get-target-file) NOPASSWD: /usr/local/bin/tails-iuk-mktemp-get-target-file ""
 tails-upgrade-frontend ALL =                             NOPASSWD: /sbin/reboot ""
 
 tails-install-iuk     ALL =                             NOPASSWD: INSTALL_IUK
