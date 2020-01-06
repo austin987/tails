@@ -222,12 +222,12 @@ import translations from Transifex and sanity-check them:
 	git checkout master && \
 	git pull && \
 	"${RELEASE_CHECKOUT:?}"/import-translations && \
-	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po
+	"${RELEASE_CHECKOUT:?}"/submodules/jenkins-tools/slaves/lint_po
 
 Then, for every PO file that has issues:
 
 1. Rollback changes to that file: `git checkout po/LL.po`
-2. Run `check_po` again. It should pass this time.
+2. Run `lint_po` again. It should pass this time.
 
 And finally, commit:
 
@@ -258,10 +258,10 @@ and commit the result, including new PO files:
 	cd "${RELEASE_CHECKOUT:?}" && \
 	./import-translations  && \
 	./refresh-translations && \
-	./submodules/jenkins-tools/slaves/check_po && \
+	./submodules/jenkins-tools/slaves/lint_po && \
 	git add po && git commit -m 'Update PO files.'
 
-If `check_po` complains:
+If `lint_po` complains:
 
 * rollback the offending PO files and retry; worst case, delete it
 * send a note to <tails-l10n@boum.org> so that they get in touch with
