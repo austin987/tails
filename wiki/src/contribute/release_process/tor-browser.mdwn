@@ -66,8 +66,9 @@ with GnuPG:
 Filter the tarballs we want and make them available at build time,
 when the tarballs are fetched:
 
-    grep --color=never "\<tor-browser-linux64-.*\.tar.xz$" sha256sums-unsigned-build.txt \
-    | grep -v '\<tor-browser-linux64-debug\.tar\.xz$' \
+    grep --color=never -E \
+       "\s(langpacks-)?tor-browser-linux64-[0-9].*\.tar.xz$" \
+       sha256sums-unsigned-build.txt \
     > config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
 Then update the URL to the one chosen above:
