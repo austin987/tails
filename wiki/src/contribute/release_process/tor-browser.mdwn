@@ -61,13 +61,18 @@ with GnuPG:
     wget ${TBB_DIST_URL:?}/sha256sums-unsigned-build.txt{.asc,} && \
     gpg --verify sha256sums-unsigned-build.txt{.asc,}
 
-Filter the tarballs we want and make them available at build time,
+Build the list of tarballs we want and their hashes,
+so this information is available at build time,
 when the tarballs are fetched:
 
-    grep --color=never -E \
-       "\s(langpacks-)?tor-browser-linux64-[0-9].*\.tar.xz$" \
-       sha256sums-unsigned-build.txt \
-    > config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
+    (
+        grep --color=never -E \
+            "\stor-browser-linux64-[0-9].*_en-US\.tar\.xz$" \
+            sha256sums-unsigned-build.txt \
+        && grep --color=never -E \
+            "\slangpacks-tor-browser-linux64-.*\.tar\.xz$" \
+            sha256sums-unsigned-build.txt \
+    ) > config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
 Then update the URL to the one chosen above:
 
