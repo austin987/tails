@@ -400,21 +400,21 @@ matches the date of the future signature.
 
 	RELEASE_DATE='2015-11-03'
 
-	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html
-	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html
+	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html && \
+	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html && \
 	for type in img iso; do
 	   basename="tails-amd64-${VERSION:?}"
 	   filename="${basename:?}.${type:?}"
 	   echo "TZ=UTC gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
 	        > wiki/src/inc/stable_amd64_${type:?}_gpg_verify.html && \
 	   echo "http://dl.amnesia.boum.org/tails/stable/${basename:?}/${filename:?}" \
-	        > wiki/src/inc/stable_amd64_${type:?}_url.html
+	        > wiki/src/inc/stable_amd64_${type:?}_url.html && \
 	   echo "https://tails.boum.org/torrents/files/${filename:?}.sig" \
-	        > wiki/src/inc/stable_amd64_${type:?}_sig_url.html
+	        > wiki/src/inc/stable_amd64_${type:?}_sig_url.html && \
 	   echo "https://tails.boum.org/torrents/files/${filename:?}.torrent" \
 	        > wiki/src/inc/stable_amd64_${type:?}_torrent_url.html
-	done
-	./build-website --rebuild
+	done && \
+	./build-website --rebuild && \
 	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
 
 Signing key downloaded by the Upgrader
