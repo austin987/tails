@@ -5,7 +5,18 @@ set -u
 
 PERL_PROGS="/usr/local/bin/tails-security-check \
     /usr/local/lib/tails-htp-notify-user \
-    /usr/local/lib/tails-virt-notify-user"
+    /usr/local/lib/tails-virt-notify-user \
+    $(find config/chroot_local-includes/usr/src/iuk/bin \
+         -type f \
+         | perl -p -E 's{^config/chroot_local-includes}{}' \
+    )"
+PERL_LIBS=$(\
+   find \
+      config/chroot_local-includes/usr/src/iuk/lib \
+      config/chroot_local-includes/usr/src/perl5lib/lib \
+      -type f -name *.pm \
+      | perl -p -E 's{^config/chroot_local-includes}{}' \
+)
 PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/electrum \
     /usr/local/bin/replace-su-with-sudo \
@@ -86,7 +97,9 @@ create_pot () {
         mkdir -p "$(dirname ${pot})"
         xgettext --language="${proglang}" --from-code=UTF-8 \
                  --add-comments="Translators:" -o "${pot}" "${progpath}"
-        normalize_pot "${pot}"
+        if [ -f "${pot}" ]; then
+            normalize_pot "${pot}"
+        fi
     else
         echo "error: We are supposed to create a POT file for '${prog}'" \
              "but '${progpath}' does not exist"
@@ -184,7 +197,7 @@ trap "rm -fr po/*.new po/*.orig ; [ "$KEEP_TMP_POT" = yes ] || rm -fr tmp/pot" E
 
 # Update POT files
 mkdir -p tmp/pot
-for prog in $PERL_PROGS   ; do create_pot $prog Perl   ; done
+for prog in $PERL_PROGS $PERL_LIBS ; do create_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do create_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do create_pot $prog Shell  ; done
 for prog in $JAVASCRIPT_PROGS  ; do create_pot $prog JavaScript ; done

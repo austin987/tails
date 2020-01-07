@@ -16,7 +16,10 @@ def ensure_chutney_is_running
     network_definition = "#{GIT_DIR}/features/chutney/test-network"
     env = {
       'CHUTNEY_LISTEN_ADDRESS' => chutney_listen_address,
-      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data/"
+      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data/",
+      # The default value (60s) is too short for "chutney wait_for_bootstrap"
+      # to succeed reliably.
+      'CHUTNEY_START_TIME' => '600',
     }
 
     chutney_data_dir_cleanup = Proc.new do
@@ -51,6 +54,9 @@ def ensure_chutney_is_running
       chutney_cmd.call('configure')
       chutney_cmd.call('start')
     end
+
+    # Documentation: submodules/chutney/README, "Waiting for the network" section
+    chutney_cmd.call('wait_for_bootstrap')
 
     at_exit do
       chutney_cmd.call('stop')
@@ -172,7 +178,8 @@ def chutney_onionservice_redir(remote_address, remote_port)
     "--unit=#{redir_unit_name}",
     '--service-type=forking',
     '--quiet',
-    # XXX: enable this once we require Buster or newer for running our test suite
+    # XXX: enable this once we require systemd v236 or newer
+    # for running our test suite
     # '--collect',
     '/usr/bin/redir',
     "#{local_address}:#{local_port}",

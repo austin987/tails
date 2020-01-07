@@ -17,9 +17,9 @@ echo "Install the Tor Browser"
 . /usr/local/lib/tails-shell-library/build.sh
 
 download_and_verify_files() {
-    local base_url bundles destination apt_proxy
+    local base_url target_files destination apt_proxy
     base_url="${1}"
-    bundles="${2}"
+    target_files="${2}"
     destination="${3}"
 
     # Use the builder's caching APT proxy, if any
@@ -31,7 +31,7 @@ download_and_verify_files() {
         export https_proxy="${apt_proxy}"
     fi
 
-    echo "${bundles}" | while read expected_sha256 tarball; do
+    echo "${target_files}" | while read expected_sha256 tarball; do
         (
             cd "${destination}"
             echo "Fetching ${base_url}/${tarball} ..."
@@ -277,23 +277,21 @@ strip_nondeterminism () {
     done
 }
 
-install_langpacks_from_bundles() {
-    local bundles_dir destination
-    bundles_dir="${1}"
+install_langpacks() {
+    local langpacks_tarball destination tmp
+    langpacks_tarball="${1}"
     destination="${2}"
 
-    for tarball in "${bundles_dir}"/tor-browser-*.tar.xz; do
-        locale="$(echo "${tarball}" | sed "s@^.*/tor-browser-.*_\(.*\)\.tar\.xz@\1@")"
-        if [ "${locale}" = en-US ]; then
-            continue
-        fi
-        xpi="tor-browser_${locale}/Browser/TorBrowser/Data/Browser/profile.default/extensions/langpack-${locale}@firefox.mozilla.org.xpi"
-        (
-            cd "${bundles_dir}"
-            tar -xf "${tarball}" "${xpi}"
-            mv "${xpi}" "${destination}"
-        )
+    tmp="$(mktemp -d)"
+
+    tar --directory="${tmp}" -xf "${langpacks_tarball}"
+    for xpi in "${tmp}"/*.xpi; do
+        locale="$(basename "${xpi}" .xpi)"
+        dest_basename="langpack-${locale}@firefox.mozilla.org.xpi"
+        [ "${locale}" = en-US ] || mv "${xpi}" "${destination}/${dest_basename}"
     done
+
+    rm -r "${tmp}"
 }
 
 get_firefox_version() {
@@ -335,9 +333,8 @@ TBB_TIMESTAMP="$(date --date='2000-01-01 00:00:00' +%s)"
 TBB_SHA256SUMS_FILE=/usr/share/tails/tbb-sha256sums.txt
 TBB_TARBALLS="$(grep "\<tor-browser-linux64-.*\.tar.xz$" "${TBB_SHA256SUMS_FILE}")"
 
-# We'll use the en-US bundle as our basis; only langpacks will be
-# installed from the other bundles.
-MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux64-.*_en-US.tar.xz" || :)"
+# We'll use the en-US bundle as our basis
+MAIN_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "tor-browser-linux64-.*_en-US\.tar\.xz" || :)"
 NIGHTLY_BUILD=
 if [ -z "${MAIN_TARBALL}" ] && [ "$(echo $TBB_TARBALLS | awk '{ print $2 }')" = 'tor-browser-linux64-tbb-nightly_ALL.tar.xz' ]; then
     # Except for TBB nightly builds; then there is only one bundle
@@ -363,7 +360,8 @@ install_tor_launcher "${TBB_INSTALL}" "${TOR_LAUNCHER_INSTALL}"
 
 mkdir -p "${TBB_EXT}"
 if [ "${NIGHTLY_BUILD}" != yes ]; then
-    install_langpacks_from_bundles "${TMP}" "${TBB_EXT}"
+    LANGPACKS_TARBALL="$(echo "${TBB_TARBALLS}" | grep -o "langpacks-tor-browser-linux64-.*\.tar\.xz")"
+    install_langpacks "${TMP}/${LANGPACKS_TARBALL}" "${TBB_EXT}"
 fi
 
 rm -r "${TMP}"
