@@ -345,12 +345,19 @@ Then, launch an editor for the needed cleanup of the result:
 
 Changelog entries can be dispatched into those usual sections:
 
- * Major changes
- * Security fixes
- * Bugfixes
- * Minor improvements and updates
- * Build system
- * Test suite
+<pre>
+  * Major changes
+
+  * Security fixes
+
+  * Bugfixes
+
+  * Minor improvements and updates
+
+  * Build system
+
+  * Test suite
+</pre>
 
 Then, gather other useful information from:
 
@@ -393,21 +400,21 @@ matches the date of the future signature.
 
 	RELEASE_DATE='2015-11-03'
 
-	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html
-	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html
+	echo "${VERSION:?}"      > wiki/src/inc/stable_amd64_version.html && \
+	echo -n "${RELEASE_DATE:?}" > wiki/src/inc/stable_amd64_date.html && \
 	for type in img iso; do
 	   basename="tails-amd64-${VERSION:?}"
 	   filename="${basename:?}.${type:?}"
 	   echo "TZ=UTC gpg --no-options --keyid-format long --verify ${filename:?}.sig ${filename:?}" \
 	        > wiki/src/inc/stable_amd64_${type:?}_gpg_verify.html && \
 	   echo "http://dl.amnesia.boum.org/tails/stable/${basename:?}/${filename:?}" \
-	        > wiki/src/inc/stable_amd64_${type:?}_url.html
+	        > wiki/src/inc/stable_amd64_${type:?}_url.html && \
 	   echo "https://tails.boum.org/torrents/files/${filename:?}.sig" \
-	        > wiki/src/inc/stable_amd64_${type:?}_sig_url.html
+	        > wiki/src/inc/stable_amd64_${type:?}_sig_url.html && \
 	   echo "https://tails.boum.org/torrents/files/${filename:?}.torrent" \
 	        > wiki/src/inc/stable_amd64_${type:?}_torrent_url.html
-	done
-	./build-website
+	done && \
+	./build-website --rebuild && \
 	git commit wiki/src/inc/ -m "Update version and date for ${VERSION:?}."
 
 Signing key downloaded by the Upgrader
@@ -429,13 +436,16 @@ pages that were added or changed accordingly to changes coming with
 the new release. This e.g. ensures that the RC call for translation
 points translators to up-to-date PO files:
 
-	./build-website && git add wiki/src && git commit -m 'Update website PO files.'
-	git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"
+    ./build-website && \
+    git add wiki/src && \
+    git commit -m 'Update website PO files.'
+    git push origin "${RELEASE_BRANCH:?}:${RELEASE_BRANCH:?}"
 
 Call for translation
 ====================
 
-If at freeze time, send a call for translations to tails-l10n, making it clear what
+If at freeze time for a major release, send a call for translations
+to tails-l10n, making it clear what
 Git branch the translations must be based on, and what are the
 priorities.
 
@@ -844,7 +854,26 @@ Build the Incremental Upgrade Kits locally
     done
 
 This command can take a long time. In parallel, while it is running,
-you can build the Incremental Upgrade Kits on Jenkins:
+you can follow the next 2 steps:
+
+ - Push the images to our ISO history git-annex repo
+ - Build the Incremental Upgrade Kits on Jenkins
+
+ISO history
+-----------
+
+Push the released ISO and USB images and their artifacts (`.buildlog`,
+`.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
+repo, so that:
+
+ - The Jenkins `build_IUKs` can fetch them.
+ - Our isotesters can fetch them from there for their testing
+
+How to do so is described in the `ISO_history.mdwn` document in the RM team's
+Git repo.
+
+Then, wait (a few minutes) until the images appear
+on <https://iso-history.tails.boum.org/>.
 
 <a id="build-iuks-on-jenkins"></a>
 
@@ -971,7 +1000,7 @@ Prepare upgrade-description files
                 done \
             ) \
             --iso "${ISO_PATH:?}" \
-            --iuks "${ISOS:?}" \
+            --iuks "${IUKS_DIR:?}" \
             --release_checkout "${RELEASE_CHECKOUT:?}" \
             --major_release "${MAJOR_RELEASE:?}" \
             --channel "${DIST:?}"
@@ -1046,7 +1075,8 @@ Update the image description file (IDF) used by the browser extension:
        > "${RELEASE_CHECKOUT:?}"/wiki/src/install/v2/Tails/amd64/stable/latest.json && \
     ( cd "${RELEASE_CHECKOUT:?}" && \
       git add wiki/src/install/v2/Tails/amd64/stable/latest.json && \
-      git commit -m "Update IDF file for Tails Verification." )
+      git commit -m "Update IDF file for Tails Verification." && \
+      git push origin "${WEBSITE_RELEASE_BRANCH:?}" )
 
 Done with OpenPGP signing
 =========================
@@ -1203,13 +1233,6 @@ Now you can announce and seed the Torrents for the release you're preparing:
     done
 
 Test that you can start downloading the ISO and USB images with a BitTorrent client.
-
-ISO history
------------
-
-Push the released ISO and USB images and their artifacts (`.buildlog`, `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex repo, so that
-our isotesters can fetch them from there for their testing. How to do so
-is described in the `ISO_history.mdwn` document in the RM team's Git repo.
 
 Testing
 =======

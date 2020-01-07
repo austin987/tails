@@ -4,6 +4,70 @@ tails (4.5) UNRELEASED; urgency=medium
 
  -- intrigeri <intrigeri@debian.org>  Tue, 22 Oct 2019 15:23:33 +0000
 
+tails (4.2) unstable; urgency=medium
+
+  * Major changes
+    - Switch to a redesigned upgrade system (Closes: #15281), which:
+      - removes the need for manual upgrades caused by lack of disk space
+        on the Tails device
+      - uses less RAM
+    - Bump snapshot of the Debian archive to 2019122802
+
+  * Security fixes
+    - Upgrade Tor Browser to 9.0.3 (Closes: #17402)
+    - Upgrade Linux to 5.3.15-1 (Closes: #17332)
+      and upgrade the aufs module to 5.3-20191223
+    - Upgrade Thunderbird to 1:68.3.0-2~deb10u1
+    - Upgrade libsasl2 to 2.1.27+dfsg-1+deb10u1
+    - Upgrade python3-ecdsa to 0.13-3+deb10u1
+
+  * Bugfixes
+    - KeePassXC:
+      - Open ~/Persistent/keepassx.kdbx by default again (Closes: #17212)
+      - Open the database specified by the user on the command-line, if any
+      - Fix database renaming prompt
+    - Upgrader:
+      - Ensure debugging info lands in the Journal before we refer to it
+      - Catch more download errors
+    - Upgrade amd64-microcode to 3.20191218.1, which removes firmware
+      updates that cause issues
+
+  * Minor improvements and updates
+    - Add metadata analysis tools used by SecureDrop (Closes: #17178)
+    - Refresh the signing key before checking for available upgrades
+      (Closes: #15279)
+    - Port the Upgrader and perl5lib to a set of dependencies that are
+      faster and have a lower memory footprint (Closes: #17152)
+    - Ensure IUKs don't include files of our website if their content
+      has not changed (refs: #15290)
+    - Zero heap memory at allocation time and at free time (Closes: #17236)
+
+  * Build system
+    - Import the Upgrader and perl5lib codebases into tails.git
+      (part of #7036)
+    - lint_po: ignore pre-existing rply cache file that can cause
+      trouble if it's corrupted (Closes: #17359)
+    - Move generate-languages-list to auto/scripts
+    - import-translations: work around the lack of usable branches
+      in Tor's translation.git (Closes: #17279)
+    - Build released IUKs on Jenkins and verify that they match
+      those built locally by the Release Manager (Closes: #15287)
+    - Don't download every localized Tor Browser tarball: instead,
+      use the new tarball that includes every langpacks (Closes: #17400)
+
+  * Test suite
+    - Adapt for the "one single SquashFS diff" upgrade scheme
+    - Chutney: update to upstream 33cbff7fc73aa51a785197c5f4afa5a91d81de9c
+      (Closes: #16792)
+    - Fix tagging of Chutney exit relays and bridge authorities
+    - Tag Chutney clients as such
+    - Wait for all Chutney nodes to have bootstrapped before assuming
+      the simulated Tor network is ready
+    - Don't try to save tor control sockets as artifacts
+    - Add a crude script to generate IUKs for our test suite
+
+ -- Tails developers <tails@boum.org>  Mon, 06 Jan 2020 16:25:22 +0000
+
 tails (4.1.1) unstable; urgency=medium
 
   * Bugfixes
