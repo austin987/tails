@@ -50,6 +50,7 @@ poisoning feature|design/kernel_hardening]], more specifically:
 
 * `page_poison`
 * passing "P" to `slub_debug`
+* zeroing heap memory at free time (`init_on_free=1`)
 
 [[!tails_gitweb features/erase_memory.feature desc="Automated tests"]]
 ensure that the most important parts of memory are erased this way.
@@ -94,8 +95,8 @@ As discussed in
 with the authors of `PAX_MEMORY_SANITIZE`, kernel memory poisoning
 does not clear _all_ kinds of memory once it's freed:
 
- * we enable free poisoning for the buddy allocator and the slub/slab
-   ones, but there may be other ways the Linux kernel allocates
+ * we enable free poisoning for the buddy allocator, the slub/slab
+   ones, and heap memory, but there may be other ways the Linux kernel allocates
    memory, that are not subject to poisoning;
  * on shutdown all process memory is freed (and thus erased), but some
    kernel memory is not erased on shutdown, and is currently
