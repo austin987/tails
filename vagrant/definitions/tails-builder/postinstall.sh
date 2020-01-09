@@ -115,9 +115,6 @@ apt-get -y install \
         python3-gi \
         rsync \
         ruby \
-        syslinux \
-        syslinux-common \
-        syslinux-utils \
         time \
         udisks2 \
         whois
