@@ -834,6 +834,7 @@ Build the Incremental Upgrade Kits locally
 
     mkdir -p "${IUKS_DIR:?}" && \
     for source_version in ${IUK_SOURCE_VERSIONS:?}; do
+        (set -e
         squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
         if [ "$squashfs_tools_version" != '1:4.4-1+0.tails1' ]; then
             echo "ERROR! Your squashfs-tools is not the required version, so any generated IUKs will *not* be reproducible!"
@@ -854,6 +855,7 @@ Build the Incremental Upgrade Kits locally
                --outfile \"${IUK:?}\"" && \
         sudo chown "$(id --user):$(id --group)" "${IUK:?}" && \
         (cd "$(dirname "${IUK:?}")" && sha256sum "${IUK:?}" >> "${IUKS_HASHES:?}")
+        ) || { echo "ERROR: failure detected for source version: ${source_version?:}"; break; }
     done
 
 This command can take a long time. In parallel, while it is running,
