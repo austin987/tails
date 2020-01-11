@@ -857,7 +857,7 @@ Build the Incremental Upgrade Kits locally
                --new_iso \"${ISO_PATH:?}\" \
                --outfile \"${IUK:?}\"" && \
         sudo chown "$(id --user):$(id --group)" "${IUK:?}" && \
-        (cd "$(dirname "${IUK:?}")" && sha256sum "${IUK:?}" >> "${IUKS_HASHES:?}")
+        (cd "$(dirname "${IUK:?}")" && sha256sum "$(basename "${IUK:?}")" >> "${IUKS_HASHES:?}")
         ) || { echo "ERROR: failure detected for source version: ${source_version?:}"; break; }
     done
 
