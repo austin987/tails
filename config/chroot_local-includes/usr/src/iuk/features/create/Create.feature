@@ -62,9 +62,9 @@ Feature: create an IUK
 
   Scenario: create an IUK when new files have appeared in filesystem.squashfs
     Given an old ISO image whose filesystem.squashfs does not contain file "A"
-    And a new ISO image whose filesystem.squashfs contains file "A"
+    And a new ISO image whose filesystem.squashfs contains file "A" owned by www-data
     When I create an IUK
-    Then the saved IUK contains a SquashFS that contains file "A"
+    Then the saved IUK contains a SquashFS that contains file "A" owned by www-data
 
   Scenario: create an IUK when files have disappeared from filesystem.squashfs
     Given an old ISO image whose filesystem.squashfs contains file "A"
