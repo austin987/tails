@@ -24,7 +24,7 @@ use Function::Parameters;
 use List::MoreUtils qw{any};
 use List::Util qw{sum};
 use Path::Tiny;
-use Types::Standard qw{ArrayRef Str};
+use Types::Standard qw{ArrayRef ClassName Maybe Str};
 use YAML::Any;
 
 use namespace::clean;
@@ -40,6 +40,13 @@ has "$_" => (
     isa       => Str,
     predicate => 1,
 ) for (qw{product_name initial_install_version build_target channel});
+
+has product_version => (
+    is        => 'ro',
+    isa       => Maybe[Str],
+    default   => sub { undef },
+    predicate => 1,
+);
 
 has upgrades =>
     is          => 'lazy',
@@ -70,10 +77,18 @@ has upgrade_paths =>
 method _build_upgrades () { return [] }
 
 method _build_upgrade_paths () {
+    assert($self->has_product_version);
+    assert_defined($self->product_version);
     my @upgrade_paths;
     foreach my $upgrade ($self->all_upgrades) {
-        exists $upgrade->{'upgrade-paths'} or $upgrade->{'upgrade-paths'} = [];
-        foreach my $path (@{$upgrade->{'upgrade-paths'}}) {
+        next unless exists $upgrade->{'upgrade-paths'};
+        my @upgrade_paths_to_newer_version = grep {
+            version_compare(
+                $upgrade->{version},
+                $self->product_version
+            ) == 1;
+        } @{$upgrade->{'upgrade-paths'}};
+        foreach my $path (@upgrade_paths_to_newer_version) {
             foreach my $key (qw{type target-files}) {
                 assert(exists  $path->{$key});
                 assert(defined $path->{$key});
@@ -88,9 +103,9 @@ method _build_upgrade_paths () {
     return \@upgrade_paths;
 }
 
-sub new_from_text {
-    my $class = shift;
-    my $text  = shift;
+fun new_from_text (ClassName $class,
+                   Str :$text,
+                   Maybe[Str] :$product_version = undef) {
 
     my $data = YAML::Any::Load($text);
 
@@ -101,17 +116,16 @@ sub new_from_text {
         $args{$attribute} = $data->{$key};
     }
 
-    $class->new(%args);
+    $class->new(%args, product_version => $product_version);
 }
 
-sub new_from_file {
-    my $class    = shift;
-    my $filename = shift;
-
+fun new_from_file (ClassName $class,
+                   Str :$filename,
+                   Maybe[Str] :$product_version = undef) {
     my $content = path($filename)->slurp;
     assert_nonblank($content);
 
-    $class->new_from_text($content);
+    $class->new_from_text($content, product_version => $product_version);
 }
 
 

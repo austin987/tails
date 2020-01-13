@@ -83,6 +83,9 @@ Feature: upgrade frontend
     And the downloaded IUK should be installed
     And I should be proposed to restart the system
     And the system should be restarted
+    When I run tails-upgrade-frontend in batch mode
+    Then it should succeed
+    And I should be told "The system is up-to-date"
 
   Scenario: USB produced by our installer: no incremental upgrade is available, but a full upgrade is
     Given Tails is running from a USB thumb drive

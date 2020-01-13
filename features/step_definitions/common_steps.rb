@@ -920,6 +920,14 @@ When /^I eject the boot medium$/ do
   end
 end
 
+Given /^Tails is fooled to think it is running version (.+)$/ do |version|
+  $vm.execute_successfully(
+    "sed -i " +
+    "'s/^TAILS_VERSION_ID=.*$/TAILS_VERSION_ID=\"#{version}\"/' " +
+    "/etc/os-release"
+  )
+end
+
 Given /^Tails is fooled to think that version (.+) was initially installed$/ do |version|
   initial_os_release_file =
     '/lib/live/mount/rootfs/filesystem.squashfs/etc/os-release'
