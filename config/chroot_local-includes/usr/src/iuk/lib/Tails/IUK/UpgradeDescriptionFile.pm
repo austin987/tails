@@ -125,7 +125,7 @@ fun new_from_file (ClassName $class,
     my $content = path($filename)->slurp;
     assert_nonblank($content);
 
-    $class->new_from_text($content, product_version => $product_version);
+    $class->new_from_text(text => $content, product_version => $product_version);
 }
 
 

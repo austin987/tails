@@ -153,7 +153,7 @@ method update_udf_for_previous_release ($previous_version) {
 
     my $description;
     if (-e $udf) {
-        $description = Tails::IUK::UpgradeDescriptionFile->new_from_file($udf);
+        $description = Tails::IUK::UpgradeDescriptionFile->new_from_file(filename => $udf->canonpath);
     }
     else {
         $description = Tails::IUK::UpgradeDescriptionFile->new(
