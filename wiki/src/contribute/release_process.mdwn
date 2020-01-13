@@ -468,8 +468,7 @@ Enable OpenPGP signing
 
 If you have an OpenPGP smart card (i.e. if you are one of the usual
 release managers) go fetch it. Remember to only plug it when needed! A
-pro tip is to never plug it unless prompted which `gpg` will do for
-you. Then just unplug it as soon as the `.sig` is done.
+pro tip is to never plug it unless prompted which `gpg` will do for you.
 
 ### Otherwise: importing the signing key
 
@@ -524,8 +523,8 @@ a signed tag, so it can be overridden later. Yes, there is room for
 improvement here.)
 
 XXX: From this push of a tag, the builds in Jenkins fail because we prevent it
-to continue if the last debian/changelog entry has a tag. There are workarounds
-we need to decide and implement.
+to continue if the last changelog entry is unreleased but corresponds to
+an existing tag. There are workarounds we need to decide and implement.
 
 Prepare the versioned APT suites
 ================================
@@ -1687,12 +1686,18 @@ this, and skip what does not make sense for a RC.
                         echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
                     fi
                 else
-                    if [ "${ARCHIVE:?}" = 'debian-security' ]; then
-                        DIST='stretch/updates'
-                    else
-                        DIST='stable'
-                   fi
-                   EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/${DIST:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+                    case "${ARCHIVE:?}" in
+                        'debian-security')
+                            DIST='buster/updates'
+                            ;;
+                        'torproject')
+                            DIST='buster'
+                            ;;
+                        *)
+                            DIST='stable'
+                            ;;
+                    esac
+                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/${DIST:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
                 fi
                 echo "* Archive '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
             done
