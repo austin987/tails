@@ -5,7 +5,8 @@
 See the [[release_schedule]].
 
 <div class="caution">
-Read the remainder of this document from the branch used to prepare the release!
+Read the remainder of this document from the branch used to prepare the release
+after having merged the current master branch into it!
 </div>
 
 Requirements
@@ -427,6 +428,7 @@ Signing key downloaded by the Upgrader
         > wiki/src/tails-signing-minimal.key && \
     git commit wiki/src/tails-signing-minimal.key \
         -m "Update signing key used by the Upgrader"
+    rm -rf "${TMP_GNUPG_HOME:?}"
 
 Website translations
 --------------------
@@ -825,21 +827,26 @@ Compute the list of initial version install to build IUKs for:
 
     cd "${RELEASE_CHECKOUT:?}" && \
 	export IUK_SOURCE_VERSIONS=$(./bin/iuk-source-versions ${VERSION:?})
+    echo "${IUK_SOURCE_VERSIONS?:}"
+
+Even if it's computed automatically, remember to store it in the file
+holding environment variables, it will be used in various places below.
 
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
 
     mkdir -p "${IUKS_DIR:?}" && \
     for source_version in ${IUK_SOURCE_VERSIONS:?}; do
+        (set -e
         squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
         if [ "$squashfs_tools_version" != '1:4.4-1+0.tails1' ]; then
             echo "ERROR! Your squashfs-tools is not the required version, so any generated IUKs will *not* be reproducible!"
             break
         fi
-        IUK=\"${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk\"
+        IUK="${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk"
         echo "Generating IUK file from ${source_version:?} to ${VERSION:?}:"
         echo "  ${IUK:?}"
-        sudo su -c
+        sudo su -c \
          "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
           LC_ALL=C \
           TMPDIR=\"${TMPDIR:-/tmp}\" \
@@ -850,10 +857,11 @@ Build the Incremental Upgrade Kits locally
                --new_iso \"${ISO_PATH:?}\" \
                --outfile \"${IUK:?}\"" && \
         sudo chown "$(id --user):$(id --group)" "${IUK:?}" && \
-        (cd "$(dirname "${IUK:?}")" && sha256sum "${IUK:?}" >> "${IUKS_HASHES:?}")
+        (cd "$(dirname "${IUK:?}")" && sha256sum "$(basename "${IUK:?}")" >> "${IUKS_HASHES:?}")
+        ) || { echo "ERROR: failure detected for source version: ${source_version?:}"; break; }
     done
 
-This command can take a long time. In parallel, while it is running,
+This command takes a long time. In parallel, while it is running,
 you can follow the next 2 steps:
 
  - Push the images to our ISO history git-annex repo
@@ -884,7 +892,7 @@ Build the Incremental Upgrade Kits on Jenkins
    fill the form with these values:
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
-    - `SOURCE_DATE_EPOCH`: the value of `SOURCE_DATE_EPOCH` in your
+    - `SOURCE_DATE_EPOCH`: the value of `$SOURCE_DATE_EPOCH` in your
       release environment
     - `SOURCE_VERSIONS`: the value of `$IUK_SOURCE_VERSIONS` in your
       release environment
@@ -1042,7 +1050,7 @@ Prepare upgrade-description files
           cd ${MASTER_CHECKOUT:?} && \
           git fetch && \
           git merge origin/master && \
-          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
+          for old_version in $(echo ${IUK_SOURCE_VERSIONS:?} ${VERSION:?}); do
             release_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/${DIST:?}/upgrades.yml" && \
             test_udf="wiki/src/upgrade/v2/Tails/${old_version:?}/amd64/test/upgrades.yml" && \
             mkdir -p "$(dirname "$test_udf")" && \
@@ -1701,6 +1709,8 @@ this, and skip what does not make sense for a RC.
 1. Ensure the next two releases have their own _Release Manager View_.
 1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
    in the Roof* so that this section appears after the next release.
+1. In [[contribute/calendar]], remove the entries about the version that you've
+   just released.
 1. Check the Mozilla release calendars:
 
    * [Google calendar](https://www.google.com/calendar/embed?src=mozilla.com_2d37383433353432352d3939%40resource.calendar.google.com)
