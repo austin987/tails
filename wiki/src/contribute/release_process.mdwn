@@ -1686,12 +1686,18 @@ this, and skip what does not make sense for a RC.
                         echo "Warning: origin '${ARCHIVE:?}' is using the 'latest' snapshot, which is unexpected" >&2
                     fi
                 else
-                    if [ "${ARCHIVE:?}" = 'debian-security' ]; then
-                        DIST='stretch/updates'
-                    else
-                        DIST='stable'
-                   fi
-                   EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/${DIST:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
+                    case "${ARCHIVE:?}" in
+                        'debian-security')
+                            DIST='buster/updates'
+                            ;;
+                        'torproject')
+                            DIST='buster'
+                            ;;
+                        *)
+                            DIST='stable'
+                            ;;
+                    esac
+                    EXPIRY="$(curl --silent "http://time-based.snapshots.deb.tails.boum.org/${ARCHIVE:?}/dists/${DIST:?}/snapshots/${SERIAL:?}/Release" | sed -n 's/^Valid-Until:\s\+\(.*\)$/\1/p')"
                 fi
                 echo "* Archive '${ARCHIVE:?}' uses snapshot '${SERIAL:?}' which expires on: ${EXPIRY:?}"
             done
