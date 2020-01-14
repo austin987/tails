@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -e
+set -u
+
+IGNORED_TAGS="4.2.1"
+
+major_version () {
+   local version="$1"
+   echo "$version" | perl -p -E 's,[.].*,,'
+}
+
+member () {
+   local item="$1"
+   shift
+   local found=no
+   for i in "$@"; do
+      if [ "$i" = "$item" ]; then
+	 found=yes
+	 break
+      fi
+   done
+
+   [ "$found" = 'yes' ]
+}
+
+RELEASING_VERSION="$1"
+RELEASING_MAJOR_VERSION=$(major_version "$RELEASING_VERSION")
+
+git tag | while read tag ; do
+   if member "$tag" $IGNORED_TAGS; then
+      continue
+   fi
+   version=$(echo "$tag" | perl -p -E 's,-,~,')
+   major_version=$(major_version "$version")
+   if [ "$major_version" = "$RELEASING_MAJOR_VERSION" ] && \
+         dpkg --compare-versions "$version" lt "$RELEASING_VERSION" ; then
+      echo "$version"
+   fi
+done
+

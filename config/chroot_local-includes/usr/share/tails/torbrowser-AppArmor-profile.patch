@@ -1,5 +1,3 @@
-diff --git a/etc/apparmor.d/torbrowser.Browser.firefox b/etc/apparmor.d/torbrowser.Browser.firefox
-index f782f35..426f7c8 100644
 --- a/etc/apparmor.d/torbrowser.Browser.firefox
 +++ b/etc/apparmor.d/torbrowser.Browser.firefox
 @@ -1,11 +1,12 @@
@@ -16,7 +14,7 @@ index f782f35..426f7c8 100644
  
    # Uncomment the following lines if you want to give the Tor Browser read-write
    # access to most of your personal files.
-@@ -14,6 +15,7 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -14,6 +15,7 @@
  
    # Audio support
    /{,usr/}bin/pulseaudio Pixr,
@@ -24,7 +22,7 @@ index f782f35..426f7c8 100644
  
    #dbus,
    network netlink raw,
-@@ -29,6 +31,8 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -29,6 +31,8 @@
    deny /etc/passwd r,
    deny /etc/group r,
    deny /etc/mailcap r,
@@ -33,7 +31,7 @@ index f782f35..426f7c8 100644
  
    /etc/machine-id r,
    /var/lib/dbus/machine-id r,
-@@ -44,36 +48,35 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -44,37 +48,35 @@
    owner @{PROC}/@{pid}/task/*/stat r,
    @{PROC}/sys/kernel/random/uuid r,
  
@@ -56,6 +54,7 @@ index f782f35..426f7c8 100644
 -  owner @{torbrowser_home_dir}/firefox rix,
 -  owner @{torbrowser_home_dir}/{,TorBrowser/UpdateInfo/}updates/[0-9]*/* rw,
 -  owner @{torbrowser_home_dir}/{,TorBrowser/UpdateInfo/}updates/[0-9]*/{,MozUpdater/bgupdate/}updater ix,
+-  owner @{torbrowser_home_dir}/updater ix,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/.parentwritetest rw,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profiles.ini r,
 -  owner @{torbrowser_home_dir}/TorBrowser/Data/Browser/profile.default/{,**} rwk,
@@ -92,12 +91,12 @@ index f782f35..426f7c8 100644
 +  /usr/share/doc/tails/website/** r,
  
    # parent Firefox process when restarting after upgrade, Web Content processes
--  owner @{torbrowser_firefox_executable} ixmr -> torbrowser_firefox,
+-  owner @{torbrowser_firefox_executable} pxmr -> torbrowser_firefox,
 +  @{torbrowser_firefox_executable} pxmr -> torbrowser_firefox,
  
    /etc/mailcap r,
    /etc/mime.types r,
-@@ -97,14 +100,9 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -98,12 +100,6 @@
    /sys/devices/system/node/node[0-9]*/meminfo r,
    deny /sys/devices/virtual/block/*/uevent r,
  
@@ -109,11 +108,8 @@ index f782f35..426f7c8 100644
 -
    # Required for multiprocess Firefox (aka Electrolysis, i.e. e10s)
    owner /{dev,run}/shm/org.chromium.* rw,
-+  owner /dev/shm/org.mozilla.ipc.[0-9]*.[0-9]* rw, # for Chromium IPC
- 
-   # Deny access to DRM nodes, that's granted by the X abstraction, which is
-   # sourced by the gnome abstraction, that we include.
-@@ -116,6 +114,25 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+   owner /dev/shm/org.mozilla.ipc.[0-9]*.[0-9]* rw, # for Chromium IPC
+@@ -118,6 +114,25 @@
    deny @{HOME}/.cache/fontconfig/** rw,
    deny @{HOME}/.config/gtk-2.0/ rw,
    deny @{HOME}/.config/gtk-2.0/** rw,
@@ -139,7 +135,7 @@ index f782f35..426f7c8 100644
    deny @{PROC}/@{pid}/net/route r,
    deny /sys/devices/system/cpu/cpufreq/policy[0-9]*/cpuinfo_max_freq r,
    deny /sys/devices/system/cpu/*/cache/index[0-9]*/size r,
-@@ -132,5 +149,10 @@ profile torbrowser_firefox @{torbrowser_firefox_executable} {
+@@ -134,5 +149,10 @@
    /etc/xfce4/defaults.list r,
    /usr/share/xfce4/applications/ r,
  
@@ -151,8 +147,6 @@ index f782f35..426f7c8 100644
 +  deny owner /tmp/**         rwklx,
 +  deny /tmp/                 rwklx,
  }
-diff --git a/etc/apparmor.d/tunables/torbrowser b/etc/apparmor.d/tunables/torbrowser
-index 9b31139..f77e082 100644
 --- a/etc/apparmor.d/tunables/torbrowser
 +++ b/etc/apparmor.d/tunables/torbrowser
 @@ -1,2 +1 @@

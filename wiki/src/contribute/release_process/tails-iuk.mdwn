@@ -1,126 +1,71 @@
-[[!meta title="Releasing tails-iuk"]]
+[[!meta title="Generating IUKs, UDFs, and testing the Upgrader"]]
 
 [[!toc levels=1]]
+
+Everything on this page happens in the
+`config/chroot_local-includes/usr/src/iuk` directory.
 
 Pre-requisites
 =============
 
 * a Debian Stretch (or newer) system
-* Tails' `devel` APT suite enabled
-* the right version of the `tails-perl5lib` package installed
 * a user that has sudo credentials
 * Environment:
   - Export location of a checkout of the `stable` branch of the main
     Tails Git repository:
 
-    	export TAILS_GIT_CHECKOUT="$RELEASE_CHECKOUT"
+        export TAILS_GIT_CHECKOUT="/path/to/your/tails/git/repo"
 
-Install build and test dependencies
-===================================
+Install dependencies needed to generate IUKs, UDFs, and to run the test suite
+=============================================================================
 
-    git checkout master && \
+    cat $(git rev-parse --show-toplevel)/config/chroot_local-packageslists/tails-iuk.list \
+       | grep -E -v '^#' \
+       | xargs sudo apt install && \
     sudo apt install \
-       devscripts \
-       dh-make-perl \
        libdist-zilla-app-command-authordebs-perl && \
     dzil authordebs --install && \
-    git checkout debian && \
-    mk-build-deps -i -r --root-cmd sudo
+    sudo apt install \
+       bsdtar \
+       libdevice-cdio-perl \
+       dosfstools \
+       faketime \
+       gdisk \
+       genisoimage \
+       gnutls-bin \
+       kpartx \
+       libdata-dumper-concise-perl \
+       libdatetime-perl \
+       libfile-copy-recursive-perl \
+       rsync \
+       squashfs-tools \
+       syslinux
 
-Update POT and PO files
-=======================
+Run the test suite
+==================
 
-    git checkout master && \
-    "${TAILS_GIT_CHECKOUT:?}"/import-translations && \
-    "${TAILS_GIT_CHECKOUT:?}"/submodules/jenkins-tools/slaves/check_po && \
-    git add po && \
-    git commit -m 'Update POT and PO files, pull updated translations from Transifex.'
-
-Make an upstream release
-========================
-
-    git checkout master
-
-Enable new translations in `po/PACKAGE` and commit.
-
-Export new upstream version number:
-
-    export VERSION=XXX
-
-Export source date epoch:
+Prepare your environment (which includes getting a `sudo` authentication token,
+that's needed by the test suite, and setting a `umask` that runs the tests in
+conditions closer to production):
 
     export SOURCE_DATE_EPOCH=$(date --utc +%s)
-
-Update version number in `bin/tails-create-iuk`, commit all files that
-need to be.
-
-    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' bin/tails-create-iuk && \
-       perl -pi -E \
-          "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
-          bin/tails-create-iuk && \
-       git commit bin/tails-create-iuk -m "tails-iuk $VERSION"
-
-Run the upstream test suite:
-
-    # get an authentication token, needed by the test suite
     sudo true
-    # run the tests in closer to real conditions
     umask 077
     
-    # Run the test suite
+Run the upstream test suite with aufs:
+
+    export UNION_TYPE=aufs
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
        RELEASE_TESTING=1 \
        LC_ALL=C \
        dzil test
 
-Build an upstream tarball, tag the release, move the tarball out of
-the build repository and cleanup:
+Run the upstream test suite with overlayfs:
 
-    dzil build && \
-       git tag -s $VERSION -m "tails-iuk $VERSION" && \
-       mv Tails-IUK*.tar.gz .. && git clean -fdx
-
-Update the Debian package
-=========================
-
-Checkout the branch with Debian package specifics and import the new
-upstream tarball, update `debian/changelog`:
-
-    git checkout debian && \
-       gbp import-orig --upstream-vcs-tag=$VERSION \
-          ../Tails-IUK-$VERSION.tar.gz && \
-       gbp dch --auto --spawn-editor=always
-
-(Do not forget to set the appropriate release.)
-
-Update the packaging (e.g. look at changes in `dist.ini`),
-and then update `debian/changelog` again if needed.
-
-Commit `debian/changelog`:
-
-    git commit debian/changelog \
-        -m "$(echo -e "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))\n\nGit-Dch: Ignore\n")"
-
-Build a Debian package (use a Buster/amd64 chroot, that has
-either tails-perl5lib
-installed or the Tails APT repository configured):
-
-    gbp buildpackage && \
-    gbp buildpackage --git-tag-only --git-sign-tags && \
-    git push --follow-tags origin \
-                    master:master \
-                    debian:debian \
-                    pristine-tar:pristine-tar \
-                    upstream:upstream
-
-Add the Debian package to Tails
-===============================
-
-Sign the package:
-
-    debsign $CHANGES_FILE
-
-Upload:
-
-    dupload --to tails $CHANGES_FILE
+    export UNION_TYPE=overlayfs
+    NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
+    PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
+       RELEASE_TESTING=1 \
+       LC_ALL=C \
+       dzil test

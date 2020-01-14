@@ -3,7 +3,7 @@
 set -e
 set -u
 
-PROJECTS="liveusb-creator tails-iuk tails-misc tails-perl5lib tails-persistence-setup whisperback"
+PROJECTS="liveusb-creator tails-iuk tails-misc tails-persistence-setup whisperback"
 GIT_TOPLEVEL_DIR=$(git rev-parse --show-toplevel)
 TOR_TRANSLATION_DIR="$GIT_TOPLEVEL_DIR/tmp/tor-translation"
 
