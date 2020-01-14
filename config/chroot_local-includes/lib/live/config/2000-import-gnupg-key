@@ -6,9 +6,9 @@ Import_GnuPG_key ()
 	sudo -H -u "${LIVE_USERNAME}" gpg --batch --import /usr/share/doc/tails/website/*.key
 
 	echo "- importing Tails' GnuPG signing key into tails-iuk's trusted keyring"
-	gpg --batch --homedir /usr/share/tails-iuk/trusted_gnupg_homedir \
-	    --import /usr/share/doc/tails/website/tails-signing.key
-	chmod -R go+rX /usr/share/tails-iuk
+	sudo -H -u tails-upgrade-frontend \
+             gpg --batch --import \
+                 /usr/share/doc/tails/website/tails-signing-minimal.key
 
 	echo "- importing Tails help desk's GnuPG key into WhisperBack's keyring"
 	gpg --batch --no-default-keyring \

@@ -31,11 +31,9 @@ See [[the blueprint|blueprint/incremental_upgrades]].
 
 # Code
 
-Most the code needed to implement this design lives in the `iuk` [Git
-repository](https://git-tails.immerda.ch/iuk/).
+The code that implements this design lives in:
 
-The rest lives in the main Tails [[contribute/Git]] repository:
-
+* [[!tails_gitweb_dir config/chroot_local-includes/usr/src/iuk]]
 * [[!tails_gitweb config/chroot_local-includes/usr/local/bin/tails-upgrade-frontend-wrapper]]
 * [[!tails_gitweb config/chroot_local-includes/etc/sudoers.d/zzz_upgrade]]
 * [[!tails_gitweb config/chroot_local-includes/usr/lib/systemd/user/tails-upgrade-frontend.service]]
@@ -110,20 +108,19 @@ pushing the release Git branch live to master.
 
 ## Upgrade paths
 
-To ease implementation, only upgrades to the next closest step
-are supported.
+To ease implementation, we only support upgrades from Tails versions
+that have a recent enough Upgrader.
 
 E.g. say one has installed Tails 0.11 a while ago, and forgets
 about it. We then release Tails 0.11.1, and publish a `0.11_to_0.11.1`
 IUK, advertised by the upgrade-description file for 0.11 users. We then
-release Tails 0.11.2, and publish a `0.11.1_to_0.11.2` IUK, advertised
-by the upgrade-description file for 0.11.1 users. If the user starts
-their Tails 0.11, the upgrade system proposes upgrading to 0.11.1.
-Say the user accepts, the upgrade is performed, the user reboots, and
-the upgrade system now proposes upgrading to 0.11.2.
+release Tails 0.11.2, and publish:
 
-Allowing to run these two steps in a row, without rebooting, is
-mainly a GUI problem, and is postponed.
+* a `0.11_to_0.11.2` IUK advertised by the upgrade-description file
+  for users who initially installed 0.11, regardless of whether they
+  already upgraded to 0.11.1 or not;
+* a `0.11.1_to_0.11.2` IUK, advertised by the upgrade-description file
+  for users who initially installed 0.11.1.
 
 ## Infrastructure
 
@@ -139,40 +136,21 @@ We have a `tails-create-iuk` program that takes two Tails full images as input, 
 
 #### IUK format
 
-An IUK is a tar archive, compatible with GNU tar, that contains the
-following files:
+An IUK is a SquashFS archive that contains the following files:
 
-* `FORMAT`: contains the version of the IUK format (that is *1*), as
-  a positive integer encoded in ASCII.
+* `FORMAT`: contains the version of the IUK format, as
+  a positive integer encoded in ASCII (currently it is *2*).
 * `control.yml`: YAML associative array with the following keys:
-  - `delete_files`: a list of files to delete from the
-    system partition.
-* zero, one or more `*.tar[.bz2]`: tar archives, compatible with GNU tar, optionally
-  compressed with bzip2, that contain the set of files to add to, or
-  upgrade in the system partition: kernel(s), initrd(s), bootloader
-  configuration, `*.squashfs` (the SquashFS "diff" that must be
-  stacked on top of the older SquashFS filesystem(s)), etc.
-
-File paths, both in `*.tar[.bz2]` and in the `delete_files` list, are
-relative to the Tails system partition root, and must be compatible
-with a FAT32 filesystem.
-
-Tarballs contained in the IUK are meant to be extracted, one after the
-other, sorted by ASCII order.
-
-#### Initial implementation details
-
-(This section is not a specification.)
-
-The initial IUK generator will ship those files in every IUK:
-
-* `system.tar` contains files that are already compressed
-  (e.g. kernel, initrd, `*.squashfs`)
-* `boot.tar.bz2` contains files that are not compressed yet
-  (that is: syslinux configuration, modules and utilities)
-
-These are implementation details the IUK installer software must not
-rely upon.
+  - `delete_files`: a list of file paths to delete from the system
+    partition. These paths are relative to the Tails system partition
+    root, and must be compatible with a FAT32 filesystem.
+* `overlay`: optional directory whose contents will be extracted onto
+  the system partition root, overwriting existing files: kernel(s),
+  initrd(s), bootloader configuration, `live/*.squashfs` (the SquashFS
+  "diff" that must be stacked on top of the SquashFS filesystem from
+  the initial version of Tails that was manually installed to the
+  device), etc. All these files target a FAT32 filesystem, so its
+  limitations apply (e.g. on filename, file size, permissions).
 
 ### Mirrors infrastructure
 
@@ -190,7 +168,8 @@ set up does leave room for such future extension.
 ### Upgrade-description files
 
 We want the client to get an answer to questions such as "I run
-version N of product P on architecture A, what stable release upgrade
+version N+2 of product P on architecture A, on a device initially
+installed as version N and then upgraded to N+2, what stable release upgrade
 is available?". To allow us changing the way the answer is computed in
 the future, the amount of work done on the client's side should be
 kept to a minimum. So, let's insert a level of indirection, and
@@ -202,17 +181,16 @@ of upgrade-description file files.
 #### upgrade-description file URL
 
 * `https://tails.boum.org/upgrade`
-* URL schema version (so we can change it in the future), that is `v1`
-  to start with.
+* URL schema version (so we can change it in the future), that is currently `v2`
 * product name (e.g. *Tails*, but some day we may have *TailsServer*,
   *TailsHandheld* or whatever)
-* product version -- the currently running version to upgrade from,
-  e.g. *0.11* or *0.11.1*
+* initial install version -- the version initially installed on the
+  device to upgrade, e.g. *0.11* or *0.11.1*
 * build-target (e.g. *amd64*)
 * channel (e.g. *stable* or *beta*)
 * `upgrade.yml`
 
-Example: <https://tails.boum.org/upgrade/v1/Tails/0.11/amd64/beta/upgrades.yml>
+Example: <https://tails.boum.org/upgrade/v2/Tails/0.11/amd64/beta/upgrades.yml>
 
 Such a file shall be shipped along with its OpenPGP detached signature
 (`upgrades.yml.pgp`).
@@ -223,7 +201,7 @@ An upgrade-description file contains a YAML associative array with the
 following top-level keys:
 
 * `product-name`
-* `product-version`
+* `initial-install-version`
 * `build-target`
 * `channel`
 * `upgrades`: a list of upgrade elements.
@@ -263,10 +241,10 @@ Every target file element has the following keys:
   will need to be specified when this happens.)
 
 Example that would be found at
-<https://tails.boum.org/upgrade/v1/Tails/0.11.1/amd64/stable/upgrades.yml>:
+<https://tails.boum.org/upgrade/v2/Tails/0.11.1/amd64/stable/upgrades.yml>:
 
 	product-name: Tails
-	product-version: 0.11.1
+	initial-install-version: 0.11.1
 	channel: stable
 	build-target: amd64
 	
@@ -277,7 +255,7 @@ Example that would be found at
 	    upgrade-paths:
 	      - type: incremental
 	        target-files:
-	          - url: http://dl.amnesia.boum.org/tails/stable/iuk/Tails_amd64_0.11.1_to_0.11.2.iuk
+	          - url: http://dl.amnesia.boum.org/tails/stable/iuk/v2/Tails_amd64_0.11.1_to_0.11.2.iuk
 	            size: 37345648
 	            sha256: 5c5c47f6155e7807c971251fdad28d5f72ff78db446e43a41e4b900f29229a7d
 	      - type: full
@@ -304,8 +282,8 @@ followed by the `.iuk` suffix:
 
 * product name (e.g. *Tails*)
 * build-target (e.g. *amd64*)
-* product version -- the currently running version to upgrade from,
-  e.g. *0.11* or *0.11.1*
+* initial install version -- the version initially installed on the device to
+  upgrade, e.g. *0.11* or *0.11.1*
 * `to`
 * the version of this upgrade, that is the version of the running
   product after the upgrade is completed and the system restarted (e.g.
@@ -317,10 +295,10 @@ Example: `Tails_amd64_0.11.1_to_0.11.2.iuk`
 
 A given IUK is meant to be made available at the URL composed from:
 
-* `http://dl.amnesia.boum.org/tails/iuk/`
+* `http://dl.amnesia.boum.org/tails/iuk/v2/`
 * the IUK file basename
 
-Example: <http://dl.amnesia.boum.org/tails/iuk/Tails_amd64_0.11.1_to_0.11.2.iuk>
+Example: <http://dl.amnesia.boum.org/tails/iuk/v2/Tails_amd64_0.11.1_to_0.11.2.iuk>
 
 ## Client and user interface
 
@@ -339,7 +317,7 @@ upgrade-description file.
 * Fetch the upgrade-description file and its signature at these URIs.
 * Verify the cryptographic signature of the upgrade-description file.
 * Check that content of the upgrade-description file matches the
-  currently running system (in terms of product name, product
+  currently running system (in terms of product name, initial install
   version, build-target and channel).
 * Once all these steps have been successfully performed, the content
   of the upgrade-description file is trusted to be legit, and is
@@ -422,13 +400,17 @@ medium read-write.
 
 * Verify the IUK is in a supported format.
 * Remount the boot-medium read-write.
-* Extract the IUK archive.
-* Move stacked squashfs found in the IUK in place.
-* Extract tarballs (`*.tar[.bz2]`) contained in the IUK, one after the
-  other, sorted by ASCII order.
+* Mount the IUK archive.
+* If the `overlay` directory exists in the IUK, copy its contents
+  onto the system partition root, overwriting existing files.
+* If a new SquashFS diff file (`live/*.squashfs`) was provided
+  in the `overlay` directory:
+  * ensure `live/Tails.module` contains:
+    - one line that says `filesystem.squashfs`
+    - one line that contains the filename of that new SquashFS diff
+  * remove any old SquashFS diff file that is not referenced
+    by `live/Tails.module` anymore.
 * Delete files that are listed in the `delete_files` control field.
-* Append the new SquashFS diff file name to the `live/Tails.module`
-  file, in the Tails system partition.
 * Upgrade syslinux with the binary found in `utils/linux/syslinux` on
   the Tails system partition. Likewise, upgrade the boot device's MBR
   with the one found in `utils/mbr/mbr.bin` on the Tails system

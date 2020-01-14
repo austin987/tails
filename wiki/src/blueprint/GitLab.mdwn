@@ -336,6 +336,8 @@ want to migrate our blueprints to GitLab's
 
 # Importing data from Redmine
 
+<a id="specification-for-importing-issues"></a>
+
 ## Specification
 
 Note: some of what follows still needs to be negotiated with the
@@ -469,22 +471,12 @@ Tails community.
 
   It looks like GitLab does not support private comments.
 
-  XXX (intrigeri): check if it's OK to publicly leak the fact that
-  someone (unspecified) posted a private note on an issue, along with
-  the corresponding timestamp. To list all private notes, grouped by
-  user:
-
-        ./redlab discuss --verbose -C config.py --private-notes
-
-  - 2019-11-20: asked the 10 affected users if they consent with leaking
-    this information publicly.
-
-  If folks don't consent to this infoleak, we'll add a link from the
-  GitLab issue description to the privately archived Redmine, and to
-  follow an old discussion, one may want to systematically follow this
-  link to ensure they did not miss a private note.
+  It's OK to publicly leak the fact that someone (unspecified) posted
+  a private note on an issue, along with the corresponding timestamp.
 
 * Preserve issue assignee
+
+  Implementation note: we'll have admin credentials on our GitLab instance.
 
   It is acceptable to require assignees to manually create their
   GitLab user account themselves before the final migration.
@@ -515,6 +507,8 @@ Tails community.
 
 * Preserve attribution (authorship) of actions, e.g. which user
   created an issue, wrote a note, or modified the metadata of an issue
+
+  Implementation note: we'll have admin credentials on our GitLab instance.
 
   It's good enough to add this as free-form text in the corresponding
   issue or note, like e.g.

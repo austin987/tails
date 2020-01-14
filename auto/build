@@ -112,13 +112,24 @@ MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS} -mem 512M -wildcards -ef chroot/usr/sh
 export MKSQUASHFS_OPTIONS
 
 # build the doc wiki
-./build-website
+if [ "${TAILS_WEBSITE_CACHE:-0}" = 1 ]; then
+   export WEBSITE_DEST_DIR=.
+   export WEBSITE_CACHE_BASEDIR
+   website-cache gc
+   WEBSITE_CACHE_KEY=$(website-cache key)
+   if ! website-cache get "$WEBSITE_CACHE_KEY"; then
+      ./build-website
+      website-cache put "$WEBSITE_CACHE_KEY"
+   fi
+else
+   ./build-website
+fi
 
 # refresh translations of our programs
 ./refresh-translations || fatal "refresh-translations failed ($?)."
 
 # generate list of supported languages
-./generate-languages-list || fatal "generate-languages-list failed ($?)."
+generate-languages-list || fatal "generate-languages-list failed ($?)."
 
 BUILD_ISO_FILENAME="${BUILD_BASENAME}.iso"
 BUILD_MANIFEST="${BUILD_BASENAME}.build-manifest"

@@ -182,7 +182,6 @@ pref("security.enable_ssl3", false);
 // https://bugs.torproject.org/11253
 // March 2017: See https://bugs.torproject.org/20751
 pref("security.tls.version.min", 3);
-pref("security.tls.version.max", 3);
 // Display a dialog warning the user when entering an insecure site from a secure one.
 pref("security.warn_entering_weak", true);
 // Display a dialog warning the user when submtting a form to an insecure site.

@@ -928,6 +928,29 @@ Given /^Tails is fooled to think it is running version (.+)$/ do |version|
   )
 end
 
+Given /^Tails is fooled to think that version (.+) was initially installed$/ do |version|
+  initial_os_release_file =
+    '/lib/live/mount/rootfs/filesystem.squashfs/etc/os-release'
+  fake_os_release_file = $vm.execute_successfully('mktemp').stdout.chomp
+  fake_os_release_content = <<-EOF
+TAILS_PRODUCT_NAME="Tails"
+TAILS_VERSION_ID="#{version}"
+  EOF
+  $vm.file_overwrite(fake_os_release_file, fake_os_release_content)
+  $vm.execute_successfully("chmod a+r #{fake_os_release_file}")
+  $vm.execute_successfully(
+    "mount --bind '#{fake_os_release_file}' '#{initial_os_release_file}'"
+  )
+  # Let's verify that the deception works
+  assert_equal(
+    version,
+    $vm.execute_successfully(
+      ". #{initial_os_release_file} && echo ${TAILS_VERSION_ID}"
+    ).stdout.chomp,
+    'Implementation error, alert the test suite maintainer!'
+  )
+end
+
 def running_tails_version
   $vm.execute_successfully('tails-version').stdout.split.first
 end
