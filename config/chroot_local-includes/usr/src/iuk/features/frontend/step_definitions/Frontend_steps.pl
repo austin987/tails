@@ -430,8 +430,6 @@ When qr{^I run tails-upgrade-frontend(| in batch mode)$}, fun ($c) {
 };
 
 Then qr{^it should succeed$}, fun ($c) {
-    Test::Util::kill_httpd($c);
-
     ok(defined $c->{stash}->{scenario}->{exit_code})
         and
     is($c->{stash}->{scenario}->{exit_code}, 0);
@@ -448,8 +446,6 @@ Then qr{^it should succeed$}, fun ($c) {
 };
 
 Then qr{^it should fail to (check for upgrades|download the upgrade)$}, fun ($c) {
-    Test::Util::kill_httpd($c);
-
     ok(defined $c->{stash}->{scenario}->{exit_code})
         and
     isnt($c->{stash}->{scenario}->{exit_code}, 0);
@@ -521,6 +517,11 @@ Then qr{^the network should be shutdown$}, fun ($c) {
 Then qr{^the downloaded IUK should be installed$}, fun ($c) {
     # the overlay directory in the test IUK contains a "placeholder" file
     ok(path($c->{stash}->{scenario}->{liveos_mountpoint}, 'placeholder')->exists);
+    # Ensure the next "I run tails-upgrade-frontend in batch mode"
+    # is aware that the upgrade was applied
+    $c->{stash}->{scenario}->{os_release_file}->edit_lines(
+        sub { s{\ATAILS_VERSION_ID="0[.]11"$}{TAILS_VERSION_ID="0.12.1"}xms }
+    );
 };
 
 Then qr{^I should be proposed to restart the system$}, fun ($c) {
@@ -543,6 +544,7 @@ Then qr{^the system should be restarted$}, fun ($c) {
 };
 
 After fun ($c) {
+    Test::Util::kill_httpd($c);
     run_as_root('umount', $c->{stash}->{scenario}->{liveos_mountpoint});
     ${^CHILD_ERROR_NATIVE} == 0 or croak("Failed to umount system partition.");
     run_as_root(qw{kpartx -d}, $c->{stash}->{scenario}->{backing_file});
