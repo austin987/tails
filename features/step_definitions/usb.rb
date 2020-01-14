@@ -903,6 +903,18 @@ Given /^Tails is fooled to think a (.+) SquashFS delta is installed$/ do |versio
   )
 end
 
+Then /^the Upgrader considers the system as up-to-date$/ do
+  try_for(120, :delay => 10) do
+    $vm.execute_successfully(
+      "systemctl --user status tails-upgrade-frontend.service",
+      :user => LIVE_USER
+    )
+    $vm.execute_successfully(
+      "journalctl | grep -q -E 'tails-upgrade-frontend-wrapper\[[0-9]+\]: The system is up-to-date'"
+    )
+  end
+end
+
 def upgrader_trusted_signing_subkeys
   $vm.execute_successfully(
     "sudo -u tails-upgrade-frontend gpg --batch --list-keys --with-colons '#{TAILS_SIGNING_KEY}'",
