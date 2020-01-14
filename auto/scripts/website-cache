@@ -47,11 +47,11 @@ def main():
         description="Query and manage website cache"
     )
     parser.add_argument(
-        "--dest-dir",  type=str, action="store", required=True,
+        "--dest-dir",  type=str, action="store",
         default=os.getenv('WEBSITE_DEST_DIR', None),
         help="Directory where to restore data from the cache")
     parser.add_argument(
-        "--cache-base-dir", type=str, action="store", required=True,
+        "--cache-base-dir", type=str, action="store",
         default=os.getenv('WEBSITE_CACHE_BASEDIR', None),
         help="Directory where the cache lives")
     parser.add_argument("--debug", action="store_true", help="debug output")
@@ -88,6 +88,14 @@ def main():
         logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
     else:
         logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
+    if args.cache_base_dir is None:
+        log.error("Please pass --cache-base-dir or set $WEBSITE_CACHE_BASEDIR")
+        sys.exit(1)
+
+    if args.dest_dir is None:
+        log.error("Please pass --dest-dir or set $WEBSITE_DEST_DIR")
+        sys.exit(1)
 
     for key_file in KEY_FILES + [args.cache_base_dir]:
         if not Path(key_file).exists():
