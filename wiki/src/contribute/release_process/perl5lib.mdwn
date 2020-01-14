@@ -1,98 +1,20 @@
-[[!meta title="Releasing perl5lib"]]
+[[!meta title="Testing perl5lib"]]
 
 [[!toc levels=1]]
+
+Everything on this page happens in the
+`config/chroot_local-includes/usr/src/perl5lib` directory.
 
 Install build and test dependencies
 ===================================
 
-    git checkout master && \
-    sudo apt install \
-       devscripts \
-       dh-make-perl \
-       libdist-zilla-app-command-authordebs-perl && \
-    dzil authordebs --install && \
-    git checkout debian && \
-    mk-build-deps -i -r --root-cmd sudo
+    cat $(git rev-parse --show-toplevel)/config/chroot_local-packageslists/tails-perl5lib.list \
+       | grep -E -v '^#' \
+       | xargs sudo apt install && \
+    sudo apt install libdist-zilla-app-command-authordebs-perl && \
+    dzil authordebs --install
 
-Update POT and PO files
-=======================
+Run the test suite
+==================
 
-    git checkout master && \
-        ( cd po && make pot && make update-po ) && \
-        git add po && \
-        git commit -m 'Update POT and PO files.'
-
-Make an upstream release
-========================
-
-    git checkout master
-
-Enable new translations in `po/PACKAGE` and commit.
-
-Export new upstream version number:
-
-    export VERSION=XXX
-
-Update version number in `lib/Tails.pm`, commit all
-files that need to be, run the upstream test suite, build an upstream
-tarball, tag the release, move the tarball out of the build repository
-and clean it up:
-
-    perl -pi -E 's,^Version [0-9.]+,Version $ENV{VERSION},' lib/Tails.pm && \
-       perl -pi \
-          -E "s,^our \\\$VERSION = '[0-9.]+';\$,our \\\$VERSION = '$VERSION';," \
-          lib/Tails.pm && \
-       git commit lib/Tails.pm -m "Tails-perl5lib $VERSION" && \
-       RELEASE_TESTING=1 dzil test && \
-       dzil build && \
-       git tag -s "Tails-perl5lib_$VERSION" -m "Tails-perl5lib $VERSION" && \
-       mv Tails-perl5lib-*.tar.gz .. && \
-       git clean -fdx
-
-Update the Debian package
-=========================
-
-Checkout the branch with Debian package specifics, import the new
-upstream tarball, update `debian/changelog`:
-
-    git checkout debian && \
-       gbp import-orig --upstream-vcs-tag=Tails-perl5lib_$VERSION \
-          ../Tails-perl5lib-$VERSION.tar.gz && \
-       gbp dch --auto --spawn-editor=always
-
-(Do not forget to set the appropriate release.)
-
-Update the packaging (e.g. look at changes in `dist.ini`),
-and then update `debian/changelog` again if needed.
-
-Commit `debian/changelog`:
-
-        git commit debian/changelog \
-            -m "$(echo "$(dpkg-parsechangelog -SSource) ($(dpkg-parsechangelog -SVersion))\n\nGit-Dch: Ignore\n")"
-
-Build a Debian package (use a Buster/amd64 chroot):
-
-    gbp buildpackage
-
-If everything is fine, add a signed tag to the repository and push the
-changes:
-
-    gbp buildpackage --git-tag-only --git-sign-tags && \
-    git push --follow-tags origin \
-                    master:master \
-                    debian:debian \
-                    pristine-tar:pristine-tar \
-                    upstream:upstream
-
-(Make sure `master`, `upstream`, `debian` and `pristine-tar` were all pushed.)
-
-Add the Debian package to Tails
-===============================
-
-Sign the package:
-
-    debsign $CHANGES_FILE
-
-Upload:
-
-    dupload --to tails $CHANGES_FILE
+    RELEASE_TESTING=1 dzil test

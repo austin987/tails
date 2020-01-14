@@ -43,6 +43,7 @@ EXPORTED_VARIABLES = [
   'TAILS_PROXY',
   'TAILS_PROXY_TYPE',
   'TAILS_RAM_BUILD',
+  'TAILS_WEBSITE_CACHE',
   'GIT_COMMIT',
   'GIT_REF',
   'BASE_BRANCH_GIT_COMMIT',
@@ -118,7 +119,7 @@ rescue CommandError => e
 end
 
 # Runs the vagrant command, not letting stdout/stderr through, and
-# returns [stdout, stderr, Preocess:Status].
+# returns [stdout, stderr, Process::Status].
 def capture_vagrant(*args)
   capture_command('vagrant', *args, :chdir => './vagrant')
 rescue CommandError => e
@@ -246,11 +247,20 @@ task :parse_build_options do
       ENV['TAILS_PROXY_TYPE'] = 'noproxy'
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
+    when 'cachewebsite'
+      if is_release?
+        $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
+        ENV['TAILS_WEBSITE_CACHE'] = '0'
+      else
+        ENV['TAILS_WEBSITE_CACHE'] = '1'
+      end
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
-      ENV['MKSQUASHFS_OPTIONS'] = '-comp xz'
       if is_release?
-        raise 'We must use the default compression when building releases!'
+        $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
+        ENV['MKSQUASHFS_OPTIONS'] = nil
+      else
+        ENV['MKSQUASHFS_OPTIONS'] = '-comp xz -no-exports'
       end
     when 'defaultcomp'
       ENV['MKSQUASHFS_OPTIONS'] = nil
@@ -389,8 +399,35 @@ task :maybe_clean_up_builder_vms do
   clean_up_builder_vms if $force_cleanup
 end
 
+task :ensure_correct_permissions do
+  FileUtils.chmod('go+x', '.')
+  FileUtils.chmod_R('go+rX', ['.git', 'submodules', 'vagrant'])
+
+  # Changing permissions outside of the working copy, in particular on
+  # parent directories such as $HOME, feels too blunt and can have
+  # problematic security consequences, so we don't forcibly do that.
+  # Instead, when the permissions are not OK, display a nicer error
+  # message than "Virtio-9p Failed to initialize fs-driver […]"
+  begin
+    capture_command('sudo', '-u', 'libvirt-qemu', 'stat', '.git')
+  rescue CommandError
+    abort <<-END_OF_MESSAGE.gsub(/^      /, '')
+
+      Incorrect permissions: the libvirt-qemu user needs to be allowed
+      to traverse the filesystem up to #{ENV['PWD']}.
+
+      To fix this, you can for example run the following command
+      on every parent directory of #{ENV['PWD']} up to #{ENV['HOME']}
+      (inclusive):
+
+        chmod g+x DIR && setfacl -m user:libvirt-qemu:x DIR
+
+    END_OF_MESSAGE
+  end
+end
+
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'vm:up', 'ensure_clean_home_directory'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_up_builder_vms', 'validate_git_state', 'setup_environment', 'validate_http_proxy', 'ensure_correct_permissions', 'vm:up', 'ensure_clean_home_directory'] do
 
   begin
     if ENV['TAILS_RAM_BUILD'] && not(enough_free_memory_for_ram_build?)
@@ -419,36 +456,60 @@ task :build => ['parse_build_options', 'ensure_clean_repository', 'maybe_clean_u
 
     exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                    collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
-    run_vagrant_ssh("#{exported_env} build-tails")
 
-    artifacts = list_artifacts
-    raise 'No build artifacts were found!' if artifacts.empty?
-    user     = vagrant_ssh_config('User')
-    hostname = vagrant_ssh_config('HostName')
-    key_file = vagrant_ssh_config('IdentityFile')
-    $stderr.puts "Retrieving artifacts from Vagrant build box."
-    run_vagrant_ssh(
-      "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
-    )
-    fetch_command = [
-      'scp',
-      '-i', key_file,
-      # We need this since the user will not necessarily have a
-      # known_hosts entry. It is safe since an attacker must
-      # compromise libvirt's network config or the user running the
-      # command to modify the #{hostname} below.
-      '-o', 'StrictHostKeyChecking=no',
-      '-o', 'UserKnownHostsFile=/dev/null',
-      # Speed up the copy
-      '-o', 'Compression=no',
-    ]
-    fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
-    fetch_command << ENV['ARTIFACTS']
-    run_command(*fetch_command)
-    clean_up_builder_vms unless $keep_running
+    begin
+      retrieved_artifacts = false
+      run_vagrant_ssh("#{exported_env} build-tails")
+    rescue VagrantCommandError
+      retrieve_artifacts(:missing_ok => true)
+      retrieved_artifacts = true
+    ensure
+      retrieve_artifacts(:missing_ok => false) unless retrieved_artifacts
+      clean_up_builder_vms unless $keep_running
+    end
   ensure
     clean_up_builder_vms if $force_cleanup
   end
+end
+
+desc "Retrieve build artifacts from the Vagrant box"
+task :retrieve_artifacts do
+  retrieve_artifacts
+end
+
+def retrieve_artifacts(missing_ok: false)
+  artifacts = list_artifacts
+  if artifacts.empty?
+    msg = 'No build artifacts were found!'
+    if missing_ok
+      $stderr.puts msg
+      return
+    else
+      raise msg
+    end
+  end
+  user     = vagrant_ssh_config('User')
+  hostname = vagrant_ssh_config('HostName')
+  key_file = vagrant_ssh_config('IdentityFile')
+  $stderr.puts "Retrieving artifacts from Vagrant build box."
+  run_vagrant_ssh(
+    "sudo chown #{user} " + artifacts.map { |a| "'#{a}'" } .join(' ')
+  )
+  fetch_command = [
+    'scp',
+    '-i', key_file,
+    # We need this since the user will not necessarily have a
+    # known_hosts entry. It is safe since an attacker must
+    # compromise libvirt's network config or the user running the
+    # command to modify the #{hostname} below.
+    '-o', 'StrictHostKeyChecking=no',
+    '-o', 'UserKnownHostsFile=/dev/null',
+    # Speed up the copy
+    '-o', 'Compression=no',
+  ]
+  fetch_command += artifacts.map { |a| "#{user}@#{hostname}:#{a}" }
+  fetch_command << ENV['ARTIFACTS']
+  run_command(*fetch_command)
 end
 
 def has_box?
@@ -486,6 +547,14 @@ def clean_up_builder_vms
     else
       run_vagrant_ssh("sudo systemctl stop apt-cacher-ng.service")
       run_vagrant_ssh("sudo umount /var/cache/apt-cacher-ng")
+      run_vagrant_ssh("sudo sync")
+    end
+    begin
+      run_vagrant_ssh("mountpoint -q /var/cache/tails-website")
+    rescue VagrantCommandError
+    # Nothing to unmount.
+    else
+      run_vagrant_ssh("sudo umount /var/cache/tails-website")
       run_vagrant_ssh("sudo sync")
     end
   end
@@ -571,7 +640,7 @@ namespace :vm do
       clean_up_builder_vms
     end
     begin
-      run_vagrant('up')
+      run_vagrant('up', '--provision')
     rescue VagrantCommandError => e
       clean_up_builder_vms if $force_cleanup
       raise e
@@ -593,7 +662,7 @@ namespace :vm do
     run_vagrant('provision')
   end
 
-  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data)"
+  desc "Destroy build virtual machine (clean up all files except the vmproxy's apt-cacher-ng data and the website cache)"
   task :destroy do
     clean_up_builder_vms
   end

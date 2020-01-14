@@ -29,7 +29,10 @@ CMD = os.path.basename(sys.argv[0])
 TORDATE_DIR = '/run/tordate'
 TORDATE_DONE_FILE = '{}/done'.format(TORDATE_DIR)
 INOTIFY_TIMEOUT = 60
-MIN_AVAILABLE_MEMORY = (300 * 1024 * 1024)  # In Bytes
+# While running iuk.git:features/frontend:
+#  - tails-upgrade-frontend never uses more than 100 * 10^6 bytes
+#  - tails-iuk-get-upgrade-description never uses more than 95 * 10^6 bytes
+MIN_AVAILABLE_MEMORY = (200 * 1024 * 1024)  # In Bytes
 RUN_AS_USER = 'tails-upgrade-frontend'
 
 ERROR_MESSAGE = gettext('''\"<b>Not enough memory available to check for upgrades.</b>
@@ -61,7 +64,7 @@ def main(*args):
         (
             "/bin/sh", "-c",
             "xhost +SI:localuser:{user};"
-            "sudo -u {user} /usr/bin/tails-upgrade-frontend {args};"
+            "sudo -u {user} /usr/local/bin/tails-upgrade-frontend {args};"
             "xhost -SI:localuser:{user}".format(user=RUN_AS_USER, args=" ".join(args))
         )
     )

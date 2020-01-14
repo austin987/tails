@@ -13,6 +13,10 @@ It's working relatively well so far, but we may need to upgrade again
 soonish, and improvements are always welcome in the contributor UX
 area:
 
+ * Our release process suffers from a number of delays that are in the critical
+   path and could be shortened if our Jenkins workers were faster: running the
+   test suite after importing Tor Browser, building the final images to check
+   for reproducibility, building IUKs.
  * When Jenkins has built an ISO from one of our main branches or from
    a branch that _Needs Validation_, since October 2017 we rebuild in
    in a slightly different build environment to ensure it can be
@@ -198,6 +202,8 @@ Cons:
  * High initial money investment
  * Hosting this is a hard sell for collocations.
  * On-going cost for hosting this cluster.
+ * Needs some development work to fully benefit from the performance
+   improvements.
 
 ### Availability
 
@@ -244,7 +250,8 @@ Summary:
   virtualization.
 
 - With 2 Jenkins executors on the node, each in its own VM that's
-  able to run one build or test job at a time, with nested virtualization:
+  able to run one build or test job at a time, with nested virtualization,
+  and qcow2 disks (probably slower than LVs as used on lizard):
   - light load, i.e. only one concurrent build/test: each build + test takes
     43% less time than on lizard
   - heavy load, i.e. two concurrent builds/tests: each build + test takes
@@ -259,13 +266,36 @@ and test ~40 branches. Even adding only 2 such boxes would
 increase the maximum throughput of our CI by 69% and immensely lower
 latency during heavy load times.
 
-This is assuming perfect load distribution, which requires VMs that
+### Required development work
+
+The above benchmarks assume perfect load distribution, which requires
+Jenkins slaves that
 can run both build and test jobs. It works fine in local limited
 testing but this is not what we have set up on lizard at the moment:
 there's a risk that a failed test job leaves the system in a bad shape
-and breaks the following build job as we don't reboot before build
-jobs. We might need to either make test jobs more robust on failure,
-or to start rebooting VMs before build jobs as well.
+and breaks the following build job as we don't reboot after build
+jobs. We might need to either make test jobs more robust on failure
+([[!tails_ticket 17216]]),
+or to start rebooting the Jenkins slaves after build jobs as well.
+
+To utilize more fully such nodes, we may need to raise the number of
+vCPUs allocated to TailsToaster. For example, assuming 8 hyperthreads
+per box, and 2 VMs per box, with our current settings (2 vCPUs
+allocated to TailsToaster and Cucumber eats another vCPU core):
+
+ - when running 1 single test suite job,
+   up to 3 hyperthreads out of 8 are used;
+
+ - when running 2 concurrent test suite jobs,
+   up to 2×3=6 hyperthreads out of 8 are used.
+
+Raising this number may make the test suite run faster at least when
+there's only 1 test suite job running. It might even make it faster,
+in most scenarios, when 2 concurrent test suite jobs are running: they
+generally won't be using that much CPU power at the same time. OTOH it
+could introduce some test fragility.
+
+We should first measure if it's worth the effort.
 
 ## Run builds and/or tests in the cloud
 
