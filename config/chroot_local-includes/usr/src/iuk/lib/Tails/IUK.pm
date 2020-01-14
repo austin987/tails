@@ -246,7 +246,6 @@ method _build_overlay_dir () {
 method _build_format_version () { "2"; }
 method _build_mksquashfs_options () { [
     qw{-no-progress -noappend},
-    qw{-all-root},
     qw{-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K},
 ]}
 method _build_union_type () { "aufs"; }
@@ -452,7 +451,8 @@ method saveas ($outfile_name) {
         qw{mksquashfs},
         $self->squashfs_src_dir,
         $outfile_name,
-        $self->list_mksquashfs_options
+        $self->list_mksquashfs_options,
+        '-all-root',
     );
 
     return;

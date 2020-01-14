@@ -148,11 +148,20 @@ Given qr{^two ISO images when a new kernel was added$}, fun ($c) {
     );
 };
 
-Given qr{^(an old|a new) ISO image whose filesystem.squashfs( does not|) contains? file "([^"]+)"(?:| modified at ([0-9]+))$}, fun ($c) {
+Given qr{^(an old|a new) ISO image whose filesystem.squashfs( does not|) contains? file "([^"]+)"(?:| modified at ([0-9]+)| owned by ([a-z-]+))$}, fun ($c) {
     my $generation = $c->matches->[0] eq 'an old' ? 'old' : 'new';
     my $contains = $c->matches->[1] eq "" ? 1 : 0;
     my $file     = $c->matches->[2];
-    my $mtime    = $c->matches->[3];
+    my ($mtime, $owner);
+    if (defined $c->matches->[3]) {
+        if ($c->matches->[3] =~ m{\A[0-9]+\z}) {
+            $mtime = $c->matches->[3];
+        } elsif ($c->matches->[3] =~ m{\A[a-z-]+\z}) {
+            $owner = $c->matches->[3];
+        } else {
+            croak "Test suite implementation error";
+        }
+    }
 
     my $iso_basename = $generation eq 'old' ? 'old.iso' : 'new.iso';
     my $iso_filename = path($c->{stash}->{scenario}->{tempdir}, $iso_basename);
@@ -164,6 +173,7 @@ Given qr{^(an old|a new) ISO image whose filesystem.squashfs( does not|) contain
         path($squashfs_tempdir, $file)->parent->mkpath();
         path($squashfs_tempdir, $file)->touch;
         utime($mtime, $mtime, path($squashfs_tempdir, $file)) if defined($mtime);
+        run_as_root('chown', $owner, path($squashfs_tempdir, $file)) if defined($owner);
     }
     path($iso_tempdir, 'live')->mkpath();
     capture("mksquashfs '$squashfs_tempdir' '$iso_tempdir/live/filesystem.squashfs' -no-progress 2>/dev/null");
@@ -311,7 +321,8 @@ fun file_content_in_iuk_unlike($iuk_in, Path $filename, $regexp) {
     _file_content_in_iuk_like(@_, 0);
 }
 
-fun squashfs_in_iuk_contains($iuk_in, $squashfs_name, $expected_file, $expected_mtime) {
+fun squashfs_in_iuk_contains(:$iuk_in, :$squashfs_name, :$expected_file,
+                             :$expected_mtime, :$expected_owner) {
     my $squashfs_path = path('overlay', 'live', $squashfs_name);
     die "SquashFS '$squashfs_name' not found in the IUK"
         unless $iuk_in->contains_file($squashfs_path);
@@ -341,8 +352,13 @@ fun squashfs_in_iuk_contains($iuk_in, $squashfs_name, $expected_file, $expected_
     return unless $exists;
 
     if (defined $expected_mtime) {
-        return $expected_mtime == $tempdir->child('squashfs-root', $expected_file)->stat->mtime
+        return unless $expected_mtime == $tempdir->child('squashfs-root', $expected_file)->stat->mtime
     }
+
+    if (defined $expected_owner) {
+        return unless $expected_owner eq getpwuid($tempdir->child('squashfs-root', $expected_file)->stat->uid)
+    }
+
     return 1;
 }
 
@@ -439,14 +455,25 @@ Then qr{^the delete_files list is empty$}, fun ($c) {
     is($c->{stash}->{scenario}->{iuk_in}->delete_files_count, 0);
 };
 
-Then qr{^the saved IUK contains a SquashFS that contains file "([^"]+)"(?:| modified at ([0-9]+))$}, fun ($c) {
+Then qr{^the saved IUK contains a SquashFS that contains file "([^"]+)"(?:| modified at ([0-9]+)| owned by ([a-z-]+))$}, fun ($c) {
     my $expected_file  = $c->matches->[0];
-    my $expected_mtime = $c->matches->[1];
+    my ($expected_mtime, $expected_owner);
+    if (defined $c->matches->[1]) {
+        if ($c->matches->[1] =~ m{\A[0-9]+\z}) {
+            $expected_mtime = $c->matches->[1];
+        } elsif ($c->matches->[1] =~ m{\A[a-z-]+\z}) {
+            $expected_owner = $c->matches->[1];
+        } else {
+            croak "Test suite implementation error";
+        }
+    }
 
     ok(squashfs_in_iuk_contains(
-        $c->{stash}->{scenario}->{iuk_in},
-        $c->{stash}->{scenario}->{squashfs_diff_name},
-        $expected_file, $expected_mtime,
+        iuk_in         => $c->{stash}->{scenario}->{iuk_in},
+        squashfs_name  => $c->{stash}->{scenario}->{squashfs_diff_name},
+        expected_file  => $expected_file,
+        expected_mtime => $expected_mtime,
+        expected_owner => $expected_owner,
     ));
 };
 
