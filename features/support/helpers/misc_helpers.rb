@@ -297,10 +297,10 @@ def pause(message = "Paused")
   STDOUT.write "\a"
   STDERR.puts
   loop do
-    STDERR.puts "Return: Continue; d: Debugging REPL"
+    STDERR.puts "Return/q: Continue; d: Debugging REPL"
     c = STDIN.getch
     case c
-    when "\r", 3.chr  # Ctrl+C => 3
+    when "q", "\r", 3.chr  # Ctrl+C => 3
       return
     when "d"
       binding.pry(quiet: true)
