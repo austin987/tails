@@ -300,7 +300,7 @@ def pause(message = "Paused")
     STDERR.puts "Return: Continue; d: Debugging REPL"
     c = STDIN.getch
     case c
-    when "\r"
+    when "\r", 3.chr  # Ctrl+C => 3
       return
     when "d"
       binding.pry(quiet: true)
