@@ -32,9 +32,12 @@ def match(image, candidate, sensitivity):
     w, h = template.shape[::-1]
     res = cv2.matchTemplate(image_gray, template, cv2.TM_CCOEFF_NORMED)
     _, val, _, pos = cv2.minMaxLoc(res)
+    x, y = pos
     if val < sensitivity:
         raise FindFailed
-    return list(pos) + [w, h]
+    cv2.imwrite(os.environ['TMPDIR'] + '/last_opencv_match.png',
+                image_rgb[y:y+h, x:x+w])
+    return [x, y, w, h]
 
 try:
     print(*match("#{screen}", "#{image}", #{sensitivity}))
