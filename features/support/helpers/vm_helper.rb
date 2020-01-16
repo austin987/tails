@@ -620,6 +620,7 @@ EOF
       end
     end
 
+    debug_log_load
     # Note: In this case the "opposite" of `internal_snapshot` is not
     # anything relating to external snapshots, but actually "memory
     # state"(-only) snapshots.
@@ -637,6 +638,7 @@ EOF
       # the clock drift too much.
       restore_snapshot(name)
     end
+    debug_log_load
   end
 
   def restore_snapshot(name)
@@ -646,6 +648,7 @@ EOF
     # See comment in save_snapshot() for details on why we use two
     # different type of snapshots.
     potential_ram_only_snapshot_path = VM.ram_only_snapshot_path(name)
+    debug_log_load
     if File.exist?(potential_ram_only_snapshot_path)
       Libvirt::Domain::restore(@virt, potential_ram_only_snapshot_path)
       @domain = @virt.lookup_domain_by_name(@domain_name)
@@ -657,6 +660,7 @@ EOF
         raise "The (internal nor external) snapshot #{name} may be known by libvirt but it cannot be restored. To investigate, use 'virsh snapshot-list TailsToaster'. To clean up old dangling snapshots, use 'virsh snapshot-delete'."
       end
     end
+    debug_log_load
     @display.start
   end
 

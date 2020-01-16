@@ -356,3 +356,9 @@ def dbus_send(*args, **opts)
   ret = ret_lines.join("\n")
   dbus_send_ret_conv(ret)
 end
+
+def debug_log_load
+  debug_log("loadavg: #{cmd_helper('cut -d" " -f1-3 /proc/loadavg')}")
+  debug_log("vmstat:  #{cmd_helper('vmstat | tail -n1')}")
+  debug_log("top:     #{cmd_helper('top -b -n 1 | grep ^%Cpu')}")
+end
