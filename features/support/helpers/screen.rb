@@ -233,6 +233,7 @@ class ImageBumpingScreen
     loop do
       STDERR.puts(
         "\n" +
+        "a: Automatic bump\n" +
         "r: Retry image (pro tip: manually update the image first!)\n" +
         "i: Ignore this image for the remaining of the run\n" +
         "d: Debugging REPL\n" +
@@ -240,6 +241,26 @@ class ImageBumpingScreen
       )
       c = STDIN.getch
       case c
+      when 'a'
+        [0.80, 0.70, 0.60, 0.50, 0.40, 0.30].each do |sensitivity|
+          STDERR.puts "Trying with sensitivity #{sensitivity}..."
+          p = @screen.match_screen(image, sensitivity, true)
+          if p
+            STDERR.puts "Found match! Accept? (y/n)"
+            loop do
+              c = STDIN.getch
+              if c == 'y'
+                FileUtils.cp("#{$config["TMPDIR"]}/last_opencv_match.png",
+                             "#{OPENCV_IMAGE_PATH}/#{image}")
+                return p
+              elsif c == 'n' || c == 3.chr  # Ctrl+C => 3
+                break
+              end
+            end
+            break if c == 3.chr  # Ctrl+C => 3
+          end
+        end
+        STDERR.puts "Failed to automatically bump image"
       when 'r'
         p = @screen.match_screen(image, opts[:sensitivity], true)
         if p.nil?
