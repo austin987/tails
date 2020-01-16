@@ -126,7 +126,7 @@ class Screen
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for any of #{patterns.join(', ')}") if opts[:log]
     try_for(time) do
-        return self.find_any(patterns, **opts.clone.update(log: false))
+      return find_any(patterns, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
     raise FindFailed.new("can not find any of the patterns #{patterns} " +
