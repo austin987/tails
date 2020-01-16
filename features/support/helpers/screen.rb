@@ -38,7 +38,6 @@ class Screen
   end
 
   def xdotool(*args)
-    debug_log_load
     out = cmd_helper("xdotool " + args.map { |s| "\"#{s}\""} .join(' '))
     assert(out.empty?, "xdotool reported an error:\n" + out)
   end
@@ -151,7 +150,7 @@ class Screen
     args.each do |arg|
       if arg.instance_of?(String)
         debug_log("Keyboard: typing: #{arg}")
-        xdotool('type', '--clearmodifiers', '--delay=100', arg)
+        xdotool('type', '--clearmodifiers', '--delay=60', arg)
       elsif arg.instance_of?(Array)
         press(*arg)
       else
