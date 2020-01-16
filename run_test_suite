@@ -79,6 +79,11 @@ Options for '@product' features:
                      On failure, pause test suite until pressing Enter. Also
                      offer the option to open an interactive Ruby shell (pry)
                      in the Cucumber world's context.
+  --image-bumping-mode
+                     When any image matching fails, enter an interactive mode
+                     that allows to update the image. If run from a graphical
+                     environment, any found candidate image will be displayed
+                     in a pop-up.
   --keep-snapshots   Don't ever delete any snapshots (including ones marked as
                      temporary). This can be a big time saver when debugging new
                      features.
@@ -192,11 +197,12 @@ LOG_FILE=
 VNC_VIEWER=
 VNC_SERVER=
 INTERACTIVE_DEBUGGING=
+IMAGE_BUMPING_MODE=
 KEEP_SNAPSHOTS=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,iso:,old-iso:,interactive-debugging"
+LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,iso:,old-iso:,interactive-debugging,image-bumping-mode"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -224,6 +230,9 @@ while [ $# -gt 0 ]; do
             ;;
         --interactive-debugging)
             export INTERACTIVE_DEBUGGING="yes"
+            ;;
+        --image-bumping-mode)
+            export IMAGE_BUMPING_MODE="yes"
             ;;
         --keep-snapshots)
             export KEEP_SNAPSHOTS="yes"

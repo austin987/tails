@@ -203,3 +203,85 @@ class Screen
   end
 
 end
+
+class ImageBumpFailed < StandardError
+end
+
+# This class is the same as Screen but with the image matching methods
+# wrapped so failures (FindFailed) are intercepted, and we enter an
+# interactive mode allowing images to be updated. Note that the the
+# negative image matching methods (*_vanish()) are excepted (it
+# doesn't make sense for them).
+class ImageBumpingScreen
+
+  def initialize
+    @screen = Screen.new
+  end
+
+  def interactive_image_bump(image, opts = {})
+    opts[:sensitivity] ||= OPENCV_MIN_SIMILARITY
+    $interactive_image_bump_ignores ||= []
+    if $interactive_image_bump_ignores.include?(image)
+      raise ImageBumpFailed
+    end
+    message = "Failed to find #{image}"
+    notify_user(message)
+    STDERR.puts("Screen: #{message}, entering interactive image bumping mode")
+    # Ring the ASCII bell for a helpful notification in most terminal
+    # emulators.
+    STDOUT.write "\a"
+    loop do
+      STDERR.puts(
+        "\n" +
+        "r: Retry image (pro tip: manually update the image first!)\n" +
+        "i: Ignore this image for the remaining of the run\n" +
+        "d: Debugging REPL\n" +
+        "q: Abort (to the FindFailed exception)"
+      )
+      c = STDIN.getch
+      case c
+      when 'r'
+        p = @screen.match_screen(image, opts[:sensitivity], true)
+        if p.nil?
+          STDERR.puts "Failed to find image"
+        else
+          STDERR.puts "Found match! Accept? (y/n)"
+          c = STDIN.getch
+          return p if c == 'y'
+        end
+      when 'i'
+        $interactive_image_bump_ignores << image
+        raise ImageBumpFailed
+      when 'q', 3.chr  # Ctrl+C => 3
+        raise ImageBumpFailed
+      when 'd'
+        binding.pry(quiet: true)
+      end
+    end
+  end
+
+  screen_methods = Screen.instance_methods - Object.instance_methods
+  overrides = [:find, :exists, :wait, :find_any, :exists_any,
+               :wait_any, :hover, :click]
+  screen_methods.each do |m|
+    if overrides.include?(m)
+      define_method(m) do |*args, **opts|
+        begin
+          return @screen.method(m).call(*args, **opts)
+        rescue FindFailed => e
+          begin
+            image = args.first
+            return interactive_image_bump(image, **opts)
+          rescue ImageBumpFailed
+            raise e
+          end
+        end
+      end
+    else
+      define_method(m) do |*args|
+        return @screen.method(m).call(*args)
+      end
+    end
+  end
+
+end
