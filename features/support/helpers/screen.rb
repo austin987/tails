@@ -42,11 +42,11 @@ class Screen
     assert(out.empty?, "xdotool reported an error:\n" + out)
   end
 
-  def match_screen(image, sensitivity)
+  def match_screen(image, sensitivity, show_image)
     screenshot = "#{$config["TMPDIR"]}/screenshot.png"
     $vm.display.screenshot(screenshot)
     return OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
-                                screenshot, sensitivity)
+                                screenshot, sensitivity, show_image)
   ensure
     FileUtils.rm_f(screenshot)
   end
@@ -62,7 +62,7 @@ class Screen
       raise "unsupported type: #{pattern.class}"
     end
     debug_log("Screen: trying to find #{image}") if opts[:log]
-    p = match_screen(image, opts[:sensitivity])
+    p = match_screen(image, opts[:sensitivity], false)
     if p.nil?
       raise FindFailed.new("cannot find #{image} on the screen")
     end
