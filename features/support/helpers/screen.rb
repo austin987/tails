@@ -42,6 +42,15 @@ class Screen
     assert(out.empty?, "xdotool reported an error:\n" + out)
   end
 
+  def match_screen(image, sensitivity)
+    screenshot = "#{$config["TMPDIR"]}/screenshot.png"
+    $vm.display.screenshot(screenshot)
+    return OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
+                                screenshot, sensitivity)
+  ensure
+    FileUtils.rm_f(screenshot)
+  end
+
   def find(pattern, **opts)
     opts[:log] = true if opts[:log].nil?
     opts[:sensitivity] ||= OPENCV_MIN_SIMILARITY
@@ -53,21 +62,13 @@ class Screen
       raise "unsupported type: #{pattern.class}"
     end
     debug_log("Screen: trying to find #{image}") if opts[:log]
-    begin
-      screenshot = "#{$config["TMPDIR"]}/screenshot.png"
-      $vm.display.screenshot(screenshot)
-      p = OpenCV.matchTemplate("#{OPENCV_IMAGE_PATH}/#{image}",
-                               screenshot, opts[:sensitivity])
-      if p.nil?
-        raise FindFailed.new("cannot find #{image} on the screen")
-      else
-        m = Match.new(image, self, *p)
-        debug_log("Screen: found #{image} at (#{m.middle.join(', ')})")
-        return m
-      end
-    ensure
-      FileUtils.rm_f(screenshot)
+    p = match_screen(image, opts[:sensitivity])
+    if p.nil?
+      raise FindFailed.new("cannot find #{image} on the screen")
     end
+    m = Match.new(image, self, *p)
+    debug_log("Screen: found #{image} at (#{m.middle.join(', ')})")
+    return m
   end
 
   def exists(pattern, **opts)
