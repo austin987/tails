@@ -1,8 +1,10 @@
-import logging
-
 import gi
+import logging
+import os
 
+import tailsgreeter.config
 from tailsgreeter.settings.localization import LocalizationSetting, language_from_locale, country_from_locale
+from tailsgreeter.settings.utils import write_settings
 
 gi.require_version('GObject', '2.0')
 gi.require_version('GnomeDesktop', '3.0')
@@ -15,6 +17,13 @@ class FormatsSetting(LocalizationSetting):
         super().__init__()
         self.value = 'en_US'
         self.locales_per_country = self._make_locales_per_country_dict(language_codes)
+
+    def apply_to_upcoming_session(self):
+        settings_file = tailsgreeter.config.formats_setting_path
+        write_settings(settings_file, {
+            'TAILS_FORMATS': self.get_value(),
+            'IS_DEFAULT': (not self.value_changed_by_user),
+        })
 
     def get_tree(self) -> Gtk.TreeStore:
         treestore = Gtk.TreeStore(GObject.TYPE_STRING,  # id

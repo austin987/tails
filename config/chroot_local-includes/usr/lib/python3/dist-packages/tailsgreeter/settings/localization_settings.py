@@ -53,18 +53,13 @@ class LocalisationSettings(object):
             self._usermanager_loaded_cb()
 
     def apply_to_upcoming_session(self):
-        with open(tailsgreeter.config.locale_setting_path, 'w') as f:
-            os.chmod(tailsgreeter.config.locale_setting_path, 0o600)
+        self.language.apply_to_upcoming_session()
+        self.formats.apply_to_upcoming_session()
+        self.keyboard.apply_to_upcoming_session()
 
-            f.write('TAILS_LOCALE_NAME=%s\n' % self.language.get_value())
-            f.write('TAILS_FORMATS=%s\n' % self.formats.get_value())
-
-            try:
-                layout, variant = self.keyboard.get_value().split('+')
-            except ValueError:
-                layout = self.keyboard.get_value()
-                variant = ''
-            # XXX: use default value from /etc/default/keyboard
-            f.write('TAILS_XKBMODEL=%s\n' % 'pc105')
-            f.write('TAILS_XKBLAYOUT=%s\n' % layout)
-            f.write('TAILS_XKBVARIANT=%s\n' % variant)
+        with open(tailsgreeter.config.locale_setting_path, 'w') as outfile:
+            for path in (tailsgreeter.config.language_setting_path,
+                         tailsgreeter.config.formats_setting_path,
+                         tailsgreeter.config.keyboard_setting_path):
+                with open(path) as infile:
+                    outfile.write(infile.read())

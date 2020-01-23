@@ -1,8 +1,10 @@
-import logging
 import gi
+import logging
 
+import tailsgreeter.config
 from tailsgreeter.settings.localization import LocalizationSetting, ln_iso639_tri, \
     ln_iso639_2_T_to_B, language_from_locale, country_from_locale
+from tailsgreeter.settings.utils import write_settings
 
 gi.require_version('Gio', '2.0')
 gi.require_version('GLib', '2.0')
@@ -18,6 +20,22 @@ class KeyboardSetting(LocalizationSetting):
         super().__init__()
         self.xkbinfo = GnomeDesktop.XkbInfo()
         self.value = 'us'
+
+    def apply_to_upcoming_session(self):
+        try:
+            layout, variant = self.get_value().split('+')
+        except ValueError:
+            layout = self.get_value()
+            variant = ''
+
+        settings_file = tailsgreeter.config.keyboard_setting_path
+        write_settings(settings_file, {
+            # The default value from /etc/default/keyboard
+            'TAILS_XKBMODEL': 'pc105',
+            'TAILS_XKBLAYOUT': layout,
+            'TAILS_XKBVARIANT': variant,
+            'IS_DEFAULT': (not self.value_changed_by_user),
+        })
 
     def get_tree(self, layout_codes=None) -> Gtk.TreeStore:
         if not layout_codes:

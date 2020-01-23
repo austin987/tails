@@ -23,8 +23,10 @@ import logging
 import locale
 from typing import Callable
 
+import tailsgreeter.config
 from tailsgreeter.settings.localization import LocalizationSetting, \
     language_from_locale, country_from_locale
+from tailsgreeter.settings.utils import write_settings
 
 gi.require_version('GLib', '2.0')
 gi.require_version('GObject', '2.0')
@@ -45,6 +47,13 @@ class LanguageSetting(LocalizationSetting):
         self.lang_codes = self._languages_from_locales(locales)
         self.locales_per_language = self._make_language_to_locale_dict(locales)
         self.language_names_per_language = self._make_language_to_language_name_dict(self.lang_codes)
+
+    def apply_to_upcoming_session(self):
+        settings_file = tailsgreeter.config.language_setting_path
+        write_settings(settings_file, {
+            'TAILS_LOCALE_NAME': self.get_value(),
+            'IS_DEFAULT': (not self.value_changed_by_user),
+        })
 
     def get_tree(self) -> Gtk.TreeStore:
         treestore = Gtk.TreeStore(GObject.TYPE_STRING,  # id

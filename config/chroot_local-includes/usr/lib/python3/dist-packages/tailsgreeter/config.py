@@ -35,7 +35,16 @@ system_locale_dir = '/usr/share/locale/'
 # Directory where the Greeter settings are stored
 settings_dir = '/var/lib/gdm3/settings'
 
-# File where session locale settings are stored
+# File where the session language setting is stored
+language_setting_path = os.path.join(settings_dir, 'tails.language')
+
+# File where the session formats setting is stored
+formats_setting_path = os.path.join(settings_dir, 'tails.formats')
+
+# File where the session keyboard setting is stored
+keyboard_setting_path = os.path.join(settings_dir, 'tails.keyboard')
+
+# File where the above locale related settings are stored concatenated
 locale_setting_path = os.path.join(settings_dir, 'tails.locale')
 
 # File where the session sudo password is stored
