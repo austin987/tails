@@ -54,6 +54,7 @@ class LocalizationSettingUI(GreeterSetting):
 
     def apply(self):
         self._localization_setting.set_value(self.selected_code, chosen_by_user=True)
+        super().apply()
 
     def cb_searchentry_activate(self, searchentry, user_data=None):
         """Selects the topmost item in the treeview when pressing Enter"""

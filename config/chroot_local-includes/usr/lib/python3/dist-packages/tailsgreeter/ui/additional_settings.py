@@ -39,9 +39,6 @@ class AdditionalSetting(GreeterSetting):
         else:
             self.dialog.response(response)
 
-    def apply(self):
-        pass
-
     def on_opened_in_dialog(self):
         pass
 
@@ -118,6 +115,7 @@ class AdminSettingUI(AdditionalSetting):
         # This writes the password to a file from which it will be set
         # as the amnesia password when the greeter is closed.
         self._admin_setting.password = self.password
+        super().apply()
 
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
@@ -179,6 +177,7 @@ class MACSpoofSettingUI(AdditionalSetting):
 
     def apply(self):
         self._macspoof_setting.value = self.spoofing_enabled
+        super().apply()
 
     def cb_listbox_macspoof_row_activated(self, listbox, row, user_data=None):
         self.spoofing_enabled = row == self.listboxrow_macspoof_on
@@ -237,6 +236,7 @@ class NetworkSettingUI(AdditionalSetting):
         self._network_setting.value = self.value
         is_bridge = self.value == self._network_setting.NETCONF_OBSTACLE
         self.main_window.set_bridge_infobar_visibility(is_bridge)
+        super().apply()
 
     def cb_listbox_network_button_press(self, widget, event, user_data=None):
         # On double-click: Close the window and apply chosen setting

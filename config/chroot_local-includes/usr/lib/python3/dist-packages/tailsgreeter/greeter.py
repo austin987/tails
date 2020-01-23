@@ -120,7 +120,9 @@ class GreeterApplication(object):
     def on_language_changed(self, locale_code: str):
         """Translate to the given locale"""
         self.localisationsettings.formats.on_language_changed(locale_code)  # XXX: notify
+        self.mainwindow.settings["formats"].update_value_label()
         self.localisationsettings.keyboard.on_language_changed(locale_code)  # XXX: notify
+        self.mainwindow.settings["keyboard"].update_value_label()
         self.translate_to(locale_code)
         self.mainwindow.current_language = localization.language_from_locale(locale_code)
 

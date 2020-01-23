@@ -337,15 +337,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
         setting.apply()
 
-        # If the language is changed, the values of the other region settings
-        # are changed as well, so we have to update the value labels for all
-        # region settings in that case.
-        if isinstance(setting, LanguageSettingUI):
-            for s in self.settings.region_settings:
-                s.update_value_label()
-        else:
-            setting.update_value_label()
-
     def cb_listbox_settings_row_activated(self, listbox, row, user_data=None):
         setting = self.settings[self.settings.id_from_row(row)]
         if not setting.popover.is_open():
@@ -358,7 +349,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.listbox_settings.unselect_all()
         if popover.response == Gtk.ResponseType.YES:
             setting.apply()
-            setting.update_value_label()
 
     def cb_toolbutton_settings_add_clicked(self, user_data=None):
         self.add_setting()
