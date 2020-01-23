@@ -53,12 +53,7 @@ class PersistentStorage(object):
         # Remove warning icon
         editable.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, None)
 
-    def unlock(self, unlocked_cb=None, failed_cb=None):
-        if not unlocked_cb:
-            unlocked_cb = self.cb_unlocked
-        if not failed_cb:
-            failed_cb = self.cb_unlock_failed
-
+    def unlock(self):
         self.entry_storage_passphrase.set_sensitive(False)
         self.button_storage_unlock.set_sensitive(False)
         self.button_storage_unlock.set_label(_("Unlocking…"))
@@ -80,9 +75,8 @@ class PersistentStorage(object):
                 target=do_unlock_storage,
                 args=(self.persistence_setting.unlock,
                       passphrase,
-                      unlocked_cb,
-                      failed_cb)
-
+                      self.cb_unlocked,
+                      self.cb_unlock_failed)
                 )
         unlocking_thread.start()
 
