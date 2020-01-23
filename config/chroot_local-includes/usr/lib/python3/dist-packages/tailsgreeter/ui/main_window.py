@@ -113,6 +113,8 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.toolbutton_settings_add = builder.get_object('toolbutton_settings_add')
         self.listbox_settings = builder.get_object("listbox_settings")
         self.listbox_region = builder.get_object("listbox_region")
+        self.button_start = builder.get_object("button_start")
+        self.headerbar = builder.get_object("headerbar")
 
         # Set preferred width
         self.set_default_size(min(Gdk.Screen.get_default().get_width(),
@@ -133,7 +135,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
         # Add children to ApplicationWindow
         self.add(self.box_main)
-        self.set_titlebar(self._build_headerbar())
+        self.set_titlebar(self.headerbar)
 
         # Set keyboard focus chain
         self._set_focus_chain()
@@ -163,26 +165,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 Gdk.ModifierType.SHIFT_MASK | Gdk.ModifierType.CONTROL_MASK,
                 Gtk.AccelFlags.VISIBLE,
                 self.cb_accelgroup_setting_activated)
-
-    def _build_headerbar(self) -> Gtk.HeaderBar:
-        headerbar = Gtk.HeaderBar()
-        headerbar_sizegroup = Gtk.SizeGroup(Gtk.SizeGroupMode.HORIZONTAL)
-
-        self.button_shutdown = Gtk.Button.new_with_label(_("Shutdown"))
-        self.button_shutdown.connect('clicked', self.cb_button_shutdown_clicked)
-        headerbar_sizegroup.add_widget(self.button_shutdown)
-        headerbar.pack_start(self.button_shutdown)
-
-        self.button_start = Gtk.Button.new_with_mnemonic(_("_Start Tails"))
-        Gtk.StyleContext.add_class(self.button_start.get_style_context(),
-                                   'suggested-action')
-        self.button_start.connect('clicked', self.cb_button_start_clicked)
-        headerbar_sizegroup.add_widget(self.button_start)
-        headerbar.pack_end(self.button_start)
-
-        headerbar.show_all()
-
-        return headerbar
 
     def _set_focus_chain(self):
         self.box_language.set_focus_chain([
