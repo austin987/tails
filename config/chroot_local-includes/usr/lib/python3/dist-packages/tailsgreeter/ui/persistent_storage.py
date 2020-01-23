@@ -27,6 +27,7 @@ class PersistentStorage(object):
         self.infobar_persistence = builder.get_object('infobar_persistence')
         self.label_infobar_persistence = builder.get_object('label_infobar_persistence')
         self.spinner_storage_unlock = builder.get_object('spinner_storage_unlock')
+        self.button_start = builder.get_object("button_start")
 
         self.checkbutton_storage_show_passphrase.connect('toggled', self.cb_checkbutton_storage_show_passphrase_toggled)
 
@@ -112,6 +113,7 @@ class PersistentStorage(object):
                                                     Gtk.IconSize.BUTTON)
         self.image_storage_state.set_visible(True)
         self.box_storage_unlocked.set_visible(True)
+        self.button_start.set_sensitive(True)
 
     def cb_checkbutton_storage_show_passphrase_toggled(self, widget):
         self.entry_storage_passphrase.set_visibility(widget.get_active())

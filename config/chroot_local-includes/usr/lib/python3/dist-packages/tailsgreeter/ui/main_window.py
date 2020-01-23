@@ -176,20 +176,6 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     # Actions
 
-    def check_and_login(self):
-        if (self.persistence_setting.has_persistence() and
-                self.entry_storage_passphrase.get_text() and
-                not self.persistence_setting.is_unlocked):
-            logging.debug("Unlocking persistent storage before login")
-            self.persistent_storage.unlock(unlocked_cb=self.finish_login)
-        else:
-            self.finish_login()
-
-    def finish_login(self):
-        logging.info("Starting the session")
-        self.greeter.login()
-        return False
-
     def add_setting(self, id_=None):
         response = self.dialog_add_setting.run(id_)
         if response == Gtk.ResponseType.YES:
@@ -298,7 +284,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         return False
 
     def cb_button_start_clicked(self, widget, user_data=None):
-        self.check_and_login()
+        self.greeter.login()
         return False
 
     def cb_button_storage_unlock_clicked(self, widget, user_data=None):
@@ -311,6 +297,13 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     def cb_entry_storage_passphrase_changed(self, editable, user_data=None):
         self.persistent_storage.passphrase_changed(editable)
+        # Only allow starting if the password entry is empty. We used to
+        # attempt unlocking with the entered password when the "Start Tails"
+        # button was clicked, but changed that behavior (see #17136), so
+        # we now force users to click the "Unlock" button first before
+        # they can click "Start Tails".
+        allow_start = not bool(editable.get_text())
+        self.button_start.set_sensitive(allow_start)
         return False
 
     def cb_infobar_close(self, infobar, user_data=None):
