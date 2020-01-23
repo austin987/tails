@@ -131,7 +131,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.listbox_settings.set_placeholder(self.label_settings_default)
 
         # Persistent storage
-        self.persistent_storage = PersistentStorage(self.persistence_setting, builder)
+        self.persistent_storage = PersistentStorage(self.persistence_setting, greeter, builder)
 
         # Add children to ApplicationWindow
         self.add(self.box_main)
@@ -176,31 +176,17 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
 
     # Actions
 
-    def add_setting(self, id_=None):
+    def run_add_setting_dialog(self, id_=None):
         response = self.dialog_add_setting.run(id_)
         if response == Gtk.ResponseType.YES:
             row = self.listbox_add_setting.get_selected_row()
             id_ = self.settings.id_from_row(row)
             setting = self.settings.additional_settings[id_]
 
-            # The setting used to be applied by the dialog itself, but there
-            # we don't know the response type in all cases. For example, we
-            # previously didn't apply the admin password in all cases if the
-            # "Add" button was clicked to close the dialog (#13447).
-            setting.apply()
-            setting.update_value_label()
-
-            self.listbox_add_setting.remove(row)
-            self.listbox_settings.add(row)
             self.dialog_add_setting.set_visible(False)
             self.dialog_add_setting.stack.remove(setting.box)
-            setting.build_popover()
 
-            self.listbox_settings.unselect_all()
-            if True not in [c.get_visible() for c in
-                            self.listbox_add_setting.get_children()]:
-                self.toolbutton_settings_add.set_sensitive(False)
-            self.dialog_add_setting.set_visible(False)
+            self.add_setting(id_)
         else:
             old_details = self.dialog_add_setting.stack.get_child_by_name(
                     'setting-details')
@@ -208,11 +194,24 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 self.dialog_add_setting.stack.remove(old_details)
             self.dialog_add_setting.set_visible(False)
 
+    def add_setting(self, id_):
+        logging.debug("Adding setting '%s'", id_)
+        setting = self.settings.additional_settings[id_]
+        setting.apply()
+        setting.build_popover()
+
+        self.listbox_add_setting.remove(setting.listboxrow)
+        self.listbox_settings.add(setting.listboxrow)
+        self.listbox_settings.unselect_all()
+
+        if not self.listbox_add_setting.get_children():
+            self.toolbutton_settings_add.set_sensitive(False)
+
     def edit_setting(self, id_):
         if self.settings[id_].has_popover():
             self.settings[id_].listboxrow.emit("activate")
         else:
-            self.add_setting(id_)
+            self.run_add_setting_dialog(id_)
 
     def show(self):
         super().show()
@@ -351,11 +350,11 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
             setting.apply()
 
     def cb_toolbutton_settings_add_clicked(self, user_data=None):
-        self.add_setting()
+        self.run_add_setting_dialog()
         return False
 
     def cb_toolbutton_settings_mnemonic_activate(self, widget, group_cycling):
-        self.add_setting()
+        self.run_add_setting_dialog()
         return False
 
     def cb_window_delete_event(self, widget, event, user_data=None):

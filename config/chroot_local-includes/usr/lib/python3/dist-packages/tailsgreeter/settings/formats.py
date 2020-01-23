@@ -4,7 +4,7 @@ import os
 
 import tailsgreeter.config
 from tailsgreeter.settings.localization import LocalizationSetting, language_from_locale, country_from_locale
-from tailsgreeter.settings.utils import write_settings
+from tailsgreeter.settings.utils import read_settings, write_settings
 
 gi.require_version('GObject', '2.0')
 gi.require_version('GnomeDesktop', '3.0')
@@ -17,13 +17,28 @@ class FormatsSetting(LocalizationSetting):
         super().__init__()
         self.value = 'en_US'
         self.locales_per_country = self._make_locales_per_country_dict(language_codes)
+        self.settings_file = tailsgreeter.config.formats_setting_path
 
     def apply_to_upcoming_session(self):
-        settings_file = tailsgreeter.config.formats_setting_path
-        write_settings(settings_file, {
+        write_settings(self.settings_file, {
             'TAILS_FORMATS': self.get_value(),
-            'IS_DEFAULT': (not self.value_changed_by_user),
+            'IS_DEFAULT': str(not self.value_changed_by_user).lower(),
         })
+
+    def load(self) -> bool:
+        try:
+            settings = read_settings(self.settings_file)
+        except FileNotFoundError:
+            logging.debug("No persistent formats settings file found (path: %s)", self.settings_file)
+            return False
+
+        formats = settings.get('TAILS_FORMATS')
+        if not formats:
+            return False
+        is_default = settings.get('IS_DEFAULT') == 'true'
+        self.set_value(formats, chosen_by_user=not is_default)
+        logging.debug("Loaded formats setting '%s' (is default: %s)", formats, is_default)
+        return True
 
     def get_tree(self) -> Gtk.TreeStore:
         treestore = Gtk.TreeStore(GObject.TYPE_STRING,  # id

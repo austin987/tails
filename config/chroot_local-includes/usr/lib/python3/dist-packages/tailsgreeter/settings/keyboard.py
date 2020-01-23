@@ -4,7 +4,7 @@ import logging
 import tailsgreeter.config
 from tailsgreeter.settings.localization import LocalizationSetting, ln_iso639_tri, \
     ln_iso639_2_T_to_B, language_from_locale, country_from_locale
-from tailsgreeter.settings.utils import write_settings
+from tailsgreeter.settings.utils import read_settings, write_settings
 
 gi.require_version('Gio', '2.0')
 gi.require_version('GLib', '2.0')
@@ -20,6 +20,7 @@ class KeyboardSetting(LocalizationSetting):
         super().__init__()
         self.xkbinfo = GnomeDesktop.XkbInfo()
         self.value = 'us'
+        self.settings_file = tailsgreeter.config.keyboard_setting_path
 
     def apply_to_upcoming_session(self):
         try:
@@ -28,14 +29,34 @@ class KeyboardSetting(LocalizationSetting):
             layout = self.get_value()
             variant = ''
 
-        settings_file = tailsgreeter.config.keyboard_setting_path
-        write_settings(settings_file, {
+        write_settings(self.settings_file, {
             # The default value from /etc/default/keyboard
             'TAILS_XKBMODEL': 'pc105',
             'TAILS_XKBLAYOUT': layout,
             'TAILS_XKBVARIANT': variant,
-            'IS_DEFAULT': (not self.value_changed_by_user),
+            'IS_DEFAULT': str(not self.value_changed_by_user).lower(),
         })
+
+    def load(self) -> bool:
+        try:
+            settings = read_settings(self.settings_file)
+        except FileNotFoundError:
+            logging.debug("No persistent keyboard settings file found (path: %s)", self.settings_file)
+            return False
+
+        keyboard_layout = settings.get('TAILS_XKBLAYOUT')
+        if not keyboard_layout:
+            return False
+
+        keyboard_variant = settings.get('TAILS_XKBVARIANT')
+        if keyboard_variant:
+            keyboard_layout += "+" + keyboard_variant
+
+        is_default = settings.get('IS_DEFAULT') == 'true'
+        self.set_value(keyboard_layout, chosen_by_user=not is_default)
+
+        logging.debug("Loaded keyboard setting '%s' (is default: %s)", keyboard_layout, is_default)
+        return True
 
     def get_tree(self, layout_codes=None) -> Gtk.TreeStore:
         if not layout_codes:

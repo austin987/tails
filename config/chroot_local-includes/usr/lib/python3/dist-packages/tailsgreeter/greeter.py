@@ -78,7 +78,7 @@ class GreeterApplication(object):
         self.macspoof_setting = MacSpoofSetting()
 
         # Initialize the settings
-        settings = GreeterSettingsCollection(
+        self.settings = GreeterSettingsCollection(
             LanguageSettingUI(self.localisationsettings.language),
             KeyboardSettingUI(self.localisationsettings.keyboard),
             FormatsSettingUI(self.localisationsettings.formats),
@@ -88,7 +88,7 @@ class GreeterApplication(object):
         )
 
         # Initialize main window
-        self.mainwindow = GreeterMainWindow(self, persistence, settings)
+        self.mainwindow = GreeterMainWindow(self, persistence, self.settings)
 
         # Inhibit the session being marked as idle
         self.inhibit_idle()
@@ -96,6 +96,29 @@ class GreeterApplication(object):
     def translate_to(self, lang):
         """Translate all windows to target language"""
         TranslatableWindow.translate_all(lang)
+
+    def load_settings(self):
+        if self.localisationsettings.language.load():
+            self.settings["language"].selected_code = self.localisationsettings.language.value
+            self.settings["language"].apply()
+        if self.localisationsettings.formats.load():
+            self.settings["formats"].selected_code = self.localisationsettings.formats.value
+            self.settings["formats"].apply()
+        if self.localisationsettings.keyboard.load():
+            self.settings["keyboard"].selected_code = self.localisationsettings.keyboard.value
+            self.settings["keyboard"].apply()
+
+        if self.admin_setting.load():
+            self.settings["admin"].password = self.admin_setting.password
+            self.mainwindow.add_setting("admin")
+        if self.network_setting.load():
+            if self.network_setting.value != self.settings["network"].value:
+                self.settings["network"].value = self.network_setting.value
+                self.mainwindow.add_setting("network")
+        if self.macspoof_setting.load():
+            if self.settings["macspoof"].spoofing_enabled != self.macspoof_setting.value:
+                self.settings["macspoof"].spoofing_enabled = self.macspoof_setting.value
+                self.mainwindow.add_setting("macspoof")
 
     def login(self):
         """Login GDM to the server"""
@@ -120,9 +143,9 @@ class GreeterApplication(object):
     def on_language_changed(self, locale_code: str):
         """Translate to the given locale"""
         self.localisationsettings.formats.on_language_changed(locale_code)  # XXX: notify
-        self.mainwindow.settings["formats"].update_value_label()
+        self.settings["formats"].update_value_label()
         self.localisationsettings.keyboard.on_language_changed(locale_code)  # XXX: notify
-        self.mainwindow.settings["keyboard"].update_value_label()
+        self.settings["keyboard"].update_value_label()
         self.translate_to(locale_code)
         self.mainwindow.current_language = localization.language_from_locale(locale_code)
 

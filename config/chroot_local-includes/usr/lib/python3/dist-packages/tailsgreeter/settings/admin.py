@@ -5,6 +5,7 @@ import logging
 import pipes
 
 import tailsgreeter.config
+from tailsgreeter.settings.utils import read_settings, write_settings
 
 
 class AdminSetting(object):
@@ -12,23 +13,35 @@ class AdminSetting(object):
 
     def __init__(self):
         self.password = None
+        self.settings_file = tailsgreeter.config.admin_password_path
 
     def apply_to_upcoming_session(self):
-        setting_file = tailsgreeter.config.admin_password_path
-
         if self.password:
-            with open(setting_file, 'w') as f:
-                os.chmod(setting_file, 0o600)
-                f.write('TAILS_USER_PASSWORD=%s\n' % pipes.quote(self.password))
-                logging.debug('password written to %s', setting_file)
+            write_settings(self.settings_file, {
+                'TAILS_USER_PASSWORD': pipes.quote(self.password),
+            })
+            logging.debug('password written to %s', self.settings_file)
             return
 
         # Try to remove the password file
         try:
-            os.unlink(setting_file)
-            logging.debug('removed %s', setting_file)
+            os.unlink(self.settings_file)
+            logging.debug('removed %s', self.settings_file)
         except OSError:
             # It's bad if the file exists and couldn't be removed, so we
             # we raise the exception in that case (which prevents the login)
-            if os.path.exists(setting_file):
+            if os.path.exists(self.settings_file):
                 raise
+
+    def load(self) -> bool:
+        try:
+            settings = read_settings(self.settings_file)
+        except FileNotFoundError:
+            logging.debug("No persistent admin settings file found (path: %s)", self.settings_file)
+            return False
+
+        password = settings.get('TAILS_USER_PASSWORD')
+        if password:
+            self.password = password
+            logging.debug("Loaded admin password setting")
+            return True

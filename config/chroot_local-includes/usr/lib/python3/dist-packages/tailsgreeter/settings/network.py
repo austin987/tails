@@ -1,8 +1,8 @@
-import os
 import logging
 import pipes
 
 import tailsgreeter.config
+from tailsgreeter.settings.utils import read_settings, write_settings
 
 
 class NetworkSetting(object):
@@ -14,10 +14,23 @@ class NetworkSetting(object):
 
     def __init__(self):
         self.value = self.NETCONF_DIRECT
+        self.settings_file = tailsgreeter.config.network_setting_path
 
     def apply_to_upcoming_session(self):
-        setting_file = tailsgreeter.config.network_setting_path
-        with open(setting_file, 'w') as f:
-            os.chmod(setting_file, 0o600)
-            f.write("TAILS_NETCONF=%s\n" % pipes.quote(self.value))
-        logging.debug('network setting written to %s', setting_file)
+        write_settings(self.settings_file, {
+            'TAILS_NETCONF': pipes.quote(self.value),
+        })
+        logging.debug('network setting written to %s', self.settings_file)
+
+    def load(self) -> bool:
+        try:
+            settings = read_settings(self.settings_file)
+        except FileNotFoundError:
+            logging.debug("No persistent network settings file found (path: %s)", self.settings_file)
+            return False
+
+        value = settings.get('TAILS_NETCONF')
+        if value:
+            self.value = value
+            logging.debug("Loaded network setting '%s'", value)
+            return True
