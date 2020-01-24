@@ -104,7 +104,7 @@ class Screen
     FileUtils.rm_f(screenshot)
   end
 
-  def find(pattern, **opts)
+  def real_find(pattern, **opts)
     opts[:log] = true if opts[:log].nil?
     opts[:sensitivity] ||= OPENCV_MIN_SIMILARITY
     if pattern.instance_of?(String)
@@ -124,22 +124,27 @@ class Screen
     return m
   end
 
+  def wait(pattern, timeout, **opts)
+    opts[:log] = true if opts[:log].nil?
+    debug_log("Screen: waiting for #{pattern}") if opts[:log]
+    try_for(timeout, delay: 0) do
+      return real_find(pattern, **opts.clone.update(log: false))
+    end
+  rescue Timeout::Error
+    raise FindFailed.new("cannot find #{pattern} on the screen")
+  end
+
+  def find(pattern, **opts)
+    debug_log("Screen: trying to find #{pattern}") if opts[:log]
+    wait(pattern, 2, **opts.clone.update(log: false))
+  end
+
   def exists(pattern, **opts)
     opts[:log] = true if opts[:log].nil?
     return !!find(pattern, **opts)
   rescue
     debug_log("cannot find #{pattern} on the screen") if opts[:log]
     false
-  end
-
-  def wait(pattern, timeout, **opts)
-    opts[:log] = true if opts[:log].nil?
-    debug_log("Screen: waiting for #{pattern}") if opts[:log]
-    try_for(timeout, delay: 0) do
-      return find(pattern, **opts.clone.update(log: false))
-    end
-  rescue Timeout::Error
-    raise FindFailed.new("cannot find #{pattern} on the screen")
   end
 
   def wait_vanish(pattern, timeout, **opts)
