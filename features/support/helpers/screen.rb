@@ -142,7 +142,7 @@ class Screen
   def exists(pattern, **opts)
     opts[:log] = true if opts[:log].nil?
     return !!find(pattern, **opts)
-  rescue
+  rescue FindFailed
     debug_log("cannot find #{pattern} on the screen") if opts[:log]
     false
   end
@@ -177,7 +177,7 @@ class Screen
 
   def exists_any(*args, **opts)
     return !!find_any(*args, **opts)
-  rescue
+  rescue FindFailed
     false
   end
 
