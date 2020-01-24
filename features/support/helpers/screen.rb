@@ -166,8 +166,8 @@ class Screen
       begin
         return [pattern, find(pattern, **opts.clone.update(log: false))]
       rescue FindFailed
-        # Ignore. We deal we'll throw an appropriate exception after
-        # having looped through all patterns and found none of them.
+        # Ignore. We'll throw an appropriate exception after having
+        # looped through all patterns and found none of them.
       end
     end
     # If we've reached this point, none of the patterns could be found.
