@@ -16,9 +16,6 @@ pref("extensions.update.enabled", false);
 // pulling the system locale into Thunderbird.
 pref("intl.locale.requested", "");
 
-// Disable default mail checking (gnome).
-pref("mail.shell.checkDefaultMail", false);
-
 // if you are not using gnome
 pref("network.protocol-handler.app.http", "x-www-browser");
 pref("network.protocol-handler.app.https", "x-www-browser");
@@ -346,9 +343,6 @@ pref("general.useragent.override", "");
 
 // Disable WebGL.
 pref("webgl.disabled", true);
-
-// Disable Telemetry completely.
-pref("toolkit.telemetry.enabled", false);
 
 // Disable Geolocation.
 pref("geo.enabled", false);
