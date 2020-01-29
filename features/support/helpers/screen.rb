@@ -130,7 +130,7 @@ class Screen
   def wait(pattern, timeout, **opts)
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for #{pattern}") if opts[:log]
-    try_for(timeout, delay: 0) do
+    try_for(timeout, delay: 0, log: false) do
       return real_find(pattern, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
@@ -153,7 +153,7 @@ class Screen
   def wait_vanish(pattern, timeout, **opts)
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for #{pattern} to vanish") if opts[:log]
-    try_for(timeout, delay: 0) do
+    try_for(timeout, delay: 0, log: false) do
       not(exists(pattern, **opts.clone.update(log: false)))
     end
     debug_log("Screen: #{pattern} has vanished") if opts[:log]
@@ -187,7 +187,7 @@ class Screen
   def wait_any(patterns, time, **opts)
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for any of #{patterns.join(', ')}") if opts[:log]
-    try_for(time) do
+    try_for(time, log: false) do
       return find_any(patterns, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
