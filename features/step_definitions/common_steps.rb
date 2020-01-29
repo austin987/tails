@@ -18,7 +18,9 @@ def post_snapshot_restore_hook(snapshot_name)
   # seems virt-viewer's auto-resolution feature moves the Greeter's
   # window outside of the visible screen.
   if snapshot_name.end_with?('tails-greeter')
-    $vm.execute_successfully("env $(tr '\\0' '\\n' < /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ | grep -E '(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') sudo -u Debian-gdm xdotool search --onlyvisible 'Welcome to Tails!' windowmove 0 0")
+    if ! @screen.exists('TailsGreeter.png')
+      $vm.execute_successfully("env $(tr '\\0' '\\n' < /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ | grep -E '(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') sudo -u Debian-gdm xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0")
+    end
   end
 
   # Increase the chances that by the time we leave this function, if
