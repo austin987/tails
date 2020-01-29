@@ -32,9 +32,10 @@ class Screen
 
   attr_reader :w, :h
 
-  # Note that this is an US English keymap. Values extracted from
-  # the virkeyname-linux(7) man page.
-  KEYMAP = {
+  # Values extracted from the virkeyname-linux(7) man page. These are the
+  # keys that tend to be the same on all keyboards, no matter locale.
+  # Beware that this has not been tested/verified thoroughly!
+  COMMON_KEYMAP = {
     "a" => [0x1e], "b" => [0x30], "c" => [0x2e], "d" => [0x20], "e" => [0x12],
     "f" => [0x21], "g" => [0x22], "h" => [0x23], "i" => [0x17], "j" => [0x24],
     "k" => [0x25], "l" => [0x26], "m" => [0x32], "n" => [0x31], "o" => [0x18],
@@ -60,18 +61,6 @@ class Screen
     "f5" => [0x3f], "f6" => [0x40], "f7" => [0x41], "f8" => [0x42],
     "f9" => [0x43], "f10" => [0x44], "f11" => [0x57], "f12" => [0x58],
 
-    "-" => [0x0c], "=" => [0x0d], ";" => [0x27], "'" => [0x28],
-    "`" => [0x29], "\\" => [0x2b], "," => [0x33], "." => [0x34],
-    "/" => [0x35], "<" => [0x56], "[" => [0x1a], "]" => [0x1b],
-
-    "!" => [0x2a, 0x02], "@" => [0x2a, 0x03], "#" => [0x2a, 0x04],
-    "$" => [0x2a, 0x05], "%" => [0x2a, 0x06], "^" => [0x2a, 0x07],
-    "&" => [0x2a, 0x08], "*" => [0x2a, 0x09], "(" => [0x2a, 0x0a],
-    ")" => [0x2a, 0x0b], "_" => [0x2a, 0x0c], "+" => [0x2a, 0x0d],
-    "{" => [0x2a, 0x1a], "}" => [0x2a, 0x1b], ":" => [0x2a, 0x27],
-    "\"" => [0x2a, 0x28], "~" => [0x2a, 0x29], "|" => [0x2a, 0x2b],
-    "?" => [0x2a, 0x35], ">" => [0x2a, 0x56],
-
     "page_up" => [0x68], "page_down" => [0x6d], "home" => [0x66],
     "end" => [0x6b], "insert" => [0x6e], "delete" => [0x6f],
     "up" => [0x67], "down" => [0x6c], "left" => [0x69], "right" => [0x6a],
@@ -84,6 +73,20 @@ class Screen
     "ctrl" => [0x1d], "right_ctrl" => [0x61],
     "shift" => [0x2a], "right_shift" => [0x36],
   }
+
+  US_KEYMAP = COMMON_KEYMAP.merge({
+    "-" => [0x0c], "=" => [0x0d], ";" => [0x27], "'" => [0x28],
+    "`" => [0x29], "\\" => [0x2b], "," => [0x33], "." => [0x34],
+    "/" => [0x35], "<" => [0x56], "[" => [0x1a], "]" => [0x1b],
+
+    "!" => [0x2a, 0x02], "@" => [0x2a, 0x03], "#" => [0x2a, 0x04],
+    "$" => [0x2a, 0x05], "%" => [0x2a, 0x06], "^" => [0x2a, 0x07],
+    "&" => [0x2a, 0x08], "*" => [0x2a, 0x09], "(" => [0x2a, 0x0a],
+    ")" => [0x2a, 0x0b], "_" => [0x2a, 0x0c], "+" => [0x2a, 0x0d],
+    "{" => [0x2a, 0x1a], "}" => [0x2a, 0x1b], ":" => [0x2a, 0x27],
+    "\"" => [0x2a, 0x28], "~" => [0x2a, 0x29], "|" => [0x2a, 0x2b],
+    "?" => [0x2a, 0x35], ">" => [0x2a, 0x56],
+  })
 
   def initialize
     @w = 1024
@@ -197,9 +200,17 @@ class Screen
     debug_log("Keyboard: pressing: #{sequence.join('+')}") if opts[:log]
     codes = []
     sequence.each do |key|
+      keymap = case $language
+               when ''; US_KEYMAP
+               else   ; COMMON_KEYMAP
+               end
       # We use lower-case to make it easier to get the keycodes right.
-      code = KEYMAP[('A'..'Z').include?(key) ? key : key.downcase]
-      raise "No key code defined for key '#{key}'" if code.nil?
+      code = keymap[('A'..'Z').include?(key) ? key : key.downcase]
+      if code.nil?
+        err = "No key code defined for key '#{key}'"
+        err += " in #{$language}" unless $language.empty?
+        raise err
+      end
       codes += code
     end
     $vm.domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, codes)

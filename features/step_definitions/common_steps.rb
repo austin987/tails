@@ -262,13 +262,13 @@ end
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   case lang
   when 'German'
-    @language = "German"
+    $language = "German"
     @screen.wait('TailsGreeterLanguage.png', 10).click
     @screen.wait('TailsGreeterLanguagePopover.png', 10)
-    @screen.type(@language)
+    @screen.type($language)
     sleep(2) # Gtk needs some time to filter the results
     @screen.press("Return")
-    @screen.wait("TailsGreeterLoginButton#{@language}.png", 10).click
+    @screen.wait("TailsGreeterLoginButton#{$language}.png", 10).click
   when ''
     @screen.wait('TailsGreeterLoginButton.png', 10).click
   else
@@ -304,7 +304,7 @@ Given /^I set an administration password$/ do
 end
 
 Given /^the Tails desktop is ready$/ do
-  desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+  desktop_started_picture = "GnomeApplicationsMenu#{$language}.png"
   @screen.wait(desktop_started_picture, 180)
   @screen.wait("DesktopTailsDocumentation.png", 30)
   # Disable screen blanking since we sometimes need to wait long
@@ -409,7 +409,7 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ 
   else
     raise "Unsupported page: #{page}"
   end
-  page_has_loaded_in_the_Tor_Browser(titles, @language)
+  page_has_loaded_in_the_Tor_Browser(titles, $language)
 end
 
 When /^I request a new identity using Torbutton$/ do

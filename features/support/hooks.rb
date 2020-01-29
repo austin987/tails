@@ -219,7 +219,7 @@ Before('@product') do |scenario|
     @screen = Screen.new
   end
   # English will be assumed if this is not overridden
-  @language = ""
+  $language = ""
   @os_loader = "MBR"
   @sudo_password = "asdf"
   @persistence_password = "asdf"

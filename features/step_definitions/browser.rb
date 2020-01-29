@@ -117,7 +117,7 @@ def page_has_loaded_in_the_Tor_Browser(page_titles, language)
     page_titles = [ page_titles ]
   end
   assert_equal(Array, page_titles.class)
-  if @language == 'German'
+  if $language == 'German'
     browser_name = 'Tor-Browser'
     reload_action = 'Neu laden'
   else
@@ -142,7 +142,7 @@ end
 # This step is limited to the Tor Browser due to #7502 since dogtail
 # uses the same interface.
 Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
-  page_has_loaded_in_the_Tor_Browser(title, @language)
+  page_has_loaded_in_the_Tor_Browser(title, $language)
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
