@@ -187,7 +187,7 @@ class Screen
   def wait_any(patterns, time, **opts)
     opts[:log] = true if opts[:log].nil?
     debug_log("Screen: waiting for any of #{patterns.join(', ')}") if opts[:log]
-    try_for(time, log: false) do
+    try_for(time, delay: 0, log: false) do
       return find_any(patterns, **opts.clone.update(log: false))
     end
   rescue Timeout::Error
