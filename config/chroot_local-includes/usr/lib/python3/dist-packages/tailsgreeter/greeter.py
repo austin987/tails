@@ -71,7 +71,6 @@ class GreeterApplication(object):
         persistence = PersistenceSettings()
         self.localisationsettings = LocalisationSettings(
             usermanager_loaded_cb=self.usermanager_loaded,
-            locale_selected_cb=self.on_language_changed
         )
         self.admin_setting = AdminSetting()
         self.network_setting = NetworkSetting()
@@ -79,7 +78,7 @@ class GreeterApplication(object):
 
         # Initialize the settings
         self.settings = GreeterSettingsCollection(
-            LanguageSettingUI(self.localisationsettings.language),
+            LanguageSettingUI(self.localisationsettings.language, self.on_language_changed),
             KeyboardSettingUI(self.localisationsettings.keyboard),
             FormatsSettingUI(self.localisationsettings.formats),
             AdminSettingUI(self.admin_setting),
@@ -90,6 +89,10 @@ class GreeterApplication(object):
         # Initialize main window
         self.mainwindow = GreeterMainWindow(self, persistence, self.settings)
 
+        # Apply the default settings
+        for setting in self.settings:
+            setting.apply()
+
         # Inhibit the session being marked as idle
         self.inhibit_idle()
 
@@ -97,38 +100,15 @@ class GreeterApplication(object):
         """Translate all windows to target language"""
         TranslatableWindow.translate_all(lang)
 
-    def load_settings(self):
-        if self.localisationsettings.language.load():
-            self.settings["language"].selected_code = self.localisationsettings.language.value
-            self.settings["language"].apply()
-        if self.localisationsettings.formats.load():
-            self.settings["formats"].selected_code = self.localisationsettings.formats.value
-            self.settings["formats"].apply()
-        if self.localisationsettings.keyboard.load():
-            self.settings["keyboard"].selected_code = self.localisationsettings.keyboard.value
-            self.settings["keyboard"].apply()
-
-        if self.admin_setting.load():
-            self.settings["admin"].password = self.admin_setting.password
-            self.mainwindow.add_setting("admin")
-        if self.network_setting.load():
-            if self.network_setting.value != self.settings["network"].value:
-                self.settings["network"].value = self.network_setting.value
-                self.mainwindow.add_setting("network")
-        if self.macspoof_setting.load():
-            if self.settings["macspoof"].spoofing_enabled != self.macspoof_setting.value:
-                self.settings["macspoof"].spoofing_enabled = self.macspoof_setting.value
-                self.mainwindow.add_setting("macspoof")
-
     def login(self):
         """Login GDM to the server"""
         logging.debug("login called")
 
         # Apply settings
+        # We now apply all settings immediately when they are
+        # changed. The only thing that still happens here is
+        # concatenating the locale settings files.
         self.localisationsettings.apply_to_upcoming_session()
-        self.admin_setting.apply_to_upcoming_session()
-        self.macspoof_setting.apply_to_upcoming_session()
-        self.network_setting.apply_to_upcoming_session()
 
         self.mainwindow.hide()
         self.gdmclient.do_login()
@@ -142,10 +122,9 @@ class GreeterApplication(object):
 
     def on_language_changed(self, locale_code: str):
         """Translate to the given locale"""
-        self.localisationsettings.formats.on_language_changed(locale_code)  # XXX: notify
-        self.settings["formats"].update_value_label()
-        self.localisationsettings.keyboard.on_language_changed(locale_code)  # XXX: notify
-        self.settings["keyboard"].update_value_label()
+        for setting in self.settings.region_settings:
+            setting.on_language_changed(locale_code)
+
         self.translate_to(locale_code)
         self.mainwindow.current_language = localization.language_from_locale(locale_code)
 

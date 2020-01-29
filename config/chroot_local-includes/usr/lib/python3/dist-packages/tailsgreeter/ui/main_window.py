@@ -30,7 +30,7 @@ from tailsgreeter.ui import _
 from tailsgreeter.ui.add_settings_dialog import AddSettingsDialog
 from tailsgreeter.ui.additional_settings import AdditionalSetting
 from tailsgreeter.ui.help_window import GreeterHelpWindow
-from tailsgreeter.ui.region_settings import LocalizationSettingUI, LanguageSettingUI
+from tailsgreeter.ui.region_settings import LocalizationSettingUI
 from tailsgreeter import TRANSLATION_DOMAIN
 from tailsgreeter.ui.persistent_storage import PersistentStorage
 
@@ -131,7 +131,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.listbox_settings.set_placeholder(self.label_settings_default)
 
         # Persistent storage
-        self.persistent_storage = PersistentStorage(self.persistence_setting, greeter, builder)
+        self.persistent_storage = PersistentStorage(self.persistence_setting, self.load_settings, builder)
 
         # Add children to ApplicationWindow
         self.add(self.box_main)
@@ -175,6 +175,17 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 self.box_settings_header])
 
     # Actions
+
+    def load_settings(self):
+        # We have to load formats and keyboard before language, because
+        # changing the language also changes the other two, which causes
+        # the settings files to be overwritten. So we load the region
+        # settings in reversed order.
+        for setting in reversed(list(self.settings.region_settings)):
+            setting.load()
+        for setting in self.settings.additional_settings:
+            if setting.load():
+                self.add_setting(setting.id)
 
     def run_add_setting_dialog(self, id_=None):
         response = self.dialog_add_setting.run(id_)

@@ -1,7 +1,7 @@
 import logging
 import gi
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from tailsgreeter.ui import _
 
@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 
 
 class PersistentStorage(object):
-    def __init__(self, persistence_setting: "PersistenceSettings", greeter, builder):
+    def __init__(self, persistence_setting: "PersistenceSettings", load_settings_cb: Callable, builder):
         self.persistence_setting = persistence_setting
-        self.greeter = greeter
+        self.load_settings_cb = load_settings_cb
 
         self.box_storage = builder.get_object('box_storage')
         self.box_storage_unlock = builder.get_object('box_storage_unlock')
@@ -109,7 +109,8 @@ class PersistentStorage(object):
         self.image_storage_state.set_visible(True)
         self.box_storage_unlocked.set_visible(True)
         self.button_start.set_sensitive(True)
-        self.greeter.load_settings()
+
+        self.load_settings_cb()
 
     def cb_checkbutton_storage_show_passphrase_toggled(self, widget):
         self.entry_storage_passphrase.set_visibility(widget.get_active())

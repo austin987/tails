@@ -3,6 +3,7 @@ import gi
 from tailsgreeter import TRANSLATION_DOMAIN
 import tailsgreeter.config
 import tailsgreeter.utils
+from tailsgreeter.settings.network import NETCONF_DIRECT, NETCONF_DISABLED, NETCONF_OBSTACLE
 from tailsgreeter.ui import _
 from tailsgreeter.ui.setting import GreeterSetting
 from tailsgreeter.ui.popover import Popover
@@ -40,6 +41,9 @@ class AdditionalSetting(GreeterSetting):
             self.dialog.response(response)
 
     def on_opened_in_dialog(self):
+        pass
+
+    def load(self) -> bool:
         pass
 
 
@@ -114,8 +118,18 @@ class AdminSettingUI(AdditionalSetting):
     def apply(self):
         # This writes the password to a file from which it will be set
         # as the amnesia password when the greeter is closed.
-        self._admin_setting.password = self.password
+        if self.password:
+            self._admin_setting.save(self.password)
+        else:
+            self._admin_setting.delete()
         super().apply()
+
+    def load(self) -> bool:
+        password = self._admin_setting.load()
+        if password:
+            self.password = password
+            return True
+        return False
 
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
@@ -176,8 +190,17 @@ class MACSpoofSettingUI(AdditionalSetting):
         self.listboxrow_macspoof_off = self.builder.get_object('listboxrow_macspoof_off')
 
     def apply(self):
-        self._macspoof_setting.value = self.spoofing_enabled
+        self._macspoof_setting.save(self.spoofing_enabled)
         super().apply()
+
+    def load(self) -> bool:
+        value = self._macspoof_setting.load()
+        if value is None:
+            return False
+        if value == self.spoofing_enabled:
+            return False
+        self.spoofing_enabled = value
+        return True
 
     def cb_listbox_macspoof_row_activated(self, listbox, row, user_data=None):
         self.spoofing_enabled = row == self.listboxrow_macspoof_on
@@ -210,16 +233,16 @@ class NetworkSettingUI(AdditionalSetting):
 
     @property
     def value_for_display(self) -> str:
-        if self.value == self._network_setting.NETCONF_DIRECT:
+        if self.value == NETCONF_DIRECT:
             return _("Direct (default)")
-        if self.value == self._network_setting.NETCONF_OBSTACLE:
+        if self.value == NETCONF_OBSTACLE:
             return _("Bridge & Proxy")
-        if self.value == self._network_setting.NETCONF_DISABLED:
+        if self.value == NETCONF_DISABLED:
             return _("Offline")
 
     def __init__(self, network_setting: "NetworkSetting"):
         self._network_setting = network_setting
-        self.value = self._network_setting.NETCONF_DIRECT
+        self.value = NETCONF_DIRECT
         super().__init__()
         self.accel_key = Gdk.KEY_n
         self.icon_network_clear_chosen = self.builder.get_object('image_network_clear')
@@ -233,10 +256,19 @@ class NetworkSettingUI(AdditionalSetting):
         self.listboxrow_network_off = self.builder.get_object('listboxrow_network_off')
 
     def apply(self):
-        self._network_setting.value = self.value
-        is_bridge = self.value == self._network_setting.NETCONF_OBSTACLE
+        self._network_setting.save(self.value)
+        is_bridge = self.value == NETCONF_OBSTACLE
         self.main_window.set_bridge_infobar_visibility(is_bridge)
         super().apply()
+
+    def load(self) -> bool:
+        value = self._network_setting.load()
+        if value is None:
+            return False
+        if value == self.value:
+            return False
+        self.value = value
+        return True
 
     def cb_listbox_network_button_press(self, widget, event, user_data=None):
         # On double-click: Close the window and apply chosen setting
@@ -250,13 +282,13 @@ class NetworkSettingUI(AdditionalSetting):
         self.icon_network_off_chosen.set_visible(False)
 
         if row == self.listboxrow_network_clear:
-            self.value = self._network_setting.NETCONF_DIRECT
+            self.value = NETCONF_DIRECT
             self.icon_network_clear_chosen.set_visible(True)
         elif row == self.listboxrow_network_specific:
-            self.value = self._network_setting.NETCONF_OBSTACLE
+            self.value = NETCONF_OBSTACLE
             self.icon_network_specific_chosen.set_visible(True)
         elif row == self.listboxrow_network_off:
-            self.value = self._network_setting.NETCONF_DISABLED
+            self.value = NETCONF_DISABLED
             self.icon_network_off_chosen.set_visible(True)
 
         if self.has_popover() and self.popover.is_open():

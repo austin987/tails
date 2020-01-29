@@ -16,7 +16,7 @@ class LocalisationSettings(object):
     """Controller for localisation settings
 
     """
-    def __init__(self, usermanager_loaded_cb: Callable, locale_selected_cb: Callable):
+    def __init__(self, usermanager_loaded_cb: Callable):
         self._usermanager_loaded_cb = usermanager_loaded_cb
 
         self._user_account = None
@@ -28,7 +28,7 @@ class LocalisationSettings(object):
         self._actusermanager_loadedid = self._actusermanager.connect(
             "notify::is-loaded",  self.__on_usermanager_loaded)
 
-        self.language = LanguageSetting(locales, locale_selected_cb)
+        self.language = LanguageSetting(locales)
         self.keyboard = KeyboardSetting()
         self.formats = FormatsSetting(locales)
 
@@ -53,10 +53,6 @@ class LocalisationSettings(object):
             self._usermanager_loaded_cb()
 
     def apply_to_upcoming_session(self):
-        self.language.apply_to_upcoming_session()
-        self.formats.apply_to_upcoming_session()
-        self.keyboard.apply_to_upcoming_session()
-
         with open(tailsgreeter.config.locale_setting_path, 'w') as outfile:
             for path in (tailsgreeter.config.language_setting_path,
                          tailsgreeter.config.formats_setting_path,

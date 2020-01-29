@@ -1,14 +1,15 @@
 import os
+from typing import Dict
 
 
-def write_settings(filename: str, settings: dict):
+def write_settings(filename: str, settings: Dict[str, str]):
     with open(filename, 'w') as f:
         os.chmod(filename, 0o600)
         for key, value in settings.items():
             f.write('%s=%s\n' % (key, value))
 
 
-def read_settings(filename: str) -> dict:
+def read_settings(filename: str) -> Dict[str, str]:
     with open(filename) as f:
         lines = f.readlines()
 

@@ -19,14 +19,13 @@ class KeyboardSetting(LocalizationSetting):
     def __init__(self):
         super().__init__()
         self.xkbinfo = GnomeDesktop.XkbInfo()
-        self.value = 'us'
         self.settings_file = tailsgreeter.config.keyboard_setting_path
 
-    def apply_to_upcoming_session(self):
+    def save(self, value: str, is_default: bool):
         try:
-            layout, variant = self.get_value().split('+')
+            layout, variant = value.split('+')
         except ValueError:
-            layout = self.get_value()
+            layout = value
             variant = ''
 
         write_settings(self.settings_file, {
@@ -34,29 +33,28 @@ class KeyboardSetting(LocalizationSetting):
             'TAILS_XKBMODEL': 'pc105',
             'TAILS_XKBLAYOUT': layout,
             'TAILS_XKBVARIANT': variant,
-            'IS_DEFAULT': str(not self.value_changed_by_user).lower(),
+            'IS_DEFAULT': str(is_default).lower(),
         })
 
-    def load(self) -> bool:
+    def load(self) -> ({str, None}, bool):
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
             logging.debug("No persistent keyboard settings file found (path: %s)", self.settings_file)
-            return False
+            return None, False
 
         keyboard_layout = settings.get('TAILS_XKBLAYOUT')
-        if not keyboard_layout:
-            return False
+        if keyboard_layout is None:
+            logging.debug("No keyboard setting found in settings file (path: %s)", self.settings_file)
+            return None, False
 
         keyboard_variant = settings.get('TAILS_XKBVARIANT')
         if keyboard_variant:
             keyboard_layout += "+" + keyboard_variant
 
         is_default = settings.get('IS_DEFAULT') == 'true'
-        self.set_value(keyboard_layout, chosen_by_user=not is_default)
-
         logging.debug("Loaded keyboard setting '%s' (is default: %s)", keyboard_layout, is_default)
-        return True
+        return keyboard_layout, is_default
 
     def get_tree(self, layout_codes=None) -> Gtk.TreeStore:
         if not layout_codes:
@@ -79,19 +77,14 @@ class KeyboardSetting(LocalizationSetting):
                     treestore.set(treeiter_layout, 1, self._layout_name(layout_code))
         return treestore
 
-    def get_name(self) -> str:
-        return self._layout_name(self.get_value())
+    def get_name(self, value: str) -> str:
+        return self._layout_name(value)
 
     def get_all(self) -> [str]:
         """Return a list of all keyboard layout codes
 
         """
         return self.xkbinfo.get_all_layouts()
-
-    def set_value(self, layout, chosen_by_user=False):
-        super().set_value(layout)
-        self.value_changed_by_user = chosen_by_user
-        self._apply_layout_to_current_screen()
 
     def _layout_name(self, layout_code) -> str:
         layout_exists, display_name, short_name, xkb_layout, xkb_variant = \
@@ -192,13 +185,7 @@ class KeyboardSetting(LocalizationSetting):
                 layouts = filtered_layouts
         return layouts
 
-    def on_language_changed(self, locale: str):
-        """Set the keyboard layout according to the new language"""
-
-        # Don't overwrite a user chosen value
-        if self.value_changed_by_user:
-            return
-
+    def get_layout_for_locale(self, locale: str):
         language = language_from_locale(locale)
         country = country_from_locale(locale)
 
@@ -243,11 +230,10 @@ class KeyboardSetting(LocalizationSetting):
         else:
             default_layout = 'us'
             logging.debug("Using us as fallback default layout")
-        self.set_value(default_layout)
+        return default_layout
 
-    def _apply_layout_to_current_screen(self):
-        layout = self.get_value()
-        logging.debug("layout=%s", layout)
+    def apply_layout_to_current_screen(self, layout: str):
+        logging.debug("applying keyboard layout '%s'", layout)
 
         settings = Gio.Settings('org.gnome.desktop.input-sources')
         settings.set_value('sources', GLib.Variant('a(ss)', [('xkb', layout)]))
