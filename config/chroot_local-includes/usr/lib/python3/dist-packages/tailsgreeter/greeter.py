@@ -103,13 +103,6 @@ class GreeterApplication(object):
     def login(self):
         """Login GDM to the server"""
         logging.debug("login called")
-
-        # Apply settings
-        # We now apply all settings immediately when they are
-        # changed. The only thing that still happens here is
-        # concatenating the locale settings files.
-        self.localisationsettings.apply_to_upcoming_session()
-
         self.mainwindow.hide()
         self.gdmclient.do_login()
 

@@ -51,11 +51,3 @@ class LocalisationSettings(object):
 
         if self._usermanager_loaded_cb:
             self._usermanager_loaded_cb()
-
-    def apply_to_upcoming_session(self):
-        with open(tailsgreeter.config.locale_setting_path, 'w') as outfile:
-            for path in (tailsgreeter.config.language_setting_path,
-                         tailsgreeter.config.formats_setting_path,
-                         tailsgreeter.config.keyboard_setting_path):
-                with open(path) as infile:
-                    outfile.write(infile.read())

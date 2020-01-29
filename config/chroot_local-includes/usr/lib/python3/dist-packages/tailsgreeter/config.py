@@ -44,9 +44,6 @@ formats_setting_path = os.path.join(settings_dir, 'tails.formats')
 # File where the session keyboard setting is stored
 keyboard_setting_path = os.path.join(settings_dir, 'tails.keyboard')
 
-# File where the above locale related settings are stored concatenated
-locale_setting_path = os.path.join(settings_dir, 'tails.locale')
-
 # File where the session sudo password is stored
 admin_password_path = os.path.join(settings_dir, 'tails.password')
 

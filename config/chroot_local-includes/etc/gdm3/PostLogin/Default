@@ -7,8 +7,10 @@
 # =====
 #
 # * /etc/live/config.d/username.conf : $LIVE_USERNAME
-# * /var/lib/gdm3/settings/tails.locale : $TAILS_LOCALE_NAME, $TAILS_XKBMODEL,
-#   $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT, $TAILS_XKBOPTIONS, $CODESET
+# * /var/lib/gdm3/settings/tails.language: $TAILS_LOCALE_NAME
+# * /var/lib/gdm3/settings/tails.formats: $TAILS_FORMATS
+# * /var/lib/gdm3/settings/tails.keyboard: $TAILS_XKBMODEL,
+#   $TAILS_XKBLAYOUT, $TAILS_XKBVARIANT, $TAILS_XKBOPTIONS
 # * /var/lib/gdm3/settings/tails.password : $TAILS_USER_PASSWORD
 
 # For whatever reason, /usr/sbin (needed by at least chpasswd)
@@ -75,8 +77,10 @@ log "tails-unblock-network has exited (status=$?)."
 
 ### Localization
 
-# Import locale name
-. /var/lib/gdm3/settings/tails.locale || log_n_exit "Locale file not found."
+# Import locale settings
+. /var/lib/gdm3/settings/tails.language || log_n_exit "Language settings file not found."
+. /var/lib/gdm3/settings/tails.formats || log_n_exit "Formats settings file not found."
+. /var/lib/gdm3/settings/tails.keyboard || log_n_exit "Keyboard settings file not found."
 if [ -z "${TAILS_LOCALE_NAME}" ] ; then
     log_n_exit "Locale variable not found."
 fi
