@@ -107,6 +107,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         self.entry_storage_passphrase = builder.get_object('entry_storage_passphrase')
         self.frame_language = builder.get_object('frame_language')
         self.infobar_network = builder.get_object('infobar_network')
+        self.infobar_settings_loaded = builder.get_object('infobar_settings_loaded')
         self.label_settings_default = builder.get_object('label_settings_default')
         self.listbox_add_setting = builder.get_object('listbox_add_setting')
         self.listbox_settings = builder.get_object('listbox_settings')
@@ -181,11 +182,16 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         # changing the language also changes the other two, which causes
         # the settings files to be overwritten. So we load the region
         # settings in reversed order.
+        settings_loaded = False
         for setting in reversed(list(self.settings.region_settings)):
-            setting.load()
+            if setting.load():
+                settings_loaded = True
         for setting in self.settings.additional_settings:
             if setting.load():
                 self.add_setting(setting.id)
+                settings_loaded = True
+        if settings_loaded:
+            self.infobar_settings_loaded.set_visible(True)
 
     def run_add_setting_dialog(self, id_=None):
         response = self.dialog_add_setting.run(id_)
