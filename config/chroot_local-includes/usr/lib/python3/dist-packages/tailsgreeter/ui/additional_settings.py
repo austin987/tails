@@ -134,14 +134,16 @@ class AdminSettingUI(AdditionalSetting):
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
         passwords_match = self.passwords_match()
-        self.dialog.button_add.set_sensitive(passwords_match)
         if passwords_match:
             self.password = self.password_entry.get_text()
+        if self.dialog:
+            self.dialog.button_add.set_sensitive(passwords_match)
         return False
 
     def cb_entry_admin_activate(self, widget, user_data=None):
         if not self.passwords_match():
-            self.dialog.button_add.set_sensitive(False)
+            if self.dialog:
+                self.dialog.button_add.set_sensitive(False)
             self.password_verify_entry.grab_focus()
             return False
 
