@@ -15,7 +15,9 @@ class AdminSetting(object):
 
     def save(self, password: str):
         proc = subprocess.run(
-            ["mkpasswd", "-s", "--method=sha512crypt"],
+            # mkpasswd generates a salt if none is provided (even though the
+            # man page doesn't explicitly state this).
+            ["mkpasswd", "--stdin", "--method=sha512crypt"],
             input=pipes.quote(password).encode(),
             capture_output=True,
             check=True,
