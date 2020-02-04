@@ -51,14 +51,10 @@ end
 
 def maybe_deal_with_pinentry
   begin
-    @screen.wait("PinEntryPrompt.png", 10).click
-    # Without this sleep here (and reliable visual indicators) we can sometimes
-    # miss keystrokes by typing too soon. This sleep prevents this problem from
-    # coming up.
-    sleep 5
-    @screen.type(@passphrase)
-    @screen.press("Return")
-  rescue FindFailed
+    pinentry = Dogtail::Application.new('pinentry-gtk-2')
+    pinentry.child('', roleName: 'password text').typeText(@passphrase)
+    pinentry.button('OK').click
+  rescue Dogtail::Failure
     # The passphrase was cached or we wasn't prompted at all (e.g. when
     # only encrypting to a public key)
   end
