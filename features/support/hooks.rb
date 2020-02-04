@@ -200,7 +200,11 @@ Before('@product') do |scenario|
   if $config["CAPTURE"]
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
-    capture = IO.popen(['avconv',
+    ffmpeg = 'ffmpeg'
+    if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
+      ffmpeg = 'avconv'
+    end
+    capture = IO.popen([ffmpeg,
                         '-f', 'x11grab',
                         '-s', '1024x768',
                         '-r', '15',
