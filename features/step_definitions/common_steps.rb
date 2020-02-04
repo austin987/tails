@@ -698,11 +698,7 @@ When /^I type "([^"]+)"$/ do |string|
 end
 
 When /^I press the "([^"]+)" key$/ do |key|
-  begin
-    @screen.press(key)
-  rescue RuntimeError
-    raise "unsupported key #{key}"
-  end
+  @screen.press(key)
 end
 
 Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/ do |persistent_or_not, mode|
