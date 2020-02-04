@@ -72,13 +72,6 @@ image before building it.
 
 # Known issues and workarounds
 
-* If Vagrant fails to start the Tails builder VM with an error similar
-  to:
-
-        Virtio-9p Failed to initialize fs-driver with id:fsdev-fs0
-
-  … then see [[!tails_ticket 11411]].
-
 * If Vagrant fails to start the Tails builder VM with:
 
         Initialization parameters must be an attributes hash, got NilClass nil (ArgumentError)
@@ -120,7 +113,7 @@ You can customize the build system using two environment variables:
 
    For example, you can speed up the build by setting:
 
-        export TAILS_BUILD_OPTIONS="ram fastcomp"
+        export TAILS_BUILD_OPTIONS="ram fastcomp cachewebsite"
 
    This will force the build to happen in RAM and SquashFS compression
    will be done using faster, though less efficient size-wise, settings.
@@ -209,6 +202,10 @@ affect reproducibility of the ISO image:
  * **rescue**: implies **keeprunning** and will also not clean up the
    build directory, which is useful for investigating build failures.
 
+ * **cachewebsite**: enable caching of the built website.
+   The cache is keyed on the input parameters that primarily determine
+   the output of the website build.
+
 ## HTTP proxy settings
 
 Building Tails requires downloading a little bit more than 2 GiB of
@@ -240,7 +237,8 @@ the following build options:
    if a local HTTP proxy is set.
 
  * **vmproxy+extproxy**: use the local proxy configured in the virtual
-   machine but make it use the local HTTP proxy.
+   machine but make it use the external HTTP proxy configured through
+   the `http_proxy` environment variable.
 
  * **noproxy**: do not use any HTTP proxy.
 

@@ -87,7 +87,6 @@ apt-get -y install \
         debootstrap \
         dosfstools \
         dpkg-dev \
-        eatmydata \
         faketime \
         gdisk \
         gettext \
@@ -95,22 +94,15 @@ apt-get -y install \
         git \
         ikiwiki \
         intltool \
-        libfile-chdir-perl \
         libfile-slurp-perl \
-        libhtml-scrubber-perl \
-        libhtml-template-perl \
         liblist-moreutils-perl \
-        libtext-multimarkdown-perl \
         libtimedate-perl \
-        liburi-perl libhtml-parser-perl \
-        libxml-simple-perl \
-        libyaml-libyaml-perl po4a \
-        libyaml-perl \
+        po4a \
         libyaml-syck-perl \
         live-build \
         lsof \
         mtools \
-        perlmagick \
+        libimage-magick-perl \
         psmisc \
         python3-gi \
         rsync \
@@ -119,8 +111,7 @@ apt-get -y install \
         syslinux-common \
         syslinux-utils \
         time \
-        udisks2 \
-        whois
+        udisks2
 
 # Ensure we can use timedatectl
 apt-get -y install dbus

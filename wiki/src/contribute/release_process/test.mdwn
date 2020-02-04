@@ -232,16 +232,18 @@ at the application level:
 
 2. Start from that USB stick.
 
-3. Upgrade to the version we're testing:
+3. Set an administration password in the _Greeter_.
+
+4. Upgrade to the version we're testing:
 
         sudo sh -c 'sed -i /^TAILS_CHANNEL=/d /etc/os-release &&
                     echo TAILS_CHANNEL=\"test\" >> /etc/os-release' && \
         systemctl --user restart tails-upgrade-frontend.service
 
-4. Once the upgrade has been applied and you're suggested to restart Tails,
+5. Once the upgrade has been applied and you're suggested to restart Tails,
    do that.
 
-5. Verify that the resulting, upgraded system "works fine":
+6. Verify that the resulting, upgraded system "works fine":
 
    * it boots
    * it pretends to be the correct version
@@ -348,5 +350,6 @@ identifying other language names in):
 # Misc
 
 * Check that all seems well during init: (automate: [[!tails_ticket 10277]])
-  - `systemctl --failed --all` should say `0 loaded units listed`
+  - `systemctl --failed --all` should either say `0 loaded units listed`,
+    or list `rng-tools.service` as the only unit in `failed` state.
   - the output of `sudo journalctl` should seem OK.
