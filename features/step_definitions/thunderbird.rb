@@ -62,8 +62,18 @@ Then /^I open Thunderbird's Add-ons Manager$/ do
   )
 end
 
-Then /^I click the extensions tab$/ do
-  @thunderbird_addons.child('Extensions', roleName: 'list item').click
+Then /^I open the Extensions tab$/ do
+  # Sometimes the Add-on manager loads its GUI slowly, so that the
+  # tabs move around, creating a race where we might find the
+  # Extensions tab at one place but it has moved to another when we
+  # finally do the click.
+  try_for(10) do
+    @thunderbird_addons
+      .child('Extensions', roleName: 'list item', retry: false).click
+    # Verify that we clicked correctly:
+    @thunderbird_addons
+      .child('Manage Your Extensions', roleName: 'label', retry: false)
+  end
 end
 
 Then /^I see that only the (.+) add-on(?:s are| is) enabled in Thunderbird$/ do |addons|
