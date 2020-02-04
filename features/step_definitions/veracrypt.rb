@@ -189,7 +189,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       begin
         filter.child('All Files', roleName: 'menu item').click
         true
-      rescue RuntimeError
+      rescue Dogtail::Failure
         # we probably clicked too early, which triggered an "Attempting
         # to generate a mouse event at negative coordinates" Dogtail error
         false
@@ -246,7 +246,7 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
       disks.pressKey('Down')
       disks.child('', roleName: 'panel', description: 'Mount selected partition', showingOnly: true).click
       true
-    rescue RuntimeError
+    rescue Dogtail::Failure
       # we probably did something too early, which triggered a Dogtail error
       # such as "Attempting to generate a mouse event at negative coordinates"
       false
