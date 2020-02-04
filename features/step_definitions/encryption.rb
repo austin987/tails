@@ -49,11 +49,15 @@ When /^I type a message into gedit$/ do
   text_buffer.typeText("ATTACK AT DAWN")
 end
 
+def deal_with_pinentry
+  pinentry = Dogtail::Application.new('pinentry-gtk-2')
+  pinentry.child('', roleName: 'password text').typeText(@passphrase)
+  pinentry.button('OK').click
+end
+
 def maybe_deal_with_pinentry
   begin
-    pinentry = Dogtail::Application.new('pinentry-gtk-2')
-    pinentry.child('', roleName: 'password text').typeText(@passphrase)
-    pinentry.button('OK').click
+    deal_with_pinentry
   rescue Dogtail::Failure
     # The passphrase was cached or we wasn't prompted at all (e.g. when
     # only encrypting to a public key)
@@ -141,7 +145,7 @@ When /^I symmetrically encrypt the message with password "([^"]+)"$/ do |pwd|
   @passphrase = pwd
   gedit_copy_all_text
   seahorse_menu_click_helper('GpgAppletIconNormal.png', 'GpgAppletEncryptPassphrase.png')
-  maybe_deal_with_pinentry # enter password
-  maybe_deal_with_pinentry # confirm password
+  deal_with_pinentry # enter password
+  deal_with_pinentry # confirm password
   gedit_paste_into_a_new_tab
 end
