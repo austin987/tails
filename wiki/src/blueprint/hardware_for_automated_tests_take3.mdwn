@@ -1,4 +1,4 @@
-This is about [[!tails_ticket 11680]] and related tickets.
+This is about [[!tails_ticket 16960]] and related tickets.
 
 [[!toc levels=3]]
 
@@ -17,6 +17,7 @@ area:
    path and could be shortened if our Jenkins workers were faster: running the
    test suite after importing Tor Browser, building the final images to check
    for reproducibility, building IUKs.
+
  * When Jenkins has built an ISO from one of our main branches or from
    a branch that _Needs Validation_, since October 2017 we rebuild in
    in a slightly different build environment to ensure it can be
@@ -24,6 +25,7 @@ area:
    This increased substantially the number of ISO image we build
    which sometimes creates congestion in our CI pipeline (see below
    for details).
+
  * On our current setup, large numbers of automated test cases are
    brittle and had to be disabled on Jenkins (`@fragile`), which quite
    a few problematic consequences such as: it decreases the value our
@@ -34,20 +36,19 @@ area:
    Interestingly, we don't see this much brittleness anywhere else,
    even on a replica of our Jenkins setup that uses nested
    virtualization too.
+
  * As we add more automated tests, and re-enable tests previously
    flagged as fragile, a full test run takes longer and longer.
-   We're now up to 230-255 minutes per run (depending on how many
+   We're now up to 300-350 minutes per run (depending on how many
    concurrent jobs are running) without fragile tests.
    We can't make it faster by adding RAM anymore nor by adding CPUs to ISO testers.
    But faster CPU cores would fix that. With a fast (Intel E-2134) CPU
    and a poor Internet connection, the same test suite (without fragile tests)
-   only takes:
-    - 138 minutes for 1 concurrent test suite run in a VM,
-      i.e. using nested virtualization
-    - 150-153 minutes for 2 concurrent test suite runs in VMs
+   only takes about twice less time.
+
  * Building our website takes a long while (11-15 minutes on our ISO
    builders on lizard, i.e. 20% of the entire ISO build time, which is
-   54-70 minutes on lizard depending on how many concurrent jobs are running),
+   56-70 minutes on lizard depending on how many concurrent jobs are running),
    which makes ISO builds take longer than they could. This will get worse as new
    languages are added to our website. This is a single-threaded task,
    so adding more CPU cores or RAM would not help: only faster CPU
@@ -59,6 +60,7 @@ area:
       for 2 concurrent builds in VMs, in the worst case situation (builds
       started exactly at the same time ⇒ they both need all their vCPUs
       at the same time)
+
  * Waiting time in queue for ISO build and test jobs is acceptable
    most of the time, but too high during peak load periods:
 
@@ -78,24 +80,28 @@ area:
      - 10% of the `reproducibly_build_*` jobs had to wait more than 15 minutes.
      - 3.2% of the `reproducibly_build_*` jobs had to wait more than 1 hour.
 
-   That's not many jobs of course, but this congestion happens
+   Not _that_ many jobs have to wait a long time, but this congestion happens
    precisely when we need results from our CI infra ASAP, be it
    because there's intense ongoing development or because we're
    reviewing and merging lots of branches close to a code freeze, so
    these delays hurt our development and release process.
 
- * Our current server was purchased at the end of 2014. The hardware
-   can last quite a few more years, but we should plan (at least
-   budget-wise) for replacing it when it is 5 years old, at the end of
-   2019, to the latest.
+ * Our current main server was purchased at the end of 2014. The hardware will
+   hopefully last quite a few more years, but since it's now 5 years old, we've
+   budgeted its replacement. If our CI run on another machine, replacing this
+   main server would cost much less and the hardware would be chosen very
+   differently.
+
  * The Tails community keeps needing new services; some of them need
    to be hosted on hardware we control for security/privacy reasons
    (which is not the case for our CI system):
    - Added already:
      - self-host our website
      - Schleuder
-   - Will be added soon:
-     - [[!tails_ticket 15919 desc="Redmine"]]
+     - Weblate is a serious CPU, memory, and I/O consumer; besides, part of its
+       job is to rebuild the website, which is affected by the single-threaded
+       task performance limitations described above.
+     - survey platform
    - Under consideration:
      - [[!tails_ticket 14601 desc="Matomo"]] will require huge amounts
        of resources and put quite some load on the system where we run
@@ -105,12 +111,12 @@ area:
        we control.
    - WIP and will need more resources once they reach production
      status or are used more often:
-     - Weblate is a serious CPU and I/O consumer; besides, part of its
-       job is to rebuild the website, which is affected by the
-       single-threaded task performance limitations described above.
-     - survey platform
- * We're allowing more and more people to use our CI infrastructure.
-   This may increase its resources needs eventually.
+
+ * We're allowing more and more people to use our CI infrastructure. This may
+   increase its resources needs eventually. From a development perspective,
+   ideally every merge request would go through our CI, which probably
+   requires a stronger separation between the CI workload and more
+   security-sensitive tasks that we run.
 
 # Options
 
@@ -151,24 +157,27 @@ Extra options:
 Specs:
 
  * For simplicity's sake, the following assumes we have Jenkins
-   workers that are each able to run all the kinds of jobs we have.
+   workers that are each able to run all the kinds of jobs we have,
+   which would be a good idea anyway.
  * CPU: assuming 2 cores (4 hyperthreads) per Jenkins worker, for
-   8 workers, we need 16 cores at 3.5 GHz base frequency, which is
+   8 workers, we need 16 cores at ≥ 3.5 GHz base frequency, which is
    roughly equivalent to 4 × the Intel NUC mentioned below.
    Our options are:
-    - 4 × [quad-core CPU](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=4&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
-      (on 2018-12-01, one result: [Xeon Gold 5122](https://ark.intel.com/products/120475/Intel-Xeon-Gold-5122-Processor-16-5M-Cache-3-60-GHz-) → 4×105 W = 420 W)
-    - 2 × [octo-core CPUs](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=8&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
-      (on 2018-12-01, one result: [Xeon Gold 6144](https://ark.intel.com/products/124943/Intel-Xeon-Gold-6144-Processor-24-75M-Cache-3-50-GHz-) → 2×150 W = 300 W)
-    - 1 × [16-core CPU](https://ark.intel.com/Search/FeatureFilter?productType=processors&CoreCountMin=16&ClockSpeedMhzMin=3500&StatusCodeId=4&MarketSegment=Server&ExtendedPageTables=true&VTD=true)
-      (2018-12-01: no result)
+    - 4 × [quad-core CPU](https://ark.intel.com/content/www/us/en/ark/search/featurefilter.html?productType=873&2_MarketSegment=Server&3_CoreCount-Min=4&3_CoreCount-Max=4&3_ClockSpeed-Min=3500&2_VTX=True&0_VTD=True&2_StatusCodeText=4&0_StatusCodeText1=3,4)
+      (On 2020-02-04, 1 result with a not totally crazy price:
+      [Xeon Gold 5222](https://ark.intel.com/content/www/us/en/ark/products/192445/intel-xeon-gold-5222-processor-16-5m-cache-3-80-ghz.html) → 4×105 W = 420 W)
+    - 2 × [octo-core CPUs](https://ark.intel.com/content/www/us/en/ark/search/featurefilter.html?productType=873&2_MarketSegment=Server&3_CoreCount-Min=8&3_CoreCount-Max=8&3_ClockSpeed-Min=3500&2_VTX=True&0_VTD=True&2_StatusCodeText=4&0_StatusCodeText1=3,4)
+      (On 2020-02-04, 1 result: [Xeon Gold
+      6244](https://ark.intel.com/content/www/us/en/ark/products/192442/intel-xeon-gold-6244-processor-24-75m-cache-3-60-ghz.html) → 2 × 150 W = 300 W)
+    - 1 × [16-core CPU](https://ark.intel.com/content/www/us/en/ark/search/featurefilter.html?productType=873&2_MarketSegment=Server&3_CoreCount-Min=16&3_ClockSpeed-Min=3500&2_VTX=True&0_VTD=True&2_StatusCodeText=4&0_StatusCodeText1=3,4)
+      (On 2020-02-04, no result.)
     - Higher-density systems, with 2+ servers in a chassis e.g.
       Supermicro Twin solutions, might allow using cheaper CPUs that
       don't support multi-processor setups.
  * RAM:  
-   + 208 GB = 26 GB × 8 Jenkins workers  
+   + 232 GB = 29 GB × 8 Jenkins workers  
    + Jenkins VM + host system + a few accessory VMs  
-   = round to 256 GB; 192 GB might feasible with super fast storage
+   = round to 256 GB; 192 GB should work with super fast storage
    (at least 4 × NVMe × 2 for RAID-1) if that's cheaper
  * storage:  
    + 480 GB = 60 GB × 8 Jenkins workers  
@@ -177,11 +186,15 @@ Specs:
    + Jenkins VM + host system + a few accessory VMs  
    = round to 1.5 TB × 2 (RAID-1)
 
+Cost estimate: $14-16k, depending on the chosen memory and storage setup
+(based on <https://www.thinkmate.com/system/rax-xt24-42s1>
+or <https://www.thinkmate.com/system/superserver-2029bt-dnc0r>).
+
 <a id="hacker-option"></a>
 
 ## Custom-built cluster of consumer-grade hardware dedicated to CI, aka. the hacker option
 
-For example, we could stuff 4-6 × Intel NUC or similar
+For example, we could stuff 4 × Intel NUC or similar
 together in a custom case, with whatever cooling, PoE and network boot
 system this high-density cluster would need. Each of these nodes
 should be able to run 2 Jenkins workers.
@@ -200,21 +213,17 @@ Cons:
  * Lots of initial research and development: casing, cooling, hosting,
    power over Ethernet, network boot, remote administration
  * High initial money investment
- * Hosting this is a hard sell for collocations.
+ * Hosting this is a hard sell for collocations. For example, the folks
+   who'll do hardware debugging and parts replacement onsite may frown
+   upon the extremely non-standard setup.
  * On-going cost for hosting this cluster.
  * Needs some development work to fully benefit from the performance
    improvements.
 
 ### Availability
 
- * Intel: as of 2018-12-01, none of the eighth generation NUC8i7
-   support vPro, so the fastest models with vPro remain those, that
-   share
-   a [i7-8650U](https://ark.intel.com/products/124968/Intel-Core-i7-8650U-Processor-8M-Cache-up-to-4-20-GHz-)
-   CPU, UCFF (4"x4") form factor, and 12-24 VDC DC input voltage:
-   - kit: [NUC7i7DNHE](https://ark.intel.com/products/130393/Intel-NUC-Kit-NUC7i7DNHE),
-     [NUC7i7DNKE](https://ark.intel.com/products/130392/Intel-NUC-Kit-NUC7i7DNKE).
-   - board: [NUC7i7DNBE](https://ark.intel.com/products/130394/Intel-NUC-Board-NUC7i7DNBE)
+ * Intel: in the ninth generation NUC9i7 (availability: 2020Q1),
+   NUC9V7QNX is the one that supports vPro
  * Other vendors have started selling UCFF boards/kits with fast CPUs.
  * Similar smallish [[!wikipedia Computer_form_factor desc="form
    factors"]] would be worth investigating, e.g. there are plenty of
@@ -232,6 +241,9 @@ Cons:
    - nicer Supermicro options, e.g. X11SSV-M4F, are too expensive (1000€ for the motherboard only)
 * Supermicro SuperServer E300-9D is very tempting (IPMI) but more
   expensive than a NUC.
+
+Cost estimate: 7k€ for hardware (including shipping to the USA and import taxes)
+and dozens of hours of custom work.
 
 ### Remote management
 
@@ -502,32 +514,31 @@ Cons:
    computers but if that's the best option we can do it
 
 2. Keep gathering data about our needs while going through the next steps:
-   - upcoming services [intrigeri] (last updated: 2018-12-01)
+   - upcoming services [intrigeri] (last updated: 2020-02-04)
 
 3. Describe our needs for each option:
    - 2nd bare metal server-grade machine:
      * <strike>hardware specs [intrigeri]</strike> [DONE]
-     * hosting needs (high power consumption) [intrigeri]
-   - cloud (nested KVM, management tools in Debian), iff. the new
-     sysadmin hired in 2019 knows is excited to learn and use
-     such technologies.
+     * <strike>hosting needs (high power consumption)</strike> [DONE]
    - the hacker option: hosting
 
-5. Ask potential hardware/VMs donors (e.g. HPE, ProfitBricks) if they
+5. Ask potential hardware/VMs donors (e.g. ProfitBricks) if they
    would happily satisfy our needs for free or with a big discount.
    If they can do that, then let's do it. Otherwise, keep reading.
    [intrigeri]
 
 6. Benchmark how our workload would be handled by the options we have
    no data about yet:
-   - Rent a bare metal server for a short time, run CI jobs in
-     a realistic way, measure. [intrigeri]
-   - Rent cloud VMs for a short time, run CI jobs in a realistic way,
-     measure.
+   - <strike>Rent a bare metal server for a short time, run CI jobs in
+     a realistic way, measure.</strike> [CANCELED: we have data about
+     Intel E-2134 which is good enough.]
+   - <strike>Rent cloud VMs for a short time, run CI jobs in a realistic way,
+     measure.</strike> [CANCELED: we won't do cloud.]
 
 7. Decide what we do and look into the details e.g.:
    - bare metal options: where to host it?
-   - cloud: refresh list of suitable providers, e.g. check if more
+   - <strike>cloud: refresh list of suitable providers, e.g. check if more
      providers offer nested KVM, if the OSU Open Source Lab offering
      is ready, and ask friendly potential cloud providers such as
-     universities, HPC cluster admins, etc.
+     universities, HPC cluster admins, etc.</strike> [CANCELED: we won't do
+     cloud]

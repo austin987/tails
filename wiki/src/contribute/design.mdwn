@@ -974,6 +974,8 @@ granting `sudo` privileges to the `amnesia` user by default.
 Unless an administrator password is set in tails-greeter,
 no root access is possible afterwards.
 
+<a id="tor-browser"></a>
+
 ### 3.6.13 Tor Browser
 
 Tails ships with the Tor Browser, which is based on Mozilla Firefox
@@ -985,36 +987,32 @@ but the configuration differs slightly, which is described below.
 In Tails we diverge from the Tor Browser's one-profile-only design, and
 install the Tor Browser in a globally accessible directory used by all
 browser profiles (and other XUL applications).
-
-- [[!tails_gitweb config/chroot_local-hooks/10-tbb]]
-
-We only modify this Tor Browser installation slightly:
-
-* We add a mandatory signing exception for the uBlock Origin add-on.
-* We add/replace some search engine plugins with our own localized
-  versions:
-  - [[!tails_gitweb config/chroot_local-hooks/11-localize_browser]]
-* We use the myspell/hunspell dictionaries provided by Debian.
-* We employ [`mozilla.cfg`](https://developer.mozilla.org/en-US/Firefox/Enterprise_deployment)
-  to restore support for the `browser.search.defaultenginename` pref,
-  otherwise this default gets messed up due to the localization we do.
+In particular, the global Tor Browser installation is also used
+for the [[Unsafe Browser]], although it is
+user-isolated and uses a separate profile with very different
+configuration (most importantly, it does not use tor for outgoing connections).
 
 The default profile is split from the binaries and application data:
 
+- [[!tails_gitweb config/chroot_local-hooks/10-tbb]]
 - [[!tails_gitweb_dir config/chroot_local-includes/etc/tor-browser]]
 - [[!tails_gitweb config/chroot_local-includes/usr/share/tails/tor-browser-prefs.js]]
 
-As for extensions we have the following differences:
+We only modify this Tor Browser installation slightly:
 
-* Tails also installs the
-  [uBlock Origin](https://github.com/gorhill/uBlock/)
-  extension to protect against many tracking possibilities by removing
-  most ads.
-
+* Tails installs the [uBlock
+  Origin](https://github.com/gorhill/uBlock/) extension.
+  We add a mandatory signing exception for this add-on.
+* We use the myspell/hunspell dictionaries provided by Debian.
+* We ship all langpacks and select the UI language depending on
+  the locale chosen by the user in our *Greeter*.
 * Tails does not install the Tor Launcher extension as part of the
   browser. Instead we extract Tor Launcher from the bundled .xpi and
   make it available as a stand-alone XUL application for Tor
-  bridge/proxy configuration.
+  bridge/proxy configuration.  
+  Rationale: Tor Browser in Tails is not allowed to configure tor.
+* We modify preferences in `browser/omni.ja` to slightly adjust the UI.
+* We append Tails-specific preferences to `browser/omni.ja`.
 
 In Tails we do not use the `start-tor-browser` script, since it does a
 lot of stuff not needed in Tails (error checking mainly) and isn't
@@ -1046,11 +1044,6 @@ The remaining configuration differences can be found in:
 - [[!tails_gitweb_dir config/chroot_local-includes/usr/share/tails/tor-browser-prefs.js]]
 - [[!tails_gitweb config/chroot_local-hooks/14-generate-tor-browser-profile]]
 - [[!tails_gitweb config/chroot_local-hooks/15-tor-browser-bookmarks]]
-
-It should also be noted that the global Tor Browser installation is also used
-for the [[Unsafe Browser]], although it is
-user-isolated and use a separate profile with very different
-configuration.
 
 ### 3.6.14 Thunderbird
 
