@@ -26,35 +26,3 @@ Feature: Keyserver interaction with GnuPG
     When I fetch the "30F80A2C" OpenPGP key using Seahorse via the OpenPGP Applet
     And the Seahorse operation is successful
     Then the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" key is in the live user's public keyring
-
-  #14770, #17169
-  @fragile
-  Scenario: Syncing OpenPGP keys using Seahorse should work and be done over Tor.
-    Given I fetch the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" OpenPGP key using the GnuPG CLI
-    And the GnuPG fetch is successful
-    And the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" key is in the live user's public keyring
-    And the key "DF841752B55CD97FDA4879B29E5B04F430F80A2C" has at least 1 subkey
-    And I delete the "85C7C1AAA3DFC34623B5516281119B9834AD5681" subkey from the live user's public keyring
-    And the key "DF841752B55CD97FDA4879B29E5B04F430F80A2C" has no subkey
-    When I start Seahorse
-    Then Seahorse has opened
-    And I enable key synchronization in Seahorse
-    And I synchronize keys in Seahorse
-    And the Seahorse operation is successful
-    Then the key "DF841752B55CD97FDA4879B29E5B04F430F80A2C" has at least 1 subkey
-
-  #14770, #17169
-  @fragile
-  Scenario: Syncing OpenPGP keys using Seahorse started from the OpenPGP Applet should work and be done over Tor.
-    Given I fetch the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" OpenPGP key using the GnuPG CLI
-    And the GnuPG fetch is successful
-    And the "DF841752B55CD97FDA4879B29E5B04F430F80A2C" key is in the live user's public keyring
-    And the key "DF841752B55CD97FDA4879B29E5B04F430F80A2C" has at least 1 subkey
-    And I delete the "85C7C1AAA3DFC34623B5516281119B9834AD5681" subkey from the live user's public keyring
-    And the key "DF841752B55CD97FDA4879B29E5B04F430F80A2C" has no subkey
-    When I start Seahorse via the OpenPGP Applet
-    Then Seahorse has opened
-    And I enable key synchronization in Seahorse
-    And I synchronize keys in Seahorse
-    And the Seahorse operation is successful
-    Then the key "DF841752B55CD97FDA4879B29E5B04F430F80A2C" has at least 1 subkey
