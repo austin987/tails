@@ -154,7 +154,10 @@ echo "I: ISO image was successfully created"
 print_iso_size binary.iso
 
 echo "I: Hybriding it..."
-isohybrid $AMNESIA_ISOHYBRID_OPTS binary.iso || fatal "isohybrid failed"
+touch chroot/binary.iso
+mount --bind binary.iso chroot/binary.iso
+chroot chroot isohybrid $AMNESIA_ISOHYBRID_OPTS binary.iso || fatal "isohybrid failed"
+umount chroot/binary.iso
 print_iso_size binary.iso
 truncate -s %2048 binary.iso
 print_iso_size binary.iso
