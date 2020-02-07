@@ -776,7 +776,7 @@ method install_iuk (HashRef $upgrade_path, AbsDir $target_files_tempdir) {
     my ($exit_code, $stdout, $stderr, $zenity_h);
     my $success = 1;
 
-    $zenity_h = IPC::Run::start [qw{zenity --progress --pulsate --no-cancel},
+    $zenity_h = IPC::Run::start [qw{tail -f /dev/null}], '|', [qw{zenity --progress --pulsate --no-cancel --auto-close},
                        '--title', $title, '--text', $info] unless $self->batch;
     IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr or $success = 0;
     $exit_code = $?;
