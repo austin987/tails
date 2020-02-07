@@ -44,7 +44,6 @@ SYSTEM_PARTITION_ADDITIONAL_SIZE = 10
 # the same syslinux version here and in Tails Installer is important to
 # prevent issues when upgrading a Tails device via Tails Installer.
 CHROOT_SYSLINUX_COM32MODULES_DIR = 'chroot/usr/lib/syslinux/modules/bios'
-CHROOT_SYSLINUX_BIN='chroot/usr/bin/syslinux'
 
 class ImageCreationError(Exception):
     pass
@@ -267,17 +266,33 @@ class ImageCreator(object):
                          src_path,
                          "::%s" % os.path.join('syslinux', module)])
 
+    @contextmanager
+    def mount_proc_and_image(self):
+        logger.info("Mounting proc and image")
+        execute(['mount', '--types', 'proc', '/proc', 'chroot/proc'])
+        execute(['mkdir', '-p', 'chroot%s' % os.path.dirname(self.image)])
+        execute(['touch', 'chroot%s' % self.image])
+        execute(['mount', '--bind', self.image, 'chroot%s' % self.image])
+        try:
+            yield
+        finally:
+            logger.info("Unmounting proc and image")
+            execute(['umount', 'chroot/proc'])
+            execute(['umount', 'chroot%s' % self.image])
+
     def install_syslinux(self):
         logger.info("Installing bootloader")
         # We install syslinux directly on the image. Installing it on the loop
         # device would cause this issue:
         # https://bugs.chromium.org/p/chromium/issues/detail?id=508713#c8
-        execute([
-            CHROOT_SYSLINUX_BIN,
-            '--offset', str(self.partition.props.partition.props.offset),
-            '--directory', '/syslinux/',
-            '--install', self.image
-        ])
+        with self.mount_proc_and_image():
+            execute([
+                'chroot', 'chroot',
+                '/usr/bin/syslinux',
+                '--offset', str(self.partition.props.partition.props.offset),
+                '--directory', '/syslinux/',
+                '--install', self.image
+            ])
 
     def set_guids(self):
         logger.info("Setting disk and partition GUID")
