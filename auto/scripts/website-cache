@@ -1,0 +1,206 @@
+#!/usr/bin/python3
+
+import argparse
+import hashlib
+import json
+import logging
+import os
+import shutil
+import subprocess
+import sys
+
+from datetime import datetime, timedelta
+from pathlib import Path
+
+LOG_FORMAT = "%(asctime)-15s %(levelname)s %(message)s"
+log = logging.getLogger()
+
+# Input parameters that primarily determine the output of the build,
+# and therefore are used to generate the cache key: any change
+# to any of these input parameters will yield a different cache key.
+KEY_FILES = [
+    # A new implementation of the caching mechanism should
+    # invalidate older cached data
+    'auto/scripts/website-cache',
+    # ikiwiki configuration
+    'ikiwiki.setup',
+    # ikiwiki input directory
+    'wiki/src',
+]
+KEY_PACKAGES = [
+    'gettext',
+    'ikiwiki',
+    'libmarkdown2',
+    'libtext-markdown-discount-perl',
+    'perl',
+    'po4a',
+]
+
+# Files to cache, relative to the root of this very Git repository
+CACHED_FILES = [
+    'config/chroot_local-includes/usr/share/doc/tails/website',
+]
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Query and manage website cache"
+    )
+    parser.add_argument(
+        "--dest-dir",  type=str, action="store",
+        default=os.getenv('WEBSITE_DEST_DIR', None),
+        help="Directory where to restore data from the cache")
+    parser.add_argument(
+        "--cache-base-dir", type=str, action="store",
+        default=os.getenv('WEBSITE_CACHE_BASEDIR', None),
+        help="Directory where the cache lives")
+    parser.add_argument("--debug", action="store_true", help="debug output")
+    subparsers = parser.add_subparsers(help="sub-command help", dest="command")
+
+    parser_gc = subparsers.add_parser(
+        "gc",
+        help="Garbage collect expired data from the cache")
+    parser_gc.add_argument(
+        "--max-days", type=int, action="store", default=30,
+        help="Number of days after which cached data expires")
+    parser_gc.set_defaults(func=gc)
+
+    parser_get = subparsers.add_parser("get", help="Copy data from the cache")
+    parser_get.add_argument("cache_key", type=str, action="store")
+    parser_get.set_defaults(func=get)
+
+    parser_put = subparsers.add_parser("put", help="Copy data to the cache")
+    parser_put.add_argument("cache_key", type=str, action="store")
+    parser_put.set_defaults(func=put)
+
+    parser_key = subparsers.add_parser(
+        "key",
+        help="Computing cache key for the source tree and build environment")
+    parser_key.set_defaults(func=key)
+
+    parser_forget = subparsers.add_parser("forget", help="Delete cached data")
+    parser_forget.add_argument("cache_key", type=str, action="store")
+    parser_forget.set_defaults(func=forget)
+
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+    else:
+        logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
+    if args.cache_base_dir is None:
+        log.error("Please pass --cache-base-dir or set $WEBSITE_CACHE_BASEDIR")
+        sys.exit(1)
+
+    if args.dest_dir is None:
+        log.error("Please pass --dest-dir or set $WEBSITE_DEST_DIR")
+        sys.exit(1)
+
+    for key_file in KEY_FILES + [args.cache_base_dir]:
+        if not Path(key_file).exists():
+            log.error("%s does not exist" % (key_file))
+            sys.exit(1)
+
+    if args.command is None:
+        parser.print_help()
+    else:
+        args.func(args)
+
+
+def gc(args):
+    log.info("Garbage collecting expired data from the cache…")
+    cache_dirs = [d for d in Path(args.cache_base_dir).iterdir() if d.is_dir()]
+    delete_before = datetime.utcnow() - timedelta(days=args.max_days)
+    log.debug("Will delete data created before %s" % (delete_before))
+    for cache_dir in cache_dirs:
+        mtime = datetime.utcfromtimestamp(cache_dir.stat().st_mtime)
+        if mtime < delete_before:
+            log.info(" - Deleting cache for %s with mtime %s"
+                     % (cache_dir.name, mtime))
+            shutil.rmtree(cache_dir)
+        else:
+            log.debug(" - Cache for %s has mtime %s ⇒ keeping"
+                      % (cache_dir.name, mtime))
+
+
+def get(args):
+    cache_dir = Path(args.cache_base_dir, args.cache_key)
+    if not cache_dir.exists():
+        raise LookupError("Found no cache dir for key %s" % (args.cache_key))
+
+    for file_to_get in [Path(f) for f in CACHED_FILES]:
+        cached_file = Path(cache_dir, file_to_get)
+        dest_file = Path(args.dest_dir, file_to_get)
+
+        if dest_file.exists():
+            raise FileExistsError("%s already exists locally, not overwriting"
+                                  % (dest_file))
+        if not cached_file.exists():
+            raise FileNotFoundError("Found no cached %s for key %s"
+                                    % (file_to_get, args.cache_key))
+
+        log.debug("Copying %s from the cache" % (file_to_get))
+        if cached_file.is_dir():
+            shutil.copytree(src=cached_file, dst=dest_file, symlinks=True)
+        else:
+            raise NotImplementedError(
+                "Retrieving non-directories is not supported yet")
+
+
+def put(args):
+    cache_dir = Path(args.cache_base_dir, args.cache_key)
+    cache_dir.mkdir()
+    for file_to_cache in [Path(f) for f in CACHED_FILES]:
+        cached_file = Path(cache_dir, file_to_cache)
+
+        if not file_to_cache.exists():
+            raise FileNotFoundError("Cannot store non-existing %s in the cache"
+                                    % file_to_cache)
+
+        log.debug("Caching %s with key %s" % (file_to_cache, args.cache_key))
+        cached_file.parent.mkdir(parents=True)
+        if file_to_cache.is_dir():
+            shutil.copytree(src=file_to_cache, dst=cached_file, symlinks=True)
+        else:
+            raise NotImplementedError(
+                "Caching non-directories is not supported yet")
+
+
+def forget(args):
+    cache_dir = Path(args.cache_base_dir, args.cache_key)
+    if cache_dir.exists():
+        log.info("Deleting cached data for key %s" % args.cache_key)
+        shutil.rmtree(cache_dir)
+    else:
+        log.info("No cached data to forget for key %s", args.cache_key)
+
+
+def package_version(package: str) -> str:
+    return subprocess.run(
+        ["dpkg-query", "--showformat", "${Version}", "--show", package],
+        stdout=subprocess.PIPE, universal_newlines=True,
+        check=True).stdout.rstrip()
+
+
+def compute_cache_key(key_files: [str], key_packages: [str]) -> str:
+    input_data = {
+        'git_commit': subprocess.run(
+            ["git", "log", "-1", "--pretty=%H", "--", *key_files],
+            stdout=subprocess.PIPE, universal_newlines=True,
+            check=True).stdout.rstrip(),
+        'packages': dict(
+            (package, package_version(package)) for package in sorted(key_packages)
+        ),
+    }
+    serialized = json.dumps(input_data, sort_keys=True)
+    log.debug("Serialized data: " + serialized)
+    return hashlib.sha1(bytes(serialized, encoding='utf-8')).hexdigest()
+
+
+def key(args):
+    print(compute_cache_key(KEY_FILES, KEY_PACKAGES))
+
+
+if __name__ == "__main__":
+    main()
