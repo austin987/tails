@@ -1,10 +1,15 @@
 #!/bin/sh
+# -*- mode: sh; sh-basic-offset: 8; tab-width: 8; indent-tabs-mode:t; -*-
 
 set -e
 set -x
 
 if [ -n "${TAILS_PROXY:-}" ]; then
 	export http_proxy="${TAILS_PROXY}"
+fi
+
+if [ "${TAILS_WEBSITE_CACHE}" = 1 ]; then
+	export WEBSITE_CACHE_BASEDIR=/var/cache/tails-website
 fi
 
 as_root_do() {
@@ -16,7 +21,9 @@ as_root_do() {
 		${no_proxy:+no_proxy="${no_proxy}"} \
 		${MKSQUASHFS_OPTIONS:+MKSQUASHFS_OPTIONS="${MKSQUASHFS_OPTIONS}"} \
 		${APT_SNAPSHOTS_SERIALS:+APT_SNAPSHOTS_SERIALS="${APT_SNAPSHOTS_SERIALS}"} \
-                ${TAILS_MERGE_BASE_BRANCH:+TAILS_MERGE_BASE_BRANCH="${TAILS_MERGE_BASE_BRANCH}"} \
+		${TAILS_WEBSITE_CACHE:+TAILS_WEBSITE_CACHE="${TAILS_WEBSITE_CACHE}"} \
+		${WEBSITE_CACHE_BASEDIR:+WEBSITE_CACHE_BASEDIR="${WEBSITE_CACHE_BASEDIR}"} \
+		${TAILS_MERGE_BASE_BRANCH:+TAILS_MERGE_BASE_BRANCH="${TAILS_MERGE_BASE_BRANCH}"} \
 		${GIT_COMMIT:+GIT_COMMIT="${GIT_COMMIT}"} \
 		${GIT_REF:+GIT_REF="${GIT_REF}"} \
 		${BASE_BRANCH_GIT_COMMIT:+BASE_BRANCH_GIT_COMMIT="${BASE_BRANCH_GIT_COMMIT}"} \
@@ -57,36 +64,50 @@ ntp_synchronized() {
 	timedatectl status | grep -qs -E '^\s*System\s+clock\s+synchronized:\s+yes$'
 }
 
+shrink_acng_cache() {
+	local proxy_type="$1"
+	[ "${proxy_type}" = "vmproxy" ] || return 0
+	# The apt-cacher-ng cache disk is 15G, so let's ensure at most 10G
+	# of it is used so there is 5G before each build, which should be
+	# enough for any build, even if we have to download a complete set
+	# of new packages for a new Debian release.
+	as_root_do /usr/lib/apt-cacher-ng/acngtool shrink 10G -f || \
+	echo "The clean-up of apt-cacher-ng's cache failed: this is" \
+	     "not fatal and most likely just means that some disk" \
+	     "space could not be reclaimed -- in order to fix that" \
+	     "situation you need to manually investigate " \
+	     "/var/cache/apt-cacher-ng/apt-cacher-ng-log/main_*.html" >&2
+}
+
 if [ "${TAILS_BUILD_FAILURE_RESCUE}" != 1 ]; then
 	trap cleanup EXIT
 	remove_build_dirs
 fi
 
 TAILS_GIT_DIR="/home/vagrant/amnesia"
-if [ ! -d "${TAILS_GIT_DIR}" ]; then
-	# We use --shared as an time/space optimization, and it is safe
-	# since our build process doesn't modify any objects (which would
-	# fail since the host's .git directory is shared read-only).
-	git clone --shared --local /amnesia.git/.git "${TAILS_GIT_DIR}"
-	# When we locally Git clone the main repo over the filesystem
-	# above, it will use the host's local repo as origin, but the
-	# submodules will continue to use their remote repos. A problem
-	# with this, beside unnecessary fetching of the network, is that
-	# any unpublished commits in the host's submodule are
-	# inaccessible, so if we want to build we first have to push those
-	# commits to the submodules remote repo. To avoid this, and in
-	# general try to make sure that the Git state in the builder is
-	# the same as on the host, we just clone the submodules in the
-	# same way we do the main repo.
-	(
-		cd "${TAILS_GIT_DIR}/submodules"
-		for submodule in $(ls -1); do
-			rm -rf "${submodule}"
-			git clone --shared \
-			    "/amnesia.git/.git/modules/submodules/${submodule}"
-		done
-	)
-fi
+rm -rf "${TAILS_GIT_DIR}"
+# We use --shared as an time/space optimization, and it is safe
+# since our build process doesn't modify any objects (which would
+# fail since the host's .git directory is shared read-only).
+git clone --shared --local /amnesia.git/.git "${TAILS_GIT_DIR}"
+# When we locally Git clone the main repo over the filesystem
+# above, it will use the host's local repo as origin, but the
+# submodules will continue to use their remote repos. A problem
+# with this, beside unnecessary fetching of the network, is that
+# any unpublished commits in the host's submodule are
+# inaccessible, so if we want to build we first have to push those
+# commits to the submodules remote repo. To avoid this, and in
+# general try to make sure that the Git state in the builder is
+# the same as on the host, we just clone the submodules in the
+# same way we do the main repo.
+(
+	cd "${TAILS_GIT_DIR}/submodules"
+	for submodule in $(ls -1); do
+		rm -rf "${submodule}"
+		git clone --shared \
+		    "/amnesia.git/.git/modules/submodules/${submodule}"
+	done
+)
 
 cd "${TAILS_GIT_DIR}"
 # Mirror the branches amnesia.git tracks on its "origin" remote as if
@@ -135,18 +156,7 @@ if [ -n "$TAILS_DATE_OFFSET" ]; then
 	as_root_do timedatectl set-time "$DESIRED_DATE"
 fi
 
-if [ "${TAILS_PROXY_TYPE}" = "vmproxy" ]; then
-	# The apt-cacher-ng cache disk is 15G, so let's ensure at most 10G
-	# of it is used there is 5G before each build, which should be
-	# enough for any build, even if we have to download a complete set
-	# of new packages for a new Debian release.
-	as_root_do /usr/lib/apt-cacher-ng/acngtool shrink 10G -f || \
-	echo "The clean-up of apt-cacher-ng's cache failed: this is" \
-	     "not fatal and most likely just means that some disk" \
-	     "space could not be reclaimed -- in order to fix that" \
-	     "situation you need to manually investigate " \
-	     "/var/cache/apt-cacher-ng/apt-cacher-ng-log/main_*.html" >&2
-fi
+shrink_acng_cache "${TAILS_PROXY_TYPE}"
 
 BUILD_DIR=$(mktemp -d /tmp/tails-build.XXXXXXXX)
 if [ "${TAILS_RAM_BUILD}" ]; then
@@ -155,8 +165,10 @@ fi
 as_root_do rsync -a "${TAILS_GIT_DIR}"/ "${BUILD_DIR}"/
 
 cd "${BUILD_DIR}"
-as_root_do lb config --cache false
 
+as_root_do lb config --cache false
 as_root_do lb build
+
+shrink_acng_cache "${TAILS_PROXY_TYPE}"
 
 mv -f tails-* "${TAILS_GIT_DIR}/"

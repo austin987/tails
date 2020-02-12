@@ -21,7 +21,7 @@ Install dependencies needed to generate IUKs, UDFs, and to run the test suite
 
     cat $(git rev-parse --show-toplevel)/config/chroot_local-packageslists/tails-iuk.list \
        | grep -E -v '^#' \
-       | xargs sudo apt install && \
+       | xargs sudo apt --yes install && \
     sudo apt install \
        libdist-zilla-app-command-authordebs-perl && \
     dzil authordebs --install && \
@@ -57,6 +57,7 @@ Run the upstream test suite with aufs:
     export UNION_TYPE=aufs
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
+    PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
        RELEASE_TESTING=1 \
        LC_ALL=C \
        dzil test
@@ -66,6 +67,7 @@ Run the upstream test suite with overlayfs:
     export UNION_TYPE=overlayfs
     NODE_PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/lib/js" \
     PATH="${TAILS_GIT_CHECKOUT}/submodules/mirror-pool-dispatcher/bin:$PATH" \
+    PERL5LIB="${TAILS_GIT_CHECKOUT}/config/chroot_local-includes/usr/src/perl5lib/lib" \
        RELEASE_TESTING=1 \
        LC_ALL=C \
        dzil test
