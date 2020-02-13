@@ -26,6 +26,7 @@ class AdminSetting(object):
 
         write_settings(self.settings_file, {
             'TAILS_USER_PASSWORD': pipes.quote(hashed_and_salted_pw),
+            'TAILS_PASSWORD_HASH_FUNCTION': 'SHA512',
         })
         logging.debug('password written to %s', self.settings_file)
 
