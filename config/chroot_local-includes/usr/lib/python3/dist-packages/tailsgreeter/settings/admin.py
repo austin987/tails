@@ -41,11 +41,14 @@ class AdminSetting(object):
             if os.path.exists(self.settings_file):
                 raise
 
-    def load(self) -> {str, None}:
+    def load(self) -> {True, None}:
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
             logging.debug("No persistent admin settings file found (path: %s)", self.settings_file)
             return None
 
-        return settings.get('TAILS_USER_PASSWORD')
+        # We don't actually return the stored value, because the UI can't do
+        # anything with it since it's hashed. Instead, we just return whether
+        # a value is stored or not.
+        return bool(settings.get('TAILS_USER_PASSWORD'))

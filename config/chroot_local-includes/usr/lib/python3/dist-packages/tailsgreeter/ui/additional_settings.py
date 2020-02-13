@@ -116,18 +116,23 @@ class AdminSettingUI(AdditionalSetting):
         return password == self.password_verify_entry.get_text()
 
     def apply(self):
-        # This writes the password to a file from which it will be set
-        # as the amnesia password when the greeter is closed.
-        if self.password:
+        if self.password is True:
+            # This should only be the case if the persistent storage was
+            # unlocked and a persistent password settings file was found.
+            # In that case, we just want to keep the existing settings file.
+            pass
+        elif self.password:
+            # Write the password to a file from which it will be set
+            # as the amnesia password when the greeter is closed.
             self._admin_setting.save(self.password)
         else:
             self._admin_setting.delete()
         super().apply()
 
     def load(self) -> bool:
-        password = self._admin_setting.load()
-        if password:
-            self.password = password
+        loaded = self._admin_setting.load()
+        if loaded:
+            self.password = True
             return True
         return False
 
