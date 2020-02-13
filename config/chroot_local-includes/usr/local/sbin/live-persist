@@ -259,14 +259,20 @@ disable_and_create_empty_persistence_conf_file ()
 {
 	local conf="$1"
 	local mode="$2"
+	local dest="${conf}.insecure_disabled"
 
 	if [ -z "$mode" ]
 	then
 		mode=0600
 	fi
 
-	mv "$conf" "${conf}.insecure_disabled" \
-		|| error "Failed to disable '$conf': $?"
+	if [ -s "$conf" ]
+	then
+		mv "$conf" "$dest" || error "Failed to disable '$conf': $?"
+	else
+		rm "$conf" || error "Failed to delete '$conf': $?"
+	fi
+
 	create_empty_persistence_conf_file "$conf" "$mode"
 }
 
