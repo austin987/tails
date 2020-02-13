@@ -29,6 +29,7 @@ def ensure_chutney_is_running
     end
 
     chutney_cmd = Proc.new do |cmd|
+      debug_log("chutney: #{cmd}")
       Dir.chdir(chutney_src_dir) do
         cmd_helper([chutney_script, cmd, network_definition], env)
       end
