@@ -207,13 +207,9 @@ end
 Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   boot_timeout = 3*60
   # Simply looking for the boot splash image is not robust; sometimes
-  # sikuli is not fast enough to see it. Here we hope that spamming
-  # TAB, which will halt the boot process by showing the prompt for
-  # the kernel cmdline, will make this a bit more robust. We want this
-  # spamming to happen in parallel with Sikuli waiting for the image,
-  # but multi-threading etc is working extremely poor in our Ruby +
-  # jrb environment when Sikuli is involved. Hence we run the spamming
-  # from a separate process.
+  # out image matching is not fast enough to see it. Here we hope that
+  # spamming TAB, which will halt the boot process by showing the
+  # prompt for the kernel cmdline, will make this a bit more robust.
   tab_spammer_code = <<-EOF
     require 'libvirt'
     tab_key_code = 0xf
@@ -308,8 +304,8 @@ Given /^the Tails desktop is ready$/ do
   @screen.wait(desktop_started_picture, 180)
   @screen.wait("DesktopTailsDocumentation.png", 30)
   # Disable screen blanking since we sometimes need to wait long
-  # enough for it to activate, which can mess with Sikuli wait():ing
-  # for some image.
+  # enough for it to activate, which can cause problems when we are
+  # waiting for an image for a very long time.
   $vm.execute_successfully(
     'gsettings set org.gnome.desktop.session idle-delay 0',
     :user => LIVE_USER
@@ -820,11 +816,11 @@ Given /^a web server is running on the LAN$/ do
   # I've tested ruby Thread:s, fork(), etc. but nothing works due to
   # various strange limitations in the ruby interpreter. For instance,
   # apparently concurrent IO has serious limits in the thread
-  # scheduler (e.g. sikuli's wait() would block WEBrick from reading
-  # from its socket), and fork():ing results in a lot of complex
-  # cucumber stuff (like our hooks!) ending up in the child process,
-  # breaking stuff in the parent process. After asking some supposed
-  # ruby pros, I've settled on the following.
+  # scheduler (e.g. when we used Sikuli, its wait() would block
+  # WEBrick from reading from its socket), and fork():ing results in a
+  # lot of complex cucumber stuff (like our hooks!) ending up in the
+  # child process, breaking stuff in the parent process. After asking
+  # some supposed ruby pros, I've settled on the following.
   code = <<-EOF
   require "webrick"
   STDOUT.reopen("/dev/null", "w")
