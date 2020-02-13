@@ -380,3 +380,11 @@ def dbus_send(*args, **opts)
   ret = ret_lines.join("\n")
   dbus_send_ret_conv(ret)
 end
+
+def ffmpeg
+    if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
+      return 'avconv'
+    else
+      return 'ffmpeg'
+    end
+end
