@@ -2,6 +2,7 @@ import gi
 import logging
 
 import tailsgreeter.config
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.settings.localization import LocalizationSetting, ln_iso639_tri, \
     ln_iso639_2_T_to_B, language_from_locale, country_from_locale
 from tailsgreeter.settings.utils import read_settings, write_settings
@@ -36,17 +37,15 @@ class KeyboardSetting(LocalizationSetting):
             'IS_DEFAULT': is_default,
         })
 
-    def load(self) -> ({str, None}, bool):
+    def load(self) -> (str, bool):
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
-            logging.debug("No persistent keyboard settings file found (path: %s)", self.settings_file)
-            return None, False
+            raise SettingNotFoundError("No persistent keyboard settings file found (path: %s)", self.settings_file)
 
         keyboard_layout = settings.get('TAILS_XKBLAYOUT')
         if keyboard_layout is None:
-            logging.debug("No keyboard setting found in settings file (path: %s)", self.settings_file)
-            return None, False
+            raise SettingNotFoundError("No keyboard setting found in settings file (path: %s)", self.settings_file)
 
         keyboard_variant = settings.get('TAILS_XKBVARIANT')
         if keyboard_variant:

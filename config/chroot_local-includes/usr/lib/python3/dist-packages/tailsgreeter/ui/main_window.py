@@ -24,6 +24,7 @@ import os
 import tailsgreeter                                             # NOQA: E402
 import tailsgreeter.config                                      # NOQA: E402
 import tailsgreeter.utils                                       # NOQA: E402
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.translatable_window import TranslatableWindow
 from tailsgreeter.ui.popover import Popover
 from tailsgreeter.ui import _
@@ -184,12 +185,19 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         # settings in reversed order.
         settings_loaded = False
         for setting in reversed(list(self.settings.region_settings)):
-            if setting.load():
+            try:
+                setting.load()
                 settings_loaded = True
+            except SettingNotFoundError as e:
+                logging.debug(e)
         for setting in self.settings.additional_settings:
-            if setting.load():
+            try:
+                setting.load()
                 self.add_setting(setting.id)
                 settings_loaded = True
+            except SettingNotFoundError as e:
+                logging.debug(e)
+
         if settings_loaded:
             self.infobar_settings_loaded.set_visible(True)
 

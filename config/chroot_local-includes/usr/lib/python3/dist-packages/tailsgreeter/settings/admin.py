@@ -5,6 +5,7 @@ import shlex
 import subprocess
 
 import tailsgreeter.config
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.settings.utils import read_settings, write_settings
 
 
@@ -41,14 +42,13 @@ class AdminSetting(object):
             if os.path.exists(self.settings_file):
                 raise
 
-    def load(self) -> {True, None}:
+    def load(self):
+        # We don't return the stored value, because the UI can't do
+        # anything with it since it's hashed.
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
-            logging.debug("No persistent admin settings file found (path: %s)", self.settings_file)
-            return None
+            raise SettingNotFoundError("No persistent admin settings file found (path: %s)", self.settings_file)
 
-        # We don't actually return the stored value, because the UI can't do
-        # anything with it since it's hashed. Instead, we just return whether
-        # a value is stored or not.
-        return bool(settings.get('TAILS_USER_PASSWORD'))
+        if settings.get('TAILS_USER_PASSWORD') is None:
+            raise SettingNotFoundError("No admin password setting found in settings file (path: %s)", self.settings_file)

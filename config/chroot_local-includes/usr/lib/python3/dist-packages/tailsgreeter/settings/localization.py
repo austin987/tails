@@ -47,7 +47,7 @@ class LocalizationSetting(GObject.Object, object):
     def save(self, value: str, is_default: bool):
         pass
 
-    def load(self) -> ({str, None}, bool):
+    def load(self) -> (str, bool):
         pass
 
 

@@ -3,6 +3,7 @@ import gi
 from tailsgreeter import TRANSLATION_DOMAIN
 import tailsgreeter.config
 import tailsgreeter.utils
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.settings.network import NETCONF_DIRECT, NETCONF_DISABLED, NETCONF_OBSTACLE
 from tailsgreeter.ui import _
 from tailsgreeter.ui.setting import GreeterSetting
@@ -43,7 +44,7 @@ class AdditionalSetting(GreeterSetting):
     def on_opened_in_dialog(self):
         pass
 
-    def load(self) -> bool:
+    def load(self):
         pass
 
 
@@ -129,12 +130,12 @@ class AdminSettingUI(AdditionalSetting):
             self._admin_setting.delete()
         super().apply()
 
-    def load(self) -> bool:
-        loaded = self._admin_setting.load()
-        if loaded:
-            self.password = True
-            return True
-        return False
+    def load(self):
+        try:
+            self._admin_setting.load()
+        except SettingNotFoundError:
+            raise
+        self.password = True
 
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
@@ -200,14 +201,11 @@ class MACSpoofSettingUI(AdditionalSetting):
         self._macspoof_setting.save(self.spoofing_enabled)
         super().apply()
 
-    def load(self) -> bool:
-        value = self._macspoof_setting.load()
-        if value is None:
-            return False
-        if value == self.spoofing_enabled:
-            return False
-        self.spoofing_enabled = value
-        return True
+    def load(self):
+        try:
+            self.spoofing_enabled = self._macspoof_setting.load()
+        except SettingNotFoundError:
+            raise
 
     def cb_listbox_macspoof_row_activated(self, listbox, row, user_data=None):
         self.spoofing_enabled = row == self.listboxrow_macspoof_on
@@ -268,14 +266,11 @@ class NetworkSettingUI(AdditionalSetting):
         self.main_window.set_bridge_infobar_visibility(is_bridge)
         super().apply()
 
-    def load(self) -> bool:
-        value = self._network_setting.load()
-        if value is None:
-            return False
-        if value == self.value:
-            return False
-        self.value = value
-        return True
+    def load(self):
+        try:
+            self.value = self._network_setting.load()
+        except SettingNotFoundError:
+            raise
 
     def cb_listbox_network_button_press(self, widget, event, user_data=None):
         # On double-click: Close the window and apply chosen setting

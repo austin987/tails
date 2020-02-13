@@ -2,6 +2,7 @@ import gi
 import logging
 
 import tailsgreeter.config
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.settings.localization import LocalizationSetting, language_from_locale, country_from_locale
 from tailsgreeter.settings.utils import read_settings, write_settings
 
@@ -23,17 +24,15 @@ class FormatsSetting(LocalizationSetting):
             'IS_DEFAULT': is_default,
         })
 
-    def load(self) -> ({str, None}, bool):
+    def load(self) -> (str, bool):
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
-            logging.debug("No persistent formats settings file found (path: %s)", self.settings_file)
-            return None, False
+            raise SettingNotFoundError("No persistent formats settings file found (path: %s)", self.settings_file)
 
         formats = settings.get('TAILS_FORMATS')
         if formats is None:
-            logging.debug("No formats setting found in settings file (path: %s)", self.settings_file)
-            return None, False
+            raise SettingNotFoundError("No formats setting found in settings file (path: %s)", self.settings_file)
 
         is_default = settings.get('IS_DEFAULT') == 'true'
         logging.debug("Loaded formats setting '%s' (is default: %s)", formats, is_default)

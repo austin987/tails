@@ -3,6 +3,7 @@ import gi
 
 from tailsgreeter import TRANSLATION_DOMAIN
 import tailsgreeter.config
+from tailsgreeter.settings import SettingNotFoundError
 from tailsgreeter.ui import _
 from tailsgreeter.ui.setting import GreeterSetting
 from tailsgreeter.ui.popover import Popover
@@ -61,9 +62,10 @@ class LocalizationSettingUI(GreeterSetting):
         super().apply()
 
     def load(self):
-        value, is_default = self._setting.load()
-        if value is None:
-            return
+        try:
+            value, is_default = self._setting.load()
+        except SettingNotFoundError:
+            raise
         self.value = value
         self.value_changed_by_user = not is_default
         self.apply()
@@ -178,7 +180,10 @@ class LanguageSettingUI(LocalizationSettingUI):
         self.changed_cb(self.value)
 
     def load(self):
-        super().load()
+        try:
+            super().load()
+        except SettingNotFoundError:
+            raise
         self._setting.apply_language(self.value)
         self.changed_cb(self.value)
 
