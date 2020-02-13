@@ -1,7 +1,7 @@
 import os
 import os.path
 import logging
-import pipes
+import shlex
 import subprocess
 
 import tailsgreeter.config
@@ -18,14 +18,14 @@ class AdminSetting(object):
             # mkpasswd generates a salt if none is provided (even though the
             # man page doesn't explicitly state this).
             ["mkpasswd", "--stdin", "--method=sha512crypt"],
-            input=pipes.quote(password).encode(),
+            input=shlex.quote(password).encode(),
             capture_output=True,
             check=True,
         )
         hashed_and_salted_pw = proc.stdout.decode().strip()
 
         write_settings(self.settings_file, {
-            'TAILS_USER_PASSWORD': pipes.quote(hashed_and_salted_pw),
+            'TAILS_USER_PASSWORD': hashed_and_salted_pw,
             'TAILS_PASSWORD_HASH_FUNCTION': 'SHA512',
         })
         logging.debug('password written to %s', self.settings_file)

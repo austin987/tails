@@ -1,11 +1,17 @@
 import os
-from typing import Dict
+import shlex
+from typing import Dict, Union
 
 
-def write_settings(filename: str, settings: Dict[str, str]):
+def write_settings(filename: str, settings: Dict[str, Union[str, bool]]):
     with open(filename, 'w') as f:
         os.chmod(filename, 0o600)
         for key, value in settings.items():
+            if type(value) is bool:
+                value = str(value).lower()
+            # shell-escape the value, but only if it's non-empty, because
+            # for an empty string the result will be "''", which is non-empty
+            value = shlex.quote(value) if value else ''
             f.write('%s=%s\n' % (key, value))
 
 

@@ -33,7 +33,7 @@ class KeyboardSetting(LocalizationSetting):
             'TAILS_XKBMODEL': 'pc105',
             'TAILS_XKBLAYOUT': layout,
             'TAILS_XKBVARIANT': variant,
-            'IS_DEFAULT': str(is_default).lower(),
+            'IS_DEFAULT': is_default,
         })
 
     def load(self) -> ({str, None}, bool):

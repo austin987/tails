@@ -1,5 +1,4 @@
 import logging
-import pipes
 
 import tailsgreeter.config
 from tailsgreeter.settings.utils import read_settings, write_settings
@@ -17,7 +16,7 @@ class NetworkSetting(object):
 
     def save(self, value: str):
         write_settings(self.settings_file, {
-            'TAILS_NETCONF': pipes.quote(value),
+            'TAILS_NETCONF': value,
         })
         logging.debug('network setting written to %s', self.settings_file)
 

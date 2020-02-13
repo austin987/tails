@@ -1,5 +1,4 @@
 import logging
-import pipes
 
 import tailsgreeter.config
 from tailsgreeter.settings.utils import read_settings, write_settings
@@ -13,7 +12,7 @@ class MacSpoofSetting(object):
 
     def save(self, value: bool):
         write_settings(self.settings_file, {
-            'TAILS_MACSPOOF_ENABLED': pipes.quote(str(value)).lower(),
+            'TAILS_MACSPOOF_ENABLED': value,
         })
         logging.debug('macspoof setting written to %s', self.settings_file)
 

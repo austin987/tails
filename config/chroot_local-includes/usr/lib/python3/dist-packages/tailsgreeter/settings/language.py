@@ -21,7 +21,6 @@ from collections import OrderedDict
 import gi
 import logging
 import locale
-import pipes
 
 import tailsgreeter.config
 from tailsgreeter.settings.localization import LocalizationSetting, \
@@ -49,8 +48,8 @@ class LanguageSetting(LocalizationSetting):
 
     def save(self, language: str, is_default: bool):
         write_settings(self.settings_file, {
-            'TAILS_LOCALE_NAME': pipes.quote(language),
-            'IS_DEFAULT': str(is_default).lower(),
+            'TAILS_LOCALE_NAME': language,
+            'IS_DEFAULT': is_default,
         })
 
     def load(self) -> ({str, None}, bool):

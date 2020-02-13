@@ -20,7 +20,7 @@ class FormatsSetting(LocalizationSetting):
     def save(self, locale: str, is_default: bool):
         write_settings(self.settings_file, {
             'TAILS_FORMATS': locale,
-            'IS_DEFAULT': str(is_default).lower(),
+            'IS_DEFAULT': is_default,
         })
 
     def load(self) -> ({str, None}, bool):
