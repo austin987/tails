@@ -192,8 +192,12 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 logging.debug(e)
         for setting in self.settings.additional_settings:
             try:
-                setting.load()
-                self.add_setting(setting.id)
+                changed = setting.load()
+                # We only add the setting to the list of additional settings
+                # if it was actually changed. Else it is either already added or
+                # it has the default value.
+                if changed:
+                    self.add_setting(setting.id)
                 settings_loaded = True
             except SettingNotFoundError as e:
                 logging.debug(e)

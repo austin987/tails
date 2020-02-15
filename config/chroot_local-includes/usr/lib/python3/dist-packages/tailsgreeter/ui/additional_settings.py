@@ -44,7 +44,7 @@ class AdditionalSetting(GreeterSetting):
     def on_opened_in_dialog(self):
         pass
 
-    def load(self):
+    def load(self) -> bool:
         pass
 
 
@@ -130,12 +130,13 @@ class AdminSettingUI(AdditionalSetting):
             self._admin_setting.delete()
         super().apply()
 
-    def load(self):
+    def load(self) -> bool:
         try:
             self._admin_setting.load()
         except SettingNotFoundError:
             raise
         self.password = True
+        return True
 
     def cb_entry_admin_changed(self, editable, user_data=None):
         self.update_check_icon()
@@ -201,11 +202,17 @@ class MACSpoofSettingUI(AdditionalSetting):
         self._macspoof_setting.save(self.spoofing_enabled)
         super().apply()
 
-    def load(self):
+    def load(self) -> bool:
         try:
-            self.spoofing_enabled = self._macspoof_setting.load()
+            value = self._macspoof_setting.load()
         except SettingNotFoundError:
             raise
+
+        if self.spoofing_enabled == value:
+            return False
+
+        self.spoofing_enabled = value
+        return True
 
     def cb_listbox_macspoof_row_activated(self, listbox, row, user_data=None):
         self.spoofing_enabled = row == self.listboxrow_macspoof_on
@@ -268,9 +275,15 @@ class NetworkSettingUI(AdditionalSetting):
 
     def load(self):
         try:
-            self.value = self._network_setting.load()
+            value = self._network_setting.load()
         except SettingNotFoundError:
             raise
+
+        if self.value == value:
+            return False
+
+        self.value = value
+        return True
 
     def cb_listbox_network_button_press(self, widget, event, user_data=None):
         # On double-click: Close the window and apply chosen setting
