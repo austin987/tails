@@ -197,6 +197,17 @@ class Screen
 
   def press(*sequence, **opts)
     opts[:log] = true if opts[:log].nil?
+    # This is the minimum time (in seconds) between key presses;
+    # repeatedly calling this method will ensure that key presses are
+    # emitted with this minimum interval. This helps preventing
+    # repeated calls interfering with each other.
+    opts[:delay] ||= 0.060  # Sikuli used 60ms delay.
+    # How long the key(s) are held (in seconds). With holdtime = 0
+    # (like virsh does it) we have seen issues, in particular with key
+    # modifiers like Shift bleeding over to subsequent invocations, so
+    # e.g. type("A9f") actually results in "A(F" (with a US layout)
+    # because the Shift wasn't released *immediately* after the "A".
+    opts[:holdtime] ||= 0.010
     debug_log("Keyboard: pressing: #{sequence.join('+')}") if opts[:log]
     codes = []
     sequence.each do |key|
@@ -213,7 +224,9 @@ class Screen
       end
       codes += code
     end
-    $vm.domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, codes)
+    $vm.domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX,
+                        (opts[:holdtime]*1000).to_i, codes)
+    sleep(opts[:delay])
     return nil
   end
 
@@ -223,7 +236,6 @@ class Screen
         debug_log("Keyboard: typing: #{arg}")
         arg.each_char do |char|
           press(char, log: false)
-          sleep 0.060
         end
       elsif arg.instance_of?(Array)
         press(*arg)
