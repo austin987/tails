@@ -734,7 +734,6 @@ live-config: 4.0.4-1
       new_content: <<-EOF
 TAILS_PRODUCT_NAME="Tails"
 TAILS_VERSION_ID="#{version}"
-TAILS_DISTRIBUTION="UNRELEASED"
       EOF
     },
     {
