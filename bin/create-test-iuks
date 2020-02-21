@@ -21,6 +21,11 @@ for version in $VERSIONS; do
    mkdir -p "$SQUASHFS_SRC"/etc/amnesia "$SQUASHFS_SRC"/usr/share
 
    cp -a /usr/share/common-licenses "$SQUASHFS_SRC"/usr/share/
+   mkdir -p "$SQUASHFS_SRC"/usr/share/doc
+   if [ "$version" = '2.0~testoverlayfs' ]; then
+      mkdir -p "$SQUASHFS_SRC"/usr/share/doc/tor
+      echo "Some content" > "$SQUASHFS_SRC"/usr/share/doc/tor/README.Debian
+   fi
    if [ "$version" != '2.0~testoverlayfs' ]; then
       echo "Some content" > "$SQUASHFS_SRC"/some_new_file
       rm "$SQUASHFS_SRC"/usr/share/common-licenses/BSD
