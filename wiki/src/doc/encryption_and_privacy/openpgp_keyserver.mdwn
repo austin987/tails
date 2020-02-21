@@ -1,0 +1,102 @@
+[[!meta title="Updating your OpenPGP keyserver configuration"]]
+
+# About keys.openpgp.org
+
+OpenPGP keyservers are public repositories of OpenPGP public keys that
+applications use to discover the public keys of contacts.
+
+In Tails 4.1 (December 2019), we changed the default GnuPG configuration
+to use <https://keys.openpgp.org/>, also available on
+<http://zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion/>,
+as the default OpenPGP keyserver.
+
+  - keys.openpgp.org is more trustworthy than other OpenPGP public
+    keyservers because it only references an OpenPGP public key after
+    sending a confirmation email to each email addresses listed in the
+    key.
+
+  - keys.openpgp.org does not distribute third-party signatures, which
+    are the signatures on a key that were made by some other key.
+    Third-party signatures are the signatures used to create the OpenPGP
+    Web of Trust.
+
+  - keys.openpgp.org prevents [OpenPGP certificate
+    flooding attacks](https://dkg.fifthhorseman.net/blog/openpgp-certificate-flooding.html),
+    which can make your OpenPGP keyring unusable and crash your
+    computer.
+
+  To learn more about keys.openpgp.org, read their
+  [About](https://keys.openpgp.org/about) and
+  [FAQ](https://keys.openpgp.org/about/faq) pages.
+
+# Updating your Tails to use keys.openpgp.org
+
+If you have GnuPG keys stored in Persistence since before Tails 4.1, you
+should update your keyserver configuration.
+
+Tails was previously configured to use the SKS keyserver network, which
+has been subject to [OpenPGP certificate flooding
+attacks](https://dkg.fifthhorseman.net/blog/openpgp-certificate-flooding.html)
+since June 2019.
+
+Downloading a public key that has been flooded can corrupt your GnuPG
+keyring, make your keyring extremely slow to operate, and possibly overheat and
+crash your computer. Only a few keys in the SKS keyserver network have
+been flooded. Downloading a flooded public key does not compromise the
+security of your private keys.
+
+To update your keyserver configuration:
+
+1. Open the *Text Editor*.
+
+1. Click **Open** and choose **Other Documents...**.
+
+1. Navigate to the *Home* folder.
+
+1. Right-click (on Mac, click with two fingers) on the list of files in
+   the right pane and choose **Show Hidden Files**.
+
+1. Open the *.gnupg* folder.
+
+1. Edit the *gpg.conf* file in the *.gnupg* folder.
+
+   Replace its content with the content of our default *gpg.conf* file:
+
+   <https://git.tails.boum.org/tails/plain/config/chroot_local-includes/etc/skel/.gnupg/gpg.conf>
+
+1. Edit the *dirmngr.conf* file in the *.gnupg* folder.
+
+   Replace its content with the content of our default *dirmngr.conf* file:
+
+   <https://git.tails.boum.org/tails/plain/config/chroot_local-includes/etc/skel/.gnupg/dirmngr.conf>
+
+1. Save both files and close the *Text Editor*.
+
+If you also have encrypted emails stored in the *Thunderbird*
+Persistence feature:
+
+1. Open *Thunderbird*.
+
+1. In *Thunderbird*, choose <span class="menuchoice">
+  <span class="guimenu">Enigmail</span>&nbsp;▸
+  <span class="guimenuitem">Preferences</span></span>.
+
+1. In the **Enigmail Preferences** dialog, click the **Display Expert
+  Settings and Menus**.
+  
+   Additional tabs appear on top of the dialog.
+
+1. Open the **Keyserver** tab.
+
+1. Specify the following keyserver addresses in the **Specify your keyserver(s)** field:
+
+   <p class="pre">vks://keys.openpgp.org, hkps://hkps.pool.sks-keyservers.net, hkps://pgp.mit.edu</p>
+
+1. Click **Ok**.
+
+   An information dialog appears that starts with *Cannot connect to
+   gpg-agent*.
+
+   Click **Ok** again to dismiss it.
+
+1. Close the **Enigmail Preferences** dialog.

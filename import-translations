@@ -39,9 +39,6 @@ elif [ -f 'po/onioncircuits.pot' ]; then
 	POTFILE=onioncircuits.pot
 	BRANCH='tails-onioncircuits_completed'
 	AFTER_IMPORT='./setup.py build_i18n && ( cd po && for po in *.po ; do msgmerge --update "$po" onioncircuits.pot ; done )'
-elif [ -f 'po/tails-perl5lib.pot' ]; then
-	BRANCH='tails-perl5lib_completed'
-	AFTER_IMPORT='make -C po pot && make -C po update-po'
 elif [ -f 'po/tails-installer.pot' ]; then
 	BRANCH='liveusb-creator_completed'
 	AFTER_IMPORT='./setup.py build && ( cd po && for po in *.po ; do msgmerge --update "$po" tails-installer.pot ; done )'
@@ -70,7 +67,8 @@ eval "$GIT_IN_TOR_TRANSLATION_DIR reset --hard \"origin/$BRANCH\""
 
 # Ensure we only keep PO files that are still present in the Transifex
 # branch we import from.
-find "$TAILS_PO_DIR" -name '*.po' -delete
+# XXX: once #16774 is resolved, -delete these files instead.
+find "$TAILS_PO_DIR" -name '*.po' -exec rename 's/$/.orig/' '{}' \;
 
 # For each completely translated language, merge it,
 # unless it is translated outside Transifex
@@ -97,6 +95,23 @@ else
 		fi
 		echo "Importing translation for $lang..."
 		cp "$po_file" "$TAILS_PO_DIR/${lang}.po"
+	done
+fi
+
+# The _completed branches we still pull from (because the _release
+# branches we need don't exist yet) are mostly empty, so avoid l10n
+# regressions by keeping old PO files instead of deleting them.
+#
+# XXX: remove this hack once #16774 is resolved.
+if echo "$BRANCH" | grep -qs -E '_completed$'; then
+	find "$TAILS_PO_DIR" -name '*.po.orig' -o -name '*.pot.orig' \
+	   | while read orig_po_file; do
+		po_file=$(echo "$orig_po_file" | sed 's/\.orig$//')
+		if ! [ -e "$po_file" ]; then
+			echo "${po_file} was removed ⇒ restoring ${orig_po_file}"
+			cp "$orig_po_file" "$po_file"
+		fi
+		rm "$orig_po_file"
 	done
 fi
 

@@ -226,70 +226,30 @@ at the application level:
 
 # Incremental upgrades
 
-* List the versions from which an upgrade path to this one is described.
-  On the up-to-date `master` branch in a local
-  [[clone of the Tails Git repository|contribute/git#main-repo]]:
+1. Install _from scratch_ on a USB stick the previous Tails stable release
+   (that is, at this time, the current published one).
+   A system that was upgraded to that version will not do.
 
-      git grep -E -l "  version: '?0.23'?" \
-          wiki/src/upgrade/v1/Tails/*/*/test/upgrades.yml
+2. Start from that USB stick.
 
-  … replacing "0.23" with the version you are testing.
+3. Set an administration password in the _Greeter_.
 
-* For each description file, open it and verify if it allows incremental upgrade
-  or only full upgrade.
-
-* For each previous version from which an upgrade path is described, install it
-  and try to upgrade:
-  * For every incremental upgrade path: make sure the resulting updated
-    system "works fine" (boots, pretends to be the correct version,
-    and the following components work fine: Tor, Tor Browser, Unsafe Browser).
-  * For upgrade paths that only propose a full upgrade: make sure the
-    user is told to do a manual upgrade.
-
-  If:
-
-  * the update-description files have been published on the
-    *test* channel already (see <https://tails.boum.org/upgrade/v1/Tails/>)
-  * and the IUK has been published already (see
-    <https://archive.torproject.org/amnesia.boum.org/tails/alpha/>
-    and <https://archive.torproject.org/amnesia.boum.org/tails/stable/>):
-
-  then:
+4. Upgrade to the version we're testing:
 
         sudo sh -c 'sed -i /^TAILS_CHANNEL=/d /etc/os-release &&
                     echo TAILS_CHANNEL=\"test\" >> /etc/os-release' && \
         systemctl --user restart tails-upgrade-frontend.service
 
-  Else, use a local test setup:
+5. Once the upgrade has been applied and you're suggested to restart Tails,
+   do that.
 
-  * A web server on the LAN.
-  * A copy of `wiki/src/upgrade` from the `stable` or `testing` branch,
-    for example in `/var/www/tails/upgrade/v1/Tails/3.14~rc2/amd64/stable/updates.yml`
-  * A copy of the `iuk` directory of our HTTP mirrors,
-    for example in `/var/www/tails/stable/iuk/Tails_amd64_3.14-rc2_to_3.14.iuk`.
+6. Verify that the resulting, upgraded system "works fine":
 
-    To synchronize your local copy:
-
-        torsocks rsync -rt --progress --delete mirrors.rsync.tails.boum.org::amnesia-archive/tails/stable/iuk/ /var/www/tails/stable/iuk/
-
-  * Patch `/etc/hosts` in Tails to point to your web server:
-
-        echo "192.168.1.4    dl.amnesia.boum.org" | sudo tee --append /etc/hosts
-
-  * Patch sudo configuration to allow passing arbitrary arguments to
-    `tails-upgrade-frontend`:
-
-        sudo sed -i \
-            -e 's,/usr/bin/tails-upgrade-frontend ""$,/usr/bin/tails-upgrade-frontend,' \
-            /etc/sudoers.d/zzz_upgrade
-
-  * Run the upgrader. It must be called, from inside the system to upgrade,
-    with every needed option to use the local web server rather than the
-    online one, for example:
-
-        DISABLE_PROXY=1 SSL_NO_VERIFY=1 \
-        tails-upgrade-frontend-wrapper --override-baseurl \
-        http://192.168.1.4/tails
+   * it boots
+   * it pretends to be the correct version
+   * Tor works fine
+   * Tor Browser works fine
+   * the Unsafe Browser starts
 
 # Tails Verification
 
@@ -327,18 +287,8 @@ at the application level:
 Note that for release candidates, we do not always optimize the ordering
 of files in the SquashFS, which might make them boot somewhat slower.
 
-### USB
-
 1. Boot this USB stick on bare-metal a first time to trigger re-partitioning.
 2. Boot this USB stick a second time, measuring the boot time (from the
-   syslinux menu until the GNOME desktop is ready -- quickly press
-   ENTER in the Greeter).
-3. Compare with the boot time of the previous Tails version. The new
-   one should not be significantly slower to start.
-
-### DVD
-
-1. Boot on bare-metal from DVD, measuring the boot time (from the
    syslinux menu until the GNOME desktop is ready -- quickly press
    ENTER in the Greeter).
 3. Compare with the boot time of the previous Tails version. The new
@@ -400,5 +350,6 @@ identifying other language names in):
 # Misc
 
 * Check that all seems well during init: (automate: [[!tails_ticket 10277]])
-  - `systemctl --failed --all` should say `0 loaded units listed`
+  - `systemctl --failed --all` should either say `0 loaded units listed`,
+    or list `rng-tools.service` as the only unit in `failed` state.
   - the output of `sudo journalctl` should seem OK.

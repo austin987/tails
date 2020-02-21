@@ -1,0 +1,27 @@
+From: segfault <segfault@riseup.net>
+Date: Wed, 27 Nov 2019 23:37:55 +0100
+Subject: [PATCH] Bug 1370217 - Avoid spellchecking language disclosure in
+ Content-Language header
+
+---
+ comm/mail/components/compose/content/MsgComposeCommands.js | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/comm/mail/components/compose/content/MsgComposeCommands.js b/comm/mail/components/compose/content/MsgComposeCommands.js
+index ba73704..170ca9c 100644
+--- a/comm/mail/components/compose/content/MsgComposeCommands.js
++++ b/comm/mail/components/compose/content/MsgComposeCommands.js
+@@ -2868,9 +2868,10 @@ function ComposeStartup(aParams) {
+         // Update the language in the composition fields, so we can save it
+         // to the draft next time.
+         if (gMsgCompose && gMsgCompose.compFields) {
+-          gMsgCompose.compFields.contentLanguage = document.documentElement.getAttribute(
+-            "lang"
+-          );
++          let lang = Services.prefs.getBoolPref("mail.mime.avoid_fingerprinting")
++            ? "en-US"
++            : document.documentElement.getAttribute("lang");
++          gMsgCompose.compFields.contentLanguage = lang;
+         }
+       }
+     });

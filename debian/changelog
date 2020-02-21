@@ -1,8 +1,282 @@
-tails (4.1) UNRELEASED; urgency=medium
+tails (4.4) UNRELEASED; urgency=medium
 
   * Dummy entry for next release.
 
- -- intrigeri <intrigeri@debian.org>  Tue, 22 Oct 2019 15:23:42 +0000
+ -- anonym <anonym@riseup.net>  Tue, 11 Feb 2020 16:44:45 +0100
+
+tails (4.3) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 9.0.5-build2 (Closes: #17469).
+    - Update Linux kernel to linux-image-5.4.0-3-amd64, currently at
+      5.4.13-1 (Closes: #17443).
+    - Upgrade Thunderbird to 1:68.4.1-1~deb10u1
+
+  * Bugfixes
+    - live-persist: don't backup empty configuration files (Closes:
+      #17112). In some cases, the previous code would overwrite a
+      non-empty backup file with an empty one, making it harder to
+      recover from the already painful #10976.
+    - create-usb-image-from-iso: Run syslinux within proper chroot
+      (Closes: #17179). Previously we ran syslinux from the host,
+      which can lead to bugs if its versions differs from the one
+      inside the chroot (which is what Tails will use later). Thanks
+      to Johan Blåbäck for the patch!
+    - Tails Upgrader: Fix progress bar not pulsating and hide useless
+      OK button (Closes: #16603).
+
+  * Minor improvements and updates
+    - Upgrade tor to 0.4.2.6 (Closes: #17059).
+    - Install the trezor package, which adds a command-line (only)
+      tool for managing Trezor devices (Closes: #17463). Thanks to
+      Pavol Rusnak for the patch!
+    - As a consequence of the Linux kernel upgrade we also:
+      * Upgrade aufs to 5.4.3 20200127.
+      * Install VirtualBox guest tools and kernel modules from sid.
+
+  * Build system
+    - Upgrade snapshot of the Debian archive to 2020020302, including
+      the 10.3 point release of Debian Buster (Closes: #17458).
+    - Add opt-in caching of the wiki (Closes: #15342).
+    - Use mksquashfs' -no-exports option even when the fastcomp build
+      option is set. "fastcomp" is supposed to only tweak SquashFS
+      compression settings, but so far it was also disabling the
+      -no-exports option that we set for our release builds.
+    - Drop a bunch of packages installed for ikiwiki for various
+      (obsoloete) resons:
+      * libfile-chdir-perl, libyaml-perl and libxml-simple-perl which
+        was needed back when we built our own ikiwiki from Git…  a
+        looong time ago.
+      * libtext-multimarkdown-perl used multimarkdown ikiwiki which
+        its doubtful we ever will use.
+      * libhtml-scrubber-perl, libhtml-template-perl,
+        libhtml-parser-perl, libyaml-libyaml-perl and liburi-perl
+        which are already installed as ikiwiki dependencies.
+    - Install libimage-magick-perl instead of the perlmagick
+      transitional package.
+    - Don't install obsolete dependencies whois and eatmydata.
+    - Consistently validate individual build options as we parse them.
+      This is consistent with how we handled "fastcomp" already. Only
+      compatibility checks between multiple build options really need
+      to happen later, once we've parsed all build options.
+    - Remove 5 years old transition code
+    - Fully provision the Vagrant box every time it starts, and
+      partially re-provision it for every build.
+    - Behave correctly when disabling a previously set "offline" or
+      "vmproxy+extproxy" build option.  Previously, setting one of
+      these build options *once* would taint the Vagrant box forever
+      with the resulting apt-cacher-ng configuration.
+    - Shrink the apt-cacher-ng cache after a successful build too
+      (Closes: #17288).
+    - Set up infrastructure to retrieve log file from the VM even on
+      build failure (Closes: #7749).
+    - Always build from a fresh Git clone.
+    - Set the permissions that Vagrant needs inside the source tree
+      (Closes: #11411, #16607, #17289).
+
+  * Test suite
+    - Remove Seahorse key synchronization scenarios. These 2 scenarios
+      never pass due to #17169, so currently:
+      * They don't teach us anything new → no benefit.
+      * Every time a developer looks at test suite results,
+        they need to filter out this known problem, which takes time
+        and trains us to ignore problems.
+
+ -- Tails developers <tails@boum.org>  Mon, 10 Feb 2020 14:08:59 +0100
+
+tails (4.2.2) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 9.0.4-build1 (MFSA-2020-03)
+
+  * Bugfixes
+    - Avoid the Upgrader proposing to upgrade to the version
+      that's already running (Closes: #17425)
+    - Avoid 2 minutes delay while rebooting after applying an automatic
+      upgrade (Closes: #17026)
+    - Make Thunderbird support TLS 1.3 (Closes: #17333)
+
+  * Build system
+    - IUK generation: don't make all files in the SquashFS diff
+      owned by root, otherwise an upgraded system cannot start
+      (Closes: #17422)
+
+ -- Tails developers <tails@boum.org>  Mon, 13 Jan 2020 09:21:51 +0000
+
+tails (4.2) unstable; urgency=medium
+
+  * Major changes
+    - Switch to a redesigned upgrade system (Closes: #15281), which:
+      - removes the need for manual upgrades caused by lack of disk space
+        on the Tails device
+      - uses less RAM
+    - Bump snapshot of the Debian archive to 2019122802
+
+  * Security fixes
+    - Upgrade Tor Browser to 9.0.3 (Closes: #17402)
+    - Upgrade Linux to 5.3.15-1 (Closes: #17332)
+      and upgrade the aufs module to 5.3-20191223
+    - Upgrade Thunderbird to 1:68.3.0-2~deb10u1
+    - Upgrade libsasl2 to 2.1.27+dfsg-1+deb10u1
+    - Upgrade python3-ecdsa to 0.13-3+deb10u1
+
+  * Bugfixes
+    - KeePassXC:
+      - Open ~/Persistent/keepassx.kdbx by default again (Closes: #17212)
+      - Open the database specified by the user on the command-line, if any
+      - Fix database renaming prompt
+    - Upgrader:
+      - Ensure debugging info lands in the Journal before we refer to it
+      - Catch more download errors
+    - Upgrade amd64-microcode to 3.20191218.1, which removes firmware
+      updates that cause issues
+
+  * Minor improvements and updates
+    - Add metadata analysis tools used by SecureDrop (Closes: #17178)
+    - Refresh the signing key before checking for available upgrades
+      (Closes: #15279)
+    - Port the Upgrader and perl5lib to a set of dependencies that are
+      faster and have a lower memory footprint (Closes: #17152)
+    - Ensure IUKs don't include files of our website if their content
+      has not changed (refs: #15290)
+    - Zero heap memory at allocation time and at free time (Closes: #17236)
+
+  * Build system
+    - Import the Upgrader and perl5lib codebases into tails.git
+      (part of #7036)
+    - lint_po: ignore pre-existing rply cache file that can cause
+      trouble if it's corrupted (Closes: #17359)
+    - Move generate-languages-list to auto/scripts
+    - import-translations: work around the lack of usable branches
+      in Tor's translation.git (Closes: #17279)
+    - Build released IUKs on Jenkins and verify that they match
+      those built locally by the Release Manager (Closes: #15287)
+    - Don't download every localized Tor Browser tarball: instead,
+      use the new tarball that includes every langpacks (Closes: #17400)
+
+  * Test suite
+    - Adapt for the "one single SquashFS diff" upgrade scheme
+    - Chutney: update to upstream 33cbff7fc73aa51a785197c5f4afa5a91d81de9c
+      (Closes: #16792)
+    - Fix tagging of Chutney exit relays and bridge authorities
+    - Tag Chutney clients as such
+    - Wait for all Chutney nodes to have bootstrapped before assuming
+      the simulated Tor network is ready
+    - Don't try to save tor control sockets as artifacts
+    - Add a crude script to generate IUKs for our test suite
+
+ -- Tails developers <tails@boum.org>  Mon, 06 Jan 2020 16:25:22 +0000
+
+tails (4.1.1) unstable; urgency=medium
+
+  * Bugfixes
+    - Drop all network drivers from the initramfs to shrink its size
+      drastically. Going over the 32 MiB mark might be the reason why so
+      many Apple machines can't boot 4.1 while they could boot 4.0
+      (Closes: #17320).
+    - Only allow up to (but excluding) 32 MiB for initramfs accordingly.
+
+  * Minor improvements and updates
+    - Fix escape sequence in tails-gdm-failed-to-start.service, to avoid a
+      warning message (Closes: #17166).
+
+ -- Tails developers <tails@boum.org>  Sun, 15 Dec 2019 23:51:25 +0100
+
+tails (4.1) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 9.0.2-build2, based on Firefox ESR 68.3
+      (MFSA-2019-37).
+    - Upgrade Thunderbird to 68.2.2 (Closes: #16771, #17220, #17222, #17267).
+    - Upgrade Enigmail to 2:2.1.3+ds1-4~deb10u2 accordingly.
+
+  * Security fixes
+    - Upgrade Linux to 5.3.9-2 from sid (Closes: #17124).
+    - Disable unprivileged userfaultfd syscall (Closes: #17196).
+    - Upgrade file to 1:5.35-4+deb10u1 (DSA-4550-1).
+    - Upgrade FriBidi to 1.0.5-3.1+deb10u1 (DSA-4561-1).
+    - Upgrade Ghostscript to 9.27~dfsg-2+deb10u3 (DSA-4569-1)
+    - Upgrade Intel microcode to 3.20191112.1~deb10u1 (DSA-4565-1,
+      CVE-2019-0117).
+    - Upgrade libarchive to 3.3.3-4+deb10u1 (DSA-4557-1).
+    - Upgrade libvpx to 1.7.0-3+deb10u1 (DSA-4578-1).
+    - Upgrade libxslt to 1.1.32-2.2~deb10u1 (CVE-2019-18197).
+    - Upgrade ncurses to 6.1+20181013-2+deb10u2 (CVE-2019-17594,
+      CVE-2019-17595).
+    - Upgrade Python 2.7 to 2.7.16-2+deb10u1 (CVE-2018-20852,
+      CVE-2019-10160, CVE-2019-16056, CVE-2019-16935, CVE-2019-9740,
+      CVE-2019-9947).
+    - Upgrade Qt to 5.11.3+dfsg1-1+deb10u1 (DSA-4556-1).
+    - Upgrade tcpdump to 4.9.3-1~deb10u1 (DSA-4547-1).
+    - Upgrade WebKitGTK to 2.26.2-1~deb10+1 (DSA-4558-1, DSA-4563-1).
+
+  * Bugfixes
+    - Remove TorBirdy (Closes: #17219, #17269).
+    - Use keys.openpgp.org's Onion service as the default keyserver
+      (Closes: #12689, #14770).
+    - Fix ordering of GTK bookmarks setup vs. Tor Browser directories
+      creation (Closes: #17206).
+    - Bring back the "Show Passphrase" button in the Greeter
+      (Closes: #17177).
+    - Bring back "Open in Terminal" entry in the GNOME Files context menu
+      (Closes: #17186).
+    - Revert "Browsers: disable the Quantum Bar." (Closes: #17143).
+    - Revert "Hide all Tor connection-related settings in
+      about:preferences in all browsers" (Closes: #17214).
+    - Wait until Tor has bootstrapped before we try to upgrade Additional
+      Software (Closes: #17203).
+    - Fix the "GDM failed to start" splash screen functionality
+      (Closes: #17200).
+
+  * Minor improvements and updates
+    - htpdate: stop sending User-Agent that fakes Tor Browser
+      (Closes: #12023).
+    - HTP: replace encrypted.google.com with www.google.com.
+    - Remove signal handler from Greeter UI file (Closes: #17240).
+    - Upgrade AMD microcode to 3.20191021.1.
+    - Upgrade fonts-noto-cjk to 1:20170601+repack1-3+deb10u1
+      (Debian#907999).
+
+  * Build system
+    - Update Vagrant box to Buster (Closes: #16868).
+    - Adjust to timedatectl's output on Buster.
+    - Adjust to Buster's debootstrap.
+    - Vagrant: ensure the chroot has a /proc filesystem while running
+      postinstall.sh
+    - Vagrant: install po4a from Stretch in the basebox.
+    - build-tails: wait for NTP to be disabled before setting the desired
+      date.
+    - Bump APT snapshot of the Debian archive to 2019111801, including the
+      10.2 point release of Buster (Closes: #17124, #17021).
+    - Install virtualbox 6.0.12-dfsg-1 from our custom APT repository
+      (Closes: #17161).
+
+  * Test suite
+    - Ensure we don't break tests by opening the Applications menu in
+      post_vm_start_hook (Closes: #17164).
+    - Improve GnuPG testing (Closes: #12689):
+      · Switch to using sajolida's key.
+      · Start adjusting for keys.openpgp.org.
+      · Make the "GnuPG's dirmngr uses the configured keyserver" step
+        actually test what it is meant to.
+      · Make error strings better reflect what failure they are about.
+      · Ensure dirmngr uses IPv4 since our CI runs on an IPv4-only
+        infrastructure.
+    - Ensure dirmngr picks up the changes we make to its configuration.
+    - Switch backend keyservers (Closes: #14770).
+    - Don't leave redir(1) processes behind (Closes: #14948).
+    - Update image for Buster (Closes: #14770).
+    - Update fragility status of Seahorse scenarios.
+    - Avoid multiple instances of tcpdump writing to the same file,
+      resulting in an unparsable network capture (Closes: #17102).
+    - Update for Thunderbird 68 (Closes: #17269).
+
+  * Documentation:
+    - Remove or adapt mentions to Tails Installer as only installation
+      method (Closes: #17204).
+    - Add a warning about which Tails to run rsync from (Closes: #17197).
+
+ -- Tails developers <tails@boum.org>  Mon, 02 Dec 2019 22:23:35 +0100
 
 tails (4.0) unstable; urgency=medium
 

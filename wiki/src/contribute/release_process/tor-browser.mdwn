@@ -41,10 +41,8 @@ Have a look at
 
 * <https://archive.torproject.org/tor-package-archive/torbrowser/?C=M;O=D>
 * <https://www.torproject.org/dist/torbrowser/?C=M;O=D>
-* <https://people.torproject.org/~mikeperry/builds/?C=M;O=D>
 * <https://people.torproject.org/~gk/builds/?C=M;O=D>
 * <https://people.torproject.org/~boklm/builds/?C=M;O=D>
-* <https://people.torproject.org/~linus/builds/?C=M;O=D>
 
 and see if the desired version is available. Set `TBB_DIST_URL` to the
 chosen URL, and set `TBB_VERSION` to the desired Tor Browser version, for
@@ -60,19 +58,25 @@ Ensure you include the "-buildN" part.
 Fetch the version's hash file and its detached signature, and verify
 with GnuPG:
 
-    wget ${TBB_DIST_URL}/sha256sums-unsigned-build.txt{.asc,} && \
+    wget ${TBB_DIST_URL:?}/sha256sums-unsigned-build.txt{.asc,} && \
     gpg --verify sha256sums-unsigned-build.txt{.asc,}
 
-Filter the tarballs we want and make them available at build time,
+Build the list of tarballs we want and their hashes,
+so this information is available at build time,
 when the tarballs are fetched:
 
-    grep --color=never "\<tor-browser-linux64-.*\.tar.xz$" sha256sums-unsigned-build.txt \
-    | grep -v '\<tor-browser-linux64-debug\.tar\.xz$' \
-    > config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
+    (
+        grep --color=never -E \
+            "\stor-browser-linux64-[0-9].*_en-US\.tar\.xz$" \
+            sha256sums-unsigned-build.txt \
+        && grep --color=never -E \
+            "\slangpacks-tor-browser-linux64-.*\.tar\.xz$" \
+            sha256sums-unsigned-build.txt \
+    ) > config/chroot_local-includes/usr/share/tails/tbb-sha256sums.txt
 
 Then update the URL to the one chosen above:
 
-    echo "${TBB_DIST_URL}" | sed "s,^https://,http://," > \
+    echo "${TBB_DIST_URL:?}" | sed "s,^https://,http://," > \
          config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt
 
 <div class="note">
@@ -87,7 +91,7 @@ we verify the checksum file.
 Lastly, commit:
 
     git commit config/chroot_local-includes/usr/share/tails/tbb-*.txt \
-        -m "Upgrade Tor Browser to ${TBB_VERSION}." && \
+        -m "Upgrade Tor Browser to ${TBB_VERSION:?}." && \
     git show
 
 <div class="caution">
@@ -173,41 +177,42 @@ Import a new set of Tor Browser tarballs
 
         DL_DIR=$(mktemp --tmpdir -d "tor-browser-${TBB_VERSION}.XXXXXXXXXX")
         CHROOT_INCLUDES="config/chroot_local-includes"
-        TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-sha256sums.txt"
-        TBB_DIST_URL_FILE="${CHROOT_INCLUDES}/usr/share/tails/tbb-dist-url.txt"
-        cd "$TAILS_GIT_REPO" && git checkout "$TBB_IMPORT_BRANCH"
-        TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE}" | sed "s,^http://,https://,")"
-        current_branch=$(git -C "$TAILS_GIT_REPO" branch | awk '/^\* / { print $2 }')
+        TBB_SHA256SUMS_FILE="${CHROOT_INCLUDES:?}/usr/share/tails/tbb-sha256sums.txt"
+        TBB_DIST_URL_FILE="${CHROOT_INCLUDES:?}/usr/share/tails/tbb-dist-url.txt"
+        cd "${TAILS_GIT_REPO:?}" && git checkout "${TBB_IMPORT_BRANCH:?}"
+        TBB_TARBALLS_BASE_URL="$(cat "${TBB_DIST_URL_FILE:?}" | sed "s,^http://,https://,")"
+        current_branch=$(git -C "${TAILS_GIT_REPO:?}" branch | awk '/^\* / { print $2 }')
         for branch in "$current_branch" ; do
-           git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
+           git -C "${TAILS_GIT_REPO:?}" show "$branch:${TBB_SHA256SUMS_FILE:?}" \
            | while read expected_sha256 tarball; do
               (
                  cd "$DL_DIR"
-                 echo "Retrieving '${TBB_TARBALLS_BASE_URL}/${tarball}'..."
+                 echo "Retrieving '${TBB_TARBALLS_BASE_URL:?}/${tarball:?}'..."
                  curl --remote-name --continue-at - \
-                    "${TBB_TARBALLS_BASE_URL}/${tarball}"
+                    "${TBB_TARBALLS_BASE_URL:?}/${tarball:?}"
               )
            done
            (
-              cd "$DL_DIR" && \
-              git -C "$TAILS_GIT_REPO" show "$branch:$TBB_SHA256SUMS_FILE" \
+              cd "${DL_DIR:?}" && \
+              git -C "${TAILS_GIT_REPO:?}" show "$branch:${TBB_SHA256SUMS_FILE:?}" \
                  | sha256sum -c -
            )
         done
 
 2. Move the tarballs into your local Git annex:
 
-        cd "$TBB_ARCHIVE" && \
-        mkdir "$TBB_VERSION" && cd "$TBB_VERSION" && \
-        git annex import --duplicate "$DL_DIR/"* "$TAILS_GIT_REPO/"sha256sums-*
+        cd "${TBB_ARCHIVE:?}" && \
+        mkdir "${TBB_VERSION:?}" && cd "${TBB_VERSION:?}" && \
+        git annex import --duplicate "${DL_DIR:?}/"* "${TAILS_GIT_REPO:?}/"sha256sums-*
 
 Commit and push your changes
 ----------------------------
 
-	cd "$TBB_ARCHIVE" && \
-	git commit -m "Add Tor Browser ${TBB_VERSION}." && \
+	cd "${TBB_ARCHIVE:?}" && \
+	git commit -m "Add Tor Browser ${TBB_VERSION:?}." && \
 	git annex sync && \
-	git annex copy --to origin -- "${TBB_VERSION}"
+	git annex copy --to origin -- "${TBB_VERSION:?}" && \
+	git annex sync
 
 Wait for the synchronization
 ----------------------------
@@ -224,12 +229,12 @@ into your `apt-cacher-ng` local cache.
 Adjust the URL in the main Git repository
 -----------------------------------------
 
-    cd "$TAILS_GIT_REPO" && \
-    git checkout "$TBB_IMPORT_BRANCH"
+    cd "${TAILS_GIT_REPO:?}" && \
+    git checkout "${TBB_IMPORT_BRANCH:?}"
     current_branch=$(git branch | awk '/^\* / { print $2 }')
-    for branch in "$current_branch" ; do
-       git checkout "$branch" && \
-       echo "http://torbrowser-archive.tails.boum.org/${TBB_VERSION}/" > \
+    for branch in "${current_branch:?}" ; do
+       git checkout "${branch:?}" && \
+       echo "http://torbrowser-archive.tails.boum.org/${TBB_VERSION:?}/" > \
             config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt && \
        git commit config/chroot_local-includes/usr/share/tails/tbb-dist-url.txt \
            -m "Fetch Tor Browser from our own archive." && \
@@ -239,6 +244,8 @@ Adjust the URL in the main Git repository
 Clean up
 --------
 
-	cd "$TBB_ARCHIVE" && \
-	git annex drop -- "${TBB_VERSION}" && \
-    rm -rf "$DL_DIR"
+	cd "${TBB_ARCHIVE:?}" && \
+	git annex drop -- "${TBB_VERSION:?}" && \
+    git annex sync && \
+    rm -rf "${DL_DIR:?}" && \
+    rm "${TAILS_GIT_REPO:?}"/sha256sums-unsigned-build.txt{,.asc}

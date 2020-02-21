@@ -1,82 +1,12 @@
 [[!meta title="Automated tests implementation details"]]
 
+See the [[design and implementation
+documentation|contribute/working_together/roles/sysadmins/Jenkins]]
+of our current setup.
+
 For Jenkins resources, see [[blueprint/automated_builds_and_tests/resources]].
 
 [[!toc levels=2]]
-
-Generating jobs
-===============
-
-We use code that lay in three different Git repositories to generate
-automatically the list of Jenkins jobs for branches that are active in
-the Tails main Git repo.
-
-The first brick is the Tails
-[[!tails_gitweb_repo pythonlib]], which extracts the list of
-active branches and output the needed informations. This list is parsed
-by the `generate_tails_iso_jobs` script run by a cronjob and deployed by
-our [[!tails_gitweb_repo puppet-tails]]
-`tails::jenkins::iso_jobs_generator` manifest.
-
-This script output yaml files compatible with
-[jenkins-job-builder](http://docs.openstack.org/infra/jenkins-job-builder).
-It creates one `project` for each active branches, which in turn uses
-three JJB `job templates` to create the three jobs for each branch: the
-ISO build one, and wrapper job that is used to start the ISO test jobs.
-
-This changes are pushed to our [[!tails_gitweb_repo jenkins-jobs]] git
-repo by the cronjob, and thanks to their automatic deployment in our
-`tails::jenkins::master` and `tails::gitolite::hooks::jenkins_jobs`
-manifests in our [[!tails_gitweb_repo puppet-tails]] repo, this new
-changes are applied automatically to our Jenkins instance.
-
-Restarting slave VMs between jobs
-=================================
-
-This question is tracked in [[!tails_ticket 9486]].
-
-For [[!tails_ticket 5288]] to be robust enough, if the test suite doesn't
-_always_ clean between itself properly (e.g. when tests simply hang
-and timeout), we might want to restart `isotesterN.lizard` between
-each each ISO testing job.
-
-If such VMs are Jenkins slave, then we can't do it as part of the job
-itself, but workarounds are possible, such as having a job restart and
-wait for the VM, that triggers another job that actually starts the
-tests. Or, instead of running `jenkins-slave` on those VMs, running
-one instance thereof somewhere else (in a Docker container on
-`jenkins.lizard`?) and then have "restart the testing VM and wait for
-it to come up" be part of the testing job.
-
-This was discussed at least there:
-
-* <http://jenkins-ci.361315.n4.nabble.com/How-to-reboot-a-slave-during-a-build-td4628820.html>
-* <https://stackoverflow.com/questions/5543413/reconfigure-and-reboot-a-hudson-jenkins-slave-as-part-of-a-build>
-
-We achieve this VM reboot by using 3 chained jobs:
-
-* First one is a wrapper and trigger 2 other jobs. It is executed on the
-  isotester the test job is supposed to be assigned to. It puts the
-  isotester in offline mode and starts the second job, blocking while
-  waiting for it to complete. This way this isotester is left reserved
-  while the second job run, and the isotester name can be passed as a build
-  parameter to the second job. This job is low prio so it waits for
-  other second and third type of jobs to be completed before starting its
-  own.
-* The second job is executed on the master (which has 4 build
-  executors). This job ssh into the said isotester and issue the
-  reboot. It needs to wait a reasonable amount of time for the Jenkins
-  slave to be stopped by the shutdown process so that no jobs gets assigned
-  to this isotester meanwhile. Stoping this Jenkins slave daemon usually
-  takes a few seconds. During testing, 5 seconds proved to be enough of
-  a delay for that, and more would mean unnecessary lagging time. It then
-  put the node back online again.  This job is higher prio so that it is
-  not lagging behind other wrapper jobs in the queue.
-* The third job is the test job, run on the freshly started isotester.
-  This one is high prio too to get executed before any other wrapper
-  jobs. These jobs are set to run concurrently, so that if a first one is
-  already running, a more recent one triggered by a new build will still
-  be able to run and not be blocked by the first running one.
 
 <a id="chain"></a>
 
@@ -110,30 +40,6 @@ These are all supported by JJB v0.9+.
 
 As we'll have to pass some parameters, the ParameterizedTrigger plugin
 is the best candidate for us.
-
-Passing parameters through jobs
-===============================
-
-We already specified what kind of informations we want to pass from the
-build job to the test job.
-
-The ParameterizedTiggerPlugin is the one usually used for that kind of
-work.
-
-We'll use it for some basic parameter passing through jobs, but given
-the test jobs will need to know a lot of them from the build job, we'll
-also use the EnvInject plugin we're already using:
-
- * In the build job, a script will collect every necessary parameters
-   defined in the automated test blueprint and outputing them in a file
-   in the /build-artifacts/ directory.
- * This file is the one used by the build job, to setup the variables it
-   needs (currently only $NOTIFY_TO).
- * At the end of the build job, this file is archived with the other
-   artifacts.
- * At the beginning of the chained test job, this file is imported in
-   the workspace along with the build artifacts. The EnvInject pre-build
-   step uses it to setup the necessary variables.
 
 Define which $OLD_ISO to test against
 =====================================
@@ -173,21 +79,3 @@ In the end, we will by default use the same ISO for both `--old-iso` and
 `--iso`, except for the branches used to prepare releases (`devel` and
 `stable`), so that we know if the upgrades are broken long before the
 next release.
-
-Retrieving the ISOs for the test
-================================
-
-We'll need a way to retrieve the different ISO needed for the test.
-
-For the ISO related to the upstream build job, this shouln't be a
-problem with #9597. We can get it with either wget, or a python script
-using python-jenkins. That was the point of this ticket.
-
-For the last release ISO, we have several means:
-
-* Using wget to get them from http://iso-history.tails.boum.org. This
-  website is password protected, but we could set up another private
-  vhost for the isotesters.
-* Using the git-annex repo directly.
-
-We'll use the first one, as it's easier to implement.
