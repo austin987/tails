@@ -194,7 +194,7 @@ def boot_menu_cmdline_image
   end
 end
 
-Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
+Given /^Tails is at the boot menu's cmdline$/ do
   boot_timeout = 3*60
   # Simply looking for the boot splash image is not robust; sometimes
   # sikuli is not fast enough to see it. Here we hope that spamming
@@ -237,8 +237,8 @@ Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
   end
 end
 
-Given /^the computer (re)?boots Tails( with genuine APT sources)?$/ do |reboot, keep_apt_sources|
-  step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
+Given /^the computer boots Tails( with genuine APT sources)?$/ do |keep_apt_sources|
+  step "Tails is at the boot menu's cmdline"
   @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
                Sikuli::Key.ENTER)
   @screen.wait('TailsGreeter.png', 5*60)
