@@ -264,7 +264,6 @@ end
 def check_disk_integrity(name, dev, scheme)
   info = $vm.execute("udisksctl info --block-device '#{dev}'").stdout
   info_split = info.split("\n  org\.freedesktop\.UDisks2\.PartitionTable:\n")
-  dev_info = info_split[0]
   part_table_info = info_split[1]
   assert(part_table_info.match("^    Type: +#{scheme}$"),
          "Unexpected partition scheme on USB drive '#{name}', '#{dev}'")
