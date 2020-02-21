@@ -113,7 +113,7 @@ You can customize the build system using two environment variables:
 
    For example, you can speed up the build by setting:
 
-        export TAILS_BUILD_OPTIONS="ram fastcomp cachewebsite"
+        export TAILS_BUILD_OPTIONS="ram fastcomp"
 
    This will force the build to happen in RAM and SquashFS compression
    will be done using faster, though less efficient size-wise, settings.
@@ -202,9 +202,12 @@ affect reproducibility of the ISO image:
  * **rescue**: implies **keeprunning** and will also not clean up the
    build directory, which is useful for investigating build failures.
 
- * **cachewebsite**: enable caching of the built website.
-   The cache is keyed on the input parameters that primarily determine
-   the output of the website build.
+ * **cachewebsite=**:
+   - If set to "yes" (the default, unless building from a tag), enable caching
+     of the built website. The cache is keyed on the input parameters that
+     primarily determine the output of the website build.
+   - If set to "no", (the default when building from a tag), build the website
+     from scratch.
 
 ## HTTP proxy settings
 
