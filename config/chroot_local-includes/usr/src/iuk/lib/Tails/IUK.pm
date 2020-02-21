@@ -248,7 +248,7 @@ method _build_mksquashfs_options () { [
     qw{-no-progress -noappend},
     qw{-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K},
 ]}
-method _build_union_type () { "aufs"; }
+method _build_union_type () { "overlayfs"; }
 
 method _build_delete_files () {
     my $old_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->old_iso->stringify);
