@@ -831,34 +831,47 @@ Compute the list of initial version install to build IUKs for:
 Even if it's computed automatically, remember to store it in the file
 holding environment variables, it will be used in various places below.
 
+Sanity checks
+-------------
+
+Check that you have the correct version of `squashfs-tools` installed:
+
+    [ "$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)" \
+      = '1:4.4-1+0.tails1' \
+    ] || echo 'ERROR! Your squashfs-tools is not the required version, so any generated IUKs will *not* be reproducible!'
+
+Check that you have the password for <https://iso-history.tails.boum.org> (it
+will be used by `wrap_tails_create_iuks` below, in order to download any ISO
+that is not present locally yet):
+
+    if ! grep -F --line-regexp -qs 'machine iso-history.tails.boum.org' ~/.netrc; then
+        echo "ERROR! Add a section for iso-history.tails.boum.org' to your ~/.netrc"
+        echo "The corresponding login and password are in the RMs' keyringer."
+    fi
+
 Build the Incremental Upgrade Kits locally
 ------------------------------------------
 
-    mkdir -p "${IUKS_DIR:?}" && \
-    for source_version in ${IUK_SOURCE_VERSIONS:?}; do
-        (set -e
-        squashfs_tools_version="$(dpkg-query --showformat '${Version}\n' --show squashfs-tools)"
-        if [ "$squashfs_tools_version" != '1:4.4-1+0.tails1' ]; then
-            echo "ERROR! Your squashfs-tools is not the required version, so any generated IUKs will *not* be reproducible!"
-            break
-        fi
-        IUK="${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk"
-        echo "Generating IUK file from ${source_version:?} to ${VERSION:?}:"
-        echo "  ${IUK:?}"
-        sudo su -c \
-         "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
-          LC_ALL=C \
-          TMPDIR=\"${TMPDIR:-/tmp}\" \
-          PERL5LIB=\"${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/perl5lib/lib\" \
-          ${RELEASE_CHECKOUT:?}/config/chroot_local-includes/usr/src/iuk/bin/tails-create-iuk \
-               --squashfs_diff_name \"${VERSION:?}.squashfs\"           \
-               --old_iso \"${ISOS:?}/tails-amd64-${source_version:?}/tails-amd64-${source_version:?}.iso\" \
-               --new_iso \"${ISO_PATH:?}\" \
-               --outfile \"${IUK:?}\"" && \
-        sudo chown "$(id --user):$(id --group)" "${IUK:?}" && \
-        (cd "$(dirname "${IUK:?}")" && sha256sum "$(basename "${IUK:?}")" >> "${IUKS_HASHES:?}")
-        ) || { echo "ERROR: failure detected for source version: ${source_version?:}"; break; }
-    done
+    (
+       set -eu
+       WORK_DIR=$(mktemp -d)
+       TAILS_REMOTE="$(git -C "$RELEASE_CHECKOUT" remote get-url origin)"
+       PUPPET_TAILS_REMOTE=$(echo -n "$TAILS_REMOTE" | perl -p -E 's,:tails(:?[.]git)?\z,:puppet-tails,')
+       cd "$WORK_DIR"
+       git clone "$PUPPET_TAILS_REMOTE"
+       ./puppet-tails/files/jenkins/slaves/isobuilders/wrap_tails_create_iuks \
+           --tails-git-remote "file://${RELEASE_CHECKOUT}/.git"             \
+           --tails-git-commit "$TAG"                                      \
+           --source-date-epoch "$SOURCE_DATE_EPOCH"                       \
+           --local-isos-dir "$ISOS"                                       \
+           --tmp-dir "${TMPDIR:-/tmp}"                                        \
+           --output-dir "$IUKS_DIR"                                       \
+           --source-versions "$IUK_SOURCE_VERSIONS"                       \
+           --new-version "$VERSION"                                       \
+           --verbose
+       cd "$IUKS_DIR"
+       sha256sum Tails_amd64_*_to_${VERSION}.iuk > "$IUKS_HASHES"
+   )
 
 This command takes a long time. In parallel, while it is running,
 you can follow the next 2 steps:
@@ -873,8 +886,8 @@ Push the released ISO and USB images and their artifacts (`.buildlog`,
 `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
 repo, so that:
 
- - The Jenkins `build_IUKs` can fetch them.
- - Our isotesters can fetch them from there for their testing
+ - The Jenkins `build_IUKs` job can fetch them.
+ - Our isotesters can fetch them from there for their testing.
 
 How to do so is described in the `ISO_history.mdwn` document in the RM team's
 Git repo.
@@ -917,6 +930,7 @@ Verify that Jenkins reproduced your IUKs
 
     "${RELEASE_CHECKOUT:?}"/bin/copy-iuks-to-rsync-server-and-verify \
        --hashes-file "${IUKS_HASHES:?}" \
+       --work-dir /srv/tmp \
        --jenkins-build-id "${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}"
 
 If this verification succeeds, move on to the next section.
@@ -1124,7 +1138,7 @@ then upload the IUKs you've built to our rsync server
     for source_version in $(echo ${IUK_SOURCE_VERSIONS:?}); do
        rsync --partial --inplace --progress -v \
           "${IUKS_DIR:?}/Tails_amd64_${source_version:?}_to_${VERSION:?}.iuk" \
-          rsync.lizard:
+          rsync.lizard:/srv/tmp/
     done
 
 While waiting for the IUKs to be uploaded, you can proceed with the next steps.
@@ -1174,9 +1188,9 @@ on our rsync server and on the live website (even for a release
 candidate):
 
     ssh rsync.lizard << EOF
-      sudo chown root:rsync_tails Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo chmod u=rwX,go=rX Tails_amd64_*_to_${VERSION:?}.iuk && \
-      sudo mv Tails_amd64_*_to_${VERSION:?}.iuk \
+      sudo chown root:rsync_tails /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo chmod u=rwX,go=rX /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk && \
+      sudo mv /srv/tmp/Tails_amd64_*_to_${VERSION:?}.iuk \
               /srv/rsync/tails/tails/${DIST:?}/iuk/v2/
     EOF
 
@@ -1467,6 +1481,31 @@ Sanity checks
 * Check the outcome of the "Testing" section above.
 * Wait for the Mozilla security advisory (MFSA)
   [to be published](https://www.mozilla.org/en-US/security/advisories/).
+
+  Below you find a shell function that will exit once a new MFSA is
+  published, so you can `wait_for_new_mfsa ; notify-send "New MFSA!"`
+  or similar to automate the wait:
+
+      current_mfsa() {
+          local current="$(
+              torsocks --isolate curl --silent https://www.mozilla.org/en-US/security/advisories/ | \
+              sed --regexp-extended -n 's@.*<a href="/en-US/security/advisories/(mfsa[0-9]+-[0-9]+)/".*>@\1@p' | \
+              sort -n | \
+              tail -n 1
+          )"
+          echo "$(date --rfc-3339=s): got ${current}" >&2
+          echo "${current}"
+      }
+      wait_for_new_mfsa() {
+          local initial="$(current_mfsa)"
+          while true; do
+              local new="$(current_mfsa)"
+              [ -z "${new}" ] && continue
+              [ "${new}" != "${initial}" ] && break
+              sleep 60
+          done
+      }
+
 * Add the relevant MFSA to
   `wiki/src/security/Numerous_security_holes_in_${PREVIOUS_VERSION:?}.mdwn`
   and commit.
