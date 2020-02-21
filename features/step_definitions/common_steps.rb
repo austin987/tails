@@ -187,7 +187,7 @@ end
 
 def boot_menu_cmdline_image
   case @os_loader
-  when "UEFI"
+  when 'UEFI'
     'TailsBootMenuKernelCmdlineUEFI.png'
   else
     'TailsBootMenuKernelCmdline.png'
@@ -204,7 +204,7 @@ def boot_menu_image
 end
 
 Given /^Tails is at the boot menu's cmdline$/ do
-  boot_timeout = 3*60
+  boot_timeout = 3 * 60
   # Simply looking for the boot splash image is not robust; sometimes
   # sikuli is not fast enough to see it. Here we hope that spamming
   # UP, which will halt the boot process, will make this a bit more robust.
@@ -212,7 +212,7 @@ Given /^Tails is at the boot menu's cmdline$/ do
   # but multi-threading etc is working extremely poor in our Ruby +
   # jrb environment when Sikuli is involved. Hence we run the spamming
   # from a separate process.
-  up_spammer_code = <<-EOF
+  up_spammer_code = <<-SCRIPT
     require 'libvirt'
     up_key_code = 0x67
     virt = Libvirt::open("qemu:///system")
@@ -225,7 +225,7 @@ Given /^Tails is at the boot menu's cmdline$/ do
     ensure
       virt.close
     end
-  EOF
+  SCRIPT
   # The below code is not completely reliable, so we might have to
   # retry by rebooting.
   try_for(boot_timeout) do
@@ -233,12 +233,12 @@ Given /^Tails is at the boot menu's cmdline$/ do
       up_spammer = IO.popen(['ruby', '-e', up_spammer_code])
       @screen.wait(boot_menu_image, 15)
     rescue FindFailed => e
-      debug_log('We missed the boot menu before we could deal with it, ' +
+      debug_log('We missed the boot menu before we could deal with it, ' \
                 'resetting...')
       $vm.reset
       raise e
     ensure
-      Process.kill("TERM", up_spammer.pid)
+      Process.kill('TERM', up_spammer.pid)
       up_spammer.close
     end
     true
@@ -262,12 +262,12 @@ Given /^the computer boots Tails( with genuine APT sources)?$/ do |keep_apt_sour
   @screen.type(' autotest_never_use_this_option' \
                ' blacklist=psmouse' \
                " #{@boot_options}" + boot_key)
-  @screen.wait('TailsGreeter.png', 5*60)
+  @screen.wait('TailsGreeter.png', 5 * 60)
   $vm.wait_until_remote_shell_is_up
   step 'I configure Tails to use a simulated Tor network'
   # This is required to use APT in the test suite as explained in
   # commit e2510fae79870ff724d190677ff3b228b2bf7eac
-  step 'I configure APT to use non-onion sources' if not keep_apt_sources
+  step 'I configure APT to use non-onion sources' unless keep_apt_sources
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
