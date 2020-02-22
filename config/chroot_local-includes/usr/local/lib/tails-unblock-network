@@ -14,8 +14,10 @@ systemctl start tails-unblock-network.service
 
 # Without this, network is sometimes not unblocked, probably due to some
 # race condition between tails-unblock-network.service (that deletes the
-# blacklist file) and udevadm trigger, possibly caused by yet another aufs
-# weirdness (#9012)...
+# blacklist file) and udevadm trigger.
+# This might have been caused by an aufs weirdness (#9012),
+# but this code is rather simple and it does not hurt to ensure
+# our assumptions are verified.
 if [ "${TAILS_NETCONF}" != "disabled" ]; then
    echo "Waiting for ${NET_MODULES_BLACKLIST} to be gone..." >&2
    while [ -e "${NET_MODULES_BLACKLIST}" ]; do

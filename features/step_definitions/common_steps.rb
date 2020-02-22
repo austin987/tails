@@ -645,7 +645,6 @@ end
 def is_persistent?(app)
   conf = get_persistence_presets_config(true)["#{app}"]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
-  # This check assumes that we haven't enabled read-only persistence.
   c.success? and c.stdout.chomp != "overlay"
 end
 
