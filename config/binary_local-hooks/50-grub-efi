@@ -135,3 +135,7 @@ cp "chroot/boot/grub/unicode.pf2" "${grub_dir}"
 
 # Append our custom kernel command-line parameters
 sed -i -E "s#AMNESIA_APPEND#${AMNESIA_APPEND}#g" "binary/EFI/debian/grub.cfg"
+
+# Copy the configuration for 32-bit EFI, which looks there
+# due to -p "/efi/debian/grub"
+cp -a "binary/EFI/debian/grub.cfg" "binary/EFI/debian/grub/grub.cfg"
