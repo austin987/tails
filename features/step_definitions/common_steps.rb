@@ -256,7 +256,7 @@ Given /^Tails is at the boot menu's cmdline$/ do
   @screen.wait(boot_menu_cmdline_image, 5)
 end
 
-Given /^the computer (?:re?)boots Tails( with genuine APT sources)?$/ do |keep_apt_sources|
+Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_apt_sources|
   step "Tails is at the boot menu's cmdline"
   boot_key = @os_loader == 'UEFI' ? Sikuli::Key.F10 : Sikuli::Key.ENTER
   @screen.type(' autotest_never_use_this_option' \
