@@ -1,0 +1,60 @@
+[[!meta title="Automated ISO/IMG builds and tests on Jenkins"]]
+
+[[!toc levels=1]]
+
+Generating jobs
+===============
+
+We generate automatically a set of Jenkins jobs for branches that are
+active in the Tails main Git repository.
+
+The first brick extracts the list of active branches and output the
+needed information:
+
+ - [[!tails_gitweb config/chroot_local-includes/usr/lib/python3/dist-packages/tailslib/git.py]]
+ - [[!tails_gitweb config/chroot_local-includes/usr/lib/python3/dist-packages/tailslib/jenkins.py]]
+
+This list is parsed by the `generate_tails_iso_jobs` script run by
+a cronjob and deployed by our [[!tails_gitweb_repo puppet-tails]]
+`tails::jenkins::iso_jobs_generator` manifest.
+
+This script output YAML files compatible with
+[jenkins-job-builder](http://docs.openstack.org/infra/jenkins-job-builder).
+It creates one `project` for each active branch, which in turn uses
+several JJB `job templates` to create jobs for each branch:
+
+ - `build_Tails_ISO_*`
+ - `reproducibly_build_Tails_ISO_*`
+ - `test_Tails_ISO_*`
+
+This changes are pushed to our [[!tails_gitweb_repo jenkins-jobs]] git
+repo by the cronjob, and thanks to their automatic deployment in our
+`tails::jenkins::master` and `tails::gitolite::hooks::jenkins_jobs`
+manifests in our [[!tails_gitweb_repo puppet-tails]] repo, these new
+changes are applied to our Jenkins instance.
+
+Passing parameters through jobs
+===============================
+
+We pass information from build job to follow-up jobs (reproducibility
+testing, test suite) via two means:
+
+ - the Parameterized Trigger plugin, whenever it's sufficient
+
+ - the EnvInject plugin, for more complex cases:
+
+   * In the build job, a script collects the needed information and
+     writes it to a file that's saved as a build artifact.
+   * This file is used by the build job itself, to setup the variables it
+     needs (currently only `$NOTIFY_TO`).
+   * Follow-up jobs imported this file in the workspace along with the
+     build artifacts, then use an EnvInject pre-build step to load it
+     and set up variables accordingly.
+
+# Builds
+
+See [[contribute/working_together/roles/sysadmins/automated_builds_in_Jenkins]].
+
+# Tests
+
+See [[contribute/working_together/roles/sysadmins/automated_tests_in_Jenkins]].

@@ -1,3 +1,166 @@
+tails (4.3) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 9.0.5-build2 (Closes: #17469).
+    - Update Linux kernel to linux-image-5.4.0-3-amd64, currently at
+      5.4.13-1 (Closes: #17443).
+    - Upgrade Thunderbird to 1:68.4.1-1~deb10u1
+
+  * Bugfixes
+    - live-persist: don't backup empty configuration files (Closes:
+      #17112). In some cases, the previous code would overwrite a
+      non-empty backup file with an empty one, making it harder to
+      recover from the already painful #10976.
+    - create-usb-image-from-iso: Run syslinux within proper chroot
+      (Closes: #17179). Previously we ran syslinux from the host,
+      which can lead to bugs if its versions differs from the one
+      inside the chroot (which is what Tails will use later). Thanks
+      to Johan Blåbäck for the patch!
+    - Tails Upgrader: Fix progress bar not pulsating and hide useless
+      OK button (Closes: #16603).
+
+  * Minor improvements and updates
+    - Upgrade tor to 0.4.2.6 (Closes: #17059).
+    - Install the trezor package, which adds a command-line (only)
+      tool for managing Trezor devices (Closes: #17463). Thanks to
+      Pavol Rusnak for the patch!
+    - As a consequence of the Linux kernel upgrade we also:
+      * Upgrade aufs to 5.4.3 20200127.
+      * Install VirtualBox guest tools and kernel modules from sid.
+
+  * Build system
+    - Upgrade snapshot of the Debian archive to 2020020302, including
+      the 10.3 point release of Debian Buster (Closes: #17458).
+    - Add opt-in caching of the wiki (Closes: #15342).
+    - Use mksquashfs' -no-exports option even when the fastcomp build
+      option is set. "fastcomp" is supposed to only tweak SquashFS
+      compression settings, but so far it was also disabling the
+      -no-exports option that we set for our release builds.
+    - Drop a bunch of packages installed for ikiwiki for various
+      (obsoloete) resons:
+      * libfile-chdir-perl, libyaml-perl and libxml-simple-perl which
+        was needed back when we built our own ikiwiki from Git…  a
+        looong time ago.
+      * libtext-multimarkdown-perl used multimarkdown ikiwiki which
+        its doubtful we ever will use.
+      * libhtml-scrubber-perl, libhtml-template-perl,
+        libhtml-parser-perl, libyaml-libyaml-perl and liburi-perl
+        which are already installed as ikiwiki dependencies.
+    - Install libimage-magick-perl instead of the perlmagick
+      transitional package.
+    - Don't install obsolete dependencies whois and eatmydata.
+    - Consistently validate individual build options as we parse them.
+      This is consistent with how we handled "fastcomp" already. Only
+      compatibility checks between multiple build options really need
+      to happen later, once we've parsed all build options.
+    - Remove 5 years old transition code
+    - Fully provision the Vagrant box every time it starts, and
+      partially re-provision it for every build.
+    - Behave correctly when disabling a previously set "offline" or
+      "vmproxy+extproxy" build option.  Previously, setting one of
+      these build options *once* would taint the Vagrant box forever
+      with the resulting apt-cacher-ng configuration.
+    - Shrink the apt-cacher-ng cache after a successful build too
+      (Closes: #17288).
+    - Set up infrastructure to retrieve log file from the VM even on
+      build failure (Closes: #7749).
+    - Always build from a fresh Git clone.
+    - Set the permissions that Vagrant needs inside the source tree
+      (Closes: #11411, #16607, #17289).
+
+  * Test suite
+    - Remove Seahorse key synchronization scenarios. These 2 scenarios
+      never pass due to #17169, so currently:
+      * They don't teach us anything new → no benefit.
+      * Every time a developer looks at test suite results,
+        they need to filter out this known problem, which takes time
+        and trains us to ignore problems.
+
+ -- Tails developers <tails@boum.org>  Mon, 10 Feb 2020 14:08:59 +0100
+
+tails (4.2.2) unstable; urgency=medium
+
+  * Major changes
+    - Upgrade Tor Browser to 9.0.4-build1 (MFSA-2020-03)
+
+  * Bugfixes
+    - Avoid the Upgrader proposing to upgrade to the version
+      that's already running (Closes: #17425)
+    - Avoid 2 minutes delay while rebooting after applying an automatic
+      upgrade (Closes: #17026)
+    - Make Thunderbird support TLS 1.3 (Closes: #17333)
+
+  * Build system
+    - IUK generation: don't make all files in the SquashFS diff
+      owned by root, otherwise an upgraded system cannot start
+      (Closes: #17422)
+
+ -- Tails developers <tails@boum.org>  Mon, 13 Jan 2020 09:21:51 +0000
+
+tails (4.2) unstable; urgency=medium
+
+  * Major changes
+    - Switch to a redesigned upgrade system (Closes: #15281), which:
+      - removes the need for manual upgrades caused by lack of disk space
+        on the Tails device
+      - uses less RAM
+    - Bump snapshot of the Debian archive to 2019122802
+
+  * Security fixes
+    - Upgrade Tor Browser to 9.0.3 (Closes: #17402)
+    - Upgrade Linux to 5.3.15-1 (Closes: #17332)
+      and upgrade the aufs module to 5.3-20191223
+    - Upgrade Thunderbird to 1:68.3.0-2~deb10u1
+    - Upgrade libsasl2 to 2.1.27+dfsg-1+deb10u1
+    - Upgrade python3-ecdsa to 0.13-3+deb10u1
+
+  * Bugfixes
+    - KeePassXC:
+      - Open ~/Persistent/keepassx.kdbx by default again (Closes: #17212)
+      - Open the database specified by the user on the command-line, if any
+      - Fix database renaming prompt
+    - Upgrader:
+      - Ensure debugging info lands in the Journal before we refer to it
+      - Catch more download errors
+    - Upgrade amd64-microcode to 3.20191218.1, which removes firmware
+      updates that cause issues
+
+  * Minor improvements and updates
+    - Add metadata analysis tools used by SecureDrop (Closes: #17178)
+    - Refresh the signing key before checking for available upgrades
+      (Closes: #15279)
+    - Port the Upgrader and perl5lib to a set of dependencies that are
+      faster and have a lower memory footprint (Closes: #17152)
+    - Ensure IUKs don't include files of our website if their content
+      has not changed (refs: #15290)
+    - Zero heap memory at allocation time and at free time (Closes: #17236)
+
+  * Build system
+    - Import the Upgrader and perl5lib codebases into tails.git
+      (part of #7036)
+    - lint_po: ignore pre-existing rply cache file that can cause
+      trouble if it's corrupted (Closes: #17359)
+    - Move generate-languages-list to auto/scripts
+    - import-translations: work around the lack of usable branches
+      in Tor's translation.git (Closes: #17279)
+    - Build released IUKs on Jenkins and verify that they match
+      those built locally by the Release Manager (Closes: #15287)
+    - Don't download every localized Tor Browser tarball: instead,
+      use the new tarball that includes every langpacks (Closes: #17400)
+
+  * Test suite
+    - Adapt for the "one single SquashFS diff" upgrade scheme
+    - Chutney: update to upstream 33cbff7fc73aa51a785197c5f4afa5a91d81de9c
+      (Closes: #16792)
+    - Fix tagging of Chutney exit relays and bridge authorities
+    - Tag Chutney clients as such
+    - Wait for all Chutney nodes to have bootstrapped before assuming
+      the simulated Tor network is ready
+    - Don't try to save tor control sockets as artifacts
+    - Add a crude script to generate IUKs for our test suite
+
+ -- Tails developers <tails@boum.org>  Mon, 06 Jan 2020 16:25:22 +0000
+
 tails (4.1.1) unstable; urgency=medium
 
   * Bugfixes

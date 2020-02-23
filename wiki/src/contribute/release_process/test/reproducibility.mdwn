@@ -38,8 +38,6 @@ following variables as instructed:
 * `ISOS`
 * `RELEASE_BRANCH`
 * `VERSION`
-<!-- * `IUK_CHECKOUT` -->
-<!-- * `PERL5LIB_CHECKOUT` -->
 
 <!-- Now for the only tricky part, setting `IUK_SOURCE_VERSIONS`. It should -->
 <!-- simply list the old Tails versions that will get an automatic upgrade -->
@@ -138,26 +136,13 @@ Set these environment variables accordingly:
 <!--             cp --dereference --recursive "${tails_dir}" "${ISOS:?}" -->
 <!--         done -->
 
-<!-- 2. Set your `iuk` and `perl5lib` Git checkouts to the desired state: -->
+<!-- 2. Set your `iuk` Git checkout to the desired state: -->
 
-<!--            PERL5LIB_VERSION="$(awk '/^tails-perl5lib\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \ -->
-<!--            if [ -z "${PERL5LIB_VERSION}" ]; then -->
-<!--                echo 'Failed to determine PERL5LIB_VERSION, aborting' && \ -->
-<!--                false -->
-<!--            fi && \ -->
-<!--            PERL5LIB_CHECKOUT_TAG="debian/${PERL5LIB_VERSION}" && \ -->
 <!--            IUK_VERSION="$(awk '/^tails-iuk\s/ { print $2 }' "${PACKAGES_FILE:?}")" && \ -->
 <!--            if [ -z "${IUK_VERSION}" ]; then -->
 <!--                echo 'Failed to determine IUK_VERSION, aborting' && \ -->
 <!--                false -->
-<!--            fi && \ -->
-<!--            IUK_CHECKOUT_TAG="debian/${IUK_VERSION}" -->
-<!--            cd "${PERL5LIB_CHECKOUT:?}" && \ -->
-<!--            git fetch && \ -->
-<!--            git checkout "${PERL5LIB_CHECKOUT_TAG:?}" && \ -->
-<!--            cd "${IUK_CHECKOUT:?}" && \ -->
-<!--            git fetch && \ -->
-<!--            git checkout "${IUK_CHECKOUT_TAG:?}" -->
+<!--            fi -->
 
 <!-- 3. Follow the [[Build the Incremental Upgrade -->
 <!--    Kits|contribute/release_process#prepare-iuk]] instructions. Note that -->
@@ -253,7 +238,7 @@ Then check that the hashes and sizes match what you have built:
 <!-- Examine each UDF by running: -->
 
 <!--     for old_version in ${IUK_SOURCE_VERSIONS}; do -->
-<!--         url=https://tails.boum.org/upgrade/v1/Tails/${old_version}/amd64/${DIST:?}/upgrades.yml -->
+<!--         url=https://tails.boum.org/upgrade/v2/Tails/${old_version}/amd64/${DIST:?}/upgrades.yml -->
 <!--         ( -->
 <!--             echo "Looking at '${url}':" -->
 <!--             echo -->
@@ -272,7 +257,7 @@ Then check that the hashes and sizes match what you have built:
 
 <!--       for old_version in ${IUK_SOURCE_VERSIONS}; do -->
 <!--       cat <<EOF -->
-<!--       Expected values for https://tails.boum.org/upgrade/v1/Tails/${old_version}/amd64/${DIST:?}/upgrades.yml: -->
+<!--       Expected values for https://tails.boum.org/upgrade/v2/Tails/${old_version}/amd64/${DIST:?}/upgrades.yml: -->
       
 <!--       sha256: $(sha256sum "${ISOS:?}/Tails_amd64_${old_version}_to_${VERSION:?}.iuk" | cut -f 1 -d ' ' | tr -d '\n') -->
 <!--       size: $(du --bytes "${ISOS:?}/Tails_amd64_${old_version}_to_${VERSION:?}.iuk" | cut -f1) -->

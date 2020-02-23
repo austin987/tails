@@ -97,7 +97,7 @@ Last updated:
   or 64-bit EFI on that list:
   <https://www.everymac.com/mac-answers/snow-leopard-mac-os-x-faq/mac-os-x-snow-leopard-64-bit-macs-64-bit-efi-boot-in-64-bit-mode.html>
 
-* MacBook Air Retina 2019
+* MacBook Air Retina 2018 and 2019
 
   To start Tails successfully, [[add the following boot option when
   starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
@@ -450,6 +450,16 @@ starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
 
     modprobe.blacklist=ideapad_laptop
 
+## RTL8821CE
+
+<!--
+Last updated: 2020-02-21
+-->
+
+The Realtek RTL8821CE Wi-Fi adapter is not supported in Linux yet.
+
+This problem is tracked by [[!debbug 917941]].
+
 Security issues
 ===============
 
@@ -708,3 +718,25 @@ To workaround this issue, you can try to:
 - Disable IOMMU in the BIOS then enable it again.
 
 Some of these workarounds may disable some of the USB ports.
+
+## Graphics corruption in in Tor Browser and Thunderbird
+
+<!--
+Last updated: 2020-02-22
+-->
+
+On some computers, _Tor Browser_ and _Thunderbird_ are displayed incorrectly:
+
+ - The application window is initially empty and white.
+ - The icons and menus only appear when hovered by the mouse.
+ - The contents of the window is only displayed in stripes when scrolling.
+
+To workaround this issue, [[add the following boot option when
+starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+    intel_iommu=off
+
+This problem affects at least the following computers:
+
+ - MacBookPro11,5
+ - other MacBooks with a Radeon R9 graphics adapter
