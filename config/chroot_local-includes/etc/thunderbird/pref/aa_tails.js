@@ -4,13 +4,6 @@
 
 pref("extensions.update.enabled", false);
 
-// Use LANG environment variable to choose locale from system
-// The old environment setting 'pref("intl.locale.matchOS", true);' is
-// currently not working anymore. The new introduced setting
-// 'intl.locale.requested' is now used for this. Setting an empty string is
-// pulling the system locale into Thunderbird.
-pref("intl.locale.requested", "");
-
 // if you are not using gnome
 pref("network.protocol-handler.app.http", "x-www-browser");
 pref("network.protocol-handler.app.https", "x-www-browser");
