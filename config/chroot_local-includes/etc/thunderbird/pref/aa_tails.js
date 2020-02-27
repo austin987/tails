@@ -2,6 +2,7 @@
 // This file is parsed after the file containing the Debian defaults
 // found in /etc/thunderbird/pref/thunderbird.js
 
+// Disable updates of extensions to have control over versions used
 pref("extensions.update.enabled", false);
 
 // Disable mail indexing
