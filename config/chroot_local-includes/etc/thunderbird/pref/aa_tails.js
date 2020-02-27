@@ -4,10 +4,6 @@
 
 pref("extensions.update.enabled", false);
 
-// if you are not using gnome
-pref("network.protocol-handler.app.http", "x-www-browser");
-pref("network.protocol-handler.app.https", "x-www-browser");
-
 // Disable mail indexing
 pref("mailnews.database.global.indexer.enabled", false);
 
