@@ -190,6 +190,10 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 settings_loaded = True
             except SettingNotFoundError as e:
                 logging.debug(e)
+                # The settings file does not exist, so we create it by
+                # applying the setting's default value.
+                setting.apply()
+
         for setting in self.settings.additional_settings:
             try:
                 changed = setting.load()
@@ -201,6 +205,9 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 settings_loaded = True
             except SettingNotFoundError as e:
                 logging.debug(e)
+                # The settings file does not exist, so we create it by
+                # applying the setting's default value.
+                setting.apply()
 
         if settings_loaded:
             self.infobar_settings_loaded.set_visible(True)
