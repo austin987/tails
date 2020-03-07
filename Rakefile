@@ -59,6 +59,8 @@ ENV['ARTIFACTS'] ||= '.'
 
 ENV['APT_SNAPSHOTS_SERIALS'] ||= ''
 
+ENV['TAILS_WEBSITE_CACHE'] = '1'
+
 class CommandError < StandardError
   attr_reader :status, :stderr
 
@@ -247,12 +249,21 @@ task :parse_build_options do
       ENV['TAILS_PROXY_TYPE'] = 'noproxy'
     when 'offline'
       ENV['TAILS_OFFLINE_MODE'] = '1'
-    when 'cachewebsite'
+    when /cachewebsite(?:=([a-z]+))?/
+      value = $1
       if is_release?
         $stderr.puts "Building a release ⇒ ignoring #{opt} build option"
         ENV['TAILS_WEBSITE_CACHE'] = '0'
       else
-        ENV['TAILS_WEBSITE_CACHE'] = '1'
+        value = 'yes' if value.nil?
+        case value
+        when 'yes'
+          ENV['TAILS_WEBSITE_CACHE'] = '1'
+        when 'no'
+          ENV['TAILS_WEBSITE_CACHE'] = '0'
+        else
+          raise "Unsupported value for cachewebsite option: #{value}"
+        end
       end
     # SquashFS compression settings
     when 'fastcomp', 'gzipcomp'
