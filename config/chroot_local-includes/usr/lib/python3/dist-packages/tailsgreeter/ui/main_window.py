@@ -186,8 +186,21 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
         settings_loaded = False
         for setting in reversed(list(self.settings.region_settings)):
             try:
-                setting.load()
-                settings_loaded = True
+                changed = setting.load()
+                if changed:
+                    # We only want to show the "settings loaded" notification
+                    # if settings were actually changed, i.e. the settings
+                    # in the persistent settings dir were not the same as
+                    # the already configured ones.
+                    # Else, the notification would also be shown the first time
+                    # the system is booted after creating the Persistent Storage
+                    # (which currently means that the Persistent Storage is empty,
+                    # but that's WIP on #11529), because then the persistent
+                    # settings dir doesn't exist yet, which means that live-boot
+                    # copies the current settings dir to the Persistent Storage -
+                    # which contains the currently configured settings, which are
+                    # then loaded.
+                    settings_loaded = True
             except SettingNotFoundError as e:
                 logging.debug(e)
                 # The settings file does not exist, so we create it by
@@ -202,7 +215,7 @@ class GreeterMainWindow(Gtk.Window, TranslatableWindow):
                 # it has the default value.
                 if changed:
                     self.add_setting(setting.id)
-                settings_loaded = True
+                    settings_loaded = True
             except SettingNotFoundError as e:
                 logging.debug(e)
                 # The settings file does not exist, so we create it by

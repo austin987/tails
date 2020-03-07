@@ -61,14 +61,19 @@ class LocalizationSettingUI(GreeterSetting):
         self._setting.save(self.value, is_default=False)
         super().apply()
 
-    def load(self):
+    def load(self) -> bool:
         try:
             value, is_default = self._setting.load()
         except SettingNotFoundError:
             raise
+
+        if value == self.value:
+            return False
+
         self.value = value
         self.value_changed_by_user = not is_default
         self.apply()
+        return True
 
     @property
     def default(self) -> {str, None}:
@@ -179,13 +184,15 @@ class LanguageSettingUI(LocalizationSettingUI):
         self._setting.apply_language(self.value)
         self.changed_cb(self.value)
 
-    def load(self):
+    def load(self) -> bool:
         try:
-            super().load()
+            changed = super().load()
         except SettingNotFoundError:
             raise
-        self._setting.apply_language(self.value)
-        self.changed_cb(self.value)
+        if changed:
+            self._setting.apply_language(self.value)
+            self.changed_cb(self.value)
+        return changed
 
 
 class FormatsSettingUI(LocalizationSettingUI):
