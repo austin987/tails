@@ -41,11 +41,11 @@ class KeyboardSetting(LocalizationSetting):
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
-            raise SettingNotFoundError("No persistent keyboard settings file found (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No persistent keyboard settings file found (path: %s)" % self.settings_file)
 
         keyboard_layout = settings.get('TAILS_XKBLAYOUT')
         if keyboard_layout is None:
-            raise SettingNotFoundError("No keyboard setting found in settings file (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No keyboard setting found in settings file (path: %s)" % self.settings_file)
 
         keyboard_variant = settings.get('TAILS_XKBVARIANT')
         if keyboard_variant:

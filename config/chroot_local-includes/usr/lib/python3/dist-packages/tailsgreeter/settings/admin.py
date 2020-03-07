@@ -48,7 +48,7 @@ class AdminSetting(object):
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
-            raise SettingNotFoundError("No persistent admin settings file found (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No persistent admin settings file found (path: %s)" % self.settings_file)
 
         if settings.get('TAILS_USER_PASSWORD') is None:
-            raise SettingNotFoundError("No admin password setting found in settings file (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No admin password setting found in settings file (path: %s)" % self.settings_file)

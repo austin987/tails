@@ -21,11 +21,11 @@ class MacSpoofSetting(object):
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
-            raise SettingNotFoundError("No persistent macspoof settings file found (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No persistent macspoof settings file found (path: %s)" % self.settings_file)
 
         value_str = settings.get('TAILS_MACSPOOF_ENABLED')
         if value_str is None:
-            raise SettingNotFoundError("No macspoof setting found in settings file (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No macspoof setting found in settings file (path: %s)" % self.settings_file)
 
         value = value_str == "true"
         logging.debug("Loaded macspoof setting '%s'", value)

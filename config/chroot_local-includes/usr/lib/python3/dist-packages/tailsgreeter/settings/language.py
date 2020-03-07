@@ -57,11 +57,11 @@ class LanguageSetting(LocalizationSetting):
         try:
             settings = read_settings(self.settings_file)
         except FileNotFoundError:
-            raise SettingNotFoundError("No persistent language settings file found (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No persistent language settings file found (path: %s)" % self.settings_file)
 
         language = settings.get('TAILS_LOCALE_NAME')
         if language is None:
-            raise SettingNotFoundError("No language setting found in settings file (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No language setting found in settings file (path: %s)" % self.settings_file)
 
         is_default = settings.get('IS_DEFAULT') == 'true'
         logging.debug("Loaded language setting '%s' (is default: %s)", language, is_default)

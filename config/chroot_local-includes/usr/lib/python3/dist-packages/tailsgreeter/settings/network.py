@@ -29,7 +29,7 @@ class NetworkSetting(object):
 
         value = settings.get('TAILS_NETCONF')
         if value is None:
-            raise SettingNotFoundError("No network setting found in settings file (path: %s)", self.settings_file)
+            raise SettingNotFoundError("No network setting found in settings file (path: %s)" % self.settings_file)
 
         logging.debug("Loaded network setting '%s'", value)
         return value
