@@ -35,23 +35,27 @@ def match(image, candidate, sensitivity, show_match=False):
         cv2.waitKey(0)
     return [x, y, w, h]
 
-try:
+def main():
     try:
-        sensitivity = float(sys.argv[3])
+        try:
+            sensitivity = float(sys.argv[3])
+        except IndexError:
+            sensitivity = 0.9
+        try:
+            show_match = sys.argv[4] == 'true'
+        except IndexError:
+            show_match = False
+        print(*match(sys.argv[1], sys.argv[2],
+                     sensitivity, show_match))
+    except FindFailed:
+        sys.exit(1)
     except IndexError:
-        sensitivity = 0.9
-    try:
-        show_match = sys.argv[4] == 'true'
-    except IndexError:
-        show_match = False
-    print(*match(sys.argv[1], sys.argv[2],
-                 sensitivity, show_match))
-except FindFailed:
-    sys.exit(1)
-except IndexError:
-    print("error: first argument must be the screen and the second the " +
-          "image to find inside the screen", file=sys.stderr)
-    sys.exit(2)
-except:
-    traceback.print_exc()
-    sys.exit(127)
+        print("error: first argument must be the screen and the second the " +
+              "image to find inside the screen", file=sys.stderr)
+        sys.exit(2)
+    except:
+        traceback.print_exc()
+        sys.exit(127)
+
+if __name__ == "__main__":
+    main()
