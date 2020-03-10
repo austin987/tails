@@ -212,8 +212,10 @@ class Screen
     codes = []
     sequence.each do |key|
       keymap = case $language
-               when ''; US_KEYMAP
-               else   ; COMMON_KEYMAP
+               when ''
+                 US_KEYMAP
+               else
+                 COMMON_KEYMAP
                end
       # We use lower-case to make it easier to get the keycodes right.
       code = keymap[('A'..'Z').include?(key) ? key : key.downcase]
