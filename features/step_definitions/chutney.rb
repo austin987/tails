@@ -41,7 +41,8 @@ def ensure_chutney_is_running
     # will prevent chutney from starting the network unless the tor
     # processes are killed manually.
     begin
-      cmd_helper(["pkill", "--full", "tor -f #{env['CHUTNEY_DATA_DIR']}"])
+      cmd_helper(["pkill", "--full", "--exact",
+                  "tor -f #{env['CHUTNEY_DATA_DIR']}/nodes/.*/torrc --quiet"])
     rescue
     end
 
