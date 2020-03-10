@@ -1,6 +1,28 @@
 tails (4.4) UNRELEASED; urgency=medium
 
-  * Dummy entry for next release.
+  * Security fixes
+    - Upgrade Linux kernel to linux-image-5.4.0-4, currently at 5.4.19-1
+      (Closes: #17477).
+    - Upgrade Thunderbird to 68.5.0-1~deb10u1 (Closes: #17481).
+
+  * Bugfixes
+    - Fix missing firmware for RTL8822BE/RTL8822CE (See: #17323). Use the
+      tails-workarounds provided firmwares until the firmware-realtek
+      package is updated with the patch by Sjoerd Simons (Debian#935969).
+      Note: This might not be sufficient to support those cards.
+
+  * Build system
+    - Vagrant build box: disable mitigation features for CPU
+      vulnerabilities (Closes: #17386). Given the kind of things we do in
+      our Vagrant build box, it seems very unlikely that vulnerabilities
+      such as Spectre and Meltdown can be exploited in there.  Let's
+      reclaim some of the performance cost of the corresponding mitigation
+      features.
+    - Enable website caching by default, with a way option to disable it
+      (Closes: #17439).
+    - Key the website cache on debian/changelog too (Closes: #17511).
+    - Update APT snapshot of the Debian archive to 2020030101.
+    - Add support for the tails-workarounds submodule.
 
  -- anonym <anonym@riseup.net>  Tue, 11 Feb 2020 16:44:45 +0100
 
