@@ -29,9 +29,7 @@ def post_snapshot_restore_hook(snapshot_name)
   # to its normal state. Otherwise, all kinds of trouble may arise:
   # for example, pressing SUPER to open the Activities Overview would
   # fail (SUPER has no effect when the Applications menu is still
-  # opened). We sleep here, instead of in "I start […] via GNOME
-  # Activities Overview", because it's our responsibility to return to
-  # a normal desktop state that any following step can rely upon.
+  # opened).
   @screen.press("Escape")
 
   # The guest's Tor's circuits' states are likely to get out of sync
