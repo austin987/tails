@@ -16,7 +16,7 @@ def ensure_chutney_is_running
     network_definition = "#{GIT_DIR}/features/chutney/test-network"
     env = {
       'CHUTNEY_LISTEN_ADDRESS' => chutney_listen_address,
-      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data/",
+      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data",
       # The default value (60s) is too short for "chutney wait_for_bootstrap"
       # to succeed reliably.
       'CHUTNEY_START_TIME' => '600',
