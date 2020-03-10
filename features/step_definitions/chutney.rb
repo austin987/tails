@@ -38,7 +38,7 @@ def ensure_chutney_is_running
     # After an unclean shutdown of the test suite (e.g. Ctrl+C) the
     # tor processes are left running, listening on the same ports we
     # are about to use. If chutney's data dir also was removed, this
-    # will preventing chutney from starting the network unless the tor
+    # will prevent chutney from starting the network unless the tor
     # processes are killed manually.
     begin
       cmd_helper(["pkill", "--full", "tor -f #{env['CHUTNEY_DATA_DIR']}"])
