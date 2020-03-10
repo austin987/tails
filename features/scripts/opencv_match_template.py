@@ -13,8 +13,10 @@ from PIL import Image
 class FindFailed(RuntimeError):
     pass
 
-# Returns the pos of candidate inside image, or raises if no match
 def match(image, candidate, sensitivity, show_match=False):
+    """
+    Returns the pos of candidate inside image, or raises if no match
+    """
     assert(sensitivity < 1.0)
     image_rgb = cv2.imread(image, 1)
     image_gray = cv2.cvtColor(image_rgb, cv2.COLOR_BGR2GRAY)
