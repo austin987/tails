@@ -1069,6 +1069,7 @@ Prepare upgrade-description files
             mkdir -p "$(dirname "$test_udf")" && \
             git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
               | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
+            echo "Signing ${test_udf:?}" && \
             gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
             mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
             git add ${test_udf:?}* ; \
