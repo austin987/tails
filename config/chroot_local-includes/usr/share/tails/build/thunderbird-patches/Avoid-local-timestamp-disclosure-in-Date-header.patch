@@ -1,23 +1,23 @@
-# This patch is based on the patch "Bug 902573 - Avoid local timestamp disclosure in Date header".
-# Link to the original patch: https://bug902573.bmoattachments.org/attachment.cgi?id=8684089
-# The original author is Arthur Edelstein <arthuredelstein@gmail.com>.
-# It is licensed under Mozilla Public License Version 2.0:
-# https://www.mozilla.org/en-US/MPL/
-
-From 611d58eb2ee6a67a6c1c112eebbc04551d98065b Mon Sep 17 00:00:00 2001
 From: segfault <segfault@riseup.net>
 Date: Wed, 27 Nov 2019 16:47:24 +0100
 Subject: [PATCH] Bug 902573 - Avoid local timestamp disclosure in Date header
 
+This patch is based on the patch "Bug 902573 - Avoid local timestamp disclosure in Date header".
+Link to the original patch: https://bug902573.bmoattachments.org/attachment.cgi?id=8684089
+The original author is Arthur Edelstein <arthuredelstein@gmail.com>.
+It is licensed under Mozilla Public License Version 2.0:
+https://www.mozilla.org/en-US/MPL/
+
 ---
- comm/mailnews/mailnews.js                     |  7 ++++
- comm/mailnews/mime/jsmime/jsmime.js           | 42 +++++++++++++++----
+ comm/mailnews/mailnews.js           |  7 +++++++
+ comm/mailnews/mime/jsmime/jsmime.js | 42 +++++++++++++++++++++++++++++--------
+ 2 files changed, 40 insertions(+), 9 deletions(-)
 
 diff --git a/comm/mailnews/mailnews.js b/comm/mailnews/mailnews.js
-index 270cef339f8..3418ad12b65 100644
+index 7dda1ad..2673c8b 100644
 --- a/comm/mailnews/mailnews.js
 +++ b/comm/mailnews/mailnews.js
-@@ -1022,3 +1022,10 @@ pref("mail.imap.qos", 0);
+@@ -1029,3 +1029,10 @@ pref("mail.imap.qos", 0);
  
  // PgpMime Addon
  pref("mail.pgpmime.addon_url", "https://addons.mozilla.org/addon/enigmail/");
@@ -29,7 +29,7 @@ index 270cef339f8..3418ad12b65 100644
 +// the user across accounts more difficult.
 +pref("mail.mime.avoid_fingerprinting", false);
 diff --git a/comm/mailnews/mime/jsmime/jsmime.js b/comm/mailnews/mime/jsmime/jsmime.js
-index 75ee0c8d773..74183b885bf 100644
+index 75ee0c8..74183b8 100644
 --- a/comm/mailnews/mime/jsmime/jsmime.js
 +++ b/comm/mailnews/mime/jsmime/jsmime.js
 @@ -3450,9 +3450,34 @@
@@ -99,6 +99,3 @@ index 75ee0c8d773..74183b885bf 100644
          tzOffsetStr,
        ].join(" ");
        this.addText(dayTime, false);
--- 
-2.24.0
-
