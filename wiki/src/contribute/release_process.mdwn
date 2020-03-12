@@ -1071,6 +1071,7 @@ Prepare upgrade-description files
             mkdir -p "$(dirname "$test_udf")" && \
             git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
               | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
+            echo "Signing ${test_udf:?}" && \
             gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
             mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
             git add ${test_udf:?}* ; \
@@ -1183,6 +1184,11 @@ and on the live website (even for a release candidate):
 	      -m "Updating trace file after uploading the ISO and USB images for ${VERSION:?}." && \
 	   git push origin master
 	)
+
+At this stage, either IUKs were reproduced by Jenkins and left on the
+rsync server in a temporary location, or one should wait until the
+synchronization of local files (started in the first part of this
+section) to the same temporary location has completed.
 
 Move the IUKs in place with proper
 ownership and permissions and update the time in `project/trace` file
