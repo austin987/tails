@@ -72,7 +72,7 @@ Export the following environment variables:
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
   release).
 * `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
-  *bugfix* Tails release; if the next release is a bugfix release, use
+  scheduled *bugfix* Tails release; if the next release is a bugfix release, use
   that one; otherwise, use `${VERSION}.1`
 * `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
   to the next emergency release if we have to put one out
@@ -500,6 +500,7 @@ Build the almost-final images
    - Set `defaultcomp`, so we can more accurately optimize our
      SquashFS file ordering.
    - Do _not_ set `keeprunning` nor `rescue`.
+   - Set `cachewebsite=no` as a workaround for [[!tails_ticket 17513]]
 2. Carefully read the build logs to make sure nothing bad happened.
 3. Keep the resulting build artifacts until the end of this release process.
 4. Record where the manifest of needed packages is stored:
@@ -646,6 +647,7 @@ suite should be ready, so it is time to:
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
    Our build system will apply the correct compression settings automatically
    so don't bother setting it yourself.
+   Set `cachewebsite=no` as a workaround for [[!tails_ticket 17513]]
 
 1. Compare the new build manifest with the one from the previous,
    almost final build:
@@ -1069,6 +1071,7 @@ Prepare upgrade-description files
             mkdir -p "$(dirname "$test_udf")" && \
             git show origin/${WEBSITE_RELEASE_BRANCH:?}:${release_udf:?} \
               | sed -e "s/channel: ${DIST:?}/channel: test/" > ${test_udf:?} && \
+            echo "Signing ${test_udf:?}" && \
             gpg -u "${TAILS_SIGNATURE_KEY:?}" --armor --detach-sign ${test_udf:?} && \
             mv ${test_udf:?}.asc ${test_udf:?}.pgp && \
             git add ${test_udf:?}* ; \
@@ -1181,6 +1184,11 @@ and on the live website (even for a release candidate):
 	      -m "Updating trace file after uploading the ISO and USB images for ${VERSION:?}." && \
 	   git push origin master
 	)
+
+At this stage, either IUKs were reproduced by Jenkins and left on the
+rsync server in a temporary location, or one should wait until the
+synchronization of local files (started in the first part of this
+section) to the same temporary location has completed.
 
 Move the IUKs in place with proper
 ownership and permissions and update the time in `project/trace` file
