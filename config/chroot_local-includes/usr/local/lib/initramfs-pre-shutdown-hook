@@ -13,22 +13,14 @@ set -x
 # Debugging
 mount
 
-# Otherwise aufs pseudo-links can't be cleaned and we cannot drop caches.
+# Otherwise we can't drop caches.
 # This may also help for tracking remaining mounts.
 mount -o remount,rw /proc
 
 # Otherwise we can't create new mountpoints in /mnt
 mount -o remount,rw /
 
-# Otherwise aufs pseudo-links can't be removed while unmounting /oldroot,
-# and we can't clean up the content of /mnt/live/overlay.
-mount -o remount,rw /oldroot/lib/live/mount/overlay
-
 # Move /oldroot/* mountpoints out of the way
-mkdir -p /mnt/live/overlay
-mount --move \
-      /oldroot/lib/live/mount/overlay \
-      /mnt/live/overlay
 mkdir -p /mnt/live/squashfs
 mount --move \
       /oldroot/lib/live/mount/rootfs/filesystem.squashfs \
@@ -37,11 +29,17 @@ mkdir -p /mnt/live/medium
 mount --move \
       /oldroot/lib/live/mount/medium \
       /mnt/live/medium
+mkdir -p /mnt/live/dev
+mount --move \
+      /oldroot/dev \
+      /mnt/live/dev
+mkdir -p /mnt/live/run
+mount --move \
+      /oldroot/run \
+      /mnt/live/run
 
 # Finally, really unmount relevant filesystems
 umount /oldroot
-rm -rf /mnt/live/overlay/.w* /mnt/live/overlay/*
-umount /mnt/live/overlay
 
 # Debugging
 mount
