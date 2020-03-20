@@ -431,7 +431,7 @@ task :ensure_correct_permissions do
       on every parent directory of #{ENV['PWD']} up to #{ENV['HOME']}
       (inclusive):
 
-        chmod g+x DIR && setfacl -m user:libvirt-qemu:x DIR
+        chmod g+rx DIR && setfacl -m user:libvirt-qemu:rx DIR
 
     END_OF_MESSAGE
   end
