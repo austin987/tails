@@ -335,7 +335,7 @@ method operation_finished (HashRef $replies) {
             q{The permissions of the persistent volume will be corrected.}
         )));
         $self->working(1);
-        systemx(qw{sudo -n /usr/bin/tails-fix-persistent-volume-permissions});
+        systemx(qw{sudo -n /usr/local/bin/tails-fix-persistent-volume-permissions});
         $self->working(0);
         say STDERR "fixed permissions.";
 
