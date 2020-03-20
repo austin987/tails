@@ -23,7 +23,7 @@ use Types::Standard qw(ArrayRef Str);
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("tails-persistence-setup");
+textdomain("tails");
 
 use namespace::clean;
 

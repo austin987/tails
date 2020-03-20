@@ -6,7 +6,9 @@ set -u
 PERL_PROGS="/usr/local/bin/tails-security-check \
     /usr/local/lib/tails-htp-notify-user \
     /usr/local/lib/tails-virt-notify-user \
-    $(find config/chroot_local-includes/usr/src/iuk/bin \
+    $(find \
+         config/chroot_local-includes/usr/src/iuk/bin \
+         config/chroot_local-includes/usr/src/persistence-setup/bin \
          -type f \
          | perl -p -E 's{^config/chroot_local-includes}{}' \
     )"
@@ -14,6 +16,7 @@ PERL_LIBS=$(\
    find \
       config/chroot_local-includes/usr/src/iuk/lib \
       config/chroot_local-includes/usr/src/perl5lib/lib \
+      config/chroot_local-includes/usr/src/persistence-setup/lib \
       -type f -name *.pm \
       | perl -p -E 's{^config/chroot_local-includes}{}' \
 )
@@ -80,6 +83,9 @@ prog_potfile () {
             ;;
         /usr/lib/python3/dist-packages/tailsgreeter/*)
             domain="greeter-$(basename "$prog")"
+            ;;
+        /usr/src/persistence-setup/lib/*)
+            domain="persistence-setup-$(basename "$prog")"
             ;;
         *)
             domain=$(basename $prog)

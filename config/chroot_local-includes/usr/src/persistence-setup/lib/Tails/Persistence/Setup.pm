@@ -36,7 +36,7 @@ use Tails::Persistence::Utils qw{align_up_at_2MiB align_down_at_2MiB step_name_t
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("tails-persistence-setup");
+textdomain("tails");
 
 no Moo::sification;
 use Moo;

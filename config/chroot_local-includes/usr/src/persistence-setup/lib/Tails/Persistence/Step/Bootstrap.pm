@@ -19,7 +19,7 @@ use Types::Standard qw(HashRef);
 use Locale::gettext;
 use POSIX;
 setlocale(LC_MESSAGES, "");
-textdomain("tails-persistence-setup");
+textdomain("tails");
 
 use Moo;
 use MooX::late;
