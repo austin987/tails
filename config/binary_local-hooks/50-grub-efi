@@ -32,7 +32,7 @@ Read_conffiles config/amnesia
 platforms="x86_64-efi i386-efi"
 
 efi_name () {
-   platform="$1"
+   local platform="$1"
    case "$platform" in
       i386-efi)
 	 echo IA32
@@ -53,8 +53,8 @@ grub_cpmodules () {
 		return 1
 	fi
 
-	outdir="$1"
-	platform="$2"
+	local outdir="$1"
+	local platform="$2"
 
 	# Copy over GRUB modules, except for those already built in.
 	cp -a "chroot/usr/lib/grub/$platform"/*.lst "$outdir/"
