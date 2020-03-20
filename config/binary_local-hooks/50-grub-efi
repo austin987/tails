@@ -23,12 +23,27 @@
 set -e
 set -x
 
-# Include common functions
+# Including common functions
 . "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
 
+# Setting static variables
+DESCRIPTION="$(Echo 'including GRUB EFI in the ISO filesystem')"
+HELP=""
+USAGE="${PROGRAM}"
+
+# Reading configuration files
+Read_conffiles config/all config/bootstrap config/common config/binary
 # Import AMNESIA_APPEND
 Read_conffiles config/amnesia
+Set_defaults
 
+# Safeguards
+[ "${LB_ARCHITECTURE}" = "amd64" ] || exit 0
+
+# Seems like we'll have work to do
+Echo_message 'including GRUB EFI in the ISO filesystem'
+
+grub_dir="binary/EFI/debian/grub"
 platforms="x86_64-efi i386-efi"
 
 efi_name () {
@@ -77,26 +92,6 @@ grub_cpmodules () {
 		esac
 	done
 }
-
-# Including common functions
-. "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
-
-# Setting static variables
-DESCRIPTION="$(Echo 'including GRUB EFI in the ISO filesystem')"
-HELP=""
-USAGE="${PROGRAM}"
-
-# Reading configuration files
-Read_conffiles config/all config/bootstrap config/common config/binary
-Set_defaults
-
-# Safeguards
-[ "${LB_ARCHITECTURE}" = "amd64" ] || exit 0
-
-# Seems like we'll have work to do
-Echo_message 'including GRUB EFI in the ISO filesystem'
-
-grub_dir="binary/EFI/debian/grub"
 
 for platform in $platforms ; do
    echo "I: installing GRUB EFI for $platform"
