@@ -183,10 +183,6 @@ Then /^I find very few patterns in the guest's memory$/ do
          "pattern, but less than #{"%.3f" % (max_coverage*100)}% was expected")
 end
 
-When /^I stop the boot at the bootloader menu$/ do
-  step "Tails is at the boot menu's cmdline"
-end
-
 When /^I wait for Tails to finish wiping the memory$/ do
   @screen.wait("MemoryWipeCompleted.png", 90)
 end
