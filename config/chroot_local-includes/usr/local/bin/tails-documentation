@@ -1,50 +1,67 @@
 #!/usr/bin/env python3
 
 import os
-import os.path
 import sys
 
 from tailslib.systemd import tor_has_bootstrapped
 
-# Main
+WEBSITE_URL = 'https://tails.boum.org'
+WEBSITE_LOCAL_PATH = '/usr/share/doc/tails/website'
+LANG_CODE = os.getenv('LANG', 'en')[0:2]
 
-try:
-    page = sys.argv[1]
-except IndexError:
-    page = 'doc'
 
-try:
-    anchor = sys.argv[2]
-except IndexError:
-    anchor = None
+def find_local_page(page: str) -> str:
+    for lang_code in (LANG_CODE, 'en', None):
+        local_page = get_local_path(page, lang_code)
+        if os.path.isfile(local_page):
+            return 'file://' + local_page
+    return ""
 
-tails_homepage = 'https://tails.boum.org'
-wiki_path = '/usr/share/doc/tails/website'
-lang_code = os.getenv('LANG', 'en')[0:2]
 
-# If possible, let's hand-off to our website, which should be the most
-# up-to-date option.
-if tor_has_bootstrapped():
-    if os.path.isfile(os.path.join(
-            wiki_path, page + '.' + lang_code + ".html")):
-        uri = tails_homepage + '/' + page + '/index.' + lang_code + '.html'
+def get_local_path(page, lang_code: str) -> str:
+    if lang_code:
+        return os.path.join(WEBSITE_LOCAL_PATH, page + '.' + lang_code + ".html")
     else:
-        uri = tails_homepage + '/' + page
-else:
-    trials = [
-        os.path.join(wiki_path, page + code + ".html")
-        for code in ['.' + lang_code, '.en', '']
-    ]
+        return os.path.join(WEBSITE_LOCAL_PATH, page + ".html")
+
+
+def parse_args() -> (str, str):
     try:
-        uri = 'file://' + next(
-            trial for trial in trials if os.path.isfile(trial)
-        )
-    except StopIteration:
-        sys.exit('error: could not find the requested documentation page')
+        page = sys.argv[1]
+    except IndexError:
+        page = 'doc'
 
-if anchor is not None:
-    uri = uri + '#' + anchor
+    try:
+        anchor = sys.argv[2]
+    except IndexError:
+        anchor = None
 
-os.environ['TOR_BROWSER_SKIP_OFFLINE_WARNING'] = 'yes'
-os.execv('/usr/local/bin/tor-browser',
-         ['/usr/local/bin/tor-browser', '--new-tab', uri])
+    return page, anchor
+
+
+def main():
+    page, anchor = parse_args()
+
+    # If possible, let's hand-off to our website, which should be the most
+    # up-to-date option.
+    if tor_has_bootstrapped():
+        # Open page in the user-configured language, if available
+        if os.path.isfile(get_local_path(page, LANG_CODE)):
+            uri = WEBSITE_URL + '/' + page + '/index.' + LANG_CODE + '.html'
+        else:
+            uri = WEBSITE_URL + '/' + page
+    else:
+        uri = find_local_page(page)
+        if not uri:
+            sys.exit('error: could not find the requested documentation page')
+
+    if anchor:
+        uri = uri + '#' + anchor
+
+    os.environ['TOR_BROWSER_SKIP_OFFLINE_WARNING'] = 'yes'
+    os.execv('/usr/local/bin/tor-browser',
+             ['/usr/local/bin/tor-browser', '--new-tab', uri])
+
+
+if __name__ == "__main__":
+    main()
