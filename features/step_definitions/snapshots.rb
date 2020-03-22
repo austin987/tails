@@ -124,7 +124,7 @@ def reach_checkpoint(name)
   step "a computer"
   if VM.snapshot_exists?(name)
     $vm.restore_snapshot(name)
-    post_snapshot_restore_hook
+    post_snapshot_restore_hook(name)
   else
     checkpoint = checkpoints[name]
     checkpoint_description = checkpoint[:description]
@@ -136,7 +136,7 @@ def reach_checkpoint(name)
       else
         reach_checkpoint(parent_checkpoint)
       end
-      post_snapshot_restore_hook
+      post_snapshot_restore_hook(parent_checkpoint)
     end
     debug_log(scenario_indent + "Checkpoint: #{checkpoint_description}",
               color: :white, timestamp: false)
