@@ -1688,8 +1688,9 @@ this, and skip what does not make sense for a RC.
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
         git fetch && \
-        git submodule update && \
-        bare_repo=$(mktemp -d)
+        git merge origin/master && \
+        git submodule update --init && \
+        bare_repo=$(mktemp -d) && \
         git clone --bare --reference "${MASTER_CHECKOUT:?}" \
            gitolite@d53ykjpeekuikgoq.onion:tails \
            "${bare_repo:?}" && \
