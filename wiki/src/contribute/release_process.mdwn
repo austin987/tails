@@ -1632,8 +1632,8 @@ Amnesia news
 Prepare for the next development cycle
 ======================================
 
-XXX: adapt / fork for release candidates. In the meantime, read all
-this, and skip what does not make sense for a RC.
+If you just released a final release
+------------------------------------
 
 1. If you just released a new stable release, remove the previous
    stable release from:
@@ -1705,10 +1705,6 @@ this, and skip what does not make sense for a RC.
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
-1. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
-   branch, the time-based APT repository snapshots that were used
-   during the freeze. This should generally be a no-op but if there
-   was some hiccup earlier it could be needed.
 1. Follow the
    [[post-release|APT_repository/custom#workflow-post-release]] custom
    APT repository documentation. This includes some git operations,
@@ -1782,6 +1778,37 @@ this, and skip what does not make sense for a RC.
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager]].
    Otherwise, kindly remind the next release manager about this :)
+
+If you just released an RC
+--------------------------
+
+1. On the devel branch,
+   [[thaw|APT_repository/time-based_snapshots#freeze-exceptions-post-release]]
+   all packages (if any) that were granted freeze exceptions.
+1. On the devel branch,
+   [[thaw|APT_repository/time-based_snapshots#thaw]] the time-based
+   APT repository snapshots. This should generally be a no-op but if
+   there was some hiccup earlier it could be needed.
+1. Follow the
+   [[post-release|APT_repository/custom#workflow-post-release]] custom
+   APT repository documentation. This includes some git operations,
+   like creating an appropriate _"dummy changelog entry"_ in the
+   `debian/changelog` file.
+1. Merge testing into devel, and push them:
+
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git checkout devel && \
+        git merge testing && \
+        git push origin testing devel
+
+1. Make sure you pushed all changes in every of our Git repo (including our
+   Debian packages ones).
+1. Follow the "Verify that the snapshots used in the release branch
+   are ok" step for final releases, above.
+1. Make sure Jenkins manages to build all updated major branches:
+   <https://jenkins.tails.boum.org/>.
+1. In [[contribute/calendar]], remove the entries about the version that you've
+   just released.
 
 Related pages
 =============
