@@ -885,7 +885,7 @@ Push the released ISO and USB images and their artifacts (`.buildlog`,
 `.build-manifest`, and `.packages` files) to our Tails ISO history git-annex
 repo, so that:
 
- - The Jenkins `build_IUKs` job can fetch them.
+ - The Jenkins `parallel_build_IUKs` job can fetch them.
  - Our isotesters can fetch them from there for their testing.
 
 How to do so is described in the `ISO_history.mdwn` document in the RM team's
@@ -899,13 +899,15 @@ on <https://iso-history.tails.boum.org/>.
 Build the Incremental Upgrade Kits on Jenkins
 ------------------------------------------
 
-1. On <https://jenkins.tails.boum.org/job/build_IUKs/build?delay=0sec>,
+1. On <https://jenkins.tails.boum.org/job/parallel_build_IUKs/configure>, adjust
+   the `SOURCE_VERSION` axis to list all versions in `$IUK_SOURCE_VERSIONS`,
+   and save the updated configuration.
+
+1. On <https://jenkins.tails.boum.org/job/parallel_build_IUKs/build?delay=0sec>,
    fill the form with these values:
 
     - `TAILS_GIT_COMMIT`: the value of `$TAG` in your release environment
     - `SOURCE_DATE_EPOCH`: the value of `$SOURCE_DATE_EPOCH` in your
-      release environment
-    - `SOURCE_VERSIONS`: the value of `$IUK_SOURCE_VERSIONS` in your
       release environment
     - `NEW_VERSION`: the value of `$VERSION` in your release environment
     - `EXTRA_ARGS`: leave it blank
@@ -915,12 +917,15 @@ Build the Incremental Upgrade Kits on Jenkins
 3. After a few seconds, a new build appears on top of the _Build
    History_ sidebar. Click on the progress bar of this new build.
 
-4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable
-   to the ID of this job (an integer).
+3. **Verify:** A downstream `parallel_collect_IUKs` job should appear,
+   to be triggered once the `parallel_build_IUKs` has completed successfully.
 
-5. Wait until this *build_IUKs* job completes successfully.
+4. Set the `$CANDIDATE_JENKINS_IUKS_BUILD_ID` environment variable
+   to the ID of that downstream job (an integer).
+
+5. Wait until both `parallel_build_IUKs` and `parallel_collect_IUKs` jobs complete successfully.
    It should take about 10-15 minutes for each member of
-   the `$IUK_SOURCE_VERSIONS` list.
+   the `$IUK_SOURCE_VERSIONS` list, distributed across `isobuilderN` workers.
 
 <a id="reproducibility-sanity-check-iuk"></a>
 
@@ -937,6 +942,8 @@ If this verification succeeds, move on to the next section.
 Else, if this verification fails, then:
 
 1. Visit the web page whose URL is printed by the following command:
+
+   **XXX: Made obsolete if we keep two jobs (build then collect)**
 
         echo "https://jenkins.tails.boum.org/job/build_IUKs/${CANDIDATE_JENKINS_IUKS_BUILD_ID:?}/parameters/"
 
