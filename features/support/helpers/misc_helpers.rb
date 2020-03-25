@@ -353,7 +353,9 @@ def dbus_send_get_shellcommand(service, object_path, method, *args, **opts)
   opts ||= {}
   ruby_type_to_dbus_type = {
     String => 'string',
+    # XXX:Stretch: drop the Fixnum line once we stop supporting Stretch
     Fixnum => 'int32',
+    Integer => 'int32',
   }
   typed_args = args.map do |arg|
     type = ruby_type_to_dbus_type[arg.class]
