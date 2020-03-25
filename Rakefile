@@ -59,8 +59,6 @@ ENV['ARTIFACTS'] ||= '.'
 
 ENV['APT_SNAPSHOTS_SERIALS'] ||= ''
 
-ENV['TAILS_WEBSITE_CACHE'] = '1'
-
 class CommandError < StandardError
   attr_reader :status, :stderr
 
@@ -205,6 +203,8 @@ def system_cpus
     nil
   end
 end
+
+ENV['TAILS_WEBSITE_CACHE'] = is_release? ? '0' : '1'
 
 task :parse_build_options do
   options = []
