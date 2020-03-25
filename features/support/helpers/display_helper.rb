@@ -51,6 +51,20 @@ class Display
     p.close
     assert($?.success?)
     assert(File.exists?(target))
+  ensure
+    # If this method is run inside try_for() we might abort anywhere
+    # in the above code, possibly leaving defunct process around, so
+    # let's ensure such messes are cleaned up.
+    begin
+      begin
+        Process.kill("KILL", p.pid)
+      rescue IOError
+        # Process has already exited.
+      end
+      p.close
+    rescue NameError
+      # We aborted before p was assigned, so no clean up needed.
+    end
   end
 
 end
