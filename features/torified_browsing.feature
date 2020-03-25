@@ -55,8 +55,8 @@ Feature: Browsing the web using the Tor Browser
     And I copy "/usr/share/synaptic/html/index.html" to "/home/amnesia/.gnupg/synaptic.html" as user "amnesia"
     And I copy "/usr/share/synaptic/html/index.html" to "/tmp/synaptic.html" as user "amnesia"
     Then the file "/home/amnesia/.gnupg/synaptic.html" exists
-    And the file "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" exists
-    And the file "/live/overlay/home/amnesia/.gnupg/synaptic.html" exists
+    And the file "/lib/live/mount/overlay/rw/home/amnesia/.gnupg/synaptic.html" exists
+    And the file "/live/overlay/rw/home/amnesia/.gnupg/synaptic.html" exists
     And the file "/tmp/synaptic.html" exists
     Given I start monitoring the AppArmor log of "torbrowser_firefox"
     When I start the Tor Browser
@@ -69,15 +69,15 @@ Feature: Browsing the web using the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     And AppArmor has denied "torbrowser_firefox" from opening "/home/amnesia/.gnupg/synaptic.html"
     Given I restart monitoring the AppArmor log of "torbrowser_firefox"
-    When I open the address "file:///lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
+    When I open the address "file:///lib/live/mount/overlay/rw/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
-    And AppArmor has denied "torbrowser_firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
+    And AppArmor has denied "torbrowser_firefox" from opening "/lib/live/mount/overlay/rw/home/amnesia/.gnupg/synaptic.html"
     Given I restart monitoring the AppArmor log of "torbrowser_firefox"
-    When I open the address "file:///live/overlay/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
+    When I open the address "file:///live/overlay/rw/home/amnesia/.gnupg/synaptic.html" in the Tor Browser
     Then I do not see "TorBrowserSynapticManual.png" after at most 5 seconds
     # Due to our AppArmor aliases, /live/overlay will be treated
     # as /lib/live/mount/overlay.
-    And AppArmor has denied "torbrowser_firefox" from opening "/lib/live/mount/overlay/home/amnesia/.gnupg/synaptic.html"
+    And AppArmor has denied "torbrowser_firefox" from opening "/lib/live/mount/overlay/rw/home/amnesia/.gnupg/synaptic.html"
     # We do not get any AppArmor log for when access to files in /tmp is denied
     # since we explictly override (commit 51c0060) the rules (from the user-tmp
     # abstration) that would otherwise allow it, and we do so with "deny", which

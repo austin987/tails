@@ -10,7 +10,7 @@ is erased upon process termination.
 Tails now relies on the Linux kernel's freed memory poisoning feature.
 
 But memory poisoning only works when memory is actually freed,
-and a regular shutdown would not free the memory used by the aufs
+and a regular shutdown would not free the memory used by the overlayfs
 read-write branch. So we use the `systemd-shutdown` ability to return
 to the initramfs, to ensure the root filesystem is unmounted.
 
@@ -36,8 +36,24 @@ desc="mounted"]] on `/run/initramfs`: `/run` is mounted with the
 worked for clean shutdown, they failed for emergency shutdown, i.e.
 when the boot medium is physically removed.
 
-For details about the underlying systemd mechanisms, see `bootup(7)`
-and `systemd-shutdown(8)`.
+For details about the underlying systemd mechanisms, see:
+
+ - `bootup(7)`
+ - `systemd-shutdown(8)`
+ - <https://www.freedesktop.org/wiki/Software/systemd/InitrdInterface/>
+
+In our experience, jumping back to the initramfs to unmount the remaining
+filesystems, as described above, was necessary but not sufficient to free the
+memory used by the overlayfs read-write branch. That's why additionally, we
+manually delete the content of that branch via [[!tails_gitweb
+config/chroot_local-includes/lib/systemd/system/tails-remove-overlayfs-dirs.service
+desc="a systemd service"]] late in the shutdown process, before we jump back to
+the initramfs. It's unclear to us why this works when the boot medium
+is physically removed: in that case, `systemctl --force poweroff`
+is _not_ supposed to stop `tails-remove-overlayfs-dirs.service`, and thus
+this additional clean up step should be skipped; it could be that in this
+emergency shutdown situation, `systemd-shutdown` somehow manages to clean
+things up by itself and there's no need for `tails-remove-overlayfs-dirs.service`.
 
 #### Triggers
 
@@ -112,7 +128,7 @@ available for Tails.
 The initial implementation of the Tails memory erasure feature
 suffered from flaws that were demonstrated by [[external
 audit|security/audits/Blackhat_De-Anonymizing_Live_CDs]]. In short, it
-only erased free memory and let data in the aufs read-write branch in
+only erased free memory and let data in the union filesystem read-write branch in
 recoverable state.
 
 Then, in order to erase the biggest possible part of the system memory,

@@ -6,9 +6,9 @@ end
 
 When /^I disable MAC spoofing in Tails Greeter$/ do
   open_greeter_additional_settings()
-  @screen.wait_and_click("TailsGreeterMACSpoofing.png", 30)
-  @screen.wait_and_click("TailsGreeterDisableMACSpoofing.png", 10)
-  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
+  @screen.wait("TailsGreeterMACSpoofing.png", 30).click
+  @screen.wait("TailsGreeterDisableMACSpoofing.png", 10).click
+  @screen.wait("TailsGreeterAdditionalSettingsAdd.png", 10).click
 end
 
 Then /^the (\d+)(?:st|nd|rd|th) network device has (its real|a spoofed) MAC address configured$/ do |dev_nr, mode|

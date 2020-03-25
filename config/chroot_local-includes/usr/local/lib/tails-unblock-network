@@ -14,8 +14,10 @@ systemctl start tails-unblock-network.service
 
 # Without this, network is sometimes not unblocked, probably due to some
 # race condition between tails-unblock-network.service (that deletes the
-# blacklist file) and udevadm trigger, possibly caused by yet another aufs
-# weirdness (#9012)...
+# blacklist file) and udevadm trigger.
+# This might have been caused by an aufs weirdness (#9012),
+# but this code is rather simple and it does not hurt to ensure
+# our assumptions are verified.
 if [ "${TAILS_NETCONF}" != "disabled" ]; then
    echo "Waiting for ${NET_MODULES_BLACKLIST} to be gone..." >&2
    while [ -e "${NET_MODULES_BLACKLIST}" ]; do
@@ -33,7 +35,8 @@ ls -l /sys/class/net
 # changes to /etc/modprobe.d, for example if it monitors that
 # directory via its inode number at the time udev started: the inode
 # number of that directory might have changed since (this is
-# a documented possibility with aufs' noxino mount option).
+# a documented possibility without overlayfs xino= mount option;
+# for details, see #17258).
 # So let's instruct udev to update its knowledge of the world.
 echo "Asking systemd-udevd to reload databases..." >&2
 udevadm control --reload

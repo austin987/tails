@@ -112,10 +112,16 @@ by the local configuration file:
   investigating the state of Cucumber's world and the VM guest to see
   exactly why a test failed. Defaults to `false`.
 
-* `SIKULI_RETRY_FINDFAILED`: Boolean value. If set to `true`, print a
-  warning whenever Sikuli fails to find an image and allow *one* retry
-  after pressing ENTER. This is useful for updating outdated images,
-  or when extracting new images. Defaults to `false`.
+* `IMAGE_BUMPING_MODE`: Boolean value. If set to `true`, the image
+  matching done through the Screen class will be modified as follows:
+  failures to find a match are intercepted so that you get a second
+  chance to update the image, find it again, and continue running
+  without having to abort. This is extremely useful when lots of
+  images require updating at the same time (e.g. if the font we use
+  changes) since all of them can be updated in a single, interactive
+  run. There's also an automatic mode that tries to update image for
+  you (and display the match in a pop-up, so you can confirm) but
+  YMMV. Defaults to `false`.
 
 * `TMPDIR`: String value. Directory where various temporary files
   are written during a test, e.g. VM snapshots and memory dumps,

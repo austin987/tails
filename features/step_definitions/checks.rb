@@ -95,7 +95,7 @@ Then /^the VirtualBox guest modules are available$/ do
 end
 
 Then /^the support documentation page opens in Tor Browser$/ do
-   if @language == 'German'
+   if $language == 'German'
      expected_title = 'Tails - Hilfe & Support'
      expected_heading = 'Die Dokumentation durchsuchen'
    else
@@ -103,7 +103,7 @@ Then /^the support documentation page opens in Tor Browser$/ do
      expected_heading = 'Search the documentation'
    end
    step "\"#{expected_title}\" has loaded in the Tor Browser"
-   if @language == 'German'
+   if $language == 'German'
      browser_name = 'Tor-Browser'
    else
      browser_name = 'Tor Browser'
@@ -193,9 +193,9 @@ end
 
 When /^I disable all networking in the Tails Greeter$/ do
   open_greeter_additional_settings()
-  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
-  @screen.wait_and_click('TailsGreeterDisableAllNetworking.png', 10)
-  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
+  @screen.wait('TailsGreeterNetworkConnection.png', 30).click
+  @screen.wait('TailsGreeterDisableAllNetworking.png', 10).click
+  @screen.wait("TailsGreeterAdditionalSettingsAdd.png", 10).click
 end
 
 Then /^the Tor Status icon tells me that Tor is( not)? usable$/ do |not_usable|

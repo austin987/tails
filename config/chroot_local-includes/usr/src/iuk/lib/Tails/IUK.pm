@@ -248,15 +248,21 @@ method _build_mksquashfs_options () { [
     qw{-no-progress -noappend},
     qw{-comp xz -Xbcj x86 -b 1024K -Xdict-size 1024K},
 ]}
-method _build_union_type () { "aufs"; }
+method _build_union_type () { "overlayfs"; }
 
 method _build_delete_files () {
     my $old_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->old_iso->stringify);
     my $new_iso_obj = Device::Cdio::ISO9660::IFS->new(-source=>$self->new_iso->stringify);
     my @delete_files;
-    for (qw{EFI EFI/BOOT EFI/BOOT/grub},
+    for ('EFI',
+         'EFI/BOOT',
+         'EFI/BOOT/grub',
          'EFI/BOOT/grub/i386-efi',
          'EFI/BOOT/grub/x86_64-efi',
+         'EFI/debian',
+         'EFI/debian/grub',
+         'EFI/debian/grub/i386-efi',
+         'EFI/debian/grub/x86_64-efi',
          qw{isolinux live syslinux tails},
          qw{utils utils/mbr utils/linux}) {
         push @delete_files,

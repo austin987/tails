@@ -65,29 +65,6 @@ AfterConfiguration do |config|
       raise "Cannot create temporary directory: #{e.to_s}"
     end
   end
-
-  # Start a thread that monitors a pseudo fifo file and debug_log():s
-  # anything written to it "immediately" (well, as fast as inotify
-  # detects it). We're forced to a convoluted solution like this
-  # because CRuby's thread support is horribly as soon as IO is mixed
-  # in (other threads get blocked).
-  FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
-  FileUtils.touch(DEBUG_LOG_PSEUDO_FIFO)
-  at_exit do
-    FileUtils.rm(DEBUG_LOG_PSEUDO_FIFO) if File.exist?(DEBUG_LOG_PSEUDO_FIFO)
-  end
-  Thread.new do
-    File.open(DEBUG_LOG_PSEUDO_FIFO) do |fd|
-      watcher = INotify::Notifier.new
-      watcher.watch(DEBUG_LOG_PSEUDO_FIFO, :modify) do
-        line = fd.read.chomp
-        debug_log(line) if line and line.length > 0
-      end
-      watcher.run
-    end
-  end
-  # Fix Sikuli's debug_log():ing.
-  bind_java_to_pseudo_fifo_logger
 end
 
 # Common
@@ -223,7 +200,7 @@ Before('@product') do |scenario|
   if $config["CAPTURE"]
     video_name = sanitize_filename("#{scenario.name}.mkv")
     @video_path = "#{ARTIFACTS_DIR}/#{video_name}"
-    capture = IO.popen(['avconv',
+    capture = IO.popen([ffmpeg,
                         '-f', 'x11grab',
                         '-s', '1024x768',
                         '-r', '15',
@@ -236,9 +213,13 @@ Before('@product') do |scenario|
                        ])
     @video_capture_pid = capture.pid
   end
-  @screen = Sikuli::Screen.new
+  if $config["IMAGE_BUMPING_MODE"]
+    @screen = ImageBumpingScreen.new
+  else
+    @screen = Screen.new
+  end
   # English will be assumed if this is not overridden
-  @language = ""
+  $language = ""
   @os_loader = "MBR"
   @sudo_password = "asdf"
   @persistence_password = "asdf"
@@ -269,8 +250,9 @@ After('@product') do |scenario|
     hrs  = "%02d" % (time_of_fail / (60*60))
     elapsed = "#{hrs}:#{mins}:#{secs}"
     info_log("Scenario failed at time #{elapsed}")
-    screen_capture = @screen.capture
-    save_failure_artifact("Screenshot", screen_capture.getFilename)
+    screenshot_path = sanitize_filename("#{scenario.name}.png")
+    $vm.display.screenshot(screenshot_path)
+    save_failure_artifact("Screenshot", screenshot_path)
     exception_name = scenario.exception.class.name
     case exception_name
     when 'FirewallAssertionFailedError'
