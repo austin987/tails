@@ -74,9 +74,11 @@ This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working
 
 <!--
 Last updated: 2018-09-18
+Success report received on 2020-01-04
 -->
 
-Starting Tails from a Kingston DataTraveler 2000 or DataTraveler 100G3 doesn't work.
+Starting Tails from a Kingston DataTraveler 2000 or DataTraveler 100G3 may
+not work.
 
 <a id="mac"></a>
 
@@ -450,6 +452,16 @@ starting Tails|doc/advanced_topics/boot_options]]:
 
     modprobe.blacklist=ideapad_laptop
 
+## RTL8821CE
+
+<!--
+Last updated: 2020-02-21
+-->
+
+The Realtek RTL8821CE Wi-Fi adapter is not supported in Linux yet.
+
+This problem is tracked by [[!debbug 917941]].
+
 Security issues
 ===============
 
@@ -583,10 +595,20 @@ If you encounter this problem:
 1. If you are asked to enter a passphrase, enter the same passphrase that you
    used to unlock your persistent storage.
 
+1. Select the persistent features that you had activated previously.
+
 1. Click <span class="button">Save</span>, then restart Tails.
 
 Your <span class="filename">Persistent</span> folder and persistent feature
 configurations should be restored.
+
+If the above instructions do not fix the problem, you might need to fix the
+ownership of TailsData_unlocked.
+
+To fix the ownership of TailsData_unlocked, set an administration password and
+execute the following command in a terminal:
+
+`sudo chown root:root /live/persistence/TailsData_unlocked`
 
 <a id="restart-shell"></a>
 
@@ -677,10 +699,6 @@ starting Tails|doc/advanced_topics/boot_options]]:
 
     intel_idle.max_cstate=1
 
-## Electrum is outdated and cannot connect to servers
-
-[[!inline pages="doc/anonymous_internet/electrum/phishing.inline" raw="yes" sort="age"]]
-
 <a id="usb-gigabyte"></a>
 
 ## USB devices are not working on some [GIGABYTE](https://www.gigabyte.com/) motherboards
@@ -708,3 +726,25 @@ To workaround this issue, you can try to:
 - Disable IOMMU in the BIOS then enable it again.
 
 Some of these workarounds may disable some of the USB ports.
+
+## Graphics corruption in in Tor Browser and Thunderbird
+
+<!--
+Last updated: 2020-02-22
+-->
+
+On some computers, _Tor Browser_ and _Thunderbird_ are displayed incorrectly:
+
+ - The application window is initially empty and white.
+ - The icons and menus only appear when hovered by the mouse.
+ - The contents of the window is only displayed in stripes when scrolling.
+
+To workaround this issue, [[add the following boot option when
+starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+
+    intel_iommu=off
+
+This problem affects at least the following computers:
+
+ - MacBookPro11,5
+ - other MacBooks with a Radeon R9 graphics adapter

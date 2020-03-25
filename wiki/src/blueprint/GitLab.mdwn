@@ -191,10 +191,9 @@ For example:
 
 ## Core team (self-)management
 
-XXX: how to replace e.g.
-<https://redmine.tails.boum.org/code/projects/tails/issues?query_id=307>?
-
-Use a dedicated set of labels?
+In the first iteration, we'll replace e.g.
+<https://redmine.tails.boum.org/code/projects/tails/issues?query_id=307>
+with a dedicated set of labels.
 
 ## Custom queries
 
@@ -402,7 +401,7 @@ Tails community.
   It's OK if the "Blocks" semantics from Redmine (if X blocks Y, one
   cannot close Y until X is resolved) is not enforced by GitLab.
 
-  XXX: some of these relationships should be dropped on GitLab.
+  Drop the relationships that are only used to track core work:
   see the "Core team (self-)management" section.
 
   Examples: [[!tails_ticket 15878]], [[!tails_ticket 12213]]
@@ -443,6 +442,10 @@ Tails community.
 * Preserve attachments
 
   Example: [[!tails_ticket 7763]]
+
+* Preserve embedding of attached images
+
+  Example: [[!tails_ticket 17068]]
 
 * Convert Textile issue description and comments to Markdown
   (pandoc can do most of the work see <https://pandoc.org/try/?from=textile&to=markdown>):
@@ -574,9 +577,9 @@ of forks, and follow the white GitHub rabbit(-hole):
 * <https://github.com/redmine-gitlab-migrator/redmine-gitlab-migrator>
 * <https://github.com/ultreia-io/migrate-redmine-to-gitlab>
 
-# Interfaces that will need adjustments
+<a id="interfaces"></a>
 
-XXX: check what part of this is in the scope of this project
+# Interfaces that will need adjustments
 
 ## Git repository → various mirrors
 
@@ -671,19 +674,18 @@ Current implementation:
  - <https://git.tails.boum.org/puppet-tails/tree/files/redmine/reminder/email_body>
  - <https://git.tails.boum.org/puppet-tails/tree/manifests/redmine/reminder.pp>
 
+With GitLab one can define policies (YAML) and have them applied automatically
+to issues and merge requests:
+
+  - <https://gitlab.com/gitlab-org/quality/triage-ops>
+  - <https://gitlab.com/gitlab-org/gitlab-triage>
+
 ## Translation platform → Git
 
 A hook ensures that Weblate only pushes changes to our main Git
 repository that meet certain conditions:
 
 <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/hooks/tails-weblate-update.hook>
-
-# Issues and merge requests triaging
-
-* One can define policies (YAML) and have them applied automatically.
-  - <https://gitlab.com/gitlab-org/quality/triage-ops>
-  - <https://gitlab.com/gitlab-org/gitlab-triage>
-
 
 # GitLab hosting options
 
@@ -697,11 +699,7 @@ See <https://salsa.debian.org/tails-team/gitlab-migration/wikis/hosting/comparis
   - Their instance is <https://dip.torproject.org/>.
   - Converted issues: <https://dip.torproject.org/ahf-admin/legacy-20/issues/>
   - Migration problems: <https://pad.riseup.net/p/gitlab-migration-problems>
-  - Timeline:
-    1. Early December: full migration being tested, feedback provided
-    2. December 17: meeting ([Agenda and notes](https://pad.riseup.net/p/pKCLewB9RpyjJfRP6X26))
-    3. December 2019: re-run updated migration script
-    4. January 2020: migrate to a new GitLab instance
+  - Timeline: none as of 2020-02-27
   - Older meetings:
     - [agenda and notes](https://pad.riseup.net/p/e-q1GP43W4gsY_tYUNxf)
     - 2019-10-15 meeting
