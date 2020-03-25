@@ -32,7 +32,7 @@ end
 # one second breaks until it returns true, or until `timeout` seconds have
 # passed when we throw a Timeout::Error exception. If `timeout` is `nil`,
 # then we just run the code block with no timeout.
-def try_for(timeout, options = {})
+def try_for(timeout, **options)
   if block_given? && timeout.nil?
     return yield
   end
@@ -291,7 +291,7 @@ def random_alnum_string(min_len, max_len = 0)
 end
 
 # Sanitize the filename from unix-hostile filename characters
-def sanitize_filename(filename, options = {})
+def sanitize_filename(filename, **options)
   options[:replacement] ||= '_'
   bad_unix_filename_chars = Regexp.new("[^A-Za-z0-9_\\-.,+:]")
   filename.gsub(bad_unix_filename_chars, options[:replacement])

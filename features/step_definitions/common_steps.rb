@@ -62,8 +62,7 @@ end
 
 Given /^I (temporarily )?create an? (\d+) ([[:alpha:]]+) (?:([[:alpha:]]+) )?disk named "([^"]+)"$/ do |temporary, size, unit, type, name|
   type ||= "qcow2"
-  $vm.storage.create_new_disk(name, {:size => size, :unit => unit,
-                                     :type => type})
+  $vm.storage.create_new_disk(name, size: size, unit: unit, type: type)
   add_after_scenario_hook { $vm.storage.delete_volume(name) } if temporary
 end
 
@@ -508,7 +507,7 @@ Given /^I enter the sudo password in the pkexec prompt$/ do
   step "I enter the \"#{@sudo_password}\" password in the pkexec prompt"
 end
 
-def deal_with_polkit_prompt(password, opts = {})
+def deal_with_polkit_prompt(password, **opts)
   opts[:expect_success] = true if opts[:expect_success].nil?
   image = 'PolicyKitAuthPrompt.png'
   @screen.wait(image, 60)
@@ -908,7 +907,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_te
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
   begin
-    try_for(10, { :delay => 1 }) {
+    try_for(10, delay: 1) {
       audit_log = $vm.execute(
         "journalctl --full --no-pager " +
         "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
@@ -1014,7 +1013,7 @@ def share_host_files(files)
   return mount_dir
 end
 
-def mount_USB_drive(disk, fs_options = {})
+def mount_USB_drive(disk, **fs_options)
   fs_options[:encrypted] ||= false
   @tmp_usb_drive_mount_dir = $vm.execute_successfully('mktemp -d').stdout.chomp
   dev = $vm.disk_dev(disk)
@@ -1052,7 +1051,7 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
     fs_options[:encrypted] = true
     fs_options[:password] = /encrypted with password "([^"]+)"/.match(fs)[1]
   end
-  mount_dir = mount_USB_drive(disk, fs_options)
+  mount_dir = mount_USB_drive(disk, **fs_options)
   @tmp_filesystem_size_b = convert_to_bytes(
     avail_space_in_mountpoint_kB(mount_dir),
     'KB'
