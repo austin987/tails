@@ -66,6 +66,21 @@ method _build__presets () {
             ]
         },
         {
+            id          => 'GreeterSettings',
+            name        => $self->encoding->decode(gettext(q{Tails Greeter Settings})),
+            description => $self->encoding->decode(gettext(
+                q{Startup options configured in Tails Greeter}
+            )),
+            icon_name   => 'preferences-system',
+            enabled     => 0,
+            atoms_args  => [
+                {
+                    destination => '/var/lib/gdm3/settings',
+                    options     => [ 'source=greeter-settings' ],
+                },
+            ]
+        },
+        {
             id          => 'BrowserBookmarks',
             name        => $self->encoding->decode(gettext(q{Browser Bookmarks})),
             description => $self->encoding->decode(gettext(
