@@ -181,8 +181,8 @@ Bootstrap manual testing coordination:
 1. Create a pad.
 2. Copy the [[manual test suite|contribute/release_process/test]]
    into it.
-3. Send the pad URL to the usual testers (see `manual_testers.mdwn` in
-   the RM team's Git repository), end-to-end encrypted.
+3. Send the pad URL in an **encrypted** mail to the manual testers:
+   <tails-manual-testers@boum.org>
 
 Update included files
 =====================
@@ -242,7 +242,8 @@ the release branch's custom APT suite:
 * [[persistence-setup]]
 * whisperback:
   * follow [upstream release process](https://gitlab.tails.boum.org/tails/whisperback/-/blob/master/HACKING)
-  * build a Debian package
+  * build a Debian package in an amd64 chroot of the Debian release
+    the Tails version you're preparing is based on
 
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
@@ -265,7 +266,7 @@ and commit the result, including new PO files:
 If `lint_po` complains:
 
 * rollback the offending PO files and retry; worst case, delete it
-* send a note to <tails-l10n@boum.org> so that they get in touch with
+* send a note to <tails-l10n@boum.org> [public] so that they get in touch with
   whoever can fix them.
 
 When preparing an actual release
@@ -1134,7 +1135,7 @@ above).
 Publish the ISO, IMG, and IUKs over HTTP
 ----------------------------------------
 
-If the IUKs reproducibility check you did earlier has failed,
+**If** the IUKs reproducibility check you did earlier has failed,
 then upload the IUKs you've built to our rsync server
 (we trust your machine more than our Jenkins):
 
@@ -1277,8 +1278,8 @@ Testing
 
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
-1. Email <tails@boum.org> and potential contributors (see
-   `manual_testers.mdwn` in the internal Git repository) that tests
+   This is a public list, don't point to the pad.
+1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
    may start:
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
@@ -1320,10 +1321,10 @@ Rename, copy, garbage collect and update various files:
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
 	git rm \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
-	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
+	LC_NUMERIC=C ls -l -h -L ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
-	LC_NUMERIC=C ls -l -h ${IMG_PATH:?} | \
+	LC_NUMERIC=C ls -l -h -L ${IMG_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html" && \
     gpg --check-trustdb && \
@@ -1339,7 +1340,7 @@ Rename, copy, garbage collect and update various files:
 Then, build the website and commit this last set of changes:
 
 	./build-website && \
-	git add wiki/src && \
+	git add wiki/src/{inc,torrents} && \
 	git commit -m "Update various website source files for ${VERSION:?}"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
@@ -1481,7 +1482,7 @@ Make sure every active mirror in the pool has the new version:
 	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
-Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
+Ask <tails-mirrors@boum.org> [encrypted] to drop those that are lagging behind and
 notify their administrators.
 
 Sanity checks
@@ -1688,8 +1689,9 @@ this, and skip what does not make sense for a RC.
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
         git fetch && \
-        git submodule update && \
-        bare_repo=$(mktemp -d)
+        git merge origin/master && \
+        git submodule update --init && \
+        bare_repo=$(mktemp -d) && \
         git clone --bare --reference "${MASTER_CHECKOUT:?}" \
            gitolite@d53ykjpeekuikgoq.onion:tails \
            "${bare_repo:?}" && \
@@ -1776,8 +1778,8 @@ this, and skip what does not make sense for a RC.
 
 1. Announce the date of the next release on <tails-dev@boum.org> and
    <tails-l10n@boum.org>.
-   - Bcc the usual testers (see `manual_testers.mdwn` in the RM team's
-     Git repository), asking them to privately tell the RM for that release
+   - Cc <tails-manual-testers@boum.org>,
+     asking them to privately tell the RM for that release
      whether they can do manual testing on release day.
 1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
