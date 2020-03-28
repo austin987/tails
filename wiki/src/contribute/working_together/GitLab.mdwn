@@ -304,3 +304,107 @@ welcome. Please check the mission statement for the corresponding team
 first, to ensure you're not asking them to do something that's outside
 of the scope of their job. And please justify your suggestions.
 Please check these views once in a while and talk to us! :)
+
+# Access control
+
+XXX: document the process to grant access level to users, once this [is
+implemented](https://salsa.debian.org/tails-team/gitlab-migration/issues/33).
+
+## Objects
+
+ - _Canonical Git repo_: the authoritative [[!tails_gitlab tails/tails]]
+   repository, hosted on GitLab
+
+ - _Major branches_: `master`, `stable`, `testing`, `devel`,
+   and possibly `feature/bullseye`
+
+ - _Release tags_: a signed Git tag that identifies the source code
+   used to build a specific Tails release; currently all tags
+   in the authoritative `tails.git` repository are release tags;
+   the tag name is a version number, with '~' replaced by '-'.
+
+ - _Particularly sensitive data_: confidential data that specific teams
+   like Fundraising and Accounting need to handle, but that other
+   contributors generally don't need direct access to. This definitely
+   include issues; this might include Git repositories at some point.
+
+   Note that as of 2020-03-29, it is undefined:
+
+    - What subset of this data can go to a web-based issue tracker or not.<br/>
+      This is already a problem with Redmine.<br/>
+      Fixing this will require discussions between various stakeholders.
+
+    - What subset of this data could live in a cleartext Git
+      repository hosted here or there, as opposed to requiring
+      end-to-end encryption between members of these teams.
+      This is a hypothetical problem for now.
+
+## Subjects
+
+ - An _admin_ can do anything that other roles can, and:
+   - can delete issues
+   - can edit team membership
+   - MUST comply with our "Level 3" security policy
+   - can view issues that contain particularly sensitive data
+
+ - A _committer_:
+   - can push and force-push to any ref in the canonical Git repo,
+     including major branches and release tags;<br/>
+     incidentally, this ensures the following requirement is met:
+   - their branches are picked up by Jenkins; it follows that they
+     MUST comply with our "Infrastructure" security policy
+   - can merge MRs into major branches
+   - can modify issues metadata
+   - is allowed to view confidential issues in the [[!tails_gitlab tails/tails]]
+     GitLab project; that's OK, because particularly sensitive data
+     lives somewhere else, with stricter access control
+   - can edit other users' comments
+   - MAY be allowed to add new team members
+   - MUST comply with our "Level 3" security policy
+
+ - A _regular, particularly trusted contributor_:
+   - can push and force-push to a subset of refs in the canonical Git repo;
+     this subset MUST NOT include any major branch nor release tag;<br/>
+     this is required to ensure the following requirement is met:
+   - their branches are picked up by Jenkins; it follows that they
+     MUST comply with our "Infrastructure" security policy
+   - can modify issues metadata
+   - is allowed to view confidential issues in the [[!tails_gitlab tails/tails]]
+     GitLab project; that's OK, because particularly sensitive data
+     lives somewhere else, with stricter access control
+
+ - A _regular contributor_:
+   - can fork the Git repositories and push changes to their own fork
+   - can modify issues metadata
+   - is allowed to view confidential issues in the [[!tails_gitlab tails/tails]]
+     GitLab project; that's OK, because particularly sensitive data
+     lives somewhere else, with stricter access control
+
+ - _Anybody with a GitLab account_ on the instance we use:
+   - can submit issues
+   - can submit MRs
+
+## Implementation
+
+### Relevant GitLab doc
+
+ - [Permissions](https://docs.gitlab.com/ee/user/permissions.html)
+ - [Authorization for Merge requests](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html)
+ - [Protected Branches](https://docs.gitlab.com/ce/user/project/protected_branches.html)
+ - [Groups](https://docs.gitlab.com/ee/user/group/)
+
+### Access levels
+
+We use the [Protected branch
+flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow):
+
+ - Our major branches and release tags are marked as "Protected".
+ - Committers get "Maintainer" access.
+ - Regular, particularly trusted contributors, who are not granted full commit
+   access but have access to our CI, get "Developer" access. They can push
+   a topic branch to the canonical Git repository and our CI will pick it up.
+   They can also modify any non-protected topic branch.
+ - Other contributors get access strictly lower than "Developer".
+   They push topic branches to their own fork of the repository and
+   create merge requests.
+ - Our Jenkins CI jobs generation process is the same as in pre-GitLab days.
