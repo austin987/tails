@@ -405,6 +405,29 @@ Properties:
  - [forking workflow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#forking-workflow)
  - regular Tails contributors have "Reporter" access
 
+## Management
+
+With Redmine + Gitolite, we centrally manage, in 1-2 single places, team
+membership and the corresponding access level. For example, when someone gets
+commit access or joins a team, we add them to the corresponding Gitolite group
+and Redmine role. That's very convenient.
+
+If we don't do anything special, to implement the access control specified
+above, we would need to:
+
+* During the migration to GitLab: give dozens of users "Reporter", "Maintainer"
+  or "Developer" access on dozens of project.
+* Day-to-day operations: occasionally, give someone "Reporter", "Maintainer" or
+  "Developer" access on dozens of project.
+
+I don't think we want to do any of this manually.
+
+It seems we could maintain user groups via the GitLab web interface and [share
+the relevant projects with these user
+groups](https://docs.gitlab.com/ce/user/project/members/share_project_with_groups.html).
+These groups would not contain any project themselves: their sole purpose is to
+manage access to projects in batch.
+
 # Wiki
 
 It's out of scope for the first iteration but at some point, we might
