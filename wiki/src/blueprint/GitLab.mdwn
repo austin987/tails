@@ -300,18 +300,34 @@ desc="for our blueprints"]]).
  - [Protected Branches](https://docs.gitlab.com/ce/user/project/protected_branches.html)
  - [Groups](https://docs.gitlab.com/ee/user/group/) and [Subgroups](https://docs.gitlab.com/ee/user/group/subgroups/)
 
-### Idea: Protected branch flow
+### Common settings
 
-The [Protected branch
-flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow)
-may be the most adequate for regular contributors, since it's the
-least disruptive in terms of workflow and habits and requires no
-work to adjust our Jenkins CI setup:
+ - pipelines: disabled
+ - wiki: disabled
 
+### The parent "tails" group
+
+ - Visibility: Public
+ - Tails sysadmins have "Owner" access to this group.
+ - Nobody else is a member of this group.
+ - Allow users to request access: disabled
+ - issues: disabled
+ - MRs: disabled
+
+### Most public projects
+
+The following applies to each of our public project that
+has no dedicated section below:
+
+ - [Protected branch flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow):
+   it's the most adequate for regular contributors, since it's the
+   least disruptive in terms of workflow and habits and requires no
+   work to adjust our Jenkins CI setup.
  - We mark our major branches and release tags as "Protected".
  - Committers get "Maintainer" access.
  - The Git workflow remains unchanged for regular developers who are
-   not granted full commit access: they get "Developer" access, can
+   not granted full commit access but have access to our CI:
+   they get "Developer" access, can
    push a topic branch to the canonical Git repository and our CI will
    pick it up. The only difference is that they are not restricted to
    pushing to their own `$nickname/*` namespace, which makes things
@@ -326,6 +342,68 @@ work to adjust our Jenkins CI setup:
    merge request (based on `refs/merge-requests/*/head`), but this
    would give arbitrary code execution on our CI to _anyone_.
    Our infrastructure is not currently equipped to cope with this.)
+ - issues: disabled except for the `tails/tails` project
+ - MRs: enabled
+ - Allow users to request access: enabled
+
+### rm
+
+ - visibility: private
+ - issues: disabled
+ - MRs: disabled (gcrypt)
+ - repository: enabled
+ - Allow users to request access: disabled
+ - Nobody has access except RMs
+
+### Public sysadmin projects
+
+Projects:
+
+ - `bitcoin`
+ - `bitcoin_libunivalue`
+ - public `puppet-*` (additional "Maintainer": role-lizard)
+ - `jenkins-jobs` (additional "Maintainer": role-lizard)
+
+Properties:
+
+ - public
+ - [forking workflow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#forking-workflow)
+ - issues: disabled (tracked in tails/tails)
+ - MRs: enabled
+ - regular Tails contributors have "Reporter" access
+
+### accounting, fundraising, sysadmin, tails-private
+
+ - visibility: private
+ - issues: enabled
+ - MRs: disabled
+ - repository: disabled
+ - Allow users to request access: disabled
+ - Nobody has access except:
+    - accounting: accounting team
+    - fundraising: fundraising team
+    - sysadmin: sysadmins team
+    - tails-private: tails@ members
+
+### test-suite-shared-secrets
+
+ - visibility: private
+ - issues: disabled
+ - MRs: enabled
+ - repository: enabled
+ - Allow users to request access: disabled
+ - Nobody has access except committers
+
+### mirror-pool
+
+ - visibility: public
+ - issues: disabled
+ - MRs: enabled
+ - repository: enabled
+ - Allow users to request access: disabled
+ - mirrors team members have "Maintainer" access
+ - [forking workflow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#forking-workflow)
+ - regular Tails contributors have "Reporter" access
 
 # Wiki
 
@@ -583,41 +661,42 @@ of forks, and follow the white GitHub rabbit(-hole):
 
 # Git repositories
 
-Migration includes preserving access rights.
+Migration includes preserving access rights, which are documented
+for each repository below.
 
 ## Must be migrated
 
 From `git.tails.boum.org` aka. `git-tails.immerda.ch`:
 
- - `bitcoin`
- - `bitcoin_libunivalue`
- - `chutney`
- - `htp`
- - `jenkins-tools`
- - `liveusb-creator` → rename to `installer`
- - `network-manager`
- - `onioncircuits`
- - `rm`
- - `tails-workarounds`
- - `test-suite-shared-secrets`
- - `torbrowser-launcher`
- - `ux`
- - `verification-extension`
- - `whisperback`
+ - `bitcoin` (public; read-write: sysadmins)
+ - `bitcoin_libunivalue` (public; read-write: sysadmins)
+ - `chutney` (public; read-write: committers)
+ - `htp` (public; read-write: committers)
+ - `jenkins-tools` (public; read-write: committers)
+ - `liveusb-creator` → rename to `installer` (public; read-write: committers)
+ - `network-manager` (public; read-write: committers)
+ - `onioncircuits` (public; read-write: committers)
+ - `rm` (public; read-write: RMs)
+ - `tails-workarounds` (public; read-write: committers)
+ - `test-suite-shared-secrets` (private; read-write: committers)
+ - `torbrowser-launcher` (public; read-write: committers)
+ - `ux` (public; read-write: committers)
+ - `verification-extension` (public; read-write: committers)
+ - `whisperback` (public; read-write: committers)
 
 From `puppet-git.lizard`:
 
- - `etcher-binary`
- - `mirror-pool`
- - `mirror-pool-dispatcher`
- - `promotion-material`
+ - `etcher-binary` (public; read-write: committers)
+ - `mirror-pool` (public; read-write: mirrors team)
+ - `mirror-pool-dispatcher` (public; read-write: committers)
+ - `promotion-material` (public; read-write: committers)
 
 Read-only mirrors to be migrated from `git.tails.boum.org` aka.
 `git-tails.immerda.ch` (with a description that makes it clear
 to people with commit access that it's a read-only mirror):
 
- - public `puppet-*`
- - `jenkins-jobs`
+ - public `puppet-*` (public; read-write: role-lizard)
+ - `jenkins-jobs` (public; read-write: role-lizard)
 
 ## Leave on immerda for now
 
