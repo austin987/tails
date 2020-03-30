@@ -1015,7 +1015,9 @@ Prepare upgrade-description files
                         --next_version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
                         --next_version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}"
                 else
-                    echo --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,')
+                    echo \
+                        --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,') \
+                        --next_version "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}"
                 fi
             ) \
             $( \
