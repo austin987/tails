@@ -6,7 +6,7 @@
 
 The automated test suite is essentially a glue between:
 
-* [Sikuli](http://www.sikuli.org/) and
+* [OpenCV](http://opencv.org/) and
   [dogtail](https://fedorahosted.org/dogtail/), used for simulating
   user interaction,
 * [libvirt](http://libvirt.org/), used for running a specific build of
@@ -16,11 +16,6 @@ The automated test suite is essentially a glue between:
 
 Its goal is to automate the development and release testing processes
 with a Continuous Integration server.
-
-A [[!tails_gitweb features/support/helpers/sikuli_helper.rb
-desc="custom thin Ruby wrapper"]], using the
-[rjb](http://rjb.rubyforge.org/) Ruby-Java bridge, gives us access to
-the Sikuli programmatic interface from our step definitions.
 
 ## Setup and usage
 
@@ -75,13 +70,10 @@ sets the correct environment up:
 
 * It uses `Xvfb` so that the `DISPLAY` environment variable points to
   an unused X display (tip: use `Xvfb`) with screen size and color
-  depth matching what the Sikuli images are optimized for (that is,
-  1024x768 / 24-bit).
-* It sets the `SIKULI_HOME` environment variable to the directory
-  where sikuli script is installed for Java (`/usr/share/java` in
-  Debian).
+  depth matching what the images used for matching are optimized for
+  (that is, 1024x768 / 24-bit).
 * It runs `unclutter` on `$DISPLAY` to prevent the mouse
-  pointer from masking GUI elements looked for by Sikuli.
+  pointer from masking GUI elements looked for through image matching.
 * It passes `--format ExtraHooks::Pretty` to `cucumber` calls, to get
   access to our custom `{After,Before}Feature` hooks.
 
@@ -125,11 +117,10 @@ pointers for the latter.
 
 ## Resources
 
-In addition to the Sikuli, libvirt and Cucumber documentation linked
+In addition to the libvirt and Cucumber documentation linked
 to in the introduction:
 
  * [ruby-libvirt API](http://libvirt.org/ruby/api/index.html)
- * [sikuli API](http://doc.sikuli.org/toc.html)
  * The `sniff` application, which is installed in Tails, is quite
    useful to navigate the GUI element hierarchy. However, `accerciser`
    (not installed) is even better, due to its ability to highlight
@@ -240,11 +231,11 @@ be working.
     And all notifications have disappeared
 
 The notifications can block GUI elements that we're looking for later
-with Sikuli, so it's important that they are gone in essentially all
-tests of GUI applications. If we have a network connection, so the
-time syncing starts and shows its notifications, then this step should be
-run after the previous step. Otherwise it always depends on the `GNOME
-has started` step.
+with OpenCV's image matching, so it's important that they are gone in
+essentially all tests of GUI applications. If we have a network
+connection, so the time syncing starts and shows its notifications,
+then this step should be run after the previous step. Otherwise it
+always depends on the `GNOME has started` step.
 
     And available upgrades have been checked
 
@@ -290,14 +281,15 @@ In essence, the tools we have for interacting with the Tails instance
 are:
 
 * the VM helper class,
-* Sikuli and dogtail, and
+* the Screen helper class,
+* dogtail, and
 * the remote shell.
 
 It should be fairly obvious when to use the VM helper class (stuff
 relating to the virtual hardware), but there is some overlap between
-Sikuli, dogtail and the remote shell.
+image matching, dogtail and the remote shell.
 
-Sikuli and dogtail:
+The Screen class and dogtail:
 
 * They should be used in all instances where we want to simulate user
   interaction with the Tails system. For instance, when we start an
@@ -306,9 +298,9 @@ Sikuli and dogtail:
 * They come in handy when we want to verify some state pertaining
   to the GUI.
 * In general we prefer dogtail, since it is more precise given its
-  direct access to GUI elements and their state, and Sikuli's images
-  carry a quite heavy maintenance burden. However, Dogtail is not
-  possible to use before GNOME has started, so we rely on Sikuli for
+  direct access to GUI elements and their state, and images carry a
+  quite heavy maintenance burden. However, Dogtail is not possible to
+  use before GNOME has started, so we rely on image matching for
   anything before or after that. Also, for some applications it's
   simply hard to "navigate" to the right element in the hierarchy of
   elements of some GUI, due to ambiguity and/or lack of labels.
@@ -317,11 +309,12 @@ The remote shell:
 
 * Useful for testing non-GUI state.
 * Useful for reaching some state required before we test stuff
-  depending on user interaction (which should use Sikuli!).
+  depending on user interaction (which should use the Screen class
+  or dogtail!).
 * It is acceptable (but not encouraged) to use the remote shell for
   simulating user terminal interaction when we need to analyze the
-  commands output. This is because Sikuli's OCR capabilities are
-  poor, and cannot be depended on.
+  commands output. Ideally we would use OCR, but we lack support for
+  it at the moment, and it might be too unreliable in practice.
 
 # Limitations and issues
 

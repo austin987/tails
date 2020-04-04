@@ -14,7 +14,7 @@ ensure_hook_dependency_is_installed \
    libdist-zilla-plugin-test-notabs-perl \
    libdist-zilla-plugin-test-perl-critic-perl
 
-for dist in perl5lib iuk; do
+for dist in perl5lib persistence-setup iuk; do
    dist_dir="/usr/src/${dist}"
    cd "$dist_dir"
    PERL5LIB=/usr/src/perl5lib/lib PERL_CPANM_OPT=--notest dzil install
@@ -23,13 +23,10 @@ for dist in perl5lib iuk; do
 done
 rm -r /root/.cpanm
 
-# Satisfy the dependency of the tails-persistence-setup package
-# on tails-perl5lib
-install_fake_package tails-perl5lib 4.0
-
-apt-get install --yes tails-persistence-setup
-
-for patch in /usr/share/tails/build/run_t-p-s_as_its_dedicated_user.diff ; do
-   (cd / && patch --forward --batch -p1 < "$patch")
-   rm "$patch"
-done
+# dzil installs the tails-persistence-setup Perl program to
+# /usr/local/bin/; we move it to /usr/bin/ and replace it in
+# /usr/local/bin/ with a wrapper that runs it as the
+# tails-persistence-setup user
+mv /usr/local/bin/tails-persistence-setup /usr/bin/
+mv /usr/local/bin/tails-persistence-setup.wrapper \
+   /usr/local/bin/tails-persistence-setup

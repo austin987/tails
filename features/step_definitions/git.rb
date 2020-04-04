@@ -6,7 +6,8 @@ When /^I clone the Git repository "([\S]+)" in GNOME Terminal$/ do |repo|
     $vm.execute("rm -rf /home/#{LIVE_USER}/#{repo_directory}",
                              :user => LIVE_USER)
     step 'I kill the process "git"'
-    @screen.type('clear' + Sikuli::Key.ENTER)
+    @screen.type('clear')
+    @screen.press("Return")
   end
 
   retry_tor(recovery_proc) do

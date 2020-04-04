@@ -325,9 +325,9 @@ When /^the Tor Launcher autostarts$/ do
 end
 
 When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_type|
-  @screen.wait_and_click('TorLauncherConfigureButton.png', 10)
-  @screen.wait_and_click('TorLauncherBridgeCheckbox.png', 10)
-  @screen.wait_and_click('TorLauncherBridgeList.png', 10)
+  @screen.wait('TorLauncherConfigureButton.png', 10).click
+  @screen.wait('TorLauncherBridgeCheckbox.png', 10).click
+  @screen.wait('TorLauncherBridgeList.png', 10).click
   @bridge_hosts = []
   chutney_src_dir = "#{GIT_DIR}/submodules/chutney"
   bridge_dirs = Dir.glob(
@@ -364,12 +364,12 @@ When /^I configure some (\w+) pluggable transports in Tor Launcher$/ do |bridge_
     @bridge_hosts << { address: address, port: port.to_i }
     bridge_line = bridge_type + " " + address + ":" + port
     [fingerprint, extra].each { |e| bridge_line += " " + e.to_s if e }
-    @screen.type(bridge_line + Sikuli::Key.ENTER)
+    @screen.type(bridge_line, ["Return"])
   end
   @screen.hide_cursor
-  @screen.wait_and_click('TorLauncherFinishButton.png', 10)
+  @screen.wait('TorLauncherFinishButton.png', 10).click
   @screen.wait('TorLauncherConnectingWindow.png', 10)
-  @screen.waitVanish('TorLauncherConnectingWindow.png', 120)
+  @screen.wait_vanish('TorLauncherConnectingWindow.png', 120)
 end
 
 When /^all Internet traffic has only flowed through the configured pluggable transports$/ do

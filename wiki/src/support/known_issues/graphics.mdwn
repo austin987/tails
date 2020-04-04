@@ -129,12 +129,17 @@ Tickets: #11095 #12482
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] RV730/M96 [Mobility Radeon HD 4650/5165]</td><td>[1002:9480]</td><td></td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Device</td><td>[1002:98e4]</td><td>(rev da)</td></tr>
 <tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Trinity [Radeon HD 7520G]</td><td>[1002:9990]</td><td></td></tr>
+<tr><td>Advanced Micro Devices, Inc. [AMD/ATI] Beavercreek [Radeon HD 6550D]</td><td>[1002:9640]</td><td></td></tr>
 </table>
 
 ### Workaround
 
-For some models, adding `radeon.modeset=0` to the
-[[boot options|/doc/first_steps/startup_options/#boot_loader_menu]] fixes the issue.
+Try adding to the [[boot
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `radeon.modeset=0`
+* `xorg-driver=modesetting`
 
 We need more test results from users: [[!tails_ticket 12482]]
 
@@ -231,8 +236,12 @@ Ticket: #15491
 
 ### Workaround
 
-Try adding `nomodeset` to the
-[[boot options|doc/first_steps/startup_options#boot_loader_menu]].
+Try adding to the [[boot
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `nomodeset`
+* `xorg-driver=modesetting`
 
 ### Other possibly affected graphics cards
 
@@ -324,8 +333,13 @@ Ticket: #15116
 
 This problem has been fixed for some of these graphic cards.
 
-Otherwise, try adding `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-[[boot options|doc/first_steps/startup_options#boot_loader_menu]].
+Otherwise, try adding to the [[boot
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `nouveau.noaccel=1`
+* `nouveau.modeset=0`
+* `xorg-driver=modesetting`
 
 We need more test results from users: [[!tails_ticket 15116]]
 
@@ -427,10 +441,50 @@ Last updated: 2019-07-30
 
 This problem has been fixed for some of these graphic cards.
 
-Otherwise, try adding `nouveau.noaccel=1` or `nouveau.modeset=0` to the
-[[boot options|doc/first_steps/startup_options#boot_loader_menu]].
+Otherwise, try adding to the [[boot
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `nouveau.noaccel=0`
+* `nouveau.noaccel=1`
+* `nouveau.modeset=0`
+* `xorg-driver=modesetting`
 
 We need more test results from users: [[!tails_ticket 15116]]
+
+<a id="nvidia-turing"></a>
+
+## Nvidia NV160 family (Turing)
+
+As of 2020-03-19, much of these Nvidia graphics cards are [not
+supported](https://nouveau.freedesktop.org/wiki/FeatureMatrix/) by Tails yet.
+
+### Affected graphics cards
+
+<table>
+        <tr>
+            <th><strong>Code name</strong>  </th>
+            <th><strong>Official Name</strong> </th>
+        </tr>
+        <tr>
+            <td>NV167 (TU117)</td>
+            <td>GeForce GTX 1650</td>
+        </tr>
+</table>
+
+### Possibly affected graphics cards
+
+Graphics cards in the [NV160 family (Turing)](https://nouveau.freedesktop.org/wiki/CodeNames/#nv160familyturing) might be affected.
+
+### Workaround
+
+Try adding to the [[boot
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `nouveau.noaccel=1`
+* `nouveau.modeset=0`
+* `xorg-driver=modesetting`
 
 Other issues
 ============
@@ -487,9 +541,12 @@ On some computers with switchable graphics, Tails 2.10 and later fails
 to start the GNOME session and keeps returning to [[Tails
 Greeter|doc/first_steps/startup_options#greeter]].
 
-Starting in *Troubleshooting Mode* works, as well as adding the
-`modprobe.blacklist=nouveau` to the [[boot
-options|doc/first_steps/startup_options#boot_loader_menu]].
+Try adding to the [[boot
+options|/doc/first_steps/startup_options#boot_loader_menu]],
+one after the other:
+
+* `modprobe.blacklist=nouveau`
+* `xorg-driver=modesetting`
 
 <a id="intel-gm965"></a>
 

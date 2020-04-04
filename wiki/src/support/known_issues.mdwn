@@ -74,9 +74,11 @@ This USB stick doesn't start Tails at all, the USB 2.0 workaround is not working
 
 <!--
 Last updated: 2018-09-18
+Success report received on 2020-01-04
 -->
 
-Starting Tails from a Kingston DataTraveler 2000 or DataTraveler 100G3 doesn't work.
+Starting Tails from a Kingston DataTraveler 2000 or DataTraveler 100G3 may
+not work.
 
 <a id="mac"></a>
 
@@ -593,10 +595,20 @@ If you encounter this problem:
 1. If you are asked to enter a passphrase, enter the same passphrase that you
    used to unlock your persistent storage.
 
+1. Select the persistent features that you had activated previously.
+
 1. Click <span class="button">Save</span>, then restart Tails.
 
 Your <span class="filename">Persistent</span> folder and persistent feature
 configurations should be restored.
+
+If the above instructions do not fix the problem, you might need to fix the
+ownership of TailsData_unlocked.
+
+To fix the ownership of TailsData_unlocked, set an administration password and
+execute the following command in a terminal:
+
+`sudo chown root:root /live/persistence/TailsData_unlocked`
 
 <a id="restart-shell"></a>
 
@@ -686,10 +698,6 @@ To fix this problem, [[add the following boot option when
 starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
 
     intel_idle.max_cstate=1
-
-## Electrum is outdated and cannot connect to servers
-
-[[!inline pages="doc/anonymous_internet/electrum/phishing.inline" raw="yes" sort="age"]]
 
 <a id="usb-gigabyte"></a>
 

@@ -124,12 +124,12 @@ end
 
 Then /^I enable key synchronization in Seahorse$/ do
   step 'process "seahorse" is running'
-  @screen.wait_and_click("SeahorseWindow.png", 10)
+  @screen.wait("SeahorseWindow.png", 10).click
   seahorse_menu_click_helper('GnomeEditMenu.png', 'SeahorseEditPreferences.png', 'seahorse')
   @screen.wait('SeahorsePreferences.png', 20)
-  @screen.type("p", Sikuli::KeyModifier.ALT) # Option: "Publish keys to...".
-  @screen.type(Sikuli::Key.DOWN) # select HKP server
-  @screen.type(Sikuli::Key.ESC) # no "Close" button
+  @screen.press("alt", "p") # Option: "Publish keys to...".
+  @screen.press("Down") # select HKP server
+  @screen.press("Escape") # no "Close" button
 end
 
 Then /^I synchronize keys in Seahorse$/ do
@@ -154,12 +154,12 @@ Then /^I synchronize keys in Seahorse$/ do
   end
 
   retry_tor(recovery_proc) do
-    @screen.wait_and_click("SeahorseWindow.png", 10)
+    @screen.wait("SeahorseWindow.png", 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuSync.png',
                                'seahorse')
     @screen.wait('SeahorseSyncKeys.png', 20)
-    @screen.type("s", Sikuli::KeyModifier.ALT) # Button: Sync
+    @screen.press("alt", "s") # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
     try_for(120) {
       change_of_status?
@@ -187,21 +187,21 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
   recovery_proc = Proc.new do
     setup_onion_keyserver
     @screen.click('GnomeCloseButton.png') if @screen.exists('GnomeCloseButton.png')
-    @screen.type("w", Sikuli::KeyModifier.CTRL)
+    @screen.press("ctrl", "w")
   end
   retry_tor(recovery_proc) do
-    @screen.wait_and_click("SeahorseWindow.png", 10)
+    @screen.wait("SeahorseWindow.png", 10).click
     seahorse_menu_click_helper('SeahorseRemoteMenu.png',
                                'SeahorseRemoteMenuFind.png',
                                'seahorse')
     @screen.wait('SeahorseFindKeysWindow.png', 10)
     # Seahorse doesn't seem to support searching for fingerprints
     # (https://gitlab.gnome.org/GNOME/seahorse/issues/177)
-    @screen.type(keyid + Sikuli::Key.ENTER)
+    @screen.type(keyid, ["Return"])
     begin
-      @screen.waitAny(['SeahorseFoundKeyResult.png',
+      @screen.wait_any(['SeahorseFoundKeyResult.png',
                        'GnomeCloseButton.png'], 120)
-    rescue FindAnyFailed
+    rescue FindFailed
       # We may end up here if Seahorse appears to be "frozen".
       # Sometimes--but not always--if we click another window
       # the main Seahorse window will unfreeze, allowing us
@@ -211,7 +211,7 @@ When /^I fetch the "([^"]+)" OpenPGP key using Seahorse( via the OpenPGP Applet)
     check_for_seahorse_error
     @screen.click("SeahorseKeyResultWindow.png")
     # Use the context menu to import the key:
-    @screen.right_click("SeahorseFoundKeyResult.png")
+    @screen.click("SeahorseFoundKeyResult.png", button: 'right')
     @screen.click("SeahorseImport.png")
     try_for(120) do
       change_of_status?(keyid)

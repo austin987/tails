@@ -17,8 +17,8 @@ To release Tails you'll need some packages installed:
 * `tidy mktorrent transmission-cli`
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
-* `iuk` [[dependencies|contribute/release_process/tails-iuk]]
-* `perl5lib` [[dependencies|contribute/release_process/perl5lib]]
+* `iuk` [[dependencies|contribute/release_process/tails-iuk#build-deps]]
+* `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
 * `po4a` _from Stretch_: the version in testing/sid extracts Markdown headings
    in a different way, which makes tons of strings fuzzy.
 
@@ -180,8 +180,8 @@ Bootstrap manual testing coordination:
 1. Create a pad.
 2. Copy the [[manual test suite|contribute/release_process/test]]
    into it.
-3. Send the pad URL to the usual testers (see `manual_testers.mdwn` in
-   the RM team's Git repository), end-to-end encrypted.
+3. Send the pad URL in an **encrypted** mail to the manual testers:
+   <tails-manual-testers@boum.org>
 
 Update included files
 =====================
@@ -238,10 +238,10 @@ Then see the relevant release processes, and upload the packages to
 the release branch's custom APT suite:
 
 * [[tails-installer]]
-* [[persistence-setup]]
 * whisperback:
   * follow [upstream release process](https://git-tails.immerda.ch/whisperback/plain/HACKING)
-  * build a Debian package
+  * build a Debian package in an amd64 chroot of the Debian release
+    the Tails version you're preparing is based on
 
 Upgrade custom packages for VeraCrypt integration
 -------------------------------------------------
@@ -264,7 +264,7 @@ and commit the result, including new PO files:
 If `lint_po` complains:
 
 * rollback the offending PO files and retry; worst case, delete it
-* send a note to <tails-l10n@boum.org> so that they get in touch with
+* send a note to <tails-l10n@boum.org> [public] so that they get in touch with
   whoever can fix them.
 
 When preparing an actual release
@@ -361,8 +361,7 @@ Changelog entries can be dispatched into those usual sections:
 
 Then, gather other useful information from:
 
-* every custom bundled package's own Changelog (Persistent
-  Volume Assistant, etc.);
+* every custom bundled package's own Changelog (Tails Installer, etc.)
 * the diff between the previous version's `.packages` file and the one
   from the to-be-released images; look for:
   - security fixes
@@ -499,7 +498,6 @@ Build the almost-final images
    - Set `defaultcomp`, so we can more accurately optimize our
      SquashFS file ordering.
    - Do _not_ set `keeprunning` nor `rescue`.
-   - Set `cachewebsite=no` as a workaround for [[!tails_ticket 17513]]
 2. Carefully read the build logs to make sure nothing bad happened.
 3. Keep the resulting build artifacts until the end of this release process.
 4. Record where the manifest of needed packages is stored:
@@ -646,7 +644,6 @@ suite should be ready, so it is time to:
    Do _not_ set `keeprunning` nor `rescue` in `$TAILS_BUILD_OPTIONS`.
    Our build system will apply the correct compression settings automatically
    so don't bother setting it yourself.
-   Set `cachewebsite=no` as a workaround for [[!tails_ticket 17513]]
 
 1. Compare the new build manifest with the one from the previous,
    almost final build:
@@ -1133,7 +1130,7 @@ above).
 Publish the ISO, IMG, and IUKs over HTTP
 ----------------------------------------
 
-If the IUKs reproducibility check you did earlier has failed,
+**If** the IUKs reproducibility check you did earlier has failed,
 then upload the IUKs you've built to our rsync server
 (we trust your machine more than our Jenkins):
 
@@ -1276,8 +1273,8 @@ Testing
 
 1. Email <tails-testers@boum.org> to ask them to test the tentative
    ISO and USB images, pointing them to the up-to-date mirror you've found previously.
-1. Email <tails@boum.org> and potential contributors (see
-   `manual_testers.mdwn` in the internal Git repository) that tests
+   This is a public list, don't point to the pad.
+1. Email <tails@boum.org> and <tails-manual-testers@boum.org> that tests
    may start:
    - point them to the up-to-date mirror you've found previously
    - make it clear what's the deadline
@@ -1319,10 +1316,10 @@ Rename, copy, garbage collect and update various files:
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/" && \
 	git rm \
 	   "${RELEASE_CHECKOUT:?}/wiki/src/torrents/files/tails-amd64-${PREVIOUS_VERSION:?}."{build-manifest,iso.sig,img.sig,packages,iso.torrent,img.torrent} && \
-	LC_NUMERIC=C ls -l -h ${ISO_PATH:?} | \
+	LC_NUMERIC=C ls -l -h -L ${ISO_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_iso_size.html" && \
-	LC_NUMERIC=C ls -l -h ${IMG_PATH:?} | \
+	LC_NUMERIC=C ls -l -h -L ${IMG_PATH:?} | \
 	   cut -f 5 -d ' ' | sed -r 's/(.+)([MG])/\1 \2B/' \
 	   > "${RELEASE_CHECKOUT:?}/wiki/src/inc/stable_amd64_img_size.html" && \
     gpg --check-trustdb && \
@@ -1338,7 +1335,7 @@ Rename, copy, garbage collect and update various files:
 Then, build the website and commit this last set of changes:
 
 	./build-website && \
-	git add wiki/src && \
+	git add wiki/src/{inc,torrents} && \
 	git commit -m "Update various website source files for ${VERSION:?}"
 
 Ensure our [[contribute/working_together/roles/technical_writer]] has
@@ -1465,6 +1462,7 @@ Skip this if you are preparing anything but a final, major release.
 - click *Back to content editing*
 - ensure the *Publish* checkbox is _not_ checked
 - click *Save* to save the draft
+- Let <steph@torproject.org> know when you intend to publish this blog post.
 
 Go wild!
 ========
@@ -1479,7 +1477,7 @@ Make sure every active mirror in the pool has the new version:
 	./check-mirrors.rb --channel ${DIST:?} --allow-multiple --fast \
         tails-amd64-${VERSION:?}
 
-Ask <tails-mirrors@boum.org> to drop those that are lagging behind and
+Ask <tails-mirrors@boum.org> [encrypted] to drop those that are lagging behind and
 notify their administrators.
 
 Sanity checks
@@ -1631,8 +1629,8 @@ Amnesia news
 Prepare for the next development cycle
 ======================================
 
-XXX: adapt / fork for release candidates. In the meantime, read all
-this, and skip what does not make sense for a RC.
+If you just released a final release
+------------------------------------
 
 1. If you just released a new stable release, remove the previous
    stable release from:
@@ -1686,8 +1684,9 @@ this, and skip what does not make sense for a RC.
         cd "${MASTER_CHECKOUT:?}" && \
         git checkout master && \
         git fetch && \
-        git submodule update && \
-        bare_repo=$(mktemp -d)
+        git merge origin/master && \
+        git submodule update --init && \
+        bare_repo=$(mktemp -d) && \
         git clone --bare --reference "${MASTER_CHECKOUT:?}" \
            gitolite@d53ykjpeekuikgoq.onion:tails \
            "${bare_repo:?}" && \
@@ -1704,10 +1703,6 @@ this, and skip what does not make sense for a RC.
 1. [[Thaw the packages that were granted freeze exceptions|APT_repository/time-based_snapshots#freeze-exceptions-post-release]].
 1. Pull `master` back and merge it into `stable`, and in turn into
    `devel`
-1. [[Thaw|APT_repository/time-based_snapshots#thaw]], on the devel
-   branch, the time-based APT repository snapshots that were used
-   during the freeze. This should generally be a no-op but if there
-   was some hiccup earlier it could be needed.
 1. Follow the
    [[post-release|APT_repository/custom#workflow-post-release]] custom
    APT repository documentation. This includes some git operations,
@@ -1774,13 +1769,44 @@ this, and skip what does not make sense for a RC.
 
 1. Announce the date of the next release on <tails-dev@boum.org> and
    <tails-l10n@boum.org>.
-   - Bcc the usual testers (see `manual_testers.mdwn` in the RM team's
-     Git repository), asking them to privately tell the RM for that release
+   - Cc <tails-manual-testers@boum.org>,
+     asking them to privately tell the RM for that release
      whether they can do manual testing on release day.
 1. If you are the release manager for the next release too, look at the
    tasks that must be done at the beginning of your shift in the
    [[release manager role page|contribute/working_together/roles/release_manager]].
    Otherwise, kindly remind the next release manager about this :)
+
+If you just released an RC
+--------------------------
+
+1. On the devel branch,
+   [[thaw|APT_repository/time-based_snapshots#freeze-exceptions-post-release]]
+   all packages (if any) that were granted freeze exceptions.
+1. On the devel branch,
+   [[thaw|APT_repository/time-based_snapshots#thaw]] the time-based
+   APT repository snapshots. This should generally be a no-op but if
+   there was some hiccup earlier it could be needed.
+1. Follow the
+   [[post-release|APT_repository/custom#workflow-post-release]] custom
+   APT repository documentation. This includes some git operations,
+   like creating an appropriate _"dummy changelog entry"_ in the
+   `debian/changelog` file.
+1. Merge testing into devel, and push them:
+
+        cd "${RELEASE_CHECKOUT:?}" && \
+        git checkout devel && \
+        git merge testing && \
+        git push origin testing devel
+
+1. Make sure you pushed all changes in every of our Git repo (including our
+   Debian packages ones).
+1. Follow the "Verify that the snapshots used in the release branch
+   are ok" step for final releases, above.
+1. Make sure Jenkins manages to build all updated major branches:
+   <https://jenkins.tails.boum.org/>.
+1. In [[contribute/calendar]], remove the entries about the version that you've
+   just released.
 
 Related pages
 =============
