@@ -1,10 +1,10 @@
 [[!meta title="Ticket gardener"]]
 
-The aim of ticket gardening is to ensure that items tracked on Redmine stay
+The aim of ticket gardening is to ensure that items tracked on GitLab stay
 relevant and contain helpful information for bringing a task to completion.  To
 achieve this goal contributors and teams need to be made aware of the existence
-of tickets that need their input so they can self-organize and prioritize their
-work. Tickets that are not relevant anymore should be closed.
+of issues that need their input so they can self-organize and prioritize their
+work. Issues that are not relevant anymore should be closed.
 
 This work should be done twice per year.
 
@@ -14,58 +14,62 @@ This work should be done twice per year.
 
 ## Manual tasks
 
-### Go through relevant Redmine views
+### Go through relevant GitLab views
 
-* ["Wait" type of work](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=314):
+* [[!tails_gitlab
+  groups/tails/-/issues?label_name%5B%5D=T%3AWait
+  desc="`T:Wait` label"]]:
   check if what was blocking was eventually resolved outside of Tails.
-  Tickets should either have an assignee, their type of work
+  Issues should either have an assignee, their `T:` label
   requalified, be rejected, or stay in this state.
 
-* [WIP without assignee](https://redmine.tails.boum.org/code/projects/tails/issues?query_id=141):
-  identify tickets that have a majority of work completed and could
-  somewhat easily be finished. Create a list of those tickets and send
-  them to the responsible team; if that team cannot handle these tickets,
-  set _Status_ to something else.
+* [[!tails_gitlab
+  groups/tails/-/issues?scope=all&utf8=✓&state=opened&label_name[]=Doing&assignee_id=None
+  desc="WIP without assignee"]]:
+  identify issues that have a majority of work completed and could
+  somewhat easily be finished. Create a list of those issues and send
+  them to the responsible team; if that team cannot handle these issues,
+  set the status label to something other than *Doing*.
 
-### Identify and fix inadequate _Target version_
+### Identify and fix inadequate milestone
 
-While we still use Redmine, some tickets are missed by our automated
-setup. These tickets are those which have a target version that's been
+Some issues are missed by our automated
+setup. These issues are those whose milestone has been
 postponed after the N last releases by the Release Manager: every such
-_Target version_ bump counts as an update so there's no chance the ticket will
+milestone bump counts as an update so there's no chance the issue will
 ever be identified as stalled. Hence we need to do a manual session of ~2 hours
-twice a year to drop the _Target version_ on some tickets. To select the
-corresponding tickets, we will thus select those that have _Target version_
-set to the next release, and triage them using the following criteria:
+twice a year to drop the milestone on some issues. To select the
+corresponding issues, we will thus select those that have
+the next release as their milestone, and triage them using the following criteria:
 
-Situations when dropping the _Target version_ would be inadequate:
+Situations when dropping the milestone would be inadequate:
 
-* If the ticket was (re)assigned to the assignee recently.
-* If there's been progress but it's not documented on the ticket.
+* If the issue was (re)assigned to the assignee recently.
+* If there's been progress but it's not documented on the issue.
 * If it's part of a sponsor deliverable.
   - If the official deadline is in the future, most of the time we don't want
-    to touch the _Target version_.
+    to touch the milestone.
 
-Whether it's appropriate to drop the _Target version_ depends on:
+Whether it's appropriate to drop the milestone depends on:
 
-* When the last action on the ticket by the assignee was performed. For
-  example, if they did not update the ticket since 3 months or more.
-* If the ticket was recently postponed be the RM and not by the assignee
+* When the last action on the issue by the assignee was performed. For
+  example, if they did not update the issue since 3 months or more.
+* If the issue was recently postponed be the RM and not by the assignee
   themselves — the latter would suggest they have it in mind and are updating
   their plans.
-* Whether there's an assignee. If there's none but the ticket was postponed a few times, then:
+* Whether there's an assignee. If there's none but the issue was postponed a few times, then:
   - Either it's important and it should be put on the plate of a core team.
-  - Or it's unimportant and the _Target version_ should be dropped: keeping it
+  - Or it's unimportant and the milestone should be dropped: keeping it
     has little value but forces the RMs to do extra work. If someone wants to track
-    those tickets, there surely are better ways.
-* Whether the ticket is blocked by anything (other tickets or what not) that's
+    those issues, there surely are better ways.
+* Whether the issue is blocked by anything (other issues or what not) that's
   out of the hands of the assignee.
 * How safe/privileged is the assignee's position in Tails. For contributors
   that hold more power than average we can assume they know how to revert our
   changes.
 
 We have a [[template message|ticket_gardener/inadequate_target_version.textile]]
-that we can use as a basis to explain why we're removing the _Target version_.
+that we can use as a basis to explain why we're removing the milestone.
 
 ## Existing automation
 
