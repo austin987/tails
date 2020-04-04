@@ -60,7 +60,7 @@ automatically if the ABI is bumped.
 # Process
 
 A Foundations Team member (generally the team lead, so far) creates
-a tracking ticket whenever:
+a tracking issue whenever:
 
  - A new major version of Linux is released. At this point, that
    version is generally available only in Debian _experimental_.
@@ -91,12 +91,10 @@ To learn how the new kernel works for us:
    back to the top level directory. `git diff` should show an updated
    `Subproject commit` accordingly, and that can be committed.
 3. Push this new branch to our CI.
-4. Set the _Feature Branch_ field on the ticket to the name of your
-   new branch.
 5. Quickly test a build from this branch on your hardware.
 6. Compare the Jenkins build and test results to the ones for our
    `stable` and `devel` branch.
-7. Report your findings on the ticket.
+7. Report your findings on the issue.
 
 ## Gather other data that will inform our decision
 
@@ -121,7 +119,7 @@ In there, look for:
    recently reported to Debian against this version of the kernel
  - Relevant hardware support improvements
 
-Take notes on the ticket of the most relevant bits or lack thereof.
+Take notes on the issue of the most relevant bits or lack thereof.
 
 ## Make a decision
 
@@ -144,7 +142,7 @@ several factors:
 
 If in doubt, ask your team-mates :)
 
-If the decision is "do nothing", close the ticket and stop reading here.
+If the decision is "do nothing", close the issue and stop reading here.
 Else, read on.
 
 ## Implement the decision
@@ -160,8 +158,7 @@ Therefore, create a new
 `feature/NNNNN-linux-X.Y-stable+force-all-tests` topic branch forked
 off `stable` and transplant onto it the commits you had to create on
 your `devel`-based topic branch (`git rebase --onto` or `git
-cherry-pick`). Update the _Feature Branch_ field accordingly
-in Redmine.
+cherry-pick`).
 
 But the new resulting topic branch will likely not build: a bugfix
 release is built from our `stable` branch, that uses a set of APT
@@ -230,8 +227,9 @@ improvement:
  - Enabled by default: nothing to do, profit :)
 
  - Guarded by local configuration such as a sysctl or a kernel command
-   line option: file a ticket about it on Redmine and add this ticket
-   to the Foundations Team' radar. Optionally, do the work yourself:
+   line option: file a GitLab issue about it, with the
+   `Core work: Foundations Team` label.
+   Optionally, do the work yourself:
    once you've got CI results about your topic branch with this new
    option disabled, add a commit that enables it and compare the
    results (including test suite total run time, to spot important
