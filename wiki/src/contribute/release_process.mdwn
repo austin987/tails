@@ -1559,11 +1559,30 @@ Bug tracker
 Skip this part if preparing a release candidate.
 
 Postpone to next release any remaining open issue for the version
-you've just released. Use the right-click contextual menu to do so in
-one single batch.
+you've just released:
 
-Then, mark the just-released Redmine milestone as done: go to the
-target version page, click *Edit*, and set *Status* to *Closed*.
+1. Create a new `missed:$VERSION` label
+   on [[!tails_gitlab groups/tails/-/labels]]
+2. Visit the [[!tails_gitlab groups/tails/-/milestones desc="milestone"]]
+   for the version you've just released.
+3. In the right side bar, in the _Issues_ section, click on the _Open: NN_
+   link.
+4. Click the _Edit issues_ link in the top right corner.
+5. In the right side bar:
+    - select the milestone for the next release
+    - select the `missed:$VERSION` label
+6. On the top left of the list of issues, click the checkbox
+   that will select all issues.
+7. In the right side bar, click _Update all_.
+8. If some issues still appear on the list, go through these steps again:
+   there's pagination involved and
+   [[!tails_gitlab help/user/project/bulk_editing.html desc="bulk editing"]]
+   only applies to issues that are displayed.
+
+Then, do the same for MRs.
+
+Then, close the just-released [[!tails_gitlab groups/tails/-/milestones
+desc="milestone"]].
 
 ### Tickets linked from the website
 
@@ -1757,8 +1776,10 @@ this, and skip what does not make sense for a RC.
 1. Make sure you pushed all changes in every of our Git repo (including our
    Debian packages ones).
 1. Ensure the next two releases have their own _Release Manager View_.
-1. On the [[!tails_roadmap]], update the *Due date* for the *Holes
-   in the Roof* so that this section appears after the next release.
+1. Set the *Due date* for the [[!tails_gitlab
+   groups/tails/-/milestones
+   desc="*Holes in the Roof* milestone"]] to a date between
+   the next 2 releases.
 1. In [[contribute/calendar]], remove the entries about the version that you've
    just released.
 1. Check the Mozilla release calendars:
