@@ -72,10 +72,11 @@ Export the following environment variables:
   release, 3.10 and 3.11 are bugfix releases, 3.12 is a major
   release).
 * `NEXT_PLANNED_BUGFIX_VERSION`: set to the version number of the next
-  scheduled *bugfix* Tails release; if the next release is a bugfix release, use
-  that one; otherwise, use `${VERSION}.1`
+  scheduled *bugfix* Tails release
 * `NEXT_POTENTIAL_EMERGENCY_VERSION`: set to the version number we'll give
   to the next emergency release if we have to put one out
+* `NEXT_STABLE_CHANGELOG_VERSION`: if `$NEXT_PLANNED_BUGFIX_VERSION` is the next
+  scheduled release, use it; otherwise, use `$NEXT_POTENTIAL_EMERGENCY_VERSION`
 
 Other variables
 ---------------
@@ -1015,7 +1016,9 @@ Prepare upgrade-description files
                         --next_version "${NEXT_PLANNED_BUGFIX_VERSION:?}" \
                         --next_version "${NEXT_POTENTIAL_EMERGENCY_VERSION:?}"
                 else
-                    echo --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,')
+                    echo \
+                        --next_version $(echo ${VERSION:?} | sed -e 's,~.*$,,') \
+                        --next_version "${SECOND_NEXT_PLANNED_MAJOR_VERSION:?}"
                 fi
             ) \
             $( \
