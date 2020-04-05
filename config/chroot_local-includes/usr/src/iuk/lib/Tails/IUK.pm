@@ -337,6 +337,8 @@ method create_squashfs_diff () {
         );
     }
 
+    my $basename = path($self->outfile)->basename;
+    my $t1 = time;
     my @rsync_options = qw{--archive --quiet --delete-after --acls --checksum};
     push @rsync_options, "--xattrs" if $self->union_type eq 'overlayfs';
     run_as_root(
@@ -344,6 +346,8 @@ method create_squashfs_diff () {
         sprintf("%s/", $new_squashfs_mount),
         sprintf("%s/", $union_mount),
     );
+    my $t2 = time;
+    printf "TIME (rsync for $basename): %d seconds\n", ($t2-$t1);
 
     for my $glob (@{$self->ignore_if_same_content}) {
         my @candidates_for_removal = map {
@@ -402,6 +406,7 @@ method create_squashfs_diff () {
         }
     }
 
+    $t1 = time;
     run_as_root(
         "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
         qw{mksquashfs},
@@ -409,6 +414,8 @@ method create_squashfs_diff () {
         $self->overlay_dir->child('live', $self->squashfs_diff_name),
         $self->list_mksquashfs_options
     );
+    $t2 = time;
+    printf "TIME (main mksquashfs for $basename): %d seconds\n", ($t2-$t1);
 
     foreach ($union_basedir,
              $new_squashfs_mount, $new_iso_mount,
@@ -452,6 +459,8 @@ method saveas ($outfile_name) {
 
     $self->prepare_overlay_dir;
 
+    my $basename = path($self->outfile)->basename;
+    my $t1 = time;
     run_as_root(
         "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
         qw{mksquashfs},
@@ -460,6 +469,8 @@ method saveas ($outfile_name) {
         $self->list_mksquashfs_options,
         '-all-root',
     );
+    my $t2 = time;
+    printf "TIME (final mksquashfs for $basename): %d seconds\n", ($t2-$t1);
 
     return;
 }
