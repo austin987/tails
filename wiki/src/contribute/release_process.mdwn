@@ -12,9 +12,12 @@ after having merged the current master branch into it!
 Requirements
 ============
 
+Packages
+--------
+
 To release Tails you'll need some packages installed:
 
-* `tidy mktorrent transmission-cli`
+* `gitlab-cli jq tidy mktorrent transmission-cli`
 * aufs DKMS module for your running kernel.
 * [[!debpts squashfs-tools]] 1:4.4-1+0.tails1
   from our custom `iukbuilder-stretch` APT suite.
@@ -22,6 +25,28 @@ To release Tails you'll need some packages installed:
 * `perl5lib` [[dependencies|contribute/release_process/perl5lib#build-deps]]
 * `po4a` _from Stretch_: the version in testing/sid extracts Markdown headings
    in a different way, which makes tons of strings fuzzy.
+
+Configuration files
+-------------------
+
+To release Tails you need:
+
+* `~/.python-gitlab.cfg`
+
+  You need at least this content:
+
+        [global]
+        ssl_verify = true
+
+        [Tails]
+        url = https://gitlab.tails.boum.org
+        per_page = 100
+        private_token = XXX
+
+   [[!tails_gitlab profile/personal_access_tokens
+   desc="Generate a _Personal Access Token_"]] with at least the `api` scope
+   enabled, and set it as the value of the `private_token` option
+   in your `~/.python-gitlab.cfg`.
 
 Environment
 ===========
@@ -1602,22 +1627,13 @@ be resolved in this release.
     find wiki/src/{doc,support} ! -path wiki/src/support/known_issues/graphics.mdwn -name "*.mdwn" -o -name "*.html" | xargs cat | \
         ruby -e 'puts STDIN.read.scan(/\[\[!tails_ticket\s+(\d+)[^\]]*\]\]/)' | \
         while read ticket; do
-            url="https://redmine.tails.boum.org/code/issues/${ticket:?}"
-            url_content=$(curl --fail --silent ${url:?})
-            if [ "${?}" -ne 0 ] || [ -z "${url_content:-}" ]; then
-                echo "Failed to fetch ${url:?} so manually investigate #${ticket:?}" >&2
-                continue
-            fi
-            ticket_status="$(echo "${url_content:?}" | \
-                sed -n 's,^.*<div class="status attribute"><div class="label">Status:</div><div class="value">\([^<>]\+\)</div></div>.*$,\1,p')"
+            ticket_status="$(python-gitlab --gitlab Tails -o json --fields state project-issue get --project-id 1 --iid "$ticket" | jq --raw-output .state)"
             if [ -z "${ticket_status:-}" ]; then
                 echo "Failed to find the status of #${ticket:?}" >&2
                 continue
             fi
-            if [ "${ticket_status:?}" != "New" ] && \
-               [ "${ticket_status:?}" != "Confirmed" ] && \
-               [ "${ticket_status:?}" != "In Progress" ]; then
-                echo "It seems ticket #${ticket:?} has been fixed (Status: ${ticket_status:?}) so please find all instances on the website and adjust them as needed. Ticket URL: ${url:?}"
+            if [ "${ticket_status:?}" = "closed" ]; then
+                echo "It seems issue #${ticket:?} has been fixed. Please find all instances on the website and adjust them as needed. Ticket URL: https://gitlab.tails.boum.org/tails/tails/issues/${ticket:?}"
             fi
         done
 
