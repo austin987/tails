@@ -25,6 +25,7 @@ use English qw{-no_match_vars};
 use File::Basename;
 use File::Spec::Functions;
 use Function::Parameters;
+use IO::LockedFile;
 use IPC::Run;
 use Path::Tiny;
 use Tails::IUK::Utils qw{extract_file_from_iso extract_here_file_from_iso run_as_root stdout_as_root};
@@ -93,6 +94,13 @@ has 'mksquashfs_options' =>
     handles     => {
         list_mksquashfs_options => 'elements',
     };
+
+option 'mksquashfs_lock_file' =>
+    is            => 'lazy',
+    isa           => AbsPath,
+    coerce        => AbsPath->coercion,
+    format        => 's',
+    documentation => q{Location of the mksquashfs lock file};
 
 option 'ignore_if_same_content' =>
     is            => 'lazy',
@@ -406,6 +414,8 @@ method create_squashfs_diff () {
         }
     }
 
+    my $lock = new IO::LockedFile(">".$self->mksquashfs_lock_file)
+        if $self->mksquashfs_lock_file;
     $t1 = time;
     run_as_root(
         "SOURCE_DATE_EPOCH=$ENV{SOURCE_DATE_EPOCH}",
@@ -416,6 +426,8 @@ method create_squashfs_diff () {
     );
     $t2 = time;
     printf "TIME (main mksquashfs for $basename): %d seconds\n", ($t2-$t1);
+    $lock->close()
+        if $self->mksquashfs_lock_file;
 
     foreach ($union_basedir,
              $new_squashfs_mount, $new_iso_mount,
@@ -459,6 +471,8 @@ method saveas ($outfile_name) {
 
     $self->prepare_overlay_dir;
 
+    my $lock = new IO::LockedFile(">".$self->mksquashfs_lock_file)
+        if $self->mksquashfs_lock_file;
     my $basename = path($self->outfile)->basename;
     my $t1 = time;
     run_as_root(
@@ -471,6 +485,8 @@ method saveas ($outfile_name) {
     );
     my $t2 = time;
     printf "TIME (final mksquashfs for $basename): %d seconds\n", ($t2-$t1);
+    $lock->close()
+        if $self->mksquashfs_lock_file;
 
     return;
 }
