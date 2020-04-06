@@ -1059,7 +1059,7 @@ When(/^I plug and mount a (\d+) MiB USB drive with an? (.*)$/) do |size_MiB, fs|
 end
 
 When(/^I mount the USB drive again$/) do
-  mount_USB_drive(@tmp_filesystem_disk, @tmp_filesystem_options)
+  mount_USB_drive(@tmp_filesystem_disk, **@tmp_filesystem_options)
 end
 
 When(/^I umount the USB drive$/) do
