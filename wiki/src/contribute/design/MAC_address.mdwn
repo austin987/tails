@@ -350,7 +350,7 @@ The current implementation leaves the OUI part unchanged, and only spoofs the
 last three bytes of any network device's MAC address immediately after
 it is added by udev. Furthermore, to deal with potential network leaks
 before the user has chosen whether to enable MAC spoofing or not, the
-addition of network devices is delayed until after Tails Greeter knows
+addition of network devices is delayed until after the Welcome Screen knows
 the user's final decision.
 
 ## Network blocking
@@ -361,7 +361,7 @@ whether to enable MAC spoofing or not. The way we do this is by
 generating a list of all network device modules during build time, and
 add these to a `modprobe.d`-type blacklist. An implication of this is
 that in-kernel drivers and modules installed after build time will not
-be in the blacklist and hence are not supported. In Tails Greeter's
+be in the blacklist and hence are not supported. In the Welcome Screen's
 post-login script (when we know the user's decision) we unblock the
 network by simply removing that list, and then we have udev "re-probe"
 for network devices and load their modules.
@@ -461,7 +461,7 @@ that some devices are pretty much only used in some geographical
 areas. Note that collecting such data probably is orders of magnitude
 harder than `macchiato`'s current quest, and that the user interface
 would be further complicated (in Tails we'd have to ask for the
-current geographical location in Tails Greeter, or similar). The real
+current geographical location in the Welcome Screen, or similar). The real
 impact of this should be evaluated; it's very likely that the benefits
 still outweigh this risk.
 
