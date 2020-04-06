@@ -309,14 +309,12 @@ desc="for our blueprints"]]).
 ### The parent "tails" group
 
  - Visibility: Public
- - Tails sysadmins have "Owner" access to this group.
+ - The `root` user has "Owner" access to this group.
  - Release managers have "Reporter" access to this group
    (after releasing a new Tails, they need to postpone issues,
    including confidential ones, and manage group labels).
  - Nobody else is a member of this group.
  - Allow users to request access: disabled
- - issues: disabled
- - MRs: disabled
 
 ### Most public projects
 
@@ -327,8 +325,10 @@ has no dedicated section below:
    it's the most adequate for regular contributors, since it's the
    least disruptive in terms of workflow and habits and requires no
    work to adjust our Jenkins CI setup.
- - We mark our major branches and release tags as "Protected".
+ - We mark our major branches as "Protected".
  - Committers get "Maintainer" access.
+ - Maintainers are allowed to merge and to push to
+   protected branches.
  - The Git workflow remains unchanged for regular developers who are
    not granted full commit access but have access to our CI:
    they get "Developer" access, can
@@ -376,23 +376,30 @@ Properties:
  - MRs: enabled
  - regular Tails contributors have "Reporter" access
 
-### accounting, fundraising, sysadmin, tails-private
+### tails/accounting, tails/fundraising, tails/private
 
- - visibility: public (but most issues are private)
+ - visibility: private
  - issues: enabled
  - MRs: disabled
- - repository: disabled
+ - repository: disabled (could be enabled later if these teams
+   want their git-remote-gcrypt repo migrated)
  - Allow users to request access: disabled
- - regular contributors have "Guest" access level (so they can create new issues
-   but not see confidential ones)
  - Maintainer access given to:
     - accounting: accounting team
     - fundraising: fundraising team
-    - sysadmin: sysadmins team
-    - tails-private: tails@ members
- - Newly created issues are, by default:
-    - accounting, fundraising, tails-private: confidential
-    - sysadmin: public
+    - private: tails@ members
+
+### tails/sysadmin
+
+ - visibility: public
+ - issues: enabled
+ - MRs: disabled
+ - repository: disabled (contributors with "Guest" access would be allowed
+   to clone it)
+ - Allow users to request access: disabled
+ - regular contributors have "Guest" access level (so they can create new issues
+   but not see confidential ones)
+ - Maintainer access given to: sysadmin team
 
 ### test-suite-shared-secrets
 
@@ -725,7 +732,7 @@ From `git.tails.boum.org` aka. `git-tails.immerda.ch`:
  - `liveusb-creator` → rename to `installer` (public; read-write: committers)
  - `network-manager` (public; read-write: committers)
  - `onioncircuits` (public; read-write: committers)
- - `rm` (public; read-write: RMs)
+ - `rm` (private; read-write: RMs)
  - `tails-workarounds` (public; read-write: committers)
  - `test-suite-shared-secrets` (private; read-write: committers)
  - `torbrowser-launcher` (public; read-write: committers)
