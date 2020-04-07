@@ -112,6 +112,6 @@ def assert_all_connections(pcap_file, **opts, &block)
   end
 end
 
-def assert_no_connections(pcap_file, opts, &block)
+def assert_no_connections(pcap_file, **opts, &block)
   assert_all_connections(pcap_file, **opts) { |*args| not(block.call(*args)) }
 end
