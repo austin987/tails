@@ -16,7 +16,7 @@ def ensure_chutney_is_running
     network_definition = "#{GIT_DIR}/features/chutney/test-network"
     env = {
       'CHUTNEY_LISTEN_ADDRESS' => chutney_listen_address,
-      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data/",
+      'CHUTNEY_DATA_DIR' => "#{$config['TMPDIR']}/chutney-data",
       # The default value (60s) is too short for "chutney wait_for_bootstrap"
       # to succeed reliably.
       'CHUTNEY_START_TIME' => '600',
@@ -29,9 +29,21 @@ def ensure_chutney_is_running
     end
 
     chutney_cmd = Proc.new do |cmd|
+      debug_log("chutney: #{cmd}")
       Dir.chdir(chutney_src_dir) do
         cmd_helper([chutney_script, cmd, network_definition], env)
       end
+    end
+
+    # After an unclean shutdown of the test suite (e.g. Ctrl+C) the
+    # tor processes are left running, listening on the same ports we
+    # are about to use. If chutney's data dir also was removed, this
+    # will prevent chutney from starting the network unless the tor
+    # processes are killed manually.
+    begin
+      cmd_helper(["pkill", "--full", "--exact",
+                  "tor -f #{env['CHUTNEY_DATA_DIR']}/nodes/.*/torrc --quiet"])
+    rescue
     end
 
     if KEEP_SNAPSHOTS
@@ -162,10 +174,15 @@ end
 
 def chutney_onionservice_redir(remote_address, remote_port)
   redir_unit_name = 'tails-test-suite-redir.service'
+  if ENV['USER'] == 'root'
+    bus = '--system'
+  else
+    bus = '--user'
+  end
   kill_redir = Proc.new do
     begin
-      if system('/bin/systemctl', '--quiet', 'is-active', redir_unit_name)
-        system('/bin/systemctl', 'stop', redir_unit_name)
+      if system('/bin/systemctl', bus, '--quiet', 'is-active', redir_unit_name)
+        system('/bin/systemctl', bus, 'stop', redir_unit_name)
       end
     rescue
       # noop
@@ -175,6 +192,7 @@ def chutney_onionservice_redir(remote_address, remote_port)
   local_address, local_port, _ = chutney_onionservice_info
   $chutney_onionservice_job = fatal_system(
     '/usr/bin/systemd-run',
+    bus,
     "--unit=#{redir_unit_name}",
     '--service-type=forking',
     '--quiet',

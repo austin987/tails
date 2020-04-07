@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+set -u
+
+PERSISTENCE_ROOT=/media/tails-persistence-setup/TailsData
+/bin/chmod 0775 "$PERSISTENCE_ROOT"
+/bin/mount -o remount,acl "$PERSISTENCE_ROOT"
+/bin/setfacl -b "$PERSISTENCE_ROOT"
+/bin/setfacl -m user:tails-persistence-setup:rwx "$PERSISTENCE_ROOT"
