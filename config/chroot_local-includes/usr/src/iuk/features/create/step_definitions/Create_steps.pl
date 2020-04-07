@@ -25,7 +25,7 @@ my $bindir = path(__FILE__)->parent->parent->parent->parent->child('bin')->absol
 use Env qw{@PATH};
 unshift @PATH, $bindir;
 
-my $union_type = $ENV{UNION_TYPE} // 'aufs';
+my $union_type = $ENV{UNION_TYPE} // 'overlayfs';
 
 Given qr{^a usable temporary directory$}, fun ($c) {
     my $dirname = Path::Tiny->tempdir(CLEANUP => 0);
