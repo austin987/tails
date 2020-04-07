@@ -4,6 +4,85 @@ tails (4.6) UNRELEASED; urgency=medium
 
  -- Cyril Brulebois <ckb@riseup.net>  Tue, 24 Mar 2020 10:19:15 +0100
 
+tails (4.5) unstable; urgency=medium
+
+  * Security fixes
+    - Upgrade Tor Browser to 9.0.9-build1 (Closes: #17594).
+    - Upgrade BlueZ to 5.50-1.2~deb10u1 (DSA-4647).
+    - Upgrade GnuTLS to 3.6.7-4+deb10u3 (DSA-4652).
+
+ -- Tails developers <tails@boum.org>  Mon, 06 Apr 2020 21:51:05 +0200
+
+tails (4.5~rc1) unstable; urgency=medium
+
+  * Major changes
+    - Migrate from aufs to overlayfs (Closes: #8415). This change touches
+      many components which won't all be listed individually, but some
+      highlights are listed below:
+      ⋅ Adjust the build system to stop building the aufs kernel module.
+      ⋅ Switch the kernel command line from union=aufs to union=overlayfs.
+      ⋅ Adjust AppArmor profiles (Closes: #9045, #12112).
+      . Adapt chroot-browsers (Closes: #12105).
+      ⋅ Drop the aufs Git submodule.
+      ⋅ Make memory erasure feature compatible with overlayfs
+        (Closes: #15146).
+      ⋅ Make Upgrader support and also generate overlayfs-based IUKs by
+       default (Closes: #9373).
+    - Use GRUB with Secure Boot support for x86_64 (Closes: #6560, #15806).
+      This is also a large change, touching many components:
+      ⋅ Install grub from bullseye.
+      ⋅ Introduce a custom grub configuration file.
+      ⋅ Use a custom background image.
+      ⋅ Mimick Debian Installer's efi-image build script to handle all
+        details in binary local hooks.
+      ⋅ Add SYSLINUX in the syslinux bootloader menu, to make it easier to
+        troubleshoot GRUB vs. syslinux issues (Closes: #17538).
+      ⋅ Upgrader: Adjust to also handle files in EFI/debian when dealing
+        with file removals.
+      ⋅ Adjust test suite.
+    - Migrate test suite from Sikuli to a combination of OpenCV (image
+      matching), xdotool (mouse interaction), plus libvirt's send-key
+      (keyboard interaction) (Closes: #15460). This is another major
+      changes, allowing the test suite to run on Buster-based systems,
+      touching various areas of the test suite, among which:
+      ⋅ Add workaround for the Greeter when restoring snapshot.
+      ⋅ Fix dependencies for Buster.
+      ⋅ Replace some Sikuli-based options with some OpenCV-based ones
+        (e.g. --retry-find → --image-bumping-mode).
+      ⋅ Handle non-English keyboards.
+      ⋅ Fix --capture on Buster and above.
+      ⋅ Deal with Buster having migrated from avconv to ffmpeg.
+
+  * Security fixes
+    - Upgrade ICU to 63.1-6+deb10u1 (DSA-4646).
+
+  * Minor improvements and updates
+    - Refactor tails-documentation (Closes: #16903).
+
+  * Build system
+    - Freeze APT snapshots for 4.5~rc1.
+    - Rakefile: always disable website caching when building from a tag
+      (Closes: #17513).
+    - Rakefile: fix recommended permissions (libvirt needs +r to share the
+      source tree with the Vagrant box).
+    - Import persistence-setup.git from its own repository into tails.git
+      (Closes: #17526, #6487).
+    - IUK: ensure rsync runtime dependency is installed.
+
+  * Test suite
+    - Adjust for the aufs → overlayfs migration (Closes: #12106, #17440,
+      #17451).
+    - run_test_suite: don't print usage on error.
+    - run_test_suite: --view/--vnc-server-only are only supported on x11.
+    - Optimize checking if file is empty.
+    - Speed up some test failures to avoid resource starvation.
+    - Check for tcplay dependency.
+    - Increase chances chutney starts after unclean shutdown.
+    - Make chutney log what it is doing.
+    - Make opening Thunderbird's Extensions tab more robust.
+
+ -- Tails developers <tails@boum.org>  Thu, 26 Mar 2020 22:51:35 +0100
+
 tails (4.4.1) unstable; urgency=medium
 
   * Security fixes

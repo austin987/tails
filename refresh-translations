@@ -6,17 +6,19 @@ set -u
 PERL_PROGS="/usr/local/bin/tails-security-check \
     /usr/local/lib/tails-htp-notify-user \
     /usr/local/lib/tails-virt-notify-user \
-    $(find config/chroot_local-includes/usr/src/iuk/bin \
+    $(find \
+         config/chroot_local-includes/usr/src/iuk/bin \
+         config/chroot_local-includes/usr/src/persistence-setup/bin \
          -type f \
          | perl -p -E 's{^config/chroot_local-includes}{}' \
-    )"
-PERL_LIBS=$(\
-   find \
+    ) \
+    $(find \
       config/chroot_local-includes/usr/src/iuk/lib \
       config/chroot_local-includes/usr/src/perl5lib/lib \
+      config/chroot_local-includes/usr/src/persistence-setup/lib \
       -type f -name *.pm \
       | perl -p -E 's{^config/chroot_local-includes}{}' \
-)
+)"
 PYTHON_PROGS="/etc/whisperback/config.py \
     /usr/local/bin/electrum \
     /usr/local/bin/replace-su-with-sudo \
@@ -80,6 +82,9 @@ prog_potfile () {
             ;;
         /usr/lib/python3/dist-packages/tailsgreeter/*)
             domain="greeter-$(basename "$prog")"
+            ;;
+        /usr/src/persistence-setup/lib/*)
+            domain="persistence-setup-$(basename "$prog")"
             ;;
         *)
             domain=$(basename $prog)
@@ -197,7 +202,7 @@ trap "rm -fr po/*.new po/*.orig ; [ "$KEEP_TMP_POT" = yes ] || rm -fr tmp/pot" E
 
 # Update POT files
 mkdir -p tmp/pot
-for prog in $PERL_PROGS $PERL_LIBS ; do create_pot $prog Perl   ; done
+for prog in $PERL_PROGS   ; do create_pot $prog Perl   ; done
 for prog in $PYTHON_PROGS ; do create_pot $prog Python ; done
 for prog in $SHELL_PROGS  ; do create_pot $prog Shell  ; done
 for prog in $JAVASCRIPT_PROGS  ; do create_pot $prog JavaScript ; done

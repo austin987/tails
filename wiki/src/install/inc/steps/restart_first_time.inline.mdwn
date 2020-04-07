@@ -67,9 +67,11 @@ the rest of the instructions afterwards, we recommend you either:
 [[!inline pages="install/inc/steps/mac_startup_disks.inline" raw="yes" sort="age"]]
 </div>
 
-<h2 id="greeter">Tails Greeter</h2>
+<a id="greeter"></a>
 
-1. One to two minutes after the <span class="application">Boot Loader Menu</span>, another screen called <span class="application">Tails Greeter</span> appears.
+<h2 id="welcome-screen">Welcome Screen</h2>
+
+1. One to two minutes after the Boot Loader, the Welcome Screen appears.
 
    <div class="note">
    <p>If the computer display the error message
@@ -78,7 +80,7 @@ the rest of the instructions afterwards, we recommend you either:
    cards|support/known_issues/graphics]].</p>
 
    <p>If the computer stops responding or displays other error messages before
-   getting to <span class="application">Tails Greeter</span>, refer to
+   getting to the Welcome Screen, refer to
    [[!toggle id="not_entirely" text="the troubleshooting section about
    Tails not starting entirely"]].</p>
    </div>
@@ -92,44 +94,84 @@ the rest of the instructions afterwards, we recommend you either:
    Tails does not start entirely
    -----------------------------
 
-   The following section applies if the <span class="application">Boot Loader Menu</span> appears but not
-   <span class="application">Tails Greeter</span> when starting Tails.
+   The following section applies if the Boot Loader appears but not
+   the Welcome Screen when starting Tails.
 
    1. Restart the computer on the first USB stick.
 
-   1. In the <span class="application">Boot Loader Menu</span>, choose the
+   1. In the Boot Loader, choose the
    <span class="guilabel">Troubleshooting Mode</span>
    which might work better on some computers.
 
    1. If the <span class="guilabel">Troubleshooting Mode</span> does not work
    better, restart the computer again on the first USB stick.
 
-   1. In the <span class="application">Boot Loader Menu</span>, press
-   <span class="keycap">TAB</span>. A command line with a list
-   of boot options appears at the bottom of the screen.
+   1. Depending on whether the Boot Loader is *GRUB* or *SYSLINUX*:
 
-      [[!img doc/first_steps/startup_options/boot-menu-with-options.png link="no" alt="Black screen with Tails artwork and list of boot options"]]
+      If the Boot Loader is *GRUB*:
 
-   1. Press the <span class="keycap">Backspace</span> key several times to
-      remove the <span class="code">quiet</span> option from the command line.
+        1. Press **e** when GRUB appears.
 
-   1. If Tails previously failed to start and displayed the <span
-      class="code">Probing EDD (edd=off to disable)...</span> error,
-      then type `edd=off` to add this option to the command line.
+           A new screen appears with more options.
 
-   1. Type `debug nosplash` to add these options to the command line.
+           [[!img doc/first_steps/welcome_screen/grub-with-options.png link="no" alt="GRUB with a list of
+           options starting with 'setparams Tails'"]]
 
-   1. To start Tails, press <span class="keycap">Enter</span>.
+        1. Navigate with the arrows of the keyboard to the end of the line that
+           starts with <span class="code">linux</span>. The line is most likely
+           wrapped and displayed on several lines on the screen but it is a
+           single configuration line.
 
-   1. Hopefully, error messages now appear when starting Tails. You can
-      [[send them to our help desk by email|support/talk]], for example by taking a
-      picture of the last screen and error messages.
+        1. Press the <span class="keycap">Backspace</span> key several times to
+           remove the <span class="code">quiet</span> option from the command line.
+
+        1. Type <span class="code">debug nosplash</span> to add these options to the command line.
+
+        1. If Tails previously failed to start and displayed the
+           following error:
+
+           <p class="pre">Probing EDD (edd=off to disable)...</span>
+
+           Then type `edd=off` to add this option to the command line.
+
+        1. Press **Ctrl+X** to start Tails.
+
+        1. Hopefully, new error messages now appear when starting Tails. You can
+           [[send them to our help desk by email|support/talk]], for example by taking a
+           picture of the last screen and error messages.
+
+      If the Boot Loader is *SYSLINUX*:
+
+        1. Press
+           <span class="keycap">Tab</span>. A command line with a list
+           of boot options appears at the bottom of the screen.
+
+           [[!img doc/first_steps/welcome_screen/syslinux-with-options.png link="no" alt="SYSLINUX with
+           a list of options starting with '/live/vmlinuz' at the bottom"]]
+
+        1. Press the <span class="keycap">Backspace</span> key several times to
+           remove the <span class="code">quiet</span> option from the command line.
+
+        1. Type <span class="code">debug nosplash</span> to add these options to the command line.
+
+        1. If Tails previously failed to start and displayed the
+           following error:
+
+           <p class="pre">Probing EDD (edd=off to disable)...</span>
+
+           Then type <span class="code">edd=off</span> to add this option to the command line.
+
+        1. Press <span class="keycap">Enter</span> to start Tails.
+
+        1. Hopefully, new error messages now appear when starting Tails. You can
+           [[send them to our help desk by email|support/talk]], for example by taking a
+           picture of the last screen and error messages.
 
    """]]
 
-   [[!img doc/first_steps/startup_options/tails-greeter-welcome-to-tails.png link="no" alt="Tails Greeter: 'Welcome to Tails!'"]]
+   [[!img doc/first_steps/welcome_screen/welcome-screen.png link="no" alt="Welcome to Tails!"]]
 
-1. In <span class="application">Tails Greeter</span>, select your language and
+1. In the Welcome Screen, select your language and
 keyboard layout in the <span class="guilabel">Language & Region</span> section.
 Click <span class="button">Start Tails</span>.
 

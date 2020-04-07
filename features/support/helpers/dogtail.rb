@@ -35,6 +35,9 @@ module Dogtail
     :window,
   ]
 
+  class Failure < StandardError
+  end
+
   # We want to keep this class immutable so that handles always are
   # left intact when doing new (proxied) method calls.  This way we
   # can support stuff like:
@@ -79,7 +82,7 @@ module Dogtail
       code = code.join("\n") if code.class == Array
       c = RemoteShell::PythonCommand.new($vm, code, user: @opts[:user])
       if c.failure?
-        raise RuntimeError.new("The Dogtail script raised: #{c.exception}")
+        raise Failure.new("The Dogtail script raised: #{c.exception}")
       end
       return c
     end

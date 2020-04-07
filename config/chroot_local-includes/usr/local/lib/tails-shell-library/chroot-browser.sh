@@ -30,10 +30,10 @@ try_cleanup_browser_chroot () {
     for mnt in ${chroot_mounts} "${cow}"; do
         try_for 10 "umount ${mnt} 2>/dev/null" 0.1
     done
-    rmdir "${cow}" "${chroot}"
+    rmdir "${cow}/rw" "${cow}/work" "${cow}" "${chroot}"
 }
 
-# Setup a chroot on a clean aufs "fork" of the root filesystem.
+# Setup a chroot on a clean overlayfs "fork" of the root filesystem.
 setup_chroot_for_browser () {
     local chroot="${1}"
     local cow="${2}"
@@ -48,7 +48,7 @@ setup_chroot_for_browser () {
     local rootfs_dir
     local rootfs_dirs_path="/lib/live/mount/rootfs"
     local tails_module_path="/lib/live/mount/medium/live/Tails.module"
-    local aufs_dirs=
+    local lowerdirs=
 
     # We have to pay attention to the order we stack the filesystems;
     # newest must be first, and remember that the .module file lists
@@ -56,21 +56,20 @@ setup_chroot_for_browser () {
     while read rootfs_dir; do
         rootfs_dir="${rootfs_dirs_path}/${rootfs_dir}"
         mountpoint -q "${rootfs_dir}" && \
-        aufs_dirs="${rootfs_dir}=rr+wh:${aufs_dirs}"
+        lowerdirs="${rootfs_dir}:${lowerdirs}"
     done < "${tails_module_path}"
-    # But our copy-on-write dir must be at the very top.
-    aufs_dirs="${cow}=rw:${aufs_dirs}"
+    # Remove the trailing colon
+    lowerdirs=${lowerdirs%?}
 
     mkdir -p "${cow}" "${chroot}" && \
     mount -t tmpfs tmpfs "${cow}" && \
-    mount -t aufs -o "noatime,noxino,dirs=${aufs_dirs}" aufs "${chroot}" && \
+    mkdir "${cow}/rw" "${cow}/work" && \
+    mount -t overlay -o "noatime,lowerdir=${lowerdirs},upperdir=${cow}/rw,workdir=${cow}/work" overlay "${chroot}" && \
+    chmod 755 "${chroot}" && \
     mount -t proc proc "${chroot}/proc" && \
     mount --bind "/dev" "${chroot}/dev" && \
     mount -t tmpfs -o rw,nosuid,nodev tmpfs "${chroot}/dev/shm" || \
         return 1
-
-    # Workaround for #6110
-    chmod -t "${cow}"
 }
 
 browser_conf_dir () {

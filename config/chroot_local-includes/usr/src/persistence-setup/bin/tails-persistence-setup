@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+tails-persistence-setup - setup Tails persistent storage
+
+=head1 VERSION
+
+Version 2.2.1
+
+=cut
+
+use strictures 2;
+use 5.10.1;
+
+our $VERSION = '2.2.1';
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+my $mu;
+sub record_memory_usage { 1 }
+sub report_memory_usage { 1 }
+
+my @options;
+
+BEGIN {
+    if (exists $ENV{REPORT_MEMORY_USAGE}
+            && defined $ENV{REPORT_MEMORY_USAGE}
+            && $ENV{REPORT_MEMORY_USAGE}) {
+        require Memory::Usage;
+        $mu = Memory::Usage->new();
+        no warnings 'redefine';
+        *record_memory_usage = sub { $mu->record(shift) };
+        *report_memory_usage = sub { $mu->dump() };
+        push @options, ('memory_usage' => $mu);
+        say STDERR "Enabled memory usage reporting";
+    }
+}
+
+$SIG{'INT'}  = $SIG{'TERM'} = sub { report_memory_usage(); exit(0); };
+$SIG{'USR1'} = sub { report_memory_usage(); };
+
+record_memory_usage('before loading Tails::Persistence::Setup');
+use Tails::Persistence::Setup;
+record_memory_usage('after loading Tails::Persistence::Setup');
+
+Tails::Persistence::Setup->new_with_options()->run;
+record_memory_usage('after Tails::Persistence::Setup->run is done');
+
+report_memory_usage();
