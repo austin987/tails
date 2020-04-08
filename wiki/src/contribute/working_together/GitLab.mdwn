@@ -17,12 +17,8 @@ desc="registration page"]] in a web browser.
 
 Then you will be allowed to open new issues and merge requests.
 
-Later on, if you need to do something in GitLab and you appear to lack the
-needed credentials, please ask
-[[tails-sysadmins@boum.org|about/contact#tails-sysadmins]] to grant
-you more power. For example, you will need "Reporter" access on
-the [[!tails_gitlab tails/tails]] project in order to add labels
-or assign issues.
+Later on, you will probably need to [[request more
+credentials|GitLab#request-access]].
 
 # Group and projects
 
@@ -396,9 +392,6 @@ administrate this GitLab instance.
 
 ## Access control
 
-XXX: document the process to grant access level to users, once this [is
-implemented](https://salsa.debian.org/tails-team/gitlab-migration/issues/33).
-
 ### Objects
 
  - _Canonical Git repo_: the authoritative [[!tails_gitlab tails/tails]]
@@ -420,7 +413,7 @@ implemented](https://salsa.debian.org/tails-team/gitlab-migration/issues/33).
    Note that as of 2020-03-29, it is undefined:
 
     - What subset of this data can go to a web-based issue tracker or not.<br/>
-      This is already a problem with Redmine.<br/>
+      This was already a problem with Redmine.<br/>
       Fixing this will require discussions between various stakeholders.
 
     - What subset of this data could live in a cleartext Git
@@ -448,7 +441,6 @@ implemented](https://salsa.debian.org/tails-team/gitlab-migration/issues/33).
      GitLab project; that's OK, because particularly sensitive data
      lives somewhere else, with stricter access control
    - can edit other users' comments
-   - MAY be allowed to add new team members
    - MUST comply with our "Level 3" security policy
 
  - A _regular, particularly trusted contributor_:
@@ -470,10 +462,35 @@ implemented](https://salsa.debian.org/tails-team/gitlab-migration/issues/33).
      lives somewhere else, with stricter access control
 
  - _Anybody with a GitLab account_ on the instance we use:
-   - can submit issues
-   - can submit MRs
+   - can view and submit issues in public projects
+   - can submit MRs in public projects
 
 ### Implementation
+
+<a id="request-access"></a>
+
+#### Requesting access
+
+If you need to do something in GitLab and you appear to lack the
+needed credentials, please ask the Tails
+[[system administrators|working_together/roles/sysadmins#communication]]
+[[tails-sysadmins@boum.org|about/contact#tails-sysadmins]] to grant
+you more power.
+
+For example, you will need "Reporter" access on the [[!tails_gitlab
+tails/tails]] project in order to add labels or assign issues.
+
+#### Adding/removing access
+
+Do not grant access via the web interface:
+
+ - Such manual changes would be later overwritten by automated processes.
+ - Manual changes can easily have side effects that violate our access control
+   requirements.
+
+Instead, after following the relevant process (if any),
+request the access modification from the Tails
+[[system administrators|working_together/roles/sysadmins#communication]].
 
 #### Relevant GitLab doc
 
@@ -498,4 +515,3 @@ desc="Protected branch flow"]]:
    They push topic branches to their own fork of the repository and
    create merge requests.
  - Our Jenkins CI jobs generation process is the same as in pre-GitLab days.
-
