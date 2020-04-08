@@ -233,7 +233,7 @@ def cmd_helper(cmd, env = {})
   env = ENV.to_h.merge(env)
   IO.popen(env, cmd) do |p|
     out = p.readlines.join("\n")
-    p.close
+    Process.wait(p.pid)
     ret = $?
     assert_equal(0, ret, "Command failed (returned #{ret}): #{cmd}:\n#{out}")
     return out

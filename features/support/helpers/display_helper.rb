@@ -48,7 +48,7 @@ class Display
   def screenshot(target)
     FileUtils.rm_f(target)
     p = IO.popen(['import', '-quality', '100%', '-window', 'root', target])
-    p.close
+    Process.wait(p.pid)
     assert($?.success?)
     assert(File.exists?(target))
   ensure
@@ -61,7 +61,11 @@ class Display
       rescue IOError, Errno::ESRCH
         # Process has already exited.
       end
-      p.close
+      begin
+        Process.wait(p.pid)
+      rescue Errno::ECHILD
+        # Process has already exited.
+      end
     rescue NameError
       # We aborted before p was assigned, so no clean up needed.
     end

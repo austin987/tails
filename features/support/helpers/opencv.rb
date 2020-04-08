@@ -24,7 +24,7 @@ module OpenCV
       err: [:child, :out]
     )
     out = p.readlines.join("\n")
-    p.close
+    Process.wait(p.pid)
     case $?.exitstatus
     when 0
       return out.chomp.split.map { |s| s.to_i }
@@ -43,7 +43,11 @@ module OpenCV
       rescue IOError, Errno::ESRCH
         # Process has already exited.
       end
-      p.close
+      begin
+        Process.wait(p.pid)
+      rescue Errno::ECHILD
+        # Process has already exited.
+      end
     rescue NameError
       # We aborted before p was assigned, so no clean up needed.
     end
