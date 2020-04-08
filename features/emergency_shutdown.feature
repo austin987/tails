@@ -14,7 +14,7 @@ Feature: Emergency shutdown
     When I eject the boot medium
     Then Tails eventually shuts down
 
-  Scenario: Tails erases memory on DVD boot medium removal: aufs read-write branch
+  Scenario: Tails erases memory on DVD boot medium removal: overlayfs read-write branch
     Given I have started Tails from DVD without network and logged in
     And I prepare Tails for memory erasure tests
     And I fill a 128 MiB file with a known pattern on the root filesystem

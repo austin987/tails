@@ -61,9 +61,8 @@ loop do
     break
   end
 end
-SIKULI_CANDIDATES_DIR = "#{ARTIFACTS_DIR}/sikuli_candidates"
-SIKULI_IMAGE_PATH = "#{Dir.pwd}/features/images/"
-SIKULI_MIN_SIMILARITY = 0.9
+OPENCV_IMAGE_PATH = "#{Dir.pwd}/features/images/"
+OPENCV_MIN_SIMILARITY = 0.9
 
 # Constants that are statically initialized.
 CONFIGURED_KEYSERVER_HOSTNAME = 'zkaan2xfbuxia2wpf7ofnkbz6r5zdbbvxbunvp5g2iebopbfc4iqmbad.onion'

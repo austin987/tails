@@ -66,26 +66,31 @@ def pidgin_account_connected?(account, prpl_protocol)
   pidgin_force_allowed_dbus_call('PurpleAccountIsConnected', account_id) == 1
 end
 
+def click_mid_right_edge(pattern, **opts)
+  m = @screen.find(pattern, **opts)
+  @screen.click(m.x + m.w, m.y + m.h/2)
+end
+
 When /^I create my XMPP account$/ do
   account = xmpp_account("Tails_account")
   @screen.click("PidginAccountManagerAddButton.png")
   @screen.wait("PidginAddAccountWindow.png", 20)
-  @screen.click_mid_right_edge("PidginAddAccountProtocolLabel.png")
+  click_mid_right_edge("PidginAddAccountProtocolLabel.png")
   @screen.click("PidginAddAccountProtocolXMPP.png")
   # We first wait for some field that is shown for XMPP but not the
   # default (IRC) since we otherwise may decide where we click before
   # the GUI has updated after switching protocol.
   @screen.wait("PidginAddAccountXMPPDomain.png", 5)
-  @screen.click_mid_right_edge("PidginAddAccountXMPPUsername.png")
+  click_mid_right_edge("PidginAddAccountXMPPUsername.png")
   @screen.type(account["username"])
-  @screen.click_mid_right_edge("PidginAddAccountXMPPDomain.png")
+  click_mid_right_edge("PidginAddAccountXMPPDomain.png")
   @screen.type(account["domain"])
-  @screen.click_mid_right_edge("PidginAddAccountXMPPPassword.png")
+  click_mid_right_edge("PidginAddAccountXMPPPassword.png")
   @screen.type(account["password"])
   @screen.click("PidginAddAccountXMPPRememberPassword.png")
   if account["connect_server"]
     @screen.click("PidginAddAccountXMPPAdvancedTab.png")
-    @screen.click_mid_right_edge("PidginAddAccountXMPPConnectServer.png")
+    click_mid_right_edge("PidginAddAccountXMPPConnectServer.png")
     @screen.type(account["connect_server"])
   end
   @screen.click("PidginAddAccountXMPPAddButton.png")
@@ -122,10 +127,9 @@ When /^I start a conversation with my friend$/ do
   # friend, given it's the only subscribed user that's online, which
   # we assume.
   r = @screen.find("PidginFriendOnline.png")
-  bottom_left = r.getBottomLeft()
-  x = bottom_left.getX + r.getW/2
-  y = bottom_left.getY
-  @screen.doubleClick_point(x, y)
+  x = r.x + r.w/2
+  y = r.y + r.h
+  @screen.click(x, y, double: true)
   # Since Pidgin sets the window name to the contact, we have no good
   # way to identify the conversation window. Let's just look for the
   # expected menu bar.
@@ -134,14 +138,13 @@ end
 
 And /^I say (.*) to my friend( in the multi-user chat)?$/ do |msg, multi_chat|
   msg = "ping" if msg == "something"
-  msg = msg + Sikuli::Key.ENTER
   if multi_chat
     $vm.focus_window(@chat_room_jid.split("@").first)
     msg = @friend_name + ": " + msg
   else
     $vm.focus_window(@friend_name)
   end
-  @screen.type(msg)
+  @screen.type(msg, ["Return"])
 end
 
 Then /^I receive a response from my friend( in the multi-user chat)?$/ do |multi_chat|
@@ -167,7 +170,7 @@ end
 
 Then /^Pidgin automatically generates an OTR key$/ do
   @screen.wait("PidginOTRKeyGenPrompt.png", 30)
-  @screen.wait_and_click("PidginOTRKeyGenPromptDoneButton.png", 30)
+  @screen.wait("PidginOTRKeyGenPromptDoneButton.png", 30).click
 end
 
 Then /^an OTR session was successfully started with my friend$/ do
@@ -181,9 +184,9 @@ end
 When /^I join some empty multi-user chat$/ do
   $vm.focus_window('Buddy List')
   @screen.click("PidginBuddiesMenu.png")
-  @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
-  @screen.wait_and_click("PidginJoinChatWindow.png", 10)
-  @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
+  @screen.wait("PidginJoinChatWindow.png", 10).click
+  click_mid_right_edge("PidginJoinChatRoomLabel.png")
   account = xmpp_account("Tails_account")
   if account.has_key?("chat_room") && \
      !account["chat_room"].nil? && \
@@ -195,9 +198,9 @@ When /^I join some empty multi-user chat$/ do
   @screen.type(chat_room)
 
   # We will need the conference server later, when starting the bot.
-  @screen.click_mid_right_edge("PidginJoinChatServerLabel.png")
-  @screen.type("a", Sikuli::KeyModifier.CTRL)
-  @screen.type("c", Sikuli::KeyModifier.CTRL)
+  click_mid_right_edge("PidginJoinChatServerLabel.png")
+  @screen.press("ctrl", "a")
+  @screen.press("ctrl", "c")
   conference_server =
     $vm.execute_successfully("xclip -o", :user => LIVE_USER).stdout.chomp
   @chat_room_jid = chat_room + "@" + conference_server
@@ -208,7 +211,7 @@ When /^I join some empty multi-user chat$/ do
   # Room" prompt that Pidgin shows for some server configurations.
   images = ["PidginCreateNewRoomPrompt.png",
             "PidginChat1UserInRoom.png"]
-  image_found, _ = @screen.waitAny(images, 30)
+  image_found, _ = @screen.wait_any(images, 30)
   if image_found == "PidginCreateNewRoomPrompt.png"
     @screen.click("PidginCreateNewRoomAcceptDefaultsButton.png")
   end
@@ -222,7 +225,7 @@ end
 When /^I clear the multi-user chat's scrollback$/ do
   $vm.focus_window(@chat_room_jid)
   @screen.click("PidginConversationMenu.png")
-  @screen.wait_and_click("PidginConversationMenuClearScrollback.png", 10)
+  @screen.wait("PidginConversationMenuClearScrollback.png", 10).click
 end
 
 Then /^I can see that my friend joined the multi-user chat$/ do
@@ -289,8 +292,8 @@ def pidgin_otr_keys
 end
 
 When /^I open Pidgin's account manager window$/ do
-  @screen.wait_and_click('PidginMenuAccounts.png', 20)
-  @screen.wait_and_click('PidginMenuManageAccounts.png', 20)
+  @screen.wait('PidginMenuAccounts.png', 20).click
+  @screen.wait('PidginMenuManageAccounts.png', 20).click
   step "I see Pidgin's account manager window"
 end
 
@@ -299,25 +302,25 @@ When /^I see Pidgin's account manager window$/ do
 end
 
 When /^I close Pidgin's account manager window$/ do
-  @screen.wait_and_click("PidginDialogCloseButton.png", 10)
+  @screen.wait("PidginDialogCloseButton.png", 10).click
 end
 
 When /^I close Pidgin$/ do
   $vm.focus_window('Buddy List')
-  @screen.type("q", Sikuli::KeyModifier.CTRL)
-  @screen.waitVanish('PidginAvailableStatus.png', 10)
+  @screen.press("ctrl", "q")
+  @screen.wait_vanish('PidginAvailableStatus.png', 10)
 end
 
 When /^I (de)?activate the "([^"]+)" Pidgin account$/ do |deactivate, account|
   @screen.click("PidginAccount_#{account}.png")
-  @screen.type(Sikuli::Key.LEFT + Sikuli::Key.SPACE)
+  @screen.type(["Left"], ["space"])
   if deactivate
-    @screen.waitVanish('PidginAccountEnabledCheckbox.png', 5)
+    @screen.wait_vanish('PidginAccountEnabledCheckbox.png', 5)
   else
     # wait for the Pidgin to be connecting, otherwise sometimes the step
     # that closes the account management dialog happens before the account
     # is actually enabled
-    @screen.waitAny(['PidginConnecting.png', 'PidginAvailableStatus.png'], 5)
+    @screen.wait_any(['PidginConnecting.png', 'PidginAvailableStatus.png'], 5)
   end
 end
 
@@ -352,7 +355,7 @@ Then /^Pidgin successfully connects to the "([^"]+)" account$/ do |account|
       # conversation window. At worst, the test will still fail...
       close_pidgin_conversation_window(account)
     end
-    on_screen, _ = @screen.waitAny([expected_channel_entry, reconnect_button], 60)
+    on_screen, _ = @screen.wait_any([expected_channel_entry, reconnect_button], 60)
     unless on_screen == expected_channel_entry
       raise "Connecting to account #{account} failed."
     end
@@ -361,10 +364,10 @@ end
 
 Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   $vm.focus_window('Buddy List')
-  @screen.wait_and_click("PidginBuddiesMenu.png", 20)
-  @screen.wait_and_click("PidginBuddiesMenuJoinChat.png", 10)
-  @screen.wait_and_click("PidginJoinChatWindow.png", 10)
-  @screen.click_mid_right_edge("PidginJoinChatRoomLabel.png")
+  @screen.wait("PidginBuddiesMenu.png", 20).click
+  @screen.wait("PidginBuddiesMenuJoinChat.png", 10).click
+  @screen.wait("PidginJoinChatWindow.png", 10).click
+  click_mid_right_edge("PidginJoinChatRoomLabel.png")
   @screen.type(channel)
   @screen.click("PidginJoinChatButton.png")
   @chat_room_jid = channel + "@" + account
@@ -372,17 +375,17 @@ Then /^I can join the "([^"]+)" channel on "([^"]+)"$/ do |channel, account|
   @screen.hide_cursor
   try_for(60) do
     begin
-      @screen.wait_and_click(chan_image(account, channel, 'conversation_tab'), 5)
+      @screen.wait(chan_image(account, channel, 'conversation_tab'), 5).click
     rescue FindFailed => e
       # If the channel tab can't be found it could be because there were
       # multiple connection attempts and the channel tab we want is off the
       # screen. We'll try closing tabs until the one we want can be found.
-      @screen.type("w", Sikuli::KeyModifier.CTRL)
+      @screen.press("ctrl", "w")
       raise e
     end
   end
   @screen.hide_cursor
-  @screen.wait(          chan_image(account, channel, 'welcome'), 10)
+  @screen.wait(chan_image(account, channel, 'welcome'), 10)
 end
 
 Then /^I take note of the configured Pidgin accounts$/ do
@@ -411,12 +414,12 @@ def pidgin_add_certificate_from (cert_file)
   step "I copy \"/usr/share/ca-certificates/mozilla/Staat_der_Nederlanden_EV_Root_CA.crt\" to \"#{cert_file}\" as user \"amnesia\""
 
   $vm.focus_window('Buddy List')
-  @screen.wait_and_click('PidginToolsMenu.png', 10)
-  @screen.wait_and_click('PidginCertificatesMenuItem.png', 10)
+  @screen.wait('PidginToolsMenu.png', 10).click
+  @screen.wait('PidginCertificatesMenuItem.png', 10).click
   @screen.wait('PidginCertificateManagerDialog.png', 10)
-  @screen.wait_and_click('PidginCertificateAddButton.png', 10)
+  @screen.wait('PidginCertificateAddButton.png', 10).click
   begin
-    @screen.wait_and_click('GtkFileChooserDesktopButton.png', 10)
+    @screen.wait('GtkFileChooserDesktopButton.png', 10).click
   rescue FindFailed
     # The first time we're run, the file chooser opens in the Recent
     # view, so we have to browse a directory before we can use the
@@ -424,15 +427,15 @@ def pidgin_add_certificate_from (cert_file)
     # chooser is already in the Desktop directory, so we don't need to
     # do anything. Hence, this noop exception handler.
   end
-  @screen.wait_and_click('GtkFileTypeFileNameButton.png', 10)
-  @screen.type("l", Sikuli::KeyModifier.ALT) # "Location" field
-  @screen.type(cert_file + Sikuli::Key.ENTER)
+  @screen.wait('GtkFileTypeFileNameButton.png', 10).click
+  @screen.press("alt", "l") # "Location" field
+  @screen.type(cert_file, ["Return"])
 end
 
 Then /^I can add a certificate from the "([^"]+)" directory to Pidgin$/ do |cert_dir|
   pidgin_add_certificate_from("#{cert_dir}/test.crt")
   wait_and_focus('PidginCertificateAddHostnameDialog.png', 10, 'Certificate Import')
-  @screen.type("XXX test XXX" + Sikuli::Key.ENTER)
+  @screen.type("XXX test XXX", ["Return"])
   wait_and_focus('PidginCertificateTestItem.png', 10, 'Certificate Manager')
 end
 
@@ -443,15 +446,15 @@ end
 
 When /^I close Pidgin's certificate manager$/ do
   wait_and_focus('PidginCertificateManagerDialog.png', 10, 'Certificate Manager')
-  @screen.type(Sikuli::Key.ESC)
-  # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
-  @screen.waitVanish('PidginCertificateManagerDialog.png', 10)
+  @screen.press("Escape")
+  # @screen.wait('PidginCertificateManagerClose.png', 10).click
+  @screen.wait_vanish('PidginCertificateManagerDialog.png', 10)
 end
 
 When /^I close Pidgin's certificate import failure dialog$/ do
-  @screen.type(Sikuli::Key.ESC)
-  # @screen.wait_and_click('PidginCertificateManagerClose.png', 10)
-  @screen.waitVanish('PidginCertificateImportFailed.png', 10)
+  @screen.press("Escape")
+  # @screen.wait('PidginCertificateManagerClose.png', 10).click
+  @screen.wait_vanish('PidginCertificateImportFailed.png', 10)
 end
 
 When /^I see the Tails roadmap URL$/ do
@@ -462,7 +465,7 @@ When /^I see the Tails roadmap URL$/ do
     begin
       @screen.find('PidginTailsRoadmapUrl.png')
     rescue FindFailed => e
-      @screen.type(Sikuli::Key.PAGE_UP)
+      @screen.press("Page_Up")
       raise e
     end
   end
