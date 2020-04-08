@@ -196,6 +196,7 @@ end
 # we want this hook to always run first, so it must always be the
 # *first* Before hook matching @product listed in this file.
 Before('@product') do |scenario|
+  $zombies = defunct_processes
   $failure_artifacts = Array.new
   if $config["CAPTURE"]
     video_name = sanitize_filename("#{scenario.name}.mkv")
@@ -233,6 +234,9 @@ end
 # hooks added dynamically via add_after_scenario_hook() are supposed to
 # truly be last.
 After('@product') do |scenario|
+  assert_equal($zombies, defunct_processes,
+               "This scenario introduced zombie processes! " +
+               "Or the previous scenario's $after_scenario_hooks.")
   if @video_capture_pid
     # We can be incredibly fast at detecting errors sometimes, so the
     # screen barely "settles" when we end up here and kill the video

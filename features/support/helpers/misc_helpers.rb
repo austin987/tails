@@ -388,3 +388,10 @@ def ffmpeg
       return 'ffmpeg'
     end
 end
+
+def defunct_processes
+  cmd_helper(['pgrep', '--parent', $$.to_s, '--runstates', 'Z'])
+    .chomp.split.map { |s| s.to_i }
+rescue Test::Unit::AssertionFailedError
+  return []
+end

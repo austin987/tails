@@ -1114,3 +1114,23 @@ When /^I disable the (.*) (system|user) unit$/ do |unit, scope|
   options = scope == 'system' ? '' : '--global'
   $vm.execute_successfully("systemctl #{options} disable '#{unit}'")
 end
+
+Then /^test$/ do
+  begin
+    ps1 = defunct_processes
+    Timeout::timeout(0.1) do
+      loop do
+        $vm.display.screenshot("#{$config["TMPDIR"]}/test.png")
+      end
+    end
+  rescue Timeout::Error
+    # Expected!
+  ensure
+    # Strangeness: this sleep is required. Without it the defunct
+    # process is not reported yet, so ps1 == ps2 even if it should
+    # not.
+    sleep 1
+    ps2 = defunct_processes
+    assert_equal(ps1, ps2)
+  end
+end
