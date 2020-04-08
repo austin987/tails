@@ -40,7 +40,7 @@ module OpenCV
     begin
       begin
         Process.kill("KILL", p.pid)
-      rescue IOError
+      rescue IOError, Errno::ESRCH
         # Process has already exited.
       end
       p.close
