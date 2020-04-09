@@ -107,67 +107,67 @@ Feature: Upgrading an old Tails USB installation
   Scenario: Upgrading an initial Tails installation with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
     And no SquashFS delta is installed
-    And Tails is fooled to think that version 2.0~test was initially installed
-    And Tails is fooled to think it is running version 2.0~test
-    And the file system changes introduced in version 2.2~test are not present
-    And the file system changes introduced in version 2.3~test are not present
+    And Tails is fooled to think that version 2.0~testoverlayfs was initially installed
+    And Tails is fooled to think it is running version 2.0~testoverlayfs
+    And the file system changes introduced in version 2.2~testoverlayfs are not present
+    And the file system changes introduced in version 2.3~testoverlayfs are not present
     When the network is plugged
     And Tor is ready
-    Then I am proposed to install an incremental upgrade to version 2.2~test
-    And I can successfully install the incremental upgrade to version 2.2~test
+    Then I am proposed to install an incremental upgrade to version 2.2~testoverlayfs
+    And I can successfully install the incremental upgrade to version 2.2~testoverlayfs
     Given I shutdown Tails and wait for the computer to power off
     When I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then Tails is running version 2.2~test
+    Then Tails is running version 2.2~testoverlayfs
     And all persistence presets are enabled
-    And the file system changes introduced in version 2.2~test are present
-    And only the 2.2~test SquashFS delta is installed
+    And the file system changes introduced in version 2.2~testoverlayfs are present
+    And only the 2.2~testoverlayfs SquashFS delta is installed
     # Our IUK sets a release date that can make Tor bootstrapping impossible
     Given Tails system time is magically synchronized
-    # We'll really install Tails_amd64_2.0~test_to_2.3~test.iuk
+    # We'll really install Tails_amd64_2.0~testoverlayfs_to_2.3~testoverlayfs.iuk
     # but we need some way to force upgrading a second time in a row
     # even if only the initially installed version is considered
-    And Tails is fooled to think that version 2.1~test was initially installed
+    And Tails is fooled to think that version 2.1~testoverlayfs was initially installed
     When the network is plugged
     And Tor is ready
-    Then I am proposed to install an incremental upgrade to version 2.3~test
-    And I can successfully install the incremental upgrade to version 2.3~test
+    Then I am proposed to install an incremental upgrade to version 2.3~testoverlayfs
+    And I can successfully install the incremental upgrade to version 2.3~testoverlayfs
     Given I shutdown Tails and wait for the computer to power off
     When I start Tails from USB drive "__internal" with network unplugged and I login with persistence enabled
-    Then Tails is running version 2.3~test
+    Then Tails is running version 2.3~testoverlayfs
     And all persistence presets are enabled
-    And the file system changes introduced in version 2.3~test are present
-    And only the 2.3~test SquashFS delta is installed
+    And the file system changes introduced in version 2.3~testoverlayfs are present
+    And only the 2.3~testoverlayfs SquashFS delta is installed
     # Regression test for #17425 (i.e. the Upgrader would propose
     # upgrading to the version that's already running)
     Given Tails system time is magically synchronized
-    And Tails is fooled to think that version 2.1~test was initially installed
+    And Tails is fooled to think that version 2.1~testoverlayfs was initially installed
     When the network is plugged
     And Tor is ready
     Then the Upgrader considers the system as up-to-date
     # Regression test on #8158 (i.e. the IUK's filesystem is not part of the Unsafe Browser's chroot)
     And I successfully start the Unsafe Browser
-    And the file system changes introduced in version 2.3~test are present in the Unsafe Browser's chroot
+    And the file system changes introduced in version 2.3~testoverlayfs are present in the Unsafe Browser's chroot
 
   @automatic_upgrade
   Scenario: Upgrading a Tails that has several SquashFS deltas present with an incremental upgrade
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    And Tails is fooled to think that version 2.0~test was initially installed
-    And Tails is fooled to think it is running version 2.1~test
-    And Tails is fooled to think a 2.0.1~test SquashFS delta is installed
-    And Tails is fooled to think a 2.1~test SquashFS delta is installed
+    And Tails is fooled to think that version 2.0~testoverlayfs was initially installed
+    And Tails is fooled to think it is running version 2.1~testoverlayfs
+    And Tails is fooled to think a 2.0.1~testoverlayfs SquashFS delta is installed
+    And Tails is fooled to think a 2.1~testoverlayfs SquashFS delta is installed
     When the network is plugged
     And Tor is ready
-    Then I am proposed to install an incremental upgrade to version 2.2~test
-    And I can successfully install the incremental upgrade to version 2.2~test
-    Then only the 2.2~test SquashFS delta is installed
+    Then I am proposed to install an incremental upgrade to version 2.2~testoverlayfs
+    And I can successfully install the incremental upgrade to version 2.2~testoverlayfs
+    Then only the 2.2~testoverlayfs SquashFS delta is installed
 
   @automatic_upgrade
   Scenario: Upgrading a Tails whose signing key is outdated
     Given I have started Tails without network from a USB drive with a persistent partition enabled and logged in
-    And Tails is fooled to think that version 2.0~test was initially installed
-    And Tails is fooled to think it is running version 2.0~test
+    And Tails is fooled to think that version 2.0~testoverlayfs was initially installed
+    And Tails is fooled to think it is running version 2.0~testoverlayfs
     And the signing key used by the Upgrader is outdated
     But a current signing key is available on our website
     When the network is plugged
     And Tor is ready
-    Then I am proposed to install an incremental upgrade to version 2.2~test
+    Then I am proposed to install an incremental upgrade to version 2.2~testoverlayfs
