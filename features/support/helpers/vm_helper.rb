@@ -523,7 +523,7 @@ class VM
   end
 
   def file_empty?(file)
-    return file_content(file).empty?
+    execute("test -s '#{file}'").failure?
   end
 
   def directory_exist?(directory)

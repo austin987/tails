@@ -13,9 +13,8 @@ dnsmasq-base
 gawk
 git
 i18nspector
-libav-tools
+imagemagick
 libcap2-bin
-libsikulixapi-java
 libvirt-clients
 libvirt-daemon-system
 libvirt-dev
@@ -34,16 +33,31 @@ ruby-json
 ruby-libvirt
 ruby-packetfu
 ruby-rb-inotify
-ruby-rjb
 ruby-rspec
 ruby-test-unit
 seabios
 tcpdump
+tcplay
 tor
 unclutter
 virt-viewer
+xdotool
 xvfb
 "
+
+if [ "$(lsb_release --short --codename)" = "stretch" ]; then
+    GENERAL_DEPENDENCIES="${GENERAL_DEPENDENCIES}
+libav-tools
+python-opencv
+python-pil
+"
+else
+    GENERAL_DEPENDENCIES="${GENERAL_DEPENDENCIES}
+ffmpeg
+python3-opencv
+python3-pil
+"
+fi
 
 usage() {
     echo "Usage: $NAME [OPTION]... [--] [CUCUMBER_ARGS]...
@@ -65,15 +79,14 @@ Options for '@product' features:
                      On failure, pause test suite until pressing Enter. Also
                      offer the option to open an interactive Ruby shell (pry)
                      in the Cucumber world's context.
+  --image-bumping-mode
+                     When any image matching fails, enter an interactive mode
+                     that allows to update the image. If run from a graphical
+                     environment, any found candidate image will be displayed
+                     in a pop-up.
   --keep-snapshots   Don't ever delete any snapshots (including ones marked as
                      temporary). This can be a big time saver when debugging new
                      features.
-  --retry-find       Print a warning whenever Sikuli fails to find an image
-                     and allow *one* retry after pressing ENTER. This is useful
-                     for updating outdated images.
-  --fuzzy-image-matching
-                     When Sikuli fails to find an image, let it retry with more
-                     fuzziness (or \"lower similarity factor\" in Sikuli terms).
   --tmpdir           Directory where various temporary files are written
                      during a test, e.g. VM snapshots and memory dumps,
                      failure screenshots, pcap files and disk images
@@ -103,7 +116,6 @@ pretty debugging printed to a file with \`--format pretty --format debug
 
 error() {
     echo "${NAME}: error: ${*}" >&2
-    usage
     exit 1
 }
 
@@ -155,7 +167,8 @@ start_xvfb() {
 	sleep 1
     done
     echo "Virtual X framebuffer started on display ${TARGET_DISPLAY}"
-    # Hide the mouse cursor so it won't mess up Sikuli's screen scanning
+    # Hide the mouse cursor so it won't be in the way when we are
+    # trying to match images.
     unclutter -display $TARGET_DISPLAY -root -idle 0.1 >/dev/null 2>&1 &
 }
 
@@ -184,13 +197,12 @@ LOG_FILE=
 VNC_VIEWER=
 VNC_SERVER=
 INTERACTIVE_DEBUGGING=
+IMAGE_BUMPING_MODE=
 KEEP_SNAPSHOTS=
-SIKULI_RETRY_FINDFAILED=
-SIKULI_FUZZY_IMAGE_MATCHING=
 TAILS_ISO=
 OLD_TAILS_ISO=
 
-LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,retry-find,fuzzy-image-matching,iso:,old-iso:,interactive-debugging"
+LONGOPTS="artifacts-base-uri:,view,vnc-server-only,capture,capture-all,help,tmpdir:,keep-snapshots,iso:,old-iso:,interactive-debugging,image-bumping-mode"
 OPTS=$(getopt -o "" --longoptions $LONGOPTS -n "${NAME}" -- "$@")
 eval set -- "$OPTS"
 while [ $# -gt 0 ]; do
@@ -219,14 +231,11 @@ while [ $# -gt 0 ]; do
         --interactive-debugging)
             export INTERACTIVE_DEBUGGING="yes"
             ;;
+        --image-bumping-mode)
+            export IMAGE_BUMPING_MODE="yes"
+            ;;
         --keep-snapshots)
             export KEEP_SNAPSHOTS="yes"
-            ;;
-        --retry-find)
-            export SIKULI_RETRY_FINDFAILED="yes"
-            ;;
-        --fuzzy-image-matching)
-            export SIKULI_FUZZY_IMAGE_MATCHING="yes"
             ;;
         --tmpdir)
             shift
@@ -261,13 +270,17 @@ TARGET_DISPLAY=$(next_free_display)
 start_xvfb
 
 if [ -n "${VNC_SERVER:-}" ]; then
+    if [ "${XDG_SESSION_TYPE}" != "x11" ]; then
+        error "the --view and --vnc-server-only are only supported on x11," \
+              "but you use ${XDG_SESSION_TYPE}"
+    fi
     start_vnc_server
 fi
 if [ -n "${VNC_VIEWER:-}" ]; then
     start_vnc_viewer
 fi
 
-export SIKULI_HOME="/usr/share/java"
+export USER_DISPLAY="${DISPLAY:-}"
 export DISPLAY=${TARGET_DISPLAY}
 
 cucumber ${@}
