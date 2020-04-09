@@ -641,7 +641,7 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
 end
 
 When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
-  timeout = 0 if timeout.nil?
+  timeout = 10 if timeout.nil?
   try_for(
     timeout.to_i,
     :msg => "The file #{file} does not exist after #{timeout} seconds"
