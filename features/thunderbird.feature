@@ -12,7 +12,7 @@ Feature: Thunderbird email client
   Scenario: Only the expected add-ons are installed
     Given I cancel setting up an email account
     When I open Thunderbird's Add-ons Manager
-    And I click the extensions tab
+    And I open the Extensions tab
     Then I see that only the Enigmail add-on is enabled in Thunderbird
 
   Scenario: Thunderbird's autoconfiguration wizard defaults to IMAP and secure protocols

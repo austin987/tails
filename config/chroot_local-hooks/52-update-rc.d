@@ -14,6 +14,7 @@ systemctl enable onion-grater.service
 systemctl enable tails-synchronize-data-to-new-persistent-volume-on-shutdown.service
 systemctl enable tails-autotest-broken-Xorg.service
 systemctl enable tails-autotest-remote-shell.service
+systemctl enable tails-remove-overlayfs-dirs.service
 systemctl enable tails-set-wireless-devices-state.service
 systemctl enable tails-shutdown-on-media-removal.service
 systemctl enable tails-tor-has-bootstrapped.target

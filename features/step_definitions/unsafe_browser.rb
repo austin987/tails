@@ -1,7 +1,7 @@
 # coding: utf-8
 When /^I see and accept the Unsafe Browser start verification(?:| in the "([^"]+)" locale)$/ do |locale|
   @screen.wait('GnomeQuestionDialogIcon.png', 30)
-  @screen.type(Sikuli::Key.TAB + Sikuli::Key.ENTER)
+  @screen.type(["Tab"], ["Return"])
 end
 
 def supported_torbrowser_languages
@@ -48,12 +48,12 @@ end
 Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
   info = xul_application_info("Unsafe Browser")
   # "Show all bookmarks"
-  @screen.type("o", Sikuli::KeyModifier.SHIFT + Sikuli::KeyModifier.CTRL)
-  @screen.wait_and_click("UnsafeBrowserExportBookmarksButton.png", 20)
-  @screen.wait_and_click("UnsafeBrowserExportBookmarksMenuEntry.png", 20)
+  @screen.press("shift", "ctrl", "o")
+  @screen.wait("UnsafeBrowserExportBookmarksButton.png", 20).click
+  @screen.wait("UnsafeBrowserExportBookmarksMenuEntry.png", 20).click
   @screen.wait("UnsafeBrowserExportBookmarksSavePrompt.png", 20)
   path = "/home/#{info[:user]}/bookmarks"
-  @screen.type(path + Sikuli::Key.ENTER)
+  @screen.type(path, ["Return"])
   chroot_path = "#{info[:chroot]}/#{path}.json"
   try_for(10) { $vm.file_exist?(chroot_path) }
   dump = JSON.load($vm.file_content(chroot_path))
@@ -81,7 +81,7 @@ Then /^the Unsafe Browser has only Firefox's default bookmarks configured$/ do
   assert_equal(5, mozilla_uris_counter,
                "Unexpected number (#{mozilla_uris_counter}) of mozilla " \
                "bookmarks")
-  @screen.type(Sikuli::Key.F4, Sikuli::KeyModifier.ALT)
+  @screen.press("alt", "F4")
 end
 
 Then /^the Unsafe Browser has a red theme$/ do
@@ -93,7 +93,7 @@ Then /^the Unsafe Browser shows a warning as its start page(?: in the "([^"]+)" 
   # Use localized image for languages that have a translated version
   # of the Unsafe Browser homepage.
   when /\A([a-z]+)/
-    if File.exists?("#{SIKULI_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
+    if File.exists?("#{OPENCV_IMAGE_PATH}/UnsafeBrowserStartPage.#{$1}.png")
       start_page_image = "UnsafeBrowserStartPage.#{$1}.png"
     else
       start_page_image = "UnsafeBrowserStartPage.png"
