@@ -858,7 +858,10 @@ EOF
     Process.kill(0, proc.pid) == 1
   end
 
-  add_after_scenario_hook { Process.kill("TERM", proc.pid) }
+  add_after_scenario_hook do
+    Process.kill("TERM", proc.pid)
+    Process.wait(proc.pid)
+  end
 
   # It seems necessary to actually check that the LAN server is
   # serving, possibly because it isn't doing so reliably when setting
