@@ -102,7 +102,7 @@ Last updated:
 * MacBook Air Retina 2018 and 2019
 
   To start Tails successfully, [[add the following boot option when
-  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+  starting Tails|doc/advanced_topics/boot_options]]:
 
       modprobe.blacklist=thunderbolt
 
@@ -115,14 +115,14 @@ Last updated:
 * MacBook Pro 8,3 17" (AMD Radeon HD6770M and Intel HD Graphics 3000)
 
   If Tails fails to start, [[add the following boot option when
-  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+  starting Tails|doc/advanced_topics/boot_options]]:
 
       radeon.modeset=0
 
 * MacBook Pro 5,1 17" (Nvidia GeForce 9400M)
 
   To make the display work properly, [[add the following boot option when
-  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+  starting Tails|doc/advanced_topics/boot_options]]:
 
       nouveau.noaccel=1
 
@@ -150,7 +150,7 @@ On some laptops, Tails starts with the following error:
 <p class="pre">soft lockup - CPU#<span class="command-placeholder">N</span> stuck for <span class="command-placeholder">N</span>s</p>
 
 To start Tails successfully, [[add the following boot option when starting
-Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+Tails|doc/advanced_topics/boot_options]]:
 
     acpi_rev_override=1 nouveau.modeset=0
 
@@ -182,7 +182,7 @@ Last updated: 2019-11-01
 -->
 
 To start Tails successfully, [[add the following boot option when starting
-Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+Tails|doc/advanced_topics/boot_options]]:
 
     iommu=soft
 
@@ -205,7 +205,7 @@ Last updated: 2018-01-10
 -->
 
 To start Tails successfully, [[add the following boot option when starting
-Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+Tails|doc/advanced_topics/boot_options]]:
 
     nomodeset
 
@@ -299,6 +299,7 @@ then `Filesystem Tails` and `EFI/BOOT/BOOTX64.EFI`.
 
 That workaround applied to, at least, the following HP ProBook:
 
+* 5330m
 * 4330s
 * 6560b
 
@@ -318,7 +319,7 @@ Last updated: 2014-08-05
 Specs: https://www.cnet.com/products/lenovo-ideapad-z585-15-6-a8-4500m-6-gb-ram-750-gb-hdd/
 -->
 
-Goes back continuously to Boot Loader Menu on Tails installed on DVD.
+Goes back continuously to Boot Loader on Tails installed on DVD.
 
 ### Clevo W258CU, ThinkPad X121e, T420i, T410, T520, W520, T530, T60, E325, and E530
 
@@ -389,7 +390,7 @@ as some Microsoft Surface Pro models, Tails fails to connect to
 Wi-Fi networks.
 
 If you experience this problem, you can try to [[disable MAC address
-spoofing|doc/first_steps/startup_options/mac_spoofing]] that sometimes
+spoofing|doc/first_steps/welcome_screen/mac_spoofing]] that sometimes
 fixes it.
 
 RTL8723BE PCIe Wireless Network Adapter
@@ -404,7 +405,7 @@ Wi-Fi networks, provide unreliable Wi-Fi connections, or have poor Wi-Fi
 performance.
 
 You can to [[add the following boot options when starting
-Tails|doc/first_steps/startup_options/#boot_loader_menu]] until you find a
+Tails|doc/advanced_topics/boot_options]] until you find a
 combination that works for you. The exact combination of options that works
 depends on the computer:
 
@@ -448,7 +449,7 @@ Last updated: 2019-05-10
 Wi-Fi adapter does not work.
 
 To fix this issue, [[add the following boot option when
-starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+starting Tails|doc/advanced_topics/boot_options]]:
 
     modprobe.blacklist=ideapad_laptop
 
@@ -501,8 +502,8 @@ fingerprint|doc/about/fingerprint]].
 Other issues
 ============
 
-Boot Loader Menu has display issues
------------------------------------
+Boot Loader has display issues
+------------------------------
 
 <!--
 Last updated: 2014-06-27
@@ -511,7 +512,7 @@ I asked some ThinkPad X230 users to confirm.
 -->
 
 Since Tails 1.1, on some hardware (ThinkPad X230, MacBook Pro 8,1),
-the Boot Loader Menu is not displayed properly. Tails starts fine, though.
+the Boot Loader is not displayed properly. Tails starts fine, though.
 
 Touchpad configurations
 -----------------------
@@ -584,7 +585,7 @@ configurations should still be saved.
 If you encounter this problem:
 
 1. Enable your encrypted persistent storage in
-   <span class="application">Tails Greeter</span> when you start Tails.
+   the Welcome Screen when you start Tails.
 
 1. Choose
    <span class="menuchoice">
@@ -595,10 +596,20 @@ If you encounter this problem:
 1. If you are asked to enter a passphrase, enter the same passphrase that you
    used to unlock your persistent storage.
 
+1. Select the persistent features that you had activated previously.
+
 1. Click <span class="button">Save</span>, then restart Tails.
 
 Your <span class="filename">Persistent</span> folder and persistent feature
 configurations should be restored.
+
+If the above instructions do not fix the problem, you might need to fix the
+ownership of TailsData_unlocked.
+
+To fix the ownership of TailsData_unlocked, set an administration password and
+execute the following command in a terminal:
+
+`sudo chown root:root /live/persistence/TailsData_unlocked`
 
 <a id="restart-shell"></a>
 
@@ -622,11 +633,11 @@ Some languages do not have the correct keyboard layout set by default
 Last updated: 2017-08-07
 -->
 
-When selecting some languages in the Tails Greeter, the default associated
+When selecting some languages in the Welcome Screen, the default associated
 keyboard layout fallbacks to US.
 
-To use the right keyboard layout during a session, set it in the Tails
-Greeter after having set the language. When the desktop has started, apply
+To use the right keyboard layout during a session, set it in the Welcome
+Screen after having set the language. When the desktop has started, apply
 the keyboard layout by clicking on the `en` systray icon.
 
 Affected language codes are `AYC`, `BHB`, `BRX`, `CMN`, `HAK`, `HNE`, `LIJ`,
@@ -665,7 +676,7 @@ For example, when the system clock goes backwards:
 <ul>
 <li>The <span class="guimenu">Applications</span> menu might stop
 working.</li>
-<li>[[Connecting to Tor using `obfs4` bridges|doc/first_steps/startup_options/bridge_mode]]
+<li>[[Connecting to Tor using `obfs4` bridges|doc/first_steps/welcome_screen/bridge_mode]]
 might be impossible and <span class="application">Tor Launcher</span>
 might get stuck on <span class="guilabel">Loading Network
 Consensus</span>.</li>
@@ -685,13 +696,9 @@ Tails may be unstable and stop working regularly on some Lenovo
 ThinkPad 11e laptops, such as the 2015 model.
 
 To fix this problem, [[add the following boot option when
-starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+starting Tails|doc/advanced_topics/boot_options]]:
 
     intel_idle.max_cstate=1
-
-## Electrum is outdated and cannot connect to servers
-
-[[!inline pages="doc/anonymous_internet/electrum/phishing.inline" raw="yes" sort="age"]]
 
 <a id="usb-gigabyte"></a>
 
@@ -713,7 +720,7 @@ To workaround this issue, you can try to:
   - IOMMU controller
 
 - [[Add the following boot option when
-  starting Tails|doc/first_steps/startup_options/#boot_loader_menu]]:
+  starting Tails|doc/advanced_topics/boot_options]]:
 
       amd_iommu=on iommu=pt
 

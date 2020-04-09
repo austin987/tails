@@ -37,16 +37,36 @@ def try_for(timeout, options = {})
     return yield
   end
   options[:delay] ||= 1
+  options[:log] = true if options[:log].nil?
   last_exception = nil
   # Create a unique exception used only for this particular try_for
   # call's Timeout to allow nested try_for:s. If we used the same one,
   # the innermost try_for would catch all outer ones', creating a
   # really strange situation.
   unique_timeout_exception = Class.new(UniqueTryForTimeoutError)
+  attempts = 0
+  start_time = Time.now
   Timeout::timeout(timeout, unique_timeout_exception) do
     loop do
       begin
-        return if yield
+        attempts += 1
+        elapsed = (Time.now - start_time)
+        # XXX: The commit that introduced this version check can be
+        # reverted when we drop support for running the test suite on
+        # Debian Stretch.
+        if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.4")
+          elapsed = ('%.2f' % elapsed).chomp(".00").chomp(".0").chomp("0")
+        else
+          elapsed = elapsed.ceil(2)
+        end
+        debug_log("try_for: attempt #{attempts} (#{elapsed}s elapsed " +
+                  "of #{timeout}s)...") if options[:log]
+        if yield
+          debug_log("try_for: success!") if options[:log]
+          return
+        end
+        debug_log("try_for: failed by code block " +
+                  "returning failure") if options[:log]
       rescue NameError, UniqueTryForTimeoutError => e
         # NameError most likely means typos, and hiding that is rarely
         # (never?) a good idea, so we rethrow them. See below why we
@@ -57,6 +77,8 @@ def try_for(timeout, options = {})
         # block. Well we save the last exception so we can print it in
         # case of a timeout.
         last_exception = e
+        debug_log("try_for: failed with exception: " +
+                  "#{last_exception.class}: #{last_exception}") if options[:log]
       end
       sleep options[:delay]
     end
@@ -132,7 +154,10 @@ def retry_action(max_retries, options = {}, &block)
   retries = 1
   loop do
     begin
+      debug_log("retry_action: trying #{options[:operation_name]} (attempt " +
+                "#{retries} of #{max_retries})...")
       block.call
+      debug_log("retry_action: success!")
       return
     rescue NameError => e
       # NameError most likely means typos, and hiding that is rarely
@@ -140,9 +165,8 @@ def retry_action(max_retries, options = {}, &block)
       raise e
     rescue Exception => e
       if retries <= max_retries
-        debug_log("#{options[:operation_name]} failed (Try #{retries} of " +
-                  "#{max_retries}) with:\n" +
-                  "#{e.class}: #{e.message}")
+        debug_log("retry_action: #{options[:operation_name]} failed with " +
+                  "exception: #{e.class}: #{e.message}")
         options[:recovery_proc].call if options[:recovery_proc]
         retries += 1
       else
@@ -297,10 +321,10 @@ def pause(message = "Paused")
   STDOUT.write "\a"
   STDERR.puts
   loop do
-    STDERR.puts "Return: Continue; d: Debugging REPL"
+    STDERR.puts "Return/q: Continue; d: Debugging REPL"
     c = STDIN.getch
     case c
-    when "\r"
+    when "q", "\r", 3.chr  # Ctrl+C => 3
       return
     when "d"
       binding.pry(quiet: true)
@@ -355,4 +379,12 @@ def dbus_send(*args, **opts)
   ret_lines.shift
   ret = ret_lines.join("\n")
   dbus_send_ret_conv(ret)
+end
+
+def ffmpeg
+    if cmd_helper('lsb_release --short --codename').chomp == 'stretch'
+      return 'avconv'
+    else
+      return 'ffmpeg'
+    end
 end
