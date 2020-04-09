@@ -1,0 +1,248 @@
+0.42   20131026
+    - Import updated translations from Transifex.
+
+0.41   20131017
+    - Import updated translations from Transifex.
+
+0.40   20131015
+    - Allow setting up persistence on a device connected via SDIO as well.
+    - Support detecting partitions on MMC block devices.
+
+0.39   20131002
+    - Fix UID/GID check on persistence.conf.
+
+0.38   20131002
+    - Check permissions of existing persistence.conf on startup.
+    - Move from the deprecated NoTabsTests to Test::NoTabs.
+    - Move from the deprecated CriticTests to Test::Perl::Critic.
+
+0.37   20130930
+    - Make the created persistent filesystem root:root, 0775, with an ACL to
+      grant write access to the tails-persistence-setup user.
+      This is done with a tiny wrapper, meant to be run with sudo.
+    - Take ACLs into account when checking access rights on the
+      persistence filesystem.
+    - Use persistence.conf instead of the old live-persistence.conf.
+    - Explicitly give live-persistence.conf 0600 permissions.
+
+0.36   20130929
+    - Add a printers persistence preset.
+
+0.35   20130909
+    - Update many translations from Transifex.
+
+0.34   20130807
+    - Update translations from Transifex.
+      New translated languages: da, ja, tr.
+
+0.33   20130730
+
+    - Remove obsolete system_partition_number attribute.
+      It was only needed by the code that fixed the system partition
+      attributes, that was dropped in commit c844f8f.
+
+0.32   20130605
+
+    - Remove ability to add custom mounts.
+      The plan is to have t-p-s able to enable innocuous persistent
+      presets only.
+
+0.31   20130524
+
+    - Format the created persistent volumes as ext4.
+    - After creating the persistent volume, wait for all udev events to be
+      handled before mounting it.
+    - Add icons search path that work on Wheezy.
+    - Make indentation consistent.
+    - Update tests to match the latest preset additions.
+    - Fix license name in dist.ini.
+    - Bump copyright years.
+
+0.30   20130503
+
+    - Update translations for many languages.
+
+0.29   20130411
+
+    - Use new canonical path to the Live OS mountpoint instead of
+      relying on a compatibility symlink.
+    - Update hard-coded numbers in test suite: we've added a few
+      presets a while ago.
+
+0.28   20130323
+
+    - Don't fix attributes on Tails system partition after creating
+      or deleting partitions.
+
+      We're going to backport the parted bugfix so this is not needed
+      anymore. Rationale: we want t-p-s to do all its disk operations
+      through udisks, so that the live user does not need write access
+      to the Tails USB disk.
+
+      Details: Debian#673042,
+      todo/palimpsest:_do_not_make_Tails_USB_unbootable.
+
+    - Update Farsi and Chinese translations,
+      import new translations for Finnish and Swedish.
+
+0.27   20130214
+
+    - Update translations from Transifex:
+      ar, bg, es, fr, nl, pl and zh_CN.
+
+0.26   20121213
+
+    - Update French, German and Italian translations.
+
+0.25   20121213
+
+    - Update PO files.
+    - Import new translations (Hebrew and Latvian) from Transifex.
+    - Update Basque and Portugues (Brazil) translations from Transifex.
+    - Update French translation.
+    - Enable Arabic, Bulgarian, German, Greek, Basque, Farsi, Hebrew,
+      Hungarian and Latvian languages. The PO files were previously
+      imported without enabling the languages, so they were actually
+      not used.
+
+0.24   20121125
+       Import Bulgarian translation.
+       Enable Bulgarian and Chinese languages.
+
+0.23   20121114
+       Arabic language updates from NDI (Nov 9 2012)
+       Russian language updates from NDI (Nov 9 2012)
+       Import zh_CN translation from Transifex
+
+0.22   20121113
+       Fix ambigious label.
+       Add preset for browser bookmarks.
+
+0.21   20121107
+       Don't package incomplete translations.
+       Import completed translations from Transifex.
+       Add Arabic translations.
+
+0.20   20121029
+       Enable forgotten translation languages.
+
+0.19   20121029
+       Bumped the volume creation timeout to one hour.
+       Update translations.
+
+0.18   20120906
+       Add preset for NetworkManager connections.
+       Update translations.
+
+0.17   20120604
+       Move translators hints to the right place.
+       Bump mkfs timeout up to 600 minutes.
+       Tell the user what's going on when the Tails boot device cannot be found.
+
+0.16   20120425
+       Add source=Persistent option for this preset.
+
+0.15   20120419
+       Update translations.
+
+0.14   20120412
+       Rephrase a bunch of GUI messages.
+       Fix URL to local documentation.
+       Update PO and POT files.
+
+0.13   20120411
+       Update to match the rename of the "linkfiles" option to "link".
+
+0.12   20120408
+       Take into account live.persist was renamed to live-persistence.conf.
+
+0.11   20120326
+       Warn before suggesting to close the application.
+       Import translation, refresh PO files.
+
+0.10   20120321
+       Adapt to new live.persist format.
+
+0.9    20120320
+       Display GNOME Keyring preset before APT ones.
+       More tests.
+       More consistent naming of the Tails USB installer.
+       Some robustness improvements.
+       Fix buggy merging of presets and live.persist with Squeeze's
+       List::MoreUtils.
+       Make it clear any changes only take effect after rebooting.
+       Fix automatic steps selection and sanity checks.
+       Harden lock_luks_device to guard against the udisks timeout bug.
+       Disable the "dotfiles" preset by default.
+
+0.8.3  20120319
+       Don't ever try to run non-existing reboot step.
+       Add safeguards in case we add more steps without checks in the future.
+       Add "GNOME Keyring" configuration preset.
+       Split APT presets into lists and packages.
+       Make APT packages cache presets store /var/cache/apt/archives/.
+
+0.8.2  20120319
+       Use a fancy specific icon for each preset button.
+       Fix the icon for custom configuration buttons.
+       Fix the delete launcher menu icon.
+       fsync live.persist after saving.
+
+0.8.1  20120319
+       Remove unneeded dependency on MooseX::Declare.
+       A few minor PO file updates.
+       Use absolute paths in custom-mounts sources.
+       Configure: check if persistence is enabled iff. no bootstrap step was run.
+
+0.8    20120318
+       Make sanity check messages translatable.
+       Fix check to skip feature tests if Test::BDD::Cucumber is not installed.
+       Configure step:
+         - is now working, with lots of tests.
+         - support adding custom (source,destination) mappings.
+         - "checked" icon: consistent behaviour, right align.
+         - use lighter text color for disabled items.
+         - enable `Persistent' personal data directory preset by default.
+
+0.7    20120316
+       Various robustness and GUI improvements.
+       Bootstrap:
+         - mount persistence partition in the end if needed.
+         - set TailsData label on the persistent filesystem too.
+       Delete:
+         - check that persistence is disabled.
+         - umount the partition if needed.
+         - add launcher that runs this step.
+       Configure:
+         - check that persistence is enabled read-write.
+         - read, parse and write live.persist configuration files.
+         - add persistence configuration presets.
+         - support merging presets with a configuration file.
+         - initial GUI.
+
+0.6    20120225
+       Ship an icon and use it in the .desktop file.
+       Only run the bootstrap step by default.
+
+0.5    20120220
+       Use bigger timeout for partition create operations.
+
+0.4 20120220
+       Set correct attributes on Tails system partition after creating
+       or deleting partitions (workaround udisks bug).
+       Actually use passphrase entered by the user.
+       Hide introduction text once the go button is pressed.
+
+0.3    20120220
+       Add missing dependency on IPC::System::Simple.
+       Many robustness and sanity checks improvements.
+       UI improvements.
+       Add manpage, improve documentation.
+       Add .desktop file.
+       Make room for single persistent setup entry point.
+
+0.2    20120216
+       Early snapshot.
+
+0.1    20120216
+       Early snapshot.
