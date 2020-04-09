@@ -59,8 +59,6 @@ ENV['ARTIFACTS'] ||= '.'
 
 ENV['APT_SNAPSHOTS_SERIALS'] ||= ''
 
-ENV['TAILS_WEBSITE_CACHE'] = '1'
-
 class CommandError < StandardError
   attr_reader :status, :stderr
 
@@ -205,6 +203,8 @@ def system_cpus
     nil
   end
 end
+
+ENV['TAILS_WEBSITE_CACHE'] = is_release? ? '0' : '1'
 
 task :parse_build_options do
   options = []
@@ -431,7 +431,7 @@ task :ensure_correct_permissions do
       on every parent directory of #{ENV['PWD']} up to #{ENV['HOME']}
       (inclusive):
 
-        chmod g+x DIR && setfacl -m user:libvirt-qemu:x DIR
+        chmod g+rx DIR && setfacl -m user:libvirt-qemu:rx DIR
 
     END_OF_MESSAGE
   end

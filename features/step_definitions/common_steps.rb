@@ -6,23 +6,31 @@ def post_vm_start_hook
   # focus to virt-viewer or similar) so we do that now rather than
   # having an important click lost. The point we click should be
   # somewhere where no clickable elements generally reside.
-  @screen.click_point(@screen.w - 1, @screen.h/2)
-  # Increase the chances that by the time we leave this function, if
-  # the above click has opened the Applications menu (which sometimes
-  # happens, go figure), that menu was closed and the desktop is back
-  # to its normal state. Otherwise, all kinds of trouble may arise:
-  # for example, pressing SUPER to open the Activities Overview would
-  # fail (SUPER has no effect when the Applications menu is still
-  # opened). We sleep here, instead of in "I start […] via GNOME
-  # Activities Overview", because it's our responsibility to return to
-  # a normal desktop state that any following step can rely upon.
-  @screen.type(Sikuli::Key.ESC)
+  @screen.click(@screen.w - 1, @screen.h/2)
   sleep 1
 end
 
-def post_snapshot_restore_hook
+def post_snapshot_restore_hook(snapshot_name)
   $vm.wait_until_remote_shell_is_up
   post_vm_start_hook
+
+  # When restoring from a snapshot while the Greeter is running it
+  # seems virt-viewer's auto-resolution feature moves the Greeter's
+  # window outside of the visible screen.
+  if snapshot_name.end_with?('tails-greeter')
+    if ! @screen.exists('TailsGreeter.png')
+      $vm.execute_successfully("env $(tr '\\0' '\\n' < /proc/$(pgrep --newest --euid Debian-gdm gnome-shell)/environ | grep -E '(DBUS_SESSION_BUS_ADDRESS|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR)') sudo -u Debian-gdm xdotool search --onlyvisible 'Welcome to Tails!' windowmove --sync 0 0")
+    end
+  end
+
+  # Increase the chances that by the time we leave this function, if
+  # the click in post_vm_start_hook() has opened the Applications menu
+  # (which sometimes happens, go figure), that menu is closed and the
+  # desktop is back to its normal state. Otherwise, all kinds of
+  # trouble may arise: for example, pressing SUPER to open the
+  # Activities Overview would fail (SUPER has no effect when the
+  # Applications menu is still opened).
+  @screen.press("Escape")
 
   # The guest's Tor's circuits' states are likely to get out of sync
   # with the other relays, so we ensure that we have fresh circuits.
@@ -187,80 +195,98 @@ end
 
 def boot_menu_cmdline_image
   case @os_loader
-  when "UEFI"
+  when 'UEFI'
     'TailsBootMenuKernelCmdlineUEFI.png'
   else
     'TailsBootMenuKernelCmdline.png'
   end
 end
 
-Given /^Tails is at the boot menu's cmdline( after rebooting)?$/ do |reboot|
-  boot_timeout = 3*60
+def boot_menu_image
+  case @os_loader
+  when 'UEFI'
+    'TailsBootMenuGRUB.png'
+  else
+    'TailsBootMenuSyslinux.png'
+  end
+end
+
+Given /^Tails is at the boot menu's cmdline$/ do
+  boot_timeout = 3 * 60
   # Simply looking for the boot splash image is not robust; sometimes
-  # sikuli is not fast enough to see it. Here we hope that spamming
-  # TAB, which will halt the boot process by showing the prompt for
-  # the kernel cmdline, will make this a bit more robust. We want this
-  # spamming to happen in parallel with Sikuli waiting for the image,
-  # but multi-threading etc is working extremely poor in our Ruby +
-  # jrb environment when Sikuli is involved. Hence we run the spamming
-  # from a separate process.
-  tab_spammer_code = <<-EOF
+  # our image matching is not fast enough to see it. Here we hope that spamming
+  # UP, which will halt the boot process, will make this a bit more robust.
+  up_spammer_code = <<-SCRIPT
     require 'libvirt'
-    tab_key_code = 0xf
+    up_key_code = 0x67
     virt = Libvirt::open("qemu:///system")
     begin
       domain = virt.lookup_domain_by_name('#{$vm.domain_name}')
       loop do
-        domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [tab_key_code])
+        domain.send_key(Libvirt::Domain::KEYCODE_SET_LINUX, 0, [up_key_code])
         sleep 1
       end
     ensure
       virt.close
     end
-  EOF
+  SCRIPT
   # The below code is not completely reliable, so we might have to
   # retry by rebooting.
   try_for(boot_timeout) do
     begin
-      tab_spammer = IO.popen(['ruby', '-e', tab_spammer_code])
-      @screen.wait(boot_menu_cmdline_image, 15)
+      up_spammer = IO.popen(['ruby', '-e', up_spammer_code])
+      @screen.wait(boot_menu_image, 15)
     rescue FindFailed => e
-      debug_log('We missed the boot menu before we could deal with it, ' +
+      debug_log('We missed the boot menu before we could deal with it, ' \
                 'resetting...')
       $vm.reset
       raise e
     ensure
-      Process.kill("TERM", tab_spammer.pid)
-      tab_spammer.close
+      Process.kill('TERM', up_spammer.pid)
+      up_spammer.close
     end
     true
   end
+
+  # Navigate to the end of the kernel command-line
+  case @os_loader
+  when 'UEFI'
+    @screen.type('e')
+    3.times { @screen.press('Down') }
+    @screen.press('End')
+  else
+    @screen.press('Tab')
+  end
+  @screen.wait(boot_menu_cmdline_image, 5)
 end
 
-Given /^the computer (re)?boots Tails( with genuine APT sources)?$/ do |reboot, keep_apt_sources|
-  step "Tails is at the boot menu's cmdline" + (reboot ? ' after rebooting' : '')
-  @screen.type(" autotest_never_use_this_option blacklist=psmouse #{@boot_options}" +
-               Sikuli::Key.ENTER)
-  @screen.wait('TailsGreeter.png', 5*60)
+Given /^the computer (?:re)?boots Tails( with genuine APT sources)?$/ do |keep_apt_sources|
+  step "Tails is at the boot menu's cmdline"
+  boot_key = @os_loader == 'UEFI' ? 'F10' : 'Return'
+  @screen.type(' autotest_never_use_this_option' \
+               ' blacklist=psmouse' \
+               " #{@boot_options}",
+               [boot_key])
+  @screen.wait('TailsGreeter.png', 5 * 60)
   $vm.wait_until_remote_shell_is_up
   step 'I configure Tails to use a simulated Tor network'
   # This is required to use APT in the test suite as explained in
   # commit e2510fae79870ff724d190677ff3b228b2bf7eac
-  step 'I configure APT to use non-onion sources' if not keep_apt_sources
+  step 'I configure APT to use non-onion sources' unless keep_apt_sources
 end
 
 Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
   case lang
   when 'German'
-    @language = "German"
-    @screen.wait_and_click('TailsGreeterLanguage.png', 10)
+    $language = "German"
+    @screen.wait('TailsGreeterLanguage.png', 10).click
     @screen.wait('TailsGreeterLanguagePopover.png', 10)
-    @screen.type(@language)
+    @screen.type($language)
     sleep(2) # Gtk needs some time to filter the results
-    @screen.type(Sikuli::Key.ENTER)
-    @screen.wait_and_click("TailsGreeterLoginButton#{@language}.png", 10)
+    @screen.press("Return")
+    @screen.wait("TailsGreeterLoginButton#{$language}.png", 10).click
   when ''
-    @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
+    @screen.wait('TailsGreeterLoginButton.png', 10).click
   else
     raise "Unsupported language: #{lang}"
   end
@@ -268,7 +294,7 @@ Given /^I log in to a new session(?: in )?(|German)$/ do |lang|
 end
 
 def open_greeter_additional_settings
-  @screen.click('TailsGreeterAddMoreOptions.png')
+  @screen.wait('TailsGreeterAddMoreOptions.png', 10).click
   @screen.wait('TailsGreeterAdditionalSettingsDialog.png', 10)
 end
 
@@ -278,28 +304,28 @@ end
 
 Given /^I enable the specific Tor configuration option$/ do
   open_greeter_additional_settings()
-  @screen.wait_and_click('TailsGreeterNetworkConnection.png', 30)
-  @screen.wait_and_click("TailsGreeterSpecificTorConfiguration.png", 10)
-  @screen.wait_and_click("TailsGreeterAdditionalSettingsAdd.png", 10)
+  @screen.wait('TailsGreeterNetworkConnection.png', 30).click
+  @screen.wait("TailsGreeterSpecificTorConfiguration.png", 10).click
+  @screen.wait("TailsGreeterAdditionalSettingsAdd.png", 10).click
 end
 
 Given /^I set an administration password$/ do
   open_greeter_additional_settings()
-  @screen.wait_and_click("TailsGreeterAdminPassword.png", 20)
+  @screen.wait("TailsGreeterAdminPassword.png", 20).click
   @screen.wait("TailsGreeterAdminPasswordDialog.png", 10)
   @screen.type(@sudo_password)
-  @screen.type(Sikuli::Key.TAB)
+  @screen.press("Tab")
   @screen.type(@sudo_password)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("Return")
 end
 
 Given /^the Tails desktop is ready$/ do
-  desktop_started_picture = "GnomeApplicationsMenu#{@language}.png"
+  desktop_started_picture = "GnomeApplicationsMenu#{$language}.png"
   @screen.wait(desktop_started_picture, 180)
   @screen.wait("DesktopTailsDocumentation.png", 30)
   # Disable screen blanking since we sometimes need to wait long
-  # enough for it to activate, which can mess with Sikuli wait():ing
-  # for some image.
+  # enough for it to activate, which can cause problems when we are
+  # waiting for an image for a very long time.
   $vm.execute_successfully(
     'gsettings set org.gnome.desktop.session idle-delay 0',
     :user => LIVE_USER
@@ -399,7 +425,7 @@ Given /^the Tor Browser loads the (startup page|Tails homepage|Tails roadmap)$/ 
   else
     raise "Unsupported page: #{page}"
   end
-  page_has_loaded_in_the_Tor_Browser(titles, @language)
+  page_has_loaded_in_the_Tor_Browser(titles, $language)
 end
 
 When /^I request a new identity using Torbutton$/ do
@@ -416,22 +442,22 @@ Given /^I add a bookmark to eff.org in the Tor Browser$/ do
   url = "https://www.eff.org"
   step "I open the address \"#{url}\" in the Tor Browser"
   step 'the Tor Browser shows the "The proxy server is refusing connections" error'
-  @screen.type("d", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "d")
   @screen.wait("TorBrowserBookmarkPrompt.png", 10)
   @screen.type(url)
   # The new default location for bookmarks is "Other Bookmarks", but our test
   # expects the new entry is available in "Bookmark Menu", that's why we need
   # to select the location explicitly.
-  @screen.wait_and_click("TorBrowserBookmarkLocation.png", 10)
-  @screen.wait_and_click("TorBrowserBookmarkLocationBookmarksMenu.png", 10)
+  @screen.wait("TorBrowserBookmarkLocation.png", 10).click
+  @screen.wait("TorBrowserBookmarkLocationBookmarksMenu.png", 10).click
   # Need to sleep here, otherwise the changed Bookmark location is not taken
   # into account and we end up creating a bookmark in "Other Bookmark" location.
   sleep 1
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("Return")
 end
 
 Given /^the Tor Browser has a bookmark to eff.org$/ do
-  @screen.type("b", Sikuli::KeyModifier.ALT)
+  @screen.press("alt", "b")
   @screen.wait("TorBrowserEFFBookmark.png", 10)
 end
 
@@ -440,8 +466,8 @@ Given /^all notifications have disappeared$/ do
   # bar, which when clicked opens the calendar.
   x, y = 512, 10
   gnome_shell = Dogtail::Application.new('gnome-shell')
-  retry_action(10, recovery_proc: Proc.new { @screen.type(Sikuli::Key.ESC) }) do
-    @screen.click_point(x, y)
+  retry_action(10, recovery_proc: Proc.new { @screen.press("Escape") }) do
+    @screen.click(x, y)
     begin
       gnome_shell.child('Clear All', roleName: 'push button', showingOnly: true).click
     rescue
@@ -451,7 +477,7 @@ Given /^all notifications have disappeared$/ do
     end
     gnome_shell.child?('No Notifications', roleName: 'label', showingOnly: true)
   end
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
   # Increase the chances that by the time we leave this step, the
   # notifications menu was closed and the desktop is back to its
   # normal state. Otherwise, all kinds of trouble may arise: for
@@ -465,7 +491,7 @@ end
 
 Then /^I (do not )?see "([^"]*)" after at most (\d+) seconds$/ do |negation, image, time|
   if negation
-    @screen.waitVanish(image, time.to_i)
+    @screen.wait_vanish(image, time.to_i)
   else
     @screen.wait(image, time.to_i)
   end
@@ -483,13 +509,12 @@ Given /^I enter the sudo password in the pkexec prompt$/ do
 end
 
 def deal_with_polkit_prompt(password, opts = {})
-  opts[:expect_success] ||= true
+  opts[:expect_success] = true if opts[:expect_success].nil?
   image = 'PolicyKitAuthPrompt.png'
   @screen.wait(image, 60)
-  @screen.type(password)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(password, ["Return"])
   if opts[:expect_success]
-    @screen.waitVanish(image, 20)
+    @screen.wait_vanish(image, 20)
   else
     @screen.wait('PolicyKitAuthFailure.png', 20)
   end
@@ -546,13 +571,13 @@ end
 
 When /^I request a shutdown using the emergency shutdown applet$/ do
   @screen.hide_cursor
-  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  @screen.wait('TailsEmergencyShutdownButton.png', 10).click
   # Sometimes the next button too fast, before the menu has settled
   # down to its final size and the icon we want to click is in its
   # final position. dogtail might allow us to fix that, but given how
   # rare this problem is, it's not worth the effort.
   step 'I wait 5 seconds'
-  @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
+  @screen.wait('TailsEmergencyShutdownHalt.png', 10).click
 end
 
 When /^I warm reboot the computer$/ do
@@ -561,11 +586,11 @@ end
 
 When /^I request a reboot using the emergency shutdown applet$/ do
   @screen.hide_cursor
-  @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
+  @screen.wait('TailsEmergencyShutdownButton.png', 10).click
   # See comment on /^I request a shutdown using the emergency shutdown applet$/
   # that explains why we need to wait.
   step 'I wait 5 seconds'
-  @screen.wait_and_click('TailsEmergencyShutdownReboot.png', 10)
+  @screen.wait('TailsEmergencyShutdownReboot.png', 10).click
 end
 
 Given /^the package "([^"]+)" is( not)? installed( after Additional Software has been started)?$/ do |package, absent, asp|
@@ -610,9 +635,9 @@ When /^I run "([^"]+)" in GNOME Terminal$/ do |command|
   if !$vm.has_process?("gnome-terminal-server")
     step "I start and focus GNOME Terminal"
   else
-    @screen.wait_and_click('GnomeTerminalWindow.png', 20)
+    @screen.wait('GnomeTerminalWindow.png', 20).click
   end
-  @screen.type(command + Sikuli::Key.ENTER)
+  @screen.type(command, ["Return"])
 end
 
 When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, timeout|
@@ -645,8 +670,7 @@ end
 def is_persistent?(app)
   conf = get_persistence_presets_config(true)["#{app}"]
   c = $vm.execute("findmnt --noheadings --output SOURCE --target '#{conf}'")
-  # This check assumes that we haven't enabled read-only persistence.
-  c.success? and c.stdout.chomp != "aufs"
+  c.success? and c.stdout.chomp != "overlay"
 end
 
 Then /^persistence for "([^"]+)" is (|not )enabled$/ do |app, enabled|
@@ -681,7 +705,7 @@ Given /^I start "([^"]+)" via GNOME Activities Overview$/ do |app_name|
   # Type the rest of the search query
   @screen.type(app_name[1..-1])
   sleep 2
-  @screen.type(Sikuli::Key.ENTER, Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "Return")
 end
 
 When /^I type "([^"]+)"$/ do |string|
@@ -689,11 +713,7 @@ When /^I type "([^"]+)"$/ do |string|
 end
 
 When /^I press the "([^"]+)" key$/ do |key|
-  begin
-    @screen.type(eval("Sikuli::Key.#{key}"))
-  rescue RuntimeError
-    raise "unsupported key #{key}"
-  end
+  @screen.press(key)
 end
 
 Then /^the (amnesiac|persistent) Tor Browser directory (exists|does not exist)$/ do |persistent_or_not, mode|
@@ -713,16 +733,17 @@ Then /^there is a GNOME bookmark for the (amnesiac|persistent) Tor Browser direc
   when "persistent"
     bookmark_image = 'TorBrowserPersistentFilesBookmark.png'
   end
-  @screen.wait_and_click('GnomePlaces.png', 10)
+  @screen.wait('GnomePlaces.png', 10).click
   @screen.wait(bookmark_image, 40)
-  @screen.type(Sikuli::Key.ESC)
+  @screen.press("Escape")
 end
 
 Then /^there is no GNOME bookmark for the persistent Tor Browser directory$/ do
   try_for(65) do
-    @screen.wait_and_click('GnomePlaces.png', 10)
+    @screen.wait('GnomePlaces.png', 10).click
     @screen.wait("GnomePlacesWithoutTorBrowserPersistent.png", 10)
-    @screen.type(Sikuli::Key.ESC)
+    @screen.press("Escape")
+    true
   end
 end
 
@@ -743,22 +764,22 @@ When /^I double-click on the (Tails documentation|Report an Error) launcher on t
   info = xul_application_info('Tor Browser')
   # Sometimes the double-click is lost (#12131).
   retry_action(10) do
-    @screen.wait_and_double_click(image, 10) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
+    @screen.wait(image, 10).click(double: true) if $vm.execute("pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'").failure?
     step 'the Tor Browser has started'
   end
 end
 
 When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) directory$/ do |should_work, output_file, output_dir|
   should_work = should_work == 'can' ? true : false
-  @screen.type("s", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "s")
   @screen.wait("Gtk3SaveFileDialog.png", 10)
   if output_dir == "persistent Tor Browser"
     output_dir = "/home/#{LIVE_USER}/Persistent/Tor Browser"
-    @screen.wait_and_click("GtkTorBrowserPersistentBookmark.png", 10)
+    @screen.wait("GtkTorBrowserPersistentBookmark.png", 10).click
     @screen.wait("GtkTorBrowserPersistentBookmarkSelected.png", 10)
     # The output filename (without its extension) is already selected,
     # let's use the keyboard shortcut to focus its field
-    @screen.type("n", Sikuli::KeyModifier.ALT)
+    @screen.press("alt", "n")
     @screen.wait("TorBrowserSaveOutputFileSelected.png", 10)
   elsif output_dir == "default downloads"
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
@@ -767,8 +788,7 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   end
   # Only the part of the filename before the .html extension can be easily replaced
   # so we have to remove it before typing it into the arget filename entry widget.
-  @screen.type(output_file.sub(/[.]html$/, ''))
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.type(output_file.sub(/[.]html$/, ''), ["Return"])
   if should_work
     try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
       $vm.file_exist?("#{output_dir}/#{output_file}")
@@ -784,7 +804,7 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   else
     output_dir = "/home/#{LIVE_USER}/Tor Browser"
   end
-  @screen.type("p", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "p")
   print_dialog = @torbrowser.child('Print', roleName: 'dialog')
   print_dialog.child('Print to File', 'table cell').click
   print_dialog.child('~/Tor Browser/output.pdf', roleName: 'push button').click()
@@ -795,12 +815,12 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # Only the file's basename is selected when the file selector dialog opens,
   # so we type only the desired file's basename to replace it
   $vm.set_clipboard(output_dir + '/' + output_file.sub(/[.]pdf$/, ''))
-  @screen.type('v', Sikuli::KeyModifier.CTRL)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("ctrl", 'v')
+  @screen.press("Return")
   # Yes, TorBrowserPrintButton.png != Gtk3PrintButton.png.
   # If you try to unite them, make sure this does not break the tests
   # that use either.
-  @screen.wait_and_click("TorBrowserPrintButton.png", 10)
+  @screen.wait("TorBrowserPrintButton.png", 10).click
   try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
     $vm.file_exist?("#{output_dir}/#{output_file}")
   }
@@ -815,11 +835,11 @@ Given /^a web server is running on the LAN$/ do
   # I've tested ruby Thread:s, fork(), etc. but nothing works due to
   # various strange limitations in the ruby interpreter. For instance,
   # apparently concurrent IO has serious limits in the thread
-  # scheduler (e.g. sikuli's wait() would block WEBrick from reading
-  # from its socket), and fork():ing results in a lot of complex
-  # cucumber stuff (like our hooks!) ending up in the child process,
-  # breaking stuff in the parent process. After asking some supposed
-  # ruby pros, I've settled on the following.
+  # scheduler (e.g. when we used Sikuli, its wait() would block
+  # WEBrick from reading from its socket), and fork():ing results in a
+  # lot of complex cucumber stuff (like our hooks!) ending up in the
+  # child process, breaking stuff in the parent process. After asking
+  # some supposed ruby pros, I've settled on the following.
   code = <<-EOF
   require "webrick"
   STDOUT.reopen("/dev/null", "w")

@@ -58,7 +58,7 @@ end
 Then /^Tails Greeter has( not)? detected a persistence partition$/ do |no_persistence|
   expecting_persistence = no_persistence.nil?
   @screen.find('TailsGreeter.png')
-  found_persistence = ! @screen.exists('TailsGreeterPersistencePassphrase.png').nil?
+  found_persistence = @screen.exists('TailsGreeterPersistencePassphrase.png')
   assert_equal(expecting_persistence, found_persistence,
                "Persistence is unexpectedly#{no_persistence} enabled")
 end

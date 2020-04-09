@@ -14,7 +14,7 @@ end
 # otherwise, browser.tabs.warnOnClose will block this with a
 # "Quit and close tabs?" dialog.
 When /^I close the (?:Tor|Unsafe) Browser$/ do
-  @screen.type("q", Sikuli::KeyModifier.CTRL)
+  @screen.press("ctrl", "q")
 end
 
 def xul_application_info(application)
@@ -92,12 +92,12 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
     # shown, which we work around by pasting the address from the
     # clipboard, in one go.
     $vm.set_clipboard(address)
-    @screen.type('v', Sikuli::KeyModifier.CTRL)
-    @screen.type(Sikuli::Key.ENTER)
+    @screen.press("ctrl", 'v')
+    @screen.press("Return")
   end
   recovery_on_failure = Proc.new do
-    @screen.type(Sikuli::Key.ESC)
-    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    @screen.press("Escape")
+    @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_address.call
   end
   if browser == "Tor Browser"
@@ -107,7 +107,7 @@ When /^I open the address "([^"]*)" in the (.*)$/ do |address, browser|
   end
   open_address.call
   retry_method.call(recovery_on_failure) do
-    @screen.waitVanish(info[:browser_stop_button_image], 120)
+    @screen.wait_vanish(info[:browser_stop_button_image], 120)
     @screen.wait(info[:browser_reload_button_image], 120)
   end
 end
@@ -117,7 +117,7 @@ def page_has_loaded_in_the_Tor_Browser(page_titles, language)
     page_titles = [ page_titles ]
   end
   assert_equal(Array, page_titles.class)
-  if @language == 'German'
+  if $language == 'German'
     browser_name = 'Tor-Browser'
     reload_action = 'Neu laden'
   else
@@ -142,7 +142,7 @@ end
 # This step is limited to the Tor Browser due to #7502 since dogtail
 # uses the same interface.
 Then /^"([^"]+)" has loaded in the Tor Browser$/ do |title|
-  page_has_loaded_in_the_Tor_Browser(title, @language)
+  page_has_loaded_in_the_Tor_Browser(title, $language)
 end
 
 Then /^the (.*) has no plugins installed$/ do |browser|
@@ -217,7 +217,7 @@ end
 When /^I save the file to the default Tor Browser download directory$/ do
   @screen.click('BrowserDownloadDialogSaveAsButton.png')
   @screen.wait('Gtk3SaveFileDialog.png', 10)
-  @screen.type(Sikuli::Key.ENTER)
+  @screen.press("Return")
 end
 
 Then /^the file is saved to the default Tor Browser download directory$/ do
@@ -248,8 +248,8 @@ Then /^I can listen to an Ogg audio track in Tor Browser$/ do
     step "I open the address \"#{test_url}\" in the Tor Browser"
   end
   recovery_on_failure = Proc.new do
-    @screen.type(Sikuli::Key.ESC)
-    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    @screen.press("Escape")
+    @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_test_url.call
   end
   step "no application is playing audio"
@@ -266,8 +266,8 @@ Then /^I can watch a WebM video in Tor Browser$/ do
     step "I open the address \"#{test_url}\" in the Tor Browser"
   end
   recovery_on_failure = Proc.new do
-    @screen.type(Sikuli::Key.ESC)
-    @screen.waitVanish(info[:browser_stop_button_image], 3)
+    @screen.press("Escape")
+    @screen.wait_vanish(info[:browser_stop_button_image], 3)
     open_test_url.call
   end
   open_test_url.call

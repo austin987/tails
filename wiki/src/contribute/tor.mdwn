@@ -1,0 +1,67 @@
+This document is about how we upgrade packages built from the `tor`
+source package.
+
+[[!toc levels=2]]
+
+# Background
+
+Tails is built using a combination of snapshots of APT
+repositories and overlay APT suites. This document assumes a good
+understanding of this [[somewhat complex system|contribute/APT_repository]].
+
+We generally install packages built from the `tor` source package from
+<http://deb.torproject.org/torproject.org>:
+
+ - [[!tails_gitweb config/chroot_sources/torproject.chroot]]
+ - [[!tails_gitweb config/chroot_apt/preferences]]
+
+The corresponding archive in our APT snapshots setup is called `torproject`:
+[[!tails_gitweb config/APT_snapshots.d/torproject/serial]].
+
+# Process
+
+A Foundations Team member or Release Manager creates a tracking issue whenever
+a new stable version of `tor` is released.
+
+Once this new version is available in our APT snapshots, a Foundations Team
+member (you!) gathers the data that will inform our decision, and prepares
+the upgrade:
+
+1. Fork a branch off `stable` called
+   `feature/NNNNN-tor-X.Y+force-all-tests`.
+2. On that branch, bump `config/APT_snapshots.d/torproject/serial` to a snapshot
+   that's recent enough to include the relevant new version of `tor`.
+3. Push this new branch to our CI.
+4. Set the _Feature Branch_ field on the tracking issue to the name of your
+   new branch.
+5. Compare the Jenkins build and test results to the ones for our
+   `stable` branch. What follows assumes that these CI results look good.
+   If they don't, more work is needed.
+6. [[Bump the expiration
+   date|contribute/APT_repository/time-based_snapshots/#bump-expiration-date]]
+   for the snapshot of the `torproject` archive that you've switched the
+   branch _to_. Set the same expiration date as the one for the snapshot
+   of the `torproject` archive that you've switched the branch _from_.
+   See tip below.
+7. State on the tracking issue that you've bumped the expiration
+   date of the snapshot.
+8. Submit your branch for review via our [[usual
+   process|contribute/merge_policy#submit]].
+
+
+## Tip: pushing back expiration date
+
+Let's set some variables: the Debian base distribution, and the old
+serial (before the change to `config/APT_snapshots.d/torproject/serial`):
+
+    DIST=buster
+    OLD_SERIAL=2020020402
+
+Get the timestamp from the `Valid-Until` field in the `Release` file
+for the old snapshot of that distribution, and compute the number of
+days between now and then:
+
+    old_url="https://time-based.snapshots.deb.tails.boum.org/torproject/dists/${DIST?:}/snapshots/${OLD_SERIAL?:}/Release"
+    old_ts=$(date -d "$(wget -q $old_url -O- | awk '/^Valid-Until:/ {$1=""; print}')" +%s)
+    now_ts=$(date +%s)
+    echo "Days from now: $(((old_ts-now_ts)/(24*60*60)+1))"
