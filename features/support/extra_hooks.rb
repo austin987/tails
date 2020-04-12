@@ -62,7 +62,7 @@ if not($at_exit_print_artifacts_dir_patching_done)
   $at_exit_print_artifacts_dir_patching_done = true
 end
 
-def info_log(message = "", options = {})
+def info_log(message = "", **options)
   options[:color] = :clear
   # This trick allows us to use a module's (~private) method on a
   # one-off basis.
@@ -70,7 +70,7 @@ def info_log(message = "", options = {})
   puts cucumber_console.format_string(message, options[:color])
 end
 
-def debug_log(message, options = {})
+def debug_log(message, **options)
   options[:timestamp] = true unless options.has_key?(:timestamp)
   if $debug_log_fns
     if options[:timestamp]
@@ -79,7 +79,7 @@ def debug_log(message, options = {})
       elapsed = (Time.now - TIME_AT_START.to_f).utc.strftime("%H:%M:%S.%9N")
       message = "#{elapsed}: #{message}"
     end
-    $debug_log_fns.each { |fn| fn.call(message, options) }
+    $debug_log_fns.each { |fn| fn.call(message, **options) }
   end
 end
 
@@ -122,7 +122,7 @@ module ExtraFormatters
       $debug_log_fns << self.method(:debug_log)
     end
 
-    def debug_log(message, options)
+    def debug_log(message, **options)
       options[:color] ||= :blue
       @io.puts(format_string(message, options[:color]))
       @io.flush

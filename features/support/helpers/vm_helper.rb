@@ -417,7 +417,7 @@ class VM
     end
   end
 
-  def execute(cmd, options = {})
+  def execute(cmd, **options)
     options[:user] ||= "root"
     options[:spawn] = false unless options.has_key?(:spawn)
     if options[:libs]
@@ -430,11 +430,11 @@ class VM
       cmds << cmd
       cmd = cmds.join(" && ")
     end
-    return RemoteShell::ShellCommand.new(self, cmd, options)
+    return RemoteShell::ShellCommand.new(self, cmd, **options)
   end
 
-  def execute_successfully(*args)
-    p = execute(*args)
+  def execute_successfully(*args, **options)
+    p = execute(*args, **options)
     begin
       assert_vmcommand_success(p)
     rescue Test::Unit::AssertionFailedError => e
@@ -443,9 +443,9 @@ class VM
     return p
   end
 
-  def spawn(cmd, options = {})
+  def spawn(cmd, **options)
     options[:spawn] = true
-    return execute(cmd, options)
+    return execute(cmd, **options)
   end
 
   def remote_shell_is_up?
