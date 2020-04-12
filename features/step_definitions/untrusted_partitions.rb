@@ -26,7 +26,7 @@ Given /^I create an?( (\d+) ([[:alpha:]]+))? ([[:alnum:]]+) partition( labeled "
   opts.merge!(:luks_password => luks_password) if is_encrypted
   opts.merge!(:size => size) if with_size
   opts.merge!(:unit => unit) if with_size
-  $vm.storage.disk_mkpartfs(name, parttype, fstype, opts)
+  $vm.storage.disk_mkpartfs(name, parttype, fstype, **opts)
 end
 
 Given /^I write (|an old version of )the Tails (ISO|USB) image to disk "([^"]+)"$/ do |old, type, name|
