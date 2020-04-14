@@ -395,3 +395,32 @@ def defunct_processes
 rescue Test::Unit::AssertionFailedError
   return []
 end
+
+# This is IO.popen() that ensures that we wait() for the subprocess to
+# finish. Please use this instead IO.popen() when running a subprocess
+# inside a try_for() or other Timeout::timeout() block!
+def popen_wait(*args, **opts)
+  p = IO.popen(*args, **opts)
+  Process.wait(p.pid)
+  return p
+ensure
+  # If popen is run inside a Timeout::timeout() block we might abort
+  # while the subprocess is still running and before the above wait()
+  # does its clean up, which would leave a defunct process around
+  # unless we take care to finish wait():ing.
+  begin
+    begin
+      Process.wait(p.pid)
+    rescue Errno::ECHILD
+      # Process has already exited.
+    else
+      begin
+        Process.kill("KILL", p.pid)
+      rescue IOError, Errno::ESRCH
+        # Process has already exited.
+      end
+    end
+  rescue NameError
+    # We aborted before p was assigned, so no clean up needed.
+  end
+end

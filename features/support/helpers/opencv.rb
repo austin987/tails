@@ -18,13 +18,12 @@ module OpenCV
     else
       env['DISPLAY'] = ENV['USER_DISPLAY']
     end
-    p = IO.popen(
+    p = popen_wait(
       [env, @python, "#{GIT_DIR}/features/scripts/opencv_match_template.py",
        screen, image, sensitivity.to_s, show_match.to_s],
       err: [:child, :out]
     )
     out = p.readlines.join("\n")
-    Process.wait(p.pid)
     case $?.exitstatus
     when 0
       return out.chomp.split.map { |s| s.to_i }
@@ -32,24 +31,6 @@ module OpenCV
       return nil
     else
       raise OpenCVInternalError.new(out)
-    end
-  ensure
-    # If this method is run inside try_for() we might abort anywhere
-    # in the above code, possibly leaving defunct process around, so
-    # let's ensure such messes are cleaned up.
-    begin
-      begin
-        Process.kill("KILL", p.pid)
-      rescue IOError, Errno::ESRCH
-        # Process has already exited.
-      end
-      begin
-        Process.wait(p.pid)
-      rescue Errno::ECHILD
-        # Process has already exited.
-      end
-    rescue NameError
-      # We aborted before p was assigned, so no clean up needed.
     end
   end
 

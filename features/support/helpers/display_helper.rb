@@ -47,28 +47,9 @@ class Display
 
   def screenshot(target)
     FileUtils.rm_f(target)
-    p = IO.popen(['import', '-quality', '100%', '-window', 'root', target])
-    Process.wait(p.pid)
+    popen_wait(['import', '-quality', '100%', '-window', 'root', target])
     assert($?.success?)
     assert(File.exists?(target))
-  ensure
-    # If this method is run inside try_for() we might abort anywhere
-    # in the above code, possibly leaving defunct process around, so
-    # let's ensure such messes are cleaned up.
-    begin
-      begin
-        Process.kill("KILL", p.pid)
-      rescue IOError, Errno::ESRCH
-        # Process has already exited.
-      end
-      begin
-        Process.wait(p.pid)
-      rescue Errno::ECHILD
-        # Process has already exited.
-      end
-    rescue NameError
-      # We aborted before p was assigned, so no clean up needed.
-    end
   end
 
 end
