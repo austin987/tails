@@ -388,14 +388,6 @@ def ffmpeg
       return 'ffmpeg'
     end
 end
-
-def defunct_processes
-  cmd_helper(['pgrep', '--parent', $$.to_s, '--runstates', 'Z'])
-    .chomp.split.map { |s| s.to_i }
-rescue Test::Unit::AssertionFailedError
-  return []
-end
-
 # This is IO.popen() that ensures that we wait() for the subprocess to
 # finish. Please use this instead IO.popen() when running a subprocess
 # inside a try_for() or other Timeout::timeout() block!
