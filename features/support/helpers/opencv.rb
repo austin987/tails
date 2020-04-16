@@ -18,13 +18,12 @@ module OpenCV
     else
       env['DISPLAY'] = ENV['USER_DISPLAY']
     end
-    p = IO.popen(
+    p = popen_wait(
       [env, @python, "#{GIT_DIR}/features/scripts/opencv_match_template.py",
        screen, image, sensitivity.to_s, show_match.to_s],
       err: [:child, :out]
     )
     out = p.readlines.join("\n")
-    p.close
     case $?.exitstatus
     when 0
       return out.chomp.split.map { |s| s.to_i }
