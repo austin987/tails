@@ -213,6 +213,8 @@ page on our website, and possibly in GitLab's own
 use it (either only for this use case or [[!tails_ticket 9174
 desc="for our blueprints"]]).
 
+<a id="access-control"></a>
+
 # Access control
 
 ## Objects
@@ -220,7 +222,7 @@ desc="for our blueprints"]]).
  - _Canonical Git repo_: the authoritative `tails.git` repository
    hosted on GitLab
 
-- _Major branches_: `master`, `stable`, `testing`, `devel`,
+ - _Major branches_: `master`, `stable`, `testing`, `devel`,
    and possibly `feature/bullseye`
 
  - _Release tags_: a signed Git tag that identifies the source code
@@ -251,6 +253,7 @@ desc="for our blueprints"]]).
    - can edit team membership
    - MUST comply with our "Level 3" security policy
    - can view issues that contain particularly sensitive data
+   - can create new groups and projects that are not forks
 
  - A _committer_:
    - can push and force-push to any ref in the canonical Git repo,
@@ -298,18 +301,38 @@ desc="for our blueprints"]]).
  - [Protected Branches](https://docs.gitlab.com/ce/user/project/protected_branches.html)
  - [Groups](https://docs.gitlab.com/ee/user/group/) and [Subgroups](https://docs.gitlab.com/ee/user/group/subgroups/)
 
-### Idea: Protected branch flow
+### Common settings
 
-The [Protected branch
-flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow)
-may be the most adequate for regular contributors, since it's the
-least disruptive in terms of workflow and habits and requires no
-work to adjust our Jenkins CI setup:
+ - pipelines: disabled
+ - wiki: disabled
 
- - We mark our major branches and release tags as "Protected".
+### The parent "tails" group
+
+ - Visibility: Public
+ - The `root` user has "Owner" access to this group.
+ - Release managers have "Reporter" access to every project in this group
+   (after releasing a new Tails, they need to postpone issues,
+   including confidential ones, and manage group labels),
+   until [[!tails_ticket 17589]] is done.
+ - Nobody else is a member of this group.
+ - Allow users to request access: disabled
+
+### Most public projects
+
+The following applies to each of our public project that
+has no dedicated section below:
+
+ - [Protected branch flow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#protected-branch-flow):
+   it's the most adequate for regular contributors, since it's the
+   least disruptive in terms of workflow and habits and requires no
+   work to adjust our Jenkins CI setup.
+ - We mark our major branches as "Protected".
  - Committers get "Maintainer" access.
+ - Maintainers are allowed to merge and to push to
+   protected branches.
  - The Git workflow remains unchanged for regular developers who are
-   not granted full commit access: they get "Developer" access, can
+   not granted full commit access but have access to our CI:
+   they get "Developer" access, can
    push a topic branch to the canonical Git repository and our CI will
    pick it up. The only difference is that they are not restricted to
    pushing to their own `$nickname/*` namespace, which makes things
@@ -324,6 +347,114 @@ work to adjust our Jenkins CI setup:
    merge request (based on `refs/merge-requests/*/head`), but this
    would give arbitrary code execution on our CI to _anyone_.
    Our infrastructure is not currently equipped to cope with this.)
+ - issues: disabled except for the `tails/tails` project
+ - MRs: enabled
+ - Allow users to request access: enabled
+
+### rm
+
+ - visibility: private
+ - issues: disabled
+ - MRs: disabled (gcrypt)
+ - repository: enabled
+ - Allow users to request access: disabled
+ - Nobody has access except RMs
+
+### Public sysadmin projects
+
+Projects:
+
+ - `bitcoin`
+ - `bitcoin_libunivalue` → rename to `libunivalue`
+ - public `puppet-*` (additional "Maintainer": role-lizard)
+ - `jenkins-jobs` (additional "Maintainer": role-lizard)
+
+Properties:
+
+ - public
+ - [forking workflow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#forking-workflow)
+ - issues: disabled (tracked in tails/tails)
+ - MRs: enabled
+ - regular Tails contributors have "Reporter" access
+
+### tails/accounting, tails/fundraising, tails/private
+
+ - visibility: private
+ - issues: enabled
+ - MRs: disabled
+ - repository: disabled (could be enabled later if these teams
+   want their git-remote-gcrypt repo migrated)
+ - Allow users to request access: disabled
+ - Maintainer access given to:
+    - accounting: accounting team
+    - fundraising: fundraising team
+    - private: tails@ members
+
+### tails/sysadmin
+
+ - visibility: public
+ - issues: enabled
+ - MRs: disabled
+ - repository: disabled (contributors with "Guest" access would be allowed
+   to clone it)
+ - Allow users to request access: disabled
+ - regular contributors have "Guest" access level (so they can create new issues
+   but not see confidential ones)
+ - Maintainer access given to: sysadmin team
+
+### test-suite-shared-secrets
+
+ - visibility: private
+ - issues: disabled
+ - MRs: enabled
+ - repository: enabled
+ - Allow users to request access: disabled
+ - Nobody has access except committers
+
+### mirror-pool
+
+ - visibility: public
+ - issues: disabled
+ - MRs: enabled
+ - repository: enabled
+ - Allow users to request access: disabled
+ - mirrors team members have "Maintainer" access
+ - [forking workflow](https://docs.gitlab.com/ce/user/project/merge_requests/authorization_for_merge_requests.html#forking-workflow)
+ - regular Tails contributors have "Reporter" access
+
+## Management
+
+With Redmine + Gitolite, we centrally manage, in 1-2 single places, team
+membership and the corresponding access level. For example, when someone gets
+commit access or joins a team, we add them to the corresponding Gitolite group
+and Redmine role. That's very convenient.
+
+If we don't do anything special, to implement the access control specified
+above, we would need to:
+
+* During the migration to GitLab: give dozens of users "Reporter", "Maintainer"
+  or "Developer" access on dozens of project.
+* Day-to-day operations: occasionally, give someone "Reporter", "Maintainer" or
+  "Developer" access on dozens of project.
+
+I don't think we want to do any of this manually.
+
+It seems we could maintain user groups via the GitLab web interface and [share
+the relevant projects with these user
+groups](https://docs.gitlab.com/ce/user/project/members/share_project_with_groups.html).
+These groups would not contain any project themselves: their primary purpose is to
+manage access to projects in batch.
+
+And in passing, such user groups would allow us to mention a team with one
+single `@xyz-team` or `@xyz-group`. For example, `@sysadmins-team`.
+
+Another option would be to use
+[subgroups](https://docs.gitlab.com/ce/user/group/subgroups/), and have for
+example `tails/accounting-team/accounting`, but references to issues etc.
+become pretty long, e.g. "tails/accounting-team/accounting#1234", compared to
+"tails/accounting#1234" in the current implementation. Unless there's a way
+around this problem, that's a usability deal breaker and we should not use
+subgroups merely to simplify access level management.
 
 # Wiki
 
@@ -355,6 +486,8 @@ Tails community.
 
 ### MUST
 
+* Does not require SSH access to the GitLab machine.
+
 * For every existing Redmine issue, the meaning of its `#NNNN` ID MUST
   be preserved unambiguously. This implies that we can't reuse
   existing Redmine issue IDs in our main GitLab project, where most
@@ -381,7 +514,15 @@ Tails community.
   GitLab project than the default one where most of our issues will
   live; for details, see the "Private issues" section above.
 
-  Example: [[!tails_ticket 10346]]
+  Same applies to "stub" issues created for confidential issues
+  moved to a different project.
+
+  Examples:
+
+   - private issue: [[!tails_ticket 10346]]
+     → <https://gitlab.tails.boum.org/tails/tails/-/issues/10346>
+   - public issue moved to another project: [[!tails_ticket 6033]]
+     → <https://gitlab.tails.boum.org/tails/tails/-/issues/6033>
 
 * Preserve parent/subtask relationship in a way that GitLab will
   enforce, i.e. prevent closing the GitLab issue corresponding to the
@@ -389,6 +530,8 @@ Tails community.
   not completed.
 
   Examples: [[!tails_ticket 15878]], [[!tails_ticket 12213]]
+     → <https://gitlab.tails.boum.org/tails/tails/-/issues/15878>,
+     <https://gitlab.tails.boum.org/tails/tails/-/issues/12213>
 
   Implementation idea: a GitLab issue imported from a Redmine issue
   that has subtasks could have a list of tasks (checklist), with each
@@ -405,6 +548,8 @@ Tails community.
   see the "Core team (self-)management" section.
 
   Examples: [[!tails_ticket 15878]], [[!tails_ticket 12213]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/15878>,
+  <https://gitlab.tails.boum.org/tails/tails/-/issues/12213>
 
   Implementation idea: add the "X blocks Y" information in the
   description of issues X and Y and/or as comments on X and Y.
@@ -426,6 +571,7 @@ Tails community.
   Adding this information as-is in a comment would be good enough.
 
   Example: [[!tails_ticket 16173]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/16173>
 
 * Preserve Category, Affected Tool, Priority, Type of work… somehow.
 
@@ -439,13 +585,18 @@ Tails community.
 
   Implementation idea: "Deliverable for SponsorXYZ" label.
 
+  Example: [[!tails_ticket 10601]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/10601>
+
 * Preserve attachments
 
   Example: [[!tails_ticket 7763]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/7763>
 
 * Preserve embedding of attached images
 
   Example: [[!tails_ticket 17068]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/17068>
 
 * Convert Textile issue description and comments to Markdown
   (pandoc can do most of the work see <https://pandoc.org/try/?from=textile&to=markdown>):
@@ -458,6 +609,7 @@ Tails community.
   - bullet lists, including nested ones
 
   Examples: [[!tails_ticket 17241]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/17241>
 
   Textile: <https://www.redmine.org/projects/redmine/wiki/RedmineTextFormatting>
   GitLab Flavored Markdown (GFM): <https://docs.gitlab.com/ee/user/markdown.html>
@@ -465,12 +617,14 @@ Tails community.
 * Convert public notes to GitLab comments.
 
   Example: [[!tails_ticket 17121]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/17121>
 
 * Private comments (notes): migrate their contents somewhere,
   and make it accessible from the corresponding issue,
   in the right place in the discussion.
 
   Example: [[!tails_ticket 16875#note-3]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/16875>
 
   It looks like GitLab does not support private comments.
 
@@ -499,6 +653,9 @@ Tails community.
 
   Adding this information to the issue description is good enough.
 
+  Example: [[!tails_ticket 15878]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/15878>
+
 * Preserve metadata changes
 
   It's good enough to:
@@ -524,6 +681,8 @@ Tails community.
       context, and then scroll back up to read the note itself.
     - It would be really nicer if we can _really_ preserve attribution.
 
+* Existing user accounts
+
 ### SHOULD
 
 * Convert more Textile issue description and comments to Markdown
@@ -535,10 +694,12 @@ Tails community.
   - `source:some/file`
 
   Examples: [[!tails_ticket 17241]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/17241>
 
 * Preserve watchers (as "participants") for open tickets.
 
   Example: [[!tails_ticket 16875]]
+  → <https://gitlab.tails.boum.org/tails/tails/-/issues/16875>
 
   It is acceptable to give Redmine users a data file + script to run
   in order for them to re-subscribe to the issues they were watching.
@@ -555,14 +716,6 @@ See "Other issues metadata" section above for some discussion about why.
 * Estimated time
 * Code syntax highlighting
 * List of commits that referenced an issue
-
-### To be triaged
-
-Relevant features — to be triaged as MUST/SHOULD/MAY:
-
-* Does not require global GitLab administration token.
-* Does not require SSH access to the GitLab machine.
-* Existing user accounts
 * Description history
 
 ## Tools
@@ -577,6 +730,54 @@ of forks, and follow the white GitHub rabbit(-hole):
 * <https://github.com/redmine-gitlab-migrator/redmine-gitlab-migrator>
 * <https://github.com/ultreia-io/migrate-redmine-to-gitlab>
 
+<a id="git"></a>
+
+# Git repositories
+
+Migration includes preserving access rights, which are documented
+for each repository below.
+
+## Must be migrated
+
+From `git.tails.boum.org` aka. `git-tails.immerda.ch`:
+
+ - `bitcoin` (public; read-write: sysadmins)
+ - `bitcoin_libunivalue` (public; read-write: sysadmins)
+ - `chutney` (public; read-write: committers)
+ - `htp` (public; read-write: committers)
+ - `jenkins-tools` (public; read-write: committers)
+ - `liveusb-creator` → rename to `installer` (public; read-write: committers)
+ - `network-manager` (public; read-write: committers)
+ - `onioncircuits` (public; read-write: committers)
+ - `rm` (private; read-write: RMs)
+ - `tails-workarounds` → rename to `workarounds` (public; read-write: committers)
+ - `test-suite-shared-secrets` (private; read-write: committers)
+ - `torbrowser-launcher` (public; read-write: committers)
+ - `ux` (public; read-write: committers)
+ - `verification-extension` (public; read-write: committers)
+ - `whisperback` (public; read-write: committers)
+
+From `puppet-git.lizard`:
+
+ - `etcher-binary` (public; read-write: committers)
+ - `mirror-pool` (public; read-write: mirrors team)
+ - `mirror-pool-dispatcher` (public; read-write: committers)
+ - `promotion-material` (public; read-write: committers)
+
+Read-only mirrors to be migrated from `git.tails.boum.org` aka.
+`git-tails.immerda.ch` (with a description that makes it clear
+to people with commit access that it's a read-only mirror):
+
+ - public `puppet-*` (public; read-write: role-lizard)
+ - `jenkins-jobs` (public; read-write: role-lizard)
+
+## Leave on immerda for now
+
+ - `download-and-verify-extension`: obsolete
+ - `iceweasel`: very big, unused since years
+ - `thunderbird`: very big, hopefully obsolete soon
+ - `uui-binary`: obsolete
+
 <a id="interfaces"></a>
 
 # Interfaces that will need adjustments
@@ -587,6 +788,13 @@ Our Git repository keeps a number of mirrors up-to-date:
 
  - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_remotes.sh>
  - <https://git.tails.boum.org/puppet-tails/tree/files/gitolite/install_hooks.sh>
+
+In particular:
+
+ - repositories that must now be mirrored on our GitLab
+   (in addition to, or instead of, the current immerda remote):
+    - public `puppet-*`
+    - `jenkins-jobs`
 
 ## Git repositories → website
 
@@ -677,8 +885,11 @@ Current implementation:
 With GitLab one can define policies (YAML) and have them applied automatically
 to issues and merge requests:
 
+  - <https://about.gitlab.com/handbook/engineering/quality/triage-operations/#triage-automation>
   - <https://gitlab.com/gitlab-org/quality/triage-ops>
   - <https://gitlab.com/gitlab-org/gitlab-triage>
+
+Potential future work: [[!tails_ticket 17589]].
 
 ## Translation platform → Git
 

@@ -78,3 +78,20 @@ for lang in $LANGUAGES ; do
         > $PO_FILES
     statistics $PO_FILES
 done
+
+# core PO files (other languages)
+echo ""
+echo "## Core pages of the website for languages not activated on the website yet"
+echo ""
+
+for lang in ar ca id pl ru sr_Latn tr zh zh_TW ; do
+    PO_FILES="$(mktemp -t XXXXXX.$lang)"
+    cat "$WEBSITE_ROOT_DIR"/contribute/l10n_tricks/core_po_files.txt \
+        | sed "s/$/.$lang.po/g" \
+        | sed "s,^,$WEBSITE_ROOT_DIR/," \
+        > $PO_FILES
+    statistics $PO_FILES
+done
+
+echo
+echo "(List of languages last updated on 2020-03-27.)"

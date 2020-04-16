@@ -87,7 +87,7 @@ class VMStorage
     @pool.lookup_volume_by_name(name).delete
   end
 
-  def create_new_disk(name, options = {})
+  def create_new_disk(name, **options)
     options[:size] ||= 2
     options[:unit] ||= "GiB"
     options[:type] ||= "qcow2"
@@ -153,7 +153,7 @@ class VMStorage
     end
   end
 
-  def disk_mkpartfs(name, parttype, fstype, opts = {})
+  def disk_mkpartfs(name, parttype, fstype, **opts)
     opts[:label] ||= nil
     opts[:luks_password] ||= nil
     opts[:size] ||= nil

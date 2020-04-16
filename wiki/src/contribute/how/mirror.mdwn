@@ -88,12 +88,12 @@ All downloads are currently served from a diverse pool of mirrors
 (see the [[design document|contribute/design/mirrors]] for details).
 
 Every HTTPS mirror makes our files available under a fixed URL
-(e.g. `https://42.dl.amnesia.boum.org/tails/` or `https://yourdomain.org/pub/tails/`)
+(e.g. `https://yourdomain.org/pub/tails/`)
 that contains per-version sub-directories (such as
-`https://42.dl.amnesia.boum.org/tails/stable/tails-i386-lenny-0.6.2/`).
+`https://yourdomain.org/pub/tails/stable/tails-i386-lenny-0.6.2/`).
 
 Alongside our mirror pool redirecting to mirrors using their own domain, we maintain
-a DNS Round Robin pool for the `dl.amnesia.boum.org` host. This pool serves as a
+a DNS Round Robin pool for the `dl.amnesia.boum.org` hostname. This pool serves as a
 fallback, we add only a few fast and reliable mirrors to it.
 
 We only accept mirrors that provide a SSL certificate deemed valid by
@@ -107,20 +107,9 @@ a _dedicated_ hostname that is unique, within our mirror pool.
 Furthermore, your web server should answer requests sent to `dl.amnesia.boum.org`
 (your mirror could be added to our fallback mirror pool at any moment).
 
-There are two ways to pick that dedicated hostname:
-
-1. Use a hostname of your choice, under a domain you control.
-   For example, if you control `example.com`, you can call your Tails
-   mirror `tails.example.com`. This is, by far, our preferred option:
-   * it allows you to maintain that DNS record yourself, e.g. whenever you
-     need to update your mirror's IP address;
-   * it saves us a lot of work :)
-
-2. Use a hostname of our choice, under `dl.amnesia.boum.org` (e.g.
-   you may get `142.dl.amnesia.boum.org`). To do so, at the end of
-   this set of instructions, when it's time to ask us to add your
-   mirror to the pool, also ask us to create a dedicated hostname
-   for you.
+Use a hostname of your choice, under a domain you control.
+For example, if you control `example.com`, you can call your Tails
+mirror `tails.example.com`.
 
 Manual set up
 -------------------------
@@ -147,7 +136,6 @@ from [Let's Encrypt](https://letsencrypt.org/) for example.
 	<VirtualHost YOUR_WEBSERVER_IP:80>
 	   ServerName yourdomain.org
 	   ServerAlias dl.amnesia.boum.org
-	   ServerAlias *.dl.amnesia.boum.org
 	   RewriteEngine On
 	   RewriteRule ^/?(.*) https://%{SERVER_NAME}/pub/$1 [R=permanent,L]
 	</VirtualHost>
@@ -186,7 +174,7 @@ Mozilla SSL Configuration Generator</a>.
 #### nginx configuration example
 
 	server {
-		server_name dl.amnesia.boum.org *.dl.amnesia.boum.org;
+		server_name dl.amnesia.boum.org;
 		root /var/www/YOUR_PATH;
 		location / {
 			autoindex on;
@@ -254,9 +242,6 @@ Go wild: ask for your mirror to be added to the pool
 
 As soon as your web server is ready, please email us its IP address
 so that we can add it to the Round Robin pool.
-
-Also, if you decided to use a hostname under `dl.amnesia.boum.org`,
-please ask us to create it at the same time.
 
 <div class="note">
 
