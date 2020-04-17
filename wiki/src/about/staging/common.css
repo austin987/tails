@@ -18,7 +18,7 @@ h3 {
   font-size: 20px;
 }
 
-/* Topbar */
+/* Banner */
 
 .banner {
   height: auto;
@@ -40,8 +40,13 @@ h3 {
   height: 110px;
 }
 
+#search-and-donate {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 form#searchform {
-  height: 2em;
   display: block;
   float: none;
   position: relative;
@@ -49,20 +54,90 @@ form#searchform {
   overflow: auto;
   top: auto !important;
   right: auto;
-  margin-top: 10px;
-  margin-left: 30px;
-  width: auto;
+  margin: 10px auto 0 auto;
+  width: 135px;
 }
 
-@media (min-width: 520px) {
-  form#searchform {
-    position: absolute;
-    top: 1em !important;
-    right: 1em;
-    left: auto;
-    margin-top: 0;
+#searchbox {
+  width: 100%;
+}
+
+.donate a {
+  background: #53b351;
+  color: black !important;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 0.5em;
+  padding: 0.2em;
+  display: block;
+  text-align: center;
+  box-shadow: 1px 1px 5px #222;
+  width: 135px;
+}
+
+.donate {
+  margin: 10px auto 0 auto;
+}
+
+@media (min-width: 360px) {
+  #search-and-donate {
+    flex-direction: row;
+    margin: 10px 30px 0 30px;
+  }
+  form#searchform, .donate {
+    margin: 0;
   }
 }
+
+@media (min-width: 550px) {
+  #search-and-donate {
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 15px 15px 15px 0;
+    height: 90px;
+  }
+  form#searchform, .donate a {
+    width: 200px;
+  }
+}
+
+/* Hide all translations of the Donate button by default */
+body .donate .de,
+body .donate .es,
+body .donate .fa,
+body .donate .fr,
+body .donate .it,
+body .donate .pt {
+    display: none;
+}
+
+/* Hide the English button for all other languages
+
+   This way, the English button is still displayed when the PO plugin is
+   disabled. This is useful for development.
+   */
+body.de .donate .en,
+body.es .donate .en,
+body.fa .donate .en,
+body.fr .donate .en,
+body.it .donate .en,
+body.pt .donate .en {
+    display: none;
+}
+
+/* Show the button corresponding to the current language */
+body.de .donate .de,
+body.es .donate .es,
+body.fa .donate .fa,
+body.fr .donate .fr,
+body.it .donate .it,
+body.pt .donate .pt {
+    display: block !important;
+}
+
+/* Topbar */
 
 .topbar {
   background: white;
@@ -100,14 +175,6 @@ form#searchform {
 
 .topbar .selflink {
   border-bottom: 5px solid #276426;
-}
-
-/* Special links */
-
-.topbar a.donate {
-  background: url(heart.svg) no-repeat top 50% left !important;
-  padding-left: 20px;
-  border-bottom: 5px solid yellow;
 }
 
 /* Hide breadcrumbs on top pages */
