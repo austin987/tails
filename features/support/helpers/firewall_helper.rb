@@ -1,7 +1,7 @@
 require 'packetfu'
 
 def looks_like_dhcp_packet?(eth_packet, protocol, sport, dport, ip_packet)
-  protocol == "udp" && sport == 68 && dport == 67 && 
+  protocol == "udp" && sport == 68 && dport == 67 &&
     eth_packet.eth_daddr == "ff:ff:ff:ff:ff:ff" &&
     ip_packet && ip_packet.ip_daddr == "255.255.255.255"
 end
