@@ -200,7 +200,7 @@ class Screen
     # repeatedly calling this method will ensure that key presses are
     # emitted with this minimum interval. This helps preventing
     # repeated calls interfering with each other.
-    opts[:delay] ||= 0.060  # Sikuli used 60ms delay.
+    opts[:delay] ||= 0.060 # Sikuli used 60ms delay.
     # How long the key(s) are held (in seconds). With holdtime = 0
     # (like virsh does it) we have seen issues, in particular with key
     # modifiers like Shift bleeding over to subsequent invocations, so
@@ -339,11 +339,11 @@ class ImageBumpingScreen
                 FileUtils.cp("#{$config["TMPDIR"]}/last_opencv_match.png",
                              "#{OPENCV_IMAGE_PATH}/#{image}")
                 return p
-              elsif c == 'n' || c == 3.chr  # Ctrl+C => 3
+              elsif c == 'n' || c == 3.chr # Ctrl+C => 3
                 break
               end
             end
-            break if c == 3.chr  # Ctrl+C => 3
+            break if c == 3.chr # Ctrl+C => 3
           end
         end
         STDERR.puts "Failed to automatically bump image"
@@ -359,7 +359,7 @@ class ImageBumpingScreen
       when 'i'
         $interactive_image_bump_ignores << image
         raise ImageBumpFailed
-      when 'q', 3.chr  # Ctrl+C => 3
+      when 'q', 3.chr # Ctrl+C => 3
         raise ImageBumpFailed
       when 'd'
         binding.pry(quiet: true)

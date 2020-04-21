@@ -168,7 +168,7 @@ def chutney_onionservice_info
   _, hs_port, local_address_port = open(hs_torrc_path, 'r') do |f|
     f.grep(/^HiddenServicePort/).first.split
   end
-  local_address, local_port  = local_address_port.split(':')
+  local_address, local_port = local_address_port.split(':')
   [local_address, local_port, hs_hostname, hs_port]
 end
 

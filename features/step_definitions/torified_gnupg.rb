@@ -147,7 +147,7 @@ Then /^I synchronize keys in Seahorse$/ do
     # try_for loop below by returning "true" when there's something we can act
     # upon.
     if count_gpg_subkeys(@fetched_openpgp_keyid) >= 3 || \
-      @screen.exists('GnomeCloseButton.png')  || \
+      @screen.exists('GnomeCloseButton.png') || \
       !$vm.has_process?('seahorse')
       true
     end

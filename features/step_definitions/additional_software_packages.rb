@@ -20,22 +20,22 @@ Then /^the Additional Software (upgrade|installation) service has started$/ do |
   end
 end
 
-Then /^I am notified I can not use Additional Software for "([^"]*)"$/  do |package|
+Then /^I am notified I can not use Additional Software for "([^"]*)"$/ do |package|
   title = "You could install #{package} automatically when starting Tails"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I am notified that the installation succeeded$/  do
+Then /^I am notified that the installation succeeded$/ do
   title = "Additional software installed successfully"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I am proposed to add the "([^"]*)" package to my Additional Software$/  do |package|
+Then /^I am proposed to add the "([^"]*)" package to my Additional Software$/ do |package|
   title = "Add #{package} to your additional software?"
   step "I see the \"#{title}\" notification after at most 300 seconds"
 end
 
-Then /^I create a persistent storage and activate the Additional Software feature$/  do
+Then /^I create a persistent storage and activate the Additional Software feature$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Create Persistent Storage', roleName: 'push button').click
   step 'I create a persistent partition for Additional Software'
@@ -43,7 +43,7 @@ Then /^I create a persistent storage and activate the Additional Software featur
   save_and_exit_the_persistence_wizard
 end
 
-Then /^The Additional Software persistence option is enabled$/  do
+Then /^The Additional Software persistence option is enabled$/ do
   @screen.wait('ASPPersistenceSetupOptionEnabled.png', 60)
 end
 
@@ -65,7 +65,7 @@ Then /^"([^"]*)" is not in the list of Additional Software$/ do |package|
   end
 end
 
-When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/  do |decision, action, package|
+When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Software$/ do |decision, action, package|
   case action
   when "adding"
     notification_title = "Add #{package} to your additional software?"
@@ -94,7 +94,7 @@ When /^I (refuse|accept) (adding|removing) "([^"]*)" (?:to|from) Additional Soft
   end
 end
 
-Given /^I remove "([^"]*)" from the list of Additional Software using Additional Software GUI$/  do |package|
+Given /^I remove "([^"]*)" from the list of Additional Software using Additional Software GUI$/ do |package|
   asp_gui = Dogtail::Application.new('tails-additional-software-config')
   installed_package = asp_gui.child(package, roleName: 'label')
   installed_package.parent.parent.child('Remove', roleName: 'push button').click
@@ -102,7 +102,7 @@ Given /^I remove "([^"]*)" from the list of Additional Software using Additional
   deal_with_polkit_prompt(@sudo_password)
 end
 
-When /^I prepare the Additional Software upgrade process to fail$/  do
+When /^I prepare the Additional Software upgrade process to fail$/ do
   # Remove the newest cowsay package from the APT cache with a DPKG hook
   # before it gets upgraded so that we simulate a failing upgrade.
   failing_dpkg_hook = <<~EOF
@@ -115,11 +115,11 @@ When /^I prepare the Additional Software upgrade process to fail$/  do
   $vm.execute_successfully("touch #{ASP_STATE_DIR}/doomed_to_fail")
 end
 
-When /^I remove the "([^"]*)" deb files from the APT cache$/  do |package|
+When /^I remove the "([^"]*)" deb files from the APT cache$/ do |package|
   $vm.execute_successfully("rm /live/persistence/TailsData_unlocked/apt/cache/#{package}_*.deb")
 end
 
-Then /^I can open the Additional Software documentation from the notification$/  do
+Then /^I can open the Additional Software documentation from the notification$/ do
   gnome_shell = Dogtail::Application.new('gnome-shell')
   gnome_shell.child('Documentation', roleName: 'push button').click
   try_for(60) { @torbrowser = Dogtail::Application.new('Firefox') }

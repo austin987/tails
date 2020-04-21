@@ -239,7 +239,7 @@ def configured_pidgin_accounts
     $vm.file_content("/home/#{LIVE_USER}/.purple/accounts.xml")
   )
   xml.elements.each("account/account") do |e|
-    account   = e.elements["name"].text
+    account = e.elements["name"].text
     account_name, network = account.split("@")
     protocol  = e.elements["protocol"].text
     port      = e.elements["settings/setting[@name='port']"].text

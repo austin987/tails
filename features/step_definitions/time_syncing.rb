@@ -54,7 +54,7 @@ Then /^the system clock is just past Tails' source date$/ do
                     '/etc/amnesia/version'
   source_time_str = $vm.execute_successfully(source_time_cmd).to_s
   source_time = DateTime.parse(source_time_str).to_time
-  diff = system_time - source_time  # => in seconds
+  diff = system_time - source_time # => in seconds
   # Half an hour should be enough to boot Tails on any reasonable
   # hardware and VM setup.
   max_diff = 30*60
