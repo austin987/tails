@@ -163,7 +163,7 @@ def xul_app_shared_lib_check(pid, chroot, expected_absent_tbb_libs = [])
       absent_tbb_libs << lib_name
     end
     native_libs = $vm.execute_successfully(
-                       "find /usr/lib /lib -name \"#{lib_name}\""
+      "find /usr/lib /lib -name \"#{lib_name}\""
                      ).stdout.split
     for native_lib in native_libs do
       if /\W#{native_lib}$"/.match firefox_pmap_info
@@ -197,10 +197,10 @@ end
 Then /^the (.*) runs as the expected user$/ do |browser|
   info = xul_application_info(browser)
   assert_vmcommand_success($vm.execute(
-    "pgrep --full --exact '#{info[:cmd_regex]}'"),
+                             "pgrep --full --exact '#{info[:cmd_regex]}'"),
                            "The #{browser} is not running")
   assert_vmcommand_success($vm.execute(
-    "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
+                             "pgrep --uid #{info[:user]} --full --exact '#{info[:cmd_regex]}'"),
                            "The #{browser} is not running as the #{info[:user]} user")
 end
 

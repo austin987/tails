@@ -30,7 +30,7 @@ def pcap_connections_helper(pcap_file, **opts)
         next
       else
         raise FirewallAssertionFailedError.new(
-                'Found something that is not an ethernet packet'
+          'Found something that is not an ethernet packet'
               )
       end
     end
@@ -60,7 +60,7 @@ def pcap_connections_helper(pcap_file, **opts)
       protocol = 'arp'
     else
       raise FirewallAssertionFailedError.new(
-              "Found something that cannot be parsed"
+        "Found something that cannot be parsed"
             )
     end
 
@@ -107,8 +107,8 @@ def assert_all_connections(pcap_file, **opts, &block)
   bad = all - good
   unless bad.empty?
     raise FirewallAssertionFailedError.new(
-            "Unexpected connections were made:\n" +
-            bad.map { |e| "  #{e}" } .join("\n"))
+      "Unexpected connections were made:\n" +
+      bad.map { |e| "  #{e}" } .join("\n"))
   end
 end
 
