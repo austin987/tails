@@ -277,7 +277,7 @@ def get_free_space(machine, path)
     assert($vm.file_exist?(path), "Path '#{path}' not found on #{machine}.")
     free = $vm.execute_successfully("df '#{path}'")
   else
-    raise 'Unsupported machine type #{machine} passed.'
+    raise "Unsupported machine type #{machine} passed."
   end
   output = free.split("\n").last
   return output.match(/[^\s]\s+[0-9]+\s+[0-9]+\s+([0-9]+)\s+.*/)[1].chomp.to_i
