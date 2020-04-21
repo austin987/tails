@@ -11,7 +11,6 @@
 # Should put all that in a Module.
 
 class Sniffer
-
   attr_reader :name, :pcap_file, :pid
 
   def initialize(name, vmnet)

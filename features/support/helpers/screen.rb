@@ -2,7 +2,6 @@ class FindFailed < StandardError
 end
 
 class Match
-
   attr_reader :w, :h, :x, :y, :image
 
   def initialize(image, screen, x, y, w, h)
@@ -25,11 +24,9 @@ class Match
   def click(**opts)
     @screen.click(*middle, **opts)
   end
-
 end
 
 class Screen
-
   attr_reader :w, :h
 
   # Values extracted from the virkeyname-linux(7) man page. These are the
@@ -291,7 +288,6 @@ class Screen
     xdotool('click', '--repeat', opts[:repeat], opts[:button])
     return [x, y]
   end
-
 end
 
 class ImageBumpFailed < StandardError
@@ -303,7 +299,6 @@ end
 # negative image matching methods (*_vanish()) are excepted (it
 # doesn't make sense for them).
 class ImageBumpingScreen
-
   def initialize
     @screen = Screen.new
   end
@@ -395,5 +390,4 @@ class ImageBumpingScreen
       end
     end
   end
-
 end

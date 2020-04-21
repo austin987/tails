@@ -6,7 +6,6 @@ class ExecutionFailedInVM < StandardError
 end
 
 class VMNet
-
   attr_reader :net_name, :net
 
   def initialize(virt, xml_path)
@@ -56,7 +55,6 @@ class VMNet
 end
 
 class VM
-
   attr_reader :domain, :domain_name, :display, :vmnet, :storage
 
   def initialize(virt, xml_path, vmnet, storage, x_display)
@@ -728,5 +726,4 @@ class VM
       end
     end
   end
-
 end

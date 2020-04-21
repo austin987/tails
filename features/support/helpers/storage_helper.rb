@@ -12,7 +12,6 @@ require 'rexml/document'
 require 'etc'
 
 class VMStorage
-
   def initialize(virt, xml_path)
     @virt = virt
     @xml_path = xml_path
@@ -219,5 +218,4 @@ class VMStorage
   ensure
     g.close
   end
-
 end

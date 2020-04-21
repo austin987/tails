@@ -1,7 +1,6 @@
 require 'tempfile'
 
 class ChatBot
-
   def initialize(account, password, otr_key, opts = Hash.new)
     @account = account
     @password = password
@@ -56,5 +55,4 @@ class ChatBot
     assert_equal(1, ret, "This shouldn't happen")
     return true
   end
-
 end

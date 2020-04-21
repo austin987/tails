@@ -1,5 +1,4 @@
 class Display
-
   def initialize(domain, x_display)
     @domain = domain
     @x_display = x_display
@@ -51,5 +50,4 @@ class Display
     assert($?.success?)
     assert(File.exists?(target))
   end
-
 end

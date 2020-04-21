@@ -224,11 +224,9 @@ module Dogtail
         Node.new("#{@var}.#{field}", **@opts)
       end
     end
-
   end
 
   class Node < Application
-
     def initialize(expr, **opts)
       @expr = expr
       @opts = opts
@@ -258,6 +256,5 @@ module Dogtail
       method_call = "click(button=#{RIGHT_CLICK})"
       run("#{@var}.#{method_call}")
     end
-
   end
 end
