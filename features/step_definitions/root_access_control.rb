@@ -26,9 +26,9 @@ end
 Then /^I should be able to run a command as root with pkexec$/ do
   step "I run \"pkexec touch /root/pkexec-test\" in GNOME Terminal"
   step 'I enter the sudo password in the pkexec prompt'
-  try_for(10, :msg => 'The /root/pkexec-test file was not created.') {
+  try_for(10, :msg => 'The /root/pkexec-test file was not created.') do
     $vm.execute('ls /root/pkexec-test').success?
-  }
+  end
 end
 
 Then /^I should not be able to run a command as root with pkexec and the standard passwords$/ do

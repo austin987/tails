@@ -149,9 +149,9 @@ When /^I update APT using Synaptic$/ do
   retry_tor(recovery_proc) do
     @synaptic.button('Reload').click
     sleep 10 # It might take some time before APT starts downloading
-    try_for(15 * 60, :msg => "Took too much time to download the APT data") {
+    try_for(15 * 60, :msg => "Took too much time to download the APT data") do
       !$vm.has_process?("/usr/lib/apt/methods/tor+http")
-    }
+    end
     assert_raise(Dogtail::Failure) do
       @synaptic.child(roleName: 'dialog', recursive: false)
                .child('Error', roleName: 'icon', retry: false)

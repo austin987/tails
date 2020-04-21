@@ -90,12 +90,12 @@ def create_veracrypt_volume(type, with_keyfile)
     ($?.exitstatus == 0) || raise( "#{tcplay_map_cmd} exited with #{$?.exitstatus}")
   end
   fatal_system "mkfs.vfat '/dev/mapper/veracrypt' >/dev/null"
-  Dir.mktmpdir('veracrypt-mountpoint', $config["TMPDIR"]) { |mountpoint|
+  Dir.mktmpdir('veracrypt-mountpoint', $config["TMPDIR"]) do |mountpoint|
     fatal_system "mount -t vfat '/dev/mapper/veracrypt' '#{mountpoint}'"
     # must match SecretFileOnVeraCryptVolume.png when displayed in GNOME Files
     FileUtils.cp('/usr/share/common-licenses/GPL-3', "#{mountpoint}/GPL-3")
     fatal_system "umount '#{mountpoint}'"
-  }
+  end
   fatal_system "tcplay --unmap=veracrypt"
   fatal_system "losetup -d '#{loop_dev}'"
   File.delete(keyfile)
@@ -172,9 +172,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
   )
   case support
   when 'volume'
-    disks.children(roleName: 'table cell').find { |row|
+    disks.children(roleName: 'table cell').find do |row|
       /^#{size} Drive/.match(row.name)
-    }.grabFocus
+    end.grabFocus
   when 'file container'
     gnome_shell = Dogtail::Application.new('gnome-shell')
     menu = gnome_shell.menu('Disks')
@@ -201,9 +201,9 @@ When /^I unlock and mount this VeraCrypt (volume|file container) with GNOME Disk
     @screen.press("Return")
     try_for(15) do
       begin
-        disks.children(roleName: 'table cell').find { |row|
+        disks.children(roleName: 'table cell').find do |row|
           /^#{size} Loop Device/.match(row.name)
-        }.grabFocus
+        end.grabFocus
         true
       rescue NoMethodError
         false

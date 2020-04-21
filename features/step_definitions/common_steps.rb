@@ -387,9 +387,9 @@ Given /^the time has synced$/ do
 end
 
 Given /^available upgrades have been checked$/ do
-  try_for(300) {
+  try_for(300) do
     $vm.execute("test -e '/run/tails-upgrader/checked_upgrades'").success?
-  }
+  end
 end
 
 When /^I start the Tor Browser( in offline mode)?$/ do |offline|
@@ -550,9 +550,9 @@ end
 
 Given /^I kill the process "([^"]+)"$/ do |process|
   $vm.execute("killall #{process}")
-  try_for(10, :msg => "Process '#{process}' could not be killed") {
+  try_for(10, :msg => "Process '#{process}' could not be killed") do
     !$vm.has_process?(process)
-  }
+  end
 end
 
 Then /^Tails eventually (shuts down|restarts)$/ do |mode|
@@ -616,10 +616,10 @@ Given /^I add a ([a-z0-9.]+ |)wired DHCP NetworkManager connection called "([^"]
     )
   end
 
-  try_for(10) {
+  try_for(10) do
     nm_con_list = $vm.execute("nmcli --terse --fields NAME connection show").stdout
     nm_con_list.split("\n").include? "#{con_name}"
-  }
+  end
 end
 
 Given /^I switch to the "([^"]+)" NetworkManager connection$/ do |con_name|
@@ -648,9 +648,9 @@ When /^the file "([^"]+)" exists(?:| after at most (\d+) seconds)$/ do |file, ti
   try_for(
     timeout.to_i,
     :msg => "The file #{file} does not exist after #{timeout} seconds"
-  ) {
+  ) do
     $vm.file_exist?(file)
-  }
+  end
 end
 
 When /^the file "([^"]+)" does not exist$/ do |file|
@@ -793,9 +793,9 @@ When /^I (can|cannot) save the current page as "([^"]+[.]html)" to the (.*) dire
   # so we have to remove it before typing it into the arget filename entry widget.
   @screen.type(output_file.sub(/[.]html$/, ''), ["Return"])
   if should_work
-    try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") {
+    try_for(20, :msg => "The page was not saved to #{output_dir}/#{output_file}") do
       $vm.file_exist?("#{output_dir}/#{output_file}")
-    }
+    end
   else
     @screen.wait("TorBrowserCannotSavePage.png", 10)
   end
@@ -824,9 +824,9 @@ When /^I can print the current page as "([^"]+[.]pdf)" to the (default downloads
   # If you try to unite them, make sure this does not break the tests
   # that use either.
   @screen.wait("TorBrowserPrintButton.png", 10).click
-  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") {
+  try_for(30, :msg => "The page was not printed to #{output_dir}/#{output_file}") do
     $vm.file_exist?("#{output_dir}/#{output_file}")
-  }
+  end
 end
 
 Given /^a web server is running on the LAN$/ do
@@ -915,7 +915,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_te
          "'I monitor the AppArmor log of ...' step")
   audit_line_regex = 'apparmor="DENIED" operation="open" profile="%s" name="%s"' % [profile, file]
   begin
-    try_for(10, delay: 1) {
+    try_for(10, delay: 1) do
       audit_log = $vm.execute(
         "journalctl --full --no-pager " +
         "--since='#{@apparmor_profile_monitoring_start[profile]}' " +
@@ -923,7 +923,7 @@ When /^AppArmor has (not )?denied "([^"]+)" from opening "([^"]+)"$/ do |anti_te
       ).stdout.chomp
       assert(audit_log.empty? == (anti_test ? true : false))
       true
-    }
+    end
   rescue Timeout::Error, Test::Unit::AssertionFailedError => e
     raise e, "AppArmor has #{anti_test ? "" : "not "}denied the operation"
   end

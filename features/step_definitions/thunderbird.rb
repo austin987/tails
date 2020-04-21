@@ -108,9 +108,9 @@ Then /^the autoconfiguration wizard's choice for the (incoming|outgoing) server 
   section = thunderbird_wizard.child(type, roleName: 'section')
   assert_not_nil(section.child(protocol, roleName: 'label'))
   assert(
-    section.children(roleName: 'label').any? { |label|
+    section.children(roleName: 'label').any? do |label|
       (label.text == 'SSL') || (label.text == 'STARTTLS')
-    }
+    end
   )
 end
 

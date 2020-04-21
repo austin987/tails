@@ -103,10 +103,10 @@ end
 
 When /^the "([^"]+)" key is in the live user's public keyring(?: after at most (\d) seconds)?$/ do |keyid, delay|
   delay = 10 unless delay
-  try_for(delay.to_i, :msg => "The '#{keyid}' key is not in the live user's public keyring") {
+  try_for(delay.to_i, :msg => "The '#{keyid}' key is not in the live user's public keyring") do
     $vm.execute("gpg --batch --list-keys '#{keyid}'",
                 :user => LIVE_USER).success?
-  }
+  end
 end
 
 Given /^I delete the "([^"]+)" subkey from the live user's public keyring$/ do |subkeyid|
@@ -162,9 +162,9 @@ Then /^I synchronize keys in Seahorse$/ do
     @screen.wait('SeahorseSyncKeys.png', 20)
     @screen.press("alt", "s") # Button: Sync
     # There's no visual feedback of Seahorse in Tails/Jessie, except on error.
-    try_for(120) {
+    try_for(120) do
       change_of_status?
-    }
+    end
     check_for_seahorse_error
     raise OpenPGPKeyserverCommunicationError.new(
       'Seahorse crashed with a segfault.'

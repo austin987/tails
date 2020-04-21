@@ -112,10 +112,10 @@ def save_failure_artifact(type, path)
 end
 
 def save_journal(path)
-  File.open("#{path}/systemd.journal", 'w') { |file|
+  File.open("#{path}/systemd.journal", 'w') do |file|
     $vm.execute('journalctl -a --no-pager > /tmp/systemd.journal')
     file.write($vm.file_content('/tmp/systemd.journal'))
-  }
+  end
   save_failure_artifact("Systemd journal", "#{path}/systemd.journal")
 rescue Exception => e
   info_log("Exception thrown while trying to save the journal: " +
@@ -139,7 +139,7 @@ end
 
 BeforeFeature('@product') do
   images = { 'ISO' => TAILS_ISO, 'IMG' => TAILS_IMG }
-  images.each { |type, path|
+  images.each do |type, path|
     if path.nil?
       raise "No Tails #{type} image specified, and none could be found " +
             "in the current directory"
@@ -162,7 +162,7 @@ BeforeFeature('@product') do
     else
       raise "The specified Tails #{type} image '#{path}' does not exist"
     end
-  }
+  end
   if !File.exist?(OLD_TAILS_ISO)
     raise "The specified old Tails ISO image '#{OLD_TAILS_ISO}' does not exist"
   end

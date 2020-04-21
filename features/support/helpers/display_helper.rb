@@ -23,9 +23,9 @@ class Display
     # We wait for the display to be active to not lose actions
     # (e.g. key presses) that come immediately after starting (or
     # restoring) a vm
-    try_for(20, delay: 0.1, msg: "virt-viewer failed to start") {
+    try_for(20, delay: 0.1, msg: "virt-viewer failed to start") do
       active?
-    }
+    end
   end
 
   def stop

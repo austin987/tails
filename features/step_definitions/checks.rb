@@ -109,12 +109,12 @@ Then /^the support documentation page opens in Tor Browser$/ do
   else
     browser_name = 'Tor Browser'
   end
-  try_for(60) {
+  try_for(60) do
     @torbrowser
       .child(expected_title + " - #{browser_name}", roleName: 'frame')
       .children(roleName: 'heading')
       .any? { |heading| heading.text == expected_heading }
-  }
+  end
 end
 
 Given /^I plug and mount a USB drive containing a sample PNG$/ do

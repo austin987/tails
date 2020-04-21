@@ -125,19 +125,19 @@ def page_has_loaded_in_the_Tor_Browser(page_titles)
     browser_name = 'Tor Browser'
     reload_action = 'Reload'
   end
-  try_for(180) {
+  try_for(180) do
     # The 'Reload' button (graphically shown as a looping arrow)
     # is only shown when a page has loaded, so once we see the
     # expected title *and* this button has appeared, then we can be sure
     # that the page has fully loaded.
-    @torbrowser.children(roleName: 'frame', showingOnly: true).any? { |frame|
+    @torbrowser.children(roleName: 'frame', showingOnly: true).any? do |frame|
       page_titles
         .map  { |page_title| "#{page_title} - #{browser_name}" }
         .any? { |page_title| page_title == frame.name }
-    } &&
+    end &&
       @torbrowser.child(reload_action, roleName:    'push button',
                                        showingOnly: true)
-  }
+  end
 end
 
 # This step is limited to the Tor Browser due to #7502 since dogtail
@@ -240,10 +240,10 @@ Then /^Tails homepage loads in the Unsafe Browser$/ do
 end
 
 Then /^the Tor Browser shows the "([^"]+)" error$/ do |error|
-  try_for(60) {
+  try_for(60) do
     page = @torbrowser.child("Problem loading page - Tor Browser", roleName: "frame")
     page.children(roleName: "heading").any? { |heading| heading.text == error }
-  }
+  end
 end
 
 Then /^I can listen to an Ogg audio track in Tor Browser$/ do
