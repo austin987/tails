@@ -194,8 +194,7 @@ def find_impacted_docs(impact_map,
       all_source_file_paths.each do |source_path|
         # Git::Diff#path() alters the object so it cannot be used for a
         # successive call for another path.
-        _git_diff = git_diff.clone
-        source_path_diff = _git_diff.path(source_path)
+        source_path_diff = git_diff.clone.path(source_path)
         if source_path_diff.size > 0
           changed_files = source_path_diff.map { |file| file.path }
           reasons = changed_files.map do |path|
